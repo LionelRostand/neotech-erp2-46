@@ -24,6 +24,32 @@ const SidebarNavigation = ({ installedModules, onNavigate }: SidebarNavigationPr
         onClick={() => onNavigate('/dashboard')}
       />
       
+      {/* Installed modules - After Dashboard */}
+      {installedModules.length > 0 && (
+        <>
+          <div className="mt-4">
+            <div className={cn(
+              "uppercase text-xs font-semibold text-gray-500 px-4 py-2",
+              "sidebar-collapsed-hide"
+            )}>
+              Modules installés
+            </div>
+            <div className="border-t border-gray-100 my-1"></div>
+          </div>
+          
+          {installedModules.map((module) => (
+            <NavLink
+              key={module.id}
+              icon={module.icon}
+              label={module.name}
+              href={module.href}
+              isActive={location.pathname === module.href}
+              onClick={() => onNavigate(module.href)}
+            />
+          ))}
+        </>
+      )}
+      
       {/* Spacer to push APPLICATIONS to the middle */}
       <div className="flex-grow min-h-8"></div>
       
@@ -38,31 +64,6 @@ const SidebarNavigation = ({ installedModules, onNavigate }: SidebarNavigationPr
       
       {/* Spacer after APPLICATIONS */}
       <div className="flex-grow min-h-8"></div>
-      
-      {/* Separator */}
-      {installedModules.length > 0 && (
-        <div className="my-3">
-          <div className={cn(
-            "uppercase text-xs font-semibold text-gray-500 px-4 py-2",
-            "sidebar-collapsed-hide"
-          )}>
-            Modules installés
-          </div>
-          <div className="border-t border-gray-100 my-1"></div>
-        </div>
-      )}
-      
-      {/* Installed modules */}
-      {installedModules.map((module) => (
-        <NavLink
-          key={module.id}
-          icon={module.icon}
-          label={module.name}
-          href={module.href}
-          isActive={location.pathname === module.href}
-          onClick={() => onNavigate(module.href)}
-        />
-      ))}
     </nav>
   );
 };
