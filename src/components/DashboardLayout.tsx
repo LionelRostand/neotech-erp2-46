@@ -1,55 +1,13 @@
 
 import React, { useState, useEffect } from 'react';
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import { 
-  Home, ShoppingCart, Warehouse, PackageOpen, 
-  LineChart, Users, Truck, Settings, 
-  Search, Bell, Mail, User, Menu, ChevronRight,
-  AppWindow
-} from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { modules } from '@/data/appModules';
-
-interface NavLinkProps {
-  icon: React.ReactNode;
-  label: string;
-  href: string;
-  isActive: boolean;
-  onClick: () => void;
-  showLabelWhenCollapsed?: boolean;
-}
-
-const NavLink = ({ 
-  icon, 
-  label, 
-  href, 
-  isActive, 
-  onClick, 
-  showLabelWhenCollapsed = true 
-}: NavLinkProps) => (
-  <a
-    href={href}
-    className={cn(
-      "nav-link group flex items-center px-4 py-2 text-sm font-medium rounded-md my-1 transition-colors",
-      isActive ? "bg-neotech-primary text-white" : "text-gray-700 hover:bg-gray-100"
-    )}
-    onClick={(e) => {
-      e.preventDefault();
-      onClick();
-    }}
-  >
-    <span className="transition-transform duration-300 group-hover:scale-110 mr-3">
-      {icon}
-    </span>
-    <span className={cn(
-      "transition-opacity duration-300",
-      !showLabelWhenCollapsed && "sidebar-collapsed-hide"
-    )}>
-      {label}
-    </span>
-  </a>
-);
+import NavLink from './dashboard/NavLink';
+import SidebarHeader from './dashboard/SidebarHeader';
+import SidebarNavigation from './dashboard/SidebarNavigation';
+import SidebarFooter from './dashboard/SidebarFooter';
+import TopBar from './dashboard/TopBar';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -61,7 +19,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [installedModules, setInstalledModules] = useState<number[]>([]);
   
-  // Charger les modules installés depuis le localStorage au chargement
+  // Load installed modules from localStorage on load
   useEffect(() => {
     const loadInstalledModules = () => {
       const savedModules = localStorage.getItem('installedModules');
@@ -70,20 +28,20 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
       }
     };
     
-    // Charger au démarrage
+    // Load on startup
     loadInstalledModules();
     
-    // Configurer l'écouteur d'événements pour les changements de modules
+    // Configure event listener for module changes
     const handleModulesChanged = () => loadInstalledModules();
     window.addEventListener('modulesChanged', handleModulesChanged);
     
-    // Nettoyer l'écouteur lors du démontage
+    // Clean up listener on unmount
     return () => {
       window.removeEventListener('modulesChanged', handleModulesChanged);
     };
   }, []);
 
-  // Ajouter une classe au body lorsque la sidebar est réduite
+  // Add a class to the body when the sidebar is collapsed
   useEffect(() => {
     if (sidebarOpen) {
       document.body.classList.remove('sidebar-collapsed');
@@ -96,7 +54,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
     navigate(href);
   };
   
-  // Filtrer les modules installés
+  // Filter installed modules
   const installedModuleDetails = modules.filter(module => 
     installedModules.includes(module.id)
   );
@@ -112,99 +70,24 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
       >
         <div className="flex flex-col h-full">
           {/* Logo - Clickable to go to Welcome page */}
-          <div 
-            className={cn(
-              "flex items-center py-6 px-6 border-b border-gray-100 cursor-pointer",
-              !sidebarOpen && "justify-center"
-            )}
-            onClick={() => navigate('/welcome')}
-          >
-            <div className="w-8 h-8 rounded-lg bg-neotech-primary flex items-center justify-center text-white font-bold">
-              N
-            </div>
-            <h2 className={cn(
-              "ml-3 text-xl font-semibold transition-opacity duration-300",
-              sidebarOpen ? "opacity-100" : "opacity-0 overflow-hidden w-0"
-            )}>
-              NEOTECH-ERP
-            </h2>
-          </div>
+          <SidebarHeader 
+            sidebarOpen={sidebarOpen} 
+            onClick={() => navigate('/welcome')} 
+          />
 
           {/* Navigation */}
-          <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
-            {/* Menu APPLICATIONS */}
-            <NavLink
-              icon={<AppWindow size={20} />}
-              label="APPLICATIONS"
-              href="/applications"
-              isActive={location.pathname === '/applications'}
-              onClick={() => handleNavigation('/applications')}
-            />
-            
-            {/* Séparateur */}
-            {installedModuleDetails.length > 0 && (
-              <div className="my-3">
-                <div className={cn(
-                  "uppercase text-xs font-semibold text-gray-500 px-4 py-2",
-                  !sidebarOpen && "opacity-0"
-                )}>
-                  Modules installés
-                </div>
-                <div className="border-t border-gray-100 my-1"></div>
-              </div>
-            )}
-            
-            {/* Modules installés */}
-            {installedModuleDetails.map((module) => (
-              <NavLink
-                key={module.id}
-                icon={module.icon}
-                label={module.name}
-                href={module.href}
-                isActive={location.pathname === module.href}
-                onClick={() => handleNavigation(module.href)}
-              />
-            ))}
-          </nav>
+          <SidebarNavigation 
+            installedModules={installedModuleDetails} 
+            onNavigate={handleNavigation} 
+          />
 
           {/* Collapse button and company info */}
-          <div className="p-4 border-t border-gray-100">
-            {/* PARAMETRES GENERAUX menu option */}
-            <NavLink
-              icon={<Settings size={20} />}
-              label="PARAMETRES GENERAUX"
-              href="/settings"
-              isActive={location.pathname === '/settings'}
-              onClick={() => handleNavigation('/settings')}
-              showLabelWhenCollapsed={false}
-            />
-
-            <div className="mt-3">
-              <Button
-                variant="outline"
-                size="sm"
-                className="w-full justify-between"
-                onClick={() => setSidebarOpen(!sidebarOpen)}
-              >
-                {sidebarOpen ? (
-                  <>
-                    <span>Réduire</span>
-                    <ChevronRight size={16} />
-                  </>
-                ) : (
-                  <Menu size={16} />
-                )}
-              </Button>
-            </div>
-            
-            {/* Company info text */}
-            <div className={cn(
-              "mt-3 text-center text-xs text-gray-500 font-medium transition-opacity duration-300",
-              sidebarOpen ? "opacity-100" : "opacity-0 overflow-hidden h-0"
-            )}>
-              NEOTECH-CONSULTING 2025
-            </div>
-          </div>
+          <SidebarFooter 
+            sidebarOpen={sidebarOpen} 
+            onToggleSidebar={() => setSidebarOpen(!sidebarOpen)} 
+            onNavigate={handleNavigation}
+            isSettingsActive={location.pathname === '/settings'}
+          />
         </div>
       </aside>
 
@@ -216,64 +99,13 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         )}
       >
         {/* Top bar */}
-        <header className="bg-white border-b border-gray-100 sticky top-0 z-30">
-          <div className="px-6 py-4 flex items-center justify-between">
-            <div className="flex items-center w-72">
-              <div className="relative w-full">
-                <Search size={18} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Rechercher..."
-                  className="pl-10 pr-4 py-2 w-full rounded-full border border-gray-200 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-all text-sm"
-                />
-              </div>
-            </div>
-
-            <div className="flex items-center space-x-4">
-              <Button variant="ghost" size="icon" className="relative">
-                <Bell size={20} />
-                <span className="absolute top-0 right-0 w-4 h-4 bg-neotech-primary text-white rounded-full text-xs flex items-center justify-center">
-                  2
-                </span>
-              </Button>
-              
-              <Button variant="ghost" size="icon" className="relative">
-                <Mail size={20} />
-                <span className="absolute top-0 right-0 w-4 h-4 bg-neotech-primary text-white rounded-full text-xs flex items-center justify-center">
-                  3
-                </span>
-              </Button>
-
-              <div className="flex items-center pl-4 border-l border-gray-200">
-                <div className="w-8 h-8 rounded-full bg-neotech-primary flex items-center justify-center text-white font-medium">
-                  A
-                </div>
-                <span className="ml-2 font-medium text-sm">Admin</span>
-              </div>
-            </div>
-          </div>
-        </header>
+        <TopBar />
 
         {/* Page content */}
         <div className="p-6 animate-fade-up">
           {children}
         </div>
       </main>
-
-      {/* Fix: Using standard style element without jsx and global properties */}
-      <style>
-        {`
-          .sidebar-collapsed-hide {
-            opacity: 0;
-            width: 0;
-            overflow: hidden;
-          }
-          
-          body.sidebar-collapsed .sidebar-collapsed-hide {
-            display: none;
-          }
-        `}
-      </style>
     </div>
   );
 };
