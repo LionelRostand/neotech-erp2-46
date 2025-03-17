@@ -32,9 +32,9 @@ const ModuleList: React.FC<ModuleListProps> = ({
   const [leftColumnModules, rightColumnModules] = splitModules();
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       {/* Left Column */}
-      <div className="space-y-6">
+      <div className="space-y-4">
         {leftColumnModules.map(module => (
           <ModuleCard
             key={module.id}
@@ -49,7 +49,7 @@ const ModuleList: React.FC<ModuleListProps> = ({
       </div>
       
       {/* Right Column */}
-      <div className="space-y-6">
+      <div className="space-y-4">
         {rightColumnModules.map(module => (
           <ModuleCard
             key={module.id}
