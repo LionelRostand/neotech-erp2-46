@@ -260,17 +260,20 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         </div>
       </main>
 
-      <style jsx global>{`
-        .sidebar-collapsed-hide {
-          opacity: 0;
-          width: 0;
-          overflow: hidden;
-        }
-        
-        body.sidebar-collapsed .sidebar-collapsed-hide {
-          display: none;
-        }
-      `}</style>
+      {/* Fix: Using standard style element without jsx and global properties */}
+      <style>
+        {`
+          .sidebar-collapsed-hide {
+            opacity: 0;
+            width: 0;
+            overflow: hidden;
+          }
+          
+          body.sidebar-collapsed .sidebar-collapsed-hide {
+            display: none;
+          }
+        `}
+      </style>
     </div>
   );
 };

@@ -76,6 +76,17 @@
     @apply bg-neotech-background text-foreground;
     font-feature-settings: "rlig" 1, "calt" 1;
   }
+  
+  /* Added sidebar collapsed classes */
+  .sidebar-collapsed-hide {
+    opacity: 0;
+    width: 0;
+    overflow: hidden;
+  }
+  
+  body.sidebar-collapsed .sidebar-collapsed-hide {
+    display: none;
+  }
 }
 
 @layer components {
