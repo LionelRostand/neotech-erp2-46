@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { cn } from "@/lib/utils";
-import { AppWindow } from 'lucide-react';
+import { AppWindow, LayoutDashboard } from 'lucide-react';
 import NavLink from './NavLink';
 import { useLocation } from 'react-router-dom';
 
@@ -14,8 +14,20 @@ const SidebarNavigation = ({ installedModules, onNavigate }: SidebarNavigationPr
   const location = useLocation();
 
   return (
-    <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
-      {/* Menu APPLICATIONS */}
+    <nav className="flex-1 p-4 space-y-1 overflow-y-auto flex flex-col">
+      {/* Dashboard Link - At the top */}
+      <NavLink
+        icon={<LayoutDashboard size={20} />}
+        label="Dashboard"
+        href="/dashboard"
+        isActive={location.pathname === '/dashboard'}
+        onClick={() => onNavigate('/dashboard')}
+      />
+      
+      {/* Spacer to push APPLICATIONS to the middle */}
+      <div className="flex-grow min-h-8"></div>
+      
+      {/* Menu APPLICATIONS - In the middle */}
       <NavLink
         icon={<AppWindow size={20} />}
         label="APPLICATIONS"
@@ -23,6 +35,9 @@ const SidebarNavigation = ({ installedModules, onNavigate }: SidebarNavigationPr
         isActive={location.pathname === '/applications'}
         onClick={() => onNavigate('/applications')}
       />
+      
+      {/* Spacer after APPLICATIONS */}
+      <div className="flex-grow min-h-8"></div>
       
       {/* Separator */}
       {installedModules.length > 0 && (
