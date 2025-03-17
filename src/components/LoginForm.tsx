@@ -19,10 +19,18 @@ const LoginForm = () => {
     setTimeout(() => {
       setIsLoading(false);
       if (email === 'admin@neotech-consulting.com' && password === 'admin') {
-        toast.success('Connexion réussie');
+        toast({
+          title: "Succès",
+          description: "Connexion réussie",
+          variant: "default",
+        });
         navigate('/');
       } else {
-        toast.error('Identifiants incorrects');
+        toast({
+          title: "Erreur",
+          description: "Identifiants incorrects",
+          variant: "destructive",
+        });
       }
     }, 1000);
   };
