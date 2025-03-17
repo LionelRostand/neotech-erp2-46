@@ -10,6 +10,10 @@ import { transportModule } from './transport';
 import { healthModule } from './health';
 import { accountingModule } from './accounting';
 import { ecommerceModule } from './ecommerce';
+import { websiteModule } from './website';
+import { vehicleRentalsModule } from './vehicle-rentals';
+import { messagesModule } from './messages';
+import { eventsModule } from './events';
 
 // Export all modules as an array
 export const modules: AppModule[] = [
@@ -22,7 +26,11 @@ export const modules: AppModule[] = [
   transportModule,
   healthModule,
   accountingModule,
-  ecommerceModule
+  ecommerceModule,
+  websiteModule,
+  vehicleRentalsModule,
+  messagesModule,
+  eventsModule
 ];
 
 // Re-export types
