@@ -140,9 +140,20 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                 onClick={() => handleNavigation(module.href)}
               />
             ))}
+            
+            {/* PARAMETRES GENERAUX menu option */}
+            <div className="mt-auto pt-4">
+              <NavLink
+                icon={<Settings size={20} />}
+                label="PARAMETRES GENERAUX"
+                href="/settings"
+                isActive={location.pathname === '/settings'}
+                onClick={() => handleNavigation('/settings')}
+              />
+            </div>
           </nav>
 
-          {/* Collapse button */}
+          {/* Collapse button and company info */}
           <div className="p-4 border-t border-gray-100">
             <Button
               variant="outline"
@@ -159,6 +170,14 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                 <Menu size={16} />
               )}
             </Button>
+            
+            {/* Company info text */}
+            <div className={cn(
+              "mt-3 text-center text-xs text-gray-500 font-medium transition-opacity duration-300",
+              sidebarOpen ? "opacity-100" : "opacity-0 overflow-hidden h-0"
+            )}>
+              NEOTECH-CONSULTING 2025
+            </div>
           </div>
         </div>
       </aside>
