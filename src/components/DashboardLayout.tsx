@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { cn } from "@/lib/utils";
 import { useNavigate, useLocation } from "react-router-dom";
-import { modules } from '@/data/appModules';
+import { modules } from '@/data/modules';
 import NavLink from './dashboard/NavLink';
 import SidebarHeader from './dashboard/SidebarHeader';
 import SidebarNavigation from './dashboard/SidebarNavigation';

@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
 import { Grid2X2, Download, Trash2, Check, ChevronDown, ChevronUp } from 'lucide-react';
-import { modules } from '@/data/appModules';
+import { modules } from '@/data/modules';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from '@/lib/utils';
 

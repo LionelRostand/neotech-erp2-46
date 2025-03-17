@@ -1,11 +1,10 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { AppWindow } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
 import { motion, AnimatePresence } from 'framer-motion';
-import { modules } from '@/data/appModules';
+import { modules } from '@/data/modules';
 
 const Welcome = () => {
   const navigate = useNavigate();
