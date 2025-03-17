@@ -51,11 +51,19 @@ const App = () => (
           <Route path="/applications" element={<Applications />} />
           <Route path="/dashboard" element={<Dashboard />} />
           
-          {/* Routes pour les modules */}
+          {/* Routes pour les modules existants */}
           <Route path="/modules/employees/*" element={<ModulePlaceholder />} />
           <Route path="/modules/freight/*" element={<ModulePlaceholder />} />
           <Route path="/modules/projects/*" element={<ModulePlaceholder />} />
           <Route path="/modules/academy/*" element={<ModulePlaceholder />} />
+          
+          {/* Routes pour les nouveaux modules */}
+          <Route path="/modules/restaurant/*" element={<ModulePlaceholder />} />
+          <Route path="/modules/garage/*" element={<ModulePlaceholder />} />
+          <Route path="/modules/transport/*" element={<ModulePlaceholder />} />
+          <Route path="/modules/health/*" element={<ModulePlaceholder />} />
+          <Route path="/modules/accounting/*" element={<ModulePlaceholder />} />
+          <Route path="/modules/ecommerce/*" element={<ModulePlaceholder />} />
           
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />

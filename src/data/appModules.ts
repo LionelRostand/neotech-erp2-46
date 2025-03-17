@@ -24,11 +24,40 @@ import {
   List,
   UsersRound,
   PieChart,
-  Graduation,
   LibraryBig,
   GraduationCap,
   ScrollText,
-  Award
+  Award,
+  Store,
+  Coffee,
+  LayoutPanelLeft,
+  ShoppingCart,
+  CreditCard,
+  Utensils,
+  UserCircle,
+  Ticket,
+  Globe,
+  Car,
+  CalendarCheck,
+  Wrench,
+  Receipt,
+  Package,
+  BadgePercent,
+  Taxi,
+  Route,
+  Map,
+  HeadphonesIcon,
+  Heart,
+  Stethoscope,
+  Pill,
+  Activity,
+  Calculator,
+  ReceiptText,
+  Percent,
+  ShoppingBag,
+  Boxes,
+  Truck as DeliveryTruck,
+  LineChart
 } from 'lucide-react';
 
 export interface AppModule {
@@ -118,6 +147,109 @@ export const modules: AppModule[] = [
       { id: "academy-reports", name: "Bulletins", href: "/modules/academy/reports", icon: createIcon(FileText) },
       { id: "academy-teachers", name: "Enseignants", href: "/modules/academy/teachers", icon: createIcon(GraduationCap) },
       { id: "academy-settings", name: "Paramètres", href: "/modules/academy/settings", icon: createIcon(Settings) }
+    ]
+  },
+  {
+    id: 5,
+    name: "Restaurant POS",
+    description: "Système de point de vente et gestion complète pour restaurants",
+    href: "/modules/restaurant",
+    icon: createIcon(Store),
+    submodules: [
+      { id: "restaurant-pos", name: "Point de Vente", href: "/modules/restaurant/pos", icon: createIcon(CreditCard) },
+      { id: "restaurant-list", name: "Restaurants", href: "/modules/restaurant/list", icon: createIcon(Coffee) },
+      { id: "restaurant-layout", name: "Plan de Salle", href: "/modules/restaurant/layout", icon: createIcon(LayoutPanelLeft) },
+      { id: "restaurant-orders", name: "Commandes", href: "/modules/restaurant/orders", icon: createIcon(ShoppingCart) },
+      { id: "restaurant-payments", name: "Paiements", href: "/modules/restaurant/payments", icon: createIcon(CreditCard) },
+      { id: "restaurant-kitchen", name: "Écran Cuisine", href: "/modules/restaurant/kitchen", icon: createIcon(Utensils) },
+      { id: "restaurant-clients", name: "Clients", href: "/modules/restaurant/clients", icon: createIcon(UserCircle) },
+      { id: "restaurant-reservations", name: "Réservations", href: "/modules/restaurant/reservations", icon: createIcon(Calendar) },
+      { id: "restaurant-tickets", name: "Tickets", href: "/modules/restaurant/tickets", icon: createIcon(Ticket) },
+      { id: "restaurant-web-reservations", name: "Réservations Web", href: "/modules/restaurant/web-reservations", icon: createIcon(Globe) },
+      { id: "restaurant-settings", name: "Paramètres", href: "/modules/restaurant/settings", icon: createIcon(Settings) }
+    ]
+  },
+  {
+    id: 6,
+    name: "Garage Auto",
+    description: "Gestion complète pour ateliers de réparation et services automobiles",
+    href: "/modules/garage",
+    icon: createIcon(Car),
+    submodules: [
+      { id: "garage-dashboard", name: "Tableau de bord", href: "/modules/garage/dashboard", icon: createIcon(LayoutDashboard) },
+      { id: "garage-clients", name: "Clients", href: "/modules/garage/clients", icon: createIcon(Users) },
+      { id: "garage-vehicles", name: "Véhicules", href: "/modules/garage/vehicles", icon: createIcon(Car) },
+      { id: "garage-appointments", name: "Rendez-vous", href: "/modules/garage/appointments", icon: createIcon(CalendarCheck) },
+      { id: "garage-repairs", name: "Réparations", href: "/modules/garage/repairs", icon: createIcon(Wrench) },
+      { id: "garage-invoices", name: "Factures", href: "/modules/garage/invoices", icon: createIcon(Receipt) },
+      { id: "garage-suppliers", name: "Fournisseurs", href: "/modules/garage/suppliers", icon: createIcon(Truck) },
+      { id: "garage-inventory", name: "Inventaire", href: "/modules/garage/inventory", icon: createIcon(Package) },
+      { id: "garage-loyalty", name: "Programme de fidélité", href: "/modules/garage/loyalty", icon: createIcon(BadgePercent) },
+      { id: "garage-settings", name: "Paramètres", href: "/modules/garage/settings", icon: createIcon(Settings) }
+    ]
+  },
+  {
+    id: 7,
+    name: "Transport",
+    description: "Gestion des chauffeurs, réservations et planification des transports",
+    href: "/modules/transport",
+    icon: createIcon(Taxi),
+    submodules: [
+      { id: "transport-reservations", name: "Réservations", href: "/modules/transport/reservations", icon: createIcon(CalendarCheck) },
+      { id: "transport-planning", name: "Planning", href: "/modules/transport/planning", icon: createIcon(Calendar) },
+      { id: "transport-fleet", name: "Flotte", href: "/modules/transport/fleet", icon: createIcon(Car) },
+      { id: "transport-drivers", name: "Chauffeurs", href: "/modules/transport/drivers", icon: createIcon(Users) },
+      { id: "transport-geolocation", name: "Géolocalisation", href: "/modules/transport/geolocation", icon: createIcon(MapPin) },
+      { id: "transport-payments", name: "Paiements", href: "/modules/transport/payments", icon: createIcon(CreditCard) },
+      { id: "transport-customer-service", name: "Service Client", href: "/modules/transport/customer-service", icon: createIcon(Mail) },
+      { id: "transport-loyalty", name: "Fidélité", href: "/modules/transport/loyalty", icon: createIcon(Heart) },
+      { id: "transport-web-booking", name: "Réservation Web", href: "/modules/transport/web-booking", icon: createIcon(Globe) },
+      { id: "transport-settings", name: "Paramètres", href: "/modules/transport/settings", icon: createIcon(Settings) }
+    ]
+  },
+  {
+    id: 8,
+    name: "Health",
+    description: "Gestion des patients, rendez-vous et suivi médical",
+    href: "/modules/health",
+    icon: createIcon(Stethoscope),
+    submodules: [
+      { id: "health-dashboard", name: "Dashboard", href: "/modules/health/dashboard", icon: createIcon(LayoutDashboard) },
+      { id: "health-appointments", name: "Rendez-vous", href: "/modules/health/appointments", icon: createIcon(Calendar) },
+      { id: "health-patients", name: "Patients", href: "/modules/health/patients", icon: createIcon(Users) },
+      { id: "health-pharmacy", name: "Pharmacie", href: "/modules/health/pharmacy", icon: createIcon(Pill) },
+      { id: "health-stats", name: "Statistiques", href: "/modules/health/stats", icon: createIcon(Activity) },
+      { id: "health-settings", name: "Paramètres", href: "/modules/health/settings", icon: createIcon(Settings) }
+    ]
+  },
+  {
+    id: 9,
+    name: "Comptabilité",
+    description: "Gestion financière, facturation et suivi des taxes",
+    href: "/modules/accounting",
+    icon: createIcon(Calculator),
+    submodules: [
+      { id: "accounting-invoices", name: "Factures", href: "/modules/accounting/invoices", icon: createIcon(ReceiptText) },
+      { id: "accounting-payments", name: "Paiements", href: "/modules/accounting/payments", icon: createIcon(CreditCard) },
+      { id: "accounting-taxes", name: "Taxes & TVA", href: "/modules/accounting/taxes", icon: createIcon(Percent) },
+      { id: "accounting-reports", name: "Rapports", href: "/modules/accounting/reports", icon: createIcon(FileText) },
+      { id: "accounting-settings", name: "Paramètres", href: "/modules/accounting/settings", icon: createIcon(Settings) }
+    ]
+  },
+  {
+    id: 10,
+    name: "E-Commerce",
+    description: "Gestion de boutique en ligne, produits et commandes",
+    href: "/modules/ecommerce",
+    icon: createIcon(ShoppingBag),
+    submodules: [
+      { id: "ecommerce-products", name: "Produits", href: "/modules/ecommerce/products", icon: createIcon(Package) },
+      { id: "ecommerce-orders", name: "Commandes", href: "/modules/ecommerce/orders", icon: createIcon(ShoppingCart) },
+      { id: "ecommerce-payments", name: "Paiements", href: "/modules/ecommerce/payments", icon: createIcon(CreditCard) },
+      { id: "ecommerce-shipping", name: "Livraison", href: "/modules/ecommerce/shipping", icon: createIcon(DeliveryTruck) },
+      { id: "ecommerce-stats", name: "Statistiques", href: "/modules/ecommerce/stats", icon: createIcon(LineChart) },
+      { id: "ecommerce-shop", name: "Boutique", href: "/modules/ecommerce/shop", icon: createIcon(Store) },
+      { id: "ecommerce-settings", name: "Paramètres", href: "/modules/ecommerce/settings", icon: createIcon(Settings) }
     ]
   }
 ];
