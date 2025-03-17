@@ -1,13 +1,15 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { 
   Home, ShoppingCart, Warehouse, PackageOpen, 
   LineChart, Users, Truck, Settings, 
-  Search, Bell, Mail, User, Menu, ChevronRight 
+  Search, Bell, Mail, User, Menu, ChevronRight,
+  AppWindow
 } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { modules } from '@/data/appModules';
 
 interface NavLinkProps {
   icon: React.ReactNode;
@@ -21,15 +23,15 @@ const NavLink = ({ icon, label, href, isActive, onClick }: NavLinkProps) => (
   <a
     href={href}
     className={cn(
-      "nav-link group",
-      isActive && "active"
+      "nav-link group flex items-center px-4 py-2 text-sm font-medium rounded-md my-1 transition-colors",
+      isActive ? "bg-neotech-primary text-white" : "text-gray-700 hover:bg-gray-100"
     )}
     onClick={(e) => {
       e.preventDefault();
       onClick();
     }}
   >
-    <span className="transition-transform duration-300 group-hover:scale-110">
+    <span className="transition-transform duration-300 group-hover:scale-110 mr-3">
       {icon}
     </span>
     <span className="transition-opacity duration-300">{label}</span>
@@ -44,21 +46,38 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   const navigate = useNavigate();
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [installedModules, setInstalledModules] = useState<number[]>([]);
   
-  const navLinks = [
-    { icon: <Home size={20} />, label: "Tableau de bord", href: "/" },
-    { icon: <ShoppingCart size={20} />, label: "Ventes", href: "/sales" },
-    { icon: <Warehouse size={20} />, label: "Achats", href: "/purchases" },
-    { icon: <PackageOpen size={20} />, label: "Inventaire", href: "/inventory" },
-    { icon: <LineChart size={20} />, label: "Rapports", href: "/reports" },
-    { icon: <Users size={20} />, label: "Clients", href: "/clients" },
-    { icon: <Truck size={20} />, label: "Fournisseurs", href: "/suppliers" },
-    { icon: <Settings size={20} />, label: "Paramètres", href: "/settings" },
-  ];
+  // Charger les modules installés depuis le localStorage au chargement
+  useEffect(() => {
+    const loadInstalledModules = () => {
+      const savedModules = localStorage.getItem('installedModules');
+      if (savedModules) {
+        setInstalledModules(JSON.parse(savedModules));
+      }
+    };
+    
+    // Charger au démarrage
+    loadInstalledModules();
+    
+    // Configurer l'écouteur d'événements pour les changements de modules
+    const handleModulesChanged = () => loadInstalledModules();
+    window.addEventListener('modulesChanged', handleModulesChanged);
+    
+    // Nettoyer l'écouteur lors du démontage
+    return () => {
+      window.removeEventListener('modulesChanged', handleModulesChanged);
+    };
+  }, []);
 
   const handleNavigation = (href: string) => {
     navigate(href);
   };
+  
+  // Filtrer les modules installés
+  const installedModuleDetails = modules.filter(module => 
+    installedModules.includes(module.id)
+  );
 
   return (
     <div className="flex min-h-screen w-full bg-neotech-background">
@@ -91,14 +110,34 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
 
           {/* Navigation */}
           <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
-            {navLinks.map((link) => (
+            {/* Menu APPLICATIONS */}
+            <NavLink
+              icon={<AppWindow size={20} />}
+              label="APPLICATIONS"
+              href="/applications"
+              isActive={location.pathname === '/applications'}
+              onClick={() => handleNavigation('/applications')}
+            />
+            
+            {/* Séparateur */}
+            {installedModuleDetails.length > 0 && (
+              <div className="my-3">
+                <div className="uppercase text-xs font-semibold text-gray-500 px-4 py-2">
+                  Modules installés
+                </div>
+                <div className="border-t border-gray-100 my-1"></div>
+              </div>
+            )}
+            
+            {/* Modules installés */}
+            {installedModuleDetails.map((module) => (
               <NavLink
-                key={link.href}
-                icon={link.icon}
-                label={link.label}
-                href={link.href}
-                isActive={location.pathname === link.href}
-                onClick={() => handleNavigation(link.href)}
+                key={module.id}
+                icon={module.icon}
+                label={module.name}
+                href={module.href}
+                isActive={location.pathname === module.href}
+                onClick={() => handleNavigation(module.href)}
               />
             ))}
           </nav>

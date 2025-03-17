@@ -2,32 +2,32 @@
 import React, { useState, useEffect } from 'react';
 import DashboardLayout from '@/components/DashboardLayout';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Package, AppWindow, LayoutDashboard, Component, 
-  Boxes, Database, Settings, Puzzle, 
-  FileText, Terminal, Grid2X2
-} from 'lucide-react';
-
-// Liste des modules à afficher dans l'animation
-const modules = [
-  { id: 1, name: 'Tableau de bord', icon: <LayoutDashboard size={48} /> },
-  { id: 2, name: 'Ventes', icon: <Grid2X2 size={48} /> },
-  { id: 3, name: 'Achats', icon: <Package size={48} /> },
-  { id: 4, name: 'Inventaire', icon: <Boxes size={48} /> },
-  { id: 5, name: 'Rapports', icon: <FileText size={48} /> },
-  { id: 6, name: 'Gestion client', icon: <AppWindow size={48} /> },
-  { id: 7, name: 'Base de données', icon: <Database size={48} /> },
-  { id: 8, name: 'Paramètres', icon: <Settings size={48} /> },
-  { id: 9, name: 'Modules personnalisés', icon: <Puzzle size={48} /> },
-  { id: 10, name: 'Terminal', icon: <Terminal size={48} /> },
-  { id: 11, name: 'Composants', icon: <Component size={48} /> },
-];
+import { modules } from '@/data/appModules';
 
 const Welcome = () => {
   const [visibleModules, setVisibleModules] = useState<number[]>([1, 2, 3, 4]);
   const [animationStep, setAnimationStep] = useState(0);
+  const [installedModules, setInstalledModules] = useState<number[]>([]);
 
-  // Animation cyclique
+  // Charger les modules installés depuis le localStorage
+  useEffect(() => {
+    const loadInstalledModules = () => {
+      const savedModules = localStorage.getItem('installedModules');
+      if (savedModules) {
+        setInstalledModules(JSON.parse(savedModules));
+      }
+    };
+    
+    loadInstalledModules();
+    
+    // Écouter les changements d'installation
+    window.addEventListener('modulesChanged', loadInstalledModules);
+    return () => {
+      window.removeEventListener('modulesChanged', loadInstalledModules);
+    };
+  }, []);
+
+  // Animation cyclique qui montre prioritairement les modules installés
   useEffect(() => {
     const interval = setInterval(() => {
       setAnimationStep(prev => {
@@ -35,9 +35,22 @@ const Welcome = () => {
         
         // Ajouter progressivement plus de modules
         if (nextStep % 3 === 0) {
-          const nextModuleId = Math.min(modules.length, visibleModules.length + 1);
-          if (nextModuleId > visibleModules.length) {
-            setVisibleModules(prev => [...prev, nextModuleId]);
+          // Priorité aux modules installés
+          let potentialModules = [...visibleModules];
+          
+          // Ajouter les modules installés d'abord s'ils ne sont pas déjà visibles
+          for (const installedId of installedModules) {
+            if (!potentialModules.includes(installedId)) {
+              potentialModules.push(installedId);
+              setVisibleModules(potentialModules);
+              return nextStep;
+            }
+          }
+          
+          // Ensuite ajouter d'autres modules si nécessaire
+          const nextModuleId = Math.min(modules.length, potentialModules.length + 1);
+          if (nextModuleId > potentialModules.length) {
+            setVisibleModules([...potentialModules, nextModuleId]);
           }
         }
         
@@ -46,7 +59,7 @@ const Welcome = () => {
     }, 2000);
 
     return () => clearInterval(interval);
-  }, [visibleModules]);
+  }, [visibleModules, installedModules]);
 
   return (
     <DashboardLayout>
@@ -102,10 +115,15 @@ const Welcome = () => {
                 const x = radius * Math.cos(angle * Math.PI / 180);
                 const y = radius * Math.sin(angle * Math.PI / 180);
                 
+                // Vérifier si le module est installé pour lui donner un style différent
+                const isInstalled = installedModules.includes(moduleId);
+                
                 return (
                   <motion.div
                     key={module.id}
-                    className="absolute top-1/2 left-1/2 bg-white p-3 rounded-xl shadow-md flex flex-col items-center justify-center w-24 h-24"
+                    className={`absolute top-1/2 left-1/2 bg-white p-3 rounded-xl shadow-md flex flex-col items-center justify-center w-24 h-24 ${
+                      isInstalled ? 'ring-2 ring-neotech-primary' : ''
+                    }`}
                     initial={{ opacity: 0, scale: 0 }}
                     animate={{ 
                       opacity: 1, 
@@ -121,8 +139,13 @@ const Welcome = () => {
                       y: { duration: 2 }
                     }}
                   >
-                    <div className="text-neotech-primary mb-1">{module.icon}</div>
+                    <div className={`mb-1 ${isInstalled ? 'text-neotech-primary' : 'text-gray-600'}`}>
+                      {module.icon}
+                    </div>
                     <span className="text-xs font-medium text-gray-700">{module.name}</span>
+                    {isInstalled && (
+                      <span className="text-[10px] text-neotech-primary">Installé</span>
+                    )}
                   </motion.div>
                 );
               })}
@@ -137,6 +160,22 @@ const Welcome = () => {
           transition={{ duration: 0.8, delay: 1 }}
         >
           <p>Modules actifs: {visibleModules.length} / {modules.length}</p>
+          <p className="text-sm mt-2">
+            Modules installés: {installedModules.length} / {modules.length}
+          </p>
+          <motion.div
+            className="mt-4"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            <Button
+              onClick={() => navigate('/applications')}
+              className="bg-neotech-primary hover:bg-neotech-primary/90"
+            >
+              <AppWindow className="mr-2 h-4 w-4" />
+              Gérer les applications
+            </Button>
+          </motion.div>
         </motion.div>
       </div>
     </DashboardLayout>
