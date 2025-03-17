@@ -17,9 +17,17 @@ interface NavLinkProps {
   href: string;
   isActive: boolean;
   onClick: () => void;
+  showLabelWhenCollapsed?: boolean;
 }
 
-const NavLink = ({ icon, label, href, isActive, onClick }: NavLinkProps) => (
+const NavLink = ({ 
+  icon, 
+  label, 
+  href, 
+  isActive, 
+  onClick, 
+  showLabelWhenCollapsed = true 
+}: NavLinkProps) => (
   <a
     href={href}
     className={cn(
@@ -34,7 +42,12 @@ const NavLink = ({ icon, label, href, isActive, onClick }: NavLinkProps) => (
     <span className="transition-transform duration-300 group-hover:scale-110 mr-3">
       {icon}
     </span>
-    <span className="transition-opacity duration-300">{label}</span>
+    <span className={cn(
+      "transition-opacity duration-300",
+      !showLabelWhenCollapsed && "sidebar-collapsed-hide"
+    )}>
+      {label}
+    </span>
   </a>
 );
 
@@ -69,6 +82,15 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
       window.removeEventListener('modulesChanged', handleModulesChanged);
     };
   }, []);
+
+  // Ajouter une classe au body lorsque la sidebar est réduite
+  useEffect(() => {
+    if (sidebarOpen) {
+      document.body.classList.remove('sidebar-collapsed');
+    } else {
+      document.body.classList.add('sidebar-collapsed');
+    }
+  }, [sidebarOpen]);
 
   const handleNavigation = (href: string) => {
     navigate(href);
@@ -122,7 +144,10 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
             {/* Séparateur */}
             {installedModuleDetails.length > 0 && (
               <div className="my-3">
-                <div className="uppercase text-xs font-semibold text-gray-500 px-4 py-2">
+                <div className={cn(
+                  "uppercase text-xs font-semibold text-gray-500 px-4 py-2",
+                  !sidebarOpen && "opacity-0"
+                )}>
                   Modules installés
                 </div>
                 <div className="border-t border-gray-100 my-1"></div>
@@ -144,13 +169,14 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
 
           {/* Collapse button and company info */}
           <div className="p-4 border-t border-gray-100">
-            {/* PARAMETRES GENERAUX menu option - Moved here from the nav */}
+            {/* PARAMETRES GENERAUX menu option */}
             <NavLink
               icon={<Settings size={20} />}
               label="PARAMETRES GENERAUX"
               href="/settings"
               isActive={location.pathname === '/settings'}
               onClick={() => handleNavigation('/settings')}
+              showLabelWhenCollapsed={false}
             />
 
             <div className="mt-3">
@@ -233,6 +259,18 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
           {children}
         </div>
       </main>
+
+      <style jsx global>{`
+        .sidebar-collapsed-hide {
+          opacity: 0;
+          width: 0;
+          overflow: hidden;
+        }
+        
+        body.sidebar-collapsed .sidebar-collapsed-hide {
+          display: none;
+        }
+      `}</style>
     </div>
   );
 };
