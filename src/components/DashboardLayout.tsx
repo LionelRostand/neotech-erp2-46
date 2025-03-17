@@ -70,11 +70,14 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         )}
       >
         <div className="flex flex-col h-full">
-          {/* Logo */}
-          <div className={cn(
-            "flex items-center py-6 px-6 border-b border-gray-100",
-            !sidebarOpen && "justify-center"
-          )}>
+          {/* Logo - Clickable to go to Welcome page */}
+          <div 
+            className={cn(
+              "flex items-center py-6 px-6 border-b border-gray-100 cursor-pointer",
+              !sidebarOpen && "justify-center"
+            )}
+            onClick={() => navigate('/welcome')}
+          >
             <div className="w-8 h-8 rounded-lg bg-neotech-primary flex items-center justify-center text-white font-bold">
               N
             </div>
