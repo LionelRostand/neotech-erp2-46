@@ -9,6 +9,8 @@ interface NavLinkProps {
   isActive: boolean;
   onClick: () => void;
   showLabelWhenCollapsed?: boolean;
+  className?: string;
+  extraContent?: React.ReactNode;
 }
 
 const NavLink = ({ 
@@ -17,13 +19,16 @@ const NavLink = ({
   href, 
   isActive, 
   onClick, 
-  showLabelWhenCollapsed = true 
+  showLabelWhenCollapsed = true,
+  className,
+  extraContent
 }: NavLinkProps) => (
   <a
     href={href}
     className={cn(
-      "nav-link group flex items-center px-4 py-2 text-sm font-medium rounded-md my-1 transition-colors",
-      isActive ? "bg-neotech-primary text-white" : "text-gray-700 hover:bg-gray-100"
+      "nav-link group flex items-center px-4 py-2 text-sm font-medium rounded-md my-1 transition-colors relative",
+      isActive ? "bg-neotech-primary text-white" : "text-gray-700 hover:bg-gray-100",
+      className
     )}
     onClick={(e) => {
       e.preventDefault();
@@ -39,6 +44,7 @@ const NavLink = ({
     )}>
       {label}
     </span>
+    {extraContent}
   </a>
 );
 
