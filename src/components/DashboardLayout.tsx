@@ -140,36 +140,36 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                 onClick={() => handleNavigation(module.href)}
               />
             ))}
-            
-            {/* PARAMETRES GENERAUX menu option */}
-            <div className="mt-auto pt-4">
-              <NavLink
-                icon={<Settings size={20} />}
-                label="PARAMETRES GENERAUX"
-                href="/settings"
-                isActive={location.pathname === '/settings'}
-                onClick={() => handleNavigation('/settings')}
-              />
-            </div>
           </nav>
 
           {/* Collapse button and company info */}
           <div className="p-4 border-t border-gray-100">
-            <Button
-              variant="outline"
-              size="sm"
-              className="w-full justify-between"
-              onClick={() => setSidebarOpen(!sidebarOpen)}
-            >
-              {sidebarOpen ? (
-                <>
-                  <span>Réduire</span>
-                  <ChevronRight size={16} />
-                </>
-              ) : (
-                <Menu size={16} />
-              )}
-            </Button>
+            {/* PARAMETRES GENERAUX menu option - Moved here from the nav */}
+            <NavLink
+              icon={<Settings size={20} />}
+              label="PARAMETRES GENERAUX"
+              href="/settings"
+              isActive={location.pathname === '/settings'}
+              onClick={() => handleNavigation('/settings')}
+            />
+
+            <div className="mt-3">
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full justify-between"
+                onClick={() => setSidebarOpen(!sidebarOpen)}
+              >
+                {sidebarOpen ? (
+                  <>
+                    <span>Réduire</span>
+                    <ChevronRight size={16} />
+                  </>
+                ) : (
+                  <Menu size={16} />
+                )}
+              </Button>
+            </div>
             
             {/* Company info text */}
             <div className={cn(
