@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -13,7 +12,6 @@ const Welcome = () => {
   const [animationStep, setAnimationStep] = useState(0);
   const [installedModules, setInstalledModules] = useState<number[]>([]);
 
-  // Charger les modules installés depuis le localStorage
   useEffect(() => {
     const loadInstalledModules = () => {
       const savedModules = localStorage.getItem('installedModules');
@@ -24,25 +22,20 @@ const Welcome = () => {
     
     loadInstalledModules();
     
-    // Écouter les changements d'installation
     window.addEventListener('modulesChanged', loadInstalledModules);
     return () => {
       window.removeEventListener('modulesChanged', loadInstalledModules);
     };
   }, []);
 
-  // Animation cyclique qui montre prioritairement les modules installés
   useEffect(() => {
     const interval = setInterval(() => {
       setAnimationStep(prev => {
         const nextStep = prev + 1;
         
-        // Ajouter progressivement plus de modules
         if (nextStep % 3 === 0) {
-          // Priorité aux modules installés
           let potentialModules = [...visibleModules];
           
-          // Ajouter les modules installés d'abord s'ils ne sont pas déjà visibles
           for (const installedId of installedModules) {
             if (!potentialModules.includes(installedId)) {
               potentialModules.push(installedId);
@@ -51,7 +44,6 @@ const Welcome = () => {
             }
           }
           
-          // Ensuite ajouter d'autres modules si nécessaire
           const nextModuleId = Math.min(modules.length, potentialModules.length + 1);
           if (nextModuleId > potentialModules.length) {
             setVisibleModules([...potentialModules, nextModuleId]);
@@ -74,7 +66,7 @@ const Welcome = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
         >
-          BIENVENUE SUR NEOTECH-CONSULTING
+          BIENVENUE À NEOTECH-CONSULTING
         </motion.h1>
         
         <motion.p 
@@ -87,9 +79,7 @@ const Welcome = () => {
         </motion.p>
         
         <div className="relative w-full max-w-4xl mx-auto">
-          {/* Orbit animation */}
           <div className="relative h-[400px] w-[400px] mx-auto">
-            {/* Centre de l'orbite - Logo NEOTECH */}
             <motion.div 
               className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-20"
               animate={{ 
@@ -107,19 +97,16 @@ const Welcome = () => {
               </div>
             </motion.div>
             
-            {/* Modules en orbite */}
             <AnimatePresence>
               {visibleModules.map((moduleId, index) => {
                 const module = modules.find(m => m.id === moduleId);
                 if (!module) return null;
                 
-                // Calculer la position sur l'orbite
                 const angle = (index * (360 / visibleModules.length) + animationStep * 5) % 360;
-                const radius = 150; // Rayon de l'orbite
+                const radius = 150;
                 const x = radius * Math.cos(angle * Math.PI / 180);
                 const y = radius * Math.sin(angle * Math.PI / 180);
                 
-                // Vérifier si le module est installé pour lui donner un style différent
                 const isInstalled = installedModules.includes(moduleId);
                 
                 return (
