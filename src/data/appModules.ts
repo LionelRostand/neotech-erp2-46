@@ -99,5 +99,5 @@ export const modules: AppModule[] = [
     description: 'Consultez la documentation technique et les guides utilisateur.',
     href: '/documentation', 
     icon: <FileText size={24} /> 
-  },
+  }
 ];

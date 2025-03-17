@@ -1,10 +1,14 @@
 
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { AppWindow } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
 import { motion, AnimatePresence } from 'framer-motion';
 import { modules } from '@/data/appModules';
 
 const Welcome = () => {
+  const navigate = useNavigate();
   const [visibleModules, setVisibleModules] = useState<number[]>([1, 2, 3, 4]);
   const [animationStep, setAnimationStep] = useState(0);
   const [installedModules, setInstalledModules] = useState<number[]>([]);
