@@ -145,7 +145,7 @@ const SidebarNavigation = ({ installedModules, onNavigate }: SidebarNavigationPr
         {installedModules.length > 0 && showModules && (
           <div className="pl-8 mt-1 space-y-1 border-l border-gray-100 ml-4">
             {installedModules.map((module) => (
-              <React.Fragment key={module.id}>
+              <div key={module.id}>
                 {/* Module link */}
                 <NavLink
                   icon={module.icon}
@@ -188,7 +188,7 @@ const SidebarNavigation = ({ installedModules, onNavigate }: SidebarNavigationPr
                     ))}
                   </div>
                 )}
-              </React.Fragment>
+              </div>
             ))}
           </div>
         )}
