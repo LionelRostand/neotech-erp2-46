@@ -34,21 +34,6 @@ const SidebarNavigation = ({ installedModules, onNavigate }: SidebarNavigationPr
     location.pathname === '/dashboard/performance' || 
     location.pathname === '/dashboard/analytics';
 
-  const toggleModules = () => {
-    setShowModules(!showModules);
-  };
-
-  const toggleDashboardSubmenus = () => {
-    setShowDashboardSubmenus(!showDashboardSubmenus);
-  };
-
-  const toggleModuleSubmenus = (moduleId: number) => {
-    setExpandedModules(prev => ({
-      ...prev,
-      [moduleId]: !prev[moduleId]
-    }));
-  };
-
   // Initialize expanded state for active module
   useEffect(() => {
     if (activeModule && !expandedModules[activeModule.id]) {
@@ -63,25 +48,33 @@ const SidebarNavigation = ({ installedModules, onNavigate }: SidebarNavigationPr
     <nav className="flex-1 p-4 space-y-1 overflow-y-auto flex flex-col">
       {/* Dashboard Link with submenu */}
       <div className="relative">
-        <NavLink
-          icon={<LayoutDashboard size={20} />}
-          label="Dashboard"
-          href="/dashboard"
-          isActive={isOnDashboardRoute}
-          onClick={() => onNavigate('/dashboard')}
-          extraContent={
-            <button 
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                toggleDashboardSubmenus();
-              }}
-              className="absolute right-2 top-1/2 transform -translate-y-1/2 p-1 text-gray-500 hover:text-gray-700"
-            >
-              {showDashboardSubmenus ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-            </button>
-          }
-        />
+        <div
+          className={`nav-link group flex items-center px-4 py-2 text-sm font-medium rounded-md my-1 transition-colors relative cursor-pointer ${
+            isOnDashboardRoute ? "bg-neotech-primary text-white" : "text-gray-700 hover:bg-gray-100"
+          }`}
+          onClick={() => {
+            setShowDashboardSubmenus(!showDashboardSubmenus);
+          }}
+        >
+          <span className="transition-transform duration-300 group-hover:scale-110 mr-3">
+            <LayoutDashboard size={20} />
+          </span>
+          <span className="transition-opacity duration-300">
+            Dashboard
+          </span>
+          
+          <button 
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowDashboardSubmenus(!showDashboardSubmenus);
+            }}
+            className={`absolute right-2 top-1/2 transform -translate-y-1/2 p-1 ${
+              isOnDashboardRoute ? "text-white" : "text-gray-500 hover:text-gray-700"
+            }`}
+          >
+            {showDashboardSubmenus ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+          </button>
+        </div>
         
         {/* Dashboard submenus */}
         <DashboardSubmenu 
@@ -93,27 +86,39 @@ const SidebarNavigation = ({ installedModules, onNavigate }: SidebarNavigationPr
       
       {/* Menu APPLICATIONS with submenu of installed modules */}
       <div className="relative mt-4">
-        <NavLink
-          icon={<AppWindow size={20} />}
-          label="APPLICATIONS"
-          href="/applications"
-          isActive={location.pathname === '/applications' || isOnModuleRoute}
-          onClick={() => onNavigate('/applications')}
-          extraContent={
-            installedModules.length > 0 && (
-              <button 
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  toggleModules();
-                }}
-                className="absolute right-2 top-1/2 transform -translate-y-1/2 p-1 text-gray-500 hover:text-gray-700"
-              >
-                {showModules ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-              </button>
-            )
-          }
-        />
+        <div
+          className={`nav-link group flex items-center px-4 py-2 text-sm font-medium rounded-md my-1 transition-colors relative cursor-pointer ${
+            location.pathname === '/applications' || isOnModuleRoute ? "bg-neotech-primary text-white" : "text-gray-700 hover:bg-gray-100"
+          }`}
+          onClick={() => {
+            if (installedModules.length > 0) {
+              setShowModules(!showModules);
+            } else {
+              onNavigate('/applications');
+            }
+          }}
+        >
+          <span className="transition-transform duration-300 group-hover:scale-110 mr-3">
+            <AppWindow size={20} />
+          </span>
+          <span className="transition-opacity duration-300">
+            APPLICATIONS
+          </span>
+          
+          {installedModules.length > 0 && (
+            <button 
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowModules(!showModules);
+              }}
+              className={`absolute right-2 top-1/2 transform -translate-y-1/2 p-1 ${
+                location.pathname === '/applications' || isOnModuleRoute ? "text-white" : "text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              {showModules ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+            </button>
+          )}
+        </div>
         
         {/* Installed modules as submenu */}
         <ModulesList 
@@ -130,6 +135,13 @@ const SidebarNavigation = ({ installedModules, onNavigate }: SidebarNavigationPr
       <div className="flex-grow min-h-8"></div>
     </nav>
   );
+  
+  function toggleModuleSubmenus(moduleId: number) {
+    setExpandedModules(prev => ({
+      ...prev,
+      [moduleId]: !prev[moduleId]
+    }));
+  }
 };
 
 export default SidebarNavigation;

@@ -47,6 +47,7 @@ const SidebarFooter = ({
               "nav-link group flex items-center px-4 py-2 text-sm font-medium rounded-md my-1 transition-colors relative cursor-pointer",
               isSettingsActive || isOnSettingsPage ? "bg-neotech-primary text-white" : "text-gray-700 hover:bg-gray-100"
             )}
+            onClick={() => setShowSettingsSubmenus(!showSettingsSubmenus)}
           >
             <span className="transition-transform duration-300 group-hover:scale-110 mr-3">
               <Settings size={20} />
@@ -60,16 +61,16 @@ const SidebarFooter = ({
               PARAMETRES GENERAUX
             </span>
             
-            <CollapsibleTrigger asChild onClick={(e) => { 
+            <button className={cn(
+              "absolute right-2 top-1/2 transform -translate-y-1/2 p-1",
+              (isSettingsActive || isOnSettingsPage) ? "text-white" : "text-gray-500 hover:text-gray-700"
+            )}
+            onClick={(e) => {
               e.stopPropagation();
+              setShowSettingsSubmenus(!showSettingsSubmenus);
             }}>
-              <button className={cn(
-                "absolute right-2 top-1/2 transform -translate-y-1/2 p-1",
-                (isSettingsActive || isOnSettingsPage) ? "text-white" : "text-gray-500 hover:text-gray-700"
-              )}>
-                {showSettingsSubmenus ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-              </button>
-            </CollapsibleTrigger>
+              {showSettingsSubmenus ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+            </button>
           </div>
         </div>
         
