@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import DashboardLayout from "@/components/DashboardLayout";
@@ -8,14 +8,32 @@ import PersonalInfo from "@/components/profile/PersonalInfo";
 import LanguageSettings from "@/components/profile/LanguageSettings";
 import TwoFactorAuth from "@/components/profile/TwoFactorAuth";
 import { User, Key, Languages, Shield } from "lucide-react";
+import { useSearchParams } from "react-router-dom";
 
 const UserProfile = () => {
+  const [searchParams] = useSearchParams();
+  const tabParam = searchParams.get('tab');
+
+  // Map URL parameter to tab value
+  const getTabValue = () => {
+    switch(tabParam) {
+      case 'password':
+        return 'password';
+      case 'language':
+        return 'language';
+      case '2fa':
+        return '2fa';
+      default:
+        return 'personal-info';
+    }
+  };
+
   return (
     <DashboardLayout>
       <div className="container mx-auto p-6">
         <h1 className="text-2xl font-bold mb-6">Paramètres du profil</h1>
         
-        <Tabs defaultValue="personal-info" className="space-y-6">
+        <Tabs defaultValue={getTabValue()} className="space-y-6">
           <TabsList className="grid grid-cols-2 md:grid-cols-4 gap-2">
             <TabsTrigger value="personal-info" className="flex items-center gap-2">
               <User className="h-4 w-4" />
