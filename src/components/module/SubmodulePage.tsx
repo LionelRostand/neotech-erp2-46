@@ -14,6 +14,7 @@ import EmployeesReports from './submodules/EmployeesReports';
 import EmployeesLeaves from './submodules/EmployeesLeaves';
 import FreightDashboard from './submodules/FreightDashboard';
 import FreightShipments from './submodules/FreightShipments';
+import FreightPackages from './submodules/freight/FreightPackages';
 import EmployeesAbsences from './submodules/EmployeesAbsences';
 import EmployeesContracts from './submodules/EmployeesContracts';
 import EmployeesDocuments from './submodules/EmployeesDocuments';
@@ -83,9 +84,10 @@ const SubmodulePage: React.FC<SubmodulePageProps> = ({ moduleId, submoduleId }) 
         return <FreightDashboard />;
       case 'freight-shipments':
         return <FreightShipments />;
+      case 'freight-packages':
+        return <FreightPackages />;
       // All other freight submodules will default to DefaultSubmoduleContent
       // until they are implemented specifically
-      case 'freight-packages':
       case 'freight-tracking':
       case 'freight-carriers':
       case 'freight-pricing':
