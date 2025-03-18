@@ -14,6 +14,7 @@ import EmployeesProfiles from './submodules/EmployeesProfiles';
 import EmployeesDepartments from './submodules/EmployeesDepartments';
 import EmployeesHierarchy from './submodules/EmployeesHierarchy';
 import EmployeesAttendance from './submodules/EmployeesAttendance';
+import EmployeesTimesheet from './submodules/EmployeesTimesheet';
 
 interface SubmodulePageProps {
   moduleId: number;
@@ -76,6 +77,10 @@ const SubmodulePage: React.FC<SubmodulePageProps> = ({ moduleId, submoduleId }) 
     
     if (submoduleId === 'employees-attendance') {
       return <EmployeesAttendance />;
+    }
+    
+    if (submoduleId === 'employees-timesheet') {
+      return <EmployeesTimesheet />;
     }
     
     if (submoduleId === 'freight-shipments') {
