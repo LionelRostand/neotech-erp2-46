@@ -8,6 +8,7 @@ export const libraryModule: AppModule = {
   description: "Gestion des livres, catalogues, emprunts et retours",
   href: "/modules/library",
   icon: createIcon(BookOpen),
+  category: 'services', // Ajout de la catégorie
   submodules: [
     { id: "library-books", name: "Livres", href: "/modules/library/books", icon: createIcon(Book) },
     { id: "library-catalog", name: "Catalogue", href: "/modules/library/catalog", icon: createIcon(Archive) },

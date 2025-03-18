@@ -31,22 +31,11 @@ const SidebarNavigation = ({ installedModules, onNavigate }: SidebarNavigationPr
   });
 
   // Group modules by category
-  const businessModules = installedModules.filter(m => 
-    ['companies', 'employees', 'accounting', 'purchase', 'inventory', 'planning', 'projects'].includes(m.href.split('/')[2])
-  );
+  const businessModules = installedModules.filter(m => m.category === 'business');
+  const serviceModules = installedModules.filter(m => m.category === 'services');
+  const digitalModules = installedModules.filter(m => m.category === 'digital');
+  const communicationModules = installedModules.filter(m => m.category === 'communication');
   
-  const serviceModules = installedModules.filter(m => 
-    ['pos', 'garage', 'transport', 'health', 'hotel', 'bookstore'].includes(m.href.split('/')[2])
-  );
-  
-  const digitalModules = installedModules.filter(m => 
-    ['website', 'ecommerce', 'email-marketing', 'academy', 'elearning'].includes(m.href.split('/')[2])
-  );
-  
-  const communicationModules = installedModules.filter(m => 
-    ['messages', 'documents'].includes(m.href.split('/')[2])
-  );
-
   // Check if we're on any of the installed module routes
   const isOnModuleRoute = installedModules.some(module => 
     location.pathname.startsWith(module.href)
@@ -119,6 +108,28 @@ const SidebarNavigation = ({ installedModules, onNavigate }: SidebarNavigationPr
       ...prev,
       [category]: !prev[category]
     }));
+  };
+
+  // Function to get category title
+  const getCategoryTitle = (category: string): string => {
+    switch (category) {
+      case 'business': return 'GESTION D\'ENTREPRISE';
+      case 'services': return 'SERVICES SPÉCIALISÉS';
+      case 'digital': return 'PRÉSENCE NUMÉRIQUE';
+      case 'communication': return 'COMMUNICATION';
+      default: return '';
+    }
+  };
+  
+  // Function to get category icon
+  const getCategoryIcon = (category: string) => {
+    switch (category) {
+      case 'business': return <Building2 size={14} />;
+      case 'services': return <Headphones size={14} />;
+      case 'digital': return <Globe size={14} />;
+      case 'communication': return <MessageSquare size={14} />;
+      default: return null;
+    }
   };
 
   return (

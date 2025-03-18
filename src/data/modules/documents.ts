@@ -8,6 +8,7 @@ export const documentsModule: AppModule = {
   description: "Gestion électronique de documents, archivage et partage",
   href: "/modules/documents",
   icon: createIcon(FileText),
+  category: 'communication', // Ajout de la catégorie
   submodules: [
     { id: "documents-files", name: "Fichiers", href: "/modules/documents/files", icon: createIcon(File) },
     { id: "documents-archive", name: "Archives", href: "/modules/documents/archive", icon: createIcon(FileCheck) },

@@ -73,7 +73,7 @@ const EmployeesDocuments: React.FC = () => {
     'Paie'
   ];
   
-  // Document types by category
+  // Document types by category - Changed variable name to avoid redeclaration
   const documentTypesByCategory: {[key: string]: string[]} = {
     'Administratif': ['Attestation de travail', 'Justificatif de domicile', 'Pièce d\'identité'],
     'Contrat': ['Contrat de travail', 'Avenant', 'Rupture conventionnelle'],
@@ -93,7 +93,7 @@ const EmployeesDocuments: React.FC = () => {
   
   // State for the new document dialog
   const [selectedCategory, setSelectedCategory] = useState('');
-  const [documentTypes, setDocumentTypes] = useState<string[]>([]);
+  const [documentTypeOptions, setDocumentTypeOptions] = useState<string[]>([]);
 
   return (
     <div className="space-y-6">
@@ -133,7 +133,10 @@ const EmployeesDocuments: React.FC = () => {
                 </div>
                 <div className="space-y-2">
                   <label htmlFor="category" className="text-sm font-medium">Catégorie *</label>
-                  <Select onValueChange={(value) => setSelectedCategory(value)}>
+                  <Select onValueChange={(value) => {
+                    setSelectedCategory(value);
+                    setDocumentTypeOptions(documentTypesByCategory[value] || []);
+                  }}>
                     <SelectTrigger>
                       <SelectValue placeholder="Sélectionner une catégorie" />
                     </SelectTrigger>
@@ -153,7 +156,7 @@ const EmployeesDocuments: React.FC = () => {
                       <SelectValue placeholder={selectedCategory ? "Sélectionner un type" : "Sélectionnez d'abord une catégorie"} />
                     </SelectTrigger>
                     <SelectContent>
-                      {selectedCategory && documentTypesByCategory[selectedCategory]?.map((type) => (
+                      {selectedCategory && documentTypeOptions.map((type) => (
                         <SelectItem key={type} value={type}>{type}</SelectItem>
                       ))}
                     </SelectContent>
