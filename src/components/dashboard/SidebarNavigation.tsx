@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { AppWindow, LayoutDashboard, Building2, Headphones, Globe, MessageSquare } from 'lucide-react';
+import { AppWindow, LayoutDashboard, Building2, Headphones, Globe, MessageSquare, Package } from 'lucide-react';
 import NavLink from './NavLink';
 import { useLocation } from 'react-router-dom';
 import DashboardSubmenu from './DashboardSubmenu';
@@ -170,7 +170,7 @@ const SidebarNavigation = ({ installedModules, onNavigate }: SidebarNavigationPr
       
       {/* Link to applications page to install more - Moved above APPLICATIONS section */}
       <NavLink
-        icon={<AppWindow size={18} />}
+        icon={<Package size={18} />}
         label="Gérer les applications"
         href="/applications"
         isActive={location.pathname === '/applications'}
