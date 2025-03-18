@@ -172,6 +172,35 @@ export const getPackageByTrackingNumber = (trackingNumber: string): Package | un
   return mockPackages.find(pkg => pkg.trackingNumber === trackingNumber);
 };
 
+// Helper function to get the latest location from a list of tracking events
+export const getLatestLocationFromEvents = (events: TrackingEvent[]): GeoLocation | undefined => {
+  // Get events with location data
+  const eventsWithLocation = events.filter(event => event.location);
+  
+  if (eventsWithLocation.length === 0) {
+    return undefined;
+  }
+  
+  // Sort by timestamp (newest first) and get the first one
+  const sortedEvents = [...eventsWithLocation].sort(
+    (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+  );
+  
+  return sortedEvents[0].location;
+};
+
+// Helper function to get the latest event from a list of tracking events
+export const getLatestEvent = (events: TrackingEvent[]): TrackingEvent | undefined => {
+  if (events.length === 0) {
+    return undefined;
+  }
+  
+  // Sort by timestamp (newest first) and get the first one
+  return [...events].sort(
+    (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+  )[0];
+};
+
 // Helper function to format package status for display
 export const formatPackageStatus = (status: string): string => {
   switch (status) {

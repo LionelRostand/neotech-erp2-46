@@ -1,6 +1,7 @@
+
 import React, { useEffect, useState } from 'react';
 import { Package, TrackingEvent, PackageStatus } from '@/types/freight';
-import { getPackageTrackingEvents, formatPackageStatus, getStatusColor } from './mockTrackingData';
+import { getPackageTrackingEvents, formatPackageStatus, getStatusColor, getLatestLocationFromEvents, getLatestEvent } from './mockTrackingData';
 import { format, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { Button } from '@/components/ui/button';
@@ -8,7 +9,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { ChevronLeft, Truck, Calendar, Info, MapPin, AlertTriangle, Clock } from 'lucide-react';
 import TrackingTimeline from './TrackingTimeline';
 import MapPreview from './MapPreview';
-import { getLatestLocationFromEvents, getLatestEvent } from './mockTrackingData';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import NotificationSettings from './NotificationSettings';
@@ -113,7 +113,9 @@ const TrackingDetails: React.FC<TrackingDetailsProps> = ({ packageData, onBack }
             <div className="flex items-center gap-2">
               <Clock className="h-5 w-5 text-gray-500" />
               <span className="font-semibold">Livraison prévue:</span>
-              <span>{format(parseISO(packageData.estimatedDeliveryDate), 'dd MMMM yyyy', { locale: fr })}</span>
+              <span>
+                {packageData.createdAt ? format(new Date(new Date(packageData.createdAt).getTime() + 7 * 24 * 60 * 60 * 1000), 'dd MMMM yyyy', { locale: fr }) : 'Non disponible'}
+              </span>
             </div>
           </div>
           
