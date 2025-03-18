@@ -27,7 +27,6 @@ const SidebarFooter = ({
       <Collapsible open={showSettingsSubmenus} onOpenChange={setShowSettingsSubmenus}>
         <div className="relative">
           <div 
-            onClick={() => onNavigate('/settings')}
             className={cn(
               "nav-link group flex items-center px-4 py-2 text-sm font-medium rounded-md my-1 transition-colors relative cursor-pointer",
               isSettingsActive ? "bg-neotech-primary text-white" : "text-gray-700 hover:bg-gray-100"
@@ -36,16 +35,18 @@ const SidebarFooter = ({
             <span className="transition-transform duration-300 group-hover:scale-110 mr-3">
               <Settings size={20} />
             </span>
-            <span className={cn(
-              "transition-opacity duration-300",
-              !sidebarOpen && "sidebar-collapsed-hide"
-            )}>
+            <span 
+              className={cn(
+                "transition-opacity duration-300",
+                !sidebarOpen && "sidebar-collapsed-hide"
+              )}
+              onClick={() => onNavigate('/settings')}
+            >
               PARAMETRES GENERAUX
             </span>
             
             <CollapsibleTrigger asChild onClick={(e) => { 
-              e.stopPropagation(); 
-              setShowSettingsSubmenus(!showSettingsSubmenus);
+              e.stopPropagation();
             }}>
               <button className={cn(
                 "absolute right-2 top-1/2 transform -translate-y-1/2 p-1",
