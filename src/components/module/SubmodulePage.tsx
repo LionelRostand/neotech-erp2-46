@@ -7,6 +7,8 @@ import SubmoduleHeader from './submodules/SubmoduleHeader';
 import DefaultSubmoduleContent from './submodules/DefaultSubmoduleContent';
 import EmployeesBadges from './submodules/EmployeesBadges';
 import FreightShipments from './submodules/FreightShipments';
+import EmployeesDashboard from './submodules/EmployeesDashboard';
+import FreightDashboard from './submodules/FreightDashboard';
 
 interface SubmodulePageProps {
   moduleId: number;
@@ -43,6 +45,15 @@ const SubmodulePage: React.FC<SubmodulePageProps> = ({ moduleId, submoduleId }) 
   }
 
   const renderSubmoduleContent = () => {
+    // Dashboard specific content
+    if (submoduleId === 'employees-dashboard') {
+      return <EmployeesDashboard />;
+    }
+    
+    if (submoduleId === 'freight-dashboard') {
+      return <FreightDashboard />;
+    }
+    
     // Specific content for employees-badges
     if (submoduleId === 'employees-badges') {
       return <EmployeesBadges />;
