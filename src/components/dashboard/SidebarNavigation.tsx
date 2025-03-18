@@ -1,11 +1,11 @@
 
-import React, { useState } from 'react';
-import { cn } from "@/lib/utils";
-import { AppWindow, LayoutDashboard, ChevronDown, ChevronUp, BarChart, Activity, LineChart } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { AppWindow, LayoutDashboard, ChevronDown, ChevronUp } from 'lucide-react';
 import NavLink from './NavLink';
 import { useLocation } from 'react-router-dom';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { AppModule, SubModule } from '@/data/types/modules';
+import DashboardSubmenu from './DashboardSubmenu';
+import ModulesList from './ModulesList';
+import { AppModule } from '@/data/types/modules';
 
 interface SidebarNavigationProps {
   installedModules: AppModule[];
@@ -50,7 +50,7 @@ const SidebarNavigation = ({ installedModules, onNavigate }: SidebarNavigationPr
   };
 
   // Initialize expanded state for active module
-  React.useEffect(() => {
+  useEffect(() => {
     if (activeModule && !expandedModules[activeModule.id]) {
       setExpandedModules(prev => ({
         ...prev,
@@ -84,37 +84,11 @@ const SidebarNavigation = ({ installedModules, onNavigate }: SidebarNavigationPr
         />
         
         {/* Dashboard submenus */}
-        {showDashboardSubmenus && (
-          <div className="pl-8 mt-1 space-y-1 border-l border-gray-100 ml-4">
-            <NavLink
-              icon={<LayoutDashboard size={16} />}
-              label="Vue générale"
-              href="/dashboard"
-              isActive={location.pathname === '/dashboard'}
-              onClick={() => onNavigate('/dashboard')}
-              className="py-1"
-              showLabelWhenCollapsed={false}
-            />
-            <NavLink
-              icon={<Activity size={16} />}
-              label="Performance"
-              href="/dashboard/performance"
-              isActive={location.pathname === '/dashboard/performance'}
-              onClick={() => onNavigate('/dashboard/performance')}
-              className="py-1"
-              showLabelWhenCollapsed={false}
-            />
-            <NavLink
-              icon={<BarChart size={16} />}
-              label="Analytiques"
-              href="/dashboard/analytics"
-              isActive={location.pathname === '/dashboard/analytics'}
-              onClick={() => onNavigate('/dashboard/analytics')}
-              className="py-1"
-              showLabelWhenCollapsed={false}
-            />
-          </div>
-        )}
+        <DashboardSubmenu 
+          showDashboardSubmenus={showDashboardSubmenus}
+          location={location}
+          onNavigate={onNavigate}
+        />
       </div>
       
       {/* Menu APPLICATIONS with submenu of installed modules */}
@@ -142,56 +116,14 @@ const SidebarNavigation = ({ installedModules, onNavigate }: SidebarNavigationPr
         />
         
         {/* Installed modules as submenu */}
-        {installedModules.length > 0 && showModules && (
-          <div className="pl-8 mt-1 space-y-1 border-l border-gray-100 ml-4">
-            {installedModules.map((module) => (
-              <div key={module.id}>
-                {/* Module link */}
-                <NavLink
-                  icon={module.icon}
-                  label={module.name}
-                  href={module.href}
-                  isActive={location.pathname.startsWith(module.href)}
-                  onClick={() => onNavigate(module.href)}
-                  className="py-1"
-                  showLabelWhenCollapsed={false}
-                  extraContent={
-                    module.submodules && module.submodules.length > 0 && (
-                      <button
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          toggleModuleSubmenus(module.id);
-                        }}
-                        className="absolute right-2 top-1/2 transform -translate-y-1/2 p-1 text-gray-500 hover:text-gray-700"
-                      >
-                        {expandedModules[module.id] ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-                      </button>
-                    )
-                  }
-                />
-                
-                {/* Submodules */}
-                {module.submodules && module.submodules.length > 0 && expandedModules[module.id] && (
-                  <div className="pl-6 mt-1 space-y-1 border-l border-gray-50 ml-2">
-                    {module.submodules.map((submodule) => (
-                      <NavLink
-                        key={submodule.id}
-                        icon={submodule.icon}
-                        label={submodule.name}
-                        href={submodule.href}
-                        isActive={location.pathname === submodule.href}
-                        onClick={() => onNavigate(submodule.href)}
-                        className="py-0.5 text-xs"
-                        showLabelWhenCollapsed={false}
-                      />
-                    ))}
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
+        <ModulesList 
+          installedModules={installedModules}
+          expandedModules={expandedModules}
+          toggleModuleSubmenus={toggleModuleSubmenus}
+          showModules={showModules}
+          location={location}
+          onNavigate={onNavigate}
+        />
       </div>
       
       {/* Spacer to push content to the bottom */}
