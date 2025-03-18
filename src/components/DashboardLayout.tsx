@@ -3,7 +3,6 @@ import React, { useState, useEffect } from 'react';
 import { cn } from "@/lib/utils";
 import { useNavigate, useLocation } from "react-router-dom";
 import { modules } from '@/data/modules';
-import NavLink from './dashboard/NavLink';
 import SidebarHeader from './dashboard/SidebarHeader';
 import SidebarNavigation from './dashboard/SidebarNavigation';
 import SidebarFooter from './dashboard/SidebarFooter';
@@ -59,6 +58,11 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
     installedModules.includes(module.id)
   );
 
+  // Check if we're on any settings page
+  const isSettingsActive = 
+    location.pathname === '/settings' || 
+    location.pathname.startsWith('/settings/');
+
   return (
     <div className="flex min-h-screen w-full bg-neotech-background">
       {/* Sidebar */}
@@ -86,7 +90,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
             sidebarOpen={sidebarOpen} 
             onToggleSidebar={() => setSidebarOpen(!sidebarOpen)} 
             onNavigate={handleNavigation}
-            isSettingsActive={location.pathname === '/settings'}
+            isSettingsActive={isSettingsActive}
           />
         </div>
       </aside>

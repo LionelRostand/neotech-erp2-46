@@ -5,6 +5,7 @@ import { Settings, ChevronRight, Menu, ChevronUp, ChevronDown, Lock, Mail, Shiel
 import { Button } from "@/components/ui/button";
 import NavLink from './NavLink';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { useLocation } from 'react-router-dom';
 
 interface SidebarFooterProps {
   sidebarOpen: boolean;
@@ -20,6 +21,22 @@ const SidebarFooter = ({
   isSettingsActive 
 }: SidebarFooterProps) => {
   const [showSettingsSubmenus, setShowSettingsSubmenus] = useState(false);
+  const location = useLocation();
+  
+  // Check if we're on any settings page
+  const isOnSettingsPage = 
+    location.pathname === '/settings' || 
+    location.pathname === '/settings/user-permissions' || 
+    location.pathname === '/settings/translation' || 
+    location.pathname === '/settings/smtp' || 
+    location.pathname === '/settings/2fa';
+  
+  // Open submenu automatically if we're on a settings page
+  React.useEffect(() => {
+    if (isOnSettingsPage && !showSettingsSubmenus) {
+      setShowSettingsSubmenus(true);
+    }
+  }, [isOnSettingsPage]);
   
   return (
     <div className="p-4 border-t border-gray-100">
@@ -29,8 +46,9 @@ const SidebarFooter = ({
           <div 
             className={cn(
               "nav-link group flex items-center px-4 py-2 text-sm font-medium rounded-md my-1 transition-colors relative cursor-pointer",
-              isSettingsActive ? "bg-neotech-primary text-white" : "text-gray-700 hover:bg-gray-100"
+              isSettingsActive || isOnSettingsPage ? "bg-neotech-primary text-white" : "text-gray-700 hover:bg-gray-100"
             )}
+            onClick={() => onNavigate('/settings')}
           >
             <span className="transition-transform duration-300 group-hover:scale-110 mr-3">
               <Settings size={20} />
@@ -40,7 +58,6 @@ const SidebarFooter = ({
                 "transition-opacity duration-300",
                 !sidebarOpen && "sidebar-collapsed-hide"
               )}
-              onClick={() => onNavigate('/settings')}
             >
               PARAMETRES GENERAUX
             </span>
@@ -50,7 +67,7 @@ const SidebarFooter = ({
             }}>
               <button className={cn(
                 "absolute right-2 top-1/2 transform -translate-y-1/2 p-1",
-                isSettingsActive ? "text-white" : "text-gray-500 hover:text-gray-700"
+                (isSettingsActive || isOnSettingsPage) ? "text-white" : "text-gray-500 hover:text-gray-700"
               )}>
                 {showSettingsSubmenus ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
               </button>
