@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Routes, Route, Navigate } from "react-router-dom";
 import Index from "@/pages/Index";
@@ -61,19 +60,11 @@ const AppRoutes = () => (
       <Route index element={<SubmodulePage moduleId={2} submoduleId="freight-dashboard" />} />
       <Route path="dashboard" element={<SubmodulePage moduleId={2} submoduleId="freight-dashboard" />} />
       <Route path="shipments" element={<SubmodulePage moduleId={2} submoduleId="freight-shipments" />} />
-      <Route path="packages" element={<SubmodulePage moduleId={2} submoduleId="freight-packages" />} />
-      <Route path="tracking" element={<SubmodulePage moduleId={2} submoduleId="freight-tracking" />} />
-      <Route path="carriers" element={<SubmodulePage moduleId={2} submoduleId="freight-carriers" />} />
-      <Route path="pricing" element={<SubmodulePage moduleId={2} submoduleId="freight-pricing" />} />
-      <Route path="quotes" element={<SubmodulePage moduleId={2} submoduleId="freight-quotes" />} />
       <Route path="containers" element={<SubmodulePage moduleId={2} submoduleId="freight-containers" />} />
-      <Route path="orders" element={<SubmodulePage moduleId={2} submoduleId="freight-orders" />} />
+      <Route path="carriers" element={<SubmodulePage moduleId={2} submoduleId="freight-carriers" />} />
+      <Route path="tracking" element={<SubmodulePage moduleId={2} submoduleId="freight-tracking" />} />
+      <Route path="pricing" element={<SubmodulePage moduleId={2} submoduleId="freight-pricing" />} />
       <Route path="documents" element={<SubmodulePage moduleId={2} submoduleId="freight-documents" />} />
-      <Route path="routes" element={<SubmodulePage moduleId={2} submoduleId="freight-routes" />} />
-      <Route path="warehouses" element={<SubmodulePage moduleId={2} submoduleId="freight-warehouses" />} />
-      <Route path="inventory" element={<SubmodulePage moduleId={2} submoduleId="freight-inventory" />} />
-      <Route path="invoicing" element={<SubmodulePage moduleId={2} submoduleId="freight-invoicing" />} />
-      <Route path="reports" element={<SubmodulePage moduleId={2} submoduleId="freight-reports" />} />
       <Route path="client-portal" element={<SubmodulePage moduleId={2} submoduleId="freight-client-portal" />} />
       <Route path="settings" element={<SubmodulePage moduleId={2} submoduleId="freight-settings" />} />
     </Route>
