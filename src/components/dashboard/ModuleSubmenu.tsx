@@ -1,6 +1,6 @@
 
 import React from 'react';
-import NavLink from './NavLink';
+import { SidebarMenuSub, SidebarMenuSubButton, SidebarMenuSubItem } from '@/components/ui/sidebar';
 import { SubModule } from '@/data/types/modules';
 
 interface ModuleSubmenuProps {
@@ -19,20 +19,19 @@ const ModuleSubmenu: React.FC<ModuleSubmenuProps> = ({
   if (!submodules || submodules.length === 0 || !isExpanded) return null;
   
   return (
-    <div className="pl-6 mt-1 space-y-1 border-l border-gray-50 ml-2">
+    <SidebarMenuSub>
       {submodules.map((submodule) => (
-        <NavLink
-          key={submodule.id}
-          icon={submodule.icon}
-          label={submodule.name}
-          href={submodule.href}
-          isActive={location.pathname === submodule.href}
-          onClick={() => onNavigate(submodule.href)}
-          className="py-0.5 text-xs"
-          showLabelWhenCollapsed={false}
-        />
+        <SidebarMenuSubItem key={submodule.id}>
+          <SidebarMenuSubButton 
+            isActive={location.pathname === submodule.href}
+            onClick={() => onNavigate(submodule.href)}
+          >
+            {submodule.icon}
+            <span>{submodule.name}</span>
+          </SidebarMenuSubButton>
+        </SidebarMenuSubItem>
       ))}
-    </div>
+    </SidebarMenuSub>
   );
 };
 

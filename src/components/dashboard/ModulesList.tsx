@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { SidebarMenu } from '@/components/ui/sidebar';
 import ModuleItem from './ModuleItem';
 import { AppModule } from '@/data/types/modules';
 
@@ -23,7 +24,7 @@ const ModulesList: React.FC<ModulesListProps> = ({
   if (!showModules || installedModules.length === 0) return null;
   
   return (
-    <div className="pl-8 mt-1 space-y-1 border-l border-gray-100 ml-4">
+    <SidebarMenu>
       {installedModules.map((module) => (
         <ModuleItem
           key={module.id}
@@ -34,7 +35,7 @@ const ModulesList: React.FC<ModulesListProps> = ({
           onNavigate={onNavigate}
         />
       ))}
-    </div>
+    </SidebarMenu>
   );
 };
 
