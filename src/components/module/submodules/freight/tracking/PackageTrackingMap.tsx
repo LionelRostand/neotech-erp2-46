@@ -25,6 +25,7 @@ const PackageTrackingMap: React.FC<PackageTrackingMapProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [mapToken, setMapToken] = useState<string>('');
   const { toast } = useToast();
+  const leafletMapRef = useRef<any>(null);
 
   // Check for stored map token
   useEffect(() => {
@@ -58,12 +59,14 @@ const PackageTrackingMap: React.FC<PackageTrackingMapProps> = ({
           const { latitude, longitude } = latestEvent.location!;
           
           // Clear any existing map
-          if (mapRef.current._leaflet_id) {
-            mapRef.current._leaflet = null;
+          if (leafletMapRef.current) {
+            leafletMapRef.current.remove();
+            leafletMapRef.current = null;
           }
           
           // Create new map
           const map = L.map(mapRef.current).setView([latitude, longitude], 8);
+          leafletMapRef.current = map;
           
           // Add tile layer (using OpenStreetMap)
           L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -99,6 +102,16 @@ const PackageTrackingMap: React.FC<PackageTrackingMapProps> = ({
     
     initializeMap();
   }, [currentEvents, mapToken, mapInitialized]);
+
+  // Clean up map on component unmount
+  useEffect(() => {
+    return () => {
+      if (leafletMapRef.current) {
+        leafletMapRef.current.remove();
+        leafletMapRef.current = null;
+      }
+    };
+  }, []);
 
   const handleTrack = async () => {
     if (!trackingNumber) {

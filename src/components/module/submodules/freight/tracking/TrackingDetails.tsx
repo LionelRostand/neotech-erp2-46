@@ -1,6 +1,5 @@
-
 import React, { useEffect, useState } from 'react';
-import { Package, TrackingEvent } from '@/types/freight';
+import { Package, TrackingEvent, PackageStatus } from '@/types/freight';
 import { getPackageTrackingEvents, formatPackageStatus, getStatusColor } from './mockTrackingData';
 import { format, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -78,8 +77,8 @@ const TrackingDetails: React.FC<TrackingDetailsProps> = ({ packageData, onBack }
 
   // Vérifier si le statut du colis indique une anomalie
   const hasIssue = () => {
-    const problemStatuses = ['returned', 'lost', 'draft', 'exception', 'delayed'];
-    return problemStatuses.includes(packageData.status as string);
+    const problemStatuses: string[] = ['returned', 'lost', 'draft', 'exception', 'delayed'];
+    return problemStatuses.includes(packageData.status);
   };
   
   return (
