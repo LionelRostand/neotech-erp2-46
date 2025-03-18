@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Table,
   TableBody,
@@ -14,7 +14,11 @@ import { ShipmentLine } from '@/types/freight';
 import { Plus, Trash2 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
-const ShipmentLinesForm: React.FC = () => {
+interface ShipmentLinesFormProps {
+  onLinesUpdate?: (lines: ShipmentLine[]) => void;
+}
+
+const ShipmentLinesForm: React.FC<ShipmentLinesFormProps> = ({ onLinesUpdate }) => {
   const [lines, setLines] = useState<ShipmentLine[]>([
     {
       id: '1',
@@ -33,20 +37,39 @@ const ShipmentLinesForm: React.FC = () => {
       weight: 0,
       packageType: 'box'
     };
-    setLines([...lines, newLine]);
+    const updatedLines = [...lines, newLine];
+    setLines(updatedLines);
+    if (onLinesUpdate) {
+      onLinesUpdate(updatedLines);
+    }
   };
 
   const removeLine = (id: string) => {
     if (lines.length > 1) {
-      setLines(lines.filter(line => line.id !== id));
+      const updatedLines = lines.filter(line => line.id !== id);
+      setLines(updatedLines);
+      if (onLinesUpdate) {
+        onLinesUpdate(updatedLines);
+      }
     }
   };
 
   const updateLine = (id: string, field: keyof ShipmentLine, value: any) => {
-    setLines(lines.map(line => 
+    const updatedLines = lines.map(line => 
       line.id === id ? { ...line, [field]: value } : line
-    ));
+    );
+    setLines(updatedLines);
+    if (onLinesUpdate) {
+      onLinesUpdate(updatedLines);
+    }
   };
+
+  // Notifier le parent des changements de lignes
+  useEffect(() => {
+    if (onLinesUpdate) {
+      onLinesUpdate(lines);
+    }
+  }, [lines, onLinesUpdate]);
 
   const packageTypes = [
     { value: 'box', label: 'Carton' },
