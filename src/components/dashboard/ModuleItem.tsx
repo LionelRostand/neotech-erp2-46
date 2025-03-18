@@ -27,7 +27,7 @@ const ModuleItem: React.FC<ModuleItemProps> = ({
     <div className="mb-1">
       <Collapsible open={isExpanded} onOpenChange={() => hasSubmodules && toggleModuleSubmenus(module.id)}>
         <div className="relative">
-          <div className="flex items-center w-full px-3 py-2 text-sm font-medium rounded-md cursor-pointer group"
+          <div 
             onClick={() => onNavigate(module.href)}
             className={`flex items-center w-full px-3 py-2 text-sm font-medium rounded-md cursor-pointer ${
               isActive ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'

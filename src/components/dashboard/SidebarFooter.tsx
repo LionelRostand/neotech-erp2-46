@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { cn } from "@/lib/utils";
-import { Settings, ChevronRight, Menu, ChevronUp, ChevronDown, Lock, Translate, Mail, Shield, Check, X } from 'lucide-react';
+import { Settings, ChevronRight, Menu, ChevronUp, ChevronDown, Lock, Mail, Shield, Check, X, Globe } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import NavLink from './NavLink';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -26,10 +26,10 @@ const SidebarFooter = ({
       {/* PARAMETRES GENERAUX menu with submenu */}
       <Collapsible open={showSettingsSubmenus} onOpenChange={setShowSettingsSubmenus}>
         <div className="relative">
-          <div className="flex items-center w-full px-4 py-2 text-sm font-medium rounded-md my-1 cursor-pointer group"
+          <div 
             onClick={() => onNavigate('/settings')}
             className={cn(
-              "nav-link group flex items-center px-4 py-2 text-sm font-medium rounded-md my-1 transition-colors relative",
+              "nav-link group flex items-center px-4 py-2 text-sm font-medium rounded-md my-1 transition-colors relative cursor-pointer",
               isSettingsActive ? "bg-neotech-primary text-white" : "text-gray-700 hover:bg-gray-100"
             )}
           >
@@ -69,7 +69,7 @@ const SidebarFooter = ({
               showLabelWhenCollapsed={false}
             />
             <NavLink
-              icon={<Translate size={16} />}
+              icon={<Globe size={16} />}
               label="Traduction"
               href="/settings/translation"
               isActive={location.pathname === '/settings/translation'}
