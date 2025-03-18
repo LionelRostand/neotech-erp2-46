@@ -8,22 +8,30 @@ interface SidebarHeaderProps {
 }
 
 const SidebarHeader = ({ sidebarOpen, onClick }: SidebarHeaderProps) => (
-  <div 
-    className={cn(
-      "flex items-center py-6 px-6 border-b border-gray-100 cursor-pointer",
-      !sidebarOpen && "justify-center"
-    )}
-    onClick={onClick}
-  >
-    <div className="w-8 h-8 rounded-lg bg-neotech-primary flex items-center justify-center text-white font-bold">
-      N
+  <div className="flex flex-col">
+    <div 
+      className={cn(
+        "flex items-center py-6 px-6 border-b border-gray-100 cursor-pointer",
+        !sidebarOpen && "justify-center"
+      )}
+      onClick={onClick}
+    >
+      <div className="w-8 h-8 rounded-lg bg-neotech-primary flex items-center justify-center text-white font-bold">
+        N
+      </div>
+      <h2 className={cn(
+        "ml-3 text-xl font-semibold transition-opacity duration-300",
+        sidebarOpen ? "opacity-100" : "opacity-0 overflow-hidden w-0"
+      )}>
+        NEOTECH-ERP
+      </h2>
     </div>
-    <h2 className={cn(
-      "ml-3 text-xl font-semibold transition-opacity duration-300",
-      sidebarOpen ? "opacity-100" : "opacity-0 overflow-hidden w-0"
-    )}>
-      NEOTECH-ERP
-    </h2>
+    
+    {/* Barre verticale en dessous de NEOTECH-ERP */}
+    <div className={cn(
+      "mx-auto h-6 w-0.5 bg-neotech-primary",
+      !sidebarOpen && "hidden"
+    )} />
   </div>
 );
 

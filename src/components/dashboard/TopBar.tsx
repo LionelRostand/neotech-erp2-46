@@ -13,9 +13,24 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useNavigate } from 'react-router-dom';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { auth } from '@/lib/firebase';
+import { signOut } from 'firebase/auth';
+import { toast } from 'sonner';
 
 const TopBar = () => {
   const navigate = useNavigate();
+
+  // Fonction de déconnexion
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      toast.success('Déconnexion réussie');
+      navigate('/login');
+    } catch (error) {
+      console.error('Erreur lors de la déconnexion:', error);
+      toast.error('Erreur lors de la déconnexion');
+    }
+  };
 
   return (
     <header className="bg-white border-b border-gray-100 sticky top-0 z-30">
@@ -101,7 +116,10 @@ const TopBar = () => {
                 </DropdownMenuGroup>
                 
                 <DropdownMenuSeparator />
-                <DropdownMenuItem className="cursor-pointer text-destructive flex items-center gap-2">
+                <DropdownMenuItem 
+                  className="cursor-pointer text-destructive flex items-center gap-2"
+                  onClick={handleLogout}
+                >
                   <LogOut className="h-4 w-4" />
                   <span>Déconnexion</span>
                 </DropdownMenuItem>
