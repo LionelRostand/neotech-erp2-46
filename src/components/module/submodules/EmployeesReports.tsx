@@ -14,14 +14,9 @@ import {
   BadgePercent 
 } from 'lucide-react';
 import { 
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  PointElement,
-  LineElement,
-  ArcElement,
-  Title,
+  BarChart,
+  PieChart as RechartsPieChart,
+  LineChart as RechartsLineChart,
   Tooltip,
   Legend
 } from 'recharts';
