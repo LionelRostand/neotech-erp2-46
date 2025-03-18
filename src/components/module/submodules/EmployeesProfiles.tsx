@@ -7,45 +7,151 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
-import { User, Mail, Phone, MapPin, Building, Briefcase, GraduationCap, Calendar, FileText, Clock } from 'lucide-react';
+import { 
+  User, Mail, Phone, MapPin, Building, Briefcase, GraduationCap, 
+  Calendar, FileText, Clock, Search, UserPlus, FileEdit, Trash2, Eye
+} from 'lucide-react';
+import { 
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow 
+} from '@/components/ui/table';
+
+// Interface pour les données d'employé
+interface Employee {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  address: string;
+  department: string;
+  position: string;
+  hireDate: string;
+  status: "Actif" | "Inactif";
+  contract: string;
+  manager: string;
+  education: Array<{
+    degree: string;
+    school: string;
+    year: string;
+  }>;
+  skills: string[];
+  documents: Array<{
+    name: string;
+    date: string;
+    type: string;
+  }>;
+  workSchedule: {
+    [key: string]: string;
+  };
+}
 
 const EmployeesProfiles: React.FC = () => {
-  const [activeTab, setActiveTab] = useState('infos');
+  const [activeTab, setActiveTab] = useState('list');
+  const [searchQuery, setSearchQuery] = useState('');
   
-  // Données simulées d'employé
-  const employee = {
-    id: "EMP001",
-    firstName: "Martin",
-    lastName: "Dupont",
-    email: "martin.dupont@example.com",
-    phone: "+33 6 12 34 56 78",
-    address: "15 Rue des Lilas, 75011 Paris",
-    department: "Marketing",
-    position: "Chef de Projet Digital",
-    hireDate: "15/03/2021",
-    status: "Actif",
-    contract: "CDI",
-    manager: "Sophie Martin",
-    education: [
-      { degree: "Master Marketing Digital", school: "HEC Paris", year: "2018" },
-      { degree: "Licence Communication", school: "Université Paris-Sorbonne", year: "2016" }
-    ],
-    skills: ["Marketing digital", "Gestion de projet", "SEO/SEA", "Adobe Creative Suite", "Analyse de données"],
-    documents: [
-      { name: "Contrat de travail", date: "15/03/2021", type: "Contrat" },
-      { name: "Avenant salaire", date: "10/06/2022", type: "Avenant" },
-      { name: "Attestation formation", date: "22/09/2022", type: "Formation" }
-    ],
-    workSchedule: {
-      monday: "09:00 - 18:00",
-      tuesday: "09:00 - 18:00",
-      wednesday: "09:00 - 18:00",
-      thursday: "09:00 - 18:00",
-      friday: "09:00 - 17:00",
+  // Données simulées d'employés
+  const employees: Employee[] = [
+    {
+      id: "EMP001",
+      firstName: "Martin",
+      lastName: "Dupont",
+      email: "martin.dupont@example.com",
+      phone: "+33 6 12 34 56 78",
+      address: "15 Rue des Lilas, 75011 Paris",
+      department: "Marketing",
+      position: "Chef de Projet Digital",
+      hireDate: "15/03/2021",
+      status: "Actif",
+      contract: "CDI",
+      manager: "Sophie Martin",
+      education: [
+        { degree: "Master Marketing Digital", school: "HEC Paris", year: "2018" },
+        { degree: "Licence Communication", school: "Université Paris-Sorbonne", year: "2016" }
+      ],
+      skills: ["Marketing digital", "Gestion de projet", "SEO/SEA", "Adobe Creative Suite", "Analyse de données"],
+      documents: [
+        { name: "Contrat de travail", date: "15/03/2021", type: "Contrat" },
+        { name: "Avenant salaire", date: "10/06/2022", type: "Avenant" },
+        { name: "Attestation formation", date: "22/09/2022", type: "Formation" }
+      ],
+      workSchedule: {
+        monday: "09:00 - 18:00",
+        tuesday: "09:00 - 18:00",
+        wednesday: "09:00 - 18:00",
+        thursday: "09:00 - 18:00",
+        friday: "09:00 - 17:00",
+      }
+    },
+    {
+      id: "EMP002",
+      firstName: "Lionel",
+      lastName: "Djossa",
+      email: "lionel.djossa@example.com",
+      phone: "+33 6 98 76 54 32",
+      address: "8 Avenue Victor Hugo, 75016 Paris",
+      department: "Direction",
+      position: "PDG",
+      hireDate: "27/03/2025",
+      status: "Actif",
+      contract: "CDI",
+      manager: "",
+      education: [
+        { degree: "MBA Management", school: "INSEAD", year: "2015" },
+        { degree: "Master Finance", school: "HEC Paris", year: "2013" }
+      ],
+      skills: ["Leadership", "Stratégie", "Finance", "Management", "Négociation"],
+      documents: [
+        { name: "Contrat de travail", date: "27/03/2025", type: "Contrat" }
+      ],
+      workSchedule: {
+        monday: "08:30 - 19:00",
+        tuesday: "08:30 - 19:00",
+        wednesday: "08:30 - 19:00",
+        thursday: "08:30 - 19:00",
+        friday: "08:30 - 18:00",
+      }
+    },
+    {
+      id: "EMP003",
+      firstName: "Sophie",
+      lastName: "Martin",
+      email: "sophie.martin@example.com",
+      phone: "+33 6 45 67 89 01",
+      address: "25 Rue du Commerce, 75015 Paris",
+      department: "Marketing",
+      position: "Directrice Marketing",
+      hireDate: "05/01/2020",
+      status: "Actif",
+      contract: "CDI",
+      manager: "Lionel Djossa",
+      education: [
+        { degree: "Master Marketing", school: "ESSEC", year: "2012" }
+      ],
+      skills: ["Stratégie marketing", "Management d'équipe", "Budgétisation", "Communication"],
+      documents: [
+        { name: "Contrat de travail", date: "05/01/2020", type: "Contrat" },
+        { name: "Avenant promotion", date: "15/12/2021", type: "Avenant" }
+      ],
+      workSchedule: {
+        monday: "09:00 - 18:00",
+        tuesday: "09:00 - 18:00",
+        wednesday: "09:00 - 18:00",
+        thursday: "09:00 - 18:00",
+        friday: "09:00 - 17:00",
+      }
     }
-  };
+  ];
 
-  return (
+  // Filtrage des employés selon la recherche
+  const filteredEmployees = employees.filter(employee => {
+    const fullName = `${employee.firstName} ${employee.lastName}`.toLowerCase();
+    return fullName.includes(searchQuery.toLowerCase()) || 
+           employee.position.toLowerCase().includes(searchQuery.toLowerCase()) ||
+           employee.department.toLowerCase().includes(searchQuery.toLowerCase());
+  });
+
+  // Contenu de la fiche détaillée d'un employé sélectionné
+  const employeeDetails = (employee: Employee) => (
     <div className="space-y-6">
       {/* En-tête de la fiche avec informations principales */}
       <Card className="border-none shadow-sm">
@@ -59,7 +165,9 @@ const EmployeesProfiles: React.FC = () => {
               <div className="text-center md:text-left">
                 <h2 className="text-2xl font-bold">{employee.firstName} {employee.lastName}</h2>
                 <p className="text-gray-500">{employee.position}</p>
-                <Badge className="mt-2 bg-green-100 text-green-800 hover:bg-green-100">{employee.status}</Badge>
+                <Badge className={`mt-2 ${employee.status === 'Actif' ? 'bg-green-100 text-green-800 hover:bg-green-100' : 'bg-red-100 text-red-800 hover:bg-red-100'}`}>
+                  {employee.status}
+                </Badge>
               </div>
             </div>
             
@@ -95,7 +203,7 @@ const EmployeesProfiles: React.FC = () => {
       </Card>
 
       {/* Tabs pour les différentes sections de la fiche */}
-      <Tabs defaultValue="infos" className="w-full" value={activeTab} onValueChange={setActiveTab}>
+      <Tabs defaultValue="infos" className="w-full">
         <TabsList className="grid grid-cols-4 md:grid-cols-6 mb-6">
           <TabsTrigger value="infos">Informations</TabsTrigger>
           <TabsTrigger value="documents">Documents</TabsTrigger>
@@ -150,7 +258,7 @@ const EmployeesProfiles: React.FC = () => {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="manager">Responsable</Label>
-                    <Input id="manager" value={employee.manager} readOnly />
+                    <Input id="manager" value={employee.manager || "N/A"} readOnly />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="contract">Type de contrat</Label>
@@ -284,6 +392,117 @@ const EmployeesProfiles: React.FC = () => {
         <Button variant="outline">Exporter PDF</Button>
         <Button variant="outline">Modifier</Button>
       </div>
+    </div>
+  );
+
+  const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
+
+  return (
+    <div className="space-y-6">
+      {selectedEmployee ? (
+        <>
+          <div className="flex items-center mb-4">
+            <Button 
+              variant="ghost" 
+              onClick={() => setSelectedEmployee(null)}
+              className="mr-2"
+            >
+              <span className="mr-2">←</span> Retour à la liste
+            </Button>
+          </div>
+          {employeeDetails(selectedEmployee)}
+        </>
+      ) : (
+        <div className="space-y-6">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div className="flex items-center text-xl font-semibold">
+              <User className="h-6 w-6 text-green-500 mr-2" />
+              Liste des Employés
+            </div>
+            
+            <Button variant="default" className="bg-green-500 hover:bg-green-600">
+              <UserPlus className="mr-2 h-4 w-4" />
+              Nouvel employé
+            </Button>
+          </div>
+          
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+            <div className="relative w-full sm:w-auto">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+              <Input 
+                placeholder="Rechercher un employé..." 
+                className="pl-10 w-full sm:w-80"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+          </div>
+          
+          <Card>
+            <CardContent className="p-0">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Nom</TableHead>
+                    <TableHead>Poste</TableHead>
+                    <TableHead>Département</TableHead>
+                    <TableHead>Type de contrat</TableHead>
+                    <TableHead>Date d'entrée</TableHead>
+                    <TableHead>Statut</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredEmployees.map((employee) => (
+                    <TableRow key={employee.id}>
+                      <TableCell className="font-medium">
+                        {employee.firstName} {employee.lastName}
+                      </TableCell>
+                      <TableCell>{employee.position}</TableCell>
+                      <TableCell>{employee.department}</TableCell>
+                      <TableCell>{employee.contract}</TableCell>
+                      <TableCell>{employee.hireDate}</TableCell>
+                      <TableCell>
+                        <Badge className={`${
+                          employee.status === "Actif" 
+                            ? "bg-green-100 text-green-800 hover:bg-green-100" 
+                            : "bg-red-100 text-red-800 hover:bg-red-100"
+                        }`}>
+                          {employee.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-right space-x-1">
+                        <Button 
+                          variant="ghost" 
+                          size="icon"
+                          onClick={() => setSelectedEmployee(employee)}
+                        >
+                          <Eye className="h-4 w-4" />
+                          <span className="sr-only">Voir</span>
+                        </Button>
+                        <Button variant="ghost" size="icon">
+                          <FileEdit className="h-4 w-4" />
+                          <span className="sr-only">Modifier</span>
+                        </Button>
+                        <Button variant="ghost" size="icon">
+                          <Trash2 className="h-4 w-4" />
+                          <span className="sr-only">Supprimer</span>
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+              
+              {filteredEmployees.length === 0 && (
+                <div className="text-center py-8">
+                  <p className="text-gray-500">Aucun employé trouvé.</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   );
 };
