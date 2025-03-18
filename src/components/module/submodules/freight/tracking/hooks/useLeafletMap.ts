@@ -15,7 +15,7 @@ export const useLeafletMap = (
 
   // Initialize and update map when events change
   useEffect(() => {
-    if (!mapElementRef.current || !mapToken || !events.length) return;
+    if (!mapElementRef.current || !events.length) return;
     
     const initializeMap = async () => {
       try {
@@ -42,12 +42,12 @@ export const useLeafletMap = (
           const { latitude, longitude } = latestEvent.location!;
           
           // Create new map
-          const map = L.map(mapElementRef.current).setView([latitude, longitude], 8);
+          const map = L.map(mapElementRef.current).setView([latitude, longitude], 11);
           leafletMapRef.current = map;
           
           // Add tile layer (using OpenStreetMap)
           L.tileLayer('https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png', {
-            attribution: 'données © OpenStreetMap/ODbL - rendu OSM France',
+            attribution: 'données © <a href="//osm.org/copyright">OpenStreetMap</a>/ODbL - rendu <a href="//openstreetmap.fr">OSM France</a>',
             minZoom: 1,
             maxZoom: 20
           }).addTo(map);
@@ -128,7 +128,7 @@ export const useLeafletMap = (
     };
     
     initializeMap();
-  }, [events, mapToken, mapInitialized, mapElementRef]);
+  }, [events, mapInitialized, mapElementRef]);
 
   // Clean up map on component unmount
   useEffect(() => {

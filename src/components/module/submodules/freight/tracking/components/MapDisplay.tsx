@@ -20,6 +20,7 @@ const MapDisplay: React.FC<MapDisplayProps> = ({ events, mapToken, error }) => {
     <div 
       ref={mapRef} 
       className="h-[400px] w-full bg-slate-100 rounded-md relative"
+      id="map"
     >
       {!events.length && (
         <div className="absolute inset-0 flex items-center justify-center">
