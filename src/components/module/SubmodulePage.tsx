@@ -11,6 +11,8 @@ import EmployeesDashboard from './submodules/EmployeesDashboard';
 import FreightDashboard from './submodules/FreightDashboard';
 import ConsultationsPage from './submodules/health/ConsultationsPage';
 import EmployeesProfiles from './submodules/EmployeesProfiles';
+import EmployeesDepartments from './submodules/EmployeesDepartments';
+import EmployeesHierarchy from './submodules/EmployeesHierarchy';
 
 interface SubmodulePageProps {
   moduleId: number;
@@ -56,14 +58,21 @@ const SubmodulePage: React.FC<SubmodulePageProps> = ({ moduleId, submoduleId }) 
       return <FreightDashboard />;
     }
     
-    // Specific content for employees-badges
+    // Specific content for employees modules
     if (submoduleId === 'employees-badges') {
       return <EmployeesBadges />;
     }
     
-    // Specific content for employees-profiles
     if (submoduleId === 'employees-profiles') {
       return <EmployeesProfiles />;
+    }
+    
+    if (submoduleId === 'employees-departments') {
+      return <EmployeesDepartments />;
+    }
+    
+    if (submoduleId === 'employees-hierarchy') {
+      return <EmployeesHierarchy />;
     }
     
     // Specific content for freight-shipments

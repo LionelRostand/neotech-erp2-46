@@ -11,14 +11,41 @@ export interface Transaction {
   statusText: string;
 }
 
-interface DataTableProps {
-  title: string;
-  data: Transaction[];
-  className?: string;
-  onRowClick?: (row: Transaction) => void;
+export interface Column {
+  key: string;
+  header: string;
+  cell?: (row: any) => React.ReactNode;
 }
 
-const DataTable = ({ title, data, className, onRowClick }: DataTableProps) => {
+interface DataTableProps<T> {
+  title: string;
+  data: T[];
+  columns?: Column[];
+  className?: string;
+  onRowClick?: (row: T) => void;
+}
+
+const DataTable = <T extends Record<string, any>>({ 
+  title, 
+  data, 
+  columns, 
+  className, 
+  onRowClick 
+}: DataTableProps<T>) => {
+  
+  // Use provided columns or default Transaction columns
+  const tableColumns = columns || [
+    { key: 'id', header: 'ID', cell: (row: Transaction) => `#${row.id}` },
+    { key: 'date', header: 'Date' },
+    { key: 'client', header: 'Client' },
+    { key: 'amount', header: 'Montant' },
+    { 
+      key: 'status', 
+      header: 'Statut',
+      cell: (row: Transaction) => <StatusBadge status={row.status} text={row.statusText} />
+    }
+  ];
+
   return (
     <div className={cn("bg-white rounded-xl shadow-sm overflow-hidden", className)}>
       <div className="p-6 border-b border-gray-100">
@@ -28,30 +55,31 @@ const DataTable = ({ title, data, className, onRowClick }: DataTableProps) => {
         <table className="w-full">
           <thead>
             <tr className="text-left text-gray-500 text-sm border-b border-gray-100">
-              <th className="px-6 py-4 font-medium">ID</th>
-              <th className="px-6 py-4 font-medium">Date</th>
-              <th className="px-6 py-4 font-medium">Client</th>
-              <th className="px-6 py-4 font-medium">Montant</th>
-              <th className="px-6 py-4 font-medium">Statut</th>
+              {tableColumns.map((column, index) => (
+                <th key={index} className="px-6 py-4 font-medium">
+                  {column.header}
+                </th>
+              ))}
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
-            {data.map((item, index) => (
+            {data.map((item, rowIndex) => (
               <tr 
-                key={item.id}
+                key={rowIndex}
                 className={cn(
                   "text-gray-700 text-sm hover:bg-gray-50 transition-colors",
                   onRowClick && "cursor-pointer"
                 )}
                 onClick={() => onRowClick && onRowClick(item)}
               >
-                <td className="px-6 py-4 font-medium">#{item.id}</td>
-                <td className="px-6 py-4">{item.date}</td>
-                <td className="px-6 py-4">{item.client}</td>
-                <td className="px-6 py-4 font-medium">{item.amount}</td>
-                <td className="px-6 py-4">
-                  <StatusBadge status={item.status} text={item.statusText} />
-                </td>
+                {tableColumns.map((column, colIndex) => (
+                  <td key={colIndex} className="px-6 py-4 font-medium">
+                    {column.cell 
+                      ? column.cell(item)
+                      : item[column.key]
+                    }
+                  </td>
+                ))}
               </tr>
             ))}
           </tbody>
