@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { modules } from '@/data/modules';
@@ -13,7 +12,6 @@ import ConsultationsPage from './submodules/health/ConsultationsPage';
 import EmployeesProfiles from './submodules/EmployeesProfiles';
 import EmployeesDepartments from './submodules/EmployeesDepartments';
 import EmployeesHierarchy from './submodules/EmployeesHierarchy';
-import EmployeesAttendance from './submodules/EmployeesAttendance';
 
 interface SubmodulePageProps {
   moduleId: number;
@@ -72,10 +70,6 @@ const SubmodulePage: React.FC<SubmodulePageProps> = ({ moduleId, submoduleId }) 
     
     if (submoduleId === 'employees-hierarchy') {
       return <EmployeesHierarchy />;
-    }
-    
-    if (submoduleId === 'employees-attendance') {
-      return <EmployeesAttendance />;
     }
     
     if (submoduleId === 'freight-shipments') {
