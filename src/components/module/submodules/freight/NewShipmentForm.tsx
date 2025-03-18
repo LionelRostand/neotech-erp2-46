@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { 
   Dialog, 
@@ -23,6 +24,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { ShipmentLine } from '@/types/freight';
 import ShipmentLinesForm from './ShipmentLinesForm';
 import ShipmentPriceCalculator from './ShipmentPriceCalculator';
+import DocumentPreview from './DocumentPreview';
 import { mockCarriers, mockRoutes } from './mockData';
 import { Printer, FileText, MapPin } from 'lucide-react';
 
