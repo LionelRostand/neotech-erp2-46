@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { modules } from '@/data/modules';
@@ -49,7 +48,6 @@ const SubmodulePage: React.FC<SubmodulePageProps> = ({ moduleId, submoduleId }) 
   }
 
   const renderSubmoduleContent = () => {
-    // Dashboard specific content
     if (submoduleId === 'employees-dashboard') {
       return <EmployeesDashboard />;
     }
@@ -58,7 +56,6 @@ const SubmodulePage: React.FC<SubmodulePageProps> = ({ moduleId, submoduleId }) 
       return <FreightDashboard />;
     }
     
-    // Specific content for employees modules
     if (submoduleId === 'employees-badges') {
       return <EmployeesBadges />;
     }
@@ -75,17 +72,14 @@ const SubmodulePage: React.FC<SubmodulePageProps> = ({ moduleId, submoduleId }) 
       return <EmployeesHierarchy />;
     }
     
-    // Specific content for freight-shipments
     if (submoduleId === 'freight-shipments') {
       return <FreightShipments />;
     }
     
-    // Health module specific content
     if (submoduleId === 'health-consultations') {
       return <ConsultationsPage />;
     }
     
-    // Default content for other submodules
     return <DefaultSubmoduleContent submodule={submodule} />;
   };
 
