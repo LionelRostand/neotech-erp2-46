@@ -2,7 +2,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { AppWindow } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
 import { motion, AnimatePresence } from 'framer-motion';
 import { modules } from '@/data/modules';
@@ -40,15 +39,6 @@ const Welcome = () => {
 
     return () => clearInterval(interval);
   }, [installedModules]);
-
-  // Handler for the "Gérer les applications" button
-  const handleManageApps = () => {
-    // Navigate to applications page and focus on installed apps in sidebar
-    navigate('/applications');
-    // Dispatch an event that sidebar can listen to for focusing on installed apps section
-    const event = new CustomEvent('focusInstalledApps');
-    window.dispatchEvent(event);
-  };
 
   return (
     <DashboardLayout>
@@ -91,15 +81,6 @@ const Welcome = () => {
                 transition={{ duration: 0.8, delay: 0.6 }}
               >
                 <Button
-                  onClick={handleManageApps}
-                  className="bg-neotech-primary hover:bg-neotech-primary/90 text-white px-8 py-6 h-auto text-lg"
-                  size="lg"
-                >
-                  <AppWindow className="mr-2 h-5 w-5" />
-                  Gérer les applications
-                </Button>
-                
-                <Button
                   variant="outline"
                   className="border-gray-300 text-gray-700 px-8 py-6 h-auto text-lg"
                   size="lg"
@@ -133,12 +114,12 @@ const Welcome = () => {
             
             {/* Right column: Animated modules */}
             <motion.div 
-              className="relative h-[500px] w-full"
+              className="relative h-[500px] w-full flex items-center justify-center"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.8, delay: 0.4 }}
             >
-              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-20">
+              <div className="absolute inset-0 flex items-center justify-center z-20">
                 <motion.div 
                   className="w-24 h-24 rounded-full bg-neotech-primary flex items-center justify-center text-white text-4xl font-bold shadow-lg"
                   animate={{ 
@@ -169,7 +150,7 @@ const Welcome = () => {
                     return (
                       <motion.div
                         key={module.id}
-                        className="absolute top-1/2 left-1/2 bg-white p-4 rounded-xl shadow-lg flex flex-col items-center justify-center w-28 h-28 ring-2 ring-neotech-primary"
+                        className="absolute bg-white p-4 rounded-xl shadow-lg flex flex-col items-center justify-center w-28 h-28 ring-2 ring-neotech-primary"
                         initial={{ opacity: 0, scale: 0 }}
                         animate={{ 
                           opacity: 1, 
@@ -194,9 +175,9 @@ const Welcome = () => {
                     );
                   })
                 ) : (
-                  <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center px-8 py-4 bg-white/80 rounded-xl shadow-sm">
+                  <div className="absolute text-center px-8 py-4 bg-white/80 rounded-xl shadow-sm">
                     <p className="text-gray-600 text-lg">Aucune application installée</p>
-                    <p className="text-sm mt-2">Cliquez sur "Gérer les applications" pour commencer</p>
+                    <p className="text-sm mt-2">Utilisez le menu de navigation pour installer des applications</p>
                   </div>
                 )}
               </AnimatePresence>
