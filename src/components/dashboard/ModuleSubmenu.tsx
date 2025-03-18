@@ -4,18 +4,16 @@ import { SubModule } from '@/data/types/modules';
 
 interface ModuleSubmenuProps {
   submodules: SubModule[];
-  isExpanded: boolean;
   location: { pathname: string };
   onNavigate: (href: string) => void;
 }
 
 const ModuleSubmenu: React.FC<ModuleSubmenuProps> = ({ 
   submodules, 
-  isExpanded, 
   location, 
   onNavigate 
 }) => {
-  if (!submodules || submodules.length === 0 || !isExpanded) return null;
+  if (!submodules || submodules.length === 0) return null;
   
   return (
     <div className="pl-8 space-y-1 mt-1">

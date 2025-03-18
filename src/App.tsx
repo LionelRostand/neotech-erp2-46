@@ -27,6 +27,156 @@ const Dashboard = () => (
   </div>
 );
 
+// Settings Pages Components
+const UserPermissions = () => (
+  <div className="container mx-auto p-6">
+    <h1 className="text-2xl font-bold mb-6">Droits utilisateurs</h1>
+    <p className="mb-4">Attribuez les droits d'accès aux modules pour chaque utilisateur ou employé.</p>
+    
+    <div className="bg-white rounded-lg border p-6 shadow-sm">
+      <h2 className="text-xl font-semibold mb-4">Attribution des droits par module</h2>
+      <div className="space-y-4">
+        {/* Sample module permissions UI */}
+        <div className="border rounded-md p-4">
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="font-medium">Module Entreprises</h3>
+            <div className="flex space-x-2">
+              <Button size="sm" variant="outline">Tous</Button>
+              <Button size="sm" variant="outline">Aucun</Button>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+            <div className="flex items-center space-x-2">
+              <Checkbox id="companies-view" />
+              <label htmlFor="companies-view" className="text-sm">Visualisation</label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Checkbox id="companies-create" />
+              <label htmlFor="companies-create" className="text-sm">Création</label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Checkbox id="companies-edit" />
+              <label htmlFor="companies-edit" className="text-sm">Modification</label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Checkbox id="companies-delete" />
+              <label htmlFor="companies-delete" className="text-sm">Suppression</label>
+            </div>
+          </div>
+        </div>
+        
+        {/* Repeat for other modules */}
+      </div>
+    </div>
+  </div>
+);
+
+const Translation = () => (
+  <div className="container mx-auto p-6">
+    <h1 className="text-2xl font-bold mb-6">Traduction de la plateforme</h1>
+    <p className="mb-4">Configurez les langues disponibles et gérez les traductions.</p>
+    
+    <div className="bg-white rounded-lg border p-6 shadow-sm">
+      <h2 className="text-xl font-semibold mb-4">Langues disponibles</h2>
+      <div className="space-y-4">
+        <div className="flex items-center space-x-3">
+          <Switch id="lang-fr" checked={true} />
+          <label htmlFor="lang-fr">Français (par défaut)</label>
+        </div>
+        <div className="flex items-center space-x-3">
+          <Switch id="lang-en" />
+          <label htmlFor="lang-en">Anglais</label>
+        </div>
+        <div className="flex items-center space-x-3">
+          <Switch id="lang-es" />
+          <label htmlFor="lang-es">Espagnol</label>
+        </div>
+        <div className="flex items-center space-x-3">
+          <Switch id="lang-de" />
+          <label htmlFor="lang-de">Allemand</label>
+        </div>
+      </div>
+    </div>
+  </div>
+);
+
+const SmtpConfig = () => (
+  <div className="container mx-auto p-6">
+    <h1 className="text-2xl font-bold mb-6">Configuration SMTP</h1>
+    <p className="mb-4">Configurez vos paramètres email pour l'envoi de notifications.</p>
+    
+    <div className="bg-white rounded-lg border p-6 shadow-sm">
+      <form className="space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <label htmlFor="smtp-server">Serveur SMTP</label>
+            <Input id="smtp-server" placeholder="smtp.example.com" />
+          </div>
+          <div className="space-y-2">
+            <label htmlFor="smtp-port">Port</label>
+            <Input id="smtp-port" placeholder="587" type="number" />
+          </div>
+          <div className="space-y-2">
+            <label htmlFor="smtp-username">Nom d'utilisateur</label>
+            <Input id="smtp-username" placeholder="username@example.com" />
+          </div>
+          <div className="space-y-2">
+            <label htmlFor="smtp-password">Mot de passe</label>
+            <Input id="smtp-password" type="password" />
+          </div>
+        </div>
+        <div className="flex items-center space-x-3 mt-4">
+          <Switch id="smtp-ssl" />
+          <label htmlFor="smtp-ssl">Utiliser SSL/TLS</label>
+        </div>
+        <div className="pt-4">
+          <Button>Enregistrer la configuration</Button>
+        </div>
+      </form>
+    </div>
+  </div>
+);
+
+const TwoFactorAuth = () => (
+  <div className="container mx-auto p-6">
+    <h1 className="text-2xl font-bold mb-6">Authentification à deux facteurs (2FA)</h1>
+    <p className="mb-4">Gérez les paramètres de sécurité pour l'authentification à deux facteurs.</p>
+    
+    <div className="bg-white rounded-lg border p-6 shadow-sm mb-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-xl font-semibold">État du 2FA</h2>
+          <p className="text-gray-500">Activez ou désactivez l'authentification à deux facteurs pour tous les utilisateurs</p>
+        </div>
+        <Switch id="2fa-status" />
+      </div>
+    </div>
+    
+    <div className="bg-white rounded-lg border p-6 shadow-sm">
+      <h2 className="text-xl font-semibold mb-4">Options disponibles</h2>
+      <div className="space-y-4">
+        <div className="flex items-center space-x-3">
+          <Checkbox id="2fa-app" checked={true} />
+          <label htmlFor="2fa-app">Application d'authentification (Google Authenticator, Authy)</label>
+        </div>
+        <div className="flex items-center space-x-3">
+          <Checkbox id="2fa-sms" />
+          <label htmlFor="2fa-sms">SMS</label>
+        </div>
+        <div className="flex items-center space-x-3">
+          <Checkbox id="2fa-email" />
+          <label htmlFor="2fa-email">Email</label>
+        </div>
+      </div>
+    </div>
+  </div>
+);
+
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Switch } from "@/components/ui/switch";
+import { Input } from "@/components/ui/input";
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -41,6 +191,12 @@ const App = () => (
           <Route path="/welcome" element={<Welcome />} />
           <Route path="/applications" element={<Applications />} />
           <Route path="/dashboard" element={<Dashboard />} />
+          
+          {/* Settings routes */}
+          <Route path="/settings/user-permissions" element={<UserPermissions />} />
+          <Route path="/settings/translation" element={<Translation />} />
+          <Route path="/settings/smtp" element={<SmtpConfig />} />
+          <Route path="/settings/2fa" element={<TwoFactorAuth />} />
           
           {/* Routes with ModuleLayout for all modules */}
           <Route path="/modules/employees" element={<ModuleLayout moduleId={1} />}>
