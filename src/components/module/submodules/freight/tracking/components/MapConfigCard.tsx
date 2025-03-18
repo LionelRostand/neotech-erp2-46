@@ -1,7 +1,6 @@
 
 import React from 'react';
 import { Card } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 
@@ -13,11 +12,14 @@ interface MapConfigCardProps {
 const MapConfigCard: React.FC<MapConfigCardProps> = ({ mapToken, setMapToken }) => {
   const { toast } = useToast();
 
-  const handleSaveToken = () => {
-    localStorage.setItem('mapbox_token', mapToken);
+  const handleContinue = () => {
+    // OpenStreetMap doesn't need a token, so we can just set a placeholder value
+    const placeholderToken = "openstreetmap_default";
+    setMapToken(placeholderToken);
+    localStorage.setItem('mapbox_token', placeholderToken);
     toast({
-      title: "Succès",
-      description: "Token sauvegardé avec succès."
+      title: "Carte configurée",
+      description: "La carte OpenStreetMap est maintenant configurée et prête à l'utilisation."
     });
   };
 
@@ -26,18 +28,12 @@ const MapConfigCard: React.FC<MapConfigCardProps> = ({ mapToken, setMapToken }) 
       <div className="space-y-4">
         <h3 className="font-medium">Configuration de la carte</h3>
         <p className="text-sm text-gray-600">
-          Pour afficher les cartes, veuillez entrer votre token OpenStreetMap (ou créez un compte sur 
-          <a href="https://www.openstreetmap.org" target="_blank" rel="noreferrer" className="text-blue-600 hover:underline"> OpenStreetMap</a>).
+          Cette application utilise OpenStreetMap pour afficher la localisation des colis.
+          Aucun token n'est nécessaire pour continuer.
         </p>
-        <div className="flex gap-2">
-          <Input
-            type="text"
-            value={mapToken}
-            onChange={(e) => setMapToken(e.target.value)}
-            placeholder="Entrez votre token OpenStreetMap"
-          />
-          <Button onClick={handleSaveToken}>
-            Sauvegarder
+        <div className="flex justify-end">
+          <Button onClick={handleContinue}>
+            Continuer
           </Button>
         </div>
       </div>
