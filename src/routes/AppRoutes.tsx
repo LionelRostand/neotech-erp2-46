@@ -90,13 +90,29 @@ const AppRoutes = () => (
       <Route path="settings" element={<SubmodulePage moduleId={18} submoduleId="companies-settings" />} />
     </Route>
     
+    {/* Routes pour le module Health avec tous les sous-modules */}
+    <Route path="/modules/health" element={<ModuleLayout moduleId={8} />}>
+      <Route index element={<SubmodulePage moduleId={8} submoduleId="health-dashboard" />} />
+      <Route path="dashboard" element={<SubmodulePage moduleId={8} submoduleId="health-dashboard" />} />
+      <Route path="patients" element={<SubmodulePage moduleId={8} submoduleId="health-patients" />} />
+      <Route path="doctors" element={<SubmodulePage moduleId={8} submoduleId="health-doctors" />} />
+      <Route path="appointments" element={<SubmodulePage moduleId={8} submoduleId="health-appointments" />} />
+      <Route path="consultations" element={<SubmodulePage moduleId={8} submoduleId="health-consultations" />} />
+      <Route path="medical-records" element={<SubmodulePage moduleId={8} submoduleId="health-medical-records" />} />
+      <Route path="pharmacy" element={<SubmodulePage moduleId={8} submoduleId="health-pharmacy" />} />
+      <Route path="admissions" element={<SubmodulePage moduleId={8} submoduleId="health-admissions" />} />
+      <Route path="billing" element={<SubmodulePage moduleId={8} submoduleId="health-billing" />} />
+      <Route path="stats" element={<SubmodulePage moduleId={8} submoduleId="health-stats" />} />
+      <Route path="integrations" element={<SubmodulePage moduleId={8} submoduleId="health-integrations" />} />
+      <Route path="settings" element={<SubmodulePage moduleId={8} submoduleId="health-settings" />} />
+    </Route>
+    
     {/* Generic routes for other modules */}
     <Route path="/modules/projects/*" element={<ModuleLayout moduleId={3} />} />
     <Route path="/modules/academy/*" element={<ModuleLayout moduleId={4} />} />
     <Route path="/modules/restaurant/*" element={<ModuleLayout moduleId={5} />} />
     <Route path="/modules/garage/*" element={<ModuleLayout moduleId={6} />} />
     <Route path="/modules/transport/*" element={<ModuleLayout moduleId={7} />} />
-    <Route path="/modules/health/*" element={<ModuleLayout moduleId={8} />} />
     <Route path="/modules/accounting/*" element={<ModuleLayout moduleId={9} />} />
     <Route path="/modules/ecommerce/*" element={<ModuleLayout moduleId={10} />} />
     
