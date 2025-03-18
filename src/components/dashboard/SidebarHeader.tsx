@@ -27,10 +27,10 @@ const SidebarHeader = ({ sidebarOpen, onClick }: SidebarHeaderProps) => (
       </h2>
     </div>
     
-    {/* Barre verticale en dessous de NEOTECH-ERP */}
+    {/* Barre horizontale en dessous de NEOTECH-ERP */}
     <div className={cn(
-      "mx-auto h-6 w-0.5 bg-neotech-primary",
-      !sidebarOpen && "hidden"
+      "mx-auto h-0.5 w-32 bg-neotech-primary my-1",
+      !sidebarOpen && "w-8"
     )} />
   </div>
 );
