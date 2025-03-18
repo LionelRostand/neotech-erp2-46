@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -8,14 +9,12 @@ import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
 import Welcome from "./pages/Welcome";
 import Applications from "./pages/Applications";
+import UserProfile from "./pages/UserProfile";
 import DashboardLayout from "./components/DashboardLayout";
 
 // Import ModuleLayout and SubmodulePage
 import ModuleLayout from "./components/module/ModuleLayout";
 import SubmodulePage from "./components/module/SubmodulePage";
-
-// Dashboard component - removed as we're redirecting now
-// const Dashboard = () => (...)
 
 // Settings Pages Components
 const UserPermissions = () => (
@@ -188,6 +187,7 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/welcome" element={<Welcome />} />
           <Route path="/applications" element={<Applications />} />
+          <Route path="/profile" element={<UserProfile />} />
           
           {/* Redirect /dashboard to / */}
           <Route path="/dashboard" element={<Navigate to="/" replace />} />
