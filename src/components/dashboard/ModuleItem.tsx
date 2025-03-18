@@ -29,65 +29,58 @@ const ModuleItem: React.FC<ModuleItemProps> = ({
   const hasSubmodules = module.submodules && module.submodules.length > 0;
   const isActive = location.pathname.startsWith(module.href);
   
-  const handleClick = (e: React.MouseEvent) => {
-    if (!hasSubmodules) {
-      e.preventDefault();
-      e.stopPropagation();
-      onNavigate(module.href);
-    }
-  };
+  if (!hasSubmodules) {
+    return (
+      <div 
+        onClick={() => onNavigate(module.href)}
+        className={`flex items-center w-full px-3 py-2 text-sm font-medium rounded-md cursor-pointer mb-1 ${
+          isActive ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+        }`}
+      >
+        <span className="mr-3 text-gray-500">{module.icon}</span>
+        <span>{module.name}</span>
+      </div>
+    );
+  }
   
   return (
     <div className="mb-1">
-      {hasSubmodules ? (
-        <Accordion 
-          type="single" 
-          collapsible 
-          value={isExpanded ? `module-${module.id}` : undefined}
-          onValueChange={(value) => toggleModuleSubmenus(module.id)}
-          className="border-none"
-        >
-          <AccordionItem value={`module-${module.id}`} className="border-none">
-            <div 
-              className={`flex items-center w-full px-3 py-2 text-sm font-medium rounded-md cursor-pointer ${
-                isActive ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-              }`}
+      <Accordion 
+        type="single" 
+        collapsible 
+        value={isExpanded ? `module-${module.id}` : undefined}
+        onValueChange={(value) => toggleModuleSubmenus(module.id)}
+        className="border-none"
+      >
+        <AccordionItem value={`module-${module.id}`} className="border-none">
+          <div 
+            className={`flex items-center w-full px-3 py-2 text-sm font-medium rounded-md cursor-pointer ${
+              isActive ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+            }`}
+          >
+            <span className="mr-3 text-gray-500">{module.icon}</span>
+            <AccordionTrigger 
+              className="flex-1 flex items-center py-0 hover:no-underline"
+              onClick={(e) => {
+                if (e.target === e.currentTarget || e.target === e.currentTarget.firstChild) {
+                  e.stopPropagation();
+                  onNavigate(module.href);
+                }
+              }}  
             >
-              <span className="mr-3 text-gray-500">{module.icon}</span>
-              <AccordionTrigger 
-                className="flex-1 flex items-center py-0 hover:no-underline"
-                onClick={(e) => {
-                  // If you click on the module name (not the chevron), navigate to the module
-                  if (e.target !== e.currentTarget) {
-                    e.stopPropagation();
-                    onNavigate(module.href);
-                  }
-                }}  
-              >
-                <span>{module.name}</span>
-              </AccordionTrigger>
-            </div>
-            
-            <AccordionContent className="pb-0 pt-1 px-0">
-              <ModuleSubmenu
-                submodules={module.submodules || []}
-                location={location}
-                onNavigate={onNavigate}
-              />
-            </AccordionContent>
-          </AccordionItem>
-        </Accordion>
-      ) : (
-        <div 
-          onClick={() => onNavigate(module.href)}
-          className={`flex items-center w-full px-3 py-2 text-sm font-medium rounded-md cursor-pointer ${
-            isActive ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-          }`}
-        >
-          <span className="mr-3 text-gray-500">{module.icon}</span>
-          <span>{module.name}</span>
-        </div>
-      )}
+              <span>{module.name}</span>
+            </AccordionTrigger>
+          </div>
+          
+          <AccordionContent className="pb-0 pt-1 px-0">
+            <ModuleSubmenu
+              submodules={module.submodules || []}
+              location={location}
+              onNavigate={onNavigate}
+            />
+          </AccordionContent>
+        </AccordionItem>
+      </Accordion>
     </div>
   );
 };

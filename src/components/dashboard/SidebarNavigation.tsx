@@ -85,8 +85,19 @@ const SidebarNavigation = ({ installedModules, onNavigate }: SidebarNavigationPr
         </AccordionItem>
       </Accordion>
       
+      {/* Link to applications page to install more - Moved above APPLICATIONS section */}
+      <NavLink
+        icon={<AppWindow size={18} />}
+        label="Gérer les applications"
+        href="/applications"
+        isActive={location.pathname === '/applications'}
+        onClick={() => onNavigate('/applications')}
+        className="mt-2"
+        showLabelWhenCollapsed={true}
+      />
+      
       {/* Display applications directly in the sidebar */}
-      <div className="mt-4">
+      <div className="mt-2">
         <div className="px-4 py-2 text-xs font-bold text-gray-500 uppercase tracking-wider">
           APPLICATIONS
         </div>
@@ -105,17 +116,6 @@ const SidebarNavigation = ({ installedModules, onNavigate }: SidebarNavigationPr
             Aucune application installée
           </div>
         )}
-        
-        {/* Link to applications page to install more */}
-        <NavLink
-          icon={<AppWindow size={18} />}
-          label="Gérer les applications"
-          href="/applications"
-          isActive={location.pathname === '/applications'}
-          onClick={() => onNavigate('/applications')}
-          className="mt-2 text-xs"
-          showLabelWhenCollapsed={true}
-        />
       </div>
       
       {/* Spacer to push content to the bottom */}
