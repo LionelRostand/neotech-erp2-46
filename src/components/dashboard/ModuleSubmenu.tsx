@@ -21,8 +21,8 @@ const ModuleSubmenu: React.FC<ModuleSubmenuProps> = ({
     <div className="pl-8 space-y-1 mt-1">
       {submodules.map((submodule) => (
         <div key={submodule.id} className="flex">
-          <button
-            className={`flex items-center px-2 py-1.5 text-sm rounded-md w-full ${
+          <div
+            className={`flex items-center px-2 py-1.5 text-sm rounded-md w-full cursor-pointer ${
               location.pathname === submodule.href 
                 ? 'bg-gray-100 text-gray-900 font-medium' 
                 : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
@@ -31,7 +31,7 @@ const ModuleSubmenu: React.FC<ModuleSubmenuProps> = ({
           >
             <span className="mr-2 text-gray-500">{submodule.icon}</span>
             <span>{submodule.name}</span>
-          </button>
+          </div>
         </div>
       ))}
     </div>
