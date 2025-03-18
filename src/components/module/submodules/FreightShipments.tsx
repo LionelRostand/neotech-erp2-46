@@ -1,10 +1,19 @@
 
-import React from 'react';
-import { Badge, BadgeCheck, User } from 'lucide-react';
+import React, { useState } from 'react';
+import { Badge, BadgeCheck, User, Search, Plus, Printer, Download } from 'lucide-react';
 import StatCard from '@/components/StatCard';
-import DataTable, { Transaction } from '@/components/DataTable';
+import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Input } from '@/components/ui/input';
+import ShipmentList from './freight/ShipmentList';
+import NewShipmentForm from './freight/NewShipmentForm';
+import { useToast } from '@/hooks/use-toast';
 
 const FreightShipments: React.FC = () => {
+  // State for controlling the new shipment dialog
+  const [showNewShipmentForm, setShowNewShipmentForm] = useState(false);
+  const { toast } = useToast();
+  
   // Sample data for the stats cards
   const statsData = [
     {
@@ -33,49 +42,12 @@ const FreightShipments: React.FC = () => {
     }
   ];
 
-  // Sample data for the transactions table
-  const shipmentsData: Transaction[] = [
-    {
-      id: "EXP-1024",
-      date: "2023-10-15",
-      client: "Logistique Express",
-      amount: "2,458 €",
-      status: "success",
-      statusText: "Livré"
-    },
-    {
-      id: "EXP-1023",
-      date: "2023-10-14",
-      client: "TransportPlus",
-      amount: "1,875 €",
-      status: "warning",
-      statusText: "En transit"
-    },
-    {
-      id: "EXP-1022",
-      date: "2023-10-12",
-      client: "Cargo International",
-      amount: "3,214 €",
-      status: "warning",
-      statusText: "En transit"
-    },
-    {
-      id: "EXP-1021",
-      date: "2023-10-10",
-      client: "MariTrans",
-      amount: "5,680 €",
-      status: "success",
-      statusText: "Livré"
-    },
-    {
-      id: "EXP-1020",
-      date: "2023-10-09",
-      client: "AirCargo",
-      amount: "2,950 €",
-      status: "danger",
-      statusText: "Retardé"
-    }
-  ];
+  const handleExport = () => {
+    toast({
+      title: "Export lancé",
+      description: "Le fichier d'export sera bientôt disponible au téléchargement.",
+    });
+  };
 
   return (
     <>
@@ -91,12 +63,64 @@ const FreightShipments: React.FC = () => {
         ))}
       </div>
 
-      <div className="mb-8">
-        <DataTable 
-          title="Suivi des Expéditions" 
-          data={shipmentsData} 
-        />
+      <div className="mb-8 bg-white rounded-lg shadow p-6">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-xl font-bold">Gestion des Expéditions</h2>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={handleExport}>
+              <Download className="mr-2 h-4 w-4" />
+              Exporter
+            </Button>
+            <Button variant="outline">
+              <Printer className="mr-2 h-4 w-4" />
+              Imprimer
+            </Button>
+            <Button onClick={() => setShowNewShipmentForm(true)}>
+              <Plus className="mr-2 h-4 w-4" />
+              Nouvelle Expédition
+            </Button>
+          </div>
+        </div>
+
+        <Tabs defaultValue="all">
+          <div className="flex justify-between items-center mb-4">
+            <TabsList>
+              <TabsTrigger value="all">Toutes</TabsTrigger>
+              <TabsTrigger value="ongoing">En cours</TabsTrigger>
+              <TabsTrigger value="delivered">Livrées</TabsTrigger>
+              <TabsTrigger value="delayed">En retard</TabsTrigger>
+            </TabsList>
+            <div className="relative">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-400" />
+              <Input
+                type="search"
+                placeholder="Rechercher..."
+                className="pl-8 w-[250px]"
+              />
+            </div>
+          </div>
+
+          <TabsContent value="all" className="mt-2">
+            <ShipmentList filter="all" />
+          </TabsContent>
+          <TabsContent value="ongoing" className="mt-2">
+            <ShipmentList filter="ongoing" />
+          </TabsContent>
+          <TabsContent value="delivered" className="mt-2">
+            <ShipmentList filter="delivered" />
+          </TabsContent>
+          <TabsContent value="delayed" className="mt-2">
+            <ShipmentList filter="delayed" />
+          </TabsContent>
+        </Tabs>
       </div>
+
+      {showNewShipmentForm && (
+        <NewShipmentForm 
+          isOpen={showNewShipmentForm}
+          onClose={() => setShowNewShipmentForm(false)}
+        />
+      )}
     </>
   );
 };

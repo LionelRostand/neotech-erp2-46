@@ -83,6 +83,24 @@ const SubmodulePage: React.FC<SubmodulePageProps> = ({ moduleId, submoduleId }) 
         return <FreightDashboard />;
       case 'freight-shipments':
         return <FreightShipments />;
+      // All other freight submodules will default to DefaultSubmoduleContent
+      // until they are implemented specifically
+      case 'freight-packages':
+      case 'freight-tracking':
+      case 'freight-carriers':
+      case 'freight-pricing':
+      case 'freight-quotes':
+      case 'freight-containers':
+      case 'freight-orders':
+      case 'freight-documents':
+      case 'freight-routes':
+      case 'freight-warehouses':
+      case 'freight-inventory':
+      case 'freight-invoicing':
+      case 'freight-reports':
+      case 'freight-client-portal':
+      case 'freight-settings':
+        return <DefaultSubmoduleContent submodule={submodule} />;
       
       // Default fallback
       default:
