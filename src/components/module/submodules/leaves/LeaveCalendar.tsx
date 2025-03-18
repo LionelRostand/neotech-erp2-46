@@ -30,8 +30,8 @@ export const LeaveCalendar: React.FC = () => {
   };
 
   // Function to render day content with leave indicators
-  const renderDayContent = (day: Date) => {
-    const hasLeave = getDayHasLeave(day);
+  const renderDayContent = (props: { date: Date }) => {
+    const hasLeave = getDayHasLeave(props.date);
     
     if (hasLeave) {
       return (
@@ -72,7 +72,7 @@ export const LeaveCalendar: React.FC = () => {
             onSelect={setDate}
             className="rounded-md border"
             components={{
-              DayContent: ({ day }) => renderDayContent(day)
+              DayContent: ({ date }) => renderDayContent({ date })
             }}
           />
         </div>

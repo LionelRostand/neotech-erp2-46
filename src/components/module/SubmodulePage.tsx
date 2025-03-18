@@ -60,16 +60,15 @@ const SubmodulePage: React.FC<SubmodulePageProps> = ({ moduleId, submoduleId }) 
       
       // Default fallback
       default:
-        return <DefaultSubmoduleContent submoduleName={submodule.name} />;
+        return <DefaultSubmoduleContent submodule={submodule} />;
     }
   };
 
   return (
     <div className="space-y-6">
       <SubmoduleHeader 
-        moduleName={module.name}
-        submoduleName={submodule.name}
-        icon={submodule.icon}
+        module={module}
+        submodule={submodule}
       />
       {renderSubmoduleContent()}
     </div>
