@@ -28,7 +28,7 @@ const ModuleSubmenu: React.FC<ModuleSubmenuProps> = ({
             onClick={() => onNavigate(submodule.href)}
           >
             <span className="mr-2 text-gray-500">{submodule.icon}</span>
-            <span>{submodule.name}</span>
+            <span className="whitespace-nowrap">{submodule.name}</span>
           </div>
         </div>
       ))}

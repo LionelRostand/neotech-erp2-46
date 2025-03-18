@@ -83,7 +83,7 @@ const SidebarFooter = ({
                 isActive={location.pathname === '/settings/user-permissions'}
                 onClick={() => onNavigate('/settings/user-permissions')}
                 className="py-1"
-                showLabelWhenCollapsed={false}
+                showLabelWhenCollapsed={true}
               />
               <NavLink
                 icon={<Globe size={16} />}
@@ -92,7 +92,7 @@ const SidebarFooter = ({
                 isActive={location.pathname === '/settings/translation'}
                 onClick={() => onNavigate('/settings/translation')}
                 className="py-1"
-                showLabelWhenCollapsed={false}
+                showLabelWhenCollapsed={true}
               />
               <NavLink
                 icon={<Mail size={16} />}
@@ -101,7 +101,7 @@ const SidebarFooter = ({
                 isActive={location.pathname === '/settings/smtp'}
                 onClick={() => onNavigate('/settings/smtp')}
                 className="py-1"
-                showLabelWhenCollapsed={false}
+                showLabelWhenCollapsed={true}
               />
               <NavLink
                 icon={<Shield size={16} />}
@@ -110,7 +110,7 @@ const SidebarFooter = ({
                 isActive={location.pathname === '/settings/2fa'}
                 onClick={() => onNavigate('/settings/2fa')}
                 className="py-1"
-                showLabelWhenCollapsed={false}
+                showLabelWhenCollapsed={true}
               />
             </div>
           </AccordionContent>

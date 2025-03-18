@@ -25,7 +25,7 @@ const DashboardSubmenu: React.FC<DashboardSubmenuProps> = ({
         isActive={location.pathname === '/' || location.pathname === '/dashboard'}
         onClick={() => onNavigate('/')}
         className="py-1"
-        showLabelWhenCollapsed={false}
+        showLabelWhenCollapsed={true}
       />
       <NavLink
         icon={<Activity size={16} />}
@@ -34,7 +34,7 @@ const DashboardSubmenu: React.FC<DashboardSubmenuProps> = ({
         isActive={location.pathname === '/dashboard/performance'}
         onClick={() => onNavigate('/dashboard/performance')}
         className="py-1"
-        showLabelWhenCollapsed={false}
+        showLabelWhenCollapsed={true}
       />
       <NavLink
         icon={<BarChart size={16} />}
@@ -43,7 +43,7 @@ const DashboardSubmenu: React.FC<DashboardSubmenuProps> = ({
         isActive={location.pathname === '/dashboard/analytics'}
         onClick={() => onNavigate('/dashboard/analytics')}
         className="py-1"
-        showLabelWhenCollapsed={false}
+        showLabelWhenCollapsed={true}
       />
     </div>
   );
