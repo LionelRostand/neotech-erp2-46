@@ -22,6 +22,10 @@ const ModuleList: React.FC<ModuleListProps> = ({
 }) => {
   // Split modules into two equal columns
   const splitModules = () => {
+    if (modules.length === 0) {
+      return [[], []];
+    }
+    
     const midpoint = Math.ceil(modules.length / 2);
     return [
       modules.slice(0, midpoint),
@@ -30,6 +34,10 @@ const ModuleList: React.FC<ModuleListProps> = ({
   };
   
   const [leftColumnModules, rightColumnModules] = splitModules();
+  
+  console.log('ModuleList received modules:', modules.length);
+  console.log('Left column:', leftColumnModules.length);
+  console.log('Right column:', rightColumnModules.length);
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

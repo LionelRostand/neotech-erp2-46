@@ -7,7 +7,8 @@ import { modules } from '@/data/modules';
 import PageHeader from '@/components/applications/PageHeader';
 import ModuleList from '@/components/applications/ModuleList';
 import { Input } from '@/components/ui/input';
-import { Search } from 'lucide-react';
+import { Search, X } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 const Applications: React.FC = () => {
   const [installedModules, setInstalledModules] = useState<number[]>([]);
@@ -68,11 +69,18 @@ const Applications: React.FC = () => {
     setSearchTerm(e.target.value);
   };
 
+  const clearSearch = () => {
+    setSearchTerm('');
+  };
+
   // Filtrer les modules en fonction du terme de recherche
   const filteredModules = modules.filter(module => 
     module.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
     module.description.toLowerCase().includes(searchTerm.toLowerCase())
   );
+  
+  console.log('Search term:', searchTerm);
+  console.log('Filtered modules:', filteredModules.length);
   
   return (
     <DashboardLayout>
@@ -88,6 +96,16 @@ const Applications: React.FC = () => {
             onChange={handleSearch}
             className="pl-10 pr-4"
           />
+          {searchTerm && (
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="absolute right-1 top-1/2 transform -translate-y-1/2 h-8 w-8" 
+              onClick={clearSearch}
+            >
+              <X size={16} />
+            </Button>
+          )}
         </div>
         
         {filteredModules.length === 0 ? (
