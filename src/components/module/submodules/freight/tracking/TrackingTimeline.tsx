@@ -62,9 +62,9 @@ const TrackingTimeline: React.FC<TrackingTimelineProps> = ({ events }) => {
                     {formatPackageStatus(event.status)}
                   </StatusBadge>
                   {event.isNotified ? (
-                    <Bell className="h-4 w-4 text-green-500" title="Notification envoyée" />
+                    <Bell className="h-4 w-4 text-green-500" aria-label="Notification envoyée" />
                   ) : (
-                    <BellOff className="h-4 w-4 text-gray-400" title="Pas de notification" />
+                    <BellOff className="h-4 w-4 text-gray-400" aria-label="Pas de notification" />
                   )}
                 </div>
               </div>

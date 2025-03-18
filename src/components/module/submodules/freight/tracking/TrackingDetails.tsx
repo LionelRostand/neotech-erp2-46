@@ -74,6 +74,17 @@ const TrackingDetails: React.FC<TrackingDetailsProps> = ({ packageData, onBack }
     const lastEvent = events[events.length - 1];
     return statusWeights[lastEvent.status] || 0;
   };
+
+  // Vérifier si le statut du colis indique une anomalie
+  const hasIssue = () => {
+    return (
+      packageData.status === 'returned' || 
+      packageData.status === 'lost' || 
+      packageData.status === 'draft' ||
+      packageData.status === 'exception' ||
+      packageData.status === 'delayed'
+    );
+  };
   
   return (
     <div className="space-y-6">
@@ -151,21 +162,23 @@ const TrackingDetails: React.FC<TrackingDetailsProps> = ({ packageData, onBack }
                     </div>
                   </div>
                   
-                  {packageData.status === 'exception' || packageData.status === 'delayed' || packageData.status === 'lost' ? (
+                  {hasIssue() && (
                     <div className="flex items-start p-3 rounded-md bg-amber-50 border border-amber-200">
                       <AlertTriangle className="h-5 w-5 text-amber-500 mr-2 flex-shrink-0 mt-0.5" />
                       <div>
                         <p className="font-medium text-amber-800">Attention</p>
                         <p className="text-sm text-amber-700">
-                          {packageData.status === 'exception' 
-                            ? 'Un problème est survenu lors de la livraison de ce colis. Veuillez contacter le service client.'
-                            : packageData.status === 'delayed'
-                            ? 'La livraison est retardée. Nous nous excusons pour ce désagrément.'
-                            : 'Ce colis a été déclaré perdu. Veuillez contacter le service client pour plus d\'informations.'}
+                          {packageData.status === 'lost' 
+                            ? 'Ce colis a été déclaré perdu. Veuillez contacter le service client pour plus d\'informations.'
+                            : packageData.status === 'returned'
+                            ? 'Ce colis a été retourné à l\'expéditeur.'
+                            : packageData.status === 'delayed' || packageData.status === 'exception'
+                            ? 'La livraison est retardée ou un problème est survenu. Nous nous excusons pour ce désagrément.'
+                            : 'Ce colis est en attente de traitement.'}
                         </p>
                       </div>
                     </div>
-                  ) : null}
+                  )}
                 </>
               )}
             </div>
