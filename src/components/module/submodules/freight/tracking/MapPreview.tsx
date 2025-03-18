@@ -4,6 +4,8 @@ import { GeoLocation } from '@/types/freight';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { Info, Map as MapIcon } from 'lucide-react';
 import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 
 interface MapPreviewProps {
   location?: GeoLocation;
@@ -12,87 +14,76 @@ interface MapPreviewProps {
 
 const MapPreview: React.FC<MapPreviewProps> = ({ location, className }) => {
   const mapContainerRef = useRef<HTMLDivElement>(null);
-  const [mapboxToken, setMapboxToken] = useState<string>('');
-  const [tokenInputVisible, setTokenInputVisible] = useState(false);
+  const leafletMapRef = useRef<any>(null);
+  const [isClient, setIsClient] = useState(false);
 
+  // Initialize client-side rendering check
   useEffect(() => {
-    // Vérifier si un token est déjà stocké
-    const storedToken = localStorage.getItem('mapbox_token');
-    if (storedToken) {
-      setMapboxToken(storedToken);
-    } else {
-      // Sinon, afficher l'input pour entrer le token
-      setTokenInputVisible(true);
-    }
+    setIsClient(true);
   }, []);
 
   useEffect(() => {
-    if (!location || !mapboxToken || !mapContainerRef.current) return;
+    if (!isClient || !location || !mapContainerRef.current) return;
 
-    // Créer une URL statique pour l'image de la carte Mapbox
-    const mapImageUrl = `https://api.mapbox.com/styles/v1/mapbox/streets-v11/static/pin-s+f00(${location.longitude},${location.latitude})/${location.longitude},${location.latitude},12,0/300x200?access_token=${mapboxToken}`;
-    
-    const mapContainer = mapContainerRef.current;
-    
-    // Créer l'élément image et l'ajouter au conteneur
-    const img = document.createElement('img');
-    img.src = mapImageUrl;
-    img.alt = 'Map location';
-    img.className = 'w-full h-full object-cover rounded-md';
-    
-    // Nettoyer le conteneur avant d'ajouter la nouvelle image
-    while (mapContainer.firstChild) {
-      mapContainer.removeChild(mapContainer.firstChild);
-    }
-    
-    mapContainer.appendChild(img);
-    
-    return () => {
-      // Nettoyer l'image lors du démontage du composant
-      while (mapContainer.firstChild) {
-        mapContainer.removeChild(mapContainer.firstChild);
+    const initializeMap = async () => {
+      try {
+        // Dynamic import to avoid SSR issues
+        const L = await import('leaflet');
+        
+        // Clean up existing map if it exists
+        if (leafletMapRef.current) {
+          leafletMapRef.current.remove();
+          leafletMapRef.current = null;
+        }
+        
+        // Create new map
+        const map = L.map(mapContainerRef.current).setView([location.latitude, location.longitude], 13);
+        leafletMapRef.current = map;
+        
+        // Add OpenStreetMap tile layer
+        L.tileLayer('https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png', {
+          attribution: 'données © <a href="//osm.org/copyright">OpenStreetMap</a>/ODbL - rendu <a href="//openstreetmap.fr">OSM France</a>',
+          minZoom: 1,
+          maxZoom: 20
+        }).addTo(map);
+        
+        // Create a marker with custom icon
+        const customIcon = L.divIcon({
+          className: 'custom-div-icon',
+          html: `<div style="background-color: #3b82f6; width: 12px; height: 12px; border-radius: 50%; border: 2px solid white;"></div>`,
+          iconSize: [20, 20],
+          iconAnchor: [10, 10]
+        });
+        
+        // Add marker to map
+        const marker = L.marker([location.latitude, location.longitude], { icon: customIcon });
+        marker.addTo(map);
+        
+        // Add popup with location info
+        marker.bindPopup(`
+          <div>
+            <div style="font-weight: 500;">${location.address || 'Location'}</div>
+            <div>${location.city}, ${location.country}</div>
+          </div>
+        `).openPopup();
+      } catch (error) {
+        console.error("Error initializing map:", error);
       }
     };
-  }, [location, mapboxToken]);
+    
+    initializeMap();
+    
+    // Cleanup function
+    return () => {
+      if (leafletMapRef.current) {
+        leafletMapRef.current.remove();
+        leafletMapRef.current = null;
+      }
+    };
+  }, [location, isClient]);
 
-  const handleSaveToken = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (mapboxToken) {
-      localStorage.setItem('mapbox_token', mapboxToken);
-      setTokenInputVisible(false);
-    }
-  };
-
-  if (tokenInputVisible) {
-    return (
-      <Card className={`p-4 ${className}`}>
-        <div className="space-y-4">
-          <div className="flex items-center space-x-2">
-            <MapIcon className="h-5 w-5 text-blue-500" />
-            <h3 className="font-medium">Configuration de la carte</h3>
-          </div>
-          <p className="text-sm text-gray-600">
-            Pour afficher les cartes, veuillez entrer votre token public Mapbox.
-            Vous pouvez l'obtenir en vous inscrivant sur <a href="https://mapbox.com" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">mapbox.com</a>.
-          </p>
-          <form onSubmit={handleSaveToken} className="space-y-2">
-            <input
-              type="text"
-              value={mapboxToken}
-              onChange={(e) => setMapboxToken(e.target.value)}
-              placeholder="Entrez votre token public Mapbox"
-              className="w-full p-2 border border-gray-300 rounded-md"
-            />
-            <button
-              type="submit"
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-            >
-              Enregistrer
-            </button>
-          </form>
-        </div>
-      </Card>
-    );
+  if (!isClient) {
+    return <div className={`bg-slate-100 ${className}`}>Loading map...</div>;
   }
 
   if (!location) {
@@ -111,12 +102,8 @@ const MapPreview: React.FC<MapPreviewProps> = ({ location, className }) => {
     <div className={`relative rounded-md overflow-hidden ${className || ''}`}>
       <div 
         ref={mapContainerRef} 
-        className="bg-slate-200 h-[200px] w-full"
-      >
-        <div className="flex h-full w-full items-center justify-center">
-          <p className="text-gray-500">Chargement de la carte...</p>
-        </div>
-      </div>
+        className="bg-slate-200 h-full w-full min-h-[200px]"
+      />
       <div className="absolute bottom-0 left-0 right-0 bg-white/80 p-2 text-xs">
         <div className="font-semibold">{location.address}</div>
         <div>{location.postalCode} {location.city}, {location.country}</div>

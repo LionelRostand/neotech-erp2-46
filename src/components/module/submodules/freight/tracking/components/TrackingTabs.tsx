@@ -6,6 +6,10 @@ import { AlertTriangle } from 'lucide-react';
 import TrackingTimeline from '../TrackingTimeline';
 import MapPreview from '../MapPreview';
 import NotificationSettings from '../NotificationSettings';
+import 'leaflet/dist/leaflet.css';
+import 'leaflet.markercluster/dist/MarkerCluster.css';
+import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
+import '../PackageTrackingStyles.css';
 
 interface TrackingTabsProps {
   packageId: string;
@@ -38,7 +42,7 @@ const TrackingTabs: React.FC<TrackingTabsProps> = ({
       
       <TabsContent value="map">
         {latestLocation ? (
-          <MapPreview location={latestLocation} className="h-[200px]" />
+          <MapPreview location={latestLocation} className="h-[300px]" />
         ) : (
           <div className="bg-amber-50 border border-amber-200 p-3 rounded-md flex items-center">
             <AlertTriangle className="h-5 w-5 text-amber-500 mr-2" />
