@@ -1,7 +1,8 @@
 
 import React, { useEffect, useState } from 'react';
 import { Package, TrackingEvent } from '@/types/freight';
-import { getPackageTrackingEvents, getLatestLocationFromEvents, getLatestEvent } from './mockTrackingData';
+import { getPackageTrackingEvents } from './mockTrackingData';
+import { getLatestLocationFromEvents } from './utils/locationUtils';
 import PackageHeader from './components/PackageHeader';
 import PackageInfoCard from './components/PackageInfoCard';
 import TrackingTabs from './components/TrackingTabs';
