@@ -1,8 +1,8 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { MapPin, Package, Search, Bell, ChevronDown } from 'lucide-react';
 import StatCard from '@/components/StatCard';
-import { Package as PackageType } from '@/types/freight';
+import { Package as PackageType, TrackingEvent } from '@/types/freight';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -14,10 +14,16 @@ import {
 import TrackingSearch from './tracking/TrackingSearch';
 import TrackingHistory from './tracking/TrackingHistory';
 import TrackingDetails from './tracking/TrackingDetails';
+import PackageTrackingMap from './tracking/PackageTrackingMap';
+import 'leaflet/dist/leaflet.css';
+import 'leaflet.markercluster/dist/MarkerCluster.css';
+import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
+import './tracking/PackageTrackingStyles.css';
 
 const FreightTracking: React.FC = () => {
   const [selectedPackage, setSelectedPackage] = useState<PackageType | null>(null);
   const [isGuideOpen, setIsGuideOpen] = useState(false);
+  const [trackingEvents, setTrackingEvents] = useState<TrackingEvent[]>([]);
   
   // Sample data for the stats cards
   const statsData = [
@@ -49,6 +55,10 @@ const FreightTracking: React.FC = () => {
   
   const handlePackageFound = (packageData: PackageType) => {
     setSelectedPackage(packageData);
+  };
+  
+  const handleTrackingFound = (events: TrackingEvent[]) => {
+    setTrackingEvents(events);
   };
   
   const handleBack = () => {
@@ -96,6 +106,23 @@ const FreightTracking: React.FC = () => {
                 </CardHeader>
                 <CardContent>
                   <TrackingSearch onPackageFound={handlePackageFound} />
+                </CardContent>
+              </Card>
+            </div>
+            
+            <div className="pb-4">
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-lg">Suivi GPS en temps réel</CardTitle>
+                  <CardDescription>
+                    Visualisez la position actuelle et l'historique de déplacement de votre colis
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <PackageTrackingMap 
+                    onTrackingFound={handleTrackingFound}
+                    initialEvents={trackingEvents}
+                  />
                 </CardContent>
               </Card>
             </div>
