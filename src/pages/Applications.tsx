@@ -6,10 +6,13 @@ import { modules } from '@/data/modules';
 
 import PageHeader from '@/components/applications/PageHeader';
 import ModuleList from '@/components/applications/ModuleList';
+import { Input } from '@/components/ui/input';
+import { Search } from 'lucide-react';
 
 const Applications: React.FC = () => {
   const [installedModules, setInstalledModules] = useState<number[]>([]);
   const [expandedModule, setExpandedModule] = useState<number | null>(null);
+  const [searchTerm, setSearchTerm] = useState<string>('');
   
   // Charger les modules installés depuis le localStorage au chargement
   useEffect(() => {
@@ -60,19 +63,47 @@ const Applications: React.FC = () => {
       setExpandedModule(moduleId);
     }
   };
+
+  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
+  };
+
+  // Filtrer les modules en fonction du terme de recherche
+  const filteredModules = modules.filter(module => 
+    module.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    module.description.toLowerCase().includes(searchTerm.toLowerCase())
+  );
   
   return (
     <DashboardLayout>
       <div className="container mx-auto py-6">
         <PageHeader />
-        <ModuleList 
-          modules={modules}
-          installedModules={installedModules}
-          expandedModule={expandedModule}
-          onInstall={handleInstall}
-          onUninstall={handleUninstall}
-          onToggleExpansion={toggleModuleExpansion}
-        />
+        
+        <div className="mb-6 relative max-w-md">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+          <Input
+            type="text"
+            placeholder="Rechercher un module..."
+            value={searchTerm}
+            onChange={handleSearch}
+            className="pl-10 pr-4"
+          />
+        </div>
+        
+        {filteredModules.length === 0 ? (
+          <div className="text-center py-8">
+            <p className="text-gray-500">Aucun module ne correspond à votre recherche</p>
+          </div>
+        ) : (
+          <ModuleList 
+            modules={filteredModules}
+            installedModules={installedModules}
+            expandedModule={expandedModule}
+            onInstall={handleInstall}
+            onUninstall={handleUninstall}
+            onToggleExpansion={toggleModuleExpansion}
+          />
+        )}
       </div>
     </DashboardLayout>
   );
