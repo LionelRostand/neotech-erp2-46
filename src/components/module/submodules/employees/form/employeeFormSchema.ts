@@ -10,7 +10,7 @@ export const employeeFormSchema = z.object({
   department: z.string().min(2, { message: 'Le département doit contenir au moins 2 caractères.' }),
   position: z.string().min(2, { message: 'Le poste doit contenir au moins 2 caractères.' }),
   contract: z.string().min(2, { message: 'Le type de contrat doit contenir au moins 2 caractères.' }),
-  hireDate: z.string().min(8, { message: 'La date d\'embauche doit être au format JJ/MM/AAAA.' }),
+  hireDate: z.string().min(8, { message: 'La date d\'embauche doit être au format DD/MM/YYYY.' }),
   manager: z.string().optional(),
   status: z.enum(['Actif', 'Inactif']),
 });

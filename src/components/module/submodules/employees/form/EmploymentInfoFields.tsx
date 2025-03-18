@@ -75,7 +75,7 @@ const EmploymentInfoFields: React.FC = () => {
             <FormItem>
               <FormLabel>Date d'entrée</FormLabel>
               <FormControl>
-                <Input placeholder="JJ/MM/AAAA" {...field} />
+                <Input placeholder="DD/MM/YYYY" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
