@@ -10,9 +10,10 @@ import { Check, Bell, BellOff, MapPin } from 'lucide-react';
 
 interface TrackingTimelineProps {
   events: TrackingEvent[];
+  showMaps?: boolean;
 }
 
-const TrackingTimeline: React.FC<TrackingTimelineProps> = ({ events }) => {
+const TrackingTimeline: React.FC<TrackingTimelineProps> = ({ events, showMaps = true }) => {
   if (!events.length) {
     return (
       <div className="text-center py-8 text-gray-500">
@@ -71,8 +72,8 @@ const TrackingTimeline: React.FC<TrackingTimelineProps> = ({ events }) => {
               
               <p className="mt-2 text-sm text-gray-600">{event.description}</p>
               
-              {/* Location map if available */}
-              {event.location && (
+              {/* Location map if available and maps are enabled */}
+              {showMaps && event.location && (
                 <div className="mt-2">
                   <MapPreview location={event.location} className="border" />
                 </div>

@@ -8,9 +8,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import StatusBadge from '@/components/StatusBadge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import TrackingTimeline from './TrackingTimeline';
+import PackageTrackingMap from './PackageTrackingMap';
 import NotificationSettings from './NotificationSettings';
 import { Button } from '@/components/ui/button';
-import { AlertTriangle, ArrowLeft, FileText, MapPin, Printer, Share2 } from 'lucide-react';
+import { AlertTriangle, ArrowLeft, FileText, MapPin, Printer, Share2, Map } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import QRCode from '../packages/QRCode';
 import { useToast } from '@/hooks/use-toast';
@@ -77,13 +78,8 @@ const TrackingDetails: React.FC<TrackingDetailsProps> = ({ packageData, onBack }
 
   // Vérifier si le statut du colis indique une anomalie
   const hasIssue = () => {
-    return (
-      packageData.status === 'returned' || 
-      packageData.status === 'lost' || 
-      packageData.status === 'draft' ||
-      packageData.status === 'exception' ||
-      packageData.status === 'delayed'
-    );
+    const problemStatuses = ['returned', 'lost', 'draft', 'exception', 'delayed'];
+    return problemStatuses.includes(packageData.status as string);
   };
   
   return (
@@ -114,7 +110,7 @@ const TrackingDetails: React.FC<TrackingDetailsProps> = ({ packageData, onBack }
             </div>
             
             <StatusBadge status={getStatusColor(packageData.status)} className="text-sm">
-              {formatPackageStatus(packageData.status)}
+              {formatPackageStatus(packageData.status as string)}
             </StatusBadge>
           </div>
         </CardHeader>
@@ -201,6 +197,10 @@ const TrackingDetails: React.FC<TrackingDetailsProps> = ({ packageData, onBack }
             <MapPin className="mr-2 h-4 w-4" />
             Chronologie
           </TabsTrigger>
+          <TabsTrigger value="map">
+            <Map className="mr-2 h-4 w-4" />
+            Carte
+          </TabsTrigger>
           <TabsTrigger value="documents" disabled={packageData.documents.length === 0}>
             <FileText className="mr-2 h-4 w-4" />
             Documents ({packageData.documents.length})
@@ -225,6 +225,19 @@ const TrackingDetails: React.FC<TrackingDetailsProps> = ({ packageData, onBack }
               </CardContent>
             </Card>
           )}
+        </TabsContent>
+        <TabsContent value="map" className="mt-4">
+          <Card>
+            <CardContent className="pt-6">
+              {isLoading ? (
+                <div className="flex justify-center items-center py-8">
+                  <p className="text-gray-500">Chargement de la carte de suivi...</p>
+                </div>
+              ) : (
+                <PackageTrackingMap initialEvents={events} />
+              )}
+            </CardContent>
+          </Card>
         </TabsContent>
         <TabsContent value="documents" className="mt-4">
           <Card>
