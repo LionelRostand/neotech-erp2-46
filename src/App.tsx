@@ -86,6 +86,18 @@ const App = () => (
             <Route path="settings" element={<SubmodulePage moduleId={2} submoduleId="freight-settings" />} />
           </Route>
           
+          {/* Route pour le nouveau module Entreprises */}
+          <Route path="/modules/companies" element={<ModuleLayout moduleId={18} />}>
+            <Route index element={<SubmodulePage moduleId={18} submoduleId="companies-dashboard" />} />
+            <Route path="dashboard" element={<SubmodulePage moduleId={18} submoduleId="companies-dashboard" />} />
+            <Route path="list" element={<SubmodulePage moduleId={18} submoduleId="companies-list" />} />
+            <Route path="create" element={<SubmodulePage moduleId={18} submoduleId="companies-create" />} />
+            <Route path="contacts" element={<SubmodulePage moduleId={18} submoduleId="companies-contacts" />} />
+            <Route path="documents" element={<SubmodulePage moduleId={18} submoduleId="companies-documents" />} />
+            <Route path="reports" element={<SubmodulePage moduleId={18} submoduleId="companies-reports" />} />
+            <Route path="settings" element={<SubmodulePage moduleId={18} submoduleId="companies-settings" />} />
+          </Route>
+          
           {/* Generic routes for other modules */}
           <Route path="/modules/projects/*" element={<ModuleLayout moduleId={3} />} />
           <Route path="/modules/academy/*" element={<ModuleLayout moduleId={4} />} />

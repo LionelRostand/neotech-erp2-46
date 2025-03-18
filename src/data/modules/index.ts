@@ -17,6 +17,7 @@ import { eventsModule } from './events';
 import { libraryModule } from './library';
 import { documentsModule } from './documents';
 import { crmModule } from './crm';
+import { companiesModule } from './companies';
 
 // Export all modules as an array
 export const modules: AppModule[] = [
@@ -36,7 +37,8 @@ export const modules: AppModule[] = [
   eventsModule,
   libraryModule,
   documentsModule,
-  crmModule
+  crmModule,
+  companiesModule
 ];
 
 // Re-export types
