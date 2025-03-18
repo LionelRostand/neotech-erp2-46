@@ -8,6 +8,7 @@ export const accountingModule: AppModule = {
   description: "Gestion financière, facturation et suivi des taxes",
   href: "/modules/accounting",
   icon: createIcon(Calculator),
+  category: 'business', // Added the category property
   submodules: [
     { id: "accounting-invoices", name: "Factures", href: "/modules/accounting/invoices", icon: createIcon(ReceiptText) },
     { id: "accounting-payments", name: "Paiements", href: "/modules/accounting/payments", icon: createIcon(CreditCard) },

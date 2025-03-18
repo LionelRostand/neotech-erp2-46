@@ -8,6 +8,7 @@ export const eventsModule: AppModule = {
   description: "Organisation et gestion d'événements et de réservations",
   href: "/modules/events",
   icon: createIcon(Calendar),
+  category: 'digital', // Added the category property
   submodules: [
     { id: "events-dashboard", name: "Tableau de bord", href: "/modules/events/dashboard", icon: createIcon(LayoutDashboard) },
     { id: "events-calendar", name: "Calendrier", href: "/modules/events/calendar", icon: createIcon(Calendar) },

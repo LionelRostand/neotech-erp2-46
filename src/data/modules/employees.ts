@@ -28,6 +28,7 @@ export const employeesModule: AppModule = {
   description: "Gestion des ressources humaines, contrats, congés et administration du personnel",
   href: "/modules/employees",
   icon: createIcon(Users),
+  category: 'business', // Added the category property
   submodules: [
     { id: "employees-dashboard", name: "Tableau de bord", href: "/modules/employees/dashboard", icon: createIcon(LayoutDashboard) },
     

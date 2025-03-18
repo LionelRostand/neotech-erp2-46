@@ -8,6 +8,7 @@ export const restaurantModule: AppModule = {
   description: "Système de point de vente et gestion complète pour restaurants",
   href: "/modules/restaurant",
   icon: createIcon(Store),
+  category: 'services', // Added the category property
   submodules: [
     { id: "restaurant-pos", name: "Point de Vente", href: "/modules/restaurant/pos", icon: createIcon(CreditCard) },
     { id: "restaurant-list", name: "Restaurants", href: "/modules/restaurant/list", icon: createIcon(Coffee) },

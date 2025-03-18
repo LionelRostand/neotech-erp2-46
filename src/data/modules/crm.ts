@@ -8,6 +8,7 @@ export const crmModule: AppModule = {
   description: "Gestion de la relation client, prospects et opportunités",
   href: "/modules/crm",
   icon: createIcon(Users),
+  category: 'business', // Added the category property
   submodules: [
     { id: "crm-clients", name: "Clients", href: "/modules/crm/clients", icon: createIcon(Users) },
     { id: "crm-prospects", name: "Prospects", href: "/modules/crm/prospects", icon: createIcon(UserPlus) },

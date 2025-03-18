@@ -55,5 +55,6 @@ export const companiesModule: AppModule = {
   description: 'Gérez vos entreprises, créez de nouvelles structures, suivez vos contacts professionnels et centralisez toutes vos informations commerciales.',
   href: '/modules/companies',
   icon: createIcon(Building),
+  category: 'business', // Added the category property
   submodules,
 };

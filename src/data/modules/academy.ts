@@ -8,6 +8,7 @@ export const academyModule: AppModule = {
   description: "Gestion des inscriptions, cours, examens et suivi pédagogique",
   href: "/modules/academy",
   icon: createIcon(BookOpen),
+  category: 'digital', // Added the category property
   submodules: [
     { id: "academy-registrations", name: "Inscriptions", href: "/modules/academy/registrations", icon: createIcon(ClipboardCheck) },
     { id: "academy-courses", name: "Cours", href: "/modules/academy/courses", icon: createIcon(LibraryBig) },

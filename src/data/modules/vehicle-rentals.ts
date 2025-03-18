@@ -8,6 +8,7 @@ export const vehicleRentalsModule: AppModule = {
   description: "Gestion de flotte de véhicules et de réservations",
   href: "/modules/vehicle-rentals",
   icon: createIcon(Car),
+  category: 'services', // Added the category property
   submodules: [
     { id: "rentals-dashboard", name: "Tableau de bord", href: "/modules/vehicle-rentals/dashboard", icon: createIcon(LayoutDashboard) },
     { id: "rentals-vehicles", name: "Véhicules", href: "/modules/vehicle-rentals/vehicles", icon: createIcon(Car) },

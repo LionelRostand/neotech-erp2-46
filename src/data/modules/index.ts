@@ -19,39 +19,30 @@ import { documentsModule } from './documents';
 import { crmModule } from './crm';
 import { companiesModule } from './companies';
 
-// Assigner les catégories aux modules
-// Puisque nous ne pouvons pas modifier directement les fichiers individuels des modules,
-// nous allons ajouter la propriété category ici
-const modulesWithCategories: AppModule[] = [
-  // Catégorie GESTION D'ENTREPRISE
-  { ...employeesModule, category: 'business' },
-  { ...companiesModule, category: 'business' },
-  { ...accountingModule, category: 'business' },
-  { ...projectsModule, category: 'business' },
-  { ...crmModule, category: 'business' },
+// Export all modules as an array - now we can use the modules directly since they all have the category property
+export const modules: AppModule[] = [
+  employeesModule,
+  companiesModule,
+  accountingModule,
+  projectsModule,
+  crmModule,
   
-  // Catégorie SERVICES SPÉCIALISÉS
-  { ...restaurantModule, category: 'services' },
-  { ...garageModule, category: 'services' },
-  { ...transportModule, category: 'services' },
-  { ...healthModule, category: 'services' },
-  { ...vehicleRentalsModule, category: 'services' },
-  { ...freightModule, category: 'services' },
-  { ...libraryModule, category: 'services' },
+  restaurantModule,
+  garageModule,
+  transportModule,
+  healthModule,
+  vehicleRentalsModule,
+  freightModule,
+  libraryModule,
   
-  // Catégorie PRÉSENCE NUMÉRIQUE
-  { ...websiteModule, category: 'digital' },
-  { ...ecommerceModule, category: 'digital' },
-  { ...academyModule, category: 'digital' },
-  { ...eventsModule, category: 'digital' },
+  websiteModule,
+  ecommerceModule,
+  academyModule,
+  eventsModule,
   
-  // Catégorie COMMUNICATION
-  { ...messagesModule, category: 'communication' },
-  { ...documentsModule, category: 'communication' }
+  messagesModule,
+  documentsModule
 ];
-
-// Export all modules as an array
-export const modules: AppModule[] = modulesWithCategories;
 
 // Re-export types
 export * from '../types/modules';

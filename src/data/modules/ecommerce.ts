@@ -8,6 +8,7 @@ export const ecommerceModule: AppModule = {
   description: "Gestion de boutique en ligne, produits et commandes",
   href: "/modules/ecommerce",
   icon: createIcon(ShoppingBag),
+  category: 'digital', // Added the category property
   submodules: [
     { id: "ecommerce-products", name: "Produits", href: "/modules/ecommerce/products", icon: createIcon(Package) },
     { id: "ecommerce-orders", name: "Commandes", href: "/modules/ecommerce/orders", icon: createIcon(ShoppingCart) },

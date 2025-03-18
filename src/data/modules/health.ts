@@ -1,3 +1,4 @@
+
 import { 
   Stethoscope, LayoutDashboard, Calendar, Users, Pill, Activity, Settings,
   UserCog, FileText, HeartPulse, Building2, CreditCard, BarChart3, Workflow, User,
@@ -11,6 +12,7 @@ export const healthModule: AppModule = {
   description: "Gestion des patients, rendez-vous et suivi médical",
   href: "/modules/health",
   icon: createIcon(Stethoscope),
+  category: 'services', // Added the category property
   submodules: [
     { id: "health-dashboard", name: "Dashboard", href: "/modules/health/dashboard", icon: createIcon(LayoutDashboard), description: "Tableau de bord et KPIs" },
     { id: "health-patients", name: "Patients", href: "/modules/health/patients", icon: createIcon(User), description: "Enregistrement et gestion des dossiers patients" },

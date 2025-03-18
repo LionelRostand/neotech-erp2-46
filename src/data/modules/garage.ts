@@ -8,6 +8,7 @@ export const garageModule: AppModule = {
   description: "Gestion complète pour ateliers de réparation et services automobiles",
   href: "/modules/garage",
   icon: createIcon(Car),
+  category: 'services', // Added the category property
   submodules: [
     { id: "garage-dashboard", name: "Tableau de bord", href: "/modules/garage/dashboard", icon: createIcon(LayoutDashboard) },
     { id: "garage-clients", name: "Clients", href: "/modules/garage/clients", icon: createIcon(Users) },

@@ -8,6 +8,7 @@ export const projectsModule: AppModule = {
   description: "Gestion de projets, tâches, équipes et coordination des activités",
   href: "/modules/projects",
   icon: createIcon(Briefcase),
+  category: 'business', // Added the category property
   submodules: [
     { id: "projects-list", name: "Projets", href: "/modules/projects/list", icon: createIcon(Briefcase) },
     { id: "projects-tasks", name: "Tâches", href: "/modules/projects/tasks", icon: createIcon(CheckSquare) },

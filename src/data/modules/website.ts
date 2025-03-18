@@ -8,6 +8,7 @@ export const websiteModule: AppModule = {
   description: "Créez et gérez votre site web professionnel",
   href: "/modules/website",
   icon: createIcon(Globe),
+  category: 'digital', // Added the category property
   submodules: [
     { id: "website-dashboard", name: "Tableau de bord", href: "/modules/website/dashboard", icon: createIcon(LayoutDashboard) },
     { id: "website-editor", name: "Éditeur", href: "/modules/website/editor", icon: createIcon(Code) },

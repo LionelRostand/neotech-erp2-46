@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -73,7 +72,7 @@ const EmployeesDocuments: React.FC = () => {
     'Paie'
   ];
   
-  // Document types by category - Changed variable name to avoid redeclaration
+  // Document types by category - renamed from documentTypes to documentTypesByCategory
   const documentTypesByCategory: {[key: string]: string[]} = {
     'Administratif': ['Attestation de travail', 'Justificatif de domicile', 'Pièce d\'identité'],
     'Contrat': ['Contrat de travail', 'Avenant', 'Rupture conventionnelle'],
@@ -93,7 +92,7 @@ const EmployeesDocuments: React.FC = () => {
   
   // State for the new document dialog
   const [selectedCategory, setSelectedCategory] = useState('');
-  const [documentTypeOptions, setDocumentTypeOptions] = useState<string[]>([]);
+  const [documentTypes, setDocumentTypes] = useState<string[]>([]);
 
   return (
     <div className="space-y-6">
@@ -135,7 +134,7 @@ const EmployeesDocuments: React.FC = () => {
                   <label htmlFor="category" className="text-sm font-medium">Catégorie *</label>
                   <Select onValueChange={(value) => {
                     setSelectedCategory(value);
-                    setDocumentTypeOptions(documentTypesByCategory[value] || []);
+                    setDocumentTypes(documentTypesByCategory[value] || []);
                   }}>
                     <SelectTrigger>
                       <SelectValue placeholder="Sélectionner une catégorie" />
@@ -156,7 +155,7 @@ const EmployeesDocuments: React.FC = () => {
                       <SelectValue placeholder={selectedCategory ? "Sélectionner un type" : "Sélectionnez d'abord une catégorie"} />
                     </SelectTrigger>
                     <SelectContent>
-                      {selectedCategory && documentTypeOptions.map((type) => (
+                      {selectedCategory && documentTypes.map((type) => (
                         <SelectItem key={type} value={type}>{type}</SelectItem>
                       ))}
                     </SelectContent>
@@ -533,3 +532,4 @@ const EmployeesDocuments: React.FC = () => {
 };
 
 export default EmployeesDocuments;
+

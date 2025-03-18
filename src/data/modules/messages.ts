@@ -8,6 +8,7 @@ export const messagesModule: AppModule = {
   description: "Communication interne et externe avec les clients et l'équipe",
   href: "/modules/messages",
   icon: createIcon(MessageSquare),
+  category: 'communication', // Added the category property
   submodules: [
     { id: "messages-dashboard", name: "Tableau de bord", href: "/modules/messages/dashboard", icon: createIcon(LayoutDashboard) },
     { id: "messages-contacts", name: "Contacts", href: "/modules/messages/contacts", icon: createIcon(Users) },

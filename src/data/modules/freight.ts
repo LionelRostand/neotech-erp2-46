@@ -25,6 +25,7 @@ export const freightModule: AppModule = {
   description: "Gestion logistique, expéditions, suivi des conteneurs et transport de marchandises",
   href: "/modules/freight",
   icon: createIcon(Truck),
+  category: 'services', // Added the category property
   submodules: [
     { id: "freight-dashboard", name: "Tableau de bord", href: "/modules/freight/dashboard", icon: createIcon(LayoutDashboard) },
     

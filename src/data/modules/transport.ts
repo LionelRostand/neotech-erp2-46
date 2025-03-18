@@ -8,6 +8,7 @@ export const transportModule: AppModule = {
   description: "Gestion des chauffeurs, réservations et planification des transports",
   href: "/modules/transport",
   icon: createIcon(Car),
+  category: 'services', // Added the category property
   submodules: [
     { id: "transport-reservations", name: "Réservations", href: "/modules/transport/reservations", icon: createIcon(CalendarCheck) },
     { id: "transport-planning", name: "Planning", href: "/modules/transport/planning", icon: createIcon(Calendar) },
