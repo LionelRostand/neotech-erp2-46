@@ -3,10 +3,11 @@ import React, { useState } from 'react';
 import TimeReportTabs from './timesheet/TimeReportTabs';
 import EmptyTimeReports from './timesheet/EmptyTimeReports';
 import TimeReportsTable from './timesheet/TimeReportsTable';
+import TimeReportForm from './timesheet/TimeReportForm';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
 import { TimeReport } from '@/types/timesheet';
-import { TabsContent } from '@/components/ui/tabs';
+import { toast } from 'sonner';
 
 const EmployeesTimesheet: React.FC = () => {
   const [activeTab, setActiveTab] = useState('reports');
@@ -55,9 +56,25 @@ const EmployeesTimesheet: React.FC = () => {
   ]);
 
   const handleNewReport = () => {
-    // This would typically open a form or dialog for creating a new report
     console.log('Create new time report');
     setActiveTab('new');
+  };
+
+  const handleSubmitReport = (reportData: Omit<TimeReport, 'id' | 'lastUpdated'>) => {
+    // Generate a unique ID and add current date as lastUpdated
+    const newReport: TimeReport = {
+      ...reportData,
+      id: (reports.length + 1).toString(),
+      lastUpdated: new Date().toISOString().split('T')[0]
+    };
+    
+    setReports([newReport, ...reports]);
+    setActiveTab('reports');
+    toast.success('Rapport d\'activité créé avec succès !');
+  };
+
+  const handleCancelReport = () => {
+    setActiveTab('reports');
   };
 
   return (
@@ -88,10 +105,7 @@ const EmployeesTimesheet: React.FC = () => {
       )}
 
       {activeTab === 'new' && (
-        <div className="bg-gray-50 p-6 rounded-md border">
-          <h3 className="text-lg font-medium mb-4">Créer un nouveau rapport d'activité</h3>
-          <p className="text-gray-500 mb-4">Formulaire à implémenter pour la création d'un nouveau rapport d'activité.</p>
-        </div>
+        <TimeReportForm onSubmit={handleSubmitReport} onCancel={handleCancelReport} />
       )}
     </div>
   );
