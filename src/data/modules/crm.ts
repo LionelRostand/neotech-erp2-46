@@ -1,5 +1,5 @@
 
-import { Users, UserPlus, Briefcase, Settings, LineChart, HandShake } from 'lucide-react';
+import { Users, UserPlus, Briefcase, Settings, LineChart, Handshake } from 'lucide-react';
 import { AppModule, createIcon } from '../types/modules';
 
 export const crmModule: AppModule = {
