@@ -2,16 +2,26 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Employee } from '@/types/employee';
-import { employees } from '@/data/employees';
+import { employees as initialEmployees } from '@/data/employees';
 import EmployeesList from './employees/EmployeesList';
 import EmployeeDetails from './employees/EmployeeDetails';
+import EmployeeForm from './employees/EmployeeForm';
+import { toast } from 'sonner';
 
 const EmployeesProfiles: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
+  const [employees, setEmployees] = useState<Employee[]>(initialEmployees);
+  const [isAddEmployeeOpen, setIsAddEmployeeOpen] = useState(false);
 
   const handleViewEmployee = (employee: Employee) => {
     setSelectedEmployee(employee);
+  };
+
+  const handleAddEmployee = (newEmployee: Partial<Employee>) => {
+    const updatedEmployees = [...employees, newEmployee as Employee];
+    setEmployees(updatedEmployees);
+    toast.success("Employé ajouté avec succès.");
   };
 
   return (
@@ -35,8 +45,15 @@ const EmployeesProfiles: React.FC = () => {
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
           onViewEmployee={handleViewEmployee}
+          onOpenAddEmployee={() => setIsAddEmployeeOpen(true)}
         />
       )}
+
+      <EmployeeForm 
+        open={isAddEmployeeOpen} 
+        onOpenChange={setIsAddEmployeeOpen} 
+        onSubmit={handleAddEmployee} 
+      />
     </div>
   );
 };

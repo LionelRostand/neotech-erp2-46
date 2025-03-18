@@ -4,7 +4,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { User, Search, UserPlus, FileEdit, Trash2, Eye } from 'lucide-react';
+import { User, Search, UserPlus, Eye, Pencil, Trash } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Employee } from '@/types/employee';
 
@@ -13,13 +13,15 @@ interface EmployeesListProps {
   searchQuery: string;
   setSearchQuery: (query: string) => void;
   onViewEmployee: (employee: Employee) => void;
+  onOpenAddEmployee: () => void;
 }
 
 const EmployeesList: React.FC<EmployeesListProps> = ({
   employees,
   searchQuery,
   setSearchQuery,
-  onViewEmployee
+  onViewEmployee,
+  onOpenAddEmployee
 }) => {
   // Filtrage des employés selon la recherche
   const filteredEmployees = employees.filter(employee => {
@@ -37,7 +39,11 @@ const EmployeesList: React.FC<EmployeesListProps> = ({
           Liste des Employés
         </div>
         
-        <Button variant="default" className="bg-green-500 hover:bg-green-600">
+        <Button 
+          variant="default" 
+          className="bg-green-500 hover:bg-green-600"
+          onClick={onOpenAddEmployee}
+        >
           <UserPlus className="mr-2 h-4 w-4" />
           Nouvel employé
         </Button>
@@ -98,11 +104,11 @@ const EmployeesList: React.FC<EmployeesListProps> = ({
                       <span className="sr-only">Voir</span>
                     </Button>
                     <Button variant="ghost" size="icon">
-                      <FileEdit className="h-4 w-4" />
+                      <Pencil className="h-4 w-4" />
                       <span className="sr-only">Modifier</span>
                     </Button>
                     <Button variant="ghost" size="icon">
-                      <Trash2 className="h-4 w-4" />
+                      <Trash className="h-4 w-4" />
                       <span className="sr-only">Supprimer</span>
                     </Button>
                   </TableCell>

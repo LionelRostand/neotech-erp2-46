@@ -10,6 +10,7 @@ import FreightShipments from './submodules/FreightShipments';
 import EmployeesDashboard from './submodules/EmployeesDashboard';
 import FreightDashboard from './submodules/FreightDashboard';
 import ConsultationsPage from './submodules/health/ConsultationsPage';
+import EmployeesProfiles from './submodules/EmployeesProfiles';
 
 interface SubmodulePageProps {
   moduleId: number;
@@ -58,6 +59,11 @@ const SubmodulePage: React.FC<SubmodulePageProps> = ({ moduleId, submoduleId }) 
     // Specific content for employees-badges
     if (submoduleId === 'employees-badges') {
       return <EmployeesBadges />;
+    }
+    
+    // Specific content for employees-profiles
+    if (submoduleId === 'employees-profiles') {
+      return <EmployeesProfiles />;
     }
     
     // Specific content for freight-shipments
