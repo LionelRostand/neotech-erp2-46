@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Search, Bell, Mail, User, Key, Languages, Shield } from 'lucide-react';
+import { Search, Bell, Mail, User, Key, Languages, Shield, Building2, Headphones, Globe, MessageSquare } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { 
   DropdownMenu,
@@ -8,7 +8,12 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
-  DropdownMenuTrigger
+  DropdownMenuTrigger,
+  DropdownMenuGroup,
+  DropdownMenuSub,
+  DropdownMenuSubTrigger,
+  DropdownMenuSubContent,
+  DropdownMenuPortal
 } from "@/components/ui/dropdown-menu";
 import { useNavigate } from 'react-router-dom';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -66,34 +71,146 @@ const TopBar = () => {
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem 
-                  className="cursor-pointer flex items-center gap-2"
-                  onClick={() => navigate('/profile')}
-                >
-                  <User className="h-4 w-4" />
-                  <span>Profil</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem 
-                  className="cursor-pointer flex items-center gap-2"
-                  onClick={() => navigate('/profile?tab=password')}
-                >
-                  <Key className="h-4 w-4" />
-                  <span>Mot de passe</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem 
-                  className="cursor-pointer flex items-center gap-2"
-                  onClick={() => navigate('/profile?tab=language')}
-                >
-                  <Languages className="h-4 w-4" />
-                  <span>Langue</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem 
-                  className="cursor-pointer flex items-center gap-2"
-                  onClick={() => navigate('/profile?tab=2fa')}
-                >
-                  <Shield className="h-4 w-4" />
-                  <span>Authentification</span>
-                </DropdownMenuItem>
+                
+                {/* Profile Settings */}
+                <DropdownMenuGroup>
+                  <DropdownMenuItem 
+                    className="cursor-pointer flex items-center gap-2"
+                    onClick={() => navigate('/profile')}
+                  >
+                    <User className="h-4 w-4" />
+                    <span>Profil</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    className="cursor-pointer flex items-center gap-2"
+                    onClick={() => navigate('/profile?tab=password')}
+                  >
+                    <Key className="h-4 w-4" />
+                    <span>Mot de passe</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    className="cursor-pointer flex items-center gap-2"
+                    onClick={() => navigate('/profile?tab=language')}
+                  >
+                    <Languages className="h-4 w-4" />
+                    <span>Langue</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    className="cursor-pointer flex items-center gap-2"
+                    onClick={() => navigate('/profile?tab=2fa')}
+                  >
+                    <Shield className="h-4 w-4" />
+                    <span>Authentification</span>
+                  </DropdownMenuItem>
+                </DropdownMenuGroup>
+                
+                <DropdownMenuSeparator />
+                
+                {/* Module Categories */}
+                <DropdownMenuSub>
+                  <DropdownMenuSubTrigger className="cursor-pointer">
+                    <Building2 className="h-4 w-4 mr-2" />
+                    <span>Gestion d'Entreprise</span>
+                  </DropdownMenuSubTrigger>
+                  <DropdownMenuPortal>
+                    <DropdownMenuSubContent>
+                      <DropdownMenuItem onClick={() => navigate('/applications')}>
+                        Companies
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate('/applications')}>
+                        Employees
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate('/applications')}>
+                        Accounting
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate('/applications')}>
+                        Purchase
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate('/applications')}>
+                        Inventory
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate('/applications')}>
+                        Planning
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate('/applications')}>
+                        Projects
+                      </DropdownMenuItem>
+                    </DropdownMenuSubContent>
+                  </DropdownMenuPortal>
+                </DropdownMenuSub>
+                
+                <DropdownMenuSub>
+                  <DropdownMenuSubTrigger className="cursor-pointer">
+                    <Headphones className="h-4 w-4 mr-2" />
+                    <span>Services Spécialisés</span>
+                  </DropdownMenuSubTrigger>
+                  <DropdownMenuPortal>
+                    <DropdownMenuSubContent>
+                      <DropdownMenuItem onClick={() => navigate('/applications')}>
+                        POS
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate('/applications')}>
+                        Garage
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate('/applications')}>
+                        Transport
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate('/applications')}>
+                        Health
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate('/applications')}>
+                        Hotel
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate('/applications')}>
+                        Bookstore
+                      </DropdownMenuItem>
+                    </DropdownMenuSubContent>
+                  </DropdownMenuPortal>
+                </DropdownMenuSub>
+                
+                <DropdownMenuSub>
+                  <DropdownMenuSubTrigger className="cursor-pointer">
+                    <Globe className="h-4 w-4 mr-2" />
+                    <span>Présence Numérique</span>
+                  </DropdownMenuSubTrigger>
+                  <DropdownMenuPortal>
+                    <DropdownMenuSubContent>
+                      <DropdownMenuItem onClick={() => navigate('/applications')}>
+                        Website
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate('/applications')}>
+                        Ecommerce
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate('/applications')}>
+                        Email Marketing
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate('/applications')}>
+                        Academy
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate('/applications')}>
+                        Elearning
+                      </DropdownMenuItem>
+                    </DropdownMenuSubContent>
+                  </DropdownMenuPortal>
+                </DropdownMenuSub>
+                
+                <DropdownMenuSub>
+                  <DropdownMenuSubTrigger className="cursor-pointer">
+                    <MessageSquare className="h-4 w-4 mr-2" />
+                    <span>Communication</span>
+                  </DropdownMenuSubTrigger>
+                  <DropdownMenuPortal>
+                    <DropdownMenuSubContent>
+                      <DropdownMenuItem onClick={() => navigate('/applications')}>
+                        Messages
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate('/applications')}>
+                        Documents
+                      </DropdownMenuItem>
+                    </DropdownMenuSubContent>
+                  </DropdownMenuPortal>
+                </DropdownMenuSub>
+                
                 <DropdownMenuSeparator />
                 <DropdownMenuItem className="cursor-pointer text-destructive">
                   Déconnexion
