@@ -15,9 +15,10 @@ interface DataTableProps {
   title: string;
   data: Transaction[];
   className?: string;
+  onRowClick?: (row: Transaction) => void;
 }
 
-const DataTable = ({ title, data, className }: DataTableProps) => {
+const DataTable = ({ title, data, className, onRowClick }: DataTableProps) => {
   return (
     <div className={cn("bg-white rounded-xl shadow-sm overflow-hidden", className)}>
       <div className="p-6 border-b border-gray-100">
@@ -38,7 +39,11 @@ const DataTable = ({ title, data, className }: DataTableProps) => {
             {data.map((item, index) => (
               <tr 
                 key={item.id}
-                className="text-gray-700 text-sm hover:bg-gray-50 transition-colors"
+                className={cn(
+                  "text-gray-700 text-sm hover:bg-gray-50 transition-colors",
+                  onRowClick && "cursor-pointer"
+                )}
+                onClick={() => onRowClick && onRowClick(item)}
               >
                 <td className="px-6 py-4 font-medium">#{item.id}</td>
                 <td className="px-6 py-4">{item.date}</td>
