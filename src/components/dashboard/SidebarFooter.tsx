@@ -6,6 +6,12 @@ import { Button } from "@/components/ui/button";
 import NavLink from './NavLink';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useLocation } from 'react-router-dom';
+import { 
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 
 interface SidebarFooterProps {
   sidebarOpen: boolean;
@@ -40,81 +46,76 @@ const SidebarFooter = ({
   return (
     <div className="p-4 border-t border-gray-100">
       {/* PARAMETRES GENERAUX menu with submenu */}
-      <Collapsible open={showSettingsSubmenus} onOpenChange={setShowSettingsSubmenus}>
-        <div className="relative">
-          <div 
-            className={cn(
-              "nav-link group flex items-center px-4 py-2 text-sm font-medium rounded-md my-1 transition-colors relative cursor-pointer",
-              isSettingsActive || isOnSettingsPage ? "bg-neotech-primary text-white" : "text-gray-700 hover:bg-gray-100"
-            )}
-            onClick={() => setShowSettingsSubmenus(!showSettingsSubmenus)}
-          >
+      <Accordion 
+        type="single" 
+        collapsible 
+        defaultValue={isOnSettingsPage ? "settings" : undefined}
+        value={showSettingsSubmenus ? "settings" : undefined}
+        onValueChange={(value) => setShowSettingsSubmenus(value === "settings")}
+      >
+        <AccordionItem value="settings" className="border-none">
+          <div className={cn(
+            "nav-link group flex items-center px-4 py-2 text-sm font-medium rounded-md my-1 transition-colors relative cursor-pointer",
+            isSettingsActive || isOnSettingsPage ? "bg-neotech-primary text-white" : "text-gray-700 hover:bg-gray-100"
+          )}>
             <span className="transition-transform duration-300 group-hover:scale-110 mr-3">
               <Settings size={20} />
             </span>
-            <span 
-              className={cn(
+            <AccordionTrigger className={cn(
+              "flex-1 flex items-center justify-between py-0 hover:no-underline",
+              (isSettingsActive || isOnSettingsPage) ? "text-white" : "text-gray-700"
+            )}>
+              <span className={cn(
                 "transition-opacity duration-300",
                 !sidebarOpen && "sidebar-collapsed-hide"
-              )}
-            >
-              PARAMETRES GENERAUX
-            </span>
-            
-            <button className={cn(
-              "absolute right-2 top-1/2 transform -translate-y-1/2 p-1",
-              (isSettingsActive || isOnSettingsPage) ? "text-white" : "text-gray-500 hover:text-gray-700"
-            )}
-            onClick={(e) => {
-              e.stopPropagation();
-              setShowSettingsSubmenus(!showSettingsSubmenus);
-            }}>
-              {showSettingsSubmenus ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-            </button>
+              )}>
+                PARAMETRES GENERAUX
+              </span>
+            </AccordionTrigger>
           </div>
-        </div>
-        
-        <CollapsibleContent>
-          <div className="pl-8 mt-1 space-y-1 border-l border-gray-100 ml-4">
-            <NavLink
-              icon={<Lock size={16} />}
-              label="Droits utilisateurs"
-              href="/settings/user-permissions"
-              isActive={location.pathname === '/settings/user-permissions'}
-              onClick={() => onNavigate('/settings/user-permissions')}
-              className="py-1"
-              showLabelWhenCollapsed={false}
-            />
-            <NavLink
-              icon={<Globe size={16} />}
-              label="Traduction"
-              href="/settings/translation"
-              isActive={location.pathname === '/settings/translation'}
-              onClick={() => onNavigate('/settings/translation')}
-              className="py-1"
-              showLabelWhenCollapsed={false}
-            />
-            <NavLink
-              icon={<Mail size={16} />}
-              label="Configuration SMTP"
-              href="/settings/smtp"
-              isActive={location.pathname === '/settings/smtp'}
-              onClick={() => onNavigate('/settings/smtp')}
-              className="py-1"
-              showLabelWhenCollapsed={false}
-            />
-            <NavLink
-              icon={<Shield size={16} />}
-              label="Authentification 2FA"
-              href="/settings/2fa"
-              isActive={location.pathname === '/settings/2fa'}
-              onClick={() => onNavigate('/settings/2fa')}
-              className="py-1"
-              showLabelWhenCollapsed={false}
-            />
-          </div>
-        </CollapsibleContent>
-      </Collapsible>
+          
+          <AccordionContent className="pb-1 pt-1">
+            <div className="pl-8 space-y-1 border-l border-gray-100 ml-4">
+              <NavLink
+                icon={<Lock size={16} />}
+                label="Droits utilisateurs"
+                href="/settings/user-permissions"
+                isActive={location.pathname === '/settings/user-permissions'}
+                onClick={() => onNavigate('/settings/user-permissions')}
+                className="py-1"
+                showLabelWhenCollapsed={false}
+              />
+              <NavLink
+                icon={<Globe size={16} />}
+                label="Traduction"
+                href="/settings/translation"
+                isActive={location.pathname === '/settings/translation'}
+                onClick={() => onNavigate('/settings/translation')}
+                className="py-1"
+                showLabelWhenCollapsed={false}
+              />
+              <NavLink
+                icon={<Mail size={16} />}
+                label="Configuration SMTP"
+                href="/settings/smtp"
+                isActive={location.pathname === '/settings/smtp'}
+                onClick={() => onNavigate('/settings/smtp')}
+                className="py-1"
+                showLabelWhenCollapsed={false}
+              />
+              <NavLink
+                icon={<Shield size={16} />}
+                label="Authentification 2FA"
+                href="/settings/2fa"
+                isActive={location.pathname === '/settings/2fa'}
+                onClick={() => onNavigate('/settings/2fa')}
+                className="py-1"
+                showLabelWhenCollapsed={false}
+              />
+            </div>
+          </AccordionContent>
+        </AccordionItem>
+      </Accordion>
 
       <div className="mt-3">
         <Button
