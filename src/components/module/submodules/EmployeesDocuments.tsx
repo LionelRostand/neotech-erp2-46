@@ -74,7 +74,7 @@ const EmployeesDocuments: React.FC = () => {
   ];
   
   // Document types by category
-  const documentTypes: {[key: string]: string[]} = {
+  const documentTypesByCategory: {[key: string]: string[]} = {
     'Administratif': ['Attestation de travail', 'Justificatif de domicile', 'Pièce d\'identité'],
     'Contrat': ['Contrat de travail', 'Avenant', 'Rupture conventionnelle'],
     'Évaluation': ['Évaluation annuelle', 'Évaluation d\'essai', 'Objectifs'],
@@ -138,7 +138,7 @@ const EmployeesDocuments: React.FC = () => {
                       <SelectValue placeholder="Sélectionner une catégorie" />
                     </SelectTrigger>
                     <SelectContent>
-                      {Object.keys(documentTypes).map((category) => (
+                      {Object.keys(documentTypesByCategory).map((category) => (
                         <SelectItem key={category} value={category}>{category}</SelectItem>
                       ))}
                     </SelectContent>
@@ -153,7 +153,7 @@ const EmployeesDocuments: React.FC = () => {
                       <SelectValue placeholder={selectedCategory ? "Sélectionner un type" : "Sélectionnez d'abord une catégorie"} />
                     </SelectTrigger>
                     <SelectContent>
-                      {selectedCategory && documentTypes[selectedCategory]?.map((type) => (
+                      {selectedCategory && documentTypesByCategory[selectedCategory]?.map((type) => (
                         <SelectItem key={type} value={type}>{type}</SelectItem>
                       ))}
                     </SelectContent>
