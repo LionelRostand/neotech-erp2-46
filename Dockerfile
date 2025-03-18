@@ -6,7 +6,7 @@ FROM node:18.20.7-alpine AS builder
 RUN corepack enable
 
 # Définir le répertoire de travail
-WORKDIR /neotech-apps
+WORKDIR /neotech-erp
 
 # Copier uniquement les fichiers nécessaires pour l'installation des dépendances
 COPY package*.json ./
@@ -46,10 +46,10 @@ RUN adduser -u 1000 -G node -s /bin/sh -D node || echo "User node already exists
 USER node
 
 # Définir le répertoire de travail
-WORKDIR /neotech-apps
+WORKDIR /neotech-erp
 
 # Copier uniquement les fichiers nécessaires pour exécuter l'application
-COPY --from=builder /neotech-apps/dist ./dist
+COPY --from=builder /neotech-erp/dist ./dist
 
 # Définir les variables d'environnement
 ENV NODE_ENV=production
