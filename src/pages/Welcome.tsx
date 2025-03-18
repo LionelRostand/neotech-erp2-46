@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -8,7 +9,7 @@ import { modules } from '@/data/modules';
 
 const Welcome = () => {
   const navigate = useNavigate();
-  const [visibleModules, setVisibleModules] = useState<number[]>([1, 2, 3, 4]);
+  const [visibleModules, setVisibleModules] = useState<number[]>([]);
   const [animationStep, setAnimationStep] = useState(0);
   const [installedModules, setInstalledModules] = useState<number[]>([]);
 
@@ -16,7 +17,9 @@ const Welcome = () => {
     const loadInstalledModules = () => {
       const savedModules = localStorage.getItem('installedModules');
       if (savedModules) {
-        setInstalledModules(JSON.parse(savedModules));
+        const parsedModules = JSON.parse(savedModules);
+        setInstalledModules(parsedModules);
+        setVisibleModules(parsedModules);
       }
     };
     
@@ -29,33 +32,23 @@ const Welcome = () => {
   }, []);
 
   useEffect(() => {
+    if (installedModules.length === 0) return;
+    
     const interval = setInterval(() => {
-      setAnimationStep(prev => {
-        const nextStep = prev + 1;
-        
-        if (nextStep % 3 === 0) {
-          let potentialModules = [...visibleModules];
-          
-          for (const installedId of installedModules) {
-            if (!potentialModules.includes(installedId)) {
-              potentialModules.push(installedId);
-              setVisibleModules(potentialModules);
-              return nextStep;
-            }
-          }
-          
-          const nextModuleId = Math.min(modules.length, potentialModules.length + 1);
-          if (nextModuleId > potentialModules.length) {
-            setVisibleModules([...potentialModules, nextModuleId]);
-          }
-        }
-        
-        return nextStep;
-      });
+      setAnimationStep(prev => prev + 1);
     }, 2000);
 
     return () => clearInterval(interval);
-  }, [visibleModules, installedModules]);
+  }, [installedModules]);
+
+  // Handler for the "Gérer les applications" button
+  const handleManageApps = () => {
+    // Navigate to applications page and focus on installed apps in sidebar
+    navigate('/applications');
+    // Dispatch an event that sidebar can listen to for focusing on installed apps section
+    const event = new CustomEvent('focusInstalledApps');
+    window.dispatchEvent(event);
+  };
 
   return (
     <DashboardLayout>
@@ -98,7 +91,7 @@ const Welcome = () => {
                 transition={{ duration: 0.8, delay: 0.6 }}
               >
                 <Button
-                  onClick={() => navigate('/applications')}
+                  onClick={handleManageApps}
                   className="bg-neotech-primary hover:bg-neotech-primary/90 text-white px-8 py-6 h-auto text-lg"
                   size="lg"
                 >
@@ -163,48 +156,49 @@ const Welcome = () => {
               </div>
               
               <AnimatePresence>
-                {visibleModules.map((moduleId, index) => {
-                  const module = modules.find(m => m.id === moduleId);
-                  if (!module) return null;
-                  
-                  const angle = (index * (360 / visibleModules.length) + animationStep * 5) % 360;
-                  const radius = 180;
-                  const x = radius * Math.cos(angle * Math.PI / 180);
-                  const y = radius * Math.sin(angle * Math.PI / 180);
-                  
-                  const isInstalled = installedModules.includes(moduleId);
-                  
-                  return (
-                    <motion.div
-                      key={module.id}
-                      className={`absolute top-1/2 left-1/2 bg-white p-4 rounded-xl shadow-lg flex flex-col items-center justify-center w-28 h-28 ${
-                        isInstalled ? 'ring-2 ring-neotech-primary' : ''
-                      }`}
-                      initial={{ opacity: 0, scale: 0 }}
-                      animate={{ 
-                        opacity: 1, 
-                        scale: 1,
-                        x: x,
-                        y: y,
-                        zIndex: Math.round(Math.sin(angle * Math.PI / 180) * 10) + 10
-                      }}
-                      exit={{ opacity: 0, scale: 0 }}
-                      transition={{ 
-                        duration: 0.8,
-                        x: { duration: 2 },
-                        y: { duration: 2 }
-                      }}
-                    >
-                      <div className={`mb-2 text-2xl ${isInstalled ? 'text-neotech-primary' : 'text-gray-600'}`}>
-                        {module.icon}
-                      </div>
-                      <span className="text-sm font-medium text-gray-800">{module.name}</span>
-                      {isInstalled && (
+                {installedModules.length > 0 ? (
+                  visibleModules.map((moduleId, index) => {
+                    const module = modules.find(m => m.id === moduleId);
+                    if (!module) return null;
+                    
+                    const angle = (index * (360 / visibleModules.length) + animationStep * 5) % 360;
+                    const radius = 180;
+                    const x = radius * Math.cos(angle * Math.PI / 180);
+                    const y = radius * Math.sin(angle * Math.PI / 180);
+                    
+                    return (
+                      <motion.div
+                        key={module.id}
+                        className="absolute top-1/2 left-1/2 bg-white p-4 rounded-xl shadow-lg flex flex-col items-center justify-center w-28 h-28 ring-2 ring-neotech-primary"
+                        initial={{ opacity: 0, scale: 0 }}
+                        animate={{ 
+                          opacity: 1, 
+                          scale: 1,
+                          x: x,
+                          y: y,
+                          zIndex: Math.round(Math.sin(angle * Math.PI / 180) * 10) + 10
+                        }}
+                        exit={{ opacity: 0, scale: 0 }}
+                        transition={{ 
+                          duration: 0.8,
+                          x: { duration: 2 },
+                          y: { duration: 2 }
+                        }}
+                      >
+                        <div className="mb-2 text-2xl text-neotech-primary">
+                          {module.icon}
+                        </div>
+                        <span className="text-sm font-medium text-gray-800">{module.name}</span>
                         <span className="text-xs mt-1 text-neotech-primary">Installé</span>
-                      )}
-                    </motion.div>
-                  );
-                })}
+                      </motion.div>
+                    );
+                  })
+                ) : (
+                  <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center px-8 py-4 bg-white/80 rounded-xl shadow-sm">
+                    <p className="text-gray-600 text-lg">Aucune application installée</p>
+                    <p className="text-sm mt-2">Cliquez sur "Gérer les applications" pour commencer</p>
+                  </div>
+                )}
               </AnimatePresence>
               
               {/* Background decorative elements */}
