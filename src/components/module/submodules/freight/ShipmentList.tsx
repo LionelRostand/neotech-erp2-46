@@ -21,7 +21,7 @@ interface ShipmentListProps {
 }
 
 const ShipmentList: React.FC<ShipmentListProps> = ({ filter }) => {
-  const getStatusColor = (status: string): "default" | "success" | "warning" | "danger" => {
+  const getStatusColor = (status: string): "success" | "warning" | "danger" => {
     switch (status) {
       case 'delivered':
         return 'success';
@@ -30,9 +30,9 @@ const ShipmentList: React.FC<ShipmentListProps> = ({ filter }) => {
         return 'warning';
       case 'delayed':
       case 'cancelled':
-        return 'danger';
+      case 'draft':
       default:
-        return 'default';
+        return 'danger';
     }
   };
 

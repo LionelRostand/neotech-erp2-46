@@ -1,24 +1,30 @@
 
 import { cn } from "@/lib/utils";
 
-type StatusType = "success" | "warning" | "danger";
+export type StatusType = "success" | "warning" | "danger";
 
 interface StatusBadgeProps {
   status: StatusType;
-  text: string;
+  children?: React.ReactNode;
   className?: string;
 }
 
-const StatusBadge = ({ status, text, className }: StatusBadgeProps) => {
+const StatusBadge = ({ status, children, className }: StatusBadgeProps) => {
   const statusClasses = {
-    success: "status-badge-success",
-    warning: "status-badge-warning",
-    danger: "status-badge-danger",
+    success: "bg-green-100 text-green-800 border-green-200",
+    warning: "bg-yellow-100 text-yellow-800 border-yellow-200",
+    danger: "bg-red-100 text-red-800 border-red-200",
   };
 
   return (
-    <span className={cn("status-badge", statusClasses[status], className)}>
-      {text}
+    <span 
+      className={cn(
+        "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium border", 
+        statusClasses[status], 
+        className
+      )}
+    >
+      {children}
     </span>
   );
 };
