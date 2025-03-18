@@ -15,6 +15,7 @@ export interface SubModule {
   name: string;
   href: string;
   icon: React.ReactNode;
+  description?: string; // Added description property as optional
 }
 
 // Helper function to create icons without JSX syntax in .ts files
