@@ -42,7 +42,7 @@ const DataTable = <T extends Record<string, any>>({
     { 
       key: 'status', 
       header: 'Statut',
-      cell: (row: Transaction) => <StatusBadge status={row.status} text={row.statusText} />
+      cell: (row: Transaction) => <StatusBadge status={row.status}>{row.statusText}</StatusBadge>
     }
   ];
 
