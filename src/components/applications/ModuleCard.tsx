@@ -1,9 +1,10 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Check, Trash2, Download, ChevronDown, ChevronUp } from 'lucide-react';
+import { Check, Trash2, Download, ChevronDown, ChevronUp, LayoutDashboard } from 'lucide-react';
 import { AppModule } from '@/data/types/modules';
+import ModuleDashboardPreview from './ModuleDashboardPreview';
 
 interface ModuleCardProps {
   module: AppModule;
@@ -22,6 +23,8 @@ const ModuleCard: React.FC<ModuleCardProps> = ({
   onUninstall,
   onToggleExpansion
 }) => {
+  const [showDashboard, setShowDashboard] = useState(false);
+
   return (
     <Card className="border border-gray-200 transition-all hover:shadow-md flex flex-col">
       <CardHeader className="bg-gray-50 py-3 px-4">
@@ -33,20 +36,40 @@ const ModuleCard: React.FC<ModuleCardProps> = ({
             <CardTitle className="text-base">{module.name}</CardTitle>
             <CardDescription className="text-xs">Module #{module.id}</CardDescription>
           </div>
-          {module.submodules && isInstalled && (
+          <div className="flex">
             <Button 
               variant="ghost" 
               size="sm" 
-              onClick={() => onToggleExpansion(module.id)}
-              className="ml-auto h-7 w-7 p-0"
+              onClick={() => setShowDashboard(!showDashboard)}
+              className="ml-auto h-7 w-7 p-0 mr-1"
+              title="Aperçu du tableau de bord"
             >
-              {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+              <LayoutDashboard size={16} />
             </Button>
-          )}
+            
+            {module.submodules && isInstalled && (
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => onToggleExpansion(module.id)}
+                className="ml-auto h-7 w-7 p-0"
+              >
+                {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+              </Button>
+            )}
+          </div>
         </div>
       </CardHeader>
       <CardContent className="py-3 px-4 flex-1 text-sm">
         <p className="text-sm text-gray-600">{module.description}</p>
+        
+        {/* Dashboard Preview */}
+        {showDashboard && (
+          <div className="mt-3 border-t pt-3">
+            <h3 className="font-medium mb-2 text-sm">Aperçu du tableau de bord:</h3>
+            <ModuleDashboardPreview moduleId={module.id} />
+          </div>
+        )}
         
         {/* Sous-modules (visible uniquement si le module est installé et développé) */}
         {isInstalled && isExpanded && module.submodules && (
