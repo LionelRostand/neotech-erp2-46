@@ -7,6 +7,7 @@ import NotFound from "@/pages/NotFound";
 import Welcome from "@/pages/Welcome";
 import Applications from "@/pages/Applications";
 import UserProfile from "@/pages/UserProfile";
+import ModuleInfo from "@/pages/ModuleInfo";
 import UserPermissions from "@/components/settings/UserPermissions";
 import Translation from "@/components/settings/Translation";
 import SmtpConfig from "@/components/settings/SmtpConfig";
@@ -19,6 +20,7 @@ const AppRoutes = () => (
     <Route path="/login" element={<Login />} />
     <Route path="/" element={<Index />} />
     <Route path="/welcome" element={<Welcome />} />
+    <Route path="/module-info" element={<ModuleInfo />} />
     <Route path="/applications" element={<Applications />} />
     <Route path="/profile" element={<UserProfile />} />
     

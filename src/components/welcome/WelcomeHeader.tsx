@@ -46,7 +46,7 @@ const WelcomeHeader = () => {
           variant="outline"
           className="border-gray-300 text-gray-700 px-8 py-6 h-auto text-lg"
           size="lg"
-          onClick={() => navigate('/welcome')}
+          onClick={() => navigate('/module-info')}
         >
           En savoir plus
         </Button>
