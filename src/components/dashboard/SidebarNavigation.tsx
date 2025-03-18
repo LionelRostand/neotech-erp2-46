@@ -39,15 +39,23 @@ const SidebarNavigation = ({ installedModules, onNavigate }: SidebarNavigationPr
     location.pathname === '/dashboard/performance' || 
     location.pathname === '/dashboard/analytics';
 
-  // Initialize expanded state for active module
+  // Initialize expanded state for active module on route change
   useEffect(() => {
-    if (activeModule && !expandedModules[activeModule.id]) {
+    if (activeModule) {
       setExpandedModules(prev => ({
         ...prev,
         [activeModule.id]: true
       }));
     }
-  }, [activeModule, expandedModules]);
+  }, [location.pathname, activeModule]);
+
+  // Function to toggle submenu expansion
+  const toggleModuleSubmenus = (moduleId: number) => {
+    setExpandedModules(prev => ({
+      ...prev,
+      [moduleId]: !prev[moduleId]
+    }));
+  };
 
   return (
     <nav className="flex-1 p-4 space-y-1 overflow-y-auto flex flex-col">
@@ -122,13 +130,6 @@ const SidebarNavigation = ({ installedModules, onNavigate }: SidebarNavigationPr
       <div className="flex-grow min-h-8"></div>
     </nav>
   );
-  
-  function toggleModuleSubmenus(moduleId: number) {
-    setExpandedModules(prev => ({
-      ...prev,
-      [moduleId]: !prev[moduleId]
-    }));
-  }
 };
 
 export default SidebarNavigation;

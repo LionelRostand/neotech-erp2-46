@@ -49,7 +49,11 @@ const ModuleItem: React.FC<ModuleItemProps> = ({
         type="single" 
         collapsible 
         value={isExpanded ? `module-${module.id}` : undefined}
-        onValueChange={(value) => toggleModuleSubmenus(module.id)}
+        onValueChange={(value) => {
+          if (value === `module-${module.id}` || value === "") {
+            toggleModuleSubmenus(module.id);
+          }
+        }}
         className="border-none"
       >
         <AccordionItem value={`module-${module.id}`} className="border-none">
@@ -59,17 +63,24 @@ const ModuleItem: React.FC<ModuleItemProps> = ({
             }`}
           >
             <span className="mr-3 text-gray-500">{module.icon}</span>
-            <AccordionTrigger 
-              className="flex-1 flex items-center py-0 hover:no-underline"
+            <span 
+              className="flex-1"
               onClick={(e) => {
-                if (e.target === e.currentTarget || e.target === e.currentTarget.firstChild) {
-                  e.stopPropagation();
-                  onNavigate(module.href);
-                }
-              }}  
+                e.stopPropagation();
+                onNavigate(module.href);
+              }}
             >
-              <span>{module.name}</span>
-            </AccordionTrigger>
+              {module.name}
+            </span>
+            <button 
+              onClick={(e) => {
+                e.stopPropagation();
+                toggleModuleSubmenus(module.id);
+              }}
+              className="p-1 rounded-full hover:bg-gray-200"
+            >
+              {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+            </button>
           </div>
           
           <AccordionContent className="pb-0 pt-1 px-0">
