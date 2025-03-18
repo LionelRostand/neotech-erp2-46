@@ -21,9 +21,9 @@ const DashboardSubmenu: React.FC<DashboardSubmenuProps> = ({
       <NavLink
         icon={<LayoutDashboard size={16} />}
         label="Vue générale"
-        href="/dashboard"
-        isActive={location.pathname === '/dashboard'}
-        onClick={() => onNavigate('/dashboard')}
+        href="/"
+        isActive={location.pathname === '/' || location.pathname === '/dashboard'}
+        onClick={() => onNavigate('/')}
         className="py-1"
         showLabelWhenCollapsed={false}
       />

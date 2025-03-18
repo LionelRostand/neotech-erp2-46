@@ -34,9 +34,9 @@ const SidebarNavigation = ({ installedModules, onNavigate }: SidebarNavigationPr
     location.pathname.startsWith(module.href)
   );
 
-  // Check if we're on any of the dashboard routes
+  // Check if we're on the root route (/) or other dashboard routes
   const isOnDashboardRoute = 
-    location.pathname === '/dashboard' || 
+    location.pathname === '/' || 
     location.pathname === '/dashboard/performance' || 
     location.pathname === '/dashboard/analytics';
 
@@ -81,7 +81,7 @@ const SidebarNavigation = ({ installedModules, onNavigate }: SidebarNavigationPr
 
   return (
     <nav className="flex-1 p-4 space-y-1 overflow-y-auto flex flex-col">
-      {/* Dashboard Link with submenu */}
+      {/* Dashboard Link with submenu - updated to point to / */}
       <Accordion 
         type="single" 
         collapsible 

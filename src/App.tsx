@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -15,20 +14,8 @@ import DashboardLayout from "./components/DashboardLayout";
 import ModuleLayout from "./components/module/ModuleLayout";
 import SubmodulePage from "./components/module/SubmodulePage";
 
-// Dashboard component
-const Dashboard = () => (
-  <DashboardLayout>
-    <div className="flex min-h-screen items-center justify-center">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold text-neotech-primary mb-4">Tableau de bord</h1>
-        <p className="text-gray-600">
-          Bienvenue sur votre tableau de bord. <br />
-          Les statistiques et informations importantes seront affichées ici.
-        </p>
-      </div>
-    </div>
-  </DashboardLayout>
-);
+// Dashboard component - removed as we're redirecting now
+// const Dashboard = () => (...)
 
 // Settings Pages Components
 const UserPermissions = () => (
@@ -201,7 +188,9 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/welcome" element={<Welcome />} />
           <Route path="/applications" element={<Applications />} />
-          <Route path="/dashboard" element={<Dashboard />} />
+          
+          {/* Redirect /dashboard to / */}
+          <Route path="/dashboard" element={<Navigate to="/" replace />} />
           
           {/* Settings routes - redirect from /settings to the first settings page */}
           <Route path="/settings" element={<Navigate to="/settings/user-permissions" replace />} />
