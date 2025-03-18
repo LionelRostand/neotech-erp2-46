@@ -1,8 +1,7 @@
-
 import { 
   Stethoscope, LayoutDashboard, Calendar, Users, Pill, Activity, Settings,
   UserCog, FileText, HeartPulse, Building2, CreditCard, BarChart3, Workflow, User,
-  Clipboard, Syringe, Flask, Bed, BedDouble, BadgePercent, ShieldCheck
+  Clipboard, Syringe, TestTube, Bed, BedDouble, BadgePercent, ShieldCheck
 } from 'lucide-react';
 import { AppModule, createIcon } from '../types/modules';
 
@@ -20,7 +19,7 @@ export const healthModule: AppModule = {
     { id: "health-nurses", name: "Personnel", href: "/modules/health/nurses", icon: createIcon(Users), description: "Infirmiers et personnel soignant" },
     { id: "health-consultations", name: "Consultations", href: "/modules/health/consultations", icon: createIcon(Clipboard), description: "Enregistrement des diagnostics et examens" },
     { id: "health-medical-records", name: "Dossiers Médicaux", href: "/modules/health/medical-records", icon: createIcon(FileText), description: "Gestion des DME et historique" },
-    { id: "health-laboratory", name: "Laboratoire", href: "/modules/health/laboratory", icon: createIcon(Flask), description: "Analyses médicales et résultats" },
+    { id: "health-laboratory", name: "Laboratoire", href: "/modules/health/laboratory", icon: createIcon(TestTube), description: "Analyses médicales et résultats" },
     { id: "health-prescriptions", name: "Ordonnances", href: "/modules/health/prescriptions", icon: createIcon(Syringe), description: "Gestion des prescriptions médicales" },
     { id: "health-pharmacy", name: "Pharmacie", href: "/modules/health/pharmacy", icon: createIcon(Pill), description: "Gestion des stocks de médicaments" },
     { id: "health-admissions", name: "Hospitalisations", href: "/modules/health/admissions", icon: createIcon(Building2), description: "Admissions et séjours hospitaliers" },
