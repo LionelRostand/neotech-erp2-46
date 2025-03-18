@@ -52,10 +52,18 @@ const ModuleItem: React.FC<ModuleItemProps> = ({
               className={`flex items-center w-full px-3 py-2 text-sm font-medium rounded-md cursor-pointer ${
                 isActive ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
               }`}
-              onClick={handleClick}
             >
               <span className="mr-3 text-gray-500">{module.icon}</span>
-              <AccordionTrigger className="flex-1 flex items-center py-0 hover:no-underline">
+              <AccordionTrigger 
+                className="flex-1 flex items-center py-0 hover:no-underline"
+                onClick={(e) => {
+                  // If you click on the module name (not the chevron), navigate to the module
+                  if (e.target !== e.currentTarget) {
+                    e.stopPropagation();
+                    onNavigate(module.href);
+                  }
+                }}  
+              >
                 <span>{module.name}</span>
               </AccordionTrigger>
             </div>

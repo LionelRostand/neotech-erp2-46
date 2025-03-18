@@ -85,52 +85,38 @@ const SidebarNavigation = ({ installedModules, onNavigate }: SidebarNavigationPr
         </AccordionItem>
       </Accordion>
       
-      {/* Menu APPLICATIONS with submenu of installed modules */}
-      <Accordion 
-        type="single" 
-        collapsible 
-        defaultValue={isOnModuleRoute || location.pathname === '/applications' ? "applications" : undefined}
-        className="border-none mt-4"
-      >
-        <AccordionItem value="applications" className="border-none">
-          <div className={`nav-link group flex items-center px-4 py-2 text-sm font-medium rounded-md my-1 transition-colors relative cursor-pointer ${
-            location.pathname === '/applications' || isOnModuleRoute ? "bg-neotech-primary text-white" : "text-gray-700 hover:bg-gray-100"
-          }`}>
-            <span className="transition-transform duration-300 group-hover:scale-110 mr-3">
-              <AppWindow size={20} />
-            </span>
-            <AccordionTrigger 
-              className={cn(
-                "flex-1 flex items-center justify-between py-0 hover:no-underline",
-                (location.pathname === '/applications' || isOnModuleRoute) ? "text-white" : "text-gray-700"
-              )}
-              disabled={installedModules.length === 0}
-              onClick={(e) => {
-                if (installedModules.length === 0) {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  onNavigate('/applications');
-                }
-              }}
-            >
-              <span className="transition-opacity duration-300">
-                APPLICATIONS
-              </span>
-            </AccordionTrigger>
+      {/* Display applications directly in the sidebar */}
+      <div className="mt-4">
+        <div className="px-4 py-2 text-xs font-bold text-gray-500 uppercase tracking-wider">
+          APPLICATIONS
+        </div>
+        
+        <ModulesList 
+          installedModules={installedModules}
+          expandedModules={expandedModules}
+          toggleModuleSubmenus={toggleModuleSubmenus}
+          showModules={true}
+          location={location}
+          onNavigate={onNavigate}
+        />
+        
+        {installedModules.length === 0 && (
+          <div className="text-sm text-gray-500 px-4 py-2 italic">
+            Aucune application installée
           </div>
-          
-          <AccordionContent className="pb-1 pt-1">
-            <ModulesList 
-              installedModules={installedModules}
-              expandedModules={expandedModules}
-              toggleModuleSubmenus={toggleModuleSubmenus}
-              showModules={true}
-              location={location}
-              onNavigate={onNavigate}
-            />
-          </AccordionContent>
-        </AccordionItem>
-      </Accordion>
+        )}
+        
+        {/* Link to applications page to install more */}
+        <NavLink
+          icon={<AppWindow size={18} />}
+          label="Gérer les applications"
+          href="/applications"
+          isActive={location.pathname === '/applications'}
+          onClick={() => onNavigate('/applications')}
+          className="mt-2 text-xs"
+          showLabelWhenCollapsed={true}
+        />
+      </div>
       
       {/* Spacer to push content to the bottom */}
       <div className="flex-grow min-h-8"></div>
