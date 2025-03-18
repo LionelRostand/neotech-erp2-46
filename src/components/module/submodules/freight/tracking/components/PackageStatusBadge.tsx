@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
-import { formatPackageStatus } from '../mockTrackingData';
+import { formatPackageStatus } from '../utils/statusUtils';
 
 interface PackageStatusBadgeProps {
   status: string;
