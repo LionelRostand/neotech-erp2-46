@@ -14,6 +14,14 @@ import EmployeesReports from './submodules/EmployeesReports';
 import EmployeesLeaves from './submodules/EmployeesLeaves';
 import FreightDashboard from './submodules/FreightDashboard';
 import FreightShipments from './submodules/FreightShipments';
+import EmployeesAbsences from './submodules/EmployeesAbsences';
+import EmployeesContracts from './submodules/EmployeesContracts';
+import EmployeesDocuments from './submodules/EmployeesDocuments';
+import EmployeesEvaluations from './submodules/EmployeesEvaluations';
+import EmployeesTrainings from './submodules/EmployeesTrainings';
+import EmployeesSalaries from './submodules/EmployeesSalaries';
+import EmployeesRecruitment from './submodules/EmployeesRecruitment';
+import EmployeesSettings from './submodules/EmployeesSettings';
 
 interface SubmodulePageProps {
   moduleId: number;
@@ -51,6 +59,24 @@ const SubmodulePage: React.FC<SubmodulePageProps> = ({ moduleId, submoduleId }) 
         return <EmployeesLeaves />;
       case 'employees-reports':
         return <EmployeesReports />;
+      
+      // New employee submodules
+      case 'employees-absences':
+        return <EmployeesAbsences />;
+      case 'employees-contracts':
+        return <EmployeesContracts />;
+      case 'employees-documents':
+        return <EmployeesDocuments />;
+      case 'employees-evaluations':
+        return <EmployeesEvaluations />;
+      case 'employees-trainings':
+        return <EmployeesTrainings />;
+      case 'employees-salaries':
+        return <EmployeesSalaries />;
+      case 'employees-recruitment':
+        return <EmployeesRecruitment />;
+      case 'employees-settings':
+        return <EmployeesSettings />;
       
       // Freight module
       case 'freight-dashboard':
