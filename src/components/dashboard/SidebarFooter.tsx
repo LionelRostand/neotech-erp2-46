@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { cn } from "@/lib/utils";
 import { Settings, ChevronRight, Menu, ChevronUp, ChevronDown, Lock, Mail, Shield, Check, X, Globe } from 'lucide-react';
 import { Button } from "@/components/ui/button";
@@ -25,18 +25,17 @@ const SidebarFooter = ({
   
   // Check if we're on any settings page
   const isOnSettingsPage = 
-    location.pathname === '/settings' || 
     location.pathname === '/settings/user-permissions' || 
     location.pathname === '/settings/translation' || 
     location.pathname === '/settings/smtp' || 
     location.pathname === '/settings/2fa';
   
   // Open submenu automatically if we're on a settings page
-  React.useEffect(() => {
+  useEffect(() => {
     if (isOnSettingsPage && !showSettingsSubmenus) {
       setShowSettingsSubmenus(true);
     }
-  }, [isOnSettingsPage]);
+  }, [isOnSettingsPage, showSettingsSubmenus]);
   
   return (
     <div className="p-4 border-t border-gray-100">
@@ -48,7 +47,6 @@ const SidebarFooter = ({
               "nav-link group flex items-center px-4 py-2 text-sm font-medium rounded-md my-1 transition-colors relative cursor-pointer",
               isSettingsActive || isOnSettingsPage ? "bg-neotech-primary text-white" : "text-gray-700 hover:bg-gray-100"
             )}
-            onClick={() => onNavigate('/settings')}
           >
             <span className="transition-transform duration-300 group-hover:scale-110 mr-3">
               <Settings size={20} />

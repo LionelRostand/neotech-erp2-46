@@ -203,8 +203,8 @@ const App = () => (
           <Route path="/applications" element={<Applications />} />
           <Route path="/dashboard" element={<Dashboard />} />
           
-          {/* Settings routes */}
-          <Route path="/settings" element={<DashboardLayout><div className="p-6">Page paramètres généraux</div></DashboardLayout>} />
+          {/* Settings routes - redirect from /settings to the first settings page */}
+          <Route path="/settings" element={<Navigate to="/settings/user-permissions" replace />} />
           <Route path="/settings/user-permissions" element={<UserPermissions />} />
           <Route path="/settings/translation" element={<Translation />} />
           <Route path="/settings/smtp" element={<SmtpConfig />} />

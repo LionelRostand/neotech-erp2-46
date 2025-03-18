@@ -60,7 +60,6 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
 
   // Check if we're on any settings page
   const isSettingsActive = 
-    location.pathname === '/settings' || 
     location.pathname.startsWith('/settings/');
 
   return (
