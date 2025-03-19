@@ -11,29 +11,9 @@ export const useDepartments = () => {
   // Hook to Firestore departments collection
   const departmentsFirestore = useFirestore(COLLECTIONS.EMPLOYEES + '_departments');
   
-  // Initial departments data
-  const [departments, setDepartments] = useState<Department[]>([
-    {
-      id: "DEP001",
-      name: "Marketing",
-      description: "Responsable de la stratégie marketing et de la communication",
-      managerId: "EMP003",
-      managerName: "Sophie Martin",
-      employeesCount: 2,
-      color: "#3b82f6", // blue-500
-      employeeIds: ["EMP003", "EMP004"]
-    },
-    {
-      id: "DEP002",
-      name: "Direction",
-      description: "Direction générale de l'entreprise",
-      managerId: "EMP002",
-      managerName: "Lionel Djossa",
-      employeesCount: 1,
-      color: "#10b981", // emerald-500
-      employeeIds: ["EMP002"]
-    }
-  ]);
+  // Departments data state
+  const [departments, setDepartments] = useState<Department[]>([]);
+  const [loading, setLoading] = useState(true);
 
   // State for dialog control and form data
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -53,20 +33,77 @@ export const useDepartments = () => {
 
   // Load departments from Firestore on component mount
   useEffect(() => {
-    // Uncomment when ready to use Firestore
-    // loadDepartmentsFromFirestore();
+    loadDepartmentsFromFirestore();
   }, []);
 
   // Function to load departments from Firestore
   const loadDepartmentsFromFirestore = async () => {
+    setLoading(true);
     try {
       const data = await departmentsFirestore.getAll();
       if (data && data.length > 0) {
         setDepartments(data as Department[]);
+      } else {
+        // If no departments found, initialize with default departments
+        const defaultDepartments = [
+          {
+            id: "DEP001",
+            name: "Marketing",
+            description: "Responsable de la stratégie marketing et de la communication",
+            managerId: "EMP003",
+            managerName: "Sophie Martin",
+            employeesCount: 2,
+            color: "#3b82f6", // blue-500
+            employeeIds: ["EMP003", "EMP004"]
+          },
+          {
+            id: "DEP002",
+            name: "Direction",
+            description: "Direction générale de l'entreprise",
+            managerId: "EMP002",
+            managerName: "Lionel Djossa",
+            employeesCount: 1,
+            color: "#10b981", // emerald-500
+            employeeIds: ["EMP002"]
+          }
+        ];
+        
+        // Save default departments to Firestore
+        for (const dept of defaultDepartments) {
+          await departmentsFirestore.set(dept.id, dept);
+        }
+        
+        setDepartments(defaultDepartments);
       }
     } catch (error) {
       console.error("Error loading departments:", error);
       toast.error("Erreur lors du chargement des départements");
+      
+      // Fallback to default departments if Firebase load fails
+      setDepartments([
+        {
+          id: "DEP001",
+          name: "Marketing",
+          description: "Responsable de la stratégie marketing et de la communication",
+          managerId: "EMP003",
+          managerName: "Sophie Martin",
+          employeesCount: 2,
+          color: "#3b82f6",
+          employeeIds: ["EMP003", "EMP004"]
+        },
+        {
+          id: "DEP002",
+          name: "Direction",
+          description: "Direction générale de l'entreprise",
+          managerId: "EMP002",
+          managerName: "Lionel Djossa",
+          employeesCount: 1,
+          color: "#10b981",
+          employeeIds: ["EMP002"]
+        }
+      ]);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -159,8 +196,7 @@ export const useDepartments = () => {
     };
 
     try {
-      // Uncomment when ready to use Firestore
-      // await departmentsFirestore.set(newDepartment.id, newDepartment);
+      await departmentsFirestore.set(newDepartment.id, newDepartment);
       setDepartments([...departments, newDepartment]);
       setIsAddDialogOpen(false);
       toast.success(`Département ${formData.name} créé avec succès`);
@@ -193,8 +229,7 @@ export const useDepartments = () => {
     };
 
     try {
-      // Uncomment when ready to use Firestore
-      // await departmentsFirestore.update(updatedDepartment.id, updatedDepartment);
+      await departmentsFirestore.update(updatedDepartment.id, updatedDepartment);
       
       const updatedDepartments = departments.map(dep => {
         if (dep.id === currentDepartment.id) {
@@ -220,8 +255,7 @@ export const useDepartments = () => {
     // Confirm deletion
     if (window.confirm(`Êtes-vous sûr de vouloir supprimer le département ${departmentToDelete.name} ?`)) {
       try {
-        // Uncomment when ready to use Firestore
-        // await departmentsFirestore.remove(id);
+        await departmentsFirestore.remove(id);
         setDepartments(departments.filter(dep => dep.id !== id));
         toast.success(`Département ${departmentToDelete.name} supprimé avec succès`);
       } catch (error) {
@@ -242,8 +276,7 @@ export const useDepartments = () => {
         employeesCount: selectedEmployees.length
       };
 
-      // Uncomment when ready to use Firestore
-      // await departmentsFirestore.update(updatedDepartment.id, updatedDepartment);
+      await departmentsFirestore.update(updatedDepartment.id, updatedDepartment);
 
       const updatedDepartments = departments.map(dep => {
         if (dep.id === currentDepartment.id) {
@@ -271,6 +304,7 @@ export const useDepartments = () => {
 
   return {
     departments,
+    loading,
     isAddDialogOpen,
     isEditDialogOpen,
     isManageEmployeesDialogOpen,

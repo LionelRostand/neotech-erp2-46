@@ -1,12 +1,22 @@
 
 import React from 'react';
-import { Edit, Trash2, User, Users } from 'lucide-react';
+import { 
+  Table, 
+  TableBody, 
+  TableCell, 
+  TableHead, 
+  TableHeader, 
+  TableRow 
+} from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Pencil, Trash2, Users } from 'lucide-react';
 import { Department } from './types';
+import DepartmentCard from './DepartmentCard';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface DepartmentTableProps {
   departments: Department[];
+  loading: boolean;
   onEditDepartment: (department: Department) => void;
   onDeleteDepartment: (id: string) => void;
   onManageEmployees: (department: Department) => void;
@@ -14,80 +24,81 @@ interface DepartmentTableProps {
 
 const DepartmentTable: React.FC<DepartmentTableProps> = ({
   departments,
+  loading,
   onEditDepartment,
   onDeleteDepartment,
-  onManageEmployees,
+  onManageEmployees
 }) => {
+  if (loading) {
+    return (
+      <div className="space-y-4">
+        {[1, 2].map((i) => (
+          <div key={i} className="border rounded-md p-4">
+            <Skeleton className="h-6 w-1/4 mb-2" />
+            <Skeleton className="h-4 w-full mb-2" />
+            <Skeleton className="h-4 w-3/4" />
+          </div>
+        ))}
+      </div>
+    );
+  }
+  
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead className="w-[50px]">ID</TableHead>
-          <TableHead>Département</TableHead>
-          <TableHead>Description</TableHead>
-          <TableHead>Responsable</TableHead>
-          <TableHead>Employés</TableHead>
-          <TableHead className="text-right">Actions</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {departments.map((department) => (
-          <TableRow key={department.id}>
-            <TableCell className="font-medium">{department.id}</TableCell>
-            <TableCell>
-              <div className="flex items-center space-x-2">
-                <div 
-                  className="w-3 h-3 rounded-full" 
-                  style={{ backgroundColor: department.color }}
-                ></div>
-                <span>{department.name}</span>
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      {departments.map((department) => (
+        <DepartmentCard key={department.id} title={department.name}>
+          <div className="space-y-3">
+            <div 
+              className="w-full h-1 rounded-full mt-1"
+              style={{ backgroundColor: department.color }}
+            />
+            
+            <p className="text-sm text-gray-600">{department.description}</p>
+            
+            <div className="flex items-center justify-between">
+              <div className="text-sm">
+                <span className="font-medium">Manager:</span>{' '}
+                {department.managerName || 'Non assigné'}
               </div>
-            </TableCell>
-            <TableCell>{department.description}</TableCell>
-            <TableCell>
-              {department.managerName ? (
-                <div className="flex items-center space-x-1">
-                  <User className="h-4 w-4" />
-                  <span>{department.managerName}</span>
-                </div>
-              ) : (
-                <span className="text-gray-400">Non assigné</span>
-              )}
-            </TableCell>
-            <TableCell>
-              <div className="flex items-center gap-2">
-                <span>{department.employeesCount || 0}</span>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  onClick={() => onManageEmployees(department)}
-                  className="h-8 px-2"
-                >
-                  <Users className="h-4 w-4 mr-1" />
-                  Gérer
-                </Button>
+              
+              <div className="text-sm">
+                <span className="font-medium">Employés:</span>{' '}
+                {department.employeesCount || 0}
               </div>
-            </TableCell>
-            <TableCell className="text-right">
-              <Button
-                variant="ghost"
-                size="icon"
+            </div>
+            
+            <div className="flex justify-end space-x-2 pt-2">
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => onManageEmployees(department)}
+              >
+                <Users className="h-4 w-4 mr-1" />
+                Employés
+              </Button>
+              
+              <Button 
+                variant="outline" 
+                size="sm"
                 onClick={() => onEditDepartment(department)}
               >
-                <Edit className="h-4 w-4" />
+                <Pencil className="h-4 w-4 mr-1" />
+                Modifier
               </Button>
-              <Button
-                variant="ghost"
-                size="icon"
+              
+              <Button 
+                variant="outline" 
+                size="sm"
                 onClick={() => onDeleteDepartment(department.id)}
               >
-                <Trash2 className="h-4 w-4" />
+                <Trash2 className="h-4 w-4 mr-1" />
+                Supprimer
               </Button>
-            </TableCell>
-          </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+            </div>
+          </div>
+        </DepartmentCard>
+      ))}
+    </div>
   );
 };
 

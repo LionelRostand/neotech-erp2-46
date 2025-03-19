@@ -5,11 +5,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 interface DepartmentCardProps {
   title: string;
   children: React.ReactNode;
+  className?: string;
 }
 
-const DepartmentCard: React.FC<DepartmentCardProps> = ({ title, children }) => {
+const DepartmentCard: React.FC<DepartmentCardProps> = ({ title, children, className }) => {
   return (
-    <Card>
+    <Card className={className}>
       <CardHeader className="pb-3">
         <CardTitle>{title}</CardTitle>
       </CardHeader>
