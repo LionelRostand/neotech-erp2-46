@@ -1,6 +1,6 @@
 
 import { useEffect } from 'react';
-import { Timestamp } from 'firebase/firestore';
+import { Timestamp, DocumentData } from 'firebase/firestore';
 import { where, orderBy } from 'firebase/firestore';
 import { useFirestore } from '@/hooks/use-firestore';
 import { COLLECTIONS } from '@/lib/firebase-collections';
@@ -27,9 +27,9 @@ export const useProspectData = (
       
       const data = await prospectCollection.getAll(constraints);
       
-      const formattedData = data.map(doc => {
-        const createdAtTimestamp = doc.createdAt as Timestamp;
-        const lastContactTimestamp = doc.lastContact as Timestamp;
+      const formattedData = data.map((doc: DocumentData) => {
+        const createdAtTimestamp = doc.createdAt as Timestamp | undefined;
+        const lastContactTimestamp = doc.lastContact as Timestamp | undefined;
         
         return {
           id: doc.id,
