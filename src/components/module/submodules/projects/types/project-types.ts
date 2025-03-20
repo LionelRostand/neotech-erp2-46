@@ -1,3 +1,4 @@
+
 import { Timestamp } from "firebase/firestore";
 
 export type ProjectStatus = 'active' | 'on-hold' | 'completed' | 'cancelled';
@@ -146,4 +147,32 @@ export interface ProjectStats {
   upcomingDeadlines: number;
   teamWorkload: Record<string, number>;
   projectProgress: Record<string, number>;
+}
+
+// Interfaces de permissions
+export interface Permission {
+  moduleId: string;
+  canView: boolean;
+  canCreate: boolean;
+  canEdit: boolean;
+  canDelete: boolean;
+}
+
+export interface UserPermission {
+  userId: string;
+  permissions: Permission[];
+}
+
+// Permissions pour le module comptabilité
+export interface AccountingPermission {
+  moduleId: string;
+  canView: boolean;
+  canCreate: boolean;
+  canEdit: boolean;
+  canDelete: boolean;
+}
+
+export interface AccountingUserPermission {
+  userId: string;
+  permissions: AccountingPermission[];
 }

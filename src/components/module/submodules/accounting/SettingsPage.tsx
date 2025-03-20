@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -35,26 +34,51 @@ import {
   Landmark, 
   Euro, 
   Globe,
-  FileText
+  FileText,
+  Users,
+  ShieldCheck
 } from 'lucide-react';
 import { Badge } from "@/components/ui/badge";
+import PermissionsTab from './components/PermissionsTab';
+import { useAccountingPermissions } from './hooks/useAccountingPermissions';
 
 const SettingsPage: React.FC = () => {
   const [selectedTab, setSelectedTab] = useState('general');
+  
+  const accountingSubmodules = [
+    { id: "accounting-dashboard", name: "Tableau de bord" },
+    { id: "accounting-invoices", name: "Factures" },
+    { id: "accounting-payments", name: "Paiements" },
+    { id: "accounting-taxes", name: "Taxes & TVA" },
+    { id: "accounting-reports", name: "Rapports" },
+    { id: "accounting-settings", name: "Paramètres" },
+  ];
+
+  const {
+    users,
+    userPermissions,
+    loading,
+    saving,
+    searchTerm,
+    setSearchTerm,
+    updatePermission,
+    setAllPermissionsOfType,
+    savePermissions
+  } = useAccountingPermissions(accountingSubmodules);
   
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-bold">Paramètres comptabilité</h1>
       
       <Tabs defaultValue="general" value={selectedTab} onValueChange={setSelectedTab}>
-        <TabsList className="grid grid-cols-4 w-[600px]">
+        <TabsList className="grid grid-cols-5 w-[750px]">
           <TabsTrigger value="general">Général</TabsTrigger>
           <TabsTrigger value="invoices">Factures</TabsTrigger>
           <TabsTrigger value="bank">Comptes bancaires</TabsTrigger>
           <TabsTrigger value="automation">Automatisation</TabsTrigger>
+          <TabsTrigger value="permissions">Permissions</TabsTrigger>
         </TabsList>
         
-        {/* Onglet Paramètres généraux */}
         <TabsContent value="general">
           <Card>
             <CardHeader>
@@ -180,7 +204,6 @@ const SettingsPage: React.FC = () => {
           </Card>
         </TabsContent>
         
-        {/* Onglet Paramètres des factures */}
         <TabsContent value="invoices">
           <Card>
             <CardHeader>
@@ -284,7 +307,6 @@ const SettingsPage: React.FC = () => {
           </Card>
         </TabsContent>
         
-        {/* Onglet Comptes bancaires */}
         <TabsContent value="bank">
           <Card>
             <CardHeader>
@@ -370,7 +392,6 @@ const SettingsPage: React.FC = () => {
           </Card>
         </TabsContent>
         
-        {/* Onglet Automatisation */}
         <TabsContent value="automation">
           <Card>
             <CardHeader>
@@ -519,6 +540,36 @@ const SettingsPage: React.FC = () => {
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+        
+        <TabsContent value="permissions">
+          <div className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <ShieldCheck className="h-5 w-5 text-blue-600" />
+                  Gestion des permissions
+                </CardTitle>
+                <CardDescription>
+                  Gérez qui peut accéder et modifier les différentes fonctionnalités du module comptabilité
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <PermissionsTab
+                  users={users}
+                  userPermissions={userPermissions}
+                  accountingSubmodules={accountingSubmodules}
+                  loading={loading}
+                  saving={saving}
+                  searchTerm={searchTerm}
+                  setSearchTerm={setSearchTerm}
+                  updatePermission={updatePermission}
+                  setAllPermissionsOfType={setAllPermissionsOfType}
+                  savePermissions={savePermissions}
+                />
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
       </Tabs>
     </div>
