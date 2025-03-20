@@ -66,6 +66,8 @@ export interface MedicalRecord {
   attachments?: string[];
   createdAt: Date | string;
   updatedAt: Date | string;
+  digitallySignedBy?: string;
+  signatureDate?: Date | string;
 }
 
 export interface Consultation {
@@ -82,6 +84,147 @@ export interface Consultation {
   followUp?: Date | string;
   notes?: string;
   status: 'scheduled' | 'in-progress' | 'completed' | 'cancelled';
+  createdAt: Date | string;
+  updatedAt: Date | string;
+}
+
+// New types for the Personnel module
+export interface StaffMember {
+  id: string;
+  firstName: string;
+  lastName: string;
+  role: StaffRole;
+  department?: string;
+  email: string;
+  phone?: string;
+  address?: string;
+  dateOfBirth?: Date | string;
+  dateHired: Date | string;
+  status: 'active' | 'on-leave' | 'terminated';
+  permissions: string[];
+  specialization?: string;
+  emergencyContact?: {
+    name: string;
+    relationship: string;
+    phone: string;
+  };
+  schedule?: WorkSchedule[];
+  absences?: Absence[];
+  createdAt: Date | string;
+  updatedAt: Date | string;
+}
+
+export type StaffRole = 'doctor' | 'nurse' | 'secretary' | 'technician' | 'director' | 'pharmacist' | 'lab_technician';
+
+export interface WorkSchedule {
+  id: string;
+  staffId: string;
+  startDate: Date | string;
+  endDate: Date | string;
+  shifts: Shift[];
+  createdAt: Date | string;
+  updatedAt: Date | string;
+}
+
+export interface Shift {
+  day: 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday';
+  startTime: string;
+  endTime: string;
+  isOnCall: boolean;
+}
+
+export interface Absence {
+  id: string;
+  staffId: string;
+  startDate: Date | string;
+  endDate: Date | string;
+  type: 'vacation' | 'sick' | 'personal' | 'maternity' | 'paternity' | 'other';
+  status: 'pending' | 'approved' | 'rejected';
+  reason?: string;
+  approvedBy?: string;
+  createdAt: Date | string;
+  updatedAt: Date | string;
+}
+
+// New types for Prescription module
+export interface Prescription {
+  id: string;
+  patientId: string;
+  doctorId: string;
+  date: Date | string;
+  medications: Medication[];
+  notes?: string;
+  status: 'active' | 'completed' | 'cancelled';
+  isDigitallySigned: boolean;
+  signedBy?: string;
+  signatureDate?: Date | string;
+  sentToPharmacy?: boolean;
+  pharmacyId?: string;
+  createdAt: Date | string;
+  updatedAt: Date | string;
+}
+
+export interface Medication {
+  name: string;
+  dosage: string;
+  frequency: string;
+  duration: string;
+  instructions?: string;
+  quantity: number;
+}
+
+// New types for Pharmacy module
+export interface PharmacyItem {
+  id: string;
+  name: string;
+  genericName?: string;
+  category: string;
+  type: 'tablet' | 'capsule' | 'liquid' | 'injection' | 'topical' | 'other';
+  dosage: string;
+  manufacturer: string;
+  batchNumber: string;
+  expiryDate: Date | string;
+  stockQuantity: number;
+  reorderLevel: number;
+  unitPrice: number;
+  location?: string;
+  needsPrescription: boolean;
+  createdAt: Date | string;
+  updatedAt: Date | string;
+}
+
+export interface PharmacySale {
+  id: string;
+  date: Date | string;
+  patientId?: string;
+  prescriptionId?: string;
+  items: {
+    medicationId: string;
+    quantity: number;
+    unitPrice: number;
+  }[];
+  totalAmount: number;
+  paymentMethod?: 'cash' | 'card' | 'insurance' | 'other';
+  staffId: string;
+  createdAt: Date | string;
+  updatedAt: Date | string;
+}
+
+export interface PharmacyRestock {
+  id: string;
+  date: Date | string;
+  supplier: string;
+  invoiceNumber: string;
+  items: {
+    medicationId: string;
+    quantity: number;
+    unitPrice: number;
+    batchNumber: string;
+    expiryDate: Date | string;
+  }[];
+  totalAmount: number;
+  receivedBy: string;
+  notes?: string;
   createdAt: Date | string;
   updatedAt: Date | string;
 }

@@ -98,9 +98,100 @@ service cloud.firestore {
       allow write: if isAuthenticated() && (hasPermission('transport', 'write') || isAdmin());
     }
     
+    // Règles pour le module Health
     match /health/{document=**} {
       allow read: if isAuthenticated() && (hasPermission('health', 'read') || isAdmin());
       allow write: if isAuthenticated() && (hasPermission('health', 'write') || isAdmin());
+    }
+    
+    match /health_patients/{document=**} {
+      allow read: if isAuthenticated() && (hasPermission('health', 'read') || isAdmin());
+      allow write: if isAuthenticated() && (hasPermission('health', 'write') || isAdmin());
+    }
+    
+    match /health_doctors/{document=**} {
+      allow read: if isAuthenticated() && (hasPermission('health', 'read') || isAdmin());
+      allow write: if isAuthenticated() && (hasPermission('health', 'write') || isAdmin());
+    }
+    
+    match /health_nurses/{document=**} {
+      allow read: if isAuthenticated() && (hasPermission('health', 'read') || isAdmin());
+      allow write: if isAuthenticated() && (hasPermission('health', 'write') || isAdmin());
+    }
+    
+    match /health_appointments/{document=**} {
+      allow read: if isAuthenticated() && (hasPermission('health', 'read') || isAdmin());
+      allow write: if isAuthenticated() && (hasPermission('health', 'write') || isAdmin());
+    }
+    
+    match /health_consultations/{document=**} {
+      allow read: if isAuthenticated() && (hasPermission('health', 'read') || isAdmin());
+      allow create: if isAuthenticated() && (hasPermission('health', 'write') || isAdmin());
+      allow update: if isAuthenticated() && (hasPermission('health', 'write') || isAdmin());
+      allow delete: if isAuthenticated() && (hasPermission('health', 'delete') || isAdmin());
+    }
+    
+    match /health_medical_records/{document=**} {
+      allow read: if isAuthenticated() && (hasPermission('health', 'read_medical_records') || isAdmin());
+      allow create: if isAuthenticated() && (hasPermission('health', 'write_medical_records') || isAdmin());
+      allow update: if isAuthenticated() && (hasPermission('health', 'write_medical_records') || isAdmin());
+      allow delete: if isAuthenticated() && (hasPermission('health', 'delete_medical_records') || isAdmin());
+    }
+    
+    match /health_laboratory/{document=**} {
+      allow read: if isAuthenticated() && (hasPermission('health', 'read_lab') || isAdmin());
+      allow create: if isAuthenticated() && (hasPermission('health', 'write_lab') || isAdmin());
+      allow update: if isAuthenticated() && (hasPermission('health', 'write_lab') || isAdmin());
+      allow delete: if isAuthenticated() && (hasPermission('health', 'delete_lab') || isAdmin());
+    }
+    
+    match /health_prescriptions/{document=**} {
+      allow read: if isAuthenticated() && (hasPermission('health', 'read_prescriptions') || isAdmin());
+      allow create: if isAuthenticated() && (hasPermission('health', 'write_prescriptions') || isAdmin());
+      allow update: if isAuthenticated() && (hasPermission('health', 'write_prescriptions') || isAdmin());
+      allow delete: if isAuthenticated() && (hasPermission('health', 'delete_prescriptions') || isAdmin());
+    }
+    
+    match /health_pharmacy/{document=**} {
+      allow read: if isAuthenticated() && (hasPermission('health', 'read_pharmacy') || isAdmin());
+      allow write: if isAuthenticated() && (hasPermission('health', 'write_pharmacy') || isAdmin());
+    }
+    
+    match /health_staff/{document=**} {
+      allow read: if isAuthenticated() && (hasPermission('health', 'read_staff') || isAdmin());
+      allow create: if isAuthenticated() && (hasPermission('health', 'write_staff') || isAdmin());
+      allow update: if isAuthenticated() && (hasPermission('health', 'write_staff') || isAdmin());
+      allow delete: if isAuthenticated() && (hasPermission('health', 'delete_staff') || isAdmin());
+    }
+    
+    match /health_schedules/{document=**} {
+      allow read: if isAuthenticated() && (hasPermission('health', 'read_schedules') || isAdmin());
+      allow write: if isAuthenticated() && (hasPermission('health', 'write_schedules') || isAdmin());
+    }
+    
+    match /health_absences/{document=**} {
+      allow read: if isAuthenticated() && (hasPermission('health', 'read_absences') || isAdmin());
+      allow write: if isAuthenticated() && (hasPermission('health', 'write_absences') || isAdmin());
+    }
+    
+    match /health_pharmacy_inventory/{document=**} {
+      allow read: if isAuthenticated() && (hasPermission('health', 'read_pharmacy') || isAdmin());
+      allow write: if isAuthenticated() && (hasPermission('health', 'write_pharmacy') || isAdmin());
+    }
+    
+    match /health_pharmacy_sales/{document=**} {
+      allow read: if isAuthenticated() && (hasPermission('health', 'read_pharmacy') || isAdmin());
+      allow write: if isAuthenticated() && (hasPermission('health', 'write_pharmacy') || isAdmin());
+    }
+    
+    match /health_pharmacy_restocks/{document=**} {
+      allow read: if isAuthenticated() && (hasPermission('health', 'read_pharmacy') || isAdmin());
+      allow write: if isAuthenticated() && (hasPermission('health', 'write_pharmacy') || isAdmin());
+    }
+    
+    match /health_settings/{document=**} {
+      allow read: if isAuthenticated() && (hasPermission('health', 'read') || isAdmin());
+      allow write: if isAuthenticated() && (hasPermission('health', 'admin') || isAdmin());
     }
     
     match /vehicleRentals/{document=**} {
