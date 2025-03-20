@@ -12,7 +12,7 @@ import StaffLeaves from './components/staff/StaffLeaves';
 import StaffMemberDetail from './components/staff/StaffMemberDetail';
 import { StaffMember } from './types/health-types';
 import { toast } from "@/hooks/use-toast";
-import { useFirestore } from '@/hooks/firestore/firestore-utils';
+import { useFirestore } from '@/hooks/use-firestore';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 
 const StaffPage: React.FC = () => {
