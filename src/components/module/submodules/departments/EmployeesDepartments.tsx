@@ -83,7 +83,10 @@ const EmployeesDepartments: React.FC = () => {
       
       {/* Manage Employees Dialog */}
       {currentDepartment && (
-        <Dialog open={isManageEmployeesDialogOpen} onOpenChange={setIsManageEmployeesDialogOpen}>
+        <Dialog 
+          open={isManageEmployeesDialogOpen} 
+          onOpenChange={setIsManageEmployeesDialogOpen}
+        >
           <ManageEmployeesDialog 
             department={currentDepartment}
             selectedEmployees={selectedEmployees}

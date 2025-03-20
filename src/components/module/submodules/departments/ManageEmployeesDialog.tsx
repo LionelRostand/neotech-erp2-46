@@ -24,19 +24,21 @@ const ManageEmployeesDialog: React.FC<ManageEmployeesDialogProps> = ({
   onClose,
   onSave,
 }) => {
+  if (!department) {
+    return null;
+  }
+
   return (
     <DialogContent className="sm:max-w-[500px]">
       <DialogHeader>
         <DialogTitle>
-          {department && (
-            <div className="flex items-center space-x-2">
-              <div 
-                className="w-3 h-3 rounded-full" 
-                style={{ backgroundColor: department.color }}
-              ></div>
-              <span>Gérer les employés - {department.name}</span>
-            </div>
-          )}
+          <div className="flex items-center space-x-2">
+            <div 
+              className="w-3 h-3 rounded-full" 
+              style={{ backgroundColor: department.color }}
+            ></div>
+            <span>Gérer les employés - {department.name}</span>
+          </div>
         </DialogTitle>
       </DialogHeader>
       
@@ -48,7 +50,7 @@ const ManageEmployeesDialog: React.FC<ManageEmployeesDialogProps> = ({
           id="manage"
         />
         
-        {department && getDepartmentEmployees(department.id).length > 0 && (
+        {getDepartmentEmployees(department.id).length > 0 && (
           <div className="mt-6">
             <h3 className="text-sm font-medium mb-2">Employés actuels du département:</h3>
             <div className="space-y-2">

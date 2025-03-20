@@ -46,6 +46,12 @@ export const useDepartmentService = () => {
   };
 
   const deleteDepartment = async (id: string, name: string): Promise<boolean> => {
+    if (!id) {
+      console.error("Invalid department ID");
+      toast.error("ID du département invalide");
+      return false;
+    }
+    
     try {
       await departmentsFirestore.remove(id);
       toast.success(`Département ${name} supprimé avec succès`);
