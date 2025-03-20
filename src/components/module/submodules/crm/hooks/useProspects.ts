@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Timestamp } from 'firebase/firestore';
 import { where, orderBy } from 'firebase/firestore';
@@ -114,7 +113,7 @@ export const useProspects = () => {
         lastContact: Timestamp.fromDate(new Date(formData.lastContact))
       };
       
-      // Fix: Only use the id from the result and combine it with our formData
+      // Only use the id from the result
       const result = await prospectCollection.add(newProspectData);
       
       // Create a new Prospect object with the id from the result and the form data
