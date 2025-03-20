@@ -1,15 +1,27 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card } from "@/components/ui/card";
-import { RefreshCw } from "lucide-react";
+import { RefreshCw, Check } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import SyncSettingsForm from './SyncSettingsForm';
+import { toast } from "sonner";
 
 const CrmSyncTab: React.FC = () => {
+  const [syncStatus, setSyncStatus] = useState<'idle' | 'success' | 'error'>('idle');
+
   const handleSaveSettings = async (settings: any) => {
     // In a real implementation, this would save the settings to your backend
     console.log('Saving CRM sync settings:', settings);
     // Simulate a network delay
     await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    // Show sync status
+    setSyncStatus('success');
+    
+    // Reset status after 3 seconds
+    setTimeout(() => {
+      setSyncStatus('idle');
+    }, 3000);
   };
 
   return (
@@ -20,10 +32,23 @@ const CrmSyncTab: React.FC = () => {
           <h3 className="text-lg font-medium">Synchronisation avec votre CRM</h3>
         </div>
 
+        {syncStatus === 'success' && (
+          <Alert className="mb-6 bg-green-50 border-green-200">
+            <Check className="h-4 w-4 text-green-600" />
+            <AlertDescription className="text-green-600">
+              Configuration du CRM enregistrée avec succès.
+            </AlertDescription>
+          </Alert>
+        )}
+
         <SyncSettingsForm 
           onSubmit={handleSaveSettings}
           defaultValues={{
-            syncFrequency: 'daily'
+            syncFrequency: 'daily',
+            syncContacts: true,
+            syncCompanies: true,
+            syncDeals: false,
+            lastSyncedAt: new Date().toISOString()
           }}
         />
       </Card>

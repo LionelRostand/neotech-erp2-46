@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Routes, Route, Navigate } from "react-router-dom";
 import Index from "@/pages/Index";
@@ -67,6 +68,16 @@ const AppRoutes = () => (
       <Route path="documents" element={<SubmodulePage moduleId={2} submoduleId="freight-documents" />} />
       <Route path="client-portal" element={<SubmodulePage moduleId={2} submoduleId="freight-client-portal" />} />
       <Route path="settings" element={<SubmodulePage moduleId={2} submoduleId="freight-settings" />} />
+    </Route>
+    
+    {/* Route pour le module CRM */}
+    <Route path="/modules/crm" element={<ModuleLayout moduleId={17} />}>
+      <Route index element={<SubmodulePage moduleId={17} submoduleId="crm-clients" />} />
+      <Route path="clients" element={<SubmodulePage moduleId={17} submoduleId="crm-clients" />} />
+      <Route path="prospects" element={<SubmodulePage moduleId={17} submoduleId="crm-prospects" />} />
+      <Route path="opportunities" element={<SubmodulePage moduleId={17} submoduleId="crm-opportunities" />} />
+      <Route path="analytics" element={<SubmodulePage moduleId={17} submoduleId="crm-analytics" />} />
+      <Route path="settings" element={<SubmodulePage moduleId={17} submoduleId="crm-settings" />} />
     </Route>
     
     {/* Route pour le module Entreprises */}

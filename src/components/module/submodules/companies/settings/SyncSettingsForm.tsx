@@ -4,6 +4,9 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RefreshCw, Save } from "lucide-react";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
+import { toast } from "sonner";
 
 interface SyncSettingsFormProps {
   onSubmit?: (settings: any) => Promise<void>;
@@ -14,6 +17,7 @@ interface SyncSettingsFormProps {
     syncCompanies?: boolean;
     syncDeals?: boolean;
     syncFrequency?: 'hourly' | 'daily' | 'manual';
+    lastSyncedAt?: string;
   };
 }
 
@@ -28,9 +32,11 @@ const SyncSettingsForm: React.FC<SyncSettingsFormProps> = ({
     syncCompanies: defaultValues.syncCompanies || false,
     syncDeals: defaultValues.syncDeals || false,
     syncFrequency: defaultValues.syncFrequency || 'daily',
+    lastSyncedAt: defaultValues.lastSyncedAt || null
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isTesting, setIsTesting] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
@@ -40,10 +46,10 @@ const SyncSettingsForm: React.FC<SyncSettingsFormProps> = ({
     }));
   };
 
-  const handleRadioChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleRadioChange = (value: string) => {
     setSettings(prev => ({
       ...prev,
-      syncFrequency: e.target.value as 'hourly' | 'daily' | 'manual'
+      syncFrequency: value as 'hourly' | 'daily' | 'manual'
     }));
   };
 
@@ -53,6 +59,9 @@ const SyncSettingsForm: React.FC<SyncSettingsFormProps> = ({
       setIsSubmitting(true);
       try {
         await onSubmit(settings);
+        toast.success("Configuration enregistrée avec succès");
+      } catch (error) {
+        toast.error("Erreur lors de l'enregistrement de la configuration");
       } finally {
         setIsSubmitting(false);
       }
@@ -63,8 +72,34 @@ const SyncSettingsForm: React.FC<SyncSettingsFormProps> = ({
     setIsTesting(true);
     // Simulate API connection test
     await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    if (settings.apiUrl && settings.apiKey) {
+      toast.success("Connexion au CRM établie avec succès");
+    } else {
+      toast.error("Veuillez renseigner l'URL et la clé API");
+    }
+    
     setIsTesting(false);
-    // Here you would typically make an actual API call to test the connection
+  };
+
+  const handleManualSync = async () => {
+    if (!settings.apiUrl || !settings.apiKey) {
+      toast.error("Veuillez configurer les informations de connexion au CRM");
+      return;
+    }
+
+    setIsSyncing(true);
+    // Simulate sync process
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    setIsSyncing(false);
+    
+    // Update last synced date
+    setSettings(prev => ({
+      ...prev,
+      lastSyncedAt: new Date().toISOString()
+    }));
+    
+    toast.success("Synchronisation effectuée avec succès");
   };
 
   return (
@@ -132,44 +167,33 @@ const SyncSettingsForm: React.FC<SyncSettingsFormProps> = ({
 
       <div>
         <h4 className="font-medium mb-2">Fréquence de synchronisation</h4>
-        <div className="flex space-x-4">
+        <RadioGroup 
+          value={settings.syncFrequency} 
+          onValueChange={handleRadioChange}
+          className="flex space-x-4"
+        >
           <div className="flex items-center space-x-2">
-            <input 
-              type="radio" 
-              id="sync-hourly" 
-              name="syncFrequency" 
-              value="hourly"
-              checked={settings.syncFrequency === 'hourly'}
-              onChange={handleRadioChange}
-            />
-            <label htmlFor="sync-hourly" className="text-sm">Toutes les heures</label>
+            <RadioGroupItem value="hourly" id="sync-hourly" />
+            <Label htmlFor="sync-hourly">Toutes les heures</Label>
           </div>
           <div className="flex items-center space-x-2">
-            <input 
-              type="radio" 
-              id="sync-daily" 
-              name="syncFrequency" 
-              value="daily"
-              checked={settings.syncFrequency === 'daily'}
-              onChange={handleRadioChange}
-            />
-            <label htmlFor="sync-daily" className="text-sm">Une fois par jour</label>
+            <RadioGroupItem value="daily" id="sync-daily" />
+            <Label htmlFor="sync-daily">Une fois par jour</Label>
           </div>
           <div className="flex items-center space-x-2">
-            <input 
-              type="radio" 
-              id="sync-manual" 
-              name="syncFrequency" 
-              value="manual"
-              checked={settings.syncFrequency === 'manual'}
-              onChange={handleRadioChange}
-            />
-            <label htmlFor="sync-manual" className="text-sm">Manuellement</label>
+            <RadioGroupItem value="manual" id="sync-manual" />
+            <Label htmlFor="sync-manual">Manuellement</Label>
           </div>
-        </div>
+        </RadioGroup>
       </div>
 
-      <div className="pt-4 flex space-x-3">
+      {settings.lastSyncedAt && (
+        <div className="text-sm text-muted-foreground">
+          Dernière synchronisation: {new Date(settings.lastSyncedAt).toLocaleString('fr-FR')}
+        </div>
+      )}
+
+      <div className="pt-4 flex flex-wrap gap-3">
         <Button type="submit" disabled={isSubmitting}>
           {isSubmitting ? (
             <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
@@ -190,6 +214,19 @@ const SyncSettingsForm: React.FC<SyncSettingsFormProps> = ({
             <RefreshCw className="mr-2 h-4 w-4" />
           )}
           Tester la connexion
+        </Button>
+        <Button
+          type="button"
+          variant="secondary"
+          onClick={handleManualSync}
+          disabled={isSyncing}
+        >
+          {isSyncing ? (
+            <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+          ) : (
+            <RefreshCw className="mr-2 h-4 w-4" />
+          )}
+          Synchroniser maintenant
         </Button>
       </div>
     </form>
