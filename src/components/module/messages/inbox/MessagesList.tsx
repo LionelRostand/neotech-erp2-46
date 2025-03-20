@@ -29,8 +29,23 @@ const MessagesList: React.FC<MessagesListProps> = ({
   onArchiveMessage,
   isLoading
 }) => {
-  const formatMessageDate = (timestamp: Timestamp) => {
-    const date = timestamp.toDate();
+  const formatMessageDate = (timestamp: Timestamp | Date | string | number) => {
+    let date: Date;
+    
+    // Vérifier si timestamp est un objet Firebase Timestamp
+    if (timestamp && typeof timestamp === 'object' && 'toDate' in timestamp && typeof timestamp.toDate === 'function') {
+      date = timestamp.toDate();
+    } else if (timestamp instanceof Date) {
+      date = timestamp;
+    } else if (typeof timestamp === 'string' || typeof timestamp === 'number') {
+      date = new Date(timestamp);
+    } else {
+      // Fallback à la date actuelle si le format est invalide
+      date = new Date();
+      console.warn('Format de timestamp invalide:', timestamp);
+      return '';
+    }
+    
     const now = new Date();
     const isToday = date.toDateString() === now.toDateString();
     
