@@ -18,9 +18,17 @@ const ModuleLayout: React.FC<ModuleLayoutProps> = ({ moduleId }) => {
     const foundModule = modules.find(m => m.id === moduleId);
     setModule(foundModule);
     
-    // If we're at the root of a module, redirect to its dashboard
+    // Si nous sommes à la racine d'un module, rediriger vers son dashboard s'il existe,
+    // sinon vers son premier sous-module
     if (location.pathname === `/modules/${foundModule?.href.split('/')[2]}`) {
-      navigate(`/modules/${foundModule?.href.split('/')[2]}/dashboard`);
+      const dashboardSubmodule = foundModule?.submodules.find(sm => sm.id.endsWith('-dashboard'));
+      if (dashboardSubmodule) {
+        navigate(`/modules/${foundModule?.href.split('/')[2]}/dashboard`);
+      } else if (foundModule?.submodules.length > 0) {
+        const firstSubmodule = foundModule.submodules[0];
+        const submoduleId = firstSubmodule.id.split('-')[1];
+        navigate(`/modules/${foundModule?.href.split('/')[2]}/${submoduleId}`);
+      }
     }
   }, [moduleId, location.pathname, navigate]);
 

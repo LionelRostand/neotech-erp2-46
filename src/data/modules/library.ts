@@ -1,5 +1,5 @@
 
-import { Archive, BookOpen, Book, Users, Settings } from 'lucide-react';
+import { Archive, BookOpen, Book, Users, Settings, LayoutDashboard } from 'lucide-react';
 import { AppModule, createIcon } from '../types/modules';
 
 export const libraryModule: AppModule = {
@@ -10,6 +10,13 @@ export const libraryModule: AppModule = {
   icon: createIcon(BookOpen),
   category: 'services',
   submodules: [
+    { 
+      id: "library-dashboard", 
+      name: "Tableau de bord", 
+      href: "/modules/library/dashboard", 
+      icon: createIcon(LayoutDashboard),
+      description: "Vue globale des opérations"
+    },
     { 
       id: "library-books", 
       name: "Livres", 
