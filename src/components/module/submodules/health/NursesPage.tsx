@@ -511,7 +511,7 @@ const NursesPage: React.FC = () => {
                 </div>
                 
                 <div className="flex flex-wrap gap-2 md:flex-nowrap">
-                  <Select value={statusFilter || ""} onValueChange={(value) => setStatusFilter(value || null)}>
+                  <Select value={statusFilter || undefined} onValueChange={(value) => setStatusFilter(value || null)}>
                     <SelectTrigger className="w-full md:w-[180px]">
                       <span className="flex items-center gap-2">
                         <BadgeCheck className="h-4 w-4" />
@@ -519,14 +519,14 @@ const NursesPage: React.FC = () => {
                       </span>
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Tous les statuts</SelectItem>
                       <SelectItem value="active">Actif</SelectItem>
                       <SelectItem value="leave">En congé</SelectItem>
                       <SelectItem value="inactive">Inactif</SelectItem>
+                      <SelectItem value="all">Tous les statuts</SelectItem>
                     </SelectContent>
                   </Select>
                   
-                  <Select value={departmentFilter || ""} onValueChange={(value) => setDepartmentFilter(value || null)}>
+                  <Select value={departmentFilter || undefined} onValueChange={(value) => setDepartmentFilter(value || null)}>
                     <SelectTrigger className="w-full md:w-[200px]">
                       <span className="flex items-center gap-2">
                         <Briefcase className="h-4 w-4" />
@@ -534,14 +534,14 @@ const NursesPage: React.FC = () => {
                       </span>
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Tous les services</SelectItem>
+                      <SelectItem value="all">Tous les services</SelectItem>
                       {departments.map((dept) => (
                         <SelectItem key={dept} value={dept}>{dept}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                   
-                  <Select value={roleFilter || ""} onValueChange={(value) => setRoleFilter(value || null)}>
+                  <Select value={roleFilter || undefined} onValueChange={(value) => setRoleFilter(value || null)}>
                     <SelectTrigger className="w-full md:w-[200px]">
                       <span className="flex items-center gap-2">
                         <UserCog className="h-4 w-4" />
@@ -549,7 +549,7 @@ const NursesPage: React.FC = () => {
                       </span>
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Tous les rôles</SelectItem>
+                      <SelectItem value="all">Tous les rôles</SelectItem>
                       <SelectItem value="nurse">Infirmier(ère)</SelectItem>
                       <SelectItem value="auxiliary_nurse">Aide-soignant(e)</SelectItem>
                       <SelectItem value="nursing_assistant">Assistant(e) infirmier(ère)</SelectItem>
@@ -952,7 +952,6 @@ const NursesPage: React.FC = () => {
         </TabsContent>
       </Tabs>
       
-      {/* Modal pour créer un nouveau soignant (à implémenter) */}
       <Dialog open={isCreatingNurse} onOpenChange={setIsCreatingNurse}>
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
@@ -962,7 +961,6 @@ const NursesPage: React.FC = () => {
             </DialogDescription>
           </DialogHeader>
           
-          {/* Formulaire à implémenter */}
           <div className="py-4">
             <div className="text-center text-muted-foreground">
               Fonctionnalité à implémenter
@@ -980,7 +978,6 @@ const NursesPage: React.FC = () => {
         </DialogContent>
       </Dialog>
       
-      {/* Modal pour éditer un soignant (à implémenter) */}
       <Dialog open={isEditingNurse} onOpenChange={setIsEditingNurse}>
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
@@ -990,7 +987,6 @@ const NursesPage: React.FC = () => {
             </DialogDescription>
           </DialogHeader>
           
-          {/* Formulaire à implémenter */}
           <div className="py-4">
             <div className="text-center text-muted-foreground">
               Fonctionnalité à implémenter
@@ -1012,3 +1008,4 @@ const NursesPage: React.FC = () => {
 };
 
 export default NursesPage;
+

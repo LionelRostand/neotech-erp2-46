@@ -1,140 +1,53 @@
 
-import { useState } from 'react';
-import { 
-  DocumentData,
-  QueryConstraint
-} from 'firebase/firestore';
-import { getAllDocuments, getDocumentById } from './firestore/read-operations';
-import { addDocument } from './firestore/create-operations';
-import { updateDocument, setDocument } from './firestore/update-operations';
-import { deleteDocument } from './firestore/delete-operations';
-import { handleNetworkError, enableFirestoreNetwork } from './firestore/network-handler';
+import { useState, useEffect } from 'react';
 
-// Hook for Firestore CRUD operations
-export const useFirestore = (collectionName: string) => {
+/**
+ * Hook simpliste simulant l'accès à une collection Firestore
+ * À remplacer par une véritable implémentation Firebase lorsque nécessaire
+ */
+export const useFirestore = (collectionPath: string) => {
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [networkStatus, setNetworkStatus] = useState<'online' | 'offline'>('online');
+  const [error, setError] = useState<Error | null>(null);
   
-  // Reconnect to Firestore
-  const reconnectToFirestore = async () => {
-    const reconnected = await enableFirestoreNetwork();
-    if (reconnected) {
-      setNetworkStatus('online');
-    }
-    return reconnected;
+  // Diverses fonctions que nous pourrions implémenter plus tard
+  const getAll = async () => {
+    console.log(`Fetching all documents from ${collectionPath}`);
+    // Simulation
+    return [];
   };
   
-  // Get all documents from a collection
-  const getAll = async (constraints?: QueryConstraint[]) => {
-    setLoading(true);
-    setError(null);
-    
-    try {
-      console.log(`Fetching all documents from collection: ${collectionName}`);
-      const data = await getAllDocuments(collectionName, constraints);
-      console.log(`Retrieved ${data.length} documents from ${collectionName}`);
-      setLoading(false);
-      return data;
-    } catch (err: any) {
-      console.error(`Error getting all documents from ${collectionName}:`, err);
-      setError(err.message || "Erreur lors de la récupération des données");
-      setLoading(false);
-      // Return empty array instead of throwing to prevent component crashes
-      return [];
-    }
-  };
-  
-  // Get a document by ID
   const getById = async (id: string) => {
-    setLoading(true);
-    setError(null);
-    
-    try {
-      const data = await getDocumentById(collectionName, id);
-      setLoading(false);
-      return data;
-    } catch (err: any) {
-      setError(err.message);
-      setLoading(false);
-      return null;
-    }
+    console.log(`Fetching document ${id} from ${collectionPath}`);
+    // Simulation
+    return null;
   };
   
-  // Add a new document
-  const add = async (data: DocumentData) => {
-    setLoading(true);
-    setError(null);
-    
-    try {
-      const result = await addDocument(collectionName, data);
-      setLoading(false);
-      return result;
-    } catch (err: any) {
-      setError(err.message);
-      setLoading(false);
-      throw err;
-    }
+  const add = async (data: any) => {
+    console.log(`Adding document to ${collectionPath}`, data);
+    // Simulation
+    return { id: 'simulated-id-' + Date.now() };
   };
   
-  // Update a document
-  const update = async (id: string, data: DocumentData) => {
-    setLoading(true);
-    setError(null);
-    
-    try {
-      const result = await updateDocument(collectionName, id, data);
-      setLoading(false);
-      return result;
-    } catch (err: any) {
-      setError(err.message);
-      setLoading(false);
-      throw err;
-    }
+  const update = async (id: string, data: any) => {
+    console.log(`Updating document ${id} in ${collectionPath}`, data);
+    // Simulation
+    return true;
   };
   
-  // Delete a document
   const remove = async (id: string) => {
-    setLoading(true);
-    setError(null);
-    
-    try {
-      await deleteDocument(collectionName, id);
-      setLoading(false);
-      return true;
-    } catch (err: any) {
-      setError(err.message);
-      setLoading(false);
-      throw err;
-    }
-  };
-  
-  // Set a document with ID
-  const set = async (id: string, data: DocumentData) => {
-    setLoading(true);
-    setError(null);
-    
-    try {
-      const result = await setDocument(collectionName, id, data);
-      setLoading(false);
-      return result;
-    } catch (err: any) {
-      setError(err.message);
-      setLoading(false);
-      return null;
-    }
+    console.log(`Removing document ${id} from ${collectionPath}`);
+    // Simulation
+    return true;
   };
   
   return {
+    collectionPath,
     loading,
     error,
-    networkStatus,
     getAll,
     getById,
     add,
     update,
-    remove,
-    set,
-    reconnectToFirestore
+    remove
   };
 };
