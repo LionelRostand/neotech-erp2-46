@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Employee } from '@/types/employee';
 import { Department } from './types';
 import EmployeesList from './EmployeesList';
+import { employees } from '@/data/employees';
 
 interface ManageEmployeesDialogProps {
   department: Department;
@@ -23,9 +24,6 @@ const ManageEmployeesDialog: React.FC<ManageEmployeesDialogProps> = ({
   onClose,
   onSave,
 }) => {
-  // Get all employees from the imported data
-  const employees = require('@/data/employees').employees;
-
   return (
     <DialogContent className="sm:max-w-[500px]">
       <DialogHeader>
