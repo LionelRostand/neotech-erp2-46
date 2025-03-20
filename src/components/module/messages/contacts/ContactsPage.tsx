@@ -21,6 +21,7 @@ import {
 import ContactDialog from './ContactDialog';
 import DeleteContactDialog from './DeleteContactDialog';
 import DataTable from '@/components/DataTable';
+import { Column } from '@/components/DataTable';
 import { 
   DropdownMenu, 
   DropdownMenuContent, 
@@ -85,33 +86,33 @@ const ContactsPage: React.FC<ContactsPageProps> = () => {
     fetchContacts();
   }, [getAll, toast]);
 
-  const columns = [
+  const columns: Column[] = [
     {
-      accessorKey: 'firstName',
+      key: 'firstName',
       header: 'Prénom',
     },
     {
-      accessorKey: 'lastName',
+      key: 'lastName',
       header: 'Nom',
     },
     {
-      accessorKey: 'email',
+      key: 'email',
       header: 'Email',
     },
     {
-      accessorKey: 'phone',
+      key: 'phone',
       header: 'Téléphone',
     },
     {
-      accessorKey: 'company',
+      key: 'company',
       header: 'Entreprise',
     },
     {
-      accessorKey: 'position',
+      key: 'position',
       header: 'Poste',
     },
     {
-      id: 'actions',
+      key: 'actions',
       header: 'Actions',
       cell: ({ row }) => {
         const contact = row.original;

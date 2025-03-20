@@ -22,12 +22,18 @@ const MessagesDashboard: React.FC = () => {
         // Prendre les métriques les plus récentes
         if (metricsData && metricsData.length > 0) {
           // Ensure the data has updateTimestamp property before sorting
-          const dataWithTimestamp = metricsData.filter(item => item.updateTimestamp);
+          const dataWithTimestamp = metricsData.filter(item => 
+            item && typeof item === 'object' && 'updateTimestamp' in item && item.updateTimestamp
+          );
           
           if (dataWithTimestamp.length > 0) {
-            const latestMetrics = dataWithTimestamp.sort((a, b) => 
-              b.updateTimestamp.toDate().getTime() - a.updateTimestamp.toDate().getTime()
-            )[0] as MessageMetrics;
+            const latestMetrics = dataWithTimestamp.sort((a, b) => {
+              if (a.updateTimestamp && b.updateTimestamp) {
+                return b.updateTimestamp.toDate().getTime() - a.updateTimestamp.toDate().getTime();
+              }
+              return 0;
+            })[0] as MessageMetrics;
+            
             setMetrics(latestMetrics);
           } else {
             // Fallback to demo data if no valid timestamps
