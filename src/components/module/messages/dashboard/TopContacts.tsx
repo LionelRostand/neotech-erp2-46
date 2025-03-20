@@ -2,6 +2,7 @@
 import React from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Progress } from '@/components/ui/progress';
+import { User } from 'lucide-react';
 
 interface TopContactsProps {
   contacts: {
@@ -14,7 +15,8 @@ interface TopContactsProps {
 const TopContacts: React.FC<TopContactsProps> = ({ contacts }) => {
   if (!contacts || contacts.length === 0) {
     return (
-      <div className="text-center text-gray-400 py-8">
+      <div className="text-center text-gray-400 py-8 flex flex-col items-center">
+        <User className="h-12 w-12 mb-2 text-gray-300" />
         Aucun contact à afficher
       </div>
     );
