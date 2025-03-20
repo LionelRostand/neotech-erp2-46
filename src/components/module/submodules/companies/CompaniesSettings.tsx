@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -60,8 +61,29 @@ const CompaniesSettings = () => {
         // If we have data, try to map it to the correct type
         if (permissionsData && permissionsData.length > 0) {
           for (const item of permissionsData) {
-            if (item && typeof item === 'object' && 'permissions' in item) {
-              typedPermissionsData.push(item as CompanyUserPermission);
+            // Check if the item has the required structure and properly map id to userId
+            if (item && typeof item === 'object' && 'id' in item && 'permissions' in item) {
+              // Verify that permissions is an array
+              const permissions = Array.isArray(item.permissions) 
+                ? item.permissions 
+                : [];
+              
+              // Make sure each permission has the correct structure
+              const validPermissions: CompanyPermission[] = permissions
+                .filter((p: any) => p && typeof p === 'object' && 'moduleId' in p)
+                .map((p: any) => ({
+                  moduleId: p.moduleId,
+                  canView: Boolean(p.canView),
+                  canCreate: Boolean(p.canCreate),
+                  canEdit: Boolean(p.canEdit),
+                  canDelete: Boolean(p.canDelete)
+                }));
+                
+              // Create a properly typed CompanyUserPermission using id as userId
+              typedPermissionsData.push({
+                userId: item.id as string,
+                permissions: validPermissions
+              });
             }
           }
         }
