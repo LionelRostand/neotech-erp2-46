@@ -8,7 +8,6 @@ export const SETTINGS = 'settings';
 // Collections générales pour les modules
 export const DOCUMENTS = 'documents';
 export const CONTACTS = 'contacts';
-export const MESSAGES = 'messages';
 export const USER_PERMISSIONS = 'user_permissions';
 
 // Collections pour les modules spécifiques
@@ -37,6 +36,43 @@ export const HEALTH_ROOMS = 'health_rooms';
 export const HEALTH_ADMISSIONS = 'health_admissions';
 export const HEALTH_INTEGRATIONS = 'health_integrations';
 
+// Messages subcollections
+export const MESSAGES = {
+  ROOT: 'messages',
+  INBOX: 'messages_inbox',
+  ARCHIVED: 'messages_archived',
+  SCHEDULED: 'messages_scheduled',
+  METRICS: 'messages_metrics'
+};
+
+// Projects subcollections
+export const PROJECTS_COLLECTIONS = {
+  PROJECTS: 'projects_projects',
+  TASKS: 'projects_tasks',
+  TEAMS: 'projects_teams',
+  NOTIFICATIONS: 'projects_notifications'
+};
+
+// Accounting subcollections
+export const ACCOUNTING_COLLECTIONS = {
+  INVOICES: 'accounting_invoices',
+  PAYMENTS: 'accounting_payments',
+  TRANSACTIONS: 'accounting_transactions',
+  PERMISSIONS: 'accounting_permissions'
+};
+
+// Freight subcollections
+export const FREIGHT_COLLECTIONS = {
+  SHIPMENTS: 'freight_shipments',
+  TRACKING: 'freight_tracking'
+};
+
+// CRM subcollections
+export const CRM_COLLECTIONS = {
+  PROSPECTS: 'crm_prospects',
+  OPPORTUNITIES: 'crm_opportunities'
+};
+
 // Exports as a single object for convenience
 export const COLLECTIONS = {
   USERS,
@@ -51,12 +87,12 @@ export const COLLECTIONS = {
   USER_PERMISSIONS,
   
   // Collections pour modules spécifiques
-  ACCOUNTING,
+  ACCOUNTING: ACCOUNTING_COLLECTIONS,
   COMPANIES,
-  CRM,
+  CRM: CRM_COLLECTIONS,
   EMPLOYEES,
-  FREIGHT,
-  PROJECTS,
+  FREIGHT: FREIGHT_COLLECTIONS,
+  PROJECTS: PROJECTS_COLLECTIONS,
   HEALTH,
   
   // Health module collections
