@@ -158,6 +158,16 @@ const AppRoutes = () => (
       <Route path="settings" element={<SubmodulePage moduleId={8} submoduleId="health-settings" />} />
     </Route>
     
+    {/* Routes pour le module Library */}
+    <Route path="/modules/library" element={<ModuleLayout moduleId={15} />}>
+      <Route index element={<SubmodulePage moduleId={15} submoduleId="library-dashboard" />} />
+      <Route path="dashboard" element={<SubmodulePage moduleId={15} submoduleId="library-dashboard" />} />
+      <Route path="books" element={<SubmodulePage moduleId={15} submoduleId="library-books" />} />
+      <Route path="catalog" element={<SubmodulePage moduleId={15} submoduleId="library-catalog" />} />
+      <Route path="members" element={<SubmodulePage moduleId={15} submoduleId="library-members" />} />
+      <Route path="settings" element={<SubmodulePage moduleId={15} submoduleId="library-settings" />} />
+    </Route>
+
     {/* Generic routes for other modules */}
     <Route path="/modules/academy/*" element={<ModuleLayout moduleId={4} />} />
     <Route path="/modules/restaurant/*" element={<ModuleLayout moduleId={5} />} />

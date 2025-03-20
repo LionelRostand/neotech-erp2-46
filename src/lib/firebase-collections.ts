@@ -18,6 +18,7 @@ export const EMPLOYEES = 'employees';
 export const FREIGHT = 'freight';
 export const PROJECTS = 'projects';
 export const HEALTH = 'health';
+export const LIBRARY = 'library'; // Added library collection
 
 // Ajout des collections pour le module Health
 export const HEALTH_PATIENTS = 'health_patients';
@@ -35,6 +36,15 @@ export const HEALTH_BILLING = 'health_billing';
 export const HEALTH_ROOMS = 'health_rooms';
 export const HEALTH_ADMISSIONS = 'health_admissions';
 export const HEALTH_INTEGRATIONS = 'health_integrations';
+
+// Ajout des collections pour le module Library
+export const LIBRARY_BOOKS = 'library_books';
+export const LIBRARY_MEMBERS = 'library_members';
+export const LIBRARY_LOANS = 'library_loans';
+export const LIBRARY_CATEGORIES = 'library_categories';
+export const LIBRARY_PUBLISHERS = 'library_publishers';
+export const LIBRARY_AUTHORS = 'library_authors';
+export const LIBRARY_STATS = 'library_stats';
 
 // Messages subcollections
 export const MESSAGES = {
@@ -73,6 +83,17 @@ export const CRM_COLLECTIONS = {
   OPPORTUNITIES: 'crm_opportunities'
 };
 
+// Library subcollections
+export const LIBRARY_COLLECTIONS = {
+  BOOKS: 'library_books',
+  MEMBERS: 'library_members',
+  LOANS: 'library_loans',
+  CATEGORIES: 'library_categories',
+  PUBLISHERS: 'library_publishers',
+  AUTHORS: 'library_authors',
+  STATS: 'library_stats'
+};
+
 // Exports as a single object for convenience
 export const COLLECTIONS = {
   USERS,
@@ -94,6 +115,7 @@ export const COLLECTIONS = {
   FREIGHT: FREIGHT_COLLECTIONS,
   PROJECTS: PROJECTS_COLLECTIONS,
   HEALTH,
+  LIBRARY: LIBRARY_COLLECTIONS,
   
   // Health module collections
   HEALTH_PATIENTS,
@@ -110,5 +132,14 @@ export const COLLECTIONS = {
   HEALTH_BILLING,
   HEALTH_ROOMS,
   HEALTH_ADMISSIONS,
-  HEALTH_INTEGRATIONS
+  HEALTH_INTEGRATIONS,
+  
+  // Library module collections
+  LIBRARY_BOOKS,
+  LIBRARY_MEMBERS,
+  LIBRARY_LOANS,
+  LIBRARY_CATEGORIES,
+  LIBRARY_PUBLISHERS,
+  LIBRARY_AUTHORS,
+  LIBRARY_STATS
 };
