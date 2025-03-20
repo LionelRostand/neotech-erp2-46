@@ -4,8 +4,7 @@ import {
   updateDoc,
   setDoc
 } from 'firebase/firestore';
-import { getDocRef } from './firestore-utils';
-import { updateDocumentWithTimestamp } from './firestore-utils';
+import { getDocRef, updateDocumentWithTimestamp } from './common-utils';
 
 // Update an existing document
 export const updateDocument = async (collectionName: string, id: string, data: DocumentData) => {

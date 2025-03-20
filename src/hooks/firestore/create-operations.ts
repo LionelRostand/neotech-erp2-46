@@ -3,8 +3,7 @@ import {
   DocumentData,
   addDoc
 } from 'firebase/firestore';
-import { getCollectionRef } from './firestore-utils';
-import { formatDocumentWithTimestamps } from './firestore-utils';
+import { getCollectionRef, formatDocumentWithTimestamps } from './common-utils';
 
 // Add a new document to a collection
 export const addDocument = async (collectionName: string, data: DocumentData) => {
