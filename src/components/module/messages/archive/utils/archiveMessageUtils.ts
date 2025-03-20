@@ -4,6 +4,10 @@ import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
 export const formatMessageDate = (timestamp: Timestamp | Date | string | number | any) => {
+  if (!timestamp) {
+    return '';
+  }
+  
   let date: Date;
   
   // Check if timestamp is a Firebase Timestamp object
@@ -19,7 +23,12 @@ export const formatMessageDate = (timestamp: Timestamp | Date | string | number 
     console.warn('Invalid timestamp format:', timestamp);
   }
   
-  return format(date, 'dd MMM yyyy', { locale: fr });
+  try {
+    return format(date, 'dd MMM yyyy', { locale: fr });
+  } catch (error) {
+    console.error('Error formatting date:', error);
+    return '';
+  }
 };
 
 export const getInitials = (firstName: string, lastName: string) => {
@@ -27,11 +36,18 @@ export const getInitials = (firstName: string, lastName: string) => {
 };
 
 export const truncateText = (text: string, maxLength: number) => {
+  if (!text) return '';
   if (text.length <= maxLength) return text;
   return text.substring(0, maxLength) + '...';
 };
 
 export const extractTextFromHtml = (html: string) => {
-  const doc = new DOMParser().parseFromString(html, 'text/html');
-  return doc.body.textContent || '';
+  if (!html) return '';
+  try {
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+    return doc.body.textContent || '';
+  } catch (error) {
+    console.error('Error extracting text from HTML:', error);
+    return '';
+  }
 };

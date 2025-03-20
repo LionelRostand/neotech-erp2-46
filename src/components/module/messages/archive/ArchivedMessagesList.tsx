@@ -24,15 +24,15 @@ const ArchivedMessagesList: React.FC<ArchivedMessagesListProps> = ({
     return <ArchivedMessageSkeleton />;
   }
 
-  if (messages.length === 0) {
+  if (!messages || messages.length === 0) {
     return <ArchivedEmptyState />;
   }
 
   return (
     <div className="divide-y h-full overflow-y-auto">
       {messages.map((message) => {
-        const contact = contacts[message.sender];
-        const isRestoringMessage = isRestoring[message.id];
+        const contact = message.sender ? contacts[message.sender] : undefined;
+        const isRestoringMessage = message.id ? isRestoring[message.id] : false;
         
         return (
           <ArchivedMessageItem

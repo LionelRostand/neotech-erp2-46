@@ -55,7 +55,7 @@ const ArchivePage: React.FC = () => {
                 'Notes de réunion - Q1 2023'
               ][i % 5],
               content: `<p>Bonjour,</p><p>Ceci est un message archivé. Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p><p>Cordialement,<br />L'équipe</p>`,
-              sender: Object.keys(contactsMap)[i % Object.keys(contactsMap).length],
+              sender: Object.keys(contactsMap)[i % Object.keys(contactsMap).length] || 'unknown-sender',
               recipients: ['current-user-id'],
               status: 'read' as any,
               priority: ['normal', 'low'][i % 2] as any,
@@ -87,19 +87,24 @@ const ArchivePage: React.FC = () => {
     };
 
     fetchData();
-  }, [getAll, contactsCollection.getAll, toast]);
+  }, [getAll, contactsCollection, toast]);
 
   // Filtrer les messages selon le terme de recherche
   useEffect(() => {
     if (searchTerm.trim()) {
       const term = searchTerm.toLowerCase();
-      const filtered = archivedMessages.filter(message => 
-        message.subject.toLowerCase().includes(term) ||
-        (contacts[message.sender]?.firstName.toLowerCase().includes(term)) ||
-        (contacts[message.sender]?.lastName.toLowerCase().includes(term)) ||
-        (contacts[message.sender]?.email.toLowerCase().includes(term)) ||
-        message.content.toLowerCase().includes(term)
-      );
+      const filtered = archivedMessages.filter(message => {
+        const senderName = contacts[message.sender] ? 
+          `${contacts[message.sender].firstName} ${contacts[message.sender].lastName}`.toLowerCase() : '';
+        const senderEmail = contacts[message.sender]?.email.toLowerCase() || '';
+        const messageSubject = message.subject?.toLowerCase() || '';
+        const messageContent = message.content?.toLowerCase() || '';
+        
+        return messageSubject.includes(term) ||
+          senderName.includes(term) ||
+          senderEmail.includes(term) ||
+          messageContent.includes(term);
+      });
       setFilteredMessages(filtered);
     } else {
       setFilteredMessages(archivedMessages);
