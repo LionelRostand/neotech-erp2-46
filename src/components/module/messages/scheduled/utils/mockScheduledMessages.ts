@@ -29,9 +29,9 @@ export const generateMockScheduledMessages = (contactIds: string[]): Message[] =
       tags: i % 3 === 0 ? ['automatique', 'important'] : i % 2 === 0 ? ['suivi'] : [],
       hasAttachments: i % 3 === 0,
       isScheduled: true,
-      scheduledAt: scheduledDate as any,
-      createdAt: today as any,
-      updatedAt: today as any,
+      scheduledAt: scheduledDate,
+      createdAt: today,
+      updatedAt: today,
     };
   });
 };

@@ -3,7 +3,7 @@ import { Timestamp } from 'firebase/firestore';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
-export const formatMessageDate = (timestamp: Timestamp | Date | string | number) => {
+export const formatMessageDate = (timestamp: Timestamp | Date | string | number | any) => {
   let date: Date;
   
   // Check if timestamp is a Firebase Timestamp object

@@ -31,6 +31,31 @@ export const useProspectData = (
         const createdAtTimestamp = doc.createdAt as Timestamp | undefined;
         const lastContactTimestamp = doc.lastContact as Timestamp | undefined;
         
+        let createdAtDate = '';
+        let lastContactDate = '';
+        
+        // Gestion sécurisée de la date createdAt
+        if (createdAtTimestamp) {
+          if (typeof createdAtTimestamp === 'object' && 'toDate' in createdAtTimestamp && typeof createdAtTimestamp.toDate === 'function') {
+            createdAtDate = createdAtTimestamp.toDate().toISOString().split('T')[0];
+          } else if (createdAtTimestamp instanceof Date) {
+            createdAtDate = createdAtTimestamp.toISOString().split('T')[0];
+          } else if (typeof createdAtTimestamp === 'string') {
+            createdAtDate = new Date(createdAtTimestamp).toISOString().split('T')[0];
+          }
+        }
+        
+        // Gestion sécurisée de la date lastContact
+        if (lastContactTimestamp) {
+          if (typeof lastContactTimestamp === 'object' && 'toDate' in lastContactTimestamp && typeof lastContactTimestamp.toDate === 'function') {
+            lastContactDate = lastContactTimestamp.toDate().toISOString().split('T')[0];
+          } else if (lastContactTimestamp instanceof Date) {
+            lastContactDate = lastContactTimestamp.toISOString().split('T')[0];
+          } else if (typeof lastContactTimestamp === 'string') {
+            lastContactDate = new Date(lastContactTimestamp).toISOString().split('T')[0];
+          }
+        }
+        
         return {
           id: doc.id,
           name: doc.name || '',
@@ -39,8 +64,8 @@ export const useProspectData = (
           phone: doc.phone || '',
           status: doc.status || 'warm',
           source: doc.source || '',
-          createdAt: createdAtTimestamp ? createdAtTimestamp.toDate().toISOString().split('T')[0] : '',
-          lastContact: lastContactTimestamp ? lastContactTimestamp.toDate().toISOString().split('T')[0] : '',
+          createdAt: createdAtDate,
+          lastContact: lastContactDate,
           notes: doc.notes || ''
         } as Prospect;
       });
