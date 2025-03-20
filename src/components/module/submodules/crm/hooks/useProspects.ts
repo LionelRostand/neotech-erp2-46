@@ -39,7 +39,6 @@ export const useProspects = () => {
   const sourcesOptions = ['Site web', 'LinkedIn', 'Salon', 'Recommandation', 'Appel entrant', 'Email', 'Autre'];
   const prospectCollection = useFirestore(COLLECTIONS.CRM);
 
-  // Charger les prospects depuis Firestore
   useEffect(() => {
     const loadProspects = async () => {
       try {
@@ -51,7 +50,6 @@ export const useProspects = () => {
         
         const data = await prospectCollection.getAll(constraints);
         
-        // Formater les données pour correspondre à notre interface Prospect
         const formattedData = data.map(doc => {
           const createdAtTimestamp = doc.createdAt as Timestamp;
           const lastContactTimestamp = doc.lastContact as Timestamp;
@@ -113,12 +111,10 @@ export const useProspects = () => {
         lastContact: Timestamp.fromDate(new Date(formData.lastContact))
       };
       
-      // Only use the id from the result
-      const result = await prospectCollection.add(newProspectData);
+      const { id } = await prospectCollection.add(newProspectData);
       
-      // Create a new Prospect object with the id from the result and the form data
       const newProspect: Prospect = {
-        id: result.id,
+        id: id,
         name: formData.name,
         company: formData.company,
         email: formData.email,
@@ -188,7 +184,6 @@ export const useProspects = () => {
     if (!selectedProspect) return;
     
     try {
-      // Mettre à jour le type de 'prospect' à 'client'
       await prospectCollection.update(selectedProspect.id, {
         type: 'client',
         convertedAt: Timestamp.now()
@@ -208,8 +203,6 @@ export const useProspects = () => {
     if (!selectedProspect) return;
     
     try {
-      // Dans un cas réel, cela pourrait être intégré à un système de notifications
-      // Pour cet exemple, nous allons simplement ajouter une note avec la date de relance
       const reminderNote = `Relance prévue (${reminderData.type}): ${reminderData.date} - ${reminderData.note}`;
       
       await prospectCollection.update(selectedProspect.id, {
@@ -217,7 +210,6 @@ export const useProspects = () => {
         lastContact: Timestamp.now()
       });
       
-      // Mettre à jour les données locales
       setProspects(prev => 
         prev.map(prospect => 
           prospect.id === selectedProspect.id 
@@ -279,7 +271,6 @@ export const useProspects = () => {
     setIsReminderDialogOpen(true);
   };
 
-  // Filtrer les prospects en fonction du terme de recherche et du filtre de statut
   const filteredProspects = prospects.filter(prospect => {
     const matchesSearch = 
       prospect.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
