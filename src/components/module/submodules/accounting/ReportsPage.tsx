@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -23,7 +22,8 @@ import {
   CartesianGrid, 
   Tooltip, 
   Legend, 
-  ResponsiveContainer 
+  ResponsiveContainer,
+  TooltipProps
 } from 'recharts';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { Badge } from "@/components/ui/badge";
@@ -176,13 +176,13 @@ const ReportsPage: React.FC = () => {
                         <div className="bg-background border rounded-md shadow-sm p-2 text-sm">
                           <p className="font-semibold">{payload[0].payload.month}</p>
                           <p className="text-blue-600">
-                            Revenus: {payload[0].value?.toLocaleString()} €
+                            Revenus: {Number(payload[0].value)?.toLocaleString()} €
                           </p>
                           <p className="text-red-600">
-                            Dépenses: {payload[1].value?.toLocaleString()} €
+                            Dépenses: {Number(payload[1].value)?.toLocaleString()} €
                           </p>
                           <p className="font-medium pt-1 border-t mt-1">
-                            Marge: {(payload[0].value - payload[1].value).toLocaleString()} €
+                            Marge: {(Number(payload[0].value) - Number(payload[1].value)).toLocaleString()} €
                           </p>
                         </div>
                       );
@@ -229,7 +229,7 @@ const ReportsPage: React.FC = () => {
                         <div className="bg-background border rounded-md shadow-sm p-2 text-sm">
                           <p className="font-semibold">{payload[0].payload.month}</p>
                           <p className="text-emerald-600 font-medium">
-                            {payload[0].value?.toFixed(1)}%
+                            {typeof payload[0].value === 'number' ? payload[0].value.toFixed(1) : '0'}%
                           </p>
                         </div>
                       );
@@ -287,7 +287,7 @@ const ReportsPage: React.FC = () => {
                       return (
                         <div className="bg-background border rounded-md shadow-sm p-2 text-sm">
                           <p className="font-semibold">{payload[0].name}</p>
-                          <p className="font-medium">{formatCurrency(payload[0].value as number)}</p>
+                          <p className="font-medium">{formatCurrency(Number(payload[0].value))}</p>
                         </div>
                       );
                     }

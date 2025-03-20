@@ -22,6 +22,7 @@ import { toast } from "sonner";
 import { useFirestore } from '@/hooks/use-firestore';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import { Task } from '../types/project-types';
+import { where } from 'firebase/firestore';
 
 const formSchema = z.object({
   title: z.string().min(2, { message: "Le titre doit contenir au moins 2 caractères" }),

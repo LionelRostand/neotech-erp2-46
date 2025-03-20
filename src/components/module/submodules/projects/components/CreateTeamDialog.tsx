@@ -49,7 +49,7 @@ export const CreateTeamDialog: React.FC<CreateTeamDialogProps> = ({
       setIsSubmitting(true);
       
       const teamData: TeamFormData = {
-        ...values,
+        name: values.name,
         description: values.description || "",
         members: []
       };

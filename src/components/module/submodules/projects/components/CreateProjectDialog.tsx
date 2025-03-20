@@ -69,8 +69,13 @@ export const CreateProjectDialog: React.FC<CreateProjectDialogProps> = ({
       setIsSubmitting(true);
       
       const projectData: ProjectFormData = {
-        ...values,
-        budget: values.budget || undefined,
+        name: values.name,
+        description: values.description || "",
+        startDate: values.startDate,
+        endDate: values.endDate,
+        status: values.status,
+        priority: values.priority,
+        budget: values.budget,
         client: values.client || undefined,
         teamId: values.teamId || undefined,
       };

@@ -1,4 +1,3 @@
-
 import { Timestamp } from "firebase/firestore";
 
 export type ProjectStatus = 'active' | 'on-hold' | 'completed' | 'cancelled';
@@ -37,6 +36,7 @@ export interface Task {
   createdAt: string;
   updatedAt: string;
   createdBy: string;
+  projectName?: string;
 }
 
 export interface TeamMember {

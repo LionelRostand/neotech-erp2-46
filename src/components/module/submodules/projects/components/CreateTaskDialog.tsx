@@ -65,8 +65,13 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
       setIsSubmitting(true);
       
       const taskData: TaskFormData = {
-        ...values,
-        estimatedHours: values.estimatedHours || undefined,
+        title: values.title,
+        description: values.description || "",
+        status: values.status,
+        priority: values.priority,
+        dueDate: values.dueDate,
+        estimatedHours: values.estimatedHours,
+        assignedTo: values.assignedTo,
         projectId: projectId
       };
       
