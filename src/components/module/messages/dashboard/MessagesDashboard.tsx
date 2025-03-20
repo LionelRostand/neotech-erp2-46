@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useFirestore } from '@/hooks/use-firestore';
 import { COLLECTIONS } from '@/lib/firebase-collections';
@@ -22,39 +21,21 @@ const MessagesDashboard: React.FC = () => {
         const metricsData = await getAll();
         // Prendre les métriques les plus récentes
         if (metricsData && metricsData.length > 0) {
-          const latestMetrics = metricsData.sort((a, b) => 
-            b.updateTimestamp.toDate().getTime() - a.updateTimestamp.toDate().getTime()
-          )[0] as MessageMetrics;
-          setMetrics(latestMetrics);
+          // Ensure the data has updateTimestamp property before sorting
+          const dataWithTimestamp = metricsData.filter(item => item.updateTimestamp);
+          
+          if (dataWithTimestamp.length > 0) {
+            const latestMetrics = dataWithTimestamp.sort((a, b) => 
+              b.updateTimestamp.toDate().getTime() - a.updateTimestamp.toDate().getTime()
+            )[0] as MessageMetrics;
+            setMetrics(latestMetrics);
+          } else {
+            // Fallback to demo data if no valid timestamps
+            setDemoMetrics();
+          }
         } else {
           // Si pas de données, créer des métriques fictives pour la démo
-          setMetrics({
-            id: 'demo',
-            totalMessages: 247,
-            unreadMessages: 15,
-            archivedMessages: 56,
-            scheduledMessages: 8,
-            messagesSentToday: 12,
-            messagesReceivedToday: 23,
-            contactsCount: 143,
-            topContacts: [
-              { contactId: '1', contactName: 'Jean Dupont', messagesCount: 47 },
-              { contactId: '2', contactName: 'Marie Martin', messagesCount: 36 },
-              { contactId: '3', contactName: 'Pierre Durand', messagesCount: 28 },
-              { contactId: '4', contactName: 'Sophie Bernard', messagesCount: 21 },
-              { contactId: '5', contactName: 'Philippe Petit', messagesCount: 15 }
-            ],
-            dailyActivity: Array.from({ length: 14 }, (_, i) => {
-              const date = new Date();
-              date.setDate(date.getDate() - (13 - i));
-              return {
-                date: date.toISOString().split('T')[0],
-                sent: Math.floor(Math.random() * 20) + 5,
-                received: Math.floor(Math.random() * 30) + 10
-              };
-            }),
-            updateTimestamp: new Date() as any
-          });
+          setDemoMetrics();
         }
       } catch (err: any) {
         console.error("Erreur lors de la récupération des métriques:", err);
@@ -62,6 +43,36 @@ const MessagesDashboard: React.FC = () => {
       } finally {
         setLoading(false);
       }
+    };
+
+    const setDemoMetrics = () => {
+      setMetrics({
+        id: 'demo',
+        totalMessages: 247,
+        unreadMessages: 15,
+        archivedMessages: 56,
+        scheduledMessages: 8,
+        messagesSentToday: 12,
+        messagesReceivedToday: 23,
+        contactsCount: 143,
+        topContacts: [
+          { contactId: '1', contactName: 'Jean Dupont', messagesCount: 47 },
+          { contactId: '2', contactName: 'Marie Martin', messagesCount: 36 },
+          { contactId: '3', contactName: 'Pierre Durand', messagesCount: 28 },
+          { contactId: '4', contactName: 'Sophie Bernard', messagesCount: 21 },
+          { contactId: '5', contactName: 'Philippe Petit', messagesCount: 15 }
+        ],
+        dailyActivity: Array.from({ length: 14 }, (_, i) => {
+          const date = new Date();
+          date.setDate(date.getDate() - (13 - i));
+          return {
+            date: date.toISOString().split('T')[0],
+            sent: Math.floor(Math.random() * 20) + 5,
+            received: Math.floor(Math.random() * 30) + 10
+          };
+        }),
+        updateTimestamp: new Date() as any
+      });
     };
 
     fetchMetrics();

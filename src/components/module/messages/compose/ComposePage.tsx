@@ -1,8 +1,7 @@
-
 import React, { useState, useEffect } from 'react';
 import { useFirestore } from '@/hooks/use-firestore';
 import { COLLECTIONS } from '@/lib/firebase-collections';
-import { Contact, MessageFormData, MessagePriority, MessageCategory } from '../types/message-types';
+import { Contact, MessageFormData, MessagePriority, MessageCategory, MessageStatus } from '../types/message-types';
 import { Timestamp } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';

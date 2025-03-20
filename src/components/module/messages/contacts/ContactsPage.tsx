@@ -20,7 +20,7 @@ import {
 } from 'lucide-react';
 import ContactDialog from './ContactDialog';
 import DeleteContactDialog from './DeleteContactDialog';
-import { DataTable } from '@/components/DataTable';
+import DataTable from '@/components/DataTable';
 import { 
   DropdownMenu, 
   DropdownMenuContent, 
@@ -55,7 +55,6 @@ const ContactsPage: React.FC<ContactsPageProps> = () => {
         if (contactsData.length > 0) {
           setContacts(contactsData as Contact[]);
         } else {
-          // Créer des données fictives pour la démo
           const mockContacts: Contact[] = Array.from({ length: 15 }, (_, i) => ({
             id: `mock-${i+1}`,
             firstName: ['Jean', 'Marie', 'Pierre', 'Sophie', 'Philippe', 'Anne', 'Thomas', 'Claire', 'Paul', 'Julie', 'Lucas', 'Emma', 'Gabriel', 'Chloé', 'Arthur'][i],
@@ -128,7 +127,6 @@ const ContactsPage: React.FC<ContactsPageProps> = () => {
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>Actions</DropdownMenuLabel>
               <DropdownMenuItem onClick={() => {
-                // Naviguer vers la page de composition avec l'email pré-rempli
                 navigate(`/modules/messages/compose?to=${contact.id}`);
               }}>
                 Envoyer un message
@@ -156,6 +154,37 @@ const ContactsPage: React.FC<ContactsPageProps> = () => {
       (contact.company?.toLowerCase().includes(lowerSearch) ?? false)
     );
   }, [contacts, search]);
+
+  const handleSaveContact = (contact: Contact, isNew: boolean) => {
+    if (isNew) {
+      setContacts(prevContacts => [...prevContacts, contact]);
+    } else {
+      setContacts(prevContacts => 
+        prevContacts.map(c => c.id === contact.id ? contact : c)
+      );
+    }
+    
+    toast({
+      title: isNew ? "Contact créé" : "Contact modifié",
+      description: isNew ? "Le contact a été créé avec succès" : "Le contact a été modifié avec succès",
+    });
+  };
+
+  const handleDeleteContact = () => {
+    if (selectedContact) {
+      setContacts(prevContacts => 
+        prevContacts.filter(c => c.id !== selectedContact.id)
+      );
+      
+      toast({
+        title: "Contact supprimé",
+        description: "Le contact a été supprimé avec succès",
+      });
+      
+      setOpenDeleteDialog(false);
+      setSelectedContact(null);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -186,16 +215,25 @@ const ContactsPage: React.FC<ContactsPageProps> = () => {
               </Button>
             </div>
           </div>
-          <DataTable columns={columns} data={filteredContacts} />
+          <DataTable 
+            title="Liste des contacts" 
+            columns={columns} 
+            data={filteredContacts} 
+          />
         </CardContent>
       </Card>
 
-      <ContactDialog open={openCreateDialog} setOpen={setOpenCreateDialog} />
-      <DeleteContactDialog
-        open={openDeleteDialog}
-        setOpen={setOpenDeleteDialog}
+      <ContactDialog 
+        isOpen={openCreateDialog} 
+        onOpenChange={setOpenCreateDialog} 
         contact={selectedContact}
-        setContacts={setContacts}
+        onSave={handleSaveContact}
+      />
+      <DeleteContactDialog
+        isOpen={openDeleteDialog}
+        onOpenChange={setOpenDeleteDialog}
+        contact={selectedContact}
+        onConfirm={handleDeleteContact}
       />
     </div>
   );
