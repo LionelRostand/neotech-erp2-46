@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useFirestore } from '@/hooks/use-firestore';
 import { COLLECTIONS } from '@/lib/firebase-collections';
@@ -11,6 +10,19 @@ import CompanyActivityChart from './CompanyActivityChart';
 import RecentCompaniesWidget from './RecentCompaniesWidget';
 import RecentDocumentsWidget from './RecentDocumentsWidget';
 import { Skeleton } from '@/components/ui/skeleton';
+
+interface Company {
+  id: string;
+  name?: string;
+  createdAt?: any;
+  updatedAt?: any;
+}
+
+interface Document {
+  id: string;
+  type?: string;
+  createdAt?: any;
+}
 
 const CompaniesDashboard: React.FC = () => {
   const [metrics, setMetrics] = useState({
@@ -28,12 +40,12 @@ const CompaniesDashboard: React.FC = () => {
     const fetchMetrics = async () => {
       try {
         // Fetch companies data
-        const companies = await companiesDb.getAll();
+        const companies = await companiesDb.getAll() as Company[];
         
         // Fetch documents data
         const documents = await documentsDb.getAll([
           where('type', '==', 'company_document')
-        ]);
+        ]) as Document[];
         
         // Calculate active companies (created or updated in the last 30 days)
         const thirtyDaysAgo = new Date();

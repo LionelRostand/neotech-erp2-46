@@ -5,10 +5,10 @@ import { Button } from '@/components/ui/button';
 import { Employee } from '@/types/employee';
 import { Department } from './types';
 import EmployeesList from './EmployeesList';
+import { employees } from '@/data/employees';
 
 interface ManageEmployeesDialogProps {
   department: Department;
-  employees: Employee[];
   selectedEmployees: string[];
   onEmployeeSelection: (employeeId: string) => void;
   getDepartmentEmployees: (departmentId: string) => Employee[];
@@ -18,7 +18,6 @@ interface ManageEmployeesDialogProps {
 
 const ManageEmployeesDialog: React.FC<ManageEmployeesDialogProps> = ({
   department,
-  employees,
   selectedEmployees,
   onEmployeeSelection,
   getDepartmentEmployees,

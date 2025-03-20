@@ -50,8 +50,6 @@ const EmployeesDepartments: React.FC = () => {
       
       {/* Add new department dialog */}
       <AddDepartmentDialog 
-        open={isAddDialogOpen}
-        onOpenChange={setIsAddDialogOpen}
         formData={formData}
         activeTab={activeTab}
         selectedEmployees={selectedEmployees}
@@ -60,14 +58,13 @@ const EmployeesDepartments: React.FC = () => {
         onColorChange={handleColorChange}
         onTabChange={setActiveTab}
         onEmployeeSelection={handleEmployeeSelection}
+        onClose={() => setIsAddDialogOpen(false)}
         onSave={handleSaveDepartment}
       />
       
       {/* Edit department dialog */}
       {currentDepartment && (
         <EditDepartmentDialog 
-          open={isEditDialogOpen}
-          onOpenChange={setIsEditDialogOpen}
           formData={formData}
           activeTab={activeTab}
           selectedEmployees={selectedEmployees}
@@ -76,19 +73,20 @@ const EmployeesDepartments: React.FC = () => {
           onColorChange={handleColorChange}
           onTabChange={setActiveTab}
           onEmployeeSelection={handleEmployeeSelection}
-          onSave={handleUpdateDepartment}
+          onClose={() => setIsEditDialogOpen(false)}
+          onUpdate={handleUpdateDepartment}
         />
       )}
       
       {/* Manage employees dialog */}
       {currentDepartment && (
         <ManageEmployeesDialog 
-          open={isManageEmployeesDialogOpen}
-          onOpenChange={setIsManageEmployeesDialogOpen}
           department={currentDepartment}
           selectedEmployees={selectedEmployees}
           onEmployeeSelection={handleEmployeeSelection}
+          onClose={() => setIsManageEmployeesDialogOpen(false)}
           onSave={handleSaveEmployeeAssignments}
+          getDepartmentEmployees={getDepartmentEmployees}
         />
       )}
     </div>

@@ -25,6 +25,18 @@ interface CompanyActivity {
   mises_à_jour: number;
 }
 
+interface Company {
+  id: string;
+  createdAt?: any;
+  updatedAt?: any;
+}
+
+interface Document {
+  id: string;
+  createdAt?: any;
+  type?: string;
+}
+
 const CompanyActivityChart: React.FC = () => {
   const [activityData, setActivityData] = useState<CompanyActivity[]>([]);
   const [loading, setLoading] = useState(true);
@@ -46,12 +58,12 @@ const CompanyActivityChart: React.FC = () => {
         });
         
         // Fetch all companies
-        const companies = await companiesDb.getAll();
+        const companies = await companiesDb.getAll() as Company[];
         
         // Fetch all documents
         const documents = await documentsDb.getAll([
           where('type', '==', 'company_document')
-        ]);
+        ]) as Document[];
         
         // Prepare activity data
         const data: CompanyActivity[] = months.map(month => {

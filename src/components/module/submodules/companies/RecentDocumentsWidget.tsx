@@ -6,7 +6,7 @@ import { where, orderBy, limit } from 'firebase/firestore';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { useNavigate } from 'react-router-dom';
-import { FileText, Calendar, ExternalLink, FilePdf, FileImage, FileSpreadsheet, FileBox } from 'lucide-react';
+import { FileText, Calendar, ExternalLink, FileImage, FileSpreadsheet, FileBox } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -53,7 +53,7 @@ const RecentDocumentsWidget: React.FC = () => {
   const getFileIcon = (fileType: string) => {
     switch (fileType?.toLowerCase()) {
       case 'pdf':
-        return <FilePdf size={16} className="text-red-600" />;
+        return <FileText size={16} className="text-red-600" />; // Changed from FilePdf to FileText with red color
       case 'jpg':
       case 'jpeg':
       case 'png':

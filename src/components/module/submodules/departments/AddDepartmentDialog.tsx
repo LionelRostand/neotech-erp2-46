@@ -9,10 +9,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Employee } from '@/types/employee';
 import { DepartmentFormData, departmentColors } from './types';
 import EmployeesList from './EmployeesList';
+import { employees } from '@/data/employees';
 
 interface AddDepartmentDialogProps {
   formData: DepartmentFormData;
-  employees: Employee[];
   selectedEmployees: string[];
   activeTab: string;
   onTabChange: (tab: string) => void;
@@ -26,7 +26,6 @@ interface AddDepartmentDialogProps {
 
 const AddDepartmentDialog: React.FC<AddDepartmentDialogProps> = ({
   formData,
-  employees,
   selectedEmployees,
   activeTab,
   onTabChange,
