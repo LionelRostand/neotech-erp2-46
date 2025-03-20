@@ -37,7 +37,10 @@ import {
   Link2,
   ExternalLink,
   Loader2,
-  Paperclip
+  Paperclip,
+  Clock,
+  MoreHorizontal,
+  Heart
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import {
