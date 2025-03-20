@@ -81,6 +81,17 @@ const AppRoutes = () => (
       <Route path="settings" element={<SubmodulePage moduleId={3} submoduleId="projects-settings" />} />
     </Route>
     
+    {/* Route pour le module Accounting */}
+    <Route path="/modules/accounting" element={<ModuleLayout moduleId={9} />}>
+      <Route index element={<SubmodulePage moduleId={9} submoduleId="accounting-dashboard" />} />
+      <Route path="dashboard" element={<SubmodulePage moduleId={9} submoduleId="accounting-dashboard" />} />
+      <Route path="invoices" element={<SubmodulePage moduleId={9} submoduleId="accounting-invoices" />} />
+      <Route path="payments" element={<SubmodulePage moduleId={9} submoduleId="accounting-payments" />} />
+      <Route path="taxes" element={<SubmodulePage moduleId={9} submoduleId="accounting-taxes" />} />
+      <Route path="reports" element={<SubmodulePage moduleId={9} submoduleId="accounting-reports" />} />
+      <Route path="settings" element={<SubmodulePage moduleId={9} submoduleId="accounting-settings" />} />
+    </Route>
+    
     {/* Route pour le module CRM */}
     <Route path="/modules/crm" element={<ModuleLayout moduleId={17} />}>
       <Route index element={<SubmodulePage moduleId={17} submoduleId="crm-dashboard" />} />
@@ -131,7 +142,6 @@ const AppRoutes = () => (
     <Route path="/modules/restaurant/*" element={<ModuleLayout moduleId={5} />} />
     <Route path="/modules/garage/*" element={<ModuleLayout moduleId={6} />} />
     <Route path="/modules/transport/*" element={<ModuleLayout moduleId={7} />} />
-    <Route path="/modules/accounting/*" element={<ModuleLayout moduleId={9} />} />
     <Route path="/modules/ecommerce/*" element={<ModuleLayout moduleId={10} />} />
     
     {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

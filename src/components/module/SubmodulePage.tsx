@@ -43,6 +43,12 @@ import TasksPage from './submodules/projects/TasksPage';
 import TeamsPage from './submodules/projects/TeamsPage';
 import ReportsPage from './submodules/projects/ReportsPage';
 import SettingsPage from './submodules/projects/SettingsPage';
+import AccountingDashboard from './submodules/accounting/AccountingDashboard';
+import InvoicesPage from './submodules/accounting/InvoicesPage';
+import PaymentsPage from './submodules/accounting/PaymentsPage';
+import TaxesPage from './submodules/accounting/TaxesPage';
+import AccountingReportsPage from './submodules/accounting/ReportsPage';
+import AccountingSettingsPage from './submodules/accounting/SettingsPage';
 
 interface SubmodulePageProps {
   moduleId: number;
@@ -152,6 +158,20 @@ const SubmodulePage: React.FC<SubmodulePageProps> = ({ moduleId, submoduleId }) 
         return <ReportsPage />;
       case 'projects-settings':
         return <SettingsPage />;
+      
+      // Accounting module
+      case 'accounting-dashboard':
+        return <AccountingDashboard />;
+      case 'accounting-invoices':
+        return <InvoicesPage />;
+      case 'accounting-payments':
+        return <PaymentsPage />;
+      case 'accounting-taxes':
+        return <TaxesPage />;
+      case 'accounting-reports':
+        return <AccountingReportsPage />;
+      case 'accounting-settings':
+        return <AccountingSettingsPage />;
       
       // All other freight submodules will default to DefaultSubmoduleContent
       // until they are implemented specifically

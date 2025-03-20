@@ -4,7 +4,15 @@ export const COLLECTIONS = {
   // Gestion d'entreprise
   EMPLOYEES: 'employees',
   COMPANIES: 'companies',
-  ACCOUNTING: 'accounting',
+  ACCOUNTING: {
+    INVOICES: 'accounting_invoices',
+    PAYMENTS: 'accounting_payments',
+    TAXES: 'accounting_taxes',
+    REPORTS: 'accounting_reports',
+    SETTINGS: 'accounting_settings',
+    BANK_ACCOUNTS: 'accounting_bank_accounts',
+    TRANSACTIONS: 'accounting_transactions'
+  },
   PROJECTS: {
     PROJECTS: 'projects_list',
     TASKS: 'projects_tasks',
