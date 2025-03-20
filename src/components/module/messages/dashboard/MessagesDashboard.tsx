@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useFirestore } from '@/hooks/use-firestore';
 import { COLLECTIONS } from '@/lib/firebase-collections';
@@ -22,12 +23,12 @@ const MessagesDashboard: React.FC = () => {
         // Prendre les métriques les plus récentes
         if (metricsData && metricsData.length > 0) {
           // Ensure the data has updateTimestamp property before sorting
-          const dataWithTimestamp = metricsData.filter(item => 
+          const dataWithTimestamp = metricsData.filter((item: any) => 
             item && typeof item === 'object' && 'updateTimestamp' in item && item.updateTimestamp
           );
           
           if (dataWithTimestamp.length > 0) {
-            const latestMetrics = dataWithTimestamp.sort((a, b) => {
+            const latestMetrics = dataWithTimestamp.sort((a: any, b: any) => {
               if (a.updateTimestamp && b.updateTimestamp) {
                 return b.updateTimestamp.toDate().getTime() - a.updateTimestamp.toDate().getTime();
               }
