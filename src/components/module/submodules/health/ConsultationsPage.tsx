@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { 
   Card, 
@@ -898,3 +899,709 @@ const ConsultationsPage: React.FC = () => {
                             
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                                  <MoreHorizontal className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem
+                                  onClick={() => {
+                                    setSelectedConsultation(consultation);
+                                    const tabTrigger = document.querySelector('[data-value="form"]') as HTMLElement;
+                                    if (tabTrigger) tabTrigger.click();
+                                  }}
+                                >
+                                  <Eye className="mr-2 h-4 w-4" />
+                                  Détails
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={() => handleUpdateConsultationStatus(consultation.id, 'in_progress')}
+                                  disabled={consultation.status === 'in_progress' || consultation.status === 'completed' || consultation.status === 'canceled'}
+                                >
+                                  <Clock className="mr-2 h-4 w-4" />
+                                  Débuter
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={() => handleUpdateConsultationStatus(consultation.id, 'completed')}
+                                  disabled={consultation.status === 'completed' || consultation.status === 'canceled'}
+                                >
+                                  <CheckCircle2 className="mr-2 h-4 w-4" />
+                                  Terminer
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={() => handleUpdateConsultationStatus(consultation.id, 'canceled')}
+                                  disabled={consultation.status === 'completed' || consultation.status === 'canceled'}
+                                >
+                                  <XCircle className="mr-2 h-4 w-4" />
+                                  Annuler
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="form" className="space-y-4">
+          {!selectedConsultation ? (
+            <Card>
+              <CardContent className="p-8 text-center">
+                <div className="flex flex-col items-center justify-center gap-4">
+                  <FileText className="h-16 w-16 text-muted-foreground/60" />
+                  <h3 className="text-xl font-medium">Aucune consultation sélectionnée</h3>
+                  <p className="text-muted-foreground max-w-md mx-auto">
+                    Veuillez sélectionner une consultation dans la liste ou créer une nouvelle consultation.
+                  </p>
+                  <Button 
+                    onClick={() => setIsCreatingConsultation(true)}
+                    className="mt-2 flex items-center gap-2"
+                  >
+                    <Plus className="h-4 w-4" />
+                    Nouvelle consultation
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <h3 className="text-xl font-medium flex items-center gap-2">
+                  <FileText className="h-5 w-5 text-blue-500" />
+                  Consultation {selectedConsultation.id}
+                </h3>
+                <Badge className={getStatusColor(selectedConsultation.status)}>
+                  {getConsultationStatusLabel(selectedConsultation.status)}
+                </Badge>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <User className="h-5 w-5 text-blue-500" />
+                      Informations générales
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <h4 className="font-medium text-sm mb-1">Patient</h4>
+                        <p>{selectedConsultation.patientName}</p>
+                      </div>
+                      <div>
+                        <h4 className="font-medium text-sm mb-1">Médecin</h4>
+                        <p>{selectedConsultation.doctorName}</p>
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <h4 className="font-medium text-sm mb-1">Date</h4>
+                        <p>{formatDate(selectedConsultation.date)}</p>
+                      </div>
+                      <div>
+                        <h4 className="font-medium text-sm mb-1">Heure</h4>
+                        <p>{selectedConsultation.time}</p>
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <h4 className="font-medium text-sm mb-1">Type</h4>
+                        <Badge className={getTypeColor(selectedConsultation.type)}>
+                          {getConsultationTypeLabel(selectedConsultation.type)}
+                        </Badge>
+                      </div>
+                      <div>
+                        <h4 className="font-medium text-sm mb-1">Durée</h4>
+                        <p>{selectedConsultation.duration} minutes</p>
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <h4 className="font-medium text-sm mb-1">Symptômes</h4>
+                      <div className="flex flex-wrap gap-1">
+                        {selectedConsultation.symptoms.map((symptom, index) => (
+                          <Badge key={index} variant="outline">{symptom}</Badge>
+                        ))}
+                        {selectedConsultation.symptoms.length === 0 && (
+                          <p className="text-muted-foreground text-sm">Aucun symptôme enregistré</p>
+                        )}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+                
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Clipboard className="h-5 w-5 text-blue-500" />
+                      Diagnostic et Prescription
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div>
+                      <Label htmlFor="diagnosis">Diagnostic</Label>
+                      <Textarea 
+                        id="diagnosis"
+                        placeholder="Entrez un diagnostic..."
+                        value={selectedConsultation.diagnosis || ""}
+                        onChange={(e) => setSelectedConsultation({
+                          ...selectedConsultation,
+                          diagnosis: e.target.value
+                        })}
+                      />
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="prescription">Prescription</Label>
+                      <Textarea 
+                        id="prescription"
+                        placeholder="Entrez une prescription..."
+                        className="min-h-[150px]"
+                        value={selectedConsultation.prescription || ""}
+                        onChange={(e) => setSelectedConsultation({
+                          ...selectedConsultation,
+                          prescription: e.target.value
+                        })}
+                      />
+                    </div>
+                    
+                    <div className="pt-4 flex justify-end">
+                      <Button 
+                        onClick={() => handleUpdateDiagnosisAndPrescription(
+                          selectedConsultation.id,
+                          selectedConsultation.diagnosis || "",
+                          selectedConsultation.prescription || ""
+                        )}
+                        className="flex items-center gap-2"
+                      >
+                        <CheckCircle2 className="h-4 w-4" />
+                        Enregistrer
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+              
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="flex items-center gap-2">
+                    <TestTube className="h-5 w-5 text-blue-500" />
+                    Examens complémentaires
+                  </CardTitle>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => setIsAddingTestOrder(true)}
+                    className="flex items-center gap-1"
+                  >
+                    <Plus className="h-3 w-3" />
+                    Ajouter
+                  </Button>
+                </CardHeader>
+                <CardContent>
+                  {selectedConsultation.testOrders && selectedConsultation.testOrders.length > 0 ? (
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Type</TableHead>
+                          <TableHead>Description</TableHead>
+                          <TableHead>Statut</TableHead>
+                          <TableHead>Date de demande</TableHead>
+                          <TableHead>Date de résultat</TableHead>
+                          <TableHead>Résultats</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {selectedConsultation.testOrders.map((test) => (
+                          <TableRow key={test.id}>
+                            <TableCell>
+                              <Badge className={getTestTypeColor(test.type)}>
+                                {getTestTypeLabel(test.type)}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>{test.description}</TableCell>
+                            <TableCell>
+                              <Badge className={getTestStatusColor(test.status)}>
+                                {getTestStatusLabel(test.status)}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>{formatDate(test.orderedDate)}</TableCell>
+                            <TableCell>{test.completedDate ? formatDate(test.completedDate) : "-"}</TableCell>
+                            <TableCell>{test.results || "-"}</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  ) : (
+                    <div className="text-center py-4 text-muted-foreground">
+                      <p>Aucun examen complémentaire demandé</p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+              
+              {selectedConsultation.vitalSigns && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Heart className="h-5 w-5 text-blue-500" />
+                      Signes vitaux
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      {selectedConsultation.vitalSigns.temperature !== undefined && (
+                        <div>
+                          <h4 className="font-medium text-sm mb-1">Température</h4>
+                          <p>{selectedConsultation.vitalSigns.temperature} °C</p>
+                        </div>
+                      )}
+                      
+                      {(selectedConsultation.vitalSigns.bloodPressureSystolic !== undefined && 
+                        selectedConsultation.vitalSigns.bloodPressureDiastolic !== undefined) && (
+                        <div>
+                          <h4 className="font-medium text-sm mb-1">Tension artérielle</h4>
+                          <p>{selectedConsultation.vitalSigns.bloodPressureSystolic}/{selectedConsultation.vitalSigns.bloodPressureDiastolic} mmHg</p>
+                        </div>
+                      )}
+                      
+                      {selectedConsultation.vitalSigns.heartRate !== undefined && (
+                        <div>
+                          <h4 className="font-medium text-sm mb-1">Fréquence cardiaque</h4>
+                          <p>{selectedConsultation.vitalSigns.heartRate} bpm</p>
+                        </div>
+                      )}
+                      
+                      {selectedConsultation.vitalSigns.respiratoryRate !== undefined && (
+                        <div>
+                          <h4 className="font-medium text-sm mb-1">Fréquence respiratoire</h4>
+                          <p>{selectedConsultation.vitalSigns.respiratoryRate} c/min</p>
+                        </div>
+                      )}
+                      
+                      {selectedConsultation.vitalSigns.oxygenSaturation !== undefined && (
+                        <div>
+                          <h4 className="font-medium text-sm mb-1">Saturation O2</h4>
+                          <p>{selectedConsultation.vitalSigns.oxygenSaturation} %</p>
+                        </div>
+                      )}
+                      
+                      {selectedConsultation.vitalSigns.weight !== undefined && (
+                        <div>
+                          <h4 className="font-medium text-sm mb-1">Poids</h4>
+                          <p>{selectedConsultation.vitalSigns.weight} kg</p>
+                        </div>
+                      )}
+                      
+                      {selectedConsultation.vitalSigns.height !== undefined && (
+                        <div>
+                          <h4 className="font-medium text-sm mb-1">Taille</h4>
+                          <p>{selectedConsultation.vitalSigns.height} cm</p>
+                        </div>
+                      )}
+                      
+                      {selectedConsultation.vitalSigns.bmi !== undefined && (
+                        <div>
+                          <h4 className="font-medium text-sm mb-1">IMC</h4>
+                          <p>{selectedConsultation.vitalSigns.bmi} kg/m²</p>
+                        </div>
+                      )}
+                      
+                      {selectedConsultation.vitalSigns.pain !== undefined && (
+                        <div>
+                          <h4 className="font-medium text-sm mb-1">Niveau de douleur</h4>
+                          <p>{selectedConsultation.vitalSigns.pain}/10</p>
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+              
+              {selectedConsultation.notes && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <FileText className="h-5 w-5 text-blue-500" />
+                      Notes
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="whitespace-pre-line">{selectedConsultation.notes}</p>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          )}
+        </TabsContent>
+      </Tabs>
+      
+      <Dialog open={isCreatingConsultation} onOpenChange={setIsCreatingConsultation}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>Nouvelle consultation</DialogTitle>
+            <DialogDescription>
+              Créez une nouvelle consultation pour un patient.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="patient">Patient</Label>
+                <Select value={newConsultation.patientId || ''} onValueChange={(value) => setNewConsultation({...newConsultation, patientId: value})}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Sélectionner un patient" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {mockPatients.map((patient) => (
+                      <SelectItem key={patient.id} value={patient.id}>
+                        {`${patient.firstName} ${patient.lastName}`}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div>
+                <Label htmlFor="doctor">Médecin</Label>
+                <Select value={newConsultation.doctorId || ''} onValueChange={(value) => setNewConsultation({...newConsultation, doctorId: value})}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Sélectionner un médecin" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {mockDoctors.map((doctor) => (
+                      <SelectItem key={doctor.id} value={doctor.id}>
+                        {`Dr. ${doctor.firstName} ${doctor.lastName} (${doctor.specialty})`}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="date">Date</Label>
+                  <Input
+                    id="date"
+                    type="date"
+                    value={newConsultation.date}
+                    onChange={(e) => setNewConsultation({...newConsultation, date: e.target.value})}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="time">Heure</Label>
+                  <Input
+                    id="time"
+                    type="time"
+                    value={newConsultation.time}
+                    onChange={(e) => setNewConsultation({...newConsultation, time: e.target.value})}
+                  />
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="type">Type de consultation</Label>
+                  <Select 
+                    value={newConsultation.type as string} 
+                    onValueChange={(value) => setNewConsultation({
+                      ...newConsultation, 
+                      type: value as Consultation['type']
+                    })}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Sélectionner un type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="initial">Première consultation</SelectItem>
+                      <SelectItem value="follow_up">Suivi</SelectItem>
+                      <SelectItem value="emergency">Urgence</SelectItem>
+                      <SelectItem value="routine">Routine</SelectItem>
+                      <SelectItem value="specialist">Spécialiste</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="duration">Durée (min)</Label>
+                  <Input
+                    id="duration"
+                    type="number"
+                    value={newConsultation.duration}
+                    onChange={(e) => setNewConsultation({
+                      ...newConsultation, 
+                      duration: parseInt(e.target.value)
+                    })}
+                    min={15}
+                    step={5}
+                  />
+                </div>
+              </div>
+              
+              <div>
+                <Label htmlFor="symptoms">Symptômes</Label>
+                <Textarea
+                  id="symptoms"
+                  placeholder="Entrez les symptômes séparés par des virgules"
+                  value={newConsultation.symptoms?.join(', ') || ''}
+                  onChange={(e) => setNewConsultation({
+                    ...newConsultation, 
+                    symptoms: e.target.value.split(',').map(s => s.trim()).filter(s => s !== '')
+                  })}
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="notes">Notes</Label>
+                <Textarea
+                  id="notes"
+                  placeholder="Notes médicales ou observations particulières"
+                  value={newConsultation.notes || ''}
+                  onChange={(e) => setNewConsultation({
+                    ...newConsultation, 
+                    notes: e.target.value
+                  })}
+                />
+              </div>
+            </div>
+            
+            <div className="space-y-4">
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-base">Signes vitaux</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="temperature">Température (°C)</Label>
+                      <Input
+                        id="temperature"
+                        type="number"
+                        placeholder="37.0"
+                        value={vitalSigns.temperature || ''}
+                        onChange={(e) => handleVitalSignsChange('temperature', e.target.value)}
+                        step="0.1"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="heartRate">Fréquence cardiaque (bpm)</Label>
+                      <Input
+                        id="heartRate"
+                        type="number"
+                        placeholder="80"
+                        value={vitalSigns.heartRate || ''}
+                        onChange={(e) => handleVitalSignsChange('heartRate', e.target.value)}
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="bloodPressureSystolic">TA - Systolique (mmHg)</Label>
+                      <Input
+                        id="bloodPressureSystolic"
+                        type="number"
+                        placeholder="120"
+                        value={vitalSigns.bloodPressureSystolic || ''}
+                        onChange={(e) => handleVitalSignsChange('bloodPressureSystolic', e.target.value)}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="bloodPressureDiastolic">TA - Diastolique (mmHg)</Label>
+                      <Input
+                        id="bloodPressureDiastolic"
+                        type="number"
+                        placeholder="80"
+                        value={vitalSigns.bloodPressureDiastolic || ''}
+                        onChange={(e) => handleVitalSignsChange('bloodPressureDiastolic', e.target.value)}
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="respiratoryRate">Fréq. respiratoire (c/min)</Label>
+                      <Input
+                        id="respiratoryRate"
+                        type="number"
+                        placeholder="16"
+                        value={vitalSigns.respiratoryRate || ''}
+                        onChange={(e) => handleVitalSignsChange('respiratoryRate', e.target.value)}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="oxygenSaturation">Saturation O2 (%)</Label>
+                      <Input
+                        id="oxygenSaturation"
+                        type="number"
+                        placeholder="98"
+                        value={vitalSigns.oxygenSaturation || ''}
+                        onChange={(e) => handleVitalSignsChange('oxygenSaturation', e.target.value)}
+                        min="0"
+                        max="100"
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="weight">Poids (kg)</Label>
+                      <Input
+                        id="weight"
+                        type="number"
+                        placeholder="70"
+                        value={vitalSigns.weight || ''}
+                        onChange={(e) => handleVitalSignsChange('weight', e.target.value)}
+                        step="0.1"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="height">Taille (cm)</Label>
+                      <Input
+                        id="height"
+                        type="number"
+                        placeholder="170"
+                        value={vitalSigns.height || ''}
+                        onChange={(e) => handleVitalSignsChange('height', e.target.value)}
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="bmi">IMC (kg/m²)</Label>
+                      <Input
+                        id="bmi"
+                        type="number"
+                        value={vitalSigns.bmi || ''}
+                        disabled
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="pain">Niveau de douleur (0-10)</Label>
+                      <Input
+                        id="pain"
+                        type="number"
+                        placeholder="0"
+                        value={vitalSigns.pain || ''}
+                        onChange={(e) => handleVitalSignsChange('pain', e.target.value)}
+                        min="0"
+                        max="10"
+                      />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsCreatingConsultation(false)}>
+              Annuler
+            </Button>
+            <Button onClick={handleCreateConsultation} disabled={isSaving}>
+              {isSaving ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Création...
+                </>
+              ) : (
+                <>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Créer la consultation
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      <Dialog open={isAddingTestOrder} onOpenChange={setIsAddingTestOrder}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Ajouter un examen complémentaire</DialogTitle>
+            <DialogDescription>
+              Ajoutez un examen complémentaire pour le patient {selectedConsultation?.patientName}.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="test-type">Type d'examen</Label>
+              <Select 
+                value={newTestOrder.type as string} 
+                onValueChange={(value) => setNewTestOrder({
+                  ...newTestOrder, 
+                  type: value as TestOrder['type']
+                })}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Sélectionner un type d'examen" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="blood_test">Analyse sanguine</SelectItem>
+                  <SelectItem value="radiology">Radiologie</SelectItem>
+                  <SelectItem value="urine_test">Analyse d'urine</SelectItem>
+                  <SelectItem value="other">Autre</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div>
+              <Label htmlFor="test-description">Description</Label>
+              <Textarea
+                id="test-description"
+                placeholder="Description détaillée de l'examen"
+                value={newTestOrder.description || ''}
+                onChange={(e) => setNewTestOrder({
+                  ...newTestOrder, 
+                  description: e.target.value
+                })}
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="test-date">Date de demande</Label>
+              <Input
+                id="test-date"
+                type="date"
+                value={newTestOrder.orderedDate}
+                onChange={(e) => setNewTestOrder({
+                  ...newTestOrder, 
+                  orderedDate: e.target.value
+                })}
+              />
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsAddingTestOrder(false)}>
+              Annuler
+            </Button>
+            <Button onClick={handleAddTestOrder} disabled={isSaving}>
+              {isSaving ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Ajout...
+                </>
+              ) : (
+                <>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Ajouter l'examen
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+};
+
+export default ConsultationsPage;
