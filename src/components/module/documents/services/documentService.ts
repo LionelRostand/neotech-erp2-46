@@ -6,7 +6,6 @@ import { useArchiveService } from './archiveService';
 import { useSearchService } from './searchService';
 import { useSettingsService } from './settingsService';
 import { usePermissionService } from './permissionService';
-import { DocumentFile, DocumentPermission, DocumentSettings, DocumentVersion, SearchParams } from '../types/document-types';
 
 export const useDocumentService = () => {
   const {

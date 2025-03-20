@@ -7,7 +7,7 @@ import { DocumentSettings } from '../types/document-types';
 export const useSettingsService = () => {
   const {
     getById: getDocumentById,
-    setDocument,
+    set: setDocument,
   } = useFirestore(COLLECTIONS.DOCUMENTS);
 
   const getDocumentSettings = async (): Promise<DocumentSettings | null> => {
