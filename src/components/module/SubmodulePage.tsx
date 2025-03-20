@@ -6,7 +6,7 @@ import { modules } from '@/data/modules';
 import EmployeesAttendance from './submodules/EmployeesAttendance';
 import EmployeesBadges from './submodules/EmployeesBadges';
 import EmployeesDashboard from './submodules/EmployeesDashboard';
-import EmployeesDepartments from './submodules/EmployeesDepartments';
+import EmployeesDepartments from './submodules/departments/EmployeesDepartments';
 import EmployeesHierarchy from './submodules/EmployeesHierarchy';
 import EmployeesProfiles from './submodules/EmployeesProfiles';
 import EmployeesTimesheet from './submodules/EmployeesTimesheet';

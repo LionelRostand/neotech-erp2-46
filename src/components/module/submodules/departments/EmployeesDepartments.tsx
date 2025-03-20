@@ -6,6 +6,7 @@ import DepartmentTable from './DepartmentTable';
 import AddDepartmentDialog from './AddDepartmentDialog';
 import EditDepartmentDialog from './EditDepartmentDialog';
 import ManageEmployeesDialog from './ManageEmployeesDialog';
+import { Dialog } from '@/components/ui/dialog';
 
 const EmployeesDepartments: React.FC = () => {
   const {
@@ -48,46 +49,50 @@ const EmployeesDepartments: React.FC = () => {
         onManageEmployees={handleManageEmployees}
       />
       
-      {/* Add new department dialog */}
-      <AddDepartmentDialog 
-        formData={formData}
-        activeTab={activeTab}
-        selectedEmployees={selectedEmployees}
-        onInputChange={handleInputChange}
-        onManagerChange={handleManagerChange}
-        onColorChange={handleColorChange}
-        onTabChange={setActiveTab}
-        onEmployeeSelection={handleEmployeeSelection}
-        onClose={() => setIsAddDialogOpen(false)}
-        onSave={handleSaveDepartment}
-      />
-      
-      {/* Edit department dialog */}
-      {currentDepartment && (
-        <EditDepartmentDialog 
+      {/* Add Department Dialog */}
+      <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+        <AddDepartmentDialog 
           formData={formData}
-          activeTab={activeTab}
           selectedEmployees={selectedEmployees}
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
           onInputChange={handleInputChange}
           onManagerChange={handleManagerChange}
           onColorChange={handleColorChange}
+          onEmployeeSelection={handleEmployeeSelection}
+          onClose={() => setIsAddDialogOpen(false)}
+          onSave={handleSaveDepartment}
+        />
+      </Dialog>
+      
+      {/* Edit Department Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <EditDepartmentDialog 
+          formData={formData}
+          selectedEmployees={selectedEmployees}
+          activeTab={activeTab}
           onTabChange={setActiveTab}
+          onInputChange={handleInputChange}
+          onManagerChange={handleManagerChange}
+          onColorChange={handleColorChange}
           onEmployeeSelection={handleEmployeeSelection}
           onClose={() => setIsEditDialogOpen(false)}
           onUpdate={handleUpdateDepartment}
         />
-      )}
+      </Dialog>
       
-      {/* Manage employees dialog */}
+      {/* Manage Employees Dialog */}
       {currentDepartment && (
-        <ManageEmployeesDialog 
-          department={currentDepartment}
-          selectedEmployees={selectedEmployees}
-          onEmployeeSelection={handleEmployeeSelection}
-          onClose={() => setIsManageEmployeesDialogOpen(false)}
-          onSave={handleSaveEmployeeAssignments}
-          getDepartmentEmployees={getDepartmentEmployees}
-        />
+        <Dialog open={isManageEmployeesDialogOpen} onOpenChange={setIsManageEmployeesDialogOpen}>
+          <ManageEmployeesDialog 
+            department={currentDepartment}
+            selectedEmployees={selectedEmployees}
+            onEmployeeSelection={handleEmployeeSelection}
+            getDepartmentEmployees={getDepartmentEmployees}
+            onClose={() => setIsManageEmployeesDialogOpen(false)}
+            onSave={handleSaveEmployeeAssignments}
+          />
+        </Dialog>
       )}
     </div>
   );
