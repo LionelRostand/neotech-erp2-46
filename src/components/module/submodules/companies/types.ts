@@ -52,3 +52,18 @@ export interface CompanyFilters {
   startDate?: Date;
   endDate?: Date;
 }
+
+// Company permissions interface
+export interface CompanyPermission {
+  moduleId: string;
+  canView: boolean;
+  canCreate: boolean;
+  canEdit: boolean;
+  canDelete: boolean;
+}
+
+// User permissions interface for the companies module
+export interface CompanyUserPermission {
+  userId: string;
+  permissions: CompanyPermission[];
+}
