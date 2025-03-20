@@ -1,7 +1,6 @@
-
 import { useState, useEffect } from 'react';
 import { toast } from "sonner";
-import { AccountingPermission, AccountingUserPermission } from '../../../projects/types/project-types';
+import { AccountingPermission, AccountingUserPermission } from '@/components/module/projects/types/project-types';
 import { useFirestore } from '@/hooks/use-firestore';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 
@@ -20,34 +19,26 @@ export const useAccountingPermissions = (accountingSubmodules: { id: string; nam
   const [searchTerm, setSearchTerm] = useState("");
 
   const usersFirestore = useFirestore(COLLECTIONS.USERS);
-  const permissionsFirestore = useFirestore(COLLECTIONS.ACCOUNTING_PERMISSIONS);
+  const permissionsFirestore = useFirestore(COLLECTIONS.ACCOUNTING.PERMISSIONS);
 
-  // Récupérer les utilisateurs et leurs permissions
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        // Récupérer les utilisateurs
         const usersData = await usersFirestore.getAll() as User[];
         setUsers(usersData);
 
-        // Récupérer les permissions
         const permissionsData = await permissionsFirestore.getAll();
         
-        // Convertir les données récupérées au type AccountingUserPermission[]
         const typedPermissionsData: AccountingUserPermission[] = [];
         
-        // Si nous avons des données, essayer de les mapper au type correct
         if (permissionsData && permissionsData.length > 0) {
           for (const item of permissionsData) {
-            // Vérifier si l'élément a la structure requise et mapper correctement id à userId
             if (item && typeof item === 'object' && 'id' in item && 'permissions' in item) {
-              // Vérifier que permissions est un tableau
               const permissions = Array.isArray(item.permissions) 
                 ? item.permissions 
                 : [];
               
-              // S'assurer que chaque permission a la structure correcte
               const validPermissions: AccountingPermission[] = permissions
                 .filter((p: any) => p && typeof p === 'object' && 'moduleId' in p)
                 .map((p: any) => ({
@@ -58,7 +49,6 @@ export const useAccountingPermissions = (accountingSubmodules: { id: string; nam
                   canDelete: Boolean(p.canDelete)
                 }));
                 
-              // Créer une AccountingUserPermission correctement typée en utilisant id comme userId
               typedPermissionsData.push({
                 userId: item.id as string,
                 permissions: validPermissions
@@ -67,7 +57,6 @@ export const useAccountingPermissions = (accountingSubmodules: { id: string; nam
           }
         }
 
-        // Si aucune permission trouvée ou si elles n'ont pas la bonne structure, créer des permissions par défaut pour chaque utilisateur
         if (typedPermissionsData.length === 0) {
           const defaultPermissions: AccountingUserPermission[] = usersData.map(user => ({
             userId: user.id,
@@ -94,7 +83,6 @@ export const useAccountingPermissions = (accountingSubmodules: { id: string; nam
     fetchData();
   }, []);
 
-  // Mettre à jour l'état des permissions
   const updatePermission = (userId: string, moduleId: string, permissionType: keyof Omit<AccountingPermission, 'moduleId'>, value: boolean) => {
     setUserPermissions(prev => {
       return prev.map(userPerm => {
@@ -112,7 +100,6 @@ export const useAccountingPermissions = (accountingSubmodules: { id: string; nam
     });
   };
 
-  // Définir toutes les permissions d'un type pour un utilisateur
   const setAllPermissionsOfType = (userId: string, permissionType: keyof Omit<AccountingPermission, 'moduleId'>, value: boolean) => {
     setUserPermissions(prev => {
       return prev.map(userPerm => {
@@ -128,11 +115,9 @@ export const useAccountingPermissions = (accountingSubmodules: { id: string; nam
     });
   };
 
-  // Enregistrer les permissions dans la base de données
   const savePermissions = async () => {
     setSaving(true);
     try {
-      // Pour chaque utilisateur, mettre à jour ou créer ses permissions
       for (const userPerm of userPermissions) {
         await permissionsFirestore.set(userPerm.userId, {
           permissions: userPerm.permissions,

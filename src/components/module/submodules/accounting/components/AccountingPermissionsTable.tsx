@@ -2,7 +2,7 @@
 import React from 'react';
 import { Checkbox } from "@/components/ui/checkbox";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { AccountingPermission, AccountingUserPermission } from '../../../projects/types/project-types';
+import { AccountingPermission, AccountingUserPermission } from '@/components/module/projects/types/project-types';
 
 interface AccountingPermissionsTableProps {
   users: { id: string; displayName: string; email: string; role?: string; }[];

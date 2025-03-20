@@ -11,7 +11,8 @@ export const COLLECTIONS = {
     REPORTS: 'accounting_reports',
     SETTINGS: 'accounting_settings',
     BANK_ACCOUNTS: 'accounting_bank_accounts',
-    TRANSACTIONS: 'accounting_transactions'
+    TRANSACTIONS: 'accounting_transactions',
+    PERMISSIONS: 'accounting_permissions'
   },
   PROJECTS: {
     PROJECTS: 'projects_list',

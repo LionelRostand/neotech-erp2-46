@@ -4,7 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search, Shield, Save, RefreshCw } from "lucide-react";
-import { AccountingPermission, AccountingUserPermission } from '../../../projects/types/project-types';
+import { AccountingPermission, AccountingUserPermission } from '@/components/module/projects/types/project-types';
 import AccountingPermissionsTable from './AccountingPermissionsTable';
 
 interface PermissionsTabProps {
