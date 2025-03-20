@@ -1,14 +1,14 @@
 
 import { useState, useEffect } from 'react';
-import { useFirestore } from '@/hooks/use-firestore';
+import { useSafeFirestore } from '@/hooks/use-safe-firestore';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import { Message, Contact } from '../../types/message-types';
 import { useToast } from '@/hooks/use-toast';
 import { generateMockScheduledMessages } from '../utils/mockScheduledMessages';
 
 export const useScheduledMessagesData = () => {
-  const { getAll } = useFirestore(COLLECTIONS.MESSAGES.SCHEDULED);
-  const contactsCollection = useFirestore(COLLECTIONS.CONTACTS);
+  const scheduledCollection = useSafeFirestore(COLLECTIONS.MESSAGES.SCHEDULED);
+  const contactsCollection = useSafeFirestore(COLLECTIONS.CONTACTS);
   const [messages, setMessages] = useState<Message[]>([]);
   const [contacts, setContacts] = useState<Record<string, Contact>>({});
   const [isLoading, setIsLoading] = useState(true);
@@ -29,7 +29,7 @@ export const useScheduledMessagesData = () => {
         setContacts(contactsMap);
         
         // Récupérer les messages programmés
-        const messagesData = await getAll();
+        const messagesData = await scheduledCollection.getAll();
         
         if (messagesData.length === 0) {
           // Créer des données fictives pour la démo
@@ -45,13 +45,23 @@ export const useScheduledMessagesData = () => {
           title: "Erreur",
           description: "Impossible de charger les messages programmés."
         });
+        
+        // En cas d'erreur, utiliser des données mock pour que l'utilisateur puisse quand même voir quelque chose
+        const mockMessages = generateMockScheduledMessages(Object.keys(contacts));
+        setMessages(mockMessages);
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchData();
-  }, [getAll, contactsCollection.getAll, toast]);
+    
+    // Fonction de nettoyage qui reset l'état de chargement des données dans les hooks useSafeFirestore
+    return () => {
+      scheduledCollection.resetFetchState();
+      contactsCollection.resetFetchState();
+    };
+  }, [scheduledCollection, contactsCollection, toast]);
 
   return {
     messages,

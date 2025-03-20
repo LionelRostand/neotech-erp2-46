@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
 import { Message } from '../../types/message-types';
-import { useFirestore } from '@/hooks/use-firestore';
+import { useSafeFirestore } from '@/hooks/use-safe-firestore';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import { useToast } from '@/hooks/use-toast';
 
@@ -11,7 +11,7 @@ export const useScheduledMessageOperations = (
 ) => {
   const [messageToCancel, setMessageToCancel] = useState<Message | null>(null);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
-  const { remove } = useFirestore(COLLECTIONS.MESSAGES.SCHEDULED);
+  const scheduledCollection = useSafeFirestore(COLLECTIONS.MESSAGES.SCHEDULED);
   const { toast } = useToast();
 
   const handleCancelMessage = (message: Message) => {
@@ -23,7 +23,7 @@ export const useScheduledMessageOperations = (
     if (!messageToCancel) return;
     
     try {
-      await remove(messageToCancel.id);
+      await scheduledCollection.remove(messageToCancel.id);
       setMessages(prev => prev.filter(msg => msg.id !== messageToCancel.id));
       
       toast({
