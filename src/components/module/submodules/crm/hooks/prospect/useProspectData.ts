@@ -11,7 +11,7 @@ export const useProspectData = (
   setProspects: React.Dispatch<React.SetStateAction<Prospect[]>>,
   setLoading: React.Dispatch<React.SetStateAction<boolean>>
 ) => {
-  const prospectCollection = useFirestore(COLLECTIONS.CRM);
+  const prospectCollection = useFirestore(COLLECTIONS.CRM.PROSPECTS);
 
   useEffect(() => {
     loadProspects();
