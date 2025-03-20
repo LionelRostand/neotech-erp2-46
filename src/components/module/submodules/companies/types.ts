@@ -46,3 +46,9 @@ export interface CompanyDocument {
   updatedAt: any;
   tags?: string[];
 }
+
+export interface CompanyFilters {
+  status?: 'active' | 'inactive' | 'pending';
+  startDate?: Date;
+  endDate?: Date;
+}

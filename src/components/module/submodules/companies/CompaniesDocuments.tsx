@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useCompanyService } from './services/companyService';
 import { CompanyDocument } from './types';
@@ -24,7 +23,6 @@ import {
   Trash2, 
   FileText, 
   FileImage, 
-  FilePdf, 
   File 
 } from 'lucide-react';
 import {
@@ -99,7 +97,7 @@ const CompaniesDocuments: React.FC = () => {
     
     switch (extension) {
       case 'pdf':
-        return <FilePdf className="h-5 w-5 text-red-500" />;
+        return <FileText className="h-5 w-5 text-red-500" />;
       case 'jpg':
       case 'jpeg':
       case 'png':

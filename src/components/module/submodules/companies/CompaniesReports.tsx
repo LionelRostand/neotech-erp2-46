@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -15,7 +14,7 @@ import {
 } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
-import { FileText, Download, Printer, BarChart, FileSpreadsheet, PieChart, Calendar } from 'lucide-react';
+import { FileText, Download, Printer, BarChart, FileSpreadsheet, PieChart, Calendar, Search } from 'lucide-react';
 
 const CompaniesReports: React.FC = () => {
   const [loading, setLoading] = useState(false);

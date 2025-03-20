@@ -29,6 +29,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
 import { Building2, MapPin, Phone, AtSign, Upload } from 'lucide-react';
+import { Company } from './types';
 
 // Définition du schéma de validation
 const companyFormSchema = z.object({
@@ -36,7 +37,7 @@ const companyFormSchema = z.object({
   siret: z.string().min(9, "Le SIRET doit contenir au moins 9 caractères").optional(),
   registrationNumber: z.string().optional(),
   type: z.string().optional(),
-  status: z.string().default('active'),
+  status: z.enum(['active', 'inactive', 'pending']).default('active'),
   description: z.string().optional(),
   website: z.string().url("Veuillez entrer une URL valide").optional().or(z.literal('')),
   
@@ -82,7 +83,7 @@ const CompanyCreateForm: React.FC = () => {
   const onSubmit = async (data: CompanyFormValues) => {
     try {
       // Reformater les données pour correspondre à la structure Company
-      const companyData = {
+      const companyData: Partial<Company> = {
         name: data.name,
         siret: data.siret,
         registrationNumber: data.registrationNumber,

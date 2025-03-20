@@ -1,5 +1,5 @@
 
-import { Company, CompanyContact, CompanyDocument } from '../types';
+import { Company, CompanyContact, CompanyDocument, CompanyFilters } from '../types';
 import { useFirestore } from '@/hooks/use-firestore';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import { toast } from 'sonner';
@@ -22,7 +22,7 @@ export const useCompanyService = () => {
   const getCompanies = async (
     page = 1, 
     pageSize = 10, 
-    filters = {}, 
+    filters: CompanyFilters = {}, 
     searchTerm = ''
   ): Promise<{ companies: Company[], hasMore: boolean }> => {
     try {
@@ -57,7 +57,7 @@ export const useCompanyService = () => {
         
         const prevPageDocs = await companiesFirestore.getAll(prevPageConstraints);
         if (prevPageDocs.length > 0) {
-          const lastDoc = prevPageDocs[prevPageDocs.length - 1];
+          const lastDoc = prevPageDocs[prevPageDocs.length - 1] as Company;
           constraints.push(startAfter(lastDoc.createdAt));
         }
       }
