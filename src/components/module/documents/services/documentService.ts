@@ -1,3 +1,4 @@
+
 import { useFirestore } from '@/hooks/use-firestore';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import { toast } from 'sonner';
@@ -43,10 +44,17 @@ export const useDocumentService = () => {
         ...metadata
       };
       
-      // Fixed: Cast the result to DocumentFile since we know it has all required fields
+      // Add document to Firestore and get the result
       const result = await addDocument(newDoc);
+      
+      // Create a proper DocumentFile object by merging the original newDoc with the id from result
+      const uploadedDocument: DocumentFile = {
+        ...newDoc,
+        id: result.id,
+      };
+      
       toast.success(`Document "${file.name}" téléversé avec succès`);
-      return result as DocumentFile;
+      return uploadedDocument;
     } catch (error) {
       console.error('Error uploading document:', error);
       toast.error('Erreur lors du téléversement du document');
