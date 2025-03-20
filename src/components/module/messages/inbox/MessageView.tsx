@@ -51,8 +51,30 @@ const MessageView: React.FC<MessageViewProps> = ({
 }) => {
   const formatDate = (timestamp: any) => {
     if (!timestamp) return '';
-    const date = timestamp.toDate();
-    return format(date, 'EEEE d MMMM yyyy à HH:mm', { locale: fr });
+    
+    let date: Date;
+    
+    // Handle different types of timestamp input
+    if (timestamp && typeof timestamp === 'object' && 'toDate' in timestamp && typeof timestamp.toDate === 'function') {
+      // Firebase Timestamp object
+      date = timestamp.toDate();
+    } else if (timestamp instanceof Date) {
+      // JavaScript Date object
+      date = timestamp;
+    } else if (typeof timestamp === 'string' || typeof timestamp === 'number') {
+      // String or number timestamp
+      date = new Date(timestamp);
+    } else {
+      console.warn('Format de timestamp invalide:', timestamp);
+      return '';
+    }
+    
+    try {
+      return format(date, 'EEEE d MMMM yyyy à HH:mm', { locale: fr });
+    } catch (error) {
+      console.error('Error formatting date:', error);
+      return '';
+    }
   };
 
   const getInitials = (firstName: string, lastName: string) => {

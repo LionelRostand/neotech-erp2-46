@@ -1,5 +1,6 @@
 
 import { Message } from '../../types/message-types';
+import { Timestamp } from 'firebase/firestore';
 
 export const generateMockScheduledMessages = (contactIds: string[]): Message[] => {
   const today = new Date();
@@ -29,9 +30,9 @@ export const generateMockScheduledMessages = (contactIds: string[]): Message[] =
       tags: i % 3 === 0 ? ['automatique', 'important'] : i % 2 === 0 ? ['suivi'] : [],
       hasAttachments: i % 3 === 0,
       isScheduled: true,
-      scheduledAt: scheduledDate,
-      createdAt: today,
-      updatedAt: today,
+      scheduledAt: Timestamp.fromDate(scheduledDate),
+      createdAt: Timestamp.fromDate(today),
+      updatedAt: Timestamp.fromDate(today),
     };
   });
 };
