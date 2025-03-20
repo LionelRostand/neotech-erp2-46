@@ -13,7 +13,7 @@ export const crmModule: AppModule = {
     { id: "crm-dashboard", name: "Tableau de bord", href: "/modules/crm/dashboard", icon: createIcon(LayoutDashboard) },
     { id: "crm-clients", name: "Clients", href: "/modules/crm/clients", icon: createIcon(Users) },
     { id: "crm-prospects", name: "Prospects", href: "/modules/crm/prospects", icon: createIcon(UserPlus) },
-    { id: "crm-opportunities", name: "Opportunités", href: "/modules/crm/opportunities", icon: createIcon(Briefcase) },
+    { id: "crm-opportunities", name: "Opportunités", href: "/modules/crm/opportunities", icon: createIcon(Handshake) },
     { id: "crm-analytics", name: "Analytiques", href: "/modules/crm/analytics", icon: createIcon(LineChart) },
     { id: "crm-settings", name: "Paramètres", href: "/modules/crm/settings", icon: createIcon(Settings) }
   ]

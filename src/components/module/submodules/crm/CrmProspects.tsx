@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Card, 
   CardContent, 
@@ -50,11 +50,18 @@ import {
   Thermometer, 
   Mail, 
   Phone,
-  ArrowUpRight
+  ArrowUpRight,
+  Ban,
+  Clock,
+  BellRing
 } from "lucide-react";
 import { toast } from "sonner";
+import { Timestamp } from 'firebase/firestore';
+import { useFirestore } from '@/hooks/use-firestore';
+import { COLLECTIONS } from '@/lib/firebase-collections';
+import { where, orderBy } from 'firebase/firestore';
 
-// Types for prospects
+// Types pour les prospects
 interface Prospect {
   id: string;
   name: string;
@@ -68,50 +75,11 @@ interface Prospect {
   notes: string;
 }
 
-// Mock data for prospects
-const mockProspects: Prospect[] = [
-  {
-    id: '1',
-    name: 'Sophie Martin',
-    company: 'Innovatech',
-    email: 'sophie@innovatech.fr',
-    phone: '+33612345678',
-    status: 'hot',
-    source: 'Salon',
-    createdAt: '2023-12-15',
-    lastContact: '2024-03-18',
-    notes: 'Très intéressée par notre solution CRM'
-  },
-  {
-    id: '2',
-    name: 'Thomas Dubois',
-    company: 'ConsultPro',
-    email: 'thomas@consultpro.fr',
-    phone: '+33623456789',
-    status: 'warm',
-    source: 'Site web',
-    createdAt: '2024-01-10',
-    lastContact: '2024-03-01',
-    notes: 'A demandé un devis pour 10 licences'
-  },
-  {
-    id: '3',
-    name: 'Camille Leroy',
-    company: 'MédiaSanté',
-    email: 'camille@mediasante.fr',
-    phone: '+33634567890',
-    status: 'cold',
-    source: 'LinkedIn',
-    createdAt: '2024-02-05',
-    lastContact: '2024-02-20',
-    notes: 'Intéressée mais budget limité actuellement'
-  }
-];
-
+// Options pour les sources de prospects
 const sourcesOptions = ['Site web', 'LinkedIn', 'Salon', 'Recommandation', 'Appel entrant', 'Email', 'Autre'];
 
 const CrmProspects: React.FC = () => {
-  const [prospects, setProspects] = useState<Prospect[]>(mockProspects);
+  const [prospects, setProspects] = useState<Prospect[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -119,7 +87,9 @@ const CrmProspects: React.FC = () => {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isViewDetailsOpen, setIsViewDetailsOpen] = useState(false);
   const [isConvertDialogOpen, setIsConvertDialogOpen] = useState(false);
+  const [isReminderDialogOpen, setIsReminderDialogOpen] = useState(false);
   const [selectedProspect, setSelectedProspect] = useState<Prospect | null>(null);
+  const [loading, setLoading] = useState(true);
   
   const [formData, setFormData] = useState<Omit<Prospect, 'id' | 'createdAt'>>({
     name: '',
@@ -127,10 +97,61 @@ const CrmProspects: React.FC = () => {
     email: '',
     phone: '',
     status: 'warm',
-    source: '',
+    source: 'Site web',
     lastContact: new Date().toISOString().split('T')[0],
     notes: ''
   });
+
+  const [reminderData, setReminderData] = useState({
+    type: 'email',
+    date: new Date().toISOString().split('T')[0],
+    note: ''
+  });
+
+  const prospectCollection = useFirestore(COLLECTIONS.CRM);
+
+  // Charger les prospects depuis Firestore
+  useEffect(() => {
+    const loadProspects = async () => {
+      try {
+        setLoading(true);
+        const constraints = [
+          where('type', '==', 'prospect'),
+          orderBy('lastContact', 'desc')
+        ];
+        
+        const data = await prospectCollection.getAll(constraints);
+        
+        // Formater les données pour correspondre à notre interface Prospect
+        const formattedData = data.map(doc => {
+          const createdAtTimestamp = doc.createdAt as Timestamp;
+          const lastContactTimestamp = doc.lastContact as Timestamp;
+          
+          return {
+            id: doc.id,
+            name: doc.name || '',
+            company: doc.company || '',
+            email: doc.email || '',
+            phone: doc.phone || '',
+            status: doc.status || 'warm',
+            source: doc.source || '',
+            createdAt: createdAtTimestamp ? createdAtTimestamp.toDate().toISOString().split('T')[0] : '',
+            lastContact: lastContactTimestamp ? lastContactTimestamp.toDate().toISOString().split('T')[0] : '',
+            notes: doc.notes || ''
+          } as Prospect;
+        });
+        
+        setProspects(formattedData);
+      } catch (error) {
+        console.error("Erreur lors du chargement des prospects:", error);
+        toast.error("Impossible de charger les prospects");
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    loadProspects();
+  }, []);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -148,62 +169,141 @@ const CrmProspects: React.FC = () => {
       email: '',
       phone: '',
       status: 'warm',
-      source: '',
+      source: 'Site web',
       lastContact: new Date().toISOString().split('T')[0],
       notes: ''
     });
   };
 
-  const handleCreateProspect = () => {
-    const newProspect: Prospect = {
-      id: Date.now().toString(),
-      ...formData,
-      createdAt: new Date().toISOString().split('T')[0]
-    };
-    
-    setProspects(prev => [newProspect, ...prev]);
-    setIsAddDialogOpen(false);
-    resetForm();
-    toast.success("Prospect ajouté avec succès");
+  const handleCreateProspect = async () => {
+    try {
+      const newProspectData = {
+        ...formData,
+        type: 'prospect',
+        createdAt: Timestamp.now(),
+        lastContact: Timestamp.fromDate(new Date(formData.lastContact))
+      };
+      
+      const result = await prospectCollection.add(newProspectData);
+      
+      const newProspect: Prospect = {
+        id: result.id,
+        ...formData,
+        createdAt: new Date().toISOString().split('T')[0]
+      };
+      
+      setProspects(prev => [newProspect, ...prev]);
+      setIsAddDialogOpen(false);
+      resetForm();
+      toast.success("Prospect ajouté avec succès");
+    } catch (error) {
+      console.error("Erreur lors de la création du prospect:", error);
+      toast.error("Impossible de créer le prospect");
+    }
   };
 
-  const handleUpdateProspect = () => {
+  const handleUpdateProspect = async () => {
     if (!selectedProspect) return;
     
-    setProspects(prev => 
-      prev.map(prospect => 
-        prospect.id === selectedProspect.id 
-          ? { ...prospect, ...formData } 
-          : prospect
-      )
-    );
-    
-    setIsEditDialogOpen(false);
-    resetForm();
-    toast.success("Prospect mis à jour avec succès");
+    try {
+      const updateData = {
+        ...formData,
+        lastContact: Timestamp.fromDate(new Date(formData.lastContact))
+      };
+      
+      await prospectCollection.update(selectedProspect.id, updateData);
+      
+      setProspects(prev => 
+        prev.map(prospect => 
+          prospect.id === selectedProspect.id 
+            ? { ...prospect, ...formData } 
+            : prospect
+        )
+      );
+      
+      setIsEditDialogOpen(false);
+      resetForm();
+      toast.success("Prospect mis à jour avec succès");
+    } catch (error) {
+      console.error("Erreur lors de la mise à jour du prospect:", error);
+      toast.error("Impossible de mettre à jour le prospect");
+    }
   };
 
-  const handleDeleteProspect = () => {
+  const handleDeleteProspect = async () => {
     if (!selectedProspect) return;
     
-    setProspects(prev => prev.filter(prospect => prospect.id !== selectedProspect.id));
-    setIsDeleteDialogOpen(false);
-    setSelectedProspect(null);
-    toast.success("Prospect supprimé avec succès");
+    try {
+      await prospectCollection.remove(selectedProspect.id);
+      
+      setProspects(prev => prev.filter(prospect => prospect.id !== selectedProspect.id));
+      setIsDeleteDialogOpen(false);
+      setSelectedProspect(null);
+      toast.success("Prospect supprimé avec succès");
+    } catch (error) {
+      console.error("Erreur lors de la suppression du prospect:", error);
+      toast.error("Impossible de supprimer le prospect");
+    }
   };
 
-  const handleConvertToClient = () => {
+  const handleConvertToClient = async () => {
     if (!selectedProspect) return;
     
-    // In a real app, this would create a client from the prospect
-    // and potentially delete or mark the prospect as converted
+    try {
+      // Mettre à jour le type de 'prospect' à 'client'
+      await prospectCollection.update(selectedProspect.id, {
+        type: 'client',
+        convertedAt: Timestamp.now()
+      });
+      
+      setProspects(prev => prev.filter(prospect => prospect.id !== selectedProspect.id));
+      setIsConvertDialogOpen(false);
+      setSelectedProspect(null);
+      toast.success("Prospect converti en client avec succès");
+    } catch (error) {
+      console.error("Erreur lors de la conversion du prospect:", error);
+      toast.error("Impossible de convertir le prospect en client");
+    }
+  };
+
+  const handleScheduleReminder = async () => {
+    if (!selectedProspect) return;
     
-    // For demo purposes, just remove the prospect
-    setProspects(prev => prev.filter(prospect => prospect.id !== selectedProspect.id));
-    setIsConvertDialogOpen(false);
-    setSelectedProspect(null);
-    
-    toast.success("Prospect converti en client avec succès");
+    try {
+      // Dans un cas réel, cela pourrait être intégré à un système de notifications
+      // Pour cet exemple, nous allons simplement ajouter une note avec la date de relance
+      const reminderNote = `Relance prévue (${reminderData.type}): ${reminderData.date} - ${reminderData.note}`;
+      
+      await prospectCollection.update(selectedProspect.id, {
+        notes: selectedProspect.notes + '\n\n' + reminderNote,
+        lastContact: Timestamp.now()
+      });
+      
+      // Mettre à jour les données locales
+      setProspects(prev => 
+        prev.map(prospect => 
+          prospect.id === selectedProspect.id 
+            ? { 
+                ...prospect, 
+                notes: prospect.notes + '\n\n' + reminderNote,
+                lastContact: new Date().toISOString().split('T')[0]
+              } 
+            : prospect
+        )
+      );
+      
+      setIsReminderDialogOpen(false);
+      setReminderData({
+        type: 'email',
+        date: new Date().toISOString().split('T')[0],
+        note: ''
+      });
+      
+      toast.success("Relance programmée avec succès");
+    } catch (error) {
+      console.error("Erreur lors de la programmation de la relance:", error);
+      toast.error("Impossible de programmer la relance");
+    }
   };
 
   const openEditDialog = (prospect: Prospect) => {
@@ -236,7 +336,12 @@ const CrmProspects: React.FC = () => {
     setIsViewDetailsOpen(true);
   };
 
-  // Filter prospects based on search term and status filter
+  const openReminderDialog = (prospect: Prospect) => {
+    setSelectedProspect(prospect);
+    setIsReminderDialogOpen(true);
+  };
+
+  // Filtrer les prospects en fonction du terme de recherche et du filtre de statut
   const filteredProspects = prospects.filter(prospect => {
     const matchesSearch = 
       prospect.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -329,7 +434,13 @@ const CrmProspects: React.FC = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredProspects.length > 0 ? (
+            {loading ? (
+              <TableRow>
+                <TableCell colSpan={7} className="text-center py-10 text-muted-foreground">
+                  Chargement des prospects...
+                </TableCell>
+              </TableRow>
+            ) : filteredProspects.length > 0 ? (
               filteredProspects.map(prospect => (
                 <TableRow key={prospect.id} className="cursor-pointer hover:bg-muted/50" onClick={() => viewProspectDetails(prospect)}>
                   <TableCell className="font-medium">{prospect.name}</TableCell>
@@ -346,7 +457,7 @@ const CrmProspects: React.FC = () => {
                     </span>
                   </TableCell>
                   <TableCell>{prospect.source}</TableCell>
-                  <TableCell>{new Date(prospect.lastContact).toLocaleDateString('fr-FR')}</TableCell>
+                  <TableCell>{prospect.lastContact ? new Date(prospect.lastContact).toLocaleDateString('fr-FR') : '-'}</TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end space-x-2" onClick={e => e.stopPropagation()}>
                       <Button 
@@ -359,6 +470,17 @@ const CrmProspects: React.FC = () => {
                         title="Modifier"
                       >
                         <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          openReminderDialog(prospect);
+                        }}
+                        title="Programmer une relance"
+                      >
+                        <BellRing className="h-4 w-4" />
                       </Button>
                       <Button 
                         variant="ghost" 
@@ -397,7 +519,8 @@ const CrmProspects: React.FC = () => {
         </Table>
       </Card>
 
-      {/* Add Prospect Dialog */}
+      {/* Dialogs pour ajouter, modifier, supprimer, etc. */}
+      {/* Dialog d'ajout de prospect */}
       <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
@@ -510,7 +633,7 @@ const CrmProspects: React.FC = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Edit Prospect Dialog */}
+      {/* Dialog de modification de prospect */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
@@ -518,7 +641,7 @@ const CrmProspects: React.FC = () => {
           </DialogHeader>
           
           <div className="grid grid-cols-2 gap-4 py-4">
-            {/* Same form fields as Add Prospect */}
+            {/* Mêmes champs que le Dialog d'ajout */}
             <div className="space-y-2">
               <label className="text-sm font-medium">Nom</label>
               <Input
@@ -624,7 +747,7 @@ const CrmProspects: React.FC = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Delete Confirmation Dialog */}
+      {/* Dialog de suppression */}
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -643,7 +766,7 @@ const CrmProspects: React.FC = () => {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Convert to Client Dialog */}
+      {/* Dialog de conversion en client */}
       <AlertDialog open={isConvertDialogOpen} onOpenChange={setIsConvertDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -661,7 +784,7 @@ const CrmProspects: React.FC = () => {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* View Prospect Details Dialog */}
+      {/* Dialog de détails du prospect */}
       <Dialog open={isViewDetailsOpen} onOpenChange={setIsViewDetailsOpen}>
         <DialogContent className="sm:max-w-[700px]">
           <DialogHeader>
@@ -706,10 +829,10 @@ const CrmProspects: React.FC = () => {
                       <span className="font-medium">Source:</span> {selectedProspect.source}
                     </div>
                     <div>
-                      <span className="font-medium">Date de création:</span> {new Date(selectedProspect.createdAt).toLocaleDateString('fr-FR')}
+                      <span className="font-medium">Date de création:</span> {selectedProspect.createdAt ? new Date(selectedProspect.createdAt).toLocaleDateString('fr-FR') : '-'}
                     </div>
                     <div>
-                      <span className="font-medium">Dernier contact:</span> {new Date(selectedProspect.lastContact).toLocaleDateString('fr-FR')}
+                      <span className="font-medium">Dernier contact:</span> {selectedProspect.lastContact ? new Date(selectedProspect.lastContact).toLocaleDateString('fr-FR') : '-'}
                     </div>
                   </div>
                 </Card>
@@ -717,27 +840,7 @@ const CrmProspects: React.FC = () => {
               
               <Card className="p-4">
                 <h3 className="font-semibold mb-2">Notes</h3>
-                <p>{selectedProspect.notes || "Aucune note disponible."}</p>
-              </Card>
-              
-              <Card className="p-4">
-                <h3 className="font-semibold mb-2">Activités récentes</h3>
-                <div className="space-y-3">
-                  <div className="border-b pb-2">
-                    <div className="flex justify-between">
-                      <span className="font-medium">Email envoyé</span>
-                      <span className="text-xs text-muted-foreground">Il y a 3 jours</span>
-                    </div>
-                    <p className="text-sm">Suivi de la proposition commerciale</p>
-                  </div>
-                  <div className="border-b pb-2">
-                    <div className="flex justify-between">
-                      <span className="font-medium">Appel téléphonique</span>
-                      <span className="text-xs text-muted-foreground">Il y a 1 semaine</span>
-                    </div>
-                    <p className="text-sm">Présentation de nos services</p>
-                  </div>
-                </div>
+                <p className="whitespace-pre-line">{selectedProspect.notes || "Aucune note disponible."}</p>
               </Card>
             </div>
           )}
@@ -747,11 +850,22 @@ const CrmProspects: React.FC = () => {
               Fermer
             </Button>
             <Button 
+              variant="outline"
+              onClick={() => {
+                setIsViewDetailsOpen(false);
+                openReminderDialog(selectedProspect!);
+              }}
+            >
+              <BellRing className="mr-2 h-4 w-4" />
+              Programmer une relance
+            </Button>
+            <Button 
               onClick={() => {
                 setIsViewDetailsOpen(false);
                 openEditDialog(selectedProspect!);
               }}
             >
+              <Edit className="mr-2 h-4 w-4" />
               Modifier
             </Button>
             <Button 
@@ -762,7 +876,64 @@ const CrmProspects: React.FC = () => {
                 openConvertDialog(selectedProspect!);
               }}
             >
+              <ArrowUpRight className="mr-2 h-4 w-4" />
               Convertir en client
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog de programmation de relance */}
+      <Dialog open={isReminderDialogOpen} onOpenChange={setIsReminderDialogOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Programmer une relance</DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Type de relance</label>
+              <Select
+                value={reminderData.type}
+                onValueChange={(value) => setReminderData({...reminderData, type: value})}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Sélectionner un type de relance" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="email">Email</SelectItem>
+                  <SelectItem value="appel">Appel téléphonique</SelectItem>
+                  <SelectItem value="rendez-vous">Rendez-vous</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Date de la relance</label>
+              <Input
+                type="date"
+                value={reminderData.date}
+                onChange={(e) => setReminderData({...reminderData, date: e.target.value})}
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Note</label>
+              <Input
+                placeholder="Information complémentaire sur la relance"
+                value={reminderData.note}
+                onChange={(e) => setReminderData({...reminderData, note: e.target.value})}
+              />
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsReminderDialogOpen(false)}>
+              Annuler
+            </Button>
+            <Button onClick={handleScheduleReminder}>
+              <BellRing className="mr-2 h-4 w-4" />
+              Programmer
             </Button>
           </DialogFooter>
         </DialogContent>
