@@ -3,20 +3,23 @@ import { Timestamp } from 'firebase/firestore';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
-export const formatMessageDate = (timestamp: Timestamp | Date | string | number) => {
+export const formatMessageDate = (timestamp: Timestamp | Date | string | number | any) => {
   let date: Date;
   
-  // Vérifier si timestamp est un objet Firebase Timestamp
+  // Handle different types of timestamp input
   if (timestamp && typeof timestamp === 'object' && 'toDate' in timestamp && typeof timestamp.toDate === 'function') {
+    // Firebase Timestamp object
     date = timestamp.toDate();
   } else if (timestamp instanceof Date) {
+    // JavaScript Date object
     date = timestamp;
   } else if (typeof timestamp === 'string' || typeof timestamp === 'number') {
+    // String or number timestamp
     date = new Date(timestamp);
   } else {
-    // Fallback à la date actuelle si le format est invalide
-    date = new Date();
+    // Fallback to current date if invalid input
     console.warn('Format de timestamp invalide:', timestamp);
+    date = new Date();
     return '';
   }
   

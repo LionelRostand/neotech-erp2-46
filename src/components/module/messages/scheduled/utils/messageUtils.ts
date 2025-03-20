@@ -4,8 +4,25 @@ import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { Contact } from '../../types/message-types';
 
-export const formatScheduledDate = (timestamp: Timestamp) => {
-  const date = timestamp.toDate();
+export const formatScheduledDate = (timestamp: Timestamp | Date | any) => {
+  let date: Date;
+  
+  // Handle different types of timestamp input
+  if (timestamp && typeof timestamp === 'object' && 'toDate' in timestamp && typeof timestamp.toDate === 'function') {
+    // Firebase Timestamp object
+    date = timestamp.toDate();
+  } else if (timestamp instanceof Date) {
+    // JavaScript Date object
+    date = timestamp;
+  } else if (typeof timestamp === 'string' || typeof timestamp === 'number') {
+    // String or number timestamp
+    date = new Date(timestamp);
+  } else {
+    // Fallback to current date if invalid input
+    console.warn('Invalid timestamp format:', timestamp);
+    date = new Date();
+  }
+  
   const now = new Date();
   const tomorrow = new Date(now);
   tomorrow.setDate(now.getDate() + 1);
