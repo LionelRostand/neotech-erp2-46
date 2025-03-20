@@ -1,4 +1,3 @@
-
 import React from 'react';
 import DefaultSubmoduleContent from './submodules/DefaultSubmoduleContent';
 import SubmoduleHeader from './submodules/SubmoduleHeader';
@@ -119,12 +118,6 @@ const SubmodulePage: React.FC<SubmodulePageProps> = ({ moduleId, submoduleId }) 
       // CRM module
       case 'crm-clients':
         return <CrmClients />;
-      case 'crm-prospects':
-        return <CrmProspects />;
-      case 'crm-opportunities':
-      case 'crm-analytics':
-      case 'crm-settings':
-        return <DefaultSubmoduleContent submodule={submodule} />;
       
       // All other freight submodules will default to DefaultSubmoduleContent
       // until they are implemented specifically
