@@ -4,6 +4,7 @@ import DefaultSubmoduleContent from '../DefaultSubmoduleContent';
 import DashboardPage from '../library/DashboardPage';
 import BooksPage from '../library/BooksPage';
 import CatalogPage from '../library/CatalogPage';
+import MembersPage from '../library/MembersPage';
 import { SubModule } from '@/data/types/modules';
 
 export const renderLibrarySubmodule = (submoduleId: string, submodule: SubModule) => {
@@ -15,6 +16,7 @@ export const renderLibrarySubmodule = (submoduleId: string, submodule: SubModule
     case 'library-catalog':
       return <CatalogPage />;
     case 'library-members':
+      return <MembersPage />;
     case 'library-settings':
       return <DefaultSubmoduleContent submodule={submodule} />;
     default:
