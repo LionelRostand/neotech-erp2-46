@@ -92,6 +92,18 @@ const AppRoutes = () => (
       <Route path="settings" element={<SubmodulePage moduleId={9} submoduleId="accounting-settings" />} />
     </Route>
     
+    {/* Route pour le module Messages */}
+    <Route path="/modules/messages" element={<ModuleLayout moduleId={13} />}>
+      <Route index element={<SubmodulePage moduleId={13} submoduleId="messages-dashboard" />} />
+      <Route path="dashboard" element={<SubmodulePage moduleId={13} submoduleId="messages-dashboard" />} />
+      <Route path="contacts" element={<SubmodulePage moduleId={13} submoduleId="messages-contacts" />} />
+      <Route path="compose" element={<SubmodulePage moduleId={13} submoduleId="messages-compose" />} />
+      <Route path="inbox" element={<SubmodulePage moduleId={13} submoduleId="messages-inbox" />} />
+      <Route path="archive" element={<SubmodulePage moduleId={13} submoduleId="messages-archive" />} />
+      <Route path="scheduled" element={<SubmodulePage moduleId={13} submoduleId="messages-scheduled" />} />
+      <Route path="settings" element={<SubmodulePage moduleId={13} submoduleId="messages-settings" />} />
+    </Route>
+    
     {/* Route pour le module CRM */}
     <Route path="/modules/crm" element={<ModuleLayout moduleId={17} />}>
       <Route index element={<SubmodulePage moduleId={17} submoduleId="crm-dashboard" />} />
