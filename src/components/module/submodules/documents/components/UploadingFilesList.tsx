@@ -1,8 +1,8 @@
 
 import React from 'react';
 import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card';
-import { FileUploader } from '../../documents/components/FileUploader';
-import { FileUploadState } from '../../documents/types/document-types';
+import { FileUploader } from '../../../documents/components/FileUploader';
+import { FileUploadState } from '../../../documents/types/document-types';
 
 interface UploadingFilesListProps {
   uploadingFiles: FileUploadState[];

@@ -2,8 +2,8 @@
 import React from 'react';
 import { Card, CardHeader, CardContent, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { DocumentFile } from '../../documents/types/document-types';
-import { DocumentsList } from '../../documents/components/DocumentsList';
+import { DocumentFile } from '../../../documents/types/document-types';
+import { DocumentsList } from '../../../documents/components/DocumentsList';
 
 interface DocumentsLayoutProps {
   documents: DocumentFile[];

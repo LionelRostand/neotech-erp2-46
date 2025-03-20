@@ -1,8 +1,8 @@
 
 import React from 'react';
 import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card';
-import { DocumentFile } from '../../documents/types/document-types';
-import { DocumentPreview } from '../../documents/components/DocumentPreview';
+import { DocumentFile } from '../../../documents/types/document-types';
+import { DocumentPreview } from '../../../documents/components/DocumentPreview';
 import { Cloud, File, Tag } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 

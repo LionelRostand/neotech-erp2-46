@@ -1,7 +1,7 @@
 
 import { useState, useCallback, useRef } from 'react';
-import { DocumentFile, FileUploadState } from '../../documents/types/document-types';
-import { useDocumentService } from '../../documents/services';
+import { DocumentFile, FileUploadState } from '../../../documents/types/document-types';
+import { useDocumentService } from '../../../documents/services';
 import { toast } from 'sonner';
 
 export const useDocumentUpload = (

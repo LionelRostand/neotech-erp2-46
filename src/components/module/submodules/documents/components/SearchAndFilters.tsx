@@ -2,20 +2,25 @@
 import React from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { 
-  Search, 
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger
+} from '@/components/ui/dropdown-menu';
+import {
+  ChevronDown,
   SortAsc,
   SortDesc,
-  Filter,
-  FileUp
+  Grid,
+  List,
+  Search,
+  FileUp,
+  Calendar,
+  Text,
+  LayoutGrid,
+  LayoutList
 } from 'lucide-react';
-import { 
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
 interface SearchAndFiltersProps {
   searchQuery: string;
@@ -39,56 +44,81 @@ const SearchAndFilters: React.FC<SearchAndFiltersProps> = ({
   onUploadClick
 }) => {
   return (
-    <div className="flex flex-col md:flex-row gap-3 justify-between">
-      <div className="relative w-full md:w-96">
+    <div className="flex flex-col md:flex-row justify-between gap-4">
+      <div className="relative flex-1">
+        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
         <Input
+          type="search"
           placeholder="Rechercher des documents..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="pl-10"
+          className="pl-8"
         />
-        <Search className="h-4 w-4 absolute left-3 top-3 text-muted-foreground" />
       </div>
       
-      <div className="flex gap-2">
+      <div className="flex items-center gap-2">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="sm">
-              {sortDirection === 'asc' ? <SortAsc className="h-4 w-4 mr-2" /> : <SortDesc className="h-4 w-4 mr-2" />}
-              Trier: {sortBy === 'name' ? 'Nom' : sortBy === 'size' ? 'Taille' : 'Date'}
+            <Button variant="outline" size="sm" className="h-9">
+              <SortAsc className="h-4 w-4 mr-1" />
+              Trier
+              <ChevronDown className="h-4 w-4 ml-1" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => handleSort('name')}>
+            <DropdownMenuItem
+              className={sortBy === 'name' ? 'font-semibold' : ''}
+              onClick={() => handleSort('name')}
+            >
+              <Text className="h-4 w-4 mr-2" />
               Nom
+              {sortBy === 'name' && (
+                sortDirection === 'asc' ? <SortAsc className="h-4 w-4 ml-2" /> : <SortDesc className="h-4 w-4 ml-2" />
+              )}
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => handleSort('date')}>
+            <DropdownMenuItem
+              className={sortBy === 'date' ? 'font-semibold' : ''}
+              onClick={() => handleSort('date')}
+            >
+              <Calendar className="h-4 w-4 mr-2" />
               Date
+              {sortBy === 'date' && (
+                sortDirection === 'asc' ? <SortAsc className="h-4 w-4 ml-2" /> : <SortDesc className="h-4 w-4 ml-2" />
+              )}
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => handleSort('size')}>
+            <DropdownMenuItem
+              className={sortBy === 'size' ? 'font-semibold' : ''}
+              onClick={() => handleSort('size')}
+            >
+              <FileUp className="h-4 w-4 mr-2" />
               Taille
+              {sortBy === 'size' && (
+                sortDirection === 'asc' ? <SortAsc className="h-4 w-4 ml-2" /> : <SortDesc className="h-4 w-4 ml-2" />
+              )}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
         
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button 
-                variant="outline" 
-                size="icon"
-                onClick={() => setView(prev => prev === 'grid' ? 'list' : 'grid')}
-              >
-                <Filter className="h-4 w-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              Changer de vue
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
+        <div className="flex border rounded-md overflow-hidden">
+          <Button 
+            variant={view === 'grid' ? 'default' : 'ghost'} 
+            size="sm" 
+            className="h-9 rounded-none"
+            onClick={() => setView('grid')}
+          >
+            <LayoutGrid className="h-4 w-4" />
+          </Button>
+          <Button 
+            variant={view === 'list' ? 'default' : 'ghost'} 
+            size="sm" 
+            className="h-9 rounded-none"
+            onClick={() => setView('list')}
+          >
+            <LayoutList className="h-4 w-4" />
+          </Button>
+        </div>
         
-        <Button onClick={onUploadClick}>
+        <Button onClick={onUploadClick} className="h-9">
           <FileUp className="h-4 w-4 mr-2" />
           Téléverser
         </Button>

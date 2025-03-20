@@ -1,6 +1,6 @@
 
 import { useState, useMemo } from 'react';
-import { DocumentFile } from '../../documents/types/document-types';
+import { DocumentFile } from '../../../documents/types/document-types';
 
 export const useDocumentFilters = (documents: DocumentFile[]) => {
   const [searchQuery, setSearchQuery] = useState('');
