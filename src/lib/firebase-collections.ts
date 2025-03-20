@@ -6,7 +6,12 @@ export const COLLECTIONS = {
   COMPANIES: 'companies',
   ACCOUNTING: 'accounting',
   PROJECTS: 'projects',
-  CRM: 'crm',
+  CRM: {
+    PROSPECTS: 'crm_prospects',
+    CLIENTS: 'crm_clients',
+    OPPORTUNITIES: 'crm_opportunities',
+    ACTIVITIES: 'crm_activities'
+  },
   CONTACTS: 'contacts',
   
   // Services spécialisés
