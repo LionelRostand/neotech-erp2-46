@@ -8,11 +8,35 @@ export const libraryModule: AppModule = {
   description: "Gestion des livres, catalogues, emprunts et retours",
   href: "/modules/library",
   icon: createIcon(BookOpen),
-  category: 'services', // Ajout de la catégorie
+  category: 'services',
   submodules: [
-    { id: "library-books", name: "Livres", href: "/modules/library/books", icon: createIcon(Book) },
-    { id: "library-catalog", name: "Catalogue", href: "/modules/library/catalog", icon: createIcon(Archive) },
-    { id: "library-members", name: "Adhérents", href: "/modules/library/members", icon: createIcon(Users) },
-    { id: "library-settings", name: "Paramètres", href: "/modules/library/settings", icon: createIcon(Settings) }
+    { 
+      id: "library-books", 
+      name: "Livres", 
+      href: "/modules/library/books", 
+      icon: createIcon(Book),
+      description: "Gestion du catalogue de livres"
+    },
+    { 
+      id: "library-catalog", 
+      name: "Catalogue", 
+      href: "/modules/library/catalog", 
+      icon: createIcon(Archive),
+      description: "Consultation du catalogue public"
+    },
+    { 
+      id: "library-members", 
+      name: "Adhérents", 
+      href: "/modules/library/members", 
+      icon: createIcon(Users),
+      description: "Gestion des adhérents et des emprunts"
+    },
+    { 
+      id: "library-settings", 
+      name: "Paramètres", 
+      href: "/modules/library/settings", 
+      icon: createIcon(Settings),
+      description: "Configuration de la librairie"
+    }
   ]
 };

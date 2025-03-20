@@ -14,6 +14,11 @@ const AccessPointsTabContent: React.FC = () => {
     point.address.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const handleAddAccessPoint = () => {
+    console.log('Add access point clicked');
+    // Fonctionnalité à implémenter ultérieurement
+  };
+
   return (
     <div className="space-y-4">
       <DevNotice />
@@ -21,7 +26,7 @@ const AccessPointsTabContent: React.FC = () => {
       <SearchBar 
         searchQuery={searchQuery} 
         onSearchChange={setSearchQuery} 
-        onAddAccessPoint={() => console.log('Add access point clicked')} 
+        onAddAccessPoint={handleAddAccessPoint} 
       />
       
       <AccessPointsList 
