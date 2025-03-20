@@ -19,9 +19,9 @@ RUN yarn config set network-timeout 300000 && \
     yarn config set legacy-peer-deps true
 
 # Installer les dépendances avec des retry en cas d'échec et l'option legacy-peer-deps
-RUN yarn install --network-timeout 300000 --legacy-peer-deps || \
-    yarn install --network-timeout 300000 --legacy-peer-deps || \
-    yarn install --network-timeout 300000 --legacy-peer-deps
+RUN yarn install --frozen-lockfile --network-timeout 300000 --legacy-peer-deps || \
+    yarn install --frozen-lockfile --network-timeout 300000 --legacy-peer-deps || \
+    yarn install --frozen-lockfile --network-timeout 300000 --legacy-peer-deps
 
 # Copier le reste du projet
 COPY . .
