@@ -19,7 +19,11 @@ const MemberSubscriptionInfo: React.FC<MemberSubscriptionInfoProps> = ({ member 
           renewalDate: '—',
           maxLoans: 2,
           maxLoanDays: 14,
-          features: ['Accès au catalogue', 'Emprunt de 2 livres maximum', 'Durée d'emprunt: 14 jours']
+          features: [
+            'Accès au catalogue', 
+            'Emprunt de 2 livres maximum', 
+            'Durée d\'emprunt: 14 jours'
+          ]
         };
       case 'basic':
         return {
@@ -28,7 +32,12 @@ const MemberSubscriptionInfo: React.FC<MemberSubscriptionInfoProps> = ({ member 
           renewalDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
           maxLoans: 5,
           maxLoanDays: 21,
-          features: ['Accès au catalogue', 'Emprunt de 5 livres maximum', 'Durée d'emprunt: 21 jours', 'Réservation de livres']
+          features: [
+            'Accès au catalogue', 
+            'Emprunt de 5 livres maximum', 
+            'Durée d\'emprunt: 21 jours', 
+            'Réservation de livres'
+          ]
         };
       case 'premium':
         return {
@@ -37,7 +46,14 @@ const MemberSubscriptionInfo: React.FC<MemberSubscriptionInfoProps> = ({ member 
           renewalDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
           maxLoans: 10,
           maxLoanDays: 30,
-          features: ['Accès au catalogue', 'Emprunt de 10 livres maximum', 'Durée d'emprunt: 30 jours', 'Réservation de livres', 'Accès aux e-books', 'Livraison à domicile']
+          features: [
+            'Accès au catalogue', 
+            'Emprunt de 10 livres maximum', 
+            'Durée d\'emprunt: 30 jours', 
+            'Réservation de livres', 
+            'Accès aux e-books', 
+            'Livraison à domicile'
+          ]
         };
       default:
         return {
