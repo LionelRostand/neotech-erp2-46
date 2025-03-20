@@ -3,20 +3,29 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { Search, Plus, Filter, Eye, Calendar } from 'lucide-react';
+import { Search, Plus, Filter, Eye, Calendar, FileText } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useFirestore } from '@/hooks/use-firestore';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { Consultation } from './types/health-types';
+import { Consultation, Patient, Doctor } from './types/health-types';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { toast } from 'sonner';
+import ConsultationDetailsForm from './ConsultationDetailsForm';
+import ConsultationDetails from './ConsultationDetails';
 
 const ConsultationsPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState('today');
   const [searchQuery, setSearchQuery] = useState('');
   const [doctorFilter, setDoctorFilter] = useState('all');
-  const firestore = useFirestore(COLLECTIONS.HEALTH);
+  const [selectedConsultation, setSelectedConsultation] = useState<Consultation | null>(null);
+  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  
+  const firestore = useFirestore(COLLECTIONS.HEALTH_CONSULTATIONS);
 
   // Mock data for consultations
   const mockConsultations: Consultation[] = [
@@ -31,7 +40,18 @@ const ConsultationsPage: React.FC = () => {
       treatment: 'Repos, hydratation, médicaments symptomatiques',
       status: 'scheduled',
       createdAt: new Date(),
-      updatedAt: new Date()
+      updatedAt: new Date(),
+      vitalSigns: {
+        temperature: 38.2,
+        heartRate: 92,
+        bloodPressure: {
+          systolic: 125,
+          diastolic: 82
+        },
+        respiratoryRate: 18,
+        oxygenSaturation: 97,
+        pain: 6
+      }
     },
     {
       id: '2',
@@ -44,7 +64,10 @@ const ConsultationsPage: React.FC = () => {
       treatment: 'Antipyrétiques, repos',
       status: 'completed',
       createdAt: new Date(new Date().setHours(new Date().getHours() - 3)),
-      updatedAt: new Date(new Date().setHours(new Date().getHours() - 2))
+      updatedAt: new Date(new Date().setHours(new Date().getHours() - 2)),
+      physicalExam: 'Auscultation pulmonaire normale. Pas de dyspnée. Gorge rouge et enflammée.',
+      assessment: 'Syndrome grippal avec évolution favorable',
+      plan: 'Paracétamol 1g toutes les 6h\nSirop antitussif\nConsultation de contrôle si aggravation'
     },
     {
       id: '3',
@@ -58,6 +81,62 @@ const ConsultationsPage: React.FC = () => {
       updatedAt: new Date(new Date().setDate(new Date().getDate() - 1))
     },
   ];
+
+  // Mock patients data
+  const mockPatients: { [key: string]: Patient } = {
+    'pat-1': {
+      id: 'pat-1',
+      firstName: 'Jean',
+      lastName: 'Dupont',
+      dateOfBirth: new Date('1985-05-12'),
+      gender: 'male',
+      bloodType: 'A+',
+      allergens: ['Pénicilline', 'Arachides'],
+      createdAt: new Date(),
+      updatedAt: new Date()
+    },
+    'pat-2': {
+      id: 'pat-2',
+      firstName: 'Marie',
+      lastName: 'Martin',
+      dateOfBirth: new Date('1992-10-25'),
+      gender: 'female',
+      createdAt: new Date(),
+      updatedAt: new Date()
+    },
+    'pat-3': {
+      id: 'pat-3',
+      firstName: 'Pierre',
+      lastName: 'Durand',
+      dateOfBirth: new Date('1978-03-18'),
+      gender: 'male',
+      bloodType: 'O-',
+      createdAt: new Date(),
+      updatedAt: new Date()
+    }
+  };
+
+  // Mock doctors data
+  const mockDoctors: { [key: string]: Doctor } = {
+    'doc-1': {
+      id: 'doc-1',
+      firstName: 'Sophie',
+      lastName: 'Martin',
+      speciality: 'Médecine générale',
+      available: true,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    },
+    'doc-2': {
+      id: 'doc-2',
+      firstName: 'Thomas',
+      lastName: 'Dubois',
+      speciality: 'Cardiologie',
+      available: true,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    }
+  };
 
   // Get today's date at midnight for comparison
   const today = new Date();
@@ -76,7 +155,9 @@ const ConsultationsPage: React.FC = () => {
       consultation.chiefComplaint.toLowerCase().includes(searchQuery.toLowerCase()) ||
       consultation.symptoms.toLowerCase().includes(searchQuery.toLowerCase()) ||
       consultation.diagnosis?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      consultation.treatment?.toLowerCase().includes(searchQuery.toLowerCase());
+      consultation.treatment?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      mockPatients[consultation.patientId]?.firstName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      mockPatients[consultation.patientId]?.lastName.toLowerCase().includes(searchQuery.toLowerCase());
     
     const matchesDoctor = doctorFilter === 'all' || consultation.doctorId === doctorFilter;
     
@@ -108,11 +189,46 @@ const ConsultationsPage: React.FC = () => {
     }
   };
 
+  const handleViewConsultation = (consultation: Consultation) => {
+    setSelectedConsultation(consultation);
+    setIsDetailsOpen(true);
+  };
+
+  const handleNewConsultation = () => {
+    setSelectedConsultation(null);
+    setIsEditing(false);
+    setIsFormOpen(true);
+  };
+
+  const handleEditConsultation = (consultation: Consultation) => {
+    setSelectedConsultation(consultation);
+    setIsEditing(true);
+    setIsFormOpen(true);
+    setIsDetailsOpen(false);
+  };
+
+  const handleFormSuccess = () => {
+    setIsFormOpen(false);
+    toast.success(isEditing ? "Consultation mise à jour avec succès" : "Consultation créée avec succès");
+    // Ici nous devrions recharger les données depuis Firestore
+  };
+
+  const handleFormCancel = () => {
+    setIsFormOpen(false);
+  };
+
+  const handleDeleteConsultation = (consultation: Consultation) => {
+    // Dans une vraie application, nous devrions faire une confirmation avant suppression
+    // et ensuite utiliser firestore.remove pour supprimer la consultation
+    setIsDetailsOpen(false);
+    toast.success("Consultation supprimée avec succès");
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold">Consultations</h2>
-        <Button>
+        <Button onClick={handleNewConsultation}>
           <Plus className="mr-2 h-4 w-4" />
           Nouvelle consultation
         </Button>
@@ -150,7 +266,7 @@ const ConsultationsPage: React.FC = () => {
                   <SelectContent>
                     <SelectItem value="all">Tous</SelectItem>
                     <SelectItem value="doc-1">Dr. Martin</SelectItem>
-                    <SelectItem value="doc-2">Dr. Dupont</SelectItem>
+                    <SelectItem value="doc-2">Dr. Dubois</SelectItem>
                   </SelectContent>
                 </Select>
                 
@@ -180,8 +296,12 @@ const ConsultationsPage: React.FC = () => {
                         <td className="px-4 py-3">
                           {format(new Date(consultation.date), 'dd/MM/yyyy HH:mm', { locale: fr })}
                         </td>
-                        <td className="px-4 py-3">Patient {consultation.patientId.replace('pat-', '')}</td>
-                        <td className="px-4 py-3">Dr. {consultation.doctorId === 'doc-1' ? 'Martin' : 'Dupont'}</td>
+                        <td className="px-4 py-3">
+                          {mockPatients[consultation.patientId]?.firstName} {mockPatients[consultation.patientId]?.lastName}
+                        </td>
+                        <td className="px-4 py-3">
+                          Dr. {mockDoctors[consultation.doctorId]?.lastName}
+                        </td>
                         <td className="px-4 py-3">{consultation.chiefComplaint}</td>
                         <td className="px-4 py-3">
                           <span className={`px-2 py-1 rounded-full text-xs ${getStatusBadgeClass(consultation.status)}`}>
@@ -190,11 +310,20 @@ const ConsultationsPage: React.FC = () => {
                         </td>
                         <td className="px-4 py-3">
                           <div className="flex space-x-2">
-                            <Button variant="ghost" size="icon">
+                            <Button 
+                              variant="ghost" 
+                              size="icon"
+                              onClick={() => handleViewConsultation(consultation)}
+                            >
                               <Eye className="h-4 w-4" />
                             </Button>
-                            <Button variant="ghost" size="icon">
-                              <Calendar className="h-4 w-4" />
+                            <Button 
+                              variant="ghost" 
+                              size="icon"
+                              onClick={() => handleEditConsultation(consultation)}
+                              disabled={consultation.status === 'completed'}
+                            >
+                              <FileText className="h-4 w-4" />
                             </Button>
                           </div>
                         </td>
@@ -230,8 +359,12 @@ const ConsultationsPage: React.FC = () => {
                         <td className="px-4 py-3">
                           {format(new Date(consultation.date), 'HH:mm', { locale: fr })}
                         </td>
-                        <td className="px-4 py-3">Patient {consultation.patientId.replace('pat-', '')}</td>
-                        <td className="px-4 py-3">Dr. {consultation.doctorId === 'doc-1' ? 'Martin' : 'Dupont'}</td>
+                        <td className="px-4 py-3">
+                          {mockPatients[consultation.patientId]?.firstName} {mockPatients[consultation.patientId]?.lastName}
+                        </td>
+                        <td className="px-4 py-3">
+                          Dr. {mockDoctors[consultation.doctorId]?.lastName}
+                        </td>
                         <td className="px-4 py-3">{consultation.chiefComplaint}</td>
                         <td className="px-4 py-3">
                           <span className={`px-2 py-1 rounded-full text-xs ${getStatusBadgeClass(consultation.status)}`}>
@@ -240,11 +373,20 @@ const ConsultationsPage: React.FC = () => {
                         </td>
                         <td className="px-4 py-3">
                           <div className="flex space-x-2">
-                            <Button variant="ghost" size="icon">
+                            <Button 
+                              variant="ghost" 
+                              size="icon"
+                              onClick={() => handleViewConsultation(consultation)}
+                            >
                               <Eye className="h-4 w-4" />
                             </Button>
-                            <Button variant="ghost" size="icon">
-                              <Calendar className="h-4 w-4" />
+                            <Button 
+                              variant="ghost" 
+                              size="icon"
+                              onClick={() => handleEditConsultation(consultation)}
+                              disabled={consultation.status === 'completed'}
+                            >
+                              <FileText className="h-4 w-4" />
                             </Button>
                           </div>
                         </td>
@@ -278,16 +420,28 @@ const ConsultationsPage: React.FC = () => {
                         <td className="px-4 py-3">
                           {format(new Date(consultation.date), 'dd/MM/yyyy HH:mm', { locale: fr })}
                         </td>
-                        <td className="px-4 py-3">Patient {consultation.patientId.replace('pat-', '')}</td>
-                        <td className="px-4 py-3">Dr. {consultation.doctorId === 'doc-1' ? 'Martin' : 'Dupont'}</td>
+                        <td className="px-4 py-3">
+                          {mockPatients[consultation.patientId]?.firstName} {mockPatients[consultation.patientId]?.lastName}
+                        </td>
+                        <td className="px-4 py-3">
+                          Dr. {mockDoctors[consultation.doctorId]?.lastName}
+                        </td>
                         <td className="px-4 py-3">{consultation.chiefComplaint}</td>
                         <td className="px-4 py-3">
                           <div className="flex space-x-2">
-                            <Button variant="ghost" size="icon">
+                            <Button 
+                              variant="ghost" 
+                              size="icon"
+                              onClick={() => handleViewConsultation(consultation)}
+                            >
                               <Eye className="h-4 w-4" />
                             </Button>
-                            <Button variant="ghost" size="icon">
-                              <Calendar className="h-4 w-4" />
+                            <Button 
+                              variant="ghost" 
+                              size="icon"
+                              onClick={() => handleEditConsultation(consultation)}
+                            >
+                              <FileText className="h-4 w-4" />
                             </Button>
                           </div>
                         </td>
@@ -317,17 +471,25 @@ const ConsultationsPage: React.FC = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredConsultations.map(consultation => consultation.status === 'completed' && (
+                    {filteredConsultations.filter(c => c.status === 'completed').map(consultation => (
                       <tr key={consultation.id} className="border-b hover:bg-muted/50">
                         <td className="px-4 py-3">
                           {format(new Date(consultation.date), 'dd/MM/yyyy', { locale: fr })}
                         </td>
-                        <td className="px-4 py-3">Patient {consultation.patientId.replace('pat-', '')}</td>
-                        <td className="px-4 py-3">Dr. {consultation.doctorId === 'doc-1' ? 'Martin' : 'Dupont'}</td>
+                        <td className="px-4 py-3">
+                          {mockPatients[consultation.patientId]?.firstName} {mockPatients[consultation.patientId]?.lastName}
+                        </td>
+                        <td className="px-4 py-3">
+                          Dr. {mockDoctors[consultation.doctorId]?.lastName}
+                        </td>
                         <td className="px-4 py-3">{consultation.diagnosis || '-'}</td>
                         <td className="px-4 py-3">{consultation.treatment || '-'}</td>
                         <td className="px-4 py-3">
-                          <Button variant="ghost" size="icon">
+                          <Button 
+                            variant="ghost" 
+                            size="icon"
+                            onClick={() => handleViewConsultation(consultation)}
+                          >
                             <Eye className="h-4 w-4" />
                           </Button>
                         </td>
@@ -345,6 +507,33 @@ const ConsultationsPage: React.FC = () => {
           </Tabs>
         </CardContent>
       </Card>
+
+      {/* Dialog pour afficher les détails de la consultation */}
+      <Dialog open={isDetailsOpen} onOpenChange={setIsDetailsOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          {selectedConsultation && (
+            <ConsultationDetails 
+              consultation={selectedConsultation}
+              patient={mockPatients[selectedConsultation.patientId]}
+              doctor={mockDoctors[selectedConsultation.doctorId]}
+              onEdit={() => handleEditConsultation(selectedConsultation)}
+              onBack={() => setIsDetailsOpen(false)}
+              onDelete={() => handleDeleteConsultation(selectedConsultation)}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog pour le formulaire de nouvelle consultation ou d'édition */}
+      <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <ConsultationDetailsForm 
+            consultation={isEditing ? selectedConsultation : undefined}
+            onSuccess={handleFormSuccess}
+            onCancel={handleFormCancel}
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

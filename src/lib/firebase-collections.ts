@@ -51,6 +51,7 @@ export const COLLECTIONS = {
   HEALTH_PHARMACY_INVENTORY: 'health_pharmacy_inventory',
   HEALTH_PHARMACY_SALES: 'health_pharmacy_sales',
   HEALTH_PHARMACY_RESTOCKS: 'health_pharmacy_restocks',
+  HEALTH_MEDICAL_IMAGES: 'health_medical_images',
   VEHICLE_RENTALS: 'vehicleRentals',
   FREIGHT: {
     SHIPMENTS: 'freight_shipments',

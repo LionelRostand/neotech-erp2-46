@@ -86,6 +86,40 @@ export interface Consultation {
   status: 'scheduled' | 'in-progress' | 'completed' | 'cancelled';
   createdAt: Date | string;
   updatedAt: Date | string;
+  vitalSigns?: VitalSigns;
+  medicalImages?: MedicalImage[];
+  physicalExam?: string;
+  assessment?: string;
+  plan?: string;
+  medicalHistory?: string;
+}
+
+// Ajout des types pour les examens complémentaires
+export interface VitalSigns {
+  temperature?: number;
+  heartRate?: number;
+  bloodPressure?: {
+    systolic: number;
+    diastolic: number;
+  };
+  respiratoryRate?: number;
+  oxygenSaturation?: number;
+  height?: number;
+  weight?: number;
+  bmi?: number;
+  pain?: number; // Échelle de douleur 0-10
+}
+
+export interface MedicalImage {
+  id: string;
+  type: 'xray' | 'mri' | 'ct' | 'ultrasound' | 'other';
+  date: Date | string;
+  url: string;
+  description?: string;
+  bodyPart?: string;
+  findings?: string;
+  requestedBy: string; // ID du médecin
+  technician?: string;
 }
 
 // New types for the Personnel module
