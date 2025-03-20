@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useCompanyService } from './services/companyService';
 import { Company, CompanyContact } from './types';
@@ -59,7 +58,6 @@ const CompaniesContacts: React.FC = () => {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [selectedContact, setSelectedContact] = useState<CompanyContact | null>(null);
   
-  // Contact form data
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -72,16 +70,13 @@ const CompaniesContacts: React.FC = () => {
   
   const contactsPerPage = 10;
   
-  // Fetch companies and contacts
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        // Get companies first
         const { companies: companiesData } = await getCompanies(1, 100);
         setCompanies(companiesData);
         
-        // Get all contacts for all companies
         const allContacts: CompanyContact[] = [];
         for (const company of companiesData) {
           const companyContacts = await getCompanyContacts(company.id);
@@ -101,11 +96,9 @@ const CompaniesContacts: React.FC = () => {
     fetchData();
   }, []);
   
-  // Filter contacts when search term or company selection changes
   useEffect(() => {
     let filtered = contacts;
     
-    // Filter by search term
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
       filtered = filtered.filter(contact => 
@@ -117,16 +110,14 @@ const CompaniesContacts: React.FC = () => {
       );
     }
     
-    // Filter by company
     if (selectedCompany) {
       filtered = filtered.filter(contact => contact.companyId === selectedCompany);
     }
     
     setFilteredContacts(filtered);
-    setCurrentPage(1); // Reset to first page when filters change
+    setCurrentPage(1);
   }, [searchTerm, selectedCompany, contacts]);
   
-  // Get paginated contacts
   const paginatedContacts = filteredContacts.slice(
     (currentPage - 1) * contactsPerPage,
     currentPage * contactsPerPage
@@ -134,23 +125,19 @@ const CompaniesContacts: React.FC = () => {
   
   const totalPages = Math.ceil(filteredContacts.length / contactsPerPage);
   
-  // Handle form input changes
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
   
-  // Handle company selection
   const handleCompanyChange = (value: string) => {
     setFormData(prev => ({ ...prev, companyId: value }));
   };
   
-  // Handle main contact checkbox
   const handleMainContactChange = (checked: boolean) => {
     setFormData(prev => ({ ...prev, isMain: checked }));
   };
   
-  // Reset form
   const resetForm = () => {
     setFormData({
       firstName: '',
@@ -163,7 +150,6 @@ const CompaniesContacts: React.FC = () => {
     });
   };
   
-  // Create contact
   const handleCreateContact = async () => {
     if (!formData.firstName || !formData.lastName || !formData.email || !formData.companyId) {
       toast.error('Veuillez remplir tous les champs obligatoires');
@@ -173,11 +159,9 @@ const CompaniesContacts: React.FC = () => {
     try {
       await createContact(formData);
       
-      // Refresh contacts for the selected company
       if (formData.companyId) {
         const newContacts = await getCompanyContacts(formData.companyId);
         
-        // Update contacts list
         setContacts(prev => {
           const filteredPrev = prev.filter(c => c.companyId !== formData.companyId);
           return [...filteredPrev, ...newContacts];
@@ -191,7 +175,6 @@ const CompaniesContacts: React.FC = () => {
     }
   };
   
-  // Edit contact
   const handleEditContact = (contact: CompanyContact) => {
     setSelectedContact(contact);
     setFormData({
@@ -206,18 +189,15 @@ const CompaniesContacts: React.FC = () => {
     setIsEditDialogOpen(true);
   };
   
-  // Update contact
   const handleUpdateContact = async () => {
     if (!selectedContact) return;
     
     try {
       await updateContact(selectedContact.id, formData);
       
-      // Refresh contacts for the company
       if (formData.companyId) {
         const updatedContacts = await getCompanyContacts(formData.companyId);
         
-        // Update contacts list
         setContacts(prev => {
           const filteredPrev = prev.filter(c => c.companyId !== formData.companyId);
           return [...filteredPrev, ...updatedContacts];
@@ -232,27 +212,23 @@ const CompaniesContacts: React.FC = () => {
     }
   };
   
-  // Delete contact
   const handleDeleteContact = async (contactId: string) => {
     if (!window.confirm('Êtes-vous sûr de vouloir supprimer ce contact ?')) return;
     
     try {
       await deleteContact(contactId);
       
-      // Update contacts list
       setContacts(prev => prev.filter(contact => contact.id !== contactId));
     } catch (error) {
       console.error('Error deleting contact:', error);
     }
   };
   
-  // Get company name by ID
   const getCompanyName = (companyId: string) => {
     const company = companies.find(c => c.id === companyId);
     return company ? company.name : 'Entreprise inconnue';
   };
   
-  // If loading, show skeleton
   if (loading) {
     return (
       <div className="space-y-4">
@@ -281,7 +257,6 @@ const CompaniesContacts: React.FC = () => {
   
   return (
     <div className="space-y-6">
-      {/* Header with title and add button */}
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold">Contacts des entreprises</h2>
         <Button onClick={() => {
@@ -293,7 +268,6 @@ const CompaniesContacts: React.FC = () => {
         </Button>
       </div>
       
-      {/* Filters */}
       <Card className="p-4">
         <div className="flex flex-col sm:flex-row gap-4">
           <div className="relative flex-1">
@@ -314,7 +288,7 @@ const CompaniesContacts: React.FC = () => {
               <SelectValue placeholder="Filtrer par entreprise" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Toutes les entreprises</SelectItem>
+              <SelectItem value="all">Toutes les entreprises</SelectItem>
               {companies.map(company => (
                 <SelectItem key={company.id} value={company.id}>
                   {company.name}
@@ -325,7 +299,6 @@ const CompaniesContacts: React.FC = () => {
         </div>
       </Card>
       
-      {/* Contacts table */}
       <Card>
         <Table>
           <TableHeader>
@@ -407,7 +380,6 @@ const CompaniesContacts: React.FC = () => {
           </TableBody>
         </Table>
         
-        {/* Pagination */}
         {totalPages > 1 && (
           <div className="p-4 border-t">
             <Pagination>
@@ -442,7 +414,6 @@ const CompaniesContacts: React.FC = () => {
         )}
       </Card>
       
-      {/* Add Contact Dialog */}
       <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
@@ -546,7 +517,6 @@ const CompaniesContacts: React.FC = () => {
         </DialogContent>
       </Dialog>
       
-      {/* Edit Contact Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
