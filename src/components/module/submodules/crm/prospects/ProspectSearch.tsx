@@ -20,8 +20,8 @@ interface ProspectSearchProps {
 const ProspectSearch: React.FC<ProspectSearchProps> = ({
   searchTerm,
   statusFilter,
-  setSearchTerm,
-  setStatusFilter
+  setStatusFilter,
+  setSearchTerm
 }) => {
   return (
     <div className="flex flex-col md:flex-row gap-4 mb-4">
@@ -44,7 +44,7 @@ const ProspectSearch: React.FC<ProspectSearchProps> = ({
           <SelectValue placeholder="Statut" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="">Tous les statuts</SelectItem>
+          <SelectItem value="all">Tous les statuts</SelectItem>
           <SelectItem value="hot">Chaud</SelectItem>
           <SelectItem value="warm">Tiède</SelectItem>
           <SelectItem value="cold">Froid</SelectItem>
