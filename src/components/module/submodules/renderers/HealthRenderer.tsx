@@ -7,6 +7,7 @@ import PatientsPage from '../health/PatientsPage';
 import AppointmentsPage from '../health/AppointmentsPage';
 import DoctorsPage from '../health/DoctorsPage';
 import NursesPage from '../health/NursesPage';
+import StaffPage from '../health/StaffPage';
 import MedicalRecordsPage from '../health/MedicalRecordsPage';
 import LaboratoryPage from '../health/LaboratoryPage';
 import PrescriptionsPage from '../health/PrescriptionsPage';
@@ -31,6 +32,8 @@ export const renderHealthSubmodule = (submoduleId: string, submodule: SubModule)
       return <DoctorsPage />;
     case 'health-nurses':
       return <NursesPage />;
+    case 'health-staff':
+      return <StaffPage />;
     case 'health-consultations':
       return <ConsultationsPage />;
     case 'health-medical-records':

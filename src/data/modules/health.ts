@@ -2,7 +2,7 @@
 import { 
   Stethoscope, LayoutDashboard, Calendar, Users, Pill, Activity, Settings,
   UserCog, FileText, HeartPulse, Building2, CreditCard, BarChart3, Workflow, User,
-  Clipboard, Syringe, TestTube, Bed, BedDouble, BadgePercent, ShieldCheck
+  Clipboard, Syringe, TestTube, Bed, BedDouble, BadgePercent, ShieldCheck, Users2
 } from 'lucide-react';
 import { AppModule, createIcon } from '../types/modules';
 
@@ -18,7 +18,8 @@ export const healthModule: AppModule = {
     { id: "health-patients", name: "Patients", href: "/modules/health/patients", icon: createIcon(User), description: "Enregistrement et gestion des dossiers patients" },
     { id: "health-appointments", name: "Rendez-vous", href: "/modules/health/appointments", icon: createIcon(Calendar), description: "Planification et suivi des consultations" },
     { id: "health-doctors", name: "Médecins", href: "/modules/health/doctors", icon: createIcon(UserCog), description: "Gestion des médecins et spécialistes" },
-    { id: "health-nurses", name: "Personnel", href: "/modules/health/nurses", icon: createIcon(Users), description: "Infirmiers et personnel soignant" },
+    { id: "health-staff", name: "Personnel", href: "/modules/health/staff", icon: createIcon(Users2), description: "Gestion du personnel et des permissions" },
+    { id: "health-nurses", name: "Infirmiers", href: "/modules/health/nurses", icon: createIcon(Users), description: "Infirmiers et personnel soignant" },
     { id: "health-consultations", name: "Consultations", href: "/modules/health/consultations", icon: createIcon(Clipboard), description: "Enregistrement des diagnostics et examens" },
     { id: "health-medical-records", name: "Dossiers Médicaux", href: "/modules/health/medical-records", icon: createIcon(FileText), description: "Gestion des DME et historique" },
     { id: "health-laboratory", name: "Laboratoire", href: "/modules/health/laboratory", icon: createIcon(TestTube), description: "Analyses médicales et résultats" },
