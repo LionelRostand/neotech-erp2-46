@@ -104,6 +104,15 @@ const AppRoutes = () => (
       <Route path="settings" element={<SubmodulePage moduleId={13} submoduleId="messages-settings" />} />
     </Route>
     
+    {/* Route pour le module Documents */}
+    <Route path="/modules/documents" element={<ModuleLayout moduleId={16} />}>
+      <Route index element={<SubmodulePage moduleId={16} submoduleId="documents-files" />} />
+      <Route path="files" element={<SubmodulePage moduleId={16} submoduleId="documents-files" />} />
+      <Route path="archive" element={<SubmodulePage moduleId={16} submoduleId="documents-archive" />} />
+      <Route path="search" element={<SubmodulePage moduleId={16} submoduleId="documents-search" />} />
+      <Route path="settings" element={<SubmodulePage moduleId={16} submoduleId="documents-settings" />} />
+    </Route>
+    
     {/* Route pour le module CRM */}
     <Route path="/modules/crm" element={<ModuleLayout moduleId={17} />}>
       <Route index element={<SubmodulePage moduleId={17} submoduleId="crm-dashboard" />} />
