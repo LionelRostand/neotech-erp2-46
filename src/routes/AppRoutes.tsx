@@ -70,6 +70,17 @@ const AppRoutes = () => (
       <Route path="settings" element={<SubmodulePage moduleId={2} submoduleId="freight-settings" />} />
     </Route>
     
+    {/* Route pour le module Projects */}
+    <Route path="/modules/projects" element={<ModuleLayout moduleId={3} />}>
+      <Route index element={<SubmodulePage moduleId={3} submoduleId="projects-dashboard" />} />
+      <Route path="dashboard" element={<SubmodulePage moduleId={3} submoduleId="projects-dashboard" />} />
+      <Route path="list" element={<SubmodulePage moduleId={3} submoduleId="projects-list" />} />
+      <Route path="tasks" element={<SubmodulePage moduleId={3} submoduleId="projects-tasks" />} />
+      <Route path="teams" element={<SubmodulePage moduleId={3} submoduleId="projects-teams" />} />
+      <Route path="reports" element={<SubmodulePage moduleId={3} submoduleId="projects-reports" />} />
+      <Route path="settings" element={<SubmodulePage moduleId={3} submoduleId="projects-settings" />} />
+    </Route>
+    
     {/* Route pour le module CRM */}
     <Route path="/modules/crm" element={<ModuleLayout moduleId={17} />}>
       <Route index element={<SubmodulePage moduleId={17} submoduleId="crm-dashboard" />} />
@@ -116,7 +127,6 @@ const AppRoutes = () => (
     </Route>
     
     {/* Generic routes for other modules */}
-    <Route path="/modules/projects/*" element={<ModuleLayout moduleId={3} />} />
     <Route path="/modules/academy/*" element={<ModuleLayout moduleId={4} />} />
     <Route path="/modules/restaurant/*" element={<ModuleLayout moduleId={5} />} />
     <Route path="/modules/garage/*" element={<ModuleLayout moduleId={6} />} />

@@ -5,7 +5,14 @@ export const COLLECTIONS = {
   EMPLOYEES: 'employees',
   COMPANIES: 'companies',
   ACCOUNTING: 'accounting',
-  PROJECTS: 'projects',
+  PROJECTS: {
+    PROJECTS: 'projects_list',
+    TASKS: 'projects_tasks',
+    TEAMS: 'projects_teams',
+    COMMENTS: 'projects_comments',
+    NOTIFICATIONS: 'projects_notifications',
+    SETTINGS: 'projects_settings'
+  },
   CRM: {
     PROSPECTS: 'crm_prospects',
     CLIENTS: 'crm_clients',

@@ -37,6 +37,12 @@ import CrmSettings from './submodules/crm/CrmSettings';
 import CrmDashboard from './submodules/crm/CrmDashboard';
 import CrmOpportunities from './submodules/crm/CrmOpportunities';
 import CrmAnalytics from './submodules/crm/CrmAnalytics';
+import ProjectDashboard from './submodules/projects/ProjectDashboard';
+import ProjectsList from './submodules/projects/ProjectsList';
+import TasksPage from './submodules/projects/TasksPage';
+import TeamsPage from './submodules/projects/TeamsPage';
+import ReportsPage from './submodules/projects/ReportsPage';
+import SettingsPage from './submodules/projects/SettingsPage';
 
 interface SubmodulePageProps {
   moduleId: number;
@@ -132,6 +138,20 @@ const SubmodulePage: React.FC<SubmodulePageProps> = ({ moduleId, submoduleId }) 
         return <CrmAnalytics />;
       case 'crm-settings':
         return <CrmSettings />;
+      
+      // Projects module
+      case 'projects-list':
+        return <ProjectsList />;
+      case 'projects-dashboard':
+        return <ProjectDashboard />;
+      case 'projects-tasks':
+        return <TasksPage />;
+      case 'projects-teams':
+        return <TeamsPage />;
+      case 'projects-reports':
+        return <ReportsPage />;
+      case 'projects-settings':
+        return <SettingsPage />;
       
       // All other freight submodules will default to DefaultSubmoduleContent
       // until they are implemented specifically
