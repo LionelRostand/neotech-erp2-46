@@ -19,27 +19,20 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
+import { formatMessageDate, getInitials, truncateText, extractTextFromHtml } from '../utils/archiveMessageUtils';
 
 interface ArchivedMessageItemProps {
   message: Message;
   contact: Contact | undefined;
   onRestoreMessage: (messageId: string) => void;
   isRestoring: boolean;
-  formatMessageDate: (timestamp: any) => string;
-  getInitials: (firstName: string, lastName: string) => string;
-  truncateText: (text: string, maxLength: number) => string;
-  extractTextFromHtml: (html: string) => string;
 }
 
 const ArchivedMessageItem: React.FC<ArchivedMessageItemProps> = ({
   message,
   contact,
   onRestoreMessage,
-  isRestoring,
-  formatMessageDate,
-  getInitials,
-  truncateText,
-  extractTextFromHtml
+  isRestoring
 }) => {
   const textContent = extractTextFromHtml(message.content);
   

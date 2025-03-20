@@ -4,7 +4,6 @@ import { Message, Contact } from '../types/message-types';
 import ArchivedMessageItem from './components/ArchivedMessageItem';
 import ArchivedMessageSkeleton from './components/ArchivedMessageSkeleton';
 import ArchivedEmptyState from './components/ArchivedEmptyState';
-import { formatMessageDate, getInitials, truncateText, extractTextFromHtml } from './utils/archiveMessageUtils';
 
 interface ArchivedMessagesListProps {
   messages: Message[];
@@ -42,10 +41,6 @@ const ArchivedMessagesList: React.FC<ArchivedMessagesListProps> = ({
             contact={contact}
             onRestoreMessage={onRestoreMessage}
             isRestoring={isRestoringMessage}
-            formatMessageDate={formatMessageDate}
-            getInitials={getInitials}
-            truncateText={truncateText}
-            extractTextFromHtml={extractTextFromHtml}
           />
         );
       })}
