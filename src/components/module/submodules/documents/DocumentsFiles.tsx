@@ -1,6 +1,5 @@
-
 import React, { useState, useCallback, useRef } from 'react';
-import { useDocumentService } from '../../documents/services/documentService';
+import { useDocumentService } from '../../documents/services';
 import { DocumentFile, FileUploadState } from '../../documents/types/document-types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -50,7 +49,6 @@ const DocumentsFiles: React.FC = () => {
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   
-  // Fetch documents on component mount
   React.useEffect(() => {
     const fetchDocuments = async () => {
       setLoading(true);
@@ -68,7 +66,6 @@ const DocumentsFiles: React.FC = () => {
     fetchDocuments();
   }, [getAllUserDocuments]);
   
-  // Handle file upload
   const handleFileUpload = useCallback(async (files: FileList | null) => {
     if (!files || files.length === 0) return;
     
@@ -80,7 +77,6 @@ const DocumentsFiles: React.FC = () => {
     
     setUploadingFiles(fileStates);
     
-    // Simulate upload progress
     const updateProgress = (index: number, progress: number) => {
       setUploadingFiles(prev => {
         const newState = [...prev];
@@ -89,7 +85,6 @@ const DocumentsFiles: React.FC = () => {
       });
     };
     
-    // Simulate progress updates
     const progressIntervals = Array.from(files).map((_, index) => {
       return setInterval(() => {
         updateProgress(index, Math.min(95, Math.random() * 20 + (fileStates[index]?.progress || 0)));
@@ -97,13 +92,10 @@ const DocumentsFiles: React.FC = () => {
     });
     
     try {
-      // Actual upload
       const uploadedDocs = await uploadMultipleDocuments(Array.from(files));
       
-      // Clear intervals
       progressIntervals.forEach(clearInterval);
       
-      // Update states to success
       setUploadingFiles(prev => prev.map((file, index) => ({
         ...file,
         progress: 100,
@@ -111,13 +103,11 @@ const DocumentsFiles: React.FC = () => {
         errorMessage: uploadedDocs[index] ? undefined : 'Erreur lors du téléversement'
       })));
       
-      // Update documents list with newly uploaded docs
       setDocuments(prev => [
         ...prev,
         ...uploadedDocs.filter(Boolean) as DocumentFile[]
       ]);
       
-      // Clear upload states after a delay
       setTimeout(() => {
         setUploadingFiles([]);
       }, 3000);
@@ -126,10 +116,8 @@ const DocumentsFiles: React.FC = () => {
       console.error('Error uploading files:', error);
       toast.error('Erreur lors du téléversement des fichiers');
       
-      // Clear intervals
       progressIntervals.forEach(clearInterval);
       
-      // Update states to error
       setUploadingFiles(prev => prev.map(file => ({
         ...file,
         progress: 100,
@@ -139,7 +127,6 @@ const DocumentsFiles: React.FC = () => {
     }
   }, [uploadMultipleDocuments]);
   
-  // Filtered and sorted documents
   const filteredDocuments = React.useMemo(() => {
     return documents
       .filter(doc => 
@@ -148,7 +135,6 @@ const DocumentsFiles: React.FC = () => {
         doc.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()))
       )
       .sort((a, b) => {
-        // Sort by selected property
         if (sortBy === 'name') {
           return sortDirection === 'asc' 
             ? a.name.localeCompare(b.name)
@@ -158,7 +144,6 @@ const DocumentsFiles: React.FC = () => {
             ? a.size - b.size
             : b.size - a.size;
         } else {
-          // Default to date
           return sortDirection === 'asc'
             ? new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
             : new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
@@ -166,7 +151,6 @@ const DocumentsFiles: React.FC = () => {
       });
   }, [documents, searchQuery, sortBy, sortDirection]);
   
-  // Toggle sort direction
   const handleSort = (by: 'name' | 'date' | 'size') => {
     if (sortBy === by) {
       setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
@@ -176,7 +160,6 @@ const DocumentsFiles: React.FC = () => {
     }
   };
   
-  // Handle document deletion
   const handleDeleteDocument = async (documentId: string) => {
     try {
       await deleteDocument(documentId);
@@ -193,7 +176,6 @@ const DocumentsFiles: React.FC = () => {
   
   return (
     <div className="space-y-4">
-      {/* Header with search and upload buttons */}
       <div className="flex flex-col md:flex-row gap-3 justify-between">
         <div className="relative w-full md:w-96">
           <Input
@@ -258,7 +240,6 @@ const DocumentsFiles: React.FC = () => {
         </div>
       </div>
       
-      {/* Upload progress */}
       {uploadingFiles.length > 0 && (
         <Card>
           <CardHeader className="pb-3">
@@ -276,9 +257,7 @@ const DocumentsFiles: React.FC = () => {
         </Card>
       )}
       
-      {/* Main content */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* Documents list */}
         <div className="lg:col-span-2">
           <Card className="h-full">
             <CardHeader className="pb-3">
@@ -305,7 +284,6 @@ const DocumentsFiles: React.FC = () => {
           </Card>
         </div>
         
-        {/* Document preview */}
         <div className="lg:col-span-1">
           <Card className="h-full">
             {selectedDocument ? (
@@ -344,7 +322,6 @@ const DocumentsFiles: React.FC = () => {
         </div>
       </div>
       
-      {/* Permissions dialog */}
       {showPermissionsDialog && selectedDocument && (
         <DocumentPermissionsDialog
           document={selectedDocument}
