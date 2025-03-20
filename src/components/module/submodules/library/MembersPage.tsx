@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -26,7 +25,6 @@ const MembersPage: React.FC = () => {
   const loansCollection = useSafeFirestore(LIBRARY_LOANS);
   const { toast } = useToast();
 
-  // Filter members based on search query
   const filteredMembers = React.useMemo(() => {
     if (!searchQuery.trim()) return members;
     
@@ -62,7 +60,6 @@ const MembersPage: React.FC = () => {
 
   const handleViewMemberDetails = async (member: Member) => {
     try {
-      // Fetch member's loans
       const loans = await loansCollection.getAll({ 
         memberId: member.id 
       });
@@ -84,10 +81,9 @@ const MembersPage: React.FC = () => {
 
   const handleAddMember = async (memberData: Omit<Member, "id" | "createdAt" | "membershipId">) => {
     try {
-      // Generate a unique membership ID
       const membershipId = `MEM-${Date.now().toString().slice(-8)}`;
       
-      const newMember = {
+      const newMember: Omit<Member, "id"> = {
         ...memberData,
         membershipId,
         createdAt: new Date().toISOString(),
@@ -225,7 +221,6 @@ const MembersPage: React.FC = () => {
         </CardContent>
       </Card>
 
-      {/* Member details side panel */}
       {selectedMember && (
         <MemberDetailsSheet 
           member={selectedMember}
@@ -236,7 +231,6 @@ const MembersPage: React.FC = () => {
         />
       )}
 
-      {/* Add/Edit member dialog */}
       <MemberForm
         isOpen={isAddingMember || isEditingMember}
         onOpenChange={(open) => {
