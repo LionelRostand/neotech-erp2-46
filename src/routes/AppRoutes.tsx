@@ -143,6 +143,7 @@ const AppRoutes = () => (
       <Route path="appointments" element={<SubmodulePage moduleId={8} submoduleId="health-appointments" />} />
       <Route path="doctors" element={<SubmodulePage moduleId={8} submoduleId="health-doctors" />} />
       <Route path="nurses" element={<SubmodulePage moduleId={8} submoduleId="health-nurses" />} />
+      <Route path="staff" element={<SubmodulePage moduleId={8} submoduleId="health-staff" />} />
       <Route path="consultations" element={<SubmodulePage moduleId={8} submoduleId="health-consultations" />} />
       <Route path="medical-records" element={<SubmodulePage moduleId={8} submoduleId="health-medical-records" />} />
       <Route path="laboratory" element={<SubmodulePage moduleId={8} submoduleId="health-laboratory" />} />
