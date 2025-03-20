@@ -25,6 +25,13 @@ import {
   Bell
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 // Types pour les hospitalisations
 interface Admission {
@@ -151,10 +158,10 @@ const AdmissionsPage: React.FC = () => {
       patientId: newAdmission.patientId!,
       dateAdmitted: today,
       roomNumber: newAdmission.roomNumber || 'À attribuer',
-      roomType: (newAdmission.roomType as 'private' | 'shared' | 'intensive') || 'shared',
+      roomType: newAdmission.roomType as 'private' | 'shared' | 'intensive',
       diagnosis: newAdmission.diagnosis!,
       doctor: newAdmission.doctor!,
-      status: newAdmission.status as 'active' | 'scheduled' | 'discharged' | 'transferred' || 'scheduled',
+      status: newAdmission.status as 'active' | 'scheduled' | 'discharged' | 'transferred',
       notes: newAdmission.notes
     };
     
@@ -313,16 +320,21 @@ const AdmissionsPage: React.FC = () => {
               
               <div className="space-y-2">
                 <Label htmlFor="roomType">Type de chambre</Label>
-                <select 
-                  id="roomType"
+                <Select
                   value={newAdmission.roomType}
-                  onChange={(e) => setNewAdmission({...newAdmission, roomType: e.target.value})}
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
+                  onValueChange={(value: 'private' | 'shared' | 'intensive') => 
+                    setNewAdmission({...newAdmission, roomType: value})
+                  }
                 >
-                  <option value="shared">Commune</option>
-                  <option value="private">Privée</option>
-                  <option value="intensive">Soins intensifs</option>
-                </select>
+                  <SelectTrigger id="roomType">
+                    <SelectValue placeholder="Sélectionner un type de chambre" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="shared">Commune</SelectItem>
+                    <SelectItem value="private">Privée</SelectItem>
+                    <SelectItem value="intensive">Soins intensifs</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               
               <div className="space-y-2">
@@ -337,15 +349,20 @@ const AdmissionsPage: React.FC = () => {
               
               <div className="space-y-2">
                 <Label htmlFor="status">Statut</Label>
-                <select 
-                  id="status"
+                <Select
                   value={newAdmission.status}
-                  onChange={(e) => setNewAdmission({...newAdmission, status: e.target.value})}
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
+                  onValueChange={(value: 'active' | 'scheduled' | 'discharged' | 'transferred') => 
+                    setNewAdmission({...newAdmission, status: value})
+                  }
                 >
-                  <option value="scheduled">Programmé</option>
-                  <option value="active">Actif (immédiat)</option>
-                </select>
+                  <SelectTrigger id="status">
+                    <SelectValue placeholder="Sélectionner un statut" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="scheduled">Programmé</SelectItem>
+                    <SelectItem value="active">Actif (immédiat)</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               
               <div className="space-y-2 md:col-span-2">
