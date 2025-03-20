@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, UserPlus, Filter, Calendar, Shield } from "lucide-react";
+import { Search, UserPlus, Filter, Calendar, Shield, Clock } from "lucide-react";
 import StaffList from './components/staff/StaffList';
 import PermissionsManager from './components/staff/PermissionsManager';
 import StaffSchedules from './components/staff/StaffSchedules';
@@ -91,7 +91,10 @@ const StaffPage: React.FC = () => {
         <TabsContent value="leaves">
           <Card>
             <CardHeader>
-              <CardTitle>Gestion des absences</CardTitle>
+              <CardTitle className="flex items-center">
+                <Clock className="h-5 w-5 mr-2 text-blue-500" />
+                Gestion des absences
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <StaffLeaves />
