@@ -46,7 +46,7 @@ const ClientSearch: React.FC<ClientSearchProps> = ({
           <SelectValue placeholder="Secteur d'activité" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="">Tous les secteurs</SelectItem>
+          <SelectItem value="all">Tous les secteurs</SelectItem>
           {sectors.map(sector => (
             <SelectItem key={sector} value={sector}>{sector}</SelectItem>
           ))}

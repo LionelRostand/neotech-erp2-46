@@ -44,7 +44,7 @@ export const sectors = ['Technologie', 'Industrie', 'Santé', 'Finance', 'Commer
 export const useClients = () => {
   const [clients, setClients] = useState(mockClients);
   const [searchTerm, setSearchTerm] = useState('');
-  const [sectorFilter, setSectorFilter] = useState('');
+  const [sectorFilter, setSectorFilter] = useState('all');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -150,7 +150,7 @@ export const useClients = () => {
   const filteredClients = clients.filter(client => {
     const matchesSearch = client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          client.contactName.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesSector = sectorFilter ? client.sector === sectorFilter : true;
+    const matchesSector = sectorFilter === 'all' ? true : client.sector === sectorFilter;
     
     return matchesSearch && matchesSector;
   });

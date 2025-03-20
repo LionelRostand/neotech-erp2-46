@@ -30,9 +30,9 @@ import CompanyCreateForm from './submodules/companies/CompanyCreateForm';
 import CompaniesDocuments from './submodules/companies/CompaniesDocuments';
 import CompaniesReports from './submodules/companies/CompaniesReports';
 import CompaniesSettings from './submodules/companies/CompaniesSettings';
-// Import CRM submodules
 import CrmClients from './submodules/crm/CrmClients';
 import CrmProspects from './submodules/crm/CrmProspects';
+import CrmSettings from './submodules/crm/CrmSettings';
 
 interface SubmodulePageProps {
   moduleId: number;
@@ -118,6 +118,10 @@ const SubmodulePage: React.FC<SubmodulePageProps> = ({ moduleId, submoduleId }) 
       // CRM module
       case 'crm-clients':
         return <CrmClients />;
+      case 'crm-prospects':
+        return <CrmProspects />;
+      case 'crm-settings':
+        return <CrmSettings />;
       
       // All other freight submodules will default to DefaultSubmoduleContent
       // until they are implemented specifically
