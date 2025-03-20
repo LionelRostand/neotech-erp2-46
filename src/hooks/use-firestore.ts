@@ -1,94 +1,59 @@
-import { useEffect, useState } from 'react';
-import { 
-  collection,
-  doc,
-  getDoc,
-  getDocs,
-  setDoc,
-  addDoc,
-  updateDoc,
-  deleteDoc,
-  query,
-  where,
-  orderBy,
-  limit,
-  DocumentData,
-  QueryConstraint,
-  Timestamp,
-  connectFirestoreEmulator,
-  enableNetwork,
-  disableNetwork
-} from 'firebase/firestore';
-import { db } from '@/lib/firebase';
 
-// Hook pour les opérations CRUD Firestore
+import { useState } from 'react';
+import { 
+  DocumentData,
+  QueryConstraint
+} from 'firebase/firestore';
+import { getAllDocuments, getDocumentById } from './firestore/firestore-utils';
+import { addDocument } from './firestore/create-operations';
+import { updateDocument, setDocument } from './firestore/update-operations';
+import { deleteDocument } from './firestore/delete-operations';
+import { handleNetworkError, enableFirestoreNetwork } from './firestore/network-handler';
+
+// Hook for Firestore CRUD operations
 export const useFirestore = (collectionName: string) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [networkStatus, setNetworkStatus] = useState<'online' | 'offline'>('online');
   
-  // Function to handle network connectivity
+  // Reconnect to Firestore
   const reconnectToFirestore = async () => {
-    try {
-      await enableNetwork(db);
+    const reconnected = await enableFirestoreNetwork();
+    if (reconnected) {
       setNetworkStatus('online');
-      console.log('Reconnected to Firestore');
-      return true;
-    } catch (err) {
-      console.error('Failed to reconnect to Firestore:', err);
-      return false;
     }
+    return reconnected;
   };
   
-  // Récupérer tous les documents d'une collection
+  // Get all documents from a collection
   const getAll = async (constraints?: QueryConstraint[]) => {
     setLoading(true);
     setError(null);
     
     try {
-      const collectionRef = collection(db, collectionName);
-      const q = constraints ? query(collectionRef, ...constraints) : query(collectionRef);
-      const querySnapshot = await getDocs(q);
-      
-      const data = querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-      
+      const data = await getAllDocuments(collectionName, constraints);
       setLoading(false);
       return data;
     } catch (err: any) {
-      // Try to reconnect if there's a network error
-      if (err.code === 'unavailable' || err.code === 'failed-precondition') {
-        const reconnected = await reconnectToFirestore();
-        if (reconnected) {
-          // Retry the operation
-          return getAll(constraints);
-        }
+      try {
+        return await handleNetworkError(err, () => getAll(constraints));
+      } catch (error: any) {
+        setError(error.message);
+        setLoading(false);
+        throw error;
       }
-      
-      setError(err.message);
-      setLoading(false);
-      throw err;
     }
   };
   
-  // Récupérer un document par son ID
+  // Get a document by ID
   const getById = async (id: string) => {
     setLoading(true);
     setError(null);
     
     try {
-      const docRef = doc(db, collectionName, id);
-      const docSnap = await getDoc(docRef);
-      
-      if (docSnap.exists()) {
-        setLoading(false);
-        return { id: docSnap.id, ...docSnap.data() };
-      } else {
-        setLoading(false);
-        return null;
-      }
+      const data = await getDocumentById(collectionName, id);
+      setLoading(false);
+      return data;
     } catch (err: any) {
       setError(err.message);
       setLoading(false);
@@ -96,21 +61,15 @@ export const useFirestore = (collectionName: string) => {
     }
   };
   
-  // Ajouter un nouveau document
+  // Add a new document
   const add = async (data: DocumentData) => {
     setLoading(true);
     setError(null);
     
     try {
-      const collectionRef = collection(db, collectionName);
-      const docRef = await addDoc(collectionRef, {
-        ...data,
-        createdAt: Timestamp.now(),
-        updatedAt: Timestamp.now()
-      });
-      
+      const result = await addDocument(collectionName, data);
       setLoading(false);
-      return { id: docRef.id, ...data };
+      return result;
     } catch (err: any) {
       setError(err.message);
       setLoading(false);
@@ -118,20 +77,15 @@ export const useFirestore = (collectionName: string) => {
     }
   };
   
-  // Mettre à jour un document existant
+  // Update a document
   const update = async (id: string, data: DocumentData) => {
     setLoading(true);
     setError(null);
     
     try {
-      const docRef = doc(db, collectionName, id);
-      await updateDoc(docRef, {
-        ...data,
-        updatedAt: Timestamp.now()
-      });
-      
+      const result = await updateDocument(collectionName, id, data);
       setLoading(false);
-      return { id, ...data };
+      return result;
     } catch (err: any) {
       setError(err.message);
       setLoading(false);
@@ -139,15 +93,13 @@ export const useFirestore = (collectionName: string) => {
     }
   };
   
-  // Supprimer un document
+  // Delete a document
   const remove = async (id: string) => {
     setLoading(true);
     setError(null);
     
     try {
-      const docRef = doc(db, collectionName, id);
-      await deleteDoc(docRef);
-      
+      await deleteDocument(collectionName, id);
       setLoading(false);
       return true;
     } catch (err: any) {
@@ -157,33 +109,23 @@ export const useFirestore = (collectionName: string) => {
     }
   };
   
-  // Créer ou mettre à jour un document avec un ID spécifique
+  // Set a document with ID
   const set = async (id: string, data: DocumentData) => {
     setLoading(true);
     setError(null);
     
     try {
-      const docRef = doc(db, collectionName, id);
-      await setDoc(docRef, {
-        ...data,
-        updatedAt: Timestamp.now()
-      }, { merge: true });
-      
+      const result = await setDocument(collectionName, id, data);
       setLoading(false);
-      return { id, ...data };
+      return result;
     } catch (err: any) {
-      // Try to reconnect if there's a network error
-      if (err.code === 'unavailable' || err.code === 'failed-precondition') {
-        const reconnected = await reconnectToFirestore();
-        if (reconnected) {
-          // Retry the operation
-          return set(id, data);
-        }
+      try {
+        return await handleNetworkError(err, () => set(id, data));
+      } catch (error: any) {
+        setError(error.message);
+        setLoading(false);
+        throw error;
       }
-      
-      setError(err.message);
-      setLoading(false);
-      throw err;
     }
   };
   

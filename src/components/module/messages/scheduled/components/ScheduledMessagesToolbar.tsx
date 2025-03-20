@@ -1,83 +1,75 @@
 
-import React from 'react';
-import { Input } from '@/components/ui/input';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Search, Filter, Calendar, Badge } from 'lucide-react';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger
-} from '@/components/ui/dropdown-menu';
+import { Input } from '@/components/ui/input';
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { CalendarClock, Plus, RefreshCw, Search } from 'lucide-react';
 
 interface ScheduledMessagesToolbarProps {
   searchTerm: string;
-  onSearchChange: (value: string) => void;
-  onFilterChange: (filter: string) => void;
+  onSearchChange: (term: string) => void;
+  filterStatus: string;
+  onFilterStatusChange: (status: string) => void;
+  onRefresh: () => void;
+  isLoading: boolean;
   onCreateNewMessage: () => void;
 }
 
 const ScheduledMessagesToolbar: React.FC<ScheduledMessagesToolbarProps> = ({
   searchTerm,
   onSearchChange,
-  onFilterChange,
+  filterStatus,
+  onFilterStatusChange,
+  onRefresh,
+  isLoading,
   onCreateNewMessage
 }) => {
   return (
-    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-      <div className="text-xl font-bold">Messages programmés</div>
-      <div className="flex flex-col sm:flex-row gap-2">
-        <div className="relative">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Rechercher..."
-            className="pl-8 w-full sm:w-64"
-            value={searchTerm}
-            onChange={(e) => onSearchChange(e.target.value)}
-          />
-        </div>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline">
-              <Filter className="mr-2 h-4 w-4" />
-              Filtrer
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent>
-            <DropdownMenuLabel>Filtrer par date</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => onFilterChange('all')}>
-              <Calendar className="mr-2 h-4 w-4" />
-              Tous
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => onFilterChange('today')}>
-              <Calendar className="mr-2 h-4 w-4" />
-              Aujourd'hui
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => onFilterChange('tomorrow')}>
-              <Calendar className="mr-2 h-4 w-4" />
-              Demain
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => onFilterChange('this-week')}>
-              <Calendar className="mr-2 h-4 w-4" />
-              Cette semaine
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => onFilterChange('high-priority')}>
-              <Badge variant="destructive" className="mr-2 px-1 py-0">!</Badge>
-              Haute priorité
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-        <Button
-          variant="default"
-          onClick={onCreateNewMessage}
-        >
-          Nouveau message
-        </Button>
+    <div className="flex flex-col space-y-4 sm:flex-row sm:space-y-0 sm:space-x-4 mb-6">
+      <div className="relative flex-1">
+        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+        <Input
+          placeholder="Rechercher dans les messages..."
+          value={searchTerm}
+          onChange={(e) => onSearchChange(e.target.value)}
+          className="pl-8"
+        />
       </div>
+      
+      <Select
+        value={filterStatus}
+        onValueChange={onFilterStatusChange}
+      >
+        <SelectTrigger className="w-full sm:w-[180px]">
+          <SelectValue placeholder="Filtrer par statut" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">Tous les messages</SelectItem>
+          <SelectItem value="pending">En attente</SelectItem>
+          <SelectItem value="sent">Envoyé</SelectItem>
+          <SelectItem value="failed">Échec</SelectItem>
+        </SelectContent>
+      </Select>
+      
+      <Button variant="outline" onClick={onRefresh} disabled={isLoading}>
+        {isLoading ? (
+          <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+        ) : (
+          <RefreshCw className="h-4 w-4 mr-2" />
+        )}
+        Actualiser
+      </Button>
+      
+      <Button onClick={onCreateNewMessage}>
+        <Plus className="h-4 w-4 mr-2" />
+        Nouveau message
+      </Button>
     </div>
   );
 };
