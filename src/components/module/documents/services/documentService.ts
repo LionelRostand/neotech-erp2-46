@@ -1,4 +1,3 @@
-
 import { useFirestore } from '@/hooks/use-firestore';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import { toast } from 'sonner';
@@ -9,6 +8,7 @@ import {
   DocumentSettings,
   SearchParams
 } from '../types/document-types';
+import { formatDocumentWithTimestamps } from '@/hooks/firestore/firestore-utils';
 
 export const useDocumentService = () => {
   const {
@@ -43,6 +43,7 @@ export const useDocumentService = () => {
         ...metadata
       };
       
+      // Fixed: Cast the result to DocumentFile since we know it has all required fields
       const result = await addDocument(newDoc);
       toast.success(`Document "${file.name}" téléversé avec succès`);
       return result as DocumentFile;
@@ -64,13 +65,16 @@ export const useDocumentService = () => {
     try {
       // In a real implementation, we would use constraints to filter by userId and status
       const allDocs = await getAllDocuments();
+      
+      // Fixed: Cast the documents properly to DocumentFile
       return allDocs.filter(doc => {
+        const typedDoc = doc as unknown as DocumentFile;
         if (status === 'all') {
           return true;
         }
-        return doc.status === status && 
-               (doc.createdBy === userId || 
-                doc.permissions.some(p => p.userId === userId));
+        return typedDoc.status === status && 
+               (typedDoc.createdBy === userId || 
+                typedDoc.permissions.some(p => p.userId === userId));
       }) as DocumentFile[];
     } catch (error) {
       console.error('Error getting documents:', error);

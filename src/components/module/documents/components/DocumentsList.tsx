@@ -14,8 +14,8 @@ import {
   Calendar,
   FileImage,
   FileCode,
-  FilePpt,
-  FileSpreadsheet
+  FileSpreadsheet,
+  File, // Changed: Using File instead of FilePpt
 } from 'lucide-react';
 import { 
   DropdownMenu, 
@@ -73,7 +73,8 @@ export const DocumentsList: React.FC<DocumentsListProps> = ({
     }
     
     if (['ppt', 'pptx'].includes(format)) {
-      return <FilePpt className="h-8 w-8 text-orange-500" />;
+      // Changed: Using File instead of FilePpt
+      return <File className="h-8 w-8 text-orange-500" />;
     }
     
     if (['html', 'css', 'js', 'ts', 'json', 'xml'].includes(format)) {
@@ -254,7 +255,8 @@ export const DocumentsList: React.FC<DocumentsListProps> = ({
                   {document.format.toUpperCase()}
                 </Badge>
                 {document.isEncrypted && (
-                  <Lock className="h-3 w-3 ml-1" title="Fichier chiffré" />
+                  // Fixed: Removed title attribute and added aria-label
+                  <Lock className="h-3 w-3 ml-1" aria-label="Fichier chiffré" />
                 )}
               </div>
             </div>
