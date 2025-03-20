@@ -38,13 +38,10 @@ export const useFirestore = (collectionName: string) => {
       return data;
     } catch (err: any) {
       console.error(`Error getting all documents from ${collectionName}:`, err);
-      try {
-        return await handleNetworkError(err, () => getAll(constraints));
-      } catch (error: any) {
-        setError(error.message);
-        setLoading(false);
-        throw error;
-      }
+      setError(err.message || "Erreur lors de la récupération des données");
+      setLoading(false);
+      // Return empty array instead of throwing to prevent component crashes
+      return [];
     }
   };
   
@@ -60,7 +57,7 @@ export const useFirestore = (collectionName: string) => {
     } catch (err: any) {
       setError(err.message);
       setLoading(false);
-      throw err;
+      return null;
     }
   };
   
@@ -122,13 +119,9 @@ export const useFirestore = (collectionName: string) => {
       setLoading(false);
       return result;
     } catch (err: any) {
-      try {
-        return await handleNetworkError(err, () => set(id, data));
-      } catch (error: any) {
-        setError(error.message);
-        setLoading(false);
-        throw error;
-      }
+      setError(err.message);
+      setLoading(false);
+      return null;
     }
   };
   
