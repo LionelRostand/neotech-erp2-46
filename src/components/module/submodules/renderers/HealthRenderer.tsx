@@ -17,6 +17,7 @@ import RoomsPage from '../health/RoomsPage';
 import BillingPage from '../health/BillingPage';
 import InsurancePage from '../health/InsurancePage';
 import StatsPage from '../health/StatsPage';
+import IntegrationsPage from '../health/IntegrationsPage';
 import SettingsPage from '../health/SettingsPage';
 import { SubModule } from '@/data/types/modules';
 
@@ -54,6 +55,8 @@ export const renderHealthSubmodule = (submoduleId: string, submodule: SubModule)
       return <InsurancePage />;
     case 'health-stats':
       return <StatsPage />;
+    case 'health-integrations':
+      return <IntegrationsPage />;
     case 'health-settings':
       return <SettingsPage />;
     default:
