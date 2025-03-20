@@ -129,6 +129,14 @@ export const executeWithNetworkRetry = async <T>(
       return await operation();
     } catch (error: any) {
       attempts++;
+      console.error(`Operation failed (attempt ${attempts}/${maxRetries}):`, error);
+      
+      // Add specific handling for QUIC_PROTOCOL_ERROR
+      if (error.message?.includes('QUIC_PROTOCOL_ERROR')) {
+        console.log('Detected QUIC_PROTOCOL_ERROR, attempting to recover...');
+        // Force a small delay before retry
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
       
       if (attempts <= maxRetries) {
         try {

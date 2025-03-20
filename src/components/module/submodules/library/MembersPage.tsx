@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import MemberDetailsSheet from './members/MemberDetailsSheet';
@@ -9,9 +9,19 @@ import SubscriptionPlans from './members/SubscriptionPlans';
 import AccessPointsTabContent from './members/AccessPointsTabContent';
 import { useMembersData } from './hooks/useMembersData';
 import { useMemberDetails } from './hooks/useMemberDetails';
+import { Button } from '@/components/ui/button';
+import { RefreshCw } from 'lucide-react';
 
 const MembersPage: React.FC = () => {
+  console.log("MembersPage component rendering");
   const [activeTab, setActiveTab] = useState("list");
+  
+  useEffect(() => {
+    console.log("MembersPage mounted");
+    return () => {
+      console.log("MembersPage unmounted");
+    };
+  }, []);
   
   const {
     filteredMembers,
@@ -20,7 +30,8 @@ const MembersPage: React.FC = () => {
     setSearchQuery,
     handleAddMember,
     handleUpdateMember,
-    handleDeleteMember
+    handleDeleteMember,
+    forceRefresh
   } = useMembersData();
 
   const {
@@ -40,8 +51,19 @@ const MembersPage: React.FC = () => {
   return (
     <div className="space-y-6">
       <Card>
-        <CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Gestion des Adhérents</CardTitle>
+          {isLoading && (
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={forceRefresh}
+              className="flex items-center gap-1"
+            >
+              <RefreshCw className="h-4 w-4" />
+              Recharger
+            </Button>
+          )}
         </CardHeader>
         <CardContent>
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
