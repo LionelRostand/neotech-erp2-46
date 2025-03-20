@@ -23,6 +23,11 @@ const ContactsTableActions: React.FC<ContactsTableActionsProps> = ({
   onDeleteContact,
   onSendMessage 
 }) => {
+  // Ensure contact exists before rendering
+  if (!contact) {
+    return null;
+  }
+  
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>

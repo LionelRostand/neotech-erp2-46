@@ -45,13 +45,21 @@ const ContactsTable: React.FC<ContactsTableProps> = ({
     {
       key: 'actions',
       header: 'Actions',
-      cell: ({ row }) => (
-        <ContactsTableActions 
-          contact={row.original} 
-          onDeleteContact={onDeleteContact}
-          onSendMessage={() => navigate(`/modules/messages/compose?to=${row.original.id}`)}
-        />
-      ),
+      cell: (props) => {
+        // Ensure row and row.original exist before trying to use them
+        if (!props || !props.row || !props.row.original) {
+          return null;
+        }
+        
+        const contact = props.row.original as Contact;
+        return (
+          <ContactsTableActions 
+            contact={contact} 
+            onDeleteContact={onDeleteContact}
+            onSendMessage={() => navigate(`/modules/messages/compose?to=${contact.id}`)}
+          />
+        );
+      },
     },
   ];
 

@@ -14,7 +14,7 @@ export interface Transaction {
 export interface Column {
   key: string;
   header: string;
-  cell?: (row: any) => React.ReactNode;
+  cell?: (props: { row: { original: any } }) => React.ReactNode;
 }
 
 interface DataTableProps<T> {
@@ -75,7 +75,7 @@ const DataTable = <T extends Record<string, any>>({
                 {tableColumns.map((column, colIndex) => (
                   <td key={colIndex} className="px-6 py-4 font-medium">
                     {column.cell 
-                      ? column.cell(item)
+                      ? column.cell({ row: { original: item } })
                       : item[column.key]
                     }
                   </td>
