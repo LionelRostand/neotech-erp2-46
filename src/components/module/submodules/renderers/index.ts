@@ -1,9 +1,22 @@
 
-export * from './EmployeesRenderer';
-export * from './FreightRenderer';
-export * from './ProjectsRenderer';
-export * from './AccountingRenderer';
-export * from './MessagesRenderer';
-export * from './CompaniesRenderer';
-export * from './CrmRenderer';
-export * from './HealthRenderer';
+import { renderEmployeesSubmodule } from './EmployeesRenderer';
+import { renderFreightSubmodule } from './FreightRenderer';
+import { renderProjectsSubmodule } from './ProjectsRenderer';
+import { renderAccountingSubmodule } from './AccountingRenderer';
+import { renderMessagesSubmodule } from './MessagesRenderer';
+import { renderCompaniesSubmodule } from './CompaniesRenderer';
+import { renderCrmSubmodule } from './CrmRenderer';
+import { renderHealthSubmodule } from './HealthRenderer';
+import { renderDocumentsSubmodule } from './DocumentsRenderer';
+
+export {
+  renderEmployeesSubmodule,
+  renderFreightSubmodule,
+  renderProjectsSubmodule,
+  renderAccountingSubmodule,
+  renderMessagesSubmodule,
+  renderCompaniesSubmodule,
+  renderCrmSubmodule,
+  renderHealthSubmodule,
+  renderDocumentsSubmodule
+};

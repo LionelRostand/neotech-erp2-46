@@ -10,7 +10,8 @@ import {
   renderMessagesSubmodule,
   renderCompaniesSubmodule,
   renderCrmSubmodule,
-  renderHealthSubmodule
+  renderHealthSubmodule,
+  renderDocumentsSubmodule
 } from './renderers';
 
 interface SubmoduleRendererProps {
@@ -47,6 +48,9 @@ export const renderSubmoduleContent = ({ submoduleId, submodule }: SubmoduleRend
     
     case 'health':
       return renderHealthSubmodule(submoduleId, submodule);
+    
+    case 'documents':
+      return renderDocumentsSubmodule(submoduleId, submodule);
     
     // Default fallback for any other module
     default:
