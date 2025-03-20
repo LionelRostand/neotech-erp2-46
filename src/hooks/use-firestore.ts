@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { 
   collection,
@@ -15,7 +14,10 @@ import {
   limit,
   DocumentData,
   QueryConstraint,
-  Timestamp
+  Timestamp,
+  connectFirestoreEmulator,
+  enableNetwork,
+  disableNetwork
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 
@@ -23,6 +25,20 @@ import { db } from '@/lib/firebase';
 export const useFirestore = (collectionName: string) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [networkStatus, setNetworkStatus] = useState<'online' | 'offline'>('online');
+  
+  // Function to handle network connectivity
+  const reconnectToFirestore = async () => {
+    try {
+      await enableNetwork(db);
+      setNetworkStatus('online');
+      console.log('Reconnected to Firestore');
+      return true;
+    } catch (err) {
+      console.error('Failed to reconnect to Firestore:', err);
+      return false;
+    }
+  };
   
   // Récupérer tous les documents d'une collection
   const getAll = async (constraints?: QueryConstraint[]) => {
@@ -42,6 +58,15 @@ export const useFirestore = (collectionName: string) => {
       setLoading(false);
       return data;
     } catch (err: any) {
+      // Try to reconnect if there's a network error
+      if (err.code === 'unavailable' || err.code === 'failed-precondition') {
+        const reconnected = await reconnectToFirestore();
+        if (reconnected) {
+          // Retry the operation
+          return getAll(constraints);
+        }
+      }
+      
       setError(err.message);
       setLoading(false);
       throw err;
@@ -147,6 +172,15 @@ export const useFirestore = (collectionName: string) => {
       setLoading(false);
       return { id, ...data };
     } catch (err: any) {
+      // Try to reconnect if there's a network error
+      if (err.code === 'unavailable' || err.code === 'failed-precondition') {
+        const reconnected = await reconnectToFirestore();
+        if (reconnected) {
+          // Retry the operation
+          return set(id, data);
+        }
+      }
+      
       setError(err.message);
       setLoading(false);
       throw err;
@@ -156,11 +190,13 @@ export const useFirestore = (collectionName: string) => {
   return {
     loading,
     error,
+    networkStatus,
     getAll,
     getById,
     add,
     update,
     remove,
-    set
+    set,
+    reconnectToFirestore
   };
 };

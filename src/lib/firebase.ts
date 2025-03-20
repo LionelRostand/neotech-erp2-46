@@ -1,6 +1,6 @@
 
 import { initializeApp } from "firebase/app";
-import { getFirestore, connectFirestoreEmulator } from "firebase/firestore";
+import { getFirestore, connectFirestoreEmulator, enableMultiTabIndexedDbPersistence } from "firebase/firestore";
 import { getAuth, connectAuthEmulator } from "firebase/auth";
 import { getStorage, connectStorageEmulator } from "firebase/storage";
 
@@ -38,17 +38,25 @@ if (import.meta.env.DEV) {
   }
 }
 
-// Add offline persistence to allow app to work offline
-import { enableIndexedDbPersistence } from "firebase/firestore";
-
-// Enable offline persistence
+// Add offline persistence with error handling and retry logic
 try {
-  enableIndexedDbPersistence(db)
+  // Changed from enableIndexedDbPersistence to enableMultiTabIndexedDbPersistence
+  // This allows multiple tabs to access the same offline storage
+  enableMultiTabIndexedDbPersistence(db)
     .then(() => {
-      console.log("Firestore offline persistence enabled");
+      console.log("Firestore offline multi-tab persistence enabled");
     })
     .catch((err) => {
-      console.error("Error enabling offline persistence:", err);
+      if (err.code === 'failed-precondition') {
+        // Multiple tabs open, persistence can only be enabled in one tab at a time
+        console.warn("Multiple tabs open, persistence only enabled in one tab");
+      } else if (err.code === 'unimplemented') {
+        // The current browser does not support all of the
+        // features required to enable persistence
+        console.warn("Offline persistence not supported in this browser");
+      } else {
+        console.error("Error enabling offline persistence:", err);
+      }
     });
 } catch (error) {
   console.error("Error setting up offline persistence:", error);
