@@ -7,7 +7,7 @@ import { DocumentSettings } from '../types/document-types';
 export const useSettingsService = () => {
   const {
     getById: getDocumentById,
-    set: setDocument,
+    set,
   } = useFirestore(COLLECTIONS.DOCUMENTS);
 
   const getDocumentSettings = async (): Promise<DocumentSettings | null> => {
@@ -25,7 +25,7 @@ export const useSettingsService = () => {
           updatedAt: new Date()
         };
         
-        await setDocument('settings', defaultSettings);
+        await set('settings', defaultSettings);
         return defaultSettings;
       }
       
@@ -51,7 +51,7 @@ export const useSettingsService = () => {
         updatedAt: new Date()
       };
       
-      await setDocument('settings', updatedSettings);
+      await set('settings', updatedSettings);
       toast.success('Paramètres mis à jour avec succès');
       return updatedSettings;
     } catch (error) {
