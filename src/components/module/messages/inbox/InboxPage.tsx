@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useFirestore } from '@/hooks/use-firestore';
 import { COLLECTIONS } from '@/lib/firebase-collections';
@@ -31,10 +30,14 @@ const InboxPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filter, setFilter] = useState<string>('all');
   const [isLoading, setIsLoading] = useState(true);
+  const [dataFetched, setDataFetched] = useState(false);
   const { toast } = useToast();
 
   // Récupérer les messages et les contacts
   useEffect(() => {
+    // Éviter la récupération répétée des données
+    if (dataFetched) return;
+    
     const fetchData = async () => {
       try {
         setIsLoading(true);
@@ -85,6 +88,8 @@ const InboxPage: React.FC = () => {
           setMessages(messagesData as Message[]);
           setFilteredMessages(messagesData as Message[]);
         }
+        
+        setDataFetched(true);
       } catch (error) {
         console.error("Erreur lors de la récupération des données:", error);
         toast({
@@ -92,13 +97,15 @@ const InboxPage: React.FC = () => {
           title: "Erreur",
           description: "Impossible de charger les messages."
         });
+        
+        setDataFetched(true);
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchData();
-  }, [getAll, contactsCollection.getAll, toast]);
+  }, [getAll, contactsCollection, toast, dataFetched]);
 
   // Filtrer les messages selon les critères
   useEffect(() => {

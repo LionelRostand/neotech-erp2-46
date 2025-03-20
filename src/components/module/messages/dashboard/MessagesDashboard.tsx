@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useFirestore } from '@/hooks/use-firestore';
 import { COLLECTIONS } from '@/lib/firebase-collections';
@@ -15,6 +14,7 @@ const MessagesDashboard: React.FC = () => {
   const [metrics, setMetrics] = useState<MessageMetrics | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [dataFetched, setDataFetched] = useState(false);
 
   // Function to generate demo metrics
   const generateDemoMetrics = (): MessageMetrics => {
@@ -49,6 +49,9 @@ const MessagesDashboard: React.FC = () => {
   };
 
   useEffect(() => {
+    // Éviter la récupération répétée des données
+    if (dataFetched) return;
+    
     const fetchMetrics = async () => {
       try {
         setLoading(true);
@@ -87,6 +90,8 @@ const MessagesDashboard: React.FC = () => {
           console.log("Aucune donnée trouvée, utilisation des données de démo");
           setMetrics(generateDemoMetrics());
         }
+        
+        setDataFetched(true);
       } catch (err: any) {
         console.error("Erreur lors de la récupération des métriques:", err);
         setError(err.message || "Une erreur s'est produite lors de la récupération des données");
@@ -94,13 +99,14 @@ const MessagesDashboard: React.FC = () => {
         
         // Use demo data in case of error
         setMetrics(generateDemoMetrics());
+        setDataFetched(true);
       } finally {
         setLoading(false);
       }
     };
 
     fetchMetrics();
-  }, [getAll]);
+  }, [getAll, dataFetched]);
 
   // Always show a loading state while fetching
   if (loading) {

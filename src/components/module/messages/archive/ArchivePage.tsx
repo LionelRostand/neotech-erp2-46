@@ -20,10 +20,14 @@ const ArchivePage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [isRestoring, setIsRestoring] = useState<Record<string, boolean>>({});
+  const [dataFetched, setDataFetched] = useState(false);
   const { toast } = useToast();
 
   // Récupérer les messages archivés et les contacts
   useEffect(() => {
+    // Éviter la récupération répétée des données
+    if (dataFetched) return;
+    
     const fetchData = async () => {
       try {
         setIsLoading(true);
@@ -77,6 +81,8 @@ const ArchivePage: React.FC = () => {
           setArchivedMessages(messagesData as Message[]);
           setFilteredMessages(messagesData as Message[]);
         }
+        
+        setDataFetched(true);
       } catch (error) {
         console.error("Erreur lors de la récupération des données:", error);
         toast({
@@ -104,13 +110,15 @@ const ArchivePage: React.FC = () => {
         
         setArchivedMessages(mockMessages);
         setFilteredMessages(mockMessages);
+        
+        setDataFetched(true);
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchData();
-  }, [getAll, contactsCollection, toast]);
+  }, [getAll, contactsCollection, toast, dataFetched]);
 
   // Filtrer les messages selon le terme de recherche
   useEffect(() => {
