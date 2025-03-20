@@ -97,7 +97,7 @@ const FirebaseShipmentForm: React.FC<FirebaseShipmentFormProps> = ({
     <div className="mt-4">
       {error && (
         <div className="bg-red-50 text-red-700 p-3 rounded-md mb-4">
-          Erreur: {error}
+          Erreur: {error.message}
         </div>
       )}
       

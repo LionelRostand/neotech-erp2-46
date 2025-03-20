@@ -28,7 +28,7 @@ export const useCompanyPermissions = (companySubmodules: { id: string; name: str
       setLoading(true);
       try {
         // Fetch users
-        const usersData = await usersFirestore.getAll() as User[];
+        const usersData = await usersFirestore.getAll();
         setUsers(usersData);
 
         // Fetch permissions

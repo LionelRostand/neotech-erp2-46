@@ -10,8 +10,8 @@ export const useFirestore = (collectionPath: string) => {
   const [error, setError] = useState<Error | null>(null);
   
   // Diverses fonctions que nous pourrions implémenter plus tard
-  const getAll = async () => {
-    console.log(`Fetching all documents from ${collectionPath}`);
+  const getAll = async (constraints?: any) => {
+    console.log(`Fetching all documents from ${collectionPath}`, constraints ? 'with constraints' : '');
     // Simulation
     return [];
   };
@@ -40,6 +40,13 @@ export const useFirestore = (collectionPath: string) => {
     return true;
   };
   
+  // Add set method which was missing
+  const set = async (id: string, data: any) => {
+    console.log(`Setting document ${id} in ${collectionPath}`, data);
+    // Simulation
+    return true;
+  };
+  
   return {
     collectionPath,
     loading,
@@ -48,6 +55,7 @@ export const useFirestore = (collectionPath: string) => {
     getById,
     add,
     update,
-    remove
+    remove,
+    set
   };
 };

@@ -5,14 +5,11 @@ import { toast } from 'sonner';
 import { DocumentSettings } from '../types/document-types';
 
 export const useSettingsService = () => {
-  const {
-    getById: getDocumentById,
-    set,
-  } = useFirestore(COLLECTIONS.DOCUMENTS);
+  const firestore = useFirestore(COLLECTIONS.DOCUMENTS);
 
   const getDocumentSettings = async (): Promise<DocumentSettings | null> => {
     try {
-      const settings = await getDocumentById('settings') as DocumentSettings;
+      const settings = await firestore.getById('settings') as DocumentSettings;
       if (!settings) {
         // Create default settings if none exist
         const defaultSettings: DocumentSettings = {
@@ -25,7 +22,7 @@ export const useSettingsService = () => {
           updatedAt: new Date()
         };
         
-        await set('settings', defaultSettings);
+        await firestore.set('settings', defaultSettings);
         return defaultSettings;
       }
       
@@ -51,7 +48,7 @@ export const useSettingsService = () => {
         updatedAt: new Date()
       };
       
-      await set('settings', updatedSettings);
+      await firestore.set('settings', updatedSettings);
       toast.success('Paramètres mis à jour avec succès');
       return updatedSettings;
     } catch (error) {

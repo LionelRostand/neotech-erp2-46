@@ -81,11 +81,18 @@ export const useContactForm = (
 
       if (isNewContact) {
         // Créer un nouveau contact
-        savedContact = await add(contactData) as Contact;
+        const result = await add(contactData);
+        savedContact = { 
+          ...contactData, 
+          id: result.id 
+        };
       } else {
         // Mettre à jour un contact existant
-        savedContact = await update(contact.id, contactData) as Contact;
-        savedContact = { ...savedContact, id: contact.id };
+        await update(contact.id, contactData);
+        savedContact = { 
+          ...contactData, 
+          id: contact.id 
+        };
       }
 
       onSave(savedContact, isNewContact);

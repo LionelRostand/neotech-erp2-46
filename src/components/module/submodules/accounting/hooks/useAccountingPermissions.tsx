@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { toast } from "sonner";
 import { AccountingPermission, AccountingUserPermission } from '@/components/module/projects/types/project-types';
@@ -25,7 +26,7 @@ export const useAccountingPermissions = (accountingSubmodules: { id: string; nam
     const fetchData = async () => {
       setLoading(true);
       try {
-        const usersData = await usersFirestore.getAll() as User[];
+        const usersData = await usersFirestore.getAll();
         setUsers(usersData);
 
         const permissionsData = await permissionsFirestore.getAll();
