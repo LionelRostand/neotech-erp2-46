@@ -114,12 +114,21 @@ export const useProspects = () => {
         lastContact: Timestamp.fromDate(new Date(formData.lastContact))
       };
       
+      // Fix: Only use the id from the result and combine it with our formData
       const result = await prospectCollection.add(newProspectData);
       
+      // Create a new Prospect object with the id from the result and the form data
       const newProspect: Prospect = {
         id: result.id,
-        ...formData,
-        createdAt: new Date().toISOString().split('T')[0]
+        name: formData.name,
+        company: formData.company,
+        email: formData.email,
+        phone: formData.phone,
+        status: formData.status,
+        source: formData.source,
+        lastContact: formData.lastContact,
+        createdAt: new Date().toISOString().split('T')[0],
+        notes: formData.notes
       };
       
       setProspects(prev => [newProspect, ...prev]);
