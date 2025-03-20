@@ -1,15 +1,18 @@
 
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
-import { employees } from '@/data/employees';
 import { Department, DepartmentFormData } from './types';
-import { Employee } from '@/types/employee';
-import { useFirestore } from '@/hooks/use-firestore';
-import { COLLECTIONS } from '@/lib/firebase-collections';
+import { useDepartmentService } from './services/departmentService';
+import { 
+  createDefaultDepartments, 
+  createEmptyFormData, 
+  prepareDepartmentFromForm,
+  getDepartmentEmployees
+} from './utils/departmentUtils';
 
 export const useDepartments = () => {
-  // Hook to Firestore departments collection
-  const departmentsFirestore = useFirestore(COLLECTIONS.EMPLOYEES + '_departments');
+  // Department service for Firebase operations
+  const departmentService = useDepartmentService();
   
   // Departments data state
   const [departments, setDepartments] = useState<Department[]>([]);
@@ -19,14 +22,7 @@ export const useDepartments = () => {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isManageEmployeesDialogOpen, setIsManageEmployeesDialogOpen] = useState(false);
-  const [formData, setFormData] = useState<DepartmentFormData>({
-    id: "",
-    name: "",
-    description: "",
-    managerId: "",
-    color: "#3b82f6",
-    employeeIds: []
-  });
+  const [formData, setFormData] = useState<DepartmentFormData>(createEmptyFormData([]));
   const [currentDepartment, setCurrentDepartment] = useState<Department | null>(null);
   const [activeTab, setActiveTab] = useState("department-info");
   const [selectedEmployees, setSelectedEmployees] = useState<string[]>([]);
@@ -40,68 +36,26 @@ export const useDepartments = () => {
   const loadDepartmentsFromFirestore = async () => {
     setLoading(true);
     try {
-      const data = await departmentsFirestore.getAll();
-      if (data && data.length > 0) {
-        setDepartments(data as Department[]);
+      const data = await departmentService.getAll();
+      
+      if (data.length > 0) {
+        setDepartments(data);
       } else {
         // If no departments found, initialize with default departments
-        const defaultDepartments = [
-          {
-            id: "DEP001",
-            name: "Marketing",
-            description: "Responsable de la stratégie marketing et de la communication",
-            managerId: "EMP003",
-            managerName: "Sophie Martin",
-            employeesCount: 2,
-            color: "#3b82f6", // blue-500
-            employeeIds: ["EMP003", "EMP004"]
-          },
-          {
-            id: "DEP002",
-            name: "Direction",
-            description: "Direction générale de l'entreprise",
-            managerId: "EMP002",
-            managerName: "Lionel Djossa",
-            employeesCount: 1,
-            color: "#10b981", // emerald-500
-            employeeIds: ["EMP002"]
-          }
-        ];
+        const defaultDepartments = createDefaultDepartments();
         
         // Save default departments to Firestore
         for (const dept of defaultDepartments) {
-          await departmentsFirestore.set(dept.id, dept);
+          await departmentService.createDepartment(dept);
         }
         
         setDepartments(defaultDepartments);
       }
     } catch (error) {
       console.error("Error loading departments:", error);
-      toast.error("Erreur lors du chargement des départements");
       
       // Fallback to default departments if Firebase load fails
-      setDepartments([
-        {
-          id: "DEP001",
-          name: "Marketing",
-          description: "Responsable de la stratégie marketing et de la communication",
-          managerId: "EMP003",
-          managerName: "Sophie Martin",
-          employeesCount: 2,
-          color: "#3b82f6",
-          employeeIds: ["EMP003", "EMP004"]
-        },
-        {
-          id: "DEP002",
-          name: "Direction",
-          description: "Direction générale de l'entreprise",
-          managerId: "EMP002",
-          managerName: "Lionel Djossa",
-          employeesCount: 1,
-          color: "#10b981",
-          employeeIds: ["EMP002"]
-        }
-      ]);
+      setDepartments(createDefaultDepartments());
     } finally {
       setLoading(false);
     }
@@ -126,14 +80,7 @@ export const useDepartments = () => {
 
   // Open add department dialog
   const handleAddDepartment = () => {
-    setFormData({
-      id: `DEP${(departments.length + 1).toString().padStart(3, '0')}`,
-      name: "",
-      description: "",
-      managerId: "",
-      color: "#3b82f6",
-      employeeIds: []
-    });
+    setFormData(createEmptyFormData(departments));
     setSelectedEmployees([]);
     setActiveTab("department-info");
     setIsAddDialogOpen(true);
@@ -180,29 +127,12 @@ export const useDepartments = () => {
       return;
     }
 
-    const selectedManager = formData.managerId 
-      ? employees.find(emp => emp.id === formData.managerId) 
-      : null;
-
-    const newDepartment: Department = {
-      id: formData.id,
-      name: formData.name,
-      description: formData.description,
-      managerId: formData.managerId || null,
-      managerName: selectedManager ? `${selectedManager.firstName} ${selectedManager.lastName}` : null,
-      employeesCount: selectedEmployees.length,
-      color: formData.color,
-      employeeIds: selectedEmployees
-    };
-
-    try {
-      await departmentsFirestore.set(newDepartment.id, newDepartment);
+    const newDepartment = prepareDepartmentFromForm(formData, selectedEmployees);
+    const success = await departmentService.createDepartment(newDepartment);
+    
+    if (success) {
       setDepartments([...departments, newDepartment]);
       setIsAddDialogOpen(false);
-      toast.success(`Département ${formData.name} créé avec succès`);
-    } catch (error) {
-      console.error("Error saving department:", error);
-      toast.error("Erreur lors de la création du département");
     }
   };
 
@@ -213,24 +143,15 @@ export const useDepartments = () => {
       return;
     }
 
-    const selectedManager = formData.managerId 
-      ? employees.find(emp => emp.id === formData.managerId) 
-      : null;
+    const updatedDepartment = prepareDepartmentFromForm(
+      formData, 
+      selectedEmployees, 
+      currentDepartment
+    );
 
-    const updatedDepartment: Department = {
-      ...currentDepartment,
-      name: formData.name,
-      description: formData.description,
-      managerId: formData.managerId || null,
-      managerName: selectedManager ? `${selectedManager.firstName} ${selectedManager.lastName}` : null,
-      employeesCount: selectedEmployees.length,
-      color: formData.color,
-      employeeIds: selectedEmployees
-    };
-
-    try {
-      await departmentsFirestore.update(updatedDepartment.id, updatedDepartment);
-      
+    const success = await departmentService.updateDepartment(updatedDepartment);
+    
+    if (success) {
       const updatedDepartments = departments.map(dep => {
         if (dep.id === currentDepartment.id) {
           return updatedDepartment;
@@ -240,10 +161,6 @@ export const useDepartments = () => {
 
       setDepartments(updatedDepartments);
       setIsEditDialogOpen(false);
-      toast.success(`Département ${formData.name} mis à jour avec succès`);
-    } catch (error) {
-      console.error("Error updating department:", error);
-      toast.error("Erreur lors de la mise à jour du département");
     }
   };
 
@@ -254,13 +171,10 @@ export const useDepartments = () => {
 
     // Confirm deletion
     if (window.confirm(`Êtes-vous sûr de vouloir supprimer le département ${departmentToDelete.name} ?`)) {
-      try {
-        await departmentsFirestore.remove(id);
+      const success = await departmentService.deleteDepartment(id, departmentToDelete.name);
+      
+      if (success) {
         setDepartments(departments.filter(dep => dep.id !== id));
-        toast.success(`Département ${departmentToDelete.name} supprimé avec succès`);
-      } catch (error) {
-        console.error("Error deleting department:", error);
-        toast.error("Erreur lors de la suppression du département");
       }
     }
   };
@@ -269,15 +183,15 @@ export const useDepartments = () => {
   const handleSaveEmployeeAssignments = async () => {
     if (!currentDepartment) return;
 
-    try {
-      const updatedDepartment = {
-        ...currentDepartment,
-        employeeIds: selectedEmployees,
-        employeesCount: selectedEmployees.length
-      };
+    const updatedDepartment = {
+      ...currentDepartment,
+      employeeIds: selectedEmployees,
+      employeesCount: selectedEmployees.length
+    };
 
-      await departmentsFirestore.update(updatedDepartment.id, updatedDepartment);
-
+    const success = await departmentService.updateDepartment(updatedDepartment);
+    
+    if (success) {
       const updatedDepartments = departments.map(dep => {
         if (dep.id === currentDepartment.id) {
           return updatedDepartment;
@@ -287,19 +201,12 @@ export const useDepartments = () => {
 
       setDepartments(updatedDepartments);
       setIsManageEmployeesDialogOpen(false);
-      toast.success(`Employés du département ${currentDepartment.name} mis à jour avec succès`);
-    } catch (error) {
-      console.error("Error updating department employees:", error);
-      toast.error("Erreur lors de la mise à jour des employés du département");
     }
   };
 
-  // Get employees list for a department
-  const getDepartmentEmployees = (departmentId: string): Employee[] => {
-    const department = departments.find(dep => dep.id === departmentId);
-    if (!department || !department.employeeIds) return [];
-    
-    return employees.filter(emp => department.employeeIds.includes(emp.id));
+  // Get employees for a specific department
+  const getDepartmentEmployeesById = (departmentId: string) => {
+    return getDepartmentEmployees(departmentId, departments);
   };
 
   return {
@@ -327,6 +234,6 @@ export const useDepartments = () => {
     handleUpdateDepartment,
     handleDeleteDepartment,
     handleSaveEmployeeAssignments,
-    getDepartmentEmployees
+    getDepartmentEmployees: getDepartmentEmployeesById
   };
 };

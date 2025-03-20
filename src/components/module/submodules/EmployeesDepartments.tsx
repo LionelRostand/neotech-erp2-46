@@ -1,7 +1,6 @@
 
 import React from 'react';
 import { Dialog } from '@/components/ui/dialog';
-import { employees } from '@/data/employees';
 import DepartmentHeader from './departments/DepartmentHeader';
 import DepartmentCard from './departments/DepartmentCard';
 import DepartmentTable from './departments/DepartmentTable';
@@ -13,6 +12,7 @@ import { useDepartments } from './departments/useDepartments';
 const EmployeesDepartments: React.FC = () => {
   const {
     departments,
+    loading,
     isAddDialogOpen,
     isEditDialogOpen,
     isManageEmployeesDialogOpen,
@@ -45,6 +45,7 @@ const EmployeesDepartments: React.FC = () => {
       <DepartmentCard title="Liste des départements">
         <DepartmentTable 
           departments={departments}
+          loading={loading}
           onEditDepartment={handleEditDepartment}
           onDeleteDepartment={handleDeleteDepartment}
           onManageEmployees={handleManageEmployees}
@@ -55,7 +56,6 @@ const EmployeesDepartments: React.FC = () => {
       <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
         <AddDepartmentDialog 
           formData={formData}
-          employees={employees}
           selectedEmployees={selectedEmployees}
           activeTab={activeTab}
           onTabChange={setActiveTab}
@@ -72,7 +72,6 @@ const EmployeesDepartments: React.FC = () => {
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <EditDepartmentDialog 
           formData={formData}
-          employees={employees}
           selectedEmployees={selectedEmployees}
           activeTab={activeTab}
           onTabChange={setActiveTab}
@@ -90,7 +89,6 @@ const EmployeesDepartments: React.FC = () => {
         <Dialog open={isManageEmployeesDialogOpen} onOpenChange={setIsManageEmployeesDialogOpen}>
           <ManageEmployeesDialog 
             department={currentDepartment}
-            employees={employees}
             selectedEmployees={selectedEmployees}
             onEmployeeSelection={handleEmployeeSelection}
             getDepartmentEmployees={getDepartmentEmployees}
