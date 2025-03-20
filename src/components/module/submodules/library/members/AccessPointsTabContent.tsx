@@ -1,30 +1,33 @@
 
-import React from 'react';
-import { Button } from '@/components/ui/button';
-import { PlusCircle } from 'lucide-react';
-import SearchBar from './access-points/SearchBar';
-import AccessPointsList from './access-points/AccessPointsList';
+import React, { useState } from 'react';
 import DevNotice from './access-points/DevNotice';
+import AccessPointsList from './access-points/AccessPointsList';
+import SearchBar from './access-points/SearchBar';
 import { useAccessPoints } from './access-points/useAccessPoints';
 
 const AccessPointsTabContent: React.FC = () => {
-  const { filteredAccessPoints, searchQuery, setSearchQuery } = useAccessPoints();
+  const [searchQuery, setSearchQuery] = useState('');
+  const { accessPoints, isLoading } = useAccessPoints();
+  
+  const filteredAccessPoints = accessPoints.filter(point => 
+    point.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    point.address.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <SearchBar 
-          searchQuery={searchQuery} 
-          onSearchChange={setSearchQuery} 
-        />
-        <Button className="w-full md:w-auto">
-          <PlusCircle className="mr-2 h-4 w-4" />
-          Ajouter un point d'accès
-        </Button>
-      </div>
-
-      <AccessPointsList accessPoints={filteredAccessPoints} />
+    <div className="space-y-4">
       <DevNotice />
+      
+      <SearchBar 
+        searchQuery={searchQuery} 
+        onSearchChange={setSearchQuery} 
+        onAddAccessPoint={() => console.log('Add access point clicked')} 
+      />
+      
+      <AccessPointsList 
+        accessPoints={filteredAccessPoints} 
+        isLoading={isLoading} 
+      />
     </div>
   );
 };
