@@ -1,4 +1,3 @@
-
 export interface Patient {
   id: string;
   firstName: string;
@@ -94,7 +93,6 @@ export interface Consultation {
   medicalHistory?: string;
 }
 
-// Ajout des types pour les examens complémentaires
 export interface VitalSigns {
   temperature?: number;
   heartRate?: number;
@@ -107,7 +105,7 @@ export interface VitalSigns {
   height?: number;
   weight?: number;
   bmi?: number;
-  pain?: number; // Échelle de douleur 0-10
+  pain?: number;
 }
 
 export interface MedicalImage {
@@ -118,11 +116,10 @@ export interface MedicalImage {
   description?: string;
   bodyPart?: string;
   findings?: string;
-  requestedBy: string; // ID du médecin
+  requestedBy: string;
   technician?: string;
 }
 
-// New types for the Personnel module
 export interface StaffMember {
   id: string;
   firstName: string;
@@ -180,7 +177,6 @@ export interface Absence {
   updatedAt: Date | string;
 }
 
-// New types for Prescription module
 export interface Prescription {
   id: string;
   patientId: string;
@@ -207,7 +203,6 @@ export interface Medication {
   quantity: number;
 }
 
-// New types for Pharmacy module
 export interface PharmacyItem {
   id: string;
   name: string;
@@ -261,4 +256,57 @@ export interface PharmacyRestock {
   notes?: string;
   createdAt: Date | string;
   updatedAt: Date | string;
+}
+
+export interface Insurance {
+  id: string;
+  name: string;
+  type: 'public' | 'private' | 'mutual';
+  coverageLevel: 'basic' | 'advanced' | 'premium';
+  contact: {
+    address: string;
+    phone: string;
+    email: string;
+  };
+  coverageDetails: {
+    consultations: number;
+    medications: number;
+    hospitalization: number;
+    specialistVisits: number;
+  };
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface InsuranceClaim {
+  id: string;
+  patientId: string;
+  insuranceId: string;
+  amount: number;
+  date: string;
+  description?: string;
+  documents?: string[];
+  status: 'pending' | 'processing' | 'approved' | 'rejected';
+  responseDate?: string;
+  responseDetails?: string;
+  reimbursedAmount?: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface PatientInsurance {
+  id: string;
+  patientId: string;
+  insuranceId: string;
+  policyNumber: string;
+  startDate: string;
+  endDate?: string;
+  isPrimary: boolean;
+  additionalDetails?: {
+    beneficiaryNumber?: string;
+    groupNumber?: string;
+    employerName?: string;
+  };
+  createdAt: string;
+  updatedAt: string;
 }
