@@ -12,10 +12,7 @@ export default defineConfig(({ mode }) => ({
   },
   plugins: [
     react(),
-    mode === 'development' &&
-    componentTagger({
-      skipCloneCheck: true // Désactiver la vérification de clonage qui cause l'erreur
-    }),
+    mode === 'development' && componentTagger,
   ].filter(Boolean),
   resolve: {
     alias: {
