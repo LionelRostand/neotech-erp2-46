@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -53,10 +52,22 @@ const CompaniesSettings = () => {
         // Fetch permissions
         const permissionsData = await permissionsFirestore.getAll([
           // You could add a where clause to filter only company permissions
-        ]) as CompanyUserPermission[];
+        ]);
+        
+        // Fix: Convert the fetched data to CompanyUserPermission[] type
+        const typedPermissionsData: CompanyUserPermission[] = [];
+        
+        // If we have data, try to map it to the correct type
+        if (permissionsData && permissionsData.length > 0) {
+          for (const item of permissionsData) {
+            if (item && typeof item === 'object' && 'permissions' in item) {
+              typedPermissionsData.push(item as CompanyUserPermission);
+            }
+          }
+        }
 
-        // If no permissions found, create default permissions for each user
-        if (permissionsData.length === 0) {
+        // If no permissions found or they don't have the right structure, create default permissions for each user
+        if (typedPermissionsData.length === 0) {
           const defaultPermissions: CompanyUserPermission[] = usersData.map(user => ({
             userId: user.id,
             permissions: companySubmodules.map(submodule => ({
@@ -69,7 +80,7 @@ const CompaniesSettings = () => {
           }));
           setUserPermissions(defaultPermissions);
         } else {
-          setUserPermissions(permissionsData);
+          setUserPermissions(typedPermissionsData);
         }
       } catch (error) {
         console.error("Error fetching data:", error);
