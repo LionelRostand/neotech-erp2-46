@@ -1,8 +1,8 @@
 
 import { initializeApp } from "firebase/app";
-import { getFirestore } from "firebase/firestore";
-import { getAuth } from "firebase/auth";
-import { getStorage } from "firebase/storage";
+import { getFirestore, connectFirestoreEmulator } from "firebase/firestore";
+import { getAuth, connectAuthEmulator } from "firebase/auth";
+import { getStorage, connectStorageEmulator } from "firebase/storage";
 
 // Configuration Firebase
 const firebaseConfig = {
@@ -21,5 +21,37 @@ const app = initializeApp(firebaseConfig);
 export const db = getFirestore(app);
 export const auth = getAuth(app);
 export const storage = getStorage(app);
+
+// Use emulators in development if needed
+// This helps with testing when Firebase backend is unavailable
+if (import.meta.env.DEV) {
+  try {
+    // Connect to Firebase emulators if they are running locally
+    // Uncomment these lines when you have emulators set up
+    // connectFirestoreEmulator(db, 'localhost', 8080);
+    // connectAuthEmulator(auth, 'http://localhost:9099');
+    // connectStorageEmulator(storage, 'localhost', 9199);
+    
+    console.log("Firebase initialization complete");
+  } catch (error) {
+    console.error("Firebase initialization error:", error);
+  }
+}
+
+// Add offline persistence to allow app to work offline
+import { enableIndexedDbPersistence } from "firebase/firestore";
+
+// Enable offline persistence
+try {
+  enableIndexedDbPersistence(db)
+    .then(() => {
+      console.log("Firestore offline persistence enabled");
+    })
+    .catch((err) => {
+      console.error("Error enabling offline persistence:", err);
+    });
+} catch (error) {
+  console.error("Error setting up offline persistence:", error);
+}
 
 export default app;
