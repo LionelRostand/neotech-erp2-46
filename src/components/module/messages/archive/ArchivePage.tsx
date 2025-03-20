@@ -38,8 +38,9 @@ const ArchivePage: React.FC = () => {
         
         // Récupérer les messages archivés
         const messagesData = await getAll();
+        console.log("Messages archivés récupérés:", messagesData);
         
-        if (messagesData.length === 0) {
+        if (!messagesData || messagesData.length === 0) {
           // Créer des données fictives pour la démo
           const mockMessages: Message[] = Array.from({ length: 10 }, (_, i) => {
             const date = new Date();
@@ -68,9 +69,11 @@ const ArchivePage: React.FC = () => {
             };
           });
           
+          console.log("Utilisation de messages archivés fictifs:", mockMessages);
           setArchivedMessages(mockMessages);
           setFilteredMessages(mockMessages);
         } else {
+          console.log("Nombre de messages archivés trouvés:", messagesData.length);
           setArchivedMessages(messagesData as Message[]);
           setFilteredMessages(messagesData as Message[]);
         }
@@ -81,6 +84,26 @@ const ArchivePage: React.FC = () => {
           title: "Erreur",
           description: "Impossible de charger les messages archivés."
         });
+        
+        // En cas d'erreur, générer des données fictives pour la démo
+        const mockMessages: Message[] = Array.from({ length: 5 }, (_, i) => ({
+          id: `error-mock-${i+1}`,
+          subject: `Message de test ${i+1}`,
+          content: "<p>Message de test généré après une erreur</p>",
+          sender: "unknown",
+          recipients: ["current-user"],
+          status: "read" as any,
+          priority: "normal" as any,
+          category: "general" as any,
+          tags: [],
+          hasAttachments: false,
+          isArchived: true,
+          createdAt: Timestamp.fromDate(new Date()),
+          updatedAt: Timestamp.fromDate(new Date()),
+        }));
+        
+        setArchivedMessages(mockMessages);
+        setFilteredMessages(mockMessages);
       } finally {
         setIsLoading(false);
       }
@@ -96,7 +119,7 @@ const ArchivePage: React.FC = () => {
       const filtered = archivedMessages.filter(message => {
         const senderName = contacts[message.sender] ? 
           `${contacts[message.sender].firstName} ${contacts[message.sender].lastName}`.toLowerCase() : '';
-        const senderEmail = contacts[message.sender]?.email.toLowerCase() || '';
+        const senderEmail = contacts[message.sender]?.email?.toLowerCase() || '';
         const messageSubject = message.subject?.toLowerCase() || '';
         const messageContent = message.content?.toLowerCase() || '';
         
@@ -112,6 +135,7 @@ const ArchivePage: React.FC = () => {
   }, [archivedMessages, searchTerm, contacts]);
 
   const handleRestoreMessage = (messageId: string) => {
+    console.log("Tentative de restauration du message:", messageId);
     setIsRestoring(prev => ({ ...prev, [messageId]: true }));
     
     // Simuler la restauration

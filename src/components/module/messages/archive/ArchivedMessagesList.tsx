@@ -20,8 +20,14 @@ const ArchivedMessagesList: React.FC<ArchivedMessagesListProps> = ({
   isLoading,
   isRestoring
 }) => {
+  console.log("Rendering ArchivedMessagesList", { 
+    messagesCount: messages?.length, 
+    isLoading,
+    hasContacts: Object.keys(contacts).length > 0
+  });
+
   if (isLoading) {
-    return <ArchivedMessageSkeleton />;
+    return <ArchivedMessageSkeleton count={7} />;
   }
 
   if (!messages || messages.length === 0) {
@@ -36,7 +42,7 @@ const ArchivedMessagesList: React.FC<ArchivedMessagesListProps> = ({
         
         return (
           <ArchivedMessageItem
-            key={message.id}
+            key={message.id || `message-${Math.random()}`}
             message={message}
             contact={contact}
             onRestoreMessage={onRestoreMessage}
