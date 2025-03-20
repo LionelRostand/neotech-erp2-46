@@ -49,6 +49,13 @@ import PaymentsPage from './submodules/accounting/PaymentsPage';
 import TaxesPage from './submodules/accounting/TaxesPage';
 import AccountingReportsPage from './submodules/accounting/ReportsPage';
 import AccountingSettingsPage from './submodules/accounting/SettingsPage';
+import MessagesDashboard from './messages/dashboard/MessagesDashboard';
+import ContactsPage from './messages/contacts/ContactsPage';
+import ComposePage from './messages/compose/ComposePage';
+import InboxPage from './messages/inbox/InboxPage';
+import ArchivePage from './messages/archive/ArchivePage';
+import ScheduledPage from './messages/scheduled/ScheduledPage';
+import MessagesSettingsPage from './messages/settings/SettingsPage';
 
 interface SubmodulePageProps {
   moduleId: number;
@@ -172,6 +179,22 @@ const SubmodulePage: React.FC<SubmodulePageProps> = ({ moduleId, submoduleId }) 
         return <AccountingReportsPage />;
       case 'accounting-settings':
         return <AccountingSettingsPage />;
+      
+      // Messages module
+      case 'messages-dashboard':
+        return <MessagesDashboard />;
+      case 'messages-contacts':
+        return <ContactsPage />;
+      case 'messages-compose':
+        return <ComposePage />;
+      case 'messages-inbox':
+        return <InboxPage />;
+      case 'messages-archive':
+        return <ArchivePage />;
+      case 'messages-scheduled':
+        return <ScheduledPage />;
+      case 'messages-settings':
+        return <MessagesSettingsPage />;
       
       // All other freight submodules will default to DefaultSubmoduleContent
       // until they are implemented specifically

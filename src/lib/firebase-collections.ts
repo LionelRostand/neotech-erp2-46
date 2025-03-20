@@ -53,7 +53,12 @@ export const COLLECTIONS = {
   EVENTS: 'events',
   
   // Communication
-  MESSAGES: 'messages',
+  MESSAGES: {
+    INBOX: 'messages_inbox',
+    ARCHIVED: 'messages_archived',
+    SCHEDULED: 'messages_scheduled',
+    METRICS: 'messages_metrics'
+  },
   DOCUMENTS: 'documents',
   
   // Gestion de l'application
