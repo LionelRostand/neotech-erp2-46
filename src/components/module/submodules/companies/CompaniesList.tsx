@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCompanyService } from './services/companyService';
-import { Company } from './types';
+import { Company, CompanyFilters } from './types';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { 
@@ -36,10 +36,10 @@ const CompaniesList: React.FC = () => {
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
-  const [filters, setFilters] = useState({
-    status: '',
-    startDate: '',
-    endDate: ''
+  const [filters, setFilters] = useState<CompanyFilters>({
+    status: undefined,
+    startDate: undefined,
+    endDate: undefined
   });
   
   useEffect(() => {
@@ -70,17 +70,33 @@ const CompaniesList: React.FC = () => {
   };
   
   const handleFilterChange = (key: string, value: string) => {
-    setFilters(prev => ({
-      ...prev,
-      [key]: value
-    }));
+    if (key === 'status') {
+      // Ensure status is a valid value or undefined
+      const statusValue = value === '' ? undefined : value as 'active' | 'inactive' | 'pending';
+      setFilters(prev => ({
+        ...prev,
+        [key]: statusValue
+      }));
+    } else if (key === 'startDate' || key === 'endDate') {
+      // Convert date strings to Date objects
+      const dateValue = value === '' ? undefined : new Date(value);
+      setFilters(prev => ({
+        ...prev,
+        [key]: dateValue
+      }));
+    } else {
+      setFilters(prev => ({
+        ...prev,
+        [key]: value
+      }));
+    }
   };
   
   const resetFilters = () => {
     setFilters({
-      status: '',
-      startDate: '',
-      endDate: ''
+      status: undefined,
+      startDate: undefined,
+      endDate: undefined
     });
     setPage(1);
   };
@@ -150,7 +166,7 @@ const CompaniesList: React.FC = () => {
             <div className="space-y-2">
               <label className="text-sm font-medium">Statut</label>
               <Select
-                value={filters.status}
+                value={filters.status || ''}
                 onValueChange={(value) => handleFilterChange('status', value)}
               >
                 <SelectTrigger>
@@ -168,7 +184,7 @@ const CompaniesList: React.FC = () => {
               <label className="text-sm font-medium">Date début</label>
               <Input
                 type="date"
-                value={filters.startDate}
+                value={filters.startDate ? filters.startDate.toISOString().slice(0, 10) : ''}
                 onChange={(e) => handleFilterChange('startDate', e.target.value)}
               />
             </div>
@@ -176,7 +192,7 @@ const CompaniesList: React.FC = () => {
               <label className="text-sm font-medium">Date fin</label>
               <Input
                 type="date"
-                value={filters.endDate}
+                value={filters.endDate ? filters.endDate.toISOString().slice(0, 10) : ''}
                 onChange={(e) => handleFilterChange('endDate', e.target.value)}
               />
             </div>
