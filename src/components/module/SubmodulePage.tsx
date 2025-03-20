@@ -1,3 +1,4 @@
+
 import React from 'react';
 import DefaultSubmoduleContent from './submodules/DefaultSubmoduleContent';
 import SubmoduleHeader from './submodules/SubmoduleHeader';
@@ -33,6 +34,7 @@ import CompaniesSettings from './submodules/companies/CompaniesSettings';
 import CrmClients from './submodules/crm/CrmClients';
 import CrmProspects from './submodules/crm/CrmProspects';
 import CrmSettings from './submodules/crm/CrmSettings';
+import CrmDashboard from './submodules/crm/CrmDashboard';
 
 interface SubmodulePageProps {
   moduleId: number;
@@ -116,6 +118,8 @@ const SubmodulePage: React.FC<SubmodulePageProps> = ({ moduleId, submoduleId }) 
         return <CompaniesSettings />;
       
       // CRM module
+      case 'crm-dashboard':
+        return <CrmDashboard />;
       case 'crm-clients':
         return <CrmClients />;
       case 'crm-prospects':
