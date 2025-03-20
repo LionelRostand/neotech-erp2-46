@@ -20,17 +20,10 @@ const ScheduledPage: React.FC = () => {
     setShowCancelDialog,
     handleCancelMessage,
     confirmCancelMessage,
-    handleSendNow
+    handleSendNow,
+    handleEditMessage,
+    handleCreateNewMessage
   } = useScheduledMessages();
-
-  const handleEditMessage = (messageId: string) => {
-    // Rediriger vers la page de composition avec les données pré-remplies
-    window.location.href = `/modules/messages/compose?edit=${messageId}`;
-  };
-
-  const handleCreateNewMessage = () => {
-    window.location.href = '/modules/messages/compose';
-  };
 
   return (
     <div className="space-y-6">
