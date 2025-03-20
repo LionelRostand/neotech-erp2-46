@@ -25,6 +25,7 @@ import EmployeesSalaries from './submodules/EmployeesSalaries';
 import EmployeesRecruitment from './submodules/EmployeesRecruitment';
 import EmployeesSettings from './submodules/EmployeesSettings';
 import CompaniesDashboard from './submodules/companies/CompaniesDashboard';
+import CompaniesContacts from './submodules/companies/CompaniesContacts';
 
 interface SubmodulePageProps {
   moduleId: number;
@@ -94,6 +95,8 @@ const SubmodulePage: React.FC<SubmodulePageProps> = ({ moduleId, submoduleId }) 
       // Companies module
       case 'companies-dashboard':
         return <CompaniesDashboard />;
+      case 'companies-contacts':
+        return <CompaniesContacts />;
       
       // All other freight submodules will default to DefaultSubmoduleContent
       // until they are implemented specifically

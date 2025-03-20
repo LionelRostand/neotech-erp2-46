@@ -7,6 +7,7 @@ export const COLLECTIONS = {
   ACCOUNTING: 'accounting',
   PROJECTS: 'projects',
   CRM: 'crm',
+  CONTACTS: 'contacts',
   
   // Services spécialisés
   RESTAURANTS: 'restaurants',
