@@ -14,7 +14,7 @@ import AppointmentCalendar from './components/AppointmentCalendar';
 import NewAppointmentForm from './components/NewAppointmentForm';
 
 const AppointmentsPage: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<string>('list');
+  const [activeTab, setActiveTab] = useState<string>('view');
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [view, setView] = useState<'list' | 'calendar'>('list');
 

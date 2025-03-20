@@ -35,7 +35,16 @@ export const COLLECTIONS = {
   GARAGES: 'garages',
   TRANSPORT: 'transport',
   HEALTH: 'health',
-  HEALTH_NURSES: 'health_nurses', // Collection spécifique pour les infirmiers/ères
+  HEALTH_PATIENTS: 'health_patients',
+  HEALTH_DOCTORS: 'health_doctors',
+  HEALTH_NURSES: 'health_nurses',
+  HEALTH_APPOINTMENTS: 'health_appointments',
+  HEALTH_CONSULTATIONS: 'health_consultations',
+  HEALTH_MEDICAL_RECORDS: 'health_medical_records',
+  HEALTH_LABORATORY: 'health_laboratory',
+  HEALTH_PRESCRIPTIONS: 'health_prescriptions',
+  HEALTH_PHARMACY: 'health_pharmacy',
+  HEALTH_SETTINGS: 'health_settings',
   VEHICLE_RENTALS: 'vehicleRentals',
   FREIGHT: {
     SHIPMENTS: 'freight_shipments',
