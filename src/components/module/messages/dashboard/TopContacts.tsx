@@ -12,11 +12,21 @@ interface TopContactsProps {
 }
 
 const TopContacts: React.FC<TopContactsProps> = ({ contacts }) => {
+  if (!contacts || contacts.length === 0) {
+    return (
+      <div className="text-center text-gray-400 py-8">
+        Aucun contact à afficher
+      </div>
+    );
+  }
+
   // Trouver le nombre maximum de messages pour normaliser la barre de progression
-  const maxMessages = Math.max(...contacts.map(c => c.messagesCount));
+  const maxMessages = Math.max(...contacts.map(c => c.messagesCount || 0));
 
   // Fonction pour obtenir les initiales
   const getInitials = (name: string) => {
+    if (!name) return '?';
+    
     return name
       .split(' ')
       .map(part => part[0])
@@ -34,10 +44,13 @@ const TopContacts: React.FC<TopContactsProps> = ({ contacts }) => {
           </Avatar>
           <div className="flex-1 space-y-1">
             <div className="flex justify-between items-center">
-              <p className="text-sm font-medium">{contact.contactName}</p>
-              <span className="text-xs text-muted-foreground">{contact.messagesCount}</span>
+              <p className="text-sm font-medium">{contact.contactName || 'Contact inconnu'}</p>
+              <span className="text-xs text-muted-foreground">{contact.messagesCount || 0}</span>
             </div>
-            <Progress value={(contact.messagesCount / maxMessages) * 100} className="h-2" />
+            <Progress 
+              value={maxMessages > 0 ? ((contact.messagesCount || 0) / maxMessages) * 100 : 0} 
+              className="h-2" 
+            />
           </div>
         </div>
       ))}
