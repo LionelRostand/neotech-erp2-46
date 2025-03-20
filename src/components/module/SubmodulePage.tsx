@@ -1,4 +1,3 @@
-
 import React from 'react';
 import DefaultSubmoduleContent from './submodules/DefaultSubmoduleContent';
 import SubmoduleHeader from './submodules/SubmoduleHeader';
