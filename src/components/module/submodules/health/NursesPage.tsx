@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { 
   Card, 
@@ -375,7 +374,7 @@ const NursesPage: React.FC = () => {
   
   // Hooks
   const { toast } = useToast();
-  const nursesCollection = useFirestore(COLLECTIONS.NURSES);
+  const nursesCollection = useFirestore(COLLECTIONS.HEALTH_NURSES);
   
   // Départements uniques pour le filtre
   const departments = getUniqueDepartments(nurses);

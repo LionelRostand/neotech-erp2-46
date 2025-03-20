@@ -35,6 +35,7 @@ export const COLLECTIONS = {
   GARAGES: 'garages',
   TRANSPORT: 'transport',
   HEALTH: 'health',
+  HEALTH_NURSES: 'health_nurses', // Collection spécifique pour les infirmiers/ères
   VEHICLE_RENTALS: 'vehicleRentals',
   FREIGHT: {
     SHIPMENTS: 'freight_shipments',
