@@ -4,7 +4,7 @@ import {
   DocumentData,
   QueryConstraint
 } from 'firebase/firestore';
-import { getAllDocuments, getDocumentById } from './firestore/firestore-utils';
+import { getAllDocuments, getDocumentById } from './firestore/read-operations';
 import { addDocument } from './firestore/create-operations';
 import { updateDocument, setDocument } from './firestore/update-operations';
 import { deleteDocument } from './firestore/delete-operations';
@@ -31,10 +31,13 @@ export const useFirestore = (collectionName: string) => {
     setError(null);
     
     try {
+      console.log(`Fetching all documents from collection: ${collectionName}`);
       const data = await getAllDocuments(collectionName, constraints);
+      console.log(`Retrieved ${data.length} documents from ${collectionName}`);
       setLoading(false);
       return data;
     } catch (err: any) {
+      console.error(`Error getting all documents from ${collectionName}:`, err);
       try {
         return await handleNetworkError(err, () => getAll(constraints));
       } catch (error: any) {

@@ -99,14 +99,6 @@ const MessagesDashboard: React.FC = () => {
     };
 
     fetchMetrics();
-    
-    // On pourrait ajouter ici une écoute WebSocket pour les mises à jour en temps réel
-    // Simulons cela avec un intervalle
-    const interval = setInterval(() => {
-      fetchMetrics();
-    }, 60000); // Mise à jour toutes les minutes
-
-    return () => clearInterval(interval);
   }, [getAll]);
 
   if (loading) {
