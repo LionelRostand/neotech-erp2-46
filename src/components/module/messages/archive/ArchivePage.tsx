@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Search, RefreshCw, ArchiveRestore } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import ArchivedMessagesList from './ArchivedMessagesList';
+import { Timestamp } from 'firebase/firestore';
 
 const ArchivePage: React.FC = () => {
   const { getAll } = useFirestore(COLLECTIONS.MESSAGES.ARCHIVED);
@@ -62,8 +63,8 @@ const ArchivePage: React.FC = () => {
               tags: i % 3 === 0 ? ['archive', 'historique'] : i % 2 === 0 ? ['ancien'] : [],
               hasAttachments: i % 3 === 0,
               isArchived: true,
-              createdAt: date as any,
-              updatedAt: date as any,
+              createdAt: Timestamp.fromDate(date),
+              updatedAt: Timestamp.fromDate(date),
             };
           });
           
