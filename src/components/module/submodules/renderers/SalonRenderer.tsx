@@ -5,22 +5,13 @@ import SalonDashboard from '../salon/dashboard/SalonDashboard';
 import SalonClients from '../salon/clients/SalonClients';
 import SalonAppointments from '../salon/appointments/SalonAppointments';
 import SalonLoyalty from '../salon/loyalty/SalonLoyalty'; 
+import SalonStylists from '../salon/stylists/SalonStylists';
 import { Card, CardContent } from "@/components/ui/card";
 
 // Style pour les pages sans contenu spécifique
 const placeholderStyle = "flex justify-center items-center p-8 text-lg text-muted-foreground";
 
 // Placeholder components
-const SalonStylists = () => (
-  <Card>
-    <CardContent className="pt-6">
-      <div className={placeholderStyle}>
-        <p>Gestion des Coiffeurs</p>
-      </div>
-    </CardContent>
-  </Card>
-);
-
 const SalonServices = () => (
   <Card>
     <CardContent className="pt-6">
