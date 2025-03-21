@@ -1,11 +1,12 @@
 
 import { cn } from "@/lib/utils";
+import React from "react";
 
 interface StatCardProps {
   title: string;
   value: string;
   icon: React.ReactNode;
-  description: string;
+  description: React.ReactNode;
   className?: string;
 }
 
@@ -25,7 +26,7 @@ const StatCard = ({ title, value, icon, description, className }: StatCardProps)
       </div>
       <div className="mt-2">
         <p className="text-2xl font-bold mb-1 tracking-tight">{value}</p>
-        <p className="text-sm text-gray-500">{description}</p>
+        <div className="text-sm text-gray-500">{description}</div>
       </div>
     </div>
   );
