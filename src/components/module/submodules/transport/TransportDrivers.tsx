@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -230,11 +229,7 @@ const TransportDrivers = () => {
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
                   <CardTitle>Profil du chauffeur</CardTitle>
-                  <Tabs 
-                    value={activeTab}
-                    onValueChange={setActiveTab}
-                    className="w-[400px]"
-                  >
+                  <Tabs value={activeTab} onValueChange={setActiveTab}>
                     <TabsList className="grid w-full grid-cols-3">
                       <TabsTrigger value="details" className="flex items-center gap-2">
                         <UserCircle size={16} />
@@ -249,24 +244,26 @@ const TransportDrivers = () => {
                         <span>Performance</span>
                       </TabsTrigger>
                     </TabsList>
+                  
+                    <TabsContent value="details">
+                      <DriverDetails driver={selectedDriver} />
+                    </TabsContent>
+                    
+                    <TabsContent value="availability">
+                      <DriverAvailability 
+                        driver={selectedDriver} 
+                        assignedReservations={getDriverReservations(selectedDriver.id)}
+                      />
+                    </TabsContent>
+                    
+                    <TabsContent value="performance">
+                      <DriverPerformance driver={selectedDriver} />
+                    </TabsContent>
                   </Tabs>
                 </div>
               </CardHeader>
               <CardContent>
-                <TabsContent value="details" className="mt-0">
-                  <DriverDetails driver={selectedDriver} />
-                </TabsContent>
-                
-                <TabsContent value="availability" className="mt-0">
-                  <DriverAvailability 
-                    driver={selectedDriver} 
-                    assignedReservations={getDriverReservations(selectedDriver.id)}
-                  />
-                </TabsContent>
-                
-                <TabsContent value="performance" className="mt-0">
-                  <DriverPerformance driver={selectedDriver} />
-                </TabsContent>
+                {/* Le contenu est maintenant géré par les TabsContent ci-dessus */}
               </CardContent>
             </Card>
           ) : (
