@@ -8,11 +8,24 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { useProducts } from '../products/hooks/useProducts';
 import { Separator } from "@/components/ui/separator";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { toast } from "sonner";
 
 const SalonInventory = () => {
-  const { products, getLowStockProducts } = useProducts();
+  const { products, getLowStockProducts, addProduct } = useProducts();
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState('products');
+  const [showNewProductDialog, setShowNewProductDialog] = useState(false);
+  const [newProduct, setNewProduct] = useState({
+    name: '',
+    brand: '',
+    category: '',
+    price: 0,
+    stockQuantity: 0,
+    minStockLevel: 5
+  });
   
   const lowStockProducts = getLowStockProducts();
   
@@ -22,6 +35,50 @@ const SalonInventory = () => {
     product.brand?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     product.category?.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setNewProduct(prev => ({
+      ...prev,
+      [name]: name === 'price' || name === 'stockQuantity' || name === 'minStockLevel' 
+        ? parseFloat(value) || 0 
+        : value
+    }));
+  };
+
+  const handleSelectChange = (name: string, value: string) => {
+    setNewProduct(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleCreateProduct = () => {
+    // Validate form
+    if (!newProduct.name || !newProduct.category) {
+      toast.error("Veuillez remplir tous les champs obligatoires");
+      return;
+    }
+
+    // Add the product
+    addProduct({
+      ...newProduct,
+      id: `product-${Date.now()}`, // Generate a temporary ID
+      createdAt: new Date().toISOString()
+    });
+
+    // Reset form and close dialog
+    setNewProduct({
+      name: '',
+      brand: '',
+      category: '',
+      price: 0,
+      stockQuantity: 0,
+      minStockLevel: 5
+    });
+    setShowNewProductDialog(false);
+    toast.success("Produit ajouté avec succès");
+  };
 
   return (
     <div className="space-y-6">
@@ -40,7 +97,7 @@ const SalonInventory = () => {
             <Filter className="mr-2 h-4 w-4" />
             Filtres
           </Button>
-          <Button size="sm">
+          <Button size="sm" onClick={() => setShowNewProductDialog(true)}>
             <Plus className="mr-2 h-4 w-4" />
             Nouveau produit
           </Button>
@@ -175,6 +232,106 @@ const SalonInventory = () => {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Dialogue pour ajouter un nouveau produit */}
+      <Dialog open={showNewProductDialog} onOpenChange={setShowNewProductDialog}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Ajouter un nouveau produit</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="name">Nom du produit*</Label>
+                <Input 
+                  id="name" 
+                  name="name" 
+                  value={newProduct.name} 
+                  onChange={handleInputChange} 
+                  placeholder="Shampoing, Après-shampoing, etc." 
+                  required 
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="brand">Marque</Label>
+                <Input 
+                  id="brand" 
+                  name="brand" 
+                  value={newProduct.brand} 
+                  onChange={handleInputChange} 
+                  placeholder="L'Oréal, Schwarzkopf, etc." 
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="category">Catégorie*</Label>
+                <Select 
+                  value={newProduct.category} 
+                  onValueChange={(value) => handleSelectChange('category', value)}
+                >
+                  <SelectTrigger id="category">
+                    <SelectValue placeholder="Sélectionner une catégorie" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Shampoing">Shampoing</SelectItem>
+                    <SelectItem value="Après-shampoing">Après-shampoing</SelectItem>
+                    <SelectItem value="Coloration">Coloration</SelectItem>
+                    <SelectItem value="Styling">Styling</SelectItem>
+                    <SelectItem value="Soin">Soin</SelectItem>
+                    <SelectItem value="Accessoires">Accessoires</SelectItem>
+                    <SelectItem value="Autre">Autre</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="price">Prix (€)</Label>
+                <Input 
+                  id="price" 
+                  name="price" 
+                  type="number" 
+                  min="0" 
+                  step="0.01" 
+                  value={newProduct.price} 
+                  onChange={handleInputChange} 
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="stockQuantity">Quantité en stock</Label>
+                <Input 
+                  id="stockQuantity" 
+                  name="stockQuantity" 
+                  type="number" 
+                  min="0" 
+                  value={newProduct.stockQuantity} 
+                  onChange={handleInputChange} 
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="minStockLevel">Niveau d'alerte stock</Label>
+                <Input 
+                  id="minStockLevel" 
+                  name="minStockLevel" 
+                  type="number" 
+                  min="0" 
+                  value={newProduct.minStockLevel} 
+                  onChange={handleInputChange} 
+                />
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowNewProductDialog(false)}>
+              Annuler
+            </Button>
+            <Button onClick={handleCreateProduct}>
+              Ajouter
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
