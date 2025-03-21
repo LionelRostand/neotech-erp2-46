@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { useParams } from 'react-router-dom';
-import SalonDashboard from '../salon/SalonDashboard';
+import SalonDashboard from '../salon/dashboard/SalonDashboard';
 import SalonClients from '../salon/clients/SalonClients';
 
 // Placeholder components - these would be implemented in separate files
@@ -18,37 +18,32 @@ const SalonSettings = () => <div>Paramètres</div>;
 
 export const SalonRenderer = () => {
   const { submoduleId } = useParams<{ submoduleId: string }>();
-
-  // Le problème est que useParams() ne renvoie pas le préfixe 'salon-'
-  // donc on doit adapter notre switch pour correspondre à l'ID attendu
-  const fullSubmoduleId = submoduleId ? `salon-${submoduleId}` : 'salon-dashboard';
+  console.log('SalonRenderer from renderers: called with submoduleId:', submoduleId);
   
-  console.log('SalonRenderer: rendering submodule', { submoduleId, fullSubmoduleId });
-
-  switch (fullSubmoduleId) {
-    case 'salon-dashboard':
+  switch (submoduleId) {
+    case 'dashboard':
       return <SalonDashboard />;
-    case 'salon-clients':
+    case 'clients':
       return <SalonClients />;
-    case 'salon-appointments':
+    case 'appointments':
       return <SalonAppointments />;
-    case 'salon-stylists':
+    case 'stylists':
       return <SalonStylists />;
-    case 'salon-services':
+    case 'services':
       return <SalonServices />;
-    case 'salon-products':
+    case 'products':
       return <SalonProducts />;
-    case 'salon-billing':
+    case 'billing':
       return <SalonBilling />;
-    case 'salon-loyalty':
+    case 'loyalty':
       return <SalonLoyalty />;
-    case 'salon-inventory':
+    case 'inventory':
       return <SalonInventory />;
-    case 'salon-reports':
+    case 'reports':
       return <SalonReports />;
-    case 'salon-booking':
+    case 'booking':
       return <SalonBooking />;
-    case 'salon-settings':
+    case 'settings':
       return <SalonSettings />;
     default:
       return <SalonDashboard />;

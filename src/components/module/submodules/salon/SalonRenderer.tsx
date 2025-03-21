@@ -7,6 +7,8 @@ import SalonAppointments from './appointments/SalonAppointments';
 
 const SalonRenderer = () => {
   const { submodule } = useParams<{ submodule: string }>();
+  
+  console.log('SalonRenderer: rendering submodule', submodule);
 
   // Render the appropriate submodule based on the URL parameter
   switch (submodule) {
@@ -17,7 +19,9 @@ const SalonRenderer = () => {
     case 'appointments':
       return <SalonAppointments />;
     default:
-      return <div>Submodule not found</div>;
+      // Fallback to dashboard if no matching submodule
+      console.warn(`Unknown submodule: ${submodule}, falling back to dashboard`);
+      return <SalonDashboard />;
   }
 };
 

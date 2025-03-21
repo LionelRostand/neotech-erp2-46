@@ -11,4 +11,4 @@ export * from './MessagesRenderer';
 export * from './ProjectsRenderer';
 export * from './VehicleRentalsRenderer';
 export * from './TransportRenderer';
-export * from './SalonRenderer'; // Add the Salon renderer export
+export * from './SalonRenderer'; // Inclure le renderer du salon

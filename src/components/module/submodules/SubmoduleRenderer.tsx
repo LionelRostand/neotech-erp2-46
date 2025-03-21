@@ -72,6 +72,7 @@ export const renderSubmoduleContent = ({ submoduleId, submodule }: RenderSubmodu
   
   if (submoduleId.startsWith('salon-')) {
     console.log('Delegating to SalonRenderer for:', submoduleId);
+    const submoduleName = submoduleId.split('-')[1]; // Extract 'clients', 'dashboard', etc.
     return <SalonRenderer />;
   }
   
