@@ -14,7 +14,7 @@ import { websiteModule } from './website';
 import { vehicleRentalsModule } from './vehicle-rentals';
 import { messagesModule } from './messages';
 import { eventsModule } from './events';
-import { libraryModule } from './library';
+// import { libraryModule } from './library'; // Remove this import
 import { documentsModule } from './documents';
 import { crmModule } from './crm';
 import { companiesModule } from './companies';
@@ -33,7 +33,7 @@ export const modules: AppModule[] = [
   healthModule,
   vehicleRentalsModule,
   freightModule,
-  libraryModule,
+  // libraryModule, // Remove the library module from the list
   
   websiteModule,
   ecommerceModule,

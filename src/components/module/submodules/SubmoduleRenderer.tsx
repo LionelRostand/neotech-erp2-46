@@ -11,7 +11,7 @@ import {
   renderCrmSubmodule,
   renderHealthSubmodule,
   renderDocumentsSubmodule,
-  renderLibrarySubmodule
+  // renderLibrarySubmodule // Remove this import
 } from './renderers';
 
 interface RenderSubmoduleContentProps {
@@ -57,9 +57,11 @@ export const renderSubmoduleContent = ({ submoduleId, submodule }: RenderSubmodu
     return renderDocumentsSubmodule(submoduleId, submodule);
   }
   
+  /* Remove this block
   if (submoduleId.startsWith('library-')) {
     return renderLibrarySubmodule(submoduleId, submodule);
   }
+  */
   
   // Fallback to default content rendering
   return <div>Module content not implemented: {submoduleId}</div>;
