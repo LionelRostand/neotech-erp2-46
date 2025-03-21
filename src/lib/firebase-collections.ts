@@ -1,4 +1,3 @@
-
 // Firestore collections names
 export const USERS = 'users';
 export const MODULES = 'modules';
@@ -55,6 +54,10 @@ export const TRANSPORT_DRIVERS = 'transport_drivers';
 export const TRANSPORT_CONTRACTS = 'transport_contracts';
 export const TRANSPORT_PAYMENTS = 'transport_payments';
 export const TRANSPORT_LOCATIONS = 'transport_locations';
+export const TRANSPORT_LOYALTY_MEMBERS = 'transport_loyalty_members';
+export const TRANSPORT_LOYALTY_REWARDS = 'transport_loyalty_rewards';
+export const TRANSPORT_LOYALTY_TRANSACTIONS = 'transport_loyalty_transactions';
+export const TRANSPORT_LOYALTY_SETTINGS = 'transport_loyalty_settings';
 
 // Messages subcollections
 export const MESSAGES = {
@@ -113,7 +116,12 @@ export const TRANSPORT_COLLECTIONS = {
   CONTRACTS: 'transport_contracts',
   PAYMENTS: 'transport_payments',
   LOCATIONS: 'transport_locations',
-  LOYALTY: 'transport_loyalty'
+  LOYALTY: {
+    MEMBERS: 'transport_loyalty_members',
+    REWARDS: 'transport_loyalty_rewards',
+    TRANSACTIONS: 'transport_loyalty_transactions',
+    SETTINGS: 'transport_loyalty_settings'
+  }
 };
 
 // Exports as a single object for convenience
@@ -173,5 +181,9 @@ export const COLLECTIONS = {
   TRANSPORT_DRIVERS,
   TRANSPORT_CONTRACTS,
   TRANSPORT_PAYMENTS,
-  TRANSPORT_LOCATIONS
+  TRANSPORT_LOCATIONS,
+  TRANSPORT_LOYALTY_MEMBERS,
+  TRANSPORT_LOYALTY_REWARDS,
+  TRANSPORT_LOYALTY_TRANSACTIONS,
+  TRANSPORT_LOYALTY_SETTINGS
 };
