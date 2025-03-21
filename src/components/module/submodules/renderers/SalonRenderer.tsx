@@ -11,6 +11,7 @@ import SalonBilling from '../salon/billing/SalonBilling';
 import SalonServices from '../salon/services/SalonServices';
 import SalonClients from '../salon/clients/SalonClients';
 import SalonAppointments from '../salon/appointments/SalonAppointments';
+import SalonStylists from '../salon/stylists/SalonStylists';
 import { useLocation } from 'react-router-dom';
 
 interface SalonRendererProps {
@@ -48,11 +49,7 @@ export const SalonRenderer: React.FC<SalonRendererProps> = ({ submoduleId }) => 
     case 'salon-appointments':
       return <SalonAppointments />;
     case 'salon-stylists':
-      return (
-        <div className="flex items-center justify-center h-64 text-muted-foreground">
-          Module de gestion des coiffeurs en cours de développement
-        </div>
-      );
+      return <SalonStylists />;
     case 'salon-settings':
       return (
         <div className="flex items-center justify-center h-64 text-muted-foreground">
@@ -67,4 +64,3 @@ export const SalonRenderer: React.FC<SalonRendererProps> = ({ submoduleId }) => 
       );
   }
 };
-
