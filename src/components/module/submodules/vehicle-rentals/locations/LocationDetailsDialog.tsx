@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Location } from '../types/rental-types';
 import { MapPin, Phone, Mail, Clock, Calendar } from "lucide-react";
-import { formatDate } from '@/lib/utils';
+import { cn } from "@/lib/utils";
 import {
   Table,
   TableBody,
@@ -26,6 +26,15 @@ interface LocationDetailsDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
+
+// Simple date formatter function
+const formatDate = (date: Date): string => {
+  return date.toLocaleDateString('fr-FR', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
+};
 
 const LocationDetailsDialog: React.FC<LocationDetailsDialogProps> = ({
   location,
