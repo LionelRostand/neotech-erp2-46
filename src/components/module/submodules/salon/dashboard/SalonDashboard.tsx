@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useSalonStats } from './hooks/useSalonStats';
+import { useSalonStats } from '../hooks/useSalonStats';
 import KeyStatsGrid from '../components/KeyStatsGrid';
 import UpcomingAppointments from '../components/UpcomingAppointments';
 import SalonAlerts from '../components/SalonAlerts';
