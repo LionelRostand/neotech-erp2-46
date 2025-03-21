@@ -57,14 +57,14 @@ const PropertiesTab: React.FC<PropertiesTabProps> = ({
         <div className="space-y-2">
           <Label htmlFor="category">Catégorie</Label>
           <Select 
-            value={category || ""} 
-            onValueChange={(value) => onCategoryChange(value as MessageCategory || undefined)}
+            value={category || "uncategorized"} 
+            onValueChange={(value) => onCategoryChange(value === "uncategorized" ? undefined : value as MessageCategory)}
           >
             <SelectTrigger>
               <SelectValue placeholder="Sélectionner une catégorie" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Non catégorisé</SelectItem>
+              <SelectItem value="uncategorized">Non catégorisé</SelectItem>
               <SelectItem value="general">Général</SelectItem>
               <SelectItem value="commercial">Commercial</SelectItem>
               <SelectItem value="support">Support</SelectItem>

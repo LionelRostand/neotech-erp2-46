@@ -31,7 +31,7 @@ const SubscriptionFields: React.FC<SubscriptionFieldsProps> = ({ form }) => {
         render={({ field }) => (
           <FormItem>
             <FormLabel>Type d'abonnement</FormLabel>
-            <Select onValueChange={field.onChange} defaultValue={field.value}>
+            <Select onValueChange={field.onChange} defaultValue={field.value || "free"}>
               <FormControl>
                 <SelectTrigger>
                   <SelectValue placeholder="Sélectionner un type d'abonnement" />
@@ -57,7 +57,7 @@ const SubscriptionFields: React.FC<SubscriptionFieldsProps> = ({ form }) => {
         render={({ field }) => (
           <FormItem>
             <FormLabel>Statut</FormLabel>
-            <Select onValueChange={field.onChange} defaultValue={field.value}>
+            <Select onValueChange={field.onChange} defaultValue={field.value || "active"}>
               <FormControl>
                 <SelectTrigger>
                   <SelectValue placeholder="Sélectionner un statut" />

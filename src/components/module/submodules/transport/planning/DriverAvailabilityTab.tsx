@@ -23,7 +23,7 @@ const DriverAvailabilityTab: React.FC<DriverAvailabilityTabProps> = ({
   const [selectedDriver, setSelectedDriver] = useState<TransportDriver | null>(null);
   
   // Filter drivers by type if a type is selected
-  const filteredDrivers = selectedDriverType 
+  const filteredDrivers = selectedDriverType && selectedDriverType !== "all"
     ? drivers.filter(d => d.skills?.includes(selectedDriverType))
     : drivers;
   
@@ -59,14 +59,14 @@ const DriverAvailabilityTab: React.FC<DriverAvailabilityTabProps> = ({
             <div className="mb-6">
               <label className="text-sm font-medium mb-2 block">Filtrer par compétence</label>
               <Select
-                value={selectedDriverType}
+                value={selectedDriverType ?? "all"}
                 onValueChange={setSelectedDriverType}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Toutes les compétences" />
                 </SelectTrigger>
                 <SelectContent>
-                  {/* Fixed the empty value to use "all" instead of empty string */}
+                  {/* Fixed empty value to use "all" instead */}
                   <SelectItem value="all">Toutes les compétences</SelectItem>
                   <SelectItem value="luxury">VIP/Luxe</SelectItem>
                   <SelectItem value="airport">Aéroport</SelectItem>

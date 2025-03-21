@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCompanyService } from './services/companyService';
@@ -72,7 +71,7 @@ const CompaniesList: React.FC = () => {
   const handleFilterChange = (key: string, value: string) => {
     if (key === 'status') {
       // Ensure status is a valid value or undefined
-      const statusValue = value === '' ? undefined : value as 'active' | 'inactive' | 'pending';
+      const statusValue = value === 'all' ? undefined : value as 'active' | 'inactive' | 'pending';
       setFilters(prev => ({
         ...prev,
         [key]: statusValue
@@ -166,14 +165,14 @@ const CompaniesList: React.FC = () => {
             <div className="space-y-2">
               <label className="text-sm font-medium">Statut</label>
               <Select
-                value={filters.status || ''}
+                value={filters.status || 'all'}
                 onValueChange={(value) => handleFilterChange('status', value)}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Tous les statuts" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Tous</SelectItem>
+                  <SelectItem value="all">Tous</SelectItem>
                   <SelectItem value="active">Actif</SelectItem>
                   <SelectItem value="inactive">Inactif</SelectItem>
                   <SelectItem value="pending">En attente</SelectItem>
@@ -303,3 +302,4 @@ const CompaniesList: React.FC = () => {
 };
 
 export default CompaniesList;
+
