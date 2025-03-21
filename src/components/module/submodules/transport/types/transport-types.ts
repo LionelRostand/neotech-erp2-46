@@ -15,6 +15,14 @@ export interface TransportVehicle {
   nextMaintenanceDate?: string;
   insuranceExpiryDate?: string;
   notes?: string;
+  // Additional properties needed by components
+  lastServiceDate?: string;
+  nextServiceDate?: string;
+  insuranceInfo?: {
+    provider: string;
+    policyNumber: string;
+    expiryDate: string;
+  };
 }
 
 export interface TransportDriver {
@@ -33,6 +41,14 @@ export interface TransportDriver {
   skills?: string[];
   preferredVehicleTypes?: string[];
   notes?: string;
+  // Additional properties needed by components
+  status?: "active" | "on-leave" | "inactive" | "driving" | "off-duty" | "vacation" | "sick";
+  performance?: {
+    onTimeRate: number;
+    customerSatisfaction: number;
+    safetyScore: number;
+    [key: string]: number;
+  };
 }
 
 export interface MaintenanceSchedule {
@@ -119,3 +135,57 @@ export interface VehicleNote {
   createdAt: string;
   createdBy: string;
 }
+
+// Additional types needed for Reservations and other components
+export interface TransportReservation {
+  id: string;
+  clientId: string;
+  vehicleId: string;
+  driverId?: string;
+  service: TransportService;
+  date: string;
+  time: string;
+  pickup: {
+    address: string;
+  };
+  dropoff: {
+    address: string;
+  };
+  status: TransportReservationStatus;
+  price: number;
+  isPaid: boolean;
+  needsDriver: boolean;
+  contractGenerated?: boolean;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface TransportClient {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  vip?: boolean;
+  loyaltyPoints?: number;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export type TransportService = 
+  | "airport-transfer" 
+  | "city-tour" 
+  | "business-travel" 
+  | "wedding" 
+  | "event" 
+  | "hourly-hire" 
+  | "long-distance" 
+  | "custom";
+
+export type TransportReservationStatus = 
+  | "confirmed" 
+  | "pending" 
+  | "in-progress" 
+  | "completed" 
+  | "cancelled";
