@@ -12,6 +12,7 @@ import SalonServices from '../salon/services/SalonServices';
 import SalonClients from '../salon/clients/SalonClients';
 import SalonAppointments from '../salon/appointments/SalonAppointments';
 import SalonStylists from '../salon/stylists/SalonStylists';
+import SalonSettings from '../salon/settings/SalonSettings';
 import { useLocation } from 'react-router-dom';
 
 interface SalonRendererProps {
@@ -51,11 +52,7 @@ export const SalonRenderer: React.FC<SalonRendererProps> = ({ submoduleId }) => 
     case 'salon-stylists':
       return <SalonStylists />;
     case 'salon-settings':
-      return (
-        <div className="flex items-center justify-center h-64 text-muted-foreground">
-          Module de paramètres en cours de développement
-        </div>
-      );
+      return <SalonSettings />;
     default:
       return (
         <div className="flex items-center justify-center h-64 text-muted-foreground">
