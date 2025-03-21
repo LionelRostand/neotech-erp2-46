@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -9,9 +8,37 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Heart, Gift, Award, Search, Plus, Filter, Users, ArrowUp, ArrowDown } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
+import NewRewardDialog from './components/NewRewardDialog';
+import AddPointsDialog from './components/AddPointsDialog';
+import { LoyaltyClient, LoyaltyReward, NewLoyaltyReward } from '../inventory/types/inventory-types';
 
 const LoyaltyDashboard = () => {
   const { toast } = useToast();
+  const [isAddPointsOpen, setIsAddPointsOpen] = useState(false);
+  const [loyaltyClients, setLoyaltyClients] = useState<LoyaltyClient[]>([
+    { id: "1", name: "Marie Dupont", status: "gold", points: 450, visits: 15, lastVisit: "12/06/2023" },
+    { id: "2", name: "Thomas Dubois", status: "silver", points: 320, visits: 9, lastVisit: "28/05/2023" },
+    { id: "3", name: "Sophie Laurent", status: "silver", points: 285, visits: 8, lastVisit: "15/06/2023" },
+    { id: "4", name: "Jean Martin", status: "bronze", points: 120, visits: 4, lastVisit: "02/06/2023" },
+    { id: "5", name: "Camille Rousseau", status: "gold", points: 410, visits: 12, lastVisit: "10/06/2023" }
+  ]);
+  
+  const handleAddPoints = (clientId: string, points: number, reason: string) => {
+    setLoyaltyClients(prev => prev.map(client => {
+      if (client.id === clientId) {
+        return {
+          ...client,
+          points: client.points + points
+        };
+      }
+      return client;
+    }));
+    
+    toast({
+      title: "Points ajoutés",
+      description: `${points} points ont été ajoutés pour ${reason.toLowerCase()}`
+    });
+  };
   
   return (
     <div className="space-y-6">
@@ -79,7 +106,7 @@ const LoyaltyDashboard = () => {
               <Filter className="h-4 w-4 mr-2" />
               Filtrer
             </Button>
-            <Button size="sm" className="ml-2">
+            <Button size="sm" className="ml-2" onClick={() => setIsAddPointsOpen(true)}>
               <Plus className="h-4 w-4 mr-2" />
               Ajouter
             </Button>
@@ -97,13 +124,7 @@ const LoyaltyDashboard = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {[
-                { id: 1, name: "Marie Dupont", status: "gold", points: 450, visits: 15, lastVisit: "12/06/2023" },
-                { id: 2, name: "Thomas Dubois", status: "silver", points: 320, visits: 9, lastVisit: "28/05/2023" },
-                { id: 3, name: "Sophie Laurent", status: "silver", points: 285, visits: 8, lastVisit: "15/06/2023" },
-                { id: 4, name: "Jean Martin", status: "bronze", points: 120, visits: 4, lastVisit: "02/06/2023" },
-                { id: 5, name: "Camille Rousseau", status: "gold", points: 410, visits: 12, lastVisit: "10/06/2023" }
-              ].map((client) => (
+              {loyaltyClients.map((client) => (
                 <TableRow key={client.id}>
                   <TableCell>{client.name}</TableCell>
                   <TableCell>
@@ -133,6 +154,13 @@ const LoyaltyDashboard = () => {
               ))}
             </TableBody>
           </Table>
+          
+          <AddPointsDialog 
+            open={isAddPointsOpen}
+            onOpenChange={setIsAddPointsOpen}
+            clients={loyaltyClients}
+            onAddPoints={handleAddPoints}
+          />
         </CardContent>
       </Card>
       
@@ -352,13 +380,51 @@ const LoyaltySettings = () => {
 
 const LoyaltyRewards = () => {
   const { toast } = useToast();
+  const [isNewRewardOpen, setIsNewRewardOpen] = useState(false);
+  const [rewards, setRewards] = useState<LoyaltyReward[]>([
+    { id: "1", name: "Coupe gratuite", points: 100, description: "Une coupe offerte", active: true, createdAt: "2023-05-10" },
+    { id: "2", name: "Produit offert", points: 75, description: "Un produit capillaire au choix jusqu'à 15€", active: true, createdAt: "2023-04-15" },
+    { id: "3", name: "Réduction 25%", points: 50, description: "25% de réduction sur une prestation", active: true, createdAt: "2023-06-01" },
+    { id: "4", name: "Brushing offert", points: 40, description: "Un brushing gratuit", active: true, createdAt: "2023-05-20" },
+    { id: "5", name: "Soin profond", points: 60, description: "Un soin capillaire profond offert", active: false, createdAt: "2023-03-10" }
+  ]);
+  
+  const handleAddReward = (newReward: NewLoyaltyReward) => {
+    const reward: LoyaltyReward = {
+      id: `${rewards.length + 1}`,
+      name: newReward.name,
+      points: newReward.points,
+      description: newReward.description,
+      active: true,
+      createdAt: new Date().toISOString().split('T')[0]
+    };
+    
+    setRewards(prev => [...prev, reward]);
+    
+    toast({
+      title: "Récompense ajoutée",
+      description: `La récompense "${newReward.name}" a été créée avec succès`
+    });
+  };
+  
+  const handleToggleRewardStatus = (rewardId: string) => {
+    setRewards(prev => prev.map(reward => {
+      if (reward.id === rewardId) {
+        return {
+          ...reward,
+          active: !reward.active
+        };
+      }
+      return reward;
+    }));
+  };
   
   return (
     <div className="space-y-6">
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Récompenses disponibles</CardTitle>
-          <Button size="sm">
+          <Button size="sm" onClick={() => setIsNewRewardOpen(true)}>
             <Plus className="h-4 w-4 mr-2" />
             Nouvelle récompense
           </Button>
@@ -375,13 +441,7 @@ const LoyaltyRewards = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {[
-                { id: 1, name: "Coupe gratuite", points: 100, description: "Une coupe offerte", active: true },
-                { id: 2, name: "Produit offert", points: 75, description: "Un produit capillaire au choix jusqu'à 15€", active: true },
-                { id: 3, name: "Réduction 25%", points: 50, description: "25% de réduction sur une prestation", active: true },
-                { id: 4, name: "Brushing offert", points: 40, description: "Un brushing gratuit", active: true },
-                { id: 5, name: "Soin profond", points: 60, description: "Un soin capillaire profond offert", active: false },
-              ].map((reward) => (
+              {rewards.map((reward) => (
                 <TableRow key={reward.id}>
                   <TableCell className="font-medium">{reward.name}</TableCell>
                   <TableCell>{reward.points}</TableCell>
@@ -412,10 +472,13 @@ const LoyaltyRewards = () => {
                       <Button 
                         variant="ghost" 
                         size="sm"
-                        onClick={() => toast({
-                          title: reward.active ? "Désactivation" : "Activation",
-                          description: `${reward.active ? "Désactivation" : "Activation"} de la récompense: ${reward.name}`
-                        })}
+                        onClick={() => {
+                          handleToggleRewardStatus(reward.id);
+                          toast({
+                            title: reward.active ? "Désactivation" : "Activation",
+                            description: `${reward.active ? "Désactivation" : "Activation"} de la récompense: ${reward.name}`
+                          });
+                        }}
                       >
                         {reward.active ? "Désactiver" : "Activer"}
                       </Button>
@@ -425,6 +488,12 @@ const LoyaltyRewards = () => {
               ))}
             </TableBody>
           </Table>
+          
+          <NewRewardDialog 
+            open={isNewRewardOpen}
+            onOpenChange={setIsNewRewardOpen}
+            onAddReward={handleAddReward}
+          />
         </CardContent>
       </Card>
       
@@ -467,12 +536,33 @@ const LoyaltyRewards = () => {
 
 const SalonLoyalty: React.FC = () => {
   const [activeTab, setActiveTab] = useState<string>("dashboard");
+  const { toast } = useToast();
+  
+  const handleExportData = () => {
+    // Simulate export data functionality
+    setTimeout(() => {
+      toast({
+        title: "Données exportées",
+        description: "Les données du programme de fidélité ont été exportées avec succès"
+      });
+    }, 500);
+    
+    // In a real application, this would generate and download a CSV/Excel file
+    const dummyData = "data:text/csv;charset=utf-8,ID,Client,Points,Status\n1,Marie Dupont,450,Gold";
+    const encodedUri = encodeURI(dummyData);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", "fidelity_data.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-3xl font-bold">Programme de Fidélité</h2>
-        <Button>
+        <Button onClick={handleExportData}>
           <Users className="mr-2 h-4 w-4" />
           Exporter les données
         </Button>

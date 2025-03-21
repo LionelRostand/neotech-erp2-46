@@ -48,3 +48,28 @@ export type NewOrder = {
   notes: string;
   expectedDeliveryDate: string;
 };
+
+// Loyalty related types
+export type LoyaltyReward = {
+  id: string;
+  name: string;
+  points: number;
+  description: string;
+  active: boolean;
+  createdAt: string;
+};
+
+export type NewLoyaltyReward = {
+  name: string;
+  points: number;
+  description: string;
+};
+
+export type LoyaltyClient = {
+  id: string;
+  name: string;
+  points: number;
+  status: 'gold' | 'silver' | 'bronze';
+  visits: number;
+  lastVisit: string;
+};
