@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { CalendarDays, Calendar, CarFront, Clock, RefreshCw, Plus, User } from "lucide-react";
-import { TransportVehicle, MaintenanceSchedule, TransportDriver } from './types/transport-types';
+import { TransportVehicle, MaintenanceSchedule, TransportDriver, ExtensionRequest } from './types/transport-types';
 import AvailabilityCalendar from './planning/AvailabilityCalendar';
 import MaintenanceScheduleList from './planning/MaintenanceScheduleList';
 import ExtensionRequestsList from './planning/ExtensionRequestsList';
@@ -98,7 +98,7 @@ const mockMaintenanceSchedules: MaintenanceSchedule[] = [
 ];
 
 // Mock extension requests with corrected union types
-const mockExtensionRequests = [
+const mockExtensionRequests: ExtensionRequest[] = [
   {
     id: "ext-001",
     reservationId: "TR-2023-002",
@@ -106,7 +106,7 @@ const mockExtensionRequests = [
     originalEndDate: "2023-11-21",
     requestedEndDate: "2023-11-23",
     vehicleName: "BMW Série 5",
-    status: "pending" as "pending",
+    status: "pending",
     reason: "Prolongation voyage d'affaires"
   },
   {
@@ -116,7 +116,7 @@ const mockExtensionRequests = [
     originalEndDate: "2023-11-20",
     requestedEndDate: "2023-11-22",
     vehicleName: "Mercedes Classe V",
-    status: "approved" as "approved",
+    status: "approved",
     reason: "Besoin supplémentaire du véhicule"
   }
 ];
@@ -239,29 +239,31 @@ const TransportPlanning = () => {
           </div>
         </CardHeader>
         <CardContent>
-          <TabsContent value="availability" className="mt-0">
-            <AvailabilityCalendar 
-              vehicles={mockVehicles} 
-              maintenanceSchedules={mockMaintenanceSchedules}
-              onAddMaintenance={handleAddMaintenance}
-            />
-          </TabsContent>
-          
-          <TabsContent value="maintenance" className="mt-0">
-            <MaintenanceScheduleList 
-              maintenanceSchedules={mockMaintenanceSchedules}
-              vehicles={mockVehicles}
-              onAddMaintenance={() => setMaintenanceDialogOpen(true)}
-            />
-          </TabsContent>
-          
-          <TabsContent value="extensions" className="mt-0">
-            <ExtensionRequestsList extensionRequests={mockExtensionRequests} />
-          </TabsContent>
-          
-          <TabsContent value="drivers" className="mt-0">
-            <DriverAvailabilityTab drivers={mockDrivers} />
-          </TabsContent>
+          <Tabs value={activeTab}>
+            <TabsContent value="availability">
+              <AvailabilityCalendar 
+                vehicles={mockVehicles} 
+                maintenanceSchedules={mockMaintenanceSchedules}
+                onAddMaintenance={handleAddMaintenance}
+              />
+            </TabsContent>
+            
+            <TabsContent value="maintenance">
+              <MaintenanceScheduleList 
+                maintenanceSchedules={mockMaintenanceSchedules}
+                vehicles={mockVehicles}
+                onAddMaintenance={() => setMaintenanceDialogOpen(true)}
+              />
+            </TabsContent>
+            
+            <TabsContent value="extensions">
+              <ExtensionRequestsList extensionRequests={mockExtensionRequests} />
+            </TabsContent>
+            
+            <TabsContent value="drivers">
+              <DriverAvailabilityTab drivers={mockDrivers} />
+            </TabsContent>
+          </Tabs>
         </CardContent>
       </Card>
 
