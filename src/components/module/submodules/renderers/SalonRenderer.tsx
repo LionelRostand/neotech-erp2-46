@@ -6,10 +6,10 @@ import SalonClients from '../salon/clients/SalonClients';
 import SalonAppointments from '../salon/appointments/SalonAppointments';
 import { Card, CardContent } from "@/components/ui/card";
 
-// Styles pour les pages sans contenu spécifique
+// Style pour les pages sans contenu spécifique
 const placeholderStyle = "flex justify-center items-center p-8 text-lg text-muted-foreground";
 
-// Placeholder components - ces composants seraient implémentés dans des fichiers séparés
+// Placeholder components
 const SalonStylists = () => (
   <Card>
     <CardContent className="pt-6">

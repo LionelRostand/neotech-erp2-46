@@ -1,138 +1,189 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { SalonClient } from '../types/salon-types';
-import { useFirestore } from '@/hooks/use-firestore';
+import { toast } from 'sonner';
 
-const MOCK_CLIENTS: SalonClient[] = [
+// Mock data for development
+const mockClients: SalonClient[] = [
   {
-    id: '1',
-    firstName: 'Marie',
-    lastName: 'Dupont',
-    email: 'marie.dupont@example.com',
-    phone: '06 12 34 56 78',
-    birthDate: '1985-04-15',
-    address: '15 rue des Lilas, 75011 Paris',
-    preferences: 'Préfère les colorations naturelles, sensible au cuir chevelu',
-    notes: 'Fidèle depuis 2018',
-    preferredStylist: 'alexandra',
-    loyaltyPoints: 75,
-    createdAt: '2018-05-10T14:30:00Z',
-    lastVisit: '2023-06-20T10:15:00Z',
+    id: "client-001",
+    firstName: "Emma",
+    lastName: "Bernard",
+    email: "emma.bernard@example.com",
+    phone: "06 12 34 56 78",
+    birthDate: "1985-05-12",
+    address: "15 rue des Lilas, 75011 Paris",
+    preferences: "Couleur naturelle, pas trop court",
+    notes: "Cliente fidèle depuis 2018",
+    preferredStylist: "Sophie Dupont",
+    loyaltyPoints: 250,
+    createdAt: "2018-03-15",
+    lastVisit: "2023-05-10",
     visits: [
       {
-        date: '2023-06-20T10:15:00Z',
-        service: 'Coupe et brushing',
-        stylist: 'Alexandra',
-        price: 55,
-        satisfaction: 'Très satisfait'
-      },
-      {
-        date: '2023-04-05T14:30:00Z',
-        service: 'Coloration complète',
-        stylist: 'Alexandra',
-        price: 75,
-        satisfaction: 'Satisfait'
-      },
-      {
-        date: '2023-01-12T11:00:00Z',
-        service: 'Coupe et couleur',
-        stylist: 'Nicolas',
+        date: "2023-05-10",
+        service: "Coupe + Coloration",
+        stylist: "Sophie Dupont",
         price: 95,
-        satisfaction: 'Très satisfait'
+        satisfaction: "Très satisfait",
+        notes: "Très contente du résultat"
+      },
+      {
+        date: "2023-03-02",
+        service: "Brushing",
+        stylist: "Marie Lefort",
+        price: 35,
+        satisfaction: "Satisfait",
+        notes: ""
       }
     ],
     appointments: [
       {
-        id: 'a1',
-        clientId: '1', // Added missing clientId
-        date: '2023-09-15T10:00:00Z',
-        time: '10:00', // Added missing time
-        service: 'Coupe et brushing',
-        stylist: 'Alexandra',
-        status: 'confirmed',
-        duration: 60
+        id: "apt-001",
+        clientId: "client-001",
+        service: "Coupe + Brushing",
+        stylist: "Sophie Dupont",
+        date: "2023-06-20",
+        time: "14:30",
+        duration: 60,
+        status: "confirmed",
+        notes: ""
       }
     ]
   },
   {
-    id: '2',
-    firstName: 'Thomas',
-    lastName: 'Martin',
-    email: 'thomas.martin@example.com',
-    phone: '06 98 76 54 32',
-    birthDate: '1990-08-22',
-    address: '8 avenue Victor Hugo, 75016 Paris',
-    preferences: 'Coupe courte, pas de produits',
-    notes: 'Client occasionnel',
-    preferredStylist: 'nicolas',
-    loyaltyPoints: 25,
-    createdAt: '2022-03-15T09:45:00Z',
-    lastVisit: '2023-05-10T16:30:00Z',
+    id: "client-002",
+    firstName: "Thomas",
+    lastName: "Mercier",
+    email: "thomas.mercier@example.com",
+    phone: "06 23 45 67 89",
+    birthDate: "1990-08-22",
+    address: "8 avenue Victor Hugo, 75016 Paris",
+    preferences: "Coupe classique, rasage à l'ancienne",
+    notes: "Allergique à certains produits capillaires",
+    preferredStylist: "Lucas Renard",
+    loyaltyPoints: 120,
+    createdAt: "2019-11-05",
+    lastVisit: "2023-04-28",
     visits: [
       {
-        date: '2023-05-10T16:30:00Z',
-        service: 'Coupe homme',
-        stylist: 'Nicolas',
-        price: 28,
-        satisfaction: 'Satisfait'
-      },
-      {
-        date: '2023-02-18T11:30:00Z',
-        service: 'Coupe homme',
-        stylist: 'Thomas',
-        price: 28,
-        satisfaction: 'Satisfait'
+        date: "2023-04-28",
+        service: "Coupe Homme + Barbe",
+        stylist: "Lucas Renard",
+        price: 45,
+        satisfaction: "Très satisfait",
+        notes: ""
       }
     ],
     appointments: []
   },
   {
-    id: '3',
-    firstName: 'Julie',
-    lastName: 'Petit',
-    email: 'julie.petit@example.com',
-    phone: '07 45 67 89 10',
-    birthDate: '1988-11-30',
-    address: '22 rue de la Paix, 75002 Paris',
-    preferences: 'Aime les coupes modernes, allergique à l\'ammoniaque',
-    notes: 'Très sensible au cuir chevelu',
-    preferredStylist: 'sophie',
-    loyaltyPoints: 120,
-    createdAt: '2020-01-20T11:15:00Z',
-    lastVisit: '2023-07-05T14:00:00Z',
+    id: "client-003",
+    firstName: "Sophie",
+    lastName: "Petit",
+    email: "sophie.petit@example.com",
+    phone: "06 34 56 78 90",
+    birthDate: "1978-02-14",
+    address: "23 rue de la Paix, 75002 Paris",
+    preferences: "Mèches blondes, cheveux mi-longs",
+    notes: "",
+    preferredStylist: "Isabelle Meyer",
+    loyaltyPoints: 380,
+    createdAt: "2017-06-30",
+    lastVisit: "2023-05-15",
     visits: [
       {
-        date: '2023-07-05T14:00:00Z',
-        service: 'Balayage et coupe',
-        stylist: 'Sophie',
+        date: "2023-05-15",
+        service: "Balayage + Coupe",
+        stylist: "Isabelle Meyer",
         price: 120,
-        satisfaction: 'Très satisfait'
+        satisfaction: "Très satisfait",
+        notes: "Ravie du résultat"
       },
       {
-        date: '2023-04-22T10:30:00Z',
-        service: 'Coupe et brushing',
-        stylist: 'Sophie',
+        date: "2023-03-10",
+        service: "Coupe + Brushing",
+        stylist: "Isabelle Meyer",
         price: 55,
-        satisfaction: 'Très satisfait'
-      },
-      {
-        date: '2023-02-08T16:15:00Z',
-        service: 'Coloration',
-        stylist: 'Sophie',
-        price: 65,
-        satisfaction: 'Satisfait'
+        satisfaction: "Satisfait",
+        notes: ""
       }
     ],
     appointments: [
       {
-        id: 'a2',
-        clientId: '3', // Added missing clientId
-        date: '2023-10-12T15:30:00Z',
-        time: '15:30', // Added missing time
-        service: 'Balayage et coupe',
-        stylist: 'Sophie',
-        status: 'pending',
-        duration: 120
+        id: "apt-002",
+        clientId: "client-003",
+        service: "Coloration + Coupe",
+        stylist: "Isabelle Meyer",
+        date: "2023-06-25",
+        time: "10:00",
+        duration: 120,
+        status: "pending",
+        notes: "Souhaite changer de couleur"
+      }
+    ]
+  },
+  {
+    id: "client-004",
+    firstName: "Nicolas",
+    lastName: "Dubois",
+    email: "nicolas.dubois@example.com",
+    phone: "06 45 67 89 01",
+    birthDate: "1982-11-30",
+    address: "5 place de la République, 75003 Paris",
+    preferences: "Coupe courte, dégradé sur les côtés",
+    notes: "Vient tous les mois",
+    preferredStylist: "Lucas Renard",
+    loyaltyPoints: 180,
+    createdAt: "2020-01-15",
+    lastVisit: "2023-05-02",
+    visits: [
+      {
+        date: "2023-05-02",
+        service: "Coupe Homme",
+        stylist: "Lucas Renard",
+        price: 25,
+        satisfaction: "Satisfait",
+        notes: ""
+      }
+    ],
+    appointments: []
+  },
+  {
+    id: "client-005",
+    firstName: "Julie",
+    lastName: "Moreau",
+    email: "julie.moreau@example.com",
+    phone: "06 56 78 90 12",
+    birthDate: "1995-07-18",
+    address: "12 rue Saint-Denis, 75001 Paris",
+    preferences: "Cheveux longs, pas de coloration",
+    notes: "Sensible du cuir chevelu",
+    preferredStylist: "Sophie Dupont",
+    loyaltyPoints: 90,
+    createdAt: "2021-03-22",
+    lastVisit: "2023-04-15",
+    visits: [
+      {
+        date: "2023-04-15",
+        service: "Coupe + Soin",
+        stylist: "Sophie Dupont",
+        price: 65,
+        satisfaction: "Très satisfait",
+        notes: ""
+      }
+    ],
+    appointments: [
+      {
+        id: "apt-003",
+        clientId: "client-005",
+        service: "Coupe + Brushing",
+        stylist: "Sophie Dupont",
+        date: "2023-06-18",
+        time: "16:00",
+        duration: 60,
+        status: "confirmed",
+        notes: ""
       }
     ]
   }
@@ -142,68 +193,93 @@ export const useSalonClients = () => {
   const [clients, setClients] = useState<SalonClient[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
-  
-  const { getAll, add, update, remove } = useFirestore('salon-clients');
-  
+
+  // Fetch clients
   useEffect(() => {
     const fetchClients = async () => {
+      setIsLoading(true);
       try {
-        setIsLoading(true);
-        // Here we would normally fetch from Firebase, but we'll use mock data for now
-        // const data = await getAll();
-        setClients(MOCK_CLIENTS);
+        // In a real app, use this:
+        // const data = await getAllDocuments('salonClients');
+        // setClients(data as SalonClient[]);
+        
+        // For mock data:
+        setTimeout(() => {
+          setClients(mockClients);
+          setIsLoading(false);
+        }, 1000);
       } catch (err) {
-        setError(err as Error);
-        console.error('Error fetching clients:', err);
-      } finally {
+        setError(err instanceof Error ? err : new Error('Unknown error'));
+        console.error(err);
         setIsLoading(false);
       }
     };
-    
+
     fetchClients();
   }, []);
-  
-  const addClient = async (client: SalonClient) => {
+
+  // Add a new client
+  const addClient = useCallback(async (clientData: Omit<SalonClient, 'id' | 'createdAt' | 'visits' | 'appointments'>) => {
     try {
-      // Here we would normally add to Firebase
-      // const newClient = await add(client);
-      setClients(prevClients => [...prevClients, client]);
-      return client;
+      // In a real app, use this:
+      // const newClient = await addDocument('salonClients', clientData);
+      
+      // For mock data:
+      const newClient: SalonClient = {
+        id: `client-${clients.length + 6}`.padStart(9, '0'),
+        ...clientData,
+        createdAt: new Date().toISOString(),
+        lastVisit: null,
+        visits: [],
+        appointments: [],
+        loyaltyPoints: 0
+      };
+      setClients(prev => [...prev, newClient]);
+      toast("Client ajouté avec succès");
+      return newClient;
     } catch (err) {
-      setError(err as Error);
-      console.error('Error adding client:', err);
+      toast("Erreur lors de l'ajout du client");
+      console.error(err);
       throw err;
     }
-  };
-  
-  const updateClient = async (client: SalonClient) => {
+  }, [clients]);
+
+  // Update a client
+  const updateClient = useCallback(async (clientData: SalonClient) => {
     try {
-      // Here we would normally update in Firebase
-      // await update(client.id, client);
-      setClients(prevClients =>
-        prevClients.map(c => c.id === client.id ? client : c)
+      // In a real app, use this:
+      // await updateDocument('salonClients', clientData.id, clientData);
+      
+      // For mock data:
+      setClients(prev => 
+        prev.map(client => 
+          client.id === clientData.id 
+            ? { ...client, ...clientData } 
+            : client
+        )
       );
-      return client;
+      toast("Client mis à jour avec succès");
     } catch (err) {
-      setError(err as Error);
-      console.error('Error updating client:', err);
-      throw err;
+      toast("Erreur lors de la mise à jour du client");
+      console.error(err);
     }
-  };
-  
-  const deleteClient = async (clientId: string) => {
+  }, []);
+
+  // Delete a client
+  const deleteClient = useCallback(async (id: string) => {
     try {
-      // Here we would normally delete from Firebase
-      // await remove(clientId);
-      setClients(prevClients => prevClients.filter(c => c.id !== clientId));
-      return true;
+      // In a real app, use this:
+      // await deleteDocument('salonClients', id);
+      
+      // For mock data:
+      setClients(prev => prev.filter(client => client.id !== id));
+      toast("Client supprimé avec succès");
     } catch (err) {
-      setError(err as Error);
-      console.error('Error deleting client:', err);
-      throw err;
+      toast("Erreur lors de la suppression du client");
+      console.error(err);
     }
-  };
-  
+  }, []);
+
   return {
     clients,
     isLoading,

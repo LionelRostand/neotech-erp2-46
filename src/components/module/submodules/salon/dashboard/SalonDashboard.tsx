@@ -1,20 +1,86 @@
 
 import React from 'react';
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useSalonStats } from './hooks/useSalonStats';
+import KeyStatsGrid from '../components/KeyStatsGrid';
+import UpcomingAppointments from '../components/UpcomingAppointments';
+import SalonAlerts from '../components/SalonAlerts';
+import RevenueChart from '../components/RevenueChart';
+import StylistsStatus from '../components/StylistsStatus';
+import TopServices from '../components/TopServices';
+import ProductInventory from '../components/ProductInventory';
+import LoyaltyOverview from '../components/LoyaltyOverview';
+import DailyAppointments from '../components/DailyAppointments';
 
 const SalonDashboard: React.FC = () => {
+  const { 
+    stats, 
+    alerts, 
+    todayAppointments, 
+    upcomingAppointments,
+    revenueData,
+    isLoading, 
+    error 
+  } = useSalonStats();
+
+  if (isLoading) {
+    return <div className="flex items-center justify-center h-64">
+      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+    </div>;
+  }
+
+  if (error) {
+    return <Card>
+      <CardContent className="pt-6">
+        <div className="text-red-500">
+          Une erreur est survenue lors du chargement des données : {error.message}
+        </div>
+      </CardContent>
+    </Card>;
+  }
+
   return (
     <div className="space-y-6">
-      <Card>
-        <CardContent className="pt-6">
-          <div className="text-center py-10">
-            <h2 className="text-2xl font-bold mb-2">Tableau de bord du salon</h2>
-            <p className="text-muted-foreground">
-              Les statistiques et informations du salon seront affichées ici.
-            </p>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="grid grid-cols-1 gap-6">
+        <SalonAlerts 
+          newAppointments={alerts.newAppointments} 
+          pendingPayments={alerts.pendingPayments} 
+          lowStockProducts={alerts.lowStockProducts} 
+        />
+      </div>
+
+      <KeyStatsGrid stats={stats} />
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <DailyAppointments appointments={todayAppointments} />
+        <RevenueChart revenueData={revenueData} />
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <UpcomingAppointments 
+          todayAppointments={todayAppointments} 
+          upcomingAppointments={upcomingAppointments} 
+        />
+        <StylistsStatus 
+          availableStylists={stats.availableStylists} 
+          busyStylists={stats.busyStylists} 
+          offStylists={stats.offStylists} 
+          totalStylists={stats.totalStylists} 
+        />
+        <ProductInventory 
+          lowStockProducts={stats.lowStockProducts}
+          totalProductsSold={stats.totalProductsSold}
+        />
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <TopServices />
+        <LoyaltyOverview 
+          totalClients={stats.totalClients}
+          loyaltyProgramMembers={stats.loyaltyProgramMembers}
+          topLoyaltyClients={stats.topLoyaltyClients}
+        />
+      </div>
     </div>
   );
 };
