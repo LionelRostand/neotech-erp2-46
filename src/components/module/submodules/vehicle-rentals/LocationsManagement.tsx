@@ -9,11 +9,12 @@ import LocationsList from './locations/LocationsList';
 import TransfersList from './locations/TransfersList';
 import VehiclesByLocation from './locations/VehiclesByLocation';
 import CreateLocationDialog from './locations/CreateLocationDialog';
+import LocationMap from './locations/LocationMap';
 import { Location } from './types/rental-types';
 import { useSafeFirestore } from '@/hooks/use-safe-firestore';
 
 const LocationsManagement = () => {
-  const [activeTab, setActiveTab] = useState<"locations" | "transfers" | "vehicles">("locations");
+  const [activeTab, setActiveTab] = useState<"locations" | "transfers" | "vehicles" | "map">("locations");
   const [searchTerm, setSearchTerm] = useState("");
   const [openCreateDialog, setOpenCreateDialog] = useState(false);
   const [locations, setLocations] = useState<Location[]>([
@@ -123,7 +124,7 @@ const LocationsManagement = () => {
       </div>
       
       <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as any)}>
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="locations" className="flex items-center gap-2">
             <Map size={16} />
             <span>Emplacements</span>
@@ -135,6 +136,10 @@ const LocationsManagement = () => {
           <TabsTrigger value="vehicles" className="flex items-center gap-2">
             <CarTaxiFront size={16} />
             <span>Véhicules par emplacement</span>
+          </TabsTrigger>
+          <TabsTrigger value="map" className="flex items-center gap-2">
+            <Map size={16} />
+            <span>Carte</span>
           </TabsTrigger>
         </TabsList>
         
@@ -155,6 +160,12 @@ const LocationsManagement = () => {
         <TabsContent value="vehicles" className="mt-4">
           <VehiclesByLocation 
             locations={locations}
+          />
+        </TabsContent>
+        
+        <TabsContent value="map" className="mt-4">
+          <LocationMap 
+            locations={filteredLocations}
           />
         </TabsContent>
       </Tabs>
