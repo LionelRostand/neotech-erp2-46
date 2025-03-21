@@ -72,7 +72,7 @@ export const renderSubmoduleContent = ({ submoduleId, submodule }: RenderSubmodu
   
   if (submoduleId.startsWith('salon-')) {
     console.log('Delegating to SalonRenderer for:', submoduleId);
-    return <SalonRenderer />;
+    return <SalonRenderer submoduleId={submoduleId} submodule={submodule} />;
   }
   
   // Fallback to default content rendering

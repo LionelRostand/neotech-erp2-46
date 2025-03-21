@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Submodule } from '@/data/types/modules';
+import { SubModule } from '@/data/types/modules';
 import SalonDashboard from '../salon/SalonDashboard';
 import SalonInventory from '../salon/inventory/SalonInventory';
 import SalonProducts from '../salon/products/SalonProducts';
@@ -9,7 +9,7 @@ import SalonReports from '../salon/reports/SalonReports';
 
 interface SalonRendererProps {
   submoduleId: string;
-  submodule: Submodule;
+  submodule: SubModule;
 }
 
 export const SalonRenderer: React.FC<SalonRendererProps> = ({ submoduleId }) => {
