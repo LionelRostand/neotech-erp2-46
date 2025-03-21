@@ -9,6 +9,7 @@ import { renderCrmSubmodule } from './CrmRenderer';
 import { renderHealthSubmodule } from './HealthRenderer';
 import { renderDocumentsSubmodule } from './DocumentsRenderer';
 import { renderLibrarySubmodule } from './LibraryRenderer';
+import { renderVehicleRentalsSubmodule } from './VehicleRentalsRenderer';
 
 export {
   renderEmployeesSubmodule,
@@ -20,5 +21,6 @@ export {
   renderCrmSubmodule,
   renderHealthSubmodule,
   renderDocumentsSubmodule,
-  renderLibrarySubmodule
+  renderLibrarySubmodule,
+  renderVehicleRentalsSubmodule
 };

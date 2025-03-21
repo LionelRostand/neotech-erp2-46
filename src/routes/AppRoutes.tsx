@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Routes, Route, Navigate } from "react-router-dom";
 import Index from "@/pages/Index";
@@ -158,14 +159,17 @@ const AppRoutes = () => (
       <Route path="settings" element={<SubmodulePage moduleId={8} submoduleId="health-settings" />} />
     </Route>
     
-    {/* Routes pour le module Library */}
-    <Route path="/modules/library" element={<ModuleLayout moduleId={15} />}>
-      <Route index element={<SubmodulePage moduleId={15} submoduleId="library-dashboard" />} />
-      <Route path="dashboard" element={<SubmodulePage moduleId={15} submoduleId="library-dashboard" />} />
-      <Route path="books" element={<SubmodulePage moduleId={15} submoduleId="library-books" />} />
-      <Route path="catalog" element={<SubmodulePage moduleId={15} submoduleId="library-catalog" />} />
-      <Route path="members" element={<SubmodulePage moduleId={15} submoduleId="library-members" />} />
-      <Route path="settings" element={<SubmodulePage moduleId={15} submoduleId="library-settings" />} />
+    {/* Routes pour le module Vehicle Rentals */}
+    <Route path="/modules/vehicle-rentals" element={<ModuleLayout moduleId={12} />}>
+      <Route index element={<SubmodulePage moduleId={12} submoduleId="rentals-dashboard" />} />
+      <Route path="dashboard" element={<SubmodulePage moduleId={12} submoduleId="rentals-dashboard" />} />
+      <Route path="vehicles" element={<SubmodulePage moduleId={12} submoduleId="rentals-vehicles" />} />
+      <Route path="clients" element={<SubmodulePage moduleId={12} submoduleId="rentals-clients" />} />
+      <Route path="reservations" element={<SubmodulePage moduleId={12} submoduleId="rentals-reservations" />} />
+      <Route path="locations" element={<SubmodulePage moduleId={12} submoduleId="rentals-locations" />} />
+      <Route path="billing" element={<SubmodulePage moduleId={12} submoduleId="rentals-billing" />} />
+      <Route path="reports" element={<SubmodulePage moduleId={12} submoduleId="rentals-reports" />} />
+      <Route path="settings" element={<SubmodulePage moduleId={12} submoduleId="rentals-settings" />} />
     </Route>
 
     {/* Generic routes for other modules */}
