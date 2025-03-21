@@ -1,26 +1,12 @@
 
-import { renderEmployeesSubmodule } from './EmployeesRenderer';
-import { renderFreightSubmodule } from './FreightRenderer';
-import { renderProjectsSubmodule } from './ProjectsRenderer';
-import { renderAccountingSubmodule } from './AccountingRenderer';
-import { renderMessagesSubmodule } from './MessagesRenderer';
-import { renderCompaniesSubmodule } from './CompaniesRenderer';
-import { renderCrmSubmodule } from './CrmRenderer';
-import { renderHealthSubmodule } from './HealthRenderer';
-import { renderDocumentsSubmodule } from './DocumentsRenderer';
-import { renderLibrarySubmodule } from './LibraryRenderer';
-import { renderVehicleRentalsSubmodule } from './VehicleRentalsRenderer';
-
-export {
-  renderEmployeesSubmodule,
-  renderFreightSubmodule,
-  renderProjectsSubmodule,
-  renderAccountingSubmodule,
-  renderMessagesSubmodule,
-  renderCompaniesSubmodule,
-  renderCrmSubmodule,
-  renderHealthSubmodule,
-  renderDocumentsSubmodule,
-  renderLibrarySubmodule,
-  renderVehicleRentalsSubmodule
-};
+export { renderEmployeesSubmodule } from './EmployeesRenderer';
+export { renderFreightSubmodule } from './FreightRenderer';
+export { renderProjectsSubmodule } from './ProjectsRenderer';
+export { renderAccountingSubmodule } from './AccountingRenderer';
+export { renderMessagesSubmodule } from './MessagesRenderer';
+export { renderCompaniesSubmodule } from './CompaniesRenderer';
+export { renderCrmSubmodule } from './CrmRenderer';
+export { renderHealthSubmodule } from './HealthRenderer';
+export { renderDocumentsSubmodule } from './DocumentsRenderer';
+export { renderVehicleRentalsSubmodule } from './VehicleRentalsRenderer';
+export { renderTransportSubmodule } from './TransportRenderer';

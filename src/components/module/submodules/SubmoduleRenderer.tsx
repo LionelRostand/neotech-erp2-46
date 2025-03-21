@@ -11,8 +11,8 @@ import {
   renderCrmSubmodule,
   renderHealthSubmodule,
   renderDocumentsSubmodule,
-  // renderLibrarySubmodule // Remove this import
-  renderVehicleRentalsSubmodule
+  renderVehicleRentalsSubmodule,
+  renderTransportSubmodule
 } from './renderers';
 
 interface RenderSubmoduleContentProps {
@@ -58,14 +58,12 @@ export const renderSubmoduleContent = ({ submoduleId, submodule }: RenderSubmodu
     return renderDocumentsSubmodule(submoduleId, submodule);
   }
   
-  /* Remove this block
-  if (submoduleId.startsWith('library-')) {
-    return renderLibrarySubmodule(submoduleId, submodule);
-  }
-  */
-  
   if (submoduleId.startsWith('rentals-')) {
     return renderVehicleRentalsSubmodule(submoduleId, submodule);
+  }
+  
+  if (submoduleId.startsWith('transport-')) {
+    return renderTransportSubmodule(submoduleId, submodule);
   }
   
   // Fallback to default content rendering
