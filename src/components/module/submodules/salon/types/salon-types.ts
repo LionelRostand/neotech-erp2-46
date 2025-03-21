@@ -1,6 +1,6 @@
 
 // Salon billing types
-export type InvoiceStatus = 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled';
+export type InvoiceStatus = 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled' | 'pending';
 export type PaymentMethod = 'credit_card' | 'cash' | 'mobile_payment' | 'gift_card' | 'transfer';
 
 export interface SalonInvoiceItem {
@@ -21,6 +21,7 @@ export interface SalonPayment {
   status: 'completed' | 'pending' | 'failed' | 'refunded';
   notes?: string;
   createdAt: string;
+  invoiceId?: string; // Added this field to fix the paymentService error
 }
 
 export interface SalonInvoice {
@@ -49,4 +50,85 @@ export interface PaymentSummary {
   todaySales: number;
   pendingInvoices: number;
   overdueInvoices: number;
+}
+
+// Salon client types
+export interface SalonVisit {
+  date: string;
+  service: string;
+  stylist: string;
+  price: number;
+  satisfaction?: string;
+  notes?: string;
+}
+
+export interface SalonClient {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  birthDate?: string;
+  address?: string;
+  preferences?: string;
+  notes?: string;
+  preferredStylist?: string;
+  loyaltyPoints: number;
+  createdAt: string;
+  lastVisit: string | null;
+  visits: SalonVisit[];
+  appointments: SalonAppointment[];
+}
+
+// Salon appointment types
+export interface SalonAppointment {
+  id: string;
+  clientId: string;
+  service: string;
+  stylist: string;
+  date: string;
+  time: string;
+  duration: number;
+  status: 'pending' | 'confirmed' | 'cancelled' | 'completed';
+  notes?: string;
+}
+
+// Salon product types
+export interface SalonProduct {
+  id: string;
+  name: string;
+  brand: string;
+  description: string;
+  price: number;
+  stockQuantity: number;
+  minStock: number;
+  category: string;
+  imageUrl: string;
+  relatedServices?: string[];
+  soldToday: number;
+  soldTotal: number;
+}
+
+// Salon service types
+export interface SalonService {
+  id: string;
+  name: string;
+  description: string;
+  duration: number;
+  price: number;
+  category: string;
+  available: boolean;
+  popularityScore: number;
+}
+
+// Salon stylist types
+export interface SalonStylist {
+  id: string;
+  name: string;
+  position: string;
+  specialties: string[];
+  availability: string[];
+  bio?: string;
+  image?: string;
+  rating?: number;
 }
