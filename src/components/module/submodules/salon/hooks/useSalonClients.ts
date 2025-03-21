@@ -44,7 +44,9 @@ const MOCK_CLIENTS: SalonClient[] = [
     appointments: [
       {
         id: 'a1',
+        clientId: '1', // Added missing clientId
         date: '2023-09-15T10:00:00Z',
+        time: '10:00', // Added missing time
         service: 'Coupe et brushing',
         stylist: 'Alexandra',
         status: 'confirmed',
@@ -124,7 +126,9 @@ const MOCK_CLIENTS: SalonClient[] = [
     appointments: [
       {
         id: 'a2',
+        clientId: '3', // Added missing clientId
         date: '2023-10-12T15:30:00Z',
+        time: '15:30', // Added missing time
         service: 'Balayage et coupe',
         stylist: 'Sophie',
         status: 'pending',
