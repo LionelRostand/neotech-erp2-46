@@ -19,6 +19,7 @@ export const FREIGHT = 'freight';
 export const PROJECTS = 'projects';
 export const HEALTH = 'health';
 export const LIBRARY = 'library'; // Added library collection
+export const TRANSPORT = 'transport'; // Added transport collection
 
 // Ajout des collections pour le module Health
 export const HEALTH_PATIENTS = 'health_patients';
@@ -45,6 +46,15 @@ export const LIBRARY_CATEGORIES = 'library_categories';
 export const LIBRARY_PUBLISHERS = 'library_publishers';
 export const LIBRARY_AUTHORS = 'library_authors';
 export const LIBRARY_STATS = 'library_stats';
+
+// Ajout des collections pour le module Transport
+export const TRANSPORT_RESERVATIONS = 'transport_reservations';
+export const TRANSPORT_CLIENTS = 'transport_clients';
+export const TRANSPORT_VEHICLES = 'transport_vehicles';
+export const TRANSPORT_DRIVERS = 'transport_drivers';
+export const TRANSPORT_CONTRACTS = 'transport_contracts';
+export const TRANSPORT_PAYMENTS = 'transport_payments';
+export const TRANSPORT_LOCATIONS = 'transport_locations';
 
 // Messages subcollections
 export const MESSAGES = {
@@ -94,6 +104,18 @@ export const LIBRARY_COLLECTIONS = {
   STATS: 'library_stats'
 };
 
+// Transport subcollections
+export const TRANSPORT_COLLECTIONS = {
+  RESERVATIONS: 'transport_reservations',
+  CLIENTS: 'transport_clients',
+  VEHICLES: 'transport_vehicles',
+  DRIVERS: 'transport_drivers',
+  CONTRACTS: 'transport_contracts',
+  PAYMENTS: 'transport_payments',
+  LOCATIONS: 'transport_locations',
+  LOYALTY: 'transport_loyalty'
+};
+
 // Exports as a single object for convenience
 export const COLLECTIONS = {
   USERS,
@@ -116,6 +138,7 @@ export const COLLECTIONS = {
   PROJECTS: PROJECTS_COLLECTIONS,
   HEALTH,
   LIBRARY: LIBRARY_COLLECTIONS,
+  TRANSPORT: TRANSPORT_COLLECTIONS,
   
   // Health module collections
   HEALTH_PATIENTS,
@@ -141,5 +164,14 @@ export const COLLECTIONS = {
   LIBRARY_CATEGORIES,
   LIBRARY_PUBLISHERS,
   LIBRARY_AUTHORS,
-  LIBRARY_STATS
+  LIBRARY_STATS,
+  
+  // Transport module collections
+  TRANSPORT_RESERVATIONS,
+  TRANSPORT_CLIENTS,
+  TRANSPORT_VEHICLES,
+  TRANSPORT_DRIVERS,
+  TRANSPORT_CONTRACTS,
+  TRANSPORT_PAYMENTS,
+  TRANSPORT_LOCATIONS
 };
