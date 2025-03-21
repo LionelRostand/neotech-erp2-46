@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { Card } from "@/components/ui/card";
+import { Tabs } from "@/components/ui/tabs";
 import { PlanningProvider } from './planning/context/PlanningContext';
 import { mockVehicles, mockMaintenanceSchedules, mockExtensionRequests, mockDrivers } from './planning/mockData';
 import PlanningHeader from './planning/PlanningHeader';
@@ -11,20 +12,22 @@ import { usePlanning } from './planning/context/PlanningContext';
 
 // Wrapper component to use the context
 const PlanningContent = () => {
-  const { maintenanceDialogOpen, setMaintenanceDialogOpen, selectedVehicle, handleSaveMaintenance } = usePlanning();
+  const { maintenanceDialogOpen, setMaintenanceDialogOpen, selectedVehicle, handleSaveMaintenance, activeTab, setActiveTab } = usePlanning();
 
   return (
     <>
       <PlanningHeader />
       
       <Card>
-        <PlanningTabs />
-        <PlanningTabContent 
-          mockVehicles={mockVehicles}
-          mockMaintenanceSchedules={mockMaintenanceSchedules}
-          mockExtensionRequests={mockExtensionRequests}
-          mockDrivers={mockDrivers}
-        />
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <PlanningTabs />
+          <PlanningTabContent 
+            mockVehicles={mockVehicles}
+            mockMaintenanceSchedules={mockMaintenanceSchedules}
+            mockExtensionRequests={mockExtensionRequests}
+            mockDrivers={mockDrivers}
+          />
+        </Tabs>
       </Card>
 
       {/* Maintenance Schedule Dialog */}
