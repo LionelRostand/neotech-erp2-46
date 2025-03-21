@@ -1,13 +1,16 @@
 
 import React from 'react';
 import { SubModule } from '@/data/types/modules';
-import SalonDashboard from '../salon/SalonDashboard';
+import SalonDashboard from '../salon/dashboard/SalonDashboard';
 import SalonInventory from '../salon/inventory/SalonInventory';
 import SalonProducts from '../salon/products/SalonProducts';
 import SalonLoyalty from '../salon/loyalty/SalonLoyalty';
 import SalonReports from '../salon/reports/SalonReports';
 import SalonBooking from '../salon/booking/SalonBooking';
 import SalonBilling from '../salon/billing/SalonBilling';
+import SalonServices from '../salon/services/SalonServices';
+import SalonClients from '../salon/clients/SalonClients';
+import SalonAppointments from '../salon/appointments/SalonAppointments';
 import { useLocation } from 'react-router-dom';
 
 interface SalonRendererProps {
@@ -38,6 +41,24 @@ export const SalonRenderer: React.FC<SalonRendererProps> = ({ submoduleId }) => 
       return <SalonBooking />;
     case 'salon-billing':
       return <SalonBilling />;
+    case 'salon-services':
+      return <SalonServices />;
+    case 'salon-clients':
+      return <SalonClients />;
+    case 'salon-appointments':
+      return <SalonAppointments />;
+    case 'salon-stylists':
+      return (
+        <div className="flex items-center justify-center h-64 text-muted-foreground">
+          Module de gestion des coiffeurs en cours de développement
+        </div>
+      );
+    case 'salon-settings':
+      return (
+        <div className="flex items-center justify-center h-64 text-muted-foreground">
+          Module de paramètres en cours de développement
+        </div>
+      );
     default:
       return (
         <div className="flex items-center justify-center h-64 text-muted-foreground">
@@ -46,3 +67,4 @@ export const SalonRenderer: React.FC<SalonRendererProps> = ({ submoduleId }) => 
       );
   }
 };
+
