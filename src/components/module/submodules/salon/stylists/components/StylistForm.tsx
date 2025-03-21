@@ -25,13 +25,26 @@ interface StylistFormProps {
   onSave: (data: any) => void;
 }
 
+// Define the form data type
+interface StylistFormData {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  experience: number;
+  specialties: string[];
+  status: 'available' | 'busy' | 'off';
+  bio: string;
+  commissionRate: number;
+}
+
 const specialtiesList = [
   "Coupe femme", "Coupe homme", "Coloration", "Mèches", "Balayage", 
   "Chignon", "Lissage", "Extensions", "Permanente", "Coiffage", "Barbe", "Soin"
 ];
 
 const StylistForm: React.FC<StylistFormProps> = ({ stylist, onClose, onSave }) => {
-  const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm({
+  const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm<StylistFormData>({
     defaultValues: stylist ? {
       ...stylist,
     } : {
@@ -59,7 +72,7 @@ const StylistForm: React.FC<StylistFormProps> = ({ stylist, onClose, onSave }) =
     setValue('specialties', selectedSpecialties.filter(s => s !== specialty));
   };
 
-  const onSubmit = (data) => {
+  const onSubmit = (data: StylistFormData) => {
     onSave({
       id: stylist?.id || Date.now().toString(),
       ...data
@@ -182,7 +195,7 @@ const StylistForm: React.FC<StylistFormProps> = ({ stylist, onClose, onSave }) =
         <Label>Statut actuel</Label>
         <RadioGroup 
           defaultValue={stylist?.status || 'available'} 
-          onValueChange={v => setValue('status', v)}
+          onValueChange={v => setValue('status', v as 'available' | 'busy' | 'off')}
           className="flex space-x-4"
         >
           <div className="flex items-center space-x-2">
