@@ -239,6 +239,7 @@ const TransportPlanning = () => {
           </div>
         </CardHeader>
         <CardContent>
+          {/* Ensure TabsContent components are wrapped inside the same Tabs component that contains the TabsList */}
           <Tabs value={activeTab}>
             <TabsContent value="availability">
               <AvailabilityCalendar 
