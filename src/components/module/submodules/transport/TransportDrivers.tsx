@@ -1,22 +1,98 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Search, Filter } from "lucide-react";
+import { Plus, Search, Filter, AlertCircle } from "lucide-react";
+import { toast } from "sonner";
 import DriversHeader from './components/drivers/DriversHeader';
 import DriversTable from './components/drivers/DriversTable';
 import DriverPerformance from './components/drivers/DriverPerformance';
 import DriverAvailability from './components/drivers/DriverAvailability';
+import { useSafeFirestore } from '@/hooks/use-safe-firestore';
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const TransportDrivers = () => {
   const [activeTab, setActiveTab] = useState('list');
   const [searchTerm, setSearchTerm] = useState('');
+  const [isNetworkError, setIsNetworkError] = useState(false);
+  
+  // Use the safe firestore hook for better error handling
+  const driversCollection = useSafeFirestore('drivers');
+
+  // Handle network connectivity issues
+  useEffect(() => {
+    const checkConnection = async () => {
+      try {
+        // Attempt to reconnect if there's a network error
+        if (isNetworkError) {
+          const success = await driversCollection.reconnectAndRefetch();
+          if (success) {
+            setIsNetworkError(false);
+            toast.success("Connexion rétablie avec succès");
+          }
+        }
+      } catch (error) {
+        console.error("Error checking connection:", error);
+      }
+    };
+
+    checkConnection();
+    
+    // Check connection when tab is activated
+    const handleVisibilityChange = () => {
+      if (!document.hidden && isNetworkError) {
+        checkConnection();
+      }
+    };
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [isNetworkError, driversCollection]);
+
+  // Handle retry attempts when network errors occur
+  const handleRetryConnection = async () => {
+    toast.info("Tentative de reconnexion...");
+    try {
+      const success = await driversCollection.reconnectAndRefetch();
+      if (success) {
+        setIsNetworkError(false);
+        toast.success("Connexion rétablie avec succès");
+      } else {
+        toast.error("Échec de la reconnexion. Veuillez réessayer ultérieurement.");
+      }
+    } catch (error) {
+      console.error("Error during retry:", error);
+      toast.error("Une erreur est survenue lors de la tentative de reconnexion");
+    }
+  };
+
+  // Detect network errors from the collection
+  useEffect(() => {
+    if (driversCollection.networkError) {
+      setIsNetworkError(true);
+    }
+  }, [driversCollection.networkError]);
 
   return (
     <div className="space-y-6">
       <DriversHeader />
+      
+      {isNetworkError && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Problème de connexion</AlertTitle>
+          <AlertDescription className="flex items-center justify-between">
+            <span>Impossible de se connecter à la base de données. Certaines fonctionnalités pourraient être limitées.</span>
+            <Button variant="outline" size="sm" onClick={handleRetryConnection}>
+              Réessayer
+            </Button>
+          </AlertDescription>
+        </Alert>
+      )}
       
       <div className="flex flex-col sm:flex-row gap-4">
         <div className="relative flex-1">
