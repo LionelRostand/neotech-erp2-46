@@ -87,24 +87,46 @@ export const reconnectToFirestore = async (): Promise<boolean> => {
 };
 
 /**
+ * Check if an error is a network-related error
+ */
+export const isNetworkError = (err: any): boolean => {
+  if (!err) return false;
+  
+  // Extract the error message for easier checks
+  const errorMessage = (err.message || '').toLowerCase();
+  const errorCode = err.code || '';
+  
+  return (
+    errorCode === 'unavailable' || 
+    errorCode === 'failed-precondition' ||
+    errorMessage.includes('quic_protocol_error') ||
+    errorMessage.includes('network error') ||
+    errorMessage.includes('network_io_suspended') ||
+    errorMessage.includes('the server responded with a status of 400') ||
+    errorMessage.includes('client is offline')
+  );
+};
+
+/**
  * Handle network errors and attempt to retry operations
  */
 export const handleNetworkError = async (err: any, retryOperation: () => Promise<any>) => {
-  // QUIC protocol errors, unavailable, or failed-precondition errors are typically network related
-  const isNetworkError = 
-    err.code === 'unavailable' || 
-    err.code === 'failed-precondition' ||
-    err.message?.includes('QUIC_PROTOCOL_ERROR') ||
-    err.message?.includes('network error') ||
-    err.message?.includes('Network Error') ||
-    err.message?.includes('Client is offline');
-  
-  if (isNetworkError) {
+  if (isNetworkError(err)) {
+    console.log('Network error detected:', err.message || err);
     toast.error("Problème de connexion à la base de données. Tentative de reconnexion...");
+    
+    // For errors indicating suspended I/O or bad requests, let's add a small delay
+    // before attempting reconnection to allow the network to stabilize
+    if (err.message?.includes('NETWORK_IO_SUSPENDED') || 
+        err.message?.includes('status of 400')) {
+      console.log('Special handling for NETWORK_IO_SUSPENDED or 400 error');
+      await new Promise(resolve => setTimeout(resolve, 2000));
+    }
     
     const reconnected = await reconnectToFirestore();
     if (reconnected) {
       // Retry the operation
+      console.log('Reconnected successfully, retrying operation');
       return retryOperation();
     } else {
       throw new Error("Impossible de se connecter à la base de données. Veuillez vérifier votre connexion internet.");
@@ -131,11 +153,11 @@ export const executeWithNetworkRetry = async <T>(
       attempts++;
       console.error(`Operation failed (attempt ${attempts}/${maxRetries}):`, error);
       
-      // Add specific handling for QUIC_PROTOCOL_ERROR
-      if (error.message?.includes('QUIC_PROTOCOL_ERROR')) {
-        console.log('Detected QUIC_PROTOCOL_ERROR, attempting to recover...');
+      // Add delay for network issues to allow potential recovery
+      if (isNetworkError(error)) {
+        console.log('Network error detected, adding delay before retry');
         // Force a small delay before retry
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await new Promise(resolve => setTimeout(resolve, 1500));
       }
       
       if (attempts <= maxRetries) {

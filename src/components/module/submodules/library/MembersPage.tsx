@@ -10,11 +10,13 @@ import AccessPointsTabContent from './members/AccessPointsTabContent';
 import { useMembersData } from './hooks/useMembersData';
 import { useMemberDetails } from './hooks/useMemberDetails';
 import { Button } from '@/components/ui/button';
-import { RefreshCw } from 'lucide-react';
+import { RefreshCw, AlertTriangle } from 'lucide-react';
+import { toast } from 'sonner';
 
 const MembersPage: React.FC = () => {
   console.log("MembersPage component rendering");
   const [activeTab, setActiveTab] = useState("list");
+  const [retryCounter, setRetryCounter] = useState(0);
   
   useEffect(() => {
     console.log("MembersPage mounted");
@@ -31,7 +33,8 @@ const MembersPage: React.FC = () => {
     handleAddMember,
     handleUpdateMember,
     handleDeleteMember,
-    forceRefresh
+    forceRefresh,
+    lastError
   } = useMembersData();
 
   const {
@@ -48,22 +51,53 @@ const MembersPage: React.FC = () => {
     resetMemberForms
   } = useMemberDetails();
 
+  // Auto-retry logic for severe errors
+  useEffect(() => {
+    if (lastError && filteredMembers.length === 0 && retryCounter < 2) {
+      const timer = setTimeout(() => {
+        console.log(`Auto-retry attempt ${retryCounter + 1}/2`);
+        setRetryCounter(prev => prev + 1);
+        forceRefresh();
+      }, 5000); // 5 second delay between auto-retries
+      
+      return () => clearTimeout(timer);
+    }
+  }, [lastError, filteredMembers.length, retryCounter, forceRefresh]);
+
+  const handleRetry = () => {
+    toast.info("Tentative de reconnexion...");
+    setRetryCounter(0); // Reset counter on manual retry
+    forceRefresh();
+  };
+
   return (
     <div className="space-y-6">
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Gestion des Adhérents</CardTitle>
-          {isLoading && (
+          <div className="flex items-center gap-2">
+            {lastError && (
+              <Button 
+                variant="outline" 
+                size="sm"
+                className="flex items-center gap-1 text-amber-500 border-amber-500 hover:bg-amber-50"
+                onClick={() => toast.info(`Erreur réseau: ${lastError.message}`)}
+              >
+                <AlertTriangle className="h-4 w-4" />
+                Erreur réseau
+              </Button>
+            )}
             <Button 
               variant="outline" 
               size="sm" 
-              onClick={forceRefresh}
+              onClick={handleRetry}
               className="flex items-center gap-1"
+              disabled={isLoading}
             >
-              <RefreshCw className="h-4 w-4" />
-              Recharger
+              <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+              {isLoading ? 'Chargement...' : 'Recharger'}
             </Button>
-          )}
+          </div>
         </CardHeader>
         <CardContent>
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">

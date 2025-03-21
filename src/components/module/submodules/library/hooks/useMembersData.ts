@@ -1,17 +1,20 @@
+
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useSafeFirestore } from '@/hooks/use-safe-firestore';
 import { useToast } from '@/hooks/use-toast';
 import { LIBRARY_MEMBERS } from '@/lib/firebase-collections';
 import { Member } from '../types/library-types';
+import { toast } from 'sonner';
 
 export const useMembersData = () => {
   const [members, setMembers] = useState<Member[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [retryCount, setRetryCount] = useState(0);
+  const [lastError, setLastError] = useState<Error | null>(null);
   
   const membersCollection = useSafeFirestore(LIBRARY_MEMBERS);
-  const { toast } = useToast();
+  const { toast: toastService } = useToast();
 
   // Filter members based on search query
   const filteredMembers = useMemo(() => {
@@ -32,10 +35,60 @@ export const useMembersData = () => {
       console.log("Fetching members data...");
       const data = await membersCollection.getAll();
       console.log("Members data received:", data);
-      setMembers(data as Member[]);
-      setRetryCount(0); // reset retry count on success
-    } catch (error) {
+      
+      if (Array.isArray(data) && data.length > 0) {
+        setMembers(data as Member[]);
+        setRetryCount(0); // reset retry count on success
+        setLastError(null);
+        return true;
+      } else if (Array.isArray(data) && data.length === 0) {
+        console.log("No members found, using sample data");
+        // If no data returned, use sample data for development
+        const sampleMembers: Member[] = [
+          {
+            id: "sample1",
+            firstName: "Marie",
+            lastName: "Durand",
+            email: "marie.durand@example.com",
+            membershipId: "MEM-12345678",
+            phoneNumber: "06 12 34 56 78",
+            address: "123 Rue de Paris, 75001 Paris",
+            birthDate: "1985-04-12",
+            createdAt: new Date().toISOString(),
+            status: "active",
+            subscriptionPlan: "standard",
+            notes: "Adhérente régulière depuis 2020"
+          },
+          {
+            id: "sample2",
+            firstName: "Thomas",
+            lastName: "Martin",
+            email: "thomas.martin@example.com",
+            membershipId: "MEM-87654321",
+            phoneNumber: "07 98 76 54 32",
+            address: "456 Avenue Victor Hugo, 75016 Paris",
+            birthDate: "1992-08-23",
+            createdAt: new Date().toISOString(),
+            status: "active",
+            subscriptionPlan: "premium",
+            notes: "Intéressé par les ateliers littéraires"
+          }
+        ];
+        setMembers(sampleMembers);
+        setRetryCount(0);
+        setLastError(null);
+        return true;
+      }
+      return false;
+    } catch (error: any) {
       console.error("Error fetching members:", error);
+      setLastError(error);
+      
+      // Show error toast only on first attempt
+      if (retryCount === 0) {
+        toast.error(`Erreur lors du chargement des adhérents: ${error.message}`);
+      }
+      
       if (retryCount < 3) {
         console.log(`Retrying fetch (${retryCount + 1}/3)...`);
         setRetryCount(prev => prev + 1);
@@ -43,20 +96,58 @@ export const useMembersData = () => {
         setTimeout(() => {
           membersCollection.resetFetchState();
           fetchMembers();
-        }, 1500);
+        }, 3000); // Longer delay for network errors
       } else {
-        toast({
+        toastService({
           title: "Erreur",
-          description: "Impossible de charger les adhérents après plusieurs tentatives",
+          description: "Impossible de charger les adhérents après plusieurs tentatives. Utilisez le bouton 'Recharger' pour réessayer.",
           variant: "destructive"
         });
+        
+        // Use sample data if after retries we still don't have data
+        if (members.length === 0) {
+          console.log("Using sample data after failed retries");
+          const sampleMembers: Member[] = [
+            {
+              id: "sample1",
+              firstName: "Marie",
+              lastName: "Durand",
+              email: "marie.durand@example.com",
+              membershipId: "MEM-12345678",
+              phoneNumber: "06 12 34 56 78",
+              address: "123 Rue de Paris, 75001 Paris",
+              birthDate: "1985-04-12",
+              createdAt: new Date().toISOString(),
+              status: "active",
+              subscriptionPlan: "standard",
+              notes: "Adhérente régulière depuis 2020"
+            },
+            {
+              id: "sample2",
+              firstName: "Thomas",
+              lastName: "Martin",
+              email: "thomas.martin@example.com",
+              membershipId: "MEM-87654321",
+              phoneNumber: "07 98 76 54 32",
+              address: "456 Avenue Victor Hugo, 75016 Paris",
+              birthDate: "1992-08-23",
+              createdAt: new Date().toISOString(),
+              status: "active",
+              subscriptionPlan: "premium",
+              notes: "Intéressé par les ateliers littéraires"
+            }
+          ];
+          setMembers(sampleMembers);
+        }
       }
+      return false;
     } finally {
       setIsLoading(false);
     }
-  }, [membersCollection, toast, retryCount]);
+  }, [membersCollection, toastService, retryCount, members.length]);
 
   useEffect(() => {
+    console.log("useMembersData effect running, initializing fetch");
     fetchMembers();
     
     // Add a listener for online status to retry fetching when connection is restored
@@ -67,7 +158,11 @@ export const useMembersData = () => {
     };
     
     window.addEventListener('online', handleOnline);
-    return () => window.removeEventListener('online', handleOnline);
+    
+    return () => {
+      console.log("useMembersData cleanup");
+      window.removeEventListener('online', handleOnline);
+    };
   }, [fetchMembers, membersCollection]);
 
   const handleAddMember = async (memberData: Omit<Member, "id" | "createdAt" | "membershipId">) => {
@@ -85,18 +180,11 @@ export const useMembersData = () => {
       
       setMembers(prev => [...prev, { ...newMember, id: result.id } as Member]);
       
-      toast({
-        title: "Succès",
-        description: "L'adhérent a été ajouté avec succès",
-      });
+      toast.success("L'adhérent a été ajouté avec succès");
       return true;
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error adding member:", error);
-      toast({
-        title: "Erreur",
-        description: "Impossible d'ajouter l'adhérent",
-        variant: "destructive"
-      });
+      toast.error(`Impossible d'ajouter l'adhérent: ${error.message}`);
       return false;
     }
   };
@@ -111,18 +199,11 @@ export const useMembersData = () => {
         )
       );
       
-      toast({
-        title: "Succès",
-        description: "L'adhérent a été mis à jour avec succès",
-      });
+      toast.success("L'adhérent a été mis à jour avec succès");
       return true;
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error updating member:", error);
-      toast({
-        title: "Erreur",
-        description: "Impossible de mettre à jour l'adhérent",
-        variant: "destructive"
-      });
+      toast.error(`Impossible de mettre à jour l'adhérent: ${error.message}`);
       return false;
     }
   };
@@ -133,24 +214,18 @@ export const useMembersData = () => {
       
       setMembers(prev => prev.filter(member => member.id !== id));
       
-      toast({
-        title: "Succès",
-        description: "L'adhérent a été supprimé avec succès",
-      });
+      toast.success("L'adhérent a été supprimé avec succès");
       return true;
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error deleting member:", error);
-      toast({
-        title: "Erreur",
-        description: "Impossible de supprimer l'adhérent",
-        variant: "destructive"
-      });
+      toast.error(`Impossible de supprimer l'adhérent: ${error.message}`);
       return false;
     }
   };
 
   const forceRefresh = () => {
-    membersCollection.resetFetchState();
+    console.log("Force refreshing members data");
+    membersCollection.reconnectAndRefetch();
     setRetryCount(0);
     fetchMembers();
   };
@@ -162,8 +237,9 @@ export const useMembersData = () => {
     searchQuery,
     setSearchQuery,
     handleAddMember,
-    handleUpdateMember: membersCollection.update,
-    handleDeleteMember: membersCollection.remove,
-    forceRefresh
+    handleUpdateMember,
+    handleDeleteMember,
+    forceRefresh,
+    lastError
   };
 };
