@@ -1,6 +1,5 @@
-
 import { useState, useEffect } from 'react';
-import { SalonService } from '../../../types/salon-types';
+import { SalonService } from '../../types/salon-types';
 
 export const useSalonServices = () => {
   const [services, setServices] = useState<SalonService[]>([]);

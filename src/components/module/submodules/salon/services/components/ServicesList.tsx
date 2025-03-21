@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -7,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Edit2, Trash2, Clock, UserCheck } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useSalonServices } from '../hooks/useSalonServices';
-import { SalonService } from '../../../types/salon-types';
+import { SalonService } from '../../types/salon-types';
 
 interface ServicesListProps {
   searchQuery: string;
@@ -17,7 +16,6 @@ const ServicesList: React.FC<ServicesListProps> = ({ searchQuery }) => {
   const { services, loading } = useSalonServices();
   const { toast } = useToast();
 
-  // Filter services based on search query
   const filteredServices = services.filter(service => 
     service.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     service.description.toLowerCase().includes(searchQuery.toLowerCase()) ||

@@ -6,8 +6,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useToast } from "@/hooks/use-toast";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useServiceForm } from '../hooks/useServiceForm';
+import { useToast } from '@/hooks/use-toast';
 
 interface AddServiceDialogProps {
   open: boolean;
@@ -15,156 +16,145 @@ interface AddServiceDialogProps {
 }
 
 const AddServiceDialog: React.FC<AddServiceDialogProps> = ({ open, onOpenChange }) => {
-  const { toast } = useToast();
   const { formData, formErrors, stylists, handleChange, handleSubmit, isValid } = useServiceForm();
-  
+  const { toast } = useToast();
+
   const onSubmit = () => {
     if (handleSubmit()) {
+      onOpenChange(false);
       toast({
         title: "Service ajouté",
-        description: "Le service a été ajouté avec succès"
+        description: "Le service a été ajouté avec succès."
       });
-      onOpenChange(false);
     }
+  };
+
+  const handleSpecialistChange = (stylistName: string, checked: boolean) => {
+    const currentSpecialists = [...formData.specialists];
+    
+    if (checked) {
+      // Add the stylist if not already in the array
+      if (!currentSpecialists.includes(stylistName)) {
+        currentSpecialists.push(stylistName);
+      }
+    } else {
+      // Remove the stylist from the array
+      const index = currentSpecialists.indexOf(stylistName);
+      if (index !== -1) {
+        currentSpecialists.splice(index, 1);
+      }
+    }
+    
+    handleChange('specialists', currentSpecialists);
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>Ajouter un service</DialogTitle>
         </DialogHeader>
-        
-        <div className="space-y-4 py-4">
-          <div className="space-y-2">
+
+        <div className="grid gap-4 py-4">
+          <div className="grid gap-2">
             <Label htmlFor="name">Nom du service *</Label>
             <Input
               id="name"
-              placeholder="Coupe & Brushing"
+              placeholder="Coupe et brushing"
               value={formData.name}
               onChange={(e) => handleChange('name', e.target.value)}
             />
-            {formErrors.name && (
-              <p className="text-sm text-destructive">{formErrors.name}</p>
-            )}
+            {formErrors.name && <p className="text-sm text-destructive">{formErrors.name}</p>}
           </div>
-          
-          <div className="space-y-2">
+
+          <div className="grid gap-2">
             <Label htmlFor="description">Description</Label>
             <Textarea
               id="description"
-              placeholder="Description détaillée du service"
-              rows={3}
+              placeholder="Courte description du service"
               value={formData.description}
               onChange={(e) => handleChange('description', e.target.value)}
+              rows={3}
             />
           </div>
-          
+
           <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
+            <div className="grid gap-2">
               <Label htmlFor="price">Prix (€) *</Label>
               <Input
                 id="price"
                 type="number"
-                placeholder="30"
-                value={formData.price === 0 ? '' : formData.price.toString()}
+                placeholder="45"
+                value={formData.price || ''}
                 onChange={(e) => handleChange('price', e.target.value)}
               />
-              {formErrors.price && (
-                <p className="text-sm text-destructive">{formErrors.price}</p>
-              )}
+              {formErrors.price && <p className="text-sm text-destructive">{formErrors.price}</p>}
             </div>
-            
-            <div className="space-y-2">
+
+            <div className="grid gap-2">
               <Label htmlFor="duration">Durée (min) *</Label>
               <Input
                 id="duration"
                 type="number"
-                placeholder="45"
-                value={formData.duration === 0 ? '' : formData.duration.toString()}
+                placeholder="60"
+                value={formData.duration || ''}
                 onChange={(e) => handleChange('duration', e.target.value)}
               />
-              {formErrors.duration && (
-                <p className="text-sm text-destructive">{formErrors.duration}</p>
-              )}
+              {formErrors.duration && <p className="text-sm text-destructive">{formErrors.duration}</p>}
             </div>
           </div>
-          
-          <div className="space-y-2">
+
+          <div className="grid gap-2">
             <Label htmlFor="category">Catégorie *</Label>
             <Select 
-              value={formData.category || "uncategorized"} 
+              value={formData.category} 
               onValueChange={(value) => handleChange('category', value)}
             >
-              <SelectTrigger>
+              <SelectTrigger id="category">
                 <SelectValue placeholder="Sélectionner une catégorie" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="uncategorized">Non catégorisé</SelectItem>
                 <SelectItem value="coupe">Coupe</SelectItem>
                 <SelectItem value="coloration">Coloration</SelectItem>
                 <SelectItem value="technique">Technique</SelectItem>
                 <SelectItem value="coiffage">Coiffage</SelectItem>
                 <SelectItem value="soin">Soin</SelectItem>
                 <SelectItem value="homme">Homme</SelectItem>
+                <SelectItem value="enfant">Enfant</SelectItem>
               </SelectContent>
             </Select>
-            {formErrors.category && (
-              <p className="text-sm text-destructive">{formErrors.category}</p>
-            )}
+            {formErrors.category && <p className="text-sm text-destructive">{formErrors.category}</p>}
           </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="specialists">Coiffeurs spécialisés</Label>
-            <Select 
-              value={formData.specialists.length > 0 ? "selected" : "all"} 
-              onValueChange={(value) => {
-                if (value === "all") {
-                  handleChange('specialists', []);
-                }
-              }}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Sélectionner des coiffeurs" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Tous les coiffeurs</SelectItem>
-                <SelectItem value="selected">Coiffeurs sélectionnés</SelectItem>
-              </SelectContent>
-            </Select>
-            
-            {formData.specialists.length > 0 && (
-              <div className="mt-2 space-y-2">
-                {stylists.map(stylist => (
-                  <div key={stylist.id} className="flex items-center space-x-2">
-                    <input
-                      type="checkbox"
-                      id={`stylist-${stylist.id}`}
-                      checked={formData.specialists.includes(stylist.firstName)}
-                      onChange={(e) => {
-                        if (e.target.checked) {
-                          handleChange('specialists', [...formData.specialists, stylist.firstName]);
-                        } else {
-                          handleChange('specialists', formData.specialists.filter(s => s !== stylist.firstName));
-                        }
-                      }}
-                      className="h-4 w-4 rounded border-gray-300 text-primary"
-                    />
-                    <Label htmlFor={`stylist-${stylist.id}`} className="text-sm font-normal cursor-pointer">
-                      {stylist.firstName} {stylist.lastName}
-                    </Label>
-                  </div>
-                ))}
-              </div>
-            )}
+
+          <div className="grid gap-2">
+            <Label>Coiffeurs spécialisés</Label>
+            <div className="grid grid-cols-2 gap-2">
+              {stylists.map((stylist) => (
+                <div key={stylist.id} className="flex items-center space-x-2">
+                  <Checkbox 
+                    id={`stylist-${stylist.id}`} 
+                    checked={formData.specialists.includes(`${stylist.firstName}`)}
+                    onCheckedChange={(checked) => 
+                      handleSpecialistChange(stylist.firstName, checked === true)
+                    }
+                  />
+                  <Label 
+                    htmlFor={`stylist-${stylist.id}`}
+                    className="text-sm font-normal cursor-pointer"
+                  >
+                    {stylist.firstName}
+                  </Label>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
-        
+
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Annuler
           </Button>
-          <Button onClick={onSubmit} disabled={!isValid}>
+          <Button type="submit" disabled={!isValid} onClick={onSubmit}>
             Ajouter
           </Button>
         </DialogFooter>

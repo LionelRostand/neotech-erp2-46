@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { SalonStylist } from '../../../types/salon-types';
+import { SalonStylist } from '../../types/salon-types';
 
 interface ServiceFormData {
   name: string;
@@ -44,8 +44,12 @@ export const useServiceForm = () => {
     if (field === 'price' || field === 'duration') {
       const numValue = value === '' ? 0 : parseFloat(value as string);
       updatedData[field] = numValue;
+    } else if (field === 'specialists') {
+      // Ensure specialists is always treated as an array
+      updatedData.specialists = Array.isArray(value) ? value : [];
     } else {
-      updatedData[field] = value;
+      // For other string fields
+      updatedData[field as 'name' | 'description' | 'category'] = value as string;
     }
 
     setFormData(updatedData);
