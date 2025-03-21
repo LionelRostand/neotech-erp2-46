@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -98,6 +97,12 @@ const LocationsManagement = () => {
     location.address.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const parisCoordinates = {
+    latitude: 48.852969,
+    longitude: 2.349903,
+    popup: "Centre de Paris"
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -166,6 +171,7 @@ const LocationsManagement = () => {
         <TabsContent value="map" className="mt-4">
           <LocationMap 
             locations={filteredLocations}
+            defaultMarker={filteredLocations.length === 0 ? parisCoordinates : undefined}
           />
         </TabsContent>
       </Tabs>

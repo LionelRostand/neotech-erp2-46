@@ -9,9 +9,14 @@ import type { Map as LeafletMap, LatLngTuple, LatLngBoundsExpression } from 'lea
 
 interface LocationMapProps {
   locations: Location[];
+  defaultMarker?: {
+    latitude: number;
+    longitude: number;
+    popup?: string;
+  };
 }
 
-const LocationMap: React.FC<LocationMapProps> = ({ locations }) => {
+const LocationMap: React.FC<LocationMapProps> = ({ locations, defaultMarker }) => {
   const mapRef = useRef<HTMLDivElement>(null);
   
   useEffect(() => {
@@ -45,8 +50,13 @@ const LocationMap: React.FC<LocationMapProps> = ({ locations }) => {
           let lon = 2.349903;
           let zoom = 11;
           
+          // If we have a default marker, use its coordinates
+          if (defaultMarker) {
+            lat = defaultMarker.latitude;
+            lon = defaultMarker.longitude;
+          }
           // If we have locations with coordinates, use the first one
-          if (locations.length > 0 && locations[0].coordinates) {
+          else if (locations.length > 0 && locations[0].coordinates) {
             lat = locations[0].coordinates.latitude;
             lon = locations[0].coordinates.longitude;
           }
@@ -60,6 +70,14 @@ const LocationMap: React.FC<LocationMapProps> = ({ locations }) => {
             minZoom: 1,
             maxZoom: 20
           }).addTo(map);
+          
+          // Add default marker if specified
+          if (defaultMarker) {
+            const marker = window.L.marker([defaultMarker.latitude, defaultMarker.longitude]).addTo(map);
+            if (defaultMarker.popup) {
+              marker.bindPopup(defaultMarker.popup);
+            }
+          }
           
           // Add markers for each location
           locations.forEach(location => {
@@ -105,7 +123,7 @@ const LocationMap: React.FC<LocationMapProps> = ({ locations }) => {
         // Clean up if needed
       }
     };
-  }, [locations]);
+  }, [locations, defaultMarker]);
   
   return (
     <Card className="w-full">
