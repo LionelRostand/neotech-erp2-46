@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { CreditCard, LockKeyhole, Percent, Wallet } from 'lucide-react';
+import { CreditCard, LockKeyhole, Percent, Wallet, Receipt, Smartphone, Euro } from 'lucide-react';
 
 const PaymentSettings = () => {
   return (
@@ -61,7 +61,7 @@ const PaymentSettings = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
               <div className="flex items-center space-x-3 bg-muted/30 p-3 rounded-lg">
                 <div className="flex items-center justify-center h-10 w-10 rounded-md bg-primary/10">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary"><path d="M2 10h18v6c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2v-6z"/><path d="M17.4 6a4 4 0 0 0-3.7-2.5H10c-1.9 0-3.3 1.3-3.7 2.5"/></svg>
+                  <CreditCard className="h-5 w-5 text-primary" />
                 </div>
                 <div className="flex-1">
                   <div className="font-medium">Cartes de crédit</div>
@@ -72,7 +72,7 @@ const PaymentSettings = () => {
               
               <div className="flex items-center space-x-3 bg-muted/30 p-3 rounded-lg">
                 <div className="flex items-center justify-center h-10 w-10 rounded-md bg-primary/10">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
+                  <Smartphone className="h-5 w-5 text-primary" />
                 </div>
                 <div className="flex-1">
                   <div className="font-medium">Apple Pay</div>
@@ -83,13 +83,35 @@ const PaymentSettings = () => {
               
               <div className="flex items-center space-x-3 bg-muted/30 p-3 rounded-lg">
                 <div className="flex items-center justify-center h-10 w-10 rounded-md bg-primary/10">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary"><rect width="20" height="14" x="2" y="5" rx="2"/><circle cx="6" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="18" cy="12" r="1"/></svg>
+                  <Smartphone className="h-5 w-5 text-primary" />
                 </div>
                 <div className="flex-1">
                   <div className="font-medium">Google Pay</div>
                   <div className="text-xs text-muted-foreground">Paiement par appareil Android</div>
                 </div>
                 <Toggle defaultPressed aria-label="Activer Google Pay" />
+              </div>
+              
+              <div className="flex items-center space-x-3 bg-muted/30 p-3 rounded-lg">
+                <div className="flex items-center justify-center h-10 w-10 rounded-md bg-primary/10">
+                  <Euro className="h-5 w-5 text-primary" />
+                </div>
+                <div className="flex-1">
+                  <div className="font-medium">Virement bancaire</div>
+                  <div className="text-xs text-muted-foreground">Paiement par virement</div>
+                </div>
+                <Toggle aria-label="Activer les virements bancaires" />
+              </div>
+              
+              <div className="flex items-center space-x-3 bg-muted/30 p-3 rounded-lg">
+                <div className="flex items-center justify-center h-10 w-10 rounded-md bg-primary/10">
+                  <Receipt className="h-5 w-5 text-primary" />
+                </div>
+                <div className="flex-1">
+                  <div className="font-medium">Paiement sur place</div>
+                  <div className="text-xs text-muted-foreground">Espèces ou carte en salon</div>
+                </div>
+                <Toggle defaultPressed aria-label="Activer le paiement sur place" />
               </div>
             </div>
           </div>

@@ -7,6 +7,8 @@ import SalonProducts from '../salon/products/SalonProducts';
 import SalonLoyalty from '../salon/loyalty/SalonLoyalty';
 import SalonReports from '../salon/reports/SalonReports';
 import SalonBooking from '../salon/booking/SalonBooking';
+import SalonBilling from '../salon/billing/SalonBilling';
+import { useLocation } from 'react-router-dom';
 
 interface SalonRendererProps {
   submoduleId: string;
@@ -14,6 +16,13 @@ interface SalonRendererProps {
 }
 
 export const SalonRenderer: React.FC<SalonRendererProps> = ({ submoduleId }) => {
+  const location = useLocation();
+  console.info("SalonRenderer: location path is", location.pathname);
+  
+  // Extract submodule name from path (e.g., /modules/salon/billing -> billing)
+  const submoduleName = location.pathname.split('/').pop();
+  console.info("Extracted submodule name from path:", submoduleName);
+  
   switch (submoduleId) {
     case 'salon-dashboard':
       return <SalonDashboard />;
@@ -27,6 +36,8 @@ export const SalonRenderer: React.FC<SalonRendererProps> = ({ submoduleId }) => 
       return <SalonReports />;
     case 'salon-booking':
       return <SalonBooking />;
+    case 'salon-billing':
+      return <SalonBilling />;
     default:
       return (
         <div className="flex items-center justify-center h-64 text-muted-foreground">
@@ -35,4 +46,3 @@ export const SalonRenderer: React.FC<SalonRendererProps> = ({ submoduleId }) => 
       );
   }
 };
-

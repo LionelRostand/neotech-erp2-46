@@ -1,62 +1,47 @@
 
-import { SalonInvoice, SalonPayment, PaymentSummary } from '../../types/salon-types';
+import { toast } from 'sonner';
+import { SalonInvoice } from '../../types/salon-types';
 
-// Generate invoice number
-export const generateInvoiceNumber = (invoicesCount: number): string => {
-  const year = new Date().getFullYear();
-  const nextNumber = (invoicesCount + 1).toString().padStart(4, '0');
-  return `FACT-${year}-${nextNumber}`;
-};
-
-// Calculate summary data for dashboard
-export const calculateSummaryData = (invoicesData: SalonInvoice[]): PaymentSummary => {
-  const summary: PaymentSummary = {
-    total: 0,
-    paid: 0,
-    pending: 0,
-    overdue: 0,
-    todaySales: 0,
-    pendingInvoices: 0,
-    overdueInvoices: 0
-  };
+// Generate invoice number based on the current count
+export const generateInvoiceNumber = (count: number) => {
+  const date = new Date();
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const invoiceNumber = String(count + 1).padStart(4, '0');
   
-  const today = new Date().toISOString().split('T')[0];
-  
-  invoicesData.forEach(invoice => {
-    summary.total += invoice.total;
-    
-    if (invoice.status === 'paid') {
-      summary.paid += invoice.total;
-    } else if (invoice.status === 'pending') {
-      summary.pending += invoice.total;
-      summary.pendingInvoices += 1;
-    } else if (invoice.status === 'overdue') {
-      summary.overdue += invoice.total;
-      summary.overdueInvoices += 1;
-    }
-    
-    if (invoice.date === today) {
-      summary.todaySales += invoice.total;
-    }
-  });
-  
-  return summary;
+  return `FACT-${year}${month}-${invoiceNumber}`;
 };
 
 // Generate PDF invoice
-export const generatePdfInvoice = async (invoice: SalonInvoice | null): Promise<void> => {
-  if (!invoice) {
-    throw new Error('Facture non trouvée');
+export const generatePdfInvoice = async (invoice: SalonInvoice) => {
+  try {
+    // This function would normally use a library like jsPDF or pdfmake
+    // For now, we'll simulate PDF generation
+    console.log('Generating PDF for invoice:', invoice);
+    
+    // Simulate PDF generation delay
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    // In a real implementation, we would:
+    // 1. Create a PDF document
+    // 2. Add salon logo and info
+    // 3. Add invoice details (number, date, etc.)
+    // 4. Add client information
+    // 5. Add table of items
+    // 6. Add totals
+    // 7. Add payment information
+    // 8. Save or open the PDF
+    
+    // Simulate downloading a file
+    const link = document.createElement('a');
+    link.href = '#';
+    link.download = `facture-${invoice.number}.pdf`;
+    link.click();
+    
+    return true;
+  } catch (error) {
+    console.error('Error generating PDF:', error);
+    toast.error('Erreur lors de la génération du PDF');
+    return false;
   }
-  
-  // In a real app, we would generate a PDF
-  console.log('Generating PDF for invoice:', invoice.number);
-  
-  // Simulate PDF generation with timeout
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      console.log('PDF generated successfully');
-      resolve();
-    }, 1500);
-  });
 };

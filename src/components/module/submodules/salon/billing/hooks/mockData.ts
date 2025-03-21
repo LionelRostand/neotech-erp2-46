@@ -1,71 +1,207 @@
 
-import { SalonInvoice, InvoiceStatus, PaymentMethod } from '../../types/salon-types';
+import { SalonInvoice } from '../../types/salon-types';
 
-// Mock data for development
+// Generate date X days from now
+const getDatePlusDays = (days: number) => {
+  const date = new Date();
+  date.setDate(date.getDate() + days);
+  return date.toISOString().split('T')[0];
+};
+
+// Sample invoices for the salon billing module
 export const mockInvoices: SalonInvoice[] = [
   {
     id: '1',
-    number: 'FACT-2023-0001',
-    clientId: 'client1',
-    clientName: 'Marie Dubois',
-    date: '2023-09-01',
-    dueDate: '2023-09-15',
-    status: 'paid' as InvoiceStatus,
+    number: 'FACT-202303-0001',
+    clientId: 'client-001',
+    clientName: 'Sophie Dubois',
+    date: getDatePlusDays(-15),
+    dueDate: getDatePlusDays(-5),
+    status: 'paid',
     items: [
-      { id: 'item1', type: 'service', name: 'Coupe femme', quantity: 1, unitPrice: 45, total: 45, serviceId: 'service1', stylistId: 'stylist1', stylistName: 'Jean Martin' }
+      {
+        id: 'item-001',
+        description: 'Coupe femme',
+        quantity: 1,
+        unitPrice: 45,
+        taxRate: 20,
+        total: 45
+      },
+      {
+        id: 'item-002',
+        description: 'Coloration',
+        quantity: 1,
+        unitPrice: 65,
+        taxRate: 20,
+        total: 65
+      }
     ],
-    subtotal: 45,
-    taxRate: 20,
-    taxAmount: 9,
-    discount: 0,
-    total: 54,
-    createdAt: '2023-09-01T10:00:00Z',
-    updatedAt: '2023-09-01T10:00:00Z',
+    subtotal: 110,
+    taxAmount: 22,
+    total: 132,
     payments: [
-      { id: 'payment1', invoiceId: '1', amount: 54, method: 'credit_card' as PaymentMethod, date: '2023-09-01', status: 'completed', createdAt: '2023-09-01T10:05:00Z' }
-    ]
+      {
+        id: 'payment-001',
+        date: getDatePlusDays(-15),
+        method: 'credit_card',
+        amount: 132,
+        reference: 'TXID-12345',
+        status: 'completed',
+        createdAt: getDatePlusDays(-15)
+      }
+    ],
+    createdAt: getDatePlusDays(-15),
+    updatedAt: getDatePlusDays(-15)
   },
   {
     id: '2',
-    number: 'FACT-2023-0002',
-    clientId: 'client2',
-    clientName: 'Thomas Bernard',
-    date: '2023-09-05',
-    dueDate: '2023-09-20',
-    status: 'pending' as InvoiceStatus,
+    number: 'FACT-202303-0002',
+    clientId: 'client-002',
+    clientName: 'Thomas Martin',
+    date: getDatePlusDays(-10),
+    dueDate: getDatePlusDays(5),
+    status: 'sent',
     items: [
-      { id: 'item2', type: 'service', name: 'Coloration', quantity: 1, unitPrice: 65, total: 65, serviceId: 'service2', stylistId: 'stylist2', stylistName: 'Sophie Petit' },
-      { id: 'item3', type: 'product', name: 'Shampooing professionnel', quantity: 1, unitPrice: 18, total: 18, productId: 'product1' }
+      {
+        id: 'item-003',
+        description: 'Coupe homme',
+        quantity: 1,
+        unitPrice: 35,
+        taxRate: 20,
+        total: 35
+      },
+      {
+        id: 'item-004',
+        description: 'Barbe',
+        quantity: 1,
+        unitPrice: 25,
+        taxRate: 20,
+        total: 25
+      }
     ],
-    subtotal: 83,
-    taxRate: 20,
-    taxAmount: 16.6,
-    discount: 0,
-    total: 99.6,
-    createdAt: '2023-09-05T14:30:00Z',
-    updatedAt: '2023-09-05T14:30:00Z',
-    payments: []
+    subtotal: 60,
+    taxAmount: 12,
+    total: 72,
+    payments: [],
+    createdAt: getDatePlusDays(-10),
+    updatedAt: getDatePlusDays(-10)
   },
   {
     id: '3',
-    number: 'FACT-2023-0003',
-    clientId: 'client3',
-    clientName: 'Lucie Martin',
-    date: '2023-08-15',
-    dueDate: '2023-08-30',
-    status: 'overdue' as InvoiceStatus,
+    number: 'FACT-202303-0003',
+    clientId: 'client-003',
+    clientName: 'Marie Lefebvre',
+    date: getDatePlusDays(-30),
+    dueDate: getDatePlusDays(-15),
+    status: 'overdue',
     items: [
-      { id: 'item4', type: 'service', name: 'Balayage', quantity: 1, unitPrice: 90, total: 90, serviceId: 'service3', stylistId: 'stylist1', stylistName: 'Jean Martin' }
+      {
+        id: 'item-005',
+        description: 'Balayage',
+        quantity: 1,
+        unitPrice: 85,
+        taxRate: 20,
+        total: 85
+      },
+      {
+        id: 'item-006',
+        description: 'Coupe femme',
+        quantity: 1,
+        unitPrice: 45,
+        taxRate: 20,
+        total: 45
+      },
+      {
+        id: 'item-007',
+        description: 'Brushing',
+        quantity: 1,
+        unitPrice: 35,
+        taxRate: 20,
+        total: 35
+      }
     ],
-    subtotal: 90,
-    taxRate: 20,
-    taxAmount: 18,
-    discount: 5,
-    total: 103,
-    createdAt: '2023-08-15T11:20:00Z',
-    updatedAt: '2023-08-15T11:20:00Z',
+    subtotal: 165,
+    taxAmount: 33,
+    total: 198,
     payments: [
-      { id: 'payment2', invoiceId: '3', amount: 50, method: 'cash' as PaymentMethod, date: '2023-08-15', status: 'completed', createdAt: '2023-08-15T11:25:00Z' }
-    ]
+      {
+        id: 'payment-002',
+        date: getDatePlusDays(-30),
+        method: 'cash',
+        amount: 100,
+        status: 'completed',
+        createdAt: getDatePlusDays(-30)
+      }
+    ],
+    createdAt: getDatePlusDays(-30),
+    updatedAt: getDatePlusDays(-30)
+  },
+  {
+    id: '4',
+    number: 'FACT-202303-0004',
+    clientId: 'client-004',
+    clientName: 'Jean Dupont',
+    date: getDatePlusDays(-5),
+    dueDate: getDatePlusDays(10),
+    status: 'draft',
+    items: [
+      {
+        id: 'item-008',
+        description: 'Coupe homme',
+        quantity: 1,
+        unitPrice: 35,
+        taxRate: 20,
+        total: 35
+      }
+    ],
+    subtotal: 35,
+    taxAmount: 7,
+    total: 42,
+    payments: [],
+    createdAt: getDatePlusDays(-5),
+    updatedAt: getDatePlusDays(-5)
+  },
+  {
+    id: '5',
+    number: 'FACT-202303-0005',
+    clientId: 'client-005',
+    clientName: 'Lucie Bernard',
+    date: getDatePlusDays(-2),
+    dueDate: getDatePlusDays(13),
+    status: 'sent',
+    items: [
+      {
+        id: 'item-009',
+        description: 'Coupe femme',
+        quantity: 1,
+        unitPrice: 45,
+        taxRate: 20,
+        total: 45
+      },
+      {
+        id: 'item-010',
+        description: 'Soin capillaire',
+        quantity: 1,
+        unitPrice: 25,
+        taxRate: 20,
+        total: 25
+      }
+    ],
+    subtotal: 70,
+    taxAmount: 14,
+    total: 84,
+    payments: [
+      {
+        id: 'payment-003',
+        date: getDatePlusDays(-2),
+        method: 'mobile_payment',
+        amount: 42,
+        reference: 'MPAY-54321',
+        status: 'completed',
+        createdAt: getDatePlusDays(-2)
+      }
+    ],
+    createdAt: getDatePlusDays(-2),
+    updatedAt: getDatePlusDays(-2)
   }
 ];

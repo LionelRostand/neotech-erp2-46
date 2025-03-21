@@ -1,60 +1,57 @@
 
 import { toast } from 'sonner';
-import { SalonInvoice, SalonPayment, InvoiceStatus, PaymentSummary } from '../../types/salon-types';
-import { calculateSummaryData } from './billingUtils';
+import { SalonPayment, SalonInvoice } from '../../types/salon-types';
+import { calculateSummary } from './invoiceService';
 
 // Record payment
 export const recordPayment = async (
   payment: Omit<SalonPayment, 'id' | 'createdAt'>,
-  currentInvoices: SalonInvoice[],
-  currentPayments: SalonPayment[],
-  callbacks: {
+  invoices: SalonInvoice[],
+  payments: SalonPayment[],
+  setters: {
     setInvoices: (invoices: SalonInvoice[]) => void,
     setPayments: (payments: SalonPayment[]) => void,
-    setSummaryData: (summary: PaymentSummary) => void
+    setSummaryData: (summary: any) => void
   }
-): Promise<SalonPayment> => {
+) => {
   try {
-    // In a real app, we would add to Firestore and update the invoice
-    // const result = await paymentsCollection.add(payment);
-    // await updateInvoiceAfterPayment(payment.invoiceId, payment.amount);
+    const now = new Date().toISOString();
+    const paymentId = `payment-${payments.length + 1}`;
     
-    // For now, simulate adding to mock data
     const newPayment: SalonPayment = {
       ...payment,
-      id: `payment${currentPayments.length + 1}`,
-      createdAt: new Date().toISOString()
+      id: paymentId,
+      createdAt: now
     };
     
-    const updatedPayments = [...currentPayments, newPayment];
-    callbacks.setPayments(updatedPayments);
-    
-    // Update the invoice with the payment
-    const updatedInvoices = currentInvoices.map(invoice => {
+    // Find invoice to update
+    const updatedInvoices = invoices.map(invoice => {
       if (invoice.id === payment.invoiceId) {
-        const updatedPayments = [...invoice.payments, newPayment];
-        const totalPaid = updatedPayments.reduce((sum, p) => sum + p.amount, 0);
+        // Add payment to invoice
+        const updatedInvoice = {
+          ...invoice,
+          payments: [...invoice.payments, newPayment],
+          updatedAt: now
+        };
         
-        let status: InvoiceStatus = invoice.status;
+        // Check if invoice is fully paid
+        const totalPaid = [...invoice.payments, newPayment].reduce((sum, p) => sum + p.amount, 0);
         if (totalPaid >= invoice.total) {
-          status = 'paid';
-        } else if (status === 'overdue') {
-          status = 'pending';
+          updatedInvoice.status = 'paid';
         }
         
-        return {
-          ...invoice,
-          payments: updatedPayments,
-          status,
-          updatedAt: new Date().toISOString()
-        };
+        return updatedInvoice;
       }
       return invoice;
     });
     
-    callbacks.setInvoices(updatedInvoices);
-    const summaryData = calculateSummaryData(updatedInvoices);
-    callbacks.setSummaryData(summaryData);
+    // Update state
+    setters.setInvoices(updatedInvoices);
+    setters.setPayments([...payments, newPayment]);
+    
+    // Update summary
+    const summary = calculateSummary(updatedInvoices);
+    setters.setSummaryData(summary);
     
     toast.success('Paiement enregistré avec succès');
     return newPayment;

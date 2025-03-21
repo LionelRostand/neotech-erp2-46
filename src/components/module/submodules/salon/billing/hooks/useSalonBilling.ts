@@ -1,7 +1,5 @@
 
 import { useState, useEffect } from 'react';
-import { toast } from 'sonner';
-import { useFirestore } from '@/hooks/use-firestore';
 import { 
   SalonInvoice, 
   SalonPayment, 
@@ -33,10 +31,6 @@ export const useSalonBilling = () => {
     pendingInvoices: 0,
     overdueInvoices: 0
   });
-  
-  // Get Firestore hooks
-  const invoicesCollection = useFirestore(INVOICES_COLLECTION);
-  const paymentsCollection = useFirestore(PAYMENTS_COLLECTION);
   
   // Load data on mount
   useEffect(() => {
@@ -99,16 +93,13 @@ export const useSalonBilling = () => {
       const invoice = getInvoiceById(invoices, invoiceId);
       
       if (!invoice) {
-        toast.error('Facture non trouvée');
-        return;
+        throw new Error('Invoice not found');
       }
       
-      toast.success('Génération du PDF en cours...');
       await generatePdfInvoice(invoice);
-      toast.success('PDF généré avec succès');
     } catch (error) {
       console.error('Error generating PDF:', error);
-      toast.error('Erreur lors de la génération du PDF');
+      throw error;
     }
   };
   
