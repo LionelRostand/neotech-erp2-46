@@ -69,6 +69,7 @@ export interface SalonService {
   price: number;
   duration: number; // in minutes
   category: string;
+  specialists?: string[];
 }
 
 // Products
