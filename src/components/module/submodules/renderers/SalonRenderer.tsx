@@ -1,9 +1,9 @@
 
 import React from 'react';
 import { useParams } from 'react-router-dom';
+import SalonDashboard from '../salon/SalonDashboard';
 
 // Placeholder components - these would be implemented in separate files
-const SalonDashboard = () => <div>Tableau de Bord du Salon</div>;
 const SalonClients = () => <div>Gestion des Clients</div>;
 const SalonAppointments = () => <div>Gestion des Rendez-vous</div>;
 const SalonStylists = () => <div>Gestion des Coiffeurs</div>;

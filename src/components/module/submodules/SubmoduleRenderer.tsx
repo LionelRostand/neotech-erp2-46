@@ -12,7 +12,8 @@ import {
   renderHealthSubmodule,
   renderDocumentsSubmodule,
   renderVehicleRentalsSubmodule,
-  renderTransportSubmodule
+  renderTransportSubmodule,
+  SalonRenderer
 } from './renderers';
 
 interface RenderSubmoduleContentProps {
@@ -67,6 +68,11 @@ export const renderSubmoduleContent = ({ submoduleId, submodule }: RenderSubmodu
   if (submoduleId.startsWith('transport-')) {
     console.log('Delegating to renderTransportSubmodule for:', submoduleId);
     return renderTransportSubmodule(submoduleId, submodule);
+  }
+  
+  if (submoduleId.startsWith('salon-')) {
+    console.log('Delegating to SalonRenderer for:', submoduleId);
+    return <SalonRenderer />;
   }
   
   // Fallback to default content rendering
