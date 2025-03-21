@@ -4,6 +4,9 @@ import { Location } from '../types/rental-types';
 import { Card, CardContent } from "@/components/ui/card";
 import { MapPin } from 'lucide-react';
 
+// Import the leaflet types but we'll load the library dynamically
+import type { Map as LeafletMap, LatLngTuple, LatLngBoundsExpression } from 'leaflet';
+
 interface LocationMapProps {
   locations: Location[];
 }
@@ -48,11 +51,11 @@ const LocationMap: React.FC<LocationMapProps> = ({ locations }) => {
             lon = locations[0].coordinates.longitude;
           }
           
-          // Create map
-          const map = L.map(mapRef.current).setView([lat, lon], zoom);
+          // Use window.L to access Leaflet after it's loaded
+          const map = window.L.map(mapRef.current).setView([lat, lon], zoom);
           
           // Add tile layer
-          L.tileLayer('https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png', {
+          window.L.tileLayer('https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png', {
             attribution: 'données © <a href="//osm.org/copyright">OpenStreetMap</a>/ODbL - rendu <a href="//openstreetmap.fr">OSM France</a>',
             minZoom: 1,
             maxZoom: 20
@@ -63,7 +66,7 @@ const LocationMap: React.FC<LocationMapProps> = ({ locations }) => {
             if (location.coordinates) {
               const { latitude, longitude } = location.coordinates;
               
-              const marker = L.marker([latitude, longitude]).addTo(map);
+              const marker = window.L.marker([latitude, longitude]).addTo(map);
               marker.bindPopup(`
                 <strong>${location.name}</strong><br>
                 ${location.address}<br>
@@ -74,12 +77,16 @@ const LocationMap: React.FC<LocationMapProps> = ({ locations }) => {
           
           // Create a group for all markers to fit bounds
           if (locations.length > 1) {
-            const markers = locations
+            const markers: LatLngTuple[] = locations
               .filter(loc => loc.coordinates)
-              .map(loc => [loc.coordinates?.latitude, loc.coordinates?.longitude]);
+              .map(loc => [
+                loc.coordinates?.latitude || 0, 
+                loc.coordinates?.longitude || 0
+              ]);
             
             if (markers.length > 0) {
-              map.fitBounds(markers);
+              const bounds: LatLngBoundsExpression = markers;
+              map.fitBounds(bounds);
             }
           }
         };
