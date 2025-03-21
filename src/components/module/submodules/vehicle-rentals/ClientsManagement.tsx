@@ -17,6 +17,8 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Client } from './types/rental-types';
+import CreateClientDialog from './dialogs/client/CreateClientDialog';
+import { toast } from 'sonner';
 
 // Mock clients data
 const mockClients: Client[] = [
@@ -105,6 +107,7 @@ const mockClients: Client[] = [
 const ClientsManagement = () => {
   const [clients, setClients] = useState<Client[]>(mockClients);
   const [searchTerm, setSearchTerm] = useState("");
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
 
   const filteredClients = clients.filter(client => {
     const fullName = `${client.firstName} ${client.lastName}`.toLowerCase();
@@ -115,11 +118,16 @@ const ClientsManagement = () => {
       client.phone.includes(searchTerm);
   });
 
+  const handleClientCreated = (newClient: Client) => {
+    setClients(prevClients => [newClient, ...prevClients]);
+    toast.success('Client ajouté avec succès');
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-3xl font-bold">Gestion des Clients</h2>
-        <Button>
+        <Button onClick={() => setIsCreateDialogOpen(true)}>
           <Plus className="h-4 w-4 mr-2" />
           Nouveau Client
         </Button>
@@ -237,6 +245,12 @@ const ClientsManagement = () => {
           </Table>
         </CardContent>
       </Card>
+
+      <CreateClientDialog 
+        isOpen={isCreateDialogOpen}
+        onClose={() => setIsCreateDialogOpen(false)}
+        onClientCreated={handleClientCreated}
+      />
     </div>
   );
 };

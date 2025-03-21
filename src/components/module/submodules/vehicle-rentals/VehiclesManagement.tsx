@@ -18,6 +18,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Vehicle, VehicleStatus } from './types/rental-types';
+import CreateVehicleDialog from './dialogs/vehicle/CreateVehicleDialog';
+import { toast } from 'sonner';
 
 // Mock vehicles data
 const mockVehicles: Vehicle[] = [
@@ -135,6 +137,7 @@ const VehiclesManagement = () => {
   const [vehicles, setVehicles] = useState<Vehicle[]>(mockVehicles);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedView, setSelectedView] = useState<"all" | VehicleStatus>("all");
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
 
   const filteredVehicles = vehicles.filter(vehicle => {
     const matchesSearch = 
@@ -164,11 +167,16 @@ const VehiclesManagement = () => {
     }
   };
 
+  const handleVehicleCreated = (newVehicle: Vehicle) => {
+    setVehicles(prevVehicles => [newVehicle, ...prevVehicles]);
+    toast.success('Véhicule ajouté avec succès');
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-3xl font-bold">Gestion des Véhicules</h2>
-        <Button>
+        <Button onClick={() => setIsCreateDialogOpen(true)}>
           <Plus className="h-4 w-4 mr-2" />
           Ajouter un véhicule
         </Button>
@@ -277,6 +285,12 @@ const VehiclesManagement = () => {
           </Table>
         </CardContent>
       </Card>
+
+      <CreateVehicleDialog 
+        isOpen={isCreateDialogOpen}
+        onClose={() => setIsCreateDialogOpen(false)}
+        onVehicleCreated={handleVehicleCreated}
+      />
     </div>
   );
 };
