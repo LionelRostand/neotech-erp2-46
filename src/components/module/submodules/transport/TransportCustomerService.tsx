@@ -17,6 +17,7 @@ const TransportCustomerService: React.FC = () => {
             activeTab={activeTab}
             onTabChange={setActiveTab}
           />
+          <CustomerServiceContent activeTab={activeTab} />
         </CardContent>
       </Card>
     </div>

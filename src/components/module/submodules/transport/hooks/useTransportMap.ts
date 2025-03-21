@@ -66,14 +66,7 @@ export const useTransportMap = (
             minZoom: 1,
             maxZoom: 20
           }).addTo(map);
-          
-          // Add a simple marker at the default location if no vehicles are available
-          if (vehiclesWithLocation.length === 0) {
-            const defaultMarker = L.marker([latitude, longitude]);
-            defaultMarker.addTo(map);
-            markersRef.current.push(defaultMarker);
-          }
-          
+
           setMapInitialized(true);
         }
         

@@ -5,6 +5,7 @@ import { Calendar, TruckIcon, Users } from "lucide-react";
 import AvailabilityCalendar from './AvailabilityCalendar';
 import MaintenanceScheduleList from './MaintenanceScheduleList';
 import ExtensionRequestsList from './ExtensionRequestsList';
+import { usePlanningContext } from './context/PlanningContext';
 
 interface PlanningTabContentProps {
   activeMode: string;
@@ -15,6 +16,13 @@ const PlanningTabContent: React.FC<PlanningTabContentProps> = ({
   activeMode,
   onModeChange
 }) => {
+  const { 
+    vehicles,
+    maintenanceSchedules, 
+    extensionRequests,
+    handleAddMaintenance
+  } = usePlanningContext();
+
   return (
     <Tabs value={activeMode} onValueChange={onModeChange} className="w-full">
       <TabsList className="grid grid-cols-3 mb-6">
@@ -33,15 +41,25 @@ const PlanningTabContent: React.FC<PlanningTabContentProps> = ({
       </TabsList>
 
       <TabsContent value="vehicles">
-        <MaintenanceScheduleList />
+        <MaintenanceScheduleList 
+          maintenanceSchedules={maintenanceSchedules}
+          vehicles={vehicles}
+          onAddMaintenance={handleAddMaintenance}
+        />
       </TabsContent>
       
       <TabsContent value="calendar">
-        <AvailabilityCalendar />
+        <AvailabilityCalendar 
+          vehicles={vehicles}
+          maintenanceSchedules={maintenanceSchedules}
+          onAddMaintenance={handleAddMaintenance}
+        />
       </TabsContent>
       
       <TabsContent value="extensions">
-        <ExtensionRequestsList />
+        <ExtensionRequestsList 
+          extensionRequests={extensionRequests}
+        />
       </TabsContent>
     </Tabs>
   );
