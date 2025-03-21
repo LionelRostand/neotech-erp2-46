@@ -255,7 +255,7 @@ export const useSalonBilling = () => {
       if (invoice.status === 'pending') {
         const dueDate = new Date(invoice.dueDate);
         if (dueDate < today) {
-          return { ...invoice, status: 'overdue', updatedAt: new Date().toISOString() };
+          return { ...invoice, status: 'overdue' as InvoiceStatus, updatedAt: new Date().toISOString() };
         }
       }
       return invoice;

@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { useSalonBilling } from '../billing/hooks/useSalonBilling';
 import { useProducts } from '../products/hooks/useProducts';
 import { useAppointments } from './useAppointments';
+import { InvoiceStatus } from '../types/salon-types';
 
 export const useSalonAlerts = () => {
   const [newAppointments, setNewAppointments] = useState(0);
@@ -11,13 +12,11 @@ export const useSalonAlerts = () => {
   
   const { invoices } = useSalonBilling();
   const { getLowStockProducts } = useProducts();
-  
-  // For now, mock appointment data
-  const mockPendingAppointments = 3;
+  const { getNewAppointments } = useAppointments();
   
   // Get count of pending appointments
   const getNewAppointmentsCount = () => {
-    return mockPendingAppointments;
+    return getNewAppointments().length;
   };
   
   // Get count of pending payments

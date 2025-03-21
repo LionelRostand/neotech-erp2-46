@@ -96,7 +96,7 @@ export interface ProductCategory {
 }
 
 // Billing Types
-export type InvoiceStatus = 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled';
+export type InvoiceStatus = 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled' | 'pending';
 export type PaymentMethod = 'cash' | 'credit_card' | 'mobile_payment' | 'gift_card' | 'transfer';
 
 export interface SalonInvoice {

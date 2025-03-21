@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { 
   Dialog, 
@@ -32,7 +31,7 @@ import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { Plus, Trash, Save } from "lucide-react";
 import { useSalonBilling } from '../hooks/useSalonBilling';
-import { InvoiceItem } from '../../types/salon-types';
+import { InvoiceItem, InvoiceStatus } from '../../types/salon-types';
 import { toast } from 'sonner';
 
 interface CreateInvoiceDialogProps {
@@ -208,7 +207,7 @@ const CreateInvoiceDialog: React.FC<CreateInvoiceDialogProps> = ({ open, onOpenC
       // Create invoice
       await createInvoice({
         ...formData,
-        status: 'pending'
+        status: 'pending' as InvoiceStatus
       });
       
       // Close dialog
