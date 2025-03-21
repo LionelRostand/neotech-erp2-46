@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Users, Bell, Settings, Layers, CheckCircle, XCircle, AlertCircle, Link } from 'lucide-react';
+import { Users, Bell, Settings, Layers, CheckCircle, XCircle, AlertCircle, Link, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';

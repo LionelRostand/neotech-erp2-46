@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Settings, Lock, Globe, Database, Bell, FileText, Mail, CreditCard } from 'lucide-react';
+import { Settings, Lock, Globe, Database, Bell, FileText, Mail, CreditCard, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
