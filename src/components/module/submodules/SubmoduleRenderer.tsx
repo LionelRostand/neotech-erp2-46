@@ -21,6 +21,8 @@ interface RenderSubmoduleContentProps {
 }
 
 export const renderSubmoduleContent = ({ submoduleId, submodule }: RenderSubmoduleContentProps) => {
+  console.log('renderSubmoduleContent called with:', submoduleId);
+  
   // Use specific renderer based on module prefix
   if (submoduleId.startsWith('employees-')) {
     return renderEmployeesSubmodule(submoduleId, submodule);
@@ -63,9 +65,11 @@ export const renderSubmoduleContent = ({ submoduleId, submodule }: RenderSubmodu
   }
   
   if (submoduleId.startsWith('transport-')) {
+    console.log('Delegating to renderTransportSubmodule for:', submoduleId);
     return renderTransportSubmodule(submoduleId, submodule);
   }
   
   // Fallback to default content rendering
+  console.warn('No renderer found for:', submoduleId);
   return <div>Module content not implemented: {submoduleId}</div>;
 };

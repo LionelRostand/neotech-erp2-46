@@ -14,6 +14,8 @@ import TransportWebBooking from '../transport/TransportWebBooking';
 import TransportSettings from '../transport/TransportSettings';
 
 export const renderTransportSubmodule = (submoduleId: string, submodule: SubModule) => {
+  console.log('renderTransportSubmodule called with:', submoduleId);
+  
   switch (submoduleId) {
     case 'transport-dashboard':
       return <TransportDashboard />;
@@ -22,6 +24,7 @@ export const renderTransportSubmodule = (submoduleId: string, submodule: SubModu
     case 'transport-planning':
       return <TransportPlanning />;
     case 'transport-fleet':
+      console.log('Rendering TransportFleet component');
       return <TransportFleet />;
     case 'transport-drivers':
       return <TransportDrivers />;
@@ -38,6 +41,7 @@ export const renderTransportSubmodule = (submoduleId: string, submodule: SubModu
     case 'transport-settings':
       return <TransportSettings />;
     default:
+      console.warn('Unknown transport submodule ID:', submoduleId);
       return <TransportDashboard />;
   }
 };
