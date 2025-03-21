@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { useParams } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import SalonDashboard from '../salon/dashboard/SalonDashboard';
 import SalonClients from '../salon/clients/SalonClients';
 import SalonAppointments from '../salon/appointments/SalonAppointments';
@@ -101,12 +101,14 @@ const SalonSettings = () => (
 );
 
 export const SalonRenderer = () => {
-  const { submoduleId } = useParams<{ submoduleId: string }>();
-  console.log('SalonRenderer from renderers: called with submoduleId:', submoduleId);
+  // Utiliser useLocation au lieu de useParams pour déterminer le submodule
+  const location = useLocation();
+  console.log('SalonRenderer: location path is', location.pathname);
   
-  // Extract the submodule name from the full ID (e.g., 'salon-clients' -> 'clients')
-  const submoduleName = submoduleId?.split('-')[1] || '';
-  console.log('Extracted submodule name:', submoduleName);
+  // Extraire le nom du sous-module à partir du chemin
+  const pathSegments = location.pathname.split('/');
+  const submoduleName = pathSegments[pathSegments.length - 1];
+  console.log('Extracted submodule name from path:', submoduleName);
   
   switch (submoduleName) {
     case 'dashboard':
