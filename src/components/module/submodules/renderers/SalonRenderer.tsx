@@ -8,22 +8,13 @@ import SalonLoyalty from '../salon/loyalty/SalonLoyalty';
 import SalonStylists from '../salon/stylists/SalonStylists';
 import SalonServices from '../salon/services/SalonServices';
 import SalonProducts from '../salon/products/SalonProducts';
+import SalonBilling from '../salon/billing/SalonBilling';
 import { Card, CardContent } from "@/components/ui/card";
 
 // Style pour les pages sans contenu spécifique
 const placeholderStyle = "flex justify-center items-center p-8 text-lg text-muted-foreground";
 
 // Placeholder components
-const SalonBilling = () => (
-  <Card>
-    <CardContent className="pt-6">
-      <div className={placeholderStyle}>
-        <p>Gestion de la Facturation</p>
-      </div>
-    </CardContent>
-  </Card>
-);
-
 const SalonInventory = () => (
   <Card>
     <CardContent className="pt-6">
