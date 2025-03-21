@@ -1,11 +1,10 @@
-
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Phone, Mail, Calendar, User, Star, Briefcase, Clock, Vehicle, Settings, Edit } from "lucide-react";
+import { Phone, Mail, Calendar, User, Star, Briefcase, Clock, Car, Settings, Edit } from "lucide-react";
 import { TransportDriver } from '../types/transport-types';
 
 interface DriverDetailsProps {

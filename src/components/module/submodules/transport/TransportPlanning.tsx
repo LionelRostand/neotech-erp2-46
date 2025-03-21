@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -97,7 +96,7 @@ const mockMaintenanceSchedules: MaintenanceSchedule[] = [
   }
 ];
 
-// Mock extension requests
+// Mock extension requests with corrected union types
 const mockExtensionRequests = [
   {
     id: "ext-001",
@@ -106,7 +105,7 @@ const mockExtensionRequests = [
     originalEndDate: "2023-11-21",
     requestedEndDate: "2023-11-23",
     vehicleName: "BMW Série 5",
-    status: "pending",
+    status: "pending" as "pending",
     reason: "Prolongation voyage d'affaires"
   },
   {
@@ -116,7 +115,7 @@ const mockExtensionRequests = [
     originalEndDate: "2023-11-20",
     requestedEndDate: "2023-11-22",
     vehicleName: "Mercedes Classe V",
-    status: "approved",
+    status: "approved" as "approved",
     reason: "Besoin supplémentaire du véhicule"
   }
 ];

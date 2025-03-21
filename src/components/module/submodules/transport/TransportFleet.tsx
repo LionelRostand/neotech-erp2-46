@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -107,12 +106,12 @@ const mockVehicles: TransportVehicle[] = [
   }
 ];
 
-// Mock maintenance history
+// Mock maintenance history with corrected union types
 const mockMaintenanceHistory = [
   {
     id: "mnt-001",
     vehicleId: "veh-001",
-    type: "regular",
+    type: "regular" as "regular",
     date: "2023-05-20",
     description: "Changement d'huile et filtres",
     cost: 280,
@@ -123,7 +122,7 @@ const mockMaintenanceHistory = [
   {
     id: "mnt-002",
     vehicleId: "veh-002",
-    type: "repair",
+    type: "repair" as "repair",
     date: "2023-07-12",
     description: "Problème de freins",
     cost: 550,
@@ -134,7 +133,7 @@ const mockMaintenanceHistory = [
   {
     id: "mnt-003",
     vehicleId: "veh-003",
-    type: "inspection",
+    type: "inspection" as "inspection",
     date: "2023-06-05",
     description: "Contrôle technique",
     cost: 120,
@@ -145,7 +144,7 @@ const mockMaintenanceHistory = [
   {
     id: "mnt-004",
     vehicleId: "veh-005",
-    type: "repair",
+    type: "repair" as "repair",
     date: "2023-09-10",
     description: "Problème de batterie",
     cost: 1200,
@@ -155,14 +154,14 @@ const mockMaintenanceHistory = [
   }
 ];
 
-// Mock incidents
+// Mock incidents with corrected union types
 const mockIncidents = [
   {
     id: "inc-001",
     vehicleId: "veh-002",
     date: "2023-06-15",
     description: "Rayure portière avant droite",
-    severity: "minor",
+    severity: "minor" as "minor",
     driverName: "Sophie Martin",
     clientName: "Marie Legrand",
     damageDetails: "Rayure superficielle de 20cm",
@@ -175,7 +174,7 @@ const mockIncidents = [
     vehicleId: "veh-005",
     date: "2023-09-05",
     description: "Problème électrique - véhicule immobilisé",
-    severity: "major",
+    severity: "major" as "major",
     driverName: "Nicolas Durand",
     clientName: "Sophie Bernard",
     damageDetails: "Défaillance du système électrique - remorquage nécessaire",
