@@ -1,8 +1,8 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { SalonAppointment, SalonClient } from '../../types/salon-types';
 import { addDocument } from '@/hooks/firestore/create-operations';
-import { updateDocument, deleteDocument } from '@/hooks/firestore/update-operations';
+import { updateDocument } from '@/hooks/firestore/update-operations';
+import { deleteDocument } from '@/hooks/firestore/delete-operations';
 import { getAllDocuments } from '@/hooks/firestore/read-operations';
 import { toast } from 'sonner';
 
