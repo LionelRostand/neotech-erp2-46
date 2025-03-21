@@ -73,3 +73,35 @@ export type LoyaltyClient = {
   visits: number;
   lastVisit: string;
 };
+
+// Report related types
+export type SalonReportData = {
+  timeRange: string;
+  revenueData: {
+    totalRevenue: number;
+    revenueByService: Record<string, number>;
+    revenueByEmployee: Record<string, number>;
+    revenueOverTime: Array<{date: string, revenue: number}>;
+  };
+  appointmentsData: {
+    totalAppointments: number;
+    appointmentsByService: Record<string, number>;
+    appointmentsByEmployee: Record<string, number>;
+    appointmentsOverTime: Array<{date: string, count: number}>;
+    completionRate: number;
+  };
+  clientsData: {
+    totalClients: number;
+    newClients: number;
+    returningClients: number;
+    clientsOverTime: Array<{date: string, new: number, returning: number}>;
+    retentionRate: number;
+  };
+  productsData: {
+    totalSold: number;
+    totalRevenue: number;
+    topProducts: Array<{name: string, sold: number, revenue: number}>;
+    salesOverTime: Array<{date: string, sold: number, revenue: number}>;
+  };
+};
+
