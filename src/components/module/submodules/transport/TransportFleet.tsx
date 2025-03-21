@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -189,7 +190,7 @@ const TransportFleet = () => {
   const [selectedType, setSelectedType] = useState<string>('all');
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
   const [selectedVehicle, setSelectedVehicle] = useState<TransportVehicle | null>(null);
-  const [activeTab, setActiveTab] = useState('all');
+  const [activeTab, setActiveTab] = useState('details');
   const [showAddDialog, setShowAddDialog] = useState(false);
   
   // Filter vehicles based on search term, type and status
@@ -305,7 +306,6 @@ const TransportFleet = () => {
                   <Tabs 
                     value={activeTab}
                     onValueChange={setActiveTab}
-                    className="w-[400px]"
                   >
                     <TabsList className="grid w-full grid-cols-3">
                       <TabsTrigger value="details" className="flex items-center gap-2">
@@ -321,27 +321,29 @@ const TransportFleet = () => {
                         <span>Incidents</span>
                       </TabsTrigger>
                     </TabsList>
+                  
+                    <TabsContent value="details">
+                      <VehicleDetails vehicle={selectedVehicle} />
+                    </TabsContent>
+                    
+                    <TabsContent value="maintenance">
+                      <MaintenanceHistoryList 
+                        maintenanceRecords={getVehicleMaintenance(selectedVehicle.id)} 
+                        vehicleName={selectedVehicle.name}
+                      />
+                    </TabsContent>
+                    
+                    <TabsContent value="incidents">
+                      <IncidentsList 
+                        incidents={getVehicleIncidents(selectedVehicle.id)} 
+                        vehicleName={selectedVehicle.name}
+                      />
+                    </TabsContent>
                   </Tabs>
                 </div>
               </CardHeader>
               <CardContent>
-                <TabsContent value="details" className="mt-0">
-                  <VehicleDetails vehicle={selectedVehicle} />
-                </TabsContent>
-                
-                <TabsContent value="maintenance" className="mt-0">
-                  <MaintenanceHistoryList 
-                    maintenanceRecords={getVehicleMaintenance(selectedVehicle.id)} 
-                    vehicleName={selectedVehicle.name}
-                  />
-                </TabsContent>
-                
-                <TabsContent value="incidents" className="mt-0">
-                  <IncidentsList 
-                    incidents={getVehicleIncidents(selectedVehicle.id)} 
-                    vehicleName={selectedVehicle.name}
-                  />
-                </TabsContent>
+                {/* Le contenu est maintenant géré par les TabsContent ci-dessus */}
               </CardContent>
             </Card>
           ) : (
