@@ -39,14 +39,14 @@ const KeyStatsGrid: React.FC<KeyStatsGridProps> = ({ stats }) => {
         value={`${new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(stats.currentMonthRevenue)}`} 
         icon={<CreditCard className="h-5 w-5 text-gray-500" />} 
         description={
-          <span className={`flex items-center ${stats.revenueChange >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+          <div className={`flex items-center ${stats.revenueChange >= 0 ? 'text-green-600' : 'text-red-600'}`}>
             {stats.revenueChange >= 0 ? (
               <ArrowUpRight className="h-4 w-4 mr-1" />
             ) : (
               <ArrowDownRight className="h-4 w-4 mr-1" />
             )}
             {Math.abs(stats.revenueChange)}% vs mois précédent
-          </span>
+          </div>
         }
       />
       
