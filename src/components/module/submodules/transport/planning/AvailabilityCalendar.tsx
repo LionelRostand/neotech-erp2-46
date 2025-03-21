@@ -95,7 +95,7 @@ const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({
                   <SelectValue placeholder="Tous les types" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Tous les types</SelectItem>
+                  <SelectItem value="all">Tous les types</SelectItem>
                   <SelectItem value="sedan">Berline</SelectItem>
                   <SelectItem value="suv">SUV</SelectItem>
                   <SelectItem value="van">Van</SelectItem>
