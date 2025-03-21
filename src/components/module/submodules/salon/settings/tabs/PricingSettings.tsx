@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useSalonServices } from "../../../salon/services/hooks/useSalonServices";
-import { SalonService } from "../../../types/salon-types";
+import { SalonService } from "../../../../submodules/salon/types/salon-types";
 
 interface PricingSettingsProps {
   onSave: () => void;

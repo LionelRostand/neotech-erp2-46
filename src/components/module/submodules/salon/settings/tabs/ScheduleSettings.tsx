@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -23,8 +22,23 @@ const daysOfWeek = [
   "Dimanche"
 ];
 
+interface RegularHours {
+  day: string;
+  open: string;
+  close: string;
+  isOpen: boolean;
+}
+
+interface SpecialDate {
+  date: string;
+  name: string;
+  open: string;
+  close: string;
+  isOpen: boolean;
+}
+
 const ScheduleSettings: React.FC<ScheduleSettingsProps> = ({ onSave }) => {
-  const [regularHours, setRegularHours] = useState([
+  const [regularHours, setRegularHours] = useState<RegularHours[]>([
     { day: "Lundi", open: "09:00", close: "19:00", isOpen: true },
     { day: "Mardi", open: "09:00", close: "19:00", isOpen: true },
     { day: "Mercredi", open: "09:00", close: "19:00", isOpen: true },
@@ -34,7 +48,7 @@ const ScheduleSettings: React.FC<ScheduleSettingsProps> = ({ onSave }) => {
     { day: "Dimanche", open: "10:00", close: "16:00", isOpen: false }
   ]);
 
-  const [specialDates, setSpecialDates] = useState([
+  const [specialDates, setSpecialDates] = useState<SpecialDate[]>([
     { date: "2023-12-24", name: "Veille de Noël", open: "09:00", close: "16:00", isOpen: true },
     { date: "2023-12-25", name: "Jour de Noël", open: "00:00", close: "00:00", isOpen: false },
     { date: "2023-12-31", name: "Réveillon du Nouvel An", open: "09:00", close: "16:00", isOpen: true },
@@ -64,9 +78,9 @@ const ScheduleSettings: React.FC<ScheduleSettingsProps> = ({ onSave }) => {
     setSpecialDates(newDates);
   };
 
-  const updateSpecialDate = (index: number, field: keyof typeof specialDates[0], value: string) => {
+  const updateSpecialDate = (index: number, field: keyof SpecialDate, value: string) => {
     const newDates = [...specialDates];
-    newDates[index][field] = value;
+    (newDates[index][field] as string) = value;
     setSpecialDates(newDates);
   };
 
