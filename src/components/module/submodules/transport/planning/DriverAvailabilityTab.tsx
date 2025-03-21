@@ -66,7 +66,8 @@ const DriverAvailabilityTab: React.FC<DriverAvailabilityTabProps> = ({
                   <SelectValue placeholder="Toutes les compétences" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Toutes les compétences</SelectItem>
+                  {/* Fixed the empty value to use "all" instead of empty string */}
+                  <SelectItem value="all">Toutes les compétences</SelectItem>
                   <SelectItem value="luxury">VIP/Luxe</SelectItem>
                   <SelectItem value="airport">Aéroport</SelectItem>
                   <SelectItem value="events">Événements</SelectItem>

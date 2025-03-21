@@ -95,6 +95,7 @@ const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({
                   <SelectValue placeholder="Tous les types" />
                 </SelectTrigger>
                 <SelectContent>
+                  {/* Fixed the empty value to use "all" instead of empty string */}
                   <SelectItem value="all">Tous les types</SelectItem>
                   <SelectItem value="sedan">Berline</SelectItem>
                   <SelectItem value="suv">SUV</SelectItem>
