@@ -238,31 +238,29 @@ const TransportPlanning = () => {
           </div>
         </CardHeader>
         <CardContent>
-          <Tabs value={activeTab}>
-            <TabsContent value="availability">
-              <AvailabilityCalendar 
-                vehicles={mockVehicles} 
-                maintenanceSchedules={mockMaintenanceSchedules}
-                onAddMaintenance={handleAddMaintenance}
-              />
-            </TabsContent>
-            
-            <TabsContent value="maintenance">
-              <MaintenanceScheduleList 
-                maintenanceSchedules={mockMaintenanceSchedules}
-                vehicles={mockVehicles}
-                onAddMaintenance={() => setMaintenanceDialogOpen(true)}
-              />
-            </TabsContent>
-            
-            <TabsContent value="extensions">
-              <ExtensionRequestsList extensionRequests={mockExtensionRequests} />
-            </TabsContent>
-            
-            <TabsContent value="drivers">
-              <DriverAvailabilityTab drivers={mockDrivers} />
-            </TabsContent>
-          </Tabs>
+          <TabsContent value="availability" className="mt-0">
+            <AvailabilityCalendar 
+              vehicles={mockVehicles} 
+              maintenanceSchedules={mockMaintenanceSchedules}
+              onAddMaintenance={handleAddMaintenance}
+            />
+          </TabsContent>
+          
+          <TabsContent value="maintenance" className="mt-0">
+            <MaintenanceScheduleList 
+              maintenanceSchedules={mockMaintenanceSchedules}
+              vehicles={mockVehicles}
+              onAddMaintenance={() => setMaintenanceDialogOpen(true)}
+            />
+          </TabsContent>
+          
+          <TabsContent value="extensions" className="mt-0">
+            <ExtensionRequestsList extensionRequests={mockExtensionRequests} />
+          </TabsContent>
+          
+          <TabsContent value="drivers" className="mt-0">
+            <DriverAvailabilityTab drivers={mockDrivers} />
+          </TabsContent>
         </CardContent>
       </Card>
 
