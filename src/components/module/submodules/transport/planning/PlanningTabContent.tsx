@@ -5,7 +5,7 @@ import { Calendar, TruckIcon, Users } from "lucide-react";
 import AvailabilityCalendar from './AvailabilityCalendar';
 import MaintenanceScheduleList from './MaintenanceScheduleList';
 import ExtensionRequestsList from './ExtensionRequestsList';
-import { usePlanningContext } from './context/PlanningContext';
+import { usePlanning } from './context/PlanningContext';
 
 interface PlanningTabContentProps {
   activeMode: string;
@@ -21,7 +21,7 @@ const PlanningTabContent: React.FC<PlanningTabContentProps> = ({
     maintenanceSchedules, 
     extensionRequests,
     handleAddMaintenance
-  } = usePlanningContext();
+  } = usePlanning();
 
   return (
     <Tabs value={activeMode} onValueChange={onModeChange} className="w-full">

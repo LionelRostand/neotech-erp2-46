@@ -26,7 +26,7 @@ const mockDrivers: TransportDriver[] = [
     phone: "06 12 34 56 78",
     email: "jean.dupont@example.com",
     address: "15 rue des Lilas, 75001 Paris",
-    status: "available",
+    status: "active", // Changed from "available" to "active"
     rating: 4.8,
     hireDate: "2019-03-10",
     preferredVehicleType: "sedan"
@@ -41,7 +41,7 @@ const mockDrivers: TransportDriver[] = [
     phone: "07 98 76 54 32",
     email: "marie.laurent@example.com",
     address: "8 avenue Victor Hugo, 75016 Paris",
-    status: "on-duty",
+    status: "driving", // Changed from "on-duty" to "driving"
     rating: 4.5,
     hireDate: "2020-01-15",
     preferredVehicleType: "van"
@@ -56,7 +56,7 @@ const mockDrivers: TransportDriver[] = [
     phone: "06 45 67 89 12",
     email: "pierre.martin@example.com",
     address: "22 rue de la République, 69002 Lyon",
-    status: "unavailable",
+    status: "off-duty", // Changed from "unavailable" to "off-duty"
     rating: 4.2,
     hireDate: "2018-06-22",
     preferredVehicleType: "bus"
@@ -71,7 +71,7 @@ const mockDrivers: TransportDriver[] = [
     phone: "07 32 16 54 98",
     email: "sophie.moreau@example.com",
     address: "5 rue des Pyrénées, 31000 Toulouse",
-    status: "available",
+    status: "active", // Changed from "available" to "active"
     rating: 4.9,
     hireDate: "2021-02-05",
     preferredVehicleType: "luxury"
@@ -86,7 +86,7 @@ const mockDrivers: TransportDriver[] = [
     phone: "06 78 91 23 45",
     email: "thomas.bernard@example.com",
     address: "12 boulevard de la Mer, 06000 Nice",
-    status: "on-duty",
+    status: "driving", // Changed from "on-duty" to "driving"
     rating: 4.7,
     hireDate: "2019-11-18",
     preferredVehicleType: "sedan"
@@ -125,9 +125,9 @@ const TransportDrivers = () => {
     setShowAddDriverDialog(false);
   };
   
-  // Handle add note
-  const handleAddNote = (note: string) => {
-    console.log(`Adding note for driver ${selectedDriver?.id}: ${note}`);
+  // Handle add note - updated to match DriverNoteDialog's expected type
+  const handleAddNote = (data: { title: string; note: string }) => {
+    console.log(`Adding note for driver ${selectedDriver?.id}: ${data.title} - ${data.note}`);
     // In a real application, would save the note to the backend
     setShowNoteDialog(false);
   };
@@ -213,17 +213,21 @@ const TransportDrivers = () => {
                   
                     <TabsContent value="details">
                       <DriverDetails 
-                        driver={selectedDriver} 
-                        onAddNote={() => setShowNoteDialog(true)}
+                        driver={selectedDriver}
                       />
                     </TabsContent>
                     
                     <TabsContent value="availability">
-                      <DriverAvailability driverId={selectedDriver.id} />
+                      <DriverAvailability 
+                        driver={selectedDriver}
+                        assignedReservations={[]} // Add mock or empty data
+                      />
                     </TabsContent>
                     
                     <TabsContent value="performance">
-                      <DriverPerformance driverId={selectedDriver.id} />
+                      <DriverPerformance 
+                        driver={selectedDriver}
+                      />
                     </TabsContent>
                   </Tabs>
                 </div>
@@ -260,7 +264,7 @@ const TransportDrivers = () => {
         <DriverNoteDialog
           open={showNoteDialog}
           onOpenChange={setShowNoteDialog}
-          driverName={`${selectedDriver.firstName} ${selectedDriver.lastName}`}
+          driver={selectedDriver}
           onSave={handleAddNote}
         />
       )}
