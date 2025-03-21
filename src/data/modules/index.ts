@@ -18,6 +18,7 @@ import { eventsModule } from './events';
 import { documentsModule } from './documents';
 import { crmModule } from './crm';
 import { companiesModule } from './companies';
+import { salonModule } from './salon'; // Import the new salon module
 
 // Export all modules as an array - now we can use the modules directly since they all have the category property
 export const modules: AppModule[] = [
@@ -33,6 +34,7 @@ export const modules: AppModule[] = [
   healthModule,
   vehicleRentalsModule,
   freightModule,
+  salonModule, // Add the salon module
   // libraryModule, // Remove the library module from the list
   
   websiteModule,
