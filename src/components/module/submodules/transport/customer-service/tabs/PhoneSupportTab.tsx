@@ -200,8 +200,8 @@ const PhoneSupportTab: React.FC = () => {
                 <div>
                   <label className="block text-sm font-medium mb-1">Statut</label>
                   <Select 
-                    value={newCall.status}
-                    onValueChange={(value) => setNewCall({...newCall, status: value as any})}
+                    value={newCall.status as string}
+                    onValueChange={(value: 'incoming' | 'outgoing' | 'missed' | 'completed') => setNewCall({...newCall, status: value})}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Sélectionner un statut" />
@@ -256,7 +256,7 @@ const PhoneSupportTab: React.FC = () => {
             <div className="w-full sm:w-1/4">
               <Select 
                 value={filterStatus}
-                onValueChange={setFilterStatus}
+                onValueChange={(value) => setFilterStatus(value)}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Filtrer par statut" />
@@ -368,7 +368,7 @@ const PhoneSupportTab: React.FC = () => {
                     // Modifier le statut de l'appel à 'completed' si ce n'est pas déjà le cas
                     if (selectedCall.status !== 'completed') {
                       const updatedCalls = calls.map(call => 
-                        call.id === selectedCall.id ? {...call, status: 'completed'} : call
+                        call.id === selectedCall.id ? {...call, status: 'completed' as const} : call
                       );
                       setCalls(updatedCalls);
                       setSelectedCall({...selectedCall, status: 'completed'});
