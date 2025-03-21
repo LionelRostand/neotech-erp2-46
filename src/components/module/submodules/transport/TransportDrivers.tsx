@@ -1,33 +1,70 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Plus, Search, Filter } from "lucide-react";
+import DriversHeader from './components/drivers/DriversHeader';
+import DriversTable from './components/drivers/DriversTable';
+import DriverPerformance from './components/drivers/DriverPerformance';
+import DriverAvailability from './components/drivers/DriverAvailability';
 
 const TransportDrivers = () => {
+  const [activeTab, setActiveTab] = useState('list');
+  const [searchTerm, setSearchTerm] = useState('');
+
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-3xl font-bold">Gestion des Chauffeurs</h2>
+      <DriversHeader />
+      
+      <div className="flex flex-col sm:flex-row gap-4">
+        <div className="relative flex-1">
+          <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            type="search"
+            placeholder="Rechercher un chauffeur..."
+            className="pl-8"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+        <Button variant="outline" size="icon" className="shrink-0">
+          <Filter className="h-4 w-4" />
+        </Button>
+        <Button className="flex items-center gap-2">
+          <Plus size={16} />
+          <span>Nouveau chauffeur</span>
+        </Button>
       </div>
       
       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Users className="h-5 w-5" />
-            <span>Équipe de Chauffeurs</span>
-          </CardTitle>
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <CardTitle>Gestion des chauffeurs</CardTitle>
+            <Tabs 
+              value={activeTab} 
+              onValueChange={setActiveTab}
+              className="w-[400px]"
+            >
+              <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="list">Liste</TabsTrigger>
+                <TabsTrigger value="performance">Performance</TabsTrigger>
+                <TabsTrigger value="availability">Disponibilité</TabsTrigger>
+              </TabsList>
+            </Tabs>
+          </div>
         </CardHeader>
         <CardContent>
-          <div className="flex justify-center items-center h-[400px]">
-            <div className="text-center">
-              <Users className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-              <h3 className="text-lg font-medium mb-2">Équipe de Chauffeurs</h3>
-              <p className="text-sm text-gray-500 max-w-xs mx-auto">
-                La gestion des chauffeurs sera implémentée dans la prochaine mise à jour.
-                Vous pourrez y gérer les chauffeurs, leurs disponibilités et leurs évaluations.
-              </p>
-            </div>
-          </div>
+          <TabsContent value="list" className="mt-0">
+            <DriversTable searchTerm={searchTerm} />
+          </TabsContent>
+          <TabsContent value="performance" className="mt-0">
+            <DriverPerformance />
+          </TabsContent>
+          <TabsContent value="availability" className="mt-0">
+            <DriverAvailability />
+          </TabsContent>
         </CardContent>
       </Card>
     </div>
