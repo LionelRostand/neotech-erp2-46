@@ -11,7 +11,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import StatCard from "@/components/StatCard";
 import DataTable from "@/components/DataTable";
-import { Line, LineChart, ResponsiveContainer, Tooltip } from "recharts";
+import { Line, LineChart, ResponsiveContainer, Tooltip, TooltipProps } from "recharts";
 
 const TransportDashboard = () => {
   const { toast } = useToast();
@@ -80,10 +80,12 @@ const TransportDashboard = () => {
       <Alert className="border-orange-300 bg-orange-50 text-orange-800">
         <AlertTriangle className="h-4 w-4" />
         <AlertTitle>Alertes</AlertTitle>
-        <AlertDescription className="flex flex-col gap-1">
-          <span>{stats.maintenanceVehicles} véhicules en maintenance</span>
-          <span>{stats.pendingPayments} paiements en attente</span>
-          <span>{stats.todayReservations} réservations aujourd'hui</span>
+        <AlertDescription>
+          <div className="flex flex-col gap-1">
+            <span>{stats.maintenanceVehicles} véhicules en maintenance</span>
+            <span>{stats.pendingPayments} paiements en attente</span>
+            <span>{stats.todayReservations} réservations aujourd'hui</span>
+          </div>
         </AlertDescription>
       </Alert>
 
@@ -153,7 +155,7 @@ const TransportDashboard = () => {
                         return (
                           <div className="bg-white p-3 shadow-md rounded-md border">
                             <p className="font-semibold">{`Jour ${payload[0].payload.day}`}</p>
-                            <p className="text-blue-600">{`${new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(payload[0].value)}`}</p>
+                            <p className="text-blue-600">{`${new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(Number(payload[0].value))}`}</p>
                           </div>
                         );
                       }
