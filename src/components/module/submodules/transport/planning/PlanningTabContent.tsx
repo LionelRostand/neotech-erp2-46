@@ -45,7 +45,7 @@ const PlanningTabContent: React.FC<PlanningTabContentProps> = ({
         <MaintenanceScheduleList 
           maintenanceSchedules={maintenanceSchedules}
           vehicles={vehicles}
-          onAddMaintenance={(vehicle: TransportVehicle) => handleAddMaintenance(vehicle)}
+          onAddMaintenance={handleAddMaintenance}
         />
       </TabsContent>
       
@@ -53,7 +53,7 @@ const PlanningTabContent: React.FC<PlanningTabContentProps> = ({
         <AvailabilityCalendar 
           vehicles={vehicles}
           maintenanceSchedules={maintenanceSchedules}
-          onAddMaintenance={(vehicle: TransportVehicle) => handleAddMaintenance(vehicle)}
+          onAddMaintenance={handleAddMaintenance}
         />
       </TabsContent>
       

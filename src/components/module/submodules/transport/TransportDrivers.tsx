@@ -29,7 +29,10 @@ const mockDrivers: TransportDriver[] = [
     status: "active", // Changed from "available" to "active"
     rating: 4.8,
     hireDate: "2019-03-10",
-    preferredVehicleType: "sedan"
+    preferredVehicleType: "sedan",
+    available: true,
+    experience: 4,
+    photo: "/assets/drivers/driver1.jpg"
   },
   {
     id: "drv-002",
@@ -44,7 +47,10 @@ const mockDrivers: TransportDriver[] = [
     status: "driving", // Changed from "on-duty" to "driving"
     rating: 4.5,
     hireDate: "2020-01-15",
-    preferredVehicleType: "van"
+    preferredVehicleType: "van",
+    available: false,
+    experience: 3,
+    photo: "/assets/drivers/driver2.jpg"
   },
   {
     id: "drv-003",
@@ -59,7 +65,10 @@ const mockDrivers: TransportDriver[] = [
     status: "off-duty", // Changed from "unavailable" to "off-duty"
     rating: 4.2,
     hireDate: "2018-06-22",
-    preferredVehicleType: "bus"
+    preferredVehicleType: "bus",
+    available: false,
+    experience: 5,
+    photo: "/assets/drivers/driver3.jpg"
   },
   {
     id: "drv-004",
@@ -74,7 +83,10 @@ const mockDrivers: TransportDriver[] = [
     status: "active", // Changed from "available" to "active"
     rating: 4.9,
     hireDate: "2021-02-05",
-    preferredVehicleType: "luxury"
+    preferredVehicleType: "luxury",
+    available: true,
+    experience: 2,
+    photo: "/assets/drivers/driver4.jpg"
   },
   {
     id: "drv-005",
@@ -89,7 +101,10 @@ const mockDrivers: TransportDriver[] = [
     status: "driving", // Changed from "on-duty" to "driving"
     rating: 4.7,
     hireDate: "2019-11-18",
-    preferredVehicleType: "sedan"
+    preferredVehicleType: "sedan",
+    available: false,
+    experience: 3,
+    photo: "/assets/drivers/driver5.jpg"
   }
 ];
 
