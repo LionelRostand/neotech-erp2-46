@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useSafeFirestore } from '@/hooks/use-safe-firestore';
 import { useToast } from '@/hooks/use-toast';
@@ -51,12 +50,11 @@ export const useMembersData = () => {
             lastName: "Durand",
             email: "marie.durand@example.com",
             membershipId: "MEM-12345678",
-            phoneNumber: "06 12 34 56 78",
+            phone: "06 12 34 56 78",
             address: "123 Rue de Paris, 75001 Paris",
-            birthDate: "1985-04-12",
             createdAt: new Date().toISOString(),
             status: "active",
-            subscriptionPlan: "standard",
+            subscriptionType: "basic",
             notes: "Adhérente régulière depuis 2020"
           },
           {
@@ -65,12 +63,11 @@ export const useMembersData = () => {
             lastName: "Martin",
             email: "thomas.martin@example.com",
             membershipId: "MEM-87654321",
-            phoneNumber: "07 98 76 54 32",
+            phone: "07 98 76 54 32",
             address: "456 Avenue Victor Hugo, 75016 Paris",
-            birthDate: "1992-08-23",
             createdAt: new Date().toISOString(),
             status: "active",
-            subscriptionPlan: "premium",
+            subscriptionType: "premium",
             notes: "Intéressé par les ateliers littéraires"
           }
         ];
@@ -114,12 +111,11 @@ export const useMembersData = () => {
               lastName: "Durand",
               email: "marie.durand@example.com",
               membershipId: "MEM-12345678",
-              phoneNumber: "06 12 34 56 78",
+              phone: "06 12 34 56 78",
               address: "123 Rue de Paris, 75001 Paris",
-              birthDate: "1985-04-12",
               createdAt: new Date().toISOString(),
               status: "active",
-              subscriptionPlan: "standard",
+              subscriptionType: "basic",
               notes: "Adhérente régulière depuis 2020"
             },
             {
@@ -128,12 +124,11 @@ export const useMembersData = () => {
               lastName: "Martin",
               email: "thomas.martin@example.com",
               membershipId: "MEM-87654321",
-              phoneNumber: "07 98 76 54 32",
+              phone: "07 98 76 54 32",
               address: "456 Avenue Victor Hugo, 75016 Paris",
-              birthDate: "1992-08-23",
               createdAt: new Date().toISOString(),
               status: "active",
-              subscriptionPlan: "premium",
+              subscriptionType: "premium",
               notes: "Intéressé par les ateliers littéraires"
             }
           ];
