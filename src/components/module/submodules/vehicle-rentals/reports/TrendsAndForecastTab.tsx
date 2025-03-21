@@ -11,7 +11,9 @@ import {
   Legend,
   ResponsiveContainer,
   AreaChart,
-  Area
+  Area,
+  BarChart,
+  Bar
 } from 'recharts';
 import { PlaneTakeoff, Ship, Car, Clock, Calendar, ArrowUpRight } from "lucide-react";
 import StatCard from '@/components/StatCard';
