@@ -3,6 +3,7 @@ import React from 'react';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Calendar, AlertTriangle, CreditCard, Package } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Link } from 'react-router-dom';
 
 interface SalonAlertsProps {
   newAppointments: number;
@@ -33,22 +34,22 @@ const SalonAlerts: React.FC<SalonAlertsProps> = ({
       <AlertDescription>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-2 mt-2">
           {newAppointments > 0 && (
-            <div className="flex items-center">
+            <Link to="/modules/salon/appointments" className="flex items-center hover:underline">
               <Calendar className="h-4 w-4 mr-2 text-orange-600" />
               <span>{newAppointments} nouveau{newAppointments > 1 ? 'x' : ''} rendez-vous à confirmer</span>
-            </div>
+            </Link>
           )}
           {pendingPayments > 0 && (
-            <div className="flex items-center">
+            <Link to="/modules/salon/billing" className="flex items-center hover:underline">
               <CreditCard className="h-4 w-4 mr-2 text-orange-600" />
               <span>{pendingPayments} paiement{pendingPayments > 1 ? 's' : ''} en attente</span>
-            </div>
+            </Link>
           )}
           {lowStockProducts > 0 && (
-            <div className="flex items-center">
+            <Link to="/modules/salon/products" className="flex items-center hover:underline">
               <Package className="h-4 w-4 mr-2 text-orange-600" />
               <span>{lowStockProducts} produit{lowStockProducts > 1 ? 's' : ''} en stock faible</span>
-            </div>
+            </Link>
           )}
         </div>
       </AlertDescription>

@@ -80,6 +80,17 @@ export interface SalonProduct {
   description: string;
   price: number;
   stockQuantity: number;
+  minStock: number;
   category: string;
   imageUrl?: string;
+  relatedServices?: string[];
+  soldToday: number;
+  soldTotal: number;
+}
+
+// Product Category
+export interface ProductCategory {
+  id: string;
+  name: string;
+  description?: string;
 }

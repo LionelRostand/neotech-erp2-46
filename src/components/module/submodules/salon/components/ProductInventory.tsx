@@ -3,6 +3,8 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Package, AlertTriangle, ShoppingBag } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { useProducts } from '../products/hooks/useProducts';
+import { Link } from 'react-router-dom';
 
 interface ProductInventoryProps {
   lowStockProducts: number;
@@ -13,11 +15,8 @@ const ProductInventory: React.FC<ProductInventoryProps> = ({
   lowStockProducts,
   totalProductsSold
 }) => {
-  const mockProducts = [
-    { name: "Shampooing Réparateur", stock: 3, minStock: 5, sold: 12 },
-    { name: "Masque Hydratant", stock: 2, minStock: 5, sold: 8 },
-    { name: "Huile Capillaire", stock: 4, minStock: 5, sold: 5 }
-  ];
+  const { products, getLowStockProducts } = useProducts();
+  const lowStockItems = getLowStockProducts().slice(0, 3);
 
   return (
     <Card>
@@ -44,24 +43,28 @@ const ProductInventory: React.FC<ProductInventoryProps> = ({
           
           <div className="text-sm">
             <p className="font-medium text-gray-700 mb-2">Produits à réapprovisionner :</p>
-            {mockProducts.map((product, index) => (
-              <div key={index} className="flex justify-between items-center py-2 border-b last:border-0">
-                <span className="flex items-center">
-                  {product.stock < product.minStock && (
+            {lowStockItems.length > 0 ? (
+              lowStockItems.map((product, index) => (
+                <div key={index} className="flex justify-between items-center py-2 border-b last:border-0">
+                  <span className="flex items-center">
                     <AlertTriangle className="h-3 w-3 text-orange-500 mr-2" />
-                  )}
-                  {product.name}
-                </span>
-                <span className={`font-medium ${product.stock < product.minStock ? 'text-orange-600' : 'text-gray-600'}`}>
-                  {product.stock} en stock
-                </span>
+                    {product.name}
+                  </span>
+                  <span className="font-medium text-orange-600">
+                    {product.stockQuantity} en stock
+                  </span>
+                </div>
+              ))
+            ) : (
+              <div className="py-2 text-center text-gray-500">
+                Tous les produits sont en stock suffisant
               </div>
-            ))}
+            )}
           </div>
           
-          <button className="w-full mt-2 text-blue-600 text-sm font-medium hover:underline">
+          <Link to="/modules/salon/products" className="block w-full mt-2 text-center text-blue-600 text-sm font-medium hover:underline">
             Gérer les stocks
-          </button>
+          </Link>
         </div>
       </CardContent>
     </Card>
