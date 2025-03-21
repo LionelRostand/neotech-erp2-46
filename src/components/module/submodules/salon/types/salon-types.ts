@@ -31,11 +31,13 @@ export interface SalonVisit {
 // Appointment
 export interface SalonAppointment {
   id: string;
-  date: string;
+  clientId: string;
   service: string;
   stylist: string;
-  status: 'pending' | 'confirmed' | 'cancelled' | 'completed';
+  date: string;
+  time: string;
   duration: number; // in minutes
+  status: 'pending' | 'confirmed' | 'cancelled' | 'completed';
   notes?: string;
 }
 
