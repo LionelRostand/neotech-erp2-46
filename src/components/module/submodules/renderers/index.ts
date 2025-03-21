@@ -1,12 +1,13 @@
 
-export { renderEmployeesSubmodule } from './EmployeesRenderer';
-export { renderFreightSubmodule } from './FreightRenderer';
-export { renderProjectsSubmodule } from './ProjectsRenderer';
-export { renderAccountingSubmodule } from './AccountingRenderer';
-export { renderMessagesSubmodule } from './MessagesRenderer';
-export { renderCompaniesSubmodule } from './CompaniesRenderer';
-export { renderCrmSubmodule } from './CrmRenderer';
-export { renderHealthSubmodule } from './HealthRenderer';
-export { renderDocumentsSubmodule } from './DocumentsRenderer';
-export { renderVehicleRentalsSubmodule } from './VehicleRentalsRenderer';
-export { renderTransportSubmodule } from './TransportRenderer';
+export * from './AccountingRenderer';
+export * from './CompaniesRenderer';
+export * from './CrmRenderer';
+export * from './DocumentsRenderer';
+export * from './EmployeesRenderer';
+export * from './FreightRenderer';
+export * from './HealthRenderer';
+export * from './LibraryRenderer';
+export * from './MessagesRenderer';
+export * from './ProjectsRenderer';
+export * from './VehicleRentalsRenderer';
+export * from './TransportRenderer';

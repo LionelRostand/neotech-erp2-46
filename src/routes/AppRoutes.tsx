@@ -172,11 +172,26 @@ const AppRoutes = () => (
       <Route path="settings" element={<SubmodulePage moduleId={12} submoduleId="rentals-settings" />} />
     </Route>
 
+    {/* Routes for Transport module */}
+    <Route path="/modules/transport" element={<ModuleLayout moduleId={7} />}>
+      <Route index element={<SubmodulePage moduleId={7} submoduleId="transport-dashboard" />} />
+      <Route path="dashboard" element={<SubmodulePage moduleId={7} submoduleId="transport-dashboard" />} />
+      <Route path="reservations" element={<SubmodulePage moduleId={7} submoduleId="transport-reservations" />} />
+      <Route path="planning" element={<SubmodulePage moduleId={7} submoduleId="transport-planning" />} />
+      <Route path="fleet" element={<SubmodulePage moduleId={7} submoduleId="transport-fleet" />} />
+      <Route path="drivers" element={<SubmodulePage moduleId={7} submoduleId="transport-drivers" />} />
+      <Route path="geolocation" element={<SubmodulePage moduleId={7} submoduleId="transport-geolocation" />} />
+      <Route path="payments" element={<SubmodulePage moduleId={7} submoduleId="transport-payments" />} />
+      <Route path="customer-service" element={<SubmodulePage moduleId={7} submoduleId="transport-customer-service" />} />
+      <Route path="loyalty" element={<SubmodulePage moduleId={7} submoduleId="transport-loyalty" />} />
+      <Route path="web-booking" element={<SubmodulePage moduleId={7} submoduleId="transport-web-booking" />} />
+      <Route path="settings" element={<SubmodulePage moduleId={7} submoduleId="transport-settings" />} />
+    </Route>
+
     {/* Generic routes for other modules */}
     <Route path="/modules/academy/*" element={<ModuleLayout moduleId={4} />} />
     <Route path="/modules/restaurant/*" element={<ModuleLayout moduleId={5} />} />
     <Route path="/modules/garage/*" element={<ModuleLayout moduleId={6} />} />
-    <Route path="/modules/transport/*" element={<ModuleLayout moduleId={7} />} />
     <Route path="/modules/ecommerce/*" element={<ModuleLayout moduleId={10} />} />
     
     {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
