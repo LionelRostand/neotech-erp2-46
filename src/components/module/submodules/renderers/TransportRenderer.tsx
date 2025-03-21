@@ -15,6 +15,8 @@ import TransportSettings from '../transport/TransportSettings';
 
 export const renderTransportSubmodule = (submoduleId: string, submodule: SubModule) => {
   switch (submoduleId) {
+    case 'transport-dashboard':
+      return <TransportDashboard />;
     case 'transport-reservations':
       return <TransportReservations />;
     case 'transport-planning':

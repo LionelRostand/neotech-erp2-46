@@ -1,5 +1,5 @@
 
-import { Car, CalendarCheck, Calendar, Users, MapPin, CreditCard, Mail, Heart, Globe, Settings } from 'lucide-react';
+import { Car, CalendarCheck, Calendar, Users, MapPin, CreditCard, Mail, Heart, Globe, Settings, LayoutDashboard } from 'lucide-react';
 import { AppModule, createIcon } from '../types/modules';
 
 export const transportModule: AppModule = {
@@ -8,8 +8,9 @@ export const transportModule: AppModule = {
   description: "Gestion des chauffeurs, réservations et planification des transports",
   href: "/modules/transport",
   icon: createIcon(Car),
-  category: 'services', // Added the category property
+  category: 'services',
   submodules: [
+    { id: "transport-dashboard", name: "Tableau de bord", href: "/modules/transport/dashboard", icon: createIcon(LayoutDashboard) },
     { id: "transport-reservations", name: "Réservations", href: "/modules/transport/reservations", icon: createIcon(CalendarCheck) },
     { id: "transport-planning", name: "Planning", href: "/modules/transport/planning", icon: createIcon(Calendar) },
     { id: "transport-fleet", name: "Flotte", href: "/modules/transport/fleet", icon: createIcon(Car) },

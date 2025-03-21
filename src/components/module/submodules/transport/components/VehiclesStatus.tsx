@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Map, Car } from "lucide-react";
+import { Car } from "lucide-react";
 
 interface VehiclesStatusProps {
   availableVehicles: number;
@@ -16,61 +16,60 @@ const VehiclesStatus: React.FC<VehiclesStatusProps> = ({
   maintenanceVehicles, 
   totalVehicles 
 }) => {
+  const availablePercentage = Math.round(100 * availableVehicles / totalVehicles);
+  const inUsePercentage = Math.round(100 * inUseVehicles / totalVehicles);
+  const maintenancePercentage = Math.round(100 * maintenanceVehicles / totalVehicles);
+  
   return (
     <Card>
       <CardHeader>
         <CardTitle>
           <div className="flex items-center gap-2">
-            <Map className="h-5 w-5" />
-            <span>Statut des véhicules</span>
+            <Car className="h-5 w-5" />
+            <span>Statut de la flotte</span>
           </div>
         </CardTitle>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="bg-green-50 p-4 rounded-lg">
-              <div className="flex justify-between items-center">
-                <div>
-                  <p className="text-sm text-gray-500">Disponibles</p>
-                  <p className="text-2xl font-bold text-green-600">{availableVehicles}</p>
-                </div>
-                <Car className="h-8 w-8 text-green-500" />
-              </div>
+          <div className="grid grid-cols-3 gap-4 text-center">
+            <div>
+              <p className="text-sm text-gray-500">Disponibles</p>
+              <p className="text-2xl font-bold text-green-600">{availableVehicles}</p>
+              <p className="text-xs text-gray-500">{availablePercentage}%</p>
             </div>
-            <div className="bg-blue-50 p-4 rounded-lg">
-              <div className="flex justify-between items-center">
-                <div>
-                  <p className="text-sm text-gray-500">En service</p>
-                  <p className="text-2xl font-bold text-blue-600">{inUseVehicles}</p>
-                </div>
-                <Car className="h-8 w-8 text-blue-500" />
-              </div>
+            <div>
+              <p className="text-sm text-gray-500">En service</p>
+              <p className="text-2xl font-bold text-blue-600">{inUseVehicles}</p>
+              <p className="text-xs text-gray-500">{inUsePercentage}%</p>
+            </div>
+            <div>
+              <p className="text-sm text-gray-500">Maintenance</p>
+              <p className="text-2xl font-bold text-orange-600">{maintenanceVehicles}</p>
+              <p className="text-xs text-gray-500">{maintenancePercentage}%</p>
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="bg-orange-50 p-4 rounded-lg">
-              <div className="flex justify-between items-center">
-                <div>
-                  <p className="text-sm text-gray-500">Maintenance</p>
-                  <p className="text-2xl font-bold text-orange-600">{maintenanceVehicles}</p>
-                </div>
-                <Car className="h-8 w-8 text-orange-500" />
-              </div>
-            </div>
-            <div className="bg-purple-50 p-4 rounded-lg">
-              <div className="flex justify-between items-center">
-                <div>
-                  <p className="text-sm text-gray-500">Total</p>
-                  <p className="text-2xl font-bold text-purple-600">{totalVehicles}</p>
-                </div>
-                <Car className="h-8 w-8 text-purple-500" />
-              </div>
-            </div>
+          
+          <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden mt-2">
+            <div 
+              className="h-full bg-green-500 float-left rounded-l-full" 
+              style={{ width: `${availablePercentage}%` }} 
+            />
+            <div 
+              className="h-full bg-blue-500 float-left" 
+              style={{ width: `${inUsePercentage}%` }} 
+            />
+            <div 
+              className="h-full bg-orange-500 float-left rounded-r-full" 
+              style={{ width: `${maintenancePercentage}%` }} 
+            />
           </div>
-          <button className="w-full mt-2 text-blue-600 text-sm font-medium hover:underline">
-            Gérer la flotte
-          </button>
+          
+          <div className="text-sm text-gray-500 mt-4">
+            <div className="font-medium">Prochains retours:</div>
+            <p className="mt-2">• Mercedes Classe E (AB-123-CD) - <span className="font-medium">Aujourd'hui 18:00</span></p>
+            <p>• BMW Série 5 (EF-456-GH) - <span className="font-medium">Demain 10:30</span></p>
+          </div>
         </div>
       </CardContent>
     </Card>
