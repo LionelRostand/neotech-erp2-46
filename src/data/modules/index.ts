@@ -14,11 +14,10 @@ import { websiteModule } from './website';
 import { vehicleRentalsModule } from './vehicle-rentals';
 import { messagesModule } from './messages';
 import { eventsModule } from './events';
-// import { libraryModule } from './library'; // Remove this import
 import { documentsModule } from './documents';
 import { crmModule } from './crm';
 import { companiesModule } from './companies';
-import { salonModule } from './salon'; // Import the new salon module
+// Import removed: import { salonModule } from './salon';
 
 // Export all modules as an array - now we can use the modules directly since they all have the category property
 export const modules: AppModule[] = [
@@ -34,8 +33,7 @@ export const modules: AppModule[] = [
   healthModule,
   vehicleRentalsModule,
   freightModule,
-  salonModule, // Add the salon module
-  // libraryModule, // Remove the library module from the list
+  // Removed: salonModule,
   
   websiteModule,
   ecommerceModule,
