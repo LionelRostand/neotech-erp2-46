@@ -1,7 +1,8 @@
 
 import React from 'react';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertTriangle } from "lucide-react";
+import { Calendar, AlertTriangle, CreditCard, Package } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
 interface SalonAlertsProps {
   newAppointments: number;
@@ -18,20 +19,38 @@ const SalonAlerts: React.FC<SalonAlertsProps> = ({
 
   if (!hasAlerts) return null;
 
+  const totalAlerts = newAppointments + pendingPayments + lowStockProducts;
+
   return (
     <Alert className="border-orange-300 bg-orange-50 text-orange-800">
-      <AlertTriangle className="h-4 w-4" />
-      <AlertTitle>Alertes</AlertTitle>
+      <AlertTriangle className="h-5 w-5" />
+      <AlertTitle className="flex items-center gap-2">
+        Alertes
+        <Badge variant="outline" className="bg-orange-100 text-orange-800 ml-2">
+          {totalAlerts}
+        </Badge>
+      </AlertTitle>
       <AlertDescription>
-        {newAppointments > 0 && (
-          <span className="mr-4">{newAppointments} nouveau{newAppointments > 1 ? 'x' : ''} rendez-vous à confirmer</span>
-        )}
-        {pendingPayments > 0 && (
-          <span className="mr-4">{pendingPayments} paiement{pendingPayments > 1 ? 's' : ''} en attente</span>
-        )}
-        {lowStockProducts > 0 && (
-          <span>{lowStockProducts} produit{lowStockProducts > 1 ? 's' : ''} en stock faible</span>
-        )}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-2 mt-2">
+          {newAppointments > 0 && (
+            <div className="flex items-center">
+              <Calendar className="h-4 w-4 mr-2 text-orange-600" />
+              <span>{newAppointments} nouveau{newAppointments > 1 ? 'x' : ''} rendez-vous à confirmer</span>
+            </div>
+          )}
+          {pendingPayments > 0 && (
+            <div className="flex items-center">
+              <CreditCard className="h-4 w-4 mr-2 text-orange-600" />
+              <span>{pendingPayments} paiement{pendingPayments > 1 ? 's' : ''} en attente</span>
+            </div>
+          )}
+          {lowStockProducts > 0 && (
+            <div className="flex items-center">
+              <Package className="h-4 w-4 mr-2 text-orange-600" />
+              <span>{lowStockProducts} produit{lowStockProducts > 1 ? 's' : ''} en stock faible</span>
+            </div>
+          )}
+        </div>
       </AlertDescription>
     </Alert>
   );
