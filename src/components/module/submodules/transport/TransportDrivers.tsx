@@ -1,164 +1,116 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { UserCircle, Plus, Search, Filter, Star, CalendarClock, TrendingUp } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Plus, Search, UserIcon, Clock, Star, FileText } from "lucide-react";
 import { TransportDriver } from './types/transport-types';
 import DriversTable from './drivers/DriversTable';
 import DriverDetails from './drivers/DriverDetails';
-import DriverPerformance from './drivers/DriverPerformance';
 import DriverAvailability from './drivers/DriverAvailability';
+import DriverPerformance from './drivers/DriverPerformance';
 import AddDriverDialog from './drivers/AddDriverDialog';
+import DriverNoteDialog from './drivers/DriverNoteDialog';
 
-// Mock drivers data
+// Mock data - would come from API in real app
 const mockDrivers: TransportDriver[] = [
   {
     id: "drv-001",
-    firstName: "Marc",
-    lastName: "Leblanc",
-    phone: "+33612345678",
-    email: "marc.leblanc@example.com",
-    licenseNumber: "12AB34567",
-    licenseExpiry: "2025-06-30",
-    available: true,
+    firstName: "Jean",
+    lastName: "Dupont",
+    licenseNumber: "123456789",
+    licenseType: "B",
+    licenseExpiry: "2025-06-15",
+    phone: "06 12 34 56 78",
+    email: "jean.dupont@example.com",
+    address: "15 rue des Lilas, 75001 Paris",
+    status: "available",
     rating: 4.8,
-    experience: 5,
-    photo: "https://randomuser.me/api/portraits/men/1.jpg",
-    status: "active",
-    performance: {
-      onTimeRate: 97,
-      customerSatisfaction: 4.8,
-      safetyScore: 95
-    }
+    hireDate: "2019-03-10",
+    preferredVehicleType: "sedan"
   },
   {
     id: "drv-002",
-    firstName: "Sophie",
-    lastName: "Martin",
-    phone: "+33623456789",
-    email: "sophie.martin@example.com",
-    licenseNumber: "23CD45678",
-    licenseExpiry: "2024-09-15",
-    available: true,
-    rating: 4.9,
-    experience: 7,
-    photo: "https://randomuser.me/api/portraits/women/2.jpg",
-    status: "active",
-    performance: {
-      onTimeRate: 99,
-      customerSatisfaction: 4.9,
-      safetyScore: 98
-    }
+    firstName: "Marie",
+    lastName: "Laurent",
+    licenseNumber: "987654321",
+    licenseType: "B",
+    licenseExpiry: "2024-11-30",
+    phone: "07 98 76 54 32",
+    email: "marie.laurent@example.com",
+    address: "8 avenue Victor Hugo, 75016 Paris",
+    status: "on-duty",
+    rating: 4.5,
+    hireDate: "2020-01-15",
+    preferredVehicleType: "van"
   },
   {
     id: "drv-003",
-    firstName: "Nicolas",
-    lastName: "Durand",
-    phone: "+33634567890",
-    email: "nicolas.durand@example.com",
-    licenseNumber: "34EF56789",
-    licenseExpiry: "2024-03-22",
-    available: false,
-    rating: 4.7,
-    experience: 4,
-    photo: "https://randomuser.me/api/portraits/men/3.jpg",
-    status: "on-leave",
-    performance: {
-      onTimeRate: 95,
-      customerSatisfaction: 4.7,
-      safetyScore: 92
-    }
+    firstName: "Pierre",
+    lastName: "Martin",
+    licenseNumber: "456789123",
+    licenseType: "D",
+    licenseExpiry: "2023-12-25",
+    phone: "06 45 67 89 12",
+    email: "pierre.martin@example.com",
+    address: "22 rue de la République, 69002 Lyon",
+    status: "unavailable",
+    rating: 4.2,
+    hireDate: "2018-06-22",
+    preferredVehicleType: "bus"
   },
   {
     id: "drv-004",
-    firstName: "Pierre",
+    firstName: "Sophie",
     lastName: "Moreau",
-    phone: "+33645678901",
-    email: "pierre.moreau@example.com",
-    licenseNumber: "45GH67890",
-    licenseExpiry: "2025-01-10",
-    available: true,
-    rating: 4.5,
-    experience: 3,
-    photo: "https://randomuser.me/api/portraits/men/4.jpg",
-    status: "active",
-    performance: {
-      onTimeRate: 94,
-      customerSatisfaction: 4.5,
-      safetyScore: 91
-    }
+    licenseNumber: "321654987",
+    licenseType: "B",
+    licenseExpiry: "2024-08-10",
+    phone: "07 32 16 54 98",
+    email: "sophie.moreau@example.com",
+    address: "5 rue des Pyrénées, 31000 Toulouse",
+    status: "available",
+    rating: 4.9,
+    hireDate: "2021-02-05",
+    preferredVehicleType: "luxury"
   },
   {
     id: "drv-005",
-    firstName: "Julie",
-    lastName: "Leroy",
-    phone: "+33656789012",
-    email: "julie.leroy@example.com",
-    licenseNumber: "56IJ78901",
-    licenseExpiry: "2024-11-05",
-    available: false,
-    rating: 4.9,
-    experience: 6,
-    photo: "https://randomuser.me/api/portraits/women/5.jpg",
-    status: "inactive",
-    performance: {
-      onTimeRate: 98,
-      customerSatisfaction: 4.9,
-      safetyScore: 97
-    }
-  }
-];
-
-// Mock assigned reservations
-const mockAssignedReservations = [
-  {
-    id: "TR-2023-001",
-    driverId: "drv-001",
-    clientName: "Jean Dupont",
-    service: "airport-transfer",
-    date: "2023-12-05",
-    time: "09:30",
-    pickup: "Aéroport Charles de Gaulle, Terminal 2E",
-    dropoff: "Hôtel Ritz Paris, 15 Place Vendôme, 75001 Paris",
-    status: "confirmed"
-  },
-  {
-    id: "TR-2023-003",
-    driverId: "drv-002",
-    clientName: "Thomas Petit",
-    service: "business-travel",
-    date: "2023-12-06",
-    time: "10:15",
-    pickup: "Tour Eiffel, Champ de Mars, 5 Avenue Anatole France, 75007 Paris",
-    dropoff: "La Défense, 92400 Courbevoie",
-    status: "confirmed"
-  },
-  {
-    id: "TR-2023-006",
-    driverId: "drv-001",
-    clientName: "Philippe Dupuis",
-    service: "hourly-hire",
-    date: "2023-12-08",
-    time: "14:00",
-    pickup: "Hôtel InterContinental Paris Le Grand, 2 Rue Scribe, 75009 Paris",
-    dropoff: "Hôtel InterContinental Paris Le Grand, 2 Rue Scribe, 75009 Paris",
-    status: "confirmed"
+    firstName: "Thomas",
+    lastName: "Bernard",
+    licenseNumber: "789123456",
+    licenseType: "B+E",
+    licenseExpiry: "2025-01-20",
+    phone: "06 78 91 23 45",
+    email: "thomas.bernard@example.com",
+    address: "12 boulevard de la Mer, 06000 Nice",
+    status: "on-duty",
+    rating: 4.7,
+    hireDate: "2019-11-18",
+    preferredVehicleType: "sedan"
   }
 ];
 
 const TransportDrivers = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [showAddDialog, setShowAddDialog] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<string>('all');
   const [selectedDriver, setSelectedDriver] = useState<TransportDriver | null>(null);
   const [activeTab, setActiveTab] = useState('details');
+  const [showAddDriverDialog, setShowAddDriverDialog] = useState(false);
+  const [showNoteDialog, setShowNoteDialog] = useState(false);
   
-  // Filter drivers based on search term
+  // Filter drivers based on search term and status
   const filteredDrivers = mockDrivers.filter(driver => {
-    const fullName = `${driver.firstName} ${driver.lastName}`.toLowerCase();
-    return fullName.includes(searchTerm.toLowerCase()) ||
-           driver.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-           driver.phone.includes(searchTerm);
+    const matchesSearch = 
+      `${driver.firstName} ${driver.lastName}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      driver.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      driver.licenseNumber.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesStatus = statusFilter === 'all' || driver.status === statusFilter;
+    
+    return matchesSearch && matchesStatus;
   });
   
   // Handle driver selection
@@ -166,16 +118,18 @@ const TransportDrivers = () => {
     setSelectedDriver(driver);
   };
   
-  // Get reservations for selected driver
-  const getDriverReservations = (driverId: string) => {
-    return mockAssignedReservations.filter(res => res.driverId === driverId);
-  };
-  
-  // Handle adding a driver
+  // Handle add driver
   const handleAddDriver = (formData: any) => {
     console.log("New driver data:", formData);
-    // In a real application, would add the driver to the database
-    setShowAddDialog(false);
+    // In a real application, would add the driver to the backend
+    setShowAddDriverDialog(false);
+  };
+  
+  // Handle add note
+  const handleAddNote = (note: string) => {
+    console.log(`Adding note for driver ${selectedDriver?.id}: ${note}`);
+    // In a real application, would save the note to the backend
+    setShowNoteDialog(false);
   };
 
   return (
@@ -184,7 +138,7 @@ const TransportDrivers = () => {
         <h2 className="text-3xl font-bold">Chauffeurs</h2>
         <Button 
           className="flex items-center gap-2"
-          onClick={() => setShowAddDialog(true)}
+          onClick={() => setShowAddDriverDialog(true)}
         >
           <Plus size={16} />
           <span>Ajouter un chauffeur</span>
@@ -196,15 +150,24 @@ const TransportDrivers = () => {
           <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
             type="search"
-            placeholder="Rechercher un chauffeur..."
+            placeholder="Rechercher par nom ou numéro de permis..."
             className="pl-8"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
-        <Button variant="outline" size="icon" className="shrink-0">
-          <Filter className="h-4 w-4" />
-        </Button>
+        
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Statut" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Tous les statuts</SelectItem>
+            <SelectItem value="available">Disponible</SelectItem>
+            <SelectItem value="on-duty">En service</SelectItem>
+            <SelectItem value="unavailable">Indisponible</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
       
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -228,49 +191,52 @@ const TransportDrivers = () => {
             <Card>
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
-                  <CardTitle>Profil du chauffeur</CardTitle>
-                  <Tabs value={activeTab} onValueChange={setActiveTab}>
+                  <CardTitle>Détails du chauffeur</CardTitle>
+                  <Tabs 
+                    value={activeTab}
+                    onValueChange={setActiveTab}
+                  >
                     <TabsList className="grid w-full grid-cols-3">
                       <TabsTrigger value="details" className="flex items-center gap-2">
-                        <UserCircle size={16} />
-                        <span>Détails</span>
+                        <UserIcon size={16} />
+                        <span>Information</span>
                       </TabsTrigger>
                       <TabsTrigger value="availability" className="flex items-center gap-2">
-                        <CalendarClock size={16} />
+                        <Clock size={16} />
                         <span>Disponibilité</span>
                       </TabsTrigger>
                       <TabsTrigger value="performance" className="flex items-center gap-2">
-                        <TrendingUp size={16} />
+                        <Star size={16} />
                         <span>Performance</span>
                       </TabsTrigger>
                     </TabsList>
                   
                     <TabsContent value="details">
-                      <DriverDetails driver={selectedDriver} />
-                    </TabsContent>
-                    
-                    <TabsContent value="availability">
-                      <DriverAvailability 
+                      <DriverDetails 
                         driver={selectedDriver} 
-                        assignedReservations={getDriverReservations(selectedDriver.id)}
+                        onAddNote={() => setShowNoteDialog(true)}
                       />
                     </TabsContent>
                     
+                    <TabsContent value="availability">
+                      <DriverAvailability driverId={selectedDriver.id} />
+                    </TabsContent>
+                    
                     <TabsContent value="performance">
-                      <DriverPerformance driver={selectedDriver} />
+                      <DriverPerformance driverId={selectedDriver.id} />
                     </TabsContent>
                   </Tabs>
                 </div>
               </CardHeader>
               <CardContent>
-                {/* Le contenu est maintenant géré par les TabsContent ci-dessus */}
+                {/* Contenu géré par les TabsContent ci-dessus */}
               </CardContent>
             </Card>
           ) : (
             <Card>
               <CardContent className="flex justify-center items-center h-[400px]">
                 <div className="text-center">
-                  <UserCircle className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+                  <UserIcon className="h-12 w-12 mx-auto text-gray-400 mb-4" />
                   <h3 className="text-lg font-medium mb-2">Sélectionnez un chauffeur</h3>
                   <p className="text-sm text-gray-500 max-w-xs mx-auto">
                     Veuillez sélectionner un chauffeur dans la liste pour voir ses détails, sa disponibilité et ses performances.
@@ -284,10 +250,20 @@ const TransportDrivers = () => {
       
       {/* Add Driver Dialog */}
       <AddDriverDialog 
-        open={showAddDialog}
-        onOpenChange={setShowAddDialog}
+        open={showAddDriverDialog} 
+        onOpenChange={setShowAddDriverDialog}
         onSave={handleAddDriver}
       />
+      
+      {/* Add Note Dialog */}
+      {selectedDriver && (
+        <DriverNoteDialog
+          open={showNoteDialog}
+          onOpenChange={setShowNoteDialog}
+          driverName={`${selectedDriver.firstName} ${selectedDriver.lastName}`}
+          onSave={handleAddNote}
+        />
+      )}
     </div>
   );
 };

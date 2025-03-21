@@ -1,32 +1,22 @@
 
 import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs } from "@/components/ui/tabs";
+import { Card, CardContent } from "@/components/ui/card";
 import CustomerServiceTabs from './customer-service/CustomerServiceTabs';
 import CustomerServiceContent from './customer-service/CustomerServiceContent';
 
-const TransportCustomerService = () => {
-  const [activeTab, setActiveTab] = useState<string>("chat");
-
-  const handleTabChange = (value: string) => {
-    setActiveTab(value);
-  };
+const TransportCustomerService: React.FC = () => {
+  const [activeTab, setActiveTab] = useState('chat');
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-3xl font-bold">Service Client</h2>
-      </div>
+      <h2 className="text-3xl font-bold">Service Client</h2>
       
       <Card>
-        <CardHeader>
-          <CardTitle>Gestion des Demandes</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Tabs value={activeTab} onValueChange={handleTabChange}>
-            <CustomerServiceTabs activeTab={activeTab} onTabChange={handleTabChange} />
-            <CustomerServiceContent activeTab={activeTab} />
-          </Tabs>
+        <CardContent className="pt-6">
+          <CustomerServiceTabs 
+            activeTab={activeTab}
+            onTabChange={setActiveTab}
+          />
         </CardContent>
       </Card>
     </div>
