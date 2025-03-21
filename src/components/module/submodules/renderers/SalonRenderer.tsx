@@ -4,17 +4,101 @@ import { useParams } from 'react-router-dom';
 import SalonDashboard from '../salon/dashboard/SalonDashboard';
 import SalonClients from '../salon/clients/SalonClients';
 import SalonAppointments from '../salon/appointments/SalonAppointments';
+import { Card, CardContent } from "@/components/ui/card";
 
-// Placeholder components - these would be implemented in separate files
-const SalonStylists = () => <div>Gestion des Coiffeurs</div>;
-const SalonServices = () => <div>Gestion des Services</div>;
-const SalonProducts = () => <div>Gestion des Produits</div>;
-const SalonBilling = () => <div>Gestion de la Facturation</div>;
-const SalonLoyalty = () => <div>Programme de Fidélité</div>;
-const SalonInventory = () => <div>Gestion des Stocks</div>;
-const SalonReports = () => <div>Statistiques et Rapports</div>;
-const SalonBooking = () => <div>Réservation Web & Mobile</div>;
-const SalonSettings = () => <div>Paramètres</div>;
+// Styles pour les pages sans contenu spécifique
+const placeholderStyle = "flex justify-center items-center p-8 text-lg text-muted-foreground";
+
+// Placeholder components - ces composants seraient implémentés dans des fichiers séparés
+const SalonStylists = () => (
+  <Card>
+    <CardContent className="pt-6">
+      <div className={placeholderStyle}>
+        <p>Gestion des Coiffeurs</p>
+      </div>
+    </CardContent>
+  </Card>
+);
+
+const SalonServices = () => (
+  <Card>
+    <CardContent className="pt-6">
+      <div className={placeholderStyle}>
+        <p>Gestion des Services</p>
+      </div>
+    </CardContent>
+  </Card>
+);
+
+const SalonProducts = () => (
+  <Card>
+    <CardContent className="pt-6">
+      <div className={placeholderStyle}>
+        <p>Gestion des Produits</p>
+      </div>
+    </CardContent>
+  </Card>
+);
+
+const SalonBilling = () => (
+  <Card>
+    <CardContent className="pt-6">
+      <div className={placeholderStyle}>
+        <p>Gestion de la Facturation</p>
+      </div>
+    </CardContent>
+  </Card>
+);
+
+const SalonLoyalty = () => (
+  <Card>
+    <CardContent className="pt-6">
+      <div className={placeholderStyle}>
+        <p>Programme de Fidélité</p>
+      </div>
+    </CardContent>
+  </Card>
+);
+
+const SalonInventory = () => (
+  <Card>
+    <CardContent className="pt-6">
+      <div className={placeholderStyle}>
+        <p>Gestion des Stocks</p>
+      </div>
+    </CardContent>
+  </Card>
+);
+
+const SalonReports = () => (
+  <Card>
+    <CardContent className="pt-6">
+      <div className={placeholderStyle}>
+        <p>Statistiques et Rapports</p>
+      </div>
+    </CardContent>
+  </Card>
+);
+
+const SalonBooking = () => (
+  <Card>
+    <CardContent className="pt-6">
+      <div className={placeholderStyle}>
+        <p>Réservation Web & Mobile</p>
+      </div>
+    </CardContent>
+  </Card>
+);
+
+const SalonSettings = () => (
+  <Card>
+    <CardContent className="pt-6">
+      <div className={placeholderStyle}>
+        <p>Paramètres</p>
+      </div>
+    </CardContent>
+  </Card>
+);
 
 export const SalonRenderer = () => {
   const { submoduleId } = useParams<{ submoduleId: string }>();
