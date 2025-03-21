@@ -1,15 +1,14 @@
-
 import React from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { CarFront, Plus, Wrench, FileCheck, FileQuestion } from "lucide-react";
-import { MaintenanceSchedule, TransportVehicle } from '../types/transport-types';
+import { MaintenanceSchedule, TransportVehicle } from '../types';
 
 interface MaintenanceScheduleListProps {
   maintenanceSchedules: MaintenanceSchedule[];
   vehicles: TransportVehicle[];
-  onAddMaintenance: () => void;
+  onAddMaintenance: (vehicle: TransportVehicle) => void;
 }
 
 const MaintenanceScheduleList: React.FC<MaintenanceScheduleListProps> = ({
@@ -60,7 +59,7 @@ const MaintenanceScheduleList: React.FC<MaintenanceScheduleListProps> = ({
     <div className="space-y-4">
       <div className="flex justify-end">
         <Button 
-          onClick={onAddMaintenance}
+          onClick={() => onAddMaintenance(null)}
           className="flex items-center gap-2"
         >
           <Plus size={16} />

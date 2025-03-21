@@ -6,7 +6,7 @@ import AvailabilityCalendar from './AvailabilityCalendar';
 import MaintenanceScheduleList from './MaintenanceScheduleList';
 import ExtensionRequestsList from './ExtensionRequestsList';
 import { usePlanning } from './context/PlanningContext';
-import { TransportVehicle } from '../types/transport-types';
+import { TransportVehicle } from '../types';
 
 interface PlanningTabContentProps {
   activeMode: string;
