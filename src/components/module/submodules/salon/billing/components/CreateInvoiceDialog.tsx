@@ -39,7 +39,6 @@ interface CreateInvoiceDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
-// Mock data for services and products
 const mockServices = [
   { id: 'service1', name: 'Coupe femme', price: 45 },
   { id: 'service2', name: 'Coloration', price: 65 },
@@ -88,7 +87,6 @@ const CreateInvoiceDialog: React.FC<CreateInvoiceDialogProps> = ({ open, onOpenC
     notes: ''
   });
   
-  // Reset form when dialog opens
   useEffect(() => {
     if (open) {
       setFormData({
@@ -102,7 +100,6 @@ const CreateInvoiceDialog: React.FC<CreateInvoiceDialogProps> = ({ open, onOpenC
     }
   }, [open, generateInvoiceNumber]);
   
-  // Recalculate totals when items, tax rate, or discount changes
   useEffect(() => {
     const subtotal = formData.items.reduce((sum, item) => sum + item.total, 0);
     const taxAmount = (subtotal - formData.discount) * (formData.taxRate / 100);
@@ -116,7 +113,6 @@ const CreateInvoiceDialog: React.FC<CreateInvoiceDialogProps> = ({ open, onOpenC
     }));
   }, [formData.items, formData.taxRate, formData.discount]);
   
-  // Handle client selection
   const handleClientChange = (clientId: string) => {
     const client = mockClients.find(c => c.id === clientId);
     setFormData({
@@ -126,7 +122,6 @@ const CreateInvoiceDialog: React.FC<CreateInvoiceDialogProps> = ({ open, onOpenC
     });
   };
   
-  // Add item to invoice
   const addItem = (type: 'service' | 'product') => {
     const newItem: InvoiceItem = {
       id: `item${formData.items.length + 1}`,
@@ -143,12 +138,10 @@ const CreateInvoiceDialog: React.FC<CreateInvoiceDialogProps> = ({ open, onOpenC
     });
   };
   
-  // Update item
   const updateItem = (index: number, field: string, value: any) => {
     const updatedItems = [...formData.items];
     const item = { ...updatedItems[index], [field]: value };
     
-    // If item type, name, or price changed, update related fields
     if (field === 'type' || field === 'name') {
       if (item.type === 'service') {
         const selectedService = mockServices.find(s => s.name === item.name);
@@ -165,13 +158,11 @@ const CreateInvoiceDialog: React.FC<CreateInvoiceDialogProps> = ({ open, onOpenC
       }
     }
     
-    // If stylist changed
     if (field === 'stylistId') {
       const stylist = mockStylists.find(s => s.id === value);
       item.stylistName = stylist ? stylist.name : '';
     }
     
-    // Recalculate total
     item.total = item.quantity * item.unitPrice;
     
     updatedItems[index] = item;
@@ -181,7 +172,6 @@ const CreateInvoiceDialog: React.FC<CreateInvoiceDialogProps> = ({ open, onOpenC
     });
   };
   
-  // Remove item
   const removeItem = (index: number) => {
     const updatedItems = formData.items.filter((_, i) => i !== index);
     setFormData({
@@ -190,10 +180,8 @@ const CreateInvoiceDialog: React.FC<CreateInvoiceDialogProps> = ({ open, onOpenC
     });
   };
   
-  // Handle form submission
   const handleSubmit = async () => {
     try {
-      // Basic validation
       if (!formData.clientId) {
         toast.error('Veuillez sélectionner un client');
         return;
@@ -204,13 +192,11 @@ const CreateInvoiceDialog: React.FC<CreateInvoiceDialogProps> = ({ open, onOpenC
         return;
       }
       
-      // Create invoice
       await createInvoice({
         ...formData,
         status: 'pending' as InvoiceStatus
       });
       
-      // Close dialog
       onOpenChange(false);
     } catch (error) {
       console.error('Error creating invoice:', error);

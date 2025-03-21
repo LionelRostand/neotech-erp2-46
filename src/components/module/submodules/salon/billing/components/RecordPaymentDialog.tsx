@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { 
   Dialog, 
@@ -45,12 +44,10 @@ const RecordPaymentDialog: React.FC<RecordPaymentDialogProps> = ({
     notes: ''
   });
   
-  // Get selected invoice
   const selectedInvoice = invoiceId 
     ? invoices.find(invoice => invoice.id === invoiceId) 
     : null;
   
-  // Calculate remaining amount to pay
   const getRemainingAmount = () => {
     if (!selectedInvoice) return 0;
     
@@ -58,7 +55,6 @@ const RecordPaymentDialog: React.FC<RecordPaymentDialogProps> = ({
     return Math.max(0, selectedInvoice.total - totalPaid);
   };
   
-  // Reset form when dialog opens or invoice changes
   useEffect(() => {
     if (open) {
       setFormData({
@@ -72,10 +68,8 @@ const RecordPaymentDialog: React.FC<RecordPaymentDialogProps> = ({
     }
   }, [open, invoiceId]);
   
-  // Handle form submission
   const handleSubmit = async () => {
     try {
-      // Basic validation
       if (!formData.invoiceId) {
         toast.error('Veuillez sélectionner une facture');
         return;
@@ -86,13 +80,11 @@ const RecordPaymentDialog: React.FC<RecordPaymentDialogProps> = ({
         return;
       }
       
-      // Record payment
       await recordPayment({
         ...formData,
         status: 'completed'
       });
       
-      // Close dialog
       onOpenChange(false);
     } catch (error) {
       console.error('Error recording payment:', error);
@@ -100,7 +92,6 @@ const RecordPaymentDialog: React.FC<RecordPaymentDialogProps> = ({
     }
   };
   
-  // Get icon for payment method
   const getPaymentMethodIcon = (method: PaymentMethod) => {
     switch (method) {
       case 'credit_card':
