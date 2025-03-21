@@ -81,11 +81,7 @@ const TransportDashboard = () => {
         <AlertTriangle className="h-4 w-4" />
         <AlertTitle>Alertes</AlertTitle>
         <AlertDescription>
-          <div className="flex flex-col gap-1">
-            <span>{stats.maintenanceVehicles} véhicules en maintenance</span>
-            <span>{stats.pendingPayments} paiements en attente</span>
-            <span>{stats.todayReservations} réservations aujourd'hui</span>
-          </div>
+          {stats.maintenanceVehicles} véhicules en maintenance, {stats.pendingPayments} paiements en attente, {stats.todayReservations} réservations aujourd'hui
         </AlertDescription>
       </Alert>
 
