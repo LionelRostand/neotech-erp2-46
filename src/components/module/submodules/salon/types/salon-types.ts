@@ -94,3 +94,62 @@ export interface ProductCategory {
   name: string;
   description?: string;
 }
+
+// Billing Types
+export type InvoiceStatus = 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled';
+export type PaymentMethod = 'cash' | 'credit_card' | 'mobile_payment' | 'gift_card' | 'transfer';
+
+export interface SalonInvoice {
+  id: string;
+  number: string;
+  clientId: string;
+  clientName: string;
+  date: string;
+  dueDate: string;
+  status: InvoiceStatus;
+  items: InvoiceItem[];
+  subtotal: number;
+  taxRate: number;
+  taxAmount: number;
+  discount: number;
+  total: number;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+  payments: SalonPayment[];
+}
+
+export interface InvoiceItem {
+  id: string;
+  type: 'service' | 'product';
+  name: string;
+  quantity: number;
+  unitPrice: number;
+  total: number;
+  serviceId?: string;
+  productId?: string;
+  stylistId?: string;
+  stylistName?: string;
+}
+
+export interface SalonPayment {
+  id: string;
+  invoiceId: string;
+  amount: number;
+  method: PaymentMethod;
+  date: string;
+  reference?: string;
+  status: 'completed' | 'pending' | 'failed' | 'refunded';
+  notes?: string;
+  createdAt: string;
+}
+
+export interface PaymentSummary {
+  total: number;
+  paid: number;
+  pending: number;
+  overdue: number;
+  todaySales: number;
+  pendingInvoices: number;
+  overdueInvoices: number;
+}
