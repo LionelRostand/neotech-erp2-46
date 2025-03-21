@@ -24,6 +24,20 @@ export const SalonRenderer: React.FC<SalonRendererProps> = ({ submoduleId }) => 
       return <SalonLoyalty />;
     case 'salon-reports':
       return <SalonReports />;
+    case 'salon-booking':
+      return (
+        <div className="p-6 space-y-6">
+          <h2 className="text-2xl font-bold">Réservation Web & Mobile</h2>
+          <p className="text-muted-foreground">
+            Plateforme de réservation en ligne pour vos clients. Cette fonctionnalité 
+            permet à vos clients de prendre rendez-vous via votre site web ou application mobile.
+          </p>
+          <div className="bg-yellow-50 border border-yellow-200 rounded-md p-4 text-yellow-800">
+            <p className="font-medium">Module en cours de développement</p>
+            <p className="text-sm">Cette fonctionnalité sera bientôt disponible.</p>
+          </div>
+        </div>
+      );
     default:
       return (
         <div className="flex items-center justify-center h-64 text-muted-foreground">
