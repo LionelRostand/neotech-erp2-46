@@ -10,6 +10,14 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { X, Plus, Upload } from "lucide-react";
+import { 
+  Form, 
+  FormControl, 
+  FormField, 
+  FormItem, 
+  FormLabel, 
+  FormMessage 
+} from "@/components/ui/form";
 
 interface StylistFormProps {
   stylist?: any;
@@ -83,7 +91,7 @@ const StylistForm: React.FC<StylistFormProps> = ({ stylist, onClose, onSave }) =
                 {...register('firstName', { required: 'Le prénom est requis' })}
                 placeholder="Prénom du coiffeur"
               />
-              {errors.firstName && <p className="text-sm text-red-500">{errors.firstName.message}</p>}
+              {errors.firstName && <p className="text-sm text-red-500">{errors.firstName.message?.toString()}</p>}
             </div>
             <div className="space-y-2">
               <Label htmlFor="lastName">Nom</Label>
@@ -92,7 +100,7 @@ const StylistForm: React.FC<StylistFormProps> = ({ stylist, onClose, onSave }) =
                 {...register('lastName', { required: 'Le nom est requis' })}
                 placeholder="Nom du coiffeur"
               />
-              {errors.lastName && <p className="text-sm text-red-500">{errors.lastName.message}</p>}
+              {errors.lastName && <p className="text-sm text-red-500">{errors.lastName.message?.toString()}</p>}
             </div>
           </div>
 
@@ -111,7 +119,7 @@ const StylistForm: React.FC<StylistFormProps> = ({ stylist, onClose, onSave }) =
                 })}
                 placeholder="email@exemple.com"
               />
-              {errors.email && <p className="text-sm text-red-500">{errors.email.message}</p>}
+              {errors.email && <p className="text-sm text-red-500">{errors.email.message?.toString()}</p>}
             </div>
             <div className="space-y-2">
               <Label htmlFor="phone">Téléphone</Label>
@@ -120,7 +128,7 @@ const StylistForm: React.FC<StylistFormProps> = ({ stylist, onClose, onSave }) =
                 {...register('phone', { required: 'Le téléphone est requis' })}
                 placeholder="06 12 34 56 78"
               />
-              {errors.phone && <p className="text-sm text-red-500">{errors.phone.message}</p>}
+              {errors.phone && <p className="text-sm text-red-500">{errors.phone.message?.toString()}</p>}
             </div>
           </div>
 
@@ -140,7 +148,7 @@ const StylistForm: React.FC<StylistFormProps> = ({ stylist, onClose, onSave }) =
                   }
                 })}
               />
-              {errors.experience && <p className="text-sm text-red-500">{errors.experience.message}</p>}
+              {errors.experience && <p className="text-sm text-red-500">{errors.experience.message?.toString()}</p>}
             </div>
             <div className="space-y-2">
               <Label htmlFor="commissionRate">Taux de commission (%)</Label>
@@ -162,7 +170,7 @@ const StylistForm: React.FC<StylistFormProps> = ({ stylist, onClose, onSave }) =
                   }
                 })}
               />
-              {errors.commissionRate && <p className="text-sm text-red-500">{errors.commissionRate.message}</p>}
+              {errors.commissionRate && <p className="text-sm text-red-500">{errors.commissionRate.message?.toString()}</p>}
             </div>
           </div>
         </div>
