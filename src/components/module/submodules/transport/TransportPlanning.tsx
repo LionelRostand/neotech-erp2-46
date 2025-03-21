@@ -1,14 +1,15 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { CalendarDays, Calendar, CarFront, Clock, RefreshCw, Plus } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { TransportVehicle, MaintenanceSchedule } from './types/transport-types';
+import { CalendarDays, Calendar, CarFront, Clock, RefreshCw, Plus, User } from "lucide-react";
+import { TransportVehicle, MaintenanceSchedule, TransportDriver } from './types/transport-types';
 import AvailabilityCalendar from './planning/AvailabilityCalendar';
 import MaintenanceScheduleList from './planning/MaintenanceScheduleList';
 import ExtensionRequestsList from './planning/ExtensionRequestsList';
 import MaintenanceScheduleDialog from './planning/MaintenanceScheduleDialog';
+import DriverAvailabilityTab from './planning/DriverAvailabilityTab';
 
 // Mock vehicle data
 const mockVehicles: TransportVehicle[] = [
@@ -120,6 +121,58 @@ const mockExtensionRequests = [
   }
 ];
 
+// Mock drivers data
+const mockDrivers: TransportDriver[] = [
+  {
+    id: "drv-001",
+    firstName: "Jean",
+    lastName: "Dupont",
+    phone: "06 12 34 56 78",
+    email: "jean.dupont@example.com",
+    licenseNumber: "123456789",
+    licenseExpiry: "2025-06-15",
+    available: true,
+    onLeave: false,
+    rating: 4.8,
+    experience: 5,
+    photo: "",
+    skills: ["luxury", "airport", "events"],
+    preferredVehicleTypes: ["sedan", "luxury"]
+  },
+  {
+    id: "drv-002",
+    firstName: "Marie",
+    lastName: "Martin",
+    phone: "06 98 76 54 32",
+    email: "marie.martin@example.com",
+    licenseNumber: "987654321",
+    licenseExpiry: "2024-03-20",
+    available: false,
+    onLeave: false,
+    rating: 4.5,
+    experience: 3,
+    photo: "",
+    skills: ["airport", "long-distance"],
+    preferredVehicleTypes: ["sedan"]
+  },
+  {
+    id: "drv-003",
+    firstName: "Paul",
+    lastName: "Lefebvre",
+    phone: "07 12 34 56 78",
+    email: "paul.lefebvre@example.com",
+    licenseNumber: "456789123",
+    licenseExpiry: "2026-09-10",
+    available: true,
+    onLeave: true,
+    rating: 4.9,
+    experience: 7,
+    photo: "",
+    skills: ["luxury", "events", "night"],
+    preferredVehicleTypes: ["luxury"]
+  }
+];
+
 const TransportPlanning = () => {
   const [activeTab, setActiveTab] = useState("availability");
   const [maintenanceDialogOpen, setMaintenanceDialogOpen] = useState(false);
@@ -162,9 +215,9 @@ const TransportPlanning = () => {
             <Tabs 
               value={activeTab} 
               onValueChange={setActiveTab}
-              className="w-[600px]"
+              className="w-[700px]"
             >
-              <TabsList className="grid w-full grid-cols-3">
+              <TabsList className="grid w-full grid-cols-4">
                 <TabsTrigger value="availability" className="flex items-center gap-2">
                   <Calendar size={16} />
                   <span>Disponibilité des véhicules</span>
@@ -176,6 +229,10 @@ const TransportPlanning = () => {
                 <TabsTrigger value="extensions" className="flex items-center gap-2">
                   <Clock size={16} />
                   <span>Prolongations</span>
+                </TabsTrigger>
+                <TabsTrigger value="drivers" className="flex items-center gap-2">
+                  <User size={16} />
+                  <span>Chauffeurs</span>
                 </TabsTrigger>
               </TabsList>
             </Tabs>
@@ -200,6 +257,10 @@ const TransportPlanning = () => {
           
           <TabsContent value="extensions" className="mt-0">
             <ExtensionRequestsList extensionRequests={mockExtensionRequests} />
+          </TabsContent>
+          
+          <TabsContent value="drivers" className="mt-0">
+            <DriverAvailabilityTab drivers={mockDrivers} />
           </TabsContent>
         </CardContent>
       </Card>
