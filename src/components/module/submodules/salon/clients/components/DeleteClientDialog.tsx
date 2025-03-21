@@ -8,7 +8,7 @@ import {
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
-  AlertDialogTitle
+  AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
 interface DeleteClientDialogProps {
@@ -28,15 +28,17 @@ const DeleteClientDialog: React.FC<DeleteClientDialogProps> = ({
     <AlertDialog open={isOpen} onOpenChange={onOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Êtes-vous sûr ?</AlertDialogTitle>
+          <AlertDialogTitle>Supprimer le client</AlertDialogTitle>
           <AlertDialogDescription>
-            Vous êtes sur le point de supprimer le client <strong>{clientName}</strong>. 
-            Cette action est irréversible et supprimera toutes les données associées à ce client.
+            Êtes-vous sûr de vouloir supprimer le client <strong>{clientName}</strong> ? Cette action est irréversible et supprimera toutes les données associées à ce client.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>Annuler</AlertDialogCancel>
-          <AlertDialogAction onClick={onConfirm} className="bg-red-600 hover:bg-red-700">
+          <AlertDialogAction 
+            onClick={onConfirm}
+            className="bg-red-600 hover:bg-red-700"
+          >
             Supprimer
           </AlertDialogAction>
         </AlertDialogFooter>

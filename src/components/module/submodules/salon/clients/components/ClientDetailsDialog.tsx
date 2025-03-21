@@ -15,6 +15,8 @@ import { useClientForm } from '../hooks/useClientForm';
 import ClientVisitHistory from './ClientVisitHistory';
 import ClientAppointments from './ClientAppointments';
 import ClientLoyalty from './ClientLoyalty';
+import ClientDashboard from './ClientDashboard';
+import ClientNotifications from './ClientNotifications';
 import DeleteClientDialog from './DeleteClientDialog';
 
 interface ClientDetailsDialogProps {
@@ -33,7 +35,7 @@ const ClientDetailsDialog: React.FC<ClientDetailsDialogProps> = ({
   onDelete
 }) => {
   const { formData, formErrors, setFormData, updateFormField, validateForm } = useClientForm(client);
-  const [activeTab, setActiveTab] = useState("profile");
+  const [activeTab, setActiveTab] = useState("dashboard");
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   const handleSubmit = () => {
@@ -55,12 +57,18 @@ const ClientDetailsDialog: React.FC<ClientDetailsDialogProps> = ({
           </DialogHeader>
           
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid grid-cols-4 mb-4">
+            <TabsList className="grid grid-cols-6 mb-4">
+              <TabsTrigger value="dashboard">Aperçu</TabsTrigger>
               <TabsTrigger value="profile">Profil</TabsTrigger>
               <TabsTrigger value="history">Historique</TabsTrigger>
               <TabsTrigger value="appointments">Rendez-vous</TabsTrigger>
               <TabsTrigger value="loyalty">Fidélité</TabsTrigger>
+              <TabsTrigger value="notifications">Notifications</TabsTrigger>
             </TabsList>
+            
+            <TabsContent value="dashboard">
+              <ClientDashboard client={client} onEdit={() => setActiveTab("profile")} />
+            </TabsContent>
             
             <TabsContent value="profile">
               <ClientForm 
@@ -89,6 +97,15 @@ const ClientDetailsDialog: React.FC<ClientDetailsDialogProps> = ({
                     loyaltyPoints: newPoints
                   });
                 }}
+              />
+            </TabsContent>
+            
+            <TabsContent value="notifications">
+              <ClientNotifications 
+                clientId={client.id}
+                clientName={`${client.firstName} ${client.lastName}`}
+                clientEmail={client.email}
+                clientPhone={client.phone}
               />
             </TabsContent>
           </Tabs>
