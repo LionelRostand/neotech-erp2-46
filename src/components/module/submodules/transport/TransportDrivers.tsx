@@ -118,29 +118,25 @@ const TransportDrivers = () => {
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <CardTitle>Gestion des chauffeurs</CardTitle>
-            <Tabs 
-              value={activeTab} 
-              onValueChange={setActiveTab}
-              className="w-[400px]"
-            >
-              <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="list">Liste</TabsTrigger>
-                <TabsTrigger value="performance">Performance</TabsTrigger>
-                <TabsTrigger value="availability">Disponibilité</TabsTrigger>
-              </TabsList>
-            </Tabs>
+            <TabsList className="grid w-[400px] grid-cols-3">
+              <TabsTrigger value="list" onClick={() => setActiveTab('list')}>Liste</TabsTrigger>
+              <TabsTrigger value="performance" onClick={() => setActiveTab('performance')}>Performance</TabsTrigger>
+              <TabsTrigger value="availability" onClick={() => setActiveTab('availability')}>Disponibilité</TabsTrigger>
+            </TabsList>
           </div>
         </CardHeader>
         <CardContent>
-          <TabsContent value="list" className="mt-0">
-            <DriversTable searchTerm={searchTerm} />
-          </TabsContent>
-          <TabsContent value="performance" className="mt-0">
-            <DriverPerformance />
-          </TabsContent>
-          <TabsContent value="availability" className="mt-0">
-            <DriverAvailability />
-          </TabsContent>
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <TabsContent value="list" className="mt-0">
+              <DriversTable searchTerm={searchTerm} />
+            </TabsContent>
+            <TabsContent value="performance" className="mt-0">
+              <DriverPerformance />
+            </TabsContent>
+            <TabsContent value="availability" className="mt-0">
+              <DriverAvailability />
+            </TabsContent>
+          </Tabs>
         </CardContent>
       </Card>
     </div>
