@@ -119,15 +119,20 @@ export interface SalonService {
   category: string;
   available: boolean;
   popularityScore: number;
+  specialists?: string[]; // Add specialists property that is used in the components
 }
 
 // Salon stylist types
 export interface SalonStylist {
   id: string;
-  name: string;
-  position: string;
+  firstName: string; // Changed from 'name' to 'firstName' to match usage in components
+  lastName: string;
+  email: string;
+  phone: string;
   specialties: string[];
-  availability: string[];
+  schedule: any[]; // This field was referenced but not defined in the previous type
+  position?: string;
+  availability?: string[];
   bio?: string;
   image?: string;
   rating?: number;
