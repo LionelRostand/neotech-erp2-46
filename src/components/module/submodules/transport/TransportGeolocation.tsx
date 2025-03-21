@@ -21,6 +21,8 @@ const mockVehicles: (TransportVehicle & {
     licensePlate: "AB-123-CD",
     available: false,
     status: "active",
+    color: "white",
+    fuelType: "diesel",
     location: {
       lat: 48.856614,
       lng: 2.3522219,
@@ -37,6 +39,8 @@ const mockVehicles: (TransportVehicle & {
     licensePlate: "EF-456-GH",
     available: false,
     status: "active",
+    color: "black",
+    fuelType: "electric",
     location: {
       lat: 48.8584,
       lng: 2.2945,
@@ -53,6 +57,8 @@ const mockVehicles: (TransportVehicle & {
     licensePlate: "IJ-789-KL",
     available: true,
     status: "maintenance",
+    color: "silver",
+    fuelType: "diesel",
     location: {
       lat: 48.8737,
       lng: 2.2950,
@@ -69,6 +75,8 @@ const mockVehicles: (TransportVehicle & {
     licensePlate: "MN-012-OP",
     available: true,
     status: "active",
+    color: "blue",
+    fuelType: "gasoline",
     location: {
       lat: 48.8417,
       lng: 2.3324,

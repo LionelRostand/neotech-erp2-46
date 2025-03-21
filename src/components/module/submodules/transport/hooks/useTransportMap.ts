@@ -70,7 +70,7 @@ export const useTransportMap = (
           setMapInitialized(true);
         }
         
-        // Add markers for all vehicles with location
+        // Add or update markers for all vehicles with location
         if (mapInitialized && leafletMapRef.current) {
           // Clear existing markers
           markersRef.current.forEach(marker => {
