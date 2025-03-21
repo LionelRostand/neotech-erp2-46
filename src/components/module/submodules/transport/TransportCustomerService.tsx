@@ -1,9 +1,17 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Mail } from "lucide-react";
+import { Tabs } from "@/components/ui/tabs";
+import CustomerServiceTabs from './customer-service/CustomerServiceTabs';
+import CustomerServiceContent from './customer-service/CustomerServiceContent';
 
 const TransportCustomerService = () => {
+  const [activeTab, setActiveTab] = useState<string>("chat");
+
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -12,22 +20,13 @@ const TransportCustomerService = () => {
       
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Mail className="h-5 w-5" />
-            <span>Gestion des Demandes</span>
-          </CardTitle>
+          <CardTitle>Gestion des Demandes</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex justify-center items-center h-[400px]">
-            <div className="text-center">
-              <Mail className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-              <h3 className="text-lg font-medium mb-2">Service Client</h3>
-              <p className="text-sm text-gray-500 max-w-xs mx-auto">
-                Le module de service client sera implémenté dans la prochaine mise à jour.
-                Il vous permettra de gérer les réclamations, le support client et l'historique des interactions.
-              </p>
-            </div>
-          </div>
+          <Tabs value={activeTab} onValueChange={handleTabChange}>
+            <CustomerServiceTabs activeTab={activeTab} onTabChange={handleTabChange} />
+            <CustomerServiceContent activeTab={activeTab} />
+          </Tabs>
         </CardContent>
       </Card>
     </div>
