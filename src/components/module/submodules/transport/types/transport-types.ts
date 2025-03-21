@@ -33,6 +33,10 @@ export interface TransportDriver {
   email: string;
   licenseNumber: string;
   licenseExpiry: string;
+  licenseType?: string;  // Added this field
+  address?: string;      // Added this field
+  hireDate?: string;     // Added this field
+  preferredVehicleType?: string; // Added this field
   available: boolean;
   onLeave?: boolean;
   rating: number;

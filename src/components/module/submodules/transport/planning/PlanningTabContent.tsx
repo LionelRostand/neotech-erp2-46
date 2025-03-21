@@ -6,6 +6,7 @@ import AvailabilityCalendar from './AvailabilityCalendar';
 import MaintenanceScheduleList from './MaintenanceScheduleList';
 import ExtensionRequestsList from './ExtensionRequestsList';
 import { usePlanning } from './context/PlanningContext';
+import { TransportVehicle } from '../types/transport-types';
 
 interface PlanningTabContentProps {
   activeMode: string;
@@ -44,7 +45,7 @@ const PlanningTabContent: React.FC<PlanningTabContentProps> = ({
         <MaintenanceScheduleList 
           maintenanceSchedules={maintenanceSchedules}
           vehicles={vehicles}
-          onAddMaintenance={handleAddMaintenance}
+          onAddMaintenance={(vehicle: TransportVehicle) => handleAddMaintenance(vehicle)}
         />
       </TabsContent>
       
@@ -52,7 +53,7 @@ const PlanningTabContent: React.FC<PlanningTabContentProps> = ({
         <AvailabilityCalendar 
           vehicles={vehicles}
           maintenanceSchedules={maintenanceSchedules}
-          onAddMaintenance={handleAddMaintenance}
+          onAddMaintenance={(vehicle: TransportVehicle) => handleAddMaintenance(vehicle)}
         />
       </TabsContent>
       
