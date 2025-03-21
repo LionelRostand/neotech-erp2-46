@@ -1,24 +1,12 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { 
-  User, Plus, Search, Filter, Download, RefreshCw, 
-  FileText, Car, CreditCard, Calendar
-} from "lucide-react";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
+import { Plus } from "lucide-react";
 import { Client } from './types/rental-types';
 import CreateClientDialog from './dialogs/client/CreateClientDialog';
 import { toast } from 'sonner';
+import ClientsList from './components/client/ClientsList';
+import ClientsSearchBar from './components/client/ClientsSearchBar';
 
 // Mock clients data
 const mockClients: Client[] = [
@@ -123,6 +111,10 @@ const ClientsManagement = () => {
     toast.success('Client ajouté avec succès');
   };
 
+  const handleRefresh = () => {
+    setClients([...mockClients]);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -133,116 +125,16 @@ const ClientsManagement = () => {
         </Button>
       </div>
 
-      <div className="flex flex-col sm:flex-row gap-4">
-        <div className="relative flex-1">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
-          <Input
-            type="search"
-            placeholder="Rechercher par nom, email ou téléphone..."
-            className="pl-9"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
-        
-        <div className="flex gap-2">
-          <Button variant="outline" className="w-full sm:w-auto">
-            <Filter className="h-4 w-4 mr-2" />
-            Filtres
-          </Button>
-          
-          <Button variant="outline" className="w-full sm:w-auto">
-            <Download className="h-4 w-4 mr-2" />
-            Exporter
-          </Button>
-          
-          <Button variant="ghost" onClick={() => setClients([...mockClients])}>
-            <RefreshCw className="h-4 w-4" />
-          </Button>
-        </div>
-      </div>
+      <ClientsSearchBar
+        searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
+        onRefresh={handleRefresh}
+        onNewClient={() => setIsCreateDialogOpen(true)}
+      />
 
       <Card>
         <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Client</TableHead>
-                <TableHead>Contact</TableHead>
-                <TableHead>Permis de conduire</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredClients.map((client) => (
-                <TableRow key={client.id}>
-                  <TableCell className="font-medium">
-                    <div className="flex items-center space-x-3">
-                      <div className="h-10 w-10 rounded-full bg-gray-100 flex items-center justify-center">
-                        <User className="h-5 w-5 text-gray-500" />
-                      </div>
-                      <div>
-                        <div>{client.firstName} {client.lastName}</div>
-                        <div className="text-sm text-gray-500">
-                          Client depuis {new Date(client.createdAt).toLocaleDateString('fr-FR')}
-                        </div>
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="space-y-1">
-                      <div className="flex items-center">
-                        <span className="text-sm">{client.email}</span>
-                      </div>
-                      <div className="flex items-center">
-                        <span className="text-sm">{client.phone}</span>
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="space-y-1">
-                      <div className="text-sm">{client.drivingLicenseNumber}</div>
-                      <div className="flex items-center">
-                        <Badge 
-                          variant={
-                            new Date(client.drivingLicenseExpiry) < new Date() 
-                              ? "destructive" 
-                              : "outline"
-                          }
-                        >
-                          Expire le {new Date(client.drivingLicenseExpiry).toLocaleDateString('fr-FR')}
-                        </Badge>
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex space-x-2">
-                      <Button variant="outline" size="sm" className="h-8 w-8 p-0">
-                        <FileText className="h-4 w-4" />
-                      </Button>
-                      <Button variant="outline" size="sm" className="h-8 w-8 p-0">
-                        <Car className="h-4 w-4" />
-                      </Button>
-                      <Button variant="outline" size="sm" className="h-8 w-8 p-0">
-                        <CreditCard className="h-4 w-4" />
-                      </Button>
-                      <Button variant="outline" size="sm" className="h-8 w-8 p-0">
-                        <Calendar className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-              
-              {filteredClients.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={4} className="h-24 text-center">
-                    Aucun client trouvé
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
+          <ClientsList clients={filteredClients} />
         </CardContent>
       </Card>
 
