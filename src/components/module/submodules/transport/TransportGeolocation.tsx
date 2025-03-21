@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { TransportVehicle } from './types/transport-types';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { useTransportMap } from './hooks/useTransportMap';
 
 // Mock data for vehicles with location
 const mockVehicles: (TransportVehicle & { 
@@ -139,6 +140,9 @@ const TransportGeolocation = () => {
   const [activeTab, setActiveTab] = useState('map');
   const [searchTerm, setSearchTerm] = useState('');
   const mapRef = useRef<HTMLDivElement>(null);
+  
+  // Use our custom map hook
+  const { mapInitialized } = useTransportMap(mapRef, mockVehicles);
 
   // Filter vehicles based on search term
   const filteredVehicles = mockVehicles.filter(vehicle => 
@@ -225,14 +229,18 @@ const TransportGeolocation = () => {
             <CardContent>
               <div 
                 ref={mapRef} 
-                className="h-[400px] bg-gray-100 rounded-md mb-6 flex items-center justify-center"
+                className="h-[400px] bg-gray-100 rounded-md mb-6"
               >
-                <div className="text-center">
-                  <Map className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-                  <p className="text-gray-500">
-                    Carte interactive de géolocalisation disponible dans la prochaine mise à jour.
-                  </p>
-                </div>
+                {!mapInitialized && (
+                  <div className="h-full flex items-center justify-center">
+                    <div className="text-center">
+                      <Map className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+                      <p className="text-gray-500">
+                        Chargement de la carte...
+                      </p>
+                    </div>
+                  </div>
+                )}
               </div>
               
               <div className="space-y-4">
