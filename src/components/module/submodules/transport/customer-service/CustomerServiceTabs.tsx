@@ -1,49 +1,49 @@
 
 import React from 'react';
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { MessageCircle, Mail, Phone, Clock } from "lucide-react";
+import { TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { MessageSquare, Mail, Phone, History } from "lucide-react";
 
 interface CustomerServiceTabsProps {
   activeTab: string;
-  onTabChange: (value: string) => void;
+  onTabChange: (tab: string) => void;
 }
 
-const CustomerServiceTabs: React.FC<CustomerServiceTabsProps> = ({ 
-  activeTab, 
-  onTabChange 
-}) => {
+const CustomerServiceTabs: React.FC<CustomerServiceTabsProps> = ({ activeTab, onTabChange }) => {
   return (
-    <TabsList className="grid w-full grid-cols-4">
+    <TabsList className="grid w-full grid-cols-4 mb-4">
       <TabsTrigger 
         value="chat" 
-        className="flex items-center gap-2"
         onClick={() => onTabChange("chat")}
+        className="flex items-center space-x-2"
       >
-        <MessageCircle size={16} />
+        <MessageSquare className="h-4 w-4" />
         <span>Chat</span>
       </TabsTrigger>
+      
       <TabsTrigger 
         value="email" 
-        className="flex items-center gap-2"
         onClick={() => onTabChange("email")}
+        className="flex items-center space-x-2"
       >
-        <Mail size={16} />
+        <Mail className="h-4 w-4" />
         <span>Email</span>
       </TabsTrigger>
+      
       <TabsTrigger 
         value="phone" 
-        className="flex items-center gap-2"
         onClick={() => onTabChange("phone")}
+        className="flex items-center space-x-2"
       >
-        <Phone size={16} />
+        <Phone className="h-4 w-4" />
         <span>Téléphone</span>
       </TabsTrigger>
+      
       <TabsTrigger 
         value="history" 
-        className="flex items-center gap-2"
         onClick={() => onTabChange("history")}
+        className="flex items-center space-x-2"
       >
-        <Clock size={16} />
+        <History className="h-4 w-4" />
         <span>Historique</span>
       </TabsTrigger>
     </TabsList>

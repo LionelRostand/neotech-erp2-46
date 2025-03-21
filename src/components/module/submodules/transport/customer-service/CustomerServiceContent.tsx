@@ -12,23 +12,23 @@ interface CustomerServiceContentProps {
 
 const CustomerServiceContent: React.FC<CustomerServiceContentProps> = ({ activeTab }) => {
   return (
-    <>
-      <TabsContent value="chat" forceMount={activeTab === "chat" ? true : undefined}>
+    <div className="pt-4">
+      <TabsContent value="chat" className={activeTab === "chat" ? "block" : "hidden"}>
         <ChatSupportTab />
       </TabsContent>
       
-      <TabsContent value="email" forceMount={activeTab === "email" ? true : undefined}>
+      <TabsContent value="email" className={activeTab === "email" ? "block" : "hidden"}>
         <EmailSupportTab />
       </TabsContent>
       
-      <TabsContent value="phone" forceMount={activeTab === "phone" ? true : undefined}>
+      <TabsContent value="phone" className={activeTab === "phone" ? "block" : "hidden"}>
         <PhoneSupportTab />
       </TabsContent>
       
-      <TabsContent value="history" forceMount={activeTab === "history" ? true : undefined}>
+      <TabsContent value="history" className={activeTab === "history" ? "block" : "hidden"}>
         <HistoryTab />
       </TabsContent>
-    </>
+    </div>
   );
 };
 
