@@ -1,22 +1,25 @@
 
 import { useState, useEffect } from 'react';
-import { useSafeFirestore } from '@/hooks/use-safe-firestore';
 
 export interface SalonStats {
+  totalAppointments: number;
   totalRevenue: number;
-  currentMonthRevenue: number;
-  previousMonthRevenue: number;
-  revenueChange: number;
   totalClients: number;
-  newClientsThisMonth: number;
-  occupancyRate: number;
-  totalStylists: number;
+  newClients: number;
+  appointmentsToday: number;
   availableStylists: number;
   busyStylists: number;
   offStylists: number;
-  totalAppointmentsToday: number;
-  totalAppointmentsWeek: number;
-  completedAppointments: number;
+  totalStylists: number;
+  lowStockProducts: number;
+  totalProductsSold: number;
+  loyaltyProgramMembers: number;
+  topLoyaltyClients: {
+    id: string;
+    name: string;
+    points: number;
+    visits: number;
+  }[];
 }
 
 export interface SalonAlerts {
@@ -27,45 +30,31 @@ export interface SalonAlerts {
 
 export interface Appointment {
   id: string;
-  date: string;
   clientName: string;
   service: string;
   stylist: string;
+  time: string;
   duration: number;
-  status: "confirmé" | "en attente" | "annulé";
+  status: 'confirmed' | 'pending' | 'cancelled';
+  price: number;
+  paid: boolean;
 }
 
-interface SalonStatsReturn {
-  stats: SalonStats;
-  alerts: SalonAlerts;
-  todayAppointments: Appointment[];
-  upcomingAppointments: Appointment[];
-  revenueData: Array<{
-    day: string;
-    revenue: number;
-  }>;
-  isLoading: boolean;
-  error: Error | null;
-}
-
-export const useSalonStats = (): SalonStatsReturn => {
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [error, setError] = useState<Error | null>(null);
+export const useSalonStats = () => {
   const [stats, setStats] = useState<SalonStats>({
+    totalAppointments: 0,
     totalRevenue: 0,
-    currentMonthRevenue: 0,
-    previousMonthRevenue: 0,
-    revenueChange: 0,
     totalClients: 0,
-    newClientsThisMonth: 0,
-    occupancyRate: 0,
-    totalStylists: 0,
+    newClients: 0,
+    appointmentsToday: 0,
     availableStylists: 0,
     busyStylists: 0,
     offStylists: 0,
-    totalAppointmentsToday: 0,
-    totalAppointmentsWeek: 0,
-    completedAppointments: 0
+    totalStylists: 0,
+    lowStockProducts: 0,
+    totalProductsSold: 0,
+    loyaltyProgramMembers: 0,
+    topLoyaltyClients: []
   });
   const [alerts, setAlerts] = useState<SalonAlerts>({
     newAppointments: 0,
@@ -74,88 +63,83 @@ export const useSalonStats = (): SalonStatsReturn => {
   });
   const [todayAppointments, setTodayAppointments] = useState<Appointment[]>([]);
   const [upcomingAppointments, setUpcomingAppointments] = useState<Appointment[]>([]);
-  const [revenueData, setRevenueData] = useState<Array<{day: string; revenue: number}>>([]);
-
-  // Utiliser le hook Firestore
-  const firestore = useSafeFirestore('salon-stats');
+  const [revenueData, setRevenueData] = useState<{ date: string; revenue: number }[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        setIsLoading(true);
+        // Simulating API call with a timeout
+        await new Promise(resolve => setTimeout(resolve, 1000));
         
-        // Dans un vrai scénario, ces données viendraient de Firestore
-        // Ici nous simulons des données pour la démo
-        
-        // Simulation de délai réseau
-        await new Promise(resolve => setTimeout(resolve, 800));
-        
-        // Données factices pour la démo
+        // Mock data
         setStats({
-          totalRevenue: 28450,
-          currentMonthRevenue: 8320,
-          previousMonthRevenue: 7650,
-          revenueChange: 8.8,
-          totalClients: 387,
-          newClientsThisMonth: 24,
-          occupancyRate: 78,
-          totalStylists: 6,
-          availableStylists: 2,
-          busyStylists: 3,
+          totalAppointments: 254,
+          totalRevenue: 15840,
+          totalClients: 187,
+          newClients: 12,
+          appointmentsToday: 8,
+          availableStylists: 3,
+          busyStylists: 2,
           offStylists: 1,
-          totalAppointmentsToday: 18,
-          totalAppointmentsWeek: 87,
-          completedAppointments: 14
+          totalStylists: 6,
+          lowStockProducts: 3,
+          totalProductsSold: 37,
+          loyaltyProgramMembers: 84,
+          topLoyaltyClients: [
+            { id: '1', name: 'Émilie Laurent', points: 450, visits: 15 },
+            { id: '2', name: 'Thomas Dubois', points: 380, visits: 12 },
+            { id: '3', name: 'Camille Rousseau', points: 320, visits: 10 }
+          ]
         });
         
         setAlerts({
-          newAppointments: 5,
-          pendingPayments: 3,
-          lowStockProducts: 7
+          newAppointments: 3,
+          pendingPayments: 2,
+          lowStockProducts: 3
         });
         
         setTodayAppointments([
-          { id: "1", date: "10:00", clientName: "Sophie Martin", service: "Coupe & Brushing", stylist: "Jean Dupont", duration: 60, status: "confirmé" },
-          { id: "2", date: "11:30", clientName: "Marie Lambert", service: "Coloration", stylist: "Lucie Blanc", duration: 90, status: "confirmé" },
-          { id: "3", date: "14:00", clientName: "Thomas Petit", service: "Coupe Homme", stylist: "Marc Lefebvre", duration: 30, status: "en attente" },
-          { id: "4", date: "15:30", clientName: "Julie Dubois", service: "Balayage", stylist: "Emma Rousseau", duration: 120, status: "confirmé" },
-          { id: "5", date: "17:30", clientName: "Philippe Moreau", service: "Coupe & Barbe", stylist: "Jean Dupont", duration: 60, status: "confirmé" }
+          { id: '1', clientName: 'Marie Dupont', service: 'Coupe et Brushing', stylist: 'Jean Valjean', time: '09:00', duration: 60, status: 'confirmed', price: 55, paid: true },
+          { id: '2', clientName: 'Philippe Martin', service: 'Coloration', stylist: 'Sophie Leclerc', time: '10:30', duration: 120, status: 'confirmed', price: 85, paid: false },
+          { id: '3', clientName: 'Anne Leroy', service: 'Brushing', stylist: 'Léa Dubois', time: '11:00', duration: 45, status: 'confirmed', price: 35, paid: false },
+          { id: '4', clientName: 'David Bernard', service: 'Coupe Homme', stylist: 'Jean Valjean', time: '12:00', duration: 30, status: 'confirmed', price: 25, paid: true },
+          { id: '5', clientName: 'Émilie Laurent', service: 'Coupe et Coloration', stylist: 'Sophie Leclerc', time: '14:00', duration: 150, status: 'confirmed', price: 110, paid: true },
+          { id: '6', clientName: 'Nicolas Moreau', service: 'Coupe et Barbe', stylist: 'Léa Dubois', time: '15:30', duration: 60, status: 'confirmed', price: 45, paid: true },
+          { id: '7', clientName: 'Camille Rousseau', service: 'Brushing', stylist: 'Jean Valjean', time: '16:30', duration: 45, status: 'pending', price: 35, paid: false },
+          { id: '8', clientName: 'Thomas Dubois', service: 'Coupe Homme', stylist: 'Sophie Leclerc', time: '17:30', duration: 30, status: 'pending', price: 25, paid: false }
         ]);
         
         setUpcomingAppointments([
-          { id: "6", date: "Demain 9:30", clientName: "Claire Leroy", service: "Coupe & Brushing", stylist: "Lucie Blanc", duration: 60, status: "confirmé" },
-          { id: "7", date: "Demain 14:00", clientName: "Alexandre Girard", service: "Coupe Homme", stylist: "Jean Dupont", duration: 30, status: "confirmé" },
-          { id: "8", date: "Après-demain 11:00", clientName: "Isabelle Fournier", service: "Mèches", stylist: "Emma Rousseau", duration: 150, status: "en attente" }
+          { id: '9', clientName: 'Julie Lefebvre', service: 'Coupe et Brushing', stylist: 'Jean Valjean', time: 'Demain 09:30', duration: 60, status: 'confirmed', price: 55, paid: false },
+          { id: '10', clientName: 'Pascal Girard', service: 'Coloration', stylist: 'Sophie Leclerc', time: 'Demain 11:00', duration: 120, status: 'confirmed', price: 85, paid: true },
+          { id: '11', clientName: 'Sarah Petit', service: 'Coupe et Coloration', stylist: 'Léa Dubois', time: 'Demain 14:00', duration: 150, status: 'confirmed', price: 110, paid: false },
+          { id: '12', clientName: 'Antoine Legrand', service: 'Coupe Homme', stylist: 'Jean Valjean', time: 'Après-demain 10:00', duration: 30, status: 'confirmed', price: 25, paid: true },
+          { id: '13', clientName: 'Audrey Morel', service: 'Brushing', stylist: 'Sophie Leclerc', time: 'Après-demain 11:00', duration: 45, status: 'pending', price: 35, paid: false }
         ]);
         
         setRevenueData([
-          { day: "Lun", revenue: 620 },
-          { day: "Mar", revenue: 580 },
-          { day: "Mer", revenue: 750 },
-          { day: "Jeu", revenue: 495 },
-          { day: "Ven", revenue: 890 },
-          { day: "Sam", revenue: 1250 },
-          { day: "Dim", revenue: 0 },
-          { day: "Lun", revenue: 680 },
-          { day: "Mar", revenue: 720 },
-          { day: "Mer", revenue: 850 },
-          { day: "Jeu", revenue: 740 },
-          { day: "Ven", revenue: 915 },
-          { day: "Sam", revenue: 1380 },
-          { day: "Dim", revenue: 0 }
+          { date: 'Lun', revenue: 580 },
+          { date: 'Mar', revenue: 620 },
+          { date: 'Mer', revenue: 750 },
+          { date: 'Jeu', revenue: 680 },
+          { date: 'Ven', revenue: 980 },
+          { date: 'Sam', revenue: 1250 },
+          { date: 'Dim', revenue: 450 }
         ]);
         
+        setIsLoading(false);
       } catch (err) {
-        setError(err instanceof Error ? err : new Error('Une erreur est survenue'));
-        console.error('Erreur lors du chargement des données du salon:', err);
-      } finally {
+        console.error('Error fetching salon data:', err);
+        setError(err instanceof Error ? err : new Error('Failed to fetch salon data'));
         setIsLoading(false);
       }
     };
-
+    
     fetchData();
   }, []);
-
+  
   return {
     stats,
     alerts,
