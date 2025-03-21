@@ -4,6 +4,7 @@ import { useLocation } from 'react-router-dom';
 import SalonDashboard from '../salon/dashboard/SalonDashboard';
 import SalonClients from '../salon/clients/SalonClients';
 import SalonAppointments from '../salon/appointments/SalonAppointments';
+import SalonLoyalty from '../salon/loyalty/SalonLoyalty'; 
 import { Card, CardContent } from "@/components/ui/card";
 
 // Style pour les pages sans contenu spécifique
@@ -45,16 +46,6 @@ const SalonBilling = () => (
     <CardContent className="pt-6">
       <div className={placeholderStyle}>
         <p>Gestion de la Facturation</p>
-      </div>
-    </CardContent>
-  </Card>
-);
-
-const SalonLoyalty = () => (
-  <Card>
-    <CardContent className="pt-6">
-      <div className={placeholderStyle}>
-        <p>Programme de Fidélité</p>
       </div>
     </CardContent>
   </Card>
