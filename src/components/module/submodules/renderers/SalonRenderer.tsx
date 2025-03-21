@@ -19,30 +19,36 @@ const SalonSettings = () => <div>Paramètres</div>;
 export const SalonRenderer = () => {
   const { submoduleId } = useParams<{ submoduleId: string }>();
 
-  switch (submoduleId) {
-    case 'dashboard':
+  // Le problème est que useParams() ne renvoie pas le préfixe 'salon-'
+  // donc on doit adapter notre switch pour correspondre à l'ID attendu
+  const fullSubmoduleId = submoduleId ? `salon-${submoduleId}` : 'salon-dashboard';
+  
+  console.log('SalonRenderer: rendering submodule', { submoduleId, fullSubmoduleId });
+
+  switch (fullSubmoduleId) {
+    case 'salon-dashboard':
       return <SalonDashboard />;
-    case 'clients':
+    case 'salon-clients':
       return <SalonClients />;
-    case 'appointments':
+    case 'salon-appointments':
       return <SalonAppointments />;
-    case 'stylists':
+    case 'salon-stylists':
       return <SalonStylists />;
-    case 'services':
+    case 'salon-services':
       return <SalonServices />;
-    case 'products':
+    case 'salon-products':
       return <SalonProducts />;
-    case 'billing':
+    case 'salon-billing':
       return <SalonBilling />;
-    case 'loyalty':
+    case 'salon-loyalty':
       return <SalonLoyalty />;
-    case 'inventory':
+    case 'salon-inventory':
       return <SalonInventory />;
-    case 'reports':
+    case 'salon-reports':
       return <SalonReports />;
-    case 'booking':
+    case 'salon-booking':
       return <SalonBooking />;
-    case 'settings':
+    case 'salon-settings':
       return <SalonSettings />;
     default:
       return <SalonDashboard />;
