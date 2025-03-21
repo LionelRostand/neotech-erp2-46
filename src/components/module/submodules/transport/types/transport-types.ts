@@ -1,3 +1,4 @@
+
 export interface TransportVehicle {
   id: string;
   name: string;
@@ -236,4 +237,26 @@ export interface LoyaltySettings {
     anniversaryBonus: number;
     referralBonus: number;
   };
+}
+
+// Web booking types
+export interface WebBooking {
+  id: string;
+  service: TransportService;
+  date: string;
+  time: string;
+  pickup: string;
+  dropoff: string;
+  clientInfo: {
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone: string;
+  };
+  passengers: number;
+  vehicleType: string;
+  needsDriver: boolean;
+  notes?: string;
+  status: "new" | "processed" | "confirmed" | "cancelled";
+  createdAt: string;
 }
