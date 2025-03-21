@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { SalonService } from '../../types/salon-types';
 
@@ -20,7 +21,9 @@ export const useSalonServices = () => {
             price: 45,
             duration: 60,
             category: "coupe",
-            specialists: ["Alexandra", "Sophie"]
+            specialists: ["Alexandra", "Sophie"],
+            available: true,
+            popularityScore: 85
           },
           {
             id: "2",
@@ -29,7 +32,9 @@ export const useSalonServices = () => {
             price: 28,
             duration: 30,
             category: "homme",
-            specialists: ["Nicolas", "Thomas"]
+            specialists: ["Nicolas", "Thomas"],
+            available: true,
+            popularityScore: 78
           },
           {
             id: "3",
@@ -38,7 +43,9 @@ export const useSalonServices = () => {
             price: 65,
             duration: 90,
             category: "coloration",
-            specialists: ["Alexandra"]
+            specialists: ["Alexandra"],
+            available: true,
+            popularityScore: 72
           },
           {
             id: "4",
@@ -47,7 +54,9 @@ export const useSalonServices = () => {
             price: 85,
             duration: 120,
             category: "technique",
-            specialists: ["Sophie"]
+            specialists: ["Sophie"],
+            available: true,
+            popularityScore: 90
           },
           {
             id: "5",
@@ -56,7 +65,9 @@ export const useSalonServices = () => {
             price: 20,
             duration: 30,
             category: "coupe",
-            specialists: []
+            specialists: [],
+            available: true,
+            popularityScore: 65
           },
           {
             id: "6",
@@ -65,7 +76,9 @@ export const useSalonServices = () => {
             price: 38,
             duration: 45,
             category: "homme",
-            specialists: ["Nicolas"]
+            specialists: ["Nicolas"],
+            available: true,
+            popularityScore: 80
           },
           {
             id: "7",
@@ -74,7 +87,9 @@ export const useSalonServices = () => {
             price: 35,
             duration: 30,
             category: "soin",
-            specialists: []
+            specialists: [],
+            available: true,
+            popularityScore: 70
           },
           {
             id: "8",
@@ -83,7 +98,9 @@ export const useSalonServices = () => {
             price: 75,
             duration: 120,
             category: "technique",
-            specialists: ["Alexandra", "Sophie"]
+            specialists: ["Alexandra", "Sophie"],
+            available: true,
+            popularityScore: 82
           },
           {
             id: "9",
@@ -92,7 +109,9 @@ export const useSalonServices = () => {
             price: 55,
             duration: 60,
             category: "coiffage",
-            specialists: ["Sophie"]
+            specialists: ["Sophie"],
+            available: true,
+            popularityScore: 75
           },
           {
             id: "10",
@@ -101,7 +120,9 @@ export const useSalonServices = () => {
             price: 30,
             duration: 30,
             category: "coiffage",
-            specialists: []
+            specialists: [],
+            available: true,
+            popularityScore: 68
           }
         ];
 
