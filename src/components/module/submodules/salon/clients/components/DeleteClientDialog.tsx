@@ -1,16 +1,15 @@
 
 import React from 'react';
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { Trash2 } from "lucide-react";
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { AlertTriangle } from "lucide-react";
 
 interface DeleteClientDialogProps {
   isOpen: boolean;
@@ -26,40 +25,39 @@ const DeleteClientDialog: React.FC<DeleteClientDialogProps> = ({
   onConfirm
 }) => {
   return (
-    <AlertDialog open={isOpen} onOpenChange={onOpenChange}>
-      <AlertDialogContent className="max-w-[450px]">
-        <AlertDialogHeader>
-          <AlertDialogTitle className="flex items-center text-red-600">
-            <Trash2 className="h-5 w-5 mr-2" />
+    <Dialog open={isOpen} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle className="flex items-center text-destructive">
+            <AlertTriangle className="mr-2 h-5 w-5" />
             Supprimer le client
-          </AlertDialogTitle>
-          <AlertDialogDescription className="py-4">
-            <p className="mb-3">
-              Êtes-vous sûr de vouloir supprimer le client <strong className="font-semibold">{clientName}</strong> ? 
-            </p>
-            <div className="p-3 bg-amber-50 border border-amber-200 rounded-md text-sm text-amber-800">
-              <p>Cette action est irréversible et supprimera :</p>
-              <ul className="list-disc ml-5 mt-2 space-y-1">
-                <li>Toutes les informations personnelles</li>
-                <li>L'historique des rendez-vous</li>
-                <li>Les points de fidélité</li>
-                <li>Les préférences et notes</li>
-              </ul>
-            </div>
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter className="gap-2">
-          <AlertDialogCancel className="font-medium">Annuler</AlertDialogCancel>
-          <AlertDialogAction 
-            onClick={onConfirm}
-            className="bg-red-600 hover:bg-red-700 text-white"
+          </DialogTitle>
+          <DialogDescription>
+            Êtes-vous sûr de vouloir supprimer le client <span className="font-semibold">{clientName}</span> ? 
+            Cette action est irréversible et supprimera toutes les données associées, y compris l'historique des rendez-vous 
+            et les points de fidélité.
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter className="gap-2 sm:justify-start">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => onOpenChange(false)}
           >
-            <Trash2 className="h-4 w-4 mr-2" />
-            Confirmer la suppression
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+            Annuler
+          </Button>
+          <Button
+            type="button"
+            variant="destructive"
+            onClick={() => {
+              onConfirm();
+            }}
+          >
+            Supprimer définitivement
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 };
 

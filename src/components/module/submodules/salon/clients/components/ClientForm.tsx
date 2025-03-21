@@ -2,8 +2,8 @@
 import React from 'react';
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { FormField, FormLabel, FormMessage } from '@/components/ui/form';
 import { ClientFormData, ClientFormErrors } from '../hooks/useClientForm';
 
 interface ClientFormProps {
@@ -20,109 +20,126 @@ const ClientForm: React.FC<ClientFormProps> = ({
   isEdit = false
 }) => {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-4">
-      <div className="space-y-2">
-        <FormLabel>Prénom <span className="text-red-500">*</span></FormLabel>
-        <Input
-          value={formData.firstName}
-          onChange={(e) => onChange('firstName', e.target.value)}
-          placeholder="Prénom"
-          className={formErrors.firstName ? "border-red-500" : ""}
-        />
-        {formErrors.firstName && <FormMessage>{formErrors.firstName}</FormMessage>}
+    <div className="space-y-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div className="space-y-2">
+          <Label htmlFor="firstName">Prénom *</Label>
+          <Input
+            id="firstName"
+            placeholder="Prénom"
+            value={formData.firstName}
+            onChange={(e) => onChange('firstName', e.target.value)}
+          />
+          {formErrors.firstName && (
+            <p className="text-sm text-destructive">{formErrors.firstName}</p>
+          )}
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="lastName">Nom *</Label>
+          <Input
+            id="lastName"
+            placeholder="Nom"
+            value={formData.lastName}
+            onChange={(e) => onChange('lastName', e.target.value)}
+          />
+          {formErrors.lastName && (
+            <p className="text-sm text-destructive">{formErrors.lastName}</p>
+          )}
+        </div>
       </div>
       
-      <div className="space-y-2">
-        <FormLabel>Nom <span className="text-red-500">*</span></FormLabel>
-        <Input
-          value={formData.lastName}
-          onChange={(e) => onChange('lastName', e.target.value)}
-          placeholder="Nom"
-          className={formErrors.lastName ? "border-red-500" : ""}
-        />
-        {formErrors.lastName && <FormMessage>{formErrors.lastName}</FormMessage>}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div className="space-y-2">
+          <Label htmlFor="email">Email *</Label>
+          <Input
+            id="email"
+            type="email"
+            placeholder="email@exemple.com"
+            value={formData.email}
+            onChange={(e) => onChange('email', e.target.value)}
+          />
+          {formErrors.email && (
+            <p className="text-sm text-destructive">{formErrors.email}</p>
+          )}
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="phone">Téléphone *</Label>
+          <Input
+            id="phone"
+            placeholder="06 12 34 56 78"
+            value={formData.phone}
+            onChange={(e) => onChange('phone', e.target.value)}
+          />
+          {formErrors.phone && (
+            <p className="text-sm text-destructive">{formErrors.phone}</p>
+          )}
+        </div>
       </div>
       
-      <div className="space-y-2">
-        <FormLabel>Email <span className="text-red-500">*</span></FormLabel>
-        <Input
-          value={formData.email}
-          onChange={(e) => onChange('email', e.target.value)}
-          placeholder="email@exemple.com"
-          type="email"
-          className={formErrors.email ? "border-red-500" : ""}
-        />
-        {formErrors.email && <FormMessage>{formErrors.email}</FormMessage>}
-      </div>
-      
-      <div className="space-y-2">
-        <FormLabel>Téléphone <span className="text-red-500">*</span></FormLabel>
-        <Input
-          value={formData.phone}
-          onChange={(e) => onChange('phone', e.target.value)}
-          placeholder="06 12 34 56 78"
-          className={formErrors.phone ? "border-red-500" : ""}
-        />
-        {formErrors.phone && <FormMessage>{formErrors.phone}</FormMessage>}
-      </div>
-      
-      <div className="space-y-2">
-        <FormLabel>Date de naissance</FormLabel>
-        <Input
-          value={formData.birthDate}
-          onChange={(e) => onChange('birthDate', e.target.value)}
-          type="date"
-        />
-      </div>
-      
-      <div className="space-y-2">
-        <FormLabel>Coiffeur préféré</FormLabel>
-        <Select 
-          value={formData.preferredStylist} 
-          onValueChange={(value) => onChange('preferredStylist', value)}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Sélectionner un coiffeur" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="alexandra">Alexandra</SelectItem>
-            <SelectItem value="thomas">Thomas</SelectItem>
-            <SelectItem value="sophie">Sophie</SelectItem>
-            <SelectItem value="nicolas">Nicolas</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-      
-      <div className="space-y-2 col-span-2">
-        <FormLabel>Adresse</FormLabel>
-        <Input
-          value={formData.address}
-          onChange={(e) => onChange('address', e.target.value)}
-          placeholder="Adresse"
-        />
-      </div>
-
-      <div className="space-y-2 col-span-2">
-        <FormLabel>Préférences / Allergies</FormLabel>
-        <Textarea
-          value={formData.preferences}
-          onChange={(e) => onChange('preferences', e.target.value)}
-          placeholder="Préférences de coiffure, soins, produits, allergies..."
-          rows={3}
-        />
-      </div>
-
-      {isEdit && (
-        <div className="space-y-2 col-span-2">
-          <FormLabel>Notes</FormLabel>
-          <Textarea
-            value={formData.notes}
-            onChange={(e) => onChange('notes', e.target.value)}
-            placeholder="Notes internes sur le client..."
-            rows={3}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div className="space-y-2">
+          <Label htmlFor="birthDate">Date de naissance</Label>
+          <Input
+            id="birthDate"
+            type="date"
+            value={formData.birthDate}
+            onChange={(e) => onChange('birthDate', e.target.value)}
           />
         </div>
-      )}
+        
+        <div className="space-y-2">
+          <Label htmlFor="preferredStylist">Coiffeur préféré</Label>
+          <Select 
+            value={formData.preferredStylist} 
+            onValueChange={(value) => onChange('preferredStylist', value)}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Choisir un coiffeur" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="">Aucune préférence</SelectItem>
+              <SelectItem value="alexandra">Alexandra</SelectItem>
+              <SelectItem value="nicolas">Nicolas</SelectItem>
+              <SelectItem value="sophie">Sophie</SelectItem>
+              <SelectItem value="thomas">Thomas</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+      
+      <div className="space-y-2">
+        <Label htmlFor="address">Adresse</Label>
+        <Input
+          id="address"
+          placeholder="Adresse complète"
+          value={formData.address}
+          onChange={(e) => onChange('address', e.target.value)}
+        />
+      </div>
+      
+      <div className="space-y-2">
+        <Label htmlFor="preferences">Préférences capillaires</Label>
+        <Textarea
+          id="preferences"
+          placeholder="Préférences, sensibilités, allergies..."
+          rows={3}
+          value={formData.preferences}
+          onChange={(e) => onChange('preferences', e.target.value)}
+        />
+      </div>
+      
+      <div className="space-y-2">
+        <Label htmlFor="notes">Notes</Label>
+        <Textarea
+          id="notes"
+          placeholder="Notes diverses sur le client..."
+          rows={3}
+          value={formData.notes}
+          onChange={(e) => onChange('notes', e.target.value)}
+        />
+      </div>
     </div>
   );
 };
