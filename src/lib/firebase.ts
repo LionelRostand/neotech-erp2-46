@@ -1,6 +1,11 @@
 
 import { initializeApp } from "firebase/app";
-import { getFirestore, connectFirestoreEmulator, enableMultiTabIndexedDbPersistence } from "firebase/firestore";
+import { 
+  getFirestore, 
+  connectFirestoreEmulator, 
+  enableMultiTabIndexedDbPersistence,
+  CACHE_SIZE_UNLIMITED
+} from "firebase/firestore";
 import { getAuth, connectAuthEmulator } from "firebase/auth";
 import { getStorage, connectStorageEmulator } from "firebase/storage";
 
@@ -17,7 +22,7 @@ const firebaseConfig = {
 // Initialiser Firebase
 const app = initializeApp(firebaseConfig);
 
-// Initialiser les services
+// Initialiser les services avec des paramètres de cache améliorés
 export const db = getFirestore(app);
 export const auth = getAuth(app);
 export const storage = getStorage(app);
@@ -39,27 +44,39 @@ if (import.meta.env.DEV) {
 }
 
 // Add offline persistence with error handling and retry logic
-try {
-  // Changed from enableIndexedDbPersistence to enableMultiTabIndexedDbPersistence
-  // This allows multiple tabs to access the same offline storage
-  enableMultiTabIndexedDbPersistence(db)
-    .then(() => {
+const enablePersistence = async (retries = 3, delay = 1000) => {
+  for (let attempt = 0; attempt < retries; attempt++) {
+    try {
+      // Enable unlimited cache size and multi-tab persistence
+      await enableMultiTabIndexedDbPersistence(db);
       console.log("Firestore offline multi-tab persistence enabled");
-    })
-    .catch((err) => {
+      return;
+    } catch (err: any) {
       if (err.code === 'failed-precondition') {
         // Multiple tabs open, persistence can only be enabled in one tab at a time
         console.warn("Multiple tabs open, persistence only enabled in one tab");
+        return;
       } else if (err.code === 'unimplemented') {
-        // The current browser does not support all of the
-        // features required to enable persistence
+        // The current browser does not support all of the features required to enable persistence
         console.warn("Offline persistence not supported in this browser");
+        return;
       } else {
-        console.error("Error enabling offline persistence:", err);
+        console.error(`Error enabling offline persistence (attempt ${attempt + 1}/${retries}):`, err);
+        
+        if (attempt < retries - 1) {
+          // Add exponential backoff
+          const backoffDelay = delay * Math.pow(2, attempt);
+          console.log(`Retrying in ${backoffDelay}ms...`);
+          await new Promise(resolve => setTimeout(resolve, backoffDelay));
+        } else {
+          console.error("Failed to enable persistence after multiple attempts");
+        }
       }
-    });
-} catch (error) {
-  console.error("Error setting up offline persistence:", error);
-}
+    }
+  }
+};
+
+// Try to enable persistence with retries
+enablePersistence();
 
 export default app;

@@ -12,6 +12,7 @@ let isReconnecting = false;
 let reconnectionAttempts = 0;
 const MAX_RECONNECTION_ATTEMPTS = 5;
 const RECONNECTION_DELAY = 2000; // 2 seconds
+const MAX_BACKOFF_DELAY = 30000; // Maximum backoff delay (30 seconds)
 
 /**
  * Enable Firestore network connection
@@ -57,14 +58,24 @@ export const reconnectToFirestore = async (): Promise<boolean> => {
     return false;
   }
   
-  // Calculate backoff delay
-  const delay = RECONNECTION_DELAY * Math.pow(2, reconnectionAttempts);
+  // Calculate backoff delay with exponential backoff and jitter
+  const baseDelay = RECONNECTION_DELAY * Math.pow(2, reconnectionAttempts);
+  // Add jitter (random delay between 0-1000ms)
+  const jitter = Math.floor(Math.random() * 1000);
+  const delay = Math.min(baseDelay + jitter, MAX_BACKOFF_DELAY);
   
   console.log(`Tentative de reconnexion (${reconnectionAttempts + 1}/${MAX_RECONNECTION_ATTEMPTS}) dans ${delay/1000} secondes...`);
   
   return new Promise(resolve => {
     setTimeout(async () => {
       try {
+        // First try to disable the network before enabling it again
+        // This can help fix 400 errors by clearing problematic connections
+        await disableFirestoreNetwork();
+        
+        // Wait a bit before reconnecting
+        await new Promise(r => setTimeout(r, 500));
+        
         const success = await enableFirestoreNetwork();
         if (success) {
           console.log('Reconnexion à Firestore réussie');
@@ -103,7 +114,9 @@ export const isNetworkError = (err: any): boolean => {
     errorMessage.includes('network error') ||
     errorMessage.includes('network_io_suspended') ||
     errorMessage.includes('the server responded with a status of 400') ||
-    errorMessage.includes('client is offline')
+    errorMessage.includes('client is offline') ||
+    errorMessage.includes('failed to get') ||
+    errorMessage.includes('error sending request')
   );
 };
 
@@ -115,12 +128,14 @@ export const handleNetworkError = async (err: any, retryOperation: () => Promise
     console.log('Network error detected:', err.message || err);
     toast.error("Problème de connexion à la base de données. Tentative de reconnexion...");
     
-    // For errors indicating suspended I/O or bad requests, let's add a small delay
+    // For errors indicating suspended I/O or bad requests (400 errors), add a larger delay
     // before attempting reconnection to allow the network to stabilize
     if (err.message?.includes('NETWORK_IO_SUSPENDED') || 
         err.message?.includes('status of 400')) {
       console.log('Special handling for NETWORK_IO_SUSPENDED or 400 error');
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Disable the network first to clear any problematic connections
+      await disableFirestoreNetwork();
+      await new Promise(resolve => setTimeout(resolve, 3000));
     }
     
     const reconnected = await reconnectToFirestore();
@@ -156,8 +171,17 @@ export const executeWithNetworkRetry = async <T>(
       // Add delay for network issues to allow potential recovery
       if (isNetworkError(error)) {
         console.log('Network error detected, adding delay before retry');
-        // Force a small delay before retry
-        await new Promise(resolve => setTimeout(resolve, 1500));
+        
+        // For 400 errors, use a longer delay and try to reset the connection
+        if (error.message?.includes('status of 400')) {
+          console.log('400 error detected, resetting connection before retry');
+          await disableFirestoreNetwork();
+          // Force a longer delay for 400 errors
+          await new Promise(resolve => setTimeout(resolve, 3000));
+        } else {
+          // Standard delay for other network errors
+          await new Promise(resolve => setTimeout(resolve, 1500));
+        }
       }
       
       if (attempts <= maxRetries) {
