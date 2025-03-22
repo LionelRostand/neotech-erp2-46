@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -369,5 +370,16 @@ const GarageAppointments = () => {
         </Card>
       )}
 
-      <
+      <CreateAppointmentDialog
+        open={showCreateDialog}
+        onOpenChange={setShowCreateDialog}
+        onSave={handleCreateAppointment}
+        clientsMap={clientsMap}
+        vehiclesMap={vehiclesMap}
+        mechanicsMap={mechanicsMap}
+      />
+    </div>
+  );
+};
 
+export default GarageAppointments;
