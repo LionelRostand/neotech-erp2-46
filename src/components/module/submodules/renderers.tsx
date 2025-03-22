@@ -98,41 +98,27 @@ import VehiclesManagement from './vehicle-rentals/VehiclesManagement';
 import ClientsManagement from './vehicle-rentals/ClientsManagement';
 import ReservationsManagement from './vehicle-rentals/ReservationsManagement';
 
-// Transport
+// Transport - Only importing components that actually exist
 import TransportDashboard from './transport/TransportDashboard';
 import TransportReservations from './transport/TransportReservations';
-import TransportClients from './transport/TransportClients';
-import TransportVehicles from './transport/TransportVehicles';
 import TransportDrivers from './transport/TransportDrivers';
-import TransportRoutes from './transport/TransportRoutes';
-import TransportContracts from './transport/TransportContracts';
-import TransportBilling from './transport/TransportBilling';
+import TransportFleet from './transport/TransportFleet';
+import TransportPlanning from './transport/TransportPlanning';
+import TransportGeolocation from './transport/TransportGeolocation';
+import TransportPayments from './transport/TransportPayments';
 import TransportLoyalty from './transport/TransportLoyalty';
-import TransportReports from './transport/TransportReports';
+import TransportWebBooking from './transport/TransportWebBooking';
 import TransportSettings from './transport/TransportSettings';
-
-// Messages
-import MessagesDashboard from './messages/dashboard/MessagesDashboard';
-import InboxPage from './messages/inbox/InboxPage';
-import ComposePage from './messages/compose/ComposePage';
-import ArchivePage from './messages/archive/ArchivePage';
-import ScheduledPage from './messages/scheduled/ScheduledPage';
-import ContactsPage from './messages/contacts/ContactsPage';
-import MessagesSettingsPage from './messages/settings/SettingsPage';
 
 // Garage module import
 import GarageDashboard from './garage/GarageDashboard';
 
-// Salon import
-import { SalonDashboard } from './salon/SalonDashboard';
-import { SalonAppointments } from './salon/SalonAppointments';
-import { SalonClients } from './salon/SalonClients';
-import { SalonEmployees } from './salon/SalonEmployees';
-import { SalonServices } from './salon/SalonServices';
-import { SalonInventory } from './salon/SalonInventory';
-import { SalonLoyalty } from './salon/SalonLoyalty';
-import { SalonReports } from './salon/SalonReports';
-import { SalonSettings } from './salon/SalonSettings';
+// Import correct message components from renderers - not direct imports
+import { renderMessagesSubmodule } from './renderers/MessagesRenderer';
+
+// Salon import - using correct import syntax
+import SalonDashboard from './salon/dashboard/SalonDashboard';
+import SalonAppointments from './salon/appointments/SalonAppointments';
 
 // Renderer functions for each module type
 export const renderEmployeesSubmodule = (submoduleId: string, submodule: SubModule) => {
@@ -172,7 +158,7 @@ export const renderEmployeesSubmodule = (submoduleId: string, submodule: SubModu
     case 'employees-settings':
       return <EmployeesSettings />;
     default:
-      return <DefaultSubmoduleContent submoduleId={submoduleId} />;
+      return <DefaultSubmoduleContent submodule={submodule} />;
   }
 };
 
@@ -199,7 +185,7 @@ export const renderFreightSubmodule = (submoduleId: string, submodule: SubModule
     case 'freight-settings':
       return <FreightSettings />;
     default:
-      return <DefaultSubmoduleContent submoduleId={submoduleId} />;
+      return <DefaultSubmoduleContent submodule={submodule} />;
   }
 };
 
@@ -218,7 +204,7 @@ export const renderProjectsSubmodule = (submoduleId: string, submodule: SubModul
     case 'projects-settings':
       return <SettingsPage />;
     default:
-      return <DefaultSubmoduleContent submoduleId={submoduleId} />;
+      return <DefaultSubmoduleContent submodule={submodule} />;
   }
 };
 
@@ -237,29 +223,12 @@ export const renderAccountingSubmodule = (submoduleId: string, submodule: SubMod
     case 'accounting-settings':
       return <AccountingSettingsPage />;
     default:
-      return <DefaultSubmoduleContent submoduleId={submoduleId} />;
+      return <DefaultSubmoduleContent submodule={submodule} />;
   }
 };
 
 export const renderMessagesSubmodule = (submoduleId: string, submodule: SubModule) => {
-  switch (submoduleId) {
-    case 'messages-dashboard':
-      return <MessagesDashboard />;
-    case 'messages-inbox':
-      return <InboxPage />;
-    case 'messages-compose':
-      return <ComposePage />;
-    case 'messages-archive':
-      return <ArchivePage />;
-    case 'messages-scheduled':
-      return <ScheduledPage />;
-    case 'messages-contacts':
-      return <ContactsPage />;
-    case 'messages-settings':
-      return <MessagesSettingsPage />;
-    default:
-      return <DefaultSubmoduleContent submoduleId={submoduleId} />;
-  }
+  return renderMessagesSubmodule(submoduleId, submodule);
 };
 
 export const renderCompaniesSubmodule = (submoduleId: string, submodule: SubModule) => {
@@ -277,7 +246,7 @@ export const renderCompaniesSubmodule = (submoduleId: string, submodule: SubModu
     case 'companies-settings':
       return <CompaniesSettings />;
     default:
-      return <DefaultSubmoduleContent submoduleId={submoduleId} />;
+      return <DefaultSubmoduleContent submodule={submodule} />;
   }
 };
 
@@ -296,7 +265,7 @@ export const renderCrmSubmodule = (submoduleId: string, submodule: SubModule) =>
     case 'crm-settings':
       return <CrmSettings />;
     default:
-      return <DefaultSubmoduleContent submoduleId={submoduleId} />;
+      return <DefaultSubmoduleContent submodule={submodule} />;
   }
 };
 
@@ -311,7 +280,7 @@ export const renderDocumentsSubmodule = (submoduleId: string, submodule: SubModu
     case 'documents-settings':
       return <DocumentsSettings />;
     default:
-      return <DefaultSubmoduleContent submoduleId={submoduleId} />;
+      return <DefaultSubmoduleContent submodule={submodule} />;
   }
 };
 
@@ -354,7 +323,7 @@ export const renderHealthSubmodule = (submoduleId: string, submodule: SubModule)
     case 'health-stats':
       return <StatsPage />;
     default:
-      return <DefaultSubmoduleContent submoduleId={submoduleId} />;
+      return <DefaultSubmoduleContent submodule={submodule} />;
   }
 };
 
@@ -369,7 +338,7 @@ export const renderVehicleRentalsSubmodule = (submoduleId: string, submodule: Su
     case 'rentals-reservations':
       return <ReservationsManagement />;
     default:
-      return <DefaultSubmoduleContent submoduleId={submoduleId} />;
+      return <DefaultSubmoduleContent submodule={submodule} />;
   }
 };
 
@@ -380,26 +349,24 @@ export const renderTransportSubmodule = (submoduleId: string, submodule: SubModu
       return <TransportDashboard />;
     case 'transport-reservations':
       return <TransportReservations />;
-    case 'transport-clients':
-      return <TransportClients />;
-    case 'transport-vehicles':
-      return <TransportVehicles />;
+    case 'transport-planning':
+      return <TransportPlanning />;
+    case 'transport-fleet':
+      return <TransportFleet />;
     case 'transport-drivers':
       return <TransportDrivers />;
-    case 'transport-routes':
-      return <TransportRoutes />;
-    case 'transport-contracts':
-      return <TransportContracts />;
-    case 'transport-billing':
-      return <TransportBilling />;
+    case 'transport-geolocation':
+      return <TransportGeolocation />;
+    case 'transport-payments':
+      return <TransportPayments />;
     case 'transport-loyalty':
       return <TransportLoyalty />;
-    case 'transport-reports':
-      return <TransportReports />;
+    case 'transport-web-booking':
+      return <TransportWebBooking />;
     case 'transport-settings':
       return <TransportSettings />;
     default:
-      return <DefaultSubmoduleContent submoduleId={submoduleId} />;
+      return <DefaultSubmoduleContent submodule={submodule} />;
   }
 };
 
@@ -410,7 +377,7 @@ export const renderGarageSubmodule = (submoduleId: string, submodule: SubModule)
       return <GarageDashboard />;
     // Add other garage submodules here as they are implemented
     default:
-      return <DefaultSubmoduleContent submoduleId={submoduleId} />;
+      return <DefaultSubmoduleContent submodule={submodule} />;
   }
 };
 
@@ -421,23 +388,7 @@ export const SalonRenderer: React.FC<{ submoduleId: string, submodule: SubModule
       return <SalonDashboard />;
     case 'salon-appointments':
       return <SalonAppointments />;
-    case 'salon-clients':
-      return <SalonClients />;
-    case 'salon-employees':
-      return <SalonEmployees />;
-    case 'salon-services':
-      return <SalonServices />;
-    case 'salon-inventory':
-      return <SalonInventory />;
-    case 'salon-loyalty':
-      return <SalonLoyalty />;
-    case 'salon-reports':
-      return <SalonReports />;
-    case 'salon-settings':
-      return <SalonSettings />;
     default:
-      return <DefaultSubmoduleContent submoduleId={submoduleId} />;
+      return <DefaultSubmoduleContent submodule={submodule} />;
   }
 };
-
-// Update the SubmoduleRenderer.tsx to include the garageSubmodule rendering
