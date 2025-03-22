@@ -1,129 +1,217 @@
 
-import React from 'react';
-import { DollarSign, Search, Plus, Edit, Trash2, Tag, RefreshCw } from 'lucide-react';
+import React, { useState } from 'react';
+import { Plus, Trash2, Calculator, BarChart4, ArrowUpDown, Percent } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
-import StatCard from '@/components/StatCard';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { 
+  Table, 
+  TableBody, 
+  TableCell, 
+  TableHead, 
+  TableHeader, 
+  TableRow 
+} from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
+import { useToast } from '@/hooks/use-toast';
+import { 
+  PricingDialog, 
+  PromotionDialog,
+  ActionButtons,
+  PriceCalculator
+} from './helpers/FreightActionHelpers';
 
 const FreightPricing: React.FC = () => {
-  // Sample data for pricing
-  const pricingRules = [
-    { id: 1, name: 'Tarif standard', type: 'Par poids', basePrice: '10.50 €/kg', minCharge: '25 €', active: true },
-    { id: 2, name: 'Service express', type: 'Par poids', basePrice: '15.75 €/kg', minCharge: '50 €', active: true },
-    { id: 3, name: 'Économique', type: 'Par volume', basePrice: '110 €/m³', minCharge: '30 €', active: true },
-    { id: 4, name: 'Tarif spécial hiver', type: 'Par poids', basePrice: '12.25 €/kg', minCharge: '35 €', active: false },
-    { id: 5, name: 'Transport fragile', type: 'Par colis', basePrice: '45 €/unité', minCharge: '45 €', active: true },
-  ];
-
-  const promotions = [
-    { id: 1, name: 'Réduction nouvel an', code: 'NY2024', discount: '15%', validUntil: '2024-01-31', active: true },
-    { id: 2, name: 'Clients fidèles', code: 'LOYAL10', discount: '10%', validUntil: '2024-12-31', active: true },
-    { id: 3, name: 'Volume important', code: 'BULK25', discount: '25%', validUntil: '2024-03-15', active: false },
-    { id: 4, name: 'Première expédition', code: 'FIRST20', discount: '20%', validUntil: '2024-06-30', active: true },
-  ];
-
-  // Stats for the dashboard
-  const statsData = [
-    {
-      title: "Tarifs actifs",
-      value: "12",
-      icon: <DollarSign className="h-8 w-8 text-green-500" />,
-      description: "Règles de tarification"
+  const { toast } = useToast();
+  const [activeTab, setActiveTab] = useState("price-models");
+  const [showNewPriceModel, setShowNewPriceModel] = useState(false);
+  const [showNewPromotion, setShowNewPromotion] = useState(false);
+  const [editingPriceModel, setEditingPriceModel] = useState<any>(null);
+  const [editingPromotion, setEditingPromotion] = useState<any>(null);
+  
+  // Sample pricing models
+  const pricingModels = [
+    { 
+      id: 1, 
+      name: "Standard", 
+      basePrice: 15,
+      weightFactor: 1.2, 
+      distanceFactor: 0.5, 
+      volumeFactor: 5, 
+      description: "Tarification standard pour les expéditions régulières" 
     },
-    {
-      title: "Promotions",
-      value: "8",
-      icon: <Tag className="h-8 w-8 text-amber-500" />,
-      description: "Codes promo actifs"
+    { 
+      id: 2, 
+      name: "Express", 
+      basePrice: 30,
+      weightFactor: 2, 
+      distanceFactor: 0.8, 
+      volumeFactor: 7, 
+      description: "Tarification express pour les livraisons urgentes" 
     },
-    {
-      title: "Tarif moyen",
-      value: "14.75 €",
-      icon: <DollarSign className="h-8 w-8 text-blue-500" />,
-      description: "Par kilogramme"
+    { 
+      id: 3, 
+      name: "Économique", 
+      basePrice: 10,
+      weightFactor: 0.8, 
+      distanceFactor: 0.3, 
+      volumeFactor: 3, 
+      description: "Tarification économique pour les envois non urgents" 
     },
-    {
-      title: "Mise à jour",
-      value: "5 jours",
-      icon: <RefreshCw className="h-8 w-8 text-purple-500" />,
-      description: "Depuis dernière révision"
+    { 
+      id: 4, 
+      name: "International", 
+      basePrice: 50,
+      weightFactor: 3, 
+      distanceFactor: 0.2, 
+      volumeFactor: 10, 
+      description: "Tarification pour les expéditions internationales" 
     }
   ];
-
+  
+  // Sample promotions
+  const promotions = [
+    { 
+      id: 1, 
+      name: "Promotion d'été", 
+      code: "ETE2023", 
+      discount: 15, 
+      startDate: "2023-06-01", 
+      endDate: "2023-08-31", 
+      status: "active",
+      description: "Réduction estivale pour tous les clients"
+    },
+    { 
+      id: 2, 
+      name: "Black Friday", 
+      code: "BLACK2023", 
+      discount: 25, 
+      startDate: "2023-11-24", 
+      endDate: "2023-11-27", 
+      status: "scheduled",
+      description: "Promotion spéciale pour le Black Friday"
+    },
+    { 
+      id: 3, 
+      name: "Nouveaux clients", 
+      code: "WELCOME", 
+      discount: 10, 
+      startDate: "2023-01-01", 
+      endDate: "2023-12-31", 
+      status: "active",
+      description: "Réduction pour les nouveaux clients"
+    }
+  ];
+  
+  const handleEditPriceModel = (model: any) => {
+    setEditingPriceModel(model);
+    setShowNewPriceModel(true);
+  };
+  
+  const handleDeletePriceModel = (modelId: number) => {
+    toast({
+      title: "Modèle de tarification supprimé",
+      description: "Le modèle de tarification a été supprimé avec succès.",
+    });
+  };
+  
+  const handleSavePriceModel = (model: any) => {
+    toast({
+      title: editingPriceModel ? "Modèle de tarification modifié" : "Modèle de tarification ajouté",
+      description: `Le modèle de tarification "${model.name || 'Nouveau modèle'}" a été ${editingPriceModel ? 'modifié' : 'ajouté'} avec succès.`,
+    });
+    setEditingPriceModel(null);
+  };
+  
+  const handleEditPromotion = (promotion: any) => {
+    setEditingPromotion(promotion);
+    setShowNewPromotion(true);
+  };
+  
+  const handleDeletePromotion = (promotionId: number) => {
+    toast({
+      title: "Promotion supprimée",
+      description: "La promotion a été supprimée avec succès.",
+    });
+  };
+  
+  const handleSavePromotion = (promotion: any) => {
+    toast({
+      title: editingPromotion ? "Promotion modifiée" : "Promotion ajoutée",
+      description: `La promotion "${promotion.name || 'Nouvelle promotion'}" a été ${editingPromotion ? 'modifiée' : 'ajoutée'} avec succès.`,
+    });
+    setEditingPromotion(null);
+  };
+  
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {statsData.map((stat, index) => (
-          <StatCard
-            key={index}
-            title={stat.title}
-            value={stat.value}
-            icon={stat.icon}
-            description={stat.description}
-          />
-        ))}
+      <div className="flex justify-between items-center">
+        <h1 className="text-2xl font-bold">Tarification et Facturation</h1>
       </div>
-
-      <Tabs defaultValue="pricing">
-        <TabsList className="mb-4">
-          <TabsTrigger value="pricing">Tarifs</TabsTrigger>
-          <TabsTrigger value="promotions">Promotions</TabsTrigger>
-          <TabsTrigger value="calculator">Calculateur</TabsTrigger>
+      
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="grid grid-cols-3 mb-8">
+          <TabsTrigger value="price-models" className="flex items-center gap-2">
+            <BarChart4 className="h-4 w-4" />
+            <span>Modèles de tarification</span>
+          </TabsTrigger>
+          <TabsTrigger value="promotions" className="flex items-center gap-2">
+            <Percent className="h-4 w-4" />
+            <span>Codes promotionnels</span>
+          </TabsTrigger>
+          <TabsTrigger value="calculator" className="flex items-center gap-2">
+            <Calculator className="h-4 w-4" />
+            <span>Calculateur de tarifs</span>
+          </TabsTrigger>
         </TabsList>
-
-        <TabsContent value="pricing">
+        
+        {/* Modèles de tarification */}
+        <TabsContent value="price-models" className="space-y-6">
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>Règles de tarification</CardTitle>
-              <Button>
-                <Plus className="mr-2 h-4 w-4" />
-                Nouveau tarif
-              </Button>
+            <CardHeader className="pb-3">
+              <div className="flex justify-between items-center">
+                <div>
+                  <CardTitle>Modèles de tarification</CardTitle>
+                  <CardDescription>
+                    Gérez les différents modèles de tarification pour vos expéditions
+                  </CardDescription>
+                </div>
+                <Button onClick={() => {
+                  setEditingPriceModel(null);
+                  setShowNewPriceModel(true);
+                }}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Nouveau modèle
+                </Button>
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="relative mb-4">
-                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-400" />
-                <Input
-                  type="search"
-                  placeholder="Rechercher un tarif..."
-                  className="pl-8"
-                />
-              </div>
-
               <Table>
                 <TableHeader>
                   <TableRow>
                     <TableHead>Nom</TableHead>
-                    <TableHead>Type</TableHead>
                     <TableHead>Prix de base</TableHead>
-                    <TableHead>Charge minimale</TableHead>
-                    <TableHead>Statut</TableHead>
+                    <TableHead>Facteur poids</TableHead>
+                    <TableHead>Facteur distance</TableHead>
+                    <TableHead>Facteur volume</TableHead>
+                    <TableHead>Description</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {pricingRules.map((rule) => (
-                    <TableRow key={rule.id}>
-                      <TableCell className="font-medium">{rule.name}</TableCell>
-                      <TableCell>{rule.type}</TableCell>
-                      <TableCell>{rule.basePrice}</TableCell>
-                      <TableCell>{rule.minCharge}</TableCell>
-                      <TableCell>
-                        <Badge className={rule.active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}>
-                          {rule.active ? 'Actif' : 'Inactif'}
-                        </Badge>
-                      </TableCell>
+                  {pricingModels.map((model) => (
+                    <TableRow key={model.id}>
+                      <TableCell className="font-medium">{model.name}</TableCell>
+                      <TableCell>{model.basePrice} €</TableCell>
+                      <TableCell>{model.weightFactor} €/kg</TableCell>
+                      <TableCell>{model.distanceFactor} €/km</TableCell>
+                      <TableCell>{model.volumeFactor} €/m³</TableCell>
+                      <TableCell className="max-w-[200px] truncate">{model.description}</TableCell>
                       <TableCell className="text-right">
-                        <Button variant="ghost" size="icon">
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button variant="ghost" size="icon">
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                        <ActionButtons 
+                          onEdit={() => handleEditPriceModel(model)}
+                          onDelete={() => handleDeletePriceModel(model.id)}
+                        />
                       </TableCell>
                     </TableRow>
                   ))}
@@ -132,33 +220,36 @@ const FreightPricing: React.FC = () => {
             </CardContent>
           </Card>
         </TabsContent>
-
-        <TabsContent value="promotions">
+        
+        {/* Codes promotionnels */}
+        <TabsContent value="promotions" className="space-y-6">
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>Codes promotionnels</CardTitle>
-              <Button>
-                <Plus className="mr-2 h-4 w-4" />
-                Nouvelle promotion
-              </Button>
+            <CardHeader className="pb-3">
+              <div className="flex justify-between items-center">
+                <div>
+                  <CardTitle>Codes promotionnels</CardTitle>
+                  <CardDescription>
+                    Gérez les différentes promotions et réductions pour vos clients
+                  </CardDescription>
+                </div>
+                <Button onClick={() => {
+                  setEditingPromotion(null);
+                  setShowNewPromotion(true);
+                }}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Nouvelle promotion
+                </Button>
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="relative mb-4">
-                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-400" />
-                <Input
-                  type="search"
-                  placeholder="Rechercher une promotion..."
-                  className="pl-8"
-                />
-              </div>
-
               <Table>
                 <TableHeader>
                   <TableRow>
                     <TableHead>Nom</TableHead>
                     <TableHead>Code</TableHead>
                     <TableHead>Réduction</TableHead>
-                    <TableHead>Valide jusqu'au</TableHead>
+                    <TableHead>Début</TableHead>
+                    <TableHead>Fin</TableHead>
                     <TableHead>Statut</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
@@ -167,25 +258,28 @@ const FreightPricing: React.FC = () => {
                   {promotions.map((promo) => (
                     <TableRow key={promo.id}>
                       <TableCell className="font-medium">{promo.name}</TableCell>
+                      <TableCell><code>{promo.code}</code></TableCell>
+                      <TableCell>{promo.discount}%</TableCell>
+                      <TableCell>{promo.startDate}</TableCell>
+                      <TableCell>{promo.endDate}</TableCell>
                       <TableCell>
-                        <Badge variant="outline" className="font-mono">
-                          {promo.code}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>{promo.discount}</TableCell>
-                      <TableCell>{promo.validUntil}</TableCell>
-                      <TableCell>
-                        <Badge className={promo.active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}>
-                          {promo.active ? 'Actif' : 'Inactif'}
+                        <Badge 
+                          variant={
+                            promo.status === 'active' 
+                              ? 'default' 
+                              : promo.status === 'scheduled' 
+                                ? 'outline' 
+                                : 'secondary'
+                          }
+                        >
+                          {promo.status === 'active' ? 'Actif' : promo.status === 'scheduled' ? 'Planifié' : 'Inactif'}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right">
-                        <Button variant="ghost" size="icon">
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button variant="ghost" size="icon">
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                        <ActionButtons 
+                          onEdit={() => handleEditPromotion(promo)}
+                          onDelete={() => handleDeletePromotion(promo.id)}
+                        />
                       </TableCell>
                     </TableRow>
                   ))}
@@ -194,96 +288,47 @@ const FreightPricing: React.FC = () => {
             </CardContent>
           </Card>
         </TabsContent>
-
-        <TabsContent value="calculator">
+        
+        {/* Calculateur de tarifs */}
+        <TabsContent value="calculator" className="space-y-6">
           <Card>
-            <CardHeader>
+            <CardHeader className="pb-3">
               <CardTitle>Calculateur de tarifs</CardTitle>
+              <CardDescription>
+                Calculez le tarif d'une expédition en fonction de ses caractéristiques
+              </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Type d'expédition
-                    </label>
-                    <select className="w-full p-2 border border-gray-300 rounded-md">
-                      <option>Standard</option>
-                      <option>Express</option>
-                      <option>Économique</option>
-                    </select>
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Poids (kg)
-                    </label>
-                    <Input type="number" placeholder="0.00" />
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Volume (m³)
-                    </label>
-                    <Input type="number" placeholder="0.00" />
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Distance (km)
-                    </label>
-                    <Input type="number" placeholder="0" />
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Code promotionnel
-                    </label>
-                    <Input type="text" placeholder="Entrez un code" />
-                  </div>
-                  
-                  <Button className="w-full">Calculer le tarif</Button>
-                </div>
-                
-                <div className="bg-gray-50 p-6 rounded-lg border border-gray-100">
-                  <h3 className="text-lg font-medium mb-4">Résultat du calcul</h3>
-                  
-                  <div className="space-y-4">
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Prix de base</span>
-                      <span className="font-medium">150.00 €</span>
-                    </div>
-                    
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Supplément distance</span>
-                      <span className="font-medium">32.50 €</span>
-                    </div>
-                    
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Frais de manutention</span>
-                      <span className="font-medium">15.00 €</span>
-                    </div>
-                    
-                    <div className="flex justify-between text-green-600">
-                      <span>Réduction</span>
-                      <span>-19.75 €</span>
-                    </div>
-                    
-                    <div className="border-t pt-4 flex justify-between">
-                      <span className="text-lg font-bold">Total</span>
-                      <span className="text-lg font-bold">177.75 €</span>
-                    </div>
-                    
-                    <div className="text-xs text-gray-500 italic">
-                      * Les prix indiqués sont hors taxes et sujets à modification
-                    </div>
-                  </div>
-                </div>
-              </div>
+              <PriceCalculator />
             </CardContent>
           </Card>
         </TabsContent>
       </Tabs>
+      
+      {/* Dialogs */}
+      {showNewPriceModel && (
+        <PricingDialog 
+          isOpen={showNewPriceModel}
+          onClose={() => {
+            setShowNewPriceModel(false);
+            setEditingPriceModel(null);
+          }}
+          pricing={editingPriceModel}
+          onSave={handleSavePriceModel}
+        />
+      )}
+      
+      {showNewPromotion && (
+        <PromotionDialog 
+          isOpen={showNewPromotion}
+          onClose={() => {
+            setShowNewPromotion(false);
+            setEditingPromotion(null);
+          }}
+          promotion={editingPromotion}
+          onSave={handleSavePromotion}
+        />
+      )}
     </div>
   );
 };

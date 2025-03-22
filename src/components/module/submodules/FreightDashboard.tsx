@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { TrendingUp, Activity, Package, Truck, Clock, AlertTriangle, Calendar, DollarSign, BarChart } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -100,7 +99,7 @@ const FreightDashboard: React.FC = () => {
     { id: "ALT-004", shipment: "EXP-1027", type: "Information", message: "Changement d'itinéraire validé", date: "2023-10-13", severity: "low" },
   ];
 
-  const getAlertSeverityColor = (severity: string) => {
+  const getAlertSeverityColor = (severity: string): "success" | "warning" | "danger" => {
     switch (severity) {
       case 'high':
         return 'danger';
@@ -109,7 +108,7 @@ const FreightDashboard: React.FC = () => {
       case 'low':
         return 'success';
       default:
-        return 'default';
+        return 'warning';
     }
   };
 
