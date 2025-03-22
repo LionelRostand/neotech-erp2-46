@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -11,6 +10,8 @@ import {
   Search, Plus, Wrench, Car, Clock, User, PenSquare, Receipt, 
   Eye, CheckCircle, MoreHorizontal 
 } from 'lucide-react';
+import { toast } from 'sonner';
+import CreateRepairDialog from './repairs/CreateRepairDialog';
 
 // Sample data for repairs
 const repairs = [
@@ -110,6 +111,8 @@ const getStatusBadge = (status: string) => {
 
 const GarageRepairs = () => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [repairs, setRepairs] = useState(window.repairs || []);
   
   // Filter repairs based on search term
   const filteredRepairs = repairs.filter(repair => 
@@ -120,11 +123,21 @@ const GarageRepairs = () => {
     repair.id.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const handleCreateRepair = (newRepair: any) => {
+    const id = `RP${String(repairs.length + 1).padStart(3, '0')}`;
+    const repair = { id, ...newRepair };
+    setRepairs(prev => [...prev, repair]);
+    toast.success(`Réparation ${id} créée avec succès`);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-3xl font-bold">Réparations</h2>
-        <Button className="flex items-center gap-2">
+        <Button 
+          className="flex items-center gap-2"
+          onClick={() => setShowCreateDialog(true)}
+        >
           <Plus size={18} />
           <span>Nouvelle Réparation</span>
         </Button>
@@ -303,6 +316,15 @@ const GarageRepairs = () => {
           </div>
         </CardContent>
       </Card>
+
+      <CreateRepairDialog
+        open={showCreateDialog}
+        onOpenChange={setShowCreateDialog}
+        onSave={handleCreateRepair}
+        clientsMap={clientsMap}
+        vehiclesMap={vehiclesMap}
+        mechanicsMap={mechanicsMap}
+      />
     </div>
   );
 };
