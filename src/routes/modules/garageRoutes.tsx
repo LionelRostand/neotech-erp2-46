@@ -1,11 +1,11 @@
 
 import React from 'react';
-import { Route } from "react-router-dom";
+import { Route, Routes } from "react-router-dom";
 import ModuleLayout from "@/components/module/ModuleLayout";
 import SubmodulePage from "@/components/module/SubmodulePage";
 
 export const GarageRoutes = (
-  <Route key="garage" path="/modules/garage" element={<ModuleLayout moduleId={6} />}>
+  <Route key="garage" path="modules/garage" element={<ModuleLayout moduleId={6} />}>
     <Route index element={<SubmodulePage moduleId={6} submoduleId="garage-dashboard" />} />
     <Route path="dashboard" element={<SubmodulePage moduleId={6} submoduleId="garage-dashboard" />} />
     <Route path="clients" element={<SubmodulePage moduleId={6} submoduleId="garage-clients" />} />
