@@ -7,7 +7,51 @@ import SubmodulePage from "@/components/module/SubmodulePage";
 export const OtherModulesRoutes = [
   <Route key="academy" path="/modules/academy/*" element={<ModuleLayout moduleId={4} />} />,
   <Route key="restaurant" path="/modules/restaurant/*" element={<ModuleLayout moduleId={5} />} />,
-  <Route key="garage" path="/modules/garage/*" element={<ModuleLayout moduleId={6} />} />,
+  
+  // Garage module routes
+  <Route key="garage" path="/modules/garage" element={<ModuleLayout moduleId={6} />}>
+    <Route 
+      path="dashboard" 
+      element={<SubmodulePage moduleId={6} submoduleId="garage-dashboard" />} 
+    />
+    <Route 
+      path="clients" 
+      element={<SubmodulePage moduleId={6} submoduleId="garage-clients" />} 
+    />
+    <Route 
+      path="vehicles" 
+      element={<SubmodulePage moduleId={6} submoduleId="garage-vehicles" />} 
+    />
+    <Route 
+      path="appointments" 
+      element={<SubmodulePage moduleId={6} submoduleId="garage-appointments" />} 
+    />
+    <Route 
+      path="repairs" 
+      element={<SubmodulePage moduleId={6} submoduleId="garage-repairs" />} 
+    />
+    <Route 
+      path="invoices" 
+      element={<SubmodulePage moduleId={6} submoduleId="garage-invoices" />} 
+    />
+    <Route 
+      path="suppliers" 
+      element={<SubmodulePage moduleId={6} submoduleId="garage-suppliers" />} 
+    />
+    <Route 
+      path="inventory" 
+      element={<SubmodulePage moduleId={6} submoduleId="garage-inventory" />} 
+    />
+    <Route 
+      path="loyalty" 
+      element={<SubmodulePage moduleId={6} submoduleId="garage-loyalty" />} 
+    />
+    <Route 
+      path="settings" 
+      element={<SubmodulePage moduleId={6} submoduleId="garage-settings" />} 
+    />
+  </Route>,
+  
   <Route key="ecommerce" path="/modules/ecommerce/*" element={<ModuleLayout moduleId={10} />} />,
   
   // Salon module routes
