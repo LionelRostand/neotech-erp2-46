@@ -11,7 +11,11 @@ import {
   Archive, 
   CalendarCheck, 
   BarChart4,
-  BarChart
+  BarChart,
+  Mail,
+  Building,
+  Phone,
+  User
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -177,6 +181,148 @@ export const ActionButtons = ({
   );
 };
 
+// Client Invite Dialog Component
+export const ClientInviteDialog = ({ 
+  isOpen, 
+  onClose, 
+  onInvite 
+}: { 
+  isOpen: boolean, 
+  onClose: () => void, 
+  onInvite: (data: any) => void 
+}) => {
+  const [formData, setFormData] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    company: "",
+    role: "client",
+    message: ""
+  });
+  
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData({
+      ...formData,
+      [name]: value
+    });
+  };
+  
+  const handleRoleChange = (value: string) => {
+    setFormData({
+      ...formData,
+      role: value
+    });
+  };
+  
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onInvite(formData);
+  };
+  
+  return (
+    <Dialog open={isOpen} onOpenChange={() => onClose()}>
+      <DialogContent className="sm:max-w-[500px]">
+        <DialogHeader>
+          <DialogTitle>Inviter un nouveau client</DialogTitle>
+          <DialogDescription>
+            Envoyez une invitation d'accès au portail client.
+          </DialogDescription>
+        </DialogHeader>
+        
+        <form onSubmit={handleSubmit} className="space-y-4 py-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="firstName">Prénom</Label>
+              <Input
+                id="firstName"
+                name="firstName"
+                value={formData.firstName}
+                onChange={handleChange}
+                placeholder="Prénom"
+                required
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="lastName">Nom</Label>
+              <Input
+                id="lastName"
+                name="lastName"
+                value={formData.lastName}
+                onChange={handleChange}
+                placeholder="Nom"
+                required
+              />
+            </div>
+            
+            <div className="space-y-2 col-span-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                name="email"
+                type="email"
+                value={formData.email}
+                onChange={handleChange}
+                placeholder="email@entreprise.com"
+                required
+              />
+            </div>
+            
+            <div className="space-y-2 col-span-2">
+              <Label htmlFor="company">Entreprise</Label>
+              <Input
+                id="company"
+                name="company"
+                value={formData.company}
+                onChange={handleChange}
+                placeholder="Nom de l'entreprise"
+                required
+              />
+            </div>
+            
+            <div className="space-y-2 col-span-2">
+              <Label htmlFor="role">Niveau d'accès</Label>
+              <Select
+                value={formData.role}
+                onValueChange={handleRoleChange}
+              >
+                <SelectTrigger id="role">
+                  <SelectValue placeholder="Sélectionner un niveau d'accès" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="client">Client standard</SelectItem>
+                  <SelectItem value="admin">Administrateur</SelectItem>
+                  <SelectItem value="readonly">Lecture seule</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="space-y-2 col-span-2">
+              <Label htmlFor="message">Message personnalisé</Label>
+              <Textarea
+                id="message"
+                name="message"
+                value={formData.message}
+                onChange={handleChange}
+                placeholder="Message optionnel à inclure dans l'email d'invitation"
+                rows={3}
+              />
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button type="button" variant="outline">Annuler</Button>
+            </DialogClose>
+            <Button type="submit">Envoyer l'invitation</Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
 // Pricing Dialog Component
 export const PricingDialog = ({ 
   isOpen, 
@@ -191,32 +337,32 @@ export const PricingDialog = ({
 }) => {
   const [formData, setFormData] = useState({
     name: pricing?.name || "",
-    basePrice: pricing?.basePrice || 0,
-    weightFactor: pricing?.weightFactor || 0,
-    distanceFactor: pricing?.distanceFactor || 0,
-    volumeFactor: pricing?.volumeFactor || 0,
+    basePrice: pricing?.basePrice || "0",
+    weightFactor: pricing?.weightFactor || "0",
+    distanceFactor: pricing?.distanceFactor || "0",
+    volumeFactor: pricing?.volumeFactor || "0",
     description: pricing?.description || ""
   });
   
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    let parsedValue = value;
-    
-    // Parse number inputs
-    if (name === 'basePrice' || name === 'weightFactor' || 
-        name === 'distanceFactor' || name === 'volumeFactor') {
-      parsedValue = value === '' ? 0 : parseFloat(value);
-    }
-    
     setFormData({
       ...formData,
-      [name]: parsedValue
+      [name]: value
     });
   };
   
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSave(formData);
+    // Convert string values to numbers for calculation
+    const numericData = {
+      ...formData,
+      basePrice: parseFloat(formData.basePrice),
+      weightFactor: parseFloat(formData.weightFactor),
+      distanceFactor: parseFloat(formData.distanceFactor),
+      volumeFactor: parseFloat(formData.volumeFactor)
+    };
+    onSave(numericData);
   };
   
   return (
@@ -339,7 +485,7 @@ export const PromotionDialog = ({
   const [formData, setFormData] = useState({
     name: promotion?.name || "",
     code: promotion?.code || "",
-    discount: promotion?.discount || 0,
+    discount: promotion?.discount || "0",
     startDate: promotion?.startDate || new Date().toISOString().split('T')[0],
     endDate: promotion?.endDate || "",
     status: promotion?.status || "active",
@@ -348,16 +494,9 @@ export const PromotionDialog = ({
   
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    let parsedValue = value;
-    
-    // Parse number inputs
-    if (name === 'discount') {
-      parsedValue = value === '' ? 0 : parseFloat(value);
-    }
-    
     setFormData({
       ...formData,
-      [name]: parsedValue
+      [name]: value
     });
   };
   
@@ -370,7 +509,12 @@ export const PromotionDialog = ({
   
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSave(formData);
+    // Convert discount from string to number
+    const numericData = {
+      ...formData,
+      discount: parseFloat(formData.discount)
+    };
+    onSave(numericData);
   };
   
   return (
