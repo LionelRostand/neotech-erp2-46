@@ -19,15 +19,19 @@ import { CompaniesRoutes } from './modules/companiesRoutes';
 import { HealthRoutes } from './modules/healthRoutes';
 import { RentalRoutes } from './modules/rentalRoutes';
 import { TransportRoutes } from './modules/transportRoutes';
+import { RouteErrorBoundary } from '@/components/ErrorBoundary';
+import NotFound from '@/pages/NotFound';
 
 export const router = createBrowserRouter([
   {
     path: '/',
     element: <App />,
+    errorElement: <RouteErrorBoundary />,
     children: [
       {
         path: '/',
         element: <DashboardWrapper />,
+        errorElement: <RouteErrorBoundary />,
       },
       ...(EmployeesRoutes.props?.children || []),
       ...(FreightRoutes.props?.children || []),
@@ -46,4 +50,9 @@ export const router = createBrowserRouter([
       ...SettingsRoutes,
     ],
   },
+  {
+    path: "*",
+    element: <NotFound />,
+    errorElement: <RouteErrorBoundary />,
+  }
 ]);
