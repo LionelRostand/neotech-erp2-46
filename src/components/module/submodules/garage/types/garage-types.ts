@@ -67,7 +67,7 @@ export interface Invoice {
   id: string;
   clientId: string;
   vehicleId: string;
-  repairs: string[];
+  repairs?: string[]; // Changed from required to optional
   repairId?: string; // Added for backward compatibility
   date: string;
   dueDate: string;

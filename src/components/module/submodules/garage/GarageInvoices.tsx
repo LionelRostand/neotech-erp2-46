@@ -19,6 +19,7 @@ const sampleInvoices: Invoice[] = [
     id: "INV-2023-056",
     clientId: "CL001",
     vehicleId: "VH001",
+    repairs: ["RP004"], // Added repairs array
     repairId: "RP004",
     date: "2023-10-11",
     dueDate: "2023-10-25",
@@ -33,6 +34,7 @@ const sampleInvoices: Invoice[] = [
     id: "INV-2023-057",
     clientId: "CL005",
     vehicleId: "VH008",
+    repairs: ["RP005"], // Added repairs array
     repairId: "RP005",
     date: "2023-10-14",
     dueDate: "2023-10-28",
@@ -47,6 +49,7 @@ const sampleInvoices: Invoice[] = [
     id: "INV-2023-058",
     clientId: "CL002",
     vehicleId: "VH003",
+    repairs: ["RP001"], // Added repairs array
     repairId: "RP001",
     date: "2023-10-20",
     dueDate: "2023-11-03",
@@ -60,6 +63,7 @@ const sampleInvoices: Invoice[] = [
     id: "INV-2023-059",
     clientId: "CL004",
     vehicleId: "VH007",
+    repairs: ["RP002"], // Added repairs array
     repairId: "RP002",
     date: "2023-10-17",
     dueDate: "2023-10-31",
@@ -73,6 +77,7 @@ const sampleInvoices: Invoice[] = [
     id: "INV-2023-060",
     clientId: "CL003",
     vehicleId: "VH005",
+    repairs: ["RP003"], // Added repairs array
     repairId: "RP003",
     date: "2023-10-19",
     dueDate: "2023-11-02",
