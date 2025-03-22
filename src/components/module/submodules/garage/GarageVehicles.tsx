@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -9,7 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Vehicle } from './types/garage-types';
-import { Search, Plus, Car, Clock, AlertCircle, MoreHorizontal, Tool, Calendar } from 'lucide-react';
+import { Search, Plus, Car, Clock, AlertCircle, MoreHorizontal, Wrench, Calendar } from 'lucide-react';
 
 // Sample data for vehicles
 const sampleVehicles: Vehicle[] = [
@@ -314,7 +313,7 @@ const GarageVehicles = () => {
                             <Calendar className="h-4 w-4" />
                           </Button>
                           <Button variant="outline" size="icon" title="Nouvelle réparation">
-                            <Tool className="h-4 w-4" />
+                            <Wrench className="h-4 w-4" />
                           </Button>
                           <Button variant="outline" size="icon" title="Plus d'options">
                             <MoreHorizontal className="h-4 w-4" />
@@ -457,7 +456,7 @@ const GarageVehicles = () => {
                 <span>Planifier entretien</span>
               </Button>
               <Button className="flex items-center gap-2">
-                <Tool className="h-4 w-4" />
+                <Wrench className="h-4 w-4" />
                 <span>Nouvelle réparation</span>
               </Button>
             </div>
