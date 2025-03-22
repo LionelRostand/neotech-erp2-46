@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -11,6 +10,8 @@ import {
   CalendarDays, CheckCircle, XCircle 
 } from 'lucide-react';
 import { Appointment } from './types/garage-types';
+import CreateAppointmentDialog from './appointments/CreateAppointmentDialog';
+import AppointmentsCalendar from './appointments/AppointmentsCalendar';
 
 // Sample data for appointments
 const sampleAppointments: Appointment[] = [
@@ -130,8 +131,10 @@ const GarageAppointments = () => {
   const [appointments, setAppointments] = useState<Appointment[]>(sampleAppointments);
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState('all');
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [showCalendarView, setShowCalendarView] = useState(false);
+  const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
   
-  // Filter appointments based on search term and active tab
   const filteredAppointments = appointments.filter(appointment => {
     const matchesSearch = 
       (clientsMap[appointment.clientId as keyof typeof clientsMap] || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -143,17 +146,35 @@ const GarageAppointments = () => {
     return matchesSearch && appointment.status === activeTab;
   });
 
+  const handleCreateAppointment = (newAppointment: Omit<Appointment, 'id'>) => {
+    const id = `APT${String(appointments.length + 1).padStart(3, '0')}`;
+    setAppointments(prev => [...prev, { id, ...newAppointment }]);
+  };
+
+  const handleSelectAppointment = (appointment: Appointment) => {
+    setSelectedAppointment(appointment);
+    console.log("Selected appointment:", appointment);
+  };
+
+  const handleStatusChange = (id: string, newStatus: "completed" | "cancelled") => {
+    setAppointments(prev => 
+      prev.map(apt => apt.id === id ? { ...apt, status: newStatus } : apt)
+    );
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-3xl font-bold">Rendez-vous</h2>
-        <Button className="flex items-center gap-2">
+        <Button 
+          className="flex items-center gap-2"
+          onClick={() => setShowCreateDialog(true)}
+        >
           <Plus size={18} />
           <span>Nouveau RDV</span>
         </Button>
       </div>
 
-      {/* Appointment search and filter */}
       <Card>
         <CardHeader className="pb-3">
           <CardTitle>Recherche et filtres</CardTitle>
@@ -185,147 +206,168 @@ const GarageAppointments = () => {
         </CardContent>
       </Card>
 
-      {/* Calendar view button */}
       <div className="flex justify-end">
-        <Button variant="outline" className="flex items-center gap-2">
+        <Button 
+          variant="outline" 
+          className="flex items-center gap-2"
+          onClick={() => setShowCalendarView(!showCalendarView)}
+        >
           <CalendarDays className="h-4 w-4" />
-          <span>Vue Calendrier</span>
+          <span>{showCalendarView ? "Vue Liste" : "Vue Calendrier"}</span>
         </Button>
       </div>
 
-      {/* Appointments list */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle>Liste des rendez-vous</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {filteredAppointments.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">
-              Aucun rendez-vous trouvé. Créez un nouveau rendez-vous avec le bouton "Nouveau RDV".
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>ID</TableHead>
-                    <TableHead>Date & Heure</TableHead>
-                    <TableHead>Client</TableHead>
-                    <TableHead>Véhicule</TableHead>
-                    <TableHead>Raison</TableHead>
-                    <TableHead>Mécanicien</TableHead>
-                    <TableHead>Statut</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredAppointments.map(appointment => (
-                    <TableRow key={appointment.id} className="hover:bg-muted/50">
-                      <TableCell className="font-medium">{appointment.id}</TableCell>
-                      <TableCell>
-                        <div className="flex items-center space-x-2">
-                          <Calendar className="h-4 w-4 text-muted-foreground" />
-                          <div>
-                            <div>{new Date(appointment.date).toLocaleDateString('fr-FR')}</div>
-                            <div className="text-xs text-muted-foreground">{appointment.time} ({appointment.duration} min)</div>
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center space-x-2">
-                          <User className="h-4 w-4 text-muted-foreground" />
-                          <span>{clientsMap[appointment.clientId as keyof typeof clientsMap]}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center space-x-2">
-                          <Car className="h-4 w-4 text-muted-foreground" />
-                          <span>{vehiclesMap[appointment.vehicleId as keyof typeof vehiclesMap]}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell>{appointment.reason}</TableCell>
-                      <TableCell>{mechanicsMap[appointment.mechanicId as keyof typeof mechanicsMap]}</TableCell>
-                      <TableCell>{getStatusBadge(appointment.status)}</TableCell>
-                      <TableCell>
-                        <div className="flex space-x-2">
-                          {appointment.status === 'scheduled' && (
-                            <>
-                              <Button variant="outline" size="icon" title="Marquer comme terminé">
-                                <CheckCircle className="h-4 w-4" />
-                              </Button>
-                              <Button variant="outline" size="icon" title="Annuler">
-                                <XCircle className="h-4 w-4" />
-                              </Button>
-                            </>
-                          )}
-                          <Button variant="outline" size="icon" title="Plus d'options">
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
+      {showCalendarView ? (
+        <AppointmentsCalendar 
+          appointments={appointments}
+          clientsMap={clientsMap}
+          vehiclesMap={vehiclesMap}
+          mechanicsMap={mechanicsMap}
+          onSelectAppointment={handleSelectAppointment}
+        />
+      ) : (
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle>Liste des rendez-vous</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {filteredAppointments.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                Aucun rendez-vous trouvé. Créez un nouveau rendez-vous avec le bouton "Nouveau RDV".
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>ID</TableHead>
+                      <TableHead>Date & Heure</TableHead>
+                      <TableHead>Client</TableHead>
+                      <TableHead>Véhicule</TableHead>
+                      <TableHead>Raison</TableHead>
+                      <TableHead>Mécanicien</TableHead>
+                      <TableHead>Statut</TableHead>
+                      <TableHead>Actions</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredAppointments.map(appointment => (
+                      <TableRow key={appointment.id} className="hover:bg-muted/50">
+                        <TableCell className="font-medium">{appointment.id}</TableCell>
+                        <TableCell>
+                          <div className="flex items-center space-x-2">
+                            <Calendar className="h-4 w-4 text-muted-foreground" />
+                            <div>
+                              <div>{new Date(appointment.date).toLocaleDateString('fr-FR')}</div>
+                              <div className="text-xs text-muted-foreground">{appointment.time} ({appointment.duration} min)</div>
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center space-x-2">
+                            <User className="h-4 w-4 text-muted-foreground" />
+                            <span>{clientsMap[appointment.clientId as keyof typeof clientsMap]}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center space-x-2">
+                            <Car className="h-4 w-4 text-muted-foreground" />
+                            <span>{vehiclesMap[appointment.vehicleId as keyof typeof vehiclesMap]}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell>{appointment.reason}</TableCell>
+                        <TableCell>{mechanicsMap[appointment.mechanicId as keyof typeof mechanicsMap]}</TableCell>
+                        <TableCell>{getStatusBadge(appointment.status)}</TableCell>
+                        <TableCell>
+                          <div className="flex space-x-2">
+                            {appointment.status === 'scheduled' && (
+                              <>
+                                <Button 
+                                  variant="outline" 
+                                  size="icon" 
+                                  title="Marquer comme terminé"
+                                  onClick={() => handleStatusChange(appointment.id, 'completed')}
+                                >
+                                  <CheckCircle className="h-4 w-4" />
+                                </Button>
+                                <Button 
+                                  variant="outline" 
+                                  size="icon" 
+                                  title="Annuler"
+                                  onClick={() => handleStatusChange(appointment.id, 'cancelled')}
+                                >
+                                  <XCircle className="h-4 w-4" />
+                                </Button>
+                              </>
+                            )}
+                            <Button variant="outline" size="icon" title="Plus d'options">
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
-      {/* Today's schedule */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle>Planning du jour</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="border rounded-lg p-4">
-              <div className="flex items-center space-x-2 mb-4">
-                <Clock className="h-5 w-5 text-blue-600" />
-                <h3 className="font-semibold">Jean Martin</h3>
-              </div>
-              <div className="space-y-2">
-                <div className="text-sm border-l-2 border-blue-500 pl-2">
-                  <div className="font-medium">09:00 - 10:00</div>
-                  <div className="text-muted-foreground">Vidange - Renault Clio</div>
+      {!showCalendarView && (
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle>Planning du jour</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="border rounded-lg p-4">
+                <div className="flex items-center space-x-2 mb-4">
+                  <Clock className="h-5 w-5 text-blue-600" />
+                  <h3 className="font-semibold">Jean Martin</h3>
                 </div>
-                <div className="text-sm border-l-2 border-green-500 pl-2">
-                  <div className="font-medium">11:00 - 11:45</div>
-                  <div className="text-muted-foreground">Pneus - Volkswagen Golf</div>
+                <div className="space-y-2">
+                  <div className="text-sm border-l-2 border-blue-500 pl-2">
+                    <div className="font-medium">09:00 - 10:00</div>
+                    <div className="text-muted-foreground">Vidange - Renault Clio</div>
+                  </div>
+                  <div className="text-sm border-l-2 border-green-500 pl-2">
+                    <div className="font-medium">11:00 - 11:45</div>
+                    <div className="text-muted-foreground">Pneus - Volkswagen Golf</div>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="border rounded-lg p-4">
+                <div className="flex items-center space-x-2 mb-4">
+                  <Clock className="h-5 w-5 text-blue-600" />
+                  <h3 className="font-semibold">Thomas Dubois</h3>
+                </div>
+                <div className="space-y-2">
+                  <div className="text-sm border-l-2 border-blue-500 pl-2">
+                    <div className="font-medium">10:30 - 12:30</div>
+                    <div className="text-muted-foreground">Révision - Ford Transit</div>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="border rounded-lg p-4">
+                <div className="flex items-center space-x-2 mb-4">
+                  <Clock className="h-5 w-5 text-blue-600" />
+                  <h3 className="font-semibold">Sophie Moreau</h3>
+                </div>
+                <div className="space-y-2">
+                  <div className="text-sm border-l-2 border-blue-500 pl-2">
+                    <div className="font-medium">13:45 - 15:15</div>
+                    <div className="text-muted-foreground">Diagnostic - Citroen C3</div>
+                  </div>
                 </div>
               </div>
             </div>
-            
-            <div className="border rounded-lg p-4">
-              <div className="flex items-center space-x-2 mb-4">
-                <Clock className="h-5 w-5 text-blue-600" />
-                <h3 className="font-semibold">Thomas Dubois</h3>
-              </div>
-              <div className="space-y-2">
-                <div className="text-sm border-l-2 border-blue-500 pl-2">
-                  <div className="font-medium">10:30 - 12:30</div>
-                  <div className="text-muted-foreground">Révision - Ford Transit</div>
-                </div>
-              </div>
-            </div>
-            
-            <div className="border rounded-lg p-4">
-              <div className="flex items-center space-x-2 mb-4">
-                <Clock className="h-5 w-5 text-blue-600" />
-                <h3 className="font-semibold">Sophie Moreau</h3>
-              </div>
-              <div className="space-y-2">
-                <div className="text-sm border-l-2 border-blue-500 pl-2">
-                  <div className="font-medium">13:45 - 15:15</div>
-                  <div className="text-muted-foreground">Diagnostic - Citroen C3</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
-  );
-};
+          </CardContent>
+        </Card>
+      )}
 
-export default GarageAppointments;
+      <
+
