@@ -5,10 +5,12 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter } from "@/components/ui/sheet";
 import { Vehicle } from './types/garage-types';
 import { Search, Plus, Car, Clock, AlertCircle, MoreHorizontal, Wrench, Calendar } from 'lucide-react';
+import { useToast } from "@/components/ui/use-toast";
 
 // Sample data for vehicles
 const sampleVehicles: Vehicle[] = [
@@ -211,32 +213,99 @@ const GarageVehicles = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
   const [isVehicleDialogOpen, setIsVehicleDialogOpen] = useState(false);
+  const [isNewVehicleSheetOpen, setIsNewVehicleSheetOpen] = useState(false);
+  const [newVehicle, setNewVehicle] = useState<Partial<Vehicle>>({
+    brand: '',
+    model: '',
+    year: new Date().getFullYear(),
+    licensePlate: '',
+    color: '',
+    mileage: 0,
+    clientId: '',
+    status: 'available',
+  });
+  const { toast } = useToast();
 
-  // Filter vehicles based on search term
   const filteredVehicles = vehicles.filter(vehicle => 
-    vehicle.brand.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    vehicle.model.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    vehicle.licensePlate.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    vehicle.clientId.toLowerCase().includes(searchTerm.toLowerCase())
+    vehicle.brand?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    vehicle.model?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    vehicle.licensePlate?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    vehicle.clientId?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // Handle vehicle selection for detail view
   const handleVehicleSelect = (vehicle: Vehicle) => {
     setSelectedVehicle(vehicle);
     setIsVehicleDialogOpen(true);
+  };
+
+  const handleNewVehicleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setNewVehicle(prev => ({
+      ...prev,
+      [name]: name === 'year' || name === 'mileage' ? Number(value) : value
+    }));
+  };
+
+  const handleNewVehicleSubmit = () => {
+    if (!newVehicle.brand || !newVehicle.model || !newVehicle.licensePlate || !newVehicle.clientId) {
+      toast({
+        title: "Champs obligatoires manquants",
+        description: "Veuillez remplir tous les champs obligatoires.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const vehicleId = `VH${Math.floor(Math.random() * 10000).toString().padStart(3, '0')}`;
+    const createdVehicle: Vehicle = {
+      id: vehicleId,
+      clientId: newVehicle.clientId || '',
+      brand: newVehicle.brand || '',
+      model: newVehicle.model || '',
+      year: newVehicle.year || new Date().getFullYear(),
+      licensePlate: newVehicle.licensePlate || '',
+      vin: newVehicle.vin || '',
+      color: newVehicle.color || '',
+      mileage: newVehicle.mileage || 0,
+      nextService: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+      lastService: new Date().toISOString(),
+      status: newVehicle.status || 'available',
+      repairHistory: [],
+    };
+
+    setVehicles(prev => [createdVehicle, ...prev]);
+    
+    setNewVehicle({
+      brand: '',
+      model: '',
+      year: new Date().getFullYear(),
+      licensePlate: '',
+      color: '',
+      mileage: 0,
+      clientId: '',
+      status: 'available',
+    });
+    setIsNewVehicleSheetOpen(false);
+    
+    toast({
+      title: "Véhicule ajouté",
+      description: `${createdVehicle.brand} ${createdVehicle.model} a été ajouté avec succès.`
+    });
   };
 
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-3xl font-bold">Véhicules</h2>
-        <Button className="flex items-center gap-2">
+        <Button 
+          className="flex items-center gap-2"
+          onClick={() => setIsNewVehicleSheetOpen(true)}
+        >
           <Plus size={18} />
           <span>Nouveau Véhicule</span>
         </Button>
       </div>
 
-      {/* Vehicle search and filter */}
       <Card>
         <CardHeader className="pb-3">
           <CardTitle>Recherche et filtres</CardTitle>
@@ -264,7 +333,6 @@ const GarageVehicles = () => {
         </CardContent>
       </Card>
 
-      {/* Vehicles list */}
       <Card>
         <CardHeader className="pb-3">
           <CardTitle>Liste des véhicules</CardTitle>
@@ -299,12 +367,12 @@ const GarageVehicles = () => {
                         </div>
                       </TableCell>
                       <TableCell>{vehicle.clientId}</TableCell>
-                      <TableCell>{vehicle.mileage.toLocaleString('fr-FR')} km</TableCell>
+                      <TableCell>{vehicle.mileage?.toLocaleString('fr-FR')} km</TableCell>
                       <TableCell>{getStatusBadge(vehicle.status)}</TableCell>
                       <TableCell>
                         <div className="flex items-center">
                           <Clock className="mr-2 h-4 w-4 text-muted-foreground" />
-                          <span>{new Date(vehicle.nextServiceDate).toLocaleDateString('fr-FR')}</span>
+                          <span>{new Date(vehicle.nextService || '').toLocaleDateString('fr-FR')}</span>
                         </div>
                       </TableCell>
                       <TableCell>
@@ -329,13 +397,133 @@ const GarageVehicles = () => {
         </CardContent>
       </Card>
 
-      {/* Vehicle detail dialog */}
+      <Sheet open={isNewVehicleSheetOpen} onOpenChange={setIsNewVehicleSheetOpen}>
+        <SheetContent className="sm:max-w-md">
+          <SheetHeader>
+            <SheetTitle>Ajouter un nouveau véhicule</SheetTitle>
+          </SheetHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="clientId" className="text-right">
+                Client ID*
+              </Label>
+              <Input
+                id="clientId"
+                name="clientId"
+                value={newVehicle.clientId}
+                onChange={handleNewVehicleChange}
+                className="col-span-3"
+                required
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="brand" className="text-right">
+                Marque*
+              </Label>
+              <Input
+                id="brand"
+                name="brand"
+                value={newVehicle.brand}
+                onChange={handleNewVehicleChange}
+                className="col-span-3"
+                required
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="model" className="text-right">
+                Modèle*
+              </Label>
+              <Input
+                id="model"
+                name="model"
+                value={newVehicle.model}
+                onChange={handleNewVehicleChange}
+                className="col-span-3"
+                required
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="year" className="text-right">
+                Année
+              </Label>
+              <Input
+                id="year"
+                name="year"
+                type="number"
+                value={newVehicle.year}
+                onChange={handleNewVehicleChange}
+                className="col-span-3"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="licensePlate" className="text-right">
+                Immatriculation*
+              </Label>
+              <Input
+                id="licensePlate"
+                name="licensePlate"
+                value={newVehicle.licensePlate}
+                onChange={handleNewVehicleChange}
+                className="col-span-3"
+                required
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="vin" className="text-right">
+                VIN
+              </Label>
+              <Input
+                id="vin"
+                name="vin"
+                value={newVehicle.vin}
+                onChange={handleNewVehicleChange}
+                className="col-span-3"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="color" className="text-right">
+                Couleur
+              </Label>
+              <Input
+                id="color"
+                name="color"
+                value={newVehicle.color}
+                onChange={handleNewVehicleChange}
+                className="col-span-3"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="mileage" className="text-right">
+                Kilométrage
+              </Label>
+              <Input
+                id="mileage"
+                name="mileage"
+                type="number"
+                value={newVehicle.mileage}
+                onChange={handleNewVehicleChange}
+                className="col-span-3"
+              />
+            </div>
+          </div>
+          <SheetFooter>
+            <Button type="button" variant="outline" onClick={() => setIsNewVehicleSheetOpen(false)}>
+              Annuler
+            </Button>
+            <Button type="button" onClick={handleNewVehicleSubmit}>
+              Sauvegarder
+            </Button>
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
+
       {selectedVehicle && (
         <Dialog open={isVehicleDialogOpen} onOpenChange={setIsVehicleDialogOpen}>
           <DialogContent className="max-w-3xl">
             <DialogHeader>
               <DialogTitle>Détails du véhicule</DialogTitle>
             </DialogHeader>
+            
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <h3 className="text-lg font-semibold mb-4">Informations du véhicule</h3>
@@ -468,3 +656,4 @@ const GarageVehicles = () => {
 };
 
 export default GarageVehicles;
+
