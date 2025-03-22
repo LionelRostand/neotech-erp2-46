@@ -25,7 +25,6 @@ export const renderSubmodule = (moduleId: number, submoduleId: string, submodule
     case 1:
       return renderEmployeesSubmodule(submoduleId, submodule);
     case 2:
-      console.log('Found freight module, rendering submodule:', submoduleId);
       return renderFreightSubmodule(submoduleId, submodule);
     case 3:
       return renderProjectsSubmodule(submoduleId, submodule);
@@ -50,7 +49,6 @@ export const renderSubmodule = (moduleId: number, submoduleId: string, submodule
     case 19:
       return renderSalonSubmodule(submoduleId, submodule);
     default:
-      console.log('No module renderer found for moduleId:', moduleId);
       return <DefaultSubmoduleContent submodule={submodule} />;
   }
 };

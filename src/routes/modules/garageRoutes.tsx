@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Route } from "react-router-dom";
+import { Route, Routes } from "react-router-dom";
 import ModuleLayout from "@/components/module/ModuleLayout";
 import SubmodulePage from "@/components/module/SubmodulePage";
 

@@ -5,7 +5,7 @@ import ModuleLayout from "@/components/module/ModuleLayout";
 import SubmodulePage from "@/components/module/SubmodulePage";
 
 export const FreightRoutes = (
-  <Route key="freight" path="modules/freight" element={<ModuleLayout moduleId={2} />}>
+  <Route key="freight" path="/modules/freight" element={<ModuleLayout moduleId={2} />}>
     <Route index element={<SubmodulePage moduleId={2} submoduleId="freight-dashboard" />} />
     <Route path="dashboard" element={<SubmodulePage moduleId={2} submoduleId="freight-dashboard" />} />
     <Route path="shipments" element={<SubmodulePage moduleId={2} submoduleId="freight-shipments" />} />
