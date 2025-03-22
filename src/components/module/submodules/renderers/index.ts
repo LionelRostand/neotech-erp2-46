@@ -5,10 +5,10 @@ export * from './CrmRenderer';
 export * from './DocumentsRenderer';
 export * from './EmployeesRenderer';
 export * from './FreightRenderer';
+export * from './GarageRenderer';
 export * from './HealthRenderer';
-export * from './LibraryRenderer';
 export * from './MessagesRenderer';
 export * from './ProjectsRenderer';
-export * from './VehicleRentalsRenderer';
+export * from './SalonRenderer';
 export * from './TransportRenderer';
-export * from './SalonRenderer'; // Inclure le renderer du salon
+export * from './VehicleRentalsRenderer';

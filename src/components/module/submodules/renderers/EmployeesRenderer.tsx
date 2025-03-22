@@ -26,35 +26,34 @@ export const renderEmployeesSubmodule = (submoduleId: string, submodule: SubModu
       return <EmployeesDashboard />;
     case 'employees-profiles':
       return <EmployeesProfiles />;
+    case 'employees-contracts':
+      return <EmployeesContracts />;
     case 'employees-badges':
       return <EmployeesBadges />;
-    case 'employees-departments':
-      return <EmployeesDepartments />;
-    case 'employees-hierarchy':
-      return <EmployeesHierarchy />;
-    case 'employees-attendance':
-      return <EmployeesAttendance />;
     case 'employees-timesheet':
       return <EmployeesTimesheet />;
     case 'employees-leaves':
       return <EmployeesLeaves />;
-    case 'employees-reports':
-      return <EmployeesReports />;
-    // New employee submodules
-    case 'employees-absences':
-      return <EmployeesAbsences />;
-    case 'employees-contracts':
-      return <EmployeesContracts />;
-    case 'employees-documents':
-      return <EmployeesDocuments />;
+    case 'employees-attendance':
+      return <EmployeesAttendance />;
+    case 'employees-departments':
+      return <EmployeesDepartments />;
+    case 'employees-hierarchy':
+      return <EmployeesHierarchy />;
+    case 'employees-recruitment':
+      return <EmployeesRecruitment />;
     case 'employees-evaluations':
       return <EmployeesEvaluations />;
     case 'employees-trainings':
       return <EmployeesTrainings />;
     case 'employees-salaries':
       return <EmployeesSalaries />;
-    case 'employees-recruitment':
-      return <EmployeesRecruitment />;
+    case 'employees-documents':
+      return <EmployeesDocuments />;
+    case 'employees-absences':
+      return <EmployeesAbsences />;
+    case 'employees-reports':
+      return <EmployeesReports />;
     case 'employees-settings':
       return <EmployeesSettings />;
     default:

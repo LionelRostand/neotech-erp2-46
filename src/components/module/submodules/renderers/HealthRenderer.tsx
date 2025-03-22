@@ -39,26 +39,26 @@ export const renderHealthSubmodule = (submoduleId: string, submodule: SubModule)
       return <ConsultationsPage />;
     case 'health-medical-records':
       return <MedicalRecordsPage />;
-    case 'health-laboratory':
-      return <LaboratoryPage />;
     case 'health-prescriptions':
       return <PrescriptionsPage />;
+    case 'health-laboratory':
+      return <LaboratoryPage />;
     case 'health-pharmacy':
       return <PharmacyPage />;
-    case 'health-admissions':
-      return <AdmissionsPage />;
-    case 'health-rooms':
-      return <RoomsPage />;
-    case 'health-billing':
-      return <BillingPage />;
     case 'health-insurance':
       return <InsurancePage />;
-    case 'health-stats':
-      return <StatsPage />;
+    case 'health-billing':
+      return <BillingPage />;
+    case 'health-rooms':
+      return <RoomsPage />;
+    case 'health-admissions':
+      return <AdmissionsPage />;
     case 'health-integrations':
       return <IntegrationsPage />;
     case 'health-settings':
       return <SettingsPage />;
+    case 'health-stats':
+      return <StatsPage />;
     default:
       return <DefaultSubmoduleContent submodule={submodule} />;
   }
