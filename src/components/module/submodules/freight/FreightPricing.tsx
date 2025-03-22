@@ -30,7 +30,7 @@ const FreightPricing: React.FC = () => {
   const [editingPromotion, setEditingPromotion] = useState<any>(null);
   
   // Sample pricing models
-  const pricingModels = [
+  const [pricingModels, setPricingModels] = useState([
     { 
       id: 1, 
       name: "Standard", 
@@ -67,10 +67,10 @@ const FreightPricing: React.FC = () => {
       volumeFactor: 10, 
       description: "Tarification pour les expéditions internationales" 
     }
-  ];
+  ]);
   
   // Sample promotions
-  const promotions = [
+  const [promotions, setPromotions] = useState([
     { 
       id: 1, 
       name: "Promotion d'été", 
@@ -101,7 +101,7 @@ const FreightPricing: React.FC = () => {
       status: "active",
       description: "Réduction pour les nouveaux clients"
     }
-  ];
+  ]);
   
   const handleEditPriceModel = (model: any) => {
     setEditingPriceModel(model);
@@ -109,6 +109,7 @@ const FreightPricing: React.FC = () => {
   };
   
   const handleDeletePriceModel = (modelId: number) => {
+    setPricingModels(pricingModels.filter(model => model.id !== modelId));
     toast({
       title: "Modèle de tarification supprimé",
       description: "Le modèle de tarification a été supprimé avec succès.",
@@ -116,11 +117,25 @@ const FreightPricing: React.FC = () => {
   };
   
   const handleSavePriceModel = (model: any) => {
+    if (editingPriceModel) {
+      // Update existing model
+      setPricingModels(pricingModels.map(m => 
+        m.id === editingPriceModel.id ? { ...m, ...model, id: m.id } : m
+      ));
+    } else {
+      // Add new model
+      setPricingModels([...pricingModels, { 
+        ...model, 
+        id: Math.max(0, ...pricingModels.map(m => m.id)) + 1 
+      }]);
+    }
+    
     toast({
       title: editingPriceModel ? "Modèle de tarification modifié" : "Modèle de tarification ajouté",
       description: `Le modèle de tarification "${model.name || 'Nouveau modèle'}" a été ${editingPriceModel ? 'modifié' : 'ajouté'} avec succès.`,
     });
     setEditingPriceModel(null);
+    setShowNewPriceModel(false);
   };
   
   const handleEditPromotion = (promotion: any) => {
@@ -129,6 +144,7 @@ const FreightPricing: React.FC = () => {
   };
   
   const handleDeletePromotion = (promotionId: number) => {
+    setPromotions(promotions.filter(promo => promo.id !== promotionId));
     toast({
       title: "Promotion supprimée",
       description: "La promotion a été supprimée avec succès.",
@@ -136,11 +152,25 @@ const FreightPricing: React.FC = () => {
   };
   
   const handleSavePromotion = (promotion: any) => {
+    if (editingPromotion) {
+      // Update existing promotion
+      setPromotions(promotions.map(p => 
+        p.id === editingPromotion.id ? { ...p, ...promotion, id: p.id } : p
+      ));
+    } else {
+      // Add new promotion
+      setPromotions([...promotions, { 
+        ...promotion, 
+        id: Math.max(0, ...promotions.map(p => p.id)) + 1 
+      }]);
+    }
+    
     toast({
       title: editingPromotion ? "Promotion modifiée" : "Promotion ajoutée",
       description: `La promotion "${promotion.name || 'Nouvelle promotion'}" a été ${editingPromotion ? 'modifiée' : 'ajoutée'} avec succès.`,
     });
     setEditingPromotion(null);
+    setShowNewPromotion(false);
   };
   
   return (
