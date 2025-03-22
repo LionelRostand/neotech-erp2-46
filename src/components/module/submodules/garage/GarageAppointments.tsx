@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -23,7 +24,6 @@ const sampleAppointments: Appointment[] = [
     reason: "Vidange et contrôle général",
     mechanicId: "MECH001",
     status: "scheduled",
-    serviceType: "maintenance",
     notes: "Client habituel, préfère les rendez-vous matinaux."
   },
   {
@@ -36,7 +36,6 @@ const sampleAppointments: Appointment[] = [
     reason: "Révision complète + courroie de distribution",
     mechanicId: "MECH002",
     status: "scheduled",
-    serviceType: "revision",
     notes: "Véhicule professionnel, urgent."
   },
   {
@@ -49,7 +48,6 @@ const sampleAppointments: Appointment[] = [
     reason: "Diagnostic système électrique",
     mechanicId: "MECH003",
     status: "scheduled",
-    serviceType: "diagnostic",
     notes: "Problème démarrage intermittent."
   },
   {
@@ -62,7 +60,6 @@ const sampleAppointments: Appointment[] = [
     reason: "Contrôle pré-technique",
     mechanicId: "MECH001",
     status: "completed",
-    serviceType: "inspection",
     notes: "Contrôle technique prévu le 25/10."
   },
   {
@@ -75,7 +72,6 @@ const sampleAppointments: Appointment[] = [
     reason: "Changement pneus avant",
     mechanicId: "MECH002",
     status: "completed",
-    serviceType: "replacement",
     notes: "Pneus Michelin en stock."
   },
   {
@@ -88,7 +84,6 @@ const sampleAppointments: Appointment[] = [
     reason: "Vérification fuite huile",
     mechanicId: "MECH001",
     status: "cancelled",
-    serviceType: "inspection",
     notes: "Client a reporté au 27/10."
   }
 ];

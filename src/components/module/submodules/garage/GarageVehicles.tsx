@@ -16,7 +16,6 @@ const sampleVehicles: Vehicle[] = [
     id: "VH001",
     clientId: "CL001",
     brand: "Renault",
-    make: "Renault",
     model: "Clio",
     year: 2018,
     licensePlate: "AB-123-CD",
@@ -39,7 +38,6 @@ const sampleVehicles: Vehicle[] = [
         parts: [],
         laborHours: 1.5,
         mechanicId: "MECH001",
-        technicianId: "MECH001",
         status: "completed",
         invoiceId: "INV001"
       },
@@ -52,7 +50,6 @@ const sampleVehicles: Vehicle[] = [
         parts: [],
         laborHours: 2,
         mechanicId: "MECH002",
-        technicianId: "MECH002",
         status: "completed",
         invoiceId: "INV002"
       }
@@ -62,7 +59,6 @@ const sampleVehicles: Vehicle[] = [
     id: "VH002",
     clientId: "CL001",
     brand: "Peugeot",
-    make: "Peugeot",
     model: "308",
     year: 2020,
     licensePlate: "EF-456-GH",
@@ -85,7 +81,6 @@ const sampleVehicles: Vehicle[] = [
         parts: [],
         laborHours: 1.5,
         mechanicId: "MECH001",
-        technicianId: "MECH001",
         status: "completed",
         invoiceId: "INV003"
       }
@@ -95,7 +90,6 @@ const sampleVehicles: Vehicle[] = [
     id: "VH003",
     clientId: "CL002",
     brand: "Citroen",
-    make: "Citroen",
     model: "C3",
     year: 2019,
     licensePlate: "IJ-789-KL",
@@ -118,7 +112,6 @@ const sampleVehicles: Vehicle[] = [
         parts: [],
         laborHours: 2,
         mechanicId: "MECH002",
-        technicianId: "MECH002",
         status: "completed",
         invoiceId: "INV004"
       },
@@ -131,7 +124,6 @@ const sampleVehicles: Vehicle[] = [
         parts: [],
         laborHours: 3,
         mechanicId: "MECH003",
-        technicianId: "MECH003",
         status: "in_progress",
         invoiceId: "INV005"
       }
@@ -141,7 +133,6 @@ const sampleVehicles: Vehicle[] = [
     id: "VH004",
     clientId: "CL003",
     brand: "Ford",
-    make: "Ford",
     model: "Transit",
     year: 2021,
     licensePlate: "MN-012-OP",
@@ -164,7 +155,6 @@ const sampleVehicles: Vehicle[] = [
         parts: [],
         laborHours: 2.5,
         mechanicId: "MECH001",
-        technicianId: "MECH001",
         status: "completed",
         invoiceId: "INV006"
       }
@@ -174,7 +164,6 @@ const sampleVehicles: Vehicle[] = [
     id: "VH005",
     clientId: "CL003",
     brand: "Mercedes",
-    make: "Mercedes",
     model: "Sprinter",
     year: 2020,
     licensePlate: "QR-345-ST",
@@ -197,7 +186,6 @@ const sampleVehicles: Vehicle[] = [
         parts: [],
         laborHours: 6,
         mechanicId: "MECH003",
-        technicianId: "MECH003",
         status: "completed",
         invoiceId: "INV007"
       }
@@ -480,4 +468,3 @@ const GarageVehicles = () => {
 };
 
 export default GarageVehicles;
-

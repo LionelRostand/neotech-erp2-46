@@ -18,27 +18,21 @@ const ModuleLayout: React.FC<ModuleLayoutProps> = ({ moduleId }) => {
     const foundModule = modules.find(m => m.id === moduleId);
     setModule(foundModule);
     
-    console.log('ModuleLayout - Current location:', location.pathname);
-    console.log('ModuleLayout - Found module:', foundModule);
-    
     // Si nous sommes à la racine d'un module, rediriger vers son dashboard s'il existe,
     // sinon vers son premier sous-module
     if (location.pathname === `/modules/${foundModule?.href.split('/')[2]}`) {
       const dashboardSubmodule = foundModule?.submodules.find(sm => sm.id.endsWith('-dashboard'));
       if (dashboardSubmodule) {
-        console.log('Redirecting to dashboard:', dashboardSubmodule.href);
         navigate(`/modules/${foundModule?.href.split('/')[2]}/dashboard`);
       } else if (foundModule?.submodules.length > 0) {
         const firstSubmodule = foundModule.submodules[0];
         const submoduleId = firstSubmodule.id.split('-')[1];
-        console.log('Redirecting to first submodule:', firstSubmodule.href);
         navigate(`/modules/${foundModule?.href.split('/')[2]}/${submoduleId}`);
       }
     }
   }, [moduleId, location.pathname, navigate]);
 
   if (!module) {
-    console.error('Module not found for ID:', moduleId);
     return (
       <DashboardLayout>
         <Card className="p-6">
