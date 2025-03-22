@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Settings, Lock, Globe, Database, Bell, FileText, Mail, CreditCard, Plus, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -793,3 +794,24 @@ const FreightSettings: React.FC = () => {
             <div className="py-4">
               <div className="p-3 border rounded-md bg-gray-50">
                 <p><strong>Utilisateur :</strong> {memberToRevoke.name}</p>
+                <p><strong>Email :</strong> {memberToRevoke.email}</p>
+                <p><strong>Rôle :</strong> {
+                  memberToRevoke.role === "1" ? "Administrateur" : 
+                  memberToRevoke.role === "2" ? "Manager" : 
+                  memberToRevoke.role === "3" ? "Opérateur" : "Comptable"
+                }</p>
+              </div>
+            </div>
+          )}
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsRevokeModalOpen(false)}>Annuler</Button>
+            <Button variant="destructive" onClick={confirmRevokeAccess}>Révoquer l'accès</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+};
+
+export default FreightSettings;
