@@ -13,6 +13,7 @@ import {
   renderDocumentsSubmodule,
   renderVehicleRentalsSubmodule,
   renderTransportSubmodule,
+  renderGarageSubmodule,
   SalonRenderer
 } from './renderers';
 
@@ -68,6 +69,11 @@ export const renderSubmoduleContent = ({ submoduleId, submodule }: RenderSubmodu
   if (submoduleId.startsWith('transport-')) {
     console.log('Delegating to renderTransportSubmodule for:', submoduleId);
     return renderTransportSubmodule(submoduleId, submodule);
+  }
+  
+  if (submoduleId.startsWith('garage-')) {
+    console.log('Delegating to renderGarageSubmodule for:', submoduleId);
+    return renderGarageSubmodule(submoduleId, submodule);
   }
   
   if (submoduleId.startsWith('salon-')) {
