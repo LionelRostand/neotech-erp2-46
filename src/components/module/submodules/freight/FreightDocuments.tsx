@@ -130,6 +130,21 @@ const FreightDocuments: React.FC = () => {
       title: "Document ajouté",
       description: "Le document a été créé avec succès.",
     });
+    setShowNewDocument(false);
+  };
+  
+  const handleEditTemplate = (template: any) => {
+    toast({
+      title: "Modification du modèle",
+      description: `Le modèle "${template.name}" est en cours de modification.`,
+    });
+  };
+  
+  const handleUseTemplate = (template: any) => {
+    toast({
+      title: "Utilisation du modèle",
+      description: `Le modèle "${template.name}" a été utilisé pour créer un nouveau document.`,
+    });
   };
   
   const getTypeIcon = (type: string) => {
@@ -325,18 +340,8 @@ const FreightDocuments: React.FC = () => {
                       <TableCell className="text-right">
                         <ActionButtons 
                           type="template"
-                          onEdit={() => {
-                            toast({
-                              title: "Modification du modèle",
-                              description: `Le modèle "${template.name}" est en cours de modification.`,
-                            });
-                          }}
-                          onUse={() => {
-                            toast({
-                              title: "Utilisation du modèle",
-                              description: `Le modèle "${template.name}" a été utilisé pour créer un nouveau document.`,
-                            });
-                          }}
+                          onEdit={() => handleEditTemplate(template)}
+                          onUse={() => handleUseTemplate(template)}
                         />
                       </TableCell>
                     </TableRow>
