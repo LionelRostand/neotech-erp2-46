@@ -12,6 +12,7 @@ export const FreightRoutes = (
     <Route path="containers" element={<SubmodulePage moduleId={2} submoduleId="freight-containers" />} />
     <Route path="carriers" element={<SubmodulePage moduleId={2} submoduleId="freight-carriers" />} />
     <Route path="tracking" element={<SubmodulePage moduleId={2} submoduleId="freight-tracking" />} />
+    <Route path="tracking/:trackingCode" element={<SubmodulePage moduleId={2} submoduleId="freight-tracking" />} />
     <Route path="pricing" element={<SubmodulePage moduleId={2} submoduleId="freight-pricing" />} />
     <Route path="documents" element={<SubmodulePage moduleId={2} submoduleId="freight-documents" />} />
     <Route path="client-portal" element={<SubmodulePage moduleId={2} submoduleId="freight-client-portal" />} />

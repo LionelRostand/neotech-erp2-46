@@ -12,8 +12,9 @@ import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ShipmentLine } from '@/types/freight';
-import { Download, Printer } from 'lucide-react';
+import { Download, Printer, MapPin } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import QRCode from '../freight/packages/QRCode';
 
 interface DocumentPreviewProps {
   type: 'invoice' | 'delivery';
@@ -50,6 +51,15 @@ const DocumentPreview: React.FC<DocumentPreviewProps> = ({
     toast({
       title: "Téléchargement",
       description: `Le ${type === 'invoice' ? 'facture' : 'bon de livraison'} a été téléchargé.`
+    });
+  };
+
+  const handleTrackShipment = () => {
+    // Ouvrir la page de suivi avec le code de suivi
+    window.open(`/modules/freight/tracking?code=${trackingCode}`, '_blank');
+    toast({
+      title: "Suivi de colis",
+      description: "Ouverture de la page de suivi du colis."
     });
   };
   
@@ -163,12 +173,17 @@ const DocumentPreview: React.FC<DocumentPreviewProps> = ({
               Vous pouvez suivre votre expédition en temps réel en utilisant ce code sur notre portail client ou en scannant le QR code ci-dessous.
             </p>
             
-            <div className="flex justify-center my-4">
-              {/* Simple representation of a QR code */}
-              <div className="border-2 border-black w-32 h-32 flex items-center justify-center p-2">
-                <div className="text-xs text-center">
-                  QR Code pour {trackingCode}
-                </div>
+            <div className="flex justify-center items-center my-4 flex-col">
+              <QRCode value={`/modules/freight/tracking?code=${trackingCode}`} size={150} />
+              <div className="mt-2 text-sm text-center">
+                <p className="font-medium">Scannez pour suivre votre colis</p>
+                <Button 
+                  variant="link" 
+                  className="p-0 h-auto text-sm flex items-center gap-1 mt-1"
+                  onClick={handleTrackShipment}
+                >
+                  <MapPin className="h-3 w-3" /> Suivre sur la carte
+                </Button>
               </div>
             </div>
           </div>
