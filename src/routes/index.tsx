@@ -1,8 +1,8 @@
 
 import React from 'react';
-import { createBrowserRouter } from 'react-router-dom';
+import { createBrowserRouter, RouteObject } from 'react-router-dom';
 import App from '@/App';
-import Dashboard from '@/pages/dashboard';
+import Dashboard from '@/components/dashboard/ModulesList'; // Using ModulesList as the dashboard page
 import { EmployeesRoutes } from './modules/employeesRoutes';
 import { FreightRoutes } from './modules/freightRoutes';
 import { ProjectsRoutes } from './modules/projectsRoutes';
