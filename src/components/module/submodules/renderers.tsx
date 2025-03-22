@@ -113,8 +113,8 @@ import TransportSettings from './transport/TransportSettings';
 // Garage module import
 import GarageDashboard from './garage/GarageDashboard';
 
-// Import correct message components from renderers - not direct imports
-import { renderMessagesSubmodule } from './renderers/MessagesRenderer';
+// Import message components correctly - rename imported function to avoid conflict
+import { renderMessagesSubmodule as messagesRenderer } from './renderers/MessagesRenderer';
 
 // Salon import - using correct import syntax
 import SalonDashboard from './salon/dashboard/SalonDashboard';
@@ -227,8 +227,9 @@ export const renderAccountingSubmodule = (submoduleId: string, submodule: SubMod
   }
 };
 
+// Use imported messages renderer instead of creating a conflicting function
 export const renderMessagesSubmodule = (submoduleId: string, submodule: SubModule) => {
-  return renderMessagesSubmodule(submoduleId, submodule);
+  return messagesRenderer(submoduleId, submodule);
 };
 
 export const renderCompaniesSubmodule = (submoduleId: string, submodule: SubModule) => {
