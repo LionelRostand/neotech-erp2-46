@@ -13,7 +13,6 @@ import GarageInventory from '../garage/GarageInventory';
 import GarageLoyalty from '../garage/GarageLoyalty';
 import GarageSettings from '../garage/GarageSettings';
 
-// Render Garage module
 export const renderGarageSubmodule = (submoduleId: string, submodule: SubModule) => {
   console.log('Rendering garage submodule:', submoduleId);
   
