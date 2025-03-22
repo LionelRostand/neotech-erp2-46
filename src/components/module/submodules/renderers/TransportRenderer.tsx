@@ -11,6 +11,7 @@ import TransportPayments from '../transport/TransportPayments';
 import TransportLoyalty from '../transport/TransportLoyalty';
 import TransportWebBooking from '../transport/TransportWebBooking';
 import TransportSettings from '../transport/TransportSettings';
+import DefaultSubmoduleContent from '../DefaultSubmoduleContent';
 
 export const renderTransportSubmodule = (submoduleId: string, submodule: SubModule) => {
   console.log('renderTransportSubmodule called with:', submoduleId);
