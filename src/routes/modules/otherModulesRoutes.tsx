@@ -6,7 +6,54 @@ import SubmodulePage from "@/components/module/SubmodulePage";
 
 export const OtherModulesRoutes = [
   <Route key="academy" path="/modules/academy/*" element={<ModuleLayout moduleId={4} />} />,
-  <Route key="restaurant" path="/modules/restaurant/*" element={<ModuleLayout moduleId={5} />} />,
+  
+  // Restaurant module routes
+  <Route key="restaurant" path="/modules/restaurant" element={<ModuleLayout moduleId={5} />}>
+    <Route 
+      path="pos" 
+      element={<SubmodulePage moduleId={5} submoduleId="restaurant-pos" />} 
+    />
+    <Route 
+      path="list" 
+      element={<SubmodulePage moduleId={5} submoduleId="restaurant-list" />} 
+    />
+    <Route 
+      path="layout" 
+      element={<SubmodulePage moduleId={5} submoduleId="restaurant-layout" />} 
+    />
+    <Route 
+      path="orders" 
+      element={<SubmodulePage moduleId={5} submoduleId="restaurant-orders" />} 
+    />
+    <Route 
+      path="payments" 
+      element={<SubmodulePage moduleId={5} submoduleId="restaurant-payments" />} 
+    />
+    <Route 
+      path="kitchen" 
+      element={<SubmodulePage moduleId={5} submoduleId="restaurant-kitchen" />} 
+    />
+    <Route 
+      path="clients" 
+      element={<SubmodulePage moduleId={5} submoduleId="restaurant-clients" />} 
+    />
+    <Route 
+      path="reservations" 
+      element={<SubmodulePage moduleId={5} submoduleId="restaurant-reservations" />} 
+    />
+    <Route 
+      path="tickets" 
+      element={<SubmodulePage moduleId={5} submoduleId="restaurant-tickets" />} 
+    />
+    <Route 
+      path="web-reservations" 
+      element={<SubmodulePage moduleId={5} submoduleId="restaurant-web-reservations" />} 
+    />
+    <Route 
+      path="settings" 
+      element={<SubmodulePage moduleId={5} submoduleId="restaurant-settings" />} 
+    />
+  </Route>,
   
   // Garage module routes
   <Route key="garage" path="/modules/garage" element={<ModuleLayout moduleId={6} />}>
