@@ -11,6 +11,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Client } from './types/garage-types';
 import { Search, Plus, Mail, Phone, Car, Clock, MoreHorizontal, CalendarCheck, Bell } from 'lucide-react';
+import AddClientDialog from './dialogs/AddClientDialog';
+import { toast } from 'sonner';
 
 // Sample data for clients
 const sampleClients: Client[] = [
@@ -86,6 +88,7 @@ const GarageClients = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [isClientDialogOpen, setIsClientDialogOpen] = useState(false);
+  const [isAddClientDialogOpen, setIsAddClientDialogOpen] = useState(false);
 
   // Filter clients based on search term
   const filteredClients = clients.filter(client => 
@@ -101,11 +104,20 @@ const GarageClients = () => {
     setIsClientDialogOpen(true);
   };
 
+  // Handle adding a new client
+  const handleAddClient = (newClient: Client) => {
+    setClients(prevClients => [newClient, ...prevClients]);
+    toast("Client ajouté avec succès");
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-3xl font-bold">Clients</h2>
-        <Button className="flex items-center gap-2">
+        <Button 
+          className="flex items-center gap-2"
+          onClick={() => setIsAddClientDialogOpen(true)}
+        >
           <Plus size={18} />
           <span>Nouveau Client</span>
         </Button>
@@ -308,6 +320,13 @@ const GarageClients = () => {
           </DialogContent>
         </Dialog>
       )}
+
+      {/* Add Client Dialog */}
+      <AddClientDialog 
+        isOpen={isAddClientDialogOpen}
+        onClose={() => setIsAddClientDialogOpen(false)}
+        onClientAdded={handleAddClient}
+      />
     </div>
   );
 };
