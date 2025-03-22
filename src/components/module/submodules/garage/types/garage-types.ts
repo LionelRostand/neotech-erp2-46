@@ -3,7 +3,7 @@
 
 export interface Client {
   id: string;
-  name: string;
+  name?: string; // Making name optional since components use firstName/lastName instead
   firstName?: string;
   lastName?: string;
   email: string;
@@ -46,7 +46,7 @@ export interface Appointment {
   time: string;
   duration: number; // in minutes
   status: 'scheduled' | 'confirmed' | 'in_progress' | 'completed' | 'cancelled';
-  serviceType: string;
+  serviceType?: string; // Making serviceType optional since it's missing in the sample data
   reason?: string;
   mechanicId?: string;
   notes?: string;
@@ -57,7 +57,7 @@ export interface RepairHistory {
   vehicleId: string;
   date: string;
   description: string;
-  technicianId: string;
+  technicianId?: string; // Making technicianId optional so mechanicId can be used
   mechanicId?: string;
   cost: number;
   parts: RepairPart[];

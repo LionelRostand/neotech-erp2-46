@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -16,6 +15,7 @@ import { Search, Plus, Mail, Phone, Car, Clock, MoreHorizontal, CalendarCheck, B
 const sampleClients: Client[] = [
   {
     id: "CL001",
+    name: "Jean Dupont",
     firstName: "Jean",
     lastName: "Dupont",
     email: "jean.dupont@example.com",
@@ -29,6 +29,7 @@ const sampleClients: Client[] = [
   },
   {
     id: "CL002",
+    name: "Marie Lambert",
     firstName: "Marie",
     lastName: "Lambert",
     email: "marie.lambert@example.com",
@@ -42,6 +43,7 @@ const sampleClients: Client[] = [
   },
   {
     id: "CL003",
+    name: "Pierre Martin",
     firstName: "Pierre",
     lastName: "Martin",
     email: "pierre.martin@example.com",
@@ -55,6 +57,7 @@ const sampleClients: Client[] = [
   },
   {
     id: "CL004",
+    name: "Sophie Bernard",
     firstName: "Sophie",
     lastName: "Bernard",
     email: "sophie.bernard@example.com",
@@ -68,6 +71,7 @@ const sampleClients: Client[] = [
   },
   {
     id: "CL005",
+    name: "Thomas Leclerc",
     firstName: "Thomas",
     lastName: "Leclerc",
     email: "thomas.leclerc@example.com",
