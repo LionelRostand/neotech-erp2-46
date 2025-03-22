@@ -1,6 +1,6 @@
 
-import React, { useState } from 'react';
-import { Settings, Lock, Globe, Database, Bell, FileText, Mail, CreditCard, Plus, X } from 'lucide-react';
+import React from 'react';
+import { Settings, Lock, Globe, Database, Bell, FileText, Mail, CreditCard, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
@@ -8,95 +8,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
-import { toast } from 'sonner';
-
-interface StaffMember {
-  id: string;
-  name: string;
-  email: string;
-  role: string;
-  active: boolean;
-}
 
 const FreightSettings: React.FC = () => {
-  const [staffRoles, setStaffRoles] = useState([
-    { id: "1", name: "Administrateur" },
-    { id: "2", name: "Manager" },
-    { id: "3", name: "Opérateur" },
-    { id: "4", name: "Comptable" },
-    { id: "5", name: "Lecture seule" }
-  ]);
-
-  const [staffMembers, setStaffMembers] = useState<StaffMember[]>([
-    { 
-      id: "1", 
-      name: "Jean Dupont", 
-      email: "jean@neotech-transport.com",
-      role: "1", // Administrateur
-      active: true
-    },
-    { 
-      id: "2", 
-      name: "Marie Martin", 
-      email: "marie@neotech-transport.com",
-      role: "2", // Réceptionniste
-      active: true
-    },
-    { 
-      id: "3", 
-      name: "Pierre Dubois", 
-      email: "pierre@neotech-transport.com",
-      role: "3", // Opérateur
-      active: true
-    },
-    { 
-      id: "4", 
-      name: "Sophie Legrand", 
-      email: "sophie@neotech-transport.com",
-      role: "3", // Comptable
-      active: true
-    }
-  ]);
-
-  // Add state for editing modal
-  const [editingMember, setEditingMember] = useState<StaffMember | null>(null);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [isRevokeModalOpen, setIsRevokeModalOpen] = useState(false);
-  const [memberToRevoke, setMemberToRevoke] = useState<StaffMember | null>(null);
-  
-  // Handle edit user
-  const handleEditUser = (member: StaffMember) => {
-    setEditingMember({...member});
-    setIsEditModalOpen(true);
-  };
-  
-  // Handle save edited user
-  const handleSaveEditedUser = () => {
-    if (editingMember) {
-      setStaffMembers(staffMembers.map(member => 
-        member.id === editingMember.id ? editingMember : member
-      ));
-      setIsEditModalOpen(false);
-      toast.success(`Les informations de ${editingMember.name} ont été mises à jour`);
-    }
-  };
-  
-  // Handle revoke access
-  const handleRevokeAccess = (member: StaffMember) => {
-    setMemberToRevoke(member);
-    setIsRevokeModalOpen(true);
-  };
-  
-  // Confirm revoke access
-  const confirmRevokeAccess = () => {
-    if (memberToRevoke) {
-      setStaffMembers(staffMembers.filter(member => member.id !== memberToRevoke.id));
-      setIsRevokeModalOpen(false);
-      toast.success(`L'accès de ${memberToRevoke.name} a été révoqué`);
-    }
-  };
-
   return (
     <div className="space-y-6">
       <Tabs defaultValue="general">
@@ -572,19 +485,42 @@ const FreightSettings: React.FC = () => {
                         </tr>
                       </thead>
                       <tbody>
-                        {staffMembers.map(member => (
-                          <tr key={member.id} className="border-b">
-                            <td className="p-3">{member.name}</td>
-                            <td className="p-3">{member.email}</td>
-                            <td className="p-3">{member.role === "1" ? "Administrateur" : 
-                                                member.role === "2" ? "Manager" : 
-                                                member.role === "3" ? "Opérateur" : "Comptable"}</td>
-                            <td className="text-right p-3">
-                              <Button variant="ghost" size="sm" onClick={() => handleEditUser(member)}>Modifier</Button>
-                              <Button variant="ghost" size="sm" onClick={() => handleRevokeAccess(member)}>Révoquer</Button>
-                            </td>
-                          </tr>
-                        ))}
+                        <tr className="border-b">
+                          <td className="p-3">Jean Dupont</td>
+                          <td className="p-3">jean@neotech-transport.com</td>
+                          <td className="p-3">Administrateur</td>
+                          <td className="text-right p-3">
+                            <Button variant="ghost" size="sm">Modifier</Button>
+                            <Button variant="ghost" size="sm">Révoquer</Button>
+                          </td>
+                        </tr>
+                        <tr className="border-b">
+                          <td className="p-3">Marie Martin</td>
+                          <td className="p-3">marie@neotech-transport.com</td>
+                          <td className="p-3">Manager</td>
+                          <td className="text-right p-3">
+                            <Button variant="ghost" size="sm">Modifier</Button>
+                            <Button variant="ghost" size="sm">Révoquer</Button>
+                          </td>
+                        </tr>
+                        <tr className="border-b">
+                          <td className="p-3">Pierre Dubois</td>
+                          <td className="p-3">pierre@neotech-transport.com</td>
+                          <td className="p-3">Opérateur</td>
+                          <td className="text-right p-3">
+                            <Button variant="ghost" size="sm">Modifier</Button>
+                            <Button variant="ghost" size="sm">Révoquer</Button>
+                          </td>
+                        </tr>
+                        <tr className="border-b">
+                          <td className="p-3">Sophie Legrand</td>
+                          <td className="p-3">sophie@neotech-transport.com</td>
+                          <td className="p-3">Comptable</td>
+                          <td className="text-right p-3">
+                            <Button variant="ghost" size="sm">Modifier</Button>
+                            <Button variant="ghost" size="sm">Révoquer</Button>
+                          </td>
+                        </tr>
                       </tbody>
                     </table>
                   </div>
@@ -712,104 +648,6 @@ const FreightSettings: React.FC = () => {
           </Card>
         </TabsContent>
       </Tabs>
-
-      {/* Edit User Modal */}
-      <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Modifier un utilisateur</DialogTitle>
-            <DialogDescription>
-              Modifiez les informations et permissions de l'utilisateur.
-            </DialogDescription>
-          </DialogHeader>
-          
-          {editingMember && (
-            <div className="space-y-4 py-4">
-              <div className="space-y-2">
-                <Label htmlFor="user-name">Nom</Label>
-                <Input 
-                  id="user-name" 
-                  value={editingMember.name}
-                  onChange={(e) => setEditingMember({...editingMember, name: e.target.value})}
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="user-email">Email</Label>
-                <Input 
-                  id="user-email" 
-                  type="email"
-                  value={editingMember.email}
-                  onChange={(e) => setEditingMember({...editingMember, email: e.target.value})}
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="user-role">Rôle</Label>
-                <Select 
-                  value={editingMember.role}
-                  onValueChange={(value) => setEditingMember({...editingMember, role: value})}
-                >
-                  <SelectTrigger id="user-role">
-                    <SelectValue placeholder="Sélectionner un rôle" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="1">Administrateur</SelectItem>
-                    <SelectItem value="2">Manager</SelectItem>
-                    <SelectItem value="3">Opérateur</SelectItem>
-                    <SelectItem value="4">Comptable</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div className="flex items-center space-x-2">
-                <Switch 
-                  id="user-active" 
-                  checked={editingMember.active}
-                  onCheckedChange={(checked) => setEditingMember({...editingMember, active: checked})}
-                />
-                <Label htmlFor="user-active">Utilisateur actif</Label>
-              </div>
-            </div>
-          )}
-          
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsEditModalOpen(false)}>Annuler</Button>
-            <Button onClick={handleSaveEditedUser}>Enregistrer</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Revoke Access Modal */}
-      <Dialog open={isRevokeModalOpen} onOpenChange={setIsRevokeModalOpen}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Révoquer l'accès</DialogTitle>
-            <DialogDescription>
-              Êtes-vous sûr de vouloir révoquer l'accès de cet utilisateur ? Cette action ne peut pas être annulée.
-            </DialogDescription>
-          </DialogHeader>
-          
-          {memberToRevoke && (
-            <div className="py-4">
-              <div className="p-3 border rounded-md bg-gray-50">
-                <p><strong>Utilisateur :</strong> {memberToRevoke.name}</p>
-                <p><strong>Email :</strong> {memberToRevoke.email}</p>
-                <p><strong>Rôle :</strong> {
-                  memberToRevoke.role === "1" ? "Administrateur" : 
-                  memberToRevoke.role === "2" ? "Manager" : 
-                  memberToRevoke.role === "3" ? "Opérateur" : "Comptable"
-                }</p>
-              </div>
-            </div>
-          )}
-          
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsRevokeModalOpen(false)}>Annuler</Button>
-            <Button variant="destructive" onClick={confirmRevokeAccess}>Révoquer l'accès</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };

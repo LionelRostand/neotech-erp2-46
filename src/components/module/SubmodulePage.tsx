@@ -2,7 +2,7 @@
 import React from 'react';
 import { modules } from '@/data/modules';
 import SubmoduleHeader from './submodules/SubmoduleHeader';
-import { renderSubmodule } from './submodules/SubmoduleRenderer';
+import { renderSubmoduleContent } from './submodules/SubmoduleRenderer';
 
 interface SubmodulePageProps {
   moduleId: number;
@@ -26,7 +26,7 @@ const SubmodulePage: React.FC<SubmodulePageProps> = ({ moduleId, submoduleId }) 
         module={module}
         submodule={submodule}
       />
-      {renderSubmodule(moduleId, submoduleId, submodule)}
+      {renderSubmoduleContent({ submoduleId, submodule })}
     </div>
   );
 };

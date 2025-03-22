@@ -1,54 +1,87 @@
 
 import React from 'react';
-import { SubModule } from "@/data/types/modules";
-import DefaultSubmoduleContent from './DefaultSubmoduleContent';
-import { 
+import { SubModule } from '@/data/types/modules';
+import {
   renderEmployeesSubmodule,
   renderFreightSubmodule,
   renderProjectsSubmodule,
   renderAccountingSubmodule,
-  renderCrmSubmodule,
-  renderCompaniesSubmodule,
-  renderDocumentsSubmodule,
   renderMessagesSubmodule,
+  renderCompaniesSubmodule,
+  renderCrmSubmodule,
   renderHealthSubmodule,
-  renderTransportSubmodule,
+  renderDocumentsSubmodule,
   renderVehicleRentalsSubmodule,
+  renderTransportSubmodule,
   renderGarageSubmodule,
-  renderSalonSubmodule
+  SalonRenderer
 } from './renderers';
 
-export const renderSubmodule = (moduleId: number, submoduleId: string, submodule: SubModule) => {
-  console.log(`Rendering submodule: ${submoduleId} for module: ${moduleId}`);
+interface RenderSubmoduleContentProps {
+  submoduleId: string;
+  submodule: SubModule;
+}
+
+export const renderSubmoduleContent = ({ submoduleId, submodule }: RenderSubmoduleContentProps) => {
+  console.log('renderSubmoduleContent called with:', submoduleId);
   
-  switch (moduleId) {
-    case 1:
-      return renderEmployeesSubmodule(submoduleId, submodule);
-    case 2:
-      return renderFreightSubmodule(submoduleId, submodule);
-    case 3:
-      return renderProjectsSubmodule(submoduleId, submodule);
-    case 4:
-      return renderCompaniesSubmodule(submoduleId, submodule);
-    case 5:
-      return renderCrmSubmodule(submoduleId, submodule);
-    case 6:
-      return renderGarageSubmodule(submoduleId, submodule);
-    case 7:
-      return renderTransportSubmodule(submoduleId, submodule);
-    case 8:
-      return renderHealthSubmodule(submoduleId, submodule);
-    case 9:
-      return renderVehicleRentalsSubmodule(submoduleId, submodule);
-    case 11:
-      return renderAccountingSubmodule(submoduleId, submodule);
-    case 17:
-      return renderMessagesSubmodule(submoduleId, submodule);
-    case 18:
-      return renderDocumentsSubmodule(submoduleId, submodule);
-    case 19:
-      return renderSalonSubmodule(submoduleId, submodule);
-    default:
-      return <DefaultSubmoduleContent submodule={submodule} />;
+  // Use specific renderer based on module prefix
+  if (submoduleId.startsWith('employees-')) {
+    return renderEmployeesSubmodule(submoduleId, submodule);
   }
+  
+  if (submoduleId.startsWith('freight-')) {
+    return renderFreightSubmodule(submoduleId, submodule);
+  }
+  
+  if (submoduleId.startsWith('projects-')) {
+    return renderProjectsSubmodule(submoduleId, submodule);
+  }
+  
+  if (submoduleId.startsWith('accounting-')) {
+    return renderAccountingSubmodule(submoduleId, submodule);
+  }
+  
+  if (submoduleId.startsWith('messages-')) {
+    return renderMessagesSubmodule(submoduleId, submodule);
+  }
+  
+  if (submoduleId.startsWith('companies-')) {
+    return renderCompaniesSubmodule(submoduleId, submodule);
+  }
+  
+  if (submoduleId.startsWith('crm-')) {
+    return renderCrmSubmodule(submoduleId, submodule);
+  }
+  
+  if (submoduleId.startsWith('health-')) {
+    return renderHealthSubmodule(submoduleId, submodule);
+  }
+  
+  if (submoduleId.startsWith('documents-')) {
+    return renderDocumentsSubmodule(submoduleId, submodule);
+  }
+  
+  if (submoduleId.startsWith('rentals-')) {
+    return renderVehicleRentalsSubmodule(submoduleId, submodule);
+  }
+  
+  if (submoduleId.startsWith('transport-')) {
+    console.log('Delegating to renderTransportSubmodule for:', submoduleId);
+    return renderTransportSubmodule(submoduleId, submodule);
+  }
+  
+  if (submoduleId.startsWith('garage-')) {
+    console.log('Delegating to renderGarageSubmodule for:', submoduleId);
+    return renderGarageSubmodule(submoduleId, submodule);
+  }
+  
+  if (submoduleId.startsWith('salon-')) {
+    console.log('Delegating to SalonRenderer for:', submoduleId);
+    return <SalonRenderer submoduleId={submoduleId} submodule={submodule} />;
+  }
+  
+  // Fallback to default content rendering
+  console.warn('No renderer found for:', submoduleId);
+  return <div>Module content not implemented: {submoduleId}</div>;
 };
