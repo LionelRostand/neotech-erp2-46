@@ -4,26 +4,38 @@
 export interface Client {
   id: string;
   name: string;
+  firstName?: string;
+  lastName?: string;
   email: string;
   phone: string;
   address?: string;
   createdAt: string;
   vehicles?: string[]; // IDs of vehicles
   loyaltyPoints?: number;
+  lastVisit?: string;
+  totalSpent?: number;
+  notes?: string;
 }
 
 export interface Vehicle {
   id: string;
   make: string;
   model: string;
+  brand?: string;
   year: number;
   licensePlate: string;
   vin?: string;
   clientId: string;
   color?: string;
   lastService?: string;
-  status: 'available' | 'in_service' | 'waiting_parts' | 'completed';
+  lastServiceDate?: string;
+  nextServiceDate?: string;
+  technicalControlDate?: string;
+  insuranceExpiryDate?: string;
+  status: 'available' | 'in_service' | 'waiting_parts' | 'completed' | 'active' | 'inactive' | 'in_repair';
   mileage?: number;
+  notes?: string;
+  repairHistory?: RepairHistory[];
 }
 
 export interface Appointment {
@@ -35,6 +47,8 @@ export interface Appointment {
   duration: number; // in minutes
   status: 'scheduled' | 'confirmed' | 'in_progress' | 'completed' | 'cancelled';
   serviceType: string;
+  reason?: string;
+  mechanicId?: string;
   notes?: string;
 }
 
@@ -44,10 +58,12 @@ export interface RepairHistory {
   date: string;
   description: string;
   technicianId: string;
+  mechanicId?: string;
   cost: number;
   parts: RepairPart[];
   laborHours: number;
   status: 'pending' | 'in_progress' | 'completed' | 'waiting_parts';
+  invoiceId?: string;
 }
 
 export interface RepairPart {
@@ -65,11 +81,13 @@ export interface Invoice {
   repairId?: string;
   date: string;
   dueDate: string;
-  items: InvoiceItem[];
-  subtotal: number;
+  items?: InvoiceItem[];
+  subtotal?: number;
   tax: number;
   total: number;
-  status: 'pending' | 'paid' | 'overdue' | 'cancelled';
+  amount?: number;
+  status: 'pending' | 'paid' | 'overdue' | 'cancelled' | 'unpaid' | 'partial';
+  paymentMethod?: 'card' | 'cash' | 'transfer' | 'other';
   notes?: string;
 }
 
