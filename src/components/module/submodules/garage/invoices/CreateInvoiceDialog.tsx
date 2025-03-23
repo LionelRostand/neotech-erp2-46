@@ -217,7 +217,7 @@ const CreateInvoiceDialog: React.FC<CreateInvoiceDialogProps> = ({
                   <SelectValue placeholder="Sélectionner une réparation" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Aucune réparation liée</SelectItem>
+                  <SelectItem value="no-repair">Aucune réparation liée</SelectItem>
                   {repairs.filter(r => r.status === "completed" || r.status === "in_progress").map(repair => (
                     <SelectItem key={repair.id} value={repair.id}>
                       {repair.id} - {repair.description.substring(0, 30)}{repair.description.length > 30 ? '...' : ''}
