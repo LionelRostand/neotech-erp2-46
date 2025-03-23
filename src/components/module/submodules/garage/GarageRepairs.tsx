@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -12,85 +13,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import CreateRepairDialog from './repairs/CreateRepairDialog';
-
-// Sample data for repairs
-const repairs = [
-  {
-    id: "RP001",
-    vehicleId: "VH003",
-    vehicleName: "Citroen C3",
-    clientId: "CL002",
-    clientName: "Marie Lambert",
-    mechanicName: "Thomas Dubois",
-    startDate: "2023-10-18",
-    estimatedEndDate: "2023-10-20",
-    status: "in_progress",
-    description: "Diagnostic système démarrage + réparation",
-    progress: 60,
-    estimatedCost: 320.45,
-    licensePlate: "IJ-789-KL"
-  },
-  {
-    id: "RP002",
-    vehicleId: "VH007",
-    vehicleName: "Volkswagen Golf",
-    clientId: "CL004",
-    clientName: "Sophie Bernard",
-    mechanicName: "Jean Martin",
-    startDate: "2023-10-15",
-    estimatedEndDate: "2023-10-17",
-    status: "awaiting_parts",
-    description: "Remplacement système d'embrayage",
-    progress: 25,
-    estimatedCost: 580.00,
-    licensePlate: "UV-678-WX"
-  },
-  {
-    id: "RP003",
-    vehicleId: "VH005",
-    vehicleName: "Mercedes Sprinter",
-    clientId: "CL003",
-    clientName: "Pierre Martin",
-    mechanicName: "Thomas Dubois",
-    startDate: "2023-10-16",
-    estimatedEndDate: "2023-10-19",
-    status: "awaiting_approval",
-    description: "Remplacement injecteurs diesel",
-    progress: 0,
-    estimatedCost: 950.75,
-    licensePlate: "QR-345-ST"
-  },
-  {
-    id: "RP004",
-    vehicleId: "VH002",
-    vehicleName: "Peugeot 308",
-    clientId: "CL001",
-    clientName: "Jean Dupont",
-    mechanicName: "Jean Martin",
-    startDate: "2023-10-10",
-    estimatedEndDate: "2023-10-11",
-    status: "completed",
-    description: "Vidange + contrôle niveaux",
-    progress: 100,
-    estimatedCost: 145.30,
-    licensePlate: "EF-456-GH"
-  },
-  {
-    id: "RP005",
-    vehicleId: "VH008",
-    vehicleName: "Toyota Yaris",
-    clientId: "CL005",
-    clientName: "Thomas Leclerc",
-    mechanicName: "Thomas Dubois",
-    startDate: "2023-10-12",
-    estimatedEndDate: "2023-10-14",
-    status: "completed",
-    description: "Remplacement plaquettes et disques de frein",
-    progress: 100,
-    estimatedCost: 390.50,
-    licensePlate: "YZ-901-AB"
-  }
-];
+import { repairs as repairsData, Repair } from './repairs/repairsData';
 
 const getStatusBadge = (status: string) => {
   switch (status) {
@@ -109,10 +32,36 @@ const getStatusBadge = (status: string) => {
   }
 };
 
+// Sample data for clients, vehicles and mechanics
+const clientsMap: Record<string, string> = {
+  "CL001": "Jean Dupont",
+  "CL002": "Marie Lambert",
+  "CL003": "Pierre Martin",
+  "CL004": "Sophie Bernard",
+  "CL005": "Thomas Leclerc"
+};
+
+const vehiclesMap: Record<string, string> = {
+  "VH001": "Renault Clio",
+  "VH002": "Peugeot 308",
+  "VH003": "Citroen C3",
+  "VH004": "Ford Fiesta",
+  "VH005": "Mercedes Sprinter",
+  "VH006": "Fiat 500",
+  "VH007": "Volkswagen Golf",
+  "VH008": "Toyota Yaris"
+};
+
+const mechanicsMap: Record<string, string> = {
+  "MECH001": "Jean Martin",
+  "MECH002": "Thomas Dubois",
+  "MECH003": "Sophie Moreau"
+};
+
 const GarageRepairs = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [showCreateDialog, setShowCreateDialog] = useState(false);
-  const [repairs, setRepairs] = useState(window.repairs || []);
+  const [repairs, setRepairs] = useState<Repair[]>(repairsData);
   
   // Filter repairs based on search term
   const filteredRepairs = repairs.filter(repair => 
@@ -123,9 +72,9 @@ const GarageRepairs = () => {
     repair.id.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleCreateRepair = (newRepair: any) => {
+  const handleCreateRepair = (newRepair: Omit<Repair, 'id'>) => {
     const id = `RP${String(repairs.length + 1).padStart(3, '0')}`;
-    const repair = { id, ...newRepair };
+    const repair = { id, ...newRepair } as Repair;
     setRepairs(prev => [...prev, repair]);
     toast.success(`Réparation ${id} créée avec succès`);
   };
