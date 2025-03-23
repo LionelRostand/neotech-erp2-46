@@ -47,7 +47,7 @@ const ShipmentList: React.FC<ShipmentListProps> = ({ filter }) => {
       case 'delivered': return 'Livrée';
       case 'cancelled': return 'Annulée';
       case 'delayed': return 'Retardée';
-      default: return status;
+      default: return status || 'Inconnu';
     }
   };
 

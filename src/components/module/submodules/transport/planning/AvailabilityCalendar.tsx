@@ -20,7 +20,7 @@ const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({
   onAddMaintenance
 }) => {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
-  const [selectedVehicleType, setSelectedVehicleType] = useState<string | undefined>(undefined);
+  const [selectedVehicleType, setSelectedVehicleType] = useState<string | undefined>("all");
   
   // Filter vehicles by type if a type is selected
   const filteredVehicles = selectedVehicleType && selectedVehicleType !== "all"
@@ -95,7 +95,6 @@ const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({
                   <SelectValue placeholder="Tous les types" />
                 </SelectTrigger>
                 <SelectContent>
-                  {/* Fixed empty value to use "all" instead */}
                   <SelectItem value="all">Tous les types</SelectItem>
                   <SelectItem value="sedan">Berline</SelectItem>
                   <SelectItem value="suv">SUV</SelectItem>

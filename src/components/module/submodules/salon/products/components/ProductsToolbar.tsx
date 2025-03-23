@@ -34,8 +34,8 @@ const ProductsToolbar: React.FC<ProductsToolbarProps> = ({
   const { products } = useProducts();
   const { toast } = useToast();
   
-  // Extract unique categories from products
-  const categories = ['all', ...Array.from(new Set(products.map(product => product.category)))];
+  // Extract unique categories from products and ensure no empty strings
+  const categories = ['all', ...Array.from(new Set(products.map(product => product.category || 'non-catégorisé')))];
 
   const handleAddProduct = () => {
     toast({

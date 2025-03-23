@@ -18,7 +18,7 @@ const DriverAvailabilityTab: React.FC<DriverAvailabilityTabProps> = ({
   drivers
 }) => {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
-  const [selectedDriverType, setSelectedDriverType] = useState<string | undefined>(undefined);
+  const [selectedDriverType, setSelectedDriverType] = useState<string | undefined>("all");
   const [noteDialogOpen, setNoteDialogOpen] = useState(false);
   const [selectedDriver, setSelectedDriver] = useState<TransportDriver | null>(null);
   
@@ -66,7 +66,6 @@ const DriverAvailabilityTab: React.FC<DriverAvailabilityTabProps> = ({
                   <SelectValue placeholder="Toutes les compétences" />
                 </SelectTrigger>
                 <SelectContent>
-                  {/* Fixed empty value to use "all" instead */}
                   <SelectItem value="all">Toutes les compétences</SelectItem>
                   <SelectItem value="luxury">VIP/Luxe</SelectItem>
                   <SelectItem value="airport">Aéroport</SelectItem>

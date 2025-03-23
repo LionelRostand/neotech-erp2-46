@@ -20,8 +20,8 @@ interface CreateLeaveRequestDialogProps {
 export const CreateLeaveRequestDialog: React.FC<CreateLeaveRequestDialogProps> = ({ isOpen, onClose }) => {
   const [startDate, setStartDate] = useState<Date>();
   const [endDate, setEndDate] = useState<Date>();
-  const [leaveType, setLeaveType] = useState('');
-  const [halfDay, setHalfDay] = useState('');
+  const [leaveType, setLeaveType] = useState('conges-payes');
+  const [halfDay, setHalfDay] = useState('full');
   
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
