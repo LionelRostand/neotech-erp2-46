@@ -389,7 +389,7 @@ const GarageClients = () => {
       {/* Create Appointment Dialog */}
       {selectedClient && (
         <CreateAppointmentDialog
-          isOpen={isAppointmentDialogOpen}
+          open={isAppointmentDialogOpen}
           onOpenChange={setIsAppointmentDialogOpen}
           clientId={selectedClient.id}
           clientName={`${selectedClient.firstName} ${selectedClient.lastName}`}
