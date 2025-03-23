@@ -15,7 +15,9 @@ export const repairs = [
     description: "Diagnostic système démarrage + réparation",
     progress: 60,
     estimatedCost: 320.45,
-    licensePlate: "IJ-789-KL"
+    licensePlate: "IJ-789-KL",
+    notes: "Client a signalé des difficultés au démarrage par temps froid",
+    actualCost: null
   },
   {
     id: "RP002",
@@ -31,7 +33,9 @@ export const repairs = [
     description: "Remplacement système d'embrayage",
     progress: 25,
     estimatedCost: 580.00,
-    licensePlate: "UV-678-WX"
+    licensePlate: "UV-678-WX",
+    notes: "En attente de la pièce de rechange principale",
+    actualCost: null
   },
   {
     id: "RP003",
@@ -47,7 +51,9 @@ export const repairs = [
     description: "Remplacement injecteurs diesel",
     progress: 0,
     estimatedCost: 950.75,
-    licensePlate: "QR-345-ST"
+    licensePlate: "QR-345-ST",
+    notes: "Devis envoyé au client, en attente de validation",
+    actualCost: null
   },
   {
     id: "RP004",
@@ -63,7 +69,9 @@ export const repairs = [
     description: "Vidange + contrôle niveaux",
     progress: 100,
     estimatedCost: 145.30,
-    licensePlate: "EF-456-GH"
+    licensePlate: "EF-456-GH",
+    notes: "Entretien standard effectué sans problème particulier",
+    actualCost: 145.30
   },
   {
     id: "RP005",
@@ -79,7 +87,9 @@ export const repairs = [
     description: "Remplacement plaquettes et disques de frein",
     progress: 100,
     estimatedCost: 390.50,
-    licensePlate: "YZ-901-AB"
+    licensePlate: "YZ-901-AB",
+    notes: "Usure importante des disques, remplacement complet effectué",
+    actualCost: 405.75
   }
 ];
 
@@ -99,4 +109,6 @@ export interface Repair {
   progress: number;
   estimatedCost: number;
   licensePlate: string;
+  notes?: string; // Added as optional property
+  actualCost?: number | null; // Added as optional property
 }
