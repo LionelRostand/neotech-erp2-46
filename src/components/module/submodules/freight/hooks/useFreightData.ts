@@ -152,11 +152,9 @@ export const useTrackingEvents = (packageId?: string) => {
         let data;
         
         if (packageId) {
-          data = await eventsCollection.query([{
-            field: 'packageId',
-            operator: '==',
-            value: packageId
-          }]);
+          // Comme nous n'avons pas de méthode query directe, utilisons getAll puis filtrons
+          const allEvents = await eventsCollection.getAll();
+          data = allEvents.filter(event => event.packageId === packageId);
         } else {
           data = await eventsCollection.getAll();
         }

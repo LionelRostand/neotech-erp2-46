@@ -85,31 +85,27 @@ export const updateShipment = async (id: string, shipmentData: Partial<Shipment>
 export const deleteShipment = async (id: string) => {
   try {
     const shipmentFirestore = useFirestore(COLLECTIONS.FREIGHT.SHIPMENTS);
-    await shipmentFirestore.delete(id);
+    await shipmentFirestore.remove(id);  // Utilisez remove au lieu de delete
     
     // Supprimer également les données de suivi associées
     const trackingFirestore = useFirestore(COLLECTIONS.FREIGHT.TRACKING);
-    const trackingData = await trackingFirestore.query([{
-      field: 'shipmentId',
-      operator: '==',
-      value: id
-    }]);
+    // Comme nous n'avons pas de méthode query, récupérons tous les documents et filtrons côté client
+    const trackingAll = await trackingFirestore.getAll();
+    const trackingData = trackingAll.filter(doc => doc.shipmentId === id);
     
     // Supprimer les documents de suivi
     for (const doc of trackingData) {
-      await trackingFirestore.delete(doc.id);
+      await trackingFirestore.remove(doc.id);  // Utilisez remove au lieu de delete
     }
     
     // Supprimer les événements de suivi
     const eventsFirestore = useFirestore(COLLECTIONS.FREIGHT.TRACKING_EVENTS);
-    const eventsData = await eventsFirestore.query([{
-      field: 'shipmentId',
-      operator: '==',
-      value: id
-    }]);
+    // Comme nous n'avons pas de méthode query, récupérons tous les documents et filtrons côté client
+    const eventsAll = await eventsFirestore.getAll();
+    const eventsData = eventsAll.filter(event => event.shipmentId === id);
     
     for (const event of eventsData) {
-      await eventsFirestore.delete(event.id);
+      await eventsFirestore.remove(event.id);  // Utilisez remove au lieu de delete
     }
     
     toast({
@@ -141,11 +137,9 @@ export const addTrackingEvent = async (trackingEvent: Omit<TrackingEvent, 'id'>)
     
     // Mettre à jour le statut de suivi principal
     const trackingFirestore = useFirestore(COLLECTIONS.FREIGHT.TRACKING);
-    const trackingData = await trackingFirestore.query([{
-      field: 'packageId',
-      operator: '==',
-      value: trackingEvent.packageId
-    }]);
+    // Comme nous n'avons pas de méthode query, récupérons tous les documents et filtrons côté client
+    const trackingAll = await trackingFirestore.getAll();
+    const trackingData = trackingAll.filter(doc => doc.packageId === trackingEvent.packageId);
     
     if (trackingData.length > 0) {
       await trackingFirestore.update(trackingData[0].id, {
@@ -158,11 +152,9 @@ export const addTrackingEvent = async (trackingEvent: Omit<TrackingEvent, 'id'>)
     // Mettre à jour l'expédition si le statut est terminal (livré)
     if (trackingEvent.status === 'delivered') {
       const shipmentFirestore = useFirestore(COLLECTIONS.FREIGHT.SHIPMENTS);
-      const shipmentsData = await shipmentFirestore.query([{
-        field: 'trackingNumber',
-        operator: '==',
-        value: trackingEvent.packageId
-      }]);
+      // Comme nous n'avons pas de méthode query, récupérons tous les documents et filtrons côté client
+      const shipmentsAll = await shipmentFirestore.getAll();
+      const shipmentsData = shipmentsAll.filter(doc => doc.trackingNumber === trackingEvent.packageId);
       
       if (shipmentsData.length > 0) {
         await shipmentFirestore.update(shipmentsData[0].id, {
