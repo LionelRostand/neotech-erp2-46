@@ -21,9 +21,10 @@ import {
 import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
+import { Appointment } from '../types/garage-types';
 
 interface CreateAppointmentDialogProps {
-  isOpen: boolean;
+  open: boolean; // Changed from isOpen to open
   onOpenChange: (open: boolean) => void;
   clientId: string;
   clientName: string;
@@ -46,7 +47,7 @@ const timeSlots = [
 ];
 
 const CreateAppointmentDialog: React.FC<CreateAppointmentDialogProps> = ({
-  isOpen,
+  open, // Changed from isOpen to open
   onOpenChange,
   clientId,
   clientName,
@@ -81,7 +82,7 @@ const CreateAppointmentDialog: React.FC<CreateAppointmentDialogProps> = ({
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>Prendre un rendez-vous</DialogTitle>

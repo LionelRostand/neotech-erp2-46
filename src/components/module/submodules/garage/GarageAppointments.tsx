@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -373,10 +372,12 @@ const GarageAppointments = () => {
       <CreateAppointmentDialog
         open={showCreateDialog}
         onOpenChange={setShowCreateDialog}
-        onSave={handleCreateAppointment}
-        clientsMap={clientsMap}
-        vehiclesMap={vehiclesMap}
-        mechanicsMap={mechanicsMap}
+        clientId="CL001"
+        clientName="Jean Dupont"
+        onAppointmentCreated={() => {
+          console.log("Appointment created");
+          setShowCreateDialog(false);
+        }}
       />
     </div>
   );

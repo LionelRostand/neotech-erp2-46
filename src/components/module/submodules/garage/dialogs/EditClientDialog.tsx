@@ -38,9 +38,9 @@ const EditClientDialog: React.FC<EditClientDialogProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    // Removed updatedAt as it's not in the Client type
     onClientUpdated({
-      ...formData,
-      updatedAt: new Date().toISOString()
+      ...formData
     });
   };
 
