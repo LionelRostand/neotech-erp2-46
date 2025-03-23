@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -12,6 +13,8 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import CreateRepairDialog from './repairs/CreateRepairDialog';
+import RepairDetailsDialog from './repairs/RepairDetailsDialog';
+import UpdateRepairDialog from './repairs/UpdateRepairDialog';
 import { Repair } from './repairs/repairsData';
 import { useSafeFirestore } from '@/hooks/use-safe-firestore';
 
@@ -133,14 +136,34 @@ const GarageRepairs = () => {
     setSelectedRepair(repair);
     setShowDetailsDialog(true);
     console.log("Viewing details for repair:", repair.id);
-    toast.info(`Affichage des détails de la réparation ${repair.id}`);
+    toast.success(`Affichage des détails de la réparation ${repair.id}`);
   };
 
   const handleUpdateRepair = (repair: Repair) => {
     setSelectedRepair(repair);
     setShowUpdateDialog(true);
     console.log("Updating repair:", repair.id);
-    toast.info(`Mise à jour de la réparation ${repair.id}`);
+    toast.success(`Mise à jour de la réparation ${repair.id}`);
+  };
+
+  const handleUpdateSubmit = (updatedRepair: Repair) => {
+    // Update the repair in the repairs array
+    const updatedRepairs = repairs.map(repair => 
+      repair.id === updatedRepair.id ? updatedRepair : repair
+    );
+    setRepairs(updatedRepairs);
+    
+    // Update in Firestore
+    repairsCollection.update(updatedRepair.id, updatedRepair)
+      .then(() => {
+        toast.success(`Réparation ${updatedRepair.id} mise à jour avec succès`);
+      })
+      .catch((error) => {
+        console.error("Error updating repair:", error);
+        toast.error("Erreur lors de la mise à jour de la réparation");
+      });
+    
+    setShowUpdateDialog(false);
   };
 
   const handleCreateInvoice = (repair: Repair) => {
@@ -369,6 +392,25 @@ const GarageRepairs = () => {
         vehiclesMap={vehiclesMap}
         mechanicsMap={mechanicsMap}
       />
+
+      {selectedRepair && (
+        <>
+          <RepairDetailsDialog
+            open={showDetailsDialog}
+            onOpenChange={setShowDetailsDialog}
+            repair={selectedRepair}
+            mechanicsMap={mechanicsMap}
+          />
+          
+          <UpdateRepairDialog
+            open={showUpdateDialog}
+            onOpenChange={setShowUpdateDialog}
+            repair={selectedRepair}
+            onUpdate={handleUpdateSubmit}
+            mechanicsMap={mechanicsMap}
+          />
+        </>
+      )}
     </div>
   );
 };
