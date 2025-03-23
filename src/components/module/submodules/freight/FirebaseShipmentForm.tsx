@@ -1,12 +1,11 @@
 
 import React, { useState } from 'react';
-import { useFirestore } from '@/hooks/use-firestore';
-import { COLLECTIONS } from '@/lib/firebase-collections';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 import { ShipmentLine } from '@/types/freight';
 import { useNavigate } from 'react-router-dom';
+import { createShipment } from './services/shipmentService';
 
 interface ShipmentData {
   reference: string;
@@ -15,14 +14,15 @@ interface ShipmentData {
   origin: string;
   destination: string;
   carrier: string;
+  carrierName: string;
   scheduledDate: string;
-  estimatedDelivery: string;
+  estimatedDeliveryDate: string;
   status: string;
   totalWeight: number;
-  totalPrice: number;
-  trackingCode: string;
+  totalPrice?: number;
+  trackingNumber?: string;
   notes?: string;
-  shipmentLines: ShipmentLine[];
+  lines: ShipmentLine[];
 }
 
 interface FirebaseShipmentFormProps {
@@ -34,7 +34,6 @@ const FirebaseShipmentForm: React.FC<FirebaseShipmentFormProps> = ({
   shipmentData, 
   onSuccess 
 }) => {
-  const { add, loading, error } = useFirestore(COLLECTIONS.FREIGHT.SHIPMENTS);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
 
@@ -42,36 +41,22 @@ const FirebaseShipmentForm: React.FC<FirebaseShipmentFormProps> = ({
     setIsSubmitting(true);
     
     try {
-      // Créer un document pour l'expédition
-      const result = await add({
-        ...shipmentData,
-        createdBy: "user_id", // Remplacer par l'ID de l'utilisateur authentifié
-        createdAt: new Date()
-      });
-      
-      toast({
-        title: "Expédition créée",
-        description: `L'expédition a été enregistrée avec succès. Référence: ${shipmentData.reference}`,
-      });
-      
-      // Créer un document pour le suivi
-      const trackingFirestore = useFirestore(COLLECTIONS.FREIGHT.TRACKING);
-      await trackingFirestore.add({
-        shipmentId: result.id,
-        trackingCode: shipmentData.trackingCode,
-        status: 'pending',
-        statusHistory: [
-          {
-            status: 'pending',
-            location: shipmentData.origin,
-            timestamp: new Date(),
-            note: 'Expédition créée'
-          }
-        ],
-        currentLocation: shipmentData.origin,
+      // Utiliser notre nouveau service pour créer l'expédition
+      await createShipment({
+        reference: shipmentData.reference,
         origin: shipmentData.origin,
         destination: shipmentData.destination,
-        estimatedDelivery: shipmentData.estimatedDelivery
+        customer: shipmentData.customer,
+        carrier: shipmentData.carrier,
+        carrierName: shipmentData.carrierName,
+        shipmentType: shipmentData.shipmentType as 'import' | 'export' | 'local' | 'international',
+        status: shipmentData.status as 'draft' | 'confirmed' | 'in_transit' | 'delivered' | 'cancelled' | 'delayed',
+        trackingNumber: shipmentData.trackingNumber,
+        scheduledDate: shipmentData.scheduledDate,
+        estimatedDeliveryDate: shipmentData.estimatedDeliveryDate,
+        lines: shipmentData.lines,
+        totalWeight: shipmentData.totalWeight,
+        notes: shipmentData.notes
       });
       
       // Si un callback de succès est fourni, l'appeler
@@ -95,12 +80,6 @@ const FirebaseShipmentForm: React.FC<FirebaseShipmentFormProps> = ({
 
   return (
     <div className="mt-4">
-      {error && (
-        <div className="bg-red-50 text-red-700 p-3 rounded-md mb-4">
-          Erreur: {error.message}
-        </div>
-      )}
-      
       <Button 
         onClick={handleSubmit}
         disabled={isSubmitting}

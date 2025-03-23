@@ -220,6 +220,21 @@ service cloud.firestore {
       allow write: if isAuthenticated() && (hasPermission('freight', 'write') || isAdmin());
     }
     
+    match /freight_tracking_events/{document=**} {
+      allow read: if true; // Accessible publiquement pour le suivi client
+      allow write: if isAuthenticated() && (hasPermission('freight', 'write') || isAdmin());
+    }
+    
+    match /freight_packages/{document=**} {
+      allow read: if isAuthenticated() && (hasPermission('freight', 'read') || isAdmin());
+      allow write: if isAuthenticated() && (hasPermission('freight', 'write') || isAdmin());
+    }
+    
+    match /freight_routes/{document=**} {
+      allow read: if isAuthenticated() && (hasPermission('freight', 'read') || isAdmin());
+      allow write: if isAuthenticated() && (hasPermission('freight', 'write') || isAdmin());
+    }
+    
     match /freight_pricing/{document=**} {
       allow read: if isAuthenticated() && (hasPermission('freight', 'read') || isAdmin());
       allow write: if isAuthenticated() && (hasPermission('freight', 'write') || isAdmin());
@@ -227,6 +242,16 @@ service cloud.firestore {
     
     match /freight_documents/{document=**} {
       allow read: if isAuthenticated() && (hasPermission('freight', 'read') || isAdmin());
+      allow write: if isAuthenticated() && (hasPermission('freight', 'write') || isAdmin());
+    }
+    
+    match /freight_package_types/{document=**} {
+      allow read: if isAuthenticated() && (hasPermission('freight', 'read') || isAdmin());
+      allow write: if isAuthenticated() && (hasPermission('freight', 'write') || isAdmin());
+    }
+    
+    match /freight_client_portal/{document=**} {
+      allow read: if true; // Accessible publiquement pour les clients
       allow write: if isAuthenticated() && (hasPermission('freight', 'write') || isAdmin());
     }
     

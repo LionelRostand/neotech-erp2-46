@@ -1,3 +1,4 @@
+
 // Firestore collections names
 export const USERS = 'users';
 export const MODULES = 'modules';
@@ -59,6 +60,19 @@ export const TRANSPORT_LOYALTY_REWARDS = 'transport_loyalty_rewards';
 export const TRANSPORT_LOYALTY_TRANSACTIONS = 'transport_loyalty_transactions';
 export const TRANSPORT_LOYALTY_SETTINGS = 'transport_loyalty_settings';
 
+// Ajout des collections spécifiques pour le module Freight
+export const FREIGHT_SHIPMENTS = 'freight_shipments';
+export const FREIGHT_CONTAINERS = 'freight_containers';
+export const FREIGHT_CARRIERS = 'freight_carriers';
+export const FREIGHT_TRACKING = 'freight_tracking';
+export const FREIGHT_PACKAGES = 'freight_packages';
+export const FREIGHT_ROUTES = 'freight_routes';
+export const FREIGHT_PRICING = 'freight_pricing';
+export const FREIGHT_DOCUMENTS = 'freight_documents';
+export const FREIGHT_TRACKING_EVENTS = 'freight_tracking_events';
+export const FREIGHT_PACKAGE_TYPES = 'freight_package_types';
+export const FREIGHT_CLIENT_PORTAL = 'freight_client_portal';
+
 // Messages subcollections
 export const MESSAGES = {
   ROOT: 'messages',
@@ -84,10 +98,19 @@ export const ACCOUNTING_COLLECTIONS = {
   PERMISSIONS: 'accounting_permissions'
 };
 
-// Freight subcollections
+// Freight subcollections - Étendre pour inclure toutes les collections du module
 export const FREIGHT_COLLECTIONS = {
   SHIPMENTS: 'freight_shipments',
-  TRACKING: 'freight_tracking'
+  CONTAINERS: 'freight_containers',
+  CARRIERS: 'freight_carriers',
+  TRACKING: 'freight_tracking',
+  TRACKING_EVENTS: 'freight_tracking_events',
+  PACKAGES: 'freight_packages',
+  ROUTES: 'freight_routes',
+  PRICING: 'freight_pricing',
+  DOCUMENTS: 'freight_documents',
+  PACKAGE_TYPES: 'freight_package_types',
+  CLIENT_PORTAL: 'freight_client_portal'
 };
 
 // CRM subcollections
