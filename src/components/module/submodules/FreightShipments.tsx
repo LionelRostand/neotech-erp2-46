@@ -48,6 +48,22 @@ const FreightShipments: React.FC = () => {
       description: "Le fichier d'export sera bientôt disponible au téléchargement.",
     });
   };
+  
+  const handlePrint = () => {
+    toast({
+      title: "Impression en cours",
+      description: "Préparation des documents pour impression...",
+    });
+    
+    // Simuler une impression après un délai
+    setTimeout(() => {
+      toast({
+        title: "Prêt à imprimer",
+        description: "Les documents sont prêts pour l'impression.",
+      });
+      window.print();
+    }, 1500);
+  };
 
   return (
     <>
@@ -71,7 +87,7 @@ const FreightShipments: React.FC = () => {
               <Download className="mr-2 h-4 w-4" />
               Exporter
             </Button>
-            <Button variant="outline">
+            <Button variant="outline" onClick={handlePrint}>
               <Printer className="mr-2 h-4 w-4" />
               Imprimer
             </Button>

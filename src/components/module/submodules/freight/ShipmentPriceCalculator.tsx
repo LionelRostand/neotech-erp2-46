@@ -113,6 +113,18 @@ const ShipmentPriceCalculator: React.FC<ShipmentPriceCalculatorProps> = ({
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
+              <Label htmlFor="basePrice">Prix de base (€)</Label>
+              <Input 
+                id="basePrice" 
+                type="number" 
+                min="0" 
+                step="0.01"
+                value={basePrice}
+                onChange={(e) => setBasePrice(Number(e.target.value))}
+              />
+            </div>
+            
+            <div className="space-y-2">
               <Label htmlFor="zone">Zone géographique</Label>
               <Select 
                 value={zone} 

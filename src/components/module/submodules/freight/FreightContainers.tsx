@@ -1,446 +1,300 @@
+
 import React, { useState } from 'react';
-import { Package, Search, Plus, Filter, SortDesc, Calendar, History, Thermometer } from 'lucide-react';
+import { Search, Filter, Plus, ArrowUpDown, Eye, Truck, MoreHorizontal } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Label } from '@/components/ui/label';
-import StatCard from '@/components/StatCard';
-import { useToast } from '@/hooks/use-toast';
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from '@/components/ui/select';
+import { 
+  Table, 
+  TableBody, 
+  TableCell, 
+  TableHead, 
+  TableHeader, 
+  TableRow 
+} from '@/components/ui/table';
+import StatusBadge from '@/components/StatusBadge';
+import { toast } from 'sonner';
 
 const FreightContainers: React.FC = () => {
-  const [showNewContainer, setShowNewContainer] = useState(false);
-  const { toast } = useToast();
-
-  // Sample data for containers
+  const [searchTerm, setSearchTerm] = useState('');
+  const [sortField, setSortField] = useState<string | null>(null);
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+  const [filterStatus, setFilterStatus] = useState<string>('all');
+  
+  // Sample data
   const containers = [
-    { id: 'CONT-1001', type: '40HC', location: 'Port de Marseille', status: 'Disponible', lastUsed: '2023-10-01', temperature: null },
-    { id: 'CONT-1002', type: '20GP', location: 'Terminal Le Havre', status: 'En transit', lastUsed: '2023-10-05', temperature: null },
-    { id: 'CONT-1003', type: '45HC', location: 'Entrepôt Paris', status: 'En maintenance', lastUsed: '2023-09-20', temperature: null },
-    { id: 'CONT-1004', type: '40GP', location: 'Port de Marseille', status: 'Réservé', lastUsed: '2023-10-08', temperature: null },
-    { id: 'CONT-1005', type: '20GP', location: 'Terminal Le Havre', status: 'Disponible', lastUsed: '2023-09-28', temperature: null },
-    { id: 'CONT-1006', type: '40RF', location: 'Terminal Lyon', status: 'En transit', lastUsed: '2023-10-12', temperature: '-18°C' },
-    { id: 'CONT-1007', type: '20RF', location: 'Port de Bordeaux', status: 'Disponible', lastUsed: '2023-10-07', temperature: '4°C' },
-  ];
-
-  // Container history data
-  const containerHistory = [
-    { date: '2023-10-01', event: 'Déchargement', location: 'Port de Marseille', shipment: 'EXP-1030' },
-    { date: '2023-09-25', event: 'Transit', location: 'Méditerranée', shipment: 'EXP-1030' },
-    { date: '2023-09-20', event: 'Chargement', location: 'Port d\'Alexandrie', shipment: 'EXP-1030' },
-    { date: '2023-09-15', event: 'Maintenance', location: 'Port d\'Alexandrie', shipment: '-' },
-    { date: '2023-09-01', event: 'Déchargement', location: 'Port d\'Alexandrie', shipment: 'EXP-1025' },
-  ];
-
-  // Stats for the dashboard
-  const statsData = [
-    {
-      title: "Total conteneurs",
-      value: "125",
-      icon: <Package className="h-8 w-8 text-blue-500" />,
-      description: "Flotte totale de conteneurs"
+    { 
+      id: 'CONT001', 
+      number: 'CON12345678', 
+      type: '40ft High Cube', 
+      status: 'in_transit', 
+      location: 'Marseille, FR', 
+      destination: 'Lyon, FR',
+      client: 'MariTrans SAS',
+      departure: '2023-10-15',
+      arrival: '2023-10-18'
     },
-    {
-      title: "Disponibles",
-      value: "68",
-      icon: <Package className="h-8 w-8 text-green-500" />,
-      description: "Conteneurs disponibles"
+    { 
+      id: 'CONT002', 
+      number: 'CON23456789', 
+      type: '20ft Standard', 
+      status: 'delivered', 
+      location: 'Paris, FR', 
+      destination: 'Paris, FR',
+      client: 'Logistique Express',
+      departure: '2023-10-10',
+      arrival: '2023-10-12'
     },
-    {
-      title: "En transit",
-      value: "42",
-      icon: <Package className="h-8 w-8 text-amber-500" />,
-      description: "Conteneurs en mouvement"
+    { 
+      id: 'CONT003', 
+      number: 'CON34567890', 
+      type: '40ft Refrigerated', 
+      status: 'loading', 
+      location: 'Le Havre, FR', 
+      destination: 'Bordeaux, FR',
+      client: 'FruitFresh SA',
+      departure: '2023-10-18',
+      arrival: '2023-10-20'
     },
-    {
-      title: "Maintenance",
-      value: "15",
-      icon: <Package className="h-8 w-8 text-red-500" />,
-      description: "Conteneurs en réparation"
-    }
+    { 
+      id: 'CONT004', 
+      number: 'CON45678901', 
+      type: '20ft Open Top', 
+      status: 'customs', 
+      location: 'Calais, FR', 
+      destination: 'Lille, FR',
+      client: 'BuildAll Construction',
+      departure: '2023-10-14',
+      arrival: '2023-10-16'
+    },
+    { 
+      id: 'CONT005', 
+      number: 'CON56789012', 
+      type: '40ft Flat Rack', 
+      status: 'ready', 
+      location: 'Toulouse, FR', 
+      destination: 'Montpellier, FR',
+      client: 'MachineWorks Inc',
+      departure: '2023-10-19',
+      arrival: '2023-10-21'
+    },
   ];
-
-  const getStatusColor = (status: string) => {
+  
+  const getStatusColor = (status: string): "success" | "warning" | "danger" => {
     switch (status) {
-      case 'Disponible':
-        return 'bg-green-100 text-green-800';
-      case 'En transit':
-        return 'bg-amber-100 text-amber-800';
-      case 'En maintenance':
-        return 'bg-red-100 text-red-800';
-      case 'Réservé':
-        return 'bg-blue-100 text-blue-800';
+      case 'delivered':
+        return 'success';
+      case 'in_transit':
+      case 'loading':
+      case 'ready':
+        return 'warning';
+      case 'customs':
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'danger';
     }
   };
 
-  const handleNewContainer = () => {
-    setShowNewContainer(false);
-    toast({
-      title: "Conteneur ajouté",
-      description: "Le nouveau conteneur a été ajouté avec succès.",
-    });
+  const getStatusText = (status: string): string => {
+    switch (status) {
+      case 'in_transit': return 'En transit';
+      case 'delivered': return 'Livré';
+      case 'loading': return 'En chargement';
+      case 'customs': return 'En douane';
+      case 'ready': return 'Prêt';
+      default: return status;
+    }
   };
-
-  const [selectedContainer, setSelectedContainer] = useState<string | null>(null);
-
-  const openContainerDetails = (containerId: string) => {
-    setSelectedContainer(containerId);
+  
+  // Filter and sort containers
+  const filteredContainers = containers
+    .filter(container => {
+      const matchesSearch = 
+        container.number.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        container.client.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        container.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        container.destination.toLowerCase().includes(searchTerm.toLowerCase());
+        
+      const matchesStatus = filterStatus === 'all' || container.status === filterStatus;
+      
+      return matchesSearch && matchesStatus;
+    })
+    .sort((a, b) => {
+      if (!sortField) return 0;
+      
+      const fieldA = a[sortField as keyof typeof a];
+      const fieldB = b[sortField as keyof typeof b];
+      
+      if (typeof fieldA === 'string' && typeof fieldB === 'string') {
+        return sortOrder === 'asc' 
+          ? fieldA.localeCompare(fieldB) 
+          : fieldB.localeCompare(fieldA);
+      }
+      
+      return 0;
+    });
+  
+  const handleSort = (field: string) => {
+    if (sortField === field) {
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortOrder('asc');
+    }
+  };
+  
+  const handleViewTracking = (containerId: string) => {
+    toast.info(`Suivi du conteneur ${containerId} en cours de chargement...`);
+    // Navigation vers la page de suivi avec le conteneur sélectionné
+    window.location.href = `/modules/freight/tracking?container=${containerId}`;
+  };
+  
+  const handleViewDetails = (containerId: string) => {
+    toast.info(`Détails du conteneur ${containerId}`);
+    // Ici, vous pourriez ouvrir une boîte de dialogue ou naviguer vers une page de détails
   };
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {statsData.map((stat, index) => (
-          <StatCard
-            key={index}
-            title={stat.title}
-            value={stat.value}
-            icon={stat.icon}
-            description={stat.description}
-          />
-        ))}
-      </div>
-
-      <div className="bg-white rounded-lg shadow p-6">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-xl font-bold">Gestion des Conteneurs</h2>
-          <Dialog open={showNewContainer} onOpenChange={setShowNewContainer}>
-            <DialogTrigger asChild>
-              <Button>
-                <Plus className="mr-2 h-4 w-4" />
-                Nouveau Conteneur
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[425px]">
-              <DialogHeader>
-                <DialogTitle>Ajouter un nouveau conteneur</DialogTitle>
-              </DialogHeader>
-              <div className="grid gap-4 py-4">
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="container-id" className="text-right">
-                    ID
-                  </Label>
-                  <Input id="container-id" defaultValue="CONT-" className="col-span-3" />
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="container-type" className="text-right">
-                    Type
-                  </Label>
-                  <Select defaultValue="40HC">
-                    <SelectTrigger className="col-span-3" id="container-type">
-                      <SelectValue placeholder="Sélectionner un type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="20GP">20' Standard (20GP)</SelectItem>
-                      <SelectItem value="40GP">40' Standard (40GP)</SelectItem>
-                      <SelectItem value="40HC">40' High Cube (40HC)</SelectItem>
-                      <SelectItem value="45HC">45' High Cube (45HC)</SelectItem>
-                      <SelectItem value="20RF">20' Réfrigéré (20RF)</SelectItem>
-                      <SelectItem value="40RF">40' Réfrigéré (40RF)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="container-location" className="text-right">
-                    Emplacement
-                  </Label>
-                  <Input id="container-location" defaultValue="" className="col-span-3" />
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="container-status" className="text-right">
-                    Statut
-                  </Label>
-                  <Select defaultValue="disponible">
-                    <SelectTrigger className="col-span-3" id="container-status">
-                      <SelectValue placeholder="Sélectionner un statut" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="disponible">Disponible</SelectItem>
-                      <SelectItem value="en_transit">En transit</SelectItem>
-                      <SelectItem value="en_maintenance">En maintenance</SelectItem>
-                      <SelectItem value="reserve">Réservé</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <div className="flex justify-end">
-                <Button onClick={handleNewContainer}>Ajouter le conteneur</Button>
-              </div>
-            </DialogContent>
-          </Dialog>
-        </div>
-
-        <div className="flex justify-between items-center mb-4">
-          <div className="flex gap-2">
-            <Button variant="outline" size="sm">
-              <Filter className="mr-2 h-4 w-4" />
-              Filtrer
-            </Button>
-            <Button variant="outline" size="sm">
-              <SortDesc className="mr-2 h-4 w-4" />
-              Trier
-            </Button>
-          </div>
-          <div className="relative">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-400" />
-            <Input
-              type="search"
-              placeholder="Rechercher un conteneur..."
-              className="pl-8 w-[250px]"
-            />
-          </div>
-        </div>
-
-        <Tabs defaultValue="all">
-          <TabsList className="mb-4">
-            <TabsTrigger value="all">Tous</TabsTrigger>
-            <TabsTrigger value="available">Disponibles</TabsTrigger>
-            <TabsTrigger value="transit">En transit</TabsTrigger>
-            <TabsTrigger value="refrigerated">Réfrigérés</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="all">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>ID</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Emplacement</TableHead>
-                  <TableHead>Statut</TableHead>
-                  <TableHead>Température</TableHead>
-                  <TableHead>Dernière utilisation</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {containers.map((container) => (
-                  <TableRow key={container.id}>
-                    <TableCell className="font-medium">{container.id}</TableCell>
-                    <TableCell>{container.type}</TableCell>
-                    <TableCell>{container.location}</TableCell>
-                    <TableCell>
-                      <Badge className={getStatusColor(container.status)}>
-                        {container.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      {container.temperature ? (
-                        <span className="flex items-center">
-                          <Thermometer className="h-4 w-4 mr-1 text-blue-500" />
-                          {container.temperature}
-                        </span>
-                      ) : (
-                        "-"
-                      )}
-                    </TableCell>
-                    <TableCell>{container.lastUsed}</TableCell>
-                    <TableCell className="text-right">
-                      <Button 
-                        variant="ghost" 
-                        size="sm"
-                        onClick={() => openContainerDetails(container.id)}
-                      >
-                        Détails
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TabsContent>
-          
-          <TabsContent value="available">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>ID</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Emplacement</TableHead>
-                  <TableHead>Dernière utilisation</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {containers
-                  .filter(container => container.status === 'Disponible')
-                  .map((container) => (
-                    <TableRow key={container.id}>
-                      <TableCell className="font-medium">{container.id}</TableCell>
-                      <TableCell>{container.type}</TableCell>
-                      <TableCell>{container.location}</TableCell>
-                      <TableCell>{container.lastUsed}</TableCell>
-                      <TableCell className="text-right">
-                        <Button variant="ghost" size="sm">Détails</Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-              </TableBody>
-            </Table>
-          </TabsContent>
-          
-          {/* Other tabs have similar structure */}
-          <TabsContent value="transit">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>ID</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Emplacement actuel</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {containers
-                  .filter(container => container.status === 'En transit')
-                  .map((container) => (
-                    <TableRow key={container.id}>
-                      <TableCell className="font-medium">{container.id}</TableCell>
-                      <TableCell>{container.type}</TableCell>
-                      <TableCell>{container.location}</TableCell>
-                      <TableCell className="text-right">
-                        <Button variant="ghost" size="sm">Suivi</Button>
-                        <Button variant="ghost" size="sm">Détails</Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-              </TableBody>
-            </Table>
-          </TabsContent>
-          
-          <TabsContent value="refrigerated">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>ID</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Emplacement</TableHead>
-                  <TableHead>Température</TableHead>
-                  <TableHead>Statut</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {containers
-                  .filter(container => container.type.includes('RF'))
-                  .map((container) => (
-                    <TableRow key={container.id}>
-                      <TableCell className="font-medium">{container.id}</TableCell>
-                      <TableCell>{container.type}</TableCell>
-                      <TableCell>{container.location}</TableCell>
-                      <TableCell>
-                        <span className="flex items-center">
-                          <Thermometer className="h-4 w-4 mr-1 text-blue-500" />
-                          {container.temperature || 'N/A'}
-                        </span>
-                      </TableCell>
-                      <TableCell>
-                        <Badge className={getStatusColor(container.status)}>
-                          {container.status}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <Button variant="ghost" size="sm">Détails</Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-              </TableBody>
-            </Table>
-          </TabsContent>
-        </Tabs>
+      <div className="flex justify-between items-center">
+        <h1 className="text-2xl font-bold">Gestion des Conteneurs</h1>
+        <Button>
+          <Plus className="mr-2 h-4 w-4" />
+          <span>Nouveau Conteneur</span>
+        </Button>
       </div>
       
-      {selectedContainer && (
-        <Dialog open={!!selectedContainer} onOpenChange={() => setSelectedContainer(null)}>
-          <DialogContent className="sm:max-w-[700px]">
-            <DialogHeader>
-              <DialogTitle>Détails du Conteneur {selectedContainer}</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Informations générales</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-sm font-medium">Type:</p>
-                      <p>40' High Cube (40HC)</p>
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium">Statut:</p>
-                      <Badge className="bg-green-100 text-green-800">Disponible</Badge>
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium">Emplacement actuel:</p>
-                      <p>Port de Marseille</p>
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium">Dernière utilisation:</p>
-                      <p>2023-10-01</p>
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium">Dimensions:</p>
-                      <p>L: 12.19m x l: 2.44m x H: 2.90m</p>
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium">Capacité:</p>
-                      <p>76.3 m³ / 26,780 kg</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle>Conteneurs</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col md:flex-row justify-between mb-4 space-y-2 md:space-y-0">
+            <div className="flex flex-col md:flex-row space-y-2 md:space-y-0 md:space-x-2 w-full md:w-auto">
+              <div className="relative flex-1 md:w-64">
+                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
+                <Input
+                  placeholder="Rechercher..."
+                  className="pl-8"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
               
-              <Card>
-                <CardHeader>
-                  <CardTitle>Historique</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Date</TableHead>
-                        <TableHead>Événement</TableHead>
-                        <TableHead>Lieu</TableHead>
-                        <TableHead>Expédition</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {containerHistory.map((event, index) => (
-                        <TableRow key={index}>
-                          <TableCell>{event.date}</TableCell>
-                          <TableCell>{event.event}</TableCell>
-                          <TableCell>{event.location}</TableCell>
-                          <TableCell>{event.shipment}</TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </CardContent>
-              </Card>
-              
-              <div className="flex justify-end gap-2">
-                <Button variant="outline" onClick={() => setSelectedContainer(null)}>
-                  Fermer
-                </Button>
-                <Button>
-                  <Calendar className="mr-2 h-4 w-4" />
-                  Réserver
-                </Button>
-                <Button variant="outline">
-                  <History className="mr-2 h-4 w-4" />
-                  Historique complet
-                </Button>
+              <div className="flex-initial">
+                <Select value={filterStatus} onValueChange={setFilterStatus}>
+                  <SelectTrigger className="w-full md:w-[180px]">
+                    <Filter className="mr-2 h-4 w-4" />
+                    <SelectValue placeholder="Tous les statuts" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Tous les statuts</SelectItem>
+                    <SelectItem value="in_transit">En transit</SelectItem>
+                    <SelectItem value="delivered">Livrés</SelectItem>
+                    <SelectItem value="loading">En chargement</SelectItem>
+                    <SelectItem value="customs">En douane</SelectItem>
+                    <SelectItem value="ready">Prêts</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
-          </DialogContent>
-        </Dialog>
-      )}
+          </div>
+          
+          <div className="rounded-md border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="cursor-pointer" onClick={() => handleSort('number')}>
+                    <div className="flex items-center">
+                      Numéro
+                      {sortField === 'number' && (
+                        <ArrowUpDown className={`ml-1 h-4 w-4 ${sortOrder === 'desc' ? 'rotate-180' : ''}`} />
+                      )}
+                    </div>
+                  </TableHead>
+                  <TableHead className="cursor-pointer" onClick={() => handleSort('type')}>
+                    <div className="flex items-center">
+                      Type
+                      {sortField === 'type' && (
+                        <ArrowUpDown className={`ml-1 h-4 w-4 ${sortOrder === 'desc' ? 'rotate-180' : ''}`} />
+                      )}
+                    </div>
+                  </TableHead>
+                  <TableHead>Client</TableHead>
+                  <TableHead className="cursor-pointer" onClick={() => handleSort('location')}>
+                    <div className="flex items-center">
+                      Localisation
+                      {sortField === 'location' && (
+                        <ArrowUpDown className={`ml-1 h-4 w-4 ${sortOrder === 'desc' ? 'rotate-180' : ''}`} />
+                      )}
+                    </div>
+                  </TableHead>
+                  <TableHead>Destination</TableHead>
+                  <TableHead className="cursor-pointer" onClick={() => handleSort('status')}>
+                    <div className="flex items-center">
+                      Statut
+                      {sortField === 'status' && (
+                        <ArrowUpDown className={`ml-1 h-4 w-4 ${sortOrder === 'desc' ? 'rotate-180' : ''}`} />
+                      )}
+                    </div>
+                  </TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredContainers.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={7} className="text-center py-6 text-gray-500">
+                      Aucun conteneur trouvé
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  filteredContainers.map((container) => (
+                    <TableRow key={container.id}>
+                      <TableCell className="font-medium">{container.number}</TableCell>
+                      <TableCell>{container.type}</TableCell>
+                      <TableCell>{container.client}</TableCell>
+                      <TableCell>{container.location}</TableCell>
+                      <TableCell>{container.destination}</TableCell>
+                      <TableCell>
+                        <StatusBadge status={getStatusColor(container.status)}>
+                          {getStatusText(container.status)}
+                        </StatusBadge>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end gap-2">
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => handleViewTracking(container.id)}
+                            title="Suivi du conteneur"
+                          >
+                            <Truck className="h-4 w-4" />
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => handleViewDetails(container.id)}
+                            title="Détails du conteneur"
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };

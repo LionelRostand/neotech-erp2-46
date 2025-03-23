@@ -15,12 +15,15 @@ import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { Button } from '@/components/ui/button';
 import { Eye, FileEdit, Trash2 } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 interface ShipmentListProps {
   filter: 'all' | 'ongoing' | 'delivered' | 'delayed';
 }
 
 const ShipmentList: React.FC<ShipmentListProps> = ({ filter }) => {
+  const { toast } = useToast();
+  
   const getStatusColor = (status: string): "success" | "warning" | "danger" => {
     switch (status) {
       case 'delivered':
@@ -56,6 +59,39 @@ const ShipmentList: React.FC<ShipmentListProps> = ({ filter }) => {
     if (filter === 'delayed') return shipment.status === 'delayed';
     return true;
   });
+  
+  const handleViewShipment = (shipment: Shipment) => {
+    toast({
+      title: "Visualisation de l'expédition",
+      description: `Consultation de l'expédition ${shipment.reference}`,
+    });
+  };
+  
+  const handleEditShipment = (shipment: Shipment) => {
+    toast({
+      title: "Modification de l'expédition",
+      description: `Édition de l'expédition ${shipment.reference}`,
+    });
+  };
+  
+  const handleDeleteShipment = (shipment: Shipment) => {
+    toast({
+      title: "Suppression de l'expédition",
+      description: `Êtes-vous sûr de vouloir supprimer l'expédition ${shipment.reference}?`,
+      action: (
+        <Button 
+          variant="destructive" 
+          size="sm"
+          onClick={() => toast({
+            title: "Expédition supprimée",
+            description: `L'expédition ${shipment.reference} a été supprimée`
+          })}
+        >
+          Confirmer
+        </Button>
+      ),
+    });
+  };
 
   return (
     <div className="rounded-md border">
@@ -91,13 +127,25 @@ const ShipmentList: React.FC<ShipmentListProps> = ({ filter }) => {
                 </TableCell>
                 <TableCell className="text-right">
                   <div className="flex justify-end gap-2">
-                    <Button variant="ghost" size="sm">
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      onClick={() => handleViewShipment(shipment)}
+                    >
                       <Eye className="h-4 w-4" />
                     </Button>
-                    <Button variant="ghost" size="sm">
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      onClick={() => handleEditShipment(shipment)}
+                    >
                       <FileEdit className="h-4 w-4" />
                     </Button>
-                    <Button variant="ghost" size="sm">
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      onClick={() => handleDeleteShipment(shipment)}
+                    >
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
