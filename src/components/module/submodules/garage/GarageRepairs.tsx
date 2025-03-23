@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -38,11 +37,12 @@ const GarageRepairs = () => {
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [repairs, setRepairs] = useState<Repair[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedRepair, setSelectedRepair] = useState<Repair | null>(null);
+  const [showDetailsDialog, setShowDetailsDialog] = useState(false);
+  const [showUpdateDialog, setShowUpdateDialog] = useState(false);
   
-  // Use Firestore hook to fetch repairs
   const repairsCollection = useSafeFirestore('garage_repairs');
   
-  // Sample data for clients, vehicles and mechanics
   const clientsMap: Record<string, string> = {
     "CL001": "Jean Dupont",
     "CL002": "Marie Lambert",
@@ -68,7 +68,6 @@ const GarageRepairs = () => {
     "MECH003": "Sophie Moreau"
   };
 
-  // Fetch repairs from Firestore
   useEffect(() => {
     const loadRepairs = async () => {
       setIsLoading(true);
@@ -77,12 +76,9 @@ const GarageRepairs = () => {
         console.log("Fetched repairs from Firestore:", data);
         
         if (Array.isArray(data) && data.length > 0) {
-          // If we have data from Firestore, use it
           setRepairs(data as Repair[]);
         } else {
-          // If no data, fetch from local mock data
           console.log("No repairs found in Firestore, using local data");
-          // Import here to avoid circular dependency
           const { repairs: repairsData } = await import('./repairs/repairsData');
           setRepairs(repairsData as Repair[]);
         }
@@ -90,7 +86,6 @@ const GarageRepairs = () => {
         console.error("Error fetching repairs:", error);
         toast.error("Erreur lors du chargement des réparations");
         
-        // Fallback to local data on error
         const { repairs: repairsData } = await import('./repairs/repairsData');
         setRepairs(repairsData as Repair[]);
       } finally {
@@ -101,7 +96,6 @@ const GarageRepairs = () => {
     loadRepairs();
   }, [repairsCollection]);
   
-  // Filter repairs based on search term
   const filteredRepairs = repairs.filter(repair => 
     repair.vehicleName.toLowerCase().includes(searchTerm.toLowerCase()) ||
     repair.clientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -112,18 +106,14 @@ const GarageRepairs = () => {
 
   const handleCreateRepair = async (newRepair: Omit<Repair, 'id'>) => {
     try {
-      // Generate ID locally first for optimistic UI update
       const id = `RP${String(repairs.length + 1).padStart(3, '0')}`;
       const repair = { id, ...newRepair } as Repair;
       
-      // Optimistic update
       setRepairs(prev => [...prev, repair]);
       
-      // Save to Firestore
       const result = await repairsCollection.add(repair);
       console.log("Repair saved to Firestore:", result);
       
-      // Update with the actual ID from Firestore if different
       if (result.id !== id) {
         setRepairs(prev => 
           prev.map(r => r.id === id ? { ...r, id: result.id } : r)
@@ -135,9 +125,32 @@ const GarageRepairs = () => {
       console.error("Error creating repair:", error);
       toast.error("Erreur lors de la création de la réparation");
       
-      // Revert optimistic update
       setRepairs(prev => prev.filter(r => r.id !== `RP${String(repairs.length + 1).padStart(3, '0')}`));
     }
+  };
+
+  const handleViewDetails = (repair: Repair) => {
+    setSelectedRepair(repair);
+    setShowDetailsDialog(true);
+    console.log("Viewing details for repair:", repair.id);
+    toast.info(`Affichage des détails de la réparation ${repair.id}`);
+  };
+
+  const handleUpdateRepair = (repair: Repair) => {
+    setSelectedRepair(repair);
+    setShowUpdateDialog(true);
+    console.log("Updating repair:", repair.id);
+    toast.info(`Mise à jour de la réparation ${repair.id}`);
+  };
+
+  const handleCreateInvoice = (repair: Repair) => {
+    console.log("Creating invoice for repair:", repair.id);
+    toast.success(`Facture créée pour la réparation ${repair.id}`);
+  };
+
+  const handleMoreOptions = (repair: Repair) => {
+    console.log("More options for repair:", repair.id);
+    toast.info(`Options supplémentaires pour la réparation ${repair.id}`);
   };
 
   return (
@@ -153,7 +166,6 @@ const GarageRepairs = () => {
         </Button>
       </div>
 
-      {/* Repair search and filter */}
       <Card>
         <CardHeader className="pb-3">
           <CardTitle>Recherche et filtres</CardTitle>
@@ -181,7 +193,6 @@ const GarageRepairs = () => {
         </CardContent>
       </Card>
 
-      {/* Repairs list */}
       <Card>
         <CardHeader className="pb-3">
           <CardTitle>Liste des réparations</CardTitle>
@@ -249,20 +260,40 @@ const GarageRepairs = () => {
                       </TableCell>
                       <TableCell>
                         <div className="flex space-x-2">
-                          <Button variant="outline" size="icon" title="Voir détails">
+                          <Button 
+                            variant="outline" 
+                            size="icon" 
+                            title="Voir détails"
+                            onClick={() => handleViewDetails(repair)}
+                          >
                             <Eye className="h-4 w-4" />
                           </Button>
                           {repair.status !== 'completed' && (
-                            <Button variant="outline" size="icon" title="Mettre à jour">
+                            <Button 
+                              variant="outline" 
+                              size="icon" 
+                              title="Mettre à jour"
+                              onClick={() => handleUpdateRepair(repair)}
+                            >
                               <PenSquare className="h-4 w-4" />
                             </Button>
                           )}
                           {repair.status === 'completed' && (
-                            <Button variant="outline" size="icon" title="Facturer">
+                            <Button 
+                              variant="outline" 
+                              size="icon" 
+                              title="Facturer"
+                              onClick={() => handleCreateInvoice(repair)}
+                            >
                               <Receipt className="h-4 w-4" />
                             </Button>
                           )}
-                          <Button variant="outline" size="icon" title="Plus d'options">
+                          <Button 
+                            variant="outline" 
+                            size="icon" 
+                            title="Plus d'options"
+                            onClick={() => handleMoreOptions(repair)}
+                          >
                             <MoreHorizontal className="h-4 w-4" />
                           </Button>
                         </div>
@@ -276,7 +307,6 @@ const GarageRepairs = () => {
         </CardContent>
       </Card>
 
-      {/* Mechanic status */}
       <Card>
         <CardHeader className="pb-3">
           <CardTitle>Statut des mécaniciens</CardTitle>
