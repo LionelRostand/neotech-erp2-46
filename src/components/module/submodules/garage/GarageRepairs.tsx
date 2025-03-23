@@ -32,36 +32,36 @@ const getStatusBadge = (status: string) => {
   }
 };
 
-// Sample data for clients, vehicles and mechanics
-const clientsMap: Record<string, string> = {
-  "CL001": "Jean Dupont",
-  "CL002": "Marie Lambert",
-  "CL003": "Pierre Martin",
-  "CL004": "Sophie Bernard",
-  "CL005": "Thomas Leclerc"
-};
-
-const vehiclesMap: Record<string, string> = {
-  "VH001": "Renault Clio",
-  "VH002": "Peugeot 308",
-  "VH003": "Citroen C3",
-  "VH004": "Ford Fiesta",
-  "VH005": "Mercedes Sprinter",
-  "VH006": "Fiat 500",
-  "VH007": "Volkswagen Golf",
-  "VH008": "Toyota Yaris"
-};
-
-const mechanicsMap: Record<string, string> = {
-  "MECH001": "Jean Martin",
-  "MECH002": "Thomas Dubois",
-  "MECH003": "Sophie Moreau"
-};
-
 const GarageRepairs = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [repairs, setRepairs] = useState<Repair[]>(repairsData);
+  
+  // Sample data for clients, vehicles and mechanics
+  const clientsMap: Record<string, string> = {
+    "CL001": "Jean Dupont",
+    "CL002": "Marie Lambert",
+    "CL003": "Pierre Martin",
+    "CL004": "Sophie Bernard",
+    "CL005": "Thomas Leclerc"
+  };
+
+  const vehiclesMap: Record<string, string> = {
+    "VH001": "Renault Clio",
+    "VH002": "Peugeot 308",
+    "VH003": "Citroen C3",
+    "VH004": "Ford Fiesta",
+    "VH005": "Mercedes Sprinter",
+    "VH006": "Fiat 500",
+    "VH007": "Volkswagen Golf",
+    "VH008": "Toyota Yaris"
+  };
+
+  const mechanicsMap: Record<string, string> = {
+    "MECH001": "Jean Martin",
+    "MECH002": "Thomas Dubois",
+    "MECH003": "Sophie Moreau"
+  };
   
   // Filter repairs based on search term
   const filteredRepairs = repairs.filter(repair => 
