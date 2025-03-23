@@ -6,13 +6,15 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Client } from './types/garage-types';
 import { Search, Plus, Mail, Phone, Car, Clock, MoreHorizontal, CalendarCheck, Bell } from 'lucide-react';
 import AddClientDialog from './dialogs/AddClientDialog';
 import { toast } from 'sonner';
+import EditClientDialog from './dialogs/EditClientDialog';
+import CreateAppointmentDialog from './appointments/CreateAppointmentDialog';
 
 // Sample data for clients
 const sampleClients: Client[] = [
@@ -89,6 +91,8 @@ const GarageClients = () => {
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [isClientDialogOpen, setIsClientDialogOpen] = useState(false);
   const [isAddClientDialogOpen, setIsAddClientDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isAppointmentDialogOpen, setIsAppointmentDialogOpen] = useState(false);
 
   // Filter clients based on search term
   const filteredClients = clients.filter(client => 
@@ -108,6 +112,34 @@ const GarageClients = () => {
   const handleAddClient = (newClient: Client) => {
     setClients(prevClients => [newClient, ...prevClients]);
     toast("Client ajouté avec succès");
+  };
+
+  // Handle editing a client
+  const handleEditClient = (updatedClient: Client) => {
+    setClients(prevClients => prevClients.map(client => 
+      client.id === updatedClient.id ? updatedClient : client
+    ));
+    toast.success("Client modifié avec succès");
+    setIsEditDialogOpen(false);
+    setIsClientDialogOpen(false);
+  };
+
+  // Handle opening the edit dialog
+  const handleOpenEditDialog = () => {
+    setIsClientDialogOpen(false);
+    setIsEditDialogOpen(true);
+  };
+
+  // Handle opening the appointment dialog
+  const handleOpenAppointmentDialog = (client: Client) => {
+    setSelectedClient(client);
+    setIsAppointmentDialogOpen(true);
+  };
+
+  // Handle appointment creation
+  const handleAppointmentCreated = () => {
+    toast.success("Rendez-vous créé avec succès");
+    setIsAppointmentDialogOpen(false);
   };
 
   return (
@@ -214,7 +246,15 @@ const GarageClients = () => {
                       </TableCell>
                       <TableCell>
                         <div className="flex space-x-2">
-                          <Button variant="outline" size="icon" title="Prendre rendez-vous">
+                          <Button 
+                            variant="outline" 
+                            size="icon" 
+                            title="Prendre rendez-vous"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleOpenAppointmentDialog(client);
+                            }}
+                          >
                             <CalendarCheck className="h-4 w-4" />
                           </Button>
                           <Button variant="outline" size="icon" title="Envoyer une notification">
@@ -311,11 +351,19 @@ const GarageClients = () => {
             </div>
             <div className="mt-4 flex justify-end space-x-2">
               <Button variant="outline" onClick={() => setIsClientDialogOpen(false)}>Fermer</Button>
-              <Button className="flex items-center gap-2">
+              <Button 
+                className="flex items-center gap-2"
+                onClick={() => handleOpenAppointmentDialog(selectedClient)}
+              >
                 <CalendarCheck className="h-4 w-4" />
                 <span>Prendre RDV</span>
               </Button>
-              <Button variant="default">Modifier</Button>
+              <Button 
+                variant="default"
+                onClick={handleOpenEditDialog}
+              >
+                Modifier
+              </Button>
             </div>
           </DialogContent>
         </Dialog>
@@ -327,6 +375,27 @@ const GarageClients = () => {
         onClose={() => setIsAddClientDialogOpen(false)}
         onClientAdded={handleAddClient}
       />
+
+      {/* Edit Client Dialog */}
+      {selectedClient && (
+        <EditClientDialog
+          isOpen={isEditDialogOpen}
+          onClose={() => setIsEditDialogOpen(false)}
+          client={selectedClient}
+          onClientUpdated={handleEditClient}
+        />
+      )}
+
+      {/* Create Appointment Dialog */}
+      {selectedClient && (
+        <CreateAppointmentDialog
+          isOpen={isAppointmentDialogOpen}
+          onOpenChange={setIsAppointmentDialogOpen}
+          clientId={selectedClient.id}
+          clientName={`${selectedClient.firstName} ${selectedClient.lastName}`}
+          onAppointmentCreated={handleAppointmentCreated}
+        />
+      )}
     </div>
   );
 };
