@@ -2,9 +2,10 @@
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Check, Trash2, Download, ChevronDown, ChevronUp, LayoutDashboard } from 'lucide-react';
+import { Check, Trash2, Download, ChevronDown, ChevronUp, LayoutDashboard, Settings, ExternalLink } from 'lucide-react';
 import { AppModule } from '@/data/types/modules';
 import ModuleDashboardPreview from './ModuleDashboardPreview';
+import { toast } from "@/hooks/use-toast";
 
 interface ModuleCardProps {
   module: AppModule;
@@ -24,6 +25,19 @@ const ModuleCard: React.FC<ModuleCardProps> = ({
   onToggleExpansion
 }) => {
   const [showDashboard, setShowDashboard] = useState(false);
+
+  const handleConfigure = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    toast({
+      title: "Configuration",
+      description: `Configuration du module ${module.name}`,
+    });
+  };
+
+  const handleGoToModule = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    window.location.href = module.href;
+  };
 
   return (
     <Card className="border border-gray-200 transition-all hover:shadow-md flex flex-col">
@@ -90,21 +104,48 @@ const ModuleCard: React.FC<ModuleCardProps> = ({
       </CardContent>
       <CardFooter className="bg-gray-50 flex justify-between py-2 px-4">
         {isInstalled ? (
-          <>
+          <div className="w-full flex items-center justify-between">
             <Button variant="ghost" size="sm" className="text-green-600 h-7 text-xs" disabled>
               <Check className="mr-1 h-3 w-3" />
               Installé
             </Button>
-            <Button 
-              variant="outline" 
-              size="sm"
-              className="text-red-600 hover:text-red-700 hover:bg-red-50 h-7 text-xs"
-              onClick={() => onUninstall(module.id)}
-            >
-              <Trash2 className="mr-1 h-3 w-3" />
-              Désinstaller
-            </Button>
-          </>
+            
+            <div className="space-x-2 flex">
+              {/* Boutons d'action */}
+              <Button 
+                variant="outline" 
+                size="sm"
+                className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 h-7 text-xs"
+                onClick={handleGoToModule}
+                title="Accéder au module"
+              >
+                <ExternalLink className="mr-1 h-3 w-3" />
+                Accéder
+              </Button>
+              
+              <Button 
+                variant="outline" 
+                size="sm"
+                className="text-gray-600 hover:text-gray-700 hover:bg-gray-50 h-7 text-xs"
+                onClick={handleConfigure}
+                title="Configurer le module"
+              >
+                <Settings className="mr-1 h-3 w-3" />
+                Configurer
+              </Button>
+              
+              <Button 
+                variant="outline" 
+                size="sm"
+                className="text-red-600 hover:text-red-700 hover:bg-red-50 h-7 text-xs"
+                onClick={() => onUninstall(module.id)}
+                title="Désinstaller le module"
+              >
+                <Trash2 className="mr-1 h-3 w-3" />
+                Désinstaller
+              </Button>
+            </div>
+          </div>
         ) : (
           <Button 
             variant="outline"
