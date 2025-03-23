@@ -122,11 +122,11 @@ const EditServiceDialog: React.FC<EditServiceDialogProps> = ({
             <div className="space-y-2 flex items-end">
               <div className="flex items-center space-x-2">
                 <Switch 
-                  id="active" 
-                  checked={updatedService.active} 
-                  onCheckedChange={(checked) => handleChange('active', checked)} 
+                  id="available" 
+                  checked={updatedService.available} 
+                  onCheckedChange={(checked) => handleChange('available', checked)} 
                 />
-                <Label htmlFor="active">Service actif</Label>
+                <Label htmlFor="available">Service actif</Label>
               </div>
             </div>
           </div>

@@ -63,8 +63,8 @@ const ServiceDetailsDialog: React.FC<ServiceDetailsDialogProps> = ({
             
             <div>
               <h4 className="text-sm font-medium text-muted-foreground">Statut</h4>
-              <Badge variant={service.active ? "default" : "secondary"} className="mt-1">
-                {service.active ? "Actif" : "Inactif"}
+              <Badge variant={service.available ? "default" : "secondary"} className="mt-1">
+                {service.available ? "Actif" : "Inactif"}
               </Badge>
             </div>
           </div>
