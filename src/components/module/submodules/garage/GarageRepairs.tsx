@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
@@ -13,7 +13,8 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import CreateRepairDialog from './repairs/CreateRepairDialog';
-import { repairs as repairsData, Repair } from './repairs/repairsData';
+import { Repair } from './repairs/repairsData';
+import { useSafeFirestore } from '@/hooks/use-safe-firestore';
 
 const getStatusBadge = (status: string) => {
   switch (status) {
@@ -35,7 +36,11 @@ const getStatusBadge = (status: string) => {
 const GarageRepairs = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [showCreateDialog, setShowCreateDialog] = useState(false);
-  const [repairs, setRepairs] = useState<Repair[]>(repairsData);
+  const [repairs, setRepairs] = useState<Repair[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  
+  // Use Firestore hook to fetch repairs
+  const repairsCollection = useSafeFirestore('garage_repairs');
   
   // Sample data for clients, vehicles and mechanics
   const clientsMap: Record<string, string> = {
@@ -62,6 +67,39 @@ const GarageRepairs = () => {
     "MECH002": "Thomas Dubois",
     "MECH003": "Sophie Moreau"
   };
+
+  // Fetch repairs from Firestore
+  useEffect(() => {
+    const loadRepairs = async () => {
+      setIsLoading(true);
+      try {
+        const data = await repairsCollection.getAll();
+        console.log("Fetched repairs from Firestore:", data);
+        
+        if (Array.isArray(data) && data.length > 0) {
+          // If we have data from Firestore, use it
+          setRepairs(data as Repair[]);
+        } else {
+          // If no data, fetch from local mock data
+          console.log("No repairs found in Firestore, using local data");
+          // Import here to avoid circular dependency
+          const { repairs: repairsData } = await import('./repairs/repairsData');
+          setRepairs(repairsData as Repair[]);
+        }
+      } catch (error) {
+        console.error("Error fetching repairs:", error);
+        toast.error("Erreur lors du chargement des réparations");
+        
+        // Fallback to local data on error
+        const { repairs: repairsData } = await import('./repairs/repairsData');
+        setRepairs(repairsData as Repair[]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    loadRepairs();
+  }, [repairsCollection]);
   
   // Filter repairs based on search term
   const filteredRepairs = repairs.filter(repair => 
@@ -72,11 +110,34 @@ const GarageRepairs = () => {
     repair.id.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleCreateRepair = (newRepair: Omit<Repair, 'id'>) => {
-    const id = `RP${String(repairs.length + 1).padStart(3, '0')}`;
-    const repair = { id, ...newRepair } as Repair;
-    setRepairs(prev => [...prev, repair]);
-    toast.success(`Réparation ${id} créée avec succès`);
+  const handleCreateRepair = async (newRepair: Omit<Repair, 'id'>) => {
+    try {
+      // Generate ID locally first for optimistic UI update
+      const id = `RP${String(repairs.length + 1).padStart(3, '0')}`;
+      const repair = { id, ...newRepair } as Repair;
+      
+      // Optimistic update
+      setRepairs(prev => [...prev, repair]);
+      
+      // Save to Firestore
+      const result = await repairsCollection.add(repair);
+      console.log("Repair saved to Firestore:", result);
+      
+      // Update with the actual ID from Firestore if different
+      if (result.id !== id) {
+        setRepairs(prev => 
+          prev.map(r => r.id === id ? { ...r, id: result.id } : r)
+        );
+      }
+      
+      toast.success(`Réparation ${id} créée avec succès`);
+    } catch (error) {
+      console.error("Error creating repair:", error);
+      toast.error("Erreur lors de la création de la réparation");
+      
+      // Revert optimistic update
+      setRepairs(prev => prev.filter(r => r.id !== `RP${String(repairs.length + 1).padStart(3, '0')}`));
+    }
   };
 
   return (
@@ -126,7 +187,11 @@ const GarageRepairs = () => {
           <CardTitle>Liste des réparations</CardTitle>
         </CardHeader>
         <CardContent>
-          {filteredRepairs.length === 0 ? (
+          {isLoading ? (
+            <div className="flex justify-center py-6">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            </div>
+          ) : filteredRepairs.length === 0 ? (
             <div className="text-center py-8 text-gray-500">
               Aucune réparation trouvée. Créez une nouvelle réparation avec le bouton "Nouvelle Réparation".
             </div>
