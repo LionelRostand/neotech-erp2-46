@@ -1,12 +1,9 @@
-
 import React, { useState } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Check, X, Eye } from 'lucide-react';
 import { 
-  Check, 
-  X, 
-  Eye, 
   AlertDialog, 
   AlertDialogAction, 
   AlertDialogCancel, 
