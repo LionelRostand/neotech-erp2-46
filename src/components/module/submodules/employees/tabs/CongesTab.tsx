@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -157,7 +158,7 @@ const CongesTab: React.FC<CongesTabProps> = ({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label className="text-sm font-medium">Type de congé</label>
-                <Select onValueChange={setNewLeaveType}>
+                <Select onValueChange={setNewLeaveType} value={newLeaveType}>
                   <SelectTrigger>
                     <SelectValue placeholder="Sélectionner un type" />
                   </SelectTrigger>
