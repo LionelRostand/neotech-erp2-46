@@ -1,147 +1,231 @@
 
 import React, { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogFooter 
+} from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { Calendar } from '@/components/ui/calendar';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Button } from '@/components/ui/button';
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from '@/components/ui/select';
 import { CalendarIcon } from 'lucide-react';
-import { format } from 'date-fns';
+import { format, addDays, differenceInBusinessDays } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { toast } from 'sonner';
 
 interface CreateLeaveRequestDialogProps {
   isOpen: boolean;
   onClose: () => void;
+  onSubmit: (data: any) => void;
 }
 
-export const CreateLeaveRequestDialog: React.FC<CreateLeaveRequestDialogProps> = ({ isOpen, onClose }) => {
-  const [startDate, setStartDate] = useState<Date>();
-  const [endDate, setEndDate] = useState<Date>();
-  const [leaveType, setLeaveType] = useState('conges-payes');
-  const [halfDay, setHalfDay] = useState('full');
-  
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    // Here we would typically save the leave request
-    console.log('Creating leave request', { startDate, endDate, leaveType, halfDay });
-    onClose();
+const LEAVE_TYPES = [
+  { value: 'paid', label: 'Congés payés' },
+  { value: 'rtt', label: 'RTT' },
+  { value: 'sick', label: 'Maladie' },
+  { value: 'unpaid', label: 'Sans solde' },
+  { value: 'family', label: 'Événement familial' },
+];
+
+export const CreateLeaveRequestDialog: React.FC<CreateLeaveRequestDialogProps> = ({
+  isOpen,
+  onClose,
+  onSubmit
+}) => {
+  const [leaveType, setLeaveType] = useState('');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [halfDay, setHalfDay] = useState('');
+  const [reason, setReason] = useState('');
+  const [comment, setComment] = useState('');
+  const [daysCount, setDaysCount] = useState<number | null>(null);
+
+  const resetForm = () => {
+    setLeaveType('');
+    setStartDate('');
+    setEndDate('');
+    setHalfDay('');
+    setReason('');
+    setComment('');
+    setDaysCount(null);
   };
-  
+
+  const calculateDays = () => {
+    if (!startDate) return;
+    
+    const start = new Date(startDate);
+    const end = endDate ? new Date(endDate) : start;
+    
+    if (start && end) {
+      // Calcul simple des jours ouvrés entre deux dates
+      let days = differenceInBusinessDays(end, start) + 1;
+      
+      // Ajustement pour demi-journées
+      if (halfDay === 'start' || halfDay === 'end') {
+        days -= 0.5;
+      } else if (halfDay === 'both') {
+        days -= 1;
+      }
+      
+      setDaysCount(Math.max(0, days));
+    }
+  };
+
+  const handleSubmit = () => {
+    if (!leaveType || !startDate) {
+      toast.error("Veuillez remplir tous les champs obligatoires");
+      return;
+    }
+    
+    if (!daysCount || daysCount <= 0) {
+      toast.error("La période sélectionnée ne contient pas de jours ouvrés");
+      return;
+    }
+    
+    const formData = {
+      type: leaveType,
+      startDate,
+      endDate: endDate || startDate,
+      halfDay,
+      daysCount,
+      reason,
+      comment
+    };
+    
+    onSubmit(formData);
+    resetForm();
+  };
+
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[500px]">
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>Nouvelle demande de congé</DialogTitle>
         </DialogHeader>
         
-        <form onSubmit={handleSubmit} className="space-y-4 pt-4">
+        <div className="space-y-4 py-2">
           <div className="space-y-2">
-            <Label htmlFor="leave-type">Type de congé</Label>
+            <Label htmlFor="leave-type">Type de congé *</Label>
             <Select value={leaveType} onValueChange={setLeaveType}>
               <SelectTrigger id="leave-type">
-                <SelectValue placeholder="Sélectionner un type de congé" />
+                <SelectValue placeholder="Sélectionnez un type de congé" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="conges-payes">Congés payés</SelectItem>
-                <SelectItem value="rtt">RTT</SelectItem>
-                <SelectItem value="maladie">Maladie</SelectItem>
-                <SelectItem value="conges-speciaux">Congés spéciaux</SelectItem>
-                <SelectItem value="conges-sans-solde">Congés sans solde</SelectItem>
+                {LEAVE_TYPES.map(type => (
+                  <SelectItem key={type.value} value={type.value}>
+                    {type.label}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
           
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="start-date">Date de début</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    id="start-date"
-                    variant="outline"
-                    className="w-full justify-start text-left font-normal"
-                  >
-                    {startDate ? (
-                      format(startDate, 'PP', { locale: fr })
-                    ) : (
-                      <span className="text-gray-400">Sélectionner une date</span>
-                    )}
-                    <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={startDate}
-                    onSelect={setStartDate}
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
+              <Label htmlFor="start-date">Date de début *</Label>
+              <div className="relative">
+                <CalendarIcon className="absolute left-3 top-3 h-4 w-4 text-gray-500" />
+                <Input 
+                  id="start-date" 
+                  type="date"
+                  className="pl-9" 
+                  value={startDate}
+                  onChange={(e) => {
+                    setStartDate(e.target.value);
+                    if (!endDate || new Date(e.target.value) > new Date(endDate)) {
+                      setEndDate(e.target.value);
+                    }
+                  }}
+                  onBlur={calculateDays}
+                />
+              </div>
             </div>
             
             <div className="space-y-2">
               <Label htmlFor="end-date">Date de fin</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    id="end-date"
-                    variant="outline"
-                    className="w-full justify-start text-left font-normal"
-                  >
-                    {endDate ? (
-                      format(endDate, 'PP', { locale: fr })
-                    ) : (
-                      <span className="text-gray-400">Sélectionner une date</span>
-                    )}
-                    <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={endDate}
-                    onSelect={setEndDate}
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
+              <div className="relative">
+                <CalendarIcon className="absolute left-3 top-3 h-4 w-4 text-gray-500" />
+                <Input 
+                  id="end-date" 
+                  type="date"
+                  className="pl-9" 
+                  value={endDate}
+                  min={startDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                  onBlur={calculateDays}
+                />
+              </div>
             </div>
           </div>
           
           <div className="space-y-2">
             <Label htmlFor="half-day">Demi-journée</Label>
-            <Select value={halfDay} onValueChange={setHalfDay}>
+            <Select value={halfDay} onValueChange={(value) => {
+              setHalfDay(value);
+              setTimeout(calculateDays, 0);
+            }}>
               <SelectTrigger id="half-day">
                 <SelectValue placeholder="Journée complète" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="full">Journée complète</SelectItem>
-                <SelectItem value="morning-start">Matin premier jour</SelectItem>
-                <SelectItem value="afternoon-start">Après-midi premier jour</SelectItem>
-                <SelectItem value="morning-end">Matin dernier jour</SelectItem>
-                <SelectItem value="afternoon-end">Après-midi dernier jour</SelectItem>
+                <SelectItem value="">Journée complète</SelectItem>
+                <SelectItem value="start">Demi-journée en début de période</SelectItem>
+                <SelectItem value="end">Demi-journée en fin de période</SelectItem>
+                <SelectItem value="both">Demi-journée en début et fin de période</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
+          {daysCount !== null && (
+            <div className="bg-blue-50 p-3 rounded-md">
+              <p className="text-sm">
+                <span className="font-medium">Nombre de jours : </span>
+                {daysCount} jour{daysCount !== 1 ? 's' : ''} ouvré{daysCount !== 1 ? 's' : ''}
+              </p>
+            </div>
+          )}
+          
+          <div className="space-y-2">
+            <Label htmlFor="reason">Motif</Label>
+            <Select value={reason} onValueChange={setReason}>
+              <SelectTrigger id="reason">
+                <SelectValue placeholder="Sélectionnez un motif (optionnel)" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="vacation">Vacances</SelectItem>
+                <SelectItem value="personal">Raison personnelle</SelectItem>
+                <SelectItem value="family">Événement familial</SelectItem>
+                <SelectItem value="medical">Rendez-vous médical</SelectItem>
+                <SelectItem value="other">Autre</SelectItem>
               </SelectContent>
             </Select>
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="reason">Motif (optionnel)</Label>
-            <Textarea
-              id="reason"
-              placeholder="Précisez le motif de votre demande de congé..."
-              className="min-h-[80px]"
+            <Label htmlFor="comment">Commentaire</Label>
+            <Textarea 
+              id="comment" 
+              placeholder="Commentaire additionnel (optionnel)" 
+              value={comment}
+              onChange={(e) => setComment(e.target.value)}
             />
           </div>
-          
-          <DialogFooter className="mt-6">
-            <Button type="button" variant="outline" onClick={onClose}>Annuler</Button>
-            <Button type="submit">Soumettre la demande</Button>
-          </DialogFooter>
-        </form>
+        </div>
+        
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>Annuler</Button>
+          <Button onClick={handleSubmit}>Soumettre la demande</Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

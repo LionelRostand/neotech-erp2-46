@@ -7,12 +7,25 @@ import { Button } from '@/components/ui/button';
 import { User, Search, UserPlus, Eye, Pencil, Trash } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Employee } from '@/types/employee';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { useState } from 'react';
 
 interface EmployeesListProps {
   employees: Employee[];
   searchQuery: string;
   setSearchQuery: (query: string) => void;
   onViewEmployee: (employee: Employee) => void;
+  onEditEmployee: (employee: Employee) => void;
+  onDeleteEmployee: (employeeId: string) => void;
   onOpenAddEmployee: () => void;
 }
 
@@ -21,8 +34,12 @@ const EmployeesList: React.FC<EmployeesListProps> = ({
   searchQuery,
   setSearchQuery,
   onViewEmployee,
+  onEditEmployee,
+  onDeleteEmployee,
   onOpenAddEmployee
 }) => {
+  const [employeeToDelete, setEmployeeToDelete] = useState<Employee | null>(null);
+  
   // Filtrage des employés selon la recherche
   const filteredEmployees = employees.filter(employee => {
     const fullName = `${employee.firstName} ${employee.lastName}`.toLowerCase();
@@ -30,6 +47,13 @@ const EmployeesList: React.FC<EmployeesListProps> = ({
            employee.position.toLowerCase().includes(searchQuery.toLowerCase()) ||
            employee.department.toLowerCase().includes(searchQuery.toLowerCase());
   });
+
+  const handleConfirmDelete = () => {
+    if (employeeToDelete) {
+      onDeleteEmployee(employeeToDelete.id);
+      setEmployeeToDelete(null);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -103,11 +127,19 @@ const EmployeesList: React.FC<EmployeesListProps> = ({
                       <Eye className="h-4 w-4" />
                       <span className="sr-only">Voir</span>
                     </Button>
-                    <Button variant="ghost" size="icon">
+                    <Button 
+                      variant="ghost" 
+                      size="icon"
+                      onClick={() => onEditEmployee(employee)}
+                    >
                       <Pencil className="h-4 w-4" />
                       <span className="sr-only">Modifier</span>
                     </Button>
-                    <Button variant="ghost" size="icon">
+                    <Button 
+                      variant="ghost" 
+                      size="icon"
+                      onClick={() => setEmployeeToDelete(employee)}
+                    >
                       <Trash className="h-4 w-4" />
                       <span className="sr-only">Supprimer</span>
                     </Button>
@@ -124,6 +156,24 @@ const EmployeesList: React.FC<EmployeesListProps> = ({
           )}
         </CardContent>
       </Card>
+
+      {/* Dialogue de confirmation pour la suppression */}
+      <AlertDialog open={!!employeeToDelete} onOpenChange={(open) => !open && setEmployeeToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Êtes-vous sûr de vouloir supprimer cet employé ?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Cette action est irréversible. Les données de {employeeToDelete?.firstName} {employeeToDelete?.lastName} seront définitivement supprimées.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmDelete} className="bg-red-500 hover:bg-red-600">
+              Supprimer
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

@@ -1,102 +1,211 @@
 
-import React from 'react';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { SunMedium, Clock, Calendar, Flag, Settings } from 'lucide-react';
+import React, { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
+import { toast } from 'sonner';
 
 export const LeavePolicies: React.FC = () => {
+  const [isEditing, setIsEditing] = useState(false);
+  const [policies, setPolicies] = useState({
+    minRequestDays: 3,
+    maxConsecutiveDays: 25,
+    allowHalfDays: true,
+    managerApprovalRequired: true,
+    allowNegativeBalance: false,
+    weekendCountAsLeave: false,
+    autoApproveUnder: 2,
+    carryOverLimit: 5,
+    notificationDays: 2
+  });
+
+  const handleSave = () => {
+    toast.success("Politiques de congés mises à jour avec succès");
+    setIsEditing(false);
+  };
+
   return (
-    <div>
-      <h3 className="text-lg font-semibold mb-4">Politiques de congés</h3>
-      <p className="text-gray-500 mb-6">
-        Consultez les règles et politiques en vigueur concernant les différents types de congés
-      </p>
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h3 className="text-lg font-semibold">Politiques de congés</h3>
+        {!isEditing ? (
+          <Button onClick={() => setIsEditing(true)}>Modifier</Button>
+        ) : (
+          <div className="space-x-2">
+            <Button variant="outline" onClick={() => setIsEditing(false)}>Annuler</Button>
+            <Button onClick={handleSave}>Enregistrer</Button>
+          </div>
+        )}
+      </div>
       
-      <Accordion type="single" collapsible className="w-full">
-        <AccordionItem value="conges-payes">
-          <AccordionTrigger className="flex items-center">
-            <div className="flex items-center">
-              <SunMedium className="h-5 w-5 mr-2 text-blue-500" />
-              Congés payés
+      <div className="grid gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="minRequestDays">Délai minimum de demande (jours)</Label>
+              <Input 
+                id="minRequestDays" 
+                type="number" 
+                value={policies.minRequestDays} 
+                onChange={(e) => isEditing && setPolicies({...policies, minRequestDays: parseInt(e.target.value)})}
+                disabled={!isEditing}
+              />
+              <p className="text-xs text-gray-500">
+                Nombre de jours minimum avant la date de début pour soumettre une demande
+              </p>
             </div>
-          </AccordionTrigger>
-          <AccordionContent>
-            <div className="pl-7 space-y-2 text-sm text-gray-600">
-              <p>Les congés payés sont accordés à raison de 2,5 jours ouvrables par mois travaillé, soit 30 jours ouvrables (5 semaines) pour une année complète.</p>
-              <p>Période de référence : du 1er juin au 31 mai de l'année suivante.</p>
-              <p>Délai de prévenance : 30 jours pour les congés d'été, 15 jours pour les autres périodes.</p>
+            
+            <div className="space-y-2">
+              <Label htmlFor="maxConsecutiveDays">Jours consécutifs maximum</Label>
+              <Input 
+                id="maxConsecutiveDays" 
+                type="number" 
+                value={policies.maxConsecutiveDays} 
+                onChange={(e) => isEditing && setPolicies({...policies, maxConsecutiveDays: parseInt(e.target.value)})}
+                disabled={!isEditing}
+              />
+              <p className="text-xs text-gray-500">
+                Nombre maximum de jours consécutifs pouvant être pris
+              </p>
             </div>
-          </AccordionContent>
-        </AccordionItem>
+            
+            <div className="space-y-2">
+              <Label htmlFor="carryOverLimit">Report maximum (jours)</Label>
+              <Input 
+                id="carryOverLimit" 
+                type="number" 
+                value={policies.carryOverLimit} 
+                onChange={(e) => isEditing && setPolicies({...policies, carryOverLimit: parseInt(e.target.value)})}
+                disabled={!isEditing}
+              />
+              <p className="text-xs text-gray-500">
+                Nombre de jours pouvant être reportés à l'année suivante
+              </p>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="notificationDays">Délai de notification (jours)</Label>
+              <Input 
+                id="notificationDays" 
+                type="number" 
+                value={policies.notificationDays} 
+                onChange={(e) => isEditing && setPolicies({...policies, notificationDays: parseInt(e.target.value)})}
+                disabled={!isEditing}
+              />
+              <p className="text-xs text-gray-500">
+                Nombre de jours avant l'expiration pour envoyer une notification
+              </p>
+            </div>
+          </div>
+          
+          <div className="space-y-4">
+            <div className="flex items-start space-x-2">
+              <Checkbox 
+                id="allowHalfDays" 
+                checked={policies.allowHalfDays} 
+                onCheckedChange={(checked) => isEditing && setPolicies({...policies, allowHalfDays: checked as boolean})}
+                disabled={!isEditing}
+              />
+              <div className="space-y-1 leading-none">
+                <Label htmlFor="allowHalfDays" className="text-sm font-medium">
+                  Autoriser les demi-journées
+                </Label>
+                <p className="text-xs text-gray-500">
+                  Permettre aux employés de demander des demi-journées de congé
+                </p>
+              </div>
+            </div>
+            
+            <div className="flex items-start space-x-2">
+              <Checkbox 
+                id="managerApprovalRequired" 
+                checked={policies.managerApprovalRequired} 
+                onCheckedChange={(checked) => isEditing && setPolicies({...policies, managerApprovalRequired: checked as boolean})}
+                disabled={!isEditing}
+              />
+              <div className="space-y-1 leading-none">
+                <Label htmlFor="managerApprovalRequired" className="text-sm font-medium">
+                  Approbation du manager requise
+                </Label>
+                <p className="text-xs text-gray-500">
+                  Les demandes de congé doivent être approuvées par un manager
+                </p>
+              </div>
+            </div>
+            
+            <div className="flex items-start space-x-2">
+              <Checkbox 
+                id="allowNegativeBalance" 
+                checked={policies.allowNegativeBalance} 
+                onCheckedChange={(checked) => isEditing && setPolicies({...policies, allowNegativeBalance: checked as boolean})}
+                disabled={!isEditing}
+              />
+              <div className="space-y-1 leading-none">
+                <Label htmlFor="allowNegativeBalance" className="text-sm font-medium">
+                  Autoriser le solde négatif
+                </Label>
+                <p className="text-xs text-gray-500">
+                  Permettre aux employés de prendre plus de congés que leur solde actuel
+                </p>
+              </div>
+            </div>
+            
+            <div className="flex items-start space-x-2">
+              <Checkbox 
+                id="weekendCountAsLeave" 
+                checked={policies.weekendCountAsLeave} 
+                onCheckedChange={(checked) => isEditing && setPolicies({...policies, weekendCountAsLeave: checked as boolean})}
+                disabled={!isEditing}
+              />
+              <div className="space-y-1 leading-none">
+                <Label htmlFor="weekendCountAsLeave" className="text-sm font-medium">
+                  Compter les week-ends comme des congés
+                </Label>
+                <p className="text-xs text-gray-500">
+                  Les week-ends entre deux jours de congé sont comptés comme des jours de congé
+                </p>
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="autoApproveUnder">Approbation automatique sous (jours)</Label>
+              <Input 
+                id="autoApproveUnder" 
+                type="number" 
+                value={policies.autoApproveUnder} 
+                onChange={(e) => isEditing && setPolicies({...policies, autoApproveUnder: parseInt(e.target.value)})}
+                disabled={!isEditing}
+              />
+              <p className="text-xs text-gray-500">
+                Les demandes de moins de ce nombre de jours sont approuvées automatiquement
+              </p>
+            </div>
+          </div>
+        </div>
         
-        <AccordionItem value="rtt">
-          <AccordionTrigger className="flex items-center">
-            <div className="flex items-center">
-              <Clock className="h-5 w-5 mr-2 text-amber-500" />
-              RTT (Réduction du Temps de Travail)
+        <div className="mt-6 p-4 bg-blue-50 rounded-md">
+          <h4 className="font-medium text-blue-900 mb-2">Types de congés configurés</h4>
+          <div className="space-y-2">
+            <div className="flex justify-between p-2 bg-white rounded-md">
+              <span className="font-medium">Congés payés</span>
+              <span>25 jours / an</span>
             </div>
-          </AccordionTrigger>
-          <AccordionContent>
-            <div className="pl-7 space-y-2 text-sm text-gray-600">
-              <p>Les jours de RTT sont attribués en compensation d'un horaire de travail supérieur à 35 heures par semaine.</p>
-              <p>Nombre de jours accordés : 12 jours par an.</p>
-              <p>Utilisation : à la discrétion du salarié, sous réserve d'un délai de prévenance de 7 jours.</p>
+            <div className="flex justify-between p-2 bg-white rounded-md">
+              <span className="font-medium">RTT</span>
+              <span>12 jours / an</span>
             </div>
-          </AccordionContent>
-        </AccordionItem>
-        
-        <AccordionItem value="maladie">
-          <AccordionTrigger className="flex items-center">
-            <div className="flex items-center">
-              <Calendar className="h-5 w-5 mr-2 text-red-500" />
-              Arrêts maladie
+            <div className="flex justify-between p-2 bg-white rounded-md">
+              <span className="font-medium">Congés sans solde</span>
+              <span>Illimité (soumis à approbation)</span>
             </div>
-          </AccordionTrigger>
-          <AccordionContent>
-            <div className="pl-7 space-y-2 text-sm text-gray-600">
-              <p>En cas de maladie, le salarié doit informer l'employeur dans les 24 heures et fournir un certificat médical dans les 48 heures.</p>
-              <p>Maintien de salaire : selon la convention collective, après un an d'ancienneté.</p>
-              <p>Les trois premiers jours peuvent constituer un délai de carence selon la politique de l'entreprise.</p>
+            <div className="flex justify-between p-2 bg-white rounded-md">
+              <span className="font-medium">Jours maladie</span>
+              <span>Illimité (justificatif requis)</span>
             </div>
-          </AccordionContent>
-        </AccordionItem>
-        
-        <AccordionItem value="conges-speciaux">
-          <AccordionTrigger className="flex items-center">
-            <div className="flex items-center">
-              <Flag className="h-5 w-5 mr-2 text-green-500" />
-              Congés spéciaux
-            </div>
-          </AccordionTrigger>
-          <AccordionContent>
-            <div className="pl-7 space-y-2 text-sm text-gray-600">
-              <p>Mariage du salarié : 4 jours ouvrables</p>
-              <p>Mariage d'un enfant : 1 jour ouvrable</p>
-              <p>Naissance ou adoption : 3 jours ouvrables</p>
-              <p>Décès du conjoint ou d'un enfant : 3 jours ouvrables</p>
-              <p>Décès du père ou de la mère : 3 jours ouvrables</p>
-              <p>Décès d'un frère ou d'une sœur : 3 jours ouvrables</p>
-              <p>Décès des beaux-parents : 3 jours ouvrables</p>
-            </div>
-          </AccordionContent>
-        </AccordionItem>
-        
-        <AccordionItem value="autres">
-          <AccordionTrigger className="flex items-center">
-            <div className="flex items-center">
-              <Settings className="h-5 w-5 mr-2 text-gray-500" />
-              Autres congés
-            </div>
-          </AccordionTrigger>
-          <AccordionContent>
-            <div className="pl-7 space-y-2 text-sm text-gray-600">
-              <p>Congé parental d'éducation : jusqu'aux 3 ans de l'enfant</p>
-              <p>Congé de formation : selon les accords d'entreprise</p>
-              <p>Congé sans solde : à la discrétion de l'employeur</p>
-              <p>Congé sabbatique : après 36 mois d'ancienneté, pour une durée de 6 à 11 mois</p>
-            </div>
-          </AccordionContent>
-        </AccordionItem>
-      </Accordion>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };

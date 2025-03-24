@@ -8,13 +8,44 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Search, Plus, FileText, Download, Eye, Edit, Trash2 } from 'lucide-react';
+import { toast } from 'sonner';
+import { 
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
+interface Contract {
+  id: number;
+  employee: string;
+  type: string;
+  startDate: string;
+  endDate: string | null;
+  status: 'Actif' | 'Expiré';
+  department: string;
+  file?: string;
+}
 
 const EmployeesContracts: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState('active');
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [selectedContract, setSelectedContract] = useState<Contract | null>(null);
+  const [editedContract, setEditedContract] = useState<Partial<Contract>>({});
+  const [isDownloading, setIsDownloading] = useState(false);
   
   // Sample contracts data
-  const contracts = [
+  const [contracts, setContracts] = useState<Contract[]>([
     { 
       id: 1, 
       employee: 'Thomas Martin', 
@@ -60,7 +91,7 @@ const EmployeesContracts: React.FC = () => {
       status: 'Actif',
       department: 'Développement'
     },
-  ];
+  ]);
   
   // Filter contracts based on search query and active tab
   const filteredContracts = contracts.filter(
@@ -73,11 +104,75 @@ const EmployeesContracts: React.FC = () => {
       activeTab === 'all')
   );
 
+  const handleAddContract = () => {
+    // Simulation d'ajout
+    toast.success("Contrat ajouté avec succès");
+    setIsAddDialogOpen(false);
+  };
+
+  const handleEditContract = () => {
+    if (!selectedContract) return;
+    
+    // Mise à jour du contrat
+    const updatedContracts = contracts.map(contract => 
+      contract.id === selectedContract.id
+        ? { ...contract, ...editedContract }
+        : contract
+    );
+    
+    setContracts(updatedContracts);
+    toast.success("Contrat mis à jour avec succès");
+    setIsEditDialogOpen(false);
+  };
+
+  const handleDeleteContract = () => {
+    if (!selectedContract) return;
+    
+    // Suppression du contrat
+    const updatedContracts = contracts.filter(contract => contract.id !== selectedContract.id);
+    setContracts(updatedContracts);
+    
+    toast.success("Contrat supprimé avec succès");
+    setIsDeleteDialogOpen(false);
+  };
+
+  const handleDownloadContract = (contract: Contract) => {
+    setIsDownloading(true);
+    
+    // Simulation de téléchargement
+    setTimeout(() => {
+      toast.success(`Le contrat de ${contract.employee} a été téléchargé`);
+      setIsDownloading(false);
+    }, 1500);
+  };
+
+  const openViewDialog = (contract: Contract) => {
+    setSelectedContract(contract);
+    setIsViewDialogOpen(true);
+  };
+
+  const openEditDialog = (contract: Contract) => {
+    setSelectedContract(contract);
+    setEditedContract({
+      employee: contract.employee,
+      type: contract.type,
+      startDate: contract.startDate,
+      endDate: contract.endDate,
+      department: contract.department
+    });
+    setIsEditDialogOpen(true);
+  };
+
+  const openDeleteDialog = (contract: Contract) => {
+    setSelectedContract(contract);
+    setIsDeleteDialogOpen(true);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-bold">Gestion des contrats</h2>
-        <Dialog>
+        <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
           <DialogTrigger asChild>
             <Button>
               <Plus className="mr-2 h-4 w-4" />
@@ -127,8 +222,8 @@ const EmployeesContracts: React.FC = () => {
               </div>
             </div>
             <DialogFooter>
-              <Button variant="outline">Annuler</Button>
-              <Button type="submit">Enregistrer</Button>
+              <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>Annuler</Button>
+              <Button type="submit" onClick={handleAddContract}>Enregistrer</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -185,16 +280,33 @@ const EmployeesContracts: React.FC = () => {
                             </Badge>
                           </TableCell>
                           <TableCell className="text-right">
-                            <Button variant="ghost" size="icon">
+                            <Button 
+                              variant="ghost" 
+                              size="icon"
+                              onClick={() => openViewDialog(contract)}
+                            >
                               <Eye className="h-4 w-4" />
                             </Button>
-                            <Button variant="ghost" size="icon">
+                            <Button 
+                              variant="ghost" 
+                              size="icon"
+                              onClick={() => handleDownloadContract(contract)}
+                              disabled={isDownloading}
+                            >
                               <Download className="h-4 w-4" />
                             </Button>
-                            <Button variant="ghost" size="icon">
+                            <Button 
+                              variant="ghost" 
+                              size="icon"
+                              onClick={() => openEditDialog(contract)}
+                            >
                               <Edit className="h-4 w-4" />
                             </Button>
-                            <Button variant="ghost" size="icon">
+                            <Button 
+                              variant="ghost" 
+                              size="icon"
+                              onClick={() => openDeleteDialog(contract)}
+                            >
                               <Trash2 className="h-4 w-4" />
                             </Button>
                           </TableCell>
@@ -241,16 +353,33 @@ const EmployeesContracts: React.FC = () => {
                             </Badge>
                           </TableCell>
                           <TableCell className="text-right">
-                            <Button variant="ghost" size="icon">
+                            <Button 
+                              variant="ghost" 
+                              size="icon"
+                              onClick={() => openViewDialog(contract)}
+                            >
                               <Eye className="h-4 w-4" />
                             </Button>
-                            <Button variant="ghost" size="icon">
+                            <Button 
+                              variant="ghost" 
+                              size="icon"
+                              onClick={() => handleDownloadContract(contract)}
+                              disabled={isDownloading}
+                            >
                               <Download className="h-4 w-4" />
                             </Button>
-                            <Button variant="ghost" size="icon">
+                            <Button 
+                              variant="ghost" 
+                              size="icon"
+                              onClick={() => openEditDialog(contract)}
+                            >
                               <Edit className="h-4 w-4" />
                             </Button>
-                            <Button variant="ghost" size="icon">
+                            <Button 
+                              variant="ghost" 
+                              size="icon"
+                              onClick={() => openDeleteDialog(contract)}
+                            >
                               <Trash2 className="h-4 w-4" />
                             </Button>
                           </TableCell>
@@ -297,16 +426,33 @@ const EmployeesContracts: React.FC = () => {
                             </Badge>
                           </TableCell>
                           <TableCell className="text-right">
-                            <Button variant="ghost" size="icon">
+                            <Button 
+                              variant="ghost" 
+                              size="icon"
+                              onClick={() => openViewDialog(contract)}
+                            >
                               <Eye className="h-4 w-4" />
                             </Button>
-                            <Button variant="ghost" size="icon">
+                            <Button 
+                              variant="ghost" 
+                              size="icon"
+                              onClick={() => handleDownloadContract(contract)}
+                              disabled={isDownloading}
+                            >
                               <Download className="h-4 w-4" />
                             </Button>
-                            <Button variant="ghost" size="icon">
+                            <Button 
+                              variant="ghost" 
+                              size="icon"
+                              onClick={() => openEditDialog(contract)}
+                            >
                               <Edit className="h-4 w-4" />
                             </Button>
-                            <Button variant="ghost" size="icon">
+                            <Button 
+                              variant="ghost" 
+                              size="icon"
+                              onClick={() => openDeleteDialog(contract)}
+                            >
                               <Trash2 className="h-4 w-4" />
                             </Button>
                           </TableCell>
@@ -391,6 +537,187 @@ const EmployeesContracts: React.FC = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Dialog for viewing contract details */}
+      <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>Détails du contrat</DialogTitle>
+          </DialogHeader>
+          {selectedContract && (
+            <div className="space-y-4 py-4">
+              <div className="bg-gray-50 p-6 rounded-md">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h3 className="text-lg font-semibold mb-1">{selectedContract.employee}</h3>
+                    <p className="text-sm text-gray-500 mb-4">{selectedContract.department}</p>
+                  </div>
+                  <Badge variant="outline" className={selectedContract.status === 'Actif' ? 'bg-green-100 text-green-800' : 'bg-amber-100 text-amber-800'}>
+                    {selectedContract.status}
+                  </Badge>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4 mt-6">
+                  <div>
+                    <p className="text-sm text-gray-500">Type de contrat</p>
+                    <p className="font-medium">{selectedContract.type}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">Département</p>
+                    <p>{selectedContract.department}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">Date de début</p>
+                    <p>{new Date(selectedContract.startDate).toLocaleDateString('fr-FR')}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">Date de fin</p>
+                    <p>{selectedContract.endDate ? new Date(selectedContract.endDate).toLocaleDateString('fr-FR') : 'Indéterminé'}</p>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="border-t pt-4">
+                <Button 
+                  variant="outline" 
+                  className="w-full"
+                  onClick={() => handleDownloadContract(selectedContract)}
+                  disabled={isDownloading}
+                >
+                  {isDownloading ? (
+                    <span className="h-4 w-4 border-2 border-current border-r-transparent animate-spin rounded-full mr-2"></span>
+                  ) : (
+                    <Download className="mr-2 h-4 w-4" />
+                  )}
+                  Télécharger le contrat
+                </Button>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button 
+              variant="outline"
+              onClick={() => {
+                if (selectedContract) {
+                  openEditDialog(selectedContract);
+                  setIsViewDialogOpen(false);
+                }
+              }}
+            >
+              <Edit className="mr-2 h-4 w-4" />
+              Modifier
+            </Button>
+            <Button onClick={() => setIsViewDialogOpen(false)}>Fermer</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog for editing contract */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>Modifier le contrat</DialogTitle>
+          </DialogHeader>
+          {selectedContract && (
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label htmlFor="edit-employee" className="text-sm font-medium">Employé</label>
+                  <Input 
+                    id="edit-employee" 
+                    value={editedContract.employee || selectedContract.employee}
+                    onChange={(e) => setEditedContract({ ...editedContract, employee: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label htmlFor="edit-type" className="text-sm font-medium">Type de contrat</label>
+                  <Select 
+                    value={editedContract.type || selectedContract.type}
+                    onValueChange={(value) => setEditedContract({ ...editedContract, type: value })}
+                  >
+                    <SelectTrigger id="edit-type">
+                      <SelectValue placeholder="Type de contrat" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="CDI">CDI</SelectItem>
+                      <SelectItem value="CDD">CDD</SelectItem>
+                      <SelectItem value="Alternance">Alternance</SelectItem>
+                      <SelectItem value="Stage">Stage</SelectItem>
+                      <SelectItem value="Intérim">Intérim</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label htmlFor="edit-startDate" className="text-sm font-medium">Date de début</label>
+                  <Input 
+                    id="edit-startDate" 
+                    type="date" 
+                    value={editedContract.startDate || selectedContract.startDate}
+                    onChange={(e) => setEditedContract({ ...editedContract, startDate: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label htmlFor="edit-endDate" className="text-sm font-medium">Date de fin</label>
+                  <Input 
+                    id="edit-endDate" 
+                    type="date" 
+                    value={editedContract.endDate || selectedContract.endDate || ''}
+                    onChange={(e) => setEditedContract({ ...editedContract, endDate: e.target.value || null })}
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <label htmlFor="edit-department" className="text-sm font-medium">Département</label>
+                <Input 
+                  id="edit-department" 
+                  value={editedContract.department || selectedContract.department}
+                  onChange={(e) => setEditedContract({ ...editedContract, department: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <label htmlFor="edit-file" className="text-sm font-medium">Document du contrat (optionnel)</label>
+                <Input id="edit-file" type="file" />
+                <p className="text-xs text-gray-500">Laissez vide pour conserver le document actuel</p>
+              </div>
+              <div className="space-y-2">
+                <label htmlFor="edit-notes" className="text-sm font-medium">Notes</label>
+                <Textarea 
+                  id="edit-notes" 
+                  rows={3}
+                  placeholder="Informations supplémentaires sur le contrat..."
+                />
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>Annuler</Button>
+            <Button onClick={handleEditContract}>Enregistrer les modifications</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog for confirmation of deletion */}
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Êtes-vous sûr de vouloir supprimer ce contrat ?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Cette action est irréversible. Le contrat sera définitivement supprimé.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setIsDeleteDialogOpen(false)}>Annuler</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleDeleteContract}
+              className="bg-red-500 hover:bg-red-600"
+            >
+              Supprimer
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
