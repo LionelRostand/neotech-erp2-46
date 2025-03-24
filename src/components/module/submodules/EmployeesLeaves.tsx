@@ -223,7 +223,7 @@ const EmployeesLeaves: React.FC = () => {
                   <SelectValue placeholder="Tous les statuts" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Tous les statuts</SelectItem>
+                  <SelectItem value="all">Tous les statuts</SelectItem>
                   <SelectItem value="approved">Approuvé</SelectItem>
                   <SelectItem value="pending">En attente</SelectItem>
                   <SelectItem value="rejected">Refusé</SelectItem>
@@ -241,7 +241,7 @@ const EmployeesLeaves: React.FC = () => {
                   <SelectValue placeholder="Tous les types" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Tous les types</SelectItem>
+                  <SelectItem value="all">Tous les types</SelectItem>
                   <SelectItem value="paid">Congés payés</SelectItem>
                   <SelectItem value="rtt">RTT</SelectItem>
                   <SelectItem value="sick">Maladie</SelectItem>
@@ -274,7 +274,7 @@ const EmployeesLeaves: React.FC = () => {
                   <SelectValue placeholder="Toutes les périodes" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Toutes les périodes</SelectItem>
+                  <SelectItem value="all">Toutes les périodes</SelectItem>
                   <SelectItem value="current-month">Mois en cours</SelectItem>
                   <SelectItem value="next-month">Mois prochain</SelectItem>
                   <SelectItem value="last-30">30 derniers jours</SelectItem>

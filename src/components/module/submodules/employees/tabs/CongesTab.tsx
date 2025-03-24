@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -37,7 +36,6 @@ const LEAVE_TYPES = [
   { value: 'événement familial', label: 'Événement familial' },
 ];
 
-// Exemple de données de congés
 const INITIAL_LEAVES: LeaveRequest[] = [
   {
     id: '1',
@@ -94,7 +92,6 @@ const CongesTab: React.FC<CongesTabProps> = ({
       ? format(newLeaveDates.to, 'dd/MM/yyyy', { locale: fr })
       : startDate;
     
-    // Calcul simple des jours (à améliorer pour tenir compte des weekends/jours fériés)
     const days = newLeaveDates.to 
       ? Math.ceil((newLeaveDates.to.getTime() - newLeaveDates.from.getTime()) / (1000 * 60 * 60 * 24)) + 1
       : 1;
@@ -111,7 +108,6 @@ const CongesTab: React.FC<CongesTabProps> = ({
 
     setLeaves([...leaves, newLeave]);
     
-    // Mettre à jour les soldes (simplifié)
     if (balances[newLeaveType]) {
       const updatedBalance = { ...balances[newLeaveType] };
       updatedBalance.taken += days;

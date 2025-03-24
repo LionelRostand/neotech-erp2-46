@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { 
   Dialog, 
@@ -67,10 +66,8 @@ export const CreateLeaveRequestDialog: React.FC<CreateLeaveRequestDialogProps> =
     const end = endDate ? new Date(endDate) : start;
     
     if (start && end) {
-      // Calcul simple des jours ouvrés entre deux dates
       let days = differenceInBusinessDays(end, start) + 1;
       
-      // Ajustement pour demi-journées
       if (halfDay === 'start' || halfDay === 'end') {
         days -= 0.5;
       } else if (halfDay === 'both') {
@@ -178,7 +175,7 @@ export const CreateLeaveRequestDialog: React.FC<CreateLeaveRequestDialogProps> =
                 <SelectValue placeholder="Journée complète" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Journée complète</SelectItem>
+                <SelectItem value="none">Journée complète</SelectItem>
                 <SelectItem value="start">Demi-journée en début de période</SelectItem>
                 <SelectItem value="end">Demi-journée en fin de période</SelectItem>
                 <SelectItem value="both">Demi-journée en début et fin de période</SelectItem>
