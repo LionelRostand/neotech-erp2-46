@@ -1,3 +1,4 @@
+
 import React, { useState, useRef } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -45,3 +46,21 @@ const MOCK_SALARIES = [
   { id: 2, name: 'Jane Smith', position: 'Project Manager', salary: 90000 },
   { id: 3, name: 'Emily Johnson', position: 'Designer', salary: 65000 }
 ];
+
+// Add your component implementation here
+const EmployeesSalaries = () => {
+  // Your component code would go here
+  return (
+    <div>
+      <Card>
+        <CardContent className="p-6">
+          <h2 className="text-2xl font-bold mb-4">Gestion des salaires</h2>
+          {/* Component content goes here */}
+          <p>Contenu à implémenter pour la gestion des salaires</p>
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
+export default EmployeesSalaries;
