@@ -40,4 +40,8 @@ import * as XLSX from 'xlsx';
 import { jsPDF } from 'jspdf';
 import 'jspdf-autotable';
 
-[The rest of the original code, starting from the MOCK_SALARIES constant, remains exactly the same]
+const MOCK_SALARIES = [
+  { id: 1, name: 'John Doe', position: 'Software Engineer', salary: 75000 },
+  { id: 2, name: 'Jane Smith', position: 'Project Manager', salary: 90000 },
+  { id: 3, name: 'Emily Johnson', position: 'Designer', salary: 65000 }
+];
