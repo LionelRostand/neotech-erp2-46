@@ -35,9 +35,16 @@ const BadgePreviewDialog: React.FC<BadgePreviewDialogProps> = ({
     doc.setFillColor(240, 240, 240);
     doc.rect(0, 0, 85, 54, 'F');
     
-    // Add company logo/header
-    doc.setFillColor(selectedBadge.status === 'success' ? 34, 197, 94 : 
-                     selectedBadge.status === 'warning' ? 234, 179, 8 : 239, 68, 68);
+    // Add company logo/header - fix for the color syntax
+    let headerColor;
+    if (selectedBadge.status === 'success') {
+      headerColor = [34, 197, 94];
+    } else if (selectedBadge.status === 'warning') {
+      headerColor = [234, 179, 8];
+    } else {
+      headerColor = [239, 68, 68];
+    }
+    doc.setFillColor(headerColor[0], headerColor[1], headerColor[2]);
     doc.rect(0, 0, 85, 10, 'F');
     
     doc.setTextColor(255, 255, 255);
@@ -60,19 +67,20 @@ const BadgePreviewDialog: React.FC<BadgePreviewDialogProps> = ({
     doc.text(`Département: ${selectedBadge.department || 'N/A'}`, 42.5, 28, { align: 'center' });
     doc.text(`Accès: ${selectedBadge.accessLevel || 'Standard'}`, 42.5, 33, { align: 'center' });
     
-    // Add status
+    // Add status - fix for the color syntax
     doc.setFontSize(9);
     doc.setFont('helvetica', 'bold');
-    doc.setTextColor(
-      selectedBadge.status === 'success' ? 34 : 
-      selectedBadge.status === 'warning' ? 234 : 239,
-      
-      selectedBadge.status === 'success' ? 197 : 
-      selectedBadge.status === 'warning' ? 179 : 68,
-      
-      selectedBadge.status === 'success' ? 94 : 
-      selectedBadge.status === 'warning' ? 8 : 68
-    );
+    
+    let statusColor;
+    if (selectedBadge.status === 'success') {
+      statusColor = [34, 197, 94];
+    } else if (selectedBadge.status === 'warning') {
+      statusColor = [234, 179, 8];
+    } else {
+      statusColor = [239, 68, 68];
+    }
+    
+    doc.setTextColor(statusColor[0], statusColor[1], statusColor[2]);
     doc.text(`Statut: ${selectedBadge.statusText}`, 42.5, 38, { align: 'center' });
     
     // Add date
