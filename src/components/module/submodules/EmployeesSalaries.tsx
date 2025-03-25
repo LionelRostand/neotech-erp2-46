@@ -226,13 +226,16 @@ const EmployeesSalaries = () => {
       margin: { left: 20, right: 20 }
     });
     
+    // Get the Y position after the first table
+    const finalY = (doc.autoTable as any).previous?.finalY || 200;
+    
     // Leave and RTT information using autoTable
     doc.setFontSize(12);
     doc.setTextColor(80, 80, 80);
-    doc.text("Suivi des Congés et RTT", 20, doc.autoTable.previous.finalY + 15);
+    doc.text("Suivi des Congés et RTT", 20, finalY + 15);
     
     doc.autoTable({
-      startY: doc.autoTable.previous.finalY + 20,
+      startY: finalY + 20,
       head: [['Type', 'Alloués', 'Pris', 'Restants']],
       body: [
         ['Congés Payés', `${employee.leaves.paid} jours`, `${employee.leaves.taken} jours`, `${employee.leaves.remaining} jours`],
