@@ -11,6 +11,7 @@ import { toast } from 'sonner';
 import { Calendar, Clock, FileText, Download, Filter, Plus, Search, Check, X } from 'lucide-react';
 import { employees } from '@/data/employees';
 import { Employee } from '@/types/employee';
+import { TimeReport, TimeReportStatus } from '@/types/timesheet';
 
 interface TimeEntry {
   id: string;
@@ -163,6 +164,15 @@ const EmployeesTimesheet: React.FC = () => {
     entry.activity.toLowerCase().includes(searchQuery.toLowerCase())
   );
   
+  // Handle approval and rejection of time entries
+  const handleUpdateStatus = (entryId: string, newStatus: 'approved' | 'rejected') => {
+    const updatedEntries = timeEntries.map(item => 
+      item.id === entryId ? { ...item, status: newStatus } : item
+    );
+    setTimeEntries(updatedEntries);
+    toast.success(`Entrée ${newStatus === 'approved' ? 'approuvée' : 'rejetée'} avec succès`);
+  };
+  
   return (
     <div className="space-y-6">
       <div className="flex flex-col space-y-4 md:flex-row md:justify-between md:items-center md:space-y-0">
@@ -257,26 +267,14 @@ const EmployeesTimesheet: React.FC = () => {
                             <Button 
                               variant="ghost" 
                               size="icon" 
-                              onClick={() => {
-                                const updatedEntries = timeEntries.map(item => 
-                                  item.id === entry.id ? {...item, status: 'approved'} : item
-                                );
-                                setTimeEntries(updatedEntries);
-                                toast.success(`Entrée approuvée pour ${entry.employee}`);
-                              }}
+                              onClick={() => handleUpdateStatus(entry.id, 'approved')}
                             >
                               <Check className="h-4 w-4 text-green-600" />
                             </Button>
                             <Button 
                               variant="ghost" 
                               size="icon"
-                              onClick={() => {
-                                const updatedEntries = timeEntries.map(item => 
-                                  item.id === entry.id ? {...item, status: 'rejected'} : item
-                                );
-                                setTimeEntries(updatedEntries);
-                                toast.success(`Entrée rejetée pour ${entry.employee}`);
-                              }}
+                              onClick={() => handleUpdateStatus(entry.id, 'rejected')}
                             >
                               <X className="h-4 w-4 text-red-600" />
                             </Button>
