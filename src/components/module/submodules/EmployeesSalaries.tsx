@@ -227,7 +227,7 @@ const EmployeesSalaries = () => {
     });
     
     // Get the Y position after the first table
-    const finalY = (doc.autoTable as any).previous?.finalY || 200;
+    const finalY = doc.autoTable.previous?.finalY || 200;
     
     // Leave and RTT information using autoTable
     doc.setFontSize(12);
@@ -247,7 +247,7 @@ const EmployeesSalaries = () => {
     });
     
     // Footer
-    const pageCount = doc.internal.getNumberOfPages();
+    const pageCount = (doc as any).internal.getNumberOfPages();
     doc.setFontSize(8);
     doc.setTextColor(150, 150, 150);
     doc.text(`Ce document est confidentiel. Généré le ${new Date().toLocaleDateString('fr-FR')}`, 105, 285, { align: "center" });
