@@ -12,6 +12,7 @@ declare module 'jspdf' {
     };
     internal: {
       getNumberOfPages: () => number;
+      [key: string]: any;  // Allow for any other properties that might exist on internal
     };
   }
 }
