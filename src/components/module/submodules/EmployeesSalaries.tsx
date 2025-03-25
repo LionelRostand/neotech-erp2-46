@@ -38,6 +38,8 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import * as XLSX from 'xlsx';
+import { jsPDF } from 'jspdf';
+import 'jspdf-autotable';
 
 // Mock data for salaries
 const MOCK_SALARIES = [
@@ -51,6 +53,11 @@ const MOCK_SALARIES = [
     lastModified: "05/01/2025",
     paymentStatus: "Payé",
     paymentMethod: "Virement bancaire",
+    leaveBalance: {
+      paidLeave: 18,
+      sickLeave: 5,
+      rtt: 4  // RTT (Réduction du Temps de Travail)
+    },
     history: [
       { date: "05/01/2025", amount: 3800, reason: "Salaire mensuel" },
       { date: "05/12/2024", amount: 3800, reason: "Salaire mensuel" },
@@ -69,6 +76,11 @@ const MOCK_SALARIES = [
     lastModified: "05/01/2025",
     paymentStatus: "Payé",
     paymentMethod: "Virement bancaire",
+    leaveBalance: {
+      paidLeave: 24,
+      sickLeave: 12,
+      rtt: 8
+    },
     history: [
       { date: "05/01/2025", amount: 8500, reason: "Salaire mensuel" },
       { date: "05/12/2024", amount: 8500, reason: "Salaire mensuel" },
@@ -85,6 +97,11 @@ const MOCK_SALARIES = [
     lastModified: "05/01/2025",
     paymentStatus: "Payé",
     paymentMethod: "Virement bancaire",
+    leaveBalance: {
+      paidLeave: 15,
+      sickLeave: 3,
+      rtt: 6
+    },
     history: [
       { date: "05/01/2025", amount: 5200, reason: "Salaire mensuel" },
       { date: "05/12/2024", amount: 5200, reason: "Salaire mensuel" },
@@ -116,7 +133,12 @@ const EmployeesSalaries: React.FC = () => {
   const [editForm, setEditForm] = useState({
     baseSalary: 0,
     paymentMethod: '',
-    notes: ''
+    notes: '',
+    leaveBalance: {
+      paidLeave: 0,
+      sickLeave: 0,
+      rtt: 0
+    }
   });
   
   // Form state for adding new payslip
@@ -129,7 +151,12 @@ const EmployeesSalaries: React.FC = () => {
     netAmount: '',
     paymentMethod: 'Virement bancaire',
     paymentStatus: 'En attente',
-    notes: ''
+    notes: '',
+    leaveBalance: {
+      paidLeave: 0,
+      sickLeave: 0,
+      rtt: 0
+    }
   });
 
   // Filter salaries based on search
@@ -149,7 +176,12 @@ const EmployeesSalaries: React.FC = () => {
     setEditForm({
       baseSalary: salary.baseSalary,
       paymentMethod: salary.paymentMethod,
-      notes: ''
+      notes: '',
+      leaveBalance: salary.leaveBalance || {
+        paidLeave: 0,
+        sickLeave: 0,
+        rtt: 0
+      }
     });
     setIsEditDialogOpen(true);
   };
@@ -182,6 +214,7 @@ const EmployeesSalaries: React.FC = () => {
           baseSalary: editForm.baseSalary,
           paymentMethod: editForm.paymentMethod,
           lastModified: new Date().toLocaleDateString('fr-FR'),
+          leaveBalance: editForm.leaveBalance,
           history: updatedHistory
         };
       }
@@ -219,6 +252,7 @@ const EmployeesSalaries: React.FC = () => {
       lastModified: new Date().toLocaleDateString('fr-FR'),
       paymentStatus: addPayslipForm.paymentStatus,
       paymentMethod: addPayslipForm.paymentMethod,
+      leaveBalance: addPayslipForm.leaveBalance,
       history: [
         {
           date: new Date().toLocaleDateString('fr-FR'),
@@ -242,7 +276,12 @@ const EmployeesSalaries: React.FC = () => {
       netAmount: '',
       paymentMethod: 'Virement bancaire',
       paymentStatus: 'En attente',
-      notes: ''
+      notes: '',
+      leaveBalance: {
+        paidLeave: 0,
+        sickLeave: 0,
+        rtt: 0
+      }
     });
     
     toast.success("Fiche de paie ajoutée avec succès");
@@ -250,6 +289,64 @@ const EmployeesSalaries: React.FC = () => {
   };
 
   const handleExportPayslip = (salary: any) => {
+    // Création du PDF
+    const doc = new jsPDF();
+    
+    // Titre du document
+    doc.setFontSize(20);
+    doc.text("Bulletin de paie", 105, 15, { align: "center" });
+    
+    // Informations de l'employé
+    doc.setFontSize(12);
+    doc.text("Informations de l'employé", 15, 30);
+    doc.setFontSize(10);
+    doc.text(`Nom: ${salary.employeeName}`, 15, 40);
+    doc.text(`ID: ${salary.employeeId}`, 15, 45);
+    doc.text(`Poste: ${salary.position}`, 15, 50);
+    doc.text(`Date: ${salary.lastModified}`, 15, 55);
+    
+    // Informations de salaire
+    doc.setFontSize(12);
+    doc.text("Détails du salaire", 15, 70);
+    doc.setFontSize(10);
+    doc.text(`Salaire de base: ${salary.baseSalary} ${salary.currency}`, 15, 80);
+    doc.text(`Méthode de paiement: ${salary.paymentMethod}`, 15, 85);
+    doc.text(`Statut: ${salary.paymentStatus}`, 15, 90);
+    
+    // Solde de congés
+    doc.setFontSize(12);
+    doc.text("Solde de congés", 15, 105);
+    doc.setFontSize(10);
+    if (salary.leaveBalance) {
+      doc.text(`Congés payés: ${salary.leaveBalance.paidLeave} jours`, 15, 115);
+      doc.text(`Congés maladie: ${salary.leaveBalance.sickLeave} jours`, 15, 120);
+      doc.text(`RTT: ${salary.leaveBalance.rtt} jours`, 15, 125);
+    } else {
+      doc.text("Aucune information de congés disponible", 15, 115);
+    }
+    
+    // Tableau d'historique simplifié
+    if (salary.history && salary.history.length > 0) {
+      const latestEntry = salary.history[0];
+      
+      doc.setFontSize(12);
+      doc.text("Dernière modification", 15, 140);
+      doc.setFontSize(10);
+      doc.text(`Date: ${latestEntry.date}`, 15, 150);
+      doc.text(`Montant: ${latestEntry.amount} ${salary.currency}`, 15, 155);
+      doc.text(`Raison: ${latestEntry.reason}`, 15, 160);
+      if (latestEntry.details) {
+        doc.text(`Détails: ${latestEntry.details}`, 15, 165);
+      }
+    }
+    
+    // Pied de page
+    doc.setFontSize(8);
+    doc.text("Ce document est généré automatiquement et ne nécessite pas de signature.", 105, 280, { align: "center" });
+    
+    // Téléchargement du PDF
+    doc.save(`Bulletin_de_paie_${salary.employeeName.replace(/ /g, '_')}.pdf`);
+    
     toast.success(`Bulletin de paie de ${salary.employeeName} téléchargé`);
   };
   
@@ -399,6 +496,28 @@ const EmployeesSalaries: React.FC = () => {
                 </div>
               </div>
 
+              <div className="border p-4 rounded-md mt-4">
+                <h3 className="text-lg font-medium mb-2">Solde de congés</h3>
+                {selectedSalary.leaveBalance ? (
+                  <div className="grid grid-cols-3 gap-4">
+                    <div>
+                      <p className="text-sm font-medium">Congés payés:</p>
+                      <p>{selectedSalary.leaveBalance.paidLeave} jours</p>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium">Congés maladie:</p>
+                      <p>{selectedSalary.leaveBalance.sickLeave} jours</p>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium">RTT:</p>
+                      <p>{selectedSalary.leaveBalance.rtt} jours</p>
+                    </div>
+                  </div>
+                ) : (
+                  <p>Aucune information de congés disponible</p>
+                )}
+              </div>
+
               <h3 className="text-lg font-medium pt-4">Historique des modifications</h3>
               <Table>
                 <TableHeader>
@@ -469,6 +588,57 @@ const EmployeesSalaries: React.FC = () => {
                     <SelectItem value="Espèces">Espèces</SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
+              
+              <div className="border p-4 rounded-md">
+                <Label className="text-md font-medium block mb-4">Solde de congés</Label>
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="paidLeave">Congés payés</Label>
+                    <Input
+                      id="paidLeave"
+                      type="number"
+                      value={editForm.leaveBalance.paidLeave}
+                      onChange={(e) => setEditForm({
+                        ...editForm, 
+                        leaveBalance: {
+                          ...editForm.leaveBalance,
+                          paidLeave: parseInt(e.target.value)
+                        }
+                      })}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="sickLeave">Congés maladie</Label>
+                    <Input
+                      id="sickLeave"
+                      type="number"
+                      value={editForm.leaveBalance.sickLeave}
+                      onChange={(e) => setEditForm({
+                        ...editForm, 
+                        leaveBalance: {
+                          ...editForm.leaveBalance,
+                          sickLeave: parseInt(e.target.value)
+                        }
+                      })}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="rtt">RTT</Label>
+                    <Input
+                      id="rtt"
+                      type="number"
+                      value={editForm.leaveBalance.rtt}
+                      onChange={(e) => setEditForm({
+                        ...editForm, 
+                        leaveBalance: {
+                          ...editForm.leaveBalance,
+                          rtt: parseInt(e.target.value)
+                        }
+                      })}
+                    />
+                  </div>
+                </div>
               </div>
               
               <div className="space-y-2">
@@ -606,16 +776,67 @@ const EmployeesSalaries: React.FC = () => {
                 </SelectContent>
               </Select>
             </div>
-            
-            <div className="space-y-2 col-span-2">
-              <Label htmlFor="notes">Notes</Label>
-              <Input
-                id="notes"
-                placeholder="Notes ou commentaires sur cette fiche de paie"
-                value={addPayslipForm.notes}
-                onChange={(e) => setAddPayslipForm({...addPayslipForm, notes: e.target.value})}
-              />
+          </div>
+          
+          <div className="border p-4 rounded-md mt-4">
+            <Label className="text-md font-medium block mb-4">Informations de congés</Label>
+            <div className="grid grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="paidLeave">Congés payés</Label>
+                <Input
+                  id="paidLeave"
+                  type="number"
+                  value={addPayslipForm.leaveBalance.paidLeave}
+                  onChange={(e) => setAddPayslipForm({
+                    ...addPayslipForm,
+                    leaveBalance: {
+                      ...addPayslipForm.leaveBalance,
+                      paidLeave: parseInt(e.target.value)
+                    }
+                  })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="sickLeave">Congés maladie</Label>
+                <Input
+                  id="sickLeave"
+                  type="number"
+                  value={addPayslipForm.leaveBalance.sickLeave}
+                  onChange={(e) => setAddPayslipForm({
+                    ...addPayslipForm,
+                    leaveBalance: {
+                      ...addPayslipForm.leaveBalance,
+                      sickLeave: parseInt(e.target.value)
+                    }
+                  })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="rtt">RTT</Label>
+                <Input
+                  id="rtt"
+                  type="number"
+                  value={addPayslipForm.leaveBalance.rtt}
+                  onChange={(e) => setAddPayslipForm({
+                    ...addPayslipForm,
+                    leaveBalance: {
+                      ...addPayslipForm.leaveBalance,
+                      rtt: parseInt(e.target.value)
+                    }
+                  })}
+                />
+              </div>
             </div>
+          </div>
+          
+          <div className="space-y-2 mt-4">
+            <Label htmlFor="notes">Notes</Label>
+            <Input
+              id="notes"
+              placeholder="Notes ou commentaires sur cette fiche de paie"
+              value={addPayslipForm.notes}
+              onChange={(e) => setAddPayslipForm({...addPayslipForm, notes: e.target.value})}
+            />
           </div>
           
           <DialogFooter className="mt-6">
