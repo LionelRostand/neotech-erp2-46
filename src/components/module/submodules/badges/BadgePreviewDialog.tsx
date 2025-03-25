@@ -35,7 +35,7 @@ const BadgePreviewDialog: React.FC<BadgePreviewDialogProps> = ({
     doc.setFillColor(240, 240, 240);
     doc.rect(0, 0, 85, 54, 'F');
     
-    // Add company logo/header - fix for the color syntax
+    // Add company logo/header
     let headerColor;
     if (selectedBadge.status === 'success') {
       headerColor = [34, 197, 94];
@@ -47,6 +47,12 @@ const BadgePreviewDialog: React.FC<BadgePreviewDialogProps> = ({
     doc.setFillColor(headerColor[0], headerColor[1], headerColor[2]);
     doc.rect(0, 0, 85, 10, 'F');
     
+    // Add company logo - top left
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(8);
+    doc.text('STORM GROUP', 5, 6);
+    
+    // Add company name
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(10);
     doc.text('Enterprise Solutions', 42.5, 6, { align: 'center' });
@@ -67,7 +73,7 @@ const BadgePreviewDialog: React.FC<BadgePreviewDialogProps> = ({
     doc.text(`Département: ${selectedBadge.department || 'N/A'}`, 42.5, 28, { align: 'center' });
     doc.text(`Accès: ${selectedBadge.accessLevel || 'Standard'}`, 42.5, 33, { align: 'center' });
     
-    // Add status - fix for the color syntax
+    // Add status
     doc.setFontSize(9);
     doc.setFont('helvetica', 'bold');
     
@@ -95,6 +101,14 @@ const BadgePreviewDialog: React.FC<BadgePreviewDialogProps> = ({
     doc.setTextColor(255, 255, 255);
     doc.text('Ce badge doit être porté visiblement à tout moment', 42.5, 52.5, { align: 'center' });
     
+    // Add QR code placeholder in bottom left
+    doc.setFillColor(0, 0, 0);
+    doc.rect(3, 40, 10, 10, 'F');
+    doc.setFillColor(255, 255, 255);
+    doc.rect(4, 41, 8, 8, 'F');
+    doc.setFillColor(0, 0, 0);
+    doc.rect(5, 42, 6, 6, 'F');
+
     // Save the PDF
     doc.save(`badge-${selectedBadge.id}.pdf`);
     

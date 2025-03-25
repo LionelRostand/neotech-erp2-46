@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -41,7 +40,6 @@ import * as XLSX from 'xlsx';
 import { jsPDF } from 'jspdf';
 import 'jspdf-autotable';
 
-// Mock data for salaries
 const MOCK_SALARIES = [
   {
     id: "1",
@@ -56,7 +54,7 @@ const MOCK_SALARIES = [
     leaveBalance: {
       paidLeave: 18,
       sickLeave: 5,
-      rtt: 4  // RTT (Réduction du Temps de Travail)
+      rtt: 4
     },
     history: [
       { date: "05/01/2025", amount: 3800, reason: "Salaire mensuel" },
@@ -111,7 +109,6 @@ const MOCK_SALARIES = [
   }
 ];
 
-// Liste des employés pour le sélecteur dans le formulaire d'ajout
 const EMPLOYEES_LIST = [
   { id: "EMP001", name: "Martin Dupont" },
   { id: "EMP002", name: "Lionel Djossa" },
@@ -129,7 +126,6 @@ const EmployeesSalaries: React.FC = () => {
   const [selectedSalary, setSelectedSalary] = useState<any>(null);
   const exportHistoryRef = useRef(null);
   
-  // Form state for editing
   const [editForm, setEditForm] = useState({
     baseSalary: 0,
     paymentMethod: '',
@@ -141,7 +137,6 @@ const EmployeesSalaries: React.FC = () => {
     }
   });
   
-  // Form state for adding new payslip
   const [addPayslipForm, setAddPayslipForm] = useState({
     employeeId: '',
     period: '',
@@ -159,7 +154,6 @@ const EmployeesSalaries: React.FC = () => {
     }
   });
 
-  // Filter salaries based on search
   const filteredSalaries = salaries.filter(salary => 
     salary.employeeName.toLowerCase().includes(searchQuery.toLowerCase()) ||
     salary.position.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -189,10 +183,8 @@ const EmployeesSalaries: React.FC = () => {
   const handleSaveEdit = () => {
     if (!selectedSalary) return;
 
-    // Update salary information
     const updatedSalaries = salaries.map(salary => {
       if (salary.id === selectedSalary.id) {
-        // Create history entry for salary change if amount changed
         let updatedHistory = [...salary.history];
         if (salary.baseSalary !== editForm.baseSalary) {
           const today = new Date();
@@ -227,7 +219,6 @@ const EmployeesSalaries: React.FC = () => {
   };
 
   const handleAddPayslip = () => {
-    // Trouver l'employé dans la liste
     const employee = EMPLOYEES_LIST.find(emp => emp.id === addPayslipForm.employeeId);
     
     if (!employee) {
@@ -235,18 +226,16 @@ const EmployeesSalaries: React.FC = () => {
       return;
     }
     
-    // Calculer le montant net si pas encore défini
     const netAmount = addPayslipForm.netAmount || 
       (parseFloat(addPayslipForm.baseSalary) + 
       (parseFloat(addPayslipForm.bonuses) || 0) - 
       (parseFloat(addPayslipForm.deductions) || 0)).toString();
     
-    // Créer un nouvel objet fiche de paie
     const newPayslip = {
       id: String(salaries.length + 1),
       employeeId: addPayslipForm.employeeId,
       employeeName: employee.name,
-      position: "À définir", // Normalement, cela viendrait d'une base de données
+      position: "À définir",
       baseSalary: parseFloat(addPayslipForm.baseSalary),
       currency: "EUR",
       lastModified: new Date().toLocaleDateString('fr-FR'),
@@ -263,10 +252,8 @@ const EmployeesSalaries: React.FC = () => {
       ]
     };
     
-    // Ajouter la nouvelle fiche de paie à la liste
     setSalaries([...salaries, newPayslip]);
     
-    // Réinitialiser le formulaire
     setAddPayslipForm({
       employeeId: '',
       period: '',
@@ -289,71 +276,222 @@ const EmployeesSalaries: React.FC = () => {
   };
 
   const handleExportPayslip = (salary: any) => {
-    // Création du PDF
-    const doc = new jsPDF();
+    const doc = new jsPDF({
+      orientation: 'portrait',
+      unit: 'mm',
+      format: 'a4'
+    });
     
-    // Titre du document
-    doc.setFontSize(20);
-    doc.text("Bulletin de paie", 105, 15, { align: "center" });
+    doc.setFillColor(240, 240, 240);
+    doc.rect(0, 0, 210, 297, 'F');
     
-    // Informations de l'employé
-    doc.setFontSize(12);
-    doc.text("Informations de l'employé", 15, 30);
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.text('BULLETIN DE PAIE', 105, 15, { align: 'center' });
     doc.setFontSize(10);
-    doc.text(`Nom: ${salary.employeeName}`, 15, 40);
-    doc.text(`ID: ${salary.employeeId}`, 15, 45);
-    doc.text(`Poste: ${salary.position}`, 15, 50);
-    doc.text(`Date: ${salary.lastModified}`, 15, 55);
+    doc.text(`EN EUROS - ${new Date().toLocaleString('fr-FR', { month: 'long', year: 'numeric' })}`, 105, 22, { align: 'center' });
     
-    // Informations de salaire
-    doc.setFontSize(12);
-    doc.text("Détails du salaire", 15, 70);
+    doc.setDrawColor(200, 200, 200);
+    doc.line(15, 25, 195, 25);
+    
     doc.setFontSize(10);
-    doc.text(`Salaire de base: ${salary.baseSalary} ${salary.currency}`, 15, 80);
-    doc.text(`Méthode de paiement: ${salary.paymentMethod}`, 15, 85);
-    doc.text(`Statut: ${salary.paymentStatus}`, 15, 90);
-    
-    // Solde de congés
-    doc.setFontSize(12);
-    doc.text("Solde de congés", 15, 105);
-    doc.setFontSize(10);
-    if (salary.leaveBalance) {
-      doc.text(`Congés payés: ${salary.leaveBalance.paidLeave} jours`, 15, 115);
-      doc.text(`Congés maladie: ${salary.leaveBalance.sickLeave} jours`, 15, 120);
-      doc.text(`RTT: ${salary.leaveBalance.rtt} jours`, 15, 125);
-    } else {
-      doc.text("Aucune information de congés disponible", 15, 115);
-    }
-    
-    // Tableau d'historique simplifié
-    if (salary.history && salary.history.length > 0) {
-      const latestEntry = salary.history[0];
-      
-      doc.setFontSize(12);
-      doc.text("Dernière modification", 15, 140);
-      doc.setFontSize(10);
-      doc.text(`Date: ${latestEntry.date}`, 15, 150);
-      doc.text(`Montant: ${latestEntry.amount} ${salary.currency}`, 15, 155);
-      doc.text(`Raison: ${latestEntry.reason}`, 15, 160);
-      if (latestEntry.details) {
-        doc.text(`Détails: ${latestEntry.details}`, 15, 165);
-      }
-    }
-    
-    // Pied de page
+    doc.setFont('helvetica', 'bold');
+    doc.text('Storm Group', 15, 35);
+    doc.setFont('helvetica', 'normal');
     doc.setFontSize(8);
-    doc.text("Ce document est généré automatiquement et ne nécessite pas de signature.", 105, 280, { align: "center" });
+    doc.text('19 rue de Turbigo', 15, 40);
+    doc.text('75002 PARIS 02', 15, 45);
     
-    // Téléchargement du PDF
-    doc.save(`Bulletin_de_paie_${salary.employeeName.replace(/ /g, '_')}.pdf`);
+    doc.text('N° SIRET: 91415699700027', 15, 55);
+    doc.text('N°APE: 70222', 15, 60);
     
-    toast.success(`Bulletin de paie de ${salary.employeeName} téléchargé`);
+    doc.text('Convention Collective: BUREAUX D\'ÉTUDES', 15, 65);
+    doc.text('TECHNIQUES, CABINETS D\'INGÉNIEURS-', 15, 70);
+    doc.text('CONSEILS ET SOCIÉTÉS DE CONSEILS (SYNTEC)', 15, 75);
+    doc.text('- 1486', 15, 80);
+    
+    doc.setFont('helvetica', 'bold');
+    doc.text(`${salary.employeeName}`, 140, 35);
+    doc.setFont('helvetica', 'normal');
+    doc.text('721 Résidence de l\'Aquitaine', 140, 40);
+    doc.text('77190 DAMMARIE LES LYS', 140, 45);
+    
+    doc.text(`Début de période: ${new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' })}`, 140, 55);
+    doc.text(`Fin de période: ${new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' })}`, 140, 60);
+    
+    doc.setFillColor(240, 250, 255);
+    doc.rect(15, 90, 180, 65, 'F');
+    
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.text(`Bonjour ${salary.employeeName.split(' ')[0]}`, 25, 100);
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Voici votre bulletin de paie de ${new Date().toLocaleString('fr-FR', { month: 'long', year: 'numeric' })}`, 25, 110);
+    
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Votre salaire avant impôt', 25, 125);
+    doc.text(`${salary.baseSalary.toFixed(2)} €`, 175, 125, { align: 'right' });
+    
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8);
+    doc.text(`Prélèvement à la source (3,60 %)`, 25, 132);
+    const taxAmount = (salary.baseSalary * 0.036).toFixed(2);
+    doc.text(`${taxAmount} €`, 175, 132, { align: 'right' });
+    
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Votre salaire après impôt', 25, 142);
+    const netSalary = (salary.baseSalary - parseFloat(taxAmount)).toFixed(2);
+    doc.text(`${netSalary} €`, 175, 142, { align: 'right' });
+    
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8);
+    doc.text(`Ce montant vous sera transféré le ${new Date(new Date().getFullYear(), new Date().getMonth() + 1, 5).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' })}`, 25, 149);
+    
+    doc.setFillColor(250, 250, 240);
+    doc.rect(15, 165, 180, 100, 'F');
+    
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Congés disponibles', 105, 175, { align: 'center' });
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Jours posés en ${new Date().toLocaleString('fr-FR', { month: 'long', year: 'numeric' })}`, 105, 182, { align: 'center' });
+    
+    doc.setFont('helvetica', 'bold');
+    doc.text('CP N-2', 25, 195);
+    doc.text(`${salary.leaveBalance.paidLeave.toFixed(2)} jours`, 175, 195, { align: 'right' });
+    
+    doc.setFont('helvetica', 'normal');
+    doc.text('+ Acquis', 30, 205);
+    doc.text(`${salary.leaveBalance.paidLeave.toFixed(2)} j`, 175, 205, { align: 'right' });
+    
+    doc.text('- Pris', 30, 212);
+    doc.text(`0,00 j`, 175, 212, { align: 'right' });
+    
+    doc.setFont('helvetica', 'bold');
+    doc.text('CP N-1', 25, 225);
+    doc.text(`${salary.leaveBalance.rtt.toFixed(2)} jours`, 175, 225, { align: 'right' });
+    
+    doc.setFont('helvetica', 'normal');
+    doc.text('+ Acquis', 30, 235);
+    doc.text(`${salary.leaveBalance.rtt.toFixed(2)} j`, 175, 235, { align: 'right' });
+    
+    doc.text('- Pris', 30, 242);
+    doc.text(`0,00 j`, 175, 242, { align: 'right' });
+    
+    doc.setFillColor(240, 240, 240);
+    doc.rect(15, 260, 25, 25, 'F');
+    doc.setFillColor(0, 0, 0);
+    doc.rect(20, 265, 15, 15, 'F');
+    doc.setFillColor(255, 255, 255);
+    doc.rect(22, 267, 11, 11, 'F');
+    
+    doc.setFontSize(7);
+    doc.text('Vérifiez', 20, 290);
+    doc.text('l\'intégrité', 20, 295);
+    doc.text('du bulletin', 20, 300);
+    
+    doc.text('CODE DE VÉRIFICATION: S18241', 15, 310);
+    
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Retrouvez tous les détails de votre fichier en deuxième', 105, 285, { align: 'center' });
+    doc.text('page de votre bulletin de paie', 105, 292, { align: 'center' });
+    
+    doc.addPage();
+    
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'bold');
+    doc.text('BULLETIN DE PAIE - EN EUROS', 105, 15, { align: 'center' });
+    
+    doc.setFontSize(9);
+    doc.text('Storm Group', 20, 30);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8);
+    doc.text('19 rue de Turbigo', 20, 35);
+    doc.text('75002 PARIS 02', 20, 40);
+    
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9);
+    doc.text(`${salary.employeeName}`, 105, 30, { align: 'center' });
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8);
+    doc.text('721 Résidence de l\'Aquitaine', 105, 35, { align: 'center' });
+    doc.text('77190 DAMMARIE LES LYS', 105, 40, { align: 'center' });
+    
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9);
+    doc.text('Détail du salarié', 180, 30, { align: 'right' });
+    
+    doc.autoTable({
+      startY: 50,
+      head: [['DÉSIGNATION', 'BASE', 'PART SALARIÉ', 'PART EMPLOYEUR']],
+      body: [
+        ['Salaire de base', '151,67', `${(salary.baseSalary * 0.85).toFixed(2)}`, ''],
+        ['Heures supplémentaires contractuelles 25 %', '17,33', `${(salary.baseSalary * 0.15).toFixed(2)}`, ''],
+        [`Rémunération brute ⓘ`, '', `${salary.baseSalary.toFixed(2)}`, ''],
+        ['Sécurité sociale plafonnée', `${salary.baseSalary.toFixed(2)}`, `${(salary.baseSalary * 0.055).toFixed(2)}`, `${(salary.baseSalary * 0.088).toFixed(2)}`],
+        ['Complémentaire Tranche 1', `${(salary.baseSalary * 0.82).toFixed(2)}`, `${(salary.baseSalary * 0.041).toFixed(2)}`, `${(salary.baseSalary * 0.062).toFixed(2)}`],
+        ['CSG déductible de l\'impôt sur le revenu', `${(salary.baseSalary * 0.98).toFixed(2)}`, `${(salary.baseSalary * 0.068).toFixed(2)}`, ''],
+        ['Prélèvement à la source', '', `${taxAmount}`, ''],
+        ['Net à payer', '', `${netSalary}`, ''],
+      ],
+      theme: 'grid',
+      styles: { fontSize: 8, cellPadding: 2 },
+      columnStyles: {
+        0: { cellWidth: 90 },
+        1: { cellWidth: 30, halign: 'right' },
+        2: { cellWidth: 30, halign: 'right' },
+        3: { cellWidth: 30, halign: 'right' },
+      },
+    });
+    
+    doc.autoTable({
+      startY: 190,
+      head: [['Soldes de congés', 'CP N-2', 'CP N-1', 'CP N']],
+      body: [
+        ['Acquis', `${salary.leaveBalance.paidLeave.toFixed(2)}`, `${salary.leaveBalance.sickLeave.toFixed(2)}`, `${salary.leaveBalance.rtt.toFixed(2)}`],
+        ['Pris', '0,00', '0,00', '0,00'],
+        ['Solde', `${salary.leaveBalance.paidLeave.toFixed(2)}`, `${salary.leaveBalance.sickLeave.toFixed(2)}`, `${salary.leaveBalance.rtt.toFixed(2)}`],
+      ],
+      theme: 'grid',
+      styles: { fontSize: 8, cellPadding: 2 },
+      columnStyles: {
+        0: { cellWidth: 90 },
+        1: { cellWidth: 30, halign: 'center' },
+        2: { cellWidth: 30, halign: 'center' },
+        3: { cellWidth: 30, halign: 'center' },
+      },
+    });
+    
+    doc.setFillColor(240, 240, 240);
+    doc.circle(185, 270, 8, 'F');
+    doc.setTextColor(30, 50, 140);
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'bold');
+    doc.text('P', 183, 272);
+    doc.text('F', 187, 272);
+    
+    doc.setTextColor(0, 0, 0);
+    doc.setFontSize(7);
+    doc.setFont('helvetica', 'normal');
+    doc.text('PayFit', 190, 270);
+    
+    doc.setFontSize(6);
+    doc.text('Dans votre intérêt, et pour vous aider à faire valoir vos droits, conservez ce document sans limitation de durée.', 105, 280, { align: 'center' });
+    doc.text('Pour la définition des termes employés, se reporter au site internet www.service-public.fr rubrique cotisations sociales', 105, 285, { align: 'center' });
+    
+    doc.save(`bulletin_de_paie_${salary.employeeName.replace(/\s+/g, '_')}_${new Date().toLocaleString('fr-FR', { month: 'numeric', year: 'numeric' })}.pdf`);
+    
+    toast.success(`Bulletin de paie de ${salary.employeeName} téléchargé avec succès`);
   };
-  
+
   const handleExportHistory = () => {
     if (!selectedSalary) return;
     
-    // Préparer les données pour l'export
     const historyData = selectedSalary.history.map((entry: any) => ({
       Date: entry.date,
       Montant: `${entry.amount} ${selectedSalary.currency}`,
@@ -361,12 +499,10 @@ const EmployeesSalaries: React.FC = () => {
       Détails: entry.details || '-'
     }));
     
-    // Créer un workbook et ajouter les données
     const wb = XLSX.utils.book_new();
     const ws = XLSX.utils.json_to_sheet(historyData);
     XLSX.utils.book_append_sheet(wb, ws, "Historique Salaires");
     
-    // Télécharger le fichier
     XLSX.writeFile(wb, `Historique_Salaires_${selectedSalary.employeeName}.xlsx`);
     
     toast.success(`Historique des salaires de ${selectedSalary.employeeName} exporté avec succès`);
@@ -468,7 +604,6 @@ const EmployeesSalaries: React.FC = () => {
         </CardContent>
       </Card>
 
-      {/* Salary History Dialog */}
       {selectedSalary && (
         <Dialog open={isHistoryDialogOpen} onOpenChange={setIsHistoryDialogOpen}>
           <DialogContent className="max-w-3xl">
@@ -554,7 +689,6 @@ const EmployeesSalaries: React.FC = () => {
         </Dialog>
       )}
 
-      {/* Edit Salary Dialog */}
       {selectedSalary && (
         <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
           <DialogContent>
@@ -662,7 +796,6 @@ const EmployeesSalaries: React.FC = () => {
         </Dialog>
       )}
 
-      {/* Add Payslip Dialog */}
       <Dialog open={isAddPayslipOpen} onOpenChange={setIsAddPayslipOpen}>
         <DialogContent className="max-w-3xl">
           <DialogHeader>
