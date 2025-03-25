@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -640,5 +641,192 @@ const EmployeesEvaluations: React.FC = () => {
         </Card>
       </div>
 
-      <
+      {/* Evaluation View Dialog */}
+      {selectedEvaluation && (
+        <Dialog open={viewDialogOpen} onOpenChange={setViewDialogOpen}>
+          <DialogContent className="max-w-4xl">
+            <DialogHeader>
+              <DialogTitle className="text-xl">
+                Évaluation de {selectedEvaluation.employee}
+              </DialogTitle>
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Badge variant="outline" className={
+                  selectedEvaluation.status === 'Complété' 
+                    ? 'bg-green-100 text-green-800' 
+                    : selectedEvaluation.status === 'Planifié'
+                    ? 'bg-blue-100 text-blue-800'
+                    : 'bg-amber-100 text-amber-800'
+                }>
+                  {selectedEvaluation.status}
+                </Badge>
+                <span>·</span>
+                <span>Date: {new Date(selectedEvaluation.evaluationDate).toLocaleDateString('fr-FR')}</span>
+                <span>·</span>
+                <span>Évaluateur: {selectedEvaluation.evaluator}</span>
+              </div>
+            </DialogHeader>
+            
+            <div className="grid md:grid-cols-3 gap-6 py-4">
+              <div className="space-y-4">
+                <div>
+                  <h3 className="font-medium mb-2">Informations générales</h3>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Poste:</span>
+                      <span className="font-medium">{selectedEvaluation.position}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Département:</span>
+                      <span className="font-medium">{selectedEvaluation.department}</span>
+                    </div>
+                    {selectedEvaluation.score && (
+                      <div className="flex justify-between items-center">
+                        <span className="text-muted-foreground">Score global:</span>
+                        <div className="flex items-center">
+                          <Star className="h-4 w-4 text-amber-500 mr-1" />
+                          <span className="font-medium">{selectedEvaluation.score}/5</span>
+                        </div>
+                      </div>
+                    )}
+                    {selectedEvaluation.nextDate && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Prochaine évaluation:</span>
+                        <span className="font-medium">{new Date(selectedEvaluation.nextDate).toLocaleDateString('fr-FR')}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+                
+                <div>
+                  <h3 className="font-medium mb-2">Points forts</h3>
+                  {selectedEvaluation.strengths && selectedEvaluation.strengths.length > 0 ? (
+                    <ul className="space-y-1 text-sm">
+                      {selectedEvaluation.strengths.map((strength, index) => (
+                        <li key={index} className="flex items-start">
+                          <span className="text-green-500 mr-2">•</span>
+                          <span>{strength}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">Aucun point fort enregistré</p>
+                  )}
+                </div>
+                
+                <div>
+                  <h3 className="font-medium mb-2">Axes d'amélioration</h3>
+                  {selectedEvaluation.areasToImprove && selectedEvaluation.areasToImprove.length > 0 ? (
+                    <ul className="space-y-1 text-sm">
+                      {selectedEvaluation.areasToImprove.map((area, index) => (
+                        <li key={index} className="flex items-start">
+                          <span className="text-amber-500 mr-2">•</span>
+                          <span>{area}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">Aucun axe d'amélioration enregistré</p>
+                  )}
+                </div>
+              </div>
+              
+              <div className="md:col-span-2 space-y-6">
+                <div>
+                  <h3 className="font-medium mb-3">Évaluation des compétences</h3>
+                  {selectedEvaluation.skills && selectedEvaluation.skills.length > 0 ? (
+                    <div className="space-y-4">
+                      {selectedEvaluation.skills.map((skill, index) => (
+                        <div key={index}>
+                          <div className="flex justify-between items-center mb-1">
+                            <span className="text-sm font-medium">{skill.skill}</span>
+                            <div className="flex items-center">
+                              {renderStars(skill.rating)}
+                            </div>
+                          </div>
+                          {skill.comment && (
+                            <p className="text-sm text-muted-foreground">{skill.comment}</p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">Aucune compétence évaluée</p>
+                  )}
+                </div>
+                
+                <div>
+                  <h3 className="font-medium mb-2">Objectifs</h3>
+                  {selectedEvaluation.goals && selectedEvaluation.goals.length > 0 ? (
+                    <ul className="space-y-2 text-sm pl-1">
+                      {selectedEvaluation.goals.map((goal, index) => (
+                        <li key={index} className="flex items-start">
+                          <div className="h-5 w-5 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-xs mr-2 mt-0.5">
+                            {index + 1}
+                          </div>
+                          <span>{goal}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">Aucun objectif défini</p>
+                  )}
+                </div>
+                
+                <div>
+                  <h3 className="font-medium mb-2">Commentaires</h3>
+                  {selectedEvaluation.comments ? (
+                    <p className="text-sm">{selectedEvaluation.comments}</p>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">Aucun commentaire</p>
+                  )}
+                </div>
+              </div>
+            </div>
+            
+            <DialogFooter className="gap-2">
+              {selectedEvaluation.status === 'Planifié' && (
+                <Button 
+                  variant="default" 
+                  onClick={() => {
+                    handleStartEvaluation(selectedEvaluation.id);
+                    setViewDialogOpen(false);
+                  }}
+                >
+                  <Play className="h-4 w-4 mr-1" />
+                  Démarrer l'évaluation
+                </Button>
+              )}
+              
+              {selectedEvaluation.status === 'En cours' && (
+                <Button 
+                  variant="default" 
+                  onClick={() => {
+                    handleContinueEvaluation(selectedEvaluation.id);
+                    setViewDialogOpen(false);
+                  }}
+                >
+                  Continuer l'évaluation
+                </Button>
+              )}
+              
+              {selectedEvaluation.status === 'Complété' && (
+                <Button variant="outline">
+                  Exporter PDF
+                </Button>
+              )}
+              
+              <Button 
+                variant="outline" 
+                onClick={() => setViewDialogOpen(false)}
+              >
+                Fermer
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
+    </div>
+  );
+};
 
+export default EmployeesEvaluations;
