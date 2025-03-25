@@ -10,13 +10,35 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Progress } from '@/components/ui/progress';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { Search, Plus, GraduationCap, BookOpen, Calendar, CheckCircle2, Clock } from 'lucide-react';
+import { Search, Plus, GraduationCap, BookOpen, Calendar, CheckCircle2, Clock, Eye, Pencil } from 'lucide-react';
+import { toast } from 'sonner';
+
+interface Training {
+  id: number;
+  title: string;
+  category: string;
+  provider: string;
+  duration: string;
+  startDate: string;
+  endDate: string;
+  status: string;
+  employees: string[];
+  description?: string;
+  location?: string;
+  cost?: string;
+}
 
 const EmployeesTrainings: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
+  const [viewDialogOpen, setViewDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [selectedTraining, setSelectedTraining] = useState<Training | null>(null);
+  
+  // Form state for editing
+  const [editForm, setEditForm] = useState<Training | null>(null);
   
   // Sample trainings data
-  const trainings = [
+  const [trainings, setTrainings] = useState<Training[]>([
     { 
       id: 1, 
       title: 'Introduction à React', 
@@ -26,7 +48,10 @@ const EmployeesTrainings: React.FC = () => {
       startDate: '2025-02-10', 
       endDate: '2025-02-12',
       status: 'Planifié',
-      employees: ['Sophie Dubois', 'Pierre Durand']
+      employees: ['Sophie Dubois', 'Pierre Durand'],
+      description: 'Formation complète sur les fondamentaux de React, y compris les hooks, le state management et les bonnes pratiques.',
+      location: 'Paris',
+      cost: '1200€'
     },
     { 
       id: 2, 
@@ -37,7 +62,10 @@ const EmployeesTrainings: React.FC = () => {
       startDate: '2025-01-15', 
       endDate: '2025-01-20',
       status: 'En cours',
-      employees: ['Thomas Martin', 'Jean Dupont']
+      employees: ['Thomas Martin', 'Jean Dupont'],
+      description: 'Formation avancée sur les techniques de leadership et management d\'équipe.',
+      location: 'Lyon',
+      cost: '1800€'
     },
     { 
       id: 3, 
@@ -48,7 +76,10 @@ const EmployeesTrainings: React.FC = () => {
       startDate: '2024-12-05', 
       endDate: '2024-12-05',
       status: 'Terminé',
-      employees: ['Marie Lambert', 'Jean Dupont', 'Sophie Dubois']
+      employees: ['Marie Lambert', 'Jean Dupont', 'Sophie Dubois'],
+      description: 'Maîtrise des fonctions avancées d\'Excel, tableaux croisés dynamiques et macros.',
+      location: 'En ligne',
+      cost: '500€'
     },
     { 
       id: 4, 
@@ -59,7 +90,10 @@ const EmployeesTrainings: React.FC = () => {
       startDate: '2024-11-20', 
       endDate: '2024-11-20',
       status: 'Terminé',
-      employees: ['Thomas Martin', 'Marie Lambert', 'Jean Dupont', 'Sophie Dubois', 'Pierre Durand']
+      employees: ['Thomas Martin', 'Marie Lambert', 'Jean Dupont', 'Sophie Dubois', 'Pierre Durand'],
+      description: 'Formation obligatoire sur la protection des données et la conformité RGPD.',
+      location: 'En ligne',
+      cost: '350€'
     },
     { 
       id: 5, 
@@ -70,9 +104,12 @@ const EmployeesTrainings: React.FC = () => {
       startDate: '2025-03-01', 
       endDate: '2025-03-02',
       status: 'Planifié',
-      employees: ['Marie Lambert', 'Thomas Martin']
+      employees: ['Marie Lambert', 'Thomas Martin'],
+      description: 'Améliorer ses compétences en communication orale et prise de parole en public.',
+      location: 'Paris',
+      cost: '950€'
     }
-  ];
+  ]);
   
   // Sample employee training data
   const employeeTrainings = [
@@ -128,7 +165,7 @@ const EmployeesTrainings: React.FC = () => {
     }
   ];
   
-  // Filter trainings based on search query and tab
+  // Filter trainings based on search query
   const filteredTrainings = trainings.filter(
     training => 
       training.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -143,6 +180,39 @@ const EmployeesTrainings: React.FC = () => {
       empTraining.employee.toLowerCase().includes(searchQuery.toLowerCase()) ||
       empTraining.department.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  // Handle view training details
+  const handleViewTraining = (training: Training) => {
+    setSelectedTraining(training);
+    setViewDialogOpen(true);
+  };
+
+  // Handle edit training
+  const handleEditTraining = (training: Training) => {
+    setSelectedTraining(training);
+    setEditForm({...training});
+    setEditDialogOpen(true);
+  };
+
+  // Handle saving edited training
+  const handleSaveEdit = () => {
+    if (!editForm) return;
+    
+    setTrainings(prevTrainings => 
+      prevTrainings.map(training => 
+        training.id === editForm.id ? editForm : training
+      )
+    );
+    
+    toast.success("Formation modifiée avec succès");
+    setEditDialogOpen(false);
+  };
+
+  // Handle form changes
+  const handleEditFormChange = (field: keyof Training, value: string | string[]) => {
+    if (!editForm) return;
+    setEditForm({...editForm, [field]: value});
+  };
 
   return (
     <div className="space-y-6">
@@ -338,8 +408,22 @@ const EmployeesTrainings: React.FC = () => {
                             </Badge>
                           </TableCell>
                           <TableCell className="text-right">
-                            <Button variant="ghost" size="sm">Voir</Button>
-                            <Button variant="ghost" size="sm">Modifier</Button>
+                            <Button 
+                              variant="ghost" 
+                              size="sm"
+                              onClick={() => handleViewTraining(training)}
+                            >
+                              <Eye className="h-4 w-4 mr-1" />
+                              Voir
+                            </Button>
+                            <Button 
+                              variant="ghost" 
+                              size="sm"
+                              onClick={() => handleEditTraining(training)}
+                            >
+                              <Pencil className="h-4 w-4 mr-1" />
+                              Modifier
+                            </Button>
                           </TableCell>
                         </TableRow>
                       ))
@@ -591,6 +675,289 @@ const EmployeesTrainings: React.FC = () => {
           </div>
         </TabsContent>
       </Tabs>
+      
+      {/* Dialogue pour voir les détails d'une formation */}
+      <Dialog open={viewDialogOpen} onOpenChange={setViewDialogOpen}>
+        <DialogContent className="sm:max-w-[700px]">
+          <DialogHeader>
+            <DialogTitle>Détails de la formation</DialogTitle>
+            <DialogDescription>
+              Informations complètes sur la formation sélectionnée
+            </DialogDescription>
+          </DialogHeader>
+          
+          {selectedTraining && (
+            <div className="py-4">
+              <div className="grid grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <div>
+                    <h3 className="text-lg font-semibold flex items-center">
+                      <GraduationCap className="h-5 w-5 text-primary mr-2" />
+                      {selectedTraining.title}
+                    </h3>
+                    <Badge variant="outline" className={
+                      selectedTraining.status === 'Terminé' 
+                        ? 'bg-green-100 text-green-800 mt-2' 
+                        : selectedTraining.status === 'En cours'
+                        ? 'bg-blue-100 text-blue-800 mt-2'
+                        : 'bg-amber-100 text-amber-800 mt-2'
+                    }>
+                      {selectedTraining.status}
+                    </Badge>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <div className="flex items-center text-sm">
+                      <span className="font-medium w-32">Catégorie:</span>
+                      <span>{selectedTraining.category}</span>
+                    </div>
+                    
+                    <div className="flex items-center text-sm">
+                      <span className="font-medium w-32">Organisme:</span>
+                      <span>{selectedTraining.provider}</span>
+                    </div>
+                    
+                    <div className="flex items-center text-sm">
+                      <span className="font-medium w-32">Lieu:</span>
+                      <span>{selectedTraining.location || 'Non spécifié'}</span>
+                    </div>
+                    
+                    <div className="flex items-center text-sm">
+                      <span className="font-medium w-32">Durée:</span>
+                      <span>{selectedTraining.duration}</span>
+                    </div>
+                    
+                    <div className="flex items-center text-sm">
+                      <span className="font-medium w-32">Date de début:</span>
+                      <span>{new Date(selectedTraining.startDate).toLocaleDateString('fr-FR')}</span>
+                    </div>
+                    
+                    <div className="flex items-center text-sm">
+                      <span className="font-medium w-32">Date de fin:</span>
+                      <span>{new Date(selectedTraining.endDate).toLocaleDateString('fr-FR')}</span>
+                    </div>
+                    
+                    <div className="flex items-center text-sm">
+                      <span className="font-medium w-32">Coût:</span>
+                      <span>{selectedTraining.cost || 'Non spécifié'}</span>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <h4 className="font-medium text-sm">Description:</h4>
+                    <p className="text-sm border p-3 rounded-md bg-muted/50">
+                      {selectedTraining.description || 'Aucune description disponible.'}
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="space-y-4">
+                  <div>
+                    <h4 className="font-medium mb-2">Participants ({selectedTraining.employees.length})</h4>
+                    <div className="border rounded-md divide-y">
+                      {selectedTraining.employees.map((employee, index) => (
+                        <div key={index} className="p-2 flex items-center">
+                          <Avatar className="h-8 w-8 mr-2">
+                            <AvatarFallback>
+                              {employee.split(' ').map(n => n[0]).join('')}
+                            </AvatarFallback>
+                          </Avatar>
+                          <span>{employee}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <h4 className="font-medium mb-2">Calendrier</h4>
+                    <div className="border rounded-md p-3 bg-muted/50">
+                      <div className="flex items-center mb-2">
+                        <Calendar className="h-4 w-4 text-muted-foreground mr-2" />
+                        <span className="text-sm">Dates: {new Date(selectedTraining.startDate).toLocaleDateString('fr-FR')} - {new Date(selectedTraining.endDate).toLocaleDateString('fr-FR')}</span>
+                      </div>
+                      <div className="flex items-center">
+                        <Clock className="h-4 w-4 text-muted-foreground mr-2" />
+                        <span className="text-sm">Durée totale: {selectedTraining.duration}</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <h4 className="font-medium mb-2">Actions</h4>
+                    <div className="flex flex-wrap gap-2">
+                      <Button size="sm" variant="outline">
+                        Télécharger programme
+                      </Button>
+                      <Button size="sm" variant="outline">
+                        Exporter données
+                      </Button>
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={() => {
+                          setViewDialogOpen(false);
+                          handleEditTraining(selectedTraining);
+                        }}
+                      >
+                        <Pencil className="h-4 w-4 mr-1" />
+                        Modifier
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setViewDialogOpen(false)}>
+              Fermer
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Dialogue pour modifier une formation */}
+      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+        <DialogContent className="sm:max-w-[700px]">
+          <DialogHeader>
+            <DialogTitle>Modifier la formation</DialogTitle>
+            <DialogDescription>
+              Modifiez les informations de la formation
+            </DialogDescription>
+          </DialogHeader>
+          
+          {editForm && (
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label htmlFor="edit-title" className="text-sm font-medium">Titre de la formation *</label>
+                  <Input 
+                    id="edit-title" 
+                    value={editForm.title}
+                    onChange={(e) => handleEditFormChange('title', e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label htmlFor="edit-category" className="text-sm font-medium">Catégorie *</label>
+                  <Select 
+                    value={editForm.category} 
+                    onValueChange={(value) => handleEditFormChange('category', value)}
+                  >
+                    <SelectTrigger id="edit-category">
+                      <SelectValue placeholder="Sélectionner une catégorie" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Développement">Développement</SelectItem>
+                      <SelectItem value="Management">Management</SelectItem>
+                      <SelectItem value="Bureautique">Bureautique</SelectItem>
+                      <SelectItem value="Juridique">Juridique</SelectItem>
+                      <SelectItem value="Communication">Communication</SelectItem>
+                      <SelectItem value="Autre">Autre</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label htmlFor="edit-provider" className="text-sm font-medium">Organisme de formation *</label>
+                  <Input 
+                    id="edit-provider" 
+                    value={editForm.provider}
+                    onChange={(e) => handleEditFormChange('provider', e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label htmlFor="edit-duration" className="text-sm font-medium">Durée *</label>
+                  <Input 
+                    id="edit-duration" 
+                    value={editForm.duration}
+                    onChange={(e) => handleEditFormChange('duration', e.target.value)}
+                  />
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label htmlFor="edit-startDate" className="text-sm font-medium">Date de début *</label>
+                  <Input 
+                    id="edit-startDate" 
+                    type="date" 
+                    value={editForm.startDate}
+                    onChange={(e) => handleEditFormChange('startDate', e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label htmlFor="edit-endDate" className="text-sm font-medium">Date de fin *</label>
+                  <Input 
+                    id="edit-endDate" 
+                    type="date" 
+                    value={editForm.endDate}
+                    onChange={(e) => handleEditFormChange('endDate', e.target.value)}
+                  />
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label htmlFor="edit-location" className="text-sm font-medium">Lieu</label>
+                  <Input 
+                    id="edit-location" 
+                    value={editForm.location || ''}
+                    onChange={(e) => handleEditFormChange('location', e.target.value)}
+                    placeholder="Ex: Paris, En ligne, etc."
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label htmlFor="edit-cost" className="text-sm font-medium">Coût</label>
+                  <Input 
+                    id="edit-cost" 
+                    value={editForm.cost || ''}
+                    onChange={(e) => handleEditFormChange('cost', e.target.value)}
+                    placeholder="Ex: 1200€"
+                  />
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <label htmlFor="edit-status" className="text-sm font-medium">Statut *</label>
+                <Select 
+                  value={editForm.status} 
+                  onValueChange={(value) => handleEditFormChange('status', value)}
+                >
+                  <SelectTrigger id="edit-status">
+                    <SelectValue placeholder="Sélectionner un statut" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Planifié">Planifié</SelectItem>
+                    <SelectItem value="En cours">En cours</SelectItem>
+                    <SelectItem value="Terminé">Terminé</SelectItem>
+                    <SelectItem value="Annulé">Annulé</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="space-y-2">
+                <label htmlFor="edit-description" className="text-sm font-medium">Description</label>
+                <textarea 
+                  id="edit-description" 
+                  className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                  rows={3}
+                  value={editForm.description || ''}
+                  onChange={(e) => handleEditFormChange('description', e.target.value)}
+                  placeholder="Description de la formation..."
+                />
+              </div>
+            </div>
+          )}
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditDialogOpen(false)}>Annuler</Button>
+            <Button onClick={handleSaveEdit}>Enregistrer</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
