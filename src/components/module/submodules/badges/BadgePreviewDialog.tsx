@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Download } from 'lucide-react';
 import { toast } from 'sonner';
@@ -102,58 +102,60 @@ const BadgePreviewDialog: React.FC<BadgePreviewDialogProps> = ({
   };
   
   return (
-    <DialogContent className="sm:max-w-md">
-      <DialogHeader>
-        <DialogTitle>Aperçu du Badge</DialogTitle>
-      </DialogHeader>
-      
-      <div className="py-4">
-        <div className="bg-gray-100 rounded-md p-6 mb-4">
-          <div className={`h-2 w-full mb-3 rounded-t ${
-            selectedBadge.status === 'success' ? 'bg-green-500' : 
-            selectedBadge.status === 'warning' ? 'bg-amber-500' : 'bg-red-500'
-          }`}></div>
-          
-          <div className="text-center mb-3">
-            <p className="text-sm text-gray-500">ID: {selectedBadge.id}</p>
-            <h3 className="text-lg font-bold">{selectedBadge.employeeName}</h3>
-          </div>
-          
-          <div className="space-y-2 text-sm">
-            <p><span className="font-medium">Département:</span> {selectedBadge.department || 'N/A'}</p>
-            <p><span className="font-medium">Niveau d'accès:</span> {selectedBadge.accessLevel || 'Standard'}</p>
-            <p><span className="font-medium">Statut:</span> 
-              <span className={`ml-1 ${
-                selectedBadge.status === 'success' ? 'text-green-600' : 
-                selectedBadge.status === 'warning' ? 'text-amber-600' : 'text-red-600'
-              }`}>
-                {selectedBadge.statusText}
-              </span>
-            </p>
-            <p><span className="font-medium">Date d'émission:</span> {selectedBadge.date}</p>
-          </div>
-          
-          {selectedEmployee && (
-            <div className="mt-4 pt-4 border-t border-gray-200">
-              <p className="text-sm text-gray-500 mb-2">Informations supplémentaires</p>
-              <div className="space-y-1 text-sm">
-                <p><span className="font-medium">Email:</span> {selectedEmployee.email}</p>
-                <p><span className="font-medium">Poste:</span> {selectedEmployee.position}</p>
-              </div>
-            </div>
-          )}
-        </div>
+    <Dialog open={isOpen} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Aperçu du Badge</DialogTitle>
+        </DialogHeader>
         
-        <Button 
-          onClick={handleDownloadBadge} 
-          className="w-full" 
-          variant="outline"
-        >
-          <Download className="h-4 w-4 mr-2" />
-          Télécharger le badge
-        </Button>
-      </div>
-    </DialogContent>
+        <div className="py-4">
+          <div className="bg-gray-100 rounded-md p-6 mb-4">
+            <div className={`h-2 w-full mb-3 rounded-t ${
+              selectedBadge.status === 'success' ? 'bg-green-500' : 
+              selectedBadge.status === 'warning' ? 'bg-amber-500' : 'bg-red-500'
+            }`}></div>
+            
+            <div className="text-center mb-3">
+              <p className="text-sm text-gray-500">ID: {selectedBadge.id}</p>
+              <h3 className="text-lg font-bold">{selectedBadge.employeeName}</h3>
+            </div>
+            
+            <div className="space-y-2 text-sm">
+              <p><span className="font-medium">Département:</span> {selectedBadge.department || 'N/A'}</p>
+              <p><span className="font-medium">Niveau d'accès:</span> {selectedBadge.accessLevel || 'Standard'}</p>
+              <p><span className="font-medium">Statut:</span> 
+                <span className={`ml-1 ${
+                  selectedBadge.status === 'success' ? 'text-green-600' : 
+                  selectedBadge.status === 'warning' ? 'text-amber-600' : 'text-red-600'
+                }`}>
+                  {selectedBadge.statusText}
+                </span>
+              </p>
+              <p><span className="font-medium">Date d'émission:</span> {selectedBadge.date}</p>
+            </div>
+            
+            {selectedEmployee && (
+              <div className="mt-4 pt-4 border-t border-gray-200">
+                <p className="text-sm text-gray-500 mb-2">Informations supplémentaires</p>
+                <div className="space-y-1 text-sm">
+                  <p><span className="font-medium">Email:</span> {selectedEmployee.email}</p>
+                  <p><span className="font-medium">Poste:</span> {selectedEmployee.position}</p>
+                </div>
+              </div>
+            )}
+          </div>
+          
+          <Button 
+            onClick={handleDownloadBadge} 
+            className="w-full" 
+            variant="outline"
+          >
+            <Download className="h-4 w-4 mr-2" />
+            Télécharger le badge
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 };
 
