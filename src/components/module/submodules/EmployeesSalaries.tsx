@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -33,9 +33,11 @@ import {
   FileEdit, 
   Download, 
   Search,
-  Plus
+  Plus,
+  FileText
 } from 'lucide-react';
 import { toast } from 'sonner';
+import * as XLSX from 'xlsx';
 
 // Mock data for salaries
 const MOCK_SALARIES = [
@@ -92,17 +94,41 @@ const MOCK_SALARIES = [
   }
 ];
 
+// Liste des employés pour le sélecteur dans le formulaire d'ajout
+const EMPLOYEES_LIST = [
+  { id: "EMP001", name: "Martin Dupont" },
+  { id: "EMP002", name: "Lionel Djossa" },
+  { id: "EMP003", name: "Sophie Martin" },
+  { id: "EMP004", name: "Julie Lemaire" },
+  { id: "EMP005", name: "Thomas Bernard" },
+];
+
 const EmployeesSalaries: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [salaries, setSalaries] = useState(MOCK_SALARIES);
   const [isHistoryDialogOpen, setIsHistoryDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isAddPayslipOpen, setIsAddPayslipOpen] = useState(false);
   const [selectedSalary, setSelectedSalary] = useState<any>(null);
+  const exportHistoryRef = useRef(null);
   
   // Form state for editing
   const [editForm, setEditForm] = useState({
     baseSalary: 0,
     paymentMethod: '',
+    notes: ''
+  });
+  
+  // Form state for adding new payslip
+  const [addPayslipForm, setAddPayslipForm] = useState({
+    employeeId: '',
+    period: '',
+    baseSalary: '',
+    bonuses: '',
+    deductions: '',
+    netAmount: '',
+    paymentMethod: 'Virement bancaire',
+    paymentStatus: 'En attente',
     notes: ''
   });
 
@@ -167,8 +193,87 @@ const EmployeesSalaries: React.FC = () => {
     setIsEditDialogOpen(false);
   };
 
+  const handleAddPayslip = () => {
+    // Trouver l'employé dans la liste
+    const employee = EMPLOYEES_LIST.find(emp => emp.id === addPayslipForm.employeeId);
+    
+    if (!employee) {
+      toast.error("Veuillez sélectionner un employé valide");
+      return;
+    }
+    
+    // Calculer le montant net si pas encore défini
+    const netAmount = addPayslipForm.netAmount || 
+      (parseFloat(addPayslipForm.baseSalary) + 
+      (parseFloat(addPayslipForm.bonuses) || 0) - 
+      (parseFloat(addPayslipForm.deductions) || 0)).toString();
+    
+    // Créer un nouvel objet fiche de paie
+    const newPayslip = {
+      id: String(salaries.length + 1),
+      employeeId: addPayslipForm.employeeId,
+      employeeName: employee.name,
+      position: "À définir", // Normalement, cela viendrait d'une base de données
+      baseSalary: parseFloat(addPayslipForm.baseSalary),
+      currency: "EUR",
+      lastModified: new Date().toLocaleDateString('fr-FR'),
+      paymentStatus: addPayslipForm.paymentStatus,
+      paymentMethod: addPayslipForm.paymentMethod,
+      history: [
+        {
+          date: new Date().toLocaleDateString('fr-FR'),
+          amount: parseFloat(addPayslipForm.baseSalary),
+          reason: `Salaire ${addPayslipForm.period}`,
+          details: addPayslipForm.notes
+        }
+      ]
+    };
+    
+    // Ajouter la nouvelle fiche de paie à la liste
+    setSalaries([...salaries, newPayslip]);
+    
+    // Réinitialiser le formulaire
+    setAddPayslipForm({
+      employeeId: '',
+      period: '',
+      baseSalary: '',
+      bonuses: '',
+      deductions: '',
+      netAmount: '',
+      paymentMethod: 'Virement bancaire',
+      paymentStatus: 'En attente',
+      notes: ''
+    });
+    
+    toast.success("Fiche de paie ajoutée avec succès");
+    setIsAddPayslipOpen(false);
+  };
+
   const handleExportPayslip = (salary: any) => {
     toast.success(`Bulletin de paie de ${salary.employeeName} téléchargé`);
+  };
+  
+  const handleExportHistory = () => {
+    if (!selectedSalary) return;
+    
+    // Préparer les données pour l'export
+    const historyData = selectedSalary.history.map((entry: any) => ({
+      Date: entry.date,
+      Montant: `${entry.amount} ${selectedSalary.currency}`,
+      Raison: entry.reason,
+      Détails: entry.details || '-'
+    }));
+    
+    // Créer un workbook et ajouter les données
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.json_to_sheet(historyData);
+    XLSX.utils.book_append_sheet(wb, ws, "Historique Salaires");
+    
+    // Télécharger le fichier
+    XLSX.writeFile(wb, `Historique_Salaires_${selectedSalary.employeeName}.xlsx`);
+    
+    toast.success(`Historique des salaires de ${selectedSalary.employeeName} exporté avec succès`);
+    setIsHistoryDialogOpen(false);
   };
 
   return (
@@ -188,7 +293,7 @@ const EmployeesSalaries: React.FC = () => {
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
-        <Button>
+        <Button onClick={() => setIsAddPayslipOpen(true)}>
           <Plus className="mr-2 h-4 w-4" />
           Ajouter une fiche de paie
         </Button>
@@ -217,7 +322,13 @@ const EmployeesSalaries: React.FC = () => {
                   <TableCell>{salary.baseSalary} {salary.currency}</TableCell>
                   <TableCell>{salary.lastModified}</TableCell>
                   <TableCell>
-                    <Badge className="bg-green-100 text-green-800 hover:bg-green-100">
+                    <Badge className={
+                      salary.paymentStatus === "Payé" 
+                        ? "bg-green-100 text-green-800 hover:bg-green-100"
+                        : salary.paymentStatus === "En attente"
+                        ? "bg-yellow-100 text-yellow-800 hover:bg-yellow-100"
+                        : "bg-gray-100 text-gray-800 hover:bg-gray-100"
+                    }>
                       {salary.paymentStatus}
                     </Badge>
                   </TableCell>
@@ -315,10 +426,10 @@ const EmployeesSalaries: React.FC = () => {
               <DialogClose asChild>
                 <Button variant="outline">Fermer</Button>
               </DialogClose>
-              <Button onClick={() => {
-                handleExportPayslip(selectedSalary);
-                setIsHistoryDialogOpen(false);
-              }}>Exporter l'historique</Button>
+              <Button onClick={handleExportHistory} ref={exportHistoryRef}>
+                <Download className="h-4 w-4 mr-2" />
+                Exporter l'historique
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -380,6 +491,144 @@ const EmployeesSalaries: React.FC = () => {
           </DialogContent>
         </Dialog>
       )}
+
+      {/* Add Payslip Dialog */}
+      <Dialog open={isAddPayslipOpen} onOpenChange={setIsAddPayslipOpen}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>Ajouter une nouvelle fiche de paie</DialogTitle>
+          </DialogHeader>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="employeeId">Employé</Label>
+              <Select
+                value={addPayslipForm.employeeId}
+                onValueChange={(value) => setAddPayslipForm({...addPayslipForm, employeeId: value})}
+              >
+                <SelectTrigger id="employeeId">
+                  <SelectValue placeholder="Sélectionner un employé" />
+                </SelectTrigger>
+                <SelectContent>
+                  {EMPLOYEES_LIST.map(employee => (
+                    <SelectItem key={employee.id} value={employee.id}>
+                      {employee.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="period">Période</Label>
+              <Input
+                id="period"
+                placeholder="Ex: Janvier 2025"
+                value={addPayslipForm.period}
+                onChange={(e) => setAddPayslipForm({...addPayslipForm, period: e.target.value})}
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="baseSalary">Salaire de base (EUR)</Label>
+              <Input
+                id="baseSalary"
+                type="number"
+                placeholder="0.00"
+                value={addPayslipForm.baseSalary}
+                onChange={(e) => setAddPayslipForm({...addPayslipForm, baseSalary: e.target.value})}
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="bonuses">Primes (EUR)</Label>
+              <Input
+                id="bonuses"
+                type="number"
+                placeholder="0.00"
+                value={addPayslipForm.bonuses}
+                onChange={(e) => setAddPayslipForm({...addPayslipForm, bonuses: e.target.value})}
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="deductions">Déductions (EUR)</Label>
+              <Input
+                id="deductions"
+                type="number"
+                placeholder="0.00"
+                value={addPayslipForm.deductions}
+                onChange={(e) => setAddPayslipForm({...addPayslipForm, deductions: e.target.value})}
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="netAmount">Montant net (EUR)</Label>
+              <Input
+                id="netAmount"
+                type="number"
+                placeholder="Calculé automatiquement"
+                value={addPayslipForm.netAmount}
+                onChange={(e) => setAddPayslipForm({...addPayslipForm, netAmount: e.target.value})}
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="paymentMethod">Méthode de paiement</Label>
+              <Select
+                value={addPayslipForm.paymentMethod}
+                onValueChange={(value) => setAddPayslipForm({...addPayslipForm, paymentMethod: value})}
+              >
+                <SelectTrigger id="paymentMethod">
+                  <SelectValue placeholder="Sélectionner une méthode" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Virement bancaire">Virement bancaire</SelectItem>
+                  <SelectItem value="Chèque">Chèque</SelectItem>
+                  <SelectItem value="Espèces">Espèces</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="paymentStatus">Statut</Label>
+              <Select
+                value={addPayslipForm.paymentStatus}
+                onValueChange={(value) => setAddPayslipForm({...addPayslipForm, paymentStatus: value})}
+              >
+                <SelectTrigger id="paymentStatus">
+                  <SelectValue placeholder="Sélectionner un statut" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="En attente">En attente</SelectItem>
+                  <SelectItem value="Payé">Payé</SelectItem>
+                  <SelectItem value="Annulé">Annulé</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="space-y-2 col-span-2">
+              <Label htmlFor="notes">Notes</Label>
+              <Input
+                id="notes"
+                placeholder="Notes ou commentaires sur cette fiche de paie"
+                value={addPayslipForm.notes}
+                onChange={(e) => setAddPayslipForm({...addPayslipForm, notes: e.target.value})}
+              />
+            </div>
+          </div>
+          
+          <DialogFooter className="mt-6">
+            <DialogClose asChild>
+              <Button variant="outline">Annuler</Button>
+            </DialogClose>
+            <Button onClick={handleAddPayslip} disabled={!addPayslipForm.employeeId || !addPayslipForm.baseSalary}>
+              <FileText className="h-4 w-4 mr-2" />
+              Créer la fiche de paie
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
