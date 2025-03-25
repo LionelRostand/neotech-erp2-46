@@ -1,8 +1,8 @@
 
 import React from 'react';
 import { Dialog } from '@/components/ui/dialog';
+import { Card, CardContent } from '@/components/ui/card';
 import DepartmentHeader from './departments/DepartmentHeader';
-import DepartmentCard from './departments/DepartmentCard';
 import DepartmentTable from './departments/DepartmentTable';
 import AddDepartmentDialog from './departments/AddDepartmentDialog';
 import EditDepartmentDialog from './departments/EditDepartmentDialog';
@@ -42,15 +42,17 @@ const EmployeesDepartments: React.FC = () => {
     <div className="space-y-6">
       <DepartmentHeader onAddDepartment={handleAddDepartment} />
 
-      <DepartmentCard title="Liste des départements">
-        <DepartmentTable 
-          departments={departments}
-          loading={loading}
-          onEditDepartment={handleEditDepartment}
-          onDeleteDepartment={handleDeleteDepartment}
-          onManageEmployees={handleManageEmployees}
-        />
-      </DepartmentCard>
+      <Card>
+        <CardContent className="p-6">
+          <DepartmentTable 
+            departments={departments}
+            loading={loading}
+            onEditDepartment={handleEditDepartment}
+            onDeleteDepartment={handleDeleteDepartment}
+            onManageEmployees={handleManageEmployees}
+          />
+        </CardContent>
+      </Card>
 
       {/* Add Department Dialog */}
       <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
