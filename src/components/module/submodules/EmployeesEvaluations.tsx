@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -10,13 +9,32 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Progress } from '@/components/ui/progress';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { Search, Plus, Star, Calendar, ClipboardList, Award, ChevronRight } from 'lucide-react';
+import { Search, Plus, Star, Calendar, ClipboardList, Award, ChevronRight, Eye, Play } from 'lucide-react';
+import { toast } from 'sonner';
+
+interface Evaluation {
+  id: number; 
+  employee: string;
+  position: string;
+  department: string;
+  evaluationDate: string;
+  evaluator: string;
+  status: 'Planifié' | 'En cours' | 'Complété';
+  score: number | null;
+  nextDate: string | null;
+  skills?: Array<{ skill: string; rating: number; comment?: string }>;
+  strengths?: string[];
+  areasToImprove?: string[];
+  goals?: string[];
+  comments?: string;
+}
 
 const EmployeesEvaluations: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
+  const [viewDialogOpen, setViewDialogOpen] = useState(false);
+  const [selectedEvaluation, setSelectedEvaluation] = useState<Evaluation | null>(null);
   
-  // Sample evaluations data
-  const evaluations = [
+  const [evaluations, setEvaluations] = useState<Evaluation[]>([
     { 
       id: 1, 
       employee: 'Thomas Martin', 
@@ -26,7 +44,17 @@ const EmployeesEvaluations: React.FC = () => {
       evaluator: 'Jean Dupont',
       status: 'Complété',
       score: 4.2,
-      nextDate: '2025-07-15'
+      nextDate: '2025-07-15',
+      skills: [
+        { skill: 'Communication', rating: 4, comment: 'Très bonne communication' },
+        { skill: 'Technique', rating: 5, comment: 'Excellente maitrise technique' },
+        { skill: 'Leadership', rating: 3, comment: 'Peut encore s\'améliorer' },
+        { skill: 'Travail d\'équipe', rating: 4, comment: 'Bon esprit d\'équipe' }
+      ],
+      strengths: ['Capacité d\'analyse', 'Créativité', 'Organisation'],
+      areasToImprove: ['Communication écrite', 'Gestion du stress'],
+      goals: ['Améliorer leadership', 'Approfondir connaissances marketing digital'],
+      comments: 'Excellent élément dans l\'équipe. Démontre une grande motivation.'
     },
     { 
       id: 2, 
@@ -37,7 +65,16 @@ const EmployeesEvaluations: React.FC = () => {
       evaluator: 'Pierre Durand',
       status: 'Complété',
       score: 4.5,
-      nextDate: '2025-08-01'
+      nextDate: '2025-08-01',
+      skills: [
+        { skill: 'Communication', rating: 4, comment: 'Bonne communication' },
+        { skill: 'Technique', rating: 5, comment: 'Excellente connaissance technique' },
+        { skill: 'Résolution de problèmes', rating: 5, comment: 'Très performante' }
+      ],
+      strengths: ['Expertise technique', 'Autonomie', 'Curiosité'],
+      areasToImprove: ['Communication avec les clients'],
+      goals: ['Maîtriser nouvelles technologies', 'Monter en compétence management'],
+      comments: 'Très bonne développeuse, à fort potentiel d\'évolution.'
     },
     { 
       id: 3, 
@@ -48,7 +85,15 @@ const EmployeesEvaluations: React.FC = () => {
       evaluator: 'Marie Lambert',
       status: 'Complété',
       score: 3.8,
-      nextDate: '2025-06-10'
+      nextDate: '2025-06-10',
+      skills: [
+        { skill: 'Finance', rating: 5, comment: 'Expert en finance' },
+        { skill: 'Management', rating: 3, comment: 'Peut améliorer son management' }
+      ],
+      strengths: ['Analyse financière', 'Rigueur'],
+      areasToImprove: ['Communication interne', 'Délégation'],
+      goals: ['Améliorer management d\'équipe'],
+      comments: 'Excellent directeur financier mais doit travailler son management.'
     },
     { 
       id: 4, 
@@ -72,9 +117,8 @@ const EmployeesEvaluations: React.FC = () => {
       score: null,
       nextDate: null
     }
-  ];
+  ]);
   
-  // Sample skills data for radar chart
   const skillsData = [
     { skill: 'Communication', value: 85 },
     { skill: 'Technique', value: 92 },
@@ -84,13 +128,41 @@ const EmployeesEvaluations: React.FC = () => {
     { skill: 'Organisation', value: 82 }
   ];
   
-  // Filter evaluations based on search query
   const filteredEvaluations = evaluations.filter(
     evaluation => 
       evaluation.employee.toLowerCase().includes(searchQuery.toLowerCase()) ||
       evaluation.position.toLowerCase().includes(searchQuery.toLowerCase()) ||
       evaluation.department.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  const handleViewEvaluation = (evaluation: Evaluation) => {
+    setSelectedEvaluation(evaluation);
+    setViewDialogOpen(true);
+  };
+
+  const handleStartEvaluation = (evaluationId: number) => {
+    setEvaluations(prevEvaluations => 
+      prevEvaluations.map(evaluation => 
+        evaluation.id === evaluationId 
+          ? { ...evaluation, status: 'En cours' } 
+          : evaluation
+      )
+    );
+    toast.success("Évaluation démarrée avec succès");
+  };
+
+  const handleContinueEvaluation = (evaluationId: number) => {
+    toast.info("Reprise de l'évaluation en cours");
+  };
+
+  const renderStars = (rating: number) => {
+    return Array(5).fill(0).map((_, i) => (
+      <Star 
+        key={i} 
+        className={`h-4 w-4 ${i < rating ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}`} 
+      />
+    ));
+  };
 
   return (
     <div className="space-y-6">
@@ -116,7 +188,7 @@ const EmployeesEvaluations: React.FC = () => {
                 <div className="space-y-2">
                   <label htmlFor="employee" className="text-sm font-medium">Employé *</label>
                   <Select>
-                    <SelectTrigger>
+                    <SelectTrigger id="employee">
                       <SelectValue placeholder="Sélectionner un employé" />
                     </SelectTrigger>
                     <SelectContent>
@@ -131,7 +203,7 @@ const EmployeesEvaluations: React.FC = () => {
                 <div className="space-y-2">
                   <label htmlFor="evaluator" className="text-sm font-medium">Évaluateur *</label>
                   <Select>
-                    <SelectTrigger>
+                    <SelectTrigger id="evaluator">
                       <SelectValue placeholder="Sélectionner un évaluateur" />
                     </SelectTrigger>
                     <SelectContent>
@@ -152,7 +224,7 @@ const EmployeesEvaluations: React.FC = () => {
                 <div className="space-y-2">
                   <label htmlFor="template" className="text-sm font-medium">Modèle d'évaluation *</label>
                   <Select>
-                    <SelectTrigger>
+                    <SelectTrigger id="template">
                       <SelectValue placeholder="Sélectionner un modèle" />
                     </SelectTrigger>
                     <SelectContent>
@@ -247,12 +319,32 @@ const EmployeesEvaluations: React.FC = () => {
                               </Badge>
                             </TableCell>
                             <TableCell className="text-right">
-                              <Button variant="ghost" size="sm">Voir</Button>
+                              <Button 
+                                variant="ghost" 
+                                size="sm"
+                                onClick={() => handleViewEvaluation(evaluation)}
+                              >
+                                <Eye className="h-4 w-4 mr-1" />
+                                Voir
+                              </Button>
                               {evaluation.status === 'Planifié' && (
-                                <Button variant="ghost" size="sm">Démarrer</Button>
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm"
+                                  onClick={() => handleStartEvaluation(evaluation.id)}
+                                >
+                                  <Play className="h-4 w-4 mr-1" />
+                                  Démarrer
+                                </Button>
                               )}
                               {evaluation.status === 'En cours' && (
-                                <Button variant="ghost" size="sm">Continuer</Button>
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm"
+                                  onClick={() => handleContinueEvaluation(evaluation.id)}
+                                >
+                                  Continuer
+                                </Button>
                               )}
                             </TableCell>
                           </TableRow>
@@ -305,7 +397,14 @@ const EmployeesEvaluations: React.FC = () => {
                             </TableCell>
                             <TableCell>{evaluation.nextDate ? new Date(evaluation.nextDate).toLocaleDateString('fr-FR') : '-'}</TableCell>
                             <TableCell className="text-right">
-                              <Button variant="ghost" size="sm">Voir</Button>
+                              <Button 
+                                variant="ghost" 
+                                size="sm"
+                                onClick={() => handleViewEvaluation(evaluation)}
+                              >
+                                <Eye className="h-4 w-4 mr-1" />
+                                Voir
+                              </Button>
                               <Button variant="ghost" size="sm">Exporter</Button>
                             </TableCell>
                           </TableRow>
@@ -357,15 +456,35 @@ const EmployeesEvaluations: React.FC = () => {
                             </Badge>
                           </TableCell>
                           <TableCell className="text-right">
-                            <Button variant="ghost" size="sm">Voir</Button>
+                            <Button 
+                              variant="ghost" 
+                              size="sm"
+                              onClick={() => handleViewEvaluation(evaluation)}
+                            >
+                              <Eye className="h-4 w-4 mr-1" />
+                              Voir
+                            </Button>
                             {evaluation.status === 'Complété' && (
                               <Button variant="ghost" size="sm">Exporter</Button>
                             )}
                             {evaluation.status === 'Planifié' && (
-                              <Button variant="ghost" size="sm">Démarrer</Button>
+                              <Button 
+                                variant="ghost" 
+                                size="sm"
+                                onClick={() => handleStartEvaluation(evaluation.id)}
+                              >
+                                <Play className="h-4 w-4 mr-1" />
+                                Démarrer
+                              </Button>
                             )}
                             {evaluation.status === 'En cours' && (
-                              <Button variant="ghost" size="sm">Continuer</Button>
+                              <Button 
+                                variant="ghost" 
+                                size="sm"
+                                onClick={() => handleContinueEvaluation(evaluation.id)}
+                              >
+                                Continuer
+                              </Button>
                             )}
                           </TableCell>
                         </TableRow>
@@ -520,8 +639,6 @@ const EmployeesEvaluations: React.FC = () => {
           </CardContent>
         </Card>
       </div>
-    </div>
-  );
-};
 
-export default EmployeesEvaluations;
+      <
+

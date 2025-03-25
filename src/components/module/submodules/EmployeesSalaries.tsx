@@ -18,7 +18,8 @@ import {
   DialogContent, 
   DialogHeader, 
   DialogTitle, 
-  DialogFooter 
+  DialogFooter,
+  DialogClose
 } from '@/components/ui/dialog';
 import { 
   Select, 
@@ -311,7 +312,9 @@ const EmployeesSalaries: React.FC = () => {
             </div>
             
             <DialogFooter>
-              <Button variant="outline" onClick={() => setIsHistoryDialogOpen(false)}>Fermer</Button>
+              <DialogClose asChild>
+                <Button variant="outline">Fermer</Button>
+              </DialogClose>
               <Button onClick={() => {
                 handleExportPayslip(selectedSalary);
                 setIsHistoryDialogOpen(false);
@@ -369,7 +372,9 @@ const EmployeesSalaries: React.FC = () => {
             </div>
             
             <DialogFooter>
-              <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>Annuler</Button>
+              <DialogClose asChild>
+                <Button variant="outline">Annuler</Button>
+              </DialogClose>
               <Button onClick={handleSaveEdit}>Enregistrer</Button>
             </DialogFooter>
           </DialogContent>
