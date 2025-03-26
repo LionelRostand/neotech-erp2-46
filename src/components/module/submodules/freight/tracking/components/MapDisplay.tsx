@@ -1,8 +1,7 @@
 
-import React, { useRef } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { TrackingEvent } from '@/types/freight';
 import { MapPin } from 'lucide-react';
-import { useLeafletMap } from '../hooks/useLeafletMap';
 
 interface MapDisplayProps {
   events: TrackingEvent[];
@@ -13,8 +12,75 @@ interface MapDisplayProps {
 const MapDisplay: React.FC<MapDisplayProps> = ({ events, mapToken, error }) => {
   const mapRef = useRef<HTMLDivElement>(null);
   
-  // Use our custom hook for map initialization
-  useLeafletMap(mapRef, events, mapToken);
+  useEffect(() => {
+    if (!mapRef.current) return;
+    
+    // Initialize the map
+    const initializeMap = async () => {
+      try {
+        // Coordonnées par défaut de Paris
+        let latitude = 48.852969;
+        let longitude = 2.349903;
+        
+        // Si nous avons des événements avec localisation, utilisons le plus récent
+        const eventsWithLocation = events.filter(event => event.location);
+        if (eventsWithLocation.length > 0) {
+          const latestEvent = eventsWithLocation[0];
+          latitude = latestEvent.location!.latitude;
+          longitude = latestEvent.location!.longitude;
+        }
+        
+        // Créer l'objet "macarte" et l'insèrer dans l'élément HTML qui a l'ID "map"
+        const L = await import('leaflet');
+        const map = L.map(mapRef.current).setView([latitude, longitude], 11);
+        
+        // Leaflet ne récupère pas les cartes (tiles) sur un serveur par défaut. Nous devons lui préciser où nous souhaitons les récupérer.
+        L.tileLayer('https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png', {
+          // Il est toujours bien de laisser le lien vers la source des données
+          attribution: 'données © <a href="//osm.org/copyright">OpenStreetMap</a>/ODbL - rendu <a href="//openstreetmap.fr">OSM France</a>',
+          minZoom: 1,
+          maxZoom: 20
+        }).addTo(map);
+
+        // Ajouter des marqueurs pour chaque événement avec une localisation
+        if (events.length > 0) {
+          const eventsWithLocation = events.filter(event => event.location);
+          eventsWithLocation.forEach(event => {
+            if (event.location) {
+              const { latitude, longitude, city, country } = event.location;
+              const marker = L.marker([latitude, longitude]).addTo(map);
+              marker.bindPopup(`<b>${event.status}</b><br>${city}, ${country}<br>${new Date(event.timestamp).toLocaleString('fr-FR')}`);
+            }
+          });
+          
+          // Si nous avons des événements avec localisation, ajustons la vue pour les voir tous
+          if (eventsWithLocation.length > 0) {
+            const latlngs = eventsWithLocation
+              .filter(event => event.location)
+              .map(event => [event.location!.latitude, event.location!.longitude]);
+            
+            if (latlngs.length > 0) {
+              try {
+                const bounds = L.latLngBounds(latlngs.map(coords => L.latLng(coords[0], coords[1])));
+                map.fitBounds(bounds, { padding: [50, 50] });
+              } catch (e) {
+                console.error("Error setting bounds:", e);
+              }
+            }
+          }
+        }
+        
+        // Nettoyage lors du démontage
+        return () => {
+          map.remove();
+        };
+      } catch (error) {
+        console.error("Error initializing map:", error);
+      }
+    };
+    
+    initializeMap();
+  }, [events, mapToken]);  // Réinitialiser la carte lorsque les événements ou le token changent
 
   return (
     <div 
