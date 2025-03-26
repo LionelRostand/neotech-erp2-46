@@ -33,9 +33,12 @@ const MapDisplay: React.FC<MapDisplayProps> = ({ events, mapToken, error }) => {
         // Créer l'objet "macarte" et l'insèrer dans l'élément HTML qui a l'ID "map"
         const L = await import('leaflet');
         
-        // Check if there's already a map instance and remove it to prevent duplicates
-        if (mapRef.current._leaflet_id) {
-          mapRef.current._leaflet = null;
+        // Clean up existing map if it exists (avoiding TypeScript errors)
+        const mapContainer = mapRef.current;
+        // @ts-ignore - Leaflet adds these properties at runtime
+        if (mapContainer && mapContainer._leaflet_id) {
+          // @ts-ignore - Accessing Leaflet-specific property
+          mapContainer._leaflet = null;
         }
         
         const map = L.map(mapRef.current).setView([latitude, longitude], 11);
