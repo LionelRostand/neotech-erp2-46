@@ -25,30 +25,38 @@ export const generatePayStubPDF = (employee: any) => {
   doc.setFontSize(10);
   doc.setTextColor(40, 40, 40);
   
+  // Add company logo (using placeholder image)
   // Create a grey rectangle for the logo area
-  doc.setFillColor(240, 240, 240);
-  doc.rect(15, 15, 50, 30, 'F');
+  doc.setFillColor(245, 245, 245);
+  doc.rect(15, 15, 55, 40, 'F');
   
   // Add logo placeholder with styling
-  doc.setFontSize(12);
+  doc.setFontSize(16);
+  doc.setFont('helvetica', 'bold');
   doc.setTextColor(80, 80, 80);
-  doc.text("LOGO", 40, 30, { align: "center" });
-  doc.setFontSize(10);
-  doc.text(COMPANY_INFO.name, 40, 37, { align: "center" });
+  doc.text("STORM", 30, 35);
+  doc.setFontSize(14);
+  doc.text("GROUP", 47, 35);
+  
+  // Add company tagline
+  doc.setFontSize(8);
+  doc.setFont('helvetica', 'italic');
+  doc.text(COMPANY_INFO.tagline, 42.5, 45, { align: "center" });
   
   // Add company information on the right side
-  doc.setFontSize(14);
+  doc.setFontSize(12);
+  doc.setFont('helvetica', 'bold');
   doc.setTextColor(40, 40, 40);
   doc.text(COMPANY_INFO.name, 195, 20, { align: "right" });
   
   doc.setFontSize(9);
+  doc.setFont('helvetica', 'normal');
   doc.setTextColor(80, 80, 80);
-  doc.text(COMPANY_INFO.tagline, 195, 27, { align: "right" });
-  doc.text(COMPANY_INFO.address, 195, 34, { align: "right" });
-  doc.text(COMPANY_INFO.siret, 195, 41, { align: "right" });
-  doc.text(COMPANY_INFO.phone, 195, 48, { align: "right" });
-  doc.text(COMPANY_INFO.email, 195, 55, { align: "right" });
-  doc.text(COMPANY_INFO.website, 195, 62, { align: "right" });
+  doc.text(COMPANY_INFO.address, 195, 28, { align: "right" });
+  doc.text(COMPANY_INFO.siret, 195, 36, { align: "right" });
+  doc.text(COMPANY_INFO.phone, 195, 44, { align: "right" });
+  doc.text(COMPANY_INFO.email, 195, 52, { align: "right" });
+  doc.text(COMPANY_INFO.website, 195, 60, { align: "right" });
   
   // Add separator line
   doc.setDrawColor(200, 200, 200);
@@ -56,6 +64,7 @@ export const generatePayStubPDF = (employee: any) => {
   
   // Document title
   doc.setFontSize(18);
+  doc.setFont('helvetica', 'bold');
   doc.setTextColor(40, 40, 40);
   doc.text("BULLETIN DE PAIE", 105, 80, { align: "center" });
   doc.setFontSize(12);
