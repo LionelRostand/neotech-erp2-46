@@ -1,5 +1,4 @@
-
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -17,10 +16,10 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { useState } from 'react';
 
 interface EmployeesListProps {
   employees: Employee[];
+  isLoading: boolean;
   searchQuery: string;
   setSearchQuery: (query: string) => void;
   onViewEmployee: (employee: Employee) => void;
@@ -31,6 +30,7 @@ interface EmployeesListProps {
 
 const EmployeesList: React.FC<EmployeesListProps> = ({
   employees,
+  isLoading,
   searchQuery,
   setSearchQuery,
   onViewEmployee,
@@ -87,69 +87,75 @@ const EmployeesList: React.FC<EmployeesListProps> = ({
       
       <Card>
         <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Nom</TableHead>
-                <TableHead>Poste</TableHead>
-                <TableHead>Département</TableHead>
-                <TableHead>Type de contrat</TableHead>
-                <TableHead>Date d'entrée</TableHead>
-                <TableHead>Statut</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredEmployees.map((employee) => (
-                <TableRow key={employee.id}>
-                  <TableCell className="font-medium">
-                    {employee.firstName} {employee.lastName}
-                  </TableCell>
-                  <TableCell>{employee.position}</TableCell>
-                  <TableCell>{employee.department}</TableCell>
-                  <TableCell>{employee.contract}</TableCell>
-                  <TableCell>{employee.hireDate}</TableCell>
-                  <TableCell>
-                    <Badge className={`${
-                      employee.status === "Actif" 
-                        ? "bg-green-100 text-green-800 hover:bg-green-100" 
-                        : "bg-red-100 text-red-800 hover:bg-red-100"
-                    }`}>
-                      {employee.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-right space-x-1">
-                    <Button 
-                      variant="ghost" 
-                      size="icon"
-                      onClick={() => onViewEmployee(employee)}
-                    >
-                      <Eye className="h-4 w-4" />
-                      <span className="sr-only">Voir</span>
-                    </Button>
-                    <Button 
-                      variant="ghost" 
-                      size="icon"
-                      onClick={() => onEditEmployee(employee)}
-                    >
-                      <Pencil className="h-4 w-4" />
-                      <span className="sr-only">Modifier</span>
-                    </Button>
-                    <Button 
-                      variant="ghost" 
-                      size="icon"
-                      onClick={() => setEmployeeToDelete(employee)}
-                    >
-                      <Trash className="h-4 w-4" />
-                      <span className="sr-only">Supprimer</span>
-                    </Button>
-                  </TableCell>
+          {isLoading ? (
+            <div className="flex justify-center items-center h-32">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500"></div>
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Nom</TableHead>
+                  <TableHead>Poste</TableHead>
+                  <TableHead>Département</TableHead>
+                  <TableHead>Type de contrat</TableHead>
+                  <TableHead>Date d'entrée</TableHead>
+                  <TableHead>Statut</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {filteredEmployees.map((employee) => (
+                  <TableRow key={employee.id}>
+                    <TableCell className="font-medium">
+                      {employee.firstName} {employee.lastName}
+                    </TableCell>
+                    <TableCell>{employee.position}</TableCell>
+                    <TableCell>{employee.department}</TableCell>
+                    <TableCell>{employee.contract}</TableCell>
+                    <TableCell>{employee.hireDate}</TableCell>
+                    <TableCell>
+                      <Badge className={`${
+                        employee.status === "Actif" 
+                          ? "bg-green-100 text-green-800 hover:bg-green-100" 
+                          : "bg-red-100 text-red-800 hover:bg-red-100"
+                      }`}>
+                        {employee.status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-right space-x-1">
+                      <Button 
+                        variant="ghost" 
+                        size="icon"
+                        onClick={() => onViewEmployee(employee)}
+                      >
+                        <Eye className="h-4 w-4" />
+                        <span className="sr-only">Voir</span>
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        size="icon"
+                        onClick={() => onEditEmployee(employee)}
+                      >
+                        <Pencil className="h-4 w-4" />
+                        <span className="sr-only">Modifier</span>
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        size="icon"
+                        onClick={() => setEmployeeToDelete(employee)}
+                      >
+                        <Trash className="h-4 w-4" />
+                        <span className="sr-only">Supprimer</span>
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
           
-          {filteredEmployees.length === 0 && (
+          {!isLoading && filteredEmployees.length === 0 && (
             <div className="text-center py-8">
               <p className="text-gray-500">Aucun employé trouvé.</p>
             </div>
