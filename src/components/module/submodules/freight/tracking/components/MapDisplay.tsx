@@ -30,28 +30,29 @@ const MapDisplay: React.FC<MapDisplayProps> = ({ events, mapToken, error }) => {
           longitude = latestEvent.location!.longitude;
         }
         
-        // Créer l'objet "macarte" et l'insèrer dans l'élément HTML qui a l'ID "map"
+        // Import Leaflet dynamically
         const L = await import('leaflet');
         
-        // Clean up existing map if it exists (avoiding TypeScript errors)
+        // Check and cleanup any existing map instances
         const mapContainer = mapRef.current;
-        // @ts-ignore - Leaflet adds these properties at runtime
-        if (mapContainer && mapContainer._leaflet_id) {
-          // @ts-ignore - Accessing Leaflet-specific property
-          mapContainer._leaflet = null;
+
+        // Using any type to avoid TypeScript errors with Leaflet's runtime properties
+        const mapElement = mapContainer as any;
+        if (mapElement && mapElement._leaflet_id) {
+          mapElement._leaflet = null;
         }
         
+        // Create new map instance
         const map = L.map(mapRef.current).setView([latitude, longitude], 11);
         
-        // Leaflet ne récupère pas les cartes (tiles) sur un serveur par défaut. Nous devons lui préciser où nous souhaitons les récupérer.
+        // Add tile layer (OpenStreetMap France)
         L.tileLayer('https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png', {
-          // Il est toujours bien de laisser le lien vers la source des données
           attribution: 'données © <a href="//osm.org/copyright">OpenStreetMap</a>/ODbL - rendu <a href="//openstreetmap.fr">OSM France</a>',
           minZoom: 1,
           maxZoom: 20
         }).addTo(map);
 
-        // Ajouter des marqueurs pour chaque événement avec une localisation
+        // Add markers for events with location
         if (events.length > 0) {
           const eventsWithLocation = events.filter(event => event.location);
           eventsWithLocation.forEach(event => {
@@ -62,7 +63,7 @@ const MapDisplay: React.FC<MapDisplayProps> = ({ events, mapToken, error }) => {
             }
           });
           
-          // Si nous avons des événements avec localisation, ajustons la vue pour les voir tous
+          // Adjust view to show all markers if we have multiple locations
           if (eventsWithLocation.length > 0) {
             const latlngs = eventsWithLocation
               .filter(event => event.location)
@@ -79,7 +80,7 @@ const MapDisplay: React.FC<MapDisplayProps> = ({ events, mapToken, error }) => {
           }
         }
         
-        // Add resize handler to ensure map renders correctly when container changes size
+        // Add resize handler
         const handleResize = () => {
           if (map) {
             map.invalidateSize();
@@ -91,7 +92,7 @@ const MapDisplay: React.FC<MapDisplayProps> = ({ events, mapToken, error }) => {
         // Force a resize after a short delay to ensure the map renders
         setTimeout(() => handleResize(), 500);
         
-        // Nettoyage lors du démontage
+        // Cleanup function
         return () => {
           window.removeEventListener('resize', handleResize);
           map.remove();
