@@ -243,7 +243,7 @@ const ProspectDialogs: React.FC<ProspectDialogsProps> = ({
             <div className="space-y-2">
               <label className="text-sm font-medium">Type de relance</label>
               <Select
-                value={reminderData.type}
+                value={reminderData.type || "email"}
                 onValueChange={(value) => setReminderData({...reminderData, type: value})}
               >
                 <SelectTrigger>

@@ -93,7 +93,7 @@ const EditDepartmentDialog: React.FC<EditDepartmentDialogProps> = ({
               Responsable
             </Label>
             <div className="col-span-3">
-              <Select value={formData.managerId} onValueChange={onManagerChange}>
+              <Select value={formData.managerId || "none"} onValueChange={onManagerChange}>
                 <SelectTrigger>
                   <SelectValue placeholder="Sélectionner un responsable" />
                 </SelectTrigger>
@@ -113,7 +113,7 @@ const EditDepartmentDialog: React.FC<EditDepartmentDialogProps> = ({
               Couleur
             </Label>
             <div className="col-span-3">
-              <Select value={formData.color} onValueChange={onColorChange}>
+              <Select value={formData.color || departmentColors[0].value} onValueChange={onColorChange}>
                 <SelectTrigger>
                   <SelectValue placeholder="Sélectionner une couleur" />
                 </SelectTrigger>

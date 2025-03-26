@@ -38,7 +38,7 @@ const PropertiesTab: React.FC<PropertiesTabProps> = ({
         <div className="space-y-2">
           <Label htmlFor="priority">Priorité</Label>
           <Select 
-            value={priority} 
+            value={priority || "normal"} 
             onValueChange={(value) => onPriorityChange(value as MessagePriority)}
           >
             <SelectTrigger>

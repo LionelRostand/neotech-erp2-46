@@ -69,7 +69,7 @@ const ProspectForm: React.FC<ProspectFormProps> = ({
       <div className="space-y-2">
         <label className="text-sm font-medium">Statut</label>
         <Select
-          value={formData.status}
+          value={formData.status || "warm"}
           onValueChange={(value) => handleSelectChange('status', value as 'hot' | 'warm' | 'cold')}
         >
           <SelectTrigger>
@@ -86,7 +86,7 @@ const ProspectForm: React.FC<ProspectFormProps> = ({
       <div className="space-y-2">
         <label className="text-sm font-medium">Source</label>
         <Select
-          value={formData.source}
+          value={formData.source || (sourcesOptions.length > 0 ? sourcesOptions[0] : "website")}
           onValueChange={(value) => handleSelectChange('source', value)}
         >
           <SelectTrigger>

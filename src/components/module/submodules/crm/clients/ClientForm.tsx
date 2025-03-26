@@ -46,7 +46,7 @@ const ClientForm: React.FC<ClientFormProps> = ({
       <div className="space-y-2">
         <label className="text-sm font-medium">Secteur d'activité</label>
         <Select
-          value={formData.sector}
+          value={formData.sector || (sectors.length > 0 ? sectors[0] : "autre")}
           onValueChange={(value) => handleSelectChange('sector', value)}
         >
           <SelectTrigger>
@@ -74,7 +74,7 @@ const ClientForm: React.FC<ClientFormProps> = ({
       <div className="space-y-2">
         <label className="text-sm font-medium">Statut</label>
         <Select
-          value={formData.status}
+          value={formData.status || "active"}
           onValueChange={(value) => handleSelectChange('status', value)}
         >
           <SelectTrigger>
