@@ -1,3 +1,4 @@
+
 import React, { useState, useRef } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -194,6 +195,17 @@ const EmployeesSalaries = () => {
   };
   
   const handleCreateSalary = () => {
+    // Validation - prevent empty values
+    if (!newSalaryForm.employeeId && !newSalaryForm.name) {
+      toast.error("Veuillez sélectionner un employé ou saisir un nom");
+      return;
+    }
+    
+    if (!newSalaryForm.salary) {
+      toast.error("Veuillez saisir un salaire");
+      return;
+    }
+    
     const selectedEmployeeDetails = newSalaryForm.employeeId 
       ? employees.find(emp => emp.id === newSalaryForm.employeeId) 
       : null;
@@ -445,6 +457,7 @@ const EmployeesSalaries = () => {
         </CardContent>
       </Card>
       
+      {/* Détails Dialog */}
       <Dialog open={showDetailsDialog} onOpenChange={setShowDetailsDialog}>
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
@@ -492,6 +505,219 @@ const EmployeesSalaries = () => {
                   </Badge>
                 </div>
               </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+      
+      {/* Historique Dialog */}
+      <Dialog open={showHistoryDialog} onOpenChange={setShowHistoryDialog}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>Historique des salaires</DialogTitle>
+          </DialogHeader>
+          
+          {selectedEmployee && (
+            <div className="space-y-4">
+              <div className="mb-4">
+                <h3 className="font-medium">{selectedEmployee.name}</h3>
+                <p className="text-sm text-muted-foreground">{selectedEmployee.position}</p>
+              </div>
               
-              {
+              <div className="rounded-md border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Montant</TableHead>
+                      <TableHead>Raison</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {MOCK_HISTORY
+                      .filter(h => h.employeeId === selectedEmployee.id)
+                      .map((history) => (
+                        <TableRow key={history.id}>
+                          <TableCell>{history.date}</TableCell>
+                          <TableCell>{history.amount.toLocaleString('fr-FR')} €</TableCell>
+                          <TableCell>{history.reason}</TableCell>
+                        </TableRow>
+                      ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+      
+      {/* Edit Dialog */}
+      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Modifier les informations salariales</DialogTitle>
+          </DialogHeader>
+          
+          {selectedEmployee && (
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="employee">Employé</Label>
+                <div className="font-medium">{selectedEmployee.name}</div>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="position">Poste</Label>
+                <Input
+                  id="position"
+                  value={editForm.position}
+                  onChange={(e) => setEditForm({ ...editForm, position: e.target.value })}
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="department">Département</Label>
+                <Input
+                  id="department"
+                  value={editForm.department}
+                  onChange={(e) => setEditForm({ ...editForm, department: e.target.value })}
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="salary">Salaire annuel (€)</Label>
+                <Input
+                  id="salary"
+                  type="number"
+                  value={editForm.salary}
+                  onChange={(e) => setEditForm({ ...editForm, salary: e.target.value })}
+                />
+              </div>
+            </div>
+          )}
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowEditDialog(false)}>
+              Annuler
+            </Button>
+            <Button onClick={handleSaveChanges}>
+              Enregistrer les modifications
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      {/* New Salary Dialog */}
+      <Dialog open={showNewSalaryDialog} onOpenChange={setShowNewSalaryDialog}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Nouvelle fiche de paie</DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="employee-select">Sélectionnez un employé</Label>
+              <Select
+                value={newSalaryForm.employeeId || "no-selection"}
+                onValueChange={handleEmployeeSelection}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Choisir un employé" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="no-selection" disabled>Choisir un employé</SelectItem>
+                  {employees.map((employee) => (
+                    <SelectItem key={employee.id} value={employee.id}>
+                      {employee.firstName} {employee.lastName}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            {!newSalaryForm.employeeId && (
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="name">Nom de l'employé</Label>
+                  <Input
+                    id="name"
+                    value={newSalaryForm.name}
+                    onChange={(e) => setNewSalaryForm({ ...newSalaryForm, name: e.target.value })}
+                    placeholder="Nom complet"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="position">Poste</Label>
+                  <Input
+                    id="position"
+                    value={newSalaryForm.position}
+                    onChange={(e) => setNewSalaryForm({ ...newSalaryForm, position: e.target.value })}
+                    placeholder="Poste occupé"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="department">Département</Label>
+                  <Input
+                    id="department"
+                    value={newSalaryForm.department}
+                    onChange={(e) => setNewSalaryForm({ ...newSalaryForm, department: e.target.value })}
+                    placeholder="Département"
+                  />
+                </div>
+              </>
+            )}
+            
+            <div className="space-y-2">
+              <Label htmlFor="salary">Salaire annuel (€)</Label>
+              <Input
+                id="salary"
+                type="number"
+                value={newSalaryForm.salary}
+                onChange={(e) => setNewSalaryForm({ ...newSalaryForm, salary: e.target.value })}
+                placeholder="Ex: 45000"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="paymentDate">Date de paiement</Label>
+              <Input
+                id="paymentDate"
+                type="date"
+                value={newSalaryForm.paymentDate}
+                onChange={(e) => setNewSalaryForm({ ...newSalaryForm, paymentDate: e.target.value })}
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="status">Statut</Label>
+              <Select
+                value={newSalaryForm.status}
+                onValueChange={(value) => setNewSalaryForm({ ...newSalaryForm, status: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Sélectionner un statut" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="pending">En attente</SelectItem>
+                  <SelectItem value="paid">Payé</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowNewSalaryDialog(false)}>
+              Annuler
+            </Button>
+            <Button onClick={handleCreateSalary}>
+              Créer
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+};
 
+export default EmployeesSalaries;
