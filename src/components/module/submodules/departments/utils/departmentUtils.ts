@@ -31,10 +31,8 @@ export const createDefaultDepartments = (): Department[] => {
       managerId: 'EMP002', // Lionel Djossa
       employeeIds: ['EMP002'],
       employeesCount: 1,
-      status: 'active',
       color: '#10b981', // emerald-500
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+      managerName: 'Lionel Djossa'
     },
     {
       id: 'DEP002',
@@ -43,10 +41,8 @@ export const createDefaultDepartments = (): Department[] => {
       managerId: 'EMP003', // Sophie Martin
       employeeIds: ['EMP001', 'EMP003'],
       employeesCount: 2,
-      status: 'active',
       color: '#3b82f6', // blue-500
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+      managerName: 'Sophie Martin'
     }
   ];
 };
@@ -60,23 +56,24 @@ export const prepareDepartmentFromForm = (
   // Make sure to use the passed selectedEmployees array
   console.log("prepareDepartmentFromForm - selectedEmployees:", selectedEmployees);
   
-  const now = new Date().toISOString();
-  
   // Start with existing department data if available
   const department: Department = existingDepartment 
     ? { ...existingDepartment } 
     : {
         id: formData.id,
         name: '',
-        status: 'active',
-        createdAt: now,
-        updatedAt: now
+        description: '',
+        managerId: null,
+        managerName: null,
+        employeesCount: 0,
+        color: '',
+        employeeIds: []
       };
   
   // Update with form data
   department.name = formData.name;
   department.description = formData.description;
-  department.managerId = formData.managerId === 'none' ? '' : formData.managerId;
+  department.managerId = formData.managerId === 'none' ? null : formData.managerId;
   department.color = formData.color;
   
   // Set manager name if manager ID is provided
@@ -92,9 +89,6 @@ export const prepareDepartmentFromForm = (
   // Important: Use the passed selectedEmployees array
   department.employeeIds = selectedEmployees;
   department.employeesCount = selectedEmployees.length;
-  
-  // Update timestamps
-  department.updatedAt = now;
   
   return department;
 };

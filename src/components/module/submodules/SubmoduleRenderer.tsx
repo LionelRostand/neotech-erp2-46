@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { SubModule } from '@/data/types/modules';
 import {
@@ -21,14 +20,15 @@ import {
 interface RenderSubmoduleContentProps {
   submoduleId: string;
   submodule: SubModule;
+  refreshKey?: number;
 }
 
-export const renderSubmoduleContent = ({ submoduleId, submodule }: RenderSubmoduleContentProps) => {
-  console.log('renderSubmoduleContent called with:', submoduleId);
+export const renderSubmoduleContent = ({ submoduleId, submodule, refreshKey }: RenderSubmoduleContentProps) => {
+  console.log('renderSubmoduleContent called with:', submoduleId, refreshKey ? `(refresh: ${refreshKey})` : '');
   
   // Use specific renderer based on module prefix
   if (submoduleId.startsWith('employees-')) {
-    return renderEmployeesSubmodule(submoduleId, submodule);
+    return renderEmployeesSubmodule(submoduleId, submodule, refreshKey);
   }
   
   if (submoduleId.startsWith('freight-')) {
