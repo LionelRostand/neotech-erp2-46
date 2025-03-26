@@ -1,20 +1,10 @@
 
 import { jsPDF } from 'jspdf';
-// Import jspdf-autotable as a module
+// Import jspdf-autotable correctly
 import 'jspdf-autotable';
 import { toast } from 'sonner';
 import { employees } from '@/data/employees';
 import { SalaryEmployee } from './hooks/useSalaries';
-
-// Type augmentation to properly extend jsPDF with autoTable
-declare module 'jspdf' {
-  interface jsPDF {
-    autoTable: (options: any) => jsPDF;
-    lastAutoTable: {
-      finalY?: number;
-    };
-  }
-}
 
 const COMPANY_INFO = {
   name: "STORM GROUP",
@@ -32,6 +22,8 @@ export const getEmployeeDetails = (employeeId: string) => {
 
 export const generatePayStubPDF = (employee: SalaryEmployee) => {
   try {
+    console.log('Starting PDF generation for employee:', employee.name);
+    
     // Create a new jsPDF instance
     const doc = new jsPDF();
     
@@ -106,8 +98,11 @@ export const generatePayStubPDF = (employee: SalaryEmployee) => {
     doc.setTextColor(80, 80, 80);
     doc.text("Détails de la Rémunération", 15, employeeDetails ? 170 : 150);
     
-    // Verify autoTable exists before calling it
+    console.log('Creating compensation table...');
+    
+    // Check if autoTable is available
     if (typeof doc.autoTable !== 'function') {
+      console.error("autoTable is not available on the jsPDF instance");
       throw new Error("La fonction autoTable n'est pas disponible. Vérifiez l'importation de jspdf-autotable.");
     }
     
@@ -125,8 +120,12 @@ export const generatePayStubPDF = (employee: SalaryEmployee) => {
       margin: { left: 15, right: 15 }
     });
     
-    // Calculate the final Y position from the previous table - using lastAutoTable
-    const finalY = doc.lastAutoTable.finalY || 200;
+    console.log('Compensation table created');
+    
+    // Calculate the final Y position from the previous table
+    const finalY = doc.lastAutoTable && doc.lastAutoTable.finalY ? doc.lastAutoTable.finalY : 200;
+    
+    console.log('finalY position:', finalY);
     
     // Leave tracking section
     doc.setFontSize(12);
@@ -146,6 +145,8 @@ export const generatePayStubPDF = (employee: SalaryEmployee) => {
       margin: { left: 15, right: 15 }
     });
     
+    console.log('Leave tracking table created');
+    
     // Footer
     doc.setFontSize(8);
     doc.setTextColor(150, 150, 150);
@@ -153,6 +154,7 @@ export const generatePayStubPDF = (employee: SalaryEmployee) => {
     
     // Save the PDF with a properly formatted filename
     const fileName = `bulletin_paie_${employee.name.replace(/\s+/g, '_')}_${employee.paymentDate.replace(/\//g, '-')}.pdf`;
+    console.log('Saving PDF with filename:', fileName);
     doc.save(fileName);
     toast.success("Bulletin de paie téléchargé avec succès");
     
