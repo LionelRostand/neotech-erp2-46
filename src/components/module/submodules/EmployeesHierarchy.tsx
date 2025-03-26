@@ -5,15 +5,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { employees } from '@/data/employees';
 import { Employee } from '@/types/employee';
 import { ListTree, Users, Building, ChevronRight, ChevronDown } from 'lucide-react';
-
-// Interface pour département dans la hiérarchie
-interface Department {
-  id: string;
-  name: string;
-  managerId: string | null;
-  managerName: string | null;
-  color: string;
-}
+import { useDepartmentService } from './departments/services/departmentService';
+import { Department as DepartmentType } from './departments/types';
 
 // Interface pour employé dans la hiérarchie
 interface EmployeeNode extends Employee {
@@ -24,33 +17,40 @@ interface EmployeeNode extends Employee {
 }
 
 const EmployeesHierarchy: React.FC = () => {
-  // Sample departments data
-  const [departments, setDepartments] = useState<Department[]>([
-    {
-      id: "DEP001",
-      name: "Marketing",
-      managerId: "EMP003",
-      managerName: "Sophie Martin",
-      color: "#3b82f6" // blue-500
-    },
-    {
-      id: "DEP002",
-      name: "Direction",
-      managerId: "EMP002",
-      managerName: "Lionel Djossa",
-      color: "#10b981" // emerald-500
-    }
-  ]);
-
+  const [departments, setDepartments] = useState<DepartmentType[]>([]);
+  const [loading, setLoading] = useState(true);
+  
   // State for hierarchy data
   const [employeeHierarchy, setEmployeeHierarchy] = useState<EmployeeNode[]>([]);
   const [activeTab, setActiveTab] = useState("employees");
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set());
+  
+  // Get departments from service
+  const departmentService = useDepartmentService();
 
-  // Build employee hierarchy on component mount
+  // Load departments and build hierarchy on component mount
   useEffect(() => {
-    buildEmployeeHierarchy();
+    const loadDepartments = async () => {
+      setLoading(true);
+      try {
+        const departmentsData = await departmentService.getAll();
+        setDepartments(departmentsData);
+      } catch (error) {
+        console.error("Error loading departments for hierarchy:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    loadDepartments();
   }, []);
+
+  // Rebuild hierarchy when departments change
+  useEffect(() => {
+    if (departments.length > 0) {
+      buildEmployeeHierarchy();
+    }
+  }, [departments]);
 
   // Toggle node expansion
   const toggleNodeExpansion = (employeeId: string) => {
@@ -131,7 +131,7 @@ const EmployeesHierarchy: React.FC = () => {
     return (
       <div key={node.id} className="relative">
         <div 
-          className={`flex items-center py-2 pl-${level * 4} transition-colors hover:bg-gray-50 rounded-md`}
+          className={`flex items-center py-2 transition-colors hover:bg-gray-50 rounded-md`}
           style={{ 
             paddingLeft: `${level * 20 + 8}px`, 
             borderLeft: node.departmentColor ? `2px solid ${node.departmentColor}` : 'none'
@@ -178,9 +178,21 @@ const EmployeesHierarchy: React.FC = () => {
 
   // Render departments with pyramid style
   const renderDepartmentsPyramid = () => {
+    if (loading) {
+      return <div className="flex justify-center py-8">Chargement des départements...</div>;
+    }
+
+    if (departments.length === 0) {
+      return <div className="text-center py-8">Aucun département n'est configuré</div>;
+    }
+
     // Group employees by department
     const departmentEmployees = departments.map(department => {
-      const deptEmployees = employees.filter(emp => emp.department === department.name);
+      // Find employees for this department using employeeIds from department
+      const deptEmployees = employees.filter(emp => 
+        department.employeeIds && department.employeeIds.includes(emp.id)
+      );
+      
       return {
         ...department,
         employees: deptEmployees,
@@ -207,7 +219,7 @@ const EmployeesHierarchy: React.FC = () => {
                   <div className="text-center relative">
                     <div className="inline-block p-4 bg-gray-100 rounded-lg mb-2 border-2 shadow-sm" 
                          style={{ borderColor: department.color }}>
-                      <div className="font-bold">{department.managerName}</div>
+                      <div className="font-bold">{department.manager.firstName} {department.manager.lastName}</div>
                       <div className="text-sm text-gray-600">{department.manager.position}</div>
                       <div className="text-xs mt-1 py-1 px-2 rounded-full" 
                            style={{ backgroundColor: department.color, color: 'white' }}>
@@ -216,7 +228,7 @@ const EmployeesHierarchy: React.FC = () => {
                     </div>
                     
                     {/* Connecting line to subordinates */}
-                    {department.employees.length > 0 && (
+                    {department.employees.length > 1 && (
                       <div className="w-0.5 h-6 bg-gray-300 mx-auto"></div>
                     )}
                   </div>
@@ -278,11 +290,15 @@ const EmployeesHierarchy: React.FC = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="overflow-x-auto">
-                <div className="min-w-[600px] p-2">
-                  {employeeHierarchy.map(node => renderEmployeeNode(node))}
+              {loading ? (
+                <div className="flex justify-center py-8">Chargement des données...</div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <div className="min-w-[600px] p-2">
+                    {employeeHierarchy.map(node => renderEmployeeNode(node))}
+                  </div>
                 </div>
-              </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
