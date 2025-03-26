@@ -89,15 +89,21 @@ export const useDepartments = () => {
   // Open edit department dialog
   const handleEditDepartment = (department: Department) => {
     setCurrentDepartment(department);
+    
+    // Make sure to extract the employee IDs from the department
+    const employeeIds = department.employeeIds || [];
+    
     setFormData({
       id: department.id,
       name: department.name,
-      description: department.description,
+      description: department.description || '',
       managerId: department.managerId || "",
-      color: department.color,
-      employeeIds: department.employeeIds || []
+      color: department.color || '',
+      employeeIds: employeeIds
     });
-    setSelectedEmployees(department.employeeIds || []);
+    
+    // Important: Set the selected employees state to match the department's employees
+    setSelectedEmployees(employeeIds);
     setActiveTab("department-info");
     setIsEditDialogOpen(true);
   };
@@ -143,12 +149,15 @@ export const useDepartments = () => {
       return;
     }
 
+    // Ensure we're using the current selectedEmployees state
     const updatedDepartment = prepareDepartmentFromForm(
       formData, 
       selectedEmployees, 
       currentDepartment
     );
 
+    console.log("Updating department with employees:", selectedEmployees);
+    
     const success = await departmentService.updateDepartment(updatedDepartment);
     
     if (success) {
