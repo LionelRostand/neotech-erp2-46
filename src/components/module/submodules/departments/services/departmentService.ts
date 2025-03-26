@@ -9,6 +9,8 @@ export const useDepartmentService = () => {
   
   // Clé de stockage local
   const LOCAL_STORAGE_KEY = 'employees_departments_data';
+  // Clé pour la dernière mise à jour
+  const LAST_UPDATE_KEY = 'employees_departments_last_update';
 
   const getAll = async (): Promise<Department[]> => {
     try {
@@ -17,6 +19,8 @@ export const useDepartmentService = () => {
       if (data && data.length > 0) {
         // Sauvegarder dans localStorage comme sauvegarde
         localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(data));
+        // Enregistrer le timestamp de la dernière mise à jour
+        localStorage.setItem(LAST_UPDATE_KEY, Date.now().toString());
         return data as Department[];
       }
       
@@ -54,6 +58,12 @@ export const useDepartmentService = () => {
       departments.push(department);
       localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(departments));
       
+      // Mise à jour du timestamp
+      localStorage.setItem(LAST_UPDATE_KEY, Date.now().toString());
+      
+      // Notifier les autres composants (comme la hiérarchie) que des données ont changé
+      window.dispatchEvent(new CustomEvent('department-updated', { detail: { action: 'create', department } }));
+      
       toast.success(`Département ${department.name} créé avec succès`);
       return true;
     } catch (error) {
@@ -65,6 +75,12 @@ export const useDepartmentService = () => {
         const departments = existingData ? JSON.parse(existingData) as Department[] : [];
         departments.push(department);
         localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(departments));
+        
+        // Mise à jour du timestamp même en mode offline
+        localStorage.setItem(LAST_UPDATE_KEY, Date.now().toString());
+        
+        // Notifier les autres composants
+        window.dispatchEvent(new CustomEvent('department-updated', { detail: { action: 'create', department } }));
         
         toast.success(`Département ${department.name} créé localement`);
         return true;
@@ -91,6 +107,12 @@ export const useDepartmentService = () => {
         localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updatedDepartments));
       }
       
+      // Mise à jour du timestamp
+      localStorage.setItem(LAST_UPDATE_KEY, Date.now().toString());
+      
+      // Notifier les autres composants
+      window.dispatchEvent(new CustomEvent('department-updated', { detail: { action: 'update', department } }));
+      
       toast.success(`Département ${department.name} mis à jour avec succès`);
       return true;
     } catch (error) {
@@ -105,6 +127,12 @@ export const useDepartmentService = () => {
             dep.id === department.id ? department : dep
           );
           localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updatedDepartments));
+          
+          // Mise à jour du timestamp même en mode offline
+          localStorage.setItem(LAST_UPDATE_KEY, Date.now().toString());
+          
+          // Notifier les autres composants
+          window.dispatchEvent(new CustomEvent('department-updated', { detail: { action: 'update', department } }));
           
           toast.success(`Département ${department.name} mis à jour localement`);
           return true;
@@ -137,6 +165,12 @@ export const useDepartmentService = () => {
         localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(filteredDepartments));
       }
       
+      // Mise à jour du timestamp
+      localStorage.setItem(LAST_UPDATE_KEY, Date.now().toString());
+      
+      // Notifier les autres composants
+      window.dispatchEvent(new CustomEvent('department-updated', { detail: { action: 'delete', id, name } }));
+      
       toast.success(`Département ${name} supprimé avec succès`);
       return true;
     } catch (error) {
@@ -150,6 +184,12 @@ export const useDepartmentService = () => {
           const filteredDepartments = departments.filter(dep => dep.id !== id);
           localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(filteredDepartments));
           
+          // Mise à jour du timestamp même en mode offline
+          localStorage.setItem(LAST_UPDATE_KEY, Date.now().toString());
+          
+          // Notifier les autres composants
+          window.dispatchEvent(new CustomEvent('department-updated', { detail: { action: 'delete', id, name } }));
+          
           toast.success(`Département ${name} supprimé localement`);
           return true;
         }
@@ -162,10 +202,16 @@ export const useDepartmentService = () => {
     }
   };
 
+  const getLastUpdateTimestamp = (): number => {
+    const timestamp = localStorage.getItem(LAST_UPDATE_KEY);
+    return timestamp ? parseInt(timestamp) : 0;
+  };
+
   return {
     getAll,
     createDepartment,
     updateDepartment,
-    deleteDepartment
+    deleteDepartment,
+    getLastUpdateTimestamp
   };
 };

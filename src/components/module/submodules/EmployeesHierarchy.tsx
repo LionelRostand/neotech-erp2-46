@@ -1,12 +1,14 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { employees } from '@/data/employees';
 import { Employee } from '@/types/employee';
-import { ListTree, Users, Building, ChevronRight, ChevronDown } from 'lucide-react';
+import { ListTree, Users, Building, ChevronRight, ChevronDown, RefreshCw } from 'lucide-react';
 import { useDepartmentService } from './departments/services/departmentService';
 import { Department as DepartmentType } from './departments/types';
+import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
 
 // Interface pour employé dans la hiérarchie
 interface EmployeeNode extends Employee {
@@ -19,6 +21,8 @@ interface EmployeeNode extends Employee {
 const EmployeesHierarchy: React.FC = () => {
   const [departments, setDepartments] = useState<DepartmentType[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [refreshing, setRefreshing] = useState(false);
   
   // State for hierarchy data
   const [employeeHierarchy, setEmployeeHierarchy] = useState<EmployeeNode[]>([]);
@@ -28,26 +32,71 @@ const EmployeesHierarchy: React.FC = () => {
   // Get departments from service
   const departmentService = useDepartmentService();
 
-  // Load departments and build hierarchy on component mount
+  // Function to refresh data manually
+  const handleRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await loadDepartments();
+      toast.success("Hiérarchie mise à jour avec succès");
+    } catch (error) {
+      toast.error("Erreur lors de la mise à jour de la hiérarchie");
+      console.error("Error refreshing hierarchy:", error);
+    } finally {
+      setRefreshing(false);
+    }
+  }, []);
+
+  // Load departments and build hierarchy function
+  const loadDepartments = useCallback(async () => {
+    setLoading(true);
+    try {
+      const departmentsData = await departmentService.getAll();
+      console.log("Fetched departments for hierarchy:", departmentsData);
+      setDepartments(departmentsData);
+    } catch (error) {
+      console.error("Error loading departments for hierarchy:", error);
+    } finally {
+      setLoading(false);
+    }
+  }, [departmentService]);
+  
+  // Load departments on component mount and refresh trigger changes
   useEffect(() => {
-    const loadDepartments = async () => {
-      setLoading(true);
-      try {
-        const departmentsData = await departmentService.getAll();
-        setDepartments(departmentsData);
-      } catch (error) {
-        console.error("Error loading departments for hierarchy:", error);
-      } finally {
-        setLoading(false);
+    console.log("Loading departments, refresh trigger:", refreshTrigger);
+    loadDepartments();
+  }, [loadDepartments, refreshTrigger]);
+
+  // Listen for department update events
+  useEffect(() => {
+    const handleDepartmentUpdate = (event: Event) => {
+      const customEvent = event as CustomEvent;
+      console.log("Department updated:", customEvent.detail);
+      
+      // Refresh hierarchy data
+      setRefreshTrigger(prev => prev + 1);
+      
+      // Show toast notification
+      const { action, department, id, name } = customEvent.detail;
+      if (action === 'create') {
+        toast.info(`Département "${department.name}" créé - Hiérarchie mise à jour`);
+      } else if (action === 'update') {
+        toast.info(`Département "${department.name}" modifié - Hiérarchie mise à jour`);
+      } else if (action === 'delete') {
+        toast.info(`Département "${name}" supprimé - Hiérarchie mise à jour`);
       }
     };
+
+    window.addEventListener('department-updated', handleDepartmentUpdate);
     
-    loadDepartments();
+    return () => {
+      window.removeEventListener('department-updated', handleDepartmentUpdate);
+    };
   }, []);
 
   // Rebuild hierarchy when departments change
   useEffect(() => {
     if (departments.length > 0) {
+      console.log("Rebuilding employee hierarchy with departments:", departments);
       buildEmployeeHierarchy();
     }
   }, [departments]);
@@ -267,7 +316,19 @@ const EmployeesHierarchy: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold">Hiérarchie de l'entreprise</h2>
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-bold">Hiérarchie de l'entreprise</h2>
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={handleRefresh}
+          disabled={refreshing}
+          className="flex items-center gap-2"
+        >
+          <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
+          Actualiser
+        </Button>
+      </div>
       
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="grid w-full grid-cols-2">
