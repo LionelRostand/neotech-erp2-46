@@ -120,7 +120,7 @@ const OpportunityForm: React.FC<OpportunityFormProps> = ({
         <div className="space-y-2">
           <Label htmlFor="stage">Étape *</Label>
           <Select
-            value={formData.stage}
+            value={formData.stage || "new"}
             onValueChange={(value) => handleSelectChange('stage', value)}
           >
             <SelectTrigger id="stage">

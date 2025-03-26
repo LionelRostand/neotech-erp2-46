@@ -111,13 +111,14 @@ const CreateAppointmentDialog: React.FC<CreateAppointmentDialogProps> = ({
           <div className="space-y-2">
             <Label htmlFor="clientId">Client</Label>
             <Select
-              value={formData.clientId}
+              value={formData.clientId || "no-client"}
               onValueChange={(value) => updateFormField('clientId', value)}
             >
               <SelectTrigger className={formErrors.clientId ? 'border-red-500' : ''}>
                 <SelectValue placeholder="Sélectionner un client" />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="no-client" disabled>Sélectionner un client</SelectItem>
                 {mockClients.map((client) => (
                   <SelectItem key={client.id} value={client.id}>
                     {client.name}
@@ -157,13 +158,14 @@ const CreateAppointmentDialog: React.FC<CreateAppointmentDialogProps> = ({
           <div className="space-y-2">
             <Label htmlFor="service">Service</Label>
             <Select
-              value={formData.service}
+              value={formData.service || "no-service"}
               onValueChange={(value) => updateFormField('service', value)}
             >
               <SelectTrigger className={formErrors.service ? 'border-red-500' : ''}>
                 <SelectValue placeholder="Sélectionner un service" />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="no-service" disabled>Sélectionner un service</SelectItem>
                 {mockServices.map((service) => (
                   <SelectItem key={service} value={service}>
                     {service}
@@ -177,13 +179,14 @@ const CreateAppointmentDialog: React.FC<CreateAppointmentDialogProps> = ({
           <div className="space-y-2">
             <Label htmlFor="stylist">Coiffeur</Label>
             <Select
-              value={formData.stylist}
+              value={formData.stylist || "no-stylist"}
               onValueChange={(value) => updateFormField('stylist', value)}
             >
               <SelectTrigger className={formErrors.stylist ? 'border-red-500' : ''}>
                 <SelectValue placeholder="Sélectionner un coiffeur" />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="no-stylist" disabled>Sélectionner un coiffeur</SelectItem>
                 {mockStylists.map((stylist) => (
                   <SelectItem key={stylist} value={stylist}>
                     {stylist}
@@ -210,7 +213,7 @@ const CreateAppointmentDialog: React.FC<CreateAppointmentDialogProps> = ({
             <div className="space-y-2">
               <Label htmlFor="status">Statut</Label>
               <Select
-                value={formData.status}
+                value={formData.status || "pending"}
                 onValueChange={(value) => updateFormField('status', value)}
               >
                 <SelectTrigger className={formErrors.status ? 'border-red-500' : ''}>

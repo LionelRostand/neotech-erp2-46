@@ -34,7 +34,7 @@ const ClientSearch: React.FC<ClientSearchProps> = ({
       
       <div className="flex gap-2">
         <div className="w-[180px]">
-          <Select value={filter} onValueChange={onFilterChange}>
+          <Select value={filter || "all"} onValueChange={onFilterChange}>
             <SelectTrigger>
               <Filter className="mr-2 h-4 w-4" />
               <SelectValue placeholder="Filtrer" />

@@ -24,7 +24,7 @@ import { fr } from "date-fns/locale";
 import { Appointment } from '../types/garage-types';
 
 interface CreateAppointmentDialogProps {
-  open: boolean; // Changed from isOpen to open
+  open: boolean;
   onOpenChange: (open: boolean) => void;
   clientId: string;
   clientName: string;
@@ -47,7 +47,7 @@ const timeSlots = [
 ];
 
 const CreateAppointmentDialog: React.FC<CreateAppointmentDialogProps> = ({
-  open, // Changed from isOpen to open
+  open,
   onOpenChange,
   clientId,
   clientName,
@@ -114,7 +114,7 @@ const CreateAppointmentDialog: React.FC<CreateAppointmentDialogProps> = ({
             
             <div className="space-y-2">
               <Label htmlFor="time">Heure</Label>
-              <Select value={time} onValueChange={setTime}>
+              <Select value={time || timeSlots[0]} onValueChange={setTime}>
                 <SelectTrigger id="time">
                   <SelectValue placeholder="Sélectionner une heure" />
                 </SelectTrigger>
@@ -131,7 +131,7 @@ const CreateAppointmentDialog: React.FC<CreateAppointmentDialogProps> = ({
           
           <div className="space-y-2">
             <Label htmlFor="serviceType">Type de service</Label>
-            <Select value={serviceType} onValueChange={setServiceType}>
+            <Select value={serviceType || serviceTypes[0].id} onValueChange={setServiceType}>
               <SelectTrigger id="serviceType">
                 <SelectValue placeholder="Sélectionner un type de service" />
               </SelectTrigger>
@@ -147,11 +147,12 @@ const CreateAppointmentDialog: React.FC<CreateAppointmentDialogProps> = ({
           
           <div className="space-y-2">
             <Label htmlFor="vehicle">Véhicule</Label>
-            <Select value={vehicleId} onValueChange={setVehicleId} required>
+            <Select value={vehicleId || "no-selection"} onValueChange={setVehicleId} required>
               <SelectTrigger id="vehicle">
                 <SelectValue placeholder="Sélectionner un véhicule" />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="no-selection" disabled>Sélectionner un véhicule</SelectItem>
                 <SelectItem value="VH001">Peugeot 208 (VH001)</SelectItem>
                 <SelectItem value="VH002">Renault Clio (VH002)</SelectItem>
                 <SelectItem value="VH003">Citroën C3 (VH003)</SelectItem>
@@ -161,7 +162,7 @@ const CreateAppointmentDialog: React.FC<CreateAppointmentDialogProps> = ({
           
           <div className="space-y-2">
             <Label htmlFor="duration">Durée (minutes)</Label>
-            <Select value={duration} onValueChange={setDuration}>
+            <Select value={duration || "60"} onValueChange={setDuration}>
               <SelectTrigger id="duration">
                 <SelectValue placeholder="Sélectionner une durée" />
               </SelectTrigger>
