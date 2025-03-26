@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -39,6 +39,8 @@ import {
 import { toast } from 'sonner';
 import * as XLSX from 'xlsx';
 import { LeaveBalances } from './leaves/LeaveBalances';
+import { useEmployeeLeaves, LeaveRequest } from '@/hooks/useEmployeeLeaves';
+import { COLLECTIONS } from '@/lib/firebase-collections';
 
 const EmployeesLeaves: React.FC = () => {
   const [activeTab, setActiveTab] = useState('demandes');
@@ -51,49 +53,86 @@ const EmployeesLeaves: React.FC = () => {
     dateRange: ''
   });
   const [isExportLoading, setIsExportLoading] = useState(false);
+  
+  // Utilisation du hook pour récupérer les données Firebase
+  const { 
+    leaves, 
+    isLoading, 
+    addLeave, 
+    updateLeave, 
+    deleteLeave,
+    refreshLeaves
+  } = useEmployeeLeaves();
 
-  const handleSubmitLeaveRequest = (data: any) => {
-    toast.success("Demande de congé soumise avec succès");
-    setIsCreateDialogOpen(false);
+  // Recharger les données quand on entre dans ce composant
+  useEffect(() => {
+    console.log('EmployeesLeaves: Refreshing leaves data');
+    refreshLeaves();
+  }, [refreshLeaves]);
+
+  const handleSubmitLeaveRequest = async (data: any) => {
+    try {
+      console.log('Adding leave request:', data);
+      await addLeave(data);
+      setIsCreateDialogOpen(false);
+      toast.success("Demande de congé soumise avec succès");
+    } catch (error) {
+      console.error('Error submitting leave request:', error);
+      toast.error("Erreur lors de la soumission de la demande de congé");
+    }
   };
 
-  const handleApproveLeave = (id: string) => {
-    toast.success(`Demande de congé #${id} approuvée`);
+  const handleApproveLeave = async (id: string) => {
+    try {
+      await updateLeave(id, { status: 'Approuvé' });
+      toast.success(`Demande de congé #${id} approuvée`);
+    } catch (error) {
+      console.error('Error approving leave:', error);
+    }
   };
 
-  const handleRejectLeave = (id: string) => {
-    toast.success(`Demande de congé #${id} refusée`);
+  const handleRejectLeave = async (id: string) => {
+    try {
+      await updateLeave(id, { status: 'Refusé' });
+      toast.success(`Demande de congé #${id} refusée`);
+    } catch (error) {
+      console.error('Error rejecting leave:', error);
+    }
   };
 
   const handleExportData = () => {
     setIsExportLoading(true);
     
-    // Simuler les données à exporter
-    const data = [
-      ['ID', 'Employé', 'Type de congé', 'Date de début', 'Date de fin', 'Statut'],
-      ['001', 'Thomas Martin', 'Congés payés', '15/07/2025', '30/07/2025', 'Approuvé'],
-      ['002', 'Sophie Dubois', 'RTT', '05/05/2025', '05/05/2025', 'En attente'],
-      ['003', 'Jean Dupont', 'Maladie', '10/03/2025', '12/03/2025', 'Approuvé'],
-      ['004', 'Marie Lambert', 'Congés sans solde', '20/08/2025', '27/08/2025', 'En attente'],
-    ];
-    
-    setTimeout(() => {
-      try {
-        // Créer une feuille de calcul
-        const ws = XLSX.utils.aoa_to_sheet(data);
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, "Congés");
-        
-        // Générer le fichier Excel et le télécharger
-        XLSX.writeFile(wb, "demandes_conges.xlsx");
-        
-        toast.success("Export Excel réalisé avec succès");
-      } catch (error) {
-        toast.error("Erreur lors de l'export Excel");
-      } finally {
-        setIsExportLoading(false);
-      }
-    }, 1000);
+    // Exporter les données réelles vers Excel
+    try {
+      // Préparer les données
+      const data = [
+        ['ID', 'Employé', 'Type de congé', 'Date de début', 'Date de fin', 'Statut'],
+        ...leaves.map(leave => [
+          leave.id,
+          leave.employeeId,
+          leave.type,
+          leave.startDate,
+          leave.endDate,
+          leave.status
+        ])
+      ];
+      
+      // Créer une feuille de calcul
+      const ws = XLSX.utils.aoa_to_sheet(data);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Congés");
+      
+      // Générer le fichier Excel et le télécharger
+      XLSX.writeFile(wb, "demandes_conges.xlsx");
+      
+      toast.success("Export Excel réalisé avec succès");
+    } catch (error) {
+      console.error('Error exporting data:', error);
+      toast.error("Erreur lors de l'export Excel");
+    } finally {
+      setIsExportLoading(false);
+    }
   };
 
   const handleApplyFilters = () => {

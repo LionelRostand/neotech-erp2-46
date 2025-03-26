@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useSafeFirestore } from '@/hooks/use-safe-firestore';
 import { Employee } from '@/types/employee';
 import { COLLECTIONS } from '@/lib/firebase-collections';
@@ -10,10 +10,11 @@ export const useEmployees = () => {
   const [isLoading, setIsLoading] = useState(true);
   const firestore = useSafeFirestore(COLLECTIONS.EMPLOYEES);
 
-  const fetchEmployees = async () => {
+  const fetchEmployees = useCallback(async () => {
     try {
       setIsLoading(true);
       const result = await firestore.getAll();
+      console.log('Fetched employees data:', result);
       setEmployees(result as Employee[]);
     } catch (error) {
       console.error('Error fetching employees:', error);
@@ -21,7 +22,7 @@ export const useEmployees = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [firestore]);
 
   const addEmployee = async (employee: Partial<Employee>) => {
     try {
@@ -61,8 +62,14 @@ export const useEmployees = () => {
   };
 
   useEffect(() => {
+    console.log('useEmployees hook: Initial data fetch');
     fetchEmployees();
-  }, []);
+    
+    // Return a cleanup function
+    return () => {
+      console.log('useEmployees hook: Cleanup');
+    };
+  }, [fetchEmployees]);
 
   return {
     employees,

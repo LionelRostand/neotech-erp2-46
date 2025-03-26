@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Employee } from '@/types/employee';
 import EmployeesList from './employees/EmployeesList';
@@ -22,15 +22,24 @@ const EmployeesProfiles: React.FC = () => {
     isLoading, 
     addEmployee, 
     updateEmployee, 
-    deleteEmployee 
+    deleteEmployee,
+    refreshEmployees
   } = useEmployees();
 
+  // Effect pour recharger les données quand on revient à cette page
+  useEffect(() => {
+    console.log('EmployeesProfiles: Refreshing employee data');
+    refreshEmployees();
+  }, [refreshEmployees]);
+
   const handleViewEmployee = (employee: Employee) => {
+    console.log('Viewing employee:', employee);
     setSelectedEmployee(employee);
   };
 
   const handleAddEmployee = async (newEmployee: Partial<Employee>) => {
     try {
+      console.log('Adding employee:', newEmployee);
       await addEmployee(newEmployee);
       setIsAddEmployeeOpen(false);
     } catch (error) {
@@ -39,6 +48,7 @@ const EmployeesProfiles: React.FC = () => {
   };
 
   const handleEditEmployee = (employee: Employee) => {
+    console.log('Editing employee:', employee);
     setEmployeeToEdit(employee);
     setIsEditEmployeeOpen(true);
   };
@@ -47,6 +57,7 @@ const EmployeesProfiles: React.FC = () => {
     if (!employeeToEdit?.id) return;
     
     try {
+      console.log('Updating employee:', updatedEmployee);
       await updateEmployee(employeeToEdit.id, updatedEmployee);
       
       // Update selected employee if it's the one being edited
@@ -62,6 +73,7 @@ const EmployeesProfiles: React.FC = () => {
 
   const handleDeleteEmployee = async (employeeId: string) => {
     try {
+      console.log('Deleting employee:', employeeId);
       await deleteEmployee(employeeId);
       
       // If deleted employee is selected, clear selection
