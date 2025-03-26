@@ -35,7 +35,8 @@ import {
   Search,
   Plus,
   FileText,
-  Building
+  Building,
+  FilePdf
 } from 'lucide-react';
 import { toast } from 'sonner';
 import * as XLSX from 'xlsx';
@@ -261,58 +262,70 @@ const EmployeesSalaries = () => {
   const generatePayStubPDF = (employee: any) => {
     const doc = new jsPDF();
     
-    doc.setFontSize(20);
+    // Set basic fonts and styles
+    doc.setFontSize(10);
     doc.setTextColor(40, 40, 40);
     
+    // Add company logo (gray rectangle as placeholder)
     doc.setFillColor(220, 220, 220);
-    doc.rect(20, 15, 25, 25, 'F');
+    doc.rect(15, 15, 35, 25, 'F');
+    
+    // Add company name and logo text
     doc.setTextColor(100, 100, 100);
-    doc.setFontSize(10);
-    doc.text(COMPANY_INFO.name, 32.5, 25, { align: "center" });
-    doc.setFontSize(6);
-    doc.text("LOGO", 32.5, 30, { align: "center" });
+    doc.setFontSize(12);
+    doc.text(COMPANY_INFO.name, 33, 25, { align: "center" });
+    doc.setFontSize(8);
+    doc.text("LOGO", 33, 30, { align: "center" });
     
+    // Add company information on the right side
     doc.setTextColor(40, 40, 40);
-    doc.setFontSize(16);
-    doc.text(COMPANY_INFO.name, 190, 20, { align: "right" });
+    doc.setFontSize(14);
+    doc.text(COMPANY_INFO.name, 195, 20, { align: "right" });
     
-    doc.setFontSize(10);
+    doc.setFontSize(9);
     doc.setTextColor(80, 80, 80);
-    doc.text(COMPANY_INFO.tagline, 190, 27, { align: "right" });
-    doc.text(COMPANY_INFO.address, 190, 34, { align: "right" });
-    doc.text(COMPANY_INFO.siret, 190, 41, { align: "right" });
-    doc.text(COMPANY_INFO.phone, 190, 48, { align: "right" });
-    doc.text(COMPANY_INFO.email, 190, 55, { align: "right" });
+    doc.text(COMPANY_INFO.tagline, 195, 27, { align: "right" });
+    doc.text(COMPANY_INFO.address, 195, 34, { align: "right" });
+    doc.text(COMPANY_INFO.siret, 195, 41, { align: "right" });
+    doc.text(COMPANY_INFO.phone, 195, 48, { align: "right" });
+    doc.text(COMPANY_INFO.email, 195, 55, { align: "right" });
+    doc.text(COMPANY_INFO.website, 195, 62, { align: "right" });
     
+    // Add separator line
     doc.setDrawColor(200, 200, 200);
-    doc.line(20, 65, 190, 65);
+    doc.line(15, 65, 195, 65);
     
-    doc.setFontSize(16);
+    // Add document title
+    doc.setFontSize(18);
     doc.setTextColor(40, 40, 40);
-    doc.text("BULLETIN DE PAIE", 105, 75, { align: "center" });
-    doc.text(`${employee.paymentDate}`, 105, 85, { align: "center" });
+    doc.text("BULLETIN DE PAIE", 105, 80, { align: "center" });
+    doc.setFontSize(12);
+    doc.text(`Période: ${employee.paymentDate}`, 105, 90, { align: "center" });
     
+    // Add employee information section
     doc.setFontSize(12);
     doc.setTextColor(80, 80, 80);
-    doc.text("Informations Employé", 20, 100);
+    doc.text("Informations Employé", 15, 105);
     
     doc.setFontSize(10);
-    doc.text(`Nom: ${employee.name}`, 20, 110);
-    doc.text(`Poste: ${employee.position}`, 20, 118);
-    doc.text(`Département: ${employee.department}`, 20, 126);
-    doc.text(`ID Employé: ${employee.id}`, 20, 134);
+    doc.text(`Nom: ${employee.name}`, 15, 115);
+    doc.text(`Poste: ${employee.position}`, 15, 122);
+    doc.text(`Département: ${employee.department}`, 15, 129);
+    doc.text(`ID Employé: ${employee.employeeId || `EMP${employee.id.toString().padStart(3, '0')}`}`, 15, 136);
     
     const employeeDetails = employee.employeeId ? getEmployeeDetails(employee.employeeId) : null;
     if (employeeDetails) {
-      doc.text(`Email: ${employeeDetails.email}`, 20, 142);
-      doc.text(`Téléphone: ${employeeDetails.phone}`, 20, 150);
-      doc.text(`Date d'embauche: ${employeeDetails.hireDate}`, 20, 158);
+      doc.text(`Email: ${employeeDetails.email || 'Non spécifié'}`, 15, 143);
+      doc.text(`Téléphone: ${employeeDetails.phone || 'Non spécifié'}`, 15, 150);
+      doc.text(`Date d'embauche: ${employeeDetails.hireDate || 'Non spécifiée'}`, 15, 157);
     }
     
+    // Add salary details section
     doc.setFontSize(12);
     doc.setTextColor(80, 80, 80);
-    doc.text("Détails de la Rémunération", 20, employeeDetails ? 170 : 150);
+    doc.text("Détails de la Rémunération", 15, employeeDetails ? 170 : 150);
     
+    // Add salary details table
     doc.autoTable({
       startY: employeeDetails ? 175 : 155,
       head: [['Description', 'Montant']],
@@ -323,15 +336,17 @@ const EmployeesSalaries = () => {
       ],
       theme: 'grid',
       headStyles: { fillColor: [80, 80, 80] },
-      margin: { left: 20, right: 20 }
+      margin: { left: 15, right: 15 }
     });
     
     const finalY = (doc as any).autoTable.previous?.finalY || 200;
     
+    // Add leave balances section
     doc.setFontSize(12);
     doc.setTextColor(80, 80, 80);
-    doc.text("Suivi des Congés et RTT", 20, finalY + 15);
+    doc.text("Suivi des Congés et RTT", 15, finalY + 15);
     
+    // Add leave balances table
     doc.autoTable({
       startY: finalY + 20,
       head: [['Type', 'Alloués', 'Pris', 'Restants']],
@@ -341,14 +356,16 @@ const EmployeesSalaries = () => {
       ],
       theme: 'grid',
       headStyles: { fillColor: [80, 80, 80] },
-      margin: { left: 20, right: 20 }
+      margin: { left: 15, right: 15 }
     });
     
-    const pageCount = (doc as any).internal.getNumberOfPages();
+    // Add footer
+    const pageCount = doc.internal.getNumberOfPages();
     doc.setFontSize(8);
     doc.setTextColor(150, 150, 150);
     doc.text(`Ce document est confidentiel. Généré le ${new Date().toLocaleDateString('fr-FR')}`, 105, 285, { align: "center" });
     
+    // Save the PDF
     doc.save(`bulletin_paie_${employee.name.replace(/\s+/g, '_')}_${employee.paymentDate.replace(/\//g, '-')}.pdf`);
     toast.success("Bulletin de paie téléchargé avec succès");
   };
@@ -445,7 +462,7 @@ const EmployeesSalaries = () => {
                           onClick={() => generatePayStubPDF(employee)}
                           title="Télécharger bulletin de paie"
                         >
-                          <Download className="h-4 w-4" />
+                          <FilePdf className="h-4 w-4" />
                         </Button>
                       </div>
                     </TableCell>
