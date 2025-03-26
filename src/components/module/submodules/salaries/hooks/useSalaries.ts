@@ -31,7 +31,7 @@ export interface NewSalaryFormData {
   department: string;
   salary: string;
   paymentDate: string;
-  status: string;
+  status: 'pending' | 'paid';
   employeeId: string;
 }
 
@@ -42,7 +42,7 @@ export const useSalaries = () => {
   const [showHistoryDialog, setShowHistoryDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showNewSalaryDialog, setShowNewSalaryDialog] = useState(false);
-  const [filteredSalaries, setFilteredSalaries] = useState<SalaryEmployee[]>(MOCK_SALARIES);
+  const [filteredSalaries, setFilteredSalaries] = useState<SalaryEmployee[]>(MOCK_SALARIES as SalaryEmployee[]);
   const [editForm, setEditForm] = useState<EditFormData>({
     salary: '',
     position: '',
@@ -64,7 +64,7 @@ export const useSalaries = () => {
       employee.position.toLowerCase().includes(search.toLowerCase()) ||
       employee.department.toLowerCase().includes(search.toLowerCase())
     );
-    setFilteredSalaries(results);
+    setFilteredSalaries(results as SalaryEmployee[]);
   }, [search]);
   
   const handleEdit = (employee: SalaryEmployee) => {
@@ -132,13 +132,13 @@ export const useSalaries = () => {
       : newSalaryForm.department;
     
     const newSalary: SalaryEmployee = {
-      id: MOCK_SALARIES.length + 1,
+      id: filteredSalaries.length + 1,
       name: employeeName,
       position: employeePosition,
       department: employeeDepartment,
       salary: parseFloat(newSalaryForm.salary),
       paymentDate: newSalaryForm.paymentDate,
-      status: newSalaryForm.status as 'pending' | 'paid',
+      status: newSalaryForm.status,
       leaves: { paid: 12, taken: 0, remaining: 12 },
       rtt: { allocated: 10, taken: 0, remaining: 10 },
       employeeId: newSalaryForm.employeeId

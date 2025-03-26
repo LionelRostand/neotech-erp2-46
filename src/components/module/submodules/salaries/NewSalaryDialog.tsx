@@ -25,7 +25,7 @@ interface NewSalaryFormData {
   department: string;
   salary: string;
   paymentDate: string;
-  status: string;
+  status: 'pending' | 'paid';
   employeeId: string;
 }
 
@@ -132,7 +132,7 @@ export const NewSalaryDialog: React.FC<NewSalaryDialogProps> = ({
             <Label htmlFor="status">Statut</Label>
             <Select
               value={formData.status}
-              onValueChange={(value) => setFormData({ ...formData, status: value })}
+              onValueChange={(value: 'pending' | 'paid') => setFormData({ ...formData, status: value })}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Sélectionner un statut" />

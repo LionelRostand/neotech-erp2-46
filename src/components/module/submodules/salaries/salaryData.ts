@@ -7,7 +7,7 @@ export const MOCK_SALARIES = [
     salary: 75000, 
     paymentDate: '25/05/2023',
     department: 'Engineering',
-    status: 'paid',
+    status: 'paid' as 'paid',
     leaves: { paid: 12, taken: 4, remaining: 8 },
     rtt: { allocated: 10, taken: 2, remaining: 8 },
     employeeId: "EMP001"
@@ -19,7 +19,7 @@ export const MOCK_SALARIES = [
     salary: 90000, 
     paymentDate: '25/05/2023',
     department: 'Management',
-    status: 'paid',
+    status: 'paid' as 'paid',
     leaves: { paid: 15, taken: 7, remaining: 8 },
     rtt: { allocated: 12, taken: 5, remaining: 7 },
     employeeId: "EMP002"
@@ -31,7 +31,7 @@ export const MOCK_SALARIES = [
     salary: 65000, 
     paymentDate: '25/05/2023',
     department: 'Design',
-    status: 'paid',
+    status: 'paid' as 'paid',
     leaves: { paid: 10, taken: 3, remaining: 7 },
     rtt: { allocated: 8, taken: 3, remaining: 5 },
     employeeId: "EMP003"
@@ -43,7 +43,7 @@ export const MOCK_SALARIES = [
     salary: 68000, 
     paymentDate: '25/05/2023',
     department: 'Marketing',
-    status: 'pending',
+    status: 'pending' as 'pending',
     leaves: { paid: 12, taken: 2, remaining: 10 },
     rtt: { allocated: 8, taken: 1, remaining: 7 },
     employeeId: ""
@@ -55,7 +55,7 @@ export const MOCK_SALARIES = [
     salary: 82000, 
     paymentDate: '25/05/2023',
     department: 'Human Resources',
-    status: 'paid',
+    status: 'paid' as 'paid',
     leaves: { paid: 15, taken: 10, remaining: 5 },
     rtt: { allocated: 10, taken: 6, remaining: 4 },
     employeeId: ""
