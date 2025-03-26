@@ -1,10 +1,20 @@
 
 import { jsPDF } from 'jspdf';
-// Import jspdf-autotable correctly
+// Import jspdf-autotable correctement et s'assurer qu'il est disponible sur l'instance jsPDF
 import 'jspdf-autotable';
 import { toast } from 'sonner';
 import { employees } from '@/data/employees';
 import { SalaryEmployee } from './hooks/useSalaries';
+
+// Type augmentation pour étendre jsPDF avec autoTable
+declare module 'jspdf' {
+  interface jsPDF {
+    autoTable: (options: any) => jsPDF;
+    lastAutoTable: {
+      finalY?: number;
+    };
+  }
+}
 
 const COMPANY_INFO = {
   name: "STORM GROUP",
@@ -26,6 +36,12 @@ export const generatePayStubPDF = (employee: SalaryEmployee) => {
     
     // Create a new jsPDF instance
     const doc = new jsPDF();
+    
+    // Vérification immédiate de l'existence de autoTable
+    if (typeof doc.autoTable !== 'function') {
+      console.error("autoTable n'est pas disponible sur l'instance jsPDF", doc);
+      throw new Error("La fonction autoTable n'est pas disponible. Vérifiez l'importation de jspdf-autotable.");
+    }
     
     // Set up document basics
     doc.setFontSize(10);
@@ -100,12 +116,6 @@ export const generatePayStubPDF = (employee: SalaryEmployee) => {
     
     console.log('Creating compensation table...');
     
-    // Check if autoTable is available
-    if (typeof doc.autoTable !== 'function') {
-      console.error("autoTable is not available on the jsPDF instance");
-      throw new Error("La fonction autoTable n'est pas disponible. Vérifiez l'importation de jspdf-autotable.");
-    }
-    
     // Compensation table - using autoTable
     doc.autoTable({
       startY: employeeDetails ? 175 : 155,
@@ -123,7 +133,9 @@ export const generatePayStubPDF = (employee: SalaryEmployee) => {
     console.log('Compensation table created');
     
     // Calculate the final Y position from the previous table
-    const finalY = doc.lastAutoTable && doc.lastAutoTable.finalY ? doc.lastAutoTable.finalY : 200;
+    const finalY = (doc.lastAutoTable && typeof doc.lastAutoTable.finalY !== 'undefined') 
+      ? doc.lastAutoTable.finalY 
+      : 200;
     
     console.log('finalY position:', finalY);
     
