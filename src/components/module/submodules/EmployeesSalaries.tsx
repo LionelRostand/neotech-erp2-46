@@ -13,6 +13,7 @@ import { SalaryHistoryDialog } from './salaries/SalaryHistoryDialog';
 import { EditSalaryDialog } from './salaries/EditSalaryDialog';
 import { generatePayStubPDF } from './salaries/payStubGenerator';
 import { MOCK_SALARIES, MOCK_HISTORY } from './salaries/salaryData';
+import { employees } from '@/data/employees';
 
 const EmployeesSalaries = () => {
   const [search, setSearch] = useState('');
