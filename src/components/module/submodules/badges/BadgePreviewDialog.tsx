@@ -24,18 +24,18 @@ const BadgePreviewDialog: React.FC<BadgePreviewDialogProps> = ({
   if (!selectedBadge) return null;
   
   const handleDownloadBadge = () => {
-    // Create a new PDF document - using landscape format for better badge display
+    // Create a new PDF document - using landscape format for badge display
     const doc = new jsPDF({
       orientation: 'landscape',
       unit: 'mm',
-      format: [85, 54] // ID card size (85mm x 54mm)
+      format: [85, 54] // ID card standard size (85mm x 54mm)
     });
     
-    // Set background color
+    // Set background color for entire badge
     doc.setFillColor(240, 240, 240);
     doc.rect(0, 0, 85, 54, 'F');
     
-    // Add company logo/header
+    // Add company header with status color
     let headerColor;
     if (selectedBadge.status === 'success') {
       headerColor = [34, 197, 94];
@@ -47,15 +47,17 @@ const BadgePreviewDialog: React.FC<BadgePreviewDialogProps> = ({
     doc.setFillColor(headerColor[0], headerColor[1], headerColor[2]);
     doc.rect(0, 0, 85, 12, 'F');
     
-    // Add company logo - top left
+    // Company logo/name on left
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(10);
+    doc.setFont('helvetica', 'bold');
     doc.text('STORM GROUP', 5, 7);
     
-    // Add company name
+    // Company tagline on right
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(10);
-    doc.text('Enterprise Solutions', 42.5, 7, { align: 'center' });
+    doc.setFont('helvetica', 'normal');
+    doc.text('Enterprise Solutions', 80, 7, { align: 'right' });
     
     // Add badge ID
     doc.setTextColor(0, 0, 0);

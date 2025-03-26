@@ -1,3 +1,4 @@
+
 import React, { useState, useRef } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -40,6 +41,7 @@ import { toast } from 'sonner';
 import * as XLSX from 'xlsx';
 import { jsPDF } from 'jspdf';
 import 'jspdf-autotable';
+import { employees } from '@/data/employees';
 
 const MOCK_SALARIES = [
   { 
@@ -51,7 +53,8 @@ const MOCK_SALARIES = [
     department: 'Engineering',
     status: 'paid',
     leaves: { paid: 12, taken: 4, remaining: 8 },
-    rtt: { allocated: 10, taken: 2, remaining: 8 }
+    rtt: { allocated: 10, taken: 2, remaining: 8 },
+    employeeId: "EMP001"
   },
   { 
     id: 2, 
@@ -62,7 +65,8 @@ const MOCK_SALARIES = [
     department: 'Management',
     status: 'paid',
     leaves: { paid: 15, taken: 7, remaining: 8 },
-    rtt: { allocated: 12, taken: 5, remaining: 7 }
+    rtt: { allocated: 12, taken: 5, remaining: 7 },
+    employeeId: "EMP002"
   },
   { 
     id: 3, 
@@ -73,7 +77,8 @@ const MOCK_SALARIES = [
     department: 'Design',
     status: 'paid',
     leaves: { paid: 10, taken: 3, remaining: 7 },
-    rtt: { allocated: 8, taken: 3, remaining: 5 }
+    rtt: { allocated: 8, taken: 3, remaining: 5 },
+    employeeId: "EMP003"
   },
   { 
     id: 4, 
@@ -84,7 +89,8 @@ const MOCK_SALARIES = [
     department: 'Marketing',
     status: 'pending',
     leaves: { paid: 12, taken: 2, remaining: 10 },
-    rtt: { allocated: 8, taken: 1, remaining: 7 }
+    rtt: { allocated: 8, taken: 1, remaining: 7 },
+    employeeId: ""
   },
   { 
     id: 5, 
@@ -95,7 +101,8 @@ const MOCK_SALARIES = [
     department: 'Human Resources',
     status: 'paid',
     leaves: { paid: 15, taken: 10, remaining: 5 },
-    rtt: { allocated: 10, taken: 6, remaining: 4 }
+    rtt: { allocated: 10, taken: 6, remaining: 4 },
+    employeeId: ""
   }
 ];
 
@@ -138,7 +145,13 @@ const EmployeesSalaries = () => {
     salary: '',
     paymentDate: new Date().toISOString().split('T')[0],
     status: 'pending',
+    employeeId: '',
   });
+  
+  // Find employee details from the employees data
+  const getEmployeeDetails = (employeeId: string) => {
+    return employees.find(emp => emp.id === employeeId);
+  };
   
   React.useEffect(() => {
     const results = MOCK_SALARIES.filter(employee => 
@@ -183,16 +196,34 @@ const EmployeesSalaries = () => {
   };
   
   const handleCreateSalary = () => {
+    // Find employee details if employee is selected from dropdown
+    const selectedEmployeeDetails = newSalaryForm.employeeId 
+      ? employees.find(emp => emp.id === newSalaryForm.employeeId) 
+      : null;
+      
+    const employeeName = selectedEmployeeDetails 
+      ? `${selectedEmployeeDetails.firstName} ${selectedEmployeeDetails.lastName}`
+      : newSalaryForm.name;
+      
+    const employeePosition = selectedEmployeeDetails
+      ? selectedEmployeeDetails.position
+      : newSalaryForm.position;
+      
+    const employeeDepartment = selectedEmployeeDetails
+      ? selectedEmployeeDetails.department
+      : newSalaryForm.department;
+    
     const newSalary = {
       id: MOCK_SALARIES.length + 1,
-      name: newSalaryForm.name,
-      position: newSalaryForm.position,
-      department: newSalaryForm.department,
+      name: employeeName,
+      position: employeePosition,
+      department: employeeDepartment,
       salary: parseFloat(newSalaryForm.salary),
       paymentDate: newSalaryForm.paymentDate,
       status: newSalaryForm.status,
       leaves: { paid: 12, taken: 0, remaining: 12 },
-      rtt: { allocated: 10, taken: 0, remaining: 10 }
+      rtt: { allocated: 10, taken: 0, remaining: 10 },
+      employeeId: newSalaryForm.employeeId
     };
     
     setFilteredSalaries([newSalary, ...filteredSalaries]);
@@ -206,6 +237,15 @@ const EmployeesSalaries = () => {
       salary: '',
       paymentDate: new Date().toISOString().split('T')[0],
       status: 'pending',
+      employeeId: '',
+    });
+  };
+  
+  const handleEmployeeSelection = (employeeId: string) => {
+    setNewSalaryForm({
+      ...newSalaryForm,
+      employeeId,
+      name: '',  // Clear manual name since we're using dropdown selection
     });
   };
   
@@ -215,6 +255,7 @@ const EmployeesSalaries = () => {
     doc.setFontSize(20);
     doc.setTextColor(40, 40, 40);
     
+    // Add company logo
     doc.setFillColor(220, 220, 220);
     doc.rect(20, 15, 25, 25, 'F');
     doc.setTextColor(100, 100, 100);
@@ -223,6 +264,7 @@ const EmployeesSalaries = () => {
     doc.setFontSize(6);
     doc.text("LOGO", 32.5, 30, { align: "center" });
     
+    // Add company info on the right
     doc.setTextColor(40, 40, 40);
     doc.setFontSize(16);
     doc.text(COMPANY_INFO.name, 190, 20, { align: "right" });
@@ -253,12 +295,20 @@ const EmployeesSalaries = () => {
     doc.text(`Département: ${employee.department}`, 20, 126);
     doc.text(`ID Employé: ${employee.id}`, 20, 134);
     
+    // Add additional employee information if available
+    const employeeDetails = employee.employeeId ? getEmployeeDetails(employee.employeeId) : null;
+    if (employeeDetails) {
+      doc.text(`Email: ${employeeDetails.email}`, 20, 142);
+      doc.text(`Téléphone: ${employeeDetails.phone}`, 20, 150);
+      doc.text(`Date d'embauche: ${employeeDetails.hireDate}`, 20, 158);
+    }
+    
     doc.setFontSize(12);
     doc.setTextColor(80, 80, 80);
-    doc.text("Détails de la Rémunération", 20, 150);
+    doc.text("Détails de la Rémunération", 20, employeeDetails ? 170 : 150);
     
     doc.autoTable({
-      startY: 155,
+      startY: employeeDetails ? 175 : 155,
       head: [['Description', 'Montant']],
       body: [
         ['Salaire Brut Annuel', `${employee.salary.toLocaleString('fr-FR')} €`],
@@ -449,6 +499,50 @@ const EmployeesSalaries = () => {
                 </div>
               </div>
               
+              {/* Display additional employee details if available */}
+              {selectedEmployee.employeeId && (
+                <div className="mt-6 pt-4 border-t border-gray-200">
+                  <h3 className="text-lg font-medium mb-3">Informations Employé</h3>
+                  
+                  {(() => {
+                    const employeeDetails = getEmployeeDetails(selectedEmployee.employeeId);
+                    if (employeeDetails) {
+                      return (
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <Label className="text-sm text-muted-foreground">Email</Label>
+                            <p className="font-medium">{employeeDetails.email}</p>
+                          </div>
+                          <div>
+                            <Label className="text-sm text-muted-foreground">Téléphone</Label>
+                            <p className="font-medium">{employeeDetails.phone}</p>
+                          </div>
+                          <div>
+                            <Label className="text-sm text-muted-foreground">Adresse</Label>
+                            <p className="font-medium">{employeeDetails.address}</p>
+                          </div>
+                          <div>
+                            <Label className="text-sm text-muted-foreground">Date d'embauche</Label>
+                            <p className="font-medium">{employeeDetails.hireDate}</p>
+                          </div>
+                          <div>
+                            <Label className="text-sm text-muted-foreground">Contrat</Label>
+                            <p className="font-medium">{employeeDetails.contract}</p>
+                          </div>
+                          <div>
+                            <Label className="text-sm text-muted-foreground">Responsable</Label>
+                            <p className="font-medium">{employeeDetails.manager || 'N/A'}</p>
+                          </div>
+                        </div>
+                      );
+                    }
+                    return (
+                      <p className="text-muted-foreground italic">Informations détaillées non disponibles</p>
+                    );
+                  })()}
+                </div>
+              )}
+              
               <div className="mt-6">
                 <h3 className="text-lg font-medium mb-2">Congés et RTT</h3>
                 
@@ -632,45 +726,71 @@ const EmployeesSalaries = () => {
           
           <div className="space-y-4 py-4">
             <div className="grid w-full items-center gap-1.5">
-              <Label htmlFor="name">Nom de l'employé</Label>
-              <Input
-                id="name"
-                value={newSalaryForm.name}
-                onChange={(e) => setNewSalaryForm({...newSalaryForm, name: e.target.value})}
-                placeholder="Nom et prénom"
-              />
-            </div>
-            
-            <div className="grid w-full items-center gap-1.5">
-              <Label htmlFor="position">Poste</Label>
-              <Input
-                id="position"
-                value={newSalaryForm.position}
-                onChange={(e) => setNewSalaryForm({...newSalaryForm, position: e.target.value})}
-                placeholder="Ex: Développeur, Manager, etc."
-              />
-            </div>
-            
-            <div className="grid w-full items-center gap-1.5">
-              <Label htmlFor="department">Département</Label>
+              <Label htmlFor="employeeId">Nom de l'employé</Label>
               <Select 
-                value={newSalaryForm.department}
-                onValueChange={(value) => setNewSalaryForm({...newSalaryForm, department: value})}
+                value={newSalaryForm.employeeId}
+                onValueChange={handleEmployeeSelection}
               >
-                <SelectTrigger id="department">
-                  <SelectValue placeholder="Sélectionner un département" />
+                <SelectTrigger id="employeeId">
+                  <SelectValue placeholder="Sélectionner un employé" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Engineering">Ingénierie</SelectItem>
-                  <SelectItem value="Management">Gestion</SelectItem>
-                  <SelectItem value="Design">Design</SelectItem>
-                  <SelectItem value="Marketing">Marketing</SelectItem>
-                  <SelectItem value="Human Resources">Ressources Humaines</SelectItem>
-                  <SelectItem value="Finance">Finance</SelectItem>
-                  <SelectItem value="Sales">Ventes</SelectItem>
+                  {employees.map(employee => (
+                    <SelectItem key={employee.id} value={employee.id}>
+                      {employee.firstName} {employee.lastName}
+                    </SelectItem>
+                  ))}
+                  <SelectItem value="">Saisir manuellement</SelectItem>
                 </SelectContent>
               </Select>
             </div>
+            
+            {!newSalaryForm.employeeId && (
+              <div className="grid w-full items-center gap-1.5">
+                <Label htmlFor="name">Nom de l'employé (manuel)</Label>
+                <Input
+                  id="name"
+                  value={newSalaryForm.name}
+                  onChange={(e) => setNewSalaryForm({...newSalaryForm, name: e.target.value})}
+                  placeholder="Nom et prénom"
+                />
+              </div>
+            )}
+            
+            {!newSalaryForm.employeeId && (
+              <div className="grid w-full items-center gap-1.5">
+                <Label htmlFor="position">Poste</Label>
+                <Input
+                  id="position"
+                  value={newSalaryForm.position}
+                  onChange={(e) => setNewSalaryForm({...newSalaryForm, position: e.target.value})}
+                  placeholder="Ex: Développeur, Manager, etc."
+                />
+              </div>
+            )}
+            
+            {!newSalaryForm.employeeId && (
+              <div className="grid w-full items-center gap-1.5">
+                <Label htmlFor="department">Département</Label>
+                <Select 
+                  value={newSalaryForm.department}
+                  onValueChange={(value) => setNewSalaryForm({...newSalaryForm, department: value})}
+                >
+                  <SelectTrigger id="department">
+                    <SelectValue placeholder="Sélectionner un département" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Engineering">Ingénierie</SelectItem>
+                    <SelectItem value="Management">Gestion</SelectItem>
+                    <SelectItem value="Design">Design</SelectItem>
+                    <SelectItem value="Marketing">Marketing</SelectItem>
+                    <SelectItem value="Human Resources">Ressources Humaines</SelectItem>
+                    <SelectItem value="Finance">Finance</SelectItem>
+                    <SelectItem value="Sales">Ventes</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
             
             <div className="grid w-full items-center gap-1.5">
               <Label htmlFor="salary">Salaire Annuel (€)</Label>
@@ -723,4 +843,3 @@ const EmployeesSalaries = () => {
 };
 
 export default EmployeesSalaries;
-
