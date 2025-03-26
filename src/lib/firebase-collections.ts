@@ -27,7 +27,8 @@ export const COLLECTIONS = {
     DRAFTS: 'messages-drafts', 
     ARCHIVED: 'messages-archived',
     SCHEDULED: 'messages-scheduled',
-    TEMPLATES: 'messages-templates'
+    TEMPLATES: 'messages-templates',
+    METRICS: 'messages-metrics' // Added missing METRICS collection
   },
   CONTACTS: 'contacts',
   
@@ -37,7 +38,8 @@ export const COLLECTIONS = {
     PAYMENTS: 'accounting-payments',
     EXPENSES: 'accounting-expenses',
     BUDGETS: 'accounting-budgets',
-    PERMISSIONS: 'accounting-permissions'
+    PERMISSIONS: 'accounting-permissions',
+    TRANSACTIONS: 'accounting-transactions' // Added missing TRANSACTIONS collection
   },
   
   // Companies collections
@@ -58,7 +60,11 @@ export const COLLECTIONS = {
     TRACKING_EVENTS: 'freight-tracking-events',
     CONTAINERS: 'freight-containers',
     VEHICLES: 'freight-vehicles',
-    DRIVERS: 'freight-drivers'
+    DRIVERS: 'freight-drivers',
+    CARRIERS: 'freight-carriers', // Added missing CARRIERS collection
+    PACKAGES: 'freight-packages', // Added missing PACKAGES collection
+    ROUTES: 'freight-routes', // Added missing ROUTES collection
+    PACKAGE_TYPES: 'freight-package-types' // Added missing PACKAGE_TYPES collection
   },
   
   // Health collections
@@ -67,13 +73,15 @@ export const COLLECTIONS = {
   HEALTH_STAFF: 'health-staff',
   HEALTH_INSURANCE: 'health-insurance',
   HEALTH_BILLING: 'health-billing',
+  HEALTH: 'health', // Added general HEALTH collection
   
   // Library collections
   LIBRARY: {
     BOOKS: 'library-books',
     MEMBERS: 'library-members',
     LOANS: 'library-loans',
-    RESERVATIONS: 'library-reservations'
+    RESERVATIONS: 'library-reservations',
+    STATS: 'library-stats' // Added missing STATS collection
   },
   
   // Projects collections
@@ -86,7 +94,7 @@ export const COLLECTIONS = {
   },
   
   // Transport collections
-  TRANSPORT_COLLECTIONS: {
+  TRANSPORT: {
     RESERVATIONS: 'transport-reservations',
     CLIENTS: 'transport-clients',
     VEHICLES: 'transport-vehicles',
@@ -94,6 +102,9 @@ export const COLLECTIONS = {
     ROUTES: 'transport-routes'
   }
 };
+
+// Export the transport collections separately
+export const TRANSPORT_COLLECTIONS = COLLECTIONS.TRANSPORT;
 
 // Export individual collections for easier imports
 export const LIBRARY_MEMBERS = COLLECTIONS.LIBRARY.MEMBERS;

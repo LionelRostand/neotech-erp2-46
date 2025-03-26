@@ -13,11 +13,10 @@ export interface EmployeeSalary {
   effectiveDate: string;
   paymentDate: string;
   status: string;
-  bonuses?: { type: string; amount: number }[];
-  deductions?: { type: string; amount: number }[];
-  notes?: string;
-  createdAt?: any;
-  updatedAt?: any;
+  paymentMethod?: string;
+  description?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export const useEmployeeSalaries = () => {
@@ -41,7 +40,11 @@ export const useEmployeeSalaries = () => {
 
   const addSalary = async (salary: Partial<EmployeeSalary>) => {
     try {
-      const result = await firestore.add(salary);
+      const result = await firestore.add({
+        ...salary,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      });
       toast.success("Salaire ajouté avec succès");
       await fetchSalaries();
       return result;
@@ -54,7 +57,10 @@ export const useEmployeeSalaries = () => {
 
   const updateSalary = async (id: string, data: Partial<EmployeeSalary>) => {
     try {
-      await firestore.update(id, data);
+      await firestore.update(id, {
+        ...data,
+        updatedAt: new Date().toISOString()
+      });
       toast.success("Salaire mis à jour avec succès");
       await fetchSalaries();
     } catch (error) {
@@ -79,6 +85,11 @@ export const useEmployeeSalaries = () => {
   useEffect(() => {
     console.log('useEmployeeSalaries hook: Initial data fetch');
     fetchSalaries();
+    
+    // Return a cleanup function
+    return () => {
+      console.log('useEmployeeSalaries hook: Cleanup');
+    };
   }, [fetchSalaries]);
 
   return {
