@@ -14,7 +14,7 @@ import {
   FileText, 
   History, 
   FileEdit, 
-  FilePdf
+  FileDown
 } from 'lucide-react';
 import {
   Tooltip,
@@ -130,7 +130,7 @@ export const SalaryList: React.FC<SalaryListProps> = ({
                           onClick={() => onDownloadPayStub(employee)}
                           className="text-primary hover:bg-primary/10"
                         >
-                          <FilePdf className="h-4 w-4" />
+                          <FileDown className="h-4 w-4" />
                         </Button>
                       </TooltipTrigger>
                       <TooltipContent>
