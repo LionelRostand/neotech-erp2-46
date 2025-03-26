@@ -1,14 +1,18 @@
 
 import { jsPDF } from 'jspdf';
+// Import jspdf-autotable as a module
 import 'jspdf-autotable';
 import { toast } from 'sonner';
 import { employees } from '@/data/employees';
 import { SalaryEmployee } from './hooks/useSalaries';
 
-// Add type augmentation to fix TypeScript errors
+// Type augmentation to properly extend jsPDF with autoTable
 declare module 'jspdf' {
   interface jsPDF {
     autoTable: (options: any) => jsPDF;
+    lastAutoTable: {
+      finalY?: number;
+    };
   }
 }
 
@@ -102,6 +106,11 @@ export const generatePayStubPDF = (employee: SalaryEmployee) => {
     doc.setTextColor(80, 80, 80);
     doc.text("Détails de la Rémunération", 15, employeeDetails ? 170 : 150);
     
+    // Verify autoTable exists before calling it
+    if (typeof doc.autoTable !== 'function') {
+      throw new Error("La fonction autoTable n'est pas disponible. Vérifiez l'importation de jspdf-autotable.");
+    }
+    
     // Compensation table - using autoTable
     doc.autoTable({
       startY: employeeDetails ? 175 : 155,
@@ -116,8 +125,8 @@ export const generatePayStubPDF = (employee: SalaryEmployee) => {
       margin: { left: 15, right: 15 }
     });
     
-    // Calculate the final Y position from the previous table
-    const finalY = (doc as any).lastAutoTable.finalY || 200;
+    // Calculate the final Y position from the previous table - using lastAutoTable
+    const finalY = doc.lastAutoTable.finalY || 200;
     
     // Leave tracking section
     doc.setFontSize(12);
@@ -142,7 +151,7 @@ export const generatePayStubPDF = (employee: SalaryEmployee) => {
     doc.setTextColor(150, 150, 150);
     doc.text(`Ce document est confidentiel. Généré le ${new Date().toLocaleDateString('fr-FR')}`, 105, 285, { align: "center" });
     
-    // Save the PDF
+    // Save the PDF with a properly formatted filename
     const fileName = `bulletin_paie_${employee.name.replace(/\s+/g, '_')}_${employee.paymentDate.replace(/\//g, '-')}.pdf`;
     doc.save(fileName);
     toast.success("Bulletin de paie téléchargé avec succès");
