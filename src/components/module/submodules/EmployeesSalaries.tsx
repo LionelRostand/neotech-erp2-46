@@ -1,3 +1,4 @@
+
 import React, { useState, useRef } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -260,20 +261,24 @@ const EmployeesSalaries = () => {
   const generatePayStubPDF = (employee: any) => {
     const doc = new jsPDF();
     
+    // Set up document basics
     doc.setFontSize(10);
     doc.setTextColor(40, 40, 40);
     
-    doc.setFillColor(220, 220, 220);
-    doc.rect(15, 15, 35, 25, 'F');
+    // Create a grey rectangle for the logo area
+    doc.setFillColor(240, 240, 240);
+    doc.rect(15, 15, 50, 30, 'F');
     
-    doc.setTextColor(100, 100, 100);
+    // Add logo placeholder with styling
     doc.setFontSize(12);
-    doc.text(COMPANY_INFO.name, 33, 25, { align: "center" });
-    doc.setFontSize(8);
-    doc.text("LOGO", 33, 30, { align: "center" });
+    doc.setTextColor(80, 80, 80);
+    doc.text("LOGO", 40, 30, { align: "center" });
+    doc.setFontSize(10);
+    doc.text(COMPANY_INFO.name, 40, 37, { align: "center" });
     
-    doc.setTextColor(40, 40, 40);
+    // Add company information on the right side
     doc.setFontSize(14);
+    doc.setTextColor(40, 40, 40);
     doc.text(COMPANY_INFO.name, 195, 20, { align: "right" });
     
     doc.setFontSize(9);
@@ -285,15 +290,18 @@ const EmployeesSalaries = () => {
     doc.text(COMPANY_INFO.email, 195, 55, { align: "right" });
     doc.text(COMPANY_INFO.website, 195, 62, { align: "right" });
     
+    // Add separator line
     doc.setDrawColor(200, 200, 200);
     doc.line(15, 65, 195, 65);
     
+    // Document title
     doc.setFontSize(18);
     doc.setTextColor(40, 40, 40);
     doc.text("BULLETIN DE PAIE", 105, 80, { align: "center" });
     doc.setFontSize(12);
     doc.text(`Période: ${employee.paymentDate}`, 105, 90, { align: "center" });
     
+    // Employee information section
     doc.setFontSize(12);
     doc.setTextColor(80, 80, 80);
     doc.text("Informations Employé", 15, 105);
@@ -311,10 +319,12 @@ const EmployeesSalaries = () => {
       doc.text(`Date d'embauche: ${employeeDetails.hireDate || 'Non spécifiée'}`, 15, 157);
     }
     
+    // Compensation details section
     doc.setFontSize(12);
     doc.setTextColor(80, 80, 80);
     doc.text("Détails de la Rémunération", 15, employeeDetails ? 170 : 150);
     
+    // Compensation table
     doc.autoTable({
       startY: employeeDetails ? 175 : 155,
       head: [['Description', 'Montant']],
@@ -330,10 +340,12 @@ const EmployeesSalaries = () => {
     
     const finalY = (doc as any).autoTable.previous?.finalY || 200;
     
+    // Leave tracking section
     doc.setFontSize(12);
     doc.setTextColor(80, 80, 80);
     doc.text("Suivi des Congés et RTT", 15, finalY + 15);
     
+    // Leave tracking table
     doc.autoTable({
       startY: finalY + 20,
       head: [['Type', 'Alloués', 'Pris', 'Restants']],
@@ -346,10 +358,12 @@ const EmployeesSalaries = () => {
       margin: { left: 15, right: 15 }
     });
     
+    // Footer
     doc.setFontSize(8);
     doc.setTextColor(150, 150, 150);
     doc.text(`Ce document est confidentiel. Généré le ${new Date().toLocaleDateString('fr-FR')}`, 105, 285, { align: "center" });
     
+    // Save the PDF with a filename based on employee info
     doc.save(`bulletin_paie_${employee.name.replace(/\s+/g, '_')}_${employee.paymentDate.replace(/\//g, '-')}.pdf`);
     toast.success("Bulletin de paie téléchargé avec succès");
   };
