@@ -130,7 +130,7 @@ const EditAppointmentDialog: React.FC<EditAppointmentDialogProps> = ({
             <div className="space-y-2">
               <Label htmlFor="status">Statut</Label>
               <Select
-                value={formData.status}
+                value={formData.status || "pending"}
                 onValueChange={(value) => updateFormField('status', value)}
               >
                 <SelectTrigger className={formErrors.status ? 'border-red-500' : ''}>

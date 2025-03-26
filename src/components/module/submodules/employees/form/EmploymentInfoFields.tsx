@@ -104,7 +104,7 @@ const EmploymentInfoFields: React.FC = () => {
           <FormItem>
             <FormLabel>Statut</FormLabel>
             <FormControl>
-              <Select value={field.value} onValueChange={field.onChange}>
+              <Select value={field.value || "Actif"} onValueChange={field.onChange}>
                 <SelectTrigger>
                   <SelectValue placeholder="Sélectionner un statut" />
                 </SelectTrigger>

@@ -45,7 +45,7 @@ const GeneralInfoTab: React.FC = () => {
           render={({ field }) => (
             <FormItem>
               <FormLabel>Patient</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <Select onValueChange={field.onChange} defaultValue={field.value || "none-selected"}>
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Sélectionner un patient" />
@@ -70,7 +70,7 @@ const GeneralInfoTab: React.FC = () => {
           render={({ field }) => (
             <FormItem>
               <FormLabel>Médecin</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <Select onValueChange={field.onChange} defaultValue={field.value || "none-selected"}>
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Sélectionner un médecin" />
