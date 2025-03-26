@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -148,7 +147,6 @@ const EmployeesSalaries = () => {
     employeeId: '',
   });
   
-  // Find employee details from the employees data
   const getEmployeeDetails = (employeeId: string) => {
     return employees.find(emp => emp.id === employeeId);
   };
@@ -196,7 +194,6 @@ const EmployeesSalaries = () => {
   };
   
   const handleCreateSalary = () => {
-    // Find employee details if employee is selected from dropdown
     const selectedEmployeeDetails = newSalaryForm.employeeId 
       ? employees.find(emp => emp.id === newSalaryForm.employeeId) 
       : null;
@@ -255,7 +252,6 @@ const EmployeesSalaries = () => {
     doc.setFontSize(20);
     doc.setTextColor(40, 40, 40);
     
-    // Add company logo
     doc.setFillColor(220, 220, 220);
     doc.rect(20, 15, 25, 25, 'F');
     doc.setTextColor(100, 100, 100);
@@ -264,7 +260,6 @@ const EmployeesSalaries = () => {
     doc.setFontSize(6);
     doc.text("LOGO", 32.5, 30, { align: "center" });
     
-    // Add company info on the right
     doc.setTextColor(40, 40, 40);
     doc.setFontSize(16);
     doc.text(COMPANY_INFO.name, 190, 20, { align: "right" });
@@ -295,7 +290,6 @@ const EmployeesSalaries = () => {
     doc.text(`Département: ${employee.department}`, 20, 126);
     doc.text(`ID Employé: ${employee.id}`, 20, 134);
     
-    // Add additional employee information if available
     const employeeDetails = employee.employeeId ? getEmployeeDetails(employee.employeeId) : null;
     if (employeeDetails) {
       doc.text(`Email: ${employeeDetails.email}`, 20, 142);
@@ -499,347 +493,5 @@ const EmployeesSalaries = () => {
                 </div>
               </div>
               
-              {/* Display additional employee details if available */}
-              {selectedEmployee.employeeId && (
-                <div className="mt-6 pt-4 border-t border-gray-200">
-                  <h3 className="text-lg font-medium mb-3">Informations Employé</h3>
-                  
-                  {(() => {
-                    const employeeDetails = getEmployeeDetails(selectedEmployee.employeeId);
-                    if (employeeDetails) {
-                      return (
-                        <div className="grid grid-cols-2 gap-4">
-                          <div>
-                            <Label className="text-sm text-muted-foreground">Email</Label>
-                            <p className="font-medium">{employeeDetails.email}</p>
-                          </div>
-                          <div>
-                            <Label className="text-sm text-muted-foreground">Téléphone</Label>
-                            <p className="font-medium">{employeeDetails.phone}</p>
-                          </div>
-                          <div>
-                            <Label className="text-sm text-muted-foreground">Adresse</Label>
-                            <p className="font-medium">{employeeDetails.address}</p>
-                          </div>
-                          <div>
-                            <Label className="text-sm text-muted-foreground">Date d'embauche</Label>
-                            <p className="font-medium">{employeeDetails.hireDate}</p>
-                          </div>
-                          <div>
-                            <Label className="text-sm text-muted-foreground">Contrat</Label>
-                            <p className="font-medium">{employeeDetails.contract}</p>
-                          </div>
-                          <div>
-                            <Label className="text-sm text-muted-foreground">Responsable</Label>
-                            <p className="font-medium">{employeeDetails.manager || 'N/A'}</p>
-                          </div>
-                        </div>
-                      );
-                    }
-                    return (
-                      <p className="text-muted-foreground italic">Informations détaillées non disponibles</p>
-                    );
-                  })()}
-                </div>
-              )}
-              
-              <div className="mt-6">
-                <h3 className="text-lg font-medium mb-2">Congés et RTT</h3>
-                
-                <div className="space-y-4">
-                  <div className="border rounded-md p-4">
-                    <h4 className="font-medium mb-2">Congés Payés</h4>
-                    <div className="grid grid-cols-3 gap-2">
-                      <div>
-                        <Label className="text-sm text-muted-foreground">Alloués</Label>
-                        <p className="font-medium">{selectedEmployee.leaves.paid} jours</p>
-                      </div>
-                      <div>
-                        <Label className="text-sm text-muted-foreground">Pris</Label>
-                        <p className="font-medium">{selectedEmployee.leaves.taken} jours</p>
-                      </div>
-                      <div>
-                        <Label className="text-sm text-muted-foreground">Restants</Label>
-                        <p className="font-medium">{selectedEmployee.leaves.remaining} jours</p>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="border rounded-md p-4">
-                    <h4 className="font-medium mb-2">RTT</h4>
-                    <div className="grid grid-cols-3 gap-2">
-                      <div>
-                        <Label className="text-sm text-muted-foreground">Alloués</Label>
-                        <p className="font-medium">{selectedEmployee.rtt.allocated} jours</p>
-                      </div>
-                      <div>
-                        <Label className="text-sm text-muted-foreground">Pris</Label>
-                        <p className="font-medium">{selectedEmployee.rtt.taken} jours</p>
-                      </div>
-                      <div>
-                        <Label className="text-sm text-muted-foreground">Restants</Label>
-                        <p className="font-medium">{selectedEmployee.rtt.remaining} jours</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-          
-          <DialogFooter>
-            <Button 
-              variant="outline" 
-              onClick={() => setShowDetailsDialog(false)}
-            >
-              Fermer
-            </Button>
-            {selectedEmployee && (
-              <Button onClick={() => generatePayStubPDF(selectedEmployee)}>
-                <Download className="h-4 w-4 mr-2" />
-                Télécharger bulletin de paie
-              </Button>
-            )}
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-      
-      <Dialog open={showHistoryDialog} onOpenChange={setShowHistoryDialog}>
-        <DialogContent className="sm:max-w-[600px]">
-          <DialogHeader>
-            <DialogTitle>Historique des salaires</DialogTitle>
-          </DialogHeader>
-          
-          {selectedEmployee && (
-            <div>
-              <div className="mb-4">
-                <Label className="text-sm text-muted-foreground">Employé</Label>
-                <p className="font-medium">{selectedEmployee.name}</p>
-              </div>
-              
-              <div className="rounded-md border">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Date</TableHead>
-                      <TableHead className="text-right">Montant</TableHead>
-                      <TableHead>Raison</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {MOCK_HISTORY
-                      .filter(item => item.employeeId === selectedEmployee.id)
-                      .map((item) => (
-                        <TableRow key={item.id}>
-                          <TableCell>{item.date}</TableCell>
-                          <TableCell className="text-right">{item.amount.toLocaleString('fr-FR')} €</TableCell>
-                          <TableCell>{item.reason}</TableCell>
-                        </TableRow>
-                      ))}
-                  </TableBody>
-                </Table>
-              </div>
-            </div>
-          )}
-          
-          <DialogFooter>
-            <Button 
-              variant="outline" 
-              onClick={() => setShowHistoryDialog(false)}
-            >
-              Fermer
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-      
-      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
-        <DialogContent className="sm:max-w-[500px]">
-          <DialogHeader>
-            <DialogTitle>Modifier les informations de salaire</DialogTitle>
-          </DialogHeader>
-          
-          {selectedEmployee && (
-            <div className="space-y-4 py-4">
-              <div className="mb-4">
-                <Label className="text-sm text-muted-foreground">Employé</Label>
-                <p className="font-medium">{selectedEmployee.name}</p>
-              </div>
-              
-              <div className="space-y-4">
-                <div className="grid w-full items-center gap-1.5">
-                  <Label htmlFor="salary">Salaire Annuel</Label>
-                  <Input
-                    id="salary"
-                    value={editForm.salary}
-                    onChange={(e) => setEditForm({...editForm, salary: e.target.value})}
-                  />
-                </div>
-                
-                <div className="grid w-full items-center gap-1.5">
-                  <Label htmlFor="position">Poste</Label>
-                  <Input
-                    id="position"
-                    value={editForm.position}
-                    onChange={(e) => setEditForm({...editForm, position: e.target.value})}
-                  />
-                </div>
-                
-                <div className="grid w-full items-center gap-1.5">
-                  <Label htmlFor="department">Département</Label>
-                  <Select 
-                    value={editForm.department}
-                    onValueChange={(value) => setEditForm({...editForm, department: value})}
-                  >
-                    <SelectTrigger id="department">
-                      <SelectValue placeholder="Sélectionner un département" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Engineering">Ingénierie</SelectItem>
-                      <SelectItem value="Management">Gestion</SelectItem>
-                      <SelectItem value="Design">Design</SelectItem>
-                      <SelectItem value="Marketing">Marketing</SelectItem>
-                      <SelectItem value="Human Resources">Ressources Humaines</SelectItem>
-                      <SelectItem value="Finance">Finance</SelectItem>
-                      <SelectItem value="Sales">Ventes</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            </div>
-          )}
-          
-          <DialogFooter>
-            <DialogClose asChild>
-              <Button variant="outline">Annuler</Button>
-            </DialogClose>
-            <Button onClick={handleSaveChanges}>Enregistrer</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-      
-      <Dialog open={showNewSalaryDialog} onOpenChange={setShowNewSalaryDialog}>
-        <DialogContent className="sm:max-w-[500px]">
-          <DialogHeader>
-            <DialogTitle>Créer une nouvelle fiche de paie</DialogTitle>
-          </DialogHeader>
-          
-          <div className="space-y-4 py-4">
-            <div className="grid w-full items-center gap-1.5">
-              <Label htmlFor="employeeId">Nom de l'employé</Label>
-              <Select 
-                value={newSalaryForm.employeeId}
-                onValueChange={handleEmployeeSelection}
-              >
-                <SelectTrigger id="employeeId">
-                  <SelectValue placeholder="Sélectionner un employé" />
-                </SelectTrigger>
-                <SelectContent>
-                  {employees.map(employee => (
-                    <SelectItem key={employee.id} value={employee.id}>
-                      {employee.firstName} {employee.lastName}
-                    </SelectItem>
-                  ))}
-                  <SelectItem value="">Saisir manuellement</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            {!newSalaryForm.employeeId && (
-              <div className="grid w-full items-center gap-1.5">
-                <Label htmlFor="name">Nom de l'employé (manuel)</Label>
-                <Input
-                  id="name"
-                  value={newSalaryForm.name}
-                  onChange={(e) => setNewSalaryForm({...newSalaryForm, name: e.target.value})}
-                  placeholder="Nom et prénom"
-                />
-              </div>
-            )}
-            
-            {!newSalaryForm.employeeId && (
-              <div className="grid w-full items-center gap-1.5">
-                <Label htmlFor="position">Poste</Label>
-                <Input
-                  id="position"
-                  value={newSalaryForm.position}
-                  onChange={(e) => setNewSalaryForm({...newSalaryForm, position: e.target.value})}
-                  placeholder="Ex: Développeur, Manager, etc."
-                />
-              </div>
-            )}
-            
-            {!newSalaryForm.employeeId && (
-              <div className="grid w-full items-center gap-1.5">
-                <Label htmlFor="department">Département</Label>
-                <Select 
-                  value={newSalaryForm.department}
-                  onValueChange={(value) => setNewSalaryForm({...newSalaryForm, department: value})}
-                >
-                  <SelectTrigger id="department">
-                    <SelectValue placeholder="Sélectionner un département" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Engineering">Ingénierie</SelectItem>
-                    <SelectItem value="Management">Gestion</SelectItem>
-                    <SelectItem value="Design">Design</SelectItem>
-                    <SelectItem value="Marketing">Marketing</SelectItem>
-                    <SelectItem value="Human Resources">Ressources Humaines</SelectItem>
-                    <SelectItem value="Finance">Finance</SelectItem>
-                    <SelectItem value="Sales">Ventes</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
-            
-            <div className="grid w-full items-center gap-1.5">
-              <Label htmlFor="salary">Salaire Annuel (€)</Label>
-              <Input
-                id="salary"
-                type="number"
-                value={newSalaryForm.salary}
-                onChange={(e) => setNewSalaryForm({...newSalaryForm, salary: e.target.value})}
-                placeholder="Ex: 45000"
-              />
-            </div>
-            
-            <div className="grid w-full items-center gap-1.5">
-              <Label htmlFor="paymentDate">Date de paiement</Label>
-              <Input
-                id="paymentDate"
-                type="date"
-                value={newSalaryForm.paymentDate}
-                onChange={(e) => setNewSalaryForm({...newSalaryForm, paymentDate: e.target.value})}
-              />
-            </div>
-            
-            <div className="grid w-full items-center gap-1.5">
-              <Label htmlFor="status">Statut</Label>
-              <Select 
-                value={newSalaryForm.status}
-                onValueChange={(value) => setNewSalaryForm({...newSalaryForm, status: value})}
-              >
-                <SelectTrigger id="status">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="pending">En attente</SelectItem>
-                  <SelectItem value="paid">Payé</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          
-          <DialogFooter>
-            <DialogClose asChild>
-              <Button variant="outline">Annuler</Button>
-            </DialogClose>
-            <Button onClick={handleCreateSalary}>Créer fiche de paie</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </div>
-  );
-};
+              {
 
-export default EmployeesSalaries;
