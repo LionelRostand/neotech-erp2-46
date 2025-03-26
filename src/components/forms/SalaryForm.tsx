@@ -19,7 +19,7 @@ const SalaryForm: React.FC<SalaryFormProps> = ({ initialData, onSubmit, onCancel
     defaultValues: initialData || {
       employeeId: '',
       employeeName: '',
-      amount: '',
+      amount: 0, // Changed from string to number
       currency: 'EUR',
       effectiveDate: new Date().toISOString().split('T')[0],
       paymentDate: new Date().toISOString().split('T')[0],
@@ -38,7 +38,12 @@ const SalaryForm: React.FC<SalaryFormProps> = ({ initialData, onSubmit, onCancel
   }, [initialData, setValue]);
 
   const onFormSubmit = (data: any) => {
-    onSubmit(data);
+    // Convert amount to number
+    const formattedData = {
+      ...data,
+      amount: Number(data.amount)
+    };
+    onSubmit(formattedData);
   };
 
   return (
