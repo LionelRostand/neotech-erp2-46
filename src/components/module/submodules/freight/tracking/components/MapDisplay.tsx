@@ -32,6 +32,12 @@ const MapDisplay: React.FC<MapDisplayProps> = ({ events, mapToken, error }) => {
         
         // Créer l'objet "macarte" et l'insèrer dans l'élément HTML qui a l'ID "map"
         const L = await import('leaflet');
+        
+        // Check if there's already a map instance and remove it to prevent duplicates
+        if (mapRef.current._leaflet_id) {
+          mapRef.current._leaflet = null;
+        }
+        
         const map = L.map(mapRef.current).setView([latitude, longitude], 11);
         
         // Leaflet ne récupère pas les cartes (tiles) sur un serveur par défaut. Nous devons lui préciser où nous souhaitons les récupérer.
@@ -70,8 +76,21 @@ const MapDisplay: React.FC<MapDisplayProps> = ({ events, mapToken, error }) => {
           }
         }
         
+        // Add resize handler to ensure map renders correctly when container changes size
+        const handleResize = () => {
+          if (map) {
+            map.invalidateSize();
+          }
+        };
+        
+        window.addEventListener('resize', handleResize);
+        
+        // Force a resize after a short delay to ensure the map renders
+        setTimeout(() => handleResize(), 500);
+        
         // Nettoyage lors du démontage
         return () => {
+          window.removeEventListener('resize', handleResize);
           map.remove();
         };
       } catch (error) {
