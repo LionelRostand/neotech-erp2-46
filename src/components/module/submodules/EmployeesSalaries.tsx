@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -36,7 +35,7 @@ import {
   Plus,
   FileText,
   Building,
-  FilePdf
+  FileDown
 } from 'lucide-react';
 import { toast } from 'sonner';
 import * as XLSX from 'xlsx';
@@ -196,7 +195,6 @@ const EmployeesSalaries = () => {
   };
   
   const handleCreateSalary = () => {
-    // Validation - prevent empty values
     if (!newSalaryForm.employeeId && !newSalaryForm.name) {
       toast.error("Veuillez sélectionner un employé ou saisir un nom");
       return;
@@ -255,29 +253,25 @@ const EmployeesSalaries = () => {
     setNewSalaryForm({
       ...newSalaryForm,
       employeeId,
-      name: '',  // Clear manual name since we're using dropdown selection
+      name: '',
     });
   };
   
   const generatePayStubPDF = (employee: any) => {
     const doc = new jsPDF();
     
-    // Set basic fonts and styles
     doc.setFontSize(10);
     doc.setTextColor(40, 40, 40);
     
-    // Add company logo (gray rectangle as placeholder)
     doc.setFillColor(220, 220, 220);
     doc.rect(15, 15, 35, 25, 'F');
     
-    // Add company name and logo text
     doc.setTextColor(100, 100, 100);
     doc.setFontSize(12);
     doc.text(COMPANY_INFO.name, 33, 25, { align: "center" });
     doc.setFontSize(8);
     doc.text("LOGO", 33, 30, { align: "center" });
     
-    // Add company information on the right side
     doc.setTextColor(40, 40, 40);
     doc.setFontSize(14);
     doc.text(COMPANY_INFO.name, 195, 20, { align: "right" });
@@ -291,18 +285,15 @@ const EmployeesSalaries = () => {
     doc.text(COMPANY_INFO.email, 195, 55, { align: "right" });
     doc.text(COMPANY_INFO.website, 195, 62, { align: "right" });
     
-    // Add separator line
     doc.setDrawColor(200, 200, 200);
     doc.line(15, 65, 195, 65);
     
-    // Add document title
     doc.setFontSize(18);
     doc.setTextColor(40, 40, 40);
     doc.text("BULLETIN DE PAIE", 105, 80, { align: "center" });
     doc.setFontSize(12);
     doc.text(`Période: ${employee.paymentDate}`, 105, 90, { align: "center" });
     
-    // Add employee information section
     doc.setFontSize(12);
     doc.setTextColor(80, 80, 80);
     doc.text("Informations Employé", 15, 105);
@@ -320,12 +311,10 @@ const EmployeesSalaries = () => {
       doc.text(`Date d'embauche: ${employeeDetails.hireDate || 'Non spécifiée'}`, 15, 157);
     }
     
-    // Add salary details section
     doc.setFontSize(12);
     doc.setTextColor(80, 80, 80);
     doc.text("Détails de la Rémunération", 15, employeeDetails ? 170 : 150);
     
-    // Add salary details table
     doc.autoTable({
       startY: employeeDetails ? 175 : 155,
       head: [['Description', 'Montant']],
@@ -341,12 +330,10 @@ const EmployeesSalaries = () => {
     
     const finalY = (doc as any).autoTable.previous?.finalY || 200;
     
-    // Add leave balances section
     doc.setFontSize(12);
     doc.setTextColor(80, 80, 80);
     doc.text("Suivi des Congés et RTT", 15, finalY + 15);
     
-    // Add leave balances table
     doc.autoTable({
       startY: finalY + 20,
       head: [['Type', 'Alloués', 'Pris', 'Restants']],
@@ -359,13 +346,10 @@ const EmployeesSalaries = () => {
       margin: { left: 15, right: 15 }
     });
     
-    // Add footer
-    const pageCount = doc.internal.getNumberOfPages();
     doc.setFontSize(8);
     doc.setTextColor(150, 150, 150);
     doc.text(`Ce document est confidentiel. Généré le ${new Date().toLocaleDateString('fr-FR')}`, 105, 285, { align: "center" });
     
-    // Save the PDF
     doc.save(`bulletin_paie_${employee.name.replace(/\s+/g, '_')}_${employee.paymentDate.replace(/\//g, '-')}.pdf`);
     toast.success("Bulletin de paie téléchargé avec succès");
   };
@@ -462,7 +446,7 @@ const EmployeesSalaries = () => {
                           onClick={() => generatePayStubPDF(employee)}
                           title="Télécharger bulletin de paie"
                         >
-                          <FilePdf className="h-4 w-4" />
+                          <FileDown className="h-4 w-4" />
                         </Button>
                       </div>
                     </TableCell>
@@ -474,7 +458,6 @@ const EmployeesSalaries = () => {
         </CardContent>
       </Card>
       
-      {/* Détails Dialog */}
       <Dialog open={showDetailsDialog} onOpenChange={setShowDetailsDialog}>
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
@@ -527,7 +510,6 @@ const EmployeesSalaries = () => {
         </DialogContent>
       </Dialog>
       
-      {/* Historique Dialog */}
       <Dialog open={showHistoryDialog} onOpenChange={setShowHistoryDialog}>
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
@@ -568,7 +550,6 @@ const EmployeesSalaries = () => {
         </DialogContent>
       </Dialog>
       
-      {/* Edit Dialog */}
       <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
@@ -623,7 +604,6 @@ const EmployeesSalaries = () => {
         </DialogContent>
       </Dialog>
       
-      {/* New Salary Dialog */}
       <Dialog open={showNewSalaryDialog} onOpenChange={setShowNewSalaryDialog}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
@@ -634,14 +614,13 @@ const EmployeesSalaries = () => {
             <div className="space-y-2">
               <Label htmlFor="employee-select">Sélectionnez un employé</Label>
               <Select
-                value={newSalaryForm.employeeId || "no-selection"}
+                value={newSalaryForm.employeeId || ""}
                 onValueChange={handleEmployeeSelection}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Choisir un employé" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="no-selection" disabled>Choisir un employé</SelectItem>
                   {employees.map((employee) => (
                     <SelectItem key={employee.id} value={employee.id}>
                       {employee.firstName} {employee.lastName}
