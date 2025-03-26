@@ -5,6 +5,13 @@ import { toast } from 'sonner';
 import { employees } from '@/data/employees';
 import { SalaryEmployee } from './hooks/useSalaries';
 
+// Add type augmentation to fix TypeScript errors
+declare module 'jspdf' {
+  interface jsPDF {
+    autoTable: (options: any) => jsPDF;
+  }
+}
+
 const COMPANY_INFO = {
   name: "STORM GROUP",
   tagline: "Enterprise Solutions",
@@ -21,6 +28,7 @@ export const getEmployeeDetails = (employeeId: string) => {
 
 export const generatePayStubPDF = (employee: SalaryEmployee) => {
   try {
+    // Create a new jsPDF instance
     const doc = new jsPDF();
     
     // Set up document basics
@@ -94,7 +102,7 @@ export const generatePayStubPDF = (employee: SalaryEmployee) => {
     doc.setTextColor(80, 80, 80);
     doc.text("Détails de la Rémunération", 15, employeeDetails ? 170 : 150);
     
-    // Compensation table
+    // Compensation table - using autoTable
     doc.autoTable({
       startY: employeeDetails ? 175 : 155,
       head: [['Description', 'Montant']],
@@ -108,7 +116,8 @@ export const generatePayStubPDF = (employee: SalaryEmployee) => {
       margin: { left: 15, right: 15 }
     });
     
-    const finalY = (doc as any).autoTable.previous?.finalY || 200;
+    // Calculate the final Y position from the previous table
+    const finalY = (doc as any).lastAutoTable.finalY || 200;
     
     // Leave tracking section
     doc.setFontSize(12);
@@ -137,6 +146,7 @@ export const generatePayStubPDF = (employee: SalaryEmployee) => {
     const fileName = `bulletin_paie_${employee.name.replace(/\s+/g, '_')}_${employee.paymentDate.replace(/\//g, '-')}.pdf`;
     doc.save(fileName);
     toast.success("Bulletin de paie téléchargé avec succès");
+    
   } catch (error) {
     console.error('Erreur lors de la génération du PDF:', error);
     toast.error("Erreur lors de la génération du bulletin de paie");
