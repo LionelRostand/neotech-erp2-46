@@ -4,7 +4,7 @@ import { toast } from 'sonner';
 import { employees } from '@/data/employees';
 import { SalaryEmployee } from './hooks/useSalaries';
 
-// Importation de jspdf-autotable
+// Import any necessary fonts
 import 'jspdf-autotable';
 
 const COMPANY_INFO = {
@@ -27,9 +27,6 @@ export const generatePayStubPDF = (employee: SalaryEmployee) => {
     
     // Create a new jsPDF instance
     const doc = new jsPDF();
-    
-    console.log('jsPDF instance created:', typeof doc);
-    console.log('autoTable availability:', typeof doc.autoTable);
     
     // Set up document basics
     doc.setFontSize(10);
@@ -91,103 +88,108 @@ export const generatePayStubPDF = (employee: SalaryEmployee) => {
     doc.text(`ID Employé: ${employee.employeeId || `EMP${employee.id.toString().padStart(3, '0')}`}`, 15, 136);
     
     const employeeDetails = employee.employeeId ? getEmployeeDetails(employee.employeeId) : null;
+    let finalY = 143;
+    
     if (employeeDetails) {
-      doc.text(`Email: ${employeeDetails.email || 'Non spécifié'}`, 15, 143);
-      doc.text(`Téléphone: ${employeeDetails.phone || 'Non spécifié'}`, 15, 150);
-      doc.text(`Date d'embauche: ${employeeDetails.hireDate || 'Non spécifiée'}`, 15, 157);
+      doc.text(`Email: ${employeeDetails.email || 'Non spécifié'}`, 15, finalY);
+      finalY += 7;
+      doc.text(`Téléphone: ${employeeDetails.phone || 'Non spécifié'}`, 15, finalY);
+      finalY += 7;
+      doc.text(`Date d'embauche: ${employeeDetails.hireDate || 'Non spécifiée'}`, 15, finalY);
+      finalY += 13;
+    } else {
+      finalY = 143;
     }
     
     // Compensation details section
     doc.setFontSize(12);
     doc.setTextColor(80, 80, 80);
-    doc.text("Détails de la Rémunération", 15, employeeDetails ? 170 : 150);
+    doc.text("Détails de la Rémunération", 15, finalY);
+    finalY += 5;
     
-    console.log('Preparing to create compensation table...');
+    // Manually create compensation table
+    const compensationStartY = finalY;
+    finalY += 10;
     
-    // Ajout manuel de la table de rémunération (sans utiliser autoTable)
-    const startY = employeeDetails ? 175 : 155;
-    
-    // En-tête de tableau
+    // Table header
     doc.setFillColor(80, 80, 80);
     doc.setTextColor(255, 255, 255);
     doc.setFont('helvetica', 'bold');
-    doc.rect(15, startY, 90, 10, 'F');
-    doc.rect(105, startY, 90, 10, 'F');
-    doc.text('Description', 20, startY + 7);
-    doc.text('Montant', 110, startY + 7);
+    doc.rect(15, compensationStartY, 90, 10, 'F');
+    doc.rect(105, compensationStartY, 90, 10, 'F');
+    doc.text('Description', 20, compensationStartY + 7);
+    doc.text('Montant', 110, compensationStartY + 7);
     
-    // Lignes du tableau
+    // Table rows
     doc.setTextColor(40, 40, 40);
     doc.setFont('helvetica', 'normal');
     
-    // Ligne 1
-    doc.rect(15, startY + 10, 90, 10, 'S');
-    doc.rect(105, startY + 10, 90, 10, 'S');
-    doc.text('Salaire Brut Annuel', 20, startY + 17);
-    doc.text(`${employee.salary.toLocaleString('fr-FR')} €`, 110, startY + 17);
+    // Row 1
+    doc.rect(15, finalY, 90, 10, 'S');
+    doc.rect(105, finalY, 90, 10, 'S');
+    doc.text('Salaire Brut Annuel', 20, finalY + 7);
+    doc.text(`${employee.salary.toLocaleString('fr-FR')} €`, 110, finalY + 7);
+    finalY += 10;
     
-    // Ligne 2
-    doc.rect(15, startY + 20, 90, 10, 'S');
-    doc.rect(105, startY + 20, 90, 10, 'S');
-    doc.text('Salaire Mensuel Brut', 20, startY + 27);
-    doc.text(`${(employee.salary / 12).toLocaleString('fr-FR')} €`, 110, startY + 27);
+    // Row 2
+    doc.rect(15, finalY, 90, 10, 'S');
+    doc.rect(105, finalY, 90, 10, 'S');
+    doc.text('Salaire Mensuel Brut', 20, finalY + 7);
+    doc.text(`${(employee.salary / 12).toLocaleString('fr-FR')} €`, 110, finalY + 7);
+    finalY += 10;
     
-    // Ligne 3
-    doc.rect(15, startY + 30, 90, 10, 'S');
-    doc.rect(105, startY + 30, 90, 10, 'S');
-    doc.text('Salaire Net Mensuel (Estimation)', 20, startY + 37);
-    doc.text(`${((employee.salary / 12) * 0.75).toLocaleString('fr-FR')} €`, 110, startY + 37);
-    
-    console.log('Compensation table created manually');
-    
-    // Position Y finale après le tableau de rémunération
-    const finalY = startY + 50;
-    
-    console.log('finalY position:', finalY);
+    // Row 3
+    doc.rect(15, finalY, 90, 10, 'S');
+    doc.rect(105, finalY, 90, 10, 'S');
+    doc.text('Salaire Net Mensuel (Estimation)', 20, finalY + 7);
+    doc.text(`${((employee.salary / 12) * 0.75).toLocaleString('fr-FR')} €`, 110, finalY + 7);
+    finalY += 20;
     
     // Leave tracking section
     doc.setFontSize(12);
     doc.setTextColor(80, 80, 80);
     doc.text("Suivi des Congés et RTT", 15, finalY);
+    finalY += 5;
     
-    // En-tête du tableau de suivi des congés
+    // Create leave tracking table header
+    const leaveStartY = finalY;
     doc.setFillColor(80, 80, 80);
     doc.setTextColor(255, 255, 255);
     doc.setFont('helvetica', 'bold');
-    doc.rect(15, finalY + 5, 45, 10, 'F');
-    doc.rect(60, finalY + 5, 45, 10, 'F');
-    doc.rect(105, finalY + 5, 45, 10, 'F');
-    doc.rect(150, finalY + 5, 45, 10, 'F');
-    doc.text('Type', 20, finalY + 12);
-    doc.text('Alloués', 65, finalY + 12);
-    doc.text('Pris', 110, finalY + 12);
-    doc.text('Restants', 155, finalY + 12);
+    doc.rect(15, leaveStartY, 45, 10, 'F');
+    doc.rect(60, leaveStartY, 45, 10, 'F');
+    doc.rect(105, leaveStartY, 45, 10, 'F');
+    doc.rect(150, leaveStartY, 45, 10, 'F');
+    doc.text('Type', 20, leaveStartY + 7);
+    doc.text('Alloués', 65, leaveStartY + 7);
+    doc.text('Pris', 110, leaveStartY + 7);
+    doc.text('Restants', 155, leaveStartY + 7);
+    finalY += 10;
     
-    // Lignes du tableau de congés
+    // Table rows
     doc.setTextColor(40, 40, 40);
     doc.setFont('helvetica', 'normal');
     
-    // Ligne 1 - Congés payés
-    doc.rect(15, finalY + 15, 45, 10, 'S');
-    doc.rect(60, finalY + 15, 45, 10, 'S');
-    doc.rect(105, finalY + 15, 45, 10, 'S');
-    doc.rect(150, finalY + 15, 45, 10, 'S');
-    doc.text('Congés Payés', 20, finalY + 22);
-    doc.text(`${employee.leaves.paid} jours`, 65, finalY + 22);
-    doc.text(`${employee.leaves.taken} jours`, 110, finalY + 22);
-    doc.text(`${employee.leaves.remaining} jours`, 155, finalY + 22);
+    // Row 1 - Congés payés
+    doc.rect(15, finalY, 45, 10, 'S');
+    doc.rect(60, finalY, 45, 10, 'S');
+    doc.rect(105, finalY, 45, 10, 'S');
+    doc.rect(150, finalY, 45, 10, 'S');
+    doc.text('Congés Payés', 20, finalY + 7);
+    doc.text(`${employee.leaves.paid} jours`, 65, finalY + 7);
+    doc.text(`${employee.leaves.taken} jours`, 110, finalY + 7);
+    doc.text(`${employee.leaves.remaining} jours`, 155, finalY + 7);
+    finalY += 10;
     
-    // Ligne 2 - RTT
-    doc.rect(15, finalY + 25, 45, 10, 'S');
-    doc.rect(60, finalY + 25, 45, 10, 'S');
-    doc.rect(105, finalY + 25, 45, 10, 'S');
-    doc.rect(150, finalY + 25, 45, 10, 'S');
-    doc.text('RTT', 20, finalY + 32);
-    doc.text(`${employee.rtt.allocated} jours`, 65, finalY + 32);
-    doc.text(`${employee.rtt.taken} jours`, 110, finalY + 32);
-    doc.text(`${employee.rtt.remaining} jours`, 155, finalY + 32);
-    
-    console.log('Leave tracking table created manually');
+    // Row 2 - RTT
+    doc.rect(15, finalY, 45, 10, 'S');
+    doc.rect(60, finalY, 45, 10, 'S');
+    doc.rect(105, finalY, 45, 10, 'S');
+    doc.rect(150, finalY, 45, 10, 'S');
+    doc.text('RTT', 20, finalY + 7);
+    doc.text(`${employee.rtt.allocated} jours`, 65, finalY + 7);
+    doc.text(`${employee.rtt.taken} jours`, 110, finalY + 7);
+    doc.text(`${employee.rtt.remaining} jours`, 155, finalY + 7);
     
     // Footer
     doc.setFontSize(8);
