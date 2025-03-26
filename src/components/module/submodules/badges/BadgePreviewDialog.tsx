@@ -24,9 +24,9 @@ const BadgePreviewDialog: React.FC<BadgePreviewDialogProps> = ({
   if (!selectedBadge) return null;
   
   const handleDownloadBadge = () => {
-    // Create a new PDF document
+    // Create a new PDF document - using landscape format for better badge display
     const doc = new jsPDF({
-      orientation: 'portrait',
+      orientation: 'landscape',
       unit: 'mm',
       format: [85, 54] // ID card size (85mm x 54mm)
     });
@@ -45,33 +45,33 @@ const BadgePreviewDialog: React.FC<BadgePreviewDialogProps> = ({
       headerColor = [239, 68, 68];
     }
     doc.setFillColor(headerColor[0], headerColor[1], headerColor[2]);
-    doc.rect(0, 0, 85, 10, 'F');
+    doc.rect(0, 0, 85, 12, 'F');
     
     // Add company logo - top left
     doc.setTextColor(255, 255, 255);
-    doc.setFontSize(8);
-    doc.text('STORM GROUP', 5, 6);
+    doc.setFontSize(10);
+    doc.text('STORM GROUP', 5, 7);
     
     // Add company name
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(10);
-    doc.text('Enterprise Solutions', 42.5, 6, { align: 'center' });
+    doc.text('Enterprise Solutions', 42.5, 7, { align: 'center' });
     
     // Add badge ID
     doc.setTextColor(0, 0, 0);
     doc.setFontSize(8);
-    doc.text(`ID: ${selectedBadge.id}`, 42.5, 15, { align: 'center' });
+    doc.text(`ID: ${selectedBadge.id}`, 42.5, 18, { align: 'center' });
     
     // Add employee name
     doc.setFontSize(12);
     doc.setFont('helvetica', 'bold');
-    doc.text(selectedBadge.employeeName, 42.5, 22, { align: 'center' });
+    doc.text(selectedBadge.employeeName, 42.5, 25, { align: 'center' });
     
     // Add employee details
     doc.setFontSize(9);
     doc.setFont('helvetica', 'normal');
-    doc.text(`Département: ${selectedBadge.department || 'N/A'}`, 42.5, 28, { align: 'center' });
-    doc.text(`Accès: ${selectedBadge.accessLevel || 'Standard'}`, 42.5, 33, { align: 'center' });
+    doc.text(`Département: ${selectedBadge.department || 'N/A'}`, 42.5, 31, { align: 'center' });
+    doc.text(`Accès: ${selectedBadge.accessLevel || 'Standard'}`, 42.5, 36, { align: 'center' });
     
     // Add status
     doc.setFontSize(9);
@@ -87,12 +87,12 @@ const BadgePreviewDialog: React.FC<BadgePreviewDialogProps> = ({
     }
     
     doc.setTextColor(statusColor[0], statusColor[1], statusColor[2]);
-    doc.text(`Statut: ${selectedBadge.statusText}`, 42.5, 38, { align: 'center' });
+    doc.text(`Statut: ${selectedBadge.statusText}`, 42.5, 41, { align: 'center' });
     
     // Add date
     doc.setTextColor(100, 100, 100);
     doc.setFontSize(8);
-    doc.text(`Émis le: ${selectedBadge.date}`, 42.5, 45, { align: 'center' });
+    doc.text(`Émis le: ${selectedBadge.date}`, 42.5, 46, { align: 'center' });
     
     // Add company footer
     doc.setFillColor(70, 70, 70);
@@ -103,11 +103,11 @@ const BadgePreviewDialog: React.FC<BadgePreviewDialogProps> = ({
     
     // Add QR code placeholder in bottom left
     doc.setFillColor(0, 0, 0);
-    doc.rect(3, 40, 10, 10, 'F');
+    doc.rect(5, 36, 10, 10, 'F');
     doc.setFillColor(255, 255, 255);
-    doc.rect(4, 41, 8, 8, 'F');
+    doc.rect(6, 37, 8, 8, 'F');
     doc.setFillColor(0, 0, 0);
-    doc.rect(5, 42, 6, 6, 'F');
+    doc.rect(7, 38, 6, 6, 'F');
 
     // Save the PDF
     doc.save(`badge-${selectedBadge.id}.pdf`);

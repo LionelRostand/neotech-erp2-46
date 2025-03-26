@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -34,14 +33,14 @@ import {
   Download, 
   Search,
   Plus,
-  FileText
+  FileText,
+  Building
 } from 'lucide-react';
 import { toast } from 'sonner';
 import * as XLSX from 'xlsx';
 import { jsPDF } from 'jspdf';
 import 'jspdf-autotable';
 
-// Sample data for salaries
 const MOCK_SALARIES = [
   { 
     id: 1, 
@@ -100,7 +99,6 @@ const MOCK_SALARIES = [
   }
 ];
 
-// Sample data for salary history
 const MOCK_HISTORY = [
   { id: 1, employeeId: 1, date: '25/04/2023', amount: 74000, reason: 'Annual salary' },
   { id: 2, employeeId: 1, date: '25/03/2023', amount: 74000, reason: 'Annual salary' },
@@ -110,20 +108,38 @@ const MOCK_HISTORY = [
   { id: 6, employeeId: 3, date: '25/04/2023', amount: 65000, reason: 'Annual salary' },
 ];
 
+const COMPANY_INFO = {
+  name: "STORM GROUP",
+  tagline: "Enterprise Solutions",
+  address: "123 Business Street, 75000 Paris",
+  siret: "SIRET: 123 456 789 00012",
+  phone: "+33 1 23 45 67 89",
+  email: "contact@stormgroup.com",
+  website: "www.stormgroup.com",
+};
+
 const EmployeesSalaries = () => {
   const [search, setSearch] = useState('');
   const [selectedEmployee, setSelectedEmployee] = useState<any>(null);
   const [showDetailsDialog, setShowDetailsDialog] = useState(false);
   const [showHistoryDialog, setShowHistoryDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
+  const [showNewSalaryDialog, setShowNewSalaryDialog] = useState(false);
   const [filteredSalaries, setFilteredSalaries] = useState(MOCK_SALARIES);
   const [editForm, setEditForm] = useState({
     salary: '',
     position: '',
     department: '',
   });
+  const [newSalaryForm, setNewSalaryForm] = useState({
+    name: '',
+    position: '',
+    department: '',
+    salary: '',
+    paymentDate: new Date().toISOString().split('T')[0],
+    status: 'pending',
+  });
   
-  // Filter salaries based on search
   React.useEffect(() => {
     const results = MOCK_SALARIES.filter(employee => 
       employee.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -133,7 +149,6 @@ const EmployeesSalaries = () => {
     setFilteredSalaries(results);
   }, [search]);
   
-  // Handle opening edit dialog
   const handleEdit = (employee: any) => {
     setSelectedEmployee(employee);
     setEditForm({
@@ -144,26 +159,21 @@ const EmployeesSalaries = () => {
     setShowEditDialog(true);
   };
   
-  // Handle saving changes from edit dialog
   const handleSaveChanges = () => {
-    // In a real app, this would update the database
     toast.success("Informations mises à jour avec succès");
     setShowEditDialog(false);
   };
   
-  // Handle view salary details
   const handleViewDetails = (employee: any) => {
     setSelectedEmployee(employee);
     setShowDetailsDialog(true);
   };
   
-  // Handle view salary history
   const handleViewHistory = (employee: any) => {
     setSelectedEmployee(employee);
     setShowHistoryDialog(true);
   };
   
-  // Handle export to Excel
   const handleExportExcel = () => {
     const worksheet = XLSX.utils.json_to_sheet(filteredSalaries);
     const workbook = XLSX.utils.book_new();
@@ -172,49 +182,83 @@ const EmployeesSalaries = () => {
     toast.success("Données exportées en Excel avec succès");
   };
   
-  // Generate PDF for a pay stub
+  const handleCreateSalary = () => {
+    const newSalary = {
+      id: MOCK_SALARIES.length + 1,
+      name: newSalaryForm.name,
+      position: newSalaryForm.position,
+      department: newSalaryForm.department,
+      salary: parseFloat(newSalaryForm.salary),
+      paymentDate: newSalaryForm.paymentDate,
+      status: newSalaryForm.status,
+      leaves: { paid: 12, taken: 0, remaining: 12 },
+      rtt: { allocated: 10, taken: 0, remaining: 10 }
+    };
+    
+    setFilteredSalaries([newSalary, ...filteredSalaries]);
+    toast.success("Nouvelle fiche de paie créée avec succès");
+    setShowNewSalaryDialog(false);
+    
+    setNewSalaryForm({
+      name: '',
+      position: '',
+      department: '',
+      salary: '',
+      paymentDate: new Date().toISOString().split('T')[0],
+      status: 'pending',
+    });
+  };
+  
   const generatePayStubPDF = (employee: any) => {
     const doc = new jsPDF();
     
-    // Add company logo and information
     doc.setFontSize(20);
     doc.setTextColor(40, 40, 40);
-    doc.text("STORM GROUP", 105, 20, { align: "center" });
     
-    doc.setFontSize(12);
-    doc.setTextColor(80, 80, 80);
-    doc.text("Enterprise Solutions", 105, 28, { align: "center" });
-    doc.text("123 Business Street, 75000 Paris", 105, 35, { align: "center" });
-    doc.text("SIRET: 123 456 789 00012", 105, 42, { align: "center" });
+    doc.setFillColor(220, 220, 220);
+    doc.rect(20, 15, 25, 25, 'F');
+    doc.setTextColor(100, 100, 100);
+    doc.setFontSize(10);
+    doc.text(COMPANY_INFO.name, 32.5, 25, { align: "center" });
+    doc.setFontSize(6);
+    doc.text("LOGO", 32.5, 30, { align: "center" });
     
-    // Add divider
-    doc.setDrawColor(200, 200, 200);
-    doc.line(20, 50, 190, 50);
-    
-    // Add pay stub title
-    doc.setFontSize(16);
     doc.setTextColor(40, 40, 40);
-    doc.text("BULLETIN DE PAIE", 105, 60, { align: "center" });
-    doc.text(`${employee.paymentDate}`, 105, 70, { align: "center" });
-    
-    // Employee information section
-    doc.setFontSize(12);
-    doc.setTextColor(80, 80, 80);
-    doc.text("Informations Employé", 20, 85);
+    doc.setFontSize(16);
+    doc.text(COMPANY_INFO.name, 190, 20, { align: "right" });
     
     doc.setFontSize(10);
-    doc.text(`Nom: ${employee.name}`, 20, 95);
-    doc.text(`Poste: ${employee.position}`, 20, 103);
-    doc.text(`Département: ${employee.department}`, 20, 111);
-    doc.text(`ID Employé: ${employee.id}`, 20, 119);
+    doc.setTextColor(80, 80, 80);
+    doc.text(COMPANY_INFO.tagline, 190, 27, { align: "right" });
+    doc.text(COMPANY_INFO.address, 190, 34, { align: "right" });
+    doc.text(COMPANY_INFO.siret, 190, 41, { align: "right" });
+    doc.text(COMPANY_INFO.phone, 190, 48, { align: "right" });
+    doc.text(COMPANY_INFO.email, 190, 55, { align: "right" });
     
-    // Salary information using autoTable
+    doc.setDrawColor(200, 200, 200);
+    doc.line(20, 65, 190, 65);
+    
+    doc.setFontSize(16);
+    doc.setTextColor(40, 40, 40);
+    doc.text("BULLETIN DE PAIE", 105, 75, { align: "center" });
+    doc.text(`${employee.paymentDate}`, 105, 85, { align: "center" });
+    
     doc.setFontSize(12);
     doc.setTextColor(80, 80, 80);
-    doc.text("Détails de la Rémunération", 20, 135);
+    doc.text("Informations Employé", 20, 100);
+    
+    doc.setFontSize(10);
+    doc.text(`Nom: ${employee.name}`, 20, 110);
+    doc.text(`Poste: ${employee.position}`, 20, 118);
+    doc.text(`Département: ${employee.department}`, 20, 126);
+    doc.text(`ID Employé: ${employee.id}`, 20, 134);
+    
+    doc.setFontSize(12);
+    doc.setTextColor(80, 80, 80);
+    doc.text("Détails de la Rémunération", 20, 150);
     
     doc.autoTable({
-      startY: 140,
+      startY: 155,
       head: [['Description', 'Montant']],
       body: [
         ['Salaire Brut Annuel', `${employee.salary.toLocaleString('fr-FR')} €`],
@@ -226,10 +270,8 @@ const EmployeesSalaries = () => {
       margin: { left: 20, right: 20 }
     });
     
-    // Get the Y position after the first table
-    const finalY = doc.autoTable.previous?.finalY || 200;
+    const finalY = (doc as any).autoTable.previous?.finalY || 200;
     
-    // Leave and RTT information using autoTable
     doc.setFontSize(12);
     doc.setTextColor(80, 80, 80);
     doc.text("Suivi des Congés et RTT", 20, finalY + 15);
@@ -246,13 +288,11 @@ const EmployeesSalaries = () => {
       margin: { left: 20, right: 20 }
     });
     
-    // Footer
     const pageCount = (doc as any).internal.getNumberOfPages();
     doc.setFontSize(8);
     doc.setTextColor(150, 150, 150);
     doc.text(`Ce document est confidentiel. Généré le ${new Date().toLocaleDateString('fr-FR')}`, 105, 285, { align: "center" });
     
-    // Save the PDF
     doc.save(`bulletin_paie_${employee.name.replace(/\s+/g, '_')}_${employee.paymentDate.replace(/\//g, '-')}.pdf`);
     toast.success("Bulletin de paie téléchargé avec succès");
   };
@@ -271,7 +311,7 @@ const EmployeesSalaries = () => {
                 <Download className="h-4 w-4 mr-2" />
                 Exporter Excel
               </Button>
-              <Button>
+              <Button onClick={() => setShowNewSalaryDialog(true)}>
                 <Plus className="h-4 w-4 mr-2" />
                 Nouveau
               </Button>
@@ -361,7 +401,6 @@ const EmployeesSalaries = () => {
         </CardContent>
       </Card>
       
-      {/* Salary Details Dialog */}
       <Dialog open={showDetailsDialog} onOpenChange={setShowDetailsDialog}>
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
@@ -471,7 +510,6 @@ const EmployeesSalaries = () => {
         </DialogContent>
       </Dialog>
       
-      {/* Salary History Dialog */}
       <Dialog open={showHistoryDialog} onOpenChange={setShowHistoryDialog}>
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
@@ -521,7 +559,6 @@ const EmployeesSalaries = () => {
         </DialogContent>
       </Dialog>
       
-      {/* Edit Salary Dialog */}
       <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
@@ -586,8 +623,104 @@ const EmployeesSalaries = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      
+      <Dialog open={showNewSalaryDialog} onOpenChange={setShowNewSalaryDialog}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Créer une nouvelle fiche de paie</DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div className="grid w-full items-center gap-1.5">
+              <Label htmlFor="name">Nom de l'employé</Label>
+              <Input
+                id="name"
+                value={newSalaryForm.name}
+                onChange={(e) => setNewSalaryForm({...newSalaryForm, name: e.target.value})}
+                placeholder="Nom et prénom"
+              />
+            </div>
+            
+            <div className="grid w-full items-center gap-1.5">
+              <Label htmlFor="position">Poste</Label>
+              <Input
+                id="position"
+                value={newSalaryForm.position}
+                onChange={(e) => setNewSalaryForm({...newSalaryForm, position: e.target.value})}
+                placeholder="Ex: Développeur, Manager, etc."
+              />
+            </div>
+            
+            <div className="grid w-full items-center gap-1.5">
+              <Label htmlFor="department">Département</Label>
+              <Select 
+                value={newSalaryForm.department}
+                onValueChange={(value) => setNewSalaryForm({...newSalaryForm, department: value})}
+              >
+                <SelectTrigger id="department">
+                  <SelectValue placeholder="Sélectionner un département" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Engineering">Ingénierie</SelectItem>
+                  <SelectItem value="Management">Gestion</SelectItem>
+                  <SelectItem value="Design">Design</SelectItem>
+                  <SelectItem value="Marketing">Marketing</SelectItem>
+                  <SelectItem value="Human Resources">Ressources Humaines</SelectItem>
+                  <SelectItem value="Finance">Finance</SelectItem>
+                  <SelectItem value="Sales">Ventes</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="grid w-full items-center gap-1.5">
+              <Label htmlFor="salary">Salaire Annuel (€)</Label>
+              <Input
+                id="salary"
+                type="number"
+                value={newSalaryForm.salary}
+                onChange={(e) => setNewSalaryForm({...newSalaryForm, salary: e.target.value})}
+                placeholder="Ex: 45000"
+              />
+            </div>
+            
+            <div className="grid w-full items-center gap-1.5">
+              <Label htmlFor="paymentDate">Date de paiement</Label>
+              <Input
+                id="paymentDate"
+                type="date"
+                value={newSalaryForm.paymentDate}
+                onChange={(e) => setNewSalaryForm({...newSalaryForm, paymentDate: e.target.value})}
+              />
+            </div>
+            
+            <div className="grid w-full items-center gap-1.5">
+              <Label htmlFor="status">Statut</Label>
+              <Select 
+                value={newSalaryForm.status}
+                onValueChange={(value) => setNewSalaryForm({...newSalaryForm, status: value})}
+              >
+                <SelectTrigger id="status">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="pending">En attente</SelectItem>
+                  <SelectItem value="paid">Payé</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button variant="outline">Annuler</Button>
+            </DialogClose>
+            <Button onClick={handleCreateSalary}>Créer fiche de paie</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
 
 export default EmployeesSalaries;
+
