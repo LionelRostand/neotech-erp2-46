@@ -1,9 +1,12 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { PieChart, BarChart, LineChart, ArrowUpRight, ArrowDownRight } from "lucide-react";
+import { PieChart, BarChart, LineChart, ArrowUpRight, ArrowDownRight, Download } from "lucide-react";
 import DashboardLayout from '@/components/DashboardLayout';
 import { PieChart as RechartsPieChart, Pie, Cell, ResponsiveContainer, BarChart as RechartsBarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
+import { useToast } from "@/hooks/use-toast";
+import { jsPDF } from "jspdf";
+import 'jspdf-autotable';
 
 const moduleUsageData = [
   { name: 'Employees', value: 35 },
@@ -26,10 +29,102 @@ const weeklyActivityData = [
 ];
 
 const Analytics = () => {
+  const { toast } = useToast();
+
+  const exportToPDF = () => {
+    const doc = new jsPDF();
+    
+    // Add title
+    doc.setFontSize(20);
+    doc.text("Analytics Report", 105, 15, { align: "center" });
+    doc.setFontSize(12);
+    doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 105, 25, { align: "center" });
+    
+    // Add key analytics
+    doc.setFontSize(16);
+    doc.text("Key Analytics", 14, 35);
+    
+    const keyAnalyticsData = [
+      ["Daily Active Users", "164", "+13.2% from yesterday"],
+      ["Session Duration", "16m 28s", "-2.4% from yesterday"],
+      ["Monthly Active Users", "2,845", "+8.1% from last month"],
+      ["User Retention", "78.5%", "+4.2% from last month"]
+    ];
+    
+    doc.autoTable({
+      head: [["Metric", "Value", "Change"]],
+      body: keyAnalyticsData,
+      startY: 40,
+    });
+    
+    // Add module usage
+    doc.setFontSize(16);
+    doc.text("Module Usage Distribution", 14, doc.autoTable.previous.finalY + 15);
+    
+    const moduleUsageTableData = moduleUsageData.map(item => [item.name, `${item.value}%`]);
+    
+    doc.autoTable({
+      head: [["Module", "Usage Percentage"]],
+      body: moduleUsageTableData,
+      startY: doc.autoTable.previous.finalY + 20,
+    });
+    
+    // Add weekly activity
+    doc.setFontSize(16);
+    doc.text("Weekly Activity", 14, doc.autoTable.previous.finalY + 15);
+    
+    const weeklyActivityTableData = weeklyActivityData.map(item => [
+      item.day,
+      item.actives.toString(),
+      item.sessions.toString()
+    ]);
+    
+    doc.autoTable({
+      head: [["Day", "Active Users", "Sessions"]],
+      body: weeklyActivityTableData,
+      startY: doc.autoTable.previous.finalY + 20,
+    });
+    
+    // Add most used features
+    doc.setFontSize(16);
+    doc.text("Most Used Features", 14, doc.autoTable.previous.finalY + 15);
+    
+    const mostUsedFeaturesData = [
+      ["Employee Directory", "Employees Module", "842 users"],
+      ["Message Inbox", "Messages Module", "784 users"],
+      ["Invoice Generator", "Accounting Module", "725 users"],
+      ["Client Database", "CRM Module", "692 users"],
+      ["Shipment Tracking", "Freight Module", "587 users"]
+    ];
+    
+    doc.autoTable({
+      head: [["Feature", "Module", "Users"]],
+      body: mostUsedFeaturesData,
+      startY: doc.autoTable.previous.finalY + 20,
+    });
+    
+    // Save the PDF
+    doc.save("analytics-report.pdf");
+    
+    toast({
+      title: "Export successful",
+      description: "Analytics report has been downloaded.",
+    });
+  };
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <h1 className="text-3xl font-bold">Analytics</h1>
+        <div className="flex justify-between items-center">
+          <h1 className="text-3xl font-bold">Analytics</h1>
+          <button 
+            onClick={exportToPDF}
+            className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90 flex items-center gap-2"
+          >
+            <Download className="h-4 w-4" />
+            Export PDF
+          </button>
+        </div>
         
         {/* Key Analytics */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
