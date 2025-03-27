@@ -1,4 +1,3 @@
-
 import { Department } from '../types';
 import { useFirestore } from '@/hooks/use-firestore';
 import { COLLECTIONS } from '@/lib/firebase-collections';
@@ -12,37 +11,75 @@ export const useDepartmentService = () => {
   // Clé pour la dernière mise à jour
   const LAST_UPDATE_KEY = 'employees_departments_last_update';
 
+  // Cache en mémoire pour éviter les accès répétés à localStorage
+  let cachedDepartments: Department[] | null = null;
+  let lastCacheTime = 0;
+  const CACHE_TTL = 60000; // 1 minute en millisecondes
+
   const getAll = async (): Promise<Department[]> => {
     try {
+      // Vérifier si nous avons des données en cache qui sont encore valides
+      const now = Date.now();
+      if (cachedDepartments && (now - lastCacheTime) < CACHE_TTL) {
+        console.log("Using cached departments data");
+        return cachedDepartments;
+      }
+      
       // Tenter de récupérer depuis Firestore
       const data = await departmentsFirestore.getAll();
       if (data && data.length > 0) {
+        // Sauvegarder dans le cache en mémoire
+        cachedDepartments = data as Department[];
+        lastCacheTime = now;
+        
         // Sauvegarder dans localStorage comme sauvegarde
-        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(data));
-        // Enregistrer le timestamp de la dernière mise à jour
-        localStorage.setItem(LAST_UPDATE_KEY, Date.now().toString());
+        try {
+          localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(data));
+          localStorage.setItem(LAST_UPDATE_KEY, now.toString());
+        } catch (e) {
+          console.warn("Failed to save to localStorage:", e);
+        }
+        
         return data as Department[];
       }
       
       // Si aucune donnée Firestore, essayer le stockage local
-      const localData = localStorage.getItem(LOCAL_STORAGE_KEY);
-      if (localData) {
-        const parsedData = JSON.parse(localData);
-        console.log("Loaded departments from local storage:", parsedData);
-        return parsedData as Department[];
+      try {
+        const localData = localStorage.getItem(LOCAL_STORAGE_KEY);
+        if (localData) {
+          const parsedData = JSON.parse(localData) as Department[];
+          
+          // Mettre en cache
+          cachedDepartments = parsedData;
+          lastCacheTime = now;
+          
+          console.log("Loaded departments from local storage:", parsedData);
+          return parsedData;
+        }
+      } catch (e) {
+        console.warn("Failed to load from localStorage:", e);
       }
       
       return [];
     } catch (error) {
       console.error("Error fetching departments:", error);
-      toast.error("Erreur lors du chargement des départements");
       
-      // En cas d'erreur, essayer le stockage local
-      const localData = localStorage.getItem(LOCAL_STORAGE_KEY);
-      if (localData) {
-        return JSON.parse(localData) as Department[];
+      // En cas d'erreur, essayer le cache d'abord
+      if (cachedDepartments) {
+        return cachedDepartments;
       }
       
+      // Puis essayer le stockage local
+      try {
+        const localData = localStorage.getItem(LOCAL_STORAGE_KEY);
+        if (localData) {
+          return JSON.parse(localData) as Department[];
+        }
+      } catch (e) {
+        console.warn("Failed to load from localStorage:", e);
+      }
+      
+      toast.error("Erreur lors du chargement des départements");
       return [];
     }
   };
@@ -202,9 +239,18 @@ export const useDepartmentService = () => {
     }
   };
 
+  const clearCache = () => {
+    cachedDepartments = null;
+    lastCacheTime = 0;
+  };
+
   const getLastUpdateTimestamp = (): number => {
-    const timestamp = localStorage.getItem(LAST_UPDATE_KEY);
-    return timestamp ? parseInt(timestamp) : 0;
+    try {
+      const timestamp = localStorage.getItem(LAST_UPDATE_KEY);
+      return timestamp ? parseInt(timestamp) : 0;
+    } catch (e) {
+      return 0;
+    }
   };
 
   return {
@@ -212,6 +258,7 @@ export const useDepartmentService = () => {
     createDepartment,
     updateDepartment,
     deleteDepartment,
+    clearCache,
     getLastUpdateTimestamp
   };
 };

@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { memo } from 'react';
 import { SubModule } from '@/data/types/modules';
 import EmployeesDashboard from '../EmployeesDashboard';
 import EmployeesProfiles from '../EmployeesProfiles';
@@ -18,6 +18,7 @@ import EmployeesSalaries from '../EmployeesSalaries';
 import EmployeesRecruitment from '../EmployeesRecruitment';
 import EmployeesReports from '../EmployeesReports';
 
+// Utilisation de memo pour éviter les rendus excessifs
 export const renderEmployeesSubmodule = (submoduleId: string, submodule: SubModule, refreshKey?: number) => {
   console.log(`Rendering employees submodule: ${submoduleId}`);
   

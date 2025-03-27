@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { employees } from '@/data/employees';
@@ -31,11 +31,18 @@ const EmployeesHierarchy: React.FC = () => {
   
   // Get departments from service
   const departmentService = useDepartmentService();
+  
+  // Référence pour contrôler les appels multiples
+  const isLoadingRef = useRef(false);
+  const eventListenerAddedRef = useRef(false);
 
   // Function to refresh data manually
   const handleRefresh = useCallback(async () => {
+    if (refreshing) return;
+    
     setRefreshing(true);
     try {
+      departmentService.clearCache(); // Vider le cache avant de recharger
       await loadDepartments();
       toast.success("Hiérarchie mise à jour avec succès");
     } catch (error) {
@@ -44,11 +51,15 @@ const EmployeesHierarchy: React.FC = () => {
     } finally {
       setRefreshing(false);
     }
-  }, []);
+  }, [refreshing]);
 
-  // Load departments and build hierarchy function
+  // Load departments and build hierarchy function - avec contrôle pour éviter les appels multiples
   const loadDepartments = useCallback(async () => {
+    if (isLoadingRef.current) return;
+    
+    isLoadingRef.current = true;
     setLoading(true);
+    
     try {
       const departmentsData = await departmentService.getAll();
       console.log("Fetched departments for hierarchy:", departmentsData);
@@ -57,43 +68,56 @@ const EmployeesHierarchy: React.FC = () => {
       console.error("Error loading departments for hierarchy:", error);
     } finally {
       setLoading(false);
+      // Reset loading flag après un délai pour éviter les appels trop fréquents
+      setTimeout(() => {
+        isLoadingRef.current = false;
+      }, 2000);
     }
   }, [departmentService]);
   
-  // Load departments on component mount and refresh trigger changes
+  // Load departments on component mount and refresh trigger changes - optimisé
   useEffect(() => {
-    console.log("Loading departments, refresh trigger:", refreshTrigger);
-    loadDepartments();
+    if (!isLoadingRef.current) {
+      console.log("Loading departments, refresh trigger:", refreshTrigger);
+      loadDepartments();
+    }
   }, [loadDepartments, refreshTrigger]);
 
-  // Listen for department update events
+  // Listen for department update events avec un contrôle pour éviter les ajouts multiples
   useEffect(() => {
+    if (eventListenerAddedRef.current) return;
+    
     const handleDepartmentUpdate = (event: Event) => {
       const customEvent = event as CustomEvent;
       console.log("Department updated:", customEvent.detail);
       
-      // Refresh hierarchy data
-      setRefreshTrigger(prev => prev + 1);
-      
-      // Show toast notification
-      const { action, department, id, name } = customEvent.detail;
-      if (action === 'create') {
-        toast.info(`Département "${department.name}" créé - Hiérarchie mise à jour`);
-      } else if (action === 'update') {
-        toast.info(`Département "${department.name}" modifié - Hiérarchie mise à jour`);
-      } else if (action === 'delete') {
-        toast.info(`Département "${name}" supprimé - Hiérarchie mise à jour`);
-      }
+      // Mettre un délai pour éviter les rendus multiples en cascade
+      setTimeout(() => {
+        // Refresh hierarchy data
+        setRefreshTrigger(prev => prev + 1);
+        
+        // Show toast notification
+        const { action, department, id, name } = customEvent.detail;
+        if (action === 'create') {
+          toast.info(`Département "${department.name}" créé - Hiérarchie mise à jour`);
+        } else if (action === 'update') {
+          toast.info(`Département "${department.name}" modifié - Hiérarchie mise à jour`);
+        } else if (action === 'delete') {
+          toast.info(`Département "${name}" supprimé - Hiérarchie mise à jour`);
+        }
+      }, 500);
     };
 
     window.addEventListener('department-updated', handleDepartmentUpdate);
+    eventListenerAddedRef.current = true;
     
     return () => {
       window.removeEventListener('department-updated', handleDepartmentUpdate);
+      eventListenerAddedRef.current = false;
     };
   }, []);
 
-  // Rebuild hierarchy when departments change
+  // Rebuild hierarchy when departments change - avec useMemo pour éviter les recalculs inutiles
   useEffect(() => {
     if (departments.length > 0) {
       console.log("Rebuilding employee hierarchy with departments:", departments);
@@ -102,7 +126,7 @@ const EmployeesHierarchy: React.FC = () => {
   }, [departments]);
 
   // Toggle node expansion
-  const toggleNodeExpansion = (employeeId: string) => {
+  const toggleNodeExpansion = useCallback((employeeId: string) => {
     setExpandedNodes(prev => {
       const newSet = new Set(prev);
       if (newSet.has(employeeId)) {
@@ -112,10 +136,10 @@ const EmployeesHierarchy: React.FC = () => {
       }
       return newSet;
     });
-  };
+  }, []);
 
-  // Function to build employee hierarchy
-  const buildEmployeeHierarchy = () => {
+  // Function to build employee hierarchy with optimisation
+  const buildEmployeeHierarchy = useCallback(() => {
     // Create a map of employees by ID
     const employeeMap = new Map<string, EmployeeNode>();
     
@@ -170,10 +194,10 @@ const EmployeesHierarchy: React.FC = () => {
     setExpandedNodes(initialExpanded);
     
     setEmployeeHierarchy(rootNodes);
-  };
+  }, [departments]);
 
-  // Recursive component to render employee hierarchy
-  const renderEmployeeNode = (node: EmployeeNode, level: number = 0) => {
+  // Memoized employee node rendering
+  const renderEmployeeNode = useCallback((node: EmployeeNode, level: number = 0) => {
     const hasSubordinates = node.subordinates.length > 0;
     const isExpanded = expandedNodes.has(node.id);
     
@@ -223,10 +247,10 @@ const EmployeesHierarchy: React.FC = () => {
         )}
       </div>
     );
-  };
+  }, [expandedNodes, toggleNodeExpansion]);
 
-  // Render departments with pyramid style
-  const renderDepartmentsPyramid = () => {
+  // Memoized departments pyramid
+  const renderDepartmentsPyramid = useMemo(() => {
     if (loading) {
       return <div className="flex justify-center py-8">Chargement des départements...</div>;
     }
@@ -312,7 +336,7 @@ const EmployeesHierarchy: React.FC = () => {
         ))}
       </div>
     );
-  };
+  }, [departments, loading]);
 
   return (
     <div className="space-y-6">
@@ -373,7 +397,7 @@ const EmployeesHierarchy: React.FC = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {renderDepartmentsPyramid()}
+              {renderDepartmentsPyramid}
             </CardContent>
           </Card>
         </TabsContent>
@@ -382,4 +406,4 @@ const EmployeesHierarchy: React.FC = () => {
   );
 };
 
-export default EmployeesHierarchy;
+export default React.memo(EmployeesHierarchy);

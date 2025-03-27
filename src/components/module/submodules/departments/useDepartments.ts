@@ -1,5 +1,4 @@
-
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { toast } from 'sonner';
 import { Department, DepartmentFormData } from './types';
 import { useDepartmentService } from './services/departmentService';
@@ -26,40 +25,69 @@ export const useDepartments = () => {
   const [currentDepartment, setCurrentDepartment] = useState<Department | null>(null);
   const [activeTab, setActiveTab] = useState("department-info");
   const [selectedEmployees, setSelectedEmployees] = useState<string[]>([]);
+  
+  // Référence pour éviter les appels répétés
+  const loadingRef = useRef(false);
+  const departmentsRef = useRef<Department[]>([]);
 
   // Load departments from Firestore on component mount
   useEffect(() => {
-    loadDepartmentsFromFirestore();
+    // Utilisation de la référence pour éviter les appels multiples
+    if (!loadingRef.current) {
+      loadDepartmentsFromFirestore();
+    }
+    return () => {
+      // Nettoyage à la destruction du composant
+      loadingRef.current = false;
+    };
   }, []);
 
-  // Function to load departments from Firestore
-  const loadDepartmentsFromFirestore = async () => {
+  // Function to load departments from Firestore - optimisée avec un debounce
+  const loadDepartmentsFromFirestore = useCallback(async () => {
+    if (loadingRef.current) return;
+    
+    loadingRef.current = true;
     setLoading(true);
+    
     try {
       const data = await departmentService.getAll();
       
       if (data.length > 0) {
         setDepartments(data);
+        departmentsRef.current = data;
       } else {
         // If no departments found, initialize with default departments
+        console.log("No departments found, creating defaults");
         const defaultDepartments = createDefaultDepartments();
         
         // Save default departments to Firestore
-        for (const dept of defaultDepartments) {
-          await departmentService.createDepartment(dept);
-        }
+        const creationPromises = defaultDepartments.map(dept => 
+          departmentService.createDepartment(dept)
+        );
+        
+        // Wait for all departments to be created
+        await Promise.all(creationPromises);
         
         setDepartments(defaultDepartments);
+        departmentsRef.current = defaultDepartments;
       }
     } catch (error) {
       console.error("Error loading departments:", error);
       
-      // Fallback to default departments if Firebase load fails
-      setDepartments(createDefaultDepartments());
+      if (departments.length === 0) {
+        // Fallback to default departments if Firebase load fails and we have no data
+        const defaultDepartments = createDefaultDepartments();
+        setDepartments(defaultDepartments);
+        departmentsRef.current = defaultDepartments;
+      }
     } finally {
       setLoading(false);
+      // Reset loading ref après un court délai
+      setTimeout(() => {
+        loadingRef.current = false;
+      }, 2000);
     }
-  };
+  }, [departmentService]);
 
   // Handle input changes
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -126,7 +154,7 @@ export const useDepartments = () => {
     });
   };
 
-  // Save new department
+  // Save new department with optimized loading
   const handleSaveDepartment = async () => {
     if (!formData.name) {
       toast.error("Le nom du département est requis");
@@ -134,15 +162,21 @@ export const useDepartments = () => {
     }
 
     const newDepartment = prepareDepartmentFromForm(formData, selectedEmployees);
-    const success = await departmentService.createDepartment(newDepartment);
     
-    if (success) {
-      setDepartments([...departments, newDepartment]);
-      setIsAddDialogOpen(false);
+    // Update local state immediately for better UX
+    setDepartments(prevDepartments => [...prevDepartments, newDepartment]);
+    setIsAddDialogOpen(false);
+    
+    // Then save to Firestore in background
+    try {
+      await departmentService.createDepartment(newDepartment);
+    } catch (error) {
+      console.error("Error saving department:", error);
+      toast.error("Erreur lors de la sauvegarde, mais les modifications sont conservées localement");
     }
   };
 
-  // Update existing department
+  // Update existing department with optimized loading
   const handleUpdateDepartment = async () => {
     if (!formData.name || !currentDepartment) {
       toast.error("Le nom du département est requis");
@@ -156,20 +190,18 @@ export const useDepartments = () => {
       currentDepartment
     );
 
-    console.log("Updating department with employees:", selectedEmployees);
+    // Update local state immediately for better UX
+    setDepartments(prevDepartments => 
+      prevDepartments.map(dep => dep.id === currentDepartment.id ? updatedDepartment : dep)
+    );
+    setIsEditDialogOpen(false);
     
-    const success = await departmentService.updateDepartment(updatedDepartment);
-    
-    if (success) {
-      const updatedDepartments = departments.map(dep => {
-        if (dep.id === currentDepartment.id) {
-          return updatedDepartment;
-        }
-        return dep;
-      });
-
-      setDepartments(updatedDepartments);
-      setIsEditDialogOpen(false);
+    // Then save to Firestore in background
+    try {
+      await departmentService.updateDepartment(updatedDepartment);
+    } catch (error) {
+      console.error("Error updating department:", error);
+      toast.error("Erreur lors de la mise à jour, mais les modifications sont conservées localement");
     }
   };
 

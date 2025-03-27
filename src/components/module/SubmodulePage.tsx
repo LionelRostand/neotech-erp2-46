@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { memo } from 'react';
 import { modules } from '@/data/modules';
 import SubmoduleHeader from './submodules/SubmoduleHeader';
 import { renderSubmoduleContent } from './submodules/SubmoduleRenderer';
@@ -7,10 +7,11 @@ import { renderSubmoduleContent } from './submodules/SubmoduleRenderer';
 interface SubmodulePageProps {
   moduleId: number;
   submoduleId: string;
-  refreshKey?: number; // Make refreshKey an optional prop
+  refreshKey?: number;
 }
 
-const SubmodulePage: React.FC<SubmodulePageProps> = ({ moduleId, submoduleId, refreshKey }) => {
+// Utilisation de memo pour éviter les rendus inutiles
+const SubmodulePage: React.FC<SubmodulePageProps> = memo(({ moduleId, submoduleId, refreshKey }) => {
   // Find the module
   const module = modules.find(m => m.id === moduleId);
   if (!module) return <div>Module not found</div>;
@@ -30,6 +31,8 @@ const SubmodulePage: React.FC<SubmodulePageProps> = ({ moduleId, submoduleId, re
       {renderSubmoduleContent({ submoduleId, submodule, refreshKey })}
     </div>
   );
-};
+});
+
+SubmodulePage.displayName = 'SubmodulePage';
 
 export default SubmodulePage;
