@@ -18,6 +18,7 @@ import EmployeesTrainings from '../EmployeesTrainings';
 import EmployeesSalaries from '../EmployeesSalaries';
 import EmployeesRecruitment from '../EmployeesRecruitment';
 import EmployeesSettings from '../EmployeesSettings';
+import EmployeesAlerts from '../EmployeesAlerts';
 import { SubModule } from '@/data/types/modules';
 
 export const renderEmployeesSubmodule = (submoduleId: string, submodule: SubModule) => {
@@ -56,6 +57,8 @@ export const renderEmployeesSubmodule = (submoduleId: string, submodule: SubModu
       return <EmployeesReports />;
     case 'employees-settings':
       return <EmployeesSettings />;
+    case 'employees-alerts':
+      return <EmployeesAlerts />;
     default:
       return <DefaultSubmoduleContent submodule={submodule} />;
   }
