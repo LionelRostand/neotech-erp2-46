@@ -1,11 +1,12 @@
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import { DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Employee } from '@/types/employee';
 import { DepartmentFormData, departmentColors } from './types';
 import EmployeesList from './EmployeesList';
 import { employees } from '@/data/employees';
@@ -35,12 +36,6 @@ const EditDepartmentDialog: React.FC<EditDepartmentDialogProps> = ({
   onClose,
   onUpdate,
 }) => {
-  // Nous pouvons utiliser useEffect pour déboguer les employés sélectionnés
-  useEffect(() => {
-    console.log("EditDepartmentDialog - selectedEmployees:", selectedEmployees);
-    console.log("EditDepartmentDialog - formData:", formData);
-  }, [selectedEmployees, formData]);
-
   return (
     <DialogContent className="sm:max-w-[600px]">
       <DialogHeader>
@@ -138,9 +133,6 @@ const EditDepartmentDialog: React.FC<EditDepartmentDialogProps> = ({
         </TabsContent>
         
         <TabsContent value="department-employees" className="py-4">
-          <div className="mb-2 text-sm text-gray-500">
-            Sélectionnez les employés qui appartiennent à ce département ({selectedEmployees.length} sélectionné(s))
-          </div>
           <EmployeesList 
             employees={employees}
             selectedEmployees={selectedEmployees}

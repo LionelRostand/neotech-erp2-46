@@ -12,7 +12,6 @@ export const EmployeesRoutes = (
     <Route path="badges" element={<SubmodulePage moduleId={1} submoduleId="employees-badges" />} />
     <Route path="departments" element={<SubmodulePage moduleId={1} submoduleId="employees-departments" />} />
     <Route path="hierarchy" element={<SubmodulePage moduleId={1} submoduleId="employees-hierarchy" />} />
-    <Route path="hierarchy/refresh" element={<SubmodulePage moduleId={1} submoduleId="employees-hierarchy" refreshKey={Date.now()} />} />
     <Route path="attendance" element={<SubmodulePage moduleId={1} submoduleId="employees-attendance" />} />
     <Route path="timesheet" element={<SubmodulePage moduleId={1} submoduleId="employees-timesheet" />} />
     <Route path="leaves" element={<SubmodulePage moduleId={1} submoduleId="employees-leaves" />} />

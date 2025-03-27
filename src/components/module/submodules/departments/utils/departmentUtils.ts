@@ -1,105 +1,73 @@
 
 import { Department, DepartmentFormData } from '../types';
+import { Employee } from '@/types/employee';
 import { employees } from '@/data/employees';
 
-// Create empty form data with a new ID
-export const createEmptyFormData = (departments: Department[]): DepartmentFormData => {
-  // Generate a new unique ID
-  const lastId = departments.length > 0 
-    ? Math.max(...departments.map(d => parseInt(d.id.replace('DEP', ''))))
-    : 0;
-  
-  const newId = `DEP${(lastId + 1).toString().padStart(3, '0')}`;
-  
-  return {
-    id: newId,
-    name: '',
-    description: '',
-    managerId: '',
-    color: '#3b82f6', // Default color (blue-500)
-    employeeIds: []
-  };
-};
-
-// Create default departments for new installs
 export const createDefaultDepartments = (): Department[] => {
   return [
     {
-      id: 'DEP001',
-      name: 'Direction',
-      description: 'Département de direction générale',
-      managerId: 'EMP002', // Lionel Djossa
-      employeeIds: ['EMP002'],
-      employeesCount: 1,
-      color: '#10b981', // emerald-500
-      managerName: 'Lionel Djossa'
+      id: "DEP001",
+      name: "Marketing",
+      description: "Responsable de la stratégie marketing et de la communication",
+      managerId: "EMP003",
+      managerName: "Sophie Martin",
+      employeesCount: 2,
+      color: "#3b82f6", // blue-500
+      employeeIds: ["EMP003", "EMP004"]
     },
     {
-      id: 'DEP002',
-      name: 'Marketing',
-      description: 'Département marketing et communication',
-      managerId: 'EMP003', // Sophie Martin
-      employeeIds: ['EMP001', 'EMP003'],
-      employeesCount: 2,
-      color: '#3b82f6', // blue-500
-      managerName: 'Sophie Martin'
+      id: "DEP002",
+      name: "Direction",
+      description: "Direction générale de l'entreprise",
+      managerId: "EMP002",
+      managerName: "Lionel Djossa",
+      employeesCount: 1,
+      color: "#10b981", // emerald-500
+      employeeIds: ["EMP002"]
     }
   ];
 };
 
-// Prepare department data from form values
+export const generateDepartmentId = (departments: Department[]): string => {
+  return `DEP${(departments.length + 1).toString().padStart(3, '0')}`;
+};
+
+export const createEmptyFormData = (departments: Department[]): DepartmentFormData => {
+  return {
+    id: generateDepartmentId(departments),
+    name: "",
+    description: "",
+    managerId: "",
+    color: "#3b82f6",
+    employeeIds: []
+  };
+};
+
 export const prepareDepartmentFromForm = (
   formData: DepartmentFormData, 
   selectedEmployees: string[],
-  existingDepartment?: Department
+  currentDepartment?: Department
 ): Department => {
-  // Make sure to use the passed selectedEmployees array
-  console.log("prepareDepartmentFromForm - selectedEmployees:", selectedEmployees);
-  
-  // Start with existing department data if available
-  const department: Department = existingDepartment 
-    ? { ...existingDepartment } 
-    : {
-        id: formData.id,
-        name: '',
-        description: '',
-        managerId: null,
-        managerName: null,
-        employeesCount: 0,
-        color: '',
-        employeeIds: []
-      };
-  
-  // Update with form data
-  department.name = formData.name;
-  department.description = formData.description;
-  department.managerId = formData.managerId === 'none' ? null : formData.managerId;
-  department.color = formData.color;
-  
-  // Set manager name if manager ID is provided
-  if (department.managerId) {
-    const manager = employees.find(e => e.id === department.managerId);
-    if (manager) {
-      department.managerName = `${manager.firstName} ${manager.lastName}`;
-    }
-  } else {
-    department.managerName = null;
-  }
-  
-  // Important: Use the passed selectedEmployees array
-  department.employeeIds = selectedEmployees;
-  department.employeesCount = selectedEmployees.length;
-  
-  return department;
+  const selectedManager = formData.managerId 
+    ? employees.find(emp => emp.id === formData.managerId) 
+    : null;
+
+  return {
+    id: formData.id,
+    name: formData.name,
+    description: formData.description,
+    managerId: formData.managerId || null,
+    managerName: selectedManager ? `${selectedManager.firstName} ${selectedManager.lastName}` : null,
+    employeesCount: selectedEmployees.length,
+    color: formData.color,
+    employeeIds: selectedEmployees,
+    ...(currentDepartment && { ...currentDepartment })
+  };
 };
 
-// Get employees for a specific department
-export const getDepartmentEmployees = (departmentId: string, departments: Department[]) => {
-  const department = departments.find(d => d.id === departmentId);
+export const getDepartmentEmployees = (departmentId: string, departments: Department[]): Employee[] => {
+  const department = departments.find(dep => dep.id === departmentId);
+  if (!department || !department.employeeIds) return [];
   
-  if (!department || !department.employeeIds) {
-    return [];
-  }
-  
-  return employees.filter(e => department.employeeIds?.includes(e.id));
+  return employees.filter(emp => department.employeeIds.includes(emp.id));
 };

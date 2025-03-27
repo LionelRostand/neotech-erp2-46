@@ -1,7 +1,5 @@
-
 import React from 'react';
-import { Routes, Route, Navigate } from "react-router-dom";
-import NotFound from '@/pages/NotFound';
+import { Routes } from "react-router-dom";
 
 // Import route modules
 import { IndexRoutes } from './modules/indexRoutes';
@@ -31,7 +29,7 @@ const AppRoutes = () => (
     {/* Settings routes */}
     {SettingsRoutes}
     
-    {/* Module routes - ajustées pour assurer la navigation correcte */}
+    {/* Module routes */}
     {EmployeesRoutes}
     {FreightRoutes}
     {ProjectsRoutes}
@@ -46,12 +44,6 @@ const AppRoutes = () => (
     
     {/* Other module routes */}
     {OtherModulesRoutes}
-    
-    {/* Default route for module pages */}
-    <Route path="/modules/:moduleName" element={<Navigate to="/dashboard" replace />} />
-    
-    {/* Catch-all route for 404 errors */}
-    <Route path="*" element={<NotFound />} />
   </Routes>
 );
 

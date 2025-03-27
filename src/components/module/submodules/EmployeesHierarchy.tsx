@@ -1,14 +1,19 @@
 
-import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { employees } from '@/data/employees';
 import { Employee } from '@/types/employee';
-import { ListTree, Users, Building, ChevronRight, ChevronDown, RefreshCw } from 'lucide-react';
-import { useDepartmentService } from './departments/services/departmentService';
-import { Department as DepartmentType } from './departments/types';
-import { Button } from '@/components/ui/button';
-import { toast } from 'sonner';
+import { ListTree, Users, Building, ChevronRight, ChevronDown } from 'lucide-react';
+
+// Interface pour département dans la hiérarchie
+interface Department {
+  id: string;
+  name: string;
+  managerId: string | null;
+  managerName: string | null;
+  color: string;
+}
 
 // Interface pour employé dans la hiérarchie
 interface EmployeeNode extends Employee {
@@ -19,114 +24,36 @@ interface EmployeeNode extends Employee {
 }
 
 const EmployeesHierarchy: React.FC = () => {
-  const [departments, setDepartments] = useState<DepartmentType[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [refreshTrigger, setRefreshTrigger] = useState(0);
-  const [refreshing, setRefreshing] = useState(false);
-  
+  // Sample departments data
+  const [departments, setDepartments] = useState<Department[]>([
+    {
+      id: "DEP001",
+      name: "Marketing",
+      managerId: "EMP003",
+      managerName: "Sophie Martin",
+      color: "#3b82f6" // blue-500
+    },
+    {
+      id: "DEP002",
+      name: "Direction",
+      managerId: "EMP002",
+      managerName: "Lionel Djossa",
+      color: "#10b981" // emerald-500
+    }
+  ]);
+
   // State for hierarchy data
   const [employeeHierarchy, setEmployeeHierarchy] = useState<EmployeeNode[]>([]);
   const [activeTab, setActiveTab] = useState("employees");
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set());
-  
-  // Get departments from service
-  const departmentService = useDepartmentService();
-  
-  // Référence pour contrôler les appels multiples
-  const isLoadingRef = useRef(false);
-  const eventListenerAddedRef = useRef(false);
 
-  // Function to refresh data manually
-  const handleRefresh = useCallback(async () => {
-    if (refreshing) return;
-    
-    setRefreshing(true);
-    try {
-      departmentService.clearCache(); // Vider le cache avant de recharger
-      await loadDepartments();
-      toast.success("Hiérarchie mise à jour avec succès");
-    } catch (error) {
-      toast.error("Erreur lors de la mise à jour de la hiérarchie");
-      console.error("Error refreshing hierarchy:", error);
-    } finally {
-      setRefreshing(false);
-    }
-  }, [refreshing]);
-
-  // Load departments and build hierarchy function - avec contrôle pour éviter les appels multiples
-  const loadDepartments = useCallback(async () => {
-    if (isLoadingRef.current) return;
-    
-    isLoadingRef.current = true;
-    setLoading(true);
-    
-    try {
-      const departmentsData = await departmentService.getAll();
-      console.log("Fetched departments for hierarchy:", departmentsData);
-      setDepartments(departmentsData);
-    } catch (error) {
-      console.error("Error loading departments for hierarchy:", error);
-    } finally {
-      setLoading(false);
-      // Reset loading flag après un délai pour éviter les appels trop fréquents
-      setTimeout(() => {
-        isLoadingRef.current = false;
-      }, 2000);
-    }
-  }, [departmentService]);
-  
-  // Load departments on component mount and refresh trigger changes - optimisé
+  // Build employee hierarchy on component mount
   useEffect(() => {
-    if (!isLoadingRef.current) {
-      console.log("Loading departments, refresh trigger:", refreshTrigger);
-      loadDepartments();
-    }
-  }, [loadDepartments, refreshTrigger]);
-
-  // Listen for department update events avec un contrôle pour éviter les ajouts multiples
-  useEffect(() => {
-    if (eventListenerAddedRef.current) return;
-    
-    const handleDepartmentUpdate = (event: Event) => {
-      const customEvent = event as CustomEvent;
-      console.log("Department updated:", customEvent.detail);
-      
-      // Mettre un délai pour éviter les rendus multiples en cascade
-      setTimeout(() => {
-        // Refresh hierarchy data
-        setRefreshTrigger(prev => prev + 1);
-        
-        // Show toast notification
-        const { action, department, id, name } = customEvent.detail;
-        if (action === 'create') {
-          toast.info(`Département "${department.name}" créé - Hiérarchie mise à jour`);
-        } else if (action === 'update') {
-          toast.info(`Département "${department.name}" modifié - Hiérarchie mise à jour`);
-        } else if (action === 'delete') {
-          toast.info(`Département "${name}" supprimé - Hiérarchie mise à jour`);
-        }
-      }, 500);
-    };
-
-    window.addEventListener('department-updated', handleDepartmentUpdate);
-    eventListenerAddedRef.current = true;
-    
-    return () => {
-      window.removeEventListener('department-updated', handleDepartmentUpdate);
-      eventListenerAddedRef.current = false;
-    };
+    buildEmployeeHierarchy();
   }, []);
 
-  // Rebuild hierarchy when departments change - avec useMemo pour éviter les recalculs inutiles
-  useEffect(() => {
-    if (departments.length > 0) {
-      console.log("Rebuilding employee hierarchy with departments:", departments);
-      buildEmployeeHierarchy();
-    }
-  }, [departments]);
-
   // Toggle node expansion
-  const toggleNodeExpansion = useCallback((employeeId: string) => {
+  const toggleNodeExpansion = (employeeId: string) => {
     setExpandedNodes(prev => {
       const newSet = new Set(prev);
       if (newSet.has(employeeId)) {
@@ -136,10 +63,10 @@ const EmployeesHierarchy: React.FC = () => {
       }
       return newSet;
     });
-  }, []);
+  };
 
-  // Function to build employee hierarchy with optimisation
-  const buildEmployeeHierarchy = useCallback(() => {
+  // Function to build employee hierarchy
+  const buildEmployeeHierarchy = () => {
     // Create a map of employees by ID
     const employeeMap = new Map<string, EmployeeNode>();
     
@@ -194,17 +121,17 @@ const EmployeesHierarchy: React.FC = () => {
     setExpandedNodes(initialExpanded);
     
     setEmployeeHierarchy(rootNodes);
-  }, [departments]);
+  };
 
-  // Memoized employee node rendering
-  const renderEmployeeNode = useCallback((node: EmployeeNode, level: number = 0) => {
+  // Recursive component to render employee hierarchy
+  const renderEmployeeNode = (node: EmployeeNode, level: number = 0) => {
     const hasSubordinates = node.subordinates.length > 0;
     const isExpanded = expandedNodes.has(node.id);
     
     return (
       <div key={node.id} className="relative">
         <div 
-          className={`flex items-center py-2 transition-colors hover:bg-gray-50 rounded-md`}
+          className={`flex items-center py-2 pl-${level * 4} transition-colors hover:bg-gray-50 rounded-md`}
           style={{ 
             paddingLeft: `${level * 20 + 8}px`, 
             borderLeft: node.departmentColor ? `2px solid ${node.departmentColor}` : 'none'
@@ -247,25 +174,13 @@ const EmployeesHierarchy: React.FC = () => {
         )}
       </div>
     );
-  }, [expandedNodes, toggleNodeExpansion]);
+  };
 
-  // Memoized departments pyramid
-  const renderDepartmentsPyramid = useMemo(() => {
-    if (loading) {
-      return <div className="flex justify-center py-8">Chargement des départements...</div>;
-    }
-
-    if (departments.length === 0) {
-      return <div className="text-center py-8">Aucun département n'est configuré</div>;
-    }
-
+  // Render departments with pyramid style
+  const renderDepartmentsPyramid = () => {
     // Group employees by department
     const departmentEmployees = departments.map(department => {
-      // Find employees for this department using employeeIds from department
-      const deptEmployees = employees.filter(emp => 
-        department.employeeIds && department.employeeIds.includes(emp.id)
-      );
-      
+      const deptEmployees = employees.filter(emp => emp.department === department.name);
       return {
         ...department,
         employees: deptEmployees,
@@ -292,7 +207,7 @@ const EmployeesHierarchy: React.FC = () => {
                   <div className="text-center relative">
                     <div className="inline-block p-4 bg-gray-100 rounded-lg mb-2 border-2 shadow-sm" 
                          style={{ borderColor: department.color }}>
-                      <div className="font-bold">{department.manager.firstName} {department.manager.lastName}</div>
+                      <div className="font-bold">{department.managerName}</div>
                       <div className="text-sm text-gray-600">{department.manager.position}</div>
                       <div className="text-xs mt-1 py-1 px-2 rounded-full" 
                            style={{ backgroundColor: department.color, color: 'white' }}>
@@ -301,7 +216,7 @@ const EmployeesHierarchy: React.FC = () => {
                     </div>
                     
                     {/* Connecting line to subordinates */}
-                    {department.employees.length > 1 && (
+                    {department.employees.length > 0 && (
                       <div className="w-0.5 h-6 bg-gray-300 mx-auto"></div>
                     )}
                   </div>
@@ -336,23 +251,11 @@ const EmployeesHierarchy: React.FC = () => {
         ))}
       </div>
     );
-  }, [departments, loading]);
+  };
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold">Hiérarchie de l'entreprise</h2>
-        <Button 
-          variant="outline" 
-          size="sm" 
-          onClick={handleRefresh}
-          disabled={refreshing}
-          className="flex items-center gap-2"
-        >
-          <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
-          Actualiser
-        </Button>
-      </div>
+      <h2 className="text-2xl font-bold">Hiérarchie de l'entreprise</h2>
       
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="grid w-full grid-cols-2">
@@ -375,15 +278,11 @@ const EmployeesHierarchy: React.FC = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {loading ? (
-                <div className="flex justify-center py-8">Chargement des données...</div>
-              ) : (
-                <div className="overflow-x-auto">
-                  <div className="min-w-[600px] p-2">
-                    {employeeHierarchy.map(node => renderEmployeeNode(node))}
-                  </div>
+              <div className="overflow-x-auto">
+                <div className="min-w-[600px] p-2">
+                  {employeeHierarchy.map(node => renderEmployeeNode(node))}
                 </div>
-              )}
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
@@ -397,7 +296,7 @@ const EmployeesHierarchy: React.FC = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {renderDepartmentsPyramid}
+              {renderDepartmentsPyramid()}
             </CardContent>
           </Card>
         </TabsContent>
@@ -406,4 +305,4 @@ const EmployeesHierarchy: React.FC = () => {
   );
 };
 
-export default React.memo(EmployeesHierarchy);
+export default EmployeesHierarchy;
