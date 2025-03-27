@@ -85,9 +85,7 @@ const ModuleItem: React.FC<ModuleItemProps> = ({
           
           <AccordionContent className="pb-0 pt-1 px-0">
             <ModuleSubmenu
-              submodules={module.submodules || []}
-              location={location}
-              onNavigate={onNavigate}
+              module={module}
             />
           </AccordionContent>
         </AccordionItem>
