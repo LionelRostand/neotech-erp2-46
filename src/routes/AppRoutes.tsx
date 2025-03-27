@@ -47,7 +47,7 @@ const AppRoutes = () => (
     {/* Other module routes */}
     {OtherModulesRoutes}
     
-    {/* Fallback route for any unmatched routes */}
+    {/* Default route for module pages */}
     <Route path="/modules/:moduleName" element={<Navigate to="/dashboard" replace />} />
     
     {/* Catch-all route for 404 errors */}
