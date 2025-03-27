@@ -5,6 +5,7 @@ import DashboardLayout from '../DashboardLayout';
 import { modules } from '@/data/modules';
 import { Card } from '@/components/ui/card';
 import { toast } from 'sonner';
+import ModuleSubmenu from '@/components/dashboard/ModuleSubmenu';
 
 interface ModuleLayoutProps {
   moduleId: number;
@@ -54,7 +55,14 @@ const ModuleLayout: React.FC<ModuleLayoutProps> = ({ moduleId }) => {
 
   return (
     <DashboardLayout>
-      <Outlet />
+      <div className="flex">
+        <div className="hidden md:block w-64 border-r h-[calc(100vh-4rem)] overflow-y-auto">
+          <ModuleSubmenu module={module} />
+        </div>
+        <div className="flex-1 p-6 overflow-y-auto">
+          <Outlet />
+        </div>
+      </div>
     </DashboardLayout>
   );
 };

@@ -3,8 +3,10 @@ import React, { memo, useEffect } from 'react';
 import { modules } from '@/data/modules';
 import SubmoduleHeader from './submodules/SubmoduleHeader';
 import { renderSubmoduleContent } from './submodules/SubmoduleRenderer';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { toast } from 'sonner';
+import { Button } from '@/components/ui/button';
+import { ChevronLeft } from 'lucide-react';
 
 interface SubmodulePageProps {
   moduleId: number;
@@ -51,7 +53,27 @@ const SubmodulePage: React.FC<SubmodulePageProps> = memo(({ moduleId, submoduleI
   
   // Find the submodule
   const submodule = module.submodules.find(sm => sm.id === submoduleId);
-  if (!submodule) return null;
+  if (!submodule) return (
+    <div className="space-y-6">
+      <div className="flex items-center gap-4">
+        <Button variant="outline" size="sm" onClick={() => navigate('/modules/employees/dashboard')}>
+          <ChevronLeft className="mr-2 h-4 w-4" />
+          Retour au module Employés
+        </Button>
+      </div>
+      <div className="p-6 bg-amber-50 border border-amber-200 rounded-md">
+        <h3 className="text-lg font-medium text-amber-800">Sous-module non trouvé</h3>
+        <p className="mt-2 text-amber-700">
+          Le sous-module demandé n'existe pas ou n'est pas accessible.
+        </p>
+        <div className="mt-4">
+          <Link to="/modules/employees/dashboard" className="text-amber-700 hover:text-amber-900 font-medium underline">
+            Retour au tableau de bord des employés
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
 
   console.log('Rendering submodule:', submoduleId, refreshKey ? `(refresh: ${refreshKey})` : '');
 

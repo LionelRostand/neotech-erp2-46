@@ -31,7 +31,7 @@ const AppRoutes = () => (
     {/* Settings routes */}
     {SettingsRoutes}
     
-    {/* Module routes */}
+    {/* Module routes - ajustées pour assurer la navigation correcte */}
     {EmployeesRoutes}
     {FreightRoutes}
     {ProjectsRoutes}
