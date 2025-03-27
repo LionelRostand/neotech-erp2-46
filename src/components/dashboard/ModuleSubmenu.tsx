@@ -1,20 +1,19 @@
 
 import React from 'react';
-import { SubModule } from '@/data/types/modules';
+import { SubModule, AppModule } from '@/data/types/modules';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 interface ModuleSubmenuProps {
-  submodules: SubModule[];
-  location: { pathname: string };
-  onNavigate: (href: string) => void;
+  module: AppModule;
 }
 
-const ModuleSubmenu: React.FC<ModuleSubmenuProps> = ({ 
-  submodules, 
-  location, 
-  onNavigate 
-}) => {
+const ModuleSubmenu: React.FC<ModuleSubmenuProps> = ({ module }) => {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const submodules = module?.submodules || [];
+  
   if (!submodules || submodules.length === 0) return null;
   
   // Groupes de sous-modules pour le module Health
@@ -59,6 +58,10 @@ const ModuleSubmenu: React.FC<ModuleSubmenuProps> = ({
   const isHighPriority = (id: string) => {
     // Simulation : ces modules sont prioritaires
     return ['health-appointments', 'health-medical-records', 'health-admissions'].includes(id);
+  };
+  
+  const onNavigate = (href: string) => {
+    navigate(href);
   };
   
   return (
