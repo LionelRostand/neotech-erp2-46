@@ -80,7 +80,8 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
     const personalInfo = [
       [`Nom: ${employee.lastName}`, `Prénom: ${employee.firstName}`],
       [`Email: ${employee.email}`, `Téléphone: ${employee.phone || "Non renseigné"}`],
-      [`Date de naissance: ${employee.birthDate || "Non renseignée"}`, `Adresse: ${employee.address || "Non renseignée"}`]
+      // Fixed: Using optional education data instead of birthDate
+      [`Date de naissance: ${employee.education?.[0]?.year || "Non renseignée"}`, `Adresse: ${employee.address || "Non renseignée"}`]
     ];
     
     let yPos = 90;
@@ -100,7 +101,8 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
     const professionalInfo = [
       [`Poste: ${employee.position}`, `Département: ${employee.department}`],
       [`Date d'embauche: ${employee.hireDate}`, `Manager: ${employee.manager || "Aucun"}`],
-      [`Type de contrat: ${employee.contractType || "Non spécifié"}`, `Statut: ${employee.status || "Actif"}`]
+      // Fixed: Using contract instead of contractType
+      [`Type de contrat: ${employee.contract || "Non spécifié"}`, `Statut: ${employee.status || "Actif"}`]
     ];
     
     yPos += 20;
