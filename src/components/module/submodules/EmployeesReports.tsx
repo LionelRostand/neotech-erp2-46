@@ -37,7 +37,7 @@ import {
 import { jsPDF } from 'jspdf';
 import 'jspdf-autotable';
 import { FileDown, FileText, BarChart2, PieChart as PieChartIcon, LineChart as LineChartIcon, FileUp, Plus } from 'lucide-react';
-import { toast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { ReportFilters } from './reports/ReportFilters';
 import { ReportCard } from './reports/ReportCard';
 
@@ -140,7 +140,7 @@ const EmployeesReports: React.FC = () => {
     status: 'scheduled',
   });
 
-  // Liste des rapports
+  // Liste des rapports unique (plus de doublons)
   const [reports, setReports] = useState<Report[]>([
     {
       id: 'report-1',
@@ -359,26 +359,35 @@ const EmployeesReports: React.FC = () => {
     
     // Ajouter en-tête et logo
     doc.setFillColor(240, 240, 240);
-    doc.rect(15, 15, 180, 25, 'F');
-    doc.setFontSize(18);
-    doc.setTextColor(50, 50, 50);
-    doc.text("STORM GROUP", 105, 25, { align: "center" });
+    doc.rect(15, 15, 50, 25, 'F');
     doc.setFontSize(12);
-    doc.text("Enterprise Solutions", 105, 32, { align: "center" });
+    doc.setTextColor(80, 80, 80);
+    doc.text("LOGO", 40, 30, { align: "center" });
+    
+    // Ajouter informations de l'entreprise
+    doc.setFontSize(14);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(40, 40, 40);
+    doc.text("STORM GROUP", 140, 25, { align: "center" });
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "normal");
+    doc.text("123 Avenue des Affaires", 140, 32, { align: "center" });
+    doc.text("75000 Paris, France", 140, 38, { align: "center" });
+    doc.text("contact@enterprise-solutions.fr", 140, 44, { align: "center" });
     
     // Ajouter titre et description du rapport
     doc.setFontSize(22);
     doc.setTextColor(40, 40, 40);
-    doc.text(report.title, 105, 60, { align: "center" });
+    doc.text(report.title, 105, 70, { align: "center" });
     
     doc.setFontSize(12);
     doc.setTextColor(80, 80, 80);
-    doc.text(report.description, 105, 70, { align: "center" });
+    doc.text(report.description, 105, 85, { align: "center" });
     
     // Date du rapport
     doc.setFontSize(10);
-    doc.text(`Rapport généré le ${new Date().toLocaleDateString('fr-FR')}`, 105, 80, { align: "center" });
-    doc.text(`Dernière mise à jour: ${report.lastUpdated}`, 105, 87, { align: "center" });
+    doc.text(`Rapport généré le ${new Date().toLocaleDateString('fr-FR')}`, 105, 95, { align: "center" });
+    doc.text(`Dernière mise à jour: ${report.lastUpdated}`, 105, 102, { align: "center" });
     
     // Ajouter les données du rapport sous forme de tableau
     const tableData = report.data.map(item => {
@@ -393,7 +402,7 @@ const EmployeesReports: React.FC = () => {
       : ['Catégorie', 'Valeur'];
     
     doc.autoTable({
-      startY: 100,
+      startY: 115,
       head: [tableColumns],
       body: tableData,
       theme: 'grid',
@@ -414,8 +423,7 @@ const EmployeesReports: React.FC = () => {
     // Télécharger le PDF
     doc.save(`rapport_${report.title.toLowerCase().replace(/ /g, '_')}.pdf`);
     
-    toast({
-      title: "Rapport exporté avec succès",
+    toast.success("Rapport exporté avec succès", {
       description: `Le rapport "${report.title}" a été téléchargé au format PDF.`,
     });
   };
@@ -443,8 +451,7 @@ const EmployeesReports: React.FC = () => {
       status: 'scheduled',
     });
 
-    toast({
-      title: "Rapport créé avec succès",
+    toast.success("Rapport créé avec succès", {
       description: `Le rapport "${newReportForm.title}" a été créé.`,
     });
   };
