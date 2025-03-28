@@ -22,7 +22,7 @@ const StaffPage: React.FC = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
 
-  const staffCollection = useFirestore(COLLECTIONS.HEALTH_STAFF);
+  const staffCollection = useFirestore(COLLECTIONS.HEALTH.STAFF);
   
   const handleViewStaff = (staff: StaffMember) => {
     setSelectedStaff(staff);

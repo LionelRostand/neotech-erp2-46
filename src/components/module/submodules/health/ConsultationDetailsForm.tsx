@@ -69,10 +69,10 @@ const ConsultationDetailsForm: React.FC<ConsultationDetailsFormProps> = ({
       const consultationData = processConsultationFormData(values, isEditing, consultation);
 
       if (isEditing && consultation) {
-        await updateDocument(COLLECTIONS.HEALTH_CONSULTATIONS, consultation.id, consultationData);
+        await updateDocument(COLLECTIONS.HEALTH.CONSULTATIONS, consultation.id, consultationData);
         toast.success("Consultation mise à jour avec succès");
       } else {
-        await addDocument(COLLECTIONS.HEALTH_CONSULTATIONS, consultationData);
+        await addDocument(COLLECTIONS.HEALTH.CONSULTATIONS, consultationData);
         toast.success("Consultation créée avec succès");
       }
       

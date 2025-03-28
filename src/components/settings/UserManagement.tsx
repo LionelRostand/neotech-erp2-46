@@ -14,7 +14,7 @@ import * as z from "zod";
 import { getAllUsers, createUser } from "@/services/userService";
 import { User } from "@/types/user";
 import { Loader2, UserPlus, Search, MoreHorizontal } from "lucide-react";
-import { toast } from "@/hooks/use-toast";
+import { useToast } from "@/hooks/use-toast";
 
 const formSchema = z.object({
   email: z.string().email("Email invalide"),
@@ -74,7 +74,7 @@ const UserManagement = () => {
   const onSubmit = async (values: FormValues) => {
     setIsCreatingUser(true);
     try {
-      const newUser = await createUser(values, values.password);
+      const newUser = await createUser(values as User, values.password);
       if (newUser) {
         setUsers((prevUsers) => [...prevUsers, newUser]);
         form.reset();
@@ -321,7 +321,7 @@ const UserManagement = () => {
 interface UsersTableProps {
   users: User[];
   isLoading: boolean;
-  getRoleBadgeVariant: (role: string) => string;
+  getRoleBadgeVariant: (role: string) => "default" | "destructive" | "secondary" | "outline" | "success" | "warning" | "info";
 }
 
 const UsersTable = ({ users, isLoading, getRoleBadgeVariant }: UsersTableProps) => {

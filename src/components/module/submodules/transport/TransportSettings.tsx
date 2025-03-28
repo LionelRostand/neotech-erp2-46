@@ -56,10 +56,12 @@ const TransportSettings = () => {
 
   return (
     <div className="space-y-6">
-      <SubmoduleHeader 
-        title="Paramètres Transport" 
-        description="Configurez les paramètres pour le module Transport" 
-      />
+      <div className="flex justify-between items-center">
+        <div>
+          <h2 className="text-2xl font-bold">Paramètres Transport</h2>
+          <p className="text-gray-500">Configurez les paramètres pour le module Transport</p>
+        </div>
+      </div>
       
       <Tabs defaultValue="general" className="w-full">
         <TabsList className="mb-4">
