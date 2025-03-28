@@ -1,347 +1,447 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Label } from "@/components/ui/label";
-import { createUser, getAllUsers } from "@/services/userService";
-import { User } from "@/types/user";
-import DashboardLayout from "@/components/DashboardLayout";
 import { Badge } from "@/components/ui/badge";
-import { toast } from "sonner";
-import { ReloadIcon } from "@radix-ui/react-icons";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import * as z from "zod";
+import { getAllUsers, createUser } from "@/services/userService";
+import { User } from "@/types/user";
+import { Loader2, UserPlus, Search, MoreHorizontal } from "lucide-react";
+import { toast } from "@/hooks/use-toast";
+
+const formSchema = z.object({
+  email: z.string().email("Email invalide"),
+  firstName: z.string().min(2, "Prénom trop court"),
+  lastName: z.string().min(2, "Nom trop court"),
+  role: z.enum(["admin", "user", "manager"], {
+    required_error: "Sélectionnez un rôle",
+  }),
+  password: z.string().min(6, "Le mot de passe doit contenir au moins 6 caractères"),
+  department: z.string().optional(),
+  position: z.string().optional(),
+});
+
+type FormValues = z.infer<typeof formSchema>;
 
 const UserManagement = () => {
   const [users, setUsers] = useState<User[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [formLoading, setFormLoading] = useState(false);
-  const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-    confirmPassword: '',
-    firstName: '',
-    lastName: '',
-    role: 'user',
-    phoneNumber: '',
-    department: '',
-    position: ''
+  const [isLoading, setIsLoading] = useState(true);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isCreatingUser, setIsCreatingUser] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const form = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      email: "",
+      firstName: "",
+      lastName: "",
+      role: "user",
+      password: "",
+      department: "",
+      position: "",
+    },
   });
 
   useEffect(() => {
+    const fetchUsers = async () => {
+      setIsLoading(true);
+      try {
+        const allUsers = await getAllUsers();
+        setUsers(allUsers);
+      } catch (error) {
+        console.error("Erreur lors de la récupération des utilisateurs", error);
+        toast({
+          title: "Erreur",
+          description: "Impossible de charger la liste des utilisateurs",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
     fetchUsers();
   }, []);
 
-  const fetchUsers = async () => {
-    setLoading(true);
+  const onSubmit = async (values: FormValues) => {
+    setIsCreatingUser(true);
     try {
-      const allUsers = await getAllUsers();
-      setUsers(allUsers);
-    } catch (error) {
-      console.error("Erreur lors de la récupération des utilisateurs", error);
-      toast.error("Impossible de charger les utilisateurs");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleSelectChange = (value: string, name: string) => {
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
-
-  const validateForm = () => {
-    if (!formData.email || !formData.password || !formData.firstName || !formData.lastName) {
-      toast.error("Veuillez remplir tous les champs obligatoires");
-      return false;
-    }
-
-    if (formData.password !== formData.confirmPassword) {
-      toast.error("Les mots de passe ne correspondent pas");
-      return false;
-    }
-
-    if (formData.password.length < 6) {
-      toast.error("Le mot de passe doit contenir au moins 6 caractères");
-      return false;
-    }
-
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(formData.email)) {
-      toast.error("Veuillez entrer une adresse email valide");
-      return false;
-    }
-
-    return true;
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!validateForm()) return;
-    
-    setFormLoading(true);
-    try {
-      const userData: User = {
-        email: formData.email,
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        role: formData.role as 'admin' | 'user' | 'manager',
-        phoneNumber: formData.phoneNumber,
-        department: formData.department,
-        position: formData.position
-      };
-      
-      await createUser(userData, formData.password);
-      
-      // Réinitialiser le formulaire
-      setFormData({
-        email: '',
-        password: '',
-        confirmPassword: '',
-        firstName: '',
-        lastName: '',
-        role: 'user',
-        phoneNumber: '',
-        department: '',
-        position: ''
-      });
-      
-      // Recharger la liste des utilisateurs
-      fetchUsers();
-      
+      const newUser = await createUser(values, values.password);
+      if (newUser) {
+        setUsers((prevUsers) => [...prevUsers, newUser]);
+        form.reset();
+        setIsDialogOpen(false);
+        toast({
+          title: "Succès",
+          description: `L'utilisateur ${newUser.firstName} ${newUser.lastName} a été créé`,
+        });
+      }
     } catch (error) {
       console.error("Erreur lors de la création de l'utilisateur", error);
     } finally {
-      setFormLoading(false);
+      setIsCreatingUser(false);
     }
   };
 
-  const getRoleBadgeColor = (role: string) => {
+  const filteredUsers = users.filter((user) => {
+    const query = searchQuery.toLowerCase();
+    return (
+      user.firstName?.toLowerCase().includes(query) ||
+      user.lastName?.toLowerCase().includes(query) ||
+      user.email?.toLowerCase().includes(query) ||
+      user.department?.toLowerCase().includes(query) ||
+      user.position?.toLowerCase().includes(query)
+    );
+  });
+
+  const getRoleBadgeVariant = (role: string) => {
     switch (role) {
-      case 'admin': return "bg-red-500";
-      case 'manager': return "bg-blue-500";
-      default: return "bg-gray-500";
+      case "admin":
+        return "default";
+      case "manager":
+        return "secondary";
+      default:
+        return "outline";
     }
   };
 
   return (
-    <DashboardLayout>
-      <div className="container mx-auto p-6">
-        <h1 className="text-2xl font-bold mb-6">Gestion des utilisateurs</h1>
-        
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-1">
-            <Card>
-              <CardHeader>
-                <CardTitle>Ajouter un utilisateur</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <form onSubmit={handleSubmit} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="email">Email *</Label>
-                    <Input 
-                      id="email" 
-                      name="email" 
-                      type="email" 
-                      value={formData.email}
-                      onChange={handleInputChange}
-                      placeholder="email@example.com"
-                      required
-                    />
-                  </div>
-                  
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="firstName">Prénom *</Label>
-                      <Input 
-                        id="firstName" 
-                        name="firstName" 
-                        value={formData.firstName}
-                        onChange={handleInputChange}
-                        placeholder="Jean"
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="lastName">Nom *</Label>
-                      <Input 
-                        id="lastName" 
-                        name="lastName" 
-                        value={formData.lastName}
-                        onChange={handleInputChange}
-                        placeholder="Dupont"
-                        required
-                      />
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="role">Rôle *</Label>
-                    <Select 
-                      value={formData.role} 
-                      onValueChange={(value) => handleSelectChange(value, 'role')}
-                      required
-                    >
-                      <SelectTrigger id="role">
-                        <SelectValue placeholder="Sélectionner un rôle" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="user">Utilisateur</SelectItem>
-                        <SelectItem value="manager">Manager</SelectItem>
-                        <SelectItem value="admin">Administrateur</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="password">Mot de passe *</Label>
-                      <Input 
-                        id="password" 
-                        name="password" 
-                        type="password"
-                        value={formData.password}
-                        onChange={handleInputChange}
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="confirmPassword">Confirmer *</Label>
-                      <Input 
-                        id="confirmPassword" 
-                        name="confirmPassword" 
-                        type="password"
-                        value={formData.confirmPassword}
-                        onChange={handleInputChange}
-                        required
-                      />
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="phoneNumber">Téléphone</Label>
-                    <Input 
-                      id="phoneNumber" 
-                      name="phoneNumber" 
-                      value={formData.phoneNumber}
-                      onChange={handleInputChange}
-                      placeholder="+33 6 12 34 56 78"
-                    />
-                  </div>
-                  
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="department">Département</Label>
-                      <Input 
-                        id="department" 
-                        name="department" 
-                        value={formData.department}
-                        onChange={handleInputChange}
-                        placeholder="IT"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="position">Poste</Label>
-                      <Input 
-                        id="position" 
-                        name="position" 
-                        value={formData.position}
-                        onChange={handleInputChange}
-                        placeholder="Développeur"
-                      />
-                    </div>
-                  </div>
-                  
-                  <Button 
-                    type="submit" 
-                    className="w-full" 
-                    disabled={formLoading}
-                  >
-                    {formLoading ? (
+    <div className="space-y-6">
+      <h1 className="text-2xl font-bold">Gestion des utilisateurs</h1>
+
+      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+        <div className="relative w-full sm:w-96">
+          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Rechercher un utilisateur..."
+            className="pl-8"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </div>
+
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <DialogTrigger asChild>
+            <Button>
+              <UserPlus className="mr-2 h-4 w-4" />
+              Nouvel utilisateur
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-[525px]">
+            <DialogHeader>
+              <DialogTitle>Ajouter un nouvel utilisateur</DialogTitle>
+              <DialogDescription>
+                Remplissez les informations pour créer un nouvel utilisateur dans le système.
+              </DialogDescription>
+            </DialogHeader>
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="firstName"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Prénom</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Jean" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="lastName"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Nom</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Dupont" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email</FormLabel>
+                      <FormControl>
+                        <Input type="email" placeholder="jean.dupont@exemple.com" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="password"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Mot de passe</FormLabel>
+                      <FormControl>
+                        <Input type="password" placeholder="••••••••" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="department"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Département</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Finance" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="position"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Poste</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Comptable" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <FormField
+                  control={form.control}
+                  name="role"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Rôle</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Sélectionnez un rôle" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="admin">Administrateur</SelectItem>
+                          <SelectItem value="manager">Manager</SelectItem>
+                          <SelectItem value="user">Utilisateur</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <DialogFooter>
+                  <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
+                    Annuler
+                  </Button>
+                  <Button type="submit" disabled={isCreatingUser}>
+                    {isCreatingUser ? (
                       <>
-                        <ReloadIcon className="mr-2 h-4 w-4 animate-spin" />
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                         Création...
                       </>
-                    ) : "Créer l'utilisateur"}
+                    ) : (
+                      "Créer l'utilisateur"
+                    )}
                   </Button>
-                </form>
-              </CardContent>
-            </Card>
-          </div>
-          
-          <div className="lg:col-span-2">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle>Utilisateurs ({users.length})</CardTitle>
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={fetchUsers}
-                  disabled={loading}
-                >
-                  {loading ? (
-                    <ReloadIcon className="h-4 w-4 animate-spin" />
-                  ) : "Actualiser"}
-                </Button>
-              </CardHeader>
-              <CardContent>
-                {loading ? (
-                  <div className="flex justify-center py-8">
-                    <ReloadIcon className="h-8 w-8 animate-spin" />
-                  </div>
-                ) : users.length === 0 ? (
-                  <div className="text-center py-8 text-muted-foreground">
-                    Aucun utilisateur trouvé
-                  </div>
-                ) : (
-                  <div className="overflow-x-auto">
-                    <table className="w-full">
-                      <thead>
-                        <tr className="border-b">
-                          <th className="text-left py-2 px-4">Nom</th>
-                          <th className="text-left py-2 px-4">Email</th>
-                          <th className="text-left py-2 px-4">Rôle</th>
-                          <th className="text-left py-2 px-4">Statut</th>
-                          <th className="text-left py-2 px-4">Dernière connexion</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {users.map((user) => (
-                          <tr key={user.id} className="border-b hover:bg-gray-50">
-                            <td className="py-2 px-4">{user.firstName} {user.lastName}</td>
-                            <td className="py-2 px-4">{user.email}</td>
-                            <td className="py-2 px-4">
-                              <Badge className={getRoleBadgeColor(user.role)}>
-                                {user.role === 'admin' ? 'Admin' : 
-                                 user.role === 'manager' ? 'Manager' : 'Utilisateur'}
-                              </Badge>
-                            </td>
-                            <td className="py-2 px-4">
-                              <Badge variant={user.status === 'active' ? 'default' : 'secondary'}>
-                                {user.status === 'active' ? 'Actif' : 
-                                 user.status === 'inactive' ? 'Inactif' : 'En attente'}
-                              </Badge>
-                            </td>
-                            <td className="py-2 px-4">
-                              {user.lastLogin ? new Date(user.lastLogin.seconds * 1000).toLocaleString() : 'Jamais'}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-        </div>
+                </DialogFooter>
+              </form>
+            </Form>
+          </DialogContent>
+        </Dialog>
       </div>
-    </DashboardLayout>
+
+      <Tabs defaultValue="all">
+        <TabsList>
+          <TabsTrigger value="all">Tous</TabsTrigger>
+          <TabsTrigger value="admin">Admins</TabsTrigger>
+          <TabsTrigger value="manager">Managers</TabsTrigger>
+          <TabsTrigger value="user">Utilisateurs</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="all" className="mt-6">
+          <UsersTable
+            users={filteredUsers}
+            isLoading={isLoading}
+            getRoleBadgeVariant={getRoleBadgeVariant}
+          />
+        </TabsContent>
+
+        <TabsContent value="admin" className="mt-6">
+          <UsersTable
+            users={filteredUsers.filter((user) => user.role === "admin")}
+            isLoading={isLoading}
+            getRoleBadgeVariant={getRoleBadgeVariant}
+          />
+        </TabsContent>
+
+        <TabsContent value="manager" className="mt-6">
+          <UsersTable
+            users={filteredUsers.filter((user) => user.role === "manager")}
+            isLoading={isLoading}
+            getRoleBadgeVariant={getRoleBadgeVariant}
+          />
+        </TabsContent>
+
+        <TabsContent value="user" className="mt-6">
+          <UsersTable
+            users={filteredUsers.filter((user) => user.role === "user")}
+            isLoading={isLoading}
+            getRoleBadgeVariant={getRoleBadgeVariant}
+          />
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+};
+
+interface UsersTableProps {
+  users: User[];
+  isLoading: boolean;
+  getRoleBadgeVariant: (role: string) => string;
+}
+
+const UsersTable = ({ users, isLoading, getRoleBadgeVariant }: UsersTableProps) => {
+  if (isLoading) {
+    return (
+      <div className="flex justify-center py-8">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (users.length === 0) {
+    return (
+      <div className="text-center py-8 text-muted-foreground">
+        Aucun utilisateur trouvé
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-white overflow-hidden rounded-md border">
+      <table className="min-w-full divide-y divide-gray-200">
+        <thead className="bg-gray-50">
+          <tr>
+            <th
+              scope="col"
+              className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+            >
+              Utilisateur
+            </th>
+            <th
+              scope="col"
+              className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+            >
+              Email
+            </th>
+            <th
+              scope="col"
+              className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+            >
+              Rôle
+            </th>
+            <th
+              scope="col"
+              className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+            >
+              Département
+            </th>
+            <th
+              scope="col"
+              className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+            >
+              Statut
+            </th>
+            <th scope="col" className="relative px-6 py-3">
+              <span className="sr-only">Actions</span>
+            </th>
+          </tr>
+        </thead>
+        <tbody className="bg-white divide-y divide-gray-200">
+          {users.map((user) => (
+            <tr key={user.id} className="hover:bg-gray-50">
+              <td className="px-6 py-4 whitespace-nowrap">
+                <div className="flex items-center">
+                  <div className="flex-shrink-0 h-10 w-10 bg-gray-200 rounded-full flex items-center justify-center">
+                    {user.profileImageUrl ? (
+                      <img
+                        className="h-10 w-10 rounded-full"
+                        src={user.profileImageUrl}
+                        alt={`${user.firstName} ${user.lastName}`}
+                      />
+                    ) : (
+                      <span className="text-gray-500 font-semibold">
+                        {user.firstName?.charAt(0)}
+                        {user.lastName?.charAt(0)}
+                      </span>
+                    )}
+                  </div>
+                  <div className="ml-4">
+                    <div className="text-sm font-medium text-gray-900">
+                      {user.firstName} {user.lastName}
+                    </div>
+                    <div className="text-sm text-gray-500">{user.position}</div>
+                  </div>
+                </div>
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{user.email}</td>
+              <td className="px-6 py-4 whitespace-nowrap">
+                <Badge variant={getRoleBadgeVariant(user.role)}>
+                  {user.role === "admin"
+                    ? "Administrateur"
+                    : user.role === "manager"
+                    ? "Manager"
+                    : "Utilisateur"}
+                </Badge>
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                {user.department || "-"}
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap">
+                <Badge
+                  variant={user.status === "active" ? "success" : user.status === "pending" ? "warning" : "destructive"}
+                >
+                  {user.status === "active"
+                    ? "Actif"
+                    : user.status === "pending"
+                    ? "En attente"
+                    : "Inactif"}
+                </Badge>
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                <Button variant="ghost" size="icon">
+                  <MoreHorizontal className="h-4 w-4" />
+                </Button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
 };
 

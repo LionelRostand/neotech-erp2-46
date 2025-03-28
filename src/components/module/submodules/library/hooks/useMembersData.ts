@@ -1,7 +1,8 @@
+
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useSafeFirestore } from '@/hooks/use-safe-firestore';
 import { useToast } from '@/hooks/use-toast';
-import { LIBRARY_MEMBERS } from '@/lib/firebase-collections';
+import { COLLECTIONS } from '@/lib/firebase-collections';
 import { Member } from '../types/library-types';
 import { toast } from 'sonner';
 
@@ -12,7 +13,7 @@ export const useMembersData = () => {
   const [retryCount, setRetryCount] = useState(0);
   const [lastError, setLastError] = useState<Error | null>(null);
   
-  const membersCollection = useSafeFirestore(LIBRARY_MEMBERS);
+  const membersCollection = useSafeFirestore(COLLECTIONS.LIBRARY.MEMBERS);
   const { toast: toastService } = useToast();
 
   // Filter members based on search query

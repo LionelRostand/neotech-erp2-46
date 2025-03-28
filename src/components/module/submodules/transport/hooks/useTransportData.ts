@@ -1,121 +1,89 @@
 
 import { useState, useEffect } from 'react';
-import { TransportReservation, TransportClient, TransportVehicle, TransportDriver } from '../types/transport-types';
-import { TRANSPORT_COLLECTIONS } from '@/lib/firebase-collections';
-import { getAllDocuments } from '@/hooks/firestore/firestore-utils';
+import { collection, getDocs, query, where, orderBy } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { COLLECTIONS } from '@/lib/firebase-collections';
+import { toast } from 'sonner';
 
-export const useTransportReservations = () => {
-  const [reservations, setReservations] = useState<TransportReservation[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
-
-  useEffect(() => {
-    const fetchReservations = async () => {
-      try {
-        setLoading(true);
-        // Uncomment when connecting to Firebase
-        // const data = await getAllDocuments(TRANSPORT_COLLECTIONS.RESERVATIONS);
-        // setReservations(data as TransportReservation[]);
-        
-        // For now, we'll use mock data
-        console.log("Would fetch reservations from", TRANSPORT_COLLECTIONS.RESERVATIONS);
-        setLoading(false);
-      } catch (err) {
-        console.error("Error fetching reservations:", err);
-        setError(err as Error);
-        setLoading(false);
-      }
-    };
-
-    fetchReservations();
-  }, []);
-
-  return { reservations, loading, error, setReservations };
-};
-
-export const useTransportClients = () => {
-  const [clients, setClients] = useState<TransportClient[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
+export const useTransportData = () => {
+  const [drivers, setDrivers] = useState([]);
+  const [vehicles, setVehicles] = useState([]);
+  const [reservations, setReservations] = useState([]);
+  const [clients, setClients] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    const fetchClients = async () => {
+    const fetchData = async () => {
+      setIsLoading(true);
       try {
-        setLoading(true);
-        // Uncomment when connecting to Firebase
-        // const data = await getAllDocuments(TRANSPORT_COLLECTIONS.CLIENTS);
-        // setClients(data as TransportClient[]);
+        // Fetch drivers
+        const driversQuery = query(
+          collection(db, COLLECTIONS.TRANSPORT.DRIVERS),
+          orderBy('lastName')
+        );
+        const driversSnapshot = await getDocs(driversQuery);
+        const driversData = driversSnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+        setDrivers(driversData);
         
-        // For now, we'll use mock data
-        console.log("Would fetch clients from", TRANSPORT_COLLECTIONS.CLIENTS);
-        setLoading(false);
+        // Fetch vehicles
+        const vehiclesQuery = query(
+          collection(db, COLLECTIONS.TRANSPORT.VEHICLES),
+          orderBy('model')
+        );
+        const vehiclesSnapshot = await getDocs(vehiclesQuery);
+        const vehiclesData = vehiclesSnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+        setVehicles(vehiclesData);
+        
+        // Fetch reservations
+        const reservationsQuery = query(
+          collection(db, COLLECTIONS.TRANSPORT.RESERVATIONS),
+          orderBy('pickupTime', 'desc')
+        );
+        const reservationsSnapshot = await getDocs(reservationsQuery);
+        const reservationsData = reservationsSnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+        setReservations(reservationsData);
+        
+        // Fetch clients
+        const clientsQuery = query(
+          collection(db, COLLECTIONS.TRANSPORT.CLIENTS),
+          orderBy('createdAt', 'desc')
+        );
+        const clientsSnapshot = await getDocs(clientsQuery);
+        const clientsData = clientsSnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+        setClients(clientsData);
+        
+        setError(null);
       } catch (err) {
-        console.error("Error fetching clients:", err);
-        setError(err as Error);
-        setLoading(false);
+        console.error('Error fetching transport data:', err);
+        setError(err);
+        toast.error('Erreur lors du chargement des données de transport');
+      } finally {
+        setIsLoading(false);
       }
     };
-
-    fetchClients();
+    
+    fetchData();
   }, []);
 
-  return { clients, loading, error, setClients };
-};
-
-export const useTransportVehicles = () => {
-  const [vehicles, setVehicles] = useState<TransportVehicle[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
-
-  useEffect(() => {
-    const fetchVehicles = async () => {
-      try {
-        setLoading(true);
-        // Uncomment when connecting to Firebase
-        // const data = await getAllDocuments(TRANSPORT_COLLECTIONS.VEHICLES);
-        // setVehicles(data as TransportVehicle[]);
-        
-        // For now, we'll use mock data
-        console.log("Would fetch vehicles from", TRANSPORT_COLLECTIONS.VEHICLES);
-        setLoading(false);
-      } catch (err) {
-        console.error("Error fetching vehicles:", err);
-        setError(err as Error);
-        setLoading(false);
-      }
-    };
-
-    fetchVehicles();
-  }, []);
-
-  return { vehicles, loading, error, setVehicles };
-};
-
-export const useTransportDrivers = () => {
-  const [drivers, setDrivers] = useState<TransportDriver[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
-
-  useEffect(() => {
-    const fetchDrivers = async () => {
-      try {
-        setLoading(true);
-        // Uncomment when connecting to Firebase
-        // const data = await getAllDocuments(TRANSPORT_COLLECTIONS.DRIVERS);
-        // setDrivers(data as TransportDriver[]);
-        
-        // For now, we'll use mock data
-        console.log("Would fetch drivers from", TRANSPORT_COLLECTIONS.DRIVERS);
-        setLoading(false);
-      } catch (err) {
-        console.error("Error fetching drivers:", err);
-        setError(err as Error);
-        setLoading(false);
-      }
-    };
-
-    fetchDrivers();
-  }, []);
-
-  return { drivers, loading, error, setDrivers };
+  return {
+    drivers,
+    vehicles,
+    reservations,
+    clients,
+    isLoading,
+    error
+  };
 };

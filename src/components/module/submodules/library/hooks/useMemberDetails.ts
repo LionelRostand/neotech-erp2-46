@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { useSafeFirestore } from '@/hooks/use-safe-firestore';
 import { useToast } from '@/hooks/use-toast';
-import { LIBRARY_LOANS } from '@/lib/firebase-collections';
+import { COLLECTIONS } from '@/lib/firebase-collections';
 import { Member, MemberWithLoans } from '../types/library-types';
 
 export const useMemberDetails = () => {
@@ -11,7 +11,7 @@ export const useMemberDetails = () => {
   const [isAddingMember, setIsAddingMember] = useState(false);
   const [isEditingMember, setIsEditingMember] = useState(false);
   
-  const loansCollection = useSafeFirestore(LIBRARY_LOANS);
+  const loansCollection = useSafeFirestore(COLLECTIONS.LIBRARY.LOANS);
   const { toast } = useToast();
 
   const handleViewMemberDetails = async (member: Member) => {
