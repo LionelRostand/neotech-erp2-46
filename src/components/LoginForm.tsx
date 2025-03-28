@@ -4,35 +4,54 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { toast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
+import { loginUser } from '@/services/userService';
+import { ReloadIcon } from '@radix-ui/react-icons';
 
 const LoginForm = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState('admin@neotech-consulting.com');
-  const [password, setPassword] = useState('admin');
+  const [password, setPassword] = useState('admin123');
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     
-    // Simuler une connexion
-    setTimeout(() => {
-      setIsLoading(false);
-      if (email === 'admin@neotech-consulting.com' && password === 'admin') {
+    try {
+      const user = await loginUser(email, password);
+      
+      if (user) {
         toast({
-          title: "Succès",
-          description: "Connexion réussie",
+          title: "Connexion réussie",
+          description: `Bienvenue, ${user.firstName} ${user.lastName}`,
           variant: "default",
         });
         navigate('/');
       } else {
         toast({
           title: "Erreur",
-          description: "Identifiants incorrects",
+          description: "Impossible de récupérer les données utilisateur",
           variant: "destructive",
         });
       }
-    }, 1000);
+    } catch (error: any) {
+      console.error("Erreur de connexion:", error);
+      let errorMessage = "Identifiants incorrects";
+      
+      if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
+        errorMessage = "Email ou mot de passe incorrect";
+      } else if (error.code === 'auth/too-many-requests') {
+        errorMessage = "Trop de tentatives. Veuillez réessayer plus tard";
+      }
+      
+      toast({
+        title: "Erreur de connexion",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -84,7 +103,12 @@ const LoginForm = () => {
             className="w-full bg-neotech-primary hover:bg-neotech-primaryDark transition-colors"
             disabled={isLoading}
           >
-            {isLoading ? 'Connexion...' : 'Se connecter'}
+            {isLoading ? (
+              <>
+                <ReloadIcon className="mr-2 h-4 w-4 animate-spin" />
+                Connexion...
+              </>
+            ) : 'Se connecter'}
           </Button>
         </form>
       </div>
