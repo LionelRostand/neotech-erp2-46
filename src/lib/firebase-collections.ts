@@ -92,5 +92,12 @@ export const COLLECTIONS = {
     CLIENTS: 'transport_clients',
     PAYMENTS: 'transport_payments',
     SETTINGS: 'transport_settings'
+  },
+  
+  COMPANIES: {
+    ROOT: 'companies',
+    COMPANIES: 'companies', // Main companies collection
+    CONTACTS: 'company_contacts',
+    DOCUMENTS: 'company_documents'
   }
 };

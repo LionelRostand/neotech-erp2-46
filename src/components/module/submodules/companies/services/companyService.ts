@@ -1,4 +1,3 @@
-
 import { Company, CompanyContact, CompanyDocument, CompanyFilters } from '../types';
 import { useFirestore } from '@/hooks/use-firestore';
 import { COLLECTIONS } from '@/lib/firebase-collections';
@@ -10,8 +9,10 @@ import {
   query, 
   startAfter,
   getDocs,
-  QueryConstraint
+  QueryConstraint,
+  serverTimestamp
 } from 'firebase/firestore';
+import { addDocument } from '@/hooks/firestore/create-operations';
 
 export const useCompanyService = () => {
   const companiesFirestore = useFirestore(COLLECTIONS.COMPANIES);
@@ -63,7 +64,9 @@ export const useCompanyService = () => {
       }
       
       // Récupérer les données
+      console.log('Fetching companies with constraints:', constraints);
       const data = await companiesFirestore.getAll(constraints) as Company[];
+      console.log('Retrieved companies:', data);
       
       // Si recherche par terme, filtrer les résultats côté client
       let filteredData = data;
@@ -87,6 +90,29 @@ export const useCompanyService = () => {
     }
   };
 
+  // Créer une nouvelle entreprise
+  const createCompany = async (companyData: Partial<Company>): Promise<Company | null> => {
+    try {
+      console.log('Creating company with data:', companyData);
+      
+      // Use addDocument function directly from hooks for better consistency
+      const result = await addDocument(COLLECTIONS.COMPANIES, {
+        ...companyData,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      }) as Company;
+      
+      console.log('Company created successfully:', result);
+      toast.success(`Entreprise ${companyData.name} créée avec succès`);
+      
+      return result;
+    } catch (error) {
+      console.error("Error creating company:", error);
+      toast.error("Erreur lors de la création de l'entreprise");
+      return null;
+    }
+  };
+
   // Récupérer une entreprise par son ID
   const getCompanyById = async (id: string): Promise<Company | null> => {
     try {
@@ -95,19 +121,6 @@ export const useCompanyService = () => {
     } catch (error) {
       console.error("Error fetching company:", error);
       toast.error("Erreur lors du chargement de l'entreprise");
-      return null;
-    }
-  };
-
-  // Créer une nouvelle entreprise
-  const createCompany = async (companyData: Partial<Company>): Promise<Company | null> => {
-    try {
-      const result = await companiesFirestore.add(companyData) as Company;
-      toast.success(`Entreprise ${companyData.name} créée avec succès`);
-      return result;
-    } catch (error) {
-      console.error("Error creating company:", error);
-      toast.error("Erreur lors de la création de l'entreprise");
       return null;
     }
   };

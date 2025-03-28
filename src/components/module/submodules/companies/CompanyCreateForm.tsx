@@ -100,6 +100,9 @@ const CompanyCreateForm: React.FC = () => {
           postalCode: data.postalCode,
           country: data.country,
         },
+        // Add these missing fields to ensure Firestore stores them
+        createdAt: new Date(),
+        updatedAt: new Date()
       };
       
       const result = await createCompany(companyData);

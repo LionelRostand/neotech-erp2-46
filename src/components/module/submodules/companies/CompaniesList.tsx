@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCompanyService } from './services/companyService';
 import { Company, CompanyFilters } from './types';
@@ -23,7 +23,7 @@ import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { Search, Filter, Plus, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Search, Filter, Plus, ChevronLeft, ChevronRight, RefreshCw } from 'lucide-react';
 
 const CompaniesList: React.FC = () => {
   const navigate = useNavigate();
@@ -41,19 +41,17 @@ const CompaniesList: React.FC = () => {
     endDate: undefined
   });
   
-  useEffect(() => {
-    fetchCompanies();
-  }, [page, filters]);
-  
-  const fetchCompanies = async () => {
+  const fetchCompanies = useCallback(async () => {
     setLoading(true);
     try {
+      console.log('Fetching companies...');
       const { companies: fetchedCompanies, hasMore: more } = await getCompanies(
         page, 
         10, 
         filters, 
         searchTerm
       );
+      console.log('Companies fetched:', fetchedCompanies);
       setCompanies(fetchedCompanies);
       setHasMore(more);
     } catch (error) {
@@ -61,7 +59,12 @@ const CompaniesList: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [getCompanies, page, filters, searchTerm]);
+  
+  useEffect(() => {
+    console.log('CompaniesList mounted or location changed');
+    fetchCompanies();
+  }, [fetchCompanies, location]);
   
   const handleSearch = () => {
     setPage(1); // Reset to first page
@@ -112,6 +115,10 @@ const CompaniesList: React.FC = () => {
     }
   };
   
+  const handleRefresh = () => {
+    fetchCompanies();
+  };
+  
   const handleCreateCompany = () => {
     navigate('/modules/companies/create');
   };
@@ -151,6 +158,13 @@ const CompaniesList: React.FC = () => {
             >
               <Filter className="h-4 w-4 mr-2" />
               Filtres
+            </Button>
+            <Button 
+              variant="outline" 
+              onClick={handleRefresh}
+              title="Rafraîchir la liste"
+            >
+              <RefreshCw className="h-4 w-4" />
             </Button>
           </div>
           <Button onClick={handleCreateCompany}>
@@ -252,8 +266,10 @@ const CompaniesList: React.FC = () => {
                     </TableCell>
                     <TableCell>
                       {company.createdAt ? 
-                        format(company.createdAt.toDate(), 'dd MMM yyyy', { locale: fr }) : 
-                        "—"}
+                        typeof company.createdAt.toDate === 'function' ? 
+                          format(company.createdAt.toDate(), 'dd MMM yyyy', { locale: fr }) : 
+                          format(company.createdAt, 'dd MMM yyyy', { locale: fr })
+                        : "—"}
                     </TableCell>
                   </TableRow>
                 ))
@@ -302,4 +318,3 @@ const CompaniesList: React.FC = () => {
 };
 
 export default CompaniesList;
-
