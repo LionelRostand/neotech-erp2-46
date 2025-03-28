@@ -1,9 +1,9 @@
-
 import React from 'react';
 import { PaySlip } from '@/types/payslip';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Download, Printer } from 'lucide-react';
+import { toast } from 'sonner';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 
@@ -195,7 +195,7 @@ const PaySlipTemplate: React.FC<PaySlipTemplateProps> = ({ payslip }) => {
         ]);
       
       // Detailed salary table
-      (doc as any).autoTable({
+      doc.autoTable({
         startY: 70,
         head: [["DÉSIGNATION", "BASE", "TAUX OU %", "MONTANT", "PART EMPLOYEUR"]],
         body: [
@@ -215,11 +215,13 @@ const PaySlipTemplate: React.FC<PaySlipTemplateProps> = ({ payslip }) => {
       doc.setFontSize(8);
       doc.text("Pour la définition des termes employés, se reporter au site internet www.service-public.fr rubrique cotisations sociales", 15, 280);
       
-      // Save the PDF
-      doc.save(`bulletin-de-paie-${payslip.employee.lastName.toLowerCase()}-${payslip.period.replace(' ', '-').toLowerCase()}.pdf`);
-      console.log("PDF téléchargé avec succès");
+      // Save the PDF with a proper name
+      const fileName = `bulletin-de-paie-${payslip.employee.lastName.toLowerCase()}-${payslip.period.replace(' ', '-').toLowerCase()}.pdf`;
+      doc.save(fileName);
+      toast.success("Bulletin de paie téléchargé avec succès");
     } catch (error) {
       console.error("Erreur lors de la génération du PDF:", error);
+      toast.error("Erreur lors du téléchargement du bulletin de paie");
     }
   };
 
@@ -229,6 +231,7 @@ const PaySlipTemplate: React.FC<PaySlipTemplateProps> = ({ payslip }) => {
       console.log("Impression initiée");
     } catch (error) {
       console.error("Erreur lors de l'impression:", error);
+      toast.error("Erreur lors de l'impression");
     }
   };
 
