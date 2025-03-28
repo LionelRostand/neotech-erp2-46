@@ -10,6 +10,8 @@ import CompetencesTab from './tabs/CompetencesTab';
 import HorairesTab from './tabs/HorairesTab';
 import CongesTab from './tabs/CongesTab';
 import EvaluationsTab from './tabs/EvaluationsTab';
+import { jsPDF } from 'jspdf';
+import { toast } from 'sonner';
 
 interface EmployeeDetailsProps {
   employee: Employee;
@@ -33,6 +35,87 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
     } else if (activeTab === 'evaluations') {
       setIsEditing(true);
     }
+  };
+
+  const handleExportPdf = () => {
+    // Create PDF document
+    const doc = new jsPDF();
+    
+    // Add company logo on left side (placeholder for now)
+    doc.setDrawColor(200, 200, 200);
+    doc.setFillColor(240, 240, 240);
+    doc.roundedRect(15, 15, 50, 25, 3, 3, 'FD');
+    doc.setFontSize(12);
+    doc.setTextColor(80, 80, 80);
+    doc.text("LOGO", 40, 30, { align: "center" });
+    
+    // Add company information on right side
+    doc.setFontSize(14);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(40, 40, 40);
+    doc.text("Enterprise Solutions", 140, 20, { align: "center" });
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "normal");
+    doc.text("123 Avenue des Affaires", 140, 26, { align: "center" });
+    doc.text("75000 Paris, France", 140, 32, { align: "center" });
+    doc.text("contact@enterprise-solutions.fr", 140, 38, { align: "center" });
+    
+    // Add horizontal separator
+    doc.setDrawColor(200, 200, 200);
+    doc.line(15, 50, 195, 50);
+    
+    // Document title
+    doc.setFontSize(18);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(20, 20, 20);
+    doc.text(`FICHE EMPLOYÉ`, 105, 65, { align: "center" });
+    
+    // Employee information
+    doc.setFontSize(14);
+    doc.setFont("helvetica", "bold");
+    doc.text("Informations personnelles", 20, 80);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(11);
+    
+    const personalInfo = [
+      [`Nom: ${employee.lastName}`, `Prénom: ${employee.firstName}`],
+      [`Email: ${employee.email}`, `Téléphone: ${employee.phone || "Non renseigné"}`],
+      [`Date de naissance: ${employee.birthDate || "Non renseignée"}`, `Adresse: ${employee.address || "Non renseignée"}`]
+    ];
+    
+    let yPos = 90;
+    personalInfo.forEach(row => {
+      doc.text(row[0], 25, yPos);
+      doc.text(row[1], 120, yPos);
+      yPos += 10;
+    });
+    
+    // Professional information
+    doc.setFontSize(14);
+    doc.setFont("helvetica", "bold");
+    doc.text("Informations professionnelles", 20, yPos + 10);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(11);
+    
+    const professionalInfo = [
+      [`Poste: ${employee.position}`, `Département: ${employee.department}`],
+      [`Date d'embauche: ${employee.hireDate}`, `Manager: ${employee.manager || "Aucun"}`],
+      [`Type de contrat: ${employee.contractType || "Non spécifié"}`, `Statut: ${employee.status || "Actif"}`]
+    ];
+    
+    yPos += 20;
+    professionalInfo.forEach(row => {
+      doc.text(row[0], 25, yPos);
+      doc.text(row[1], 120, yPos);
+      yPos += 10;
+    });
+    
+    // Save PDF
+    doc.save(`fiche-employe-${employee.firstName.toLowerCase()}-${employee.lastName.toLowerCase()}.pdf`);
+    toast.success("Document PDF exporté avec succès");
+    
+    // Also call the parent onExportPdf to manage any UI updates
+    onExportPdf();
   };
 
   return (
@@ -83,7 +166,7 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
       </Tabs>
       
       <div className="flex justify-end gap-3 mt-6">
-        <Button variant="outline" onClick={onExportPdf}>Exporter PDF</Button>
+        <Button variant="outline" onClick={handleExportPdf}>Exporter PDF</Button>
         <Button variant="outline" onClick={handleEditTab}>Modifier</Button>
       </div>
     </div>

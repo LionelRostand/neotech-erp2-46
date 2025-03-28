@@ -224,18 +224,37 @@ const EmployeesContracts: React.FC = () => {
     // Create a new PDF document
     const doc = new jsPDF();
     
-    // Add company header
+    // Add company logo on left side
+    doc.setDrawColor(200, 200, 200);
+    doc.setFillColor(240, 240, 240);
+    doc.roundedRect(15, 15, 50, 25, 3, 3, 'FD');
+    doc.setFontSize(12);
+    doc.setTextColor(80, 80, 80);
+    doc.text("LOGO", 40, 30, { align: "center" });
+    
+    // Add company information on right side
+    doc.setFontSize(14);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(40, 40, 40);
+    doc.text("Enterprise Solutions", 140, 20, { align: "center" });
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "normal");
+    doc.text("123 Avenue des Affaires", 140, 26, { align: "center" });
+    doc.text("75000 Paris, France", 140, 32, { align: "center" });
+    doc.text("SIRET: 123 456 789 00010", 140, 38, { align: "center" });
+    
+    // Document title
     doc.setFontSize(20);
     doc.setTextColor(44, 62, 80);
-    doc.text("CONTRAT DE TRAVAIL", 105, 20, { align: "center" });
+    doc.text("CONTRAT DE TRAVAIL", 105, 55, { align: "center" });
     
     // Add contract type subheader
     doc.setFontSize(16);
-    doc.text(`${contract.type}`, 105, 30, { align: "center" });
+    doc.text(`${contract.type}`, 105, 65, { align: "center" });
     
     // Add horizontal line
     doc.setDrawColor(44, 62, 80);
-    doc.line(20, 35, 190, 35);
+    doc.line(20, 70, 190, 70);
     
     // Add contract information
     doc.setFontSize(12);
@@ -244,45 +263,45 @@ const EmployeesContracts: React.FC = () => {
     // Company information
     doc.setFontSize(12);
     doc.setFont("helvetica", "bold");
-    doc.text("ENTRE LES SOUSSIGNÉS :", 20, 45);
+    doc.text("ENTRE LES SOUSSIGNÉS :", 20, 80);
     doc.setFont("helvetica", "normal");
-    doc.text("La société Enterprise Solutions, représentée par M. Jean Directeur", 20, 55);
-    doc.text("Siège social : 123 Avenue des Affaires, 75000 Paris", 20, 62);
-    doc.text("SIRET : 123 456 789 00010", 20, 69);
-    doc.text("Ci-après désignée « l'employeur »", 20, 76);
+    doc.text("La société Enterprise Solutions, représentée par M. Jean Directeur", 20, 90);
+    doc.text("Siège social : 123 Avenue des Affaires, 75000 Paris", 20, 97);
+    doc.text("SIRET : 123 456 789 00010", 20, 104);
+    doc.text("Ci-après désignée « l'employeur »", 20, 111);
     
     // Employee information
     doc.setFont("helvetica", "bold");
-    doc.text("ET :", 20, 90);
+    doc.text("ET :", 20, 125);
     doc.setFont("helvetica", "normal");
-    doc.text(`M./Mme ${contract.employeeName}`, 20, 100);
-    doc.text(`Demeurant à : [Adresse de l'employé]`, 20, 107);
-    doc.text(`Ci-après désigné(e) « le salarié »`, 20, 114);
+    doc.text(`M./Mme ${contract.employeeName}`, 20, 135);
+    doc.text(`Demeurant à : [Adresse de l'employé]`, 20, 142);
+    doc.text(`Ci-après désigné(e) « le salarié »`, 20, 149);
     
     // Contract details
     doc.setFont("helvetica", "bold");
-    doc.text("IL A ÉTÉ CONVENU CE QUI SUIT :", 20, 130);
+    doc.text("IL A ÉTÉ CONVENU CE QUI SUIT :", 20, 165);
     doc.setFont("helvetica", "normal");
     
     // Article 1
     doc.setFont("helvetica", "bold");
-    doc.text("Article 1 : Engagement", 20, 140);
+    doc.text("Article 1 : Engagement", 20, 175);
     doc.setFont("helvetica", "normal");
-    doc.text(`Le salarié est engagé en qualité de ${contract.position} au sein du département`, 20, 147);
-    doc.text(`${contract.department}, à compter du ${new Date(contract.startDate).toLocaleDateString('fr-FR')}.`, 20, 154);
+    doc.text(`Le salarié est engagé en qualité de ${contract.position} au sein du département`, 20, 182);
+    doc.text(`${contract.department}, à compter du ${new Date(contract.startDate).toLocaleDateString('fr-FR')}.`, 20, 189);
     
     if (contract.endDate) {
-      doc.text(`Ce contrat est conclu pour une durée déterminée jusqu'au ${new Date(contract.endDate).toLocaleDateString('fr-FR')}.`, 20, 161);
+      doc.text(`Ce contrat est conclu pour une durée déterminée jusqu'au ${new Date(contract.endDate).toLocaleDateString('fr-FR')}.`, 20, 196);
     } else {
-      doc.text("Ce contrat est conclu pour une durée indéterminée.", 20, 161);
+      doc.text("Ce contrat est conclu pour une durée indéterminée.", 20, 196);
     }
     
     // Article 2
     doc.setFont("helvetica", "bold");
-    doc.text("Article 2 : Rémunération", 20, 175);
+    doc.text("Article 2 : Rémunération", 20, 210);
     doc.setFont("helvetica", "normal");
-    doc.text(`Le salarié percevra une rémunération annuelle brute de ${contract.salary.toLocaleString('fr-FR')} euros,`, 20, 182);
-    doc.text("versée sur 12 mois.", 20, 189);
+    doc.text(`Le salarié percevra une rémunération annuelle brute de ${contract.salary.toLocaleString('fr-FR')} euros,`, 20, 217);
+    doc.text("versée sur 12 mois.", 20, 224);
     
     // Add signatures section
     doc.setFontSize(12);

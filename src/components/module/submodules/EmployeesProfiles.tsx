@@ -71,14 +71,13 @@ const EmployeesProfiles: React.FC = () => {
   };
 
   const handleExportPdf = () => {
-    if (!selectedEmployee) return;
-    
-    // Simuler un téléchargement
+    // Show loading dialog
     setIsPdfExportOpen(true);
+    // The actual PDF export is now handled in EmployeeDetails component
+    // This is just for UI feedback
     setTimeout(() => {
       setIsPdfExportOpen(false);
-      toast.success(`Informations de ${selectedEmployee.firstName} ${selectedEmployee.lastName} exportées en PDF.`);
-    }, 1500);
+    }, 1000);
   };
 
   return (
