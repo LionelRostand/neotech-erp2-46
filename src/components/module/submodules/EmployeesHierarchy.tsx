@@ -1,10 +1,11 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { employees } from '@/data/employees';
-import { Employee } from '@/types/employee';
 import { ListTree, Users, Building, ChevronRight, ChevronDown } from 'lucide-react';
+import { Employee } from '@/types/employee';
 import { getSyncedDepartments } from './departments/utils/departmentUtils';
+import { getEmployeesData } from './employees/services/employeeService';
 
 // Interface pour département dans la hiérarchie
 interface Department {
@@ -26,6 +27,10 @@ interface EmployeeNode extends Employee {
 }
 
 const EmployeesHierarchy: React.FC = () => {
+  // Données des employés provenant de Firebase
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  
   // Départements - maintenant synchronisés avec la gestion des départements
   const [departments, setDepartments] = useState<Department[]>([]);
 
@@ -33,6 +38,24 @@ const EmployeesHierarchy: React.FC = () => {
   const [employeeHierarchy, setEmployeeHierarchy] = useState<EmployeeNode[]>([]);
   const [activeTab, setActiveTab] = useState("employees");
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set());
+
+  // Fetch employees data from Firebase
+  useEffect(() => {
+    const fetchEmployees = async () => {
+      setLoading(true);
+      try {
+        const data = await getEmployeesData();
+        setEmployees(data);
+        console.log("Données employés chargées:", data.length);
+      } catch (error) {
+        console.error("Erreur lors du chargement des employés:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchEmployees();
+  }, []);
 
   // Fetch departments from synced storage
   useEffect(() => {
@@ -108,12 +131,12 @@ const EmployeesHierarchy: React.FC = () => {
     };
   }, []);
 
-  // Build employee hierarchy on component mount and when departments change
+  // Build employee hierarchy when employees and departments are loaded
   useEffect(() => {
-    if (departments.length > 0) {
+    if (departments.length > 0 && employees.length > 0 && !loading) {
       buildEmployeeHierarchy();
     }
-  }, [departments]);
+  }, [departments, employees, loading]);
 
   // Toggle node expansion
   const toggleNodeExpansion = (employeeId: string) => {
@@ -338,50 +361,62 @@ const EmployeesHierarchy: React.FC = () => {
     <div className="space-y-6">
       <h2 className="text-2xl font-bold">Hiérarchie de l'entreprise</h2>
       
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="employees" className="flex items-center gap-2">
-            <Users className="h-4 w-4" />
-            <span>Par employés</span>
-          </TabsTrigger>
-          <TabsTrigger value="departments" className="flex items-center gap-2">
-            <Building className="h-4 w-4" />
-            <span>Par départements</span>
-          </TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="employees" className="mt-6">
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="flex items-center gap-2">
-                <ListTree className="h-5 w-5" />
-                Organigramme des employés
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="overflow-x-auto">
-                <div className="min-w-[600px] p-2">
-                  {employeeHierarchy.map(node => renderEmployeeNode(node))}
+      {loading ? (
+        <div className="flex justify-center items-center p-8">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+        </div>
+      ) : (
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="employees" className="flex items-center gap-2">
+              <Users className="h-4 w-4" />
+              <span>Par employés</span>
+            </TabsTrigger>
+            <TabsTrigger value="departments" className="flex items-center gap-2">
+              <Building className="h-4 w-4" />
+              <span>Par départements</span>
+            </TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="employees" className="mt-6">
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="flex items-center gap-2">
+                  <ListTree className="h-5 w-5" />
+                  Organigramme des employés
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="overflow-x-auto">
+                  <div className="min-w-[600px] p-2">
+                    {employeeHierarchy.length > 0 ? (
+                      employeeHierarchy.map(node => renderEmployeeNode(node))
+                    ) : (
+                      <div className="text-center py-8 text-gray-500">
+                        Aucun employé trouvé
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-        
-        <TabsContent value="departments" className="mt-6">
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="flex items-center gap-2">
-                <Building className="h-5 w-5" />
-                Organisation par départements
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {renderDepartmentsPyramid()}
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+              </CardContent>
+            </Card>
+          </TabsContent>
+          
+          <TabsContent value="departments" className="mt-6">
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="flex items-center gap-2">
+                  <Building className="h-5 w-5" />
+                  Organisation par départements
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {renderDepartmentsPyramid()}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      )}
     </div>
   );
 };
