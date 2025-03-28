@@ -80,7 +80,7 @@ const AttendanceTerminal: React.FC<AttendanceTerminalProps> = ({
       date: new Date().toLocaleDateString('fr-FR'),
       arrivalTime: currentTime,
       departureTime: null,
-      hoursWorked: '0',
+      hoursWorked: '0h',
       status: 'Présent',
       validation: 'En attente'
     };

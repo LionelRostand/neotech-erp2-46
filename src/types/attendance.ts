@@ -4,11 +4,12 @@ export type ValidationStatus = "En attente" | "Validé" | "Rejeté";
 
 export interface EmployeeAttendance {
   id: string;
+  employeeId: string;
   employeeName: string;
   date: string;
   arrivalTime: string;
-  departureTime: string;
-  hoursWorked: number;
+  departureTime: string | null;
+  hoursWorked: string;
   status: AttendanceStatus;
   validation: ValidationStatus;
 }

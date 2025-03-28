@@ -40,7 +40,7 @@ const EmployeesAttendance: React.FC = () => {
     setAttendances(prev => {
       return prev.map(attendance => {
         if (attendance.employeeId === employeeId && !attendance.departureTime) {
-          const hoursWorked = calculateHoursWorked(attendance.arrivalTime!, departureTime);
+          const hoursWorked = calculateHoursWorked(attendance.arrivalTime, departureTime);
           return {
             ...attendance,
             departureTime,
