@@ -18,7 +18,7 @@ import { Badge } from "@/components/ui/badge";
 import { CalendarDays, DollarSign, FileCheck, FilePlus, FileText, Search, Users } from "lucide-react";
 import SubmoduleHeader from '../SubmoduleHeader';
 import { useToast } from "@/hooks/use-toast";
-import { useFirestore } from "@/hooks/firestore/firestore-utils";
+import { useFirestore } from "@/hooks/use-firestore";
 import { COLLECTIONS } from "@/lib/firebase-collections";
 
 // Types pour la facturation
@@ -140,7 +140,6 @@ const BillingPage = () => {
     const newId = `BILL-${String(billingRecords.length + 1).padStart(3, '0')}`;
     const newRecord = { ...invoice, id: newId } as BillingRecord;
     
-    // Dans un environnement réel, nous utiliserions le résultat de l'ajout Firestore
     add(newRecord)
       .then(() => {
         setBillingRecords([...billingRecords, newRecord]);
@@ -183,7 +182,24 @@ const BillingPage = () => {
 
   return (
     <div className="space-y-6">
-      <SubmoduleHeader title="Facturation" description="Gérez les factures et les paiements" />
+      <SubmoduleHeader 
+        module={{
+          id: 8,
+          name: "Health",
+          description: "Gestion des patients, rendez-vous et suivi médical",
+          href: "/modules/health",
+          icon: null,
+          category: 'services',
+          submodules: []
+        }}
+        submodule={{
+          id: "health-billing",
+          name: "Facturation",
+          href: "/modules/health/billing",
+          icon: null,
+          description: "Gérez les factures et les paiements"
+        }}
+      />
       
       <div className="flex items-center justify-between">
         <div className="relative w-full max-w-sm">
