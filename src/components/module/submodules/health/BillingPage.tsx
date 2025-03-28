@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { 
   Card, 
@@ -117,7 +116,7 @@ const BillingPage: React.FC = () => {
   });
   
   const { toast } = useToast();
-  const { add, loading } = useFirestore(COLLECTIONS.HEALTH);
+  const { add, loading } = useFirestore(COLLECTIONS.HEALTH.BILLING);
 
   const filteredRecords = billingRecords.filter(record => 
     record.patientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -126,7 +125,6 @@ const BillingPage: React.FC = () => {
   );
 
   const handleCreateInvoice = () => {
-    // Validation de base
     if (!newInvoice.patientName || !newInvoice.patientId || newInvoice.amount <= 0) {
       toast({
         title: "Erreur de validation",
@@ -145,8 +143,6 @@ const BillingPage: React.FC = () => {
       remainingAmount: remainingAmount > 0 ? remainingAmount : 0
     };
 
-    // Dans un environnement réel, nous utiliserions Firestore
-    // Simulation d'ajout pour le moment
     const newId = `BILL-${String(billingRecords.length + 1).padStart(3, '0')}`;
     const newRecord = { ...invoice, id: newId } as BillingRecord;
     
@@ -187,7 +183,6 @@ const BillingPage: React.FC = () => {
     }
   };
   
-  // Calcul des statistiques de facturation
   const totalBilled = billingRecords.reduce((sum, record) => sum + record.amount, 0);
   const totalPaid = billingRecords
     .filter(record => record.status === 'paid')
@@ -212,7 +207,6 @@ const BillingPage: React.FC = () => {
         </Button>
       </div>
 
-      {/* Statistiques de facturation */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
           <CardContent className="pt-6">
@@ -528,7 +522,6 @@ const BillingPage: React.FC = () => {
                     {filteredRecords
                       .filter(record => record.status === 'overdue')
                       .map((record) => {
-                        // Calculer le nombre de jours de retard
                         const invoiceDate = new Date(record.date);
                         const today = new Date();
                         const daysLate = Math.floor((today.getTime() - invoiceDate.getTime()) / (1000 * 3600 * 24));

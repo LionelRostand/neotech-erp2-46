@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -37,6 +36,8 @@ const UserManagement = () => {
   const [isCreatingUser, setIsCreatingUser] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
+  const { toast } = useToast();
+
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -69,7 +70,7 @@ const UserManagement = () => {
     };
 
     fetchUsers();
-  }, []);
+  }, [toast]);
 
   const onSubmit = async (values: FormValues) => {
     setIsCreatingUser(true);
