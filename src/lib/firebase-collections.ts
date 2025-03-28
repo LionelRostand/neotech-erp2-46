@@ -54,7 +54,69 @@ export const COLLECTIONS = {
   LIBRARY_MEMBERS: 'library_members',
   LIBRARY_LOANS: 'library_loans',
   
-  // Transport collections
+  // Convert all top-level strings into structured objects to fix nested property access
+  MESSAGES: {
+    ROOT: 'messages',
+    INBOX: 'messages_inbox',
+    CONTACTS: 'messages_contacts',
+    SCHEDULED: 'messages_scheduled',
+    ARCHIVED: 'messages_archived',
+    METRICS: 'messages_metrics'
+  },
+  
+  ACCOUNTING: {
+    ROOT: 'accounting',
+    TRANSACTIONS: 'accounting_transactions',
+    INVOICES: 'accounting_invoices',
+    PAYMENTS: 'accounting_payments',
+    PERMISSIONS: 'accounting_permissions'
+  },
+  
+  CRM: {
+    ROOT: 'crm',
+    CLIENTS: 'crm_clients',
+    PROSPECTS: 'crm_prospects',
+    OPPORTUNITIES: 'crm_opportunities',
+    CONTACTS: 'crm_contacts'
+  },
+  
+  PROJECTS: {
+    ROOT: 'projects',
+    TASKS: 'project_tasks',
+    TEAMS: 'project_teams',
+    NOTIFICATIONS: 'project_notifications'
+  },
+  
+  FREIGHT: {
+    ROOT: 'freight',
+    SHIPMENTS: 'freight_shipments',
+    CARRIERS: 'freight_carriers',
+    PACKAGES: 'freight_packages',
+    TRACKING: 'freight_tracking',
+    TRACKING_EVENTS: 'freight_tracking_events',
+    ROUTES: 'freight_routes',
+    PACKAGE_TYPES: 'freight_package_types'
+  },
+  
+  HEALTH: {
+    ROOT: 'health',
+    PATIENTS: 'health_patients',
+    DOCTORS: 'health_doctors',
+    APPOINTMENTS: 'health_appointments',
+    CONSULTATIONS: 'health_consultations',
+    INSURANCE: 'health_insurance',
+    BILLING: 'health_billing',
+    STAFF: 'health_staff'
+  },
+  
+  LIBRARY: {
+    ROOT: 'library',
+    BOOKS: 'library_books',
+    MEMBERS: 'library_members',
+    LOANS: 'library_loans',
+    STATS: 'library_stats'
+  },
+  
   TRANSPORT_COLLECTIONS: {
     DRIVERS: 'transport_drivers',
     VEHICLES: 'transport_vehicles',

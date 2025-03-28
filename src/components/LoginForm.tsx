@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { loginUser } from '@/services/userService';
-import { ReloadIcon } from "lucide-react";
+import { Loader2 } from "lucide-react";
 
 const LoginForm = () => {
   const navigate = useNavigate();
@@ -105,7 +105,7 @@ const LoginForm = () => {
           >
             {isLoading ? (
               <>
-                <ReloadIcon className="mr-2 h-4 w-4 animate-spin" />
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 Connexion...
               </>
             ) : 'Se connecter'}
