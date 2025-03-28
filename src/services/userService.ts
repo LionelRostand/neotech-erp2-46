@@ -3,7 +3,9 @@ import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   signOut,
-  updateProfile
+  updateProfile,
+  sendPasswordResetEmail,
+  getAuth
 } from "firebase/auth";
 import { doc, setDoc, getDoc, collection, getDocs, query, where } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase";
@@ -148,5 +150,62 @@ export const getAllUsers = async (): Promise<User[]> => {
   } catch (error) {
     console.error("Erreur lors de la récupération des utilisateurs:", error);
     return [];
+  }
+};
+
+// Envoyer un email de réinitialisation de mot de passe
+export const sendPasswordEmail = async (email: string): Promise<boolean> => {
+  try {
+    await sendPasswordResetEmail(auth, email);
+    console.log(`Email de réinitialisation envoyé à ${email}`);
+    return true;
+  } catch (error) {
+    console.error("Erreur lors de l'envoi de l'email de réinitialisation:", error);
+    return false;
+  }
+};
+
+// Créer un employé avec compte utilisateur
+export const createEmployeeWithAccount = async (employeeData: any, professionalEmail: string): Promise<{success: boolean, employee?: any, user?: User}> => {
+  try {
+    // Générer un mot de passe temporaire aléatoire
+    const tempPassword = Math.random().toString(36).slice(-8);
+
+    // Créer l'utilisateur dans Firebase Auth
+    const userData: User = {
+      email: professionalEmail,
+      firstName: employeeData.firstName,
+      lastName: employeeData.lastName,
+      role: 'user',
+      department: employeeData.department || '',
+      position: employeeData.position || '',
+      status: 'pending'
+    };
+
+    // Créer l'utilisateur
+    const newUser = await createUser(userData, tempPassword);
+    
+    if (!newUser) {
+      console.error("Échec de la création du compte utilisateur");
+      return { success: false };
+    }
+    
+    // Envoyer l'email de réinitialisation de mot de passe
+    const emailSent = await sendPasswordEmail(professionalEmail);
+    
+    if (!emailSent) {
+      console.warn("L'utilisateur a été créé mais l'email n'a pas pu être envoyé");
+    }
+    
+    // Retourner les données de l'employé et de l'utilisateur créés
+    return { 
+      success: true, 
+      employee: employeeData,
+      user: newUser
+    };
+
+  } catch (error) {
+    console.error("Erreur lors de la création de l'employé avec compte:", error);
+    return { success: false };
   }
 };

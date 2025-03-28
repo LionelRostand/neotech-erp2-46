@@ -1,18 +1,21 @@
 
 import * as z from 'zod';
 
+// Schéma pour la validation du formulaire
 export const employeeFormSchema = z.object({
-  firstName: z.string().min(2, { message: 'Le prénom doit contenir au moins 2 caractères.' }),
-  lastName: z.string().min(2, { message: 'Le nom doit contenir au moins 2 caractères.' }),
-  email: z.string().email({ message: 'Veuillez saisir une adresse email valide.' }),
-  phone: z.string().min(10, { message: 'Le numéro de téléphone doit contenir au moins 10 caractères.' }),
-  address: z.string().min(5, { message: 'L\'adresse doit contenir au moins 5 caractères.' }),
-  department: z.string().min(2, { message: 'Le département doit contenir au moins 2 caractères.' }),
-  position: z.string().min(2, { message: 'Le poste doit contenir au moins 2 caractères.' }),
-  contract: z.string().min(2, { message: 'Le type de contrat doit contenir au moins 2 caractères.' }),
-  hireDate: z.string().min(8, { message: 'La date d\'embauche doit être au format DD/MM/YYYY.' }),
+  firstName: z.string().min(2, "Le prénom doit contenir au moins 2 caractères"),
+  lastName: z.string().min(2, "Le nom doit contenir au moins 2 caractères"),
+  email: z.string().email("Format d'email invalide").or(z.string().length(0)),
+  phone: z.string().optional(),
+  address: z.string().optional(),
+  department: z.string().optional(),
+  position: z.string().optional(),
+  contract: z.string(),
+  hireDate: z.string().optional(),
   manager: z.string().optional(),
-  status: z.enum(['Actif', 'Inactif']),
+  status: z.string(),
+  professionalEmail: z.string().email("Format d'email professionnel invalide").or(z.string().length(0)),
 });
 
+// Type dérivé du schéma
 export type EmployeeFormValues = z.infer<typeof employeeFormSchema>;
