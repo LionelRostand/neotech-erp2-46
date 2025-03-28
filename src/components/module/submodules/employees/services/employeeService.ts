@@ -6,30 +6,46 @@ import { toast } from 'sonner';
 
 // Clé de stockage local pour les employés
 const LOCAL_STORAGE_KEY = 'employees_data';
+const CACHE_DURATION = 1000 * 60 * 30; // 30 minutes en millisecondes
 
 export const getEmployeesData = async (): Promise<Employee[]> => {
   try {
-    // Tenter de récupérer depuis Firestore
+    // Vérifier si des données mises en cache récemment existent
+    const cachedData = localStorage.getItem(LOCAL_STORAGE_KEY);
+    if (cachedData) {
+      const { timestamp, data } = JSON.parse(cachedData);
+      const now = new Date().getTime();
+      
+      // Si les données ont moins de 30 minutes, les utiliser
+      if (now - timestamp < CACHE_DURATION && data.length > 0) {
+        console.log(`Utilisation des données en cache (${data.length} employés)`);
+        return data as Employee[];
+      }
+    }
+    
+    // Sinon, tenter de récupérer depuis Firestore
     console.log('Tentative de récupération des employés depuis Firestore');
     const data = await getAllDocuments(COLLECTIONS.EMPLOYEES);
     
     if (data && data.length > 0) {
       console.log(`${data.length} employés récupérés depuis Firestore`);
-      // Sauvegarder dans localStorage comme sauvegarde
-      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(data));
+      // Sauvegarder dans localStorage avec timestamp
+      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify({
+        timestamp: new Date().getTime(),
+        data: data
+      }));
       return data as Employee[];
     }
     
-    // Si aucune donnée Firestore, essayer le stockage local
+    // Si aucune donnée Firestore, essayer le stockage local (même si expiré)
     console.log('Aucune donnée Firestore, recherche dans le stockage local');
-    const localData = localStorage.getItem(LOCAL_STORAGE_KEY);
-    if (localData) {
-      const parsedData = JSON.parse(localData);
-      console.log(`${parsedData.length} employés récupérés depuis le stockage local`);
-      return parsedData as Employee[];
+    if (cachedData) {
+      const { data } = JSON.parse(cachedData);
+      console.log(`${data.length} employés récupérés depuis le stockage local (expiré)`);
+      return data as Employee[];
     }
     
-    // Si toujours aucune donnée, utiliser les données simulées du fichier employees.ts
+    // En dernier recours, utiliser les données simulées du fichier employees.ts
     console.log('Utilisation des données simulées');
     const { employees } = await import('@/data/employees');
     return employees;
@@ -38,9 +54,10 @@ export const getEmployeesData = async (): Promise<Employee[]> => {
     toast.error("Erreur lors du chargement des employés");
     
     // En cas d'erreur, essayer le stockage local
-    const localData = localStorage.getItem(LOCAL_STORAGE_KEY);
-    if (localData) {
-      return JSON.parse(localData) as Employee[];
+    const cachedData = localStorage.getItem(LOCAL_STORAGE_KEY);
+    if (cachedData) {
+      const { data } = JSON.parse(cachedData);
+      return data as Employee[];
     }
     
     // En dernier recours, utiliser les données simulées
@@ -58,9 +75,10 @@ export const getEmployeeById = async (id: string): Promise<Employee | null> => {
     }
     
     // Si pas trouvé, chercher dans le stockage local
-    const localData = localStorage.getItem(LOCAL_STORAGE_KEY);
-    if (localData) {
-      const employees = JSON.parse(localData) as Employee[];
+    const cachedData = localStorage.getItem(LOCAL_STORAGE_KEY);
+    if (cachedData) {
+      const { data } = JSON.parse(cachedData);
+      const employees = data as Employee[];
       const employee = employees.find(emp => emp.id === id);
       if (employee) return employee;
     }
@@ -75,3 +93,10 @@ export const getEmployeeById = async (id: string): Promise<Employee | null> => {
   }
 };
 
+// Nouvelle fonction pour actualiser les données
+export const refreshEmployeesData = async (): Promise<Employee[]> => {
+  // Supprimer le cache local
+  localStorage.removeItem(LOCAL_STORAGE_KEY);
+  // Récupérer à nouveau depuis Firestore
+  return getEmployeesData();
+};
