@@ -75,10 +75,18 @@ export const getDepartmentEmployees = (departmentId: string, departments: Depart
   return employees.filter(emp => department.employeeIds.includes(emp.id));
 };
 
-// Function to sync departments with hierarchy component
+// Fonction améliorée pour synchroniser les départements avec la hiérarchie
 export const syncDepartmentsWithHierarchy = (departments: Department[]) => {
   try {
+    // Synchronisation via localStorage
     localStorage.setItem(DEPARTMENTS_STORAGE_KEY, JSON.stringify(departments));
+    
+    // Émettre un événement personnalisé pour notifier les autres composants
+    const syncEvent = new CustomEvent('departments-updated', { 
+      detail: { departments } 
+    });
+    window.dispatchEvent(syncEvent);
+    
     console.log("Departments synced with hierarchy:", departments);
   } catch (error) {
     console.error("Error syncing departments with hierarchy:", error);
@@ -96,4 +104,21 @@ export const getSyncedDepartments = (): Department[] => {
     console.error("Error getting synced departments:", error);
   }
   return [];
+};
+
+// S'abonner aux mises à jour des départements
+export const subscribeToDepartmentUpdates = (callback: (departments: Department[]) => void) => {
+  const handleUpdate = (event: Event) => {
+    const customEvent = event as CustomEvent<{departments: Department[]}>;
+    if (customEvent.detail && customEvent.detail.departments) {
+      callback(customEvent.detail.departments);
+    }
+  };
+  
+  window.addEventListener('departments-updated', handleUpdate);
+  
+  // Retourner une fonction de nettoyage
+  return () => {
+    window.removeEventListener('departments-updated', handleUpdate);
+  };
 };
