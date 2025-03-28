@@ -22,7 +22,6 @@ export const EmployeesRoutes = (
     <Route path="evaluations" element={<SubmodulePage moduleId={1} submoduleId="employees-evaluations" />} />
     <Route path="trainings" element={<SubmodulePage moduleId={1} submoduleId="employees-trainings" />} />
     <Route path="salaries" element={<SubmodulePage moduleId={1} submoduleId="employees-salaries" />} />
-    <Route path="salaries/slips" element={<SalarySlips />} />
     <Route path="recruitment" element={<SubmodulePage moduleId={1} submoduleId="employees-recruitment" />} />
     <Route path="reports" element={<SubmodulePage moduleId={1} submoduleId="employees-reports" />} />
     <Route path="alerts" element={<SubmodulePage moduleId={1} submoduleId="employees-alerts" />} />

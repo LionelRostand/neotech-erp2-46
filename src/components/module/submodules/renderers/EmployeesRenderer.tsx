@@ -19,6 +19,7 @@ import EmployeesSalaries from '../EmployeesSalaries';
 import EmployeesRecruitment from '../EmployeesRecruitment';
 import EmployeesSettings from '../EmployeesSettings';
 import EmployeesAlerts from '../EmployeesAlerts';
+import SalarySlips from '../salaries/SalarySlips';
 import { SubModule } from '@/data/types/modules';
 
 export const renderEmployeesSubmodule = (submoduleId: string, submodule: SubModule) => {
@@ -50,7 +51,7 @@ export const renderEmployeesSubmodule = (submoduleId: string, submodule: SubModu
     case 'employees-trainings':
       return <EmployeesTrainings />;
     case 'employees-salaries':
-      return <EmployeesSalaries />;
+      return <SalarySlips />;
     case 'employees-documents':
       return <EmployeesDocuments />;
     case 'employees-absences':
