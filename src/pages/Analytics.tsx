@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PieChart, BarChart, LineChart, ArrowUpRight, ArrowDownRight, Download } from "lucide-react";
@@ -6,7 +5,7 @@ import DashboardLayout from '@/components/DashboardLayout';
 import { PieChart as RechartsPieChart, Pie, Cell, ResponsiveContainer, BarChart as RechartsBarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
 import { useToast } from "@/hooks/use-toast";
 import { jsPDF } from "jspdf";
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 
 const moduleUsageData = [
   { name: 'Employees', value: 35 },
@@ -51,7 +50,7 @@ const Analytics = () => {
       ["User Retention", "78.5%", "+4.2% from last month"]
     ];
     
-    doc.autoTable({
+    autoTable(doc, {
       head: [["Metric", "Value", "Change"]],
       body: keyAnalyticsData,
       startY: 40,
@@ -59,19 +58,19 @@ const Analytics = () => {
     
     // Add module usage
     doc.setFontSize(16);
-    doc.text("Module Usage Distribution", 14, doc.autoTable.previous.finalY + 15);
+    doc.text("Module Usage Distribution", 14, doc.lastAutoTable.finalY + 15);
     
     const moduleUsageTableData = moduleUsageData.map(item => [item.name, `${item.value}%`]);
     
-    doc.autoTable({
+    autoTable(doc, {
       head: [["Module", "Usage Percentage"]],
       body: moduleUsageTableData,
-      startY: doc.autoTable.previous.finalY + 20,
+      startY: doc.lastAutoTable.finalY + 20,
     });
     
     // Add weekly activity
     doc.setFontSize(16);
-    doc.text("Weekly Activity", 14, doc.autoTable.previous.finalY + 15);
+    doc.text("Weekly Activity", 14, doc.lastAutoTable.finalY + 15);
     
     const weeklyActivityTableData = weeklyActivityData.map(item => [
       item.day,
@@ -79,15 +78,15 @@ const Analytics = () => {
       item.sessions.toString()
     ]);
     
-    doc.autoTable({
+    autoTable(doc, {
       head: [["Day", "Active Users", "Sessions"]],
       body: weeklyActivityTableData,
-      startY: doc.autoTable.previous.finalY + 20,
+      startY: doc.lastAutoTable.finalY + 20,
     });
     
     // Add most used features
     doc.setFontSize(16);
-    doc.text("Most Used Features", 14, doc.autoTable.previous.finalY + 15);
+    doc.text("Most Used Features", 14, doc.lastAutoTable.finalY + 15);
     
     const mostUsedFeaturesData = [
       ["Employee Directory", "Employees Module", "842 users"],
@@ -97,10 +96,10 @@ const Analytics = () => {
       ["Shipment Tracking", "Freight Module", "587 users"]
     ];
     
-    doc.autoTable({
+    autoTable(doc, {
       head: [["Feature", "Module", "Users"]],
       body: mostUsedFeaturesData,
-      startY: doc.autoTable.previous.finalY + 20,
+      startY: doc.lastAutoTable.finalY + 20,
     });
     
     // Save the PDF
