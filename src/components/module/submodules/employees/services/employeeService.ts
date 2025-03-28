@@ -11,33 +11,43 @@ const CACHE_DURATION = 1000 * 60 * 30; // 30 minutes en millisecondes
 
 export const getEmployeesData = async (): Promise<Employee[]> => {
   try {
-    // Essayer de récupérer directement depuis Firestore d'abord (priorité aux données réelles)
     console.log('Récupération des données employés depuis Firestore...');
     
     // Utilisation de executeWithNetworkRetry pour gérer automatiquement les erreurs réseau
     const firestoreData = await executeWithNetworkRetry(async () => {
+      // Utilisation de la collection définie dans COLLECTIONS pour garantir la cohérence
       return await getAllDocuments(COLLECTIONS.EMPLOYEES);
     });
     
-    if (firestoreData && firestoreData.length > 0) {
+    // Vérifier si les données sont valides et non vides
+    if (firestoreData && Array.isArray(firestoreData) && firestoreData.length > 0) {
       console.log(`${firestoreData.length} employés récupérés depuis Firestore`);
-      // Sauvegarder dans localStorage avec timestamp
+      
+      // Sauvegarder dans localStorage avec timestamp pour le cache
       localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify({
         timestamp: new Date().getTime(),
         data: firestoreData
       }));
+      
       return firestoreData as Employee[];
     }
     
     // Si aucune donnée Firestore, vérifier le cache local
     console.log('Aucune donnée Firestore, vérification du cache local');
     const cachedData = localStorage.getItem(LOCAL_STORAGE_KEY);
+    
     if (cachedData) {
       const { timestamp, data } = JSON.parse(cachedData);
       const now = new Date().getTime();
+      const cacheAge = now - timestamp;
       
-      console.log(`Données en cache trouvées (${data.length} employés), âge: ${Math.round((now - timestamp) / 60000)} minutes`);
-      return data as Employee[];
+      // Vérifier si le cache n'est pas expiré
+      if (cacheAge < CACHE_DURATION) {
+        console.log(`Données en cache trouvées (${data.length} employés), âge: ${Math.round(cacheAge / 60000)} minutes`);
+        return data as Employee[];
+      } else {
+        console.log('Données en cache expirées');
+      }
     }
     
     // En dernier recours, utiliser les données simulées
@@ -71,6 +81,7 @@ export const getEmployeeById = async (id: string): Promise<Employee | null> => {
     });
     
     if (employeeData) {
+      console.log(`Employé ${id} récupéré depuis Firestore`);
       return employeeData as Employee;
     }
     
@@ -110,7 +121,7 @@ export const refreshEmployeesData = async (): Promise<Employee[]> => {
       return await getAllDocuments(COLLECTIONS.EMPLOYEES);
     });
     
-    if (firestoreData && firestoreData.length > 0) {
+    if (firestoreData && Array.isArray(firestoreData) && firestoreData.length > 0) {
       console.log(`${firestoreData.length} employés récupérés depuis Firestore`);
       // Sauvegarder dans localStorage avec timestamp
       localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify({
