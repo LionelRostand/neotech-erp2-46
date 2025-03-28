@@ -13,213 +13,223 @@ interface PaySlipTemplateProps {
 
 const PaySlipTemplate: React.FC<PaySlipTemplateProps> = ({ payslip }) => {
   const handleDownload = () => {
-    const doc = new jsPDF();
-    
-    // Add header
-    doc.setFontSize(16);
-    doc.text("BULLETIN DE PAIE", 14, 20);
-    doc.setFontSize(12);
-    doc.text(`EN EUROS - ${payslip.period}`, 14, 28);
-    
-    doc.line(14, 32, 196, 32); // horizontal line
-    
-    // Left section - Welcome and salary info
-    doc.setFillColor(240, 247, 255);
-    doc.rect(14, 40, 85, 100, 'F');
-    
-    doc.setFontSize(18);
-    doc.text(`Bonjour ${payslip.employee.firstName}`, 20, 55);
-    doc.setFontSize(11);
-    doc.text(`Voici votre bulletin de paie de ${payslip.period}`, 20, 65);
-    
-    doc.setFontSize(12);
-    doc.text("Votre salaire avant impôt", 20, 80);
-    doc.text(`${payslip.grossSalary.toFixed(2)} €`, 85, 80, { align: 'right' });
-    
-    doc.setFontSize(10);
-    doc.text(`Prélèvement à la source (${(payslip.totalDeductions / payslip.grossSalary * 100).toFixed(2)} %)`, 20, 87);
-    doc.text(`${(payslip.grossSalary * 0.036).toFixed(2)} €`, 85, 87, { align: 'right' });
-    
-    doc.setFontSize(12);
-    doc.text("Votre salaire après impôt", 20, 97);
-    doc.text(`${payslip.netSalary.toFixed(2)} €`, 85, 97, { align: 'right' });
-    doc.setFontSize(10);
-    doc.text(`Ce montant vous sera transféré le ${payslip.paymentDate}`, 20, 104);
-    
-    doc.setFontSize(12);
-    doc.text("Votre montant net social", 20, 115);
-    doc.text(`${(payslip.netSalary + payslip.grossSalary * 0.07).toFixed(2)} €`, 85, 115, { align: 'right' });
-    doc.setFontSize(10);
-    doc.text("Ce montant sert au calcul de vos aides sociales", 20, 122);
-    
-    // Net salary calculation section
-    doc.setFillColor(255, 255, 255);
-    doc.rect(14, 150, 85, 120, 'F');
-    doc.setFontSize(14);
-    doc.text("Calcul du salaire net", 30, 165);
-    
-    doc.setFontSize(12);
-    doc.text("Rémunération brute", 20, 180);
-    doc.text(`${payslip.grossSalary.toFixed(2)} €`, 85, 180, { align: 'right' });
-    
-    doc.setFontSize(10);
-    doc.setTextColor(100, 100, 100);
-    doc.text("Dont 0,00 € de primes", 20, 187);
-    doc.setTextColor(0, 0, 0);
-    
-    doc.setFontSize(12);
-    doc.text("Cotisations et contributions salariales", 20, 198);
-    doc.text(`- ${(payslip.totalDeductions * 1.82).toFixed(2)} €`, 85, 198, { align: 'right' });
-    
-    doc.text("Indemnités non soumises", 20, 208);
-    doc.text(`+ 0,00 €`, 85, 208, { align: 'right' });
-    
-    doc.setFontSize(10);
-    doc.setTextColor(100, 100, 100);
-    doc.text("Dont notes de frais ( 0,00 €)", 20, 215);
-    doc.setTextColor(0, 0, 0);
-    
-    doc.setFontSize(12);
-    doc.text("Autres retenues", 20, 226);
-    doc.text(`- 105,00 €`, 85, 226, { align: 'right' });
-    
-    doc.setFontSize(10);
-    doc.setTextColor(100, 100, 100);
-    doc.text("Dont titres restaurant ( 105,00 €)", 20, 233);
-    doc.setTextColor(0, 0, 0);
-    
-    doc.setFontSize(12);
-    doc.text("Prélèvement à la source", 20, 243);
-    doc.text(`- ${(payslip.grossSalary * 0.036).toFixed(2)} €`, 85, 243, { align: 'right' });
-    
-    doc.text("Net à payer", 20, 255);
-    doc.text(`${payslip.netSalary.toFixed(2)} €`, 85, 255, { align: 'right' });
-    
-    // Cumuls section
-    doc.setFillColor(255, 250, 230);
-    doc.rect(14, 280, 85, 90, 'F');
-    
-    doc.setFontSize(14);
-    doc.text("Cumuls DEPUIS JANV. 2025", 20, 295);
-    
-    doc.setFontSize(12);
-    doc.text("Salaire net imposable", 20, 310);
-    doc.text(`${(payslip.grossSalary * 2.07).toFixed(2)} €`, 85, 310, { align: 'right' });
-    
-    doc.text("Salaire brut", 20, 322);
-    doc.text(`${(payslip.grossSalary * 2.85).toFixed(2)} €`, 85, 322, { align: 'right' });
-    
-    doc.text("Prélèvement à la source", 20, 334);
-    doc.text(`${(payslip.grossSalary * 0.075).toFixed(2)} €`, 85, 334, { align: 'right' });
-    
-    doc.text("Montant net des heures supplémentaires exonérées", 20, 346);
-    doc.text(`${(payslip.grossSalary * 0.28).toFixed(2)} €`, 85, 346, { align: 'right' });
-    
-    doc.text("Temps travaillé", 20, 358);
-    doc.text(`${payslip.hoursWorked.toFixed(0)} h`, 85, 358, { align: 'right' });
-    
-    // Right section - Leave balances
-    doc.setFillColor(255, 255, 255);
-    doc.rect(110, 40, 85, 100, 'F');
-    
-    doc.setFontSize(12);
-    doc.text("Congés disponibles", 130, 55);
-    doc.setFontSize(10);
-    doc.text(`Jours posés en ${payslip.period}`, 120, 63);
-    
-    doc.setFontSize(14);
-    doc.text("17,25 jours", 180, 55, { align: 'right' });
-    doc.setFontSize(10);
-    doc.text("0,00 jours", 180, 63, { align: 'right' });
-    
-    // CP sections
-    doc.setFontSize(12);
-    doc.text("CP N-2", 120, 80);
-    doc.text("0,00 jours", 180, 80, { align: 'right' });
-    
-    doc.text("+ Acquis", 120, 90);
-    doc.text("5,00 j", 180, 90, { align: 'right' });
-    
-    doc.text("- Pris", 120, 100);
-    doc.text("5,00 j", 180, 100, { align: 'right' });
-    
-    doc.text("CP N-1", 120, 115);
-    doc.text("0,00 jours", 180, 115, { align: 'right' });
-    
-    doc.text("+ Acquis", 120, 125);
-    doc.text("25,00 j", 180, 125, { align: 'right' });
-    
-    doc.text("- Pris", 120, 135);
-    doc.text("25,00 j", 180, 135, { align: 'right' });
-    
-    // Salary composition chart
-    doc.setFillColor(255, 255, 255);
-    doc.rect(110, 150, 85, 120, 'F');
-    
-    doc.setFontSize(14);
-    doc.text("Composition du salaire brut", 120, 165);
-    
-    // Second page - Detailed payslip
-    doc.addPage();
-    doc.setFontSize(16);
-    doc.text("BULLETIN DE PAIE - EN EUROS", 105, 20, { align: 'center' });
-    
-    // Company and Employee info
-    doc.setFontSize(11);
-    doc.text(`${payslip.employerName}`, 20, 35);
-    doc.text(`${payslip.employerAddress}`, 20, 42);
-    
-    doc.text(`${payslip.employee.firstName} ${payslip.employee.lastName}`, 140, 35);
-    doc.text(`Détail du salarié`, 180, 35, { align: 'right' });
-    
-    doc.text(`N° SIRET: ${payslip.employerSiret}`, 20, 55);
-    
-    // Add detailed tables for earnings and deductions
-    const earningsData = payslip.details
-      .filter(detail => detail.type === "earning")
-      .map(item => [
-        item.label, 
-        item.base, 
-        item.rate || "-", 
-        item.amount.toFixed(2)
-      ]);
+    try {
+      const doc = new jsPDF();
       
-    const deductionsData = payslip.details
-      .filter(detail => detail.type === "deduction")
-      .map(item => [
-        item.label, 
-        item.base, 
-        item.rate || "-", 
-        item.amount.toFixed(2)
-      ]);
-    
-    // Detailed salary table
-    (doc as any).autoTable({
-      startY: 70,
-      head: [["DÉSIGNATION", "BASE", "TAUX OU %", "MONTANT", "PART EMPLOYEUR"]],
-      body: [
-        ...earningsData,
-        ["Rémunération brute", "", "", payslip.grossSalary.toFixed(2), ""],
-        ...deductionsData,
-        ["TOTAL COTISATIONS & CONTRIBUTIONS SALARIALES", "", "", payslip.totalDeductions.toFixed(2), ""],
-        ["Montant net social", "", "", (payslip.netSalary + payslip.grossSalary * 0.07).toFixed(2), ""],
-        ["Net à payer avant impôt sur le revenu", "", "", payslip.grossSalary.toFixed(2), ""],
-        ["Net payé en euros (Virement)", "", "", payslip.netSalary.toFixed(2), ""],
-      ],
-      theme: 'grid',
-      headStyles: { fillColor: [240, 240, 240], textColor: [0, 0, 0] }
-    });
-    
-    // Add footer with verification information
-    doc.setFontSize(8);
-    doc.text("Pour la définition des termes employés, se reporter au site internet www.service-public.fr rubrique cotisations sociales", 15, 280);
-    
-    // Save the PDF
-    doc.save(`bulletin-de-paie-${payslip.employee.lastName.toLowerCase()}-${payslip.period.replace(' ', '-').toLowerCase()}.pdf`);
+      // Add header
+      doc.setFontSize(16);
+      doc.text("BULLETIN DE PAIE", 14, 20);
+      doc.setFontSize(12);
+      doc.text(`EN EUROS - ${payslip.period}`, 14, 28);
+      
+      doc.line(14, 32, 196, 32); // horizontal line
+      
+      // Left section - Welcome and salary info
+      doc.setFillColor(240, 247, 255);
+      doc.rect(14, 40, 85, 100, 'F');
+      
+      doc.setFontSize(18);
+      doc.text(`Bonjour ${payslip.employee.firstName}`, 20, 55);
+      doc.setFontSize(11);
+      doc.text(`Voici votre bulletin de paie de ${payslip.period}`, 20, 65);
+      
+      doc.setFontSize(12);
+      doc.text("Votre salaire avant impôt", 20, 80);
+      doc.text(`${payslip.grossSalary.toFixed(2)} €`, 85, 80, { align: 'right' });
+      
+      doc.setFontSize(10);
+      doc.text(`Prélèvement à la source (${(payslip.totalDeductions / payslip.grossSalary * 100).toFixed(2)} %)`, 20, 87);
+      doc.text(`${(payslip.grossSalary * 0.036).toFixed(2)} €`, 85, 87, { align: 'right' });
+      
+      doc.setFontSize(12);
+      doc.text("Votre salaire après impôt", 20, 97);
+      doc.text(`${payslip.netSalary.toFixed(2)} €`, 85, 97, { align: 'right' });
+      doc.setFontSize(10);
+      doc.text(`Ce montant vous sera transféré le ${payslip.paymentDate}`, 20, 104);
+      
+      doc.setFontSize(12);
+      doc.text("Votre montant net social", 20, 115);
+      doc.text(`${(payslip.netSalary + payslip.grossSalary * 0.07).toFixed(2)} €`, 85, 115, { align: 'right' });
+      doc.setFontSize(10);
+      doc.text("Ce montant sert au calcul de vos aides sociales", 20, 122);
+      
+      // Net salary calculation section
+      doc.setFillColor(255, 255, 255);
+      doc.rect(14, 150, 85, 120, 'F');
+      doc.setFontSize(14);
+      doc.text("Calcul du salaire net", 30, 165);
+      
+      doc.setFontSize(12);
+      doc.text("Rémunération brute", 20, 180);
+      doc.text(`${payslip.grossSalary.toFixed(2)} €`, 85, 180, { align: 'right' });
+      
+      doc.setFontSize(10);
+      doc.setTextColor(100, 100, 100);
+      doc.text("Dont 0,00 € de primes", 20, 187);
+      doc.setTextColor(0, 0, 0);
+      
+      doc.setFontSize(12);
+      doc.text("Cotisations et contributions salariales", 20, 198);
+      doc.text(`- ${(payslip.totalDeductions * 1.82).toFixed(2)} €`, 85, 198, { align: 'right' });
+      
+      doc.text("Indemnités non soumises", 20, 208);
+      doc.text(`+ 0,00 €`, 85, 208, { align: 'right' });
+      
+      doc.setFontSize(10);
+      doc.setTextColor(100, 100, 100);
+      doc.text("Dont notes de frais ( 0,00 €)", 20, 215);
+      doc.setTextColor(0, 0, 0);
+      
+      doc.setFontSize(12);
+      doc.text("Autres retenues", 20, 226);
+      doc.text(`- 105,00 €`, 85, 226, { align: 'right' });
+      
+      doc.setFontSize(10);
+      doc.setTextColor(100, 100, 100);
+      doc.text("Dont titres restaurant ( 105,00 €)", 20, 233);
+      doc.setTextColor(0, 0, 0);
+      
+      doc.setFontSize(12);
+      doc.text("Prélèvement à la source", 20, 243);
+      doc.text(`- ${(payslip.grossSalary * 0.036).toFixed(2)} €`, 85, 243, { align: 'right' });
+      
+      doc.text("Net à payer", 20, 255);
+      doc.text(`${payslip.netSalary.toFixed(2)} €`, 85, 255, { align: 'right' });
+      
+      // Cumuls section
+      doc.setFillColor(255, 250, 230);
+      doc.rect(14, 280, 85, 90, 'F');
+      
+      doc.setFontSize(14);
+      doc.text("Cumuls DEPUIS JANV. 2025", 20, 295);
+      
+      doc.setFontSize(12);
+      doc.text("Salaire net imposable", 20, 310);
+      doc.text(`${(payslip.grossSalary * 2.07).toFixed(2)} €`, 85, 310, { align: 'right' });
+      
+      doc.text("Salaire brut", 20, 322);
+      doc.text(`${(payslip.grossSalary * 2.85).toFixed(2)} €`, 85, 322, { align: 'right' });
+      
+      doc.text("Prélèvement à la source", 20, 334);
+      doc.text(`${(payslip.grossSalary * 0.075).toFixed(2)} €`, 85, 334, { align: 'right' });
+      
+      doc.text("Montant net des heures supplémentaires exonérées", 20, 346);
+      doc.text(`${(payslip.grossSalary * 0.28).toFixed(2)} €`, 85, 346, { align: 'right' });
+      
+      doc.text("Temps travaillé", 20, 358);
+      doc.text(`${payslip.hoursWorked.toFixed(0)} h`, 85, 358, { align: 'right' });
+      
+      // Right section - Leave balances
+      doc.setFillColor(255, 255, 255);
+      doc.rect(110, 40, 85, 100, 'F');
+      
+      doc.setFontSize(12);
+      doc.text("Congés disponibles", 130, 55);
+      doc.setFontSize(10);
+      doc.text(`Jours posés en ${payslip.period}`, 120, 63);
+      
+      doc.setFontSize(14);
+      doc.text("17,25 jours", 180, 55, { align: 'right' });
+      doc.setFontSize(10);
+      doc.text("0,00 jours", 180, 63, { align: 'right' });
+      
+      // CP sections
+      doc.setFontSize(12);
+      doc.text("CP N-2", 120, 80);
+      doc.text("0,00 jours", 180, 80, { align: 'right' });
+      
+      doc.text("+ Acquis", 120, 90);
+      doc.text("5,00 j", 180, 90, { align: 'right' });
+      
+      doc.text("- Pris", 120, 100);
+      doc.text("5,00 j", 180, 100, { align: 'right' });
+      
+      doc.text("CP N-1", 120, 115);
+      doc.text("0,00 jours", 180, 115, { align: 'right' });
+      
+      doc.text("+ Acquis", 120, 125);
+      doc.text("25,00 j", 180, 125, { align: 'right' });
+      
+      doc.text("- Pris", 120, 135);
+      doc.text("25,00 j", 180, 135, { align: 'right' });
+      
+      // Salary composition chart
+      doc.setFillColor(255, 255, 255);
+      doc.rect(110, 150, 85, 120, 'F');
+      
+      doc.setFontSize(14);
+      doc.text("Composition du salaire brut", 120, 165);
+      
+      // Second page - Detailed payslip
+      doc.addPage();
+      doc.setFontSize(16);
+      doc.text("BULLETIN DE PAIE - EN EUROS", 105, 20, { align: 'center' });
+      
+      // Company and Employee info
+      doc.setFontSize(11);
+      doc.text(`${payslip.employerName}`, 20, 35);
+      doc.text(`${payslip.employerAddress}`, 20, 42);
+      
+      doc.text(`${payslip.employee.firstName} ${payslip.employee.lastName}`, 140, 35);
+      doc.text(`Détail du salarié`, 180, 35, { align: 'right' });
+      
+      doc.text(`N° SIRET: ${payslip.employerSiret}`, 20, 55);
+      
+      // Add detailed tables for earnings and deductions
+      const earningsData = payslip.details
+        .filter(detail => detail.type === "earning")
+        .map(item => [
+          item.label, 
+          item.base, 
+          item.rate || "-", 
+          item.amount.toFixed(2)
+        ]);
+        
+      const deductionsData = payslip.details
+        .filter(detail => detail.type === "deduction")
+        .map(item => [
+          item.label, 
+          item.base, 
+          item.rate || "-", 
+          item.amount.toFixed(2)
+        ]);
+      
+      // Detailed salary table
+      (doc as any).autoTable({
+        startY: 70,
+        head: [["DÉSIGNATION", "BASE", "TAUX OU %", "MONTANT", "PART EMPLOYEUR"]],
+        body: [
+          ...earningsData,
+          ["Rémunération brute", "", "", payslip.grossSalary.toFixed(2), ""],
+          ...deductionsData,
+          ["TOTAL COTISATIONS & CONTRIBUTIONS SALARIALES", "", "", payslip.totalDeductions.toFixed(2), ""],
+          ["Montant net social", "", "", (payslip.netSalary + payslip.grossSalary * 0.07).toFixed(2), ""],
+          ["Net à payer avant impôt sur le revenu", "", "", payslip.grossSalary.toFixed(2), ""],
+          ["Net payé en euros (Virement)", "", "", payslip.netSalary.toFixed(2), ""],
+        ],
+        theme: 'grid',
+        headStyles: { fillColor: [240, 240, 240], textColor: [0, 0, 0] }
+      });
+      
+      // Add footer with verification information
+      doc.setFontSize(8);
+      doc.text("Pour la définition des termes employés, se reporter au site internet www.service-public.fr rubrique cotisations sociales", 15, 280);
+      
+      // Save the PDF
+      doc.save(`bulletin-de-paie-${payslip.employee.lastName.toLowerCase()}-${payslip.period.replace(' ', '-').toLowerCase()}.pdf`);
+      console.log("PDF téléchargé avec succès");
+    } catch (error) {
+      console.error("Erreur lors de la génération du PDF:", error);
+    }
   };
 
   const handlePrint = () => {
-    window.print();
+    try {
+      window.print();
+      console.log("Impression initiée");
+    } catch (error) {
+      console.error("Erreur lors de l'impression:", error);
+    }
   };
 
   return (
