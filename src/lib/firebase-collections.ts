@@ -94,7 +94,7 @@ export const COLLECTIONS = {
     SETTINGS: 'transport_settings'
   },
   
-  COMPANIES: {
+  COMPANY_DATA: {
     ROOT: 'companies',
     COMPANIES: 'companies', // Main companies collection
     CONTACTS: 'company_contacts',
