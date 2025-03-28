@@ -12,11 +12,11 @@ import { getStorage, connectStorageEmulator } from "firebase/storage";
 // Configuration Firebase
 const firebaseConfig = {
   apiKey: "AIzaSyD3ZQYPtVHk4w63bCvOX0b8RVJyybWyOqU",
-  authDomain: "neotech-platform.firebaseapp.com",
-  projectId: "neotech-platform",
-  storageBucket: "neotech-platform.appspot.com",
-  messagingSenderId: "123456789012",
-  appId: "1:123456789012:web:abcdef1234567890abcdef"
+  authDomain: "neotech-erp.firebaseapp.com",
+  projectId: "neotech-erp",
+  storageBucket: "neotech-erp.firebasestorage.app",
+  messagingSenderId: "803661896660",
+  appId: "1:803661896660:web:94f17531b963627cbd5441"
 };
 
 // Initialiser Firebase
