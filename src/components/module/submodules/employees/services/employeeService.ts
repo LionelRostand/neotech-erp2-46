@@ -3,6 +3,7 @@ import { Employee } from '@/types/employee';
 import { getAllDocuments, getDocumentById } from '@/hooks/firestore/read-operations';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import { toast } from 'sonner';
+import { executeWithNetworkRetry } from '@/hooks/firestore/network-handler';
 
 // Clé de stockage local pour les employés
 const LOCAL_STORAGE_KEY = 'employees_data';
@@ -10,43 +11,37 @@ const CACHE_DURATION = 1000 * 60 * 30; // 30 minutes en millisecondes
 
 export const getEmployeesData = async (): Promise<Employee[]> => {
   try {
-    // Vérifier si des données mises en cache récemment existent
+    // Essayer de récupérer directement depuis Firestore d'abord (priorité aux données réelles)
+    console.log('Récupération des données employés depuis Firestore...');
+    
+    // Utilisation de executeWithNetworkRetry pour gérer automatiquement les erreurs réseau
+    const firestoreData = await executeWithNetworkRetry(async () => {
+      return await getAllDocuments(COLLECTIONS.EMPLOYEES);
+    });
+    
+    if (firestoreData && firestoreData.length > 0) {
+      console.log(`${firestoreData.length} employés récupérés depuis Firestore`);
+      // Sauvegarder dans localStorage avec timestamp
+      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify({
+        timestamp: new Date().getTime(),
+        data: firestoreData
+      }));
+      return firestoreData as Employee[];
+    }
+    
+    // Si aucune donnée Firestore, vérifier le cache local
+    console.log('Aucune donnée Firestore, vérification du cache local');
     const cachedData = localStorage.getItem(LOCAL_STORAGE_KEY);
     if (cachedData) {
       const { timestamp, data } = JSON.parse(cachedData);
       const now = new Date().getTime();
       
-      // Si les données ont moins de 30 minutes, les utiliser
-      if (now - timestamp < CACHE_DURATION && data.length > 0) {
-        console.log(`Utilisation des données en cache (${data.length} employés)`);
-        return data as Employee[];
-      }
-    }
-    
-    // Sinon, tenter de récupérer depuis Firestore
-    console.log('Tentative de récupération des employés depuis Firestore');
-    const data = await getAllDocuments(COLLECTIONS.EMPLOYEES);
-    
-    if (data && data.length > 0) {
-      console.log(`${data.length} employés récupérés depuis Firestore`);
-      // Sauvegarder dans localStorage avec timestamp
-      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify({
-        timestamp: new Date().getTime(),
-        data: data
-      }));
+      console.log(`Données en cache trouvées (${data.length} employés), âge: ${Math.round((now - timestamp) / 60000)} minutes`);
       return data as Employee[];
     }
     
-    // Si aucune donnée Firestore, essayer le stockage local (même si expiré)
-    console.log('Aucune donnée Firestore, recherche dans le stockage local');
-    if (cachedData) {
-      const { data } = JSON.parse(cachedData);
-      console.log(`${data.length} employés récupérés depuis le stockage local (expiré)`);
-      return data as Employee[];
-    }
-    
-    // En dernier recours, utiliser les données simulées du fichier employees.ts
-    console.log('Utilisation des données simulées');
+    // En dernier recours, utiliser les données simulées
+    console.log('Aucune donnée disponible, utilisation des données simulées');
     const { employees } = await import('@/data/employees');
     return employees;
   } catch (error) {
@@ -57,6 +52,7 @@ export const getEmployeesData = async (): Promise<Employee[]> => {
     const cachedData = localStorage.getItem(LOCAL_STORAGE_KEY);
     if (cachedData) {
       const { data } = JSON.parse(cachedData);
+      console.log("Utilisation des données en cache suite à une erreur");
       return data as Employee[];
     }
     
@@ -68,22 +64,31 @@ export const getEmployeesData = async (): Promise<Employee[]> => {
 
 export const getEmployeeById = async (id: string): Promise<Employee | null> => {
   try {
-    // Tenter de récupérer depuis Firestore
-    const data = await getDocumentById(COLLECTIONS.EMPLOYEES, id);
-    if (data) {
-      return data as Employee;
+    // Tenter de récupérer directement depuis Firestore
+    console.log(`Récupération de l'employé ${id} depuis Firestore`);
+    const employeeData = await executeWithNetworkRetry(async () => {
+      return await getDocumentById(COLLECTIONS.EMPLOYEES, id);
+    });
+    
+    if (employeeData) {
+      return employeeData as Employee;
     }
     
     // Si pas trouvé, chercher dans le stockage local
+    console.log(`Employé ${id} non trouvé dans Firestore, recherche en cache local`);
     const cachedData = localStorage.getItem(LOCAL_STORAGE_KEY);
     if (cachedData) {
       const { data } = JSON.parse(cachedData);
       const employees = data as Employee[];
       const employee = employees.find(emp => emp.id === id);
-      if (employee) return employee;
+      if (employee) {
+        console.log(`Employé ${id} trouvé en cache local`);
+        return employee;
+      }
     }
     
     // En dernier recours, chercher dans les données simulées
+    console.log(`Employé ${id} non trouvé, recherche dans les données simulées`);
     const { employees } = await import('@/data/employees');
     return employees.find(emp => emp.id === id) || null;
   } catch (error) {
@@ -93,10 +98,36 @@ export const getEmployeeById = async (id: string): Promise<Employee | null> => {
   }
 };
 
-// Nouvelle fonction pour actualiser les données
+// Fonction pour actualiser les données (forcer le rechargement depuis Firebase)
 export const refreshEmployeesData = async (): Promise<Employee[]> => {
-  // Supprimer le cache local
-  localStorage.removeItem(LOCAL_STORAGE_KEY);
-  // Récupérer à nouveau depuis Firestore
-  return getEmployeesData();
+  try {
+    console.log("Actualisation des données employés depuis Firestore...");
+    // Supprimer le cache local
+    localStorage.removeItem(LOCAL_STORAGE_KEY);
+    
+    // Récupérer directement depuis Firestore avec executeWithNetworkRetry
+    const firestoreData = await executeWithNetworkRetry(async () => {
+      return await getAllDocuments(COLLECTIONS.EMPLOYEES);
+    });
+    
+    if (firestoreData && firestoreData.length > 0) {
+      console.log(`${firestoreData.length} employés récupérés depuis Firestore`);
+      // Sauvegarder dans localStorage avec timestamp
+      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify({
+        timestamp: new Date().getTime(),
+        data: firestoreData
+      }));
+      toast.success("Données employés actualisées avec succès");
+      return firestoreData as Employee[];
+    } else {
+      toast.warning("Aucune donnée trouvée sur Firestore");
+      const { employees } = await import('@/data/employees');
+      return employees;
+    }
+  } catch (error) {
+    console.error("Erreur lors de l'actualisation des employés:", error);
+    toast.error("Échec de l'actualisation des données employés");
+    const { employees } = await import('@/data/employees');
+    return employees;
+  }
 };
