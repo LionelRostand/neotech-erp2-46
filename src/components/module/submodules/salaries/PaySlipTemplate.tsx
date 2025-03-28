@@ -1,11 +1,13 @@
+
 import React from 'react';
 import { PaySlip } from '@/types/payslip';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Download, Printer } from 'lucide-react';
 import { toast } from 'sonner';
-import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import { jsPDF } from 'jspdf';
+// Import the autoTable plugin correctly
+import autoTable from 'jspdf-autotable';
 
 interface PaySlipTemplateProps {
   payslip: PaySlip;
@@ -194,8 +196,8 @@ const PaySlipTemplate: React.FC<PaySlipTemplateProps> = ({ payslip }) => {
           item.amount.toFixed(2)
         ]);
       
-      // Detailed salary table
-      doc.autoTable({
+      // Detailed salary table - using autoTable correctly
+      autoTable(doc, {
         startY: 70,
         head: [["DÉSIGNATION", "BASE", "TAUX OU %", "MONTANT", "PART EMPLOYEUR"]],
         body: [
