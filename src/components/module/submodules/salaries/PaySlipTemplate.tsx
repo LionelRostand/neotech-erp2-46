@@ -101,9 +101,6 @@ const PaySlipTemplate: React.FC<PaySlipTemplateProps> = ({ payslip }) => {
           <Button variant="outline" size="sm" onClick={handlePrint} className="flex items-center">
             <Printer className="mr-1 h-4 w-4" /> Imprimer
           </Button>
-          <Button variant="default" size="sm" onClick={handleDownload} className="flex items-center bg-green-600 hover:bg-green-700">
-            <Download className="mr-1 h-4 w-4" /> Télécharger PDF
-          </Button>
         </div>
       </CardHeader>
       <CardContent className="p-6">
@@ -189,6 +186,17 @@ const PaySlipTemplate: React.FC<PaySlipTemplateProps> = ({ payslip }) => {
 
         <div className="mt-8 text-xs text-gray-500 text-center">
           <p>Ce bulletin de paie est conforme aux dispositions de l'article R. 3243-1 du Code du travail.</p>
+        </div>
+        
+        <div className="mt-6 flex justify-center">
+          <Button 
+            variant="default" 
+            size="sm" 
+            onClick={handleDownload} 
+            className="flex items-center bg-green-600 hover:bg-green-700"
+          >
+            <Download className="mr-1 h-4 w-4" /> Télécharger contrat
+          </Button>
         </div>
       </CardContent>
     </Card>
