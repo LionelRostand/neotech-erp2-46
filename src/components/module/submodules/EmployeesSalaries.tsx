@@ -1,3 +1,4 @@
+
 import React, { useState, useRef } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -37,7 +38,7 @@ import {
   Building,
   FileDown
 } from 'lucide-react';
-import { toast } from 'sonner';
+import { toast } from '@/hooks/use-toast';
 import * as XLSX from 'xlsx';
 import { jsPDF } from 'jspdf';
 import 'jspdf-autotable';
@@ -123,6 +124,7 @@ const COMPANY_INFO = {
   phone: "+33 1 23 45 67 89",
   email: "contact@stormgroup.com",
   website: "www.stormgroup.com",
+  logo: "logo_placeholder.png", // Placeholder pour le logo
 };
 
 const EmployeesSalaries = () => {
@@ -172,7 +174,10 @@ const EmployeesSalaries = () => {
   };
   
   const handleSaveChanges = () => {
-    toast.success("Informations mises à jour avec succès");
+    toast({
+      title: "Informations mises à jour avec succès",
+      description: "Les modifications ont été enregistrées."
+    });
     setShowEditDialog(false);
   };
   
@@ -191,17 +196,28 @@ const EmployeesSalaries = () => {
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Salaires");
     XLSX.writeFile(workbook, "salaires.xlsx");
-    toast.success("Données exportées en Excel avec succès");
+    toast({
+      title: "Exportation réussie",
+      description: "Les données ont été exportées en Excel avec succès"
+    });
   };
   
   const handleCreateSalary = () => {
     if (!newSalaryForm.employeeId && !newSalaryForm.name) {
-      toast.error("Veuillez sélectionner un employé ou saisir un nom");
+      toast({
+        title: "Erreur",
+        description: "Veuillez sélectionner un employé ou saisir un nom",
+        variant: "destructive"
+      });
       return;
     }
     
     if (!newSalaryForm.salary) {
-      toast.error("Veuillez saisir un salaire");
+      toast({
+        title: "Erreur",
+        description: "Veuillez saisir un salaire",
+        variant: "destructive"
+      });
       return;
     }
     
@@ -235,7 +251,10 @@ const EmployeesSalaries = () => {
     };
     
     setFilteredSalaries([newSalary, ...filteredSalaries]);
-    toast.success("Nouvelle fiche de paie créée avec succès");
+    toast({
+      title: "Nouvelle fiche de paie créée",
+      description: "La fiche de paie a été créée avec succès"
+    });
     setShowNewSalaryDialog(false);
     
     setNewSalaryForm({
@@ -257,101 +276,277 @@ const EmployeesSalaries = () => {
     });
   };
   
+  // Fonction améliorée pour générer un bulletin de paie PDF complet
   const generatePayStubPDF = (employee: any) => {
     const doc = new jsPDF();
     
     doc.setFontSize(10);
     doc.setTextColor(40, 40, 40);
     
-    doc.setFillColor(220, 220, 220);
-    doc.rect(15, 15, 35, 25, 'F');
+    // Ajout du logo et en-tête de l'entreprise
+    doc.setFillColor(240, 240, 240);
+    doc.rect(15, 15, 180, 25, 'F');
     
-    doc.setTextColor(100, 100, 100);
+    // Logo (simulé par un rectangle coloré)
+    doc.setFillColor(60, 80, 180);
+    doc.rect(20, 17, 20, 20, 'F');
+    doc.setTextColor(255, 255, 255);
     doc.setFontSize(12);
-    doc.text(COMPANY_INFO.name, 33, 25, { align: "center" });
+    doc.text("LOGO", 30, 30, { align: "center" });
+    
+    // Nom de l'entreprise
+    doc.setTextColor(40, 40, 40);
+    doc.setFontSize(16);
+    doc.text(COMPANY_INFO.name, 50, 25);
+    
+    // Coordonnées de l'entreprise
     doc.setFontSize(8);
-    doc.text("LOGO", 33, 30, { align: "center" });
+    doc.setTextColor(80, 80, 80);
+    doc.text(COMPANY_INFO.tagline, 50, 30);
+    doc.text(COMPANY_INFO.address, 50, 34);
+    doc.text(COMPANY_INFO.siret, 50, 38);
     
-    doc.setTextColor(40, 40, 40);
+    // Informations de contact
+    doc.text(COMPANY_INFO.phone, 160, 25);
+    doc.text(COMPANY_INFO.email, 160, 30);
+    doc.text(COMPANY_INFO.website, 160, 35);
+    
+    // Titre du document
+    doc.setFillColor(230, 230, 230);
+    doc.rect(15, 45, 180, 10, 'F');
     doc.setFontSize(14);
-    doc.text(COMPANY_INFO.name, 195, 20, { align: "right" });
-    
-    doc.setFontSize(9);
-    doc.setTextColor(80, 80, 80);
-    doc.text(COMPANY_INFO.tagline, 195, 27, { align: "right" });
-    doc.text(COMPANY_INFO.address, 195, 34, { align: "right" });
-    doc.text(COMPANY_INFO.siret, 195, 41, { align: "right" });
-    doc.text(COMPANY_INFO.phone, 195, 48, { align: "right" });
-    doc.text(COMPANY_INFO.email, 195, 55, { align: "right" });
-    doc.text(COMPANY_INFO.website, 195, 62, { align: "right" });
-    
-    doc.setDrawColor(200, 200, 200);
-    doc.line(15, 65, 195, 65);
-    
-    doc.setFontSize(18);
     doc.setTextColor(40, 40, 40);
-    doc.text("BULLETIN DE PAIE", 105, 80, { align: "center" });
-    doc.setFontSize(12);
-    doc.text(`Période: ${employee.paymentDate}`, 105, 90, { align: "center" });
+    doc.text("BULLETIN DE PAIE", 105, 52, { align: "center" });
+    
+    // Période et informations du document
+    doc.setFontSize(10);
+    doc.text(`Période: ${employee.paymentDate}`, 15, 63);
+    doc.text(`N° Bulletin: BP-${employee.id.toString().padStart(5, '0')}`, 160, 63);
+    
+    // Informations employé
+    doc.setFillColor(245, 245, 245);
+    doc.rect(15, 68, 180, 35, 'F');
     
     doc.setFontSize(12);
-    doc.setTextColor(80, 80, 80);
-    doc.text("Informations Employé", 15, 105);
+    doc.setTextColor(60, 60, 60);
+    doc.text("INFORMATIONS EMPLOYÉ", 105, 75, { align: "center" });
     
     doc.setFontSize(10);
-    doc.text(`Nom: ${employee.name}`, 15, 115);
-    doc.text(`Poste: ${employee.position}`, 15, 122);
-    doc.text(`Département: ${employee.department}`, 15, 129);
-    doc.text(`ID Employé: ${employee.employeeId || `EMP${employee.id.toString().padStart(3, '0')}`}`, 15, 136);
+    doc.setTextColor(80, 80, 80);
     
-    const employeeDetails = employee.employeeId ? getEmployeeDetails(employee.employeeId) : null;
-    if (employeeDetails) {
-      doc.text(`Email: ${employeeDetails.email || 'Non spécifié'}`, 15, 143);
-      doc.text(`Téléphone: ${employeeDetails.phone || 'Non spécifié'}`, 15, 150);
-      doc.text(`Date d'embauche: ${employeeDetails.hireDate || 'Non spécifiée'}`, 15, 157);
-    }
+    // Colonne gauche
+    doc.text("Nom et prénom:", 20, 82);
+    doc.text("Poste:", 20, 88);
+    doc.text("Département:", 20, 94);
+    doc.text("ID Employé:", 20, 100);
+    
+    // Colonne droite
+    doc.setTextColor(40, 40, 40);
+    doc.text(employee.name, 70, 82);
+    doc.text(employee.position, 70, 88);
+    doc.text(employee.department, 70, 94);
+    doc.text(employee.employeeId || `EMP${employee.id.toString().padStart(3, '0')}`, 70, 100);
+    
+    // Détail de la rémunération
+    doc.setFillColor(245, 245, 245);
+    doc.rect(15, 110, 180, 80, 'F');
     
     doc.setFontSize(12);
-    doc.setTextColor(80, 80, 80);
-    doc.text("Détails de la Rémunération", 15, employeeDetails ? 170 : 150);
+    doc.setTextColor(60, 60, 60);
+    doc.text("DÉTAIL DE LA RÉMUNÉRATION", 105, 118, { align: "center" });
     
+    // Tableau rémunération
     doc.autoTable({
-      startY: employeeDetails ? 175 : 155,
-      head: [['Description', 'Montant']],
+      startY: 125,
+      head: [['Description', 'Base', 'Taux', 'Montant']],
       body: [
-        ['Salaire Brut Annuel', `${employee.salary.toLocaleString('fr-FR')} €`],
-        ['Salaire Mensuel Brut', `${(employee.salary / 12).toLocaleString('fr-FR')} €`],
-        ['Salaire Net Mensuel (Estimation)', `${((employee.salary / 12) * 0.75).toLocaleString('fr-FR')} €`]
+        ['Salaire Brut Annuel', '-', '-', `${employee.salary.toLocaleString('fr-FR')} €`],
+        ['Salaire Mensuel Brut', '-', '-', `${(employee.salary / 12).toLocaleString('fr-FR')} €`],
+        ['Heures supplémentaires', '0', '25%', '0.00 €'],
+        ['Prime d\'ancienneté', '-', '-', '0.00 €'],
+        ['Prime de performance', '-', '-', '0.00 €'],
+        ['Avantages en nature', '-', '-', '0.00 €'],
+        ['Cotisations sociales', `${(employee.salary / 12).toLocaleString('fr-FR')} €`, '25%', `${((employee.salary / 12) * 0.25).toLocaleString('fr-FR')} €`],
+        ['Salaire Net Mensuel', '-', '-', `${((employee.salary / 12) * 0.75).toLocaleString('fr-FR')} €`],
       ],
       theme: 'grid',
-      headStyles: { fillColor: [80, 80, 80] },
-      margin: { left: 15, right: 15 }
+      headStyles: { fillColor: [80, 80, 80], textColor: [255, 255, 255] },
+      styles: { fontSize: 9 },
+      margin: { left: 15, right: 15 },
     });
     
-    const finalY = (doc as any).autoTable.previous?.finalY || 200;
+    // Section congés et RTT
+    const finalY = (doc as any).autoTable.previous.finalY + 10;
+    
+    doc.setFillColor(245, 245, 245);
+    doc.rect(15, finalY, 180, 50, 'F');
     
     doc.setFontSize(12);
-    doc.setTextColor(80, 80, 80);
-    doc.text("Suivi des Congés et RTT", 15, finalY + 15);
+    doc.setTextColor(60, 60, 60);
+    doc.text("SUIVI DES CONGÉS ET RTT", 105, finalY + 8, { align: "center" });
     
+    // Tableau congés et RTT
     doc.autoTable({
-      startY: finalY + 20,
-      head: [['Type', 'Alloués', 'Pris', 'Restants']],
+      startY: finalY + 15,
+      head: [['Type', 'Droits acquis', 'Pris', 'Restants']],
       body: [
         ['Congés Payés', `${employee.leaves.paid} jours`, `${employee.leaves.taken} jours`, `${employee.leaves.remaining} jours`],
-        ['RTT', `${employee.rtt.allocated} jours`, `${employee.rtt.taken} jours`, `${employee.rtt.remaining} jours`]
+        ['RTT', `${employee.rtt.allocated} jours`, `${employee.rtt.taken} jours`, `${employee.rtt.remaining} jours`],
       ],
       theme: 'grid',
-      headStyles: { fillColor: [80, 80, 80] },
-      margin: { left: 15, right: 15 }
+      headStyles: { fillColor: [80, 80, 80], textColor: [255, 255, 255] },
+      styles: { fontSize: 9 },
+      margin: { left: 15, right: 15 },
     });
     
-    doc.setFontSize(8);
-    doc.setTextColor(150, 150, 150);
-    doc.text(`Ce document est confidentiel. Généré le ${new Date().toLocaleDateString('fr-FR')}`, 105, 285, { align: "center" });
+    // Pied de page
+    const pageCount = (doc as any).internal.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        doc.setFontSize(8);
+        doc.setTextColor(150, 150, 150);
+        doc.text(`Ce document est strictement confidentiel. Généré le ${new Date().toLocaleDateString('fr-FR')}`, 105, 287, { align: "center" });
+        doc.text(`Page ${i} / ${pageCount}`, 195, 287, { align: "right" });
+        doc.text(`${COMPANY_INFO.name}`, 15, 287);
+    }
     
+    // Enregistrement du PDF
     doc.save(`bulletin_paie_${employee.name.replace(/\s+/g, '_')}_${employee.paymentDate.replace(/\//g, '-')}.pdf`);
-    toast.success("Bulletin de paie téléchargé avec succès");
+    
+    toast({
+      title: "Bulletin de paie généré",
+      description: `Le bulletin de paie de ${employee.name} a été téléchargé`
+    });
+  };
+
+  // Fonction pour générer un contrat de travail en PDF
+  const generateEmploymentContract = (employee: any) => {
+    const doc = new jsPDF();
+    
+    // En-tête avec logo
+    doc.setFillColor(240, 240, 240);
+    doc.rect(15, 15, 180, 25, 'F');
+    
+    // Logo (simulé)
+    doc.setFillColor(60, 80, 180);
+    doc.rect(20, 17, 20, 20, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(12);
+    doc.text("LOGO", 30, 30, { align: "center" });
+    
+    // Informations de l'entreprise
+    doc.setTextColor(40, 40, 40);
+    doc.setFontSize(16);
+    doc.text(COMPANY_INFO.name, 50, 25);
+    
+    doc.setFontSize(8);
+    doc.setTextColor(80, 80, 80);
+    doc.text(COMPANY_INFO.tagline, 50, 30);
+    doc.text(COMPANY_INFO.address, 50, 34);
+    doc.text(COMPANY_INFO.siret, 50, 38);
+    
+    // Titre du document
+    doc.setFontSize(16);
+    doc.setTextColor(40, 40, 40);
+    doc.text("CONTRAT DE TRAVAIL À DURÉE INDÉTERMINÉE", 105, 60, { align: "center" });
+    
+    // Partie 1: Parties contractantes
+    doc.setFontSize(12);
+    doc.text("ENTRE LES SOUSSIGNÉS:", 15, 75);
+    
+    doc.setFontSize(10);
+    doc.text(`${COMPANY_INFO.name}, ${COMPANY_INFO.address}`, 20, 85);
+    doc.text(`Représentée par M. Jean DIRECTEUR, en qualité de Directeur Général`, 20, 90);
+    doc.text(`Ci-après désignée "l'Employeur" ou "la Société", d'une part,`, 20, 95);
+    
+    doc.text("ET", 15, 105);
+    
+    doc.text(`${employee.name}, demeurant à [Adresse de l'employé]`, 20, 115);
+    doc.text(`Numéro de sécurité sociale: _______________________`, 20, 120);
+    doc.text(`Ci-après désigné(e) "le Salarié", d'autre part,`, 20, 125);
+    
+    doc.text("IL A ÉTÉ CONVENU CE QUI SUIT:", 15, 135);
+    
+    // Partie 2: Engagement
+    doc.setFontSize(11);
+    doc.text("Article 1 - Engagement", 15, 145);
+    doc.setFontSize(10);
+    doc.text(`La société ${COMPANY_INFO.name} engage ${employee.name} à compter du [Date de début de contrat] en qualité de ${employee.position}, statut cadre, coefficient ___, niveau ___, sous réserve des résultats de la visite médicale d'embauche.`, 20, 155, { maxWidth: 170, align: 'justify' });
+    
+    // Partie 3: Période d'essai
+    doc.setFontSize(11);
+    doc.text("Article 2 - Période d'essai", 15, 170);
+    doc.setFontSize(10);
+    doc.text(`Le présent contrat est conclu pour une période d'essai de 3 mois, qui s'achèvera le [Date de fin de période d'essai]. Durant cette période, chacune des parties pourra rompre le contrat sans indemnité, en respectant un préavis conformément aux dispositions légales et conventionnelles en vigueur.`, 20, 180, { maxWidth: 170, align: 'justify' });
+    
+    // Partie 4: Fonctions
+    doc.setFontSize(11);
+    doc.text("Article 3 - Fonctions", 15, 200);
+    doc.setFontSize(10);
+    doc.text(`Le Salarié exercera les fonctions de ${employee.position} au sein du département ${employee.department}. À ce titre, il/elle aura notamment pour missions et responsabilités : [Détail des missions et responsabilités].`, 20, 210, { maxWidth: 170, align: 'justify' });
+    
+    // Nouvelle page
+    doc.addPage();
+    
+    // Partie 5: Rémunération
+    doc.setFontSize(11);
+    doc.text("Article 4 - Rémunération", 15, 25);
+    doc.setFontSize(10);
+    doc.text(`En contrepartie de son travail, le Salarié percevra une rémunération annuelle brute de ${employee.salary.toLocaleString('fr-FR')} euros, versée sur 12 mois, soit un salaire mensuel brut de ${(employee.salary / 12).toLocaleString('fr-FR')} euros.`, 20, 35, { maxWidth: 170, align: 'justify' });
+    
+    // Partie 6: Durée du travail
+    doc.setFontSize(11);
+    doc.text("Article 5 - Durée du travail", 15, 55);
+    doc.setFontSize(10);
+    doc.text(`La durée du travail du Salarié est fixée à 35 heures par semaine. Le Salarié pourra être amené à effectuer des heures supplémentaires en fonction des nécessités du service, qui seront rémunérées conformément aux dispositions légales et conventionnelles en vigueur.`, 20, 65, { maxWidth: 170, align: 'justify' });
+    
+    // Partie 7: Congés payés
+    doc.setFontSize(11);
+    doc.text("Article 6 - Congés payés", 15, 85);
+    doc.setFontSize(10);
+    doc.text(`Le Salarié bénéficiera de congés payés dans les conditions fixées par les dispositions légales et conventionnelles, soit 25 jours ouvrés par an pour un temps plein. Le Salarié bénéficiera également de ${employee.rtt.allocated} jours de RTT par an.`, 20, 95, { maxWidth: 170, align: 'justify' });
+    
+    // Partie 8: Confidentialité
+    doc.setFontSize(11);
+    doc.text("Article 7 - Confidentialité", 15, 115);
+    doc.setFontSize(10);
+    doc.text(`Le Salarié s'engage à respecter la plus stricte confidentialité concernant l'ensemble des documents, informations et méthodes dont il pourrait avoir connaissance dans le cadre de ses fonctions, pendant toute la durée du contrat et après sa cessation, quelle qu'en soit la cause.`, 20, 125, { maxWidth: 170, align: 'justify' });
+    
+    // Partie 9: Convention collective
+    doc.setFontSize(11);
+    doc.text("Article 8 - Convention collective", 15, 145);
+    doc.setFontSize(10);
+    doc.text(`Le présent contrat est régi par la Convention Collective Nationale applicable à la société : [Nom de la convention collective]. Une copie de cette convention est à la disposition du Salarié au sein des locaux de l'entreprise.`, 20, 155, { maxWidth: 170, align: 'justify' });
+    
+    // Partie 10: Signatures
+    doc.setFontSize(11);
+    doc.text("Fait en deux exemplaires originaux", 15, 185);
+    doc.text(`À Paris, le ${new Date().toLocaleDateString('fr-FR')}`, 15, 195);
+    
+    doc.text("Pour la société", 40, 215);
+    doc.text("M. Jean DIRECTEUR", 40, 225);
+    doc.text("Le Salarié", 145, 215);
+    doc.text(`${employee.name}`, 145, 225);
+    doc.text("(Signature précédée de la mention", 30, 235);
+    doc.text("\"Lu et approuvé\")", 45, 242);
+    
+    // Pied de page
+    const pageCount = (doc as any).internal.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        doc.setFontSize(8);
+        doc.setTextColor(150, 150, 150);
+        doc.text(`Document confidentiel - ${COMPANY_INFO.name}`, 105, 287, { align: "center" });
+        doc.text(`Page ${i} / ${pageCount}`, 195, 287, { align: "right" });
+    }
+    
+    // Enregistrement du PDF
+    doc.save(`contrat_travail_${employee.name.replace(/\s+/g, '_')}.pdf`);
+    
+    toast({
+      title: "Contrat généré",
+      description: `Le contrat de travail de ${employee.name} a été téléchargé`
+    });
   };
 
   return (
@@ -448,6 +643,14 @@ const EmployeesSalaries = () => {
                         >
                           <FileDown className="h-4 w-4" />
                         </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="icon"
+                          onClick={() => generateEmploymentContract(employee)}
+                          title="Télécharger contrat"
+                        >
+                          <Download className="h-4 w-4" />
+                        </Button>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -503,6 +706,36 @@ const EmployeesSalaries = () => {
                   >
                     {selectedEmployee.status === 'paid' ? 'Payé' : 'En attente'}
                   </Badge>
+                </div>
+              </div>
+
+              <div className="mt-4 border-t pt-4">
+                <h3 className="font-medium mb-2">Détail des congés et RTT</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-sm text-muted-foreground">Congés payés acquis</Label>
+                    <p className="font-medium">{selectedEmployee.leaves.paid} jours</p>
+                  </div>
+                  <div>
+                    <Label className="text-sm text-muted-foreground">Congés payés pris</Label>
+                    <p className="font-medium">{selectedEmployee.leaves.taken} jours</p>
+                  </div>
+                  <div>
+                    <Label className="text-sm text-muted-foreground">Congés payés restants</Label>
+                    <p className="font-medium">{selectedEmployee.leaves.remaining} jours</p>
+                  </div>
+                  <div>
+                    <Label className="text-sm text-muted-foreground">RTT alloués</Label>
+                    <p className="font-medium">{selectedEmployee.rtt.allocated} jours</p>
+                  </div>
+                  <div>
+                    <Label className="text-sm text-muted-foreground">RTT pris</Label>
+                    <p className="font-medium">{selectedEmployee.rtt.taken} jours</p>
+                  </div>
+                  <div>
+                    <Label className="text-sm text-muted-foreground">RTT restants</Label>
+                    <p className="font-medium">{selectedEmployee.rtt.remaining} jours</p>
+                  </div>
                 </div>
               </div>
             </div>
@@ -589,6 +822,74 @@ const EmployeesSalaries = () => {
                   value={editForm.salary}
                   onChange={(e) => setEditForm({ ...editForm, salary: e.target.value })}
                 />
+              </div>
+
+              <div className="border-t pt-4">
+                <Label className="text-sm text-muted-foreground">Congés et RTT</Label>
+                <div className="grid grid-cols-3 gap-2 mt-2">
+                  <div>
+                    <Label htmlFor="leaves-paid" className="text-xs">Acquis</Label>
+                    <Input
+                      id="leaves-paid"
+                      type="number"
+                      value={selectedEmployee.leaves.paid}
+                      className="h-8"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="leaves-taken" className="text-xs">Pris</Label>
+                    <Input
+                      id="leaves-taken"
+                      type="number"
+                      value={selectedEmployee.leaves.taken}
+                      className="h-8"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="leaves-remaining" className="text-xs">Restants</Label>
+                    <Input
+                      id="leaves-remaining"
+                      type="number"
+                      value={selectedEmployee.leaves.remaining}
+                      className="h-8"
+                      disabled
+                    />
+                  </div>
+                </div>
+                
+                <div className="mt-2">
+                  <Label className="text-sm text-muted-foreground">RTT</Label>
+                  <div className="grid grid-cols-3 gap-2 mt-1">
+                    <div>
+                      <Label htmlFor="rtt-allocated" className="text-xs">Alloués</Label>
+                      <Input
+                        id="rtt-allocated"
+                        type="number"
+                        value={selectedEmployee.rtt.allocated}
+                        className="h-8"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="rtt-taken" className="text-xs">Pris</Label>
+                      <Input
+                        id="rtt-taken"
+                        type="number"
+                        value={selectedEmployee.rtt.taken}
+                        className="h-8"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="rtt-remaining" className="text-xs">Restants</Label>
+                      <Input
+                        id="rtt-remaining"
+                        type="number"
+                        value={selectedEmployee.rtt.remaining}
+                        className="h-8"
+                        disabled
+                      />
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           )}

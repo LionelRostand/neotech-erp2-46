@@ -2,432 +2,700 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Settings, Users, Building, Calendar, Clock, Bell, Search, Shield, Save, RefreshCw } from 'lucide-react';
-import { toast } from 'sonner';
+import { Label } from '@/components/ui/label';
+import {
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import {
+  Settings,
+  Users,
+  Edit,
+  Trash,
+  Plus,
+  Check,
+  Save,
+  FileText,
+  User,
+  Bell,
+  Shield,
+  FormInput,
+} from 'lucide-react';
+import { toast } from '@/hooks/use-toast';
 
-// Permission type definitions
+// Type pour les champs personnalisés
+interface CustomField {
+  id: string;
+  name: string;
+  type: 'text' | 'number' | 'date' | 'select' | 'checkbox';
+  required: boolean;
+  options?: string[];
+  section: 'personal' | 'professional' | 'administrative';
+  enabled: boolean;
+}
+
+// Type pour les utilisateurs et leurs droits
 interface UserPermission {
-  moduleId: string;
-  canView: boolean;
-  canCreate: boolean;
-  canEdit: boolean;
-  canDelete: boolean;
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  permissions: {
+    view: boolean;
+    create: boolean;
+    edit: boolean;
+    delete: boolean;
+  };
 }
 
-interface EmployeePermission {
-  userId: string;
-  permissions: UserPermission[];
-}
+const EmployeesSettings = () => {
+  const [activeTab, setActiveTab] = useState('customFields');
+  
+  // État pour les champs personnalisés
+  const [customFields, setCustomFields] = useState<CustomField[]>([
+    {
+      id: 'field-1',
+      name: 'Numéro de sécurité sociale',
+      type: 'text',
+      required: true,
+      section: 'administrative',
+      enabled: true,
+    },
+    {
+      id: 'field-2',
+      name: 'Compétences',
+      type: 'text',
+      required: false,
+      section: 'professional',
+      enabled: true,
+    },
+    {
+      id: 'field-3',
+      name: 'Date de naissance',
+      type: 'date',
+      required: true,
+      section: 'personal',
+      enabled: true,
+    },
+    {
+      id: 'field-4',
+      name: 'Situation familiale',
+      type: 'select',
+      required: false,
+      options: ['Célibataire', 'Marié(e)', 'Divorcé(e)', 'Veuf/Veuve', 'Pacsé(e)'],
+      section: 'personal',
+      enabled: true,
+    },
+    {
+      id: 'field-5',
+      name: 'Permis de conduire',
+      type: 'checkbox',
+      required: false,
+      section: 'personal',
+      enabled: true,
+    },
+    {
+      id: 'field-6',
+      name: 'Années d\'expérience',
+      type: 'number',
+      required: false,
+      section: 'professional',
+      enabled: false,
+    },
+  ]);
+  
+  // État pour l'édition d'un champ personnalisé
+  const [editingField, setEditingField] = useState<CustomField | null>(null);
+  const [showFieldDialog, setShowFieldDialog] = useState(false);
+  
+  // État pour les utilisateurs et leurs droits
+  const [users, setUsers] = useState<UserPermission[]>([
+    {
+      id: 'user-1',
+      name: 'Jean Martin',
+      email: 'jean.martin@example.com',
+      role: 'Administrateur RH',
+      permissions: {
+        view: true,
+        create: true,
+        edit: true,
+        delete: true,
+      },
+    },
+    {
+      id: 'user-2',
+      name: 'Marie Dubois',
+      email: 'marie.dubois@example.com',
+      role: 'Responsable RH',
+      permissions: {
+        view: true,
+        create: true,
+        edit: true,
+        delete: false,
+      },
+    },
+    {
+      id: 'user-3',
+      name: 'Pierre Lefebvre',
+      email: 'pierre.lefebvre@example.com',
+      role: 'Assistant RH',
+      permissions: {
+        view: true,
+        create: false,
+        edit: false,
+        delete: false,
+      },
+    },
+    {
+      id: 'user-4',
+      name: 'Sophie Moreau',
+      email: 'sophie.moreau@example.com',
+      role: 'Directeur',
+      permissions: {
+        view: true,
+        create: false,
+        edit: false,
+        delete: false,
+      },
+    },
+    {
+      id: 'user-5',
+      name: 'Thomas Girard',
+      email: 'thomas.girard@example.com',
+      role: 'Responsable département',
+      permissions: {
+        view: true,
+        create: false,
+        edit: false,
+        delete: false,
+      },
+    },
+  ]);
 
-const EmployeesSettings: React.FC = () => {
-  const [activeTab, setActiveTab] = useState('general');
-  const [searchTerm, setSearchTerm] = useState('');
-  const [saving, setSaving] = useState(false);
-  
-  // Sample data for permissions tab
-  const [employees] = useState([
-    { id: '1', name: 'Thomas Martin', email: 'thomas.martin@example.com', role: 'Responsable Marketing' },
-    { id: '2', name: 'Sophie Dubois', email: 'sophie.dubois@example.com', role: 'Développeuse Front-end' },
-    { id: '3', name: 'Jean Dupont', email: 'jean.dupont@example.com', role: 'Directeur Financier' },
-    { id: '4', name: 'Marie Lambert', email: 'marie.lambert@example.com', role: 'Responsable RH' },
-    { id: '5', name: 'Pierre Durand', email: 'pierre.durand@example.com', role: 'Chef de projet technique' },
-  ]);
-  
-  const [modules] = useState([
-    { id: 'employees-profiles', name: 'Fiches employé' },
-    { id: 'employees-badges', name: 'Badges et accès' },
-    { id: 'employees-departments', name: 'Départements' },
-    { id: 'employees-hierarchy', name: 'Hiérarchie' },
-    { id: 'employees-attendance', name: 'Présences' },
-    { id: 'employees-timesheet', name: 'Feuilles de temps' },
-    { id: 'employees-leaves', name: 'Congés' },
-    { id: 'employees-absences', name: 'Absences' },
-    { id: 'employees-contracts', name: 'Contrats' },
-    { id: 'employees-documents', name: 'Documents RH' },
-    { id: 'employees-evaluations', name: 'Évaluations' },
-    { id: 'employees-trainings', name: 'Formations' },
-    { id: 'employees-salaries', name: 'Salaires' },
-    { id: 'employees-recruitment', name: 'Recrutement' },
-    { id: 'employees-reports', name: 'Rapports' },
-  ]);
-  
-  // Initialize permissions for all employees and modules
-  const [userPermissions, setUserPermissions] = useState<EmployeePermission[]>(
-    employees.map(employee => ({
-      userId: employee.id,
-      permissions: modules.map(module => ({
-        moduleId: module.id,
-        canView: true,
-        canCreate: employee.id === '1' || employee.id === '4', // Only admin and HR can create by default
-        canEdit: employee.id === '1' || employee.id === '4',   // Only admin and HR can edit by default
-        canDelete: employee.id === '1',                        // Only admin can delete by default
-      })),
-    }))
-  );
-  
-  // Filtered employees based on search term
-  const filteredEmployees = employees.filter(employee => 
-    employee.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    employee.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    employee.role.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-  
-  // Get employee's permission for a module
-  const getEmployeePermissionForModule = (userId: string, moduleId: string): UserPermission | undefined => {
-    const employeePerm = userPermissions.find(p => p.userId === userId);
-    if (!employeePerm) return undefined;
+  // Fonctions pour gérer les champs personnalisés
+  const handleEditField = (field: CustomField) => {
+    setEditingField({ ...field });
+    setShowFieldDialog(true);
+  };
+
+  const handleDeleteField = (fieldId: string) => {
+    setCustomFields(customFields.filter(field => field.id !== fieldId));
+    toast({
+      title: "Champ supprimé",
+      description: "Le champ personnalisé a été supprimé avec succès.",
+    });
+  };
+
+  const handleToggleField = (fieldId: string) => {
+    setCustomFields(customFields.map(field => 
+      field.id === fieldId ? { ...field, enabled: !field.enabled } : field
+    ));
+  };
+
+  const handleSaveField = () => {
+    if (!editingField) return;
     
-    return employeePerm.permissions.find(p => p.moduleId === moduleId);
-  };
-  
-  // Update permission state
-  const updatePermission = (userId: string, moduleId: string, permissionType: keyof Omit<UserPermission, 'moduleId'>, value: boolean) => {
-    setUserPermissions(prev => {
-      return prev.map(userPerm => {
-        if (userPerm.userId === userId) {
-          const updatedPermissions = userPerm.permissions.map(perm => {
-            if (perm.moduleId === moduleId) {
-              return { ...perm, [permissionType]: value };
-            }
-            return perm;
-          });
-          return { ...userPerm, permissions: updatedPermissions };
-        }
-        return userPerm;
+    if (editingField.id) {
+      // Mise à jour d'un champ existant
+      setCustomFields(customFields.map(field => 
+        field.id === editingField.id ? editingField : field
+      ));
+      toast({
+        title: "Champ mis à jour",
+        description: "Le champ personnalisé a été mis à jour avec succès.",
       });
+    } else {
+      // Création d'un nouveau champ
+      const newField = {
+        ...editingField,
+        id: `field-${customFields.length + 1}`,
+        enabled: true,
+      };
+      setCustomFields([...customFields, newField]);
+      toast({
+        title: "Champ créé",
+        description: "Le nouveau champ personnalisé a été créé avec succès.",
+      });
+    }
+    
+    setEditingField(null);
+    setShowFieldDialog(false);
+  };
+
+  const handleNewField = () => {
+    setEditingField({
+      id: '',
+      name: '',
+      type: 'text',
+      required: false,
+      section: 'personal',
+      enabled: true,
+    });
+    setShowFieldDialog(true);
+  };
+
+  // Fonctions pour gérer les droits d'accès
+  const handleTogglePermission = (userId: string, permission: 'view' | 'create' | 'edit' | 'delete') => {
+    setUsers(users.map(user => {
+      if (user.id === userId) {
+        return {
+          ...user,
+          permissions: {
+            ...user.permissions,
+            [permission]: !user.permissions[permission],
+          },
+        };
+      }
+      return user;
+    }));
+  };
+
+  const handleSetAllPermissions = (userId: string, value: boolean) => {
+    setUsers(users.map(user => {
+      if (user.id === userId) {
+        return {
+          ...user,
+          permissions: {
+            view: value,
+            create: value,
+            edit: value,
+            delete: value,
+          },
+        };
+      }
+      return user;
+    }));
+  };
+
+  // Sauvegarde des paramètres
+  const handleSaveSettings = () => {
+    toast({
+      title: "Paramètres enregistrés",
+      description: "Les paramètres ont été enregistrés avec succès.",
     });
   };
-  
-  // Set all permissions of a type for an employee
-  const setAllPermissionsOfType = (userId: string, permissionType: keyof Omit<UserPermission, 'moduleId'>, value: boolean) => {
-    setUserPermissions(prev => {
-      return prev.map(userPerm => {
-        if (userPerm.userId === userId) {
-          const updatedPermissions = userPerm.permissions.map(perm => ({
-            ...perm,
-            [permissionType]: value
-          }));
-          return { ...userPerm, permissions: updatedPermissions };
-        }
-        return userPerm;
-      });
-    });
-  };
-  
-  // Save permissions
-  const savePermissions = async () => {
-    setSaving(true);
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    setSaving(false);
-    toast.success("Permissions enregistrées avec succès");
+
+  // Rendu des sections et leurs champs
+  const renderFieldsBySection = (section: string) => {
+    const filteredFields = customFields.filter(field => field.section === section);
+    
+    if (filteredFields.length === 0) {
+      return (
+        <div className="text-gray-500 text-center py-4">
+          Aucun champ personnalisé dans cette section
+        </div>
+      );
+    }
+    
+    return (
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Nom du champ</TableHead>
+            <TableHead>Type</TableHead>
+            <TableHead className="text-center">Obligatoire</TableHead>
+            <TableHead className="text-center">Statut</TableHead>
+            <TableHead className="text-center">Actions</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {filteredFields.map(field => (
+            <TableRow key={field.id}>
+              <TableCell>{field.name}</TableCell>
+              <TableCell>
+                {field.type === 'text' && 'Texte'}
+                {field.type === 'number' && 'Nombre'}
+                {field.type === 'date' && 'Date'}
+                {field.type === 'select' && 'Liste déroulante'}
+                {field.type === 'checkbox' && 'Case à cocher'}
+              </TableCell>
+              <TableCell className="text-center">
+                {field.required ? (
+                  <Check className="h-4 w-4 mx-auto text-green-500" />
+                ) : (
+                  <span className="text-gray-400">-</span>
+                )}
+              </TableCell>
+              <TableCell className="text-center">
+                <div className="flex items-center justify-center">
+                  <button 
+                    onClick={() => handleToggleField(field.id)}
+                    className={`w-12 h-6 rounded-full p-1 transition-colors ${field.enabled ? 'bg-green-500' : 'bg-gray-300'}`}
+                  >
+                    <div className={`w-4 h-4 rounded-full bg-white transform transition-transform ${field.enabled ? 'translate-x-6' : ''}`} />
+                  </button>
+                </div>
+              </TableCell>
+              <TableCell className="text-center">
+                <div className="flex justify-center space-x-2">
+                  <Button variant="ghost" size="sm" onClick={() => handleEditField(field)}>
+                    <Edit className="h-4 w-4" />
+                  </Button>
+                  <Button variant="ghost" size="sm" onClick={() => handleDeleteField(field.id)}>
+                    <Trash className="h-4 w-4" />
+                  </Button>
+                </div>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    );
   };
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-xl font-bold">Paramètres des Employés</h2>
+      <div className="flex justify-between items-center">
+        <h1 className="text-3xl font-bold">Paramètres Employés</h1>
+        <Button onClick={handleSaveSettings} className="flex items-center gap-2">
+          <Save className="h-4 w-4" />
+          Enregistrer les modifications
+        </Button>
       </div>
-      
+
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="mb-4">
-          <TabsTrigger value="general">Général</TabsTrigger>
-          <TabsTrigger value="fields">Champs personnalisés</TabsTrigger>
-          <TabsTrigger value="departments">Départements</TabsTrigger>
-          <TabsTrigger value="permissions">Permissions</TabsTrigger>
-          <TabsTrigger value="integrations">Intégrations</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="customFields" className="flex items-center gap-2">
+            <FormInput className="h-4 w-4" />
+            <span>Champs personnalisés</span>
+          </TabsTrigger>
+          <TabsTrigger value="permissions" className="flex items-center gap-2">
+            <Shield className="h-4 w-4" />
+            <span>Droits d'accès</span>
+          </TabsTrigger>
+          <TabsTrigger value="notifications" className="flex items-center gap-2">
+            <Bell className="h-4 w-4" />
+            <span>Notifications</span>
+          </TabsTrigger>
         </TabsList>
-        
-        <TabsContent value="general" className="space-y-6">
+
+        {/* Onglet des champs personnalisés */}
+        <TabsContent value="customFields" className="mt-6">
           <Card>
-            <CardHeader>
-              <CardTitle className="text-lg font-medium">Paramètres généraux</CardTitle>
-              <CardDescription>Configuration générale du module Employés</CardDescription>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <div>
+                <CardTitle>Champs personnalisés</CardTitle>
+                <CardDescription>
+                  Configurez les champs personnalisés pour les fiches employés
+                </CardDescription>
+              </div>
+              <Button onClick={handleNewField} className="flex items-center gap-2">
+                <Plus className="h-4 w-4" />
+                Ajouter un champ
+              </Button>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-4">
-                  <h3 className="text-sm font-medium">Préférences de l'entreprise</h3>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="companyName">Nom de l'entreprise</Label>
-                    <Input id="companyName" defaultValue="Neotech Solutions" />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="timezone">Fuseau horaire</Label>
-                    <Select defaultValue="europe-paris">
-                      <SelectTrigger>
-                        <SelectValue placeholder="Sélectionner un fuseau horaire" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="europe-paris">Europe/Paris (UTC+1)</SelectItem>
-                        <SelectItem value="europe-london">Europe/London (UTC+0)</SelectItem>
-                        <SelectItem value="america-newyork">America/New_York (UTC-5)</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="dateFormat">Format de date</Label>
-                    <Select defaultValue="fr">
-                      <SelectTrigger>
-                        <SelectValue placeholder="Sélectionner un format de date" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="fr">DD/MM/YYYY (31/12/2025)</SelectItem>
-                        <SelectItem value="us">MM/DD/YYYY (12/31/2025)</SelectItem>
-                        <SelectItem value="iso">YYYY-MM-DD (2025-12-31)</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-                
-                <div className="space-y-4">
-                  <h3 className="text-sm font-medium">Options du module</h3>
-                  
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label htmlFor="autoNumber">Numérotation automatique des employés</Label>
-                      <p className="text-sm text-muted-foreground">
-                        Générer automatiquement un ID unique pour chaque nouvel employé
-                      </p>
-                    </div>
-                    <Switch id="autoNumber" defaultChecked />
-                  </div>
-                  
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label htmlFor="notifications">Notifications d'événements</Label>
-                      <p className="text-sm text-muted-foreground">
-                        Envoyer des notifications pour les événements importants
-                      </p>
-                    </div>
-                    <Switch id="notifications" defaultChecked />
-                  </div>
-                </div>
+              <div>
+                <h3 className="text-lg font-medium mb-4">Informations personnelles</h3>
+                {renderFieldsBySection('personal')}
               </div>
-              
-              <div className="border-t pt-6">
-                <h3 className="text-sm font-medium mb-4">Modules activés</h3>
-                
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-                  <div className="flex items-start">
-                    <Switch id="module-profiles" defaultChecked className="mt-0.5 mr-2" />
-                    <div className="space-y-0.5">
-                      <Label htmlFor="module-profiles" className="flex items-center">
-                        <Users className="h-4 w-4 mr-1" />
-                        Profils
-                      </Label>
-                      <p className="text-xs text-muted-foreground">Gestion des fiches employés</p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-start">
-                    <Switch id="module-departments" defaultChecked className="mt-0.5 mr-2" />
-                    <div className="space-y-0.5">
-                      <Label htmlFor="module-departments" className="flex items-center">
-                        <Building className="h-4 w-4 mr-1" />
-                        Départements
-                      </Label>
-                      <p className="text-xs text-muted-foreground">Structure organisationnelle</p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-start">
-                    <Switch id="module-attendance" defaultChecked className="mt-0.5 mr-2" />
-                    <div className="space-y-0.5">
-                      <Label htmlFor="module-attendance" className="flex items-center">
-                        <Clock className="h-4 w-4 mr-1" />
-                        Présences
-                      </Label>
-                      <p className="text-xs text-muted-foreground">Suivi des présences</p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-start">
-                    <Switch id="module-leaves" defaultChecked className="mt-0.5 mr-2" />
-                    <div className="space-y-0.5">
-                      <Label htmlFor="module-leaves" className="flex items-center">
-                        <Calendar className="h-4 w-4 mr-1" />
-                        Congés
-                      </Label>
-                      <p className="text-xs text-muted-foreground">Gestion des congés</p>
-                    </div>
-                  </div>
-                </div>
+
+              <div>
+                <h3 className="text-lg font-medium mb-4">Informations professionnelles</h3>
+                {renderFieldsBySection('professional')}
               </div>
-              
-              <div className="flex justify-end">
-                <Button type="submit">Enregistrer les paramètres</Button>
+
+              <div>
+                <h3 className="text-lg font-medium mb-4">Informations administratives</h3>
+                {renderFieldsBySection('administrative')}
               </div>
             </CardContent>
           </Card>
         </TabsContent>
-        
-        <TabsContent value="fields">
+
+        {/* Onglet des droits d'accès */}
+        <TabsContent value="permissions" className="mt-6">
           <Card>
-            <CardContent>
-              <p className="text-muted-foreground text-center py-10">
-                Cette section vous permet de configurer les champs personnalisés pour les fiches employés.
-              </p>
-            </CardContent>
-          </Card>
-        </TabsContent>
-        
-        <TabsContent value="departments">
-          <Card>
-            <CardContent>
-              <p className="text-muted-foreground text-center py-10">
-                Cette section vous permet de gérer les départements de votre organisation.
-              </p>
-            </CardContent>
-          </Card>
-        </TabsContent>
-        
-        <TabsContent value="permissions" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <Shield className="h-5 w-5 text-blue-600" />
-                <span>Gestion des droits d'accès</span>
-              </CardTitle>
+            <CardHeader className="pb-2">
+              <CardTitle>Gestion des droits d'accès</CardTitle>
               <CardDescription>
-                Attribuez les droits d'accès aux différentes fonctionnalités du module Employés pour chaque utilisateur.
+                Attribuez les droits d'accès aux modules employés pour chaque utilisateur
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="flex items-center justify-between mb-6">
-                <div>
-                  <h3 className="text-sm font-medium mb-1">Attribution des droits par module</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Définissez qui peut voir, créer, modifier ou supprimer des données dans chaque module.
-                  </p>
-                </div>
-                <div className="relative">
-                  <Search className="absolute left-3 top-3 h-4 w-4 text-gray-500" />
-                  <Input
-                    placeholder="Rechercher un employé..."
-                    className="pl-9 w-64"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                  />
-                </div>
-              </div>
-
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="w-[250px]">Employé</TableHead>
-                    <TableHead>Module</TableHead>
+                    <TableHead>Utilisateur</TableHead>
+                    <TableHead>Rôle</TableHead>
                     <TableHead className="text-center">Visualisation</TableHead>
                     <TableHead className="text-center">Création</TableHead>
                     <TableHead className="text-center">Modification</TableHead>
                     <TableHead className="text-center">Suppression</TableHead>
+                    <TableHead className="text-center">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredEmployees.map(employee => (
-                    <React.Fragment key={employee.id}>
-                      {/* User row with "select all" options */}
-                      <TableRow className="bg-muted/30">
-                        <TableCell className="font-medium">
-                          {employee.name}
-                          <div className="text-xs text-muted-foreground">{employee.role}</div>
-                        </TableCell>
-                        <TableCell className="font-medium">Tous les modules</TableCell>
-                        <TableCell className="text-center">
-                          <Checkbox 
-                            checked={userPermissions.find(p => p.userId === employee.id)?.permissions.every(p => p.canView)}
-                            onCheckedChange={(checked) => setAllPermissionsOfType(employee.id, 'canView', !!checked)}
-                          />
-                        </TableCell>
-                        <TableCell className="text-center">
-                          <Checkbox 
-                            checked={userPermissions.find(p => p.userId === employee.id)?.permissions.every(p => p.canCreate)}
-                            onCheckedChange={(checked) => setAllPermissionsOfType(employee.id, 'canCreate', !!checked)}
-                          />
-                        </TableCell>
-                        <TableCell className="text-center">
-                          <Checkbox 
-                            checked={userPermissions.find(p => p.userId === employee.id)?.permissions.every(p => p.canEdit)}
-                            onCheckedChange={(checked) => setAllPermissionsOfType(employee.id, 'canEdit', !!checked)}
-                          />
-                        </TableCell>
-                        <TableCell className="text-center">
-                          <Checkbox 
-                            checked={userPermissions.find(p => p.userId === employee.id)?.permissions.every(p => p.canDelete)}
-                            onCheckedChange={(checked) => setAllPermissionsOfType(employee.id, 'canDelete', !!checked)}
-                          />
-                        </TableCell>
-                      </TableRow>
-
-                      {/* Individual module permissions */}
-                      {modules.map(module => {
-                        const perm = getEmployeePermissionForModule(employee.id, module.id);
-                        return (
-                          <TableRow key={`${employee.id}-${module.id}`}>
-                            <TableCell></TableCell>
-                            <TableCell>{module.name}</TableCell>
-                            <TableCell className="text-center">
-                              <Checkbox 
-                                checked={perm?.canView}
-                                onCheckedChange={(checked) => updatePermission(employee.id, module.id, 'canView', !!checked)}
-                              />
-                            </TableCell>
-                            <TableCell className="text-center">
-                              <Checkbox 
-                                checked={perm?.canCreate}
-                                onCheckedChange={(checked) => updatePermission(employee.id, module.id, 'canCreate', !!checked)}
-                              />
-                            </TableCell>
-                            <TableCell className="text-center">
-                              <Checkbox 
-                                checked={perm?.canEdit}
-                                onCheckedChange={(checked) => updatePermission(employee.id, module.id, 'canEdit', !!checked)}
-                              />
-                            </TableCell>
-                            <TableCell className="text-center">
-                              <Checkbox 
-                                checked={perm?.canDelete}
-                                onCheckedChange={(checked) => updatePermission(employee.id, module.id, 'canDelete', !!checked)}
-                              />
-                            </TableCell>
-                          </TableRow>
-                        );
-                      })}
-                    </React.Fragment>
+                  {users.map(user => (
+                    <TableRow key={user.id}>
+                      <TableCell>
+                        <div>
+                          <p className="font-medium">{user.name}</p>
+                          <p className="text-sm text-gray-500">{user.email}</p>
+                        </div>
+                      </TableCell>
+                      <TableCell>{user.role}</TableCell>
+                      <TableCell className="text-center">
+                        <Checkbox
+                          checked={user.permissions.view}
+                          onCheckedChange={() => handleTogglePermission(user.id, 'view')}
+                        />
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <Checkbox
+                          checked={user.permissions.create}
+                          onCheckedChange={() => handleTogglePermission(user.id, 'create')}
+                        />
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <Checkbox
+                          checked={user.permissions.edit}
+                          onCheckedChange={() => handleTogglePermission(user.id, 'edit')}
+                        />
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <Checkbox
+                          checked={user.permissions.delete}
+                          onCheckedChange={() => handleTogglePermission(user.id, 'delete')}
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex justify-center space-x-2">
+                          <Select
+                            onValueChange={(value) => {
+                              if (value === "all") handleSetAllPermissions(user.id, true);
+                              if (value === "none") handleSetAllPermissions(user.id, false);
+                              if (value === "view") {
+                                handleSetAllPermissions(user.id, false);
+                                handleTogglePermission(user.id, 'view');
+                              }
+                            }}
+                          >
+                            <SelectTrigger className="h-8 w-[120px]">
+                              <SelectValue placeholder="Actions" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="all">Tous les droits</SelectItem>
+                              <SelectItem value="none">Aucun droit</SelectItem>
+                              <SelectItem value="view">Lecture seule</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </TableCell>
+                    </TableRow>
                   ))}
                 </TableBody>
               </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
 
-              <div className="mt-6 flex justify-end">
-                <Button onClick={savePermissions} disabled={saving}>
-                  {saving ? <RefreshCw className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-                  Enregistrer les modifications
-                </Button>
+        {/* Onglet des notifications */}
+        <TabsContent value="notifications" className="mt-6">
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle>Paramètres de notifications</CardTitle>
+              <CardDescription>
+                Configurez les notifications automatiques pour le module Employés
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between border-b pb-4">
+                  <div className="flex items-start gap-2">
+                    <Bell className="h-5 w-5 text-gray-500 mt-0.5" />
+                    <div>
+                      <h3 className="font-medium">Contrats arrivant à échéance</h3>
+                      <p className="text-sm text-gray-500">Notification envoyée X jours avant l'expiration d'un contrat</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Input type="number" className="w-20" defaultValue="15" />
+                    <Label>jours</Label>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between border-b pb-4">
+                  <div className="flex items-start gap-2">
+                    <Bell className="h-5 w-5 text-gray-500 mt-0.5" />
+                    <div>
+                      <h3 className="font-medium">Périodes d'essai</h3>
+                      <p className="text-sm text-gray-500">Notification envoyée X jours avant la fin d'une période d'essai</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Input type="number" className="w-20" defaultValue="7" />
+                    <Label>jours</Label>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between border-b pb-4">
+                  <div className="flex items-start gap-2">
+                    <Bell className="h-5 w-5 text-gray-500 mt-0.5" />
+                    <div>
+                      <h3 className="font-medium">Anniversaires</h3>
+                      <p className="text-sm text-gray-500">Notification pour les anniversaires des employés</p>
+                    </div>
+                  </div>
+                  <Checkbox defaultChecked />
+                </div>
+
+                <div className="flex items-center justify-between border-b pb-4">
+                  <div className="flex items-start gap-2">
+                    <Bell className="h-5 w-5 text-gray-500 mt-0.5" />
+                    <div>
+                      <h3 className="font-medium">Documents expirés</h3>
+                      <p className="text-sm text-gray-500">Notification pour les documents d'identité ou permis expirés</p>
+                    </div>
+                  </div>
+                  <Checkbox defaultChecked />
+                </div>
+
+                <div className="flex items-center justify-between pb-4">
+                  <div className="flex items-start gap-2">
+                    <Bell className="h-5 w-5 text-gray-500 mt-0.5" />
+                    <div>
+                      <h3 className="font-medium">Évaluations annuelles</h3>
+                      <p className="text-sm text-gray-500">Notification X jours avant la date prévue d'évaluation</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Input type="number" className="w-20" defaultValue="30" />
+                    <Label>jours</Label>
+                  </div>
+                </div>
               </div>
             </CardContent>
           </Card>
         </TabsContent>
-        
-        <TabsContent value="integrations">
-          <Card>
-            <CardContent>
-              <p className="text-muted-foreground text-center py-10">
-                Cette section vous permet de configurer les intégrations avec d'autres services.
-              </p>
-            </CardContent>
-          </Card>
-        </TabsContent>
       </Tabs>
+
+      {/* Dialog d'édition de champ personnalisé */}
+      <Dialog open={showFieldDialog} onOpenChange={setShowFieldDialog}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>
+              {editingField?.id ? 'Modifier le champ' : 'Ajouter un nouveau champ'}
+            </DialogTitle>
+            <DialogDescription>
+              Configurez les propriétés du champ personnalisé.
+            </DialogDescription>
+          </DialogHeader>
+          
+          {editingField && (
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="name" className="text-right">Nom</Label>
+                <Input
+                  id="name"
+                  value={editingField.name}
+                  onChange={(e) => setEditingField({ ...editingField, name: e.target.value })}
+                  className="col-span-3"
+                />
+              </div>
+              
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="type" className="text-right">Type</Label>
+                <Select
+                  value={editingField.type}
+                  onValueChange={(value: any) => setEditingField({ ...editingField, type: value })}
+                >
+                  <SelectTrigger className="col-span-3">
+                    <SelectValue placeholder="Sélectionner un type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="text">Texte</SelectItem>
+                    <SelectItem value="number">Nombre</SelectItem>
+                    <SelectItem value="date">Date</SelectItem>
+                    <SelectItem value="select">Liste déroulante</SelectItem>
+                    <SelectItem value="checkbox">Case à cocher</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="section" className="text-right">Section</Label>
+                <Select
+                  value={editingField.section}
+                  onValueChange={(value: any) => setEditingField({ ...editingField, section: value })}
+                >
+                  <SelectTrigger className="col-span-3">
+                    <SelectValue placeholder="Sélectionner une section" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="personal">Informations personnelles</SelectItem>
+                    <SelectItem value="professional">Informations professionnelles</SelectItem>
+                    <SelectItem value="administrative">Informations administratives</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              {editingField.type === 'select' && (
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="options" className="text-right">Options</Label>
+                  <Input
+                    id="options"
+                    placeholder="Valeur1, Valeur2, Valeur3"
+                    value={editingField.options?.join(', ') || ''}
+                    onChange={(e) => setEditingField({ 
+                      ...editingField, 
+                      options: e.target.value.split(',').map(opt => opt.trim()) 
+                    })}
+                    className="col-span-3"
+                  />
+                </div>
+              )}
+              
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="required" className="text-right">Obligatoire</Label>
+                <div className="flex items-center space-x-2 col-span-3">
+                  <Checkbox
+                    id="required"
+                    checked={editingField.required}
+                    onCheckedChange={(checked) => 
+                      setEditingField({ ...editingField, required: checked as boolean })
+                    }
+                  />
+                  <label htmlFor="required">Ce champ est obligatoire</label>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowFieldDialog(false)}>
+              Annuler
+            </Button>
+            <Button onClick={handleSaveField}>
+              {editingField?.id ? 'Mettre à jour' : 'Créer'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

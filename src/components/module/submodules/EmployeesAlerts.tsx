@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { AlertTriangle, Bell, Calendar, Clock, FileText, User, BadgeAlert, Building } from 'lucide-react';
+import { AlertTriangle, Bell, Calendar, Clock, FileText, User, BadgeAlert, Building, CheckCircle, UserCheck, Send } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
@@ -16,6 +16,23 @@ import {
   AlertDialogHeader,
   AlertDialogTitle
 } from '@/components/ui/alert-dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogDescription,
+} from '@/components/ui/dialog';
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { toast } from '@/hooks/use-toast';
 
 // Types for employee alerts
@@ -123,11 +140,37 @@ const mockAlerts: EmployeeAlert[] = [
   }
 ];
 
+// Types pour les formulaires et les dialogs supplémentaires
+interface TransferFormData {
+  recipient: string;
+  message: string;
+  priority: 'high' | 'medium' | 'low';
+}
+
+interface ReminderFormData {
+  date: string;
+  time: string;
+  note: string;
+}
+
 const EmployeesAlerts = () => {
   const [alerts, setAlerts] = useState<EmployeeAlert[]>(mockAlerts);
   const [activeTab, setActiveTab] = useState<string>('all');
   const [showDialogId, setShowDialogId] = useState<string | null>(null);
   const [alertToManage, setAlertToManage] = useState<EmployeeAlert | null>(null);
+  const [showTransferDialog, setShowTransferDialog] = useState(false);
+  const [showReminderDialog, setShowReminderDialog] = useState(false);
+  const [showEmployeeDialog, setShowEmployeeDialog] = useState(false);
+  const [transferForm, setTransferForm] = useState<TransferFormData>({
+    recipient: '',
+    message: '',
+    priority: 'medium',
+  });
+  const [reminderForm, setReminderForm] = useState<ReminderFormData>({
+    date: new Date().toISOString().split('T')[0],
+    time: '12:00',
+    note: '',
+  });
 
   // Count unread alerts by type
   const unreadCount = {
@@ -224,6 +267,40 @@ const EmployeesAlerts = () => {
     setShowDialogId('action');
   };
 
+  // Handle transfer action
+  const handleTransfer = () => {
+    if (!alertToManage) return;
+    
+    toast({
+      title: "Alerte transférée",
+      description: `L'alerte a été transférée à ${transferForm.recipient}.`,
+    });
+    
+    setShowTransferDialog(false);
+    setTransferForm({
+      recipient: '',
+      message: '',
+      priority: 'medium',
+    });
+  };
+
+  // Handle reminder action
+  const handleReminder = () => {
+    if (!alertToManage) return;
+    
+    toast({
+      title: "Rappel programmé",
+      description: `Un rappel a été programmé pour le ${reminderForm.date} à ${reminderForm.time}.`,
+    });
+    
+    setShowReminderDialog(false);
+    setReminderForm({
+      date: new Date().toISOString().split('T')[0],
+      time: '12:00',
+      note: '',
+    });
+  };
+
   // Format relative time
   const formatRelativeTime = (dateString: string) => {
     const date = new Date(dateString);
@@ -256,7 +333,7 @@ const EmployeesAlerts = () => {
           className="flex items-center gap-2"
           onClick={markAllAsRead}
         >
-          <Bell className="h-4 w-4" />
+          <CheckCircle className="h-4 w-4" />
           Tout marquer comme lu
         </Button>
       </div>
@@ -479,10 +556,7 @@ const EmployeesAlerts = () => {
                       size="sm" 
                       className="w-full flex items-center justify-center gap-2"
                       onClick={() => {
-                        toast({
-                          title: "Fiche employé",
-                          description: `Vous êtes redirigé vers la fiche de ${alertToManage.employeeName}`,
-                        });
+                        setShowEmployeeDialog(true);
                         setShowDialogId(null);
                       }}
                     >
@@ -495,10 +569,7 @@ const EmployeesAlerts = () => {
                       size="sm" 
                       className="w-full flex items-center justify-center gap-2"
                       onClick={() => {
-                        toast({
-                          title: "Rappel programmé",
-                          description: "Un rappel a été programmé pour cette alerte",
-                        });
+                        setShowReminderDialog(true);
                         setShowDialogId(null);
                       }}
                     >
@@ -511,14 +582,11 @@ const EmployeesAlerts = () => {
                       size="sm" 
                       className="w-full flex items-center justify-center gap-2"
                       onClick={() => {
-                        toast({
-                          title: "Alerte transférée",
-                          description: "L'alerte a été transférée à un autre administrateur",
-                        });
+                        setShowTransferDialog(true);
                         setShowDialogId(null);
                       }}
                     >
-                      <Bell className="h-4 w-4" />
+                      <Send className="h-4 w-4" />
                       Transférer
                     </Button>
                     
@@ -527,11 +595,13 @@ const EmployeesAlerts = () => {
                       size="sm" 
                       className="w-full flex items-center justify-center gap-2"
                       onClick={() => {
-                        markAsRead(alertToManage.id);
-                        setShowDialogId(null);
+                        if (alertToManage) {
+                          markAsRead(alertToManage.id);
+                          setShowDialogId(null);
+                        }
                       }}
                     >
-                      <FileText className="h-4 w-4" />
+                      <CheckCircle className="h-4 w-4" />
                       Marquer comme lu
                     </Button>
                   </div>
@@ -558,6 +628,167 @@ const EmployeesAlerts = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Transfer Dialog */}
+      <Dialog open={showTransferDialog} onOpenChange={setShowTransferDialog}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Transférer l'alerte</DialogTitle>
+            <DialogDescription>
+              Transférez cette alerte à un autre membre du personnel.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="recipient">Destinataire</Label>
+              <Select
+                value={transferForm.recipient}
+                onValueChange={(value) => setTransferForm({ ...transferForm, recipient: value })}
+              >
+                <SelectTrigger id="recipient">
+                  <SelectValue placeholder="Sélectionner un destinataire" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="philippe.durand@example.com">Philippe Durand (RH)</SelectItem>
+                  <SelectItem value="sophie.martin@example.com">Sophie Martin (Direction)</SelectItem>
+                  <SelectItem value="eric.leroy@example.com">Eric Leroy (Technique)</SelectItem>
+                  <SelectItem value="julie.blanc@example.com">Julie Blanc (Admin)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="message">Message (optionnel)</Label>
+              <Input
+                id="message"
+                value={transferForm.message}
+                onChange={(e) => setTransferForm({ ...transferForm, message: e.target.value })}
+                placeholder="Ajoutez un message avec l'alerte..."
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="priority">Priorité</Label>
+              <Select
+                value={transferForm.priority}
+                onValueChange={(value: any) => setTransferForm({ ...transferForm, priority: value })}
+              >
+                <SelectTrigger id="priority">
+                  <SelectValue placeholder="Sélectionner une priorité" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="high">Élevée</SelectItem>
+                  <SelectItem value="medium">Moyenne</SelectItem>
+                  <SelectItem value="low">Basse</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowTransferDialog(false)}>
+              Annuler
+            </Button>
+            <Button onClick={handleTransfer}>Transférer</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Reminder Dialog */}
+      <Dialog open={showReminderDialog} onOpenChange={setShowReminderDialog}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Programmer un rappel</DialogTitle>
+            <DialogDescription>
+              Définissez quand vous souhaitez être rappelé de cette alerte.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="date">Date</Label>
+              <Input
+                id="date"
+                type="date"
+                value={reminderForm.date}
+                onChange={(e) => setReminderForm({ ...reminderForm, date: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="time">Heure</Label>
+              <Input
+                id="time"
+                type="time"
+                value={reminderForm.time}
+                onChange={(e) => setReminderForm({ ...reminderForm, time: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="note">Note (optionnel)</Label>
+              <Input
+                id="note"
+                value={reminderForm.note}
+                onChange={(e) => setReminderForm({ ...reminderForm, note: e.target.value })}
+                placeholder="Ajoutez une note pour ce rappel..."
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowReminderDialog(false)}>
+              Annuler
+            </Button>
+            <Button onClick={handleReminder}>Programmer</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Employee Details Dialog */}
+      <Dialog open={showEmployeeDialog} onOpenChange={setShowEmployeeDialog}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>Détails de l'employé</DialogTitle>
+          </DialogHeader>
+          {alertToManage && (
+            <div className="grid grid-cols-2 gap-4 py-4">
+              <div className="col-span-2 flex justify-center mb-4">
+                <div className="w-24 h-24 rounded-full bg-gray-200 flex items-center justify-center">
+                  <UserCheck className="h-12 w-12 text-gray-500" />
+                </div>
+              </div>
+              <div>
+                <Label className="text-sm text-muted-foreground">Nom</Label>
+                <p className="font-medium">{alertToManage.employeeName}</p>
+              </div>
+              <div>
+                <Label className="text-sm text-muted-foreground">ID Employé</Label>
+                <p className="font-medium">{alertToManage.employeeId}</p>
+              </div>
+              <div>
+                <Label className="text-sm text-muted-foreground">Département</Label>
+                <p className="font-medium">{alertToManage.department}</p>
+              </div>
+              <div>
+                <Label className="text-sm text-muted-foreground">Statut</Label>
+                <Badge className="mt-1">Actif</Badge>
+              </div>
+              <div className="col-span-2">
+                <Label className="text-sm text-muted-foreground">Alerte actuelle</Label>
+                <p className="font-medium">{alertToManage.message}</p>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowEmployeeDialog(false)}>
+              Fermer
+            </Button>
+            <Button onClick={() => {
+              setShowEmployeeDialog(false);
+              toast({
+                title: "Navigation",
+                description: "Redirection vers la fiche complète de l'employé",
+              });
+            }}>
+              Voir fiche complète
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

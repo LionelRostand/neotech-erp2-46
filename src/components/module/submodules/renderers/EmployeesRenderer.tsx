@@ -22,6 +22,8 @@ import EmployeesAlerts from '../EmployeesAlerts';
 import { SubModule } from '@/data/types/modules';
 
 export const renderEmployeesSubmodule = (submoduleId: string, submodule: SubModule) => {
+  console.log("Rendering employee submodule:", submoduleId);
+  
   switch (submoduleId) {
     case 'employees-dashboard':
       return <EmployeesDashboard />;

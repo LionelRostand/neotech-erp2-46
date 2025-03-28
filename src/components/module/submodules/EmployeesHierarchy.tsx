@@ -39,7 +39,28 @@ const EmployeesHierarchy: React.FC = () => {
       managerId: "EMP002",
       managerName: "Lionel Djossa",
       color: "#10b981" // emerald-500
-    }
+    },
+    {
+      id: "DEP003",
+      name: "Finance",
+      managerId: "EMP005",
+      managerName: "Marie Dupont",
+      color: "#8b5cf6" // violet-500
+    },
+    {
+      id: "DEP004",
+      name: "Technique",
+      managerId: "EMP007",
+      managerName: "Jean Leroy",
+      color: "#f59e0b" // amber-500
+    },
+    {
+      id: "DEP005",
+      name: "Ressources Humaines",
+      managerId: "EMP009",
+      managerName: "Camille Rousseau",
+      color: "#ec4899" // pink-500
+    },
   ]);
 
   // State for hierarchy data
@@ -47,10 +68,10 @@ const EmployeesHierarchy: React.FC = () => {
   const [activeTab, setActiveTab] = useState("employees");
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set());
 
-  // Build employee hierarchy on component mount
+  // Build employee hierarchy on component mount and when departments change
   useEffect(() => {
     buildEmployeeHierarchy();
-  }, []);
+  }, [departments]);
 
   // Toggle node expansion
   const toggleNodeExpansion = (employeeId: string) => {
@@ -134,7 +155,7 @@ const EmployeesHierarchy: React.FC = () => {
           className={`flex items-center py-2 pl-${level * 4} transition-colors hover:bg-gray-50 rounded-md`}
           style={{ 
             paddingLeft: `${level * 20 + 8}px`, 
-            borderLeft: node.departmentColor ? `2px solid ${node.departmentColor}` : 'none'
+            borderLeft: node.departmentColor ? `3px solid ${node.departmentColor}` : 'none'
           }}
         >
           {hasSubordinates && (
@@ -176,7 +197,7 @@ const EmployeesHierarchy: React.FC = () => {
     );
   };
 
-  // Render departments with pyramid style
+  // Render departments with improved pyramid style
   const renderDepartmentsPyramid = () => {
     // Group employees by department
     const departmentEmployees = departments.map(department => {
@@ -197,7 +218,7 @@ const EmployeesHierarchy: React.FC = () => {
             <CardHeader className="pb-2">
               <CardTitle className="text-lg flex items-center gap-2">
                 <Building className="h-5 w-5" style={{ color: department.color }} />
-                {department.name}
+                {department.name} <span className="text-sm font-normal text-gray-500">({department.count} membres)</span>
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -205,19 +226,26 @@ const EmployeesHierarchy: React.FC = () => {
               {department.manager ? (
                 <div className="mb-6">
                   <div className="text-center relative">
-                    <div className="inline-block p-4 bg-gray-100 rounded-lg mb-2 border-2 shadow-sm" 
-                         style={{ borderColor: department.color }}>
+                    <div 
+                      className="inline-block p-4 bg-gray-100 rounded-lg mb-2 border-2 shadow-sm transform hover:scale-105 transition-transform" 
+                      style={{ borderColor: department.color }}
+                    >
                       <div className="font-bold">{department.managerName}</div>
                       <div className="text-sm text-gray-600">{department.manager.position}</div>
-                      <div className="text-xs mt-1 py-1 px-2 rounded-full" 
-                           style={{ backgroundColor: department.color, color: 'white' }}>
+                      <div 
+                        className="text-xs mt-1 py-1 px-2 rounded-full" 
+                        style={{ backgroundColor: department.color, color: 'white' }}
+                      >
                         Responsable
                       </div>
                     </div>
                     
-                    {/* Connecting line to subordinates */}
+                    {/* Connecting lines to subordinates */}
                     {department.employees.length > 0 && (
-                      <div className="w-0.5 h-6 bg-gray-300 mx-auto"></div>
+                      <>
+                        <div className="w-0.5 h-10 bg-gray-300 mx-auto"></div>
+                        <div className="w-full h-0.5 bg-gray-300 absolute left-0 bottom-0"></div>
+                      </>
                     )}
                   </div>
                 </div>
@@ -227,15 +255,19 @@ const EmployeesHierarchy: React.FC = () => {
               
               {/* Department Employees */}
               {department.employees.length > 0 ? (
-                <div className="mt-4">
-                  <div className="flex flex-wrap justify-center gap-3">
+                <div className="mt-12">
+                  <div className="flex flex-wrap justify-center gap-4">
                     {department.employees
                       .filter(emp => emp.id !== department.managerId) // Exclude the manager
                       .map(emp => (
-                        <div key={emp.id} 
-                             className="p-3 bg-gray-50 rounded-md shadow-sm border text-center w-[150px]">
+                        <div 
+                          key={emp.id} 
+                          className="p-3 bg-gray-50 rounded-md shadow-sm border text-center w-[160px] hover:shadow-md transition-shadow"
+                          style={{ borderTop: `3px solid ${department.color}` }}
+                        >
                           <div className="font-medium">{emp.firstName} {emp.lastName}</div>
                           <div className="text-sm text-gray-500">{emp.position}</div>
+                          <div className="text-xs text-gray-400 mt-1">{emp.email}</div>
                         </div>
                       ))
                     }
