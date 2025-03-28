@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { loginUser } from '@/services/userService';
-import { ReloadIcon } from '@radix-ui/react-icons';
+import { ReloadIcon } from "lucide-react";
 
 const LoginForm = () => {
   const navigate = useNavigate();
