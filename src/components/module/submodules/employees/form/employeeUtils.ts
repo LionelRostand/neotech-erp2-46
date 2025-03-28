@@ -17,8 +17,8 @@ export const prepareEmployeeData = (data: EmployeeFormValues): Partial<Employee>
     hireDate: data.hireDate,
     manager: data.manager || '',
     status: data.status,
-    education: [],
     skills: [],
+    education: [],
     documents: [],
     workSchedule: {
       monday: '09:00 - 18:00',

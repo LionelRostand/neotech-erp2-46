@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Employee, Document } from '@/types/employee';
@@ -77,7 +76,6 @@ const DocumentsTab: React.FC<DocumentsTabProps> = ({ employee }) => {
   };
 
   const handleDownload = (document: Document) => {
-    // Simuler un téléchargement
     toast.success(`Téléchargement de "${document.name}" en cours...`);
     setTimeout(() => {
       toast.success(`Document "${document.name}" téléchargé avec succès`);
@@ -160,7 +158,6 @@ const DocumentsTab: React.FC<DocumentsTabProps> = ({ employee }) => {
           </div>
         )}
 
-        {/* Dialog pour ajouter un document */}
         <Dialog open={isUploadOpen} onOpenChange={setIsUploadOpen}>
           <DialogContent>
             <DialogHeader>
@@ -234,7 +231,6 @@ const DocumentsTab: React.FC<DocumentsTabProps> = ({ employee }) => {
           </DialogContent>
         </Dialog>
 
-        {/* Dialog pour visualiser un document */}
         <Dialog open={isViewOpen} onOpenChange={setIsViewOpen}>
           <DialogContent>
             <DialogHeader>
@@ -255,7 +251,6 @@ const DocumentsTab: React.FC<DocumentsTabProps> = ({ employee }) => {
           </DialogContent>
         </Dialog>
 
-        {/* Dialog pour modifier un document */}
         <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
           <DialogContent>
             <DialogHeader>
@@ -302,7 +297,6 @@ const DocumentsTab: React.FC<DocumentsTabProps> = ({ employee }) => {
           </DialogContent>
         </Dialog>
 
-        {/* Dialog de confirmation pour supprimer un document */}
         <Dialog open={isDeleteConfirmOpen} onOpenChange={setIsDeleteConfirmOpen}>
           <DialogContent>
             <DialogHeader>

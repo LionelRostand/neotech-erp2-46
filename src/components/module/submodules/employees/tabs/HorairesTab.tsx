@@ -9,13 +9,21 @@ interface HorairesTabProps {
 }
 
 const HorairesTab: React.FC<HorairesTabProps> = ({ employee }) => {
+  const workSchedule = employee.workSchedule || {
+    monday: '09:00 - 18:00',
+    tuesday: '09:00 - 18:00',
+    wednesday: '09:00 - 18:00',
+    thursday: '09:00 - 18:00',
+    friday: '09:00 - 17:00',
+  };
+
   return (
     <Card>
       <CardContent className="p-6">
         <h3 className="text-lg font-semibold mb-6">Horaires de travail</h3>
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-          {Object.entries(employee.workSchedule).map(([day, hours]) => (
+          {Object.entries(workSchedule).map(([day, hours]) => (
             <div key={day} className="p-4 border rounded-md">
               <p className="text-sm font-medium text-gray-500 mb-2">
                 {day.charAt(0).toUpperCase() + day.slice(1)}

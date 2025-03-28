@@ -12,6 +12,8 @@ interface InformationsTabProps {
 }
 
 const InformationsTab: React.FC<InformationsTabProps> = ({ employee }) => {
+  const education = employee.education || [];
+  
   return (
     <Card>
       <CardContent className="p-6 space-y-6">
@@ -78,15 +80,19 @@ const InformationsTab: React.FC<InformationsTabProps> = ({ employee }) => {
         <div>
           <h3 className="text-lg font-semibold mb-4">Formation</h3>
           <div className="space-y-4">
-            {employee.education.map((edu, index) => (
-              <div key={index} className="flex items-center gap-2 p-3 bg-gray-50 rounded-md">
-                <GraduationCap className="h-5 w-5 text-blue-500 flex-shrink-0" />
-                <div>
-                  <p className="font-medium">{edu.degree}</p>
-                  <p className="text-sm text-gray-500">{edu.school}, {edu.year}</p>
+            {education.length > 0 ? (
+              education.map((edu, index) => (
+                <div key={index} className="flex items-center gap-2 p-3 bg-gray-50 rounded-md">
+                  <GraduationCap className="h-5 w-5 text-blue-500 flex-shrink-0" />
+                  <div>
+                    <p className="font-medium">{edu.degree}</p>
+                    <p className="text-sm text-gray-500">{edu.school}, {edu.year}</p>
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))
+            ) : (
+              <p className="text-gray-500">Aucune formation renseignée</p>
+            )}
           </div>
         </div>
       </CardContent>
