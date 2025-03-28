@@ -7,7 +7,7 @@ export const COLLECTIONS = {
   DOCUMENTS: 'documents',
   SETTINGS: 'settings',
   MODULES: 'modules',
-  CONTACTS: 'contacts', // Add top-level contacts collection
+  CONTACTS: 'contacts', // Top-level contacts collection
   
   // Collection paths for top-level directories
   MESSAGES: {
@@ -40,7 +40,7 @@ export const COLLECTIONS = {
     TASKS: 'project_tasks',
     TEAMS: 'project_teams',
     NOTIFICATIONS: 'project_notifications',
-    PROJECTS: 'projects_list' // Add the missing PROJECTS field
+    PROJECTS: 'projects_list' // PROJECTS field for projects list
   },
   
   FREIGHT: {
@@ -65,7 +65,7 @@ export const COLLECTIONS = {
     STAFF: 'health_staff'
   },
   
-  // Add direct properties for health collections for backward compatibility
+  // Direct properties for health collections
   HEALTH_CONSULTATIONS: 'health_consultations',
   HEALTH_PATIENTS: 'health_patients',
   HEALTH_DOCTORS: 'health_doctors',

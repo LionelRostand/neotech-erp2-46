@@ -1,39 +1,50 @@
 
 import { 
-  QueryConstraint,
+  collection, 
+  doc, 
+  CollectionReference, 
+  DocumentReference,
   Timestamp,
-  DocumentData,
-  collection,
-  doc,
-  getDoc,
-  getDocs,
-  query
+  serverTimestamp
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 
-// Helper to get a collection reference
-export const getCollectionRef = (collectionName: string) => {
-  return collection(db, collectionName);
+// Get a Firestore collection reference
+export const getCollectionRef = (collectionPath: string): CollectionReference => {
+  return collection(db, collectionPath);
 };
 
-// Helper to get a document reference
-export const getDocRef = (collectionName: string, id: string) => {
-  return doc(db, collectionName, id);
+// Get a Firestore document reference
+export const getDocRef = (collectionPath: string, docId: string): DocumentReference => {
+  return doc(db, collectionPath, docId);
 };
 
-// Format document with timestamps
-export const formatDocumentWithTimestamps = (data: DocumentData) => {
+// Format document data with timestamps for created/updated timestamps
+export const formatDocumentWithTimestamps = (data: any) => {
+  const now = serverTimestamp();
   return {
     ...data,
-    createdAt: Timestamp.now(),
-    updatedAt: Timestamp.now()
+    createdAt: data.createdAt || now,
+    updatedAt: now
   };
 };
 
-// Update document with timestamp
-export const updateDocumentWithTimestamp = (data: DocumentData) => {
-  return {
-    ...data,
-    updatedAt: Timestamp.now()
-  };
+// Convert Firestore timestamps to Date objects
+export const convertTimestamps = (data: any): any => {
+  if (!data) return data;
+  
+  const result = { ...data };
+  
+  Object.keys(result).forEach(key => {
+    // Convert Timestamp to Date
+    if (result[key] instanceof Timestamp) {
+      result[key] = result[key].toDate();
+    }
+    // Recursively convert nested objects
+    else if (result[key] && typeof result[key] === 'object') {
+      result[key] = convertTimestamps(result[key]);
+    }
+  });
+  
+  return result;
 };

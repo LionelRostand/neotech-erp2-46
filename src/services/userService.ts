@@ -8,7 +8,7 @@ import {
 import { doc, setDoc, getDoc, collection, getDocs, query, where } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase";
 import { User, UserPermission } from "@/types/user";
-import { toast } from "sonner";
+import { useToast } from "@/hooks/use-toast";
 import { COLLECTIONS } from "@/lib/firebase-collections";
 
 // Créer un nouvel utilisateur dans Firebase Authentication et Firestore
@@ -22,7 +22,7 @@ export const createUser = async (userData: User, password: string): Promise<User
     const existingUsers = await getDocs(emailQuery);
     
     if (!existingUsers.empty) {
-      toast.error("Un utilisateur avec cet email existe déjà");
+      console.error("Un utilisateur avec cet email existe déjà");
       return null;
     }
 
@@ -78,12 +78,11 @@ export const createUser = async (userData: User, password: string): Promise<User
     // Sauvegarder les permissions
     await setDoc(doc(db, COLLECTIONS.USER_PERMISSIONS, uid), defaultPermissions);
     
-    toast.success("Utilisateur créé avec succès");
+    console.log("Utilisateur créé avec succès");
     return userToSave;
     
   } catch (error: any) {
     console.error("Erreur lors de la création de l'utilisateur:", error);
-    toast.error(`Erreur: ${error.message || "Impossible de créer l'utilisateur"}`);
     return null;
   }
 };

@@ -75,7 +75,16 @@ const UserManagement = () => {
   const onSubmit = async (values: FormValues) => {
     setIsCreatingUser(true);
     try {
-      const newUser = await createUser(values as User, values.password);
+      const userData: User = {
+        email: values.email,
+        firstName: values.firstName,
+        lastName: values.lastName,
+        role: values.role,
+        department: values.department || "",
+        position: values.position || ""
+      };
+
+      const newUser = await createUser(userData, values.password);
       if (newUser) {
         setUsers((prevUsers) => [...prevUsers, newUser]);
         form.reset();
@@ -87,6 +96,11 @@ const UserManagement = () => {
       }
     } catch (error) {
       console.error("Erreur lors de la création de l'utilisateur", error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de créer l'utilisateur",
+        variant: "destructive",
+      });
     } finally {
       setIsCreatingUser(false);
     }
