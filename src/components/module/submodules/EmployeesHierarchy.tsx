@@ -4,6 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { employees } from '@/data/employees';
 import { Employee } from '@/types/employee';
 import { ListTree, Users, Building, ChevronRight, ChevronDown } from 'lucide-react';
+import { getSyncedDepartments } from './departments/utils/departmentUtils';
 
 // Interface pour département dans la hiérarchie
 interface Department {
@@ -12,6 +13,8 @@ interface Department {
   managerId: string | null;
   managerName: string | null;
   color: string;
+  employeeIds?: string[];
+  employeesCount?: number;
 }
 
 // Interface pour employé dans la hiérarchie
@@ -23,53 +26,93 @@ interface EmployeeNode extends Employee {
 }
 
 const EmployeesHierarchy: React.FC = () => {
-  // Sample departments data
-  const [departments, setDepartments] = useState<Department[]>([
-    {
-      id: "DEP001",
-      name: "Marketing",
-      managerId: "EMP003",
-      managerName: "Sophie Martin",
-      color: "#3b82f6" // blue-500
-    },
-    {
-      id: "DEP002",
-      name: "Direction",
-      managerId: "EMP002",
-      managerName: "Lionel Djossa",
-      color: "#10b981" // emerald-500
-    },
-    {
-      id: "DEP003",
-      name: "Finance",
-      managerId: "EMP005",
-      managerName: "Marie Dupont",
-      color: "#8b5cf6" // violet-500
-    },
-    {
-      id: "DEP004",
-      name: "Technique",
-      managerId: "EMP007",
-      managerName: "Jean Leroy",
-      color: "#f59e0b" // amber-500
-    },
-    {
-      id: "DEP005",
-      name: "Ressources Humaines",
-      managerId: "EMP009",
-      managerName: "Camille Rousseau",
-      color: "#ec4899" // pink-500
-    },
-  ]);
+  // Départements - maintenant synchronisés avec la gestion des départements
+  const [departments, setDepartments] = useState<Department[]>([]);
 
   // State for hierarchy data
   const [employeeHierarchy, setEmployeeHierarchy] = useState<EmployeeNode[]>([]);
   const [activeTab, setActiveTab] = useState("employees");
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set());
 
+  // Fetch departments from synced storage
+  useEffect(() => {
+    const loadSyncedDepartments = () => {
+      const syncedDepartments = getSyncedDepartments();
+      if (syncedDepartments && syncedDepartments.length > 0) {
+        console.log("Loaded synced departments:", syncedDepartments);
+        setDepartments(syncedDepartments);
+      } else {
+        // Fallback to default departments
+        setDepartments([
+          {
+            id: "DEP001",
+            name: "Marketing",
+            managerId: "EMP003",
+            managerName: "Sophie Martin",
+            color: "#3b82f6", // blue-500
+            employeesCount: 2,
+            employeeIds: ["EMP003", "EMP004"]
+          },
+          {
+            id: "DEP002",
+            name: "Direction",
+            managerId: "EMP002",
+            managerName: "Lionel Djossa",
+            color: "#10b981", // emerald-500
+            employeesCount: 1,
+            employeeIds: ["EMP002"]
+          },
+          {
+            id: "DEP003",
+            name: "Finance",
+            managerId: "EMP005",
+            managerName: "Marie Dupont",
+            color: "#8b5cf6", // violet-500
+            employeesCount: 3,
+            employeeIds: ["EMP005", "EMP006", "EMP010"]
+          },
+          {
+            id: "DEP004",
+            name: "Technique",
+            managerId: "EMP007",
+            managerName: "Jean Leroy",
+            color: "#f59e0b", // amber-500
+            employeesCount: 2,
+            employeeIds: ["EMP007", "EMP008"]
+          },
+          {
+            id: "DEP005",
+            name: "Ressources Humaines",
+            managerId: "EMP009",
+            managerName: "Camille Rousseau",
+            color: "#ec4899", // pink-500
+            employeesCount: 1,
+            employeeIds: ["EMP009"]
+          },
+        ]);
+      }
+    };
+
+    loadSyncedDepartments();
+
+    // Listen for storage changes to keep departments in sync
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'hierarchy_departments_data') {
+        loadSyncedDepartments();
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, []);
+
   // Build employee hierarchy on component mount and when departments change
   useEffect(() => {
-    buildEmployeeHierarchy();
+    if (departments.length > 0) {
+      buildEmployeeHierarchy();
+    }
   }, [departments]);
 
   // Toggle node expansion
@@ -200,12 +243,19 @@ const EmployeesHierarchy: React.FC = () => {
   const renderDepartmentsPyramid = () => {
     // Group employees by department
     const departmentEmployees = departments.map(department => {
-      const deptEmployees = employees.filter(emp => emp.department === department.name);
+      // Use employeeIds from synced departments if available
+      let deptEmployees = [];
+      if (department.employeeIds && department.employeeIds.length > 0) {
+        deptEmployees = employees.filter(emp => department.employeeIds!.includes(emp.id));
+      } else {
+        deptEmployees = employees.filter(emp => emp.department === department.name);
+      }
+      
       return {
         ...department,
         employees: deptEmployees,
         manager: employees.find(emp => emp.id === department.managerId),
-        count: deptEmployees.length
+        count: department.employeesCount || deptEmployees.length
       };
     });
 

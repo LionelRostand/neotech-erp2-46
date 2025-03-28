@@ -3,6 +3,9 @@ import { Department, DepartmentFormData } from '../types';
 import { Employee } from '@/types/employee';
 import { employees } from '@/data/employees';
 
+// Store department data in local storage for hierarchy component to access
+const DEPARTMENTS_STORAGE_KEY = 'hierarchy_departments_data';
+
 export const createDefaultDepartments = (): Department[] => {
   return [
     {
@@ -70,4 +73,27 @@ export const getDepartmentEmployees = (departmentId: string, departments: Depart
   if (!department || !department.employeeIds) return [];
   
   return employees.filter(emp => department.employeeIds.includes(emp.id));
+};
+
+// Function to sync departments with hierarchy component
+export const syncDepartmentsWithHierarchy = (departments: Department[]) => {
+  try {
+    localStorage.setItem(DEPARTMENTS_STORAGE_KEY, JSON.stringify(departments));
+    console.log("Departments synced with hierarchy:", departments);
+  } catch (error) {
+    console.error("Error syncing departments with hierarchy:", error);
+  }
+};
+
+// Function for hierarchy component to get synced departments
+export const getSyncedDepartments = (): Department[] => {
+  try {
+    const data = localStorage.getItem(DEPARTMENTS_STORAGE_KEY);
+    if (data) {
+      return JSON.parse(data);
+    }
+  } catch (error) {
+    console.error("Error getting synced departments:", error);
+  }
+  return [];
 };

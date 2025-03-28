@@ -7,7 +7,8 @@ import {
   createDefaultDepartments, 
   createEmptyFormData, 
   prepareDepartmentFromForm,
-  getDepartmentEmployees
+  getDepartmentEmployees,
+  syncDepartmentsWithHierarchy
 } from './utils/departmentUtils';
 
 export const useDepartments = () => {
@@ -31,6 +32,13 @@ export const useDepartments = () => {
   useEffect(() => {
     loadDepartmentsFromFirestore();
   }, []);
+
+  // Effect to sync with hierarchy whenever departments change
+  useEffect(() => {
+    if (departments.length > 0) {
+      syncDepartmentsWithHierarchy(departments);
+    }
+  }, [departments]);
 
   // Function to load departments from Firestore
   const loadDepartmentsFromFirestore = async () => {
