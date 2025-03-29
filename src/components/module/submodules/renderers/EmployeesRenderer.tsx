@@ -1,9 +1,9 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { SubModule } from '@/data/types/modules';
 import DefaultSubmoduleContent from '../DefaultSubmoduleContent';
 import EmployeesDashboard from '../EmployeesDashboard';
-import EmployeesProfiles from '../EmployeesProfiles';
+import EmployeesProfiles from '../employees/EmployeesProfiles';
 import EmployeesBadges from '../EmployeesBadges';
 import EmployeesAttendance from '../EmployeesAttendance';
 import EmployeesTimesheet from '../EmployeesTimesheet';
@@ -21,78 +21,6 @@ import EmployeesDepartments from '../departments/EmployeesDepartments';
 import EmployeesHierarchy from '../EmployeesHierarchy';
 import EmployeesCompanies from '../employees/EmployeesCompanies';
 import SalarySlips from '../salaries/SalarySlips';
-import { Employee } from '@/types/employee';
-
-// Mock data for employees
-const mockEmployees: Employee[] = [
-  {
-    id: "EMP001",
-    firstName: "Jean",
-    lastName: "Dupont",
-    email: "jean.dupont@example.com",
-    phone: "0123456789",
-    department: "Développement",
-    position: "Développeur Senior",
-    contract: "CDI",
-    hireDate: "01/02/2020",
-    manager: "Sarah Martin",
-    status: "Actif",
-    company: "enterprise1"
-  },
-  {
-    id: "EMP002",
-    firstName: "Marie",
-    lastName: "Laurent",
-    email: "marie.laurent@example.com",
-    phone: "0123456788",
-    department: "Marketing",
-    position: "Chef de Produit",
-    contract: "CDI",
-    hireDate: "15/05/2019",
-    manager: "Thomas Bernard",
-    status: "Actif",
-    company: "techinno"
-  },
-  {
-    id: "EMP003",
-    firstName: "Pierre",
-    lastName: "Martin",
-    email: "pierre.martin@example.com",
-    phone: "0123456787",
-    department: "Ressources Humaines",
-    position: "Responsable RH",
-    contract: "CDI",
-    hireDate: "10/03/2021",
-    status: "Actif",
-    company: "greenco"
-  },
-  {
-    id: "EMP004",
-    firstName: "Sophie",
-    lastName: "Bertrand",
-    email: "sophie.bertrand@example.com",
-    phone: "0123456786",
-    department: "Finance",
-    position: "Comptable",
-    contract: "CDI",
-    hireDate: "05/06/2018",
-    status: "Actif",
-    company: "enterprise1"
-  },
-  {
-    id: "EMP005",
-    firstName: "Lucas",
-    lastName: "Dubois",
-    email: "lucas.dubois@example.com",
-    phone: "0123456785",
-    department: "Développement",
-    position: "Chef de Projet",
-    contract: "CDI",
-    hireDate: "12/09/2017",
-    status: "Actif",
-    company: "techinno"
-  }
-];
 
 export const renderEmployeesSubmodule = (submoduleId: string, submodule: SubModule) => {
   console.log('Rendering employee submodule:', submoduleId);
@@ -101,7 +29,7 @@ export const renderEmployeesSubmodule = (submoduleId: string, submodule: SubModu
     case 'employees-dashboard':
       return <EmployeesDashboard />;
     case 'employees-profiles':
-      return <EmployeesProfiles employees={mockEmployees} />;
+      return <EmployeesProfiles />;
     case 'employees-badges':
       return <EmployeesBadges />;
     case 'employees-departments':

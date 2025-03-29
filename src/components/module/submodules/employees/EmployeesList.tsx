@@ -4,7 +4,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { User, Search, UserPlus, Eye, Pencil, Trash } from 'lucide-react';
+import { User, Search, Eye, Pencil, Trash } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Employee } from '@/types/employee';
 import {
@@ -18,6 +18,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useState } from 'react';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface EmployeesListProps {
   employees: Employee[];
@@ -26,7 +27,7 @@ interface EmployeesListProps {
   onViewEmployee: (employee: Employee) => void;
   onEditEmployee: (employee: Employee) => void;
   onDeleteEmployee: (employeeId: string) => void;
-  onOpenAddEmployee?: () => void;
+  loading?: boolean;
 }
 
 const EmployeesList: React.FC<EmployeesListProps> = ({
@@ -36,7 +37,7 @@ const EmployeesList: React.FC<EmployeesListProps> = ({
   onViewEmployee,
   onEditEmployee,
   onDeleteEmployee,
-  onOpenAddEmployee
+  loading = false
 }) => {
   const [employeeToDelete, setEmployeeToDelete] = useState<Employee | null>(null);
   
@@ -54,6 +55,21 @@ const EmployeesList: React.FC<EmployeesListProps> = ({
       setEmployeeToDelete(null);
     }
   };
+  
+  // Skeleton pour l'état de chargement
+  const LoadingSkeleton = () => (
+    Array(5).fill(0).map((_, index) => (
+      <TableRow key={`skeleton-${index}`}>
+        <TableCell><Skeleton className="h-4 w-[120px]" /></TableCell>
+        <TableCell><Skeleton className="h-4 w-[150px]" /></TableCell>
+        <TableCell><Skeleton className="h-4 w-[100px]" /></TableCell>
+        <TableCell><Skeleton className="h-4 w-[80px]" /></TableCell>
+        <TableCell><Skeleton className="h-4 w-[80px]" /></TableCell>
+        <TableCell><Skeleton className="h-4 w-[60px]" /></TableCell>
+        <TableCell className="text-right"><Skeleton className="h-4 w-[80px] ml-auto" /></TableCell>
+      </TableRow>
+    ))
+  );
 
   return (
     <div className="space-y-6">
@@ -91,63 +107,67 @@ const EmployeesList: React.FC<EmployeesListProps> = ({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredEmployees.map((employee) => (
-                <TableRow key={employee.id}>
-                  <TableCell className="font-medium">
-                    {employee.firstName} {employee.lastName}
-                  </TableCell>
-                  <TableCell>{employee.position}</TableCell>
-                  <TableCell>{employee.department}</TableCell>
-                  <TableCell>{employee.contract}</TableCell>
-                  <TableCell>{employee.hireDate}</TableCell>
-                  <TableCell>
-                    <Badge className={`${
-                      employee.status === "Actif" 
-                        ? "bg-green-100 text-green-800 hover:bg-green-100" 
-                        : "bg-red-100 text-red-800 hover:bg-red-100"
-                    }`}>
-                      {employee.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-right space-x-1">
-                    <Button 
-                      variant="ghost" 
-                      size="icon"
-                      onClick={() => onViewEmployee(employee)}
-                      title="Visualiser"
-                    >
-                      <Eye className="h-4 w-4" />
-                      <span className="sr-only">Voir</span>
-                    </Button>
-                    <Button 
-                      variant="ghost" 
-                      size="icon"
-                      onClick={() => onEditEmployee(employee)}
-                      title="Modifier"
-                    >
-                      <Pencil className="h-4 w-4" />
-                      <span className="sr-only">Modifier</span>
-                    </Button>
-                    <Button 
-                      variant="ghost" 
-                      size="icon"
-                      onClick={() => setEmployeeToDelete(employee)}
-                      title="Supprimer"
-                    >
-                      <Trash className="h-4 w-4" />
-                      <span className="sr-only">Supprimer</span>
-                    </Button>
+              {loading ? (
+                <LoadingSkeleton />
+              ) : filteredEmployees.length > 0 ? (
+                filteredEmployees.map((employee) => (
+                  <TableRow key={employee.id}>
+                    <TableCell className="font-medium">
+                      {employee.firstName} {employee.lastName}
+                    </TableCell>
+                    <TableCell>{employee.position}</TableCell>
+                    <TableCell>{employee.department}</TableCell>
+                    <TableCell>{employee.contract}</TableCell>
+                    <TableCell>{employee.hireDate}</TableCell>
+                    <TableCell>
+                      <Badge className={`${
+                        employee.status === "Actif" 
+                          ? "bg-green-100 text-green-800 hover:bg-green-100" 
+                          : "bg-red-100 text-red-800 hover:bg-red-100"
+                      }`}>
+                        {employee.status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-right space-x-1">
+                      <Button 
+                        variant="ghost" 
+                        size="icon"
+                        onClick={() => onViewEmployee(employee)}
+                        title="Visualiser"
+                      >
+                        <Eye className="h-4 w-4" />
+                        <span className="sr-only">Voir</span>
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        size="icon"
+                        onClick={() => onEditEmployee(employee)}
+                        title="Modifier"
+                      >
+                        <Pencil className="h-4 w-4" />
+                        <span className="sr-only">Modifier</span>
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        size="icon"
+                        onClick={() => setEmployeeToDelete(employee)}
+                        title="Supprimer"
+                      >
+                        <Trash className="h-4 w-4" />
+                        <span className="sr-only">Supprimer</span>
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={7} className="text-center py-6">
+                    {searchQuery ? "Aucun employé ne correspond à votre recherche." : "Aucun employé trouvé."}
                   </TableCell>
                 </TableRow>
-              ))}
+              )}
             </TableBody>
           </Table>
-          
-          {filteredEmployees.length === 0 && (
-            <div className="text-center py-8">
-              <p className="text-gray-500">Aucun employé trouvé.</p>
-            </div>
-          )}
         </CardContent>
       </Card>
 
