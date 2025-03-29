@@ -17,6 +17,7 @@ import {
   SalonRenderer,
   RestaurantRenderer
 } from './renderers';
+import { toast } from "@/hooks/use-toast";
 
 interface RenderSubmoduleContentProps {
   submoduleId: string;
@@ -49,7 +50,17 @@ export const renderSubmoduleContent = ({ submoduleId, submodule }: RenderSubmodu
   
   if (submoduleId.startsWith('companies-')) {
     console.log('Delegating to renderCompaniesSubmodule for:', submoduleId);
-    return renderCompaniesSubmodule(submoduleId, submodule);
+    try {
+      return renderCompaniesSubmodule(submoduleId, submodule);
+    } catch (error) {
+      console.error('Error rendering companies submodule:', error);
+      toast({
+        title: "Erreur",
+        description: `Erreur lors du rendu du module ${submoduleId}`,
+        variant: "destructive"
+      });
+      return <div>Une erreur est survenue lors du chargement du contenu.</div>;
+    }
   }
   
   if (submoduleId.startsWith('crm-')) {

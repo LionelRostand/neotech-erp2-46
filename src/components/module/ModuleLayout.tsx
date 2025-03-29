@@ -4,6 +4,7 @@ import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import DashboardLayout from '../DashboardLayout';
 import { modules } from '@/data/modules';
 import { Card } from '@/components/ui/card';
+import { toast } from "@/hooks/use-toast";
 
 interface ModuleLayoutProps {
   moduleId: number;
@@ -15,6 +16,7 @@ const ModuleLayout: React.FC<ModuleLayoutProps> = ({ moduleId }) => {
   const [module, setModule] = useState(modules.find(m => m.id === moduleId));
   
   useEffect(() => {
+    console.log('ModuleLayout: Current path', location.pathname);
     const foundModule = modules.find(m => m.id === moduleId);
     setModule(foundModule);
     
@@ -23,16 +25,23 @@ const ModuleLayout: React.FC<ModuleLayoutProps> = ({ moduleId }) => {
     if (location.pathname === `/modules/${foundModule?.href.split('/')[2]}`) {
       const dashboardSubmodule = foundModule?.submodules.find(sm => sm.id.endsWith('-dashboard'));
       if (dashboardSubmodule) {
-        navigate(`/modules/${foundModule?.href.split('/')[2]}/dashboard`);
+        console.log('Redirecting to dashboard:', dashboardSubmodule.href);
+        navigate(dashboardSubmodule.href);
       } else if (foundModule?.submodules.length > 0) {
         const firstSubmodule = foundModule.submodules[0];
-        const submoduleId = firstSubmodule.id.split('-')[1];
-        navigate(`/modules/${foundModule?.href.split('/')[2]}/${submoduleId}`);
+        console.log('Redirecting to first submodule:', firstSubmodule.href);
+        navigate(firstSubmodule.href);
       }
     }
   }, [moduleId, location.pathname, navigate]);
 
   if (!module) {
+    console.error('Module not found in ModuleLayout:', moduleId);
+    toast({
+      title: "Erreur",
+      description: "Module non trouvé",
+      variant: "destructive"
+    });
     return (
       <DashboardLayout>
         <Card className="p-6">
