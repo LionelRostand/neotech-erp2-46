@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { SubModule } from '@/data/types/modules';
 import DefaultSubmoduleContent from '../DefaultSubmoduleContent';
 import EmployeesDashboard from '../EmployeesDashboard';
@@ -20,15 +20,73 @@ import EmployeesSettings from '../EmployeesSettings';
 import EmployeesDepartments from '../departments/EmployeesDepartments';
 import EmployeesHierarchy from '../EmployeesHierarchy';
 import EmployeesCompanies from '../employees/EmployeesCompanies';
+import { Employee } from '@/types/employee';
+
+// Mock data for employees
+const mockEmployees: Employee[] = [
+  {
+    id: "1",
+    firstName: "Jean",
+    lastName: "Dupont",
+    email: "jean.dupont@example.com",
+    phone: "0123456789",
+    department: "Développement",
+    position: "Développeur Senior",
+    contract: "CDI",
+    hireDate: "01/02/2020",
+    manager: "Sarah Martin",
+    status: "Actif"
+  },
+  {
+    id: "2",
+    firstName: "Marie",
+    lastName: "Laurent",
+    email: "marie.laurent@example.com",
+    phone: "0123456788",
+    department: "Marketing",
+    position: "Chef de Produit",
+    contract: "CDI",
+    hireDate: "15/05/2019",
+    manager: "Thomas Bernard",
+    status: "Actif"
+  },
+  {
+    id: "3",
+    firstName: "Pierre",
+    lastName: "Martin",
+    email: "pierre.martin@example.com",
+    phone: "0123456787",
+    department: "Ressources Humaines",
+    position: "Responsable RH",
+    contract: "CDI",
+    hireDate: "10/03/2021",
+    status: "Actif"
+  }
+];
 
 export const renderEmployeesSubmodule = (submoduleId: string, submodule: SubModule) => {
   console.log('Rendering employee submodule:', submoduleId);
+  
+  // Mock functions for the EmployeesList component
+  const handleEmployeeSearch = () => {};
+  const handleViewEmployee = (employee: Employee) => {};
+  const handleEditEmployee = (employee: Employee) => {};
+  const handleDeleteEmployee = (employeeId: string) => {};
+  const handleOpenAddEmployee = () => {};
   
   switch (submoduleId) {
     case 'employees-dashboard':
       return <EmployeesDashboard />;
     case 'employees-profiles':
-      return <EmployeesProfiles />;
+      return <EmployeesProfiles 
+        employees={mockEmployees}
+        searchQuery=""
+        setSearchQuery={() => {}}
+        onViewEmployee={handleViewEmployee}
+        onEditEmployee={handleEditEmployee}
+        onDeleteEmployee={handleDeleteEmployee}
+        onOpenAddEmployee={handleOpenAddEmployee}
+      />;
     case 'employees-badges':
       return <EmployeesBadges />;
     case 'employees-departments':

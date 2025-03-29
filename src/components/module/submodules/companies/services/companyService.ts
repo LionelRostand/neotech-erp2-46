@@ -1,3 +1,4 @@
+
 import { Company, CompanyContact, CompanyDocument, CompanyFilters } from '../types';
 import { useFirestore } from '@/hooks/use-firestore';
 import { COLLECTIONS } from '@/lib/firebase-collections';
@@ -16,7 +17,7 @@ import { addDocument } from '@/hooks/firestore/create-operations';
 import { executeWithNetworkRetry } from '@/hooks/firestore/network-handler';
 
 // Données fictives pour simuler les entreprises
-const mockCompanies = [
+const mockCompanies: Company[] = [
   {
     id: '1',
     name: 'Tech Solutions',
@@ -25,7 +26,8 @@ const mockCompanies = [
     status: 'active',
     contactEmail: 'contact@techsolutions.com',
     contactName: 'Jean Dupont',
-    createdAt: new Date('2023-01-15')
+    createdAt: new Date('2023-01-15'),
+    updatedAt: new Date('2023-01-15')
   },
   {
     id: '2',
@@ -35,7 +37,8 @@ const mockCompanies = [
     status: 'inactive',
     contactEmail: 'info@industriegenerale.fr',
     contactName: 'Marie Martin',
-    createdAt: new Date('2023-03-20')
+    createdAt: new Date('2023-03-20'),
+    updatedAt: new Date('2023-03-20')
   },
   {
     id: '3',
@@ -45,7 +48,8 @@ const mockCompanies = [
     status: 'pending',
     contactEmail: 'service@servicepro.com',
     contactName: 'Thomas Bernard',
-    createdAt: new Date('2023-05-10')
+    createdAt: new Date('2023-05-10'),
+    updatedAt: new Date('2023-05-10')
   },
   {
     id: '4',
@@ -55,7 +59,8 @@ const mockCompanies = [
     status: 'active',
     contactEmail: 'info@digitalexpress.fr',
     contactName: 'Laura Petit',
-    createdAt: new Date('2023-06-05')
+    createdAt: new Date('2023-06-05'),
+    updatedAt: new Date('2023-06-05')
   },
   {
     id: '5',
@@ -65,7 +70,8 @@ const mockCompanies = [
     status: 'active',
     contactEmail: 'contact@constructionsmodernes.com',
     contactName: 'Pierre Lefort',
-    createdAt: new Date('2023-07-18')
+    createdAt: new Date('2023-07-18'),
+    updatedAt: new Date('2023-07-18')
   }
 ];
 
@@ -143,7 +149,7 @@ export const useCompanyService = () => {
       console.log('Creating company with data:', companyData);
       
       // Simuler la création d'une entreprise
-      const newCompany = {
+      const newCompany: Company = {
         id: `new-${Date.now()}`,
         ...companyData,
         createdAt: new Date(),
