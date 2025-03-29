@@ -6,6 +6,28 @@ import { deleteDocument } from '@/hooks/firestore/delete-operations';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import { toast } from 'sonner';
 import { executeWithNetworkRetry } from '@/hooks/firestore/network-handler';
+import { Employee } from '@/types/employee';
+
+// Type for document retrieved from Firestore
+interface EmployeeDocument {
+  id: string;
+  employeeId: string;
+  documentType: string;
+  name: string;
+  date: string;
+  type: string;
+  fileUrl?: string;
+  fileSize?: number;
+  fileType?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+// Type for settings document
+interface DocumentSettings {
+  id: string;
+  types: Array<{ id: string, name: string }>;
+}
 
 // Récupérer tous les documents d'un employé
 export const getEmployeeDocuments = async (employeeId: string) => {
@@ -15,21 +37,21 @@ export const getEmployeeDocuments = async (employeeId: string) => {
     // Récupérer l'employé pour obtenir ses références de documents
     const employee = await executeWithNetworkRetry(async () => {
       return await getDocumentById(COLLECTIONS.EMPLOYEES, employeeId);
-    });
+    }) as Employee | { id: string; };
     
-    if (!employee || !employee.documents) {
+    if (!employee || !(employee as Employee).documents) {
       console.log(`Aucun document trouvé pour l'employé ${employeeId}`);
       return [];
     }
     
     // Si l'employé a des documents intégrés, les retourner directement
-    if (Array.isArray(employee.documents)) {
-      console.log(`${employee.documents.length} documents récupérés pour l'employé ${employeeId}`);
-      return employee.documents;
+    if (Array.isArray((employee as Employee).documents)) {
+      console.log(`${(employee as Employee).documents.length} documents récupérés pour l'employé ${employeeId}`);
+      return (employee as Employee).documents;
     }
     
     // Si les documents sont des références à la collection DOCUMENTS
-    const documentIds = Array.isArray(employee.documents) ? employee.documents : [];
+    const documentIds = Array.isArray((employee as Employee).documents) ? (employee as Employee).documents : [];
     
     // Récupérer les documents depuis la collection DOCUMENTS
     const documents = [];
@@ -64,12 +86,12 @@ export const addDocumentToEmployee = async (employeeId: string, documentData: an
         employeeId,
         documentType: 'employee_document'
       });
-    });
+    }) as EmployeeDocument;
     
     // Récupérer l'employé pour mettre à jour sa liste de documents
     const employee = await executeWithNetworkRetry(async () => {
       return await getDocumentById(COLLECTIONS.EMPLOYEES, employeeId);
-    });
+    }) as Employee | { id: string; };
     
     if (!employee) {
       console.error(`Employé ${employeeId} non trouvé`);
@@ -78,7 +100,7 @@ export const addDocumentToEmployee = async (employeeId: string, documentData: an
     }
     
     // Mettre à jour l'employé avec la référence du nouveau document
-    const documents = employee.documents || [];
+    const documents = (employee as Employee).documents || [];
     documents.push(document.id);
     
     await executeWithNetworkRetry(async () => {
@@ -108,12 +130,12 @@ export const deleteEmployeeDocument = async (employeeId: string, documentId: str
     // Récupérer l'employé pour mettre à jour sa liste de documents
     const employee = await executeWithNetworkRetry(async () => {
       return await getDocumentById(COLLECTIONS.EMPLOYEES, employeeId);
-    });
+    }) as Employee | { id: string; };
     
-    if (employee && employee.documents) {
+    if (employee && (employee as Employee).documents) {
       // Mettre à jour l'employé en retirant la référence au document supprimé
-      const documents = Array.isArray(employee.documents) 
-        ? employee.documents.filter(id => id !== documentId) 
+      const documents = Array.isArray((employee as Employee).documents) 
+        ? (employee as Employee).documents.filter(id => id !== documentId) 
         : [];
       
       await executeWithNetworkRetry(async () => {
@@ -140,10 +162,10 @@ export const getDocumentTypes = async () => {
     // ou dans un document de la collection SETTINGS
     const settings = await executeWithNetworkRetry(async () => {
       return await getDocumentById(COLLECTIONS.SETTINGS, 'documentTypes');
-    });
+    }) as DocumentSettings | { id: string; };
     
-    if (settings && settings.types) {
-      return settings.types;
+    if (settings && (settings as DocumentSettings).types) {
+      return (settings as DocumentSettings).types;
     }
     
     // Types par défaut si non trouvés dans la base de données

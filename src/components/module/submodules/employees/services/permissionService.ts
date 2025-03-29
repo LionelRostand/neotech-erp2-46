@@ -35,14 +35,22 @@ export const getUserPermissions = async (userId: string): Promise<UserPermission
   try {
     console.log(`Récupération des permissions pour l'utilisateur ${userId} depuis Firestore...`);
     
-    const permissions = await executeWithNetworkRetry(async () => {
+    const permissionsDoc = await executeWithNetworkRetry(async () => {
       return await getDocumentById(COLLECTIONS.USER_PERMISSIONS, userId);
-    }) as UserPermissions | null;
+    });
     
-    if (!permissions) {
+    if (!permissionsDoc) {
       console.log(`Aucune permission trouvée pour l'utilisateur ${userId}`);
       return null;
     }
+    
+    // Convert the document to UserPermissions type, ensuring it has the required properties
+    const permissions = {
+      userId,
+      permissions: (permissionsDoc as any).permissions || {},
+      roles: (permissionsDoc as any).roles || [],
+      isAdmin: (permissionsDoc as any).isAdmin || false
+    } as UserPermissions;
     
     console.log(`Permissions récupérées pour l'utilisateur ${userId}:`, permissions);
     return permissions;

@@ -4,7 +4,7 @@ import { getUserPermissions, checkUserPermission, ModulePermissions } from '@/co
 import { useAuth } from './useAuth';
 
 export const usePermissions = (moduleId?: string) => {
-  const { user, isOffline } = useAuth();
+  const { currentUser, isOffline } = useAuth();
   const [loading, setLoading] = useState(true);
   const [permissions, setPermissions] = useState<{[key: string]: ModulePermissions} | null>(null);
   const [hasPermission, setHasPermission] = useState<{[key: string]: boolean}>({});
@@ -12,14 +12,14 @@ export const usePermissions = (moduleId?: string) => {
 
   useEffect(() => {
     const fetchPermissions = async () => {
-      if (!user?.uid) {
+      if (!currentUser?.uid) {
         setLoading(false);
         return;
       }
 
       try {
         setLoading(true);
-        const userPermissions = await getUserPermissions(user.uid);
+        const userPermissions = await getUserPermissions(currentUser.uid);
         
         if (userPermissions) {
           setPermissions(userPermissions.permissions);
@@ -37,10 +37,10 @@ export const usePermissions = (moduleId?: string) => {
     };
 
     fetchPermissions();
-  }, [user?.uid]);
+  }, [currentUser?.uid]);
 
   const checkPermission = async (module: string, action: 'view' | 'create' | 'edit' | 'delete' | 'export' | 'modify') => {
-    if (!user?.uid) return false;
+    if (!currentUser?.uid) return false;
     
     if (isOffline) {
       console.log('Mode hors ligne: utilisation des permissions en cache');
@@ -50,7 +50,7 @@ export const usePermissions = (moduleId?: string) => {
     }
 
     try {
-      const hasAccess = await checkUserPermission(user.uid, module, action);
+      const hasAccess = await checkUserPermission(currentUser.uid, module, action);
       setHasPermission(prev => ({...prev, [`${module}.${action}`]: hasAccess}));
       return hasAccess;
     } catch (error) {
@@ -61,7 +61,7 @@ export const usePermissions = (moduleId?: string) => {
 
   // Vérifier si l'utilisateur peut accéder au module actuel
   useEffect(() => {
-    if (moduleId && !loading && user?.uid) {
+    if (moduleId && !loading && currentUser?.uid) {
       checkPermission(moduleId, 'view').then(hasAccess => {
         if (!hasAccess && !isAdmin) {
           console.warn(`L'utilisateur n'a pas accès au module ${moduleId}`);
@@ -69,7 +69,7 @@ export const usePermissions = (moduleId?: string) => {
         }
       });
     }
-  }, [moduleId, loading, user?.uid, isAdmin]);
+  }, [moduleId, loading, currentUser?.uid, isAdmin]);
 
   return {
     permissions,
