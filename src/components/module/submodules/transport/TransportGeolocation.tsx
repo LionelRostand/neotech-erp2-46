@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Map, AlertTriangle, Navigation, Bell, Search, Settings, Layers } from "lucide-react";
@@ -13,9 +14,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { toast } from "sonner";
+import VehicleDetailsDialog from './geolocation/VehicleDetailsDialog';
+import AlertConfigDialog from './geolocation/AlertConfigDialog';
+import AlertDetailsDialog from './geolocation/AlertDetailsDialog';
 
 const mockVehicles: (TransportVehicle & { 
   location?: { lat: number; lng: number; lastUpdate: string; speed: number; status: string; }
+  driverName?: string;
 })[] = [
   {
     id: "v1",
@@ -33,7 +39,8 @@ const mockVehicles: (TransportVehicle & {
       lastUpdate: "2023-06-01T14:32:00",
       speed: 45,
       status: "en service"
-    }
+    },
+    driverName: "Thomas Durand"
   },
   {
     id: "v2",
@@ -51,7 +58,8 @@ const mockVehicles: (TransportVehicle & {
       lastUpdate: "2023-06-01T14:30:00",
       speed: 0,
       status: "arrêté"
-    }
+    },
+    driverName: "Sophie Martin"
   },
   {
     id: "v3",
@@ -87,7 +95,8 @@ const mockVehicles: (TransportVehicle & {
       lastUpdate: "2023-06-01T14:28:00",
       speed: 32,
       status: "en service"
-    }
+    },
+    driverName: "Marc Dupont"
   }
 ];
 
@@ -100,7 +109,8 @@ const mockAlerts = [
     type: 'unauthorized', 
     message: 'Utilisation en dehors des heures de service', 
     timestamp: '2023-06-01T02:14:00', 
-    status: 'unresolved'
+    status: 'unresolved',
+    location: { lat: 48.8417, lng: 2.3324 }
   },
   { 
     id: 'a2', 
@@ -110,7 +120,9 @@ const mockAlerts = [
     type: 'speeding', 
     message: 'Excès de vitesse: 95 km/h en zone 50', 
     timestamp: '2023-06-01T11:23:00', 
-    status: 'resolved'
+    status: 'resolved',
+    speed: 95,
+    speedLimit: 50
   },
   { 
     id: 'a3', 
@@ -120,7 +132,8 @@ const mockAlerts = [
     type: 'geofence', 
     message: 'Véhicule hors zone autorisée', 
     timestamp: '2023-06-01T09:45:00', 
-    status: 'unresolved'
+    status: 'unresolved',
+    location: { lat: 48.8584, lng: 2.2945 }
   }
 ];
 
@@ -148,6 +161,14 @@ const mockRoutes = [
 const TransportGeolocation = () => {
   const [activeTab, setActiveTab] = useState('map');
   const [searchTerm, setSearchTerm] = useState('');
+  const [alerts, setAlerts] = useState(mockAlerts);
+  const [routes, setRoutes] = useState(mockRoutes);
+  const [selectedVehicle, setSelectedVehicle] = useState<any>(null);
+  const [selectedAlert, setSelectedAlert] = useState<any>(null);
+  const [isVehicleDetailsOpen, setIsVehicleDetailsOpen] = useState(false);
+  const [isAlertConfigOpen, setIsAlertConfigOpen] = useState(false);
+  const [isAlertDetailsOpen, setIsAlertDetailsOpen] = useState(false);
+  
   const mapRef = useRef<HTMLDivElement>(null);
   
   const { mapInitialized, mapConfig, setMapConfig, refreshMap } = useTransportMap(mapRef, mockVehicles);
@@ -163,7 +184,7 @@ const TransportGeolocation = () => {
     vehicle.licensePlate.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const filteredAlerts = mockAlerts.filter(alert => 
+  const filteredAlerts = alerts.filter(alert => 
     alert.vehicleName.toLowerCase().includes(searchTerm.toLowerCase()) ||
     alert.licensePlate.toLowerCase().includes(searchTerm.toLowerCase()) ||
     alert.message.toLowerCase().includes(searchTerm.toLowerCase())
@@ -213,6 +234,45 @@ const TransportGeolocation = () => {
       showLabels: checked
     });
     refreshMap();
+  };
+  
+  const handleVehicleDetails = (vehicle: any) => {
+    setSelectedVehicle(vehicle);
+    setIsVehicleDetailsOpen(true);
+  };
+  
+  const handleAlertDetails = (alert: any) => {
+    setSelectedAlert(alert);
+    setIsAlertDetailsOpen(true);
+  };
+  
+  const handleResolveAlert = (alertId: string) => {
+    // Update the alert status
+    setAlerts(prev => 
+      prev.map(alert => 
+        alert.id === alertId 
+          ? { ...alert, status: 'resolved' } 
+          : alert
+      )
+    );
+    toast.success("Alerte résolue avec succès");
+  };
+  
+  const handleConfigureSave = (data: any) => {
+    console.log("Configuration des alertes sauvegardée:", data);
+    toast.success("Configuration des alertes sauvegardée");
+  };
+  
+  const handleApplyRoute = (routeId: string) => {
+    // Update the routes to mark as applied
+    setRoutes(prev => 
+      prev.map(route => 
+        route.id === routeId 
+          ? { ...route, applied: true } 
+          : route
+      )
+    );
+    toast.success("Optimisation de l'itinéraire appliquée");
   };
 
   return (
@@ -371,7 +431,11 @@ const TransportGeolocation = () => {
                             <span className="text-sm font-medium">{vehicle.location.speed} km/h</span>
                           ) : null}
                           {renderStatusBadge(vehicle.location?.status || "")}
-                          <Button variant="outline" size="sm">
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => handleVehicleDetails(vehicle)}
+                          >
                             Détails
                           </Button>
                         </div>
@@ -405,7 +469,12 @@ const TransportGeolocation = () => {
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
                   <h3 className="text-lg font-medium">Alertes récentes</h3>
-                  <Button size="sm" variant="outline" className="flex items-center gap-1">
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    className="flex items-center gap-1"
+                    onClick={() => setIsAlertConfigOpen(true)}
+                  >
                     <Bell className="h-4 w-4" />
                     Configurer
                   </Button>
@@ -436,10 +505,15 @@ const TransportGeolocation = () => {
                             variant="outline" 
                             size="sm"
                             disabled={alert.status === 'resolved'}
+                            onClick={() => handleResolveAlert(alert.id)}
                           >
                             {alert.status === 'resolved' ? 'Résolu' : 'Résoudre'}
                           </Button>
-                          <Button variant="outline" size="sm">
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => handleAlertDetails(alert)}
+                          >
                             Détails
                           </Button>
                         </div>
@@ -478,12 +552,12 @@ const TransportGeolocation = () => {
               <div className="space-y-4">
                 <h3 className="text-lg font-medium">Suggestions d'optimisation</h3>
                 <div className="border rounded-md divide-y">
-                  {mockRoutes.length === 0 ? (
+                  {routes.length === 0 ? (
                     <div className="p-4 text-center text-muted-foreground">
                       Aucune optimisation disponible
                     </div>
                   ) : (
-                    mockRoutes.map((route) => (
+                    routes.map((route) => (
                       <div key={route.id} className="p-4">
                         <div className="flex justify-between items-start">
                           <div>
@@ -499,8 +573,13 @@ const TransportGeolocation = () => {
                               Économie: {route.savingsMinutes} min • {route.savingsKm} km
                             </div>
                           </div>
-                          <Button variant="outline" size="sm">
-                            Appliquer
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => handleApplyRoute(route.id)}
+                            disabled={route.applied}
+                          >
+                            {route.applied ? 'Appliqué' : 'Appliquer'}
                           </Button>
                         </div>
                       </div>
@@ -512,6 +591,26 @@ const TransportGeolocation = () => {
           </Card>
         </TabsContent>
       </Tabs>
+      
+      {/* Dialogs */}
+      <VehicleDetailsDialog 
+        open={isVehicleDetailsOpen} 
+        onOpenChange={setIsVehicleDetailsOpen} 
+        vehicle={selectedVehicle} 
+      />
+      
+      <AlertConfigDialog 
+        open={isAlertConfigOpen} 
+        onOpenChange={setIsAlertConfigOpen} 
+        onSave={handleConfigureSave} 
+      />
+      
+      <AlertDetailsDialog 
+        open={isAlertDetailsOpen} 
+        onOpenChange={setIsAlertDetailsOpen} 
+        alert={selectedAlert}
+        onResolve={handleResolveAlert}
+      />
     </div>
   );
 };
