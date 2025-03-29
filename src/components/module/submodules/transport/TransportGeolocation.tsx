@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Map, AlertTriangle, Navigation, Bell, Search, Settings, Layers } from "lucide-react";
@@ -145,7 +144,8 @@ const mockRoutes = [
     currentRoute: 'Paris Centre → Orly Airport',
     optimizedRoute: 'Paris Centre → A6 → Orly Airport',
     savingsMinutes: 12,
-    savingsKm: 5.4
+    savingsKm: 5.4,
+    applied: false
   },
   {
     id: 'r2',
@@ -154,7 +154,8 @@ const mockRoutes = [
     currentRoute: 'Montmartre → Tour Eiffel',
     optimizedRoute: 'Montmartre → Opéra → Tour Eiffel',
     savingsMinutes: 8,
-    savingsKm: 2.3
+    savingsKm: 2.3,
+    applied: false
   }
 ];
 
@@ -247,7 +248,6 @@ const TransportGeolocation = () => {
   };
   
   const handleResolveAlert = (alertId: string) => {
-    // Update the alert status
     setAlerts(prev => 
       prev.map(alert => 
         alert.id === alertId 
@@ -264,7 +264,6 @@ const TransportGeolocation = () => {
   };
   
   const handleApplyRoute = (routeId: string) => {
-    // Update the routes to mark as applied
     setRoutes(prev => 
       prev.map(route => 
         route.id === routeId 
@@ -592,7 +591,6 @@ const TransportGeolocation = () => {
         </TabsContent>
       </Tabs>
       
-      {/* Dialogs */}
       <VehicleDetailsDialog 
         open={isVehicleDetailsOpen} 
         onOpenChange={setIsVehicleDetailsOpen} 
