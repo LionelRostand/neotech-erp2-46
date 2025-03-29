@@ -1,6 +1,7 @@
+
 import React, { useState, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Map, AlertTriangle, Navigation, Bell, Search } from "lucide-react";
+import { Map, AlertTriangle, Navigation, Bell, Search, Settings, Layers } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -8,6 +9,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { TransportVehicle } from './types/transport-types';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useTransportMap } from './hooks/useTransportMap';
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Slider } from "@/components/ui/slider";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 
 // Mock data for vehicles with location
 const mockVehicles: (TransportVehicle & { 
@@ -149,7 +155,7 @@ const TransportGeolocation = () => {
   const mapRef = useRef<HTMLDivElement>(null);
   
   // Use our custom map hook
-  const { mapInitialized } = useTransportMap(mapRef, mockVehicles);
+  const { mapInitialized, mapConfig, setMapConfig, refreshMap } = useTransportMap(mapRef, mockVehicles);
 
   // Filter vehicles based on search term
   const filteredVehicles = mockVehicles.filter(vehicle => 
@@ -187,6 +193,30 @@ const TransportGeolocation = () => {
     }
     
     return <Badge className={bgColor}>{type}</Badge>;
+  };
+
+  // Handle map configuration changes
+  const handleMapProviderChange = (value: 'osm' | 'osm-france' | 'carto') => {
+    setMapConfig({
+      ...mapConfig,
+      tileProvider: value
+    });
+    refreshMap();
+  };
+
+  const handleZoomChange = (value: number[]) => {
+    setMapConfig({
+      ...mapConfig,
+      zoom: value[0]
+    });
+  };
+
+  const handleShowLabelsChange = (checked: boolean) => {
+    setMapConfig({
+      ...mapConfig,
+      showLabels: checked
+    });
+    refreshMap();
   };
 
   return (
@@ -227,11 +257,75 @@ const TransportGeolocation = () => {
         
         <TabsContent value="map" className="mt-4">
           <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Map className="h-5 w-5" />
-                <span>Suivi en Temps Réel</span>
-              </CardTitle>
+            <CardHeader className="pb-2">
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center gap-2">
+                  <Map className="h-5 w-5" />
+                  <span>Suivi en Temps Réel</span>
+                </CardTitle>
+                
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" size="sm" className="flex items-center gap-1">
+                      <Settings className="h-4 w-4" />
+                      <span>Configuration de la carte</span>
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-80">
+                    <div className="space-y-4">
+                      <h4 className="font-medium">Configuration de la carte</h4>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="tileProvider">Fournisseur de carte</Label>
+                        <Select 
+                          value={mapConfig.tileProvider} 
+                          onValueChange={(value: any) => handleMapProviderChange(value)}
+                        >
+                          <SelectTrigger id="tileProvider">
+                            <SelectValue placeholder="Choisir un fournisseur" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="osm-france">OpenStreetMap France</SelectItem>
+                            <SelectItem value="osm">OpenStreetMap Standard</SelectItem>
+                            <SelectItem value="carto">CartoDB Light</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <div className="flex justify-between">
+                          <Label htmlFor="zoom">Niveau de zoom</Label>
+                          <span className="text-sm text-muted-foreground">{mapConfig.zoom}</span>
+                        </div>
+                        <Slider 
+                          id="zoom"
+                          min={1} 
+                          max={18} 
+                          step={1}
+                          value={[mapConfig.zoom]}
+                          onValueChange={handleZoomChange}
+                          className="w-full"
+                        />
+                      </div>
+                      
+                      <div className="flex items-center justify-between space-x-2">
+                        <Label htmlFor="showLabels">Afficher les informations détaillées</Label>
+                        <Switch
+                          id="showLabels"
+                          checked={mapConfig.showLabels}
+                          onCheckedChange={handleShowLabelsChange}
+                        />
+                      </div>
+                      
+                      <div className="flex justify-end pt-2">
+                        <Button onClick={refreshMap} size="sm">
+                          Appliquer
+                        </Button>
+                      </div>
+                    </div>
+                  </PopoverContent>
+                </Popover>
+              </div>
             </CardHeader>
             <CardContent>
               <div 
@@ -251,7 +345,14 @@ const TransportGeolocation = () => {
               </div>
               
               <div className="space-y-4">
-                <h3 className="text-lg font-medium">Localisation des véhicules</h3>
+                <div className="flex justify-between items-center">
+                  <h3 className="text-lg font-medium">Localisation des véhicules</h3>
+                  <Button variant="outline" size="sm" className="flex items-center gap-1">
+                    <Layers className="h-4 w-4" />
+                    <span>Changer de vue</span>
+                  </Button>
+                </div>
+                
                 <div className="border rounded-md divide-y">
                   {filteredVehicles.length === 0 ? (
                     <div className="p-4 text-center text-muted-foreground">

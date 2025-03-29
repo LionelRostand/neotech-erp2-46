@@ -14,15 +14,32 @@ interface TransportVehicleWithLocation extends TransportVehicle {
   location?: VehicleLocation;
 }
 
+interface MapConfig {
+  zoom: number;
+  centerLat: number;
+  centerLng: number;
+  tileProvider: 'osm' | 'osm-france' | 'carto';
+  showLabels: boolean;
+}
+
 export const useTransportMap = (
   mapElementRef: React.RefObject<HTMLDivElement>,
-  vehicles: TransportVehicleWithLocation[]
+  vehicles: TransportVehicleWithLocation[],
+  initialConfig?: Partial<MapConfig>
 ) => {
   const [mapInitialized, setMapInitialized] = useState(false);
   const leafletMapRef = useRef<any>(null);
   const markersRef = useRef<any[]>([]);
+  const [mapConfig, setMapConfig] = useState<MapConfig>({
+    zoom: 11,
+    centerLat: 48.852969,
+    centerLng: 2.349903,
+    tileProvider: 'osm-france',
+    showLabels: true,
+    ...initialConfig
+  });
 
-  // Initialize and update map when vehicles change
+  // Initialize and update map when vehicles or config change
   useEffect(() => {
     if (!mapElementRef.current) return;
     
@@ -39,10 +56,10 @@ export const useTransportMap = (
             leafletMapRef.current = null;
           }
           
-          // Coordonnées par défaut de Paris
-          let latitude = 48.852969;
-          let longitude = 2.349903;
-          let zoom = 11;
+          // Set initial coordinates
+          let latitude = mapConfig.centerLat;
+          let longitude = mapConfig.centerLng;
+          let zoom = mapConfig.zoom;
           
           // Si nous avons des véhicules avec localisation, utilisons le centre
           const vehiclesWithLocation = vehicles.filter(v => v.location);
@@ -60,12 +77,35 @@ export const useTransportMap = (
           const map = L.map(mapElementRef.current).setView([latitude, longitude], zoom);
           leafletMapRef.current = map;
           
-          // Add tile layer (using OpenStreetMap France)
-          L.tileLayer('https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png', {
-            attribution: 'données © <a href="//osm.org/copyright">OpenStreetMap</a>/ODbL - rendu <a href="//openstreetmap.fr">OSM France</a>',
-            minZoom: 1,
-            maxZoom: 20
-          }).addTo(map);
+          // Add tile layer based on config
+          let tileLayer;
+          switch (mapConfig.tileProvider) {
+            case 'osm':
+              tileLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+                minZoom: 1,
+                maxZoom: 19
+              });
+              break;
+            case 'carto':
+              tileLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+                subdomains: 'abcd',
+                minZoom: 1,
+                maxZoom: 19
+              });
+              break;
+            case 'osm-france':
+            default:
+              tileLayer = L.tileLayer('https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png', {
+                attribution: 'données © <a href="//osm.org/copyright">OpenStreetMap</a>/ODbL - rendu <a href="//openstreetmap.fr">OSM France</a>',
+                minZoom: 1,
+                maxZoom: 20
+              });
+              break;
+          }
+          
+          tileLayer.addTo(map);
 
           setMapInitialized(true);
         }
@@ -107,15 +147,19 @@ export const useTransportMap = (
               const marker = L.marker([lat, lng], { icon: customIcon });
               
               // Create popup for vehicle info
-              marker.bindPopup(`
-                <div>
-                  <h3 style="font-weight: bold; margin-bottom: 5px;">${vehicle.name}</h3>
-                  <p style="margin-bottom: 3px;">Immatriculation: ${vehicle.licensePlate}</p>
-                  <p style="margin-bottom: 3px;">Statut: ${vehicle.location.status}</p>
-                  <p style="margin-bottom: 3px;">Vitesse: ${vehicle.location.speed} km/h</p>
-                  <p style="margin-bottom: 3px;">Dernière mise à jour: ${new Date(vehicle.location.lastUpdate).toLocaleTimeString('fr-FR')}</p>
-                </div>
-              `);
+              const popupContent = mapConfig.showLabels 
+                ? `
+                  <div>
+                    <h3 style="font-weight: bold; margin-bottom: 5px;">${vehicle.name}</h3>
+                    <p style="margin-bottom: 3px;">Immatriculation: ${vehicle.licensePlate}</p>
+                    <p style="margin-bottom: 3px;">Statut: ${vehicle.location.status}</p>
+                    <p style="margin-bottom: 3px;">Vitesse: ${vehicle.location.speed} km/h</p>
+                    <p style="margin-bottom: 3px;">Dernière mise à jour: ${new Date(vehicle.location.lastUpdate).toLocaleTimeString('fr-FR')}</p>
+                  </div>
+                `
+                : `<div><p>${vehicle.name}</p></div>`;
+              
+              marker.bindPopup(popupContent);
               
               marker.addTo(leafletMapRef.current);
               markers.push(marker);
@@ -140,7 +184,7 @@ export const useTransportMap = (
     };
     
     initializeMap();
-  }, [vehicles, mapInitialized, mapElementRef]);
+  }, [vehicles, mapInitialized, mapElementRef, mapConfig]);
 
   // Clean up map on component unmount
   useEffect(() => {
@@ -152,5 +196,10 @@ export const useTransportMap = (
     };
   }, []);
 
-  return { mapInitialized };
+  return { 
+    mapInitialized,
+    mapConfig,
+    setMapConfig,
+    refreshMap: () => setMapInitialized(false)
+  };
 };
