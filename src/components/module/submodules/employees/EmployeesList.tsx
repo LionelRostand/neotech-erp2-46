@@ -30,8 +30,8 @@ interface EmployeesListProps {
 }
 
 const EmployeesList: React.FC<EmployeesListProps> = ({
-  employees,
-  searchQuery,
+  employees = [],
+  searchQuery = "",
   setSearchQuery,
   onViewEmployee,
   onEditEmployee,
@@ -40,13 +40,13 @@ const EmployeesList: React.FC<EmployeesListProps> = ({
 }) => {
   const [employeeToDelete, setEmployeeToDelete] = useState<Employee | null>(null);
   
-  // Filtrage des employés selon la recherche
-  const filteredEmployees = employees.filter(employee => {
+  // Ensure employees exists before filtering (defensive programming)
+  const filteredEmployees = employees ? employees.filter(employee => {
     const fullName = `${employee.firstName} ${employee.lastName}`.toLowerCase();
     return fullName.includes(searchQuery.toLowerCase()) || 
            employee.position.toLowerCase().includes(searchQuery.toLowerCase()) ||
            employee.department.toLowerCase().includes(searchQuery.toLowerCase());
-  });
+  }) : [];
 
   const handleConfirmDelete = () => {
     if (employeeToDelete) {

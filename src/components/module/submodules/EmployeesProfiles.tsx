@@ -9,10 +9,20 @@ import EmployeeForm from './employees/EmployeeForm';
 import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
-const EmployeesProfiles: React.FC = () => {
-  const [searchQuery, setSearchQuery] = useState('');
+interface EmployeesProfilesProps {
+  employees: Employee[];
+  searchQuery: string;
+  setSearchQuery: (query: string) => void;
+  onViewEmployee: (employee: Employee) => void;
+  onEditEmployee: (employee: Employee) => void;
+  onDeleteEmployee: (employeeId: string) => void;
+  onOpenAddEmployee: () => void;
+}
+
+const EmployeesProfiles: React.FC<EmployeesProfilesProps> = (props) => {
+  const [searchQuery, setSearchQuery] = useState(props.searchQuery || '');
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
-  const [employees, setEmployees] = useState<Employee[]>(initialEmployees);
+  const [employees, setEmployees] = useState<Employee[]>(props.employees || initialEmployees);
   const [isAddEmployeeOpen, setIsAddEmployeeOpen] = useState(false);
   const [isEditEmployeeOpen, setIsEditEmployeeOpen] = useState(false);
   const [employeeToEdit, setEmployeeToEdit] = useState<Employee | null>(null);
