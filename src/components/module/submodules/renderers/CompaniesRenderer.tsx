@@ -11,6 +11,8 @@ import CompaniesSettings from '../companies/CompaniesSettings';
 import { SubModule } from '@/data/types/modules';
 
 export const renderCompaniesSubmodule = (submoduleId: string, submodule: SubModule) => {
+  console.log('Rendering company submodule:', submoduleId);
+  
   switch (submoduleId) {
     case 'companies-dashboard':
       return <CompaniesDashboard />;

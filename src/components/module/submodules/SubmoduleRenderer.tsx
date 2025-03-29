@@ -48,6 +48,7 @@ export const renderSubmoduleContent = ({ submoduleId, submodule }: RenderSubmodu
   }
   
   if (submoduleId.startsWith('companies-')) {
+    console.log('Delegating to renderCompaniesSubmodule for:', submoduleId);
     return renderCompaniesSubmodule(submoduleId, submodule);
   }
   

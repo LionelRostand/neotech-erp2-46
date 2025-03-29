@@ -18,7 +18,7 @@ const SubmodulePage: React.FC<SubmodulePageProps> = ({ moduleId, submoduleId }) 
   const submodule = module.submodules.find(sm => sm.id === submoduleId);
   if (!submodule) return <div>Submodule not found</div>;
 
-  console.log('Rendering submodule:', submoduleId);
+  console.log('Rendering submodule:', submoduleId, 'for module:', module.name);
 
   return (
     <div className="space-y-6">
