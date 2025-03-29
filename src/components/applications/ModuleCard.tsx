@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Check, Trash2, Download, ChevronDown, ChevronUp, LayoutDashboard, Settings, ExternalLink } from 'lucide-react';
+import { Check, Trash2, Download, ChevronDown, ChevronUp, LayoutDashboard, Settings } from 'lucide-react';
 import { AppModule } from '@/data/types/modules';
 import ModuleDashboardPreview from './ModuleDashboardPreview';
 import { toast } from "@/hooks/use-toast";
@@ -32,11 +32,6 @@ const ModuleCard: React.FC<ModuleCardProps> = ({
       title: "Configuration",
       description: `Configuration du module ${module.name}`,
     });
-  };
-
-  const handleGoToModule = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    window.location.href = module.href;
   };
 
   return (
@@ -111,18 +106,7 @@ const ModuleCard: React.FC<ModuleCardProps> = ({
             </Button>
             
             <div className="space-x-2 flex">
-              {/* Boutons d'action */}
-              <Button 
-                variant="outline" 
-                size="sm"
-                className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 h-7 text-xs"
-                onClick={handleGoToModule}
-                title="Accéder au module"
-              >
-                <ExternalLink className="mr-1 h-3 w-3" />
-                Accéder
-              </Button>
-              
+              {/* Boutons d'action - removed the "Accéder" button */}
               <Button 
                 variant="outline" 
                 size="sm"
