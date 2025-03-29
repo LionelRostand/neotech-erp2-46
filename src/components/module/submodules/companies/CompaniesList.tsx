@@ -14,7 +14,7 @@ const CompaniesList: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [filters, setFilters] = useState<CompanyFilters>({
-    status: 'all',
+    status: undefined, // Using undefined instead of 'all' for type safety
   });
   const [showFilters, setShowFilters] = useState<boolean>(true);
   const navigate = useNavigate();
@@ -36,11 +36,16 @@ const CompaniesList: React.FC = () => {
   };
 
   const handleFilterChange = (key: string, value: string) => {
-    setFilters(prev => ({ ...prev, [key]: value }));
+    setFilters(prev => ({ 
+      ...prev, 
+      [key]: value === 'all' ? undefined : value 
+    }));
   };
 
   const handleResetFilters = () => {
-    setFilters({ status: 'all' });
+    setFilters({ 
+      status: undefined 
+    });
   };
 
   const handleSearchChange = (value: string) => {
