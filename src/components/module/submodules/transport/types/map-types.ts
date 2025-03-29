@@ -27,3 +27,29 @@ export interface MapHookResult {
   setMapConfig: React.Dispatch<React.SetStateAction<MapConfig>>;
   refreshMap: () => void;
 }
+
+// Maintenance Schedule type for planning
+export interface MaintenanceSchedule {
+  id: string;
+  vehicleId: string;
+  type: 'regular' | 'repair' | 'inspection';
+  startDate: string;
+  endDate: string;
+  description: string;
+  technician?: string;
+  notes?: string;
+  completed: boolean;
+}
+
+// Extension request type for planning
+export interface ExtensionRequest {
+  id: string;
+  requestId: string;
+  clientName: string;
+  vehicleName: string;
+  originalEndDate: string;
+  requestedEndDate: string;
+  reason: string;
+  status: 'pending' | 'approved' | 'rejected';
+  createdAt: string;
+}

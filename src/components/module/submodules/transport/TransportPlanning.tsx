@@ -4,6 +4,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import PlanningTabContent from './planning/PlanningTabContent';
 import PlanningHeader from './planning/PlanningHeader';
 import { PlanningProvider } from './planning/context/PlanningContext';
+import MaintenanceScheduleDialog from './planning/MaintenanceScheduleDialog';
+import ExtensionDetailsDialog from './planning/ExtensionDetailsDialog';
 
 const TransportPlanning: React.FC = () => {
   const [activePlanningMode, setActivePlanningMode] = useState('vehicles');
@@ -21,6 +23,9 @@ const TransportPlanning: React.FC = () => {
             />
           </CardContent>
         </Card>
+      
+        <MaintenanceScheduleDialog />
+        <ExtensionDetailsDialog />
       </div>
     </PlanningProvider>
   );
