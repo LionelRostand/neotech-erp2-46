@@ -30,10 +30,9 @@ declare module 'jspdf-autotable' {
 
   function autoTable(doc: jsPDF, options: AutoTableOptions): void;
 
-  // Extend the jsPDF prototype
   declare global {
     interface jsPDF {
-      autoTable(options: AutoTableOptions): void;
+      autoTable: (options: AutoTableOptions) => void;
       lastAutoTable: {
         finalY: number;
       };
