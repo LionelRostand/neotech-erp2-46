@@ -10,8 +10,12 @@ import TransportGeolocation from '../transport/TransportGeolocation';
 import TransportPlanning from '../transport/TransportPlanning';
 import TransportPayments from '../transport/TransportPayments';
 import TransportCustomerService from '../transport/TransportCustomerService';
+import TransportLoyalty from '../transport/TransportLoyalty';
+import TransportWebBooking from '../transport/TransportWebBooking';
+import TransportSettings from '../transport/TransportSettings';
 
 export const renderTransportSubmodule = (submoduleId: string, submodule: SubModule) => {
+  // Make sure the component is properly imported and used in the switch statement
   switch (submoduleId) {
     case 'transport-dashboard':
       return <TransportDashboard />;
@@ -29,6 +33,12 @@ export const renderTransportSubmodule = (submoduleId: string, submodule: SubModu
       return <TransportPayments />;
     case 'transport-customer-service':
       return <TransportCustomerService />;
+    case 'transport-loyalty':
+      return <TransportLoyalty />;
+    case 'transport-web-booking':
+      return <TransportWebBooking />;
+    case 'transport-settings':
+      return <TransportSettings />;
     default:
       return <DefaultSubmoduleContent submodule={submodule} />;
   }
