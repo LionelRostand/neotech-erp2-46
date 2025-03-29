@@ -4,21 +4,36 @@ import { Employee } from '@/types/employee';
 import { getEmployeesData, refreshEmployeesData } from '@/components/module/submodules/employees/services/employeeService';
 import { toast } from 'sonner';
 import { useAuth } from './useAuth';
+import { usePermissions } from './usePermissions';
 
 export const useEmployeeData = () => {
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { isOffline } = useAuth();
+  const { isOffline, currentUser } = useAuth();
+  const { isAdmin, checkPermission } = usePermissions('employees');
 
   useEffect(() => {
-    loadEmployees();
-  }, []);
+    if (currentUser) {
+      loadEmployees();
+    }
+  }, [currentUser]);
 
   const loadEmployees = async () => {
     try {
       setLoading(true);
       setError(null);
+      
+      // Check if user has permission to view employee data
+      const canViewEmployees = isAdmin || await checkPermission('employees', 'view');
+      
+      if (!canViewEmployees) {
+        console.warn("L'utilisateur n'a pas les permissions pour voir les données employés");
+        setError("Accès refusé. Vous n'avez pas les permissions nécessaires.");
+        setLoading(false);
+        return;
+      }
+      
       const data = await getEmployeesData();
       setEmployees(data);
     } catch (err) {
@@ -39,6 +54,16 @@ export const useEmployeeData = () => {
     try {
       setLoading(true);
       setError(null);
+      
+      // Check if user has permission to view employee data
+      const canViewEmployees = isAdmin || await checkPermission('employees', 'view');
+      
+      if (!canViewEmployees) {
+        console.warn("L'utilisateur n'a pas les permissions pour voir les données employés");
+        setError("Accès refusé. Vous n'avez pas les permissions nécessaires.");
+        return employees; // Retourner les données actuelles
+      }
+      
       const refreshedData = await refreshEmployeesData();
       setEmployees(refreshedData);
       return refreshedData;

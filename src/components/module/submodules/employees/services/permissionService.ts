@@ -45,12 +45,12 @@ export const getUserPermissions = async (userId: string): Promise<UserPermission
     }
     
     // Convert the document to UserPermissions type, ensuring it has the required properties
-    const permissions = {
+    const permissions: UserPermissions = {
       userId,
       permissions: (permissionsDoc as any).permissions || {},
       roles: (permissionsDoc as any).roles || [],
       isAdmin: (permissionsDoc as any).isAdmin || false
-    } as UserPermissions;
+    };
     
     console.log(`Permissions récupérées pour l'utilisateur ${userId}:`, permissions);
     return permissions;
