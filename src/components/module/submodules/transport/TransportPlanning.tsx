@@ -24,6 +24,7 @@ const TransportPlanning: React.FC = () => {
           </CardContent>
         </Card>
       
+        {/* Connect the MaintenanceScheduleDialog with the PlanningContext */}
         <MaintenanceScheduleDialog />
         <ExtensionDetailsDialog />
       </div>

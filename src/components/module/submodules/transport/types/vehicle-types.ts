@@ -1,5 +1,6 @@
 
 import { Note } from './base-types';
+import { MaintenanceSchedule as MapMaintenanceSchedule } from './map-types';
 
 export interface TransportVehicle {
   id: string;
@@ -27,17 +28,8 @@ export interface TransportVehicle {
   };
 }
 
-export interface MaintenanceSchedule {
-  id: string;
-  vehicleId: string;
-  startDate: string;
-  endDate: string;
-  type: "regular" | "repair" | "inspection";
-  description: string;
-  completed: boolean;
-  technician: string;
-  notes?: string;
-}
+// Use the MaintenanceSchedule type from map-types.ts to avoid duplication
+export type MaintenanceSchedule = MapMaintenanceSchedule;
 
 export interface MaintenanceRecord {
   id: string;

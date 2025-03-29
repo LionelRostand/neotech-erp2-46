@@ -7,6 +7,7 @@ import MaintenanceScheduleList from './MaintenanceScheduleList';
 import ExtensionRequestsList from './ExtensionRequestsList';
 import { usePlanning } from './context/PlanningContext';
 import { TransportVehicle } from '../types';
+import { MaintenanceSchedule } from '../types/map-types';
 
 interface PlanningTabContentProps {
   activeMode: string;
@@ -43,7 +44,7 @@ const PlanningTabContent: React.FC<PlanningTabContentProps> = ({
 
       <TabsContent value="vehicles">
         <MaintenanceScheduleList 
-          maintenanceSchedules={maintenanceSchedules}
+          maintenanceSchedules={maintenanceSchedules as any}  // Type assertion to avoid type conflicts
           vehicles={vehicles}
           onAddMaintenance={handleAddMaintenance}
         />

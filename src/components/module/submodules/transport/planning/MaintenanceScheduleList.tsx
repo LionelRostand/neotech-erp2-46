@@ -3,7 +3,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { CarFront, Plus, Wrench, FileCheck, FileQuestion } from "lucide-react";
-import { MaintenanceSchedule, TransportVehicle } from '../types';
+import { TransportVehicle } from '../types';
+import { MaintenanceSchedule } from '../types/map-types';
 
 interface MaintenanceScheduleListProps {
   maintenanceSchedules: MaintenanceSchedule[];

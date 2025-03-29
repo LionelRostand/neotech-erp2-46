@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -15,7 +14,7 @@ import { fr } from "date-fns/locale";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { TransportVehicle } from '../types/transport-types';
+import { usePlanning } from './context/PlanningContext';
 
 // Form schema
 const maintenanceFormSchema = z.object({
@@ -45,21 +44,15 @@ const maintenanceFormSchema = z.object({
 
 type MaintenanceFormValues = z.infer<typeof maintenanceFormSchema>;
 
-interface MaintenanceScheduleDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  vehicles: TransportVehicle[];
-  selectedVehicle: TransportVehicle | null;
-  onSave: (data: MaintenanceFormValues) => void;
-}
+const MaintenanceScheduleDialog: React.FC = () => {
+  const { 
+    vehicles,
+    selectedVehicle,
+    showMaintenanceDialog,
+    setShowMaintenanceDialog,
+    handleSaveMaintenance
+  } = usePlanning();
 
-const MaintenanceScheduleDialog: React.FC<MaintenanceScheduleDialogProps> = ({
-  open,
-  onOpenChange,
-  vehicles,
-  selectedVehicle,
-  onSave
-}) => {
   // Default values for the form
   const defaultValues: Partial<MaintenanceFormValues> = {
     vehicleId: selectedVehicle?.id || "",
@@ -76,11 +69,11 @@ const MaintenanceScheduleDialog: React.FC<MaintenanceScheduleDialogProps> = ({
 
   // Form submission handler
   const onSubmit = (data: MaintenanceFormValues) => {
-    onSave(data);
+    handleSaveMaintenance(data);
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={showMaintenanceDialog} onOpenChange={setShowMaintenanceDialog}>
       <DialogContent className="sm:max-w-[550px]">
         <DialogHeader>
           <DialogTitle>Planifier une maintenance</DialogTitle>
@@ -282,7 +275,7 @@ const MaintenanceScheduleDialog: React.FC<MaintenanceScheduleDialogProps> = ({
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => onOpenChange(false)}
+                onClick={() => setShowMaintenanceDialog(false)}
               >
                 Annuler
               </Button>

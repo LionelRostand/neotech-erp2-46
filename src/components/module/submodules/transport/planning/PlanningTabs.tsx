@@ -6,7 +6,8 @@ import { Calendar, CarFront, Clock, User } from "lucide-react";
 import { usePlanning } from './context/PlanningContext';
 
 const PlanningTabs: React.FC = () => {
-  const { activeTab, setActiveTab } = usePlanning();
+  // Remove activeTab and setActiveTab as they don't exist in the context
+  const { } = usePlanning();
 
   return (
     <CardHeader className="pb-3">

@@ -5,6 +5,7 @@ export * from './vehicle-types';
 export * from './driver-types';
 export * from './reservation-types';
 export * from './client-types';
+export * from './map-types';
 
 // Create a backward compatibility layer to avoid breaking imports
 // This way code that imports from transport-types.ts will still work

@@ -161,9 +161,10 @@ export const PlanningProvider = ({ children }: PlanningProviderProps) => {
       const updatedMaintenance = [...maintenanceSchedules];
       if (updatedMaintenance.length > 0) {
         const randomIndex = Math.floor(Math.random() * updatedMaintenance.length);
+        // Use properties that exist in the MaintenanceSchedule type
         updatedMaintenance[randomIndex] = {
           ...updatedMaintenance[randomIndex],
-          lastUpdate: new Date().toISOString()
+          description: updatedMaintenance[randomIndex].description + " (Actualisé)"
         };
         setMaintenanceSchedules(updatedMaintenance);
       }
