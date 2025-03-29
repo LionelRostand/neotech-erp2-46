@@ -1,9 +1,11 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Reservation } from '../types/reservation-types';
+import EditReservationDialog from './EditReservationDialog';
+import ViewReservationDetailsDialog from './ViewReservationDetailsDialog';
 
 // Mock data pour les réservations
 const mockReservations: Reservation[] = [
@@ -93,6 +95,10 @@ const mockReservations: Reservation[] = [
 ];
 
 const ReservationsList: React.FC = () => {
+  const [selectedReservation, setSelectedReservation] = useState<Reservation | null>(null);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false);
+
   // Format date string
   const formatDate = (dateStr: string) => {
     return new Date(dateStr).toLocaleDateString('fr-FR', {
@@ -132,42 +138,81 @@ const ReservationsList: React.FC = () => {
     }
   };
 
+  const handleEditClick = (reservation: Reservation) => {
+    setSelectedReservation(reservation);
+    setIsEditDialogOpen(true);
+  };
+
+  const handleViewDetailsClick = (reservation: Reservation) => {
+    setSelectedReservation(reservation);
+    setIsDetailsDialogOpen(true);
+  };
+
   return (
-    <div className="overflow-hidden rounded-md border">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead className="w-[80px]">ID</TableHead>
-            <TableHead>Client</TableHead>
-            <TableHead>Date début</TableHead>
-            <TableHead>Date fin</TableHead>
-            <TableHead>Montant</TableHead>
-            <TableHead>Statut</TableHead>
-            <TableHead>Paiement</TableHead>
-            <TableHead className="text-right">Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {mockReservations.map((reservation) => (
-            <TableRow key={reservation.id}>
-              <TableCell className="font-medium">{reservation.id}</TableCell>
-              <TableCell>{reservation.clientName}</TableCell>
-              <TableCell>{formatDate(reservation.startDate)}</TableCell>
-              <TableCell>{formatDate(reservation.endDate)}</TableCell>
-              <TableCell>{reservation.totalAmount} €</TableCell>
-              <TableCell>{getStatusBadge(reservation.status)}</TableCell>
-              <TableCell>{getPaymentBadge(reservation.paymentStatus)}</TableCell>
-              <TableCell className="text-right">
-                <div className="flex justify-end gap-2">
-                  <Button variant="ghost" size="sm">Modifier</Button>
-                  <Button variant="ghost" size="sm">Détails</Button>
-                </div>
-              </TableCell>
+    <>
+      <div className="overflow-hidden rounded-md border">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-[80px]">ID</TableHead>
+              <TableHead>Client</TableHead>
+              <TableHead>Date début</TableHead>
+              <TableHead>Date fin</TableHead>
+              <TableHead>Montant</TableHead>
+              <TableHead>Statut</TableHead>
+              <TableHead>Paiement</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </div>
+          </TableHeader>
+          <TableBody>
+            {mockReservations.map((reservation) => (
+              <TableRow key={reservation.id}>
+                <TableCell className="font-medium">{reservation.id}</TableCell>
+                <TableCell>{reservation.clientName}</TableCell>
+                <TableCell>{formatDate(reservation.startDate)}</TableCell>
+                <TableCell>{formatDate(reservation.endDate)}</TableCell>
+                <TableCell>{reservation.totalAmount} €</TableCell>
+                <TableCell>{getStatusBadge(reservation.status)}</TableCell>
+                <TableCell>{getPaymentBadge(reservation.paymentStatus)}</TableCell>
+                <TableCell className="text-right">
+                  <div className="flex justify-end gap-2">
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      onClick={() => handleEditClick(reservation)}
+                    >
+                      Modifier
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      onClick={() => handleViewDetailsClick(reservation)}
+                    >
+                      Détails
+                    </Button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+      
+      {selectedReservation && (
+        <>
+          <EditReservationDialog
+            open={isEditDialogOpen}
+            onOpenChange={setIsEditDialogOpen}
+            reservation={selectedReservation}
+          />
+          <ViewReservationDetailsDialog
+            open={isDetailsDialogOpen}
+            onOpenChange={setIsDetailsDialogOpen}
+            reservation={selectedReservation}
+          />
+        </>
+      )}
+    </>
   );
 };
 

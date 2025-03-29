@@ -1,15 +1,17 @@
 
 import React, { useState } from 'react';
-import { Calendar } from "@/components/ui/calendar";
+import { Calendar, CalendarCell, CalendarGrid, CalendarHeader, CalendarHeading, CalendarMonthName, CalendarNav, CalendarRoot, CalendarWeek } from "@/components/ui/calendar";
 import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { fr } from "date-fns/locale";
-import { compareDesc } from "date-fns";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { CalendarIcon, Car, Users } from "lucide-react";
+import { format, isSameDay } from 'date-fns';
+import { fr } from 'date-fns/locale';
+import { ChevronLeft, ChevronRight, Eye } from 'lucide-react';
 import { Reservation } from '../types/reservation-types';
+import ViewReservationDetailsDialog from './ViewReservationDetailsDialog';
 
-// Mock data pour les réservations
+// Mock data for reservations
 const mockReservations: Reservation[] = [
   {
     id: "rsv-001",
@@ -60,184 +62,340 @@ const mockReservations: Reservation[] = [
     notes: "Location sans chauffeur",
     createdAt: "2023-10-20T11:15:00",
     updatedAt: "2023-11-10T18:30:00"
+  },
+  {
+    id: "rsv-004",
+    vehicleId: "veh-001",
+    driverId: "drv-003",
+    clientId: "cli-004",
+    clientName: "Jean Moreau",
+    startDate: "2023-11-20",
+    endDate: "2023-11-20",
+    pickupLocation: "Hôtel Ritz, Place Vendôme, Paris",
+    dropoffLocation: "Opéra Garnier, Paris",
+    status: "confirmed",
+    paymentStatus: "partial",
+    totalAmount: 180,
+    notes: "",
+    createdAt: "2023-11-05T16:20:00",
+    updatedAt: "2023-11-05T16:20:00"
+  },
+  {
+    id: "rsv-005",
+    vehicleId: "veh-004",
+    clientId: "cli-005",
+    clientName: "Isabelle Bernard",
+    startDate: "2023-11-25",
+    endDate: "2023-11-27",
+    pickupLocation: "Gare Montparnasse, Paris",
+    dropoffLocation: "Gare Montparnasse, Paris",
+    status: "pending",
+    paymentStatus: "pending",
+    totalAmount: 420,
+    notes: "Location sans chauffeur, kilométrage illimité",
+    createdAt: "2023-11-07T10:10:00",
+    updatedAt: "2023-11-07T10:10:00"
   }
 ];
 
+// Adjust dates to be close to current date for demo
+const adjustReservationDates = (reservations: Reservation[]): Reservation[] => {
+  const today = new Date();
+  const currentYear = today.getFullYear();
+  const currentMonth = today.getMonth();
+  
+  return reservations.map((reservation, index) => {
+    // Parse original dates
+    const startDate = new Date(reservation.startDate);
+    const endDate = new Date(reservation.endDate);
+    
+    // Calculate new dates that are within the current month
+    const newStartDate = new Date(currentYear, currentMonth, 5 + index * 3);
+    const duration = Math.floor((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+    const newEndDate = new Date(currentYear, currentMonth, 5 + index * 3 + duration);
+    
+    return {
+      ...reservation,
+      startDate: newStartDate.toISOString().split('T')[0],
+      endDate: newEndDate.toISOString().split('T')[0],
+    };
+  });
+};
+
 const ReservationsCalendar: React.FC = () => {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
-  const [viewMode, setViewMode] = useState<'day' | 'vehicle'>('day');
+  const [selectedReservation, setSelectedReservation] = useState<Reservation | null>(null);
+  const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false);
+  const [calendarView, setCalendarView] = useState<'month' | 'week' | 'day'>('month');
   
-  const getReservationsForDate = (date: Date | undefined) => {
-    if (!date) return [];
-    
-    const dateString = date.toISOString().split('T')[0];
-    
-    return mockReservations.filter(reservation => {
-      const startDate = new Date(reservation.startDate);
-      const endDate = new Date(reservation.endDate);
-      const currentDate = new Date(dateString);
-      
-      // Check if the current date is between start and end dates (inclusive)
-      return currentDate >= startDate && currentDate <= endDate;
+  // Adjust reservation dates to be around the current date
+  const adjustedReservations = adjustReservationDates(mockReservations);
+  
+  // Get reservations for the selected date
+  const getReservationsForDate = (date: Date) => {
+    return adjustedReservations.filter(reservation => {
+      const start = new Date(reservation.startDate);
+      const end = new Date(reservation.endDate);
+      return date >= start && date <= end;
     });
   };
-  
-  const reservationsOnSelectedDate = getReservationsForDate(selectedDate);
-  
-  const getDayHasReservation = (date: Date) => {
-    const reservations = getReservationsForDate(date);
-    return reservations.length > 0;
+
+  const selectedDateReservations = selectedDate 
+    ? getReservationsForDate(selectedDate) 
+    : [];
+
+  // Get color for reservation status
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'confirmed':
+        return 'bg-green-500';
+      case 'pending':
+        return 'bg-yellow-500';
+      case 'in-progress':
+        return 'bg-blue-500';
+      case 'completed':
+        return 'bg-gray-500';
+      case 'cancelled':
+        return 'bg-red-500';
+      default:
+        return 'bg-gray-500';
+    }
   };
-  
-  const formatTime = (dateString: string) => {
-    return new Date(dateString).toLocaleTimeString('fr-FR', {
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+
+  // Handle view reservation details
+  const handleViewDetails = (reservation: Reservation) => {
+    setSelectedReservation(reservation);
+    setIsDetailsDialogOpen(true);
   };
-  
-  return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      <div className="lg:col-span-1 space-y-4">
-        <div className="flex justify-between items-center">
-          <h3 className="text-lg font-medium">Calendrier des réservations</h3>
-          <Select value={viewMode} onValueChange={(value: 'day' | 'vehicle') => setViewMode(value)}>
-            <SelectTrigger className="w-[160px]">
-              <SelectValue placeholder="Mode d'affichage" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="day">Par jour</SelectItem>
-              <SelectItem value="vehicle">Par véhicule</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        
-        <div className="border rounded-md p-4">
-          <Calendar
-            mode="single"
-            selected={selectedDate}
-            onSelect={setSelectedDate}
-            locale={fr}
-            className="w-full"
-            modifiers={{
-              hasReservation: (date) => getDayHasReservation(date),
-            }}
-            modifiersStyles={{
-              hasReservation: { backgroundColor: "#f3e8ff", fontWeight: "bold" }
-            }}
+
+  // Render content for a calendar cell
+  const renderCellContent = (day: Date) => {
+    const reservationsForDay = getReservationsForDate(day);
+    
+    if (reservationsForDay.length === 0) return null;
+    
+    // If we have reservations for this day, show indicators
+    return (
+      <div className="absolute bottom-1 left-0 right-0 flex justify-center gap-1">
+        {reservationsForDay.slice(0, 3).map((reservation, i) => (
+          <div 
+            key={i}
+            className={`h-1 w-1 rounded-full ${getStatusColor(reservation.status)}`}
           />
-        </div>
-        
-        <div className="flex justify-between text-sm text-muted-foreground">
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full bg-[#f3e8ff]"></div>
-            <span>Avec réservations</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full bg-primary"></div>
-            <span>Jour sélectionné</span>
-          </div>
-        </div>
-      </div>
-      
-      <div className="lg:col-span-2 space-y-4">
-        <h3 className="text-lg font-medium flex items-center gap-2">
-          <CalendarIcon size={18} />
-          <span>Réservations du {selectedDate?.toLocaleDateString('fr-FR', { dateStyle: 'long' })}</span>
-          <Badge className="ml-2">
-            {reservationsOnSelectedDate.length} réservation{reservationsOnSelectedDate.length !== 1 ? 's' : ''}
-          </Badge>
-        </h3>
-        
-        {reservationsOnSelectedDate.length === 0 ? (
-          <div className="text-center py-16 border rounded-md">
-            <CalendarIcon className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-            <h4 className="text-lg font-medium mb-2">Aucune réservation</h4>
-            <p className="text-sm text-gray-500 max-w-xs mx-auto">
-              Il n'y a pas de réservation prévue pour cette date.
-            </p>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {reservationsOnSelectedDate
-              .sort((a, b) => compareDesc(new Date(b.startDate), new Date(a.startDate)) * -1)
-              .map((reservation) => (
-                <Card key={reservation.id} className="overflow-hidden">
-                  <div className={`h-1.5 w-full ${
-                    reservation.status === 'confirmed' ? 'bg-green-500' :
-                    reservation.status === 'pending' ? 'bg-yellow-500' :
-                    reservation.status === 'completed' ? 'bg-blue-500' :
-                    reservation.status === 'cancelled' ? 'bg-red-500' :
-                    'bg-gray-500'
-                  }`}></div>
-                  <CardContent className="pt-6">
-                    <div className="flex flex-col md:flex-row justify-between gap-4">
-                      <div className="space-y-2">
-                        <h4 className="font-medium">{reservation.clientName}</h4>
-                        <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                          <Car size={14} />
-                          <span>Réservation #{reservation.id}</span>
-                          {reservation.driverId && (
-                            <>
-                              <span className="mx-1">•</span>
-                              <Users size={14} />
-                              <span>Avec chauffeur</span>
-                            </>
-                          )}
-                        </div>
-                        
-                        <div className="mt-4 space-y-1">
-                          <div>
-                            <span className="text-xs text-muted-foreground">Départ:</span>
-                            <div className="flex items-center justify-between">
-                              <div>{reservation.pickupLocation}</div>
-                            </div>
-                          </div>
-                          
-                          <div>
-                            <span className="text-xs text-muted-foreground">Arrivée:</span>
-                            <div className="flex items-center justify-between">
-                              <div>{reservation.dropoffLocation}</div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                      
-                      <div className="flex flex-col items-end justify-between">
-                        <Badge variant={reservation.paymentStatus === 'paid' ? 'secondary' : 'outline'}>
-                          {reservation.paymentStatus === 'paid' ? 'Payée' : 
-                           reservation.paymentStatus === 'partial' ? 'Partiellement payée' : 'En attente de paiement'}
-                        </Badge>
-                        
-                        <div className="text-right">
-                          <div className="text-2xl font-bold">
-                            {reservation.totalAmount} €
-                          </div>
-                          <div className="text-xs text-muted-foreground">
-                            Statut: {
-                              reservation.status === 'confirmed' ? 'Confirmée' :
-                              reservation.status === 'pending' ? 'En attente' :
-                              reservation.status === 'completed' ? 'Terminée' :
-                              reservation.status === 'cancelled' ? 'Annulée' : 'Inconnu'
-                            }
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    {reservation.notes && (
-                      <div className="mt-4 border-t pt-3 text-sm">
-                        <span className="font-medium">Notes: </span>
-                        {reservation.notes}
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              ))
-            }
-          </div>
+        ))}
+        {reservationsForDay.length > 3 && (
+          <div className="h-1 w-1 rounded-full bg-gray-400" />
         )}
       </div>
+    );
+  };
+
+  return (
+    <div className="space-y-6">
+      <Tabs 
+        defaultValue="month" 
+        value={calendarView}
+        onValueChange={(v) => setCalendarView(v as 'month' | 'week' | 'day')}
+      >
+        <div className="flex justify-between items-center mb-4">
+          <TabsList>
+            <TabsTrigger value="month">Mois</TabsTrigger>
+            <TabsTrigger value="week">Semaine</TabsTrigger>
+            <TabsTrigger value="day">Jour</TabsTrigger>
+          </TabsList>
+          
+          <div className="flex items-center space-x-2">
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => {
+                const newDate = new Date(selectedDate || new Date());
+                if (calendarView === 'month') {
+                  newDate.setMonth(newDate.getMonth() - 1);
+                } else if (calendarView === 'week') {
+                  newDate.setDate(newDate.getDate() - 7);
+                } else {
+                  newDate.setDate(newDate.getDate() - 1);
+                }
+                setSelectedDate(newDate);
+              }}
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => setSelectedDate(new Date())}
+            >
+              Aujourd'hui
+            </Button>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => {
+                const newDate = new Date(selectedDate || new Date());
+                if (calendarView === 'month') {
+                  newDate.setMonth(newDate.getMonth() + 1);
+                } else if (calendarView === 'week') {
+                  newDate.setDate(newDate.getDate() + 7);
+                } else {
+                  newDate.setDate(newDate.getDate() + 1);
+                }
+                setSelectedDate(newDate);
+              }}
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+
+        <TabsContent value="month" className="m-0">
+          <Card>
+            <CardContent className="p-4">
+              <Calendar
+                mode="single"
+                selected={selectedDate}
+                onSelect={setSelectedDate}
+                className="border rounded-md p-4"
+                locale={fr}
+                month={selectedDate || new Date()}
+                fixedWeeks
+                showOutsideDays
+              >
+                <CalendarHeader>
+                  <CalendarMonthName />
+                  <CalendarNav />
+                </CalendarHeader>
+                <CalendarGrid>
+                  <CalendarWeek>
+                    <div className="h-8 w-8 flex items-center justify-center font-medium text-muted-foreground">L</div>
+                    <div className="h-8 w-8 flex items-center justify-center font-medium text-muted-foreground">M</div>
+                    <div className="h-8 w-8 flex items-center justify-center font-medium text-muted-foreground">M</div>
+                    <div className="h-8 w-8 flex items-center justify-center font-medium text-muted-foreground">J</div>
+                    <div className="h-8 w-8 flex items-center justify-center font-medium text-muted-foreground">V</div>
+                    <div className="h-8 w-8 flex items-center justify-center font-medium text-muted-foreground">S</div>
+                    <div className="h-8 w-8 flex items-center justify-center font-medium text-muted-foreground">D</div>
+                  </CalendarWeek>
+                  <CalendarCell
+                    renderDay={(day) => (
+                      <div className="relative h-full w-full p-2">
+                        <span>{format(day, "d")}</span>
+                        {renderCellContent(day)}
+                      </div>
+                    )}
+                  />
+                </CalendarGrid>
+              </Calendar>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="week" className="m-0">
+          <Card>
+            <CardContent className="p-4">
+              <div className="text-xl font-semibold mb-4">
+                Semaine du {selectedDate ? format(selectedDate, "d MMMM yyyy", { locale: fr }) : ''}
+              </div>
+              <div className="grid grid-cols-7 gap-2">
+                {Array.from({ length: 7 }).map((_, i) => {
+                  const date = new Date(selectedDate || new Date());
+                  const startOfWeek = new Date(date);
+                  startOfWeek.setDate(date.getDate() - date.getDay() + 1); // Start from Monday
+                  const dayDate = new Date(startOfWeek);
+                  dayDate.setDate(startOfWeek.getDate() + i);
+                  
+                  const isToday = isSameDay(dayDate, new Date());
+                  const reservations = getReservationsForDate(dayDate);
+
+                  return (
+                    <div 
+                      key={i} 
+                      className={`border rounded-md p-2 min-h-[140px] ${
+                        isToday ? 'bg-muted' : ''
+                      }`}
+                    >
+                      <div className="text-center mb-2 font-medium">
+                        {format(dayDate, "EEEE", { locale: fr })}
+                        <div className={`text-sm ${isToday ? 'bg-primary text-primary-foreground rounded-full w-6 h-6 flex items-center justify-center mx-auto' : ''}`}>
+                          {format(dayDate, "d")}
+                        </div>
+                      </div>
+                      <div className="space-y-1">
+                        {reservations.map(reservation => (
+                          <div 
+                            key={reservation.id}
+                            className="text-xs p-1 rounded bg-muted overflow-hidden text-ellipsis whitespace-nowrap"
+                          >
+                            <Badge className={getStatusColor(reservation.status)} variant="secondary" />
+                            <span className="ml-1">{reservation.clientName}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="day" className="m-0">
+          <Card>
+            <CardContent className="p-4">
+              <div className="text-xl font-semibold mb-4">
+                {selectedDate ? format(selectedDate, "EEEE d MMMM yyyy", { locale: fr }) : ''}
+              </div>
+              
+              {selectedDateReservations.length === 0 ? (
+                <div className="text-center py-12 text-muted-foreground">
+                  Aucune réservation pour cette date
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {selectedDateReservations.map(reservation => (
+                    <div 
+                      key={reservation.id}
+                      className="border rounded-md p-3 hover:bg-muted transition-colors"
+                    >
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <Badge className={getStatusColor(reservation.status)}>
+                            {reservation.status === 'confirmed' ? 'Confirmée' :
+                             reservation.status === 'pending' ? 'En attente' :
+                             reservation.status === 'completed' ? 'Terminée' :
+                             reservation.status === 'in-progress' ? 'En cours' : 
+                             'Annulée'}
+                          </Badge>
+                          <h4 className="text-base font-medium mt-2">{reservation.clientName}</h4>
+                          <p className="text-sm text-muted-foreground">
+                            {reservation.pickupLocation} → {reservation.dropoffLocation}
+                          </p>
+                        </div>
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => handleViewDetails(reservation)}
+                          className="flex gap-1 items-center"
+                        >
+                          <Eye size={14} />
+                          <span>Détails</span>
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+
+      {selectedReservation && (
+        <ViewReservationDetailsDialog
+          open={isDetailsDialogOpen}
+          onOpenChange={setIsDetailsDialogOpen}
+          reservation={selectedReservation}
+        />
+      )}
     </div>
   );
 };

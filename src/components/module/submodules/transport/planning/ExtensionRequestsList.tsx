@@ -2,10 +2,11 @@
 import React from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Calendar, Eye, CheckCircle, XCircle } from "lucide-react";
-import { usePlanning } from './context/PlanningContext';
 import { MapExtensionRequest as ExtensionRequest } from '../types';
+import { Badge } from "@/components/ui/badge";
+import { format } from "date-fns";
+import { fr } from "date-fns/locale";
+import { CalendarRange } from "lucide-react";
 
 interface ExtensionRequestsListProps {
   extensionRequests: ExtensionRequest[];
@@ -16,9 +17,8 @@ const ExtensionRequestsList: React.FC<ExtensionRequestsListProps> = ({
   extensionRequests,
   onViewDetails
 }) => {
-  // Format date from YYYY-MM-DD to local date
-  const formatDate = (dateStr: string) => {
-    return new Date(dateStr).toLocaleDateString('fr-FR', { dateStyle: 'long' });
+  const formatDate = (dateString: string) => {
+    return format(new Date(dateString), "dd MMM yyyy", { locale: fr });
   };
 
   const getStatusBadge = (status: string) => {
@@ -38,52 +38,52 @@ const ExtensionRequestsList: React.FC<ExtensionRequestsListProps> = ({
     <div className="space-y-4">
       <h3 className="text-lg font-medium">Demandes de prolongation</h3>
       
-      <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Client</TableHead>
-              <TableHead>Véhicule</TableHead>
-              <TableHead>Date originale</TableHead>
-              <TableHead>Date demandée</TableHead>
-              <TableHead>Raison</TableHead>
-              <TableHead>Statut</TableHead>
-              <TableHead>Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {extensionRequests.length === 0 ? (
+      {extensionRequests.length === 0 ? (
+        <div className="text-center py-12 border rounded-md">
+          <CalendarRange className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+          <h4 className="text-lg font-medium mb-2">Aucune demande de prolongation</h4>
+          <p className="text-muted-foreground mx-auto max-w-md">
+            Il n'y a pas de demande de prolongation actuellement.
+          </p>
+        </div>
+      ) : (
+        <div className="border rounded-md overflow-hidden">
+          <Table>
+            <TableHeader>
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-6 text-muted-foreground">
-                  Aucune demande de prolongation
-                </TableCell>
+                <TableHead className="w-24">Référence</TableHead>
+                <TableHead>Client</TableHead>
+                <TableHead>Véhicule</TableHead>
+                <TableHead>Date originale</TableHead>
+                <TableHead>Date demandée</TableHead>
+                <TableHead className="w-24">Statut</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
               </TableRow>
-            ) : (
-              extensionRequests.map((request) => (
+            </TableHeader>
+            <TableBody>
+              {extensionRequests.map((request) => (
                 <TableRow key={request.id}>
-                  <TableCell className="font-medium">{request.clientName}</TableCell>
+                  <TableCell className="font-medium">{request.requestId}</TableCell>
+                  <TableCell>{request.clientName}</TableCell>
                   <TableCell>{request.vehicleName}</TableCell>
                   <TableCell>{formatDate(request.originalEndDate)}</TableCell>
                   <TableCell>{formatDate(request.requestedEndDate)}</TableCell>
-                  <TableCell className="max-w-[200px] truncate">{request.reason}</TableCell>
                   <TableCell>{getStatusBadge(request.status)}</TableCell>
-                  <TableCell>
+                  <TableCell className="text-right">
                     <Button 
-                      variant="ghost" 
-                      size="sm" 
+                      variant="outline" 
+                      size="sm"
                       onClick={() => onViewDetails(request.id)}
-                      className="flex items-center gap-1"
                     >
-                      <Eye size={16} />
-                      <span>Détails</span>
+                      Détails
                     </Button>
                   </TableCell>
                 </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </div>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      )}
     </div>
   );
 };
