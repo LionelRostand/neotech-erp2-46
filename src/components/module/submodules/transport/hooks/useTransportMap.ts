@@ -48,6 +48,19 @@ export const useTransportMap = (
         // Dynamic import to avoid SSR issues
         const L = await import('leaflet');
         
+        // Fix Leaflet icon paths issue
+        const icon = L.icon({
+          iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+          iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+          shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+          iconSize: [25, 41],
+          iconAnchor: [12, 41],
+          popupAnchor: [1, -34],
+          shadowSize: [41, 41]
+        });
+        
+        L.Marker.prototype.options.icon = icon;
+        
         // Initialize map if not already done
         if (!mapInitialized) {
           // Clean up existing map
@@ -73,8 +86,14 @@ export const useTransportMap = (
             }
           }
           
-          // Create new map
-          const map = L.map(mapElementRef.current).setView([latitude, longitude], zoom);
+          // Create new map with correct sizing
+          const map = L.map(mapElementRef.current, {
+            zoomControl: true,
+            attributionControl: true,
+            scrollWheelZoom: true,
+            doubleClickZoom: true
+          }).setView([latitude, longitude], zoom);
+          
           leafletMapRef.current = map;
           
           // Add tile layer based on config
@@ -106,12 +125,20 @@ export const useTransportMap = (
           }
           
           tileLayer.addTo(map);
+          
+          // Force map to update its container size
+          setTimeout(() => {
+            map.invalidateSize();
+          }, 100);
 
           setMapInitialized(true);
         }
         
         // Add or update markers for all vehicles with location
         if (mapInitialized && leafletMapRef.current) {
+          // Force map to update its container size again after initialization
+          leafletMapRef.current.invalidateSize();
+          
           // Clear existing markers
           markersRef.current.forEach(marker => {
             marker.remove();

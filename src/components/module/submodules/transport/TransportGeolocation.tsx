@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Map, AlertTriangle, Navigation, Bell, Search, Settings, Layers } from "lucide-react";
@@ -328,20 +327,22 @@ const TransportGeolocation = () => {
               </div>
             </CardHeader>
             <CardContent>
-              <div 
-                ref={mapRef} 
-                className="h-[400px] bg-gray-100 rounded-md mb-6"
-              >
-                {!mapInitialized && (
-                  <div className="h-full flex items-center justify-center">
-                    <div className="text-center">
-                      <Map className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-                      <p className="text-gray-500">
-                        Chargement de la carte...
-                      </p>
+              <div className="w-full relative">
+                <div 
+                  ref={mapRef} 
+                  className="h-[500px] w-full bg-gray-100 rounded-md mb-6 z-0 overflow-hidden"
+                >
+                  {!mapInitialized && (
+                    <div className="h-full flex items-center justify-center">
+                      <div className="text-center">
+                        <Map className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+                        <p className="text-gray-500">
+                          Chargement de la carte...
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
               
               <div className="space-y-4">
