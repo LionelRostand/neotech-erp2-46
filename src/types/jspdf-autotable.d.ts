@@ -34,6 +34,9 @@ declare module 'jspdf-autotable' {
   declare global {
     interface jsPDF {
       autoTable(options: AutoTableOptions): void;
+      lastAutoTable: {
+        finalY: number;
+      };
     }
   }
 
