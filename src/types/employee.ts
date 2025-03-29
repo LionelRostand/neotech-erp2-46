@@ -24,6 +24,10 @@ export interface Employee {
   workSchedule?: {
     [key: string]: string;
   };
+  // Ajout d'un tableau pour stocker les références aux fiches de paie
+  payslips?: string[];
+  // Ajout d'un champ pour le salaire de base
+  baseSalary?: number;
 }
 
 export interface EducationItem {

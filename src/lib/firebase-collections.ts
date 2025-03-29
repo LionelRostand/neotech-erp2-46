@@ -99,5 +99,17 @@ export const COLLECTIONS = {
     COMPANIES: 'companies', // Main companies collection
     CONTACTS: 'company_contacts',
     DOCUMENTS: 'company_documents'
+  },
+  
+  // Nouvelles collections pour les ressources humaines
+  HR: {
+    ROOT: 'hr',
+    EMPLOYEES: 'employees',
+    PAYSLIPS: 'hr_payslips',
+    LEAVE_REQUESTS: 'hr_leave_requests',
+    CONTRACTS: 'hr_contracts',
+    EVALUATIONS: 'hr_evaluations',
+    DEPARTMENTS: 'hr_departments',
+    TRAININGS: 'hr_trainings'
   }
 };
