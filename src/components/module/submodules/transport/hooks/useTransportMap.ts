@@ -39,23 +39,43 @@ export const useTransportMap = (
     showLabels: true,
     ...initialConfig
   });
+  
+  // Added to prevent continuous reloading
+  const initializationAttemptedRef = useRef(false);
 
   // Initialize and update map when vehicles or config change
   useEffect(() => {
     if (!mapElementRef.current) return;
     
+    // Prevent repeated initialization attempts
+    if (!mapInitialized && initializationAttemptedRef.current) return;
+    
     const initializeMap = async () => {
       try {
+        // Set initialization flag to prevent multiple attempts
+        initializationAttemptedRef.current = true;
+        
         // Dynamic import to avoid SSR issues
         const L = await import('leaflet');
         
         // Fix Leaflet icon paths issue - this is crucial for marker display
-        delete L.Icon.Default.prototype._getIconUrl;
-        L.Icon.Default.mergeOptions({
-          iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-          iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
-          shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+        // Fix TypeScript error by using a different approach to set icon options
+        L.Icon.Default.imagePath = 'https://unpkg.com/leaflet@1.9.4/dist/images/';
+        
+        // Use direct method to set options instead of accessing _getIconUrl
+        const DefaultIcon = L.Icon.extend({
+          options: {
+            iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+            iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+            shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+            iconSize: [25, 41],
+            iconAnchor: [12, 41],
+            popupAnchor: [1, -34],
+            shadowSize: [41, 41]
+          }
         });
+        
+        L.Marker.prototype.options.icon = new DefaultIcon();
         
         // Initialize map if not already done
         if (!mapInitialized) {
@@ -70,7 +90,7 @@ export const useTransportMap = (
           let longitude = mapConfig.centerLng;
           let zoom = mapConfig.zoom;
           
-          // Si nous avons des véhicules avec localisation, utilisons le centre
+          // Use vehicles with location to center the map
           const vehiclesWithLocation = vehicles.filter(v => v.location);
           if (vehiclesWithLocation.length > 0) {
             // Calculate center based on all vehicle positions
@@ -221,10 +241,16 @@ export const useTransportMap = (
     };
   }, []);
 
+  const forceRefreshMap = () => {
+    // Reset the initialization flag
+    initializationAttemptedRef.current = false;
+    setMapInitialized(false);
+  };
+
   return { 
     mapInitialized,
     mapConfig,
     setMapConfig,
-    refreshMap: () => setMapInitialized(false)
+    refreshMap: forceRefreshMap
   };
 };

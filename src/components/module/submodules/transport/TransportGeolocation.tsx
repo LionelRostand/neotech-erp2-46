@@ -153,10 +153,10 @@ const TransportGeolocation = () => {
   const { mapInitialized, mapConfig, setMapConfig, refreshMap } = useTransportMap(mapRef, mockVehicles);
 
   useEffect(() => {
-    if (mapRef.current && activeTab === 'map') {
+    if (activeTab === 'map' && mapRef.current && !mapInitialized) {
       refreshMap();
     }
-  }, [activeTab, refreshMap]);
+  }, [activeTab, refreshMap, mapInitialized]);
 
   const filteredVehicles = mockVehicles.filter(vehicle => 
     vehicle.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -327,7 +327,7 @@ const TransportGeolocation = () => {
                 <div 
                   id="map"
                   ref={mapRef} 
-                  className="h-[600px] w-full bg-gray-100 rounded-md mb-6"
+                  className="h-[600px] w-full bg-gray-100 rounded-md mb-6 overflow-hidden"
                   style={{ position: 'relative', zIndex: 0 }}
                 >
                   {!mapInitialized && (
