@@ -48,7 +48,7 @@ export const useTransportMap = (
         // Dynamic import to avoid SSR issues
         const L = await import('leaflet');
         
-        // Fix Leaflet icon paths issue
+        // Fix Leaflet icon paths issue - this is crucial for marker display
         const icon = L.icon({
           iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
           iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
@@ -86,12 +86,14 @@ export const useTransportMap = (
             }
           }
           
-          // Create new map with correct sizing
+          // Create new map with correct sizing and options
           const map = L.map(mapElementRef.current, {
             zoomControl: true,
             attributionControl: true,
             scrollWheelZoom: true,
-            doubleClickZoom: true
+            doubleClickZoom: true,
+            dragging: true,
+            maxBounds: [[-90, -180], [90, 180]]
           }).setView([latitude, longitude], zoom);
           
           leafletMapRef.current = map;
@@ -126,10 +128,10 @@ export const useTransportMap = (
           
           tileLayer.addTo(map);
           
-          // Force map to update its container size
+          // Ensure map properly sizes itself - critical for proper display
           setTimeout(() => {
-            map.invalidateSize();
-          }, 100);
+            map.invalidateSize(true);
+          }, 250);
 
           setMapInitialized(true);
         }
@@ -137,7 +139,7 @@ export const useTransportMap = (
         // Add or update markers for all vehicles with location
         if (mapInitialized && leafletMapRef.current) {
           // Force map to update its container size again after initialization
-          leafletMapRef.current.invalidateSize();
+          leafletMapRef.current.invalidateSize(true);
           
           // Clear existing markers
           markersRef.current.forEach(marker => {

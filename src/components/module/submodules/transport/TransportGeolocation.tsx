@@ -1,4 +1,5 @@
-import React, { useState, useRef } from 'react';
+
+import React, { useState, useRef, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Map, AlertTriangle, Navigation, Bell, Search, Settings, Layers } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -328,9 +329,12 @@ const TransportGeolocation = () => {
             </CardHeader>
             <CardContent>
               <div className="w-full relative">
+                {/* Improved map container with proper sizing and styling as per Leaflet requirements */}
                 <div 
+                  id="map" 
                   ref={mapRef} 
-                  className="h-[500px] w-full bg-gray-100 rounded-md mb-6 z-0 overflow-hidden"
+                  className="h-[600px] w-full bg-gray-100 rounded-md mb-6 z-0 overflow-hidden"
+                  style={{ position: 'relative' }}
                 >
                   {!mapInitialized && (
                     <div className="h-full flex items-center justify-center">
