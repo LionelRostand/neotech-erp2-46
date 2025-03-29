@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { 
@@ -12,7 +11,12 @@ import {
   ChevronDown,
   MoreHorizontal,
   AlertCircle,
-  CreditCardIcon
+  CreditCardIcon,
+  Eye,
+  Download,
+  Mail,
+  X,
+  Check,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -50,8 +54,13 @@ import {
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { toast } from "sonner";
+import FiltersDialog from './payments/FiltersDialog';
+import InvoiceDetailsDialog from './payments/InvoiceDetailsDialog';
+import EmailInvoiceDialog from './payments/EmailInvoiceDialog';
+import RecordPaymentDialog from './payments/RecordPaymentDialog';
+import { jsPDF } from "jspdf";
+import 'jspdf-autotable';
 
-// Mock data for payments
 const mockInvoices = [
   { 
     id: 'inv1', 
@@ -199,51 +208,125 @@ const TransportPayments = () => {
   const [selectedInvoiceId, setSelectedInvoiceId] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('');
   const [paymentAmount, setPaymentAmount] = useState('');
+  
+  const [showFiltersDialog, setShowFiltersDialog] = useState(false);
+  const [showDetailsDialog, setShowDetailsDialog] = useState(false);
+  const [showEmailDialog, setShowEmailDialog] = useState(false);
+  const [showPaymentDialog, setShowPaymentDialog] = useState(false);
+  const [selectedInvoice, setSelectedInvoice] = useState<any>(null);
+  const [appliedFilters, setAppliedFilters] = useState<any>({});
 
-  // Filter invoices based on search term
-  const filteredInvoices = mockInvoices.filter(invoice => 
-    invoice.number.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    invoice.clientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    invoice.vehicleInfo.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredInvoices = mockInvoices.filter(invoice => {
+    const matchesSearch = 
+      invoice.number.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      invoice.clientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      invoice.vehicleInfo.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    if (!matchesSearch) return false;
+    
+    if (Object.keys(appliedFilters).length === 0) return true;
+    
+    let matches = true;
+    
+    if (appliedFilters.dateFrom && new Date(invoice.date) < new Date(appliedFilters.dateFrom)) {
+      matches = false;
+    }
+    
+    if (appliedFilters.dateTo && new Date(invoice.date) > new Date(appliedFilters.dateTo)) {
+      matches = false;
+    }
+    
+    if (appliedFilters.amount && invoice.amount !== appliedFilters.amount) {
+      matches = false;
+    }
+    
+    if (appliedFilters.clientName && 
+        !invoice.clientName.toLowerCase().includes(appliedFilters.clientName.toLowerCase())) {
+      matches = false;
+    }
+    
+    if (appliedFilters.paymentStatus && invoice.status !== appliedFilters.paymentStatus) {
+      matches = false;
+    }
+    
+    if (appliedFilters.paymentMethod && invoice.paymentMethod !== appliedFilters.paymentMethod) {
+      matches = false;
+    }
+    
+    return matches;
+  });
 
-  // Filter transactions based on search term
   const filteredTransactions = mockTransactions.filter(tx => 
     (tx.invoiceNumber?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
     tx.clientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
     getPaymentMethodName(tx.method).toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // Handle record payment
-  const handleRecordPayment = () => {
-    if (!selectedInvoiceId) {
-      toast.error("Veuillez sélectionner une facture");
-      return;
-    }
-
-    if (!paymentMethod) {
-      toast.error("Veuillez sélectionner une méthode de paiement");
-      return;
-    }
-
-    if (!paymentAmount || parseFloat(paymentAmount) <= 0) {
-      toast.error("Veuillez entrer un montant valide");
-      return;
-    }
-
-    toast.success("Paiement enregistré avec succès");
-    
-    // Reset form and close dialog
-    setSelectedInvoiceId('');
-    setPaymentMethod('');
-    setPaymentAmount('');
-    setShowAddPaymentDialog(false);
+  const handleRecordPayment = (invoice: any) => {
+    setSelectedInvoice(invoice);
+    setShowPaymentDialog(true);
   };
 
-  // Handle create invoice
   const handleCreateInvoice = () => {
     toast.success("Facture créée avec succès");
     setShowInvoiceDialog(false);
+  };
+
+  const handleViewDetails = (invoice: any) => {
+    setSelectedInvoice(invoice);
+    setShowDetailsDialog(true);
+  };
+
+  const handleEmailInvoice = (invoice: any) => {
+    setSelectedInvoice(invoice);
+    setShowEmailDialog(true);
+  };
+
+  const handleDownloadPdf = (invoice: any) => {
+    const doc = new jsPDF();
+    
+    doc.setFontSize(20);
+    doc.setTextColor(40, 40, 40);
+    doc.text('FACTURE', 105, 20, { align: 'center' });
+    
+    doc.setFontSize(12);
+    doc.text(`Facture N° : ${invoice.number}`, 15, 40);
+    doc.text(`Date : ${new Date(invoice.date).toLocaleDateString('fr-FR')}`, 15, 50);
+    doc.text(`Échéance : ${new Date(invoice.dueDate).toLocaleDateString('fr-FR')}`, 15, 60);
+    
+    doc.text(`Client: ${invoice.clientName}`, 15, 80);
+    doc.text(`Véhicule: ${invoice.vehicleInfo}`, 15, 90);
+    
+    const tableColumn = ["Description", "Prix"];
+    const tableRows = [
+      ["Service de transport", `${(invoice.amount * 0.8).toLocaleString('fr-FR')} €`],
+      ["Frais additionnels", `${(invoice.amount * 0.2).toLocaleString('fr-FR')} €`],
+    ];
+    
+    doc.autoTable({
+      head: [tableColumn],
+      body: tableRows,
+      startY: 110,
+      theme: 'grid',
+      styles: { fontSize: 10, cellPadding: 6 },
+      headStyles: { fillColor: [22, 33, 62] }
+    });
+    
+    doc.setFontSize(14);
+    doc.text(`Total : ${invoice.amount.toLocaleString('fr-FR')} €`, 150, 150, { align: 'right' });
+    
+    doc.setFontSize(10);
+    doc.setTextColor(100, 100, 100);
+    doc.text('Merci pour votre confiance', 105, 260, { align: 'center' });
+    
+    doc.save(`Facture_${invoice.number}.pdf`);
+    
+    toast.success("Facture téléchargée au format PDF");
+  };
+
+  const handleApplyFilters = (filters: any) => {
+    setAppliedFilters(filters);
+    toast.success("Filtres appliqués");
   };
 
   return (
@@ -251,24 +334,20 @@ const TransportPayments = () => {
       <div className="flex items-center justify-between">
         <h2 className="text-3xl font-bold">Gestion des Paiements</h2>
         <div className="flex gap-2">
-          <Button
-            onClick={() => setShowInvoiceDialog(true)}
-            className="flex items-center gap-2"
-          >
-            <FileText className="h-4 w-4" />
+          <Button variant="outline">
+            <ChevronsUpDown className="mr-2 h-4 w-4" /> Rapprochement bancaire
+          </Button>
+          <Button onClick={() => setShowInvoiceDialog(true)}>
+            <FileText className="mr-2 h-4 w-4" />
             Créer une facture
           </Button>
-          <Button
-            onClick={() => setShowAddPaymentDialog(true)}
-            className="flex items-center gap-2"
-          >
-            <Plus className="h-4 w-4" />
+          <Button onClick={() => setShowAddPaymentDialog(true)}>
+            <Plus className="mr-2 h-4 w-4" />
             Enregistrer un paiement
           </Button>
         </div>
       </div>
       
-      {/* Search and filters */}
       <div className="flex gap-4 items-center">
         <div className="relative flex-1">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
@@ -280,9 +359,18 @@ const TransportPayments = () => {
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
-        <Button variant="outline" className="flex items-center gap-2">
+        <Button 
+          variant="outline" 
+          className="flex items-center gap-2"
+          onClick={() => setShowFiltersDialog(true)}
+        >
           <Filter className="h-4 w-4" />
           Filtres
+          {Object.keys(appliedFilters).length > 0 && (
+            <Badge className="ml-1 bg-primary h-5 w-5 p-0 flex items-center justify-center rounded-full">
+              {Object.keys(appliedFilters).filter(key => appliedFilters[key]).length}
+            </Badge>
+          )}
         </Button>
       </div>
       
@@ -343,28 +431,55 @@ const TransportPayments = () => {
                         <TableCell>{formatCurrency(invoice.amount)}</TableCell>
                         <TableCell>{getStatusBadge(invoice.status)}</TableCell>
                         <TableCell>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" className="h-8 w-8 p-0">
-                                <MoreHorizontal className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem>Voir détails</DropdownMenuItem>
-                              <DropdownMenuItem>Envoyer par email</DropdownMenuItem>
-                              <DropdownMenuItem>Télécharger PDF</DropdownMenuItem>
-                              <DropdownMenuItem 
-                                onClick={() => {
-                                  setSelectedInvoiceId(invoice.id);
-                                  setPaymentAmount(invoice.amount.toString());
-                                  setShowAddPaymentDialog(true);
-                                }}
-                              >
-                                Enregistrer un paiement
-                              </DropdownMenuItem>
-                              <DropdownMenuItem>Envoyer un rappel</DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
+                          <div className="flex space-x-1">
+                            <Button 
+                              variant="ghost" 
+                              size="icon"
+                              onClick={() => handleViewDetails(invoice)}
+                              title="Voir détails"
+                            >
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                            <Button 
+                              variant="ghost" 
+                              size="icon"
+                              onClick={() => handleEmailInvoice(invoice)}
+                              title="Envoyer par email"
+                            >
+                              <Mail className="h-4 w-4" />
+                            </Button>
+                            <Button 
+                              variant="ghost" 
+                              size="icon"
+                              onClick={() => handleDownloadPdf(invoice)}
+                              title="Télécharger PDF"
+                            >
+                              <Download className="h-4 w-4" />
+                            </Button>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon">
+                                  <MoreHorizontal className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem onClick={() => handleViewDetails(invoice)}>
+                                  <Eye className="h-4 w-4 mr-2" /> Voir détails
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => handleEmailInvoice(invoice)}>
+                                  <Mail className="h-4 w-4 mr-2" /> Envoyer par email
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => handleDownloadPdf(invoice)}>
+                                  <Download className="h-4 w-4 mr-2" /> Télécharger PDF
+                                </DropdownMenuItem>
+                                {invoice.status !== 'paid' && (
+                                  <DropdownMenuItem onClick={() => handleRecordPayment(invoice)}>
+                                    <CreditCard className="h-4 w-4 mr-2" /> Enregistrer un paiement
+                                  </DropdownMenuItem>
+                                )}
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))
@@ -431,7 +546,6 @@ const TransportPayments = () => {
         </TabsContent>
       </Tabs>
       
-      {/* Dialog for adding a payment */}
       <Dialog open={showAddPaymentDialog} onOpenChange={setShowAddPaymentDialog}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
@@ -495,7 +609,6 @@ const TransportPayments = () => {
         </DialogContent>
       </Dialog>
       
-      {/* Dialog for creating an invoice */}
       <Dialog open={showInvoiceDialog} onOpenChange={setShowInvoiceDialog}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
@@ -553,6 +666,30 @@ const TransportPayments = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      
+      <FiltersDialog 
+        open={showFiltersDialog} 
+        onOpenChange={setShowFiltersDialog}
+        onApplyFilters={handleApplyFilters}
+      />
+      
+      <InvoiceDetailsDialog
+        open={showDetailsDialog}
+        onOpenChange={setShowDetailsDialog}
+        invoice={selectedInvoice}
+      />
+      
+      <EmailInvoiceDialog
+        open={showEmailDialog}
+        onOpenChange={setShowEmailDialog}
+        invoice={selectedInvoice}
+      />
+      
+      <RecordPaymentDialog
+        open={showPaymentDialog}
+        onOpenChange={setShowPaymentDialog}
+        invoice={selectedInvoice}
+      />
     </div>
   );
 };

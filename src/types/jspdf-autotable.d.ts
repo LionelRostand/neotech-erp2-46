@@ -1,16 +1,41 @@
 
-import { jsPDF } from 'jspdf';
-
-declare module 'jspdf' {
-  interface jsPDF {
-    autoTable: (options: any) => jsPDF;
-    lastAutoTable: {
-      finalY: number;
-    };
-  }
-}
-
+// Declare missing jsPDF-AutoTable types
 declare module 'jspdf-autotable' {
-  function autoTable(doc: jsPDF, options: any): jsPDF;
+  import { jsPDF } from 'jspdf';
+
+  interface AutoTableOptions {
+    head?: any[][];
+    body?: any[][];
+    foot?: any[][];
+    startY?: number;
+    margin?: { top?: number; right?: number; bottom?: number; left?: number };
+    pageBreak?: 'auto' | 'avoid';
+    rowPageBreak?: 'auto' | 'avoid';
+    tableWidth?: 'auto' | 'wrap' | number;
+    showHead?: 'everyPage' | 'firstPage' | 'never';
+    showFoot?: 'everyPage' | 'lastPage' | 'never';
+    tableLineWidth?: number;
+    tableLineColor?: string;
+    theme?: 'striped' | 'grid' | 'plain';
+    styles?: any;
+    columnStyles?: any;
+    headStyles?: any;
+    bodyStyles?: any;
+    footStyles?: any;
+    alternateRowStyles?: any;
+    didParseCell?: (data: any) => void;
+    didDrawCell?: (data: any) => void;
+    didDrawPage?: (data: any) => void;
+  }
+
+  function autoTable(doc: jsPDF, options: AutoTableOptions): void;
+
+  // Extend the jsPDF prototype
+  declare global {
+    interface jsPDF {
+      autoTable(options: AutoTableOptions): void;
+    }
+  }
+
   export default autoTable;
 }
