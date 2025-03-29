@@ -11,6 +11,7 @@ export interface VehicleLocation {
 
 export interface TransportVehicleWithLocation extends TransportVehicle {
   location?: VehicleLocation;
+  driverName?: string;
 }
 
 export interface MapConfig {
