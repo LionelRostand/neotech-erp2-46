@@ -1,17 +1,17 @@
 
 import React from 'react';
+import { SubModule } from '@/data/types/modules';
 import DefaultSubmoduleContent from '../DefaultSubmoduleContent';
 import CompaniesDashboard from '../companies/CompaniesDashboard';
-import CompaniesContacts from '../companies/CompaniesContacts';
 import CompaniesList from '../companies/CompaniesList';
-import CompanyCreateForm from '../companies/CompanyCreateForm';
+import CompaniesContacts from '../companies/CompaniesContacts';
 import CompaniesDocuments from '../companies/CompaniesDocuments';
 import CompaniesReports from '../companies/CompaniesReports';
 import CompaniesSettings from '../companies/CompaniesSettings';
-import { SubModule } from '@/data/types/modules';
+import CompanyCreateForm from '../companies/CompanyCreateForm';
 
 export const renderCompaniesSubmodule = (submoduleId: string, submodule: SubModule) => {
-  console.log('Rendering company submodule:', submoduleId);
+  console.log('Rendering companies submodule:', submoduleId);
   
   switch (submoduleId) {
     case 'companies-dashboard':
