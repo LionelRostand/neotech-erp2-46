@@ -20,6 +20,7 @@ import EmployeesSettings from '../EmployeesSettings';
 import EmployeesDepartments from '../departments/EmployeesDepartments';
 import EmployeesHierarchy from '../EmployeesHierarchy';
 import EmployeesCompanies from '../employees/EmployeesCompanies';
+import SalarySlips from '../salaries/SalarySlips';
 import { Employee } from '@/types/employee';
 
 // Mock data for employees
@@ -124,7 +125,7 @@ export const renderEmployeesSubmodule = (submoduleId: string, submodule: SubModu
     case 'employees-trainings':
       return <EmployeesTrainings />;
     case 'employees-salaries':
-      return <div>Salaires des employés</div>;
+      return <SalarySlips />;
     case 'employees-recruitment':
       return <EmployeesRecruitment />;
     case 'employees-reports':
