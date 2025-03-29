@@ -1,4 +1,5 @@
-import React from 'react';
+
+import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -6,12 +7,18 @@ import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Phone, Mail, Calendar, User, Star, Briefcase, Clock, Car, Settings, Edit } from "lucide-react";
 import { TransportDriver } from '../types/transport-types';
+import EditDriverForm from './EditDriverForm';
+import { useToast } from "@/hooks/use-toast";
 
 interface DriverDetailsProps {
   driver: TransportDriver;
 }
 
-const DriverDetails: React.FC<DriverDetailsProps> = ({ driver }) => {
+const DriverDetails: React.FC<DriverDetailsProps> = ({ driver: initialDriver }) => {
+  const [isEditing, setIsEditing] = useState(false);
+  const [driver, setDriver] = useState<TransportDriver>(initialDriver);
+  const { toast } = useToast();
+  
   // Format date from YYYY-MM-DD to local date
   const formatDate = (dateStr: string) => {
     return new Date(dateStr).toLocaleDateString('fr-FR', { dateStyle: 'long' });
@@ -38,6 +45,38 @@ const DriverDetails: React.FC<DriverDetailsProps> = ({ driver }) => {
       return <Badge className="bg-green-500">Valide</Badge>;
     }
   };
+  
+  const handleEditClick = () => {
+    setIsEditing(true);
+  };
+  
+  const handleSave = (updatedDriver: TransportDriver) => {
+    setDriver(updatedDriver);
+    setIsEditing(false);
+    toast({
+      title: "Modifications enregistrées",
+      description: `Les informations de ${updatedDriver.firstName} ${updatedDriver.lastName} ont été mises à jour.`,
+    });
+  };
+  
+  const handleCancel = () => {
+    setIsEditing(false);
+  };
+
+  if (isEditing) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <h3 className="text-xl font-bold">Modification du chauffeur</h3>
+        </div>
+        <EditDriverForm 
+          driver={driver} 
+          onSave={handleSave} 
+          onCancel={handleCancel} 
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -67,7 +106,12 @@ const DriverDetails: React.FC<DriverDetailsProps> = ({ driver }) => {
           </div>
         </div>
         
-        <Button variant="outline" size="sm" className="flex items-center gap-1">
+        <Button 
+          variant="outline" 
+          size="sm" 
+          className="flex items-center gap-1"
+          onClick={handleEditClick}
+        >
           <Edit size={16} />
           <span>Modifier</span>
         </Button>
