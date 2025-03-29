@@ -26,15 +26,12 @@ export const getEmployeesData = async (): Promise<Employee[]> => {
     }
     
     console.log('Aucune donnée trouvée dans Firestore');
-    const { employees } = await import('@/data/employees');
-    return employees;
+    toast.error("Aucune donnée d'employé trouvée");
+    return [];
   } catch (error) {
     console.error("Erreur lors de la récupération des employés:", error);
     toast.error("Erreur lors du chargement des employés");
-    
-    // En cas d'erreur, utiliser les données simulées
-    const { employees } = await import('@/data/employees');
-    return employees;
+    return [];
   }
 };
 
@@ -50,10 +47,9 @@ export const getEmployeeById = async (id: string): Promise<Employee | null> => {
       return employeeData as Employee;
     }
     
-    // Si pas trouvé, chercher dans les données simulées
-    console.log(`Employé ${id} non trouvé dans Firestore, recherche dans les données simulées`);
-    const { employees } = await import('@/data/employees');
-    return employees.find(emp => emp.id === id) || null;
+    console.log(`Employé ${id} non trouvé dans Firestore`);
+    toast.error("Employé non trouvé");
+    return null;
   } catch (error) {
     console.error(`Erreur lors de la récupération de l'employé ${id}:`, error);
     toast.error(`Erreur lors du chargement des données de l'employé`);
@@ -128,13 +124,49 @@ export const refreshEmployeesData = async (): Promise<Employee[]> => {
       return firestoreData as Employee[];
     } else {
       toast.warning("Aucune donnée trouvée sur Firestore");
-      const { employees } = await import('@/data/employees');
-      return employees;
+      return [];
     }
   } catch (error) {
     console.error("Erreur lors de l'actualisation des employés:", error);
     toast.error("Échec de l'actualisation des données employés");
-    const { employees } = await import('@/data/employees');
-    return employees;
+    return [];
+  }
+};
+
+// Récupérer les employés par département
+export const getEmployeesByDepartment = async (department: string): Promise<Employee[]> => {
+  try {
+    console.log(`Récupération des employés du département ${department} depuis Firestore...`);
+    
+    const employees = await executeWithNetworkRetry(async () => {
+      const allEmployees = await getAllDocuments(COLLECTIONS.EMPLOYEES);
+      return allEmployees.filter((emp: any) => emp.department === department);
+    });
+    
+    console.log(`${employees.length} employés récupérés pour le département ${department}`);
+    return employees as Employee[];
+  } catch (error) {
+    console.error(`Erreur lors de la récupération des employés du département ${department}:`, error);
+    toast.error("Erreur lors du chargement des employés par département");
+    return [];
+  }
+};
+
+// Récupérer les employés par statut
+export const getEmployeesByStatus = async (status: string): Promise<Employee[]> => {
+  try {
+    console.log(`Récupération des employés avec le statut ${status} depuis Firestore...`);
+    
+    const employees = await executeWithNetworkRetry(async () => {
+      const allEmployees = await getAllDocuments(COLLECTIONS.EMPLOYEES);
+      return allEmployees.filter((emp: any) => emp.status === status);
+    });
+    
+    console.log(`${employees.length} employés récupérés avec le statut ${status}`);
+    return employees as Employee[];
+  } catch (error) {
+    console.error(`Erreur lors de la récupération des employés avec le statut ${status}:`, error);
+    toast.error("Erreur lors du chargement des employés par statut");
+    return [];
   }
 };
