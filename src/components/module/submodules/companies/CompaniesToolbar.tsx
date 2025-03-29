@@ -2,13 +2,6 @@
 import React from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { 
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { Search, Filter, Plus, RefreshCw } from 'lucide-react';
 
 interface CompaniesToolbarProps {
@@ -51,7 +44,7 @@ const CompaniesToolbar: React.FC<CompaniesToolbarProps> = ({
           </Button>
         </div>
         <Button 
-          variant="outline" 
+          variant={showFilters ? "default" : "outline"}
           onClick={onToggleFilters}
         >
           <Filter className="h-4 w-4 mr-2" />
