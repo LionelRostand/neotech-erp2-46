@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useCompanyService } from './services/companyService';
 import { Company, CompanyFilters } from './types';
 import { Input } from '@/components/ui/input';
@@ -27,6 +27,7 @@ import { Search, Filter, Plus, ChevronLeft, ChevronRight, RefreshCw } from 'luci
 
 const CompaniesList: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { getCompanies } = useCompanyService();
   
   const [companies, setCompanies] = useState<Company[]>([]);
@@ -62,9 +63,9 @@ const CompaniesList: React.FC = () => {
   }, [getCompanies, page, filters, searchTerm]);
   
   useEffect(() => {
-    console.log('CompaniesList mounted or location changed');
+    console.log('CompaniesList mounted or dependencies changed');
     fetchCompanies();
-  }, [fetchCompanies, location]);
+  }, [fetchCompanies]);
   
   const handleSearch = () => {
     setPage(1); // Reset to first page
