@@ -1,5 +1,5 @@
 
-import { TransportVehicle, MaintenanceSchedule, ExtensionRequest, TransportDriver } from '../types/transport-types';
+import { TransportVehicle, TransportDriver, VehicleMaintenanceSchedule as MaintenanceSchedule, MapExtensionRequest as ExtensionRequest } from '../types';
 
 // Mock vehicle data
 export const mockVehicles: TransportVehicle[] = [
@@ -91,23 +91,25 @@ export const mockMaintenanceSchedules: MaintenanceSchedule[] = [
 export const mockExtensionRequests: ExtensionRequest[] = [
   {
     id: "ext-001",
-    reservationId: "TR-2023-002",
+    requestId: "TR-2023-002",
     clientName: "Marie Legrand",
     originalEndDate: "2023-11-21",
     requestedEndDate: "2023-11-23",
     vehicleName: "BMW Série 5",
     status: "pending",
-    reason: "Prolongation voyage d'affaires"
+    reason: "Prolongation voyage d'affaires",
+    createdAt: "2023-11-18"
   },
   {
     id: "ext-002",
-    reservationId: "TR-2023-004",
+    requestId: "TR-2023-004",
     clientName: "Sophie Bernard",
     originalEndDate: "2023-11-20",
     requestedEndDate: "2023-11-22",
     vehicleName: "Mercedes Classe V",
     status: "approved",
-    reason: "Besoin supplémentaire du véhicule"
+    reason: "Besoin supplémentaire du véhicule",
+    createdAt: "2023-11-17"
   }
 ];
 

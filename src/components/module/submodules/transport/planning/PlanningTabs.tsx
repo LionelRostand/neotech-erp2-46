@@ -1,14 +1,12 @@
 
 import React from 'react';
 import { CardHeader, CardTitle } from "@/components/ui/card";
-import { TabsList, TabsTrigger, Tabs } from "@/components/ui/tabs";
+import { TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Calendar, CarFront, Clock, User } from "lucide-react";
 import { usePlanning } from './context/PlanningContext';
 
 const PlanningTabs: React.FC = () => {
-  // We no longer need to get activeTab and setActiveTab from the context
-  // as they are not defined in the context
-  const { } = usePlanning();
+  const { } = usePlanning(); // We don't need any properties from the context here
 
   return (
     <CardHeader className="pb-3">

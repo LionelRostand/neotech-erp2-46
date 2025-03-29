@@ -5,7 +5,7 @@ import { DialogHeader, DialogFooter, DialogTitle, DialogContent, Dialog, DialogD
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Calendar, Clock, MapPin, User, Car, FileText, Check, X, Printer } from "lucide-react";
-import { ExtensionRequest } from '../types/transport-types';
+import { MapExtensionRequest as ExtensionRequest } from '../types';
 import { Separator } from "@/components/ui/separator";
 
 interface ExtensionDetailDialogProps {
@@ -58,7 +58,7 @@ const ExtensionDetailDialog: React.FC<ExtensionDetailDialogProps> = ({
             <span>Détails de la demande de prolongation</span>
           </DialogTitle>
           <DialogDescription>
-            Réservation {extension.reservationId}
+            Réservation {extension.requestId}
           </DialogDescription>
         </DialogHeader>
         

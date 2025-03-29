@@ -4,10 +4,10 @@ import { v4 as uuidv4 } from 'uuid';
 import { 
   TransportVehicle,
   TransportDriver,
-  MapMaintenanceSchedule as MaintenanceSchedule, 
+  VehicleMaintenanceSchedule as MaintenanceSchedule,
   MapExtensionRequest as ExtensionRequest 
 } from '../../types';
-import { mockVehicles, mockDrivers, mockMaintenances, mockExtensions } from '../mockData';
+import { mockVehicles, mockDrivers, mockMaintenanceSchedules, mockExtensionRequests } from '../mockData';
 
 // Define the context types
 interface PlanningContextType {
@@ -20,8 +20,15 @@ interface PlanningContextType {
   selectedExtensionId: string | null;
   isMaintenanceDialogOpen: boolean;
   isExtensionDialogOpen: boolean;
+  isLoading: boolean;
+  selectedVehicle?: TransportVehicle;
+  selectedExtensionRequest?: ExtensionRequest;
+  showMaintenanceDialog: boolean;
+  setShowMaintenanceDialog: (show: boolean) => void;
+  showExtensionDetailsDialog: boolean;
+  setShowExtensionDetailsDialog: (show: boolean) => void;
   refreshData: () => void;
-  openMaintenanceScheduleDialog: (vehicleId?: string) => void;
+  openMaintenanceScheduleDialog: (vehicleId?: string | null) => void;
   closeMaintenanceScheduleDialog: () => void;
   openExtensionDetailsDialog: (requestId: string) => void;
   closeExtensionDetailsDialog: () => void;
@@ -31,6 +38,10 @@ interface PlanningContextType {
   getSelectedVehicle: () => TransportVehicle | undefined;
   getSelectedMaintenance: () => MaintenanceSchedule | undefined;
   getSelectedExtension: () => ExtensionRequest | undefined;
+  handleAddMaintenance: (vehicle: TransportVehicle | null) => void;
+  handleSaveMaintenance: (data: any) => void;
+  setSelectedExtensionRequest: (request: ExtensionRequest) => void;
+  handleResolveExtension: (id: string, approved: boolean) => void;
 }
 
 // Create the context with a default empty value
@@ -47,8 +58,9 @@ export const PlanningProvider: React.FC<PlanningProviderProps> = ({ children }) 
   // State for vehicles and related data
   const [vehicles, setVehicles] = useState<TransportVehicle[]>(mockVehicles);
   const [drivers, setDrivers] = useState<TransportDriver[]>(mockDrivers);
-  const [maintenanceSchedules, setMaintenanceSchedules] = useState<MaintenanceSchedule[]>(mockMaintenances);
-  const [extensionRequests, setExtensionRequests] = useState<ExtensionRequest[]>(mockExtensions);
+  const [maintenanceSchedules, setMaintenanceSchedules] = useState<MaintenanceSchedule[]>(mockMaintenanceSchedules);
+  const [extensionRequests, setExtensionRequests] = useState<ExtensionRequest[]>(mockExtensionRequests);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
   
   // State for selected items and dialog control
   const [selectedVehicleId, setSelectedVehicleId] = useState<string | null>(null);
@@ -56,18 +68,26 @@ export const PlanningProvider: React.FC<PlanningProviderProps> = ({ children }) 
   const [selectedExtensionId, setSelectedExtensionId] = useState<string | null>(null);
   const [isMaintenanceDialogOpen, setIsMaintenanceDialogOpen] = useState(false);
   const [isExtensionDialogOpen, setIsExtensionDialogOpen] = useState(false);
+  const [showMaintenanceDialog, setShowMaintenanceDialog] = useState(false);
+  const [showExtensionDetailsDialog, setShowExtensionDetailsDialog] = useState(false);
+  const [selectedExtensionRequest, setSelectedExtensionRequest] = useState<ExtensionRequest | undefined>(undefined);
 
   // Function to refresh data from API or mock data
   const refreshData = useCallback(() => {
+    setIsLoading(true);
+    
     // In a real app, this would fetch data from an API
-    setVehicles(mockVehicles);
-    setDrivers(mockDrivers);
-    setMaintenanceSchedules(mockMaintenances);
-    setExtensionRequests(mockExtensions);
+    setTimeout(() => {
+      setVehicles(mockVehicles);
+      setDrivers(mockDrivers);
+      setMaintenanceSchedules(mockMaintenanceSchedules);
+      setExtensionRequests(mockExtensionRequests);
+      setIsLoading(false);
+    }, 1000);
   }, []);
 
   // Dialog control functions
-  const openMaintenanceScheduleDialog = useCallback((vehicleId?: string) => {
+  const openMaintenanceScheduleDialog = useCallback((vehicleId?: string | null) => {
     if (vehicleId) {
       setSelectedVehicleId(vehicleId);
       // If a vehicle is selected, check if there's an existing maintenance
@@ -79,23 +99,28 @@ export const PlanningProvider: React.FC<PlanningProviderProps> = ({ children }) 
       setSelectedVehicleId(null);
       setSelectedMaintenanceId(null);
     }
-    setIsMaintenanceDialogOpen(true);
+    setShowMaintenanceDialog(true);
   }, [maintenanceSchedules]);
 
   const closeMaintenanceScheduleDialog = useCallback(() => {
-    setIsMaintenanceDialogOpen(false);
+    setShowMaintenanceDialog(false);
     setSelectedVehicleId(null);
     setSelectedMaintenanceId(null);
   }, []);
 
   const openExtensionDetailsDialog = useCallback((requestId: string) => {
-    setSelectedExtensionId(requestId);
-    setIsExtensionDialogOpen(true);
-  }, []);
+    const request = extensionRequests.find(r => r.id === requestId);
+    if (request) {
+      setSelectedExtensionRequest(request);
+      setSelectedExtensionId(requestId);
+      setShowExtensionDetailsDialog(true);
+    }
+  }, [extensionRequests]);
 
   const closeExtensionDetailsDialog = useCallback(() => {
-    setIsExtensionDialogOpen(false);
+    setShowExtensionDetailsDialog(false);
     setSelectedExtensionId(null);
+    setSelectedExtensionRequest(undefined);
   }, []);
 
   // CRUD operations for maintenance schedules
@@ -136,6 +161,38 @@ export const PlanningProvider: React.FC<PlanningProviderProps> = ({ children }) 
     return extensionRequests.find(e => e.id === selectedExtensionId);
   }, [selectedExtensionId, extensionRequests]);
 
+  // Handler for adding a maintenance
+  const handleAddMaintenance = useCallback((vehicle: TransportVehicle | null) => {
+    if (vehicle) {
+      setSelectedVehicleId(vehicle.id);
+    } else {
+      setSelectedVehicleId(null);
+    }
+    setShowMaintenanceDialog(true);
+  }, []);
+
+  // Handler for saving maintenance data
+  const handleSaveMaintenance = useCallback((data: any) => {
+    // If editing an existing maintenance
+    if (selectedMaintenanceId) {
+      updateMaintenanceSchedule(selectedMaintenanceId, data);
+    } else {
+      // If creating a new maintenance
+      createMaintenanceSchedule(data);
+    }
+  }, [selectedMaintenanceId, updateMaintenanceSchedule, createMaintenanceSchedule]);
+
+  // Handler for resolving extension requests
+  const handleResolveExtension = useCallback((id: string, approved: boolean) => {
+    setExtensionRequests(prev => 
+      prev.map(item => item.id === id ? { ...item, status: approved ? 'approved' : 'rejected' } : item)
+    );
+    setShowExtensionDetailsDialog(false);
+  }, []);
+
+  // Computed property for the selected vehicle
+  const selectedVehicle = getSelectedVehicle();
+
   // Create the context value object
   const contextValue: PlanningContextType = {
     vehicles,
@@ -147,6 +204,13 @@ export const PlanningProvider: React.FC<PlanningProviderProps> = ({ children }) 
     selectedExtensionId,
     isMaintenanceDialogOpen,
     isExtensionDialogOpen,
+    isLoading,
+    selectedVehicle,
+    selectedExtensionRequest,
+    showMaintenanceDialog,
+    setShowMaintenanceDialog,
+    showExtensionDetailsDialog,
+    setShowExtensionDetailsDialog,
     refreshData,
     openMaintenanceScheduleDialog,
     closeMaintenanceScheduleDialog,
@@ -157,7 +221,11 @@ export const PlanningProvider: React.FC<PlanningProviderProps> = ({ children }) 
     deleteMaintenanceSchedule,
     getSelectedVehicle,
     getSelectedMaintenance,
-    getSelectedExtension
+    getSelectedExtension,
+    handleAddMaintenance,
+    handleSaveMaintenance,
+    setSelectedExtensionRequest,
+    handleResolveExtension
   };
 
   return (

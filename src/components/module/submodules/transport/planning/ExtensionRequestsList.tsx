@@ -5,28 +5,20 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Calendar, Eye, CheckCircle, XCircle } from "lucide-react";
 import { usePlanning } from './context/PlanningContext';
-import { ExtensionRequest } from '../types/map-types';
+import { MapExtensionRequest as ExtensionRequest } from '../types';
 
 interface ExtensionRequestsListProps {
   extensionRequests: ExtensionRequest[];
+  onViewDetails: (requestId: string) => void;
 }
 
 const ExtensionRequestsList: React.FC<ExtensionRequestsListProps> = ({
-  extensionRequests
+  extensionRequests,
+  onViewDetails
 }) => {
-  const { 
-    setSelectedExtensionRequest, 
-    setShowExtensionDetailsDialog 
-  } = usePlanning();
-
   // Format date from YYYY-MM-DD to local date
   const formatDate = (dateStr: string) => {
     return new Date(dateStr).toLocaleDateString('fr-FR', { dateStyle: 'long' });
-  };
-
-  const handleViewDetails = (request: ExtensionRequest) => {
-    setSelectedExtensionRequest(request);
-    setShowExtensionDetailsDialog(true);
   };
 
   const getStatusBadge = (status: string) => {
@@ -79,7 +71,7 @@ const ExtensionRequestsList: React.FC<ExtensionRequestsListProps> = ({
                     <Button 
                       variant="ghost" 
                       size="sm" 
-                      onClick={() => handleViewDetails(request)}
+                      onClick={() => onViewDetails(request.id)}
                       className="flex items-center gap-1"
                     >
                       <Eye size={16} />

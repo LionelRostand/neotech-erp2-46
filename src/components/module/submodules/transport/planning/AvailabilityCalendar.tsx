@@ -1,12 +1,10 @@
 
 import React, { useState } from 'react';
-import { Calendar as CalendarIcon, Plus } from "lucide-react";
+import { Calendar as CalendarIcon } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
 import { fr } from "date-fns/locale";
-import { TransportVehicle } from '../types/transport-types';
-import { MaintenanceSchedule } from '../types/map-types';
-import { usePlanning } from './context/PlanningContext';
+import { TransportVehicle, VehicleMaintenanceSchedule as MaintenanceSchedule } from '../types';
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 

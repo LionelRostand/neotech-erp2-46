@@ -6,7 +6,6 @@ import { Badge } from "@/components/ui/badge";
 import { Calendar, Clock, FileText, Printer } from "lucide-react";
 import { usePlanning } from './context/PlanningContext';
 import { jsPDF } from "jspdf";
-import "jspdf-autotable";
 
 const ExtensionDetailsDialog: React.FC = () => {
   const { 

@@ -1,15 +1,15 @@
+
 import React from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { CarFront, Plus, Wrench, FileCheck, FileQuestion } from "lucide-react";
-import { TransportVehicle } from '../types';
-import { MaintenanceSchedule } from '../types/map-types';
+import { TransportVehicle, VehicleMaintenanceSchedule as MaintenanceSchedule } from '../types';
 
 interface MaintenanceScheduleListProps {
   maintenanceSchedules: MaintenanceSchedule[];
   vehicles: TransportVehicle[];
-  onAddMaintenance: (vehicle: TransportVehicle) => void;
+  onAddMaintenance: (vehicle: TransportVehicle | null) => void;
 }
 
 const MaintenanceScheduleList: React.FC<MaintenanceScheduleListProps> = ({
@@ -121,7 +121,16 @@ const MaintenanceScheduleList: React.FC<MaintenanceScheduleListProps> = ({
                   </TableCell>
                   <TableCell>
                     <div className="flex gap-2">
-                      <Button variant="ghost" size="sm">
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={() => {
+                          const vehicle = vehicles.find(v => v.id === schedule.vehicleId);
+                          if (vehicle) {
+                            onAddMaintenance(vehicle);
+                          }
+                        }}
+                      >
                         Modifier
                       </Button>
                       <Button variant="ghost" size="sm" className="text-destructive">

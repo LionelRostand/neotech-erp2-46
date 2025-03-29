@@ -7,7 +7,6 @@ import MaintenanceScheduleList from './MaintenanceScheduleList';
 import ExtensionRequestsList from './ExtensionRequestsList';
 import DriverAvailabilityTab from './DriverAvailabilityTab';
 import { usePlanning } from './context/PlanningContext';
-import { MapMaintenanceSchedule } from '../types';
 
 interface PlanningTabContentProps {
   activeMode: string;
@@ -28,7 +27,8 @@ const PlanningTabContent: React.FC<PlanningTabContentProps> = ({
     drivers,
     refreshData,
     openMaintenanceScheduleDialog,
-    openExtensionDetailsDialog
+    openExtensionDetailsDialog,
+    handleAddMaintenance
   } = usePlanning();
 
   // Effect to refresh data when the component mounts
@@ -36,35 +36,30 @@ const PlanningTabContent: React.FC<PlanningTabContentProps> = ({
     refreshData();
   }, [refreshData]);
 
-  const handleOpenMaintenanceDialog = (vehicleId?: string) => {
-    openMaintenanceScheduleDialog(vehicleId);
-  };
-
-  const handleOpenExtensionDialog = (requestId: string) => {
-    openExtensionDetailsDialog(requestId);
-  };
-
   return (
     <Tabs defaultValue="availability" value={activeTab} onValueChange={setActiveTab} className="w-full">
       <PlanningTabs />
       
       <TabsContent value="availability" className="mt-0 border-0 p-0">
-        <AvailabilityCalendar vehicles={vehicles} />
+        <AvailabilityCalendar 
+          vehicles={vehicles}
+          maintenanceSchedules={maintenanceSchedules}
+          onAddMaintenance={handleAddMaintenance}
+        />
       </TabsContent>
       
       <TabsContent value="maintenance" className="mt-0 border-0 p-0">
         <MaintenanceScheduleList 
-          maintenances={maintenanceSchedules as MapMaintenanceSchedule[]} 
+          maintenanceSchedules={maintenanceSchedules}
           vehicles={vehicles}
-          onNewMaintenance={() => handleOpenMaintenanceDialog()}
-          onEditMaintenance={(maintenance) => handleOpenMaintenanceDialog(maintenance.vehicleId)}
+          onAddMaintenance={handleAddMaintenance}
         />
       </TabsContent>
       
       <TabsContent value="extensions" className="mt-0 border-0 p-0">
         <ExtensionRequestsList 
-          extensions={extensionRequests} 
-          onViewDetails={handleOpenExtensionDialog}
+          extensionRequests={extensionRequests}
+          onViewDetails={openExtensionDetailsDialog}
         />
       </TabsContent>
       
