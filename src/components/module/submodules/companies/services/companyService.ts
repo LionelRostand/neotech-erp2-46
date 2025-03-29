@@ -1,3 +1,4 @@
+
 import { Company, CompanyContact, CompanyDocument, CompanyFilters } from '../types';
 import { useFirestore } from '@/hooks/use-firestore';
 import { COLLECTIONS } from '@/lib/firebase-collections';
@@ -13,6 +14,7 @@ import {
   serverTimestamp
 } from 'firebase/firestore';
 import { addDocument } from '@/hooks/firestore/create-operations';
+import { executeWithNetworkRetry } from '@/hooks/firestore/network-handler';
 
 export const useCompanyService = () => {
   const companiesFirestore = useFirestore(COLLECTIONS.COMPANIES);
@@ -27,62 +29,65 @@ export const useCompanyService = () => {
     searchTerm = ''
   ): Promise<{ companies: Company[], hasMore: boolean }> => {
     try {
-      const constraints: QueryConstraint[] = [];
-      
-      // Appliquer les filtres
-      if (filters) {
-        if (filters.status) {
-          constraints.push(where('status', '==', filters.status));
+      const operationId = `get-companies-${page}-${pageSize}`;
+      return await executeWithNetworkRetry(async () => {
+        const constraints: QueryConstraint[] = [];
+        
+        // Appliquer les filtres
+        if (filters) {
+          if (filters.status) {
+            constraints.push(where('status', '==', filters.status));
+          }
+          
+          if (filters.startDate && filters.endDate) {
+            const startDate = new Date(filters.startDate);
+            const endDate = new Date(filters.endDate);
+            constraints.push(where('createdAt', '>=', startDate));
+            constraints.push(where('createdAt', '<=', endDate));
+          }
         }
         
-        if (filters.startDate && filters.endDate) {
-          const startDate = new Date(filters.startDate);
-          const endDate = new Date(filters.endDate);
-          constraints.push(where('createdAt', '>=', startDate));
-          constraints.push(where('createdAt', '<=', endDate));
-        }
-      }
-      
-      // Toujours trier par date de création décroissante
-      constraints.push(orderBy('createdAt', 'desc'));
-      
-      // Limiter les résultats selon la pagination
-      constraints.push(limit(pageSize));
-      
-      // Si ce n'est pas la première page, utiliser startAfter
-      if (page > 1) {
-        // Récupérer le dernier document de la page précédente
-        const prevPageConstraints = [...constraints];
-        prevPageConstraints.pop(); // Supprimer la limite
-        prevPageConstraints.push(limit((page - 1) * pageSize));
+        // Toujours trier par date de création décroissante
+        constraints.push(orderBy('createdAt', 'desc'));
         
-        const prevPageDocs = await companiesFirestore.getAll(prevPageConstraints);
-        if (prevPageDocs.length > 0) {
-          const lastDoc = prevPageDocs[prevPageDocs.length - 1] as Company;
-          constraints.push(startAfter(lastDoc.createdAt));
+        // Limiter les résultats selon la pagination
+        constraints.push(limit(pageSize));
+        
+        // Si ce n'est pas la première page, utiliser startAfter
+        if (page > 1) {
+          // Récupérer le dernier document de la page précédente
+          const prevPageConstraints = [...constraints];
+          prevPageConstraints.pop(); // Supprimer la limite
+          prevPageConstraints.push(limit((page - 1) * pageSize));
+          
+          const prevPageDocs = await companiesFirestore.getAll(prevPageConstraints);
+          if (prevPageDocs.length > 0) {
+            const lastDoc = prevPageDocs[prevPageDocs.length - 1] as Company;
+            constraints.push(startAfter(lastDoc.createdAt));
+          }
         }
-      }
-      
-      // Récupérer les données
-      console.log('Fetching companies with constraints:', constraints);
-      const data = await companiesFirestore.getAll(constraints) as Company[];
-      console.log('Retrieved companies:', data);
-      
-      // Si recherche par terme, filtrer les résultats côté client
-      let filteredData = data;
-      if (searchTerm) {
-        const term = searchTerm.toLowerCase();
-        filteredData = data.filter(company => 
-          company.name?.toLowerCase().includes(term) || 
-          company.siret?.toLowerCase().includes(term) ||
-          company.registrationNumber?.toLowerCase().includes(term)
-        );
-      }
-      
-      // Vérifier s'il y a plus de données
-      const hasMore = data.length === pageSize;
-      
-      return { companies: filteredData, hasMore };
+        
+        // Récupérer les données
+        console.log('Fetching companies with constraints:', constraints);
+        const data = await companiesFirestore.getAll(constraints) as Company[];
+        console.log('Retrieved companies:', data);
+        
+        // Si recherche par terme, filtrer les résultats côté client
+        let filteredData = data;
+        if (searchTerm) {
+          const term = searchTerm.toLowerCase();
+          filteredData = data.filter(company => 
+            company.name?.toLowerCase().includes(term) || 
+            company.siret?.toLowerCase().includes(term) ||
+            company.registrationNumber?.toLowerCase().includes(term)
+          );
+        }
+        
+        // Vérifier s'il y a plus de données
+        const hasMore = data.length === pageSize;
+        
+        return { companies: filteredData, hasMore };
+      }, 3, operationId);
     } catch (error) {
       console.error("Error fetching companies:", error);
       toast.error("Erreur lors du chargement des entreprises");
@@ -95,12 +100,14 @@ export const useCompanyService = () => {
     try {
       console.log('Creating company with data:', companyData);
       
-      // Use addDocument function directly from hooks for better consistency
-      const result = await addDocument(COLLECTIONS.COMPANIES, {
-        ...companyData,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      }) as Company;
+      // Use rate-limited network retry for company creation
+      const result = await executeWithNetworkRetry(async () => {
+        return await addDocument(COLLECTIONS.COMPANIES, {
+          ...companyData,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        }) as Company;
+      }, 3, 'create-company');
       
       console.log('Company created successfully:', result);
       toast.success(`Entreprise ${companyData.name} créée avec succès`);

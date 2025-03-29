@@ -14,6 +14,11 @@ const MAX_RECONNECTION_ATTEMPTS = 5;
 const RECONNECTION_DELAY = 2000; // 2 seconds
 const MAX_BACKOFF_DELAY = 30000; // Maximum backoff delay (30 seconds)
 
+// Rate limiting variables
+let lastRequestTime = 0;
+const MIN_REQUEST_INTERVAL = 300; // Minimum time between requests (ms)
+const rateLimitedOperations = new Set();
+
 /**
  * Enable Firestore network connection
  */
@@ -110,10 +115,12 @@ export const isNetworkError = (err: any): boolean => {
   return (
     errorCode === 'unavailable' || 
     errorCode === 'failed-precondition' ||
+    errorCode === 'resource-exhausted' || // Rate limit error
     errorMessage.includes('quic_protocol_error') ||
     errorMessage.includes('network error') ||
     errorMessage.includes('network_io_suspended') ||
     errorMessage.includes('the server responded with a status of 400') ||
+    errorMessage.includes('the server responded with a status of 429') || // Added 429 error
     errorMessage.includes('client is offline') ||
     errorMessage.includes('failed to get') ||
     errorMessage.includes('error sending request')
@@ -121,9 +128,78 @@ export const isNetworkError = (err: any): boolean => {
 };
 
 /**
+ * Check if an error is a rate limit error (429)
+ */
+export const isRateLimitError = (err: any): boolean => {
+  if (!err) return false;
+  
+  const errorMessage = (err.message || '').toLowerCase();
+  const errorCode = err.code || '';
+  
+  return (
+    errorCode === 'resource-exhausted' ||
+    errorMessage.includes('the server responded with a status of 429') ||
+    errorMessage.includes('quota exceeded') ||
+    errorMessage.includes('too many requests')
+  );
+};
+
+/**
+ * Apply rate limiting to prevent 429 errors
+ */
+const applyRateLimit = async (operationId: string): Promise<void> => {
+  const now = Date.now();
+  const timeElapsed = now - lastRequestTime;
+  
+  // If this operation is already rate limited, use a longer delay
+  const delay = rateLimitedOperations.has(operationId) 
+    ? MIN_REQUEST_INTERVAL * 3 
+    : MIN_REQUEST_INTERVAL;
+  
+  if (timeElapsed < delay) {
+    const waitTime = delay - timeElapsed;
+    console.log(`Rate limiting applied, waiting ${waitTime}ms before next request`);
+    await new Promise(resolve => setTimeout(resolve, waitTime));
+  }
+  
+  lastRequestTime = Date.now();
+};
+
+/**
+ * Handle rate limit errors specifically
+ */
+const handleRateLimitError = async (err: any, operationId: string, retryOperation: () => Promise<any>) => {
+  console.log('Rate limit error detected:', err.message || err);
+  toast.error("Trop de requêtes envoyées. Attente avant nouvel essai...");
+  
+  // Mark this operation as rate limited
+  rateLimitedOperations.add(operationId);
+  
+  // Add a significant delay before retrying
+  const delay = 2000 + Math.random() * 1000;
+  await new Promise(resolve => setTimeout(resolve, delay));
+  
+  // Retry the operation
+  try {
+    const result = await retryOperation();
+    return result;
+  } finally {
+    // After successful retry or final failure, remove from rate limited set
+    setTimeout(() => {
+      rateLimitedOperations.delete(operationId);
+    }, 10000);
+  }
+};
+
+/**
  * Handle network errors and attempt to retry operations
  */
-export const handleNetworkError = async (err: any, retryOperation: () => Promise<any>) => {
+export const handleNetworkError = async (err: any, retryOperation: () => Promise<any>, operationId = 'default') => {
+  // Handle 429 rate limit errors specifically
+  if (isRateLimitError(err)) {
+    return handleRateLimitError(err, operationId, retryOperation);
+  }
+  
   if (isNetworkError(err)) {
     console.log('Network error detected:', err.message || err);
     toast.error("Problème de connexion à la base de données. Tentative de reconnexion...");
@@ -153,20 +229,31 @@ export const handleNetworkError = async (err: any, retryOperation: () => Promise
 };
 
 /**
- * Execute an operation with network error handling
+ * Execute an operation with network error handling and rate limiting
  */
 export const executeWithNetworkRetry = async <T>(
   operation: () => Promise<T>, 
-  maxRetries = 3
+  maxRetries = 3,
+  operationId = 'default'
 ): Promise<T> => {
   let attempts = 0;
   
   const executeOperation = async (): Promise<T> => {
     try {
+      // Apply rate limiting before executing the operation
+      await applyRateLimit(operationId);
+      
       return await operation();
     } catch (error: any) {
       attempts++;
       console.error(`Operation failed (attempt ${attempts}/${maxRetries}):`, error);
+      
+      // Handle rate limit errors specifically
+      if (isRateLimitError(error)) {
+        if (attempts <= maxRetries) {
+          return handleRateLimitError(error, operationId, executeOperation);
+        }
+      }
       
       // Add delay for network issues to allow potential recovery
       if (isNetworkError(error)) {
@@ -186,7 +273,7 @@ export const executeWithNetworkRetry = async <T>(
       
       if (attempts <= maxRetries) {
         try {
-          return await handleNetworkError(error, executeOperation);
+          return await handleNetworkError(error, executeOperation, operationId);
         } catch (retryError) {
           throw retryError;
         }

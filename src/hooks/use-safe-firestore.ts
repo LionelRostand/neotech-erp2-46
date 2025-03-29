@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useFirestore } from './use-firestore';
 import { toast } from 'sonner';
 import { restoreFirestoreConnectivity } from './firestore/network-operations';
-import { isNetworkError } from './firestore/network-handler';
+import { isNetworkError, isRateLimitError } from './firestore/network-handler';
 
 /**
  * Ce hook enveloppe le hook useFirestore pour éviter les rechargements infinis
@@ -13,8 +13,19 @@ export const useSafeFirestore = (collectionName: string) => {
   const firestore = useFirestore(collectionName);
   const [dataFetched, setDataFetched] = useState(false);
   const [networkError, setNetworkError] = useState(false);
+  const [rateLimited, setRateLimited] = useState(false);
   const [retryAttempts, setRetryAttempts] = useState(0);
+  const [retryTimeout, setRetryTimeout] = useState<NodeJS.Timeout | null>(null);
   const MAX_RETRY_ATTEMPTS = 3;
+  
+  // Clean up any pending timers when unmounting
+  useEffect(() => {
+    return () => {
+      if (retryTimeout) {
+        clearTimeout(retryTimeout);
+      }
+    };
+  }, [retryTimeout]);
   
   // Effect to handle initial network errors
   useEffect(() => {
@@ -43,28 +54,61 @@ export const useSafeFirestore = (collectionName: string) => {
         }
       }, 10000); // 10 second timeout
       
+      setRetryTimeout(timer);
+      
       return () => clearTimeout(timer);
     }
   }, [networkError, collectionName]);
+  
+  // Effect to handle rate limit errors
+  useEffect(() => {
+    if (rateLimited) {
+      console.log(`Collection ${collectionName} is rate limited, will retry after delay`);
+      
+      // Set a timer for rate limit backoff
+      const timer = setTimeout(() => {
+        console.log(`Rate limit backoff complete for ${collectionName}, allowing new requests`);
+        setRateLimited(false);
+        setDataFetched(false); // Allow refetch
+      }, 3000 + Math.random() * 2000); // Random delay between 3-5 seconds
+      
+      setRetryTimeout(timer);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [rateLimited, collectionName]);
   
   // Reset fetch state if collection changes
   useEffect(() => {
     setDataFetched(false);
     setNetworkError(false);
+    setRateLimited(false);
     setRetryAttempts(0);
-  }, [collectionName]);
+    
+    if (retryTimeout) {
+      clearTimeout(retryTimeout);
+      setRetryTimeout(null);
+    }
+  }, [collectionName, retryTimeout]);
   
   // Wrapper pour getAll qui évite les appels répétés
   const getSafeAll = useCallback(async (options?: any) => {
+    // Don't attempt if we're currently rate limited
+    if (rateLimited) {
+      console.log(`Collection ${collectionName} is rate limited, skipping fetch`);
+      return Promise.resolve([]);
+    }
+    
     // Réinitialiser si trop de tentatives ont échoué
     if (retryAttempts >= MAX_RETRY_ATTEMPTS) {
       console.log(`Resetting after ${MAX_RETRY_ATTEMPTS} failed attempts for ${collectionName}`);
       setRetryAttempts(0);
       setDataFetched(false);
       setNetworkError(false);
+      setRateLimited(false);
     }
     
-    if (dataFetched && !networkError) {
+    if (dataFetched && !networkError && !rateLimited) {
       // Retourner une promesse résolue avec une valeur vide si les données ont déjà été récupérées
       console.log(`Data already fetched for ${collectionName}, skipping fetch`);
       return Promise.resolve([]);
@@ -76,10 +120,19 @@ export const useSafeFirestore = (collectionName: string) => {
       console.log(`Successfully fetched data from ${collectionName}`, result);
       setDataFetched(true);
       setNetworkError(false);
+      setRateLimited(false);
       setRetryAttempts(0);
       return result;
     } catch (error: any) {
       console.error(`Error fetching data from ${collectionName}:`, error);
+      
+      // Check for rate limit errors
+      if (isRateLimitError(error)) {
+        console.log(`Rate limit detected for ${collectionName}`);
+        setRateLimited(true);
+        toast.error("Trop de requêtes. Veuillez patienter quelques instants...");
+        return [];
+      }
       
       // Check for network errors
       if (isNetworkError(error)) {
@@ -99,13 +152,14 @@ export const useSafeFirestore = (collectionName: string) => {
       setDataFetched(true); // Même en cas d'erreur, on considère que la tentative a été faite
       throw error;
     }
-  }, [firestore, dataFetched, networkError, collectionName, retryAttempts]);
+  }, [firestore, dataFetched, networkError, rateLimited, collectionName, retryAttempts]);
   
   // Fonction pour réinitialiser l'état de chargement
   const resetFetchState = useCallback(() => {
     console.log(`Resetting fetch state for ${collectionName}`);
     setDataFetched(false);
     setNetworkError(false);
+    setRateLimited(false);
     setRetryAttempts(0);
   }, [collectionName]);
   
@@ -127,6 +181,7 @@ export const useSafeFirestore = (collectionName: string) => {
     reconnectAndRefetch,
     dataFetched,
     networkError,
+    rateLimited,
     retryAttempts
   };
 };

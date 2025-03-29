@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -28,7 +28,7 @@ import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
-import { Building2, MapPin, Phone, AtSign, Upload } from 'lucide-react';
+import { Building2, MapPin, Phone, AtSign, Upload, Loader2 } from 'lucide-react';
 import { Company } from './types';
 
 // Définition du schéma de validation
@@ -58,6 +58,7 @@ type CompanyFormValues = z.infer<typeof companyFormSchema>;
 const CompanyCreateForm: React.FC = () => {
   const navigate = useNavigate();
   const { createCompany } = useCompanyService();
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
   // Initialiser le formulaire
   const form = useForm<CompanyFormValues>({
@@ -81,6 +82,9 @@ const CompanyCreateForm: React.FC = () => {
   });
   
   const onSubmit = async (data: CompanyFormValues) => {
+    if (isSubmitting) return; // Prevent multiple submissions
+    
+    setIsSubmitting(true);
     try {
       // Reformater les données pour correspondre à la structure Company
       const companyData: Partial<Company> = {
@@ -109,11 +113,26 @@ const CompanyCreateForm: React.FC = () => {
       
       if (result) {
         toast.success("Entreprise créée avec succès");
-        navigate('/modules/companies/list');
+        // Add a small delay before navigation to ensure toast is shown
+        setTimeout(() => {
+          navigate('/modules/companies/list');
+        }, 500);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error creating company:', error);
-      toast.error("Échec de la création de l'entreprise");
+      
+      // Enhanced error message based on the error type
+      let errorMessage = "Échec de la création de l'entreprise";
+      
+      if (error?.message?.includes('429') || error?.message?.includes('too many requests')) {
+        errorMessage = "Trop de requêtes. Veuillez réessayer dans quelques instants.";
+      } else if (error?.message?.includes('network')) {
+        errorMessage = "Problème de connexion réseau. Vérifiez votre connexion internet.";
+      }
+      
+      toast.error(errorMessage);
+    } finally {
+      setIsSubmitting(false);
     }
   };
   
@@ -453,10 +472,23 @@ const CompanyCreateForm: React.FC = () => {
               type="button" 
               variant="outline" 
               onClick={() => navigate('/modules/companies/list')}
+              disabled={isSubmitting}
             >
               Annuler
             </Button>
-            <Button type="submit">Créer l'entreprise</Button>
+            <Button 
+              type="submit" 
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Création en cours...
+                </>
+              ) : (
+                "Créer l'entreprise"
+              )}
+            </Button>
           </div>
         </form>
       </Form>
