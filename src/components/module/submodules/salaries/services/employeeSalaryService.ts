@@ -84,7 +84,7 @@ export const getEmployeeSalaryHistory = async (employeeId: string): Promise<any[
         return await getDocumentById(COLLECTIONS.DOCUMENTS, payslipId);
       });
       
-      if (payslip && payslip.documentType === 'payslip') {
+      if (payslip && (payslip as any).documentType === 'payslip') {
         salaryHistory.push(payslip);
       }
     }

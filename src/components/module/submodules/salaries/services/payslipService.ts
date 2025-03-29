@@ -62,8 +62,8 @@ export const getEmployeePaySlips = async (employeeId: string): Promise<PaySlipDa
     const payslips = await executeWithNetworkRetry(async () => {
       const allDocs = await getAllDocuments(COLLECTIONS.DOCUMENTS);
       return allDocs.filter(doc => 
-        doc.documentType === 'payslip' && 
-        doc.employeeId === employeeId
+        (doc as any).documentType === 'payslip' && 
+        (doc as any).employeeId === employeeId
       );
     });
     
@@ -84,7 +84,7 @@ export const getAllPaySlips = async (): Promise<PaySlipData[]> => {
     // Filtrer tous les documents pour ne récupérer que les fiches de paie
     const payslips = await executeWithNetworkRetry(async () => {
       const allDocs = await getAllDocuments(COLLECTIONS.DOCUMENTS);
-      return allDocs.filter(doc => doc.documentType === 'payslip');
+      return allDocs.filter(doc => (doc as any).documentType === 'payslip');
     });
     
     console.log(`${payslips.length} fiches de paie récupérées au total`);
@@ -106,7 +106,7 @@ export const getPaySlipById = async (payslipId: string): Promise<PaySlipData | n
     });
     
     // Vérifier que c'est bien une fiche de paie
-    if (payslip && payslip.documentType === 'payslip') {
+    if (payslip && (payslip as any).documentType === 'payslip') {
       console.log(`Fiche de paie ${payslipId} récupérée avec succès`);
       return payslip as PaySlipData;
     }
