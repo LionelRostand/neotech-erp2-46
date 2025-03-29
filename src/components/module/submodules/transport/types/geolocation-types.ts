@@ -26,7 +26,7 @@ export interface RouteOptimization {
   optimizedRoute: string;
   savingsMinutes: number;
   savingsKm: number;
-  applied?: boolean;
+  applied: boolean;
 }
 
 export interface AlertConfig {
