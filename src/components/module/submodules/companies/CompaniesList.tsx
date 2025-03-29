@@ -1,34 +1,19 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useCompanyService } from './services/companyService';
 import { Company, CompanyFilters } from './types';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from '@/components/ui/table';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { Card } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
-import { format } from 'date-fns';
-import { fr } from 'date-fns/locale';
-import { Search, Filter, Plus, ChevronLeft, ChevronRight, RefreshCw } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
+import { useToast } from '@/hooks/use-toast';
+import CompaniesTable from './CompaniesTable';
+import CompaniesToolbar from './CompaniesToolbar';
+import CompaniesFilters from './CompaniesFilters';
 
 const CompaniesList: React.FC = () => {
   const navigate = useNavigate();
-  const location = useLocation();
   const { getCompanies } = useCompanyService();
+  const { toast } = useToast();
   
   const [companies, setCompanies] = useState<Company[]>([]);
   const [loading, setLoading] = useState(true);
@@ -57,10 +42,15 @@ const CompaniesList: React.FC = () => {
       setHasMore(more);
     } catch (error) {
       console.error('Error fetching companies:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de charger les entreprises",
+        variant: "destructive"
+      });
     } finally {
       setLoading(false);
     }
-  }, [getCompanies, page, filters, searchTerm]);
+  }, [getCompanies, page, filters, searchTerm, toast]);
   
   useEffect(() => {
     console.log('CompaniesList mounted or dependencies changed');
@@ -102,18 +92,11 @@ const CompaniesList: React.FC = () => {
       endDate: undefined
     });
     setPage(1);
+    fetchCompanies();
   };
   
-  const nextPage = () => {
-    if (hasMore) {
-      setPage(prev => prev + 1);
-    }
-  };
-  
-  const prevPage = () => {
-    if (page > 1) {
-      setPage(prev => prev - 1);
-    }
+  const handlePageChange = (newPage: number) => {
+    setPage(newPage);
   };
   
   const handleRefresh = () => {
@@ -124,195 +107,94 @@ const CompaniesList: React.FC = () => {
     navigate('/modules/companies/create');
   };
 
-  const handleRowClick = (company: Company) => {
-    // Idéalement, naviguer vers la page de détails de l'entreprise
-    // navigate(`/modules/companies/details/${company.id}`);
+  const handleViewCompany = (company: Company) => {
+    // Naviguer vers la page de détails de l'entreprise quand elle sera disponible
     console.log('Company clicked:', company);
+    toast({
+      title: "Information",
+      description: `Vous avez sélectionné : ${company.name}`,
+    });
   };
   
+  const totalPages = Math.ceil(companies.length / 10) + (hasMore ? 1 : 0);
+  
   return (
-    <div className="space-y-4">
-      {/* Header section with search and filters */}
-      <Card className="p-4">
-        <div className="flex flex-col md:flex-row gap-4">
-          <div className="flex-1 flex gap-2">
-            <div className="relative flex-1">
-              <Input
-                placeholder="Rechercher par nom, SIRET..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pr-10"
-                onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-              />
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="absolute right-0 top-0 h-full"
-                onClick={handleSearch}
-              >
-                <Search className="h-4 w-4" />
-              </Button>
-            </div>
-            <Button 
-              variant="outline" 
-              onClick={() => setShowFilters(!showFilters)}
-            >
-              <Filter className="h-4 w-4 mr-2" />
-              Filtres
-            </Button>
-            <Button 
-              variant="outline" 
-              onClick={handleRefresh}
-              title="Rafraîchir la liste"
-            >
-              <RefreshCw className="h-4 w-4" />
-            </Button>
-          </div>
-          <Button onClick={handleCreateCompany}>
-            <Plus className="h-4 w-4 mr-2" />
-            Nouvelle entreprise
-          </Button>
-        </div>
-        
-        {/* Filters section */}
-        {showFilters && (
-          <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Statut</label>
-              <Select
-                value={filters.status || 'all'}
-                onValueChange={(value) => handleFilterChange('status', value)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Tous les statuts" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Tous</SelectItem>
-                  <SelectItem value="active">Actif</SelectItem>
-                  <SelectItem value="inactive">Inactif</SelectItem>
-                  <SelectItem value="pending">En attente</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Date début</label>
-              <Input
-                type="date"
-                value={filters.startDate ? filters.startDate.toISOString().slice(0, 10) : ''}
-                onChange={(e) => handleFilterChange('startDate', e.target.value)}
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Date fin</label>
-              <Input
-                type="date"
-                value={filters.endDate ? filters.endDate.toISOString().slice(0, 10) : ''}
-                onChange={(e) => handleFilterChange('endDate', e.target.value)}
-              />
-            </div>
-            <div className="md:col-span-3 flex justify-end">
-              <Button variant="outline" onClick={resetFilters}>
-                Réinitialiser
-              </Button>
-            </div>
-          </div>
-        )}
-      </Card>
-      
-      {/* Companies table */}
+    <div className="space-y-6">
       <Card>
-        <div className="rounded-md border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Nom</TableHead>
-                <TableHead>SIRET/Numéro</TableHead>
-                <TableHead>Contact</TableHead>
-                <TableHead>Statut</TableHead>
-                <TableHead>Date de création</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {loading ? (
-                // Loading skeletons
-                Array.from({ length: 5 }).map((_, i) => (
-                  <TableRow key={i}>
-                    <TableCell><Skeleton className="h-5 w-40" /></TableCell>
-                    <TableCell><Skeleton className="h-5 w-32" /></TableCell>
-                    <TableCell><Skeleton className="h-5 w-36" /></TableCell>
-                    <TableCell><Skeleton className="h-5 w-20" /></TableCell>
-                    <TableCell><Skeleton className="h-5 w-28" /></TableCell>
-                  </TableRow>
-                ))
-              ) : companies.length > 0 ? (
-                companies.map((company) => (
-                  <TableRow 
-                    key={company.id} 
-                    onClick={() => handleRowClick(company)}
-                    className="cursor-pointer hover:bg-muted"
-                  >
-                    <TableCell className="font-medium">{company.name}</TableCell>
-                    <TableCell>{company.siret || company.registrationNumber || "—"}</TableCell>
-                    <TableCell>{company.contactEmail || company.contactName || "—"}</TableCell>
-                    <TableCell>
-                      <span className={`px-2 py-1 rounded-full text-xs ${
-                        company.status === 'active' ? 'bg-green-100 text-green-800' :
-                        company.status === 'inactive' ? 'bg-gray-100 text-gray-800' :
-                        'bg-yellow-100 text-yellow-800'
-                      }`}>
-                        {company.status === 'active' ? 'Actif' :
-                         company.status === 'inactive' ? 'Inactif' :
-                         company.status === 'pending' ? 'En attente' : '—'}
-                      </span>
-                    </TableCell>
-                    <TableCell>
-                      {company.createdAt ? 
-                        typeof company.createdAt.toDate === 'function' ? 
-                          format(company.createdAt.toDate(), 'dd MMM yyyy', { locale: fr }) : 
-                          format(company.createdAt, 'dd MMM yyyy', { locale: fr })
-                        : "—"}
-                    </TableCell>
-                  </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={5} className="text-center py-4">
-                    Aucune entreprise trouvée
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </div>
-        
-        {/* Pagination */}
-        {companies.length > 0 && (
-          <div className="flex items-center justify-between px-4 py-4 border-t">
-            <div>
-              <p className="text-sm text-gray-500">
-                Page {page} {hasMore ? '...' : ''}
-              </p>
-            </div>
-            <div className="flex gap-2">
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={prevPage} 
-                disabled={page === 1}
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={nextPage} 
-                disabled={!hasMore}
-              >
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-            </div>
+        <CardHeader>
+          <CardTitle>Liste des entreprises</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <CompaniesToolbar 
+            searchTerm={searchTerm}
+            onSearchChange={setSearchTerm}
+            onSearch={handleSearch}
+            onCreateCompany={handleCreateCompany}
+            onRefresh={handleRefresh}
+            onToggleFilters={() => setShowFilters(!showFilters)}
+            showFilters={showFilters}
+          />
+          
+          {showFilters && (
+            <CompaniesFilters 
+              filters={filters} 
+              onFilterChange={handleFilterChange} 
+              onResetFilters={resetFilters} 
+            />
+          )}
+          
+          <div className="mt-6">
+            <CompaniesTable 
+              companies={companies} 
+              loading={loading} 
+              onView={handleViewCompany} 
+            />
           </div>
-        )}
+          
+          {companies.length > 0 && (
+            <div className="mt-4">
+              <Pagination>
+                <PaginationContent>
+                  <PaginationItem>
+                    <PaginationPrevious 
+                      onClick={() => handlePageChange(Math.max(page - 1, 1))}
+                      className={page === 1 ? "pointer-events-none opacity-50" : ""}
+                    />
+                  </PaginationItem>
+                  
+                  {Array.from({ length: Math.min(5, totalPages) }).map((_, i) => {
+                    const pageNumber = page <= 3 
+                      ? i + 1 
+                      : page >= totalPages - 2 
+                        ? totalPages - 4 + i 
+                        : page - 2 + i;
+                    
+                    if (pageNumber > 0 && pageNumber <= totalPages) {
+                      return (
+                        <PaginationItem key={i}>
+                          <PaginationLink
+                            isActive={page === pageNumber}
+                            onClick={() => handlePageChange(pageNumber)}
+                          >
+                            {pageNumber}
+                          </PaginationLink>
+                        </PaginationItem>
+                      );
+                    }
+                    return null;
+                  })}
+                  
+                  <PaginationItem>
+                    <PaginationNext 
+                      onClick={() => handlePageChange(page + 1)}
+                      className={!hasMore ? "pointer-events-none opacity-50" : ""}
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
+            </div>
+          )}
+        </CardContent>
       </Card>
     </div>
   );
