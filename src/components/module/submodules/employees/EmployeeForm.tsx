@@ -170,7 +170,7 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
                 
                 {createAccount && (
                   <div className="space-y-4">
-                    <Alert variant="outline" className="bg-blue-50">
+                    <Alert variant="default" className="bg-blue-50">
                       <AlertCircle className="h-4 w-4 text-blue-600" />
                       <AlertDescription>
                         Un email sera envoyé à l'adresse professionnelle pour configurer le mot de passe.
