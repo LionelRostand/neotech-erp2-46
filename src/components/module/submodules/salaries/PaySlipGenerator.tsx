@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -14,7 +13,6 @@ import { Employee } from '@/types/employee';
 import { Company } from '@/components/module/submodules/companies/types';
 import { useCompanyService } from '@/components/module/submodules/companies/services/companyService';
 
-// Sample data for a pay slip
 const samplePaySlip: PaySlip = {
   id: '12345',
   employee: {
@@ -64,7 +62,6 @@ const PaySlipGenerator: React.FC = () => {
   
   const { getCompanies } = useCompanyService();
 
-  // Fetch employees from Firestore
   useEffect(() => {
     const fetchEmployees = async () => {
       try {
@@ -79,7 +76,6 @@ const PaySlipGenerator: React.FC = () => {
     fetchEmployees();
   }, []);
 
-  // Fetch companies from the companies module
   useEffect(() => {
     const fetchCompanies = async () => {
       try {
@@ -108,7 +104,6 @@ const PaySlipGenerator: React.FC = () => {
       setSelectedEmployee(employee);
       setEmployeeName(`${employee.firstName} ${employee.lastName}`);
       
-      // Set the salary from the contract if available
       if (employee.contract) {
         const contractParts = employee.contract.split('|');
         if (contractParts.length > 1) {
@@ -125,6 +120,14 @@ const PaySlipGenerator: React.FC = () => {
   };
 
   const handleCompanySelect = (companyId: string) => {
+    if (companyId === 'placeholder') {
+      setSelectedCompany(null);
+      setCompanyName('');
+      setCompanyAddress('');
+      setCompanySiret('');
+      return;
+    }
+    
     const company = companies.find(comp => comp.id === companyId);
     if (company) {
       setSelectedCompany(company);
@@ -158,7 +161,6 @@ const PaySlipGenerator: React.FC = () => {
       return;
     }
 
-    // Split employee name into first and last name
     const nameParts = employeeName.trim().split(' ');
     const firstName = nameParts[0] || '';
     const lastName = nameParts.slice(1).join(' ') || '';
@@ -169,7 +171,6 @@ const PaySlipGenerator: React.FC = () => {
       return;
     }
 
-    // Calculate overtime pay if provided
     let overtimePay = 0;
     const overtimeHoursValue = parseFloat(overtimeHours || '0');
     const overtimeRateValue = parseFloat(overtimeRate || '25');
@@ -181,7 +182,6 @@ const PaySlipGenerator: React.FC = () => {
 
     const totalGrossAmount = grossAmount + overtimePay;
 
-    // Calculate deductions (rough French social security estimation)
     const csgDeductible = totalGrossAmount * 0.0675;
     const csgNonDeductible = totalGrossAmount * 0.029;
     const healthInsurance = totalGrossAmount * 0.0095;
@@ -190,12 +190,10 @@ const PaySlipGenerator: React.FC = () => {
     const totalDeductions = csgDeductible + csgNonDeductible + healthInsurance + pension + unemployment;
     const netSalary = totalGrossAmount - totalDeductions;
 
-    // Prepare details array with base salary and overtime if applicable
     const details = [
       { label: 'Salaire de base', base: '151.67 H', rate: `${(grossAmount / 151.67).toFixed(2)} €/H`, amount: grossAmount, type: 'earning' as const },
     ];
 
-    // Add overtime if provided
     if (overtimePay > 0) {
       details.push({
         label: 'Heures supplémentaires', 
@@ -206,7 +204,6 @@ const PaySlipGenerator: React.FC = () => {
       });
     }
 
-    // Add deductions
     details.push(
       { label: 'CSG déductible', base: `${totalGrossAmount.toFixed(2)} €`, rate: '6,75 %', amount: csgDeductible, type: 'deduction' as const },
       { label: 'CSG non déductible', base: `${totalGrossAmount.toFixed(2)} €`, rate: '2,90 %', amount: csgNonDeductible, type: 'deduction' as const },
@@ -215,8 +212,7 @@ const PaySlipGenerator: React.FC = () => {
       { label: 'Assurance chômage', base: `${totalGrossAmount.toFixed(2)} €`, rate: '1,90 %', amount: unemployment, type: 'deduction' as const }
     );
 
-    // Generate a custom payslip based on input
-    const customPayslip: PaySlip = {
+    setCurrentPayslip({
       id: `PS-${Date.now().toString().slice(-6)}`,
       employee: {
         firstName,
@@ -236,9 +232,8 @@ const PaySlipGenerator: React.FC = () => {
       employerName: companyName || 'Votre Entreprise SARL',
       employerAddress: companyAddress || '1 Rue des Entrepreneurs, 75002 Paris',
       employerSiret: companySiret || '987 654 321 00098'
-    };
+    });
 
-    setCurrentPayslip(customPayslip);
     setShowPreview(true);
     toast.success('Bulletin de paie généré avec succès');
   };
@@ -271,7 +266,7 @@ const PaySlipGenerator: React.FC = () => {
                         <SelectValue placeholder="Sélectionner une entreprise" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">Sélectionner une entreprise</SelectItem>
+                        <SelectItem value="placeholder">Sélectionner une entreprise</SelectItem>
                         {companies.map(company => (
                           <SelectItem key={company.id} value={company.id}>
                             {company.name}
