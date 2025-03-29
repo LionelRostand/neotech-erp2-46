@@ -217,19 +217,20 @@ const CompaniesDashboard: React.FC = () => {
                 <TabsTrigger value="companies">Récentes</TabsTrigger>
                 <TabsTrigger value="documents">Documents</TabsTrigger>
               </TabsList>
-            </CardHeader>
-            <CardContent className="pt-2">
-              <TabsContent value="companies" className="mt-0 p-0">
-                <RecentCompaniesWidget />
-              </TabsContent>
-              
-              <TabsContent value="documents" className="mt-0 p-0">
-                <RecentDocumentsWidget />
-              </TabsContent>
-            </CardContent>
-          </Card>
-        </div>
+            </Tabs>
+          </CardHeader>
+          <CardContent className="pt-2">
+            <TabsContent value="companies" className="mt-0 p-0">
+              <RecentCompaniesWidget />
+            </TabsContent>
+            
+            <TabsContent value="documents" className="mt-0 p-0">
+              <RecentDocumentsWidget />
+            </TabsContent>
+          </CardContent>
+        </Card>
       </div>
+    </div>
   );
 };
 
