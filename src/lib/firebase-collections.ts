@@ -45,7 +45,9 @@ export const COLLECTIONS = {
     TAX_RATES: 'accounting_tax_rates',
     ACCOUNTS: 'accounting_accounts',
     LEDGER: 'accounting_ledger',
-    JOURNAL: 'accounting_journal'
+    JOURNAL: 'accounting_journal',
+    TRANSACTIONS: 'accounting_transactions',
+    PERMISSIONS: 'accounting_permissions'
   },
 
   // Health module
@@ -53,7 +55,9 @@ export const COLLECTIONS = {
     PATIENTS: 'health_patients',
     APPOINTMENTS: 'health_appointments',
     STAFF: 'health_staff',
-    MEDICAL_RECORDS: 'health_medical_records'
+    MEDICAL_RECORDS: 'health_medical_records',
+    CONSULTATIONS: 'health_consultations',
+    BILLING: 'health_billing'
   },
   HEALTH_CONSULTATIONS: 'health_consultations',
   HEALTH_INSURANCE: 'health_insurance',
@@ -64,7 +68,10 @@ export const COLLECTIONS = {
     VEHICLES: 'transport_vehicles',
     DRIVERS: 'transport_drivers',
     ROUTES: 'transport_routes',
-    SCHEDULES: 'transport_schedules'
+    SCHEDULES: 'transport_schedules',
+    SETTINGS: 'transport_settings',
+    RESERVATIONS: 'transport_reservations',
+    CLIENTS: 'transport_clients'
   },
 
   // Library module
@@ -73,7 +80,8 @@ export const COLLECTIONS = {
     MEMBERS: 'library_members',
     LOANS: 'library_loans',
     CATEGORIES: 'library_categories',
-    STATISTICS: 'library_statistics'
+    STATISTICS: 'library_statistics',
+    STATS: 'library_stats'
   },
 
   // CRM module
