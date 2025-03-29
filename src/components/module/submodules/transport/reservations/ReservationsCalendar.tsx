@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Calendar, CalendarCell, CalendarGrid, CalendarHeader, CalendarHeading, CalendarMonthName, CalendarNav, CalendarRoot, CalendarWeek } from "@/components/ui/calendar";
+import { Calendar } from "@/components/ui/calendar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -255,36 +255,53 @@ const ReservationsCalendar: React.FC = () => {
                 mode="single"
                 selected={selectedDate}
                 onSelect={setSelectedDate}
-                className="border rounded-md p-4"
+                className="border rounded-md p-4 pointer-events-auto"
                 locale={fr}
                 month={selectedDate || new Date()}
                 fixedWeeks
                 showOutsideDays
-              >
-                <CalendarHeader>
-                  <CalendarMonthName />
-                  <CalendarNav />
-                </CalendarHeader>
-                <CalendarGrid>
-                  <CalendarWeek>
-                    <div className="h-8 w-8 flex items-center justify-center font-medium text-muted-foreground">L</div>
-                    <div className="h-8 w-8 flex items-center justify-center font-medium text-muted-foreground">M</div>
-                    <div className="h-8 w-8 flex items-center justify-center font-medium text-muted-foreground">M</div>
-                    <div className="h-8 w-8 flex items-center justify-center font-medium text-muted-foreground">J</div>
-                    <div className="h-8 w-8 flex items-center justify-center font-medium text-muted-foreground">V</div>
-                    <div className="h-8 w-8 flex items-center justify-center font-medium text-muted-foreground">S</div>
-                    <div className="h-8 w-8 flex items-center justify-center font-medium text-muted-foreground">D</div>
-                  </CalendarWeek>
-                  <CalendarCell
-                    renderDay={(day) => (
-                      <div className="relative h-full w-full p-2">
-                        <span>{format(day, "d")}</span>
-                        {renderCellContent(day)}
+              />
+              
+              <div className="mt-4">
+                <h3 className="text-lg font-medium mb-2">
+                  {selectedDate ? format(selectedDate, "EEEE d MMMM yyyy", { locale: fr }) : ''}
+                </h3>
+                
+                {selectedDateReservations.length === 0 ? (
+                  <p className="text-muted-foreground">Aucune réservation pour cette date</p>
+                ) : (
+                  <div className="space-y-2">
+                    {selectedDateReservations.map(reservation => (
+                      <div 
+                        key={reservation.id}
+                        className="p-2 border rounded-md hover:bg-muted transition-colors flex justify-between items-center"
+                      >
+                        <div>
+                          <Badge className={getStatusColor(reservation.status)}>
+                            {reservation.status === 'confirmed' ? 'Confirmée' :
+                            reservation.status === 'pending' ? 'En attente' :
+                            reservation.status === 'completed' ? 'Terminée' :
+                            reservation.status === 'in-progress' ? 'En cours' : 
+                            'Annulée'}
+                          </Badge>
+                          <div className="font-medium mt-1">{reservation.clientName}</div>
+                          <div className="text-sm text-muted-foreground">
+                            {reservation.pickupLocation.substring(0, 30)}
+                            {reservation.pickupLocation.length > 30 ? '...' : ''}
+                          </div>
+                        </div>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => handleViewDetails(reservation)}
+                        >
+                          Détails
+                        </Button>
                       </div>
-                    )}
-                  />
-                </CalendarGrid>
-              </Calendar>
+                    ))}
+                  </div>
+                )}
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
