@@ -1,36 +1,18 @@
 
 import { useEffect, useRef, useState } from 'react';
-import { TransportVehicle } from '../types/transport-types';
+import { TransportVehicleWithLocation, MapConfig, MapHookResult } from '../types/map-types';
+import { configureLeafletIcons } from '../utils/leaflet-icon-setup';
+import { getTileLayerConfig, calculateMapCenter } from '../utils/map-utils';
+import { useMapMarkers } from './useMapMarkers';
 import 'leaflet/dist/leaflet.css'; // Import Leaflet CSS
-
-interface VehicleLocation {
-  lat: number;
-  lng: number;
-  lastUpdate: string;
-  speed: number;
-  status: string;
-}
-
-interface TransportVehicleWithLocation extends TransportVehicle {
-  location?: VehicleLocation;
-}
-
-interface MapConfig {
-  zoom: number;
-  centerLat: number;
-  centerLng: number;
-  tileProvider: 'osm' | 'osm-france' | 'carto';
-  showLabels: boolean;
-}
 
 export const useTransportMap = (
   mapElementRef: React.RefObject<HTMLDivElement>,
   vehicles: TransportVehicleWithLocation[],
   initialConfig?: Partial<MapConfig>
-) => {
+): MapHookResult => {
   const [mapInitialized, setMapInitialized] = useState(false);
   const leafletMapRef = useRef<any>(null);
-  const markersRef = useRef<any[]>([]);
   const [mapConfig, setMapConfig] = useState<MapConfig>({
     zoom: 11,
     centerLat: 48.852969,
@@ -42,6 +24,7 @@ export const useTransportMap = (
   
   // Added to prevent continuous reloading
   const initializationAttemptedRef = useRef(false);
+  const { markersRef, createVehicleMarkers, fitMapToMarkers } = useMapMarkers();
 
   // Initialize and update map when vehicles or config change
   useEffect(() => {
@@ -55,27 +38,8 @@ export const useTransportMap = (
         // Set initialization flag to prevent multiple attempts
         initializationAttemptedRef.current = true;
         
-        // Dynamic import to avoid SSR issues
-        const L = await import('leaflet');
-        
-        // Fix Leaflet icon paths issue - this is crucial for marker display
-        // Fix TypeScript error by using a different approach to set icon options
-        L.Icon.Default.imagePath = 'https://unpkg.com/leaflet@1.9.4/dist/images/';
-        
-        // Use direct method to set options instead of accessing _getIconUrl
-        const DefaultIcon = L.Icon.extend({
-          options: {
-            iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-            iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
-            shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-            iconSize: [25, 41],
-            iconAnchor: [12, 41],
-            popupAnchor: [1, -34],
-            shadowSize: [41, 41]
-          }
-        });
-        
-        L.Marker.prototype.options.icon = new DefaultIcon();
+        // Configure Leaflet icons
+        const L = await configureLeafletIcons();
         
         // Initialize map if not already done
         if (!mapInitialized) {
@@ -85,22 +49,13 @@ export const useTransportMap = (
             leafletMapRef.current = null;
           }
           
-          // Set initial coordinates
-          let latitude = mapConfig.centerLat;
-          let longitude = mapConfig.centerLng;
-          let zoom = mapConfig.zoom;
-          
-          // Use vehicles with location to center the map
-          const vehiclesWithLocation = vehicles.filter(v => v.location);
-          if (vehiclesWithLocation.length > 0) {
-            // Calculate center based on all vehicle positions
-            const bounds = vehiclesWithLocation.map(v => [v.location!.lat, v.location!.lng]);
-            if (bounds.length > 0) {
-              const firstVehicle = vehiclesWithLocation[0];
-              latitude = firstVehicle.location!.lat;
-              longitude = firstVehicle.location!.lng;
-            }
-          }
+          // Calculate center position
+          const { latitude, longitude, zoom } = calculateMapCenter(
+            vehicles,
+            mapConfig.centerLat,
+            mapConfig.centerLng,
+            mapConfig.zoom
+          );
           
           // Create new map with correct sizing and options
           const map = L.map(mapElementRef.current, {
@@ -115,33 +70,8 @@ export const useTransportMap = (
           leafletMapRef.current = map;
           
           // Add tile layer based on config
-          let tileLayer;
-          switch (mapConfig.tileProvider) {
-            case 'osm':
-              tileLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-                minZoom: 1,
-                maxZoom: 19
-              });
-              break;
-            case 'carto':
-              tileLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
-                subdomains: 'abcd',
-                minZoom: 1,
-                maxZoom: 19
-              });
-              break;
-            case 'osm-france':
-            default:
-              tileLayer = L.tileLayer('https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png', {
-                attribution: 'données © <a href="//osm.org/copyright">OpenStreetMap</a>/ODbL - rendu <a href="//openstreetmap.fr">OSM France</a>',
-                minZoom: 1,
-                maxZoom: 20
-              });
-              break;
-          }
-          
+          const tileLayerConfig = getTileLayerConfig(mapConfig.tileProvider);
+          const tileLayer = L.tileLayer(tileLayerConfig.url, tileLayerConfig);
           tileLayer.addTo(map);
           
           // Ensure map properly sizes itself - critical for proper display
@@ -157,71 +87,15 @@ export const useTransportMap = (
           // Force map to update its container size again after initialization
           leafletMapRef.current.invalidateSize(true);
           
-          // Clear existing markers
-          markersRef.current.forEach(marker => {
-            marker.remove();
-          });
-          markersRef.current = [];
+          // Create new markers
+          const markers = await createVehicleMarkers(
+            leafletMapRef.current, 
+            vehicles, 
+            mapConfig.showLabels
+          );
           
-          // Add new markers
-          const vehiclesWithLocation = vehicles.filter(v => v.location);
-          const markers: any[] = [];
-          
-          vehiclesWithLocation.forEach(vehicle => {
-            if (vehicle.location) {
-              const { lat, lng } = vehicle.location;
-              
-              // Create custom icon based on vehicle status
-              let iconColor = "#4CAF50"; // Default green
-              
-              if (vehicle.location.status === "arrêté") {
-                iconColor = "#FFC107"; // Yellow for stopped
-              } else if (vehicle.location.status === "maintenance") {
-                iconColor = "#FF9800"; // Orange for maintenance
-              }
-              
-              const customIcon = L.divIcon({
-                className: `vehicle-marker-${vehicle.id}`,
-                html: `<div style="background-color: white; border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
-                  <div style="background-color: ${iconColor}; width: 24px; height: 24px; border-radius: 50%;"></div>
-                </div>`,
-                iconSize: [36, 36],
-                iconAnchor: [18, 18]
-              });
-              
-              const marker = L.marker([lat, lng], { icon: customIcon });
-              
-              // Create popup for vehicle info
-              const popupContent = mapConfig.showLabels 
-                ? `
-                  <div>
-                    <h3 style="font-weight: bold; margin-bottom: 5px;">${vehicle.name}</h3>
-                    <p style="margin-bottom: 3px;">Immatriculation: ${vehicle.licensePlate}</p>
-                    <p style="margin-bottom: 3px;">Statut: ${vehicle.location.status}</p>
-                    <p style="margin-bottom: 3px;">Vitesse: ${vehicle.location.speed} km/h</p>
-                    <p style="margin-bottom: 3px;">Dernière mise à jour: ${new Date(vehicle.location.lastUpdate).toLocaleTimeString('fr-FR')}</p>
-                  </div>
-                `
-                : `<div><p>${vehicle.name}</p></div>`;
-              
-              marker.bindPopup(popupContent);
-              
-              marker.addTo(leafletMapRef.current);
-              markers.push(marker);
-            }
-          });
-          
-          markersRef.current = markers;
-          
-          // Fit map to show all markers if we have any
-          if (markers.length > 0) {
-            try {
-              const group = L.featureGroup(markers);
-              leafletMapRef.current.fitBounds(group.getBounds().pad(0.2));
-            } catch (error) {
-              console.error("Error fitting bounds", error);
-            }
-          }
+          // Fit map to show all markers
+          fitMapToMarkers(leafletMapRef.current, markers);
         }
       } catch (error) {
         console.error("Error initializing map:", error);
@@ -229,7 +103,7 @@ export const useTransportMap = (
     };
     
     initializeMap();
-  }, [vehicles, mapInitialized, mapElementRef, mapConfig]);
+  }, [vehicles, mapInitialized, mapElementRef, mapConfig, createVehicleMarkers, fitMapToMarkers]);
 
   // Clean up map on component unmount
   useEffect(() => {
