@@ -8,15 +8,16 @@ import EmployeeDetails from './employees/EmployeeDetails';
 import EmployeeForm from './employees/EmployeeForm';
 import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface EmployeesProfilesProps {
-  employees: Employee[];
-  searchQuery: string;
-  setSearchQuery: (query: string) => void;
-  onViewEmployee: (employee: Employee) => void;
-  onEditEmployee: (employee: Employee) => void;
-  onDeleteEmployee: (employeeId: string) => void;
-  onOpenAddEmployee: () => void;
+  employees?: Employee[];
+  searchQuery?: string;
+  setSearchQuery?: (query: string) => void;
+  onViewEmployee?: (employee: Employee) => void;
+  onEditEmployee?: (employee: Employee) => void;
+  onDeleteEmployee?: (employeeId: string) => void;
+  onOpenAddEmployee?: () => void;
 }
 
 const EmployeesProfiles: React.FC<EmployeesProfilesProps> = (props) => {
@@ -27,6 +28,14 @@ const EmployeesProfiles: React.FC<EmployeesProfilesProps> = (props) => {
   const [isEditEmployeeOpen, setIsEditEmployeeOpen] = useState(false);
   const [employeeToEdit, setEmployeeToEdit] = useState<Employee | null>(null);
   const [isPdfExportOpen, setIsPdfExportOpen] = useState(false);
+  const [selectedCompany, setSelectedCompany] = useState<string>('all');
+
+  const companies = [
+    { id: 'all', name: 'Toutes les entreprises' },
+    { id: 'enterprise1', name: 'Enterprise Solutions' },
+    { id: 'techinno', name: 'TechInnovation' },
+    { id: 'greenco', name: 'GreenCo' },
+  ];
 
   const handleViewEmployee = (employee: Employee) => {
     setSelectedEmployee(employee);
@@ -41,6 +50,7 @@ const EmployeesProfiles: React.FC<EmployeesProfilesProps> = (props) => {
     const updatedEmployees = [...employees, employeeWithId];
     setEmployees(updatedEmployees);
     toast.success("Employé ajouté avec succès.");
+    setIsAddEmployeeOpen(false);
   };
 
   const handleEditEmployee = (employee: Employee) => {
@@ -90,6 +100,10 @@ const EmployeesProfiles: React.FC<EmployeesProfilesProps> = (props) => {
     }, 1000);
   };
 
+  const filteredEmployees = selectedCompany === 'all' 
+    ? employees 
+    : employees.filter(emp => emp.company === selectedCompany);
+
   return (
     <div className="space-y-6">
       {selectedEmployee ? (
@@ -110,15 +124,39 @@ const EmployeesProfiles: React.FC<EmployeesProfilesProps> = (props) => {
           />
         </>
       ) : (
-        <EmployeesList
-          employees={employees}
-          searchQuery={searchQuery}
-          setSearchQuery={setSearchQuery}
-          onViewEmployee={handleViewEmployee}
-          onEditEmployee={handleEditEmployee}
-          onDeleteEmployee={handleDeleteEmployee}
-          onOpenAddEmployee={() => setIsAddEmployeeOpen(true)}
-        />
+        <div className="space-y-6">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+            <div className="flex items-center space-x-2">
+              <div className="text-md font-medium">Entreprise :</div>
+              <Select value={selectedCompany} onValueChange={setSelectedCompany}>
+                <SelectTrigger className="w-[220px]">
+                  <SelectValue placeholder="Sélectionner une entreprise" />
+                </SelectTrigger>
+                <SelectContent>
+                  {companies.map((company) => (
+                    <SelectItem key={company.id} value={company.id}>{company.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <Button 
+              variant="default" 
+              className="bg-green-500 hover:bg-green-600"
+              onClick={() => setIsAddEmployeeOpen(true)}
+            >
+              Nouvel employé
+            </Button>
+          </div>
+          
+          <EmployeesList
+            employees={filteredEmployees}
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+            onViewEmployee={handleViewEmployee}
+            onEditEmployee={handleEditEmployee}
+            onDeleteEmployee={handleDeleteEmployee}
+          />
+        </div>
       )}
 
       <EmployeeForm 

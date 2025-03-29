@@ -26,7 +26,7 @@ interface EmployeesListProps {
   onViewEmployee: (employee: Employee) => void;
   onEditEmployee: (employee: Employee) => void;
   onDeleteEmployee: (employeeId: string) => void;
-  onOpenAddEmployee: () => void;
+  onOpenAddEmployee?: () => void;
 }
 
 const EmployeesList: React.FC<EmployeesListProps> = ({
@@ -62,15 +62,6 @@ const EmployeesList: React.FC<EmployeesListProps> = ({
           <User className="h-6 w-6 text-green-500 mr-2" />
           Liste des Employés
         </div>
-        
-        <Button 
-          variant="default" 
-          className="bg-green-500 hover:bg-green-600"
-          onClick={onOpenAddEmployee}
-        >
-          <UserPlus className="mr-2 h-4 w-4" />
-          Nouvel employé
-        </Button>
       </div>
       
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
@@ -123,6 +114,7 @@ const EmployeesList: React.FC<EmployeesListProps> = ({
                       variant="ghost" 
                       size="icon"
                       onClick={() => onViewEmployee(employee)}
+                      title="Visualiser"
                     >
                       <Eye className="h-4 w-4" />
                       <span className="sr-only">Voir</span>
@@ -131,6 +123,7 @@ const EmployeesList: React.FC<EmployeesListProps> = ({
                       variant="ghost" 
                       size="icon"
                       onClick={() => onEditEmployee(employee)}
+                      title="Modifier"
                     >
                       <Pencil className="h-4 w-4" />
                       <span className="sr-only">Modifier</span>
@@ -139,6 +132,7 @@ const EmployeesList: React.FC<EmployeesListProps> = ({
                       variant="ghost" 
                       size="icon"
                       onClick={() => setEmployeeToDelete(employee)}
+                      title="Supprimer"
                     >
                       <Trash className="h-4 w-4" />
                       <span className="sr-only">Supprimer</span>
