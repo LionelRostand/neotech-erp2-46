@@ -1,21 +1,21 @@
 
-import * as z from 'zod';
+import { z } from "zod";
 
-// Schéma pour la validation du formulaire
 export const employeeFormSchema = z.object({
-  firstName: z.string().min(2, "Le prénom doit contenir au moins 2 caractères"),
-  lastName: z.string().min(2, "Le nom doit contenir au moins 2 caractères"),
-  email: z.string().email("Format d'email invalide").or(z.string().length(0)),
+  firstName: z.string().min(2, { message: "Le prénom doit contenir au moins 2 caractères" }),
+  lastName: z.string().min(2, { message: "Le nom doit contenir au moins 2 caractères" }),
+  email: z.string().email({ message: "Email invalide" }),
   phone: z.string().optional(),
   address: z.string().optional(),
-  department: z.string().optional(),
-  position: z.string().optional(),
+  department: z.string(),
+  position: z.string(),
   contract: z.string(),
-  hireDate: z.string().optional(),
+  hireDate: z.string(),
   manager: z.string().optional(),
   status: z.string(),
-  professionalEmail: z.string().email("Format d'email professionnel invalide").or(z.string().length(0)),
+  company: z.string().optional(), // Ajout du champ entreprise
+  professionalEmail: z.string().email({ message: "Email professionnel invalide" }).optional(),
+  password: z.string().min(6, { message: "Le mot de passe doit contenir au moins 6 caractères" }).optional(),
 });
 
-// Type dérivé du schéma
 export type EmployeeFormValues = z.infer<typeof employeeFormSchema>;

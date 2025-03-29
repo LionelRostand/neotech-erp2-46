@@ -1,11 +1,13 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
-import { GraduationCap } from 'lucide-react';
+import { GraduationCap, Building } from 'lucide-react';
 import { Employee } from '@/types/employee';
+import { useFirestore } from '@/hooks/use-firestore';
+import { COLLECTIONS } from '@/lib/firebase-collections';
 
 interface InformationsTabProps {
   employee: Employee;
@@ -13,6 +15,25 @@ interface InformationsTabProps {
 
 const InformationsTab: React.FC<InformationsTabProps> = ({ employee }) => {
   const education = employee.education || [];
+  const [companyName, setCompanyName] = useState<string>("Non assigné");
+  const companiesFirestore = useFirestore(COLLECTIONS.COMPANIES);
+
+  useEffect(() => {
+    if (employee.company) {
+      const fetchCompany = async () => {
+        try {
+          const company = await companiesFirestore.getById(employee.company as string);
+          if (company) {
+            setCompanyName(company.name);
+          }
+        } catch (error) {
+          console.error('Error fetching company:', error);
+        }
+      };
+      
+      fetchCompany();
+    }
+  }, [employee.company, companiesFirestore]);
   
   return (
     <Card>
@@ -48,6 +69,13 @@ const InformationsTab: React.FC<InformationsTabProps> = ({ employee }) => {
         <div>
           <h3 className="text-lg font-semibold mb-4">Informations professionnelles</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="company">Entreprise</Label>
+              <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-md">
+                <Building className="h-5 w-5 text-blue-500 flex-shrink-0" />
+                <span>{companyName}</span>
+              </div>
+            </div>
             <div className="space-y-2">
               <Label htmlFor="department">Département</Label>
               <Input id="department" value={employee.department} readOnly />

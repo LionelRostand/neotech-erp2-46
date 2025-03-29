@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCompanyService } from './services/companyService';
@@ -24,6 +25,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { Search, Filter, Plus, ChevronLeft, ChevronRight, RefreshCw } from 'lucide-react';
+import { toast } from "@/hooks/use-toast";
 
 const CompaniesList: React.FC = () => {
   console.log('CompaniesList component rendering');
@@ -58,6 +60,11 @@ const CompaniesList: React.FC = () => {
       setHasMore(more);
     } catch (error) {
       console.error('Error fetching companies:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de récupérer la liste des entreprises",
+        variant: "destructive"
+      });
     } finally {
       setLoading(false);
     }

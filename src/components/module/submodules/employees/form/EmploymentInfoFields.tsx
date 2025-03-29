@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useFormContext } from 'react-hook-form';
 import {
   FormField,
@@ -17,9 +17,31 @@ import {
   SelectTrigger,
   SelectValue
 } from '@/components/ui/select';
+import { Company } from '../../companies/types';
+import { useFirestore } from '@/hooks/use-firestore';
+import { COLLECTIONS } from '@/lib/firebase-collections';
 
 const EmploymentInfoFields: React.FC = () => {
   const form = useFormContext<EmployeeFormValues>();
+  const [companies, setCompanies] = useState<Company[]>([]);
+  const [loading, setLoading] = useState(false);
+  const companiesFirestore = useFirestore(COLLECTIONS.COMPANIES);
+
+  useEffect(() => {
+    const fetchCompanies = async () => {
+      setLoading(true);
+      try {
+        const fetchedCompanies = await companiesFirestore.getAll() as Company[];
+        setCompanies(fetchedCompanies);
+      } catch (error) {
+        console.error('Error fetching companies:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCompanies();
+  }, [companiesFirestore]);
 
   return (
     <>
@@ -52,6 +74,36 @@ const EmploymentInfoFields: React.FC = () => {
           )}
         />
       </div>
+      
+      {/* Nouveau champ pour sélectionner l'entreprise */}
+      <FormField
+        control={form.control}
+        name="company"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Entreprise</FormLabel>
+            <FormControl>
+              <Select
+                value={field.value}
+                onValueChange={field.onChange}
+                disabled={loading}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Sélectionner une entreprise" />
+                </SelectTrigger>
+                <SelectContent>
+                  {companies.map((company) => (
+                    <SelectItem key={company.id} value={company.id}>
+                      {company.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <FormField
