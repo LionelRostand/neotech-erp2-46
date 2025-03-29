@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { modules } from '@/data/modules';
 import SubmoduleHeader from './submodules/SubmoduleHeader';
 import { renderSubmoduleContent } from './submodules/SubmoduleRenderer';
@@ -10,15 +10,23 @@ interface SubmodulePageProps {
 }
 
 const SubmodulePage: React.FC<SubmodulePageProps> = ({ moduleId, submoduleId }) => {
+  useEffect(() => {
+    console.log('Rendering submodule:', submoduleId);
+  }, [submoduleId]);
+  
   // Find the module
   const module = modules.find(m => m.id === moduleId);
-  if (!module) return <div>Module not found</div>;
+  if (!module) {
+    console.error('Module not found:', moduleId);
+    return <div>Module not found</div>;
+  }
   
   // Find the submodule
   const submodule = module.submodules.find(sm => sm.id === submoduleId);
-  if (!submodule) return <div>Submodule not found</div>;
-
-  console.log('Rendering submodule:', submoduleId);
+  if (!submodule) {
+    console.error('Submodule not found:', submoduleId, 'in module', moduleId);
+    return <div>Submodule not found</div>;
+  }
 
   return (
     <div className="space-y-6">

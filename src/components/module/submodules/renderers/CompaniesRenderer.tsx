@@ -17,6 +17,7 @@ export const renderCompaniesSubmodule = (submoduleId: string, submodule: SubModu
     case 'companies-dashboard':
       return <CompaniesDashboard />;
     case 'companies-list':
+      console.log('Rendering companies list component');
       return <CompaniesList />;
     case 'companies-create':
       return <CompanyCreateForm />;
@@ -29,6 +30,7 @@ export const renderCompaniesSubmodule = (submoduleId: string, submodule: SubModu
     case 'companies-settings':
       return <CompaniesSettings />;
     default:
+      console.warn('Unknown companies submodule:', submoduleId);
       return <DefaultSubmoduleContent submodule={submodule} />;
   }
 };

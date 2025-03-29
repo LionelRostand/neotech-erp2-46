@@ -26,6 +26,8 @@ import { fr } from 'date-fns/locale';
 import { Search, Filter, Plus, ChevronLeft, ChevronRight, RefreshCw } from 'lucide-react';
 
 const CompaniesList: React.FC = () => {
+  console.log('CompaniesList component rendering');
+  
   const navigate = useNavigate();
   const { getCompanies } = useCompanyService();
   
@@ -64,7 +66,7 @@ const CompaniesList: React.FC = () => {
   useEffect(() => {
     console.log('CompaniesList mounted or location changed');
     fetchCompanies();
-  }, [fetchCompanies, location]);
+  }, [fetchCompanies]);
   
   const handleSearch = () => {
     setPage(1); // Reset to first page
