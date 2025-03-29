@@ -13,7 +13,7 @@ export interface PaySlipDetail {
   base: string;
   rate?: string;
   amount: number;
-  type: "earning" | "deduction";
+  type: "earning" | "deduction"; // Make sure both values are allowed
 }
 
 export interface PaySlip {

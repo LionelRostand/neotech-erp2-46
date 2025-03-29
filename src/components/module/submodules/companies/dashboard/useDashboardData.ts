@@ -8,6 +8,8 @@ export interface DashboardMetrics {
   activeCompanies: number;
   newCompanies: number;
   pendingReview: number;
+  totalDocuments: number; // Added missing property
+  growthRate: number;     // Added missing property
 }
 
 export const useDashboardData = () => {
@@ -15,7 +17,9 @@ export const useDashboardData = () => {
     totalCompanies: 0,
     activeCompanies: 0,
     newCompanies: 0,
-    pendingReview: 0
+    pendingReview: 0,
+    totalDocuments: 0, // Initialize the new property
+    growthRate: 0      // Initialize the new property
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
@@ -40,7 +44,9 @@ export const useDashboardData = () => {
               totalCompanies: 42,
               activeCompanies: 36,
               newCompanies: 3,
-              pendingReview: 5
+              pendingReview: 5,
+              totalDocuments: 128,  // Added default value
+              growthRate: 5.2       // Added default value
             });
             console.log('Using default dashboard data (offline mode, no cache)');
           }
@@ -62,7 +68,9 @@ export const useDashboardData = () => {
             totalCompanies: 87,
             activeCompanies: 72,
             newCompanies: 8,
-            pendingReview: 7
+            pendingReview: 7,
+            totalDocuments: 245,  // Added mock data
+            growthRate: 8.7       // Added mock data
           };
         });
         
