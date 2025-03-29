@@ -2,8 +2,8 @@
 import React from 'react';
 import { Card, CardHeader, CardContent } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import RecentCompaniesWidget from '../RecentCompaniesWidget';
-import RecentDocumentsWidget from '../RecentDocumentsWidget';
+import RecentCompaniesWidget from './RecentCompaniesWidget';
+import RecentDocumentsWidget from './RecentDocumentsWidget';
 
 const RecentItemsSection = () => {
   return (
