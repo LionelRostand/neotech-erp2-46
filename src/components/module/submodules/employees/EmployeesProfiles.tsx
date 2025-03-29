@@ -8,7 +8,13 @@ import EmployeeForm from './EmployeeForm';
 import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { getEmployeesData, refreshEmployeesData } from './services/employeeService';
+import { 
+  getEmployeesData, 
+  refreshEmployeesData, 
+  addEmployee, 
+  updateEmployee, 
+  deleteEmployee 
+} from './services/employeeService';
 import { RefreshCw } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -67,16 +73,26 @@ const EmployeesProfiles: React.FC = () => {
     setSelectedEmployee(employee);
   };
 
-  const handleAddEmployee = (newEmployee: Partial<Employee>) => {
-    const employeeWithId = {
-      ...newEmployee,
-      id: `EMP${String(employees.length + 1).padStart(3, '0')}`,
-    } as Employee;
-    
-    const updatedEmployees = [...employees, employeeWithId];
-    setEmployees(updatedEmployees);
-    toast.success("Employé ajouté avec succès.");
-    setIsAddEmployeeOpen(false);
+  const handleAddEmployee = async (newEmployee: Partial<Employee>) => {
+    setLoading(true);
+    try {
+      // Ajouter l'employé à Firebase
+      const addedEmployee = await addEmployee(newEmployee as Omit<Employee, 'id'>);
+      
+      if (addedEmployee) {
+        // Ajouter au state local pour actualisation immédiate de l'UI
+        setEmployees(prev => [...prev, addedEmployee]);
+        toast.success("Employé ajouté avec succès.");
+      } else {
+        toast.error("Échec de l'ajout de l'employé.");
+      }
+    } catch (error) {
+      console.error("Erreur lors de l'ajout de l'employé:", error);
+      toast.error("Erreur lors de l'ajout de l'employé.");
+    } finally {
+      setLoading(false);
+      setIsAddEmployeeOpen(false);
+    }
   };
 
   const handleEditEmployee = (employee: Employee) => {
@@ -84,36 +100,63 @@ const EmployeesProfiles: React.FC = () => {
     setIsEditEmployeeOpen(true);
   };
 
-  const handleUpdateEmployee = (updatedEmployee: Partial<Employee>) => {
+  const handleUpdateEmployee = async (updatedEmployeeData: Partial<Employee>) => {
     if (!employeeToEdit) return;
     
-    const updatedEmployees = employees.map(emp => 
-      emp.id === employeeToEdit.id 
-        ? { ...emp, ...updatedEmployee } as Employee
-        : emp
-    );
-    
-    setEmployees(updatedEmployees);
-    
-    // Si l'employé est actuellement sélectionné, mettre à jour aussi
-    if (selectedEmployee && selectedEmployee.id === employeeToEdit.id) {
-      setSelectedEmployee({ ...selectedEmployee, ...updatedEmployee } as Employee);
+    setLoading(true);
+    try {
+      // Mettre à jour l'employé dans Firebase
+      const updatedEmployee = await updateEmployee(employeeToEdit.id, updatedEmployeeData);
+      
+      if (updatedEmployee) {
+        // Mettre à jour le state local
+        setEmployees(prev => prev.map(emp => 
+          emp.id === employeeToEdit.id ? updatedEmployee : emp
+        ));
+        
+        // Si l'employé est actuellement sélectionné, mettre à jour aussi
+        if (selectedEmployee && selectedEmployee.id === employeeToEdit.id) {
+          setSelectedEmployee(updatedEmployee);
+        }
+        
+        toast.success("Employé mis à jour avec succès.");
+      } else {
+        toast.error("Échec de la mise à jour de l'employé.");
+      }
+    } catch (error) {
+      console.error("Erreur lors de la mise à jour:", error);
+      toast.error("Erreur lors de la mise à jour de l'employé.");
+    } finally {
+      setLoading(false);
+      setIsEditEmployeeOpen(false);
     }
-    
-    toast.success("Employé mis à jour avec succès.");
-    setIsEditEmployeeOpen(false);
   };
 
-  const handleDeleteEmployee = (employeeId: string) => {
-    const updatedEmployees = employees.filter(emp => emp.id !== employeeId);
-    setEmployees(updatedEmployees);
-    
-    // Si l'employé supprimé est celui qui est affiché, revenir à la liste
-    if (selectedEmployee && selectedEmployee.id === employeeId) {
-      setSelectedEmployee(null);
+  const handleDeleteEmployee = async (employeeId: string) => {
+    setLoading(true);
+    try {
+      // Supprimer l'employé de Firebase
+      const success = await deleteEmployee(employeeId);
+      
+      if (success) {
+        // Mettre à jour le state local
+        setEmployees(prev => prev.filter(emp => emp.id !== employeeId));
+        
+        // Si l'employé supprimé est celui qui est affiché, revenir à la liste
+        if (selectedEmployee && selectedEmployee.id === employeeId) {
+          setSelectedEmployee(null);
+        }
+        
+        toast.success("Employé supprimé avec succès.");
+      } else {
+        toast.error("Échec de la suppression de l'employé.");
+      }
+    } catch (error) {
+      console.error("Erreur lors de la suppression:", error);
+      toast.error("Erreur lors de la suppression de l'employé.");
+    } finally {
+      setLoading(false);
     }
-    
-    toast.success("Employé supprimé avec succès.");
   };
 
   const handleExportPdf = () => {

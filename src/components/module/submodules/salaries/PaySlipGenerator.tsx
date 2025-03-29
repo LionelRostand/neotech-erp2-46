@@ -12,6 +12,7 @@ import { COLLECTIONS } from '@/lib/firebase-collections';
 import { Employee } from '@/types/employee';
 import { Company } from '@/components/module/submodules/companies/types';
 import { useCompanyService } from '@/components/module/submodules/companies/services/companyService';
+import { PaySlipDetail } from './types/payslip';
 
 const samplePaySlip: PaySlip = {
   id: '12345',
