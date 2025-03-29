@@ -42,7 +42,7 @@ const EmailsTab: React.FC = () => {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead width={30}></TableHead>
+              <TableHead style={{ width: 30 }}></TableHead>
               <TableHead>De / À</TableHead>
               <TableHead>Objet</TableHead>
               <TableHead>Date</TableHead>

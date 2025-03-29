@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { TabsContent } from "@/components/ui/tabs";
 import ChatTab from './tabs/ChatTab';
 import MessagesTab from './tabs/MessagesTab';
 import CallsTab from './tabs/CallsTab';
@@ -12,22 +13,28 @@ interface CustomerServiceContentProps {
 }
 
 const CustomerServiceContent: React.FC<CustomerServiceContentProps> = ({ activeTab }) => {
-  switch (activeTab) {
-    case 'chat':
-      return <ChatTab />;
-    case 'messages':
-      return <MessagesTab />;
-    case 'calls':
-      return <CallsTab />;
-    case 'emails':
-      return <EmailsTab />;
-    case 'customers':
-      return <CustomersTab />;
-    case 'settings':
-      return <SettingsTab />;
-    default:
-      return <ChatTab />;
-  }
+  return (
+    <>
+      <TabsContent value="chat">
+        <ChatTab />
+      </TabsContent>
+      <TabsContent value="messages">
+        <MessagesTab />
+      </TabsContent>
+      <TabsContent value="calls">
+        <CallsTab />
+      </TabsContent>
+      <TabsContent value="emails">
+        <EmailsTab />
+      </TabsContent>
+      <TabsContent value="customers">
+        <CustomersTab />
+      </TabsContent>
+      <TabsContent value="settings">
+        <SettingsTab />
+      </TabsContent>
+    </>
+  );
 };
 
 export default CustomerServiceContent;

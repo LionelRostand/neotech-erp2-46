@@ -1,6 +1,7 @@
 
 import React, { useState } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
+import { Tabs } from "@/components/ui/tabs";
 import CustomerServiceTabs from './customer-service/CustomerServiceTabs';
 import CustomerServiceContent from './customer-service/CustomerServiceContent';
 
@@ -13,11 +14,13 @@ const TransportCustomerService: React.FC = () => {
       
       <Card>
         <CardContent className="pt-6">
-          <CustomerServiceTabs 
-            activeTab={activeTab}
-            onTabChange={setActiveTab}
-          />
-          <CustomerServiceContent activeTab={activeTab} />
+          <Tabs defaultValue={activeTab} onValueChange={setActiveTab}>
+            <CustomerServiceTabs 
+              activeTab={activeTab}
+              onTabChange={setActiveTab}
+            />
+            <CustomerServiceContent activeTab={activeTab} />
+          </Tabs>
         </CardContent>
       </Card>
     </div>

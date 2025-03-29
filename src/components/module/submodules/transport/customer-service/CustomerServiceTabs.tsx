@@ -14,8 +14,6 @@ const CustomerServiceTabs: React.FC<CustomerServiceTabsProps> = ({ activeTab, on
       <TabsList className="grid grid-cols-3 sm:grid-cols-6 max-w-3xl">
         <TabsTrigger
           value="chat"
-          onClick={() => onTabChange('chat')}
-          data-state={activeTab === 'chat' ? 'active' : ''}
           className="flex flex-col items-center gap-1 py-3 px-4"
         >
           <MessageSquare className="h-4 w-4" />
@@ -23,8 +21,6 @@ const CustomerServiceTabs: React.FC<CustomerServiceTabsProps> = ({ activeTab, on
         </TabsTrigger>
         <TabsTrigger
           value="messages"
-          onClick={() => onTabChange('messages')}
-          data-state={activeTab === 'messages' ? 'active' : ''}
           className="flex flex-col items-center gap-1 py-3 px-4"
         >
           <MessagesSquare className="h-4 w-4" />
@@ -32,8 +28,6 @@ const CustomerServiceTabs: React.FC<CustomerServiceTabsProps> = ({ activeTab, on
         </TabsTrigger>
         <TabsTrigger
           value="calls"
-          onClick={() => onTabChange('calls')}
-          data-state={activeTab === 'calls' ? 'active' : ''}
           className="flex flex-col items-center gap-1 py-3 px-4"
         >
           <Phone className="h-4 w-4" />
@@ -41,8 +35,6 @@ const CustomerServiceTabs: React.FC<CustomerServiceTabsProps> = ({ activeTab, on
         </TabsTrigger>
         <TabsTrigger
           value="emails"
-          onClick={() => onTabChange('emails')}
-          data-state={activeTab === 'emails' ? 'active' : ''}
           className="flex flex-col items-center gap-1 py-3 px-4"
         >
           <Mail className="h-4 w-4" />
@@ -50,8 +42,6 @@ const CustomerServiceTabs: React.FC<CustomerServiceTabsProps> = ({ activeTab, on
         </TabsTrigger>
         <TabsTrigger
           value="customers"
-          onClick={() => onTabChange('customers')}
-          data-state={activeTab === 'customers' ? 'active' : ''}
           className="flex flex-col items-center gap-1 py-3 px-4"
         >
           <Users className="h-4 w-4" />
@@ -59,8 +49,6 @@ const CustomerServiceTabs: React.FC<CustomerServiceTabsProps> = ({ activeTab, on
         </TabsTrigger>
         <TabsTrigger
           value="settings"
-          onClick={() => onTabChange('settings')}
-          data-state={activeTab === 'settings' ? 'active' : ''}
           className="flex flex-col items-center gap-1 py-3 px-4"
         >
           <Settings className="h-4 w-4" />
