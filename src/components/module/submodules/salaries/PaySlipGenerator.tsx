@@ -12,7 +12,7 @@ import { COLLECTIONS } from '@/lib/firebase-collections';
 import { Employee } from '@/types/employee';
 import { Company } from '@/components/module/submodules/companies/types';
 import { useCompanyService } from '@/components/module/submodules/companies/services/companyService';
-import { PaySlipDetail } from './types/payslip';
+import { PaySlipDetail as LocalPaySlipDetail } from './types/payslip';
 
 const samplePaySlip: PaySlip = {
   id: '12345',
@@ -191,8 +191,8 @@ const PaySlipGenerator: React.FC = () => {
     const totalDeductions = csgDeductible + csgNonDeductible + healthInsurance + pension + unemployment;
     const netSalary = totalGrossAmount - totalDeductions;
 
-    const details = [
-      { label: 'Salaire de base', base: '151.67 H', rate: `${(grossAmount / 151.67).toFixed(2)} €/H`, amount: grossAmount, type: 'earning' as const },
+    const details: any[] = [
+      { label: 'Salaire de base', base: '151.67 H', rate: `${(grossAmount / 151.67).toFixed(2)} €/H`, amount: grossAmount, type: 'earning' },
     ];
 
     if (overtimePay > 0) {
@@ -201,16 +201,16 @@ const PaySlipGenerator: React.FC = () => {
         base: `${overtimeHoursValue.toFixed(2)} H`, 
         rate: `${(grossAmount / 151.67 * (1 + overtimeRateValue / 100)).toFixed(2)} €/H`, 
         amount: overtimePay, 
-        type: 'earning' as const
+        type: 'earning'
       });
     }
 
     details.push(
-      { label: 'CSG déductible', base: `${totalGrossAmount.toFixed(2)} €`, rate: '6,75 %', amount: csgDeductible, type: 'deduction' as const },
-      { label: 'CSG non déductible', base: `${totalGrossAmount.toFixed(2)} €`, rate: '2,90 %', amount: csgNonDeductible, type: 'deduction' as const },
-      { label: 'Assurance maladie', base: `${totalGrossAmount.toFixed(2)} €`, rate: '0,95 %', amount: healthInsurance, type: 'deduction' as const },
-      { label: 'Retraite complémentaire', base: `${totalGrossAmount.toFixed(2)} €`, rate: '3,10 %', amount: pension, type: 'deduction' as const },
-      { label: 'Assurance chômage', base: `${totalGrossAmount.toFixed(2)} €`, rate: '1,90 %', amount: unemployment, type: 'deduction' as const }
+      { label: 'CSG déductible', base: `${totalGrossAmount.toFixed(2)} €`, rate: '6,75 %', amount: csgDeductible, type: 'deduction' },
+      { label: 'CSG non déductible', base: `${totalGrossAmount.toFixed(2)} €`, rate: '2,90 %', amount: csgNonDeductible, type: 'deduction' },
+      { label: 'Assurance maladie', base: `${totalGrossAmount.toFixed(2)} €`, rate: '0,95 %', amount: healthInsurance, type: 'deduction' },
+      { label: 'Retraite complémentaire', base: `${totalGrossAmount.toFixed(2)} €`, rate: '3,10 %', amount: pension, type: 'deduction' },
+      { label: 'Assurance chômage', base: `${totalGrossAmount.toFixed(2)} €`, rate: '1,90 %', amount: unemployment, type: 'deduction' }
     );
 
     setCurrentPayslip({
