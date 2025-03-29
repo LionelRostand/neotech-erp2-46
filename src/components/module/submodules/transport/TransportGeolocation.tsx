@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Map, AlertTriangle, Navigation, Bell, Search, Settings, Layers } from "lucide-react";
@@ -15,7 +14,6 @@ import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 
-// Mock data for vehicles with location
 const mockVehicles: (TransportVehicle & { 
   location?: { lat: number; lng: number; lastUpdate: string; speed: number; status: string; }
 })[] = [
@@ -93,7 +91,6 @@ const mockVehicles: (TransportVehicle & {
   }
 ];
 
-// Mock alerts for the alerts tab
 const mockAlerts = [
   { 
     id: 'a1', 
@@ -127,7 +124,6 @@ const mockAlerts = [
   }
 ];
 
-// Mock routes optimization data
 const mockRoutes = [
   {
     id: 'r1',
@@ -154,23 +150,25 @@ const TransportGeolocation = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const mapRef = useRef<HTMLDivElement>(null);
   
-  // Use our custom map hook
   const { mapInitialized, mapConfig, setMapConfig, refreshMap } = useTransportMap(mapRef, mockVehicles);
 
-  // Filter vehicles based on search term
+  useEffect(() => {
+    if (mapRef.current && activeTab === 'map') {
+      refreshMap();
+    }
+  }, [activeTab, refreshMap]);
+
   const filteredVehicles = mockVehicles.filter(vehicle => 
     vehicle.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     vehicle.licensePlate.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // Filter alerts based on search term
   const filteredAlerts = mockAlerts.filter(alert => 
     alert.vehicleName.toLowerCase().includes(searchTerm.toLowerCase()) ||
     alert.licensePlate.toLowerCase().includes(searchTerm.toLowerCase()) ||
     alert.message.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // Render status badge for vehicle
   const renderStatusBadge = (status: string) => {
     switch (status) {
       case "en service":
@@ -184,7 +182,6 @@ const TransportGeolocation = () => {
     }
   };
 
-  // Render alert badge
   const renderAlertBadge = (type: string, status: string) => {
     let bgColor = "bg-red-500";
     
@@ -195,7 +192,6 @@ const TransportGeolocation = () => {
     return <Badge className={bgColor}>{type}</Badge>;
   };
 
-  // Handle map configuration changes
   const handleMapProviderChange = (value: 'osm' | 'osm-france' | 'carto') => {
     setMapConfig({
       ...mapConfig,
@@ -225,7 +221,6 @@ const TransportGeolocation = () => {
         <h2 className="text-3xl font-bold">Géolocalisation des Véhicules</h2>
       </div>
       
-      {/* Search and filters */}
       <div className="flex gap-4 items-center">
         <div className="relative flex-1">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
@@ -329,12 +324,11 @@ const TransportGeolocation = () => {
             </CardHeader>
             <CardContent>
               <div className="w-full relative">
-                {/* Improved map container with proper sizing and styling as per Leaflet requirements */}
                 <div 
-                  id="map" 
+                  id="map"
                   ref={mapRef} 
-                  className="h-[600px] w-full bg-gray-100 rounded-md mb-6 z-0 overflow-hidden"
-                  style={{ position: 'relative' }}
+                  className="h-[600px] w-full bg-gray-100 rounded-md mb-6"
+                  style={{ position: 'relative', zIndex: 0 }}
                 >
                   {!mapInitialized && (
                     <div className="h-full flex items-center justify-center">

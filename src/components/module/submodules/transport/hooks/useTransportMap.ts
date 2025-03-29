@@ -1,6 +1,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { TransportVehicle } from '../types/transport-types';
+import 'leaflet/dist/leaflet.css'; // Import Leaflet CSS
 
 interface VehicleLocation {
   lat: number;
@@ -49,17 +50,12 @@ export const useTransportMap = (
         const L = await import('leaflet');
         
         // Fix Leaflet icon paths issue - this is crucial for marker display
-        const icon = L.icon({
+        delete L.Icon.Default.prototype._getIconUrl;
+        L.Icon.Default.mergeOptions({
           iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
           iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
           shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-          iconSize: [25, 41],
-          iconAnchor: [12, 41],
-          popupAnchor: [1, -34],
-          shadowSize: [41, 41]
         });
-        
-        L.Marker.prototype.options.icon = icon;
         
         // Initialize map if not already done
         if (!mapInitialized) {
@@ -131,7 +127,7 @@ export const useTransportMap = (
           // Ensure map properly sizes itself - critical for proper display
           setTimeout(() => {
             map.invalidateSize(true);
-          }, 250);
+          }, 500);
 
           setMapInitialized(true);
         }
