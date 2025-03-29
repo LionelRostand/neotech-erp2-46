@@ -16,9 +16,7 @@ export interface Employee {
   updatedAt?: string;
   photo?: string;
   professionalEmail?: string;
-  // Ajouter la référence à l'entreprise
-  company?: string;
-  // Autres propriétés
+  // Add missing properties
   education?: EducationItem[];
   skills?: string[];
   documents?: Document[];

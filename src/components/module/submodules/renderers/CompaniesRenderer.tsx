@@ -11,13 +11,10 @@ import CompaniesSettings from '../companies/CompaniesSettings';
 import { SubModule } from '@/data/types/modules';
 
 export const renderCompaniesSubmodule = (submoduleId: string, submodule: SubModule) => {
-  console.log('Rendering companies submodule:', submoduleId);
-  
   switch (submoduleId) {
     case 'companies-dashboard':
       return <CompaniesDashboard />;
     case 'companies-list':
-      console.log('Rendering companies list component');
       return <CompaniesList />;
     case 'companies-create':
       return <CompanyCreateForm />;
@@ -30,7 +27,6 @@ export const renderCompaniesSubmodule = (submoduleId: string, submodule: SubModu
     case 'companies-settings':
       return <CompaniesSettings />;
     default:
-      console.warn('Unknown companies submodule:', submoduleId);
       return <DefaultSubmoduleContent submodule={submodule} />;
   }
 };
