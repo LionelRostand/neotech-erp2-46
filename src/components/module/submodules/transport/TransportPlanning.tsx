@@ -24,7 +24,7 @@ const TransportPlanning: React.FC = () => {
           </CardContent>
         </Card>
       
-        {/* Connect the MaintenanceScheduleDialog with the PlanningContext */}
+        {/* These dialogs will use the PlanningContext to get their props */}
         <MaintenanceScheduleDialog />
         <ExtensionDetailsDialog />
       </div>

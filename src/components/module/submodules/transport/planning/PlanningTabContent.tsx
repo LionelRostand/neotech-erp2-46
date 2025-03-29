@@ -1,13 +1,13 @@
 
-import React from 'react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Calendar, TruckIcon, Users } from "lucide-react";
+import React, { useState, useEffect } from 'react';
+import { Tabs, TabsContent } from "@/components/ui/tabs";
+import PlanningTabs from './PlanningTabs';
 import AvailabilityCalendar from './AvailabilityCalendar';
 import MaintenanceScheduleList from './MaintenanceScheduleList';
 import ExtensionRequestsList from './ExtensionRequestsList';
+import DriverAvailabilityTab from './DriverAvailabilityTab';
 import { usePlanning } from './context/PlanningContext';
-import { TransportVehicle } from '../types';
-import { MaintenanceSchedule } from '../types/map-types';
+import { MapMaintenanceSchedule } from '../types';
 
 interface PlanningTabContentProps {
   activeMode: string;
@@ -18,50 +18,58 @@ const PlanningTabContent: React.FC<PlanningTabContentProps> = ({
   activeMode,
   onModeChange
 }) => {
+  const [activeTab, setActiveTab] = useState("availability");
+  
+  // Use the planning context to access shared state
   const { 
-    vehicles,
+    vehicles, 
     maintenanceSchedules, 
     extensionRequests,
-    handleAddMaintenance
+    drivers,
+    refreshData,
+    openMaintenanceScheduleDialog,
+    openExtensionDetailsDialog
   } = usePlanning();
 
-  return (
-    <Tabs value={activeMode} onValueChange={onModeChange} className="w-full">
-      <TabsList className="grid grid-cols-3 mb-6">
-        <TabsTrigger value="vehicles" className="flex items-center gap-2">
-          <TruckIcon className="h-4 w-4" />
-          <span>Véhicules</span>
-        </TabsTrigger>
-        <TabsTrigger value="calendar" className="flex items-center gap-2">
-          <Calendar className="h-4 w-4" />
-          <span>Calendrier</span>
-        </TabsTrigger>
-        <TabsTrigger value="extensions" className="flex items-center gap-2">
-          <Users className="h-4 w-4" />
-          <span>Extensions</span>
-        </TabsTrigger>
-      </TabsList>
+  // Effect to refresh data when the component mounts
+  useEffect(() => {
+    refreshData();
+  }, [refreshData]);
 
-      <TabsContent value="vehicles">
+  const handleOpenMaintenanceDialog = (vehicleId?: string) => {
+    openMaintenanceScheduleDialog(vehicleId);
+  };
+
+  const handleOpenExtensionDialog = (requestId: string) => {
+    openExtensionDetailsDialog(requestId);
+  };
+
+  return (
+    <Tabs defaultValue="availability" value={activeTab} onValueChange={setActiveTab} className="w-full">
+      <PlanningTabs />
+      
+      <TabsContent value="availability" className="mt-0 border-0 p-0">
+        <AvailabilityCalendar vehicles={vehicles} />
+      </TabsContent>
+      
+      <TabsContent value="maintenance" className="mt-0 border-0 p-0">
         <MaintenanceScheduleList 
-          maintenanceSchedules={maintenanceSchedules as any}  // Type assertion to avoid type conflicts
+          maintenances={maintenanceSchedules as MapMaintenanceSchedule[]} 
           vehicles={vehicles}
-          onAddMaintenance={handleAddMaintenance}
+          onNewMaintenance={() => handleOpenMaintenanceDialog()}
+          onEditMaintenance={(maintenance) => handleOpenMaintenanceDialog(maintenance.vehicleId)}
         />
       </TabsContent>
       
-      <TabsContent value="calendar">
-        <AvailabilityCalendar 
-          vehicles={vehicles}
-          maintenanceSchedules={maintenanceSchedules}
-          onAddMaintenance={handleAddMaintenance}
-        />
-      </TabsContent>
-      
-      <TabsContent value="extensions">
+      <TabsContent value="extensions" className="mt-0 border-0 p-0">
         <ExtensionRequestsList 
-          extensionRequests={extensionRequests}
+          extensions={extensionRequests} 
+          onViewDetails={handleOpenExtensionDialog}
         />
+      </TabsContent>
+      
+      <TabsContent value="drivers" className="mt-0 border-0 p-0">
+        <DriverAvailabilityTab drivers={drivers} />
       </TabsContent>
     </Tabs>
   );
