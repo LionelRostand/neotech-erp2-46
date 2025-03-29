@@ -50,6 +50,7 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
       manager: '',
       status: 'Actif',
       professionalEmail: '',
+      company: '',
     },
   });
 
@@ -69,6 +70,7 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
         manager: employee.manager,
         status: employee.status,
         professionalEmail: employee.professionalEmail || '',
+        company: employee.company || '',
       });
     } else {
       form.reset({
@@ -84,6 +86,7 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
         manager: '',
         status: 'Actif',
         professionalEmail: '',
+        company: '',
       });
     }
   }, [isEditing, employee, form, open]);

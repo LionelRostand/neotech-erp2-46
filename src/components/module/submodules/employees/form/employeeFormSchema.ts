@@ -15,6 +15,7 @@ export const employeeFormSchema = z.object({
   manager: z.string().optional(),
   status: z.string(),
   professionalEmail: z.string().email("Format d'email professionnel invalide").or(z.string().length(0)),
+  company: z.string().optional(),
 });
 
 // Type dérivé du schéma
