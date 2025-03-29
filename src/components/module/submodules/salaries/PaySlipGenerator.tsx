@@ -4,12 +4,15 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import PaySlipTemplate from './PaySlipTemplate';
 import { PaySlip } from '@/types/payslip';
 import { toast } from 'sonner';
 import { getAllDocuments } from '@/hooks/firestore/read-operations';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import { Employee } from '@/types/employee';
+import { Company } from '@/components/module/submodules/companies/types';
+import { useCompanyService } from '@/components/module/submodules/companies/services/companyService';
 
 // Sample data for a pay slip
 const samplePaySlip: PaySlip = {
@@ -56,6 +59,10 @@ const PaySlipGenerator: React.FC = () => {
   const [currentPayslip, setCurrentPayslip] = useState<PaySlip | null>(null);
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
+  const [companies, setCompanies] = useState<Company[]>([]);
+  const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
+  
+  const { getCompanies } = useCompanyService();
 
   // Fetch employees from Firestore
   useEffect(() => {
@@ -71,6 +78,21 @@ const PaySlipGenerator: React.FC = () => {
     
     fetchEmployees();
   }, []);
+
+  // Fetch companies from the companies module
+  useEffect(() => {
+    const fetchCompanies = async () => {
+      try {
+        const { companies: fetchedCompanies } = await getCompanies();
+        setCompanies(fetchedCompanies);
+      } catch (error) {
+        console.error('Error fetching companies:', error);
+        toast.error('Erreur lors du chargement des entreprises');
+      }
+    };
+
+    fetchCompanies();
+  }, [getCompanies]);
 
   const handleEmployeeSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const employeeId = e.target.value;
@@ -99,6 +121,34 @@ const PaySlipGenerator: React.FC = () => {
           }
         }
       }
+    }
+  };
+
+  const handleCompanySelect = (companyId: string) => {
+    const company = companies.find(comp => comp.id === companyId);
+    if (company) {
+      setSelectedCompany(company);
+      setCompanyName(company.name);
+      
+      if (company.address) {
+        const address = [
+          company.address.street,
+          company.address.city,
+          company.address.postalCode,
+          company.address.country
+        ].filter(Boolean).join(', ');
+        
+        setCompanyAddress(address);
+      }
+      
+      if (company.siret) {
+        setCompanySiret(company.siret);
+      }
+    } else {
+      setSelectedCompany(null);
+      setCompanyName('');
+      setCompanyAddress('');
+      setCompanySiret('');
     }
   };
 
@@ -214,6 +264,22 @@ const PaySlipGenerator: React.FC = () => {
               <div className="space-y-2">
                 <Label htmlFor="companySection">Informations de l'entreprise</Label>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 border rounded-md">
+                  <div className="space-y-2 md:col-span-2">
+                    <Label htmlFor="companySelect">Sélectionner une entreprise</Label>
+                    <Select onValueChange={handleCompanySelect}>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Sélectionner une entreprise" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="">Sélectionner une entreprise</SelectItem>
+                        {companies.map(company => (
+                          <SelectItem key={company.id} value={company.id}>
+                            {company.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                   <div className="space-y-2">
                     <Label htmlFor="companyName">Nom de l'entreprise</Label>
                     <Input 
