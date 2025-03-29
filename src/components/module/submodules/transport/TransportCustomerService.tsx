@@ -1,10 +1,8 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs } from "@/components/ui/tabs";
 import CustomerServiceTabs from './customer-service/CustomerServiceTabs';
 import CustomerServiceContent from './customer-service/CustomerServiceContent';
-// Import our icons utility to ensure ChevronsUpDown is available
 import { ChevronsUpDown } from "@/components/icons/ChevronIcons";
 
 const TransportCustomerService: React.FC = () => {
