@@ -10,3 +10,6 @@ export const ChevronsUpDown: React.FC<{ className?: string }> = ({ className }) 
     </div>
   );
 };
+
+// Add a default export to ensure the component is available both ways
+export default { ChevronsUpDown };
