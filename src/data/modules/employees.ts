@@ -62,6 +62,9 @@ export const employeesModule: AppModule = {
     // Recrutement (conservé du module original)
     { id: "employees-recruitment", name: "Recrutement", href: "/modules/employees/recruitment", icon: createIcon(Briefcase) },
     
+    // Entreprises (ajouté)
+    { id: "employees-companies", name: "Entreprises", href: "/modules/employees/companies", icon: createIcon(Building) },
+    
     // Rapports et analytiques
     { id: "employees-reports", name: "Rapports", href: "/modules/employees/reports", icon: createIcon(PieChart) },
     

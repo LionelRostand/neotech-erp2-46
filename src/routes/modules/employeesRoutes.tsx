@@ -26,5 +26,6 @@ export const EmployeesRoutes = (
     <Route path="reports" element={<SubmodulePage moduleId={1} submoduleId="employees-reports" />} />
     <Route path="alerts" element={<SubmodulePage moduleId={1} submoduleId="employees-alerts" />} />
     <Route path="settings" element={<SubmodulePage moduleId={1} submoduleId="employees-settings" />} />
+    <Route path="companies" element={<SubmodulePage moduleId={1} submoduleId="employees-companies" />} />
   </Route>
 );

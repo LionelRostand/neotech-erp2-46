@@ -1,4 +1,3 @@
-
 import { Company, CompanyContact, CompanyDocument, CompanyFilters } from '../types';
 import { useFirestore } from '@/hooks/use-firestore';
 import { COLLECTIONS } from '@/lib/firebase-collections';
@@ -16,6 +15,60 @@ import {
 import { addDocument } from '@/hooks/firestore/create-operations';
 import { executeWithNetworkRetry } from '@/hooks/firestore/network-handler';
 
+// Données fictives pour simuler les entreprises
+const mockCompanies = [
+  {
+    id: '1',
+    name: 'Tech Solutions',
+    siret: '12345678901234',
+    registrationNumber: 'RCS123456',
+    status: 'active',
+    contactEmail: 'contact@techsolutions.com',
+    contactName: 'Jean Dupont',
+    createdAt: new Date('2023-01-15')
+  },
+  {
+    id: '2',
+    name: 'Industrie Générale',
+    siret: '98765432109876',
+    registrationNumber: 'RCS654321',
+    status: 'inactive',
+    contactEmail: 'info@industriegenerale.fr',
+    contactName: 'Marie Martin',
+    createdAt: new Date('2023-03-20')
+  },
+  {
+    id: '3',
+    name: 'Service Pro',
+    siret: '45678912345678',
+    registrationNumber: 'RCS789456',
+    status: 'pending',
+    contactEmail: 'service@servicepro.com',
+    contactName: 'Thomas Bernard',
+    createdAt: new Date('2023-05-10')
+  },
+  {
+    id: '4',
+    name: 'Digital Express',
+    siret: '78945612378945',
+    registrationNumber: 'RCS456123',
+    status: 'active',
+    contactEmail: 'info@digitalexpress.fr',
+    contactName: 'Laura Petit',
+    createdAt: new Date('2023-06-05')
+  },
+  {
+    id: '5',
+    name: 'Constructions Modernes',
+    siret: '32165498732165',
+    registrationNumber: 'RCS987654',
+    status: 'active',
+    contactEmail: 'contact@constructionsmodernes.com',
+    contactName: 'Pierre Lefort',
+    createdAt: new Date('2023-07-18')
+  }
+];
+
 export const useCompanyService = () => {
   const companiesFirestore = useFirestore(COLLECTIONS.COMPANIES);
   const contactsFirestore = useFirestore(COLLECTIONS.CONTACTS);
@@ -29,65 +82,54 @@ export const useCompanyService = () => {
     searchTerm = ''
   ): Promise<{ companies: Company[], hasMore: boolean }> => {
     try {
-      const operationId = `get-companies-${page}-${pageSize}`;
-      return await executeWithNetworkRetry(async () => {
-        const constraints: QueryConstraint[] = [];
-        
-        // Appliquer les filtres
-        if (filters) {
-          if (filters.status) {
-            constraints.push(where('status', '==', filters.status));
-          }
-          
-          if (filters.startDate && filters.endDate) {
-            const startDate = new Date(filters.startDate);
-            const endDate = new Date(filters.endDate);
-            constraints.push(where('createdAt', '>=', startDate));
-            constraints.push(where('createdAt', '<=', endDate));
-          }
-        }
-        
-        // Toujours trier par date de création décroissante
-        constraints.push(orderBy('createdAt', 'desc'));
-        
-        // Limiter les résultats selon la pagination
-        constraints.push(limit(pageSize));
-        
-        // Si ce n'est pas la première page, utiliser startAfter
-        if (page > 1) {
-          // Récupérer le dernier document de la page précédente
-          const prevPageConstraints = [...constraints];
-          prevPageConstraints.pop(); // Supprimer la limite
-          prevPageConstraints.push(limit((page - 1) * pageSize));
-          
-          const prevPageDocs = await companiesFirestore.getAll(prevPageConstraints);
-          if (prevPageDocs.length > 0) {
-            const lastDoc = prevPageDocs[prevPageDocs.length - 1] as Company;
-            constraints.push(startAfter(lastDoc.createdAt));
-          }
-        }
-        
-        // Récupérer les données
-        console.log('Fetching companies with constraints:', constraints);
-        const data = await companiesFirestore.getAll(constraints) as Company[];
-        console.log('Retrieved companies:', data);
-        
-        // Si recherche par terme, filtrer les résultats côté client
-        let filteredData = data;
-        if (searchTerm) {
-          const term = searchTerm.toLowerCase();
-          filteredData = data.filter(company => 
-            company.name?.toLowerCase().includes(term) || 
-            company.siret?.toLowerCase().includes(term) ||
-            company.registrationNumber?.toLowerCase().includes(term)
+      // Simuler un délai pour éviter les appels trop fréquents
+      await new Promise(resolve => setTimeout(resolve, 300));
+      
+      // En mode de développement, utilisons les données fictives
+      let filteredCompanies = [...mockCompanies];
+      
+      // Appliquer les filtres
+      if (filters) {
+        if (filters.status) {
+          filteredCompanies = filteredCompanies.filter(company => 
+            company.status === filters.status
           );
         }
         
-        // Vérifier s'il y a plus de données
-        const hasMore = data.length === pageSize;
-        
-        return { companies: filteredData, hasMore };
-      }, 3, operationId);
+        if (filters.startDate && filters.endDate) {
+          filteredCompanies = filteredCompanies.filter(company => {
+            const createdAt = company.createdAt instanceof Date ? company.createdAt : new Date(company.createdAt);
+            return createdAt >= filters.startDate! && createdAt <= filters.endDate!;
+          });
+        }
+      }
+      
+      // Appliquer la recherche
+      if (searchTerm) {
+        const term = searchTerm.toLowerCase();
+        filteredCompanies = filteredCompanies.filter(company => 
+          company.name?.toLowerCase().includes(term) || 
+          company.siret?.toLowerCase().includes(term) ||
+          company.registrationNumber?.toLowerCase().includes(term)
+        );
+      }
+      
+      // Trier par date de création décroissante
+      filteredCompanies.sort((a, b) => {
+        const dateA = a.createdAt instanceof Date ? a.createdAt : new Date(a.createdAt);
+        const dateB = b.createdAt instanceof Date ? b.createdAt : new Date(b.createdAt);
+        return dateB.getTime() - dateA.getTime();
+      });
+      
+      // Paginer les résultats
+      const startIndex = (page - 1) * pageSize;
+      const paginatedCompanies = filteredCompanies.slice(startIndex, startIndex + pageSize);
+      
+      // Vérifier s'il y a plus de données
+      const hasMore = startIndex + pageSize < filteredCompanies.length;
+      
+      console.log('Retrieved companies:', paginatedCompanies);
+      return { companies: paginatedCompanies, hasMore };
     } catch (error) {
       console.error("Error fetching companies:", error);
       toast.error("Erreur lors du chargement des entreprises");
@@ -100,19 +142,21 @@ export const useCompanyService = () => {
     try {
       console.log('Creating company with data:', companyData);
       
-      // Use rate-limited network retry for company creation
-      const result = await executeWithNetworkRetry(async () => {
-        return await addDocument(COLLECTIONS.COMPANIES, {
-          ...companyData,
-          createdAt: new Date(),
-          updatedAt: new Date()
-        }) as Company;
-      }, 3, 'create-company');
+      // Simuler la création d'une entreprise
+      const newCompany = {
+        id: `new-${Date.now()}`,
+        ...companyData,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      } as Company;
       
-      console.log('Company created successfully:', result);
+      // Ajouter aux données fictives
+      mockCompanies.unshift(newCompany);
+      
+      console.log('Company created successfully:', newCompany);
       toast.success(`Entreprise ${companyData.name} créée avec succès`);
       
-      return result;
+      return newCompany;
     } catch (error) {
       console.error("Error creating company:", error);
       toast.error("Erreur lors de la création de l'entreprise");
@@ -121,41 +165,30 @@ export const useCompanyService = () => {
   };
 
   // Récupérer une entreprise par son ID
-  const getCompanyById = async (id: string): Promise<Company | null> => {
-    try {
-      const company = await companiesFirestore.getById(id) as Company;
-      return company;
-    } catch (error) {
-      console.error("Error fetching company:", error);
-      toast.error("Erreur lors du chargement de l'entreprise");
-      return null;
-    }
-  };
+  const getCompanyById = async (id: string) => mockCompanies.find(c => c.id === id) || null;
 
   // Mettre à jour une entreprise
   const updateCompany = async (id: string, companyData: Partial<Company>): Promise<boolean> => {
-    try {
-      await companiesFirestore.update(id, companyData);
+    const index = mockCompanies.findIndex(c => c.id === id);
+    if (index !== -1) {
+      mockCompanies[index] = { ...mockCompanies[index], ...companyData, updatedAt: new Date() };
       toast.success(`Entreprise mise à jour avec succès`);
       return true;
-    } catch (error) {
-      console.error("Error updating company:", error);
-      toast.error("Erreur lors de la mise à jour de l'entreprise");
-      return false;
     }
+    toast.error("Erreur lors de la mise à jour de l'entreprise");
+    return false;
   };
 
   // Supprimer une entreprise
   const deleteCompany = async (id: string): Promise<boolean> => {
-    try {
-      await companiesFirestore.remove(id);
+    const index = mockCompanies.findIndex(c => c.id === id);
+    if (index !== -1) {
+      mockCompanies.splice(index, 1);
       toast.success("Entreprise supprimée avec succès");
       return true;
-    } catch (error) {
-      console.error("Error deleting company:", error);
-      toast.error("Erreur lors de la suppression de l'entreprise");
-      return false;
     }
+    toast.error("Erreur lors de la suppression de l'entreprise");
+    return false;
   };
 
   // Contacts

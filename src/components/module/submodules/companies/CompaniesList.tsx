@@ -52,9 +52,12 @@ const CompaniesList: React.FC = () => {
     }
   }, [getCompanies, page, filters, searchTerm, toast]);
   
+  // Utilisation d'un effet avec un tableau de dépendances stable
+  // On retire l'appel répété qui causait la boucle infinie
   useEffect(() => {
-    console.log('CompaniesList mounted or dependencies changed');
+    console.log('CompaniesList component mounted');
     fetchCompanies();
+    // La dépendance fetchCompanies est stable grâce à useCallback
   }, [fetchCompanies]);
   
   const handleSearch = () => {
