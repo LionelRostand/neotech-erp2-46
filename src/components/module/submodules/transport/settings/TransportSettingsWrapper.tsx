@@ -8,8 +8,13 @@ import ChevronsUpDown from '@/components/icons/ChevronsUpDown';
 const TransportSettingsWrapper: React.FC = () => {
   // Make ChevronsUpDown globally available to the Transport module
   React.useEffect(() => {
-    // @ts-ignore - we're doing this hack to provide the ChevronsUpDown icon
-    window.ChevronsUpDown = ChevronsUpDown;
+    try {
+      // @ts-ignore - we're doing this hack to provide the ChevronsUpDown icon
+      window.ChevronsUpDown = ChevronsUpDown;
+      console.log('ChevronsUpDown icon registered globally');
+    } catch (error) {
+      console.error('Failed to register ChevronsUpDown icon:', error);
+    }
   }, []);
   
   return (

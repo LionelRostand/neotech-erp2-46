@@ -109,12 +109,20 @@ export const SelectLabel = React.forwardRef<
 ));
 SelectLabel.displayName = SelectPrimitive.Label.displayName;
 
+// Enhanced SelectItem that ensures value is never empty
 export const SelectItem = React.forwardRef<
   React.ElementRef<typeof SelectPrimitive.Item>,
   React.ComponentPropsWithoutRef<typeof SelectPrimitive.Item>
 >(({ className, children, value, ...props }, ref) => {
-  // Ensure value is not null or empty string
+  // Ensure value is not null, undefined, or empty string
   const safeValue = value || `item-${Math.random().toString(36).substr(2, 9)}`;
+  
+  // Warning if the value is invalid
+  if (!value && process.env.NODE_ENV !== 'production') {
+    console.warn(
+      `SelectItem: A value prop is required and should not be an empty string. A random value has been assigned: ${safeValue}`
+    );
+  }
   
   return (
     <SelectPrimitive.Item
