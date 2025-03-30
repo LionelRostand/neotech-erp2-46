@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -300,6 +301,7 @@ const ReservationFormDialog: React.FC<ReservationFormDialogProps> = ({
                           onSelect={field.onChange}
                           disabled={(date) => date < new Date()}
                           initialFocus
+                          className={cn("p-3 pointer-events-auto")}
                         />
                       </PopoverContent>
                     </Popover>
@@ -413,7 +415,7 @@ const ReservationFormDialog: React.FC<ReservationFormDialogProps> = ({
                     <FormLabel>Chauffeur</FormLabel>
                     <Select
                       onValueChange={field.onChange}
-                      value={field.value}
+                      value={field.value || "no-driver"}
                     >
                       <FormControl>
                         <SelectTrigger>
@@ -421,6 +423,7 @@ const ReservationFormDialog: React.FC<ReservationFormDialogProps> = ({
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
+                        <SelectItem value="no-driver">Pas encore assigné</SelectItem>
                         {mockDrivers.map((driver) => (
                           <SelectItem key={driver.id} value={driver.id}>
                             {driver.firstName} {driver.lastName} - {driver.rating}★
