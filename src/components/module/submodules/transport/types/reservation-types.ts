@@ -1,13 +1,17 @@
 
 import { TransportService } from './base-types';
 
+// Define the service types for web booking that match the TransportService.serviceType
+export type WebBookingService = 'airport' | 'hourly' | 'pointToPoint' | 'dayTour';
+
+// Define the structure for a web booking
 export interface WebBooking {
   id: string;
-  service: TransportService;
+  service: WebBookingService | TransportService;
   date: string;
   time: string;
-  pickup: string;
-  dropoff: string;
+  pickup: string | { address: string };
+  dropoff: string | { address: string };
   clientInfo: {
     firstName: string;
     lastName: string;
@@ -17,77 +21,30 @@ export interface WebBooking {
   passengers: number;
   vehicleType: string;
   needsDriver: boolean;
-  status: 'new' | 'confirmed' | 'cancelled';
+  status: 'new' | 'confirmed' | 'cancelled' | 'completed';
   createdAt: string;
+  notes?: string;
 }
 
+// Define the structure for a reservation
 export interface Reservation {
   id: string;
   clientId: string;
-  clientName: string;
-  date?: string;
-  time?: string;
-  pickup?: string | {address: string};
-  dropoff?: string | {address: string};
-  service?: TransportService;
-  passengers?: number;
   vehicleId?: string;
   driverId?: string;
-  status: ReservationStatus;
-  createdAt: string;
-  updatedAt: string;
-  notes?: string;
-  price?: number;
-  paymentStatus?: 'pending' | 'paid' | 'partial' | 'refunded';
-  // Additional properties used in components
+  service?: WebBookingService | TransportService;
   startDate: string;
   endDate: string;
-  pickupLocation: {address: string};
-  dropoffLocation: {address: string};
+  time?: string;
+  pickupLocation?: string | { address: string };
+  pickup?: string | { address: string };
+  dropoffLocation?: string | { address: string };
+  dropoff?: string | { address: string };
   totalAmount?: number;
+  status: 'pending' | 'confirmed' | 'in-progress' | 'completed' | 'cancelled';
+  paymentStatus?: 'pending' | 'partial' | 'paid';
+  notes?: string;
+  passengers?: number;
+  createdAt: string;
+  updatedAt?: string;
 }
-
-// Helper function to get address string regardless of input format
-export const getAddressString = (address: string | { address: string }): string => {
-  if (typeof address === 'string') {
-    return address;
-  }
-  return address.address;
-};
-
-// Helper function to convert any address format to object format
-export const getAddressObject = (address: string | { address: string }): { address: string } => {
-  if (typeof address === 'string') {
-    return { address };
-  }
-  return address;
-};
-
-export type ReservationStatus = 'pending' | 'confirmed' | 'in-progress' | 'completed' | 'cancelled';
-
-export interface TransportReservation extends Reservation {
-  distance?: number;
-  duration?: number;
-  specialRequests?: string[];
-  luggage?: number;
-  pickupInstructions?: string;
-  additionalStops?: string[];
-  needsDriver?: boolean;
-  isPaid?: boolean;
-  contractGenerated?: boolean;
-}
-
-export interface ExtensionRequest {
-  id: string;
-  reservationId: string;
-  requestedBy: string;
-  requestedAt: string;
-  extraTimeMinutes: number;
-  reason: string;
-  status: 'pending' | 'approved' | 'rejected';
-  handledBy?: string;
-  handledAt?: string;
-  additionalTime?: number; // Added to accommodate existing code
-}
-
-export type TransportReservationStatus = 'pending' | 'confirmed' | 'in-progress' | 'completed' | 'cancelled';

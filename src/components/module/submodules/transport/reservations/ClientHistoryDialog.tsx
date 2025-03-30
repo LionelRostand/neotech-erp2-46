@@ -1,10 +1,12 @@
+
 import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Calendar, Car, MapPin } from "lucide-react";
-import { TransportReservation, TransportClient } from '../types/transport-types';
+import { TransportClient } from '../types';
+import { TransportReservation } from '../types/transport-types';
 
 interface ClientHistoryDialogProps {
   open: boolean;
@@ -24,7 +26,11 @@ const formatDate = (dateString: string) => {
 };
 
 // Format service for display
-const formatService = (service: string) => {
+const formatService = (service: string | any) => {
+  if (typeof service !== 'string') {
+    return service?.name || 'Service inconnu';
+  }
+  
   switch (service) {
     case "airport-transfer": return "Transfert Aéroport";
     case "city-tour": return "Visite de ville";

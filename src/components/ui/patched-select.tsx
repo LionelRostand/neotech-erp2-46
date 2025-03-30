@@ -116,7 +116,9 @@ export const SelectItem = React.forwardRef<
 >(({ className, children, value, ...props }, ref) => {
   // Make sure a default value is always provided
   // Use a more robust check that handles all falsy values
-  const safeValue = value || value === 0 ? String(value) : `item-${Math.random().toString(36).substring(2, 15)}-${Date.now()}`;
+  const safeValue = value !== undefined && value !== null && value !== '' 
+    ? String(value)
+    : `item-${Math.random().toString(36).substring(2, 15)}-${Date.now()}`;
   
   // Warning if the value is invalid (but only in development)
   if ((value === undefined || value === null || value === '') && process.env.NODE_ENV !== 'production') {

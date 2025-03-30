@@ -13,7 +13,7 @@ export type {
   VehicleNote, 
   MaintenanceRecord, 
   IncidentRecord,
-  MaintenanceSchedule as VehicleMaintenanceSchedule 
+  MaintenanceSchedule
 } from './vehicle-types';
 
 // Export from map-types.ts
@@ -22,9 +22,12 @@ export type {
   TransportVehicleWithLocation, 
   MapConfig, 
   MapHookResult,
-  MaintenanceSchedule as MapMaintenanceSchedule,
+  MaintenanceSchedule as VehicleMaintenanceSchedule,
   ExtensionRequest as MapExtensionRequest 
 } from './map-types';
+
+// Export from client-types.ts
+export type { TransportClient, ClientNote } from './client-types';
 
 // Export from other type files
 export type * from './geolocation-types';

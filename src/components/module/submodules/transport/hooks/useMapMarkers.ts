@@ -49,7 +49,7 @@ export const useMapMarkers = () => {
     }
   }, []);
   
-  const clearMarkers = useCallback((map?: any, markers?: any[]) => {
+  const clearMarkers = useCallback((map: any, markers: any[]) => {
     // Fixed function signature to accept parameters
     if (map && markers && markers.length > 0) {
       markers.forEach(marker => {
