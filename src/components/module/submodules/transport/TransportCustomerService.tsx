@@ -12,6 +12,7 @@ const TransportCustomerService: React.FC = () => {
   // Ensure ChevronsUpDown is available globally
   useEffect(() => {
     if (typeof window !== 'undefined') {
+      console.log('Setting ChevronsUpDown on window from TransportCustomerService');
       // @ts-ignore - We're explicitly adding this to the window object
       window.ChevronsUpDown = ChevronsUpDown;
     }

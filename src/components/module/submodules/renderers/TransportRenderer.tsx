@@ -35,6 +35,9 @@ export const TransportRenderer: React.FC<TransportRendererProps> = ({ submoduleI
     }
   }, []);
 
+  // Log the current submoduleId for debugging
+  console.log('TransportRenderer rendering:', submoduleId);
+
   switch (submoduleId) {
     case 'transport-dashboard':
       return <TransportDashboard />;
