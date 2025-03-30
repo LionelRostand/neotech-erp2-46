@@ -8,7 +8,7 @@ import TransportDrivers from '../transport/TransportDrivers';
 import TransportSettings from '../transport/TransportSettings';
 import TransportPlanning from '../transport/TransportPlanning';
 import TransportReservations from '../transport/TransportReservations';
-import ChevronsUpDown from "@/components/icons/ChevronIcons";
+import { ChevronsUpDown } from "lucide-react";
 
 // Make ChevronsUpDown available globally
 // TypeScript-safe approach using declaration merging
