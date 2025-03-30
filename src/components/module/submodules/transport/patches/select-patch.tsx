@@ -34,7 +34,7 @@ const SelectPatch: React.FC = () => {
           // Ensure value is never empty
           const safeProps = {...props};
           if (!safeProps.value) {
-            safeProps.value = `item-${Math.random().toString(36).substr(2, 9)}`;
+            safeProps.value = `item-${Math.random().toString(36).substring(2, 9)}`;
             console.log('Patched empty Select.Item value with:', safeProps.value);
           }
           
