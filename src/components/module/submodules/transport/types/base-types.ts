@@ -1,30 +1,25 @@
 
-// Common shared transport types and interfaces
+// Define the TransportService type
+export type TransportService = "airport" | "hourly" | "pointToPoint" | "dayTour";
 
-// Status types
-export type TransportReservationStatus = 
-  | "confirmed" 
-  | "pending" 
-  | "in-progress" 
-  | "completed" 
-  | "cancelled";
-
-// Service types
-export type TransportService = 
-  | "airport-transfer" 
-  | "city-tour" 
-  | "business-travel" 
-  | "wedding" 
-  | "event" 
-  | "hourly-hire" 
-  | "long-distance" 
-  | "custom";
-
-// Common interfaces that might be reused
-export interface Note {
+export interface TransportDriver {
   id: string;
-  title: string;
-  content: string;
-  createdAt: string;
-  createdBy: string;
+  firstName: string;
+  lastName: string;
+  licenseNumber: string;
+  phoneNumber: string;
+  email: string;
+  rating: number;
+  status: 'available' | 'busy' | 'offline';
+  photo?: string;
+}
+
+export interface TransportVehicle {
+  id: string;
+  type: 'sedan' | 'van' | 'luxury' | 'bus';
+  licensePlate: string;
+  model: string;
+  capacity: number;
+  driver: string;
+  status: 'available' | 'in-use' | 'maintenance';
 }
