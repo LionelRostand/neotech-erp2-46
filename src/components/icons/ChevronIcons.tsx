@@ -3,20 +3,19 @@ import React from 'react';
 import { ChevronDown, ChevronUp, LucideProps } from 'lucide-react';
 
 // Define the component to be compatible with Lucide's type expectations
-export const ChevronsUpDown: React.FC<LucideProps> = ({ className, size, color, ...props }) => {
-  // Extract Lucide-specific props to avoid passing them to the div
-  const divProps = { ...props };
+export const ChevronsUpDown: React.FC<Omit<LucideProps, 'ref'>> = ({ className, size, color, ...props }) => {
+  // Create a clean props object for the div by excluding Lucide-specific props
+  const divProps: React.HTMLAttributes<HTMLDivElement> = {};
   
-  // Remove Lucide-specific props that shouldn't be passed to a div
-  delete divProps.absoluteStrokeWidth;
-  delete divProps.strokeWidth;
-  delete divProps.fill;
-  delete divProps.stroke;
+  // Only copy over safe props that both can use
+  if (className) divProps.className = `flex flex-col ${className}`;
+  else divProps.className = 'flex flex-col';
   
+  // Explicitly don't pass any Lucide-specific props to the div
   return (
-    <div className={`flex flex-col ${className || ''}`} {...divProps}>
-      <ChevronUp className="h-4 w-4" size={size} color={color} />
-      <ChevronDown className="h-4 w-4 -mt-1" size={size} color={color} />
+    <div {...divProps}>
+      <ChevronUp className="h-4 w-4" size={size} color={color} {...props} />
+      <ChevronDown className="h-4 w-4 -mt-1" size={size} color={color} {...props} />
     </div>
   );
 };
