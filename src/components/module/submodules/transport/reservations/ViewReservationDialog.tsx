@@ -4,7 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import { TransportReservation } from '../types/transport-types';
+import { TransportReservation } from '../types/reservation-types';
 import { Car, Calendar, MapPin, CreditCard, FileText, User, UserCheck } from "lucide-react";
 
 interface ViewReservationDialogProps {
@@ -58,6 +58,13 @@ const getServiceLabel = (service: string) => {
   }
 };
 
+// Helper function to safely access pickup/dropoff address
+const getLocationAddress = (location?: string | { address: string }): string => {
+  if (!location) return "";
+  if (typeof location === "string") return location;
+  return location.address || "";
+};
+
 const ViewReservationDialog: React.FC<ViewReservationDialogProps> = ({
   open,
   onOpenChange,
@@ -85,7 +92,7 @@ const ViewReservationDialog: React.FC<ViewReservationDialogProps> = ({
               <p className="text-sm font-medium">Référence</p>
               <p className="text-sm">{reservation.id}</p>
               <p className="text-sm font-medium mt-2">Service</p>
-              <p className="text-sm">{getServiceLabel(reservation.service)}</p>
+              <p className="text-sm">{reservation.service ? getServiceLabel(reservation.service) : ''}</p>
             </div>
           </div>
 
@@ -129,7 +136,7 @@ const ViewReservationDialog: React.FC<ViewReservationDialogProps> = ({
             </div>
             <div className="space-y-1">
               <p className="text-sm font-medium">Date et Heure</p>
-              <p className="text-sm">{formatDate(reservation.date)} à {reservation.time}</p>
+              <p className="text-sm">{reservation.date ? formatDate(reservation.date) : ''} à {reservation.time || ''}</p>
             </div>
           </div>
 
@@ -140,7 +147,7 @@ const ViewReservationDialog: React.FC<ViewReservationDialogProps> = ({
               </div>
               <div className="space-y-1">
                 <p className="text-sm font-medium">Adresse de prise en charge</p>
-                <p className="text-sm">{reservation.pickup.address}</p>
+                <p className="text-sm">{getLocationAddress(reservation.pickup)}</p>
               </div>
             </div>
 
@@ -150,7 +157,7 @@ const ViewReservationDialog: React.FC<ViewReservationDialogProps> = ({
               </div>
               <div className="space-y-1">
                 <p className="text-sm font-medium">Adresse de destination</p>
-                <p className="text-sm">{reservation.dropoff.address}</p>
+                <p className="text-sm">{getLocationAddress(reservation.dropoff)}</p>
               </div>
             </div>
           </div>

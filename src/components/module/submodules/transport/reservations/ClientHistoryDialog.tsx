@@ -39,6 +39,13 @@ const formatService = (service: string) => {
   }
 };
 
+// Helper function to safely access pickup/dropoff address
+const getLocationAddress = (location?: string | { address: string }): string => {
+  if (!location) return "";
+  if (typeof location === "string") return location;
+  return location.address || "";
+};
+
 // Status badges
 const getStatusBadge = (status: string) => {
   switch (status) {
@@ -80,15 +87,15 @@ const ClientHistoryDialog: React.FC<ClientHistoryDialogProps> = ({
   const cancelledReservations = reservations.filter(r => r.status === "cancelled");
 
   // Calculate total spent
-  const totalSpent = completedReservations.reduce((sum, res) => sum + res.price, 0);
+  const totalSpent = completedReservations.reduce((sum, res) => sum + (res.price || 0), 0);
   
   // Sort reservations by date
   const sortedUpcoming = [...upcomingReservations].sort((a, b) => 
-    new Date(a.date).getTime() - new Date(b.date).getTime()
+    new Date(a.date || '').getTime() - new Date(b.date || '').getTime()
   );
   
   const sortedCompleted = [...completedReservations].sort((a, b) => 
-    new Date(b.date).getTime() - new Date(a.date).getTime()
+    new Date(b.date || '').getTime() - new Date(a.date || '').getTime()
   );
 
   return (
@@ -126,21 +133,23 @@ const ClientHistoryDialog: React.FC<ClientHistoryDialogProps> = ({
                       onClick={() => onViewReservation(reservation)}
                     >
                       <div className="flex justify-between items-start mb-2">
-                        <span className="font-medium">{formatService(reservation.service)}</span>
+                        <span className="font-medium">{reservation.service ? formatService(reservation.service) : ''}</span>
                         {getStatusBadge(reservation.status)}
                       </div>
                       <div className="grid grid-cols-2 gap-2 text-sm">
                         <div className="flex items-center gap-1">
                           <Calendar className="h-4 w-4" />
-                          <span>{formatDate(reservation.date)} {reservation.time}</span>
+                          <span>{reservation.date ? formatDate(reservation.date) : ''} {reservation.time || ''}</span>
                         </div>
                         <div className="flex items-center gap-1">
                           <Car className="h-4 w-4" />
-                          <span>{mockVehicleNames[reservation.vehicleId]}</span>
+                          <span>{reservation.vehicleId ? mockVehicleNames[reservation.vehicleId] || '' : ''}</span>
                         </div>
                         <div className="flex items-center gap-1 col-span-2">
                           <MapPin className="h-4 w-4" />
-                          <span className="truncate">{reservation.pickup.address} → {reservation.dropoff.address}</span>
+                          <span className="truncate">
+                            {getLocationAddress(reservation.pickup)} → {getLocationAddress(reservation.dropoff)}
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -162,17 +171,17 @@ const ClientHistoryDialog: React.FC<ClientHistoryDialogProps> = ({
                       onClick={() => onViewReservation(reservation)}
                     >
                       <div className="flex justify-between items-start mb-2">
-                        <span className="font-medium">{formatService(reservation.service)}</span>
+                        <span className="font-medium">{reservation.service ? formatService(reservation.service) : ''}</span>
                         {getStatusBadge(reservation.status)}
                       </div>
                       <div className="grid grid-cols-2 gap-2 text-sm">
                         <div className="flex items-center gap-1">
                           <Calendar className="h-4 w-4" />
-                          <span>{formatDate(reservation.date)} {reservation.time}</span>
+                          <span>{reservation.date ? formatDate(reservation.date) : ''} {reservation.time || ''}</span>
                         </div>
                         <div className="flex items-center gap-1">
                           <Car className="h-4 w-4" />
-                          <span>{mockVehicleNames[reservation.vehicleId]}</span>
+                          <span>{reservation.vehicleId ? mockVehicleNames[reservation.vehicleId] || '' : ''}</span>
                         </div>
                       </div>
                     </div>

@@ -143,7 +143,7 @@ const ViewReservationDetailsDialog: React.FC<ViewReservationDetailsDialogProps> 
               </div>
               <div className="space-y-1">
                 <p className="text-sm font-medium">Adresse de départ</p>
-                <p className="text-sm">{reservation.pickupLocation}</p>
+                <p className="text-sm">{reservation.pickupLocation.address}</p>
               </div>
             </div>
 
@@ -153,7 +153,7 @@ const ViewReservationDetailsDialog: React.FC<ViewReservationDetailsDialogProps> 
               </div>
               <div className="space-y-1">
                 <p className="text-sm font-medium">Adresse d'arrivée</p>
-                <p className="text-sm">{reservation.dropoffLocation}</p>
+                <p className="text-sm">{reservation.dropoffLocation.address}</p>
               </div>
             </div>
           </div>

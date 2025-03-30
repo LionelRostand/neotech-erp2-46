@@ -21,8 +21,8 @@ const mockReservations: Reservation[] = [
     clientName: "Marie Martin",
     startDate: "2023-11-10",
     endDate: "2023-11-12",
-    pickupLocation: "15 rue de Rivoli, 75001 Paris",
-    dropoffLocation: "8 avenue des Champs-Élysées, 75008 Paris",
+    pickupLocation: { address: "15 rue de Rivoli, 75001 Paris" },
+    dropoffLocation: { address: "8 avenue des Champs-Élysées, 75008 Paris" },
     status: "confirmed",
     paymentStatus: "paid",
     totalAmount: 250,
@@ -38,8 +38,8 @@ const mockReservations: Reservation[] = [
     clientName: "Pierre Dubois",
     startDate: "2023-11-15",
     endDate: "2023-11-15",
-    pickupLocation: "Aéroport CDG Terminal 2E, Paris",
-    dropoffLocation: "25 rue du Faubourg Saint-Honoré, 75008 Paris",
+    pickupLocation: { address: "Aéroport CDG Terminal 2E, Paris" },
+    dropoffLocation: { address: "25 rue du Faubourg Saint-Honoré, 75008 Paris" },
     status: "pending",
     paymentStatus: "pending",
     totalAmount: 120,
@@ -54,8 +54,8 @@ const mockReservations: Reservation[] = [
     clientName: "Sophie Laurent",
     startDate: "2023-11-08",
     endDate: "2023-11-10",
-    pickupLocation: "Gare de Lyon, Paris",
-    dropoffLocation: "Gare de Lyon, Paris",
+    pickupLocation: { address: "Gare de Lyon, Paris" },
+    dropoffLocation: { address: "Gare de Lyon, Paris" },
     status: "completed",
     paymentStatus: "paid",
     totalAmount: 320,
@@ -71,8 +71,8 @@ const mockReservations: Reservation[] = [
     clientName: "Jean Moreau",
     startDate: "2023-11-20",
     endDate: "2023-11-20",
-    pickupLocation: "Hôtel Ritz, Place Vendôme, Paris",
-    dropoffLocation: "Opéra Garnier, Paris",
+    pickupLocation: { address: "Hôtel Ritz, Place Vendôme, Paris" },
+    dropoffLocation: { address: "Opéra Garnier, Paris" },
     status: "confirmed",
     paymentStatus: "partial",
     totalAmount: 180,
@@ -87,8 +87,8 @@ const mockReservations: Reservation[] = [
     clientName: "Isabelle Bernard",
     startDate: "2023-11-25",
     endDate: "2023-11-27",
-    pickupLocation: "Gare Montparnasse, Paris",
-    dropoffLocation: "Gare Montparnasse, Paris",
+    pickupLocation: { address: "Gare Montparnasse, Paris" },
+    dropoffLocation: { address: "Gare Montparnasse, Paris" },
     status: "pending",
     paymentStatus: "pending",
     totalAmount: 420,
@@ -286,8 +286,8 @@ const ReservationsCalendar: React.FC = () => {
                           </Badge>
                           <div className="font-medium mt-1">{reservation.clientName}</div>
                           <div className="text-sm text-muted-foreground">
-                            {reservation.pickupLocation.substring(0, 30)}
-                            {reservation.pickupLocation.length > 30 ? '...' : ''}
+                            {reservation.pickupLocation.address.substring(0, 30)}
+                            {reservation.pickupLocation.address.length > 30 ? '...' : ''}
                           </div>
                         </div>
                         <Button 
@@ -384,7 +384,7 @@ const ReservationsCalendar: React.FC = () => {
                           </Badge>
                           <h4 className="text-base font-medium mt-2">{reservation.clientName}</h4>
                           <p className="text-sm text-muted-foreground">
-                            {reservation.pickupLocation} → {reservation.dropoffLocation}
+                            {reservation.pickupLocation.address} → {reservation.dropoffLocation.address}
                           </p>
                         </div>
                         <Button 

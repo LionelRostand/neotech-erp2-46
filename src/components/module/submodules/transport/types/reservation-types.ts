@@ -42,8 +42,8 @@ export interface Reservation {
   // Additional properties used in components
   startDate: string;
   endDate: string;
-  pickupLocation?: {address: string};
-  dropoffLocation?: {address: string};
+  pickupLocation: {address: string};
+  dropoffLocation: {address: string};
   totalAmount?: number;
 }
 
@@ -71,6 +71,7 @@ export interface ExtensionRequest {
   status: 'pending' | 'approved' | 'rejected';
   handledBy?: string;
   handledAt?: string;
+  additionalTime?: number; // Added to accommodate existing code
 }
 
 export type TransportReservationStatus = 'pending' | 'confirmed' | 'in-progress' | 'completed' | 'cancelled';

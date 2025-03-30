@@ -133,57 +133,59 @@ const SelectPatch: React.FC = () => {
         console.log('React.Component.prototype.setState patched for SelectItems');
       }
 
-      // Patch 4: Check SelectItems during rendering phase
-      const patchSelectContentChildren = (element) => {
-        if (!element) return element;
-        
-        if (Array.isArray(element)) {
-          return element.map(child => patchSelectContentChildren(child));
-        }
-        
-        if (element && typeof element === 'object' && element.type && 
-            (element.type.displayName === 'SelectItem' || 
-             element.type.name === 'SelectItem' || 
-             (typeof element.type === 'string' && element.type.toLowerCase() === 'selectitem'))) {
-          
-          if (!element.props?.value || element.props.value === '') {
-            const patchedValue = `render-${Math.random().toString(36).substring(2, 9)}`;
-            console.log('Render - SelectItem value patched:', patchedValue);
-            return React.cloneElement(element, { value: patchedValue });
-          }
-        } else if (element && typeof element === 'object' && element.props && element.props.children) {
-          return React.cloneElement(element, { 
-            children: patchSelectContentChildren(element.props.children) 
-          });
-        }
-        
-        return element;
-      };
+      // Patch 4: Modify the SelectContent to check for invalid SelectItem children
+      const originalSelectContentRef = SelectContent;
       
-      // Hook into the render method of SelectContent
-      const originalRender = SelectContent.render || SelectContent;
-      if (typeof originalRender === 'function' && !originalRender.__patched) {
-        SelectContent.render = function(...args) {
-          const element = originalRender.apply(this, args);
-          
-          try {
-            if (element && element.props && element.props.children) {
-              return React.cloneElement(element, { 
-                children: patchSelectContentChildren(element.props.children) 
-              });
-            }
-          } catch (error) {
-            console.error('Error patching SelectContent children', error);
-          }
-          
-          return element;
-        };
+      // Create a wrapper around the SelectContent to process its children
+      const patchedSelectContent = React.forwardRef((props, ref) => {
+        const patchedProps = { ...props };
         
-        // @ts-ignore - custom property
-        SelectContent.render.__patched = true;
-        console.log('SelectContent.render patched for SelectItems');
-      }
-
+        if (props.children) {
+          // Define a function to process the children and ensure they have valid values
+          const processChildren = (children) => {
+            return React.Children.map(children, child => {
+              // If not a valid element, return as is
+              if (!React.isValidElement(child)) return child;
+              
+              // If it's a SelectItem, ensure it has a valid value
+              if (
+                child.type === SelectItem || 
+                (child.type && (
+                  child.type.displayName === 'SelectItem' || 
+                  child.type.name === 'SelectItem'
+                ))
+              ) {
+                if (!child.props.value || child.props.value === '') {
+                  const safeValue = `content-item-${Math.random().toString(36).substring(2, 9)}`;
+                  console.log('SelectContent - SelectItem value patched:', safeValue);
+                  return React.cloneElement(child, { value: safeValue });
+                }
+              }
+              
+              // Recursively process any children
+              if (child.props.children) {
+                return React.cloneElement(child, {
+                  children: processChildren(child.props.children)
+                });
+              }
+              
+              return child;
+            });
+          };
+          
+          patchedProps.children = processChildren(props.children);
+        }
+        
+        return React.createElement(originalSelectContentRef, { ...patchedProps, ref });
+      });
+      
+      // Copy over the displayName and other properties
+      patchedSelectContent.displayName = originalSelectContentRef.displayName;
+      
+      // Replace the original SelectContent with our patched version
+      Object.assign(SelectContent, patchedSelectContent);
+      
+      console.log('SelectContent patched for SelectItems');
     } catch (error) {
       console.error('Failed to patch Select components:', error);
       toast.error("Failed to patch Select components", {

@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Loader2, FileText, Download, Send } from "lucide-react";
-import { TransportReservation } from '../types/transport-types';
+import { TransportReservation } from '../types/reservation-types';
 import { toast } from "sonner";
 
 interface ContractGenerationDialogProps {
@@ -17,6 +17,13 @@ interface ContractGenerationDialogProps {
   driverName?: string;
   onContractGenerated: () => void;
 }
+
+// Helper function to safely access pickup/dropoff address
+const getLocationAddress = (location?: string | { address: string }): string => {
+  if (!location) return "";
+  if (typeof location === "string") return location;
+  return location.address || "";
+};
 
 const ContractGenerationDialog: React.FC<ContractGenerationDialogProps> = ({
   open,
@@ -87,8 +94,8 @@ const ContractGenerationDialog: React.FC<ContractGenerationDialogProps> = ({
             <p><strong>Client:</strong> {clientName}</p>
             <p><strong>Véhicule:</strong> {vehicleName}</p>
             {reservation.needsDriver && <p><strong>Chauffeur:</strong> {driverName || "Non assigné"}</p>}
-            <p><strong>Date:</strong> {formatDate(reservation.date)} à {reservation.time}</p>
-            <p><strong>Trajet:</strong> {reservation.pickup.address} → {reservation.dropoff.address}</p>
+            <p><strong>Date:</strong> {reservation.date ? formatDate(reservation.date) : ''} à {reservation.time || ''}</p>
+            <p><strong>Trajet:</strong> {getLocationAddress(reservation.pickup)} → {getLocationAddress(reservation.dropoff)}</p>
             <p><strong>Montant:</strong> {reservation.price} €</p>
           </div>
 
