@@ -1,11 +1,10 @@
-
 import { useState, useEffect, useRef } from 'react';
 import { TransportVehicleWithLocation, MapConfig, MapHookResult } from '../types/map-types';
 import { getTileLayerConfig, calculateMapCenter } from '../utils/map-utils';
 import { useMapMarkers } from './useMapMarkers';
 import { configureLeafletIcons } from '../utils/leaflet-icon-setup';
-import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
+// Remove the mapboxgl import as we don't need it for Leaflet
 
 const DEFAULT_CENTER_LAT = 48.8566;
 const DEFAULT_CENTER_LNG = 2.3522;
@@ -81,8 +80,8 @@ export const useTransportMap = (
         setMapInitialized(true);
         setIsLoaded(true);
         
-        // Add markers for vehicles
-        const markers = await createVehicleMarkers(mapInstance, vehicles, mapConfig.showLabels);
+        // Add markers for vehicles - fixed parameter order for createVehicleMarkers
+        const markers = await createVehicleMarkers(mapInstance, vehicles);
         markersRef.current = markers;
         
         // Fit map to markers
@@ -113,12 +112,13 @@ export const useTransportMap = (
       if (!map || !mapInitialized) return;
       
       clearMarkers();
-      const markers = await createVehicleMarkers(map, vehicles, mapConfig.showLabels);
+      // Fixed parameter order for createVehicleMarkers
+      const markers = await createVehicleMarkers(map, vehicles);
       markersRef.current = markers;
     };
     
     updateMarkers();
-  }, [vehicles, mapInitialized, map, mapConfig.showLabels, clearMarkers, createVehicleMarkers]);
+  }, [vehicles, mapInitialized, map, clearMarkers, createVehicleMarkers]);
   
   // Update map when config changes
   useEffect(() => {
@@ -133,7 +133,7 @@ export const useTransportMap = (
   const addMarkers = (vehicles: TransportVehicleWithLocation[]) => {
     if (!map || !mapInitialized) return;
     
-    createVehicleMarkers(map, vehicles, mapConfig.showLabels);
+    createVehicleMarkers(map, vehicles);
   };
   
   // Function to center on specific vehicle
