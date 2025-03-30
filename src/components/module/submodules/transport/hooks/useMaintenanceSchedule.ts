@@ -7,10 +7,11 @@ export const useMaintenanceSchedule = (
 ) => {
   const mapSchedules = useMemo(() => {
     return maintenanceSchedules.map(schedule => {
-      // Ensure startDate is always defined for MapMaintenanceSchedule
+      // Ensure scheduledDate is always defined for MapMaintenanceSchedule
       const mapSchedule = {
         ...schedule,
         startDate: schedule.startDate || schedule.scheduledDate || new Date().toISOString(), // Default to current date if undefined
+        endDate: schedule.endDate || schedule.scheduledDate || new Date().toISOString(), // Add endDate if not present
       };
       return mapSchedule;
     });
