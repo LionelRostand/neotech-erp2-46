@@ -1,12 +1,21 @@
 
 import React from 'react';
-import { DefaultSubmoduleContent } from '../DefaultSubmoduleContent';
+import DefaultSubmoduleContent from '../DefaultSubmoduleContent';
 import TransportCustomerService from '../transport/TransportCustomerService';
-// Import and re-export ChevronsUpDown so it's globally available
-import ChevronsUpDown from "@/components/icons/ChevronIcons";
+import { ChevronsUpDown } from "@/components/icons/ChevronIcons";
 
 // Make ChevronsUpDown available globally
-window.ChevronsUpDown = ChevronsUpDown;
+// TypeScript-safe approach using declaration merging
+declare global {
+  interface Window {
+    ChevronsUpDown: typeof ChevronsUpDown;
+  }
+}
+
+// Assign to window object
+if (typeof window !== 'undefined') {
+  window.ChevronsUpDown = ChevronsUpDown;
+}
 
 // Transport module renderers
 export const renderTransportContent = ({ submoduleId, submodule }: { submoduleId: string, submodule: any }) => {
