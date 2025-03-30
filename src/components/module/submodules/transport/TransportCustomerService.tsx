@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Tabs } from "@/components/ui/tabs";
 import CustomerServiceTabs from './customer-service/CustomerServiceTabs';
 import CustomerServiceContent from './customer-service/CustomerServiceContent';
-import ChevronsUpDown from "@/components/icons/ChevronIcons";
+import { ChevronsUpDown } from "lucide-react";
 
 const TransportCustomerService: React.FC = () => {
   const [activeTab, setActiveTab] = useState('chat');
@@ -12,6 +12,7 @@ const TransportCustomerService: React.FC = () => {
   // Ensure ChevronsUpDown is available globally
   useEffect(() => {
     if (typeof window !== 'undefined') {
+      // @ts-ignore - We're explicitly adding this to the window object
       window.ChevronsUpDown = ChevronsUpDown;
     }
   }, []);

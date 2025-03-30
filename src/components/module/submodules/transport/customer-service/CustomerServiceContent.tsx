@@ -12,8 +12,8 @@ import HistoryTab from './tabs/HistoryTab';
 import CustomersTab from './tabs/CustomersTab';
 import SettingsTab from './tabs/SettingsTab';
 
-// Import ChevronsUpDown component explicitly so it's available in the context
-import { ChevronsUpDown } from "@/components/icons/ChevronIcons";
+// Import ChevronsUpDown component explicitly from lucide-react
+import { ChevronsUpDown } from "lucide-react";
 
 interface CustomerServiceContentProps {
   activeTab: string;
@@ -23,6 +23,7 @@ const CustomerServiceContent: React.FC<CustomerServiceContentProps> = ({ activeT
   // Make ChevronsUpDown available to TransportPayments.tsx component
   React.useEffect(() => {
     if (typeof window !== 'undefined') {
+      // @ts-ignore - We're explicitly adding this to the window object
       window.ChevronsUpDown = ChevronsUpDown;
     }
   }, []);
