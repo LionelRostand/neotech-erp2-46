@@ -31,7 +31,8 @@ import {
   BoxSelect,
   Edit3,
   Globe,
-  ArrowUpRight
+  ArrowUpRight,
+  ExternalLink
 } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import EditorSidebar from './editor/EditorSidebar';
@@ -59,6 +60,7 @@ const WebsiteEditor = () => {
   const [floatingToolbarPosition, setFloatingToolbarPosition] = useState({ top: 0, left: 0 });
   const [isPreviewMode, setIsPreviewMode] = useState(false);
   const [currentPageContent, setCurrentPageContent] = useState<any[]>([]);
+  const [publishDialogOpen, setPublishDialogOpen] = useState(false);
 
   // Importer les éléments existants lors du chargement initial
   useEffect(() => {
@@ -154,6 +156,20 @@ const WebsiteEditor = () => {
     });
   };
 
+  const handlePublishClick = () => {
+    // Simuler la publication du site
+    setPublishDialogOpen(true);
+  };
+
+  const handleOpenPublishedSite = () => {
+    // Ouvrir le site publié dans un nouvel onglet
+    window.open('/modules/website/public', '_blank');
+    setPublishDialogOpen(false);
+    toast({
+      description: "Site ouvert dans un nouvel onglet",
+    });
+  };
+
   return (
     <div className="h-[calc(100vh-120px)] flex flex-col">
       <div className="border-b pb-2 flex flex-wrap items-center justify-between gap-2">
@@ -218,7 +234,7 @@ const WebsiteEditor = () => {
             <Save className="h-4 w-4 mr-1" />
             <span className="hidden sm:inline">Enregistrer</span>
           </Button>
-          <Button size="sm" variant="outline">
+          <Button size="sm" variant="outline" onClick={handlePublishClick}>
             <ArrowUpRight className="h-4 w-4 mr-1" />
             <span className="hidden sm:inline">Publier</span>
           </Button>
@@ -376,6 +392,30 @@ const WebsiteEditor = () => {
         <div>Page: {currentPage}</div>
         <div>Mode: {isPreviewMode ? 'Prévisualisation' : isDirectEditMode ? 'Édition directe' : 'Édition standard'}</div>
       </div>
+      
+      {/* Publication Dialog */}
+      {publishDialogOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <Card className="w-full max-w-md p-6 bg-background">
+            <h3 className="text-xl font-bold mb-4 flex items-center">
+              <Globe className="mr-2 h-5 w-5 text-primary" />
+              Publication du site
+            </h3>
+            <p className="mb-6">
+              Votre site a été publié avec succès ! Vous pouvez maintenant y accéder en ligne.
+            </p>
+            <div className="flex gap-3 justify-end border-t pt-4">
+              <Button variant="outline" onClick={() => setPublishDialogOpen(false)}>
+                Fermer
+              </Button>
+              <Button onClick={handleOpenPublishedSite}>
+                <ExternalLink className="h-4 w-4 mr-2" />
+                Voir le site publié
+              </Button>
+            </div>
+          </Card>
+        </div>
+      )}
     </div>
   );
 };
