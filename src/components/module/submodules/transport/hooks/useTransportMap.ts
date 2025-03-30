@@ -6,7 +6,7 @@ import { MapConfig, TransportVehicleWithLocation, MapHookResult } from '../types
 
 // Default map configuration
 const defaultConfig: MapConfig = {
-  center: [48.866667, 2.333333], // Paris
+  center: { lat: 48.866667, lng: 2.333333 }, // Paris
   zoom: 12,
   maxZoom: 18,
   minZoom: 3,
@@ -102,10 +102,19 @@ export function useTransportMap(initialConfig?: MapConfig): MapHookResult {
 
   return {
     mapRef,
+    isMapLoaded: !!map,
+    vehicles: [],
+    selectedVehicle: null,
+    setSelectedVehicle: () => {},
+    zoomToVehicle: () => {},
+    zoomToFitAllVehicles: () => {},
+    trackingMode: false,
+    setTrackingMode: () => {},
+    // Add additional properties
     mapInitialized,
+    mapConfig,
     setMapConfig,
     refreshMap,
-    updateMarkers,
-    mapConfig
+    updateMarkers
   };
 }

@@ -22,8 +22,7 @@ export type {
   TransportVehicleWithLocation, 
   MapConfig, 
   MapHookResult, 
-  MaintenanceSchedule as VehicleMaintenanceSchedule,
-  ExtensionRequest as MapExtensionRequest 
+  ExtensionRequest
 } from './map-types';
 
 // Export from client-types.ts
@@ -35,6 +34,7 @@ export {
   type WebBookingService,
   type WebBooking,
   type Reservation,
+  type LocationType,
   type TransportReservation,
   type TransportReservationStatus
 } from './reservation-types';

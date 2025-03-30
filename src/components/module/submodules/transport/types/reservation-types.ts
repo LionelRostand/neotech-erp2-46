@@ -1,119 +1,89 @@
 
-// Basic types for reservations
-
-export interface Location {
-  address: string;
-  coordinates?: {
-    lat: number;
-    lng: number;
-  };
-}
-
-export type LocationType = string | { address: string };
-
-export const getAddressString = (location: LocationType): string => {
+export function getAddressString(location: { address: string } | string): string {
   if (typeof location === 'string') {
     return location;
   }
-  return location.address || '';
-};
+  return location.address || 'Adresse non spécifiée';
+}
 
 export interface WebBookingService {
   id: string;
   name: string;
+  description: string;
   price: number;
-  description?: string;
-  duration?: number;
-  image?: string;
-  vehicleType?: string;
+  duration: number;
+  serviceType: string;
+  active: boolean;
 }
 
 export interface WebBooking {
   id: string;
-  serviceId: string;
+  service: WebBookingService;
   clientName: string;
   clientEmail: string;
   clientPhone: string;
   date: string;
   time: string;
-  pickupLocation: LocationType;
-  dropoffLocation: LocationType;
-  status: string;
+  pickup: string;
+  dropoff: string;
+  passengerCount: number;
+  luggageCount: number;
   specialRequests?: string;
-  price: number;
-  paymentMethod?: string;
-  paymentStatus?: string;
+  status: 'pending' | 'confirmed' | 'cancelled';
+  createdAt: string;
+}
+
+export interface LocationType {
+  address: string;
+  [key: string]: any;
 }
 
 export interface Reservation {
   id: string;
+  vehicleId: string;
+  driverId?: string;
   clientId: string;
   clientName: string;
-  vehicleId?: string;
-  vehicleName?: string;
-  driverId?: string;
-  driverName?: string;
-  pickupDate?: string;
+  startDate?: string; // For compatibility with mock data
+  endDate?: string; // For compatibility with mock data
   pickupLocation: LocationType;
   dropoffLocation: LocationType;
-  status: TransportReservationStatus;
-  passengerCount: number;
-  price: number;
-  type: string;
-  duration: number;
-  luggageCount?: number;
-  paymentMethod?: string;
-  paymentStatus?: string;
-  notes?: string;
-  // Adding properties used in components
-  startDate?: string;
-  endDate?: string;
-  pickup?: LocationType;
-  dropoff?: LocationType;
+  status: 'pending' | 'confirmed' | 'cancelled' | 'completed' | 'in-progress' | 'no-show';
+  paymentStatus?: 'paid' | 'pending' | 'partial' | 'refunded';
   totalAmount?: number;
+  notes?: string;
   createdAt?: string;
   updatedAt?: string;
-}
-
-export interface TransportReservation {
-  id: string;
-  title: string;
-  clientId: string;
-  clientName: string;
-  vehicleId: string;
-  vehicleName: string;
-  driverId?: string;
-  driverName?: string;
-  start: string;
-  end: string;
-  startLocation: LocationType;
-  endLocation: LocationType;
-  status: TransportReservationStatus;
-  price: number;
-  passengerCount: number;
-  luggageCount?: number;
-  type: string;
-  notes?: string;
-  paymentMethod?: string;
-  paymentStatus?: string;
-  color?: string;
-  borderColor?: string;
-  // Adding properties used in components
-  service?: string | { name: string };
-  date?: string;
-  time?: string;
-  pickup?: LocationType;
-  dropoff?: LocationType;
-  isPaid?: boolean;
-  needsDriver?: boolean;
-  contractGenerated?: boolean;
-  createdAt?: string;
+  // Add required properties from type errors
+  passengerCount?: number;
+  price?: number;
+  type?: string;
+  duration?: number;
 }
 
 export type TransportReservationStatus = 
   | 'pending'
   | 'confirmed'
+  | 'in-progress'
   | 'completed'
   | 'cancelled'
-  | 'no-show'
-  | 'in-progress'; // Added for compatibility
+  | 'no-show';
+
+export interface TransportReservation {
+  id: string;
+  clientId: string;
+  vehicleId?: string;
+  driverId?: string;
+  status: TransportReservationStatus;
+  createdAt?: string;
+  updatedAt?: string;
+  // Add properties referenced by components
+  service?: string | { name: string };
+  date?: string;
+  time?: string;
+  pickup?: string | LocationType;
+  dropoff?: string | LocationType;
+  isPaid?: boolean;
+  needsDriver?: boolean;
+  contractGenerated?: boolean;
+}

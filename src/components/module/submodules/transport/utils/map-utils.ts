@@ -9,7 +9,8 @@ export const calculateMapCenter = (
   defaultZoom: number
 ) => {
   // If there are no vehicles with location data, return default values
-  const vehiclesWithLocation = vehicles.filter(v => v.location && v.location.latitude && v.location.longitude);
+  const vehiclesWithLocation = vehicles.filter(v => v.location && 
+    ((v.location.lat && v.location.lng) || (v.location.latitude && v.location.longitude)));
   
   if (vehiclesWithLocation.length === 0) {
     return { latitude: defaultLat, longitude: defaultLng, zoom: defaultZoom };
@@ -18,9 +19,12 @@ export const calculateMapCenter = (
   // If there's only one vehicle, center on it
   if (vehiclesWithLocation.length === 1) {
     const vehicle = vehiclesWithLocation[0];
+    const latitude = vehicle.location.lat || vehicle.location.latitude;
+    const longitude = vehicle.location.lng || vehicle.location.longitude;
+    
     return { 
-      latitude: vehicle.location.latitude, 
-      longitude: vehicle.location.longitude,
+      latitude, 
+      longitude,
       zoom: Math.max(14, defaultZoom) // Higher zoom for single vehicle
     };
   }
@@ -32,8 +36,8 @@ export const calculateMapCenter = (
   let maxLng = -Infinity;
 
   vehiclesWithLocation.forEach(vehicle => {
-    const lat = vehicle.location.latitude;
-    const lng = vehicle.location.longitude;
+    const lat = vehicle.location.lat || vehicle.location.latitude;
+    const lng = vehicle.location.lng || vehicle.location.longitude;
     
     minLat = Math.min(minLat, lat);
     maxLat = Math.max(maxLat, lat);

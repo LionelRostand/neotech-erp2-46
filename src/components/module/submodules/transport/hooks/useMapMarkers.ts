@@ -90,12 +90,20 @@ export function useMapMarkers() {
     // Add markers for each vehicle
     vehicles.forEach(vehicle => {
       const { location } = vehicle;
+      if (!location) return;
+      
+      // Support both lat/lng and latitude/longitude formats
+      const lat = location.lat || location.latitude;
+      const lng = location.lng || location.longitude;
+      
+      if (!lat || !lng) return;
+      
       const isSelected = vehicle.id === selectedId;
       const icon = getVehicleIcon(vehicle.type, isSelected);
       
-      const marker = L.marker([location.latitude, location.longitude], {
+      const marker = L.marker([lat, lng], {
         icon,
-        title: `${vehicle.make} ${vehicle.model} (${vehicle.licensePlate})`,
+        title: `${vehicle.make || ''} ${vehicle.model || ''} (${vehicle.licensePlate})`,
         riseOnHover: true,
       });
       
@@ -120,11 +128,12 @@ export function useMapMarkers() {
     if (typeof window !== 'undefined') {
       window.markers = markersRef.current;
       window.markerClusterGroup = markerClusterGroupRef.current;
+      window.map = map;
     }
   }, [clearMarkers]);
 
   return {
     clearMarkers,
-    addVehicleMarkers
+    addVehicleMarkers,
   };
 }
