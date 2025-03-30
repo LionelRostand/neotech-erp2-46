@@ -17,7 +17,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue
-} from "@/components/ui/select";
+} from "@/components/ui/patched-select";
 import { Check, X } from "lucide-react";
 
 interface FiltersDialogProps {
@@ -115,7 +115,7 @@ const FiltersDialog: React.FC<FiltersDialogProps> = ({ open, onOpenChange, onApp
                   <SelectValue placeholder="Tous les statuts" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Tous</SelectItem>
+                  <SelectItem value="all">Tous</SelectItem>
                   <SelectItem value="paid">Payée</SelectItem>
                   <SelectItem value="pending">En attente</SelectItem>
                   <SelectItem value="partially_paid">Partiellement payée</SelectItem>
@@ -132,7 +132,7 @@ const FiltersDialog: React.FC<FiltersDialogProps> = ({ open, onOpenChange, onApp
                   <SelectValue placeholder="Toutes les méthodes" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Toutes</SelectItem>
+                  <SelectItem value="all">Toutes</SelectItem>
                   <SelectItem value="card">Carte bancaire</SelectItem>
                   <SelectItem value="transfer">Virement bancaire</SelectItem>
                   <SelectItem value="cash">Espèces</SelectItem>

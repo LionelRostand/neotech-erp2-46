@@ -1,9 +1,10 @@
+
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/patched-select";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { CalendarIcon, Car, User, UserCheck } from "lucide-react";
@@ -16,7 +17,10 @@ import { fr } from "date-fns/locale";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { TransportReservation, TransportService, TransportReservationStatus, getAddressString } from '../types';
+import { TransportReservation, TransportReservationStatus, getAddressString } from '../types';
+
+// Define TransportService type here to avoid import issues
+type TransportService = 'airport-transfer' | 'city-tour' | 'business-travel' | 'wedding' | 'event' | 'hourly-hire' | 'long-distance' | 'custom';
 
 // Mock data for clients, vehicles, and drivers
 const mockClients = [
@@ -109,25 +113,26 @@ const ReservationFormDialog: React.FC<ReservationFormDialogProps> = ({
   const defaultValues: Partial<ReservationFormValues> = isEditing && reservation
     ? {
         clientId: reservation.clientId,
-        vehicleId: reservation.vehicleId,
-        service: reservation.service,
-        date: new Date(reservation.date),
-        time: reservation.time,
-        pickupAddress: getAddressString(reservation.pickup),
-        dropoffAddress: getAddressString(reservation.dropoff),
-        price: reservation.price,
-        isPaid: reservation.isPaid,
-        needsDriver: reservation.needsDriver,
-        driverId: reservation.driverId,
+        vehicleId: reservation.vehicleId || '',
+        service: reservation.service as TransportService || 'custom',
+        date: new Date(reservation.date || Date.now()),
+        time: reservation.time || "10:00",
+        pickupAddress: getAddressString(reservation.pickup || ''),
+        dropoffAddress: getAddressString(reservation.dropoff || ''),
+        price: reservation.price || 0,
+        isPaid: reservation.isPaid || false,
+        needsDriver: reservation.needsDriver || true,
+        driverId: reservation.driverId || "no-driver",
         notes: reservation.notes || "",
-        status: reservation.status,
+        status: reservation.status || "pending",
       }
     : {
         needsDriver: true,
         isPaid: false,
         status: "pending",
         date: new Date(),
-        time: "10:00"
+        time: "10:00",
+        service: "custom",
       };
 
   const form = useForm<ReservationFormValues>({
@@ -224,7 +229,7 @@ const ReservationFormDialog: React.FC<ReservationFormDialogProps> = ({
                     <FormLabel>Client</FormLabel>
                     <Select
                       onValueChange={field.onChange}
-                      value={field.value}
+                      value={field.value || ""}
                     >
                       <FormControl>
                         <SelectTrigger className="w-full">
@@ -252,7 +257,7 @@ const ReservationFormDialog: React.FC<ReservationFormDialogProps> = ({
                     <FormLabel>Service</FormLabel>
                     <Select
                       onValueChange={field.onChange}
-                      value={field.value}
+                      value={field.value || "custom"}
                     >
                       <FormControl>
                         <SelectTrigger>
@@ -371,7 +376,7 @@ const ReservationFormDialog: React.FC<ReservationFormDialogProps> = ({
                     <FormLabel>Véhicule</FormLabel>
                     <Select
                       onValueChange={field.onChange}
-                      value={field.value}
+                      value={field.value || ""}
                     >
                       <FormControl>
                         <SelectTrigger>
@@ -422,7 +427,7 @@ const ReservationFormDialog: React.FC<ReservationFormDialogProps> = ({
                     <FormLabel>Chauffeur</FormLabel>
                     <Select
                       onValueChange={field.onChange}
-                      value={field.value}
+                      value={field.value || "no-driver"}
                     >
                       <FormControl>
                         <SelectTrigger>
@@ -430,6 +435,7 @@ const ReservationFormDialog: React.FC<ReservationFormDialogProps> = ({
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
+                        <SelectItem value="no-driver">Sélectionner un chauffeur</SelectItem>
                         {mockDrivers.map((driver) => (
                           <SelectItem key={driver.id} value={driver.id}>
                             {driver.firstName} {driver.lastName} - {driver.rating}★
@@ -451,7 +457,7 @@ const ReservationFormDialog: React.FC<ReservationFormDialogProps> = ({
                   <FormItem>
                     <FormLabel>Prix (€)</FormLabel>
                     <FormControl>
-                      <Input type="number" {...field} />
+                      <Input type="number" {...field} onChange={(e) => field.onChange(parseFloat(e.target.value))} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -489,7 +495,7 @@ const ReservationFormDialog: React.FC<ReservationFormDialogProps> = ({
                     <FormLabel>Statut</FormLabel>
                     <Select
                       onValueChange={field.onChange}
-                      value={field.value}
+                      value={field.value || "pending"}
                     >
                       <FormControl>
                         <SelectTrigger>

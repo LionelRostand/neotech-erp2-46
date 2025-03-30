@@ -16,7 +16,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue
-} from "@/components/ui/select";
+} from "@/components/ui/patched-select";
 import { Textarea } from "@/components/ui/textarea";
 import { Check, CreditCard, Receipt, Landmark, X } from "lucide-react";
 import { toast } from "sonner";

@@ -4,7 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/patched-select";
 import { Textarea } from "@/components/ui/textarea";
 import { CalendarIcon } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
@@ -250,14 +250,14 @@ const EditReservationDialog: React.FC<EditReservationDialogProps> = ({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Chauffeur</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value || ""}>
+                    <Select onValueChange={field.onChange} value={field.value || "no-driver"}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Sélectionner un chauffeur" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="">Sans chauffeur</SelectItem>
+                        <SelectItem value="no-driver">Sans chauffeur</SelectItem>
                         {mockDrivers.map((driver) => (
                           <SelectItem key={driver.id} value={driver.id}>{driver.name}</SelectItem>
                         ))}
