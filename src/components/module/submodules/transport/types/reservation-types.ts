@@ -53,7 +53,7 @@ export interface Reservation {
   vehicleName?: string;
   driverId?: string;
   driverName?: string;
-  pickupDate: string;
+  pickupDate?: string;
   pickupLocation: LocationType;
   dropoffLocation: LocationType;
   status: TransportReservationStatus;
@@ -65,6 +65,14 @@ export interface Reservation {
   paymentMethod?: string;
   paymentStatus?: string;
   notes?: string;
+  // Adding properties used in components
+  startDate?: string;
+  endDate?: string;
+  pickup?: LocationType;
+  dropoff?: LocationType;
+  totalAmount?: number;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface TransportReservation {
@@ -90,6 +98,16 @@ export interface TransportReservation {
   paymentStatus?: string;
   color?: string;
   borderColor?: string;
+  // Adding properties used in components
+  service?: string | { name: string };
+  date?: string;
+  time?: string;
+  pickup?: LocationType;
+  dropoff?: LocationType;
+  isPaid?: boolean;
+  needsDriver?: boolean;
+  contractGenerated?: boolean;
+  createdAt?: string;
 }
 
 export type TransportReservationStatus = 
@@ -97,4 +115,5 @@ export type TransportReservationStatus =
   | 'confirmed'
   | 'completed'
   | 'cancelled'
-  | 'no-show';
+  | 'no-show'
+  | 'in-progress'; // Added for compatibility

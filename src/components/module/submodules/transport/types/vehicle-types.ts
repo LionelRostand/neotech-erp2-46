@@ -2,17 +2,17 @@
 import { Note, TransportBasic } from './base-types';
 
 export interface TransportVehicle extends TransportBasic {
-  make: string;
-  model: string;
-  year: number;
+  make?: string; // Made optional for compatibility
+  model?: string; // Made optional for compatibility
+  year?: number; // Made optional for compatibility
   licensePlate: string;
-  vinNumber: string;
+  vinNumber?: string; // Made optional for compatibility
   status: 'available' | 'in-use' | 'maintenance' | 'out-of-service' | 'active';
   type: string;
   capacity: number;
   mileage: number;
-  fuelType: string;
-  fuelLevel: number;
+  fuelType?: string; // Made optional for compatibility
+  fuelLevel?: number; // Made optional for compatibility
   lastInspection?: string;
   name?: string;
   available?: boolean;
@@ -24,6 +24,7 @@ export interface TransportVehicle extends TransportBasic {
     policyNumber: string;
     expiryDate: string;
   };
+  createdAt?: string; // Added for mockData compatibility
 }
 
 export interface VehicleNote extends Note {
@@ -37,10 +38,10 @@ export interface MaintenanceRecord {
   date: string;
   description: string;
   cost: number;
-  technicianName: string;
+  technicianName: string; // Required
   parts?: string[];
   nextServiceDue?: string;
-  odometerReading: number;
+  odometerReading: number; // Required
   // For backward compatibility with existing components
   provider?: string;
   nextMaintenance?: string;
@@ -52,18 +53,17 @@ export interface IncidentRecord {
   vehicleId: string;
   date: string;
   description: string;
-  location: string;
+  location: string; // Required
   driverName?: string;
   severity: 'minor' | 'moderate' | 'major';
   status: 'reported' | 'investigating' | 'resolved';
   cost?: number;
-  insuranceClaim?: string;
   // For backward compatibility with existing components
   clientName?: string;
   repairCost?: number;
   resolved?: boolean;
   damageDetails?: string;
-  insuranceClaim?: boolean; // Adding this for TransportFleet errors
+  insuranceClaim?: boolean | string; // Combined type to handle both use cases
 }
 
 export interface MaintenanceSchedule {

@@ -3,60 +3,45 @@ import { TransportVehicle } from './vehicle-types';
 import { MaintenanceSchedule } from './vehicle-types';
 
 export interface VehicleLocation {
-  latitude: number;
-  longitude: number;
-  lat?: number; // For compatibility with map libraries
-  lng?: number; // For compatibility with map libraries
-  speed?: number;
+  vehicleId: string;
+  lat: number;
+  lng: number;
   heading?: number;
-  lastUpdate?: string;
-  status?: string; // Add status for VehicleDetailsDialog
-  vehicleId?: string; // Add vehicleId for TransportGeolocation
+  speed?: number;
+  timestamp?: string; // Added for TransportGeolocation compatibility
 }
 
 export interface TransportVehicleWithLocation extends TransportVehicle {
-  location: VehicleLocation;
-  driverName?: string;
+  location?: VehicleLocation;
 }
 
 export interface MapConfig {
-  center: [number, number];
+  center: { lat: number; lng: number };
   zoom: number;
-  maxZoom?: number;
-  minZoom?: number;
-  tileProvider?: string;
-  showLabels?: boolean;
+  style?: string;
+  apiKey?: string;
 }
 
 export interface MapHookResult {
-  mapRef: React.RefObject<HTMLDivElement>;
-  mapInitialized: boolean;
-  setMapConfig: (config: MapConfig) => void;
-  refreshMap: () => void;
-  updateMarkers: (vehicles: TransportVehicleWithLocation[], selectedId?: string) => void;
-  mapConfig?: MapConfig; // Add mapConfig for TransportGeolocation
+  isMapLoaded: boolean;
+  mapRef: any;
+  vehicles: TransportVehicleWithLocation[];
+  selectedVehicle: TransportVehicleWithLocation | null;
+  setSelectedVehicle: (vehicle: TransportVehicleWithLocation | null) => void;
+  zoomToVehicle: (vehicleId: string) => void;
+  zoomToFitAllVehicles: () => void;
+  trackingMode: boolean;
+  setTrackingMode: (mode: boolean) => void;
 }
 
-export type { MaintenanceSchedule };
+export interface MaintenanceSchedule extends MaintenanceSchedule {
+  // Re-exported for convenience - no new properties
+}
 
 export interface ExtensionRequest {
-  id: string;
-  vehicleId: string;
-  requestId?: string;
+  title: string;
+  description: string;
+  url?: string;
+  status: 'pending' | 'approved' | 'rejected';
   requestDate: string;
-  requestedEndDate?: string;
-  originalEndDate?: string;
-  extensionReason: string;
-  extensionDays: number;
-  status: 'pending' | 'approved' | 'rejected' | 'denied';
-  approvedBy?: string;
-  notes?: string;
-  vehicleName?: string;
-  clientName?: string;
-  reason?: string;
-  createdAt?: string;
-  reservationId?: string;
-  requestedAt?: string; // Add for mockData
-  extraTimeMinutes?: number; // Add for mockData
-  additionalTime?: number; // Add for mockData
 }

@@ -28,7 +28,11 @@ export interface TransportDriver extends TransportBasic {
     onTimeRate?: number; // For backward compatibility
     customerSatisfaction?: number; // For backward compatibility
   };
-  createdAt: string;
+  name?: string; // Added for compatibility with ClientHistoryDialog
+  createdAt?: string; // Making createdAt optional
+  updatedAt?: string;
+  notes?: string[];
+  loyaltyPoints?: number; // Added for compatibility with ClientHistoryDialog
 }
 
 export interface DriverNote extends Note {

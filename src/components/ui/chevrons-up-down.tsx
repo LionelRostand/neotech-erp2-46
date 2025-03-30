@@ -11,4 +11,4 @@ const ChevronsUpDown = React.forwardRef<
 
 ChevronsUpDown.displayName = 'ChevronsUpDown';
 
-export default ChevronsUpDown;
+export { ChevronsUpDown };

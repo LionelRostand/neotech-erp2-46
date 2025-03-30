@@ -1,28 +1,22 @@
 
-import { TransportBasic, Note } from './base-types';
+import { Note, TransportBasic } from './base-types';
 
 export interface TransportClient extends TransportBasic {
-  firstName: string;
-  lastName: string;
+  firstName?: string;
+  lastName?: string;
+  fullName?: string;
+  name?: string; // For compatibility with components using name directly
   email: string;
   phone: string;
-  company?: string;
   address?: string;
-  city?: string;
-  postalCode?: string;
-  country?: string;
-  taxId?: string;
-  paymentMethod?: string;
-  defaultVehicleType?: string;
-  notes?: string;
-  preferredLanguage?: string;
-  status?: 'active' | 'inactive' | 'blocked';
-  website?: string;
-  referralSource?: string;
+  company?: string;
+  status: 'active' | 'inactive' | 'blocked';
   loyaltyPoints?: number;
-  totalTrips?: number;
-  totalSpend?: number;
-  createdAt: string;
+  vipStatus?: boolean;
+  preferredVehicleType?: string;
+  preferredDriverId?: string;
+  notes?: string[];
+  createdAt?: string;
   updatedAt?: string;
 }
 
