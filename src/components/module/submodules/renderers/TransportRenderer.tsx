@@ -8,6 +8,9 @@ import TransportDrivers from '../transport/TransportDrivers';
 import TransportSettings from '../transport/TransportSettings';
 import TransportPlanning from '../transport/TransportPlanning';
 import TransportReservations from '../transport/TransportReservations';
+import TransportFleet from '../transport/TransportFleet';
+import TransportLoyalty from '../transport/TransportLoyalty';
+import TransportWebBooking from '../transport/TransportWebBooking';
 import { ChevronsUpDown } from "lucide-react";
 
 // Make ChevronsUpDown available globally
@@ -50,8 +53,24 @@ export const TransportRenderer: React.FC<TransportRendererProps> = ({ submoduleI
       return <TransportPlanning />;
     case 'transport-reservations':
       return <TransportReservations />;
+    case 'transport-fleet':
+      return <TransportFleet />;
+    case 'transport-loyalty':
+      return <TransportLoyalty />;
+    case 'transport-web-booking':
+      return <TransportWebBooking />;
+    case 'transport-geolocation':
+      // For geolocation, we'll use a dynamic import since we don't have direct access to the file
+      const TransportGeolocation = React.lazy(() => 
+        import('../transport/TransportGeolocation')
+      );
+      return (
+        <React.Suspense fallback={<div>Chargement de la géolocalisation...</div>}>
+          <TransportGeolocation />
+        </React.Suspense>
+      );
     case 'transport-payments':
-      // Import TransportPayments dynamically to avoid errors
+      // For payments, we'll use a dynamic import
       const TransportPayments = React.lazy(() => 
         import('../transport/TransportPayments')
       );
