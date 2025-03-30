@@ -13,6 +13,7 @@ const SelectPatch: React.FC = () => {
     // Solution provisoire qui fonctionne pour patcher sans modifier le module transport
     // Elle injecte globalement les composantes Select patchées pour une utilisation dans le module transport
     try {
+      // Patch 1: Make patched components globally available
       // @ts-ignore - nous faisons ce hack pour patcher les composantes
       window.__PATCHED_SELECT__ = {
         Select,
@@ -24,93 +25,175 @@ const SelectPatch: React.FC = () => {
       
       console.log('Les composants Select ont été patchés avec succès');
       
-      // Monkey patch de la composante Select.Item originale pour s'assurer qu'elle a toujours une valeur valide
-      const originalSelectItem = require('@radix-ui/react-select').Item;
-      if (originalSelectItem && !originalSelectItem.__patched) {
-        const OriginalComponent = originalSelectItem;
-        
-        // @ts-ignore - Extension de la composante React
-        require('@radix-ui/react-select').Item = React.forwardRef((props: any, ref) => {
-          // S'assurer que la valeur n'est jamais vide
-          const safeProps = {...props};
-          if (!safeProps.value || safeProps.value === '') {
-            safeProps.value = `item-${Math.random().toString(36).substring(2, 9)}`;
-            console.log('Valeur vide de Select.Item patchée avec:', safeProps.value);
-          }
+      // Patch 2: Directly patch @radix-ui/react-select Item component
+      try {
+        const originalSelectItem = require('@radix-ui/react-select').Item;
+        if (originalSelectItem && !originalSelectItem.__patched) {
+          const OriginalComponent = originalSelectItem;
           
-          return <OriginalComponent {...safeProps} ref={ref} />;
-        });
-        
-        // Marquer comme patché pour éviter un double patching
-        // @ts-ignore - Ajout d'une propriété personnalisée
-        require('@radix-ui/react-select').Item.__patched = true;
-        
-        console.log('Radix UI Select.Item monkey patché avec succès');
+          // Override the original component
+          require('@radix-ui/react-select').Item = React.forwardRef((props, ref) => {
+            // Ensure value is never empty
+            const safeProps = {...props};
+            if (!safeProps.value || safeProps.value === '') {
+              safeProps.value = `radix-item-${Math.random().toString(36).substring(2, 9)}`;
+              console.log('Radix UI Select.Item empty value patched with:', safeProps.value);
+            }
+            
+            return <OriginalComponent {...safeProps} ref={ref} />;
+          });
+          
+          // Mark as patched to avoid double patching
+          require('@radix-ui/react-select').Item.__patched = true;
+          console.log('Radix UI Select.Item successfully monkey patched');
+        }
+      } catch (error) {
+        console.error('Failed to patch Radix UI Select.Item:', error);
       }
 
-      // Patch additionnel pour s'assurer que le SelectItem des composants UI est aussi patché
+      // Patch 3: Also patch the shadcn/ui SelectItem component
       try {
         const SelectUIModule = require('@/components/ui/select');
         if (SelectUIModule && SelectUIModule.SelectItem && !SelectUIModule.SelectItem.__patched) {
           const OriginalUISelectItem = SelectUIModule.SelectItem;
           
-          // @ts-ignore - Remplacer le composant
-          SelectUIModule.SelectItem = React.forwardRef((props: any, ref) => {
-            // S'assurer que la valeur n'est jamais vide
+          // Replace the component
+          SelectUIModule.SelectItem = React.forwardRef((props, ref) => {
+            // Ensure value is never empty
             const safeProps = {...props};
             if (!safeProps.value || safeProps.value === '') {
               safeProps.value = `ui-item-${Math.random().toString(36).substring(2, 9)}`;
-              console.log('Valeur vide de UI SelectItem patchée avec:', safeProps.value);
+              console.log('UI SelectItem empty value patched with:', safeProps.value);
             }
             
             return <OriginalUISelectItem {...safeProps} ref={ref} />;
           });
           
-          // Marquer comme patché
-          // @ts-ignore
+          // Mark as patched
           SelectUIModule.SelectItem.__patched = true;
-          
-          console.log('UI SelectItem patché avec succès');
+          console.log('UI SelectItem successfully patched');
         }
       } catch (error) {
-        console.error('Échec du patch de UI SelectItem:', error);
+        console.error('Failed to patch UI SelectItem:', error);
       }
 
-      // Patch supplémentaire pour s'assurer que les instances préexistantes de react-select sont également patchées
-      // Ce patch s'applique globalement aux composants React Select montés
+      // Patch 4: Patch React.createElement to catch all SelectItem instances
       const originalCreateElement = React.createElement;
       if (!React.createElement.__patched) {
-        // @ts-ignore
-        React.createElement = function patchedCreateElement(type: any, props: any, ...children: any[]) {
-          // Si c'est un SelectItem ou quelque chose qui pourrait en être un
+        // @ts-ignore - custom property
+        React.createElement = function patchedCreateElement(type, props, ...children) {
+          // Check if this is a SelectItem component or something that could be one
           if (
             props && 
-            (type?.displayName === 'SelectItem' || 
-             type?.name === 'SelectItem' || 
-             (typeof type === 'string' && type.toLowerCase().includes('selectitem')))
+            (
+              (typeof type === 'object' && (
+                type?.displayName === 'SelectItem' || 
+                type?.name === 'SelectItem' || 
+                (type?.render && (
+                  type.render.displayName === 'SelectItem' || 
+                  type.render.name === 'SelectItem'
+                ))
+              )) ||
+              (typeof type === 'function' && (
+                type.displayName === 'SelectItem' || 
+                type.name === 'SelectItem'
+              )) ||
+              (typeof type === 'string' && type.toLowerCase().includes('selectitem'))
+            )
           ) {
-            // S'assurer que value existe et n'est pas vide
+            // Check if value exists and is not empty
             if (!props.value || props.value === '') {
-              const newProps = { ...props, value: `patched-item-${Math.random().toString(36).substring(2, 9)}` };
+              const newProps = { 
+                ...props, 
+                value: `patched-item-${Math.random().toString(36).substring(2, 9)}` 
+              };
+              console.log('React.createElement - SelectItem value patched:', newProps.value);
               return originalCreateElement(type, newProps, ...children);
             }
           }
+          
+          // Default behavior for all other elements
           return originalCreateElement(type, props, ...children);
         };
         
-        // @ts-ignore
+        // @ts-ignore - custom property
         React.createElement.__patched = true;
-        console.log('React.createElement patché pour les SelectItems');
+        console.log('React.createElement patched for SelectItems');
       }
+
+      // Patch 5: Direct patch selectItems in state updates
+      const originalSetState = React.Component.prototype.setState;
+      if (!originalSetState.__patched) {
+        React.Component.prototype.setState = function patchedSetState(state, callback) {
+          // Process the state if it's a function
+          if (typeof state === 'function') {
+            const originalStateFunction = state;
+            state = function(prevState, props) {
+              const newState = originalStateFunction(prevState, props);
+              return patchSelectItemValues(newState);
+            };
+          } else if (state && typeof state === 'object') {
+            // Process the state object directly
+            state = patchSelectItemValues(state);
+          }
+          
+          return originalSetState.call(this, state, callback);
+        };
+        
+        // Helper to recursively patch SelectItem values in state objects
+        function patchSelectItemValues(obj) {
+          if (!obj || typeof obj !== 'object') return obj;
+          
+          // Clone to avoid mutating original
+          const patched = Array.isArray(obj) ? [...obj] : {...obj};
+          
+          // Process all properties
+          for (let key in patched) {
+            if (patched.hasOwnProperty(key)) {
+              const value = patched[key];
+              
+              // Check if this is a SelectItem-like object
+              if (value && typeof value === 'object') {
+                // If it looks like a SelectItem and has an empty value
+                if (
+                  (value.type === 'SelectItem' || 
+                   (value.type && (value.type.displayName === 'SelectItem' || value.type.name === 'SelectItem'))) &&
+                  (!value.props?.value || value.props?.value === '')
+                ) {
+                  const newValue = `state-item-${Math.random().toString(36).substring(2, 9)}`;
+                  patched[key] = {
+                    ...value,
+                    props: {
+                      ...value.props,
+                      value: newValue
+                    }
+                  };
+                  console.log('State update - SelectItem value patched:', newValue);
+                } else {
+                  // Recursively patch deeper objects
+                  patched[key] = patchSelectItemValues(value);
+                }
+              }
+            }
+          }
+          
+          return patched;
+        }
+        
+        // @ts-ignore - custom property
+        originalSetState.__patched = true;
+        console.log('React.Component.prototype.setState patched for SelectItems');
+      }
+
     } catch (error) {
-      console.error('Échec du patch des composants Select:', error);
-      toast.error("Échec du patch des composants Select", {
-        description: "Certains composants peuvent ne pas fonctionner correctement"
+      console.error('Failed to patch Select components:', error);
+      toast.error("Failed to patch Select components", {
+        description: "Some components may not work correctly"
       });
     }
   }, []);
 
-  // Ce composant ne rend rien visuellement
+  // This component renders nothing visually
   return null;
 };
 
