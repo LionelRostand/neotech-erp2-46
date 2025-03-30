@@ -4,16 +4,16 @@ import TransportSettings from '../TransportSettings';
 import SelectPatch from '../patches/select-patch';
 import { ChevronsUpDown } from "lucide-react";
 
-// This component wraps the original TransportSettings component and adds the necessary patches
+// Ce composant enveloppe le composant TransportSettings original et ajoute les patches nécessaires
 const TransportSettingsWrapper: React.FC = () => {
-  // Make ChevronsUpDown globally available to the Transport module
+  // Rendre ChevronsUpDown globalement disponible pour le module Transport
   React.useEffect(() => {
     try {
-      // @ts-ignore - we're doing this hack to provide the ChevronsUpDown icon
+      // @ts-ignore - nous faisons ce hack pour fournir l'icône ChevronsUpDown
       window.ChevronsUpDown = ChevronsUpDown;
-      console.log('ChevronsUpDown icon registered globally');
+      console.log('Icône ChevronsUpDown enregistrée globalement');
     } catch (error) {
-      console.error('Failed to register ChevronsUpDown icon:', error);
+      console.error('Échec de l\'enregistrement de l\'icône ChevronsUpDown:', error);
     }
   }, []);
   
