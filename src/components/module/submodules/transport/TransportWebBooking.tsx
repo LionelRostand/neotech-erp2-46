@@ -8,12 +8,28 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
-import { Globe, Settings, Users, Calendar, Car, MapPin } from 'lucide-react';
+import { Globe, Settings, Users, Calendar, Car, MapPin, Code, X, Check, Copy } from 'lucide-react';
 import { WebBooking } from './types/reservation-types';
 import { TransportService } from './types/base-types';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogClose
+} from "@/components/ui/dialog";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { toast } from "sonner";
 
 const TransportWebBooking: React.FC = () => {
   const [activeTab, setActiveTab] = useState('configuration');
+  const [configDialogOpen, setConfigDialogOpen] = useState(false);
+  const [integrationMethod, setIntegrationMethod] = useState<'iframe' | 'javascript'>('iframe');
+  const [customDomain, setCustomDomain] = useState('');
+  const [websiteTheme, setWebsiteTheme] = useState('light');
+  
   const [formConfig, setFormConfig] = useState({
     enableDriverSelection: true,
     requireUserAccount: false,
@@ -73,6 +89,39 @@ const TransportWebBooking: React.FC = () => {
     }));
   };
 
+  const getDomainBasedUrl = () => {
+    const domain = customDomain || 'votre-domaine.com';
+    return `https://${domain}/reservations-transport`;
+  };
+
+  const getIframeCode = () => {
+    return `<iframe src="${getDomainBasedUrl()}" 
+        width="100%" 
+        height="650" 
+        frameborder="0">
+</iframe>`;
+  };
+
+  const getJavascriptCode = () => {
+    return `<script>
+  (function() {
+    var s = document.createElement('script');
+    s.type = 'text/javascript';
+    s.async = true;
+    s.src = '${getDomainBasedUrl()}/embed.js';
+    var x = document.getElementsByTagName('script')[0];
+    x.parentNode.insertBefore(s, x);
+  })();
+</script>
+<div id="transport-booking-form"></div>`;
+  };
+
+  const handleCopyCode = () => {
+    const code = integrationMethod === 'iframe' ? getIframeCode() : getJavascriptCode();
+    navigator.clipboard.writeText(code);
+    toast.success("Code d'intégration copié dans le presse-papier");
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col space-y-2">
@@ -95,7 +144,7 @@ const TransportWebBooking: React.FC = () => {
               <div className="h-3 w-3 rounded-full bg-green-500"></div>
               <span className="text-sm font-medium">Actif</span>
             </div>
-            <Button variant="outline" size="sm">
+            <Button variant="outline" size="sm" onClick={() => setConfigDialogOpen(true)}>
               <Settings className="mr-2 h-4 w-4" />
               Configurer l'intégration
             </Button>
@@ -335,14 +384,11 @@ const TransportWebBooking: React.FC = () => {
                 <h3 className="text-lg font-medium">Code d'intégration</h3>
                 <div className="bg-muted p-4 rounded-md overflow-x-auto">
                   <pre className="text-sm">
-                    {`<iframe src="https://votre-domaine.com/reservations-transport" 
-        width="100%" 
-        height="650" 
-        frameborder="0">
-</iframe>`}
+                    {getIframeCode()}
                   </pre>
                 </div>
-                <Button variant="outline" size="sm">
+                <Button variant="outline" size="sm" onClick={handleCopyCode}>
+                  <Copy className="mr-2 h-4 w-4" />
                   Copier le code
                 </Button>
               </div>
@@ -373,6 +419,103 @@ const TransportWebBooking: React.FC = () => {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Dialog de configuration d'intégration */}
+      <Dialog open={configDialogOpen} onOpenChange={setConfigDialogOpen}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Code className="h-5 w-5" /> Configuration de l'intégration web
+            </DialogTitle>
+            <DialogDescription>
+              Personnalisez les paramètres d'intégration du formulaire de réservation sur votre site web.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="grid gap-6 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="domain">Domaine personnalisé</Label>
+              <div className="flex gap-2">
+                <span className="flex items-center bg-muted px-3 rounded-l-md border border-r-0">https://</span>
+                <Input
+                  id="domain"
+                  placeholder="votre-domaine.com"
+                  value={customDomain}
+                  onChange={(e) => setCustomDomain(e.target.value)}
+                  className="rounded-l-none"
+                />
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Le domaine sur lequel sera hébergé votre formulaire de réservation.
+              </p>
+            </div>
+            
+            <div className="space-y-2">
+              <Label>Méthode d'intégration</Label>
+              <RadioGroup value={integrationMethod} onValueChange={(value) => setIntegrationMethod(value as 'iframe' | 'javascript')}>
+                <div className="flex items-center space-x-2 border rounded-md p-3">
+                  <RadioGroupItem value="iframe" id="iframe" />
+                  <Label htmlFor="iframe" className="flex-grow cursor-pointer">
+                    <div className="font-medium">Iframe (Recommandé)</div>
+                    <div className="text-sm text-muted-foreground">Intégration simple via un cadre iframe.</div>
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2 border rounded-md p-3">
+                  <RadioGroupItem value="javascript" id="javascript" />
+                  <Label htmlFor="javascript" className="flex-grow cursor-pointer">
+                    <div className="font-medium">JavaScript</div>
+                    <div className="text-sm text-muted-foreground">Intégration avancée avec plus de flexibilité.</div>
+                  </Label>
+                </div>
+              </RadioGroup>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="theme">Thème d'affichage</Label>
+              <Select value={websiteTheme} onValueChange={setWebsiteTheme}>
+                <SelectTrigger id="theme">
+                  <SelectValue placeholder="Sélectionner un thème" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="light">Clair</SelectItem>
+                  <SelectItem value="dark">Sombre</SelectItem>
+                  <SelectItem value="auto">Automatique (selon le thème du visiteur)</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-sm text-muted-foreground">
+                Le thème visuel du formulaire de réservation.
+              </p>
+            </div>
+            
+            <div className="bg-muted p-4 rounded-md space-y-2">
+              <h3 className="font-medium">Aperçu du code</h3>
+              <div className="bg-black text-white p-3 rounded-md overflow-x-auto text-sm font-mono">
+                {integrationMethod === 'iframe' ? getIframeCode() : getJavascriptCode()}
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter className="flex justify-between items-center">
+            <Button variant="outline" onClick={() => setConfigDialogOpen(false)}>
+              <X className="h-4 w-4 mr-2" />
+              Annuler
+            </Button>
+            <div className="flex gap-3">
+              <Button variant="outline" onClick={handleCopyCode}>
+                <Copy className="h-4 w-4 mr-2" />
+                Copier le code
+              </Button>
+              <Button onClick={() => {
+                toast.success("Configuration d'intégration enregistrée");
+                setConfigDialogOpen(false);
+              }}>
+                <Check className="h-4 w-4 mr-2" />
+                Enregistrer
+              </Button>
+            </div>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
