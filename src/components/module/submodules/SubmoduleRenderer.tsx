@@ -1,7 +1,7 @@
 
 import React from 'react';
 // Import all renderers
-import { renderTransportContent } from './renderers/TransportRenderer';
+import { TransportRenderer } from './renderers/TransportRenderer';
 import { renderCrmSubmodule } from './renderers/CrmRenderer';
 import { renderProjectsSubmodule } from './renderers/ProjectsRenderer';
 import { renderAccountingSubmodule } from './renderers/AccountingRenderer';
@@ -20,7 +20,7 @@ import { renderDocumentsSubmodule } from './renderers/DocumentsRenderer';
 export const renderSubmoduleContent = ({ submoduleId, submodule }: { submoduleId: string, submodule: any }) => {
   // Transport module
   if (submoduleId.startsWith('transport-')) {
-    return renderTransportContent({ submoduleId, submodule });
+    return <TransportRenderer submoduleId={submoduleId} submodule={submodule} />;
   }
   
   // CRM module

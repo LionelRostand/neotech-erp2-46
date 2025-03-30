@@ -5,6 +5,9 @@ import DefaultSubmoduleContent from '../DefaultSubmoduleContent';
 import TransportCustomerService from '../transport/TransportCustomerService';
 import TransportDashboard from '../transport/TransportDashboard';
 import TransportDrivers from '../transport/TransportDrivers';
+import TransportSettings from '../transport/TransportSettings';
+import TransportPlanning from '../transport/TransportPlanning';
+import TransportReservations from '../transport/TransportReservations';
 import ChevronsUpDown from "@/components/icons/ChevronIcons";
 
 // Make ChevronsUpDown available globally
@@ -41,6 +44,22 @@ export const TransportRenderer: React.FC<TransportRendererProps> = ({ submoduleI
       return <TransportCustomerService />;
     case 'transport-drivers':
       return <TransportDrivers />;
+    case 'transport-settings':
+      return <TransportSettings />;
+    case 'transport-planning':
+      return <TransportPlanning />;
+    case 'transport-reservations':
+      return <TransportReservations />;
+    case 'transport-payments':
+      // Import TransportPayments dynamically to avoid errors
+      const TransportPayments = React.lazy(() => 
+        import('../transport/TransportPayments')
+      );
+      return (
+        <React.Suspense fallback={<div>Chargement des paiements...</div>}>
+          <TransportPayments />
+        </React.Suspense>
+      );
     default:
       return <DefaultSubmoduleContent title={submodule.name} submodule={submodule} />;
   }
