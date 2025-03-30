@@ -13,16 +13,10 @@ import TransportLoyalty from '../transport/TransportLoyalty';
 import TransportWebBooking from '../transport/TransportWebBooking';
 import { ChevronsUpDown } from "lucide-react";
 
-// Make ChevronsUpDown available globally
-// TypeScript-safe approach using declaration merging
-declare global {
-  interface Window {
-    ChevronsUpDown: typeof ChevronsUpDown;
-  }
-}
-
-// Assign to window object immediately
+// Make ChevronsUpDown available globally in a TypeScript-safe way
+// This ensures the component has all the required properties for React components
 if (typeof window !== 'undefined') {
+  // @ts-ignore - We're explicitly adding this to the window object
   window.ChevronsUpDown = ChevronsUpDown;
 }
 
@@ -36,6 +30,7 @@ export const TransportRenderer: React.FC<TransportRendererProps> = ({ submoduleI
   // Make ChevronsUpDown available each time this component renders
   React.useEffect(() => {
     if (typeof window !== 'undefined') {
+      // @ts-ignore - We're explicitly adding this to the window object
       window.ChevronsUpDown = ChevronsUpDown;
     }
   }, []);

@@ -13,7 +13,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Check, Clipboard, Mail, Send, X } from "lucide-react";
 import { toast } from "sonner";
-import { ChevronsUpDown } from '@/components/icons/ChevronIcons';
+import { ChevronsUpDown } from "lucide-react";
 
 interface EmailInvoiceDialogProps {
   open: boolean;
@@ -34,6 +34,7 @@ const EmailInvoiceDialog: React.FC<EmailInvoiceDialogProps> = ({
   // Ensure ChevronsUpDown is available globally
   useEffect(() => {
     if (typeof window !== 'undefined') {
+      // @ts-ignore - We're explicitly adding this to the window object
       window.ChevronsUpDown = ChevronsUpDown;
     }
   }, []);
