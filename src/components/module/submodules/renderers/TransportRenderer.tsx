@@ -41,6 +41,12 @@ export const TransportRenderer: React.FC<TransportRendererProps> = ({ submoduleI
   // Log the current submoduleId for debugging
   console.log('TransportRenderer rendering:', submoduleId);
 
+  // Special handling for payments to ensure ChevronsUpDown is available
+  if (submoduleId === 'transport-payments') {
+    // Force global icon availability for payments specifically
+    initializeGlobalIcons();
+  }
+
   switch (submoduleId) {
     case 'transport-dashboard':
       return <TransportDashboard />;

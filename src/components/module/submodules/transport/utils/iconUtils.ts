@@ -13,3 +13,8 @@ export const initializeGlobalIcons = () => {
     window.ChevronsUpDown = ChevronsUpDown;
   }
 };
+
+// Immediately invoke the function to ensure early initialization
+if (typeof window !== 'undefined') {
+  initializeGlobalIcons();
+}

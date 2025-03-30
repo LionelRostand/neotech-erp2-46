@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -7,10 +8,10 @@ import AppRoutes from "@/routes/AppRoutes";
 import { AuthProvider } from "@/hooks/useAuth";
 import { initializeGlobalIcons } from './components/module/submodules/transport/utils/iconUtils';
 
-const queryClient = new QueryClient();
-
-// Initialize global icons as early as possible
+// Initialize global icons before anything else
 initializeGlobalIcons();
+
+const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>

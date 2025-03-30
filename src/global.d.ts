@@ -7,6 +7,7 @@ declare global {
       size?: string | number; 
       color?: string;
       strokeWidth?: number;
+      [key: string]: any; // Allow additional props to match Lucide's component API
     }>;
   }
 }
