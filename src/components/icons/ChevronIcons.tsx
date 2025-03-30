@@ -1,10 +1,11 @@
 
 import React from 'react';
-import { ChevronDown, ChevronUp } from 'lucide-react';
+import { ChevronDown, ChevronUp, LucideProps } from 'lucide-react';
 
-export const ChevronsUpDown: React.FC<{ className?: string }> = ({ className }) => {
+// Define the component to be compatible with Lucide's type expectations
+export const ChevronsUpDown: React.FC<LucideProps> = ({ className, ...props }) => {
   return (
-    <div className={`flex flex-col ${className}`}>
+    <div className={`flex flex-col ${className}`} {...props}>
       <ChevronUp className="h-4 w-4" />
       <ChevronDown className="h-4 w-4 -mt-1" />
     </div>

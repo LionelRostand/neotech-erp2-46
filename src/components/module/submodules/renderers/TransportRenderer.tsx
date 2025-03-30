@@ -11,10 +11,10 @@ import TransportReservations from '../transport/TransportReservations';
 import TransportFleet from '../transport/TransportFleet';
 import TransportLoyalty from '../transport/TransportLoyalty';
 import TransportWebBooking from '../transport/TransportWebBooking';
-import { ChevronsUpDown } from "lucide-react";
+// Import our custom ChevronsUpDown component
+import ChevronsUpDown from '@/components/icons/ChevronIcons';
 
 // Make ChevronsUpDown available globally in a TypeScript-safe way
-// This ensures the component has all the required properties for React components
 if (typeof window !== 'undefined') {
   // @ts-ignore - We're explicitly adding this to the window object
   window.ChevronsUpDown = ChevronsUpDown;
