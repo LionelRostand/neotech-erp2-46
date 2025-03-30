@@ -117,7 +117,7 @@ export const SelectItem = React.forwardRef<
   // Ensure value is not null, undefined, or empty string
   const safeValue = (value && value !== '') 
     ? value 
-    : `item-${Math.random().toString(36).substring(2, 9)}`;
+    : `item-${Math.random().toString(36).substring(2, 15)}-${Date.now()}`;
   
   // Warning if the value is invalid
   if ((!value || value === '') && process.env.NODE_ENV !== 'production') {
@@ -126,25 +126,36 @@ export const SelectItem = React.forwardRef<
     );
   }
   
-  return (
-    <SelectPrimitive.Item
-      ref={ref}
-      className={cn(
-        "relative flex w-full cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
-        className
-      )}
-      value={safeValue}
-      {...props}
-    >
-      <span className="absolute left-2 flex h-3.5 w-3.5 items-center justify-center">
-        <SelectPrimitive.ItemIndicator>
-          <Check className="h-4 w-4" />
-        </SelectPrimitive.ItemIndicator>
-      </span>
+  // Ensure we never try to render a SelectItem with an empty string value
+  try {
+    // Pre-check to prevent React from even trying to render an invalid SelectItem
+    if (typeof safeValue !== 'string' || safeValue === '') {
+      throw new Error("Cannot create SelectItem with invalid value");
+    }
+    
+    return (
+      <SelectPrimitive.Item
+        ref={ref}
+        className={cn(
+          "relative flex w-full cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+          className
+        )}
+        value={safeValue}
+        {...props}
+      >
+        <span className="absolute left-2 flex h-3.5 w-3.5 items-center justify-center">
+          <SelectPrimitive.ItemIndicator>
+            <Check className="h-4 w-4" />
+          </SelectPrimitive.ItemIndicator>
+        </span>
 
-      <SelectPrimitive.ItemText>{children}</SelectPrimitive.ItemText>
-    </SelectPrimitive.Item>
-  );
+        <SelectPrimitive.ItemText>{children}</SelectPrimitive.ItemText>
+      </SelectPrimitive.Item>
+    );
+  } catch (error) {
+    console.error("Error rendering SelectItem:", error);
+    return null;
+  }
 });
 SelectItem.displayName = SelectPrimitive.Item.displayName;
 

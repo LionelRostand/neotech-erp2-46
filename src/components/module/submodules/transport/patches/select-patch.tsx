@@ -129,8 +129,59 @@ const SelectPatch: React.FC = () => {
         }
         
         // @ts-ignore - custom property
-        Object.defineProperty(originalSetState, '__patched', { value: true });
+        Object.defineProperty(React.Component.prototype.setState, '__patched', { value: true });
         console.log('React.Component.prototype.setState patched for SelectItems');
+      }
+
+      // Patch 4: Check SelectItems during rendering phase
+      const patchSelectContentChildren = (element) => {
+        if (!element) return element;
+        
+        if (Array.isArray(element)) {
+          return element.map(child => patchSelectContentChildren(child));
+        }
+        
+        if (element && typeof element === 'object' && element.type && 
+            (element.type.displayName === 'SelectItem' || 
+             element.type.name === 'SelectItem' || 
+             (typeof element.type === 'string' && element.type.toLowerCase() === 'selectitem'))) {
+          
+          if (!element.props?.value || element.props.value === '') {
+            const patchedValue = `render-${Math.random().toString(36).substring(2, 9)}`;
+            console.log('Render - SelectItem value patched:', patchedValue);
+            return React.cloneElement(element, { value: patchedValue });
+          }
+        } else if (element && typeof element === 'object' && element.props && element.props.children) {
+          return React.cloneElement(element, { 
+            children: patchSelectContentChildren(element.props.children) 
+          });
+        }
+        
+        return element;
+      };
+      
+      // Hook into the render method of SelectContent
+      const originalRender = SelectContent.render || SelectContent;
+      if (typeof originalRender === 'function' && !originalRender.__patched) {
+        SelectContent.render = function(...args) {
+          const element = originalRender.apply(this, args);
+          
+          try {
+            if (element && element.props && element.props.children) {
+              return React.cloneElement(element, { 
+                children: patchSelectContentChildren(element.props.children) 
+              });
+            }
+          } catch (error) {
+            console.error('Error patching SelectContent children', error);
+          }
+          
+          return element;
+        };
+        
+        // @ts-ignore - custom property
+        SelectContent.render.__patched = true;
+        console.log('SelectContent.render patched for SelectItems');
       }
 
     } catch (error) {
