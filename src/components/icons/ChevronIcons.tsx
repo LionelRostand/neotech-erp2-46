@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { ChevronDown, ChevronUp } from 'lucide-react';
+import { ChevronDown, ChevronUp, ChevronsUpDown as LucideChevronsUpDown } from 'lucide-react';
 
 // This component provides the missing ChevronsUpDown icon
 export const ChevronsUpDown: React.FC<{ className?: string }> = ({ className }) => {
@@ -11,3 +11,9 @@ export const ChevronsUpDown: React.FC<{ className?: string }> = ({ className }) 
     </div>
   );
 };
+
+// Expose the ChevronsUpDown component globally for use in protected files
+if (typeof window !== 'undefined') {
+  // @ts-ignore - Adding to window object
+  window.ChevronsUpDown = LucideChevronsUpDown || ChevronsUpDown;
+}
