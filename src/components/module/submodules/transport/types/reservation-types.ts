@@ -58,7 +58,14 @@ export function getAddressString(address: string | { address: string } | undefin
 }
 
 // Legacy reservation type for backward compatibility
-export interface TransportReservation extends Reservation {}
+export interface TransportReservation extends Reservation {
+  // Additional properties used in existing components
+  date?: string;
+  price?: number;
+  isPaid?: boolean;
+  needsDriver?: boolean;
+  contractGenerated?: boolean;
+}
 
 // Status types for use in components
 export type TransportReservationStatus = 'pending' | 'confirmed' | 'in-progress' | 'completed' | 'cancelled';

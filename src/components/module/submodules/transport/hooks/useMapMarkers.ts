@@ -10,6 +10,32 @@ const carIconSvg = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My
 const busIconSvg = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMiIgaGVpZ2h0PSIzMiIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiMwMDAwMDAiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48cGF0aCBkPSJNOCAwdjIiLz48cGF0aCBkPSJNMTYgMHYyIi8+PHBhdGggZD0iTTggMmgzYTkgOSAwIDAgMSA5IDl2N2MwIDEuMTEtLjkgMi0yIDJoLTFhMiAyIDAgMSAxLTQgMEg5YTIgMiAwIDEgMS00IDBINGEyIDIgMCAwIDEtMi0yVjEwYTggOCAwIDAgMSA2LTh6Ii8+PHBhdGggZD0iTTcgMTNoMTAiLz48cGF0aCBkPSJNNSA6aDFhNiA2IDAgMCAxIDYtNmg0YTYgNiAwIDAgMSA2IDZoMSIvPjxyZWN0IHg9IjUiIHk9IDgiIHdpZHRoPSIxNCIgaGVpZ2h0PSI1IiByeD0iMSIvPjwvc3ZnPgo=";
 const selectedIconSvg = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzNiIgaGVpZ2h0PSIzNiIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiNmZjAwMDAiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48Y2lyY2xlIGN4PSIxMiIgY3k9IjEyIiByPSIxMCIgZmlsbD0iI2ZmZTZlNiIvPjxwYXRoIGQ9Im0xOS4wNiA0LjkzLTguMTIgOC4xMi0zLjA0LTMuMDQiLz48L3N2Zz4=";
 
+// Extend window interface for global map references
+declare global {
+  interface Window {
+    map?: L.Map;
+    markers?: L.LayerGroup;
+    markerClusterGroup?: L.MarkerClusterGroup;
+  }
+}
+
+// Extend Leaflet namespace to properly type MarkerClusterGroup
+declare module 'leaflet' {
+  namespace L {
+    interface MarkerClusterGroupOptions {
+      maxClusterRadius?: number;
+      disableClusteringAtZoom?: number;
+    }
+    
+    class MarkerClusterGroup extends FeatureGroup {
+      constructor(options?: MarkerClusterGroupOptions);
+      addLayer(layer: Layer): this;
+    }
+    
+    function markerClusterGroup(options?: MarkerClusterGroupOptions): MarkerClusterGroup;
+  }
+}
+
 export function useMapMarkers() {
   const markersRef = useRef<L.LayerGroup | null>(null);
   const markerClusterGroupRef = useRef<L.MarkerClusterGroup | null>(null);

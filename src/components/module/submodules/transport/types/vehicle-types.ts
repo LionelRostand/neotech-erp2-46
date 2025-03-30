@@ -41,6 +41,10 @@ export interface MaintenanceRecord {
   parts?: string[];
   nextServiceDue?: string;
   odometerReading: number;
+  // For backward compatibility with existing components
+  provider?: string;
+  nextMaintenance?: string;
+  resolved?: boolean;
 }
 
 export interface IncidentRecord {
@@ -54,6 +58,11 @@ export interface IncidentRecord {
   status: 'reported' | 'investigating' | 'resolved';
   cost?: number;
   insuranceClaim?: string;
+  // For backward compatibility with existing components
+  clientName?: string;
+  repairCost?: number;
+  resolved?: boolean;
+  damageDetails?: string;
 }
 
 export interface MaintenanceSchedule {
@@ -65,4 +74,8 @@ export interface MaintenanceSchedule {
   estimatedDuration: number; // in minutes
   technicianAssigned?: string;
   status: 'scheduled' | 'in-progress' | 'completed' | 'cancelled';
+  // Additional fields needed by components
+  startDate?: string;
+  endDate?: string;
+  technician?: string;
 }

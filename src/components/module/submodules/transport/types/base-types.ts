@@ -21,7 +21,7 @@ export interface TransportService {
   vehicleTypeRequired?: string;
   active: boolean;
   maxPassengers?: number;
-  serviceType: 'taxi' | 'shuttle' | 'vip' | 'event' | 'corporate' | 'tour' | 'other' | 'airport' | 'hourly' | 'pointToPoint' | 'dayTour';
+  serviceType: 'taxi' | 'shuttle' | 'vip' | 'event' | 'corporate' | 'tour' | 'other' | 'airport' | 'hourly' | 'pointToPoint' | 'dayTour' | string;
 }
 
 // Ensure basic types are available for extensions in other files

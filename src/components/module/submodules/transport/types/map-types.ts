@@ -1,54 +1,55 @@
 
 import { TransportVehicle } from './vehicle-types';
+import { MaintenanceSchedule } from './vehicle-types';
 
 export interface VehicleLocation {
-  vehicleId: string;
   latitude: number;
   longitude: number;
-  timestamp: string;
+  lat?: number; // For compatibility with map libraries
+  lng?: number; // For compatibility with map libraries
   speed?: number;
   heading?: number;
-  status?: string;
+  lastUpdate?: string;
 }
 
 export interface TransportVehicleWithLocation extends TransportVehicle {
   location: VehicleLocation;
+  driverName?: string;
 }
 
 export interface MapConfig {
-  center: [number, number]; // [latitude, longitude]
+  center: [number, number];
   zoom: number;
-  showTraffic: boolean;
-  showControls: boolean;
+  maxZoom?: number;
+  minZoom?: number;
+  tileProvider?: string;
+  showLabels?: boolean;
 }
 
 export interface MapHookResult {
-  mapContainer: React.RefObject<HTMLDivElement>;
-  vehicles: TransportVehicleWithLocation[];
-  selectedVehicle: TransportVehicleWithLocation | null;
-  setSelectedVehicle: (vehicle: TransportVehicleWithLocation | null) => void;
-  mapConfig: MapConfig;
-  updateMapConfig: (config: Partial<MapConfig>) => void;
+  mapRef: React.RefObject<HTMLDivElement>;
+  mapInitialized: boolean;
+  setMapConfig: (config: MapConfig) => void;
+  refreshMap: () => void;
 }
 
-export interface MaintenanceSchedule {
-  id: string;
-  vehicleId: string;
-  scheduledDate: string;
-  type: string;
-  description: string;
-  estimatedDuration: number; // in minutes
-  technicianAssigned?: string;
-  status: 'scheduled' | 'in-progress' | 'completed' | 'cancelled';
-}
+export { MaintenanceSchedule };
 
 export interface ExtensionRequest {
   id: string;
   vehicleId: string;
+  requestId?: string;
   requestDate: string;
+  requestedEndDate?: string;
+  originalEndDate?: string;
   extensionReason: string;
   extensionDays: number;
-  status: 'pending' | 'approved' | 'denied';
+  status: 'pending' | 'approved' | 'denied' | 'rejected';
   approvedBy?: string;
   notes?: string;
+  vehicleName?: string;
+  clientName?: string;
+  reason?: string;
+  createdAt?: string;
+  reservationId?: string;
 }

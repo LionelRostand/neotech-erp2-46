@@ -18,12 +18,15 @@ export interface TransportDriver extends TransportBasic {
   hireDate: string;
   experience?: number;
   preferredVehicleTypes?: string[];
+  preferredVehicleType?: string; // For backward compatibility
   skills?: string[];
   performance?: {
     completedTrips: number;
     customerRating: number;
     onTimePercentage: number;
     safetyScore: number;
+    onTimeRate?: number; // For backward compatibility
+    customerSatisfaction?: number; // For backward compatibility
   };
 }
 
