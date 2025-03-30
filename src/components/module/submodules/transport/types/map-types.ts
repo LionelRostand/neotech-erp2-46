@@ -14,6 +14,7 @@ export interface VehicleLocation {
   lastUpdate?: string;
   address?: string;
   status: string;
+  heading?: number; // Added heading property
 }
 
 export interface TransportVehicleWithLocation extends TransportVehicle {
@@ -32,6 +33,7 @@ export interface MapConfig {
   maxZoom?: number;
   minZoom?: number;
   tileProvider?: string;
+  showLabels?: boolean; // Added showLabels property
 }
 
 export interface MapHookResult {
@@ -75,5 +77,10 @@ export interface ExtensionRequest {
   extensionReason?: string;
   createdAt?: string;
   reservationId?: string;
+  requestDate?: string; // Added requestDate property
+  requestedAt?: string;
+  extraTimeMinutes?: number;
+  additionalTime?: number;
+  extensionDays?: number;
 }
 

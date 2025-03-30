@@ -38,3 +38,16 @@ export interface ClientFilters {
     end: string;
   };
 }
+
+// Adding these types for compatibility with the existing imports
+export interface TransportClient extends Client {
+  // Additional properties from index.ts import
+}
+
+export interface ClientNote {
+  id: string;
+  clientId: string;
+  content: string;
+  createdAt: string;
+  createdBy: string;
+}

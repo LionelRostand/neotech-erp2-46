@@ -26,7 +26,7 @@ export type {
 } from './map-types';
 
 // Export from client-types.ts
-export type { TransportClient, ClientNote } from './client-types';
+export type { Client, TransportClient, ClientNote, LoyaltyTransaction, LoyaltyReward, ClientFilters } from './client-types';
 
 // Export from reservation-types
 export {
