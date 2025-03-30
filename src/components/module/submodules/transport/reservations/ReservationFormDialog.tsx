@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -19,7 +18,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { TransportReservation, TransportService, TransportReservationStatus } from '../types/transport-types';
 
-// Mock data for clients, vehicles, and drivers
 const mockClients = [
   { id: "cli-001", firstName: "Jean", lastName: "Dupont", email: "jean.dupont@example.com", phone: "+33612345678" },
   { id: "cli-002", firstName: "Marie", lastName: "Martin", email: "marie.martin@example.com", phone: "+33623456789" },
@@ -44,7 +42,6 @@ const mockDrivers = [
   { id: "drv-005", firstName: "Julie", lastName: "Leroy", rating: 4.9 }
 ];
 
-// Form schema
 const reservationFormSchema = z.object({
   clientId: z.string({
     required_error: "Veuillez sélectionner un client",
@@ -100,13 +97,11 @@ const ReservationFormDialog: React.FC<ReservationFormDialogProps> = ({
   onSave,
   isEditing = false,
 }) => {
-  // Get client name
   const getClientName = (id: string) => {
     const client = mockClients.find(c => c.id === id);
     return client ? `${client.firstName} ${client.lastName}` : "Client inconnu";
   };
 
-  // Default values for the form
   const defaultValues: Partial<ReservationFormValues> = isEditing && reservation
     ? {
         clientId: reservation.clientId,
@@ -136,17 +131,14 @@ const ReservationFormDialog: React.FC<ReservationFormDialogProps> = ({
     defaultValues,
   });
 
-  // Reset form when dialog opens/closes or when editing a different reservation
   useEffect(() => {
     if (open) {
       form.reset(defaultValues);
     }
   }, [open, reservation?.id]);
 
-  // Handle needsDriver changes
   const needsDriver = form.watch("needsDriver");
-  
-  // Calculate price based on service type and distance (simplified example)
+
   const calculatePrice = (service: string, needsDriver: boolean) => {
     let basePrice = 0;
     
@@ -180,20 +172,18 @@ const ReservationFormDialog: React.FC<ReservationFormDialogProps> = ({
     }
     
     if (needsDriver) {
-      basePrice += 50; // Add driver fee
+      basePrice += 50;
     }
     
     return basePrice;
   };
 
-  // Update price when service or needsDriver changes
-  const service = form.watch("service");
   useEffect(() => {
-    if (service) {
-      const calculatedPrice = calculatePrice(service, needsDriver);
+    if (form.watch("service")) {
+      const calculatedPrice = calculatePrice(form.watch("service"), needsDriver);
       form.setValue("price", calculatedPrice);
     }
-  }, [service, needsDriver]);
+  }, [form.watch("service"), needsDriver]);
 
   const onSubmit = (data: ReservationFormValues) => {
     console.log("Form data:", data);
@@ -536,7 +526,9 @@ const ReservationFormDialog: React.FC<ReservationFormDialogProps> = ({
               >
                 Annuler
               </Button>
-              <Button type="submit">{isEditing ? "Enregistrer les modifications" : "Créer la réservation"}</Button>
+              <Button type="submit">
+                {isEditing ? "Enregistrer" : "Créer la réservation"}
+              </Button>
             </DialogFooter>
           </form>
         </Form>
