@@ -15,7 +15,8 @@ import {
   renderTransportSubmodule,
   renderGarageSubmodule,
   SalonRenderer,
-  RestaurantRenderer
+  RestaurantRenderer,
+  renderWebsiteSubmodule
 } from './renderers';
 
 interface RenderSubmoduleContentProps {
@@ -86,6 +87,11 @@ export const renderSubmoduleContent = ({ submoduleId, submodule }: RenderSubmodu
   if (submoduleId.startsWith('restaurant-')) {
     console.log('Delegating to RestaurantRenderer for:', submoduleId);
     return <RestaurantRenderer submoduleId={submoduleId} submodule={submodule} />;
+  }
+  
+  if (submoduleId.startsWith('website-')) {
+    console.log('Delegating to renderWebsiteSubmodule for:', submoduleId);
+    return renderWebsiteSubmodule(submoduleId, submodule);
   }
   
   // Fallback to default content rendering

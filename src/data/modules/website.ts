@@ -1,5 +1,5 @@
 
-import { Globe, LayoutDashboard, Code, FileCode, PanelLeft, Palette, Image, Settings } from 'lucide-react';
+import { Globe, LayoutDashboard, Code, FileCode, PanelLeft, Palette, Image, Settings, Puzzle } from 'lucide-react';
 import { AppModule, createIcon } from '../types/modules';
 
 export const websiteModule: AppModule = {
@@ -16,6 +16,7 @@ export const websiteModule: AppModule = {
     { id: "website-pages", name: "Pages", href: "/modules/website/pages", icon: createIcon(PanelLeft) },
     { id: "website-design", name: "Design", href: "/modules/website/design", icon: createIcon(Palette) },
     { id: "website-media", name: "Médias", href: "/modules/website/media", icon: createIcon(Image) },
+    { id: "website-modules", name: "Modules", href: "/modules/website/modules", icon: createIcon(Puzzle) },
     { id: "website-settings", name: "Paramètres", href: "/modules/website/settings", icon: createIcon(Settings) }
   ]
 };

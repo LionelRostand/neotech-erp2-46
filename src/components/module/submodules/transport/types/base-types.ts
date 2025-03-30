@@ -1,32 +1,41 @@
 
-// Base types shared across the transport module
+// Types de base pour le transport
+
+export interface TransportBasic {
+  id: string;
+}
 
 export interface Note {
   id: string;
-  title: string;
   content: string;
+  createdBy?: string;
   createdAt: string;
-  updatedAt?: string;
-  createdBy: string;
-  category?: string;
-  tags?: string[];
 }
 
 export interface TransportService {
   id: string;
   name: string;
-  description?: string;
+  description: string;
   price: number;
-  duration?: number; // in minutes
-  vehicleTypeRequired?: string;
+  duration: number;
+  serviceType: 'airport' | 'hourly' | 'pointToPoint' | 'dayTour' | 'other';
   active: boolean;
+  vehicleType?: string;
+  image?: string;
+  minPassengers?: number;
   maxPassengers?: number;
-  serviceType: 'taxi' | 'shuttle' | 'vip' | 'event' | 'corporate' | 'tour' | 'other' | 'airport' | 'hourly' | 'pointToPoint' | 'dayTour' | string;
+  availableDays?: string[];
+  availableHours?: string[];
+  pricePerKm?: number;
+  pricePerHour?: number;
+  minimumHours?: number;
+  includesDriver?: boolean;
+  extraOptions?: ServiceExtraOption[];
 }
 
-// Ensure basic types are available for extensions in other files
-export interface TransportBasic {
+export interface ServiceExtraOption {
   id: string;
-  createdAt: string;
-  updatedAt?: string;
+  name: string;
+  description?: string;
+  price: number;
 }

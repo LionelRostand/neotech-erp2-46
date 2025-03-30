@@ -13,3 +13,4 @@ export * from './RestaurantRenderer';
 export * from './SalonRenderer';
 export * from './TransportRenderer';
 export * from './VehicleRentalsRenderer';
+export * from './WebsiteRenderer';

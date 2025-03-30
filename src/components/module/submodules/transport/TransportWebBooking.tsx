@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -44,41 +43,33 @@ const TransportWebBooking: React.FC = () => {
   const [mockRecentBookings] = useState<WebBooking[]>([
     {
       id: "wb-1001",
-      service: "airport" as TransportService,
+      serviceId: "airport",
+      clientName: "Jean Dupont",
+      clientEmail: "jean.dupont@example.com",
+      clientPhone: "+33612345678",
       date: "2023-09-25",
       time: "14:30",
-      pickup: "34 Avenue de la République, Paris",
-      dropoff: "Aéroport Charles de Gaulle, Terminal 2E",
-      clientInfo: {
-        firstName: "Jean",
-        lastName: "Dupont",
-        email: "jean.dupont@example.com",
-        phone: "+33612345678"
-      },
-      passengers: 2,
-      vehicleType: "sedan",
-      needsDriver: true,
+      pickupLocation: "34 Avenue de la République, Paris",
+      dropoffLocation: "Aéroport Charles de Gaulle, Terminal 2E",
       status: "confirmed",
-      createdAt: "2023-09-20T10:15:00Z"
+      price: 75,
+      paymentMethod: "card",
+      paymentStatus: "paid"
     },
     {
       id: "wb-1002",
-      service: "hourly" as TransportService,
+      serviceId: "hourly",
+      clientName: "Marie Laurent",
+      clientEmail: "marie.laurent@example.com",
+      clientPhone: "+33623456789",
       date: "2023-09-27",
       time: "09:00",
-      pickup: "16 Rue de Rivoli, Paris",
-      dropoff: "Multiple destinations",
-      clientInfo: {
-        firstName: "Marie",
-        lastName: "Laurent",
-        email: "marie.laurent@example.com",
-        phone: "+33623456789"
-      },
-      passengers: 4,
-      vehicleType: "van",
-      needsDriver: true,
+      pickupLocation: "16 Rue de Rivoli, Paris",
+      dropoffLocation: "Multiple destinations",
       status: "new",
-      createdAt: "2023-09-23T16:45:00Z"
+      price: 120,
+      paymentMethod: "pending",
+      paymentStatus: "pending"
     }
   ]);
 
@@ -344,11 +335,11 @@ const TransportWebBooking: React.FC = () => {
                     {mockRecentBookings.map(booking => (
                       <tr key={booking.id} className="border-b hover:bg-muted/50">
                         <td className="py-3 px-4">{booking.id}</td>
-                        <td className="py-3 px-4">{`${booking.clientInfo.firstName} ${booking.clientInfo.lastName}`}</td>
+                        <td className="py-3 px-4">{booking.clientName}</td>
                         <td className="py-3 px-4">
-                          {booking.service === "airport" ? 'Transfert aéroport' : 
-                           booking.service === "hourly" ? 'Service à l\'heure' : 
-                           booking.service === "pointToPoint" ? 'Point à point' : 'Excursion journée'}
+                          {booking.serviceId === "airport" ? 'Transfert aéroport' : 
+                           booking.serviceId === "hourly" ? 'Service à l\'heure' : 
+                           booking.serviceId === "pointToPoint" ? 'Point à point' : 'Excursion journée'}
                         </td>
                         <td className="py-3 px-4">{`${booking.date} ${booking.time}`}</td>
                         <td className="py-3 px-4">
