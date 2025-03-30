@@ -11,5 +11,5 @@ export const ChevronsUpDown: React.FC<{ className?: string }> = ({ className }) 
   );
 };
 
-// Add a default export to ensure the component is available both ways
-export default { ChevronsUpDown };
+// Export as default so it can be imported both ways
+export default ChevronsUpDown;
