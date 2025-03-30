@@ -114,12 +114,10 @@ export const SelectItem = React.forwardRef<
   React.ElementRef<typeof SelectPrimitive.Item>,
   React.ComponentPropsWithoutRef<typeof SelectPrimitive.Item>
 >(({ className, children, value, ...props }, ref) => {
-  // Ensure value is not null, undefined, or empty string
-  const safeValue = (value && value !== '') 
-    ? value 
-    : `item-${Math.random().toString(36).substring(2, 15)}-${Date.now()}`;
+  // Ensure value is not undefined, null, or empty string
+  const safeValue = value ? value : `item-${Math.random().toString(36).substring(2, 15)}-${Date.now()}`;
   
-  // Warning if the value is invalid
+  // Warning if the value is invalid (but only in development)
   if ((!value || value === '') && process.env.NODE_ENV !== 'production') {
     console.warn(
       `SelectItem: A value prop is required and should not be an empty string. A random value has been assigned: ${safeValue}`
