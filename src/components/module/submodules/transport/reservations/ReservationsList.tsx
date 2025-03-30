@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Reservation } from '../types/reservation-types';
 import EditReservationDialog from './EditReservationDialog';
 import ViewReservationDetailsDialog from './ViewReservationDetailsDialog';
+import { toast } from "sonner";
 
 // Mock data pour les réservations
 const mockReservations: Reservation[] = [
@@ -141,11 +142,18 @@ const ReservationsList: React.FC = () => {
   const handleEditClick = (reservation: Reservation) => {
     setSelectedReservation(reservation);
     setIsEditDialogOpen(true);
+    console.log("Opening edit dialog for reservation:", reservation.id);
   };
 
   const handleViewDetailsClick = (reservation: Reservation) => {
     setSelectedReservation(reservation);
     setIsDetailsDialogOpen(true);
+  };
+
+  const handleReservationUpdated = (updatedReservation: Reservation) => {
+    toast.success(`Réservation ${updatedReservation.id} mise à jour avec succès`);
+    // Here you would typically update the list or fetch fresh data
+    setIsEditDialogOpen(false);
   };
 
   return (

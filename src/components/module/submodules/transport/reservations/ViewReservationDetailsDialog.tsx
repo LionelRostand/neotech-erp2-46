@@ -2,10 +2,8 @@
 import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import { Reservation } from '../types/reservation-types';
-import { Calendar, Car, FileText, MapPin, User, CreditCard } from "lucide-react";
+import { Reservation, getAddressString } from '../types/reservation-types';
 
 interface ViewReservationDetailsDialogProps {
   open: boolean;
@@ -13,192 +11,113 @@ interface ViewReservationDetailsDialogProps {
   reservation: Reservation;
 }
 
-// Helper function to format date
-const formatDate = (dateString: string) => {
-  return new Date(dateString).toLocaleDateString('fr-FR', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
-  });
-};
-
-// Status badges
-const getStatusBadge = (status: string) => {
-  switch (status) {
-    case "confirmed":
-      return <Badge className="bg-green-500">Confirmée</Badge>;
-    case "in-progress":
-      return <Badge className="bg-blue-500">En cours</Badge>;
-    case "completed":
-      return <Badge className="bg-gray-500">Terminée</Badge>;
-    case "cancelled":
-      return <Badge className="bg-red-500">Annulée</Badge>;
-    case "pending":
-      return <Badge className="bg-yellow-500">En attente</Badge>;
-    default:
-      return <Badge>Inconnue</Badge>;
-  }
-};
-
 const ViewReservationDetailsDialog: React.FC<ViewReservationDetailsDialogProps> = ({
   open,
   onOpenChange,
   reservation,
 }) => {
-  // Mocked data for vehicle and driver names
-  const vehicleName = {
-    "veh-001": "Mercedes Classe E",
-    "veh-002": "Tesla Model S",
-    "veh-003": "BMW Série 7",
-    "veh-004": "Audi A8",
-  }[reservation.vehicleId] || "Véhicule inconnu";
-
-  const driverName = reservation.driverId ? {
-    "drv-001": "Thomas Martin",
-    "drv-002": "Luc Bernard",
-    "drv-003": "Émilie Dubois",
-  }[reservation.driverId] || "Chauffeur inconnu" : "Sans chauffeur";
+  // Format date string
+  const formatDate = (dateStr: string) => {
+    return new Date(dateStr).toLocaleDateString('fr-FR', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  };
+  
+  // Get badge based on reservation status
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'confirmed':
+        return <Badge className="bg-green-500">Confirmée</Badge>;
+      case 'pending':
+        return <Badge className="bg-yellow-500">En attente</Badge>;
+      case 'completed':
+        return <Badge className="bg-blue-500">Terminée</Badge>;
+      case 'cancelled':
+        return <Badge className="bg-red-500">Annulée</Badge>;
+      default:
+        return <Badge>Inconnue</Badge>;
+    }
+  };
+  
+  // Get badge based on payment status
+  const getPaymentBadge = (paymentStatus: string) => {
+    switch (paymentStatus) {
+      case 'paid':
+        return <Badge variant="outline" className="bg-green-100 text-green-800 border-green-300">Payée</Badge>;
+      case 'partial':
+        return <Badge variant="outline" className="bg-yellow-100 text-yellow-800 border-yellow-300">Partielle</Badge>;
+      case 'pending':
+        return <Badge variant="outline" className="bg-gray-100 text-gray-800 border-gray-300">En attente</Badge>;
+      default:
+        return <Badge variant="outline">Inconnue</Badge>;
+    }
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[550px]">
+      <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
-          <DialogTitle className="flex items-center justify-between">
-            <span>Détails de la réservation #{reservation.id}</span>
-            {getStatusBadge(reservation.status)}
-          </DialogTitle>
+          <DialogTitle>Détails de la réservation {reservation.id}</DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-6">
-          <div className="flex items-start space-x-4">
-            <div className="bg-muted rounded-full p-2">
-              <FileText className="h-5 w-5" />
+        <div className="space-y-4">
+          <div className="flex justify-between items-center">
+            <div>
+              <h3 className="font-semibold text-lg">Client</h3>
+              <p>{reservation.clientName}</p>
             </div>
-            <div className="space-y-1">
-              <p className="text-sm font-medium">Référence</p>
-              <p className="text-sm">{reservation.id}</p>
-              <p className="text-sm text-muted-foreground mt-1">
-                Créée le {new Date(reservation.createdAt).toLocaleString('fr-FR')}
-              </p>
-              {reservation.createdAt !== reservation.updatedAt && (
-                <p className="text-sm text-muted-foreground">
-                  Mise à jour le {new Date(reservation.updatedAt).toLocaleString('fr-FR')}
-                </p>
-              )}
-            </div>
-          </div>
-
-          <Separator />
-
-          <div className="flex items-start space-x-4">
-            <div className="bg-muted rounded-full p-2">
-              <User className="h-5 w-5" />
-            </div>
-            <div className="space-y-1">
-              <p className="text-sm font-medium">Client</p>
-              <p className="text-sm">{reservation.clientName}</p>
-            </div>
-          </div>
-
-          <div className="flex items-start space-x-4">
-            <div className="bg-muted rounded-full p-2">
-              <Car className="h-5 w-5" />
-            </div>
-            <div className="space-y-1 flex-1">
-              <div className="flex justify-between">
-                <div>
-                  <p className="text-sm font-medium">Véhicule</p>
-                  <p className="text-sm">{vehicleName}</p>
-                </div>
-                <div className="text-right">
-                  <p className="text-sm font-medium">Chauffeur</p>
-                  <p className="text-sm">{driverName}</p>
-                </div>
+            <div>
+              <h3 className="font-semibold text-lg">Statut</h3>
+              <div className="flex space-x-2">
+                {getStatusBadge(reservation.status)}
+                {reservation.paymentStatus && getPaymentBadge(reservation.paymentStatus)}
               </div>
             </div>
           </div>
-
-          <div className="flex items-start space-x-4">
-            <div className="bg-muted rounded-full p-2">
-              <Calendar className="h-5 w-5" />
+          
+          <div className="grid grid-cols-2 gap-4 border-t border-gray-200 pt-4">
+            <div>
+              <h3 className="font-semibold">Date de début</h3>
+              <p>{formatDate(reservation.startDate)}</p>
             </div>
-            <div className="space-y-1 flex-1">
-              <div className="flex justify-between">
-                <div>
-                  <p className="text-sm font-medium">Date de début</p>
-                  <p className="text-sm">{formatDate(reservation.startDate)}</p>
-                </div>
-                <div className="text-right">
-                  <p className="text-sm font-medium">Date de fin</p>
-                  <p className="text-sm">{formatDate(reservation.endDate)}</p>
-                </div>
-              </div>
+            <div>
+              <h3 className="font-semibold">Date de fin</h3>
+              <p>{formatDate(reservation.endDate)}</p>
             </div>
           </div>
-
-          <div className="grid grid-cols-1 gap-4">
-            <div className="flex items-start space-x-4">
-              <div className="bg-muted rounded-full p-2">
-                <MapPin className="h-5 w-5" />
-              </div>
-              <div className="space-y-1">
-                <p className="text-sm font-medium">Adresse de départ</p>
-                <p className="text-sm">{reservation.pickupLocation.address}</p>
-              </div>
-            </div>
-
-            <div className="flex items-start space-x-4">
-              <div className="bg-muted rounded-full p-2">
-                <MapPin className="h-5 w-5" />
-              </div>
-              <div className="space-y-1">
-                <p className="text-sm font-medium">Adresse d'arrivée</p>
-                <p className="text-sm">{reservation.dropoffLocation.address}</p>
-              </div>
-            </div>
+          
+          <div className="border-t border-gray-200 pt-4">
+            <h3 className="font-semibold">Adresse de départ</h3>
+            <p>{getAddressString(reservation.pickupLocation || { address: "Non spécifiée" })}</p>
           </div>
-
-          <Separator />
-
-          <div className="flex items-start space-x-4">
-            <div className="bg-muted rounded-full p-2">
-              <CreditCard className="h-5 w-5" />
-            </div>
-            <div className="space-y-2 flex-1">
-              <div className="flex justify-between items-center">
-                <p className="text-sm font-medium">Prix total</p>
-                <p className="font-bold">{reservation.totalAmount} €</p>
-              </div>
-              <div className="flex justify-between items-center">
-                <p className="text-sm font-medium">Statut de paiement</p>
-                <div>
-                  {reservation.paymentStatus === 'paid' && (
-                    <Badge variant="outline" className="bg-green-100 text-green-800 border-green-300">Payé</Badge>
-                  )}
-                  {reservation.paymentStatus === 'partial' && (
-                    <Badge variant="outline" className="bg-yellow-100 text-yellow-800 border-yellow-300">Partiel</Badge>
-                  )}
-                  {reservation.paymentStatus === 'pending' && (
-                    <Badge variant="outline" className="bg-gray-100 text-gray-800 border-gray-300">En attente</Badge>
-                  )}
-                </div>
-              </div>
-            </div>
+          
+          <div className="border-t border-gray-200 pt-4">
+            <h3 className="font-semibold">Adresse d'arrivée</h3>
+            <p>{getAddressString(reservation.dropoffLocation || { address: "Non spécifiée" })}</p>
           </div>
-
+          
+          {reservation.totalAmount && (
+            <div className="border-t border-gray-200 pt-4">
+              <h3 className="font-semibold">Montant total</h3>
+              <p className="text-xl font-semibold">{reservation.totalAmount} €</p>
+            </div>
+          )}
+          
           {reservation.notes && (
-            <>
-              <Separator />
-              <div>
-                <p className="text-sm font-medium mb-2">Notes</p>
-                <p className="text-sm bg-muted p-3 rounded">{reservation.notes}</p>
-              </div>
-            </>
+            <div className="border-t border-gray-200 pt-4">
+              <h3 className="font-semibold">Notes</h3>
+              <p>{reservation.notes}</p>
+            </div>
           )}
         </div>
 
         <DialogFooter>
-          <Button onClick={() => onOpenChange(false)}>
+          <Button 
+            type="button" 
+            onClick={() => onOpenChange(false)}
+          >
             Fermer
           </Button>
         </DialogFooter>
