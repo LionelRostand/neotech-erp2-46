@@ -6,8 +6,11 @@ import { MapConfig, TransportVehicleWithLocation, MapHookResult } from '../types
 
 // Default map configuration
 const defaultConfig: MapConfig = {
-  center: { lat: 48.866667, lng: 2.333333 }, // Paris
+  center: [48.866667, 2.333333], // Paris
   zoom: 12,
+  showTraffic: false,
+  showGeofences: false,
+  refreshInterval: 30000,
   maxZoom: 18,
   minZoom: 3,
   tileProvider: 'osm', // OpenStreetMap by default
@@ -106,6 +109,8 @@ export function useTransportMap(initialConfig?: MapConfig): MapHookResult {
     vehicles: [],
     selectedVehicle: null,
     setSelectedVehicle: () => {},
+    loading: false,
+    error: null,
     zoomToVehicle: () => {},
     zoomToFitAllVehicles: () => {},
     trackingMode: false,

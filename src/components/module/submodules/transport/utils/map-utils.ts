@@ -10,7 +10,7 @@ export const calculateMapCenter = (
 ) => {
   // If there are no vehicles with location data, return default values
   const vehiclesWithLocation = vehicles.filter(v => v.location && 
-    ((v.location.lat && v.location.lng) || (v.location.latitude && v.location.longitude)));
+    ((v.location.latitude && v.location.longitude) || (v.location.lat && v.location.lng)));
   
   if (vehiclesWithLocation.length === 0) {
     return { latitude: defaultLat, longitude: defaultLng, zoom: defaultZoom };
@@ -119,4 +119,12 @@ export const getTileLayerConfig = (provider: string = 'osm-france') => {
         maxZoom: 19
       };
   }
+};
+
+// Helper function to normalize coordinates (handles both lat/lng and latitude/longitude)
+export const getCoordinates = (location: any) => {
+  return {
+    lat: location.lat || location.latitude,
+    lng: location.lng || location.longitude
+  };
 };

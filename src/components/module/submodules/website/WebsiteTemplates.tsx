@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/components/ui/use-toast';
 import { FileCode, Search, ArrowRight, Plus, LayoutGrid, LayoutList, Eye } from 'lucide-react';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
-import { WebsitePreview } from './website-preview/WebsitePreview';
+import WebsitePreview from './website-preview/WebsitePreview';
 import TransportBookingTemplate from './templates/TransportBookingTemplate';
 
 const WebsiteTemplates = () => {

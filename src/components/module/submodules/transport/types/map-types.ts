@@ -5,9 +5,13 @@ export interface VehicleLocation {
   vehicleId: string;
   latitude: number;
   longitude: number;
+  // Add lat/lng properties for compatibility
+  lat?: number;
+  lng?: number;
   speed: number;
   direction: number;
   timestamp: string;
+  lastUpdate?: string;
   address?: string;
   status: string;
 }
@@ -24,6 +28,10 @@ export interface MapConfig {
   showTraffic: boolean;
   showGeofences: boolean;
   refreshInterval: number;
+  // Add missing properties
+  maxZoom?: number;
+  minZoom?: number;
+  tileProvider?: string;
 }
 
 export interface MapHookResult {
@@ -32,6 +40,18 @@ export interface MapHookResult {
   setSelectedVehicle: (vehicle: TransportVehicleWithLocation | null) => void;
   loading: boolean;
   error: string | null;
+  // Add missing properties
+  mapRef?: React.RefObject<HTMLDivElement>;
+  isMapLoaded?: boolean;
+  zoomToVehicle?: (vehicleId: string) => void;
+  zoomToFitAllVehicles?: () => void;
+  trackingMode?: boolean;
+  setTrackingMode?: (mode: boolean) => void;
+  mapInitialized?: boolean;
+  mapConfig?: MapConfig;
+  setMapConfig?: (config: MapConfig) => void;
+  refreshMap?: () => void;
+  updateMarkers?: (vehicles: TransportVehicleWithLocation[], selectedId?: string) => void;
 }
 
 export interface ExtensionRequest {
@@ -47,4 +67,13 @@ export interface ExtensionRequest {
   newEndTime: string;
   timestamp: string;
   responseMessage?: string;
+  // Add missing properties used in components
+  requestId?: string;
+  clientName?: string;
+  originalEndDate?: string;
+  requestedEndDate?: string;
+  extensionReason?: string;
+  createdAt?: string;
+  reservationId?: string;
 }
+
