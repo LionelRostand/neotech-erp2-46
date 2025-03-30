@@ -47,6 +47,22 @@ export interface Reservation {
   totalAmount?: number;
 }
 
+// Helper function to get address string regardless of input format
+export const getAddressString = (address: string | { address: string }): string => {
+  if (typeof address === 'string') {
+    return address;
+  }
+  return address.address;
+};
+
+// Helper function to convert any address format to object format
+export const getAddressObject = (address: string | { address: string }): { address: string } => {
+  if (typeof address === 'string') {
+    return { address };
+  }
+  return address;
+};
+
 export type ReservationStatus = 'pending' | 'confirmed' | 'in-progress' | 'completed' | 'cancelled';
 
 export interface TransportReservation extends Reservation {

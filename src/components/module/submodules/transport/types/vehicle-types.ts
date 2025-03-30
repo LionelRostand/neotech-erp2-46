@@ -37,7 +37,7 @@ export interface MaintenanceRecord {
   description: string;
   cost: number;
   provider: string;
-  mileage: number;
+  mileage?: number; // Making mileage optional
   nextMaintenance?: string;
   resolved?: boolean;
   attachments?: string[];
@@ -76,7 +76,7 @@ export interface IncidentRecord {
   description: string;
   location?: string;
   severity: 'minor' | 'moderate' | 'major';
-  status: 'reported' | 'in-review' | 'resolved';
+  status: 'reported' | 'in-review' | 'resolved'; // Added required status field
   insuranceClaim?: boolean;
   claimNumber?: string;
   cost?: number;

@@ -1,17 +1,14 @@
 
-import { TransportVehicle } from "./vehicle-types";
+import { TransportVehicle } from './vehicle-types';
 
 export interface VehicleLocation {
   vehicleId: string;
   latitude: number;
   longitude: number;
   heading: number;
-  speed: number;
   timestamp: string;
-  status: 'idle' | 'driving' | 'stopped';
-  // Additional properties used in components
-  lat?: number; 
-  lng?: number;
+  speed?: number;
+  status?: string;
   lastUpdate?: string;
 }
 
@@ -23,56 +20,41 @@ export interface TransportVehicleWithLocation extends TransportVehicle {
 export interface MapConfig {
   center: [number, number];
   zoom: number;
-  tileProvider: string;
-  apiKey?: string;
-  // Additional properties used in components
-  showLabels?: boolean;
-  centerLat?: number;
-  centerLng?: number;
+  style?: string;
+  minZoom?: number;
+  maxZoom?: number;
 }
 
 export interface MapHookResult {
-  map: any;
+  mapRef: React.RefObject<any>;
   isLoaded: boolean;
-  setCenter: (coords: [number, number]) => void;
-  setZoom: (zoom: number) => void;
-  addMarker: (coords: [number, number], options?: any) => any;
-  removeMarker: (marker: any) => void;
-  drawRoute: (points: [number, number][], options?: any) => any;
-  clearRoute: (route: any) => void;
-  // Additional properties used in components
-  mapInitialized?: boolean;
-  mapConfig?: MapConfig;
-  setMapConfig?: (config: MapConfig) => void;
-  refreshMap?: () => void;
+  addMarkers: (vehicles: TransportVehicleWithLocation[]) => void;
+  centerOnVehicle: (vehicleId: string) => void;
+  refreshMap: () => void;
 }
 
-// For backward compatibility
 export interface MaintenanceSchedule {
   id: string;
   vehicleId: string;
   taskName: string;
-  type?: string;
-  nextDue: string;
+  startDate: string;
+  endDate: string;
+  type: string;
   priority: 'low' | 'medium' | 'high' | 'critical';
-  description?: string;
-  startDate?: string;
-  endDate?: string;
   technician?: string;
+  completed: boolean;
+  notes?: string;
 }
 
 export interface ExtensionRequest {
   id: string;
   reservationId: string;
+  requestedBy: string;
+  requestedAt: string;
+  extraTimeMinutes: number;
+  additionalTime?: number; // Add this field to match usage in code
+  reason: string;
   status: 'pending' | 'approved' | 'rejected';
-  // Additional fields used in components
-  requestId?: string;
-  clientName?: string;
-  vehicleName?: string;
-  originalEndDate?: string;
-  requestedEndDate?: string;
-  reason?: string;
-  requestedAt?: string;
-  requestedBy?: string;
-  createdAt?: string;
+  handledBy?: string;
+  handledAt?: string;
 }

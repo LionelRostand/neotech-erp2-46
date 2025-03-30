@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -17,7 +16,7 @@ import { fr } from "date-fns/locale";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { TransportReservation, TransportService, TransportReservationStatus } from '../types/transport-types';
+import { TransportReservation, TransportService, TransportReservationStatus, getAddressString } from '../types';
 
 // Mock data for clients, vehicles, and drivers
 const mockClients = [
@@ -114,8 +113,8 @@ const ReservationFormDialog: React.FC<ReservationFormDialogProps> = ({
         service: reservation.service,
         date: new Date(reservation.date),
         time: reservation.time,
-        pickupAddress: reservation.pickup.address,
-        dropoffAddress: reservation.dropoff.address,
+        pickupAddress: getAddressString(reservation.pickup),
+        dropoffAddress: getAddressString(reservation.dropoff),
         price: reservation.price,
         isPaid: reservation.isPaid,
         needsDriver: reservation.needsDriver,

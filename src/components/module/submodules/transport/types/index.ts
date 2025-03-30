@@ -23,6 +23,7 @@ export type {
   ExtensionRequest as ReservationExtensionRequest, 
   TransportReservationStatus 
 } from './reservation-types';
+export { getAddressString, getAddressObject } from './reservation-types';
 
 // Export client-types
 export type { 
