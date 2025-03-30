@@ -1,8 +1,9 @@
-
 import { TransportVehicle } from './vehicle-types';
 
 export interface VehicleLocation {
   vehicleId: string;
+  lat?: number;
+  lng?: number;
   latitude: number;
   longitude: number;
   heading: number;
@@ -23,6 +24,10 @@ export interface MapConfig {
   style?: string;
   minZoom?: number;
   maxZoom?: number;
+  tileProvider?: string;
+  showLabels?: boolean;
+  centerLat?: number;
+  centerLng?: number;
 }
 
 export interface MapHookResult {
@@ -31,6 +36,12 @@ export interface MapHookResult {
   addMarkers: (vehicles: TransportVehicleWithLocation[]) => void;
   centerOnVehicle: (vehicleId: string) => void;
   refreshMap: () => void;
+  map?: any;
+  mapInitialized?: boolean;
+  mapConfig?: MapConfig;
+  setMapConfig?: (config: MapConfig) => void;
+  setCenter?: (coords: [number, number]) => void;
+  setZoom?: (zoom: number) => void;
 }
 
 export interface MaintenanceSchedule {
@@ -44,6 +55,7 @@ export interface MaintenanceSchedule {
   technician?: string;
   completed: boolean;
   notes?: string;
+  description?: string;
 }
 
 export interface ExtensionRequest {
@@ -52,9 +64,15 @@ export interface ExtensionRequest {
   requestedBy: string;
   requestedAt: string;
   extraTimeMinutes: number;
-  additionalTime?: number; // Add this field to match usage in code
+  additionalTime?: number;
   reason: string;
   status: 'pending' | 'approved' | 'rejected';
   handledBy?: string;
   handledAt?: string;
+  requestId?: string;
+  clientName?: string;
+  vehicleName?: string;
+  originalEndDate?: string;
+  requestedEndDate?: string;
+  createdAt?: string;
 }

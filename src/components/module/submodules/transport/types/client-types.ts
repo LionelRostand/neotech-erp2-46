@@ -1,49 +1,41 @@
 
 import { Note } from './base-types';
 
-export interface TransportClient {
-  id: string;
-  firstName: string;
-  lastName: string;
-  company?: string;
-  email: string;
-  phone: string;
-  address?: string;
-  city?: string;
-  postalCode?: string;
-  country?: string;
-  vatNumber?: string;
-  preferredPaymentMethod?: string;
-  loyalty?: {
-    points: number;
-    tier: string;
-    lastActivity: string;
-  };
-  loyaltyPoints?: number;
-  createdAt: string;
-  notes?: string[];
-}
+export type ClientNote = Note & {
+  clientId: string;
+};
 
-export interface LoyaltyTier {
-  id: string;
-  name: string;
-  pointThreshold: number;
-  benefits: string[];
-  discountPercentage: number;
-  color: string;
+export enum LoyaltyTier {
+  BRONZE = 'bronze',
+  SILVER = 'silver',
+  GOLD = 'gold',
+  PLATINUM = 'platinum'
 }
 
 export interface LoyaltyActivity {
   id: string;
   clientId: string;
   date: string;
-  type: 'reservation' | 'purchase' | 'reward' | 'referral' | 'adjustment';
-  points: number;
+  type: 'ride' | 'referral' | 'review' | 'promotion' | 'other';
   description: string;
-  reservationId?: string;
-  productId?: string;
+  pointsEarned: number;
+  pointsSpent: number;
+  balance: number;
 }
 
-export interface ClientNote extends Note {
-  clientId: string;
+export interface TransportClient {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone?: string;
+  address?: string;
+  loyaltyTier?: LoyaltyTier;
+  loyaltyPoints?: number;
+  registrationDate: string;
+  lastActivity?: string;
+  totalRides?: number;
+  preferredVehicleTypes?: string[];
+  notes?: ClientNote[];
+  status: 'active' | 'inactive' | 'blocked';
 }
