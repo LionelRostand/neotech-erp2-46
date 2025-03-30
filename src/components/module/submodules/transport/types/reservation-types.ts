@@ -7,7 +7,7 @@ export type WebBookingService = 'airport' | 'hourly' | 'pointToPoint' | 'dayTour
 // Define the structure for a web booking
 export interface WebBooking {
   id: string;
-  service: WebBookingService | TransportService;
+  service: WebBookingService | string;
   date: string;
   time: string;
   pickup: string | { address: string };
@@ -30,9 +30,10 @@ export interface WebBooking {
 export interface Reservation {
   id: string;
   clientId: string;
+  clientName?: string; // Added for backward compatibility
   vehicleId?: string;
   driverId?: string;
-  service?: WebBookingService | TransportService;
+  service?: WebBookingService | string;
   startDate: string;
   endDate: string;
   time?: string;
@@ -48,3 +49,16 @@ export interface Reservation {
   createdAt: string;
   updatedAt?: string;
 }
+
+// Utility function to get address string from various address formats
+export function getAddressString(address: string | { address: string } | undefined): string {
+  if (!address) return 'No address';
+  if (typeof address === 'string') return address;
+  return address.address;
+}
+
+// Legacy reservation type for backward compatibility
+export interface TransportReservation extends Reservation {}
+
+// Status types for use in components
+export type TransportReservationStatus = 'pending' | 'confirmed' | 'in-progress' | 'completed' | 'cancelled';

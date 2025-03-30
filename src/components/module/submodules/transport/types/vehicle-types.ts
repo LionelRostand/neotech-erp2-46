@@ -1,34 +1,22 @@
-import { Note } from './base-types';
 
-export interface TransportDriver {
-  id: string;
-  firstName: string;
-  lastName: string;
-  phone: string;
-  email: string;
-  licenseNumber: string;
-  licenseExpiry: string;
-  status: string;
-  rating: number;
-}
+import { Note, TransportBasic } from './base-types';
 
-export interface TransportVehicle {
-  id: string;
-  name: string;
+export interface TransportVehicle extends TransportBasic {
+  make: string;
+  model: string;
+  year: number;
+  licensePlate: string;
+  vinNumber: string;
+  status: 'available' | 'in-use' | 'maintenance' | 'out-of-service' | 'active';
   type: string;
   capacity: number;
-  licensePlate: string;
-  available: boolean;
-  status: "available" | "in-use" | "maintenance" | "out-of-service" | "active";
-  color?: string;
-  fuelType?: string;
-  currentDriverId?: string;
-  currentDriver?: TransportDriver;
-  maintenanceRecords?: MaintenanceRecord[];
-  incidentRecords?: IncidentRecord[];
-  notes?: VehicleNote[];
+  mileage: number;
+  fuelType: string;
+  fuelLevel: number;
+  lastInspection?: string;
+  name?: string;
+  available?: boolean;
   purchaseDate?: string;
-  mileage?: number;
   lastServiceDate?: string;
   nextServiceDate?: string;
   insuranceInfo?: {
@@ -38,9 +26,9 @@ export interface TransportVehicle {
   };
 }
 
-export type VehicleNote = Note & {
+export interface VehicleNote extends Note {
   vehicleId: string;
-};
+}
 
 export interface MaintenanceRecord {
   id: string;
@@ -49,10 +37,10 @@ export interface MaintenanceRecord {
   date: string;
   description: string;
   cost: number;
-  provider: string;
-  nextMaintenance?: string;
-  mileage?: number;
-  resolved: boolean;
+  technicianName: string;
+  parts?: string[];
+  nextServiceDue?: string;
+  odometerReading: number;
 }
 
 export interface IncidentRecord {
@@ -60,27 +48,21 @@ export interface IncidentRecord {
   vehicleId: string;
   date: string;
   description: string;
-  severity: string;
+  location: string;
   driverName?: string;
-  clientName?: string;
-  damageDetails?: string;
-  repairCost?: number;
-  insuranceClaim?: boolean;
-  status: string;
-  resolved: boolean;
+  severity: 'minor' | 'moderate' | 'major';
+  status: 'reported' | 'investigating' | 'resolved';
+  cost?: number;
+  insuranceClaim?: string;
 }
 
 export interface MaintenanceSchedule {
   id: string;
   vehicleId: string;
-  taskName: string;
-  startDate: string;
-  endDate: string;
+  scheduledDate: string;
   type: string;
-  priority: 'low' | 'medium' | 'high' | 'critical';
-  technician?: string;
-  completed: boolean;
-  notes?: string;
-  description?: string;
-  nextDue?: string;
+  description: string;
+  estimatedDuration: number; // in minutes
+  technicianAssigned?: string;
+  status: 'scheduled' | 'in-progress' | 'completed' | 'cancelled';
 }

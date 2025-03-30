@@ -1,9 +1,8 @@
 
-import { Note } from './base-types';
+import { Note, TransportBasic } from './base-types';
 
-export interface TransportClient {
-  id: string;
-  name: string;
+export interface TransportClient extends TransportBasic {
+  name?: string;  // For backward compatibility
   firstName?: string;
   lastName?: string;
   email: string;

@@ -2,7 +2,7 @@
 // Export all types from the separate type modules
 
 // Export from base-types.ts
-export type { Note, TransportService } from './base-types';
+export type { Note, TransportService, TransportBasic } from './base-types';
 
 // Export from driver-types.ts 
 export type { TransportDriver, DriverNote } from './driver-types';
@@ -21,7 +21,7 @@ export type {
   VehicleLocation, 
   TransportVehicleWithLocation, 
   MapConfig, 
-  MapHookResult,
+  MapHookResult, 
   MaintenanceSchedule as VehicleMaintenanceSchedule,
   ExtensionRequest as MapExtensionRequest 
 } from './map-types';
@@ -29,6 +29,15 @@ export type {
 // Export from client-types.ts
 export type { TransportClient, ClientNote } from './client-types';
 
+// Export from reservation-types
+export {
+  getAddressString,
+  type WebBookingService,
+  type WebBooking,
+  type Reservation,
+  type TransportReservation,
+  type TransportReservationStatus
+} from './reservation-types';
+
 // Export from other type files
-export type * from './geolocation-types';
-export * from './reservation-types';
+export * from './geolocation-types';

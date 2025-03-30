@@ -1,34 +1,29 @@
 
-import { Note } from './base-types';
+import { Note, TransportBasic } from './base-types';
 
-// Individual driver type
-export interface TransportDriver {
-  id: string;
+export interface TransportDriver extends TransportBasic {
   firstName: string;
   lastName: string;
-  phone: string;
   email: string;
+  phone: string;
   licenseNumber: string;
+  licenseType: string;
   licenseExpiry: string;
-  licenseType?: string;
-  address?: string;
-  hireDate?: string;
-  preferredVehicleType?: string;
-  available: boolean;
-  onLeave?: boolean;
+  status: 'active' | 'inactive' | 'vacation' | 'sick' | 'driving' | 'off-duty' | 'on-leave';
   rating: number;
-  experience: number;
+  address?: string;
   photo?: string;
-  skills?: string[];
+  available?: boolean;
+  onLeave?: boolean;
+  hireDate: string;
+  experience?: number;
   preferredVehicleTypes?: string[];
-  notes?: string;
-  // Status should include all the used statuses in the application
-  status: "active" | "inactive" | "vacation" | "sick" | "driving" | "off-duty" | "on-leave";
+  skills?: string[];
   performance?: {
-    onTimeRate: number;
-    customerSatisfaction: number;
+    completedTrips: number;
+    customerRating: number;
+    onTimePercentage: number;
     safetyScore: number;
-    [key: string]: number;
   };
 }
 

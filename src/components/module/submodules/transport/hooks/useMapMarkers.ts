@@ -1,87 +1,126 @@
 
-import { useCallback } from 'react';
-import { TransportVehicleWithLocation } from '../types/map-types';
-import { getMarkerColorByStatus } from '../utils/map-utils';
+import { useRef, useCallback } from 'react';
+import L from 'leaflet';
+import 'leaflet.markercluster';
+import { TransportVehicleWithLocation } from '../types';
+import vanIcon from '../assets/van-marker.svg';
+import carIcon from '../assets/car-marker.svg';
+import busIcon from '../assets/bus-marker.svg';
+import selectedIcon from '../assets/selected-marker.svg';
 
-export const useMapMarkers = () => {
-  const createVehicleMarkers = useCallback(async (map: any, vehicles: TransportVehicleWithLocation[], showLabels: boolean = true) => {
-    if (!map) return [];
-    
-    try {
-      // Import Leaflet dynamically
-      const L = await import('leaflet');
-      
-      const markers: any[] = [];
-      
-      vehicles.forEach(vehicle => {
-        if (!vehicle.location) return;
-        
-        const { latitude, longitude } = vehicle.location;
-        if (!latitude || !longitude) return;
-        
-        // Create marker with custom icon
-        const marker = L.marker([latitude, longitude], {
-          icon: L.divIcon({
-            className: 'custom-vehicle-marker',
-            html: `<div style="background-color: ${getMarkerColorByStatus(vehicle.location.status || '')}; width: 12px; height: 12px; border-radius: 50%; border: 2px solid white;"></div>`,
-            iconSize: [16, 16],
-            iconAnchor: [8, 8]
-          })
-        }).addTo(map);
-        
-        // Add popup with vehicle info
-        marker.bindPopup(`
-          <div>
-            <b>${vehicle.name}</b><br/>
-            ${vehicle.licensePlate}<br/>
-            ${vehicle.location.status || 'Status inconnu'}<br/>
-            ${vehicle.driverName ? `Chauffeur: ${vehicle.driverName}` : 'Aucun chauffeur'}
-          </div>
-        `);
-        
-        markers.push(marker);
-      });
-      
-      return markers;
-    } catch (error) {
-      console.error("Error creating markers:", error);
-      return [];
-    }
-  }, []);
-  
-  const clearMarkers = useCallback((map: any, markers: any[]) => {
-    // Fixed function signature to accept parameters
-    if (map && markers && markers.length > 0) {
-      markers.forEach(marker => {
-        map.removeLayer(marker);
+declare global {
+  interface Window {
+    map?: L.Map;
+    markers?: L.LayerGroup;
+    markerClusterGroup?: L.MarkerClusterGroup;
+  }
+}
+
+export function useMapMarkers() {
+  const markersRef = useRef<L.LayerGroup | null>(null);
+  const markerClusterGroupRef = useRef<L.MarkerClusterGroup | null>(null);
+
+  const getVehicleIcon = (vehicleType: string, isSelected: boolean) => {
+    if (isSelected) {
+      return L.icon({
+        iconUrl: selectedIcon,
+        iconSize: [36, 36],
+        iconAnchor: [18, 36],
+        popupAnchor: [0, -36],
       });
     }
-  }, []);
-  
-  const fitMapToMarkers = useCallback((map: any, markers: any[]) => {
-    if (!map || markers.length === 0) return;
-    
-    try {
-      // Use dynamic import instead of require
-      import('leaflet').then((L) => {
-        const bounds = L.latLngBounds();
-        
-        markers.forEach(marker => {
-          bounds.extend(marker.getLatLng());
-        });
-        
-        map.fitBounds(bounds, { padding: [50, 50] });
-      }).catch(error => {
-        console.error("Error importing Leaflet:", error);
-      });
-    } catch (error) {
-      console.error("Error fitting map to markers:", error);
+
+    let iconUrl = carIcon;
+    if (vehicleType.toLowerCase().includes('van')) {
+      iconUrl = vanIcon;
+    } else if (vehicleType.toLowerCase().includes('bus')) {
+      iconUrl = busIcon;
     }
-  }, []);
-  
-  return {
-    createVehicleMarkers,
-    clearMarkers,
-    fitMapToMarkers
+
+    return L.icon({
+      iconUrl,
+      iconSize: [32, 32],
+      iconAnchor: [16, 32],
+      popupAnchor: [0, -32],
+    });
   };
-};
+
+  const clearMarkers = useCallback((map?: L.Map) => {
+    if (!map && typeof window !== 'undefined') {
+      map = window.map;
+    }
+
+    if (markersRef.current && map) {
+      map.removeLayer(markersRef.current);
+      markersRef.current = null;
+    }
+
+    if (markerClusterGroupRef.current && map) {
+      map.removeLayer(markerClusterGroupRef.current);
+      markerClusterGroupRef.current = null;
+    }
+  }, []);
+
+  const addVehicleMarkers = useCallback((
+    map: L.Map, 
+    vehicles: TransportVehicleWithLocation[], 
+    onVehicleSelect: (vehicle: TransportVehicleWithLocation) => void,
+    selectedId?: string,
+    useCluster = true
+  ) => {
+    if (!map) return;
+
+    // Clear existing markers
+    clearMarkers(map);
+
+    // Create the marker group
+    if (useCluster) {
+      markerClusterGroupRef.current = L.markerClusterGroup({
+        maxClusterRadius: 30,
+        disableClusteringAtZoom: 15,
+      });
+    } else {
+      markersRef.current = L.layerGroup();
+    }
+
+    // Add markers for each vehicle
+    vehicles.forEach(vehicle => {
+      const { location } = vehicle;
+      const isSelected = vehicle.id === selectedId;
+      const icon = getVehicleIcon(vehicle.type, isSelected);
+      
+      const marker = L.marker([location.latitude, location.longitude], {
+        icon,
+        title: `${vehicle.make} ${vehicle.model} (${vehicle.licensePlate})`,
+        riseOnHover: true,
+      });
+      
+      marker.on('click', () => onVehicleSelect(vehicle));
+      
+      // Add the marker to the appropriate group
+      if (useCluster) {
+        markerClusterGroupRef.current?.addLayer(marker);
+      } else {
+        markersRef.current?.addLayer(marker);
+      }
+    });
+    
+    // Add the group to the map
+    if (useCluster) {
+      markerClusterGroupRef.current && map.addLayer(markerClusterGroupRef.current);
+    } else {
+      markersRef.current && map.addLayer(markersRef.current);
+    }
+    
+    // Store references globally for debugging
+    if (typeof window !== 'undefined') {
+      window.markers = markersRef.current;
+      window.markerClusterGroup = markerClusterGroupRef.current;
+    }
+  }, [clearMarkers]);
+
+  return {
+    clearMarkers,
+    addVehicleMarkers
+  };
+}

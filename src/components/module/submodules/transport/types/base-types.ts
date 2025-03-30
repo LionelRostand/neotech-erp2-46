@@ -23,3 +23,10 @@ export interface TransportService {
   maxPassengers?: number;
   serviceType: 'taxi' | 'shuttle' | 'vip' | 'event' | 'corporate' | 'tour' | 'other' | 'airport' | 'hourly' | 'pointToPoint' | 'dayTour';
 }
+
+// Ensure basic types are available for extensions in other files
+export interface TransportBasic {
+  id: string;
+  createdAt: string;
+  updatedAt?: string;
+}
