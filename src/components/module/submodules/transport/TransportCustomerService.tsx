@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Tabs } from "@/components/ui/tabs";
 import CustomerServiceTabs from './customer-service/CustomerServiceTabs';
 import CustomerServiceContent from './customer-service/CustomerServiceContent';
-import { ChevronsUpDown } from "lucide-react";
+import ChevronsUpDown from '@/components/icons/ChevronIcons';
 
 const TransportCustomerService: React.FC = () => {
   const [activeTab, setActiveTab] = useState('chat');
