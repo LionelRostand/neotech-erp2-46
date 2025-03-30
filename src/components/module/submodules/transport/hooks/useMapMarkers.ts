@@ -1,3 +1,4 @@
+
 import { useCallback } from 'react';
 import { TransportVehicleWithLocation } from '../types/map-types';
 import { getMarkerColorByStatus } from '../utils/map-utils';
@@ -57,14 +58,18 @@ export const useMapMarkers = () => {
     if (!map || markers.length === 0) return;
     
     try {
-      const L = require('leaflet');
-      const bounds = L.latLngBounds();
-      
-      markers.forEach(marker => {
-        bounds.extend(marker.getLatLng());
+      // Use dynamic import instead of require
+      import('leaflet').then((L) => {
+        const bounds = L.latLngBounds();
+        
+        markers.forEach(marker => {
+          bounds.extend(marker.getLatLng());
+        });
+        
+        map.fitBounds(bounds, { padding: [50, 50] });
+      }).catch(error => {
+        console.error("Error importing Leaflet:", error);
       });
-      
-      map.fitBounds(bounds, { padding: [50, 50] });
     } catch (error) {
       console.error("Error fitting map to markers:", error);
     }

@@ -1,11 +1,16 @@
 
-import React from 'react';
-import { ChevronsUpDown } from "lucide-react";
+import React, { useEffect } from 'react';
+import { ChevronsUpDown } from '@/components/icons/ChevronsUpDown';
 
-// This component ensures ChevronsUpDown icon is available
 const SelectPatch: React.FC = () => {
-  // This component doesn't render anything visible
-  // It just ensures the ChevronsUpDown icon is imported
+  useEffect(() => {
+    // Make sure ChevronsUpDown is available globally
+    if (typeof window !== 'undefined' && !window.ChevronsUpDown) {
+      // @ts-ignore - Adding to window object
+      window.ChevronsUpDown = ChevronsUpDown;
+    }
+  }, []);
+  
   return null;
 };
 

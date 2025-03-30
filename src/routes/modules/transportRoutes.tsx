@@ -5,28 +5,32 @@ import ModuleLayout from "@/components/module/ModuleLayout";
 import SubmodulePage from "@/components/module/SubmodulePage";
 import TransportSettingsWrapper from '@/components/module/submodules/transport/settings/TransportSettingsWrapper';
 import SelectPatch from '@/components/module/submodules/transport/patches/select-patch';
+import GeolocationMapPatch from '@/components/module/submodules/transport/patches/geolocation-patch';
+import LeafletCssPatch from '@/components/module/submodules/transport/patches/leaflet-css-patch';
 
-// Composant d'enveloppe pour appliquer SelectPatch à chaque sous-module
-const WithSelectPatch: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+// Composant d'enveloppe pour appliquer SelectPatch et map patches à chaque sous-module
+const WithPatches: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   <>
     <SelectPatch />
+    <GeolocationMapPatch />
+    <LeafletCssPatch />
     {children}
   </>
 );
 
 export const TransportRoutes = (
   <Route key="transport" path="/modules/transport" element={<ModuleLayout moduleId={7} />}>
-    <Route index element={<WithSelectPatch><SubmodulePage moduleId={7} submoduleId="transport-dashboard" /></WithSelectPatch>} />
-    <Route path="dashboard" element={<WithSelectPatch><SubmodulePage moduleId={7} submoduleId="transport-dashboard" /></WithSelectPatch>} />
-    <Route path="reservations" element={<WithSelectPatch><SubmodulePage moduleId={7} submoduleId="transport-reservations" /></WithSelectPatch>} />
-    <Route path="planning" element={<WithSelectPatch><SubmodulePage moduleId={7} submoduleId="transport-planning" /></WithSelectPatch>} />
-    <Route path="fleet" element={<WithSelectPatch><SubmodulePage moduleId={7} submoduleId="transport-fleet" /></WithSelectPatch>} />
-    <Route path="drivers" element={<WithSelectPatch><SubmodulePage moduleId={7} submoduleId="transport-drivers" /></WithSelectPatch>} />
-    <Route path="geolocation" element={<WithSelectPatch><SubmodulePage moduleId={7} submoduleId="transport-geolocation" /></WithSelectPatch>} />
-    <Route path="payments" element={<WithSelectPatch><SubmodulePage moduleId={7} submoduleId="transport-payments" /></WithSelectPatch>} />
-    <Route path="customer-service" element={<WithSelectPatch><SubmodulePage moduleId={7} submoduleId="transport-customer-service" /></WithSelectPatch>} />
-    <Route path="loyalty" element={<WithSelectPatch><SubmodulePage moduleId={7} submoduleId="transport-loyalty" /></WithSelectPatch>} />
-    <Route path="web-booking" element={<WithSelectPatch><SubmodulePage moduleId={7} submoduleId="transport-web-booking" /></WithSelectPatch>} />
+    <Route index element={<WithPatches><SubmodulePage moduleId={7} submoduleId="transport-dashboard" /></WithPatches>} />
+    <Route path="dashboard" element={<WithPatches><SubmodulePage moduleId={7} submoduleId="transport-dashboard" /></WithPatches>} />
+    <Route path="reservations" element={<WithPatches><SubmodulePage moduleId={7} submoduleId="transport-reservations" /></WithPatches>} />
+    <Route path="planning" element={<WithPatches><SubmodulePage moduleId={7} submoduleId="transport-planning" /></WithPatches>} />
+    <Route path="fleet" element={<WithPatches><SubmodulePage moduleId={7} submoduleId="transport-fleet" /></WithPatches>} />
+    <Route path="drivers" element={<WithPatches><SubmodulePage moduleId={7} submoduleId="transport-drivers" /></WithPatches>} />
+    <Route path="geolocation" element={<WithPatches><SubmodulePage moduleId={7} submoduleId="transport-geolocation" /></WithPatches>} />
+    <Route path="payments" element={<WithPatches><SubmodulePage moduleId={7} submoduleId="transport-payments" /></WithPatches>} />
+    <Route path="customer-service" element={<WithPatches><SubmodulePage moduleId={7} submoduleId="transport-customer-service" /></WithPatches>} />
+    <Route path="loyalty" element={<WithPatches><SubmodulePage moduleId={7} submoduleId="transport-loyalty" /></WithPatches>} />
+    <Route path="web-booking" element={<WithPatches><SubmodulePage moduleId={7} submoduleId="transport-web-booking" /></WithPatches>} />
     <Route path="settings" element={<TransportSettingsWrapper />} />
   </Route>
 );
