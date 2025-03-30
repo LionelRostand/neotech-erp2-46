@@ -2,8 +2,9 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Users, Settings as SettingsIcon, Shield } from "lucide-react";
+import { Settings as SettingsIcon, Shield } from "lucide-react";
 import TransportPermissionsTab from './settings/TransportPermissionsTab';
+import TransportGeneralTab from './settings/TransportGeneralTab';
 
 const TransportSettings: React.FC = () => {
   return (
@@ -23,11 +24,7 @@ const TransportSettings: React.FC = () => {
         </TabsList>
         
         <TabsContent value="general">
-          <Card>
-            <CardContent className="pt-6">
-              <p>Cette fonctionnalité est en cours de développement.</p>
-            </CardContent>
-          </Card>
+          <TransportGeneralTab />
         </TabsContent>
         
         <TabsContent value="permissions">

@@ -24,3 +24,7 @@ export interface UserWithPermissions {
   role: string;
   permissions: TransportPermission[];
 }
+
+// Dropdown options for permission management
+export type PermissionLevel = 'none' | 'readonly' | 'readwrite' | 'full';
+

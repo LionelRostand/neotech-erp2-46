@@ -7,9 +7,10 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Search, Shield, Save, RefreshCw, User, Users } from "lucide-react";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { usePermissions } from '@/hooks/usePermissions';
-import { TransportPermission, TransportUserPermission } from '../types/permission-types';
+import { TransportPermission, TransportUserPermission, PermissionLevel } from '../types/permission-types';
 
 const TransportPermissionsTab: React.FC = () => {
   // Mock data for users and clients - would be fetched from API in production
@@ -75,14 +76,44 @@ const TransportPermissionsTab: React.FC = () => {
     setClientPermissions(initClientPerms);
   }, []);
   
-  // Update a specific permission
-  const updatePermission = (
+  // Convert permission level to individual permissions
+  const getPermissionsFromLevel = (level: PermissionLevel): { canView: boolean, canCreate: boolean, canEdit: boolean, canDelete: boolean } => {
+    switch (level) {
+      case 'none':
+        return { canView: false, canCreate: false, canEdit: false, canDelete: false };
+      case 'readonly':
+        return { canView: true, canCreate: false, canEdit: false, canDelete: false };
+      case 'readwrite':
+        return { canView: true, canCreate: true, canEdit: true, canDelete: false };
+      case 'full':
+        return { canView: true, canCreate: true, canEdit: true, canDelete: true };
+      default:
+        return { canView: false, canCreate: false, canEdit: false, canDelete: false };
+    }
+  };
+
+  // Get permission level from individual permissions
+  const getPermissionLevel = (permission: TransportPermission): PermissionLevel => {
+    const { canView, canCreate, canEdit, canDelete } = permission;
+    
+    if (canDelete) return 'full';
+    if (canEdit && canCreate && canView) return 'readwrite';
+    if (canView && !canCreate && !canEdit) return 'readonly';
+    if (!canView) return 'none';
+    
+    // Custom state that doesn't fit standard levels
+    return 'readonly';
+  };
+
+  // Update permissions based on selected level
+  const updatePermissionLevel = (
     userType: 'employee' | 'client',
     userId: string, 
     moduleId: string, 
-    permissionType: keyof Omit<TransportPermission, 'moduleId'>, 
-    value: boolean
+    level: PermissionLevel
   ) => {
+    const newPermissions = getPermissionsFromLevel(level);
+    
     if (userType === 'employee') {
       setEmployeePermissions(prev => prev.map(p => {
         if (p.userId === userId) {
@@ -90,7 +121,7 @@ const TransportPermissionsTab: React.FC = () => {
             ...p,
             permissions: p.permissions.map(mod => {
               if (mod.moduleId === moduleId) {
-                return { ...mod, [permissionType]: value };
+                return { ...mod, ...newPermissions };
               }
               return mod;
             })
@@ -105,7 +136,7 @@ const TransportPermissionsTab: React.FC = () => {
             ...p,
             permissions: p.permissions.map(mod => {
               if (mod.moduleId === moduleId) {
-                return { ...mod, [permissionType]: value };
+                return { ...mod, ...newPermissions };
               }
               return mod;
             })
@@ -116,13 +147,14 @@ const TransportPermissionsTab: React.FC = () => {
     }
   };
   
-  // Set all permissions of a specific type for a user
-  const setAllPermissionsOfType = (
+  // Set all permissions for a user
+  const setAllPermissionsToLevel = (
     userType: 'employee' | 'client',
     userId: string, 
-    permissionType: keyof Omit<TransportPermission, 'moduleId'>, 
-    value: boolean
+    level: PermissionLevel
   ) => {
+    const newPermissions = getPermissionsFromLevel(level);
+    
     if (userType === 'employee') {
       setEmployeePermissions(prev => prev.map(p => {
         if (p.userId === userId) {
@@ -130,7 +162,7 @@ const TransportPermissionsTab: React.FC = () => {
             ...p,
             permissions: p.permissions.map(mod => ({
               ...mod,
-              [permissionType]: value
+              ...newPermissions
             }))
           };
         }
@@ -143,7 +175,7 @@ const TransportPermissionsTab: React.FC = () => {
             ...p,
             permissions: p.permissions.map(mod => ({
               ...mod,
-              [permissionType]: value
+              ...newPermissions
             }))
           };
         }
@@ -185,17 +217,15 @@ const TransportPermissionsTab: React.FC = () => {
     client.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // Common permission table component
+  // Common permission table component with dropdowns
   const PermissionsTable = ({ userType, users, userPermissions }) => (
     <Table>
       <TableHeader>
         <TableRow>
           <TableHead className="w-[250px]">Nom</TableHead>
           <TableHead>Module</TableHead>
-          <TableHead className="text-center">Lecture</TableHead>
-          <TableHead className="text-center">Création</TableHead>
-          <TableHead className="text-center">Modification</TableHead>
-          <TableHead className="text-center">Suppression</TableHead>
+          <TableHead className="text-center">Niveau d'accès</TableHead>
+          <TableHead className="text-center">Détails</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -209,28 +239,27 @@ const TransportPermissionsTab: React.FC = () => {
               </TableCell>
               <TableCell className="font-medium">Tous les modules</TableCell>
               <TableCell className="text-center">
-                <Checkbox 
-                  checked={userPermissions.find(p => p.userId === user.id)?.permissions.every(p => p.canView)}
-                  onCheckedChange={(checked) => setAllPermissionsOfType(userType, user.id, 'canView', !!checked)}
-                />
+                <Select 
+                  onValueChange={(value) => setAllPermissionsToLevel(userType, user.id, value as PermissionLevel)}
+                >
+                  <SelectTrigger className="w-[180px] mx-auto">
+                    <SelectValue placeholder="Choisir un niveau" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Aucun accès</SelectItem>
+                    <SelectItem value="readonly">Lecture seule</SelectItem>
+                    <SelectItem value="readwrite">Lecture/Écriture</SelectItem>
+                    <SelectItem value="full">Accès complet</SelectItem>
+                  </SelectContent>
+                </Select>
               </TableCell>
               <TableCell className="text-center">
-                <Checkbox 
-                  checked={userPermissions.find(p => p.userId === user.id)?.permissions.every(p => p.canCreate)}
-                  onCheckedChange={(checked) => setAllPermissionsOfType(userType, user.id, 'canCreate', !!checked)}
-                />
-              </TableCell>
-              <TableCell className="text-center">
-                <Checkbox 
-                  checked={userPermissions.find(p => p.userId === user.id)?.permissions.every(p => p.canEdit)}
-                  onCheckedChange={(checked) => setAllPermissionsOfType(userType, user.id, 'canEdit', !!checked)}
-                />
-              </TableCell>
-              <TableCell className="text-center">
-                <Checkbox 
-                  checked={userPermissions.find(p => p.userId === user.id)?.permissions.every(p => p.canDelete)}
-                  onCheckedChange={(checked) => setAllPermissionsOfType(userType, user.id, 'canDelete', !!checked)}
-                />
+                <div className="flex justify-around text-xs">
+                  <div>Lecture</div>
+                  <div>Création</div>
+                  <div>Édition</div>
+                  <div>Suppression</div>
+                </div>
               </TableCell>
             </TableRow>
 
@@ -240,33 +269,51 @@ const TransportPermissionsTab: React.FC = () => {
                 .find(p => p.userId === user.id)
                 ?.permissions.find(p => p.moduleId === module.id);
               
+              const currentLevel = perm ? getPermissionLevel(perm) : 'none';
+              
               return (
                 <TableRow key={`${user.id}-${module.id}`}>
                   <TableCell></TableCell>
                   <TableCell>{module.name}</TableCell>
                   <TableCell className="text-center">
-                    <Checkbox 
-                      checked={perm?.canView || false}
-                      onCheckedChange={(checked) => updatePermission(userType, user.id, module.id, 'canView', !!checked)}
-                    />
+                    <Select 
+                      value={currentLevel}
+                      onValueChange={(value) => updatePermissionLevel(userType, user.id, module.id, value as PermissionLevel)}
+                    >
+                      <SelectTrigger className="w-[180px] mx-auto">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">Aucun accès</SelectItem>
+                        <SelectItem value="readonly">Lecture seule</SelectItem>
+                        <SelectItem value="readwrite">Lecture/Écriture</SelectItem>
+                        <SelectItem value="full">Accès complet</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </TableCell>
                   <TableCell className="text-center">
-                    <Checkbox 
-                      checked={perm?.canCreate || false}
-                      onCheckedChange={(checked) => updatePermission(userType, user.id, module.id, 'canCreate', !!checked)}
-                    />
-                  </TableCell>
-                  <TableCell className="text-center">
-                    <Checkbox 
-                      checked={perm?.canEdit || false}
-                      onCheckedChange={(checked) => updatePermission(userType, user.id, module.id, 'canEdit', !!checked)}
-                    />
-                  </TableCell>
-                  <TableCell className="text-center">
-                    <Checkbox 
-                      checked={perm?.canDelete || false}
-                      onCheckedChange={(checked) => updatePermission(userType, user.id, module.id, 'canDelete', !!checked)}
-                    />
+                    <div className="flex justify-around">
+                      <Checkbox 
+                        checked={perm?.canView || false}
+                        disabled={true}
+                        className="opacity-100"
+                      />
+                      <Checkbox 
+                        checked={perm?.canCreate || false}
+                        disabled={true}
+                        className="opacity-100"
+                      />
+                      <Checkbox 
+                        checked={perm?.canEdit || false}
+                        disabled={true}
+                        className="opacity-100"
+                      />
+                      <Checkbox 
+                        checked={perm?.canDelete || false}
+                        disabled={true}
+                        className="opacity-100"
+                      />
+                    </div>
                   </TableCell>
                 </TableRow>
               );
