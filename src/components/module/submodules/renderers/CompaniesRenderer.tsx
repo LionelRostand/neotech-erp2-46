@@ -29,6 +29,6 @@ export const renderCompaniesSubmodule = (submoduleId: string, submodule: SubModu
     case 'companies-settings':
       return <CompaniesSettings />;
     default:
-      return <DefaultSubmoduleContent submodule={submodule} />;
+      return <DefaultSubmoduleContent title={submodule.name} submodule={submodule} />;
   }
 };

@@ -17,6 +17,6 @@ export const SalonRenderer: React.FC<SalonRendererProps> = ({ submoduleId, submo
     case 'salon-appointments':
       return <SalonAppointments />;
     default:
-      return <DefaultSubmoduleContent submodule={submodule} />;
+      return <DefaultSubmoduleContent title={submodule.name} submodule={submodule} />;
   }
 };

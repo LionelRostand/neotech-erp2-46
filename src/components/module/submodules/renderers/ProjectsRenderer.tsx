@@ -24,6 +24,6 @@ export const renderProjectsSubmodule = (submoduleId: string, submodule: SubModul
     case 'projects-settings':
       return <SettingsPage />;
     default:
-      return <DefaultSubmoduleContent submodule={submodule} />;
+      return <DefaultSubmoduleContent title={submodule.name} submodule={submodule} />;
   }
 };

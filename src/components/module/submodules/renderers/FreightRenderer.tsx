@@ -37,6 +37,6 @@ export const renderFreightSubmodule = (submoduleId: string, submodule: SubModule
       return <FreightSettings />;
     // All other freight submodules will default to DefaultSubmoduleContent
     default:
-      return <DefaultSubmoduleContent submodule={submodule} />;
+      return <DefaultSubmoduleContent title={submodule.name} submodule={submodule} />;
   }
 };

@@ -25,6 +25,6 @@ export const renderLibrarySubmodule = (submoduleId: string, submodule: SubModule
       return <SettingsPage />;
     default:
       console.warn(`Unknown library submodule: ${submoduleId}`);
-      return <DefaultSubmoduleContent submodule={submodule} />;
+      return <DefaultSubmoduleContent title={submodule.name} submodule={submodule} />;
   }
 };

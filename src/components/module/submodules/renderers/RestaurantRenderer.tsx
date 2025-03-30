@@ -100,6 +100,6 @@ export const RestaurantRenderer: React.FC<RestaurantRendererProps> = ({ submodul
         </div>
       );
     default:
-      return <DefaultSubmoduleContent submodule={submodule} />;
+      return <DefaultSubmoduleContent title={submodule.name} submodule={submodule} />;
   }
 };

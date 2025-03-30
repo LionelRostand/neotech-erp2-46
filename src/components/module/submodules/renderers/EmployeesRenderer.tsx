@@ -65,6 +65,6 @@ export const renderEmployeesSubmodule = (submoduleId: string, submodule: SubModu
     case 'employees-companies':
       return <EmployeesCompanies />;
     default:
-      return <DefaultSubmoduleContent submodule={submodule} />;
+      return <DefaultSubmoduleContent title={submodule.name} submodule={submodule} />;
   }
 };
