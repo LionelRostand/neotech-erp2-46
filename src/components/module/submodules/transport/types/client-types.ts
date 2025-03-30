@@ -5,7 +5,7 @@ export interface TransportClient extends TransportBasic {
   firstName?: string;
   lastName?: string;
   fullName?: string;
-  name?: string; // For compatibility with components using name directly
+  name?: string; // Pour la compatibilité avec les composants utilisant directement le nom
   email: string;
   phone: string;
   address?: string;
