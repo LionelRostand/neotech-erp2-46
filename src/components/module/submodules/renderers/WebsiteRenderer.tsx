@@ -10,6 +10,8 @@ import WebsiteDesign from '../website/WebsiteDesign';
 import WebsiteMedia from '../website/WebsiteMedia';
 import WebsiteModules from '../website/WebsiteModules';
 import WebsiteSettings from '../website/WebsiteSettings';
+import WebsitePublic from '../website/WebsitePublic';
+import WebsiteThemeEditor from '../website/WebsiteThemeEditor';
 
 export const renderWebsiteSubmodule = (submoduleId: string, submodule: SubModule) => {
   switch (submoduleId) {
@@ -29,6 +31,10 @@ export const renderWebsiteSubmodule = (submoduleId: string, submodule: SubModule
       return <WebsiteModules />;
     case 'website-settings':
       return <WebsiteSettings />;
+    case 'website-public':
+      return <WebsitePublic />;
+    case 'website-theme':
+      return <WebsiteThemeEditor />;
     default:
       return <DefaultSubmoduleContent submodule={submodule} />;
   }
