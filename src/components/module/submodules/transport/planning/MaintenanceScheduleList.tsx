@@ -28,7 +28,9 @@ const MaintenanceScheduleList: React.FC<MaintenanceScheduleListProps> = ({
     return format(new Date(dateString), "dd MMM yyyy", { locale: fr });
   };
 
-  const getMaintenanceTypeLabel = (type: string) => {
+  const getMaintenanceTypeLabel = (type: string | undefined) => {
+    if (!type) return 'Entretien';
+    
     switch(type) {
       case 'regular': return 'Entretien régulier';
       case 'repair': return 'Réparation';
@@ -91,9 +93,9 @@ const MaintenanceScheduleList: React.FC<MaintenanceScheduleListProps> = ({
                 <TableRow key={schedule.id}>
                   <TableCell className="font-medium">{getVehicleName(schedule.vehicleId)}</TableCell>
                   <TableCell>{getMaintenanceTypeLabel(schedule.type)}</TableCell>
-                  <TableCell>{formatDate(schedule.startDate)}</TableCell>
-                  <TableCell>{formatDate(schedule.endDate)}</TableCell>
-                  <TableCell className="max-w-xs truncate">{schedule.description}</TableCell>
+                  <TableCell>{schedule.startDate ? formatDate(schedule.startDate) : '-'}</TableCell>
+                  <TableCell>{schedule.endDate ? formatDate(schedule.endDate) : '-'}</TableCell>
+                  <TableCell className="max-w-xs truncate">{schedule.description || '-'}</TableCell>
                   <TableCell>{schedule.technician || '-'}</TableCell>
                   <TableCell className="text-right">
                     <Button 

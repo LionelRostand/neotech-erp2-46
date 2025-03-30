@@ -17,7 +17,7 @@ export interface VehicleLocation {
 
 export interface TransportVehicleWithLocation extends TransportVehicle {
   location: VehicleLocation;
-  driverName?: string; // Added property
+  driverName?: string;
 }
 
 export interface MapConfig {
@@ -52,8 +52,13 @@ export interface MaintenanceSchedule {
   id: string;
   vehicleId: string;
   taskName: string;
+  type?: string;
   nextDue: string;
   priority: 'low' | 'medium' | 'high' | 'critical';
+  description?: string;
+  startDate?: string;
+  endDate?: string;
+  technician?: string;
 }
 
 export interface ExtensionRequest {

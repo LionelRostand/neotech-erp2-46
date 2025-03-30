@@ -3,25 +3,25 @@ import { Note } from './base-types';
 
 export interface TransportVehicle {
   id: string;
-  name: string; // Added property
+  name: string;
   licensePlate: string;
   make?: string;
   model?: string;
   year?: number;
   type: string;
   capacity: number;
-  status: 'available' | 'in-use' | 'maintenance' | 'out-of-service' | 'active'; // Added 'active'
+  status: 'available' | 'in-use' | 'maintenance' | 'out-of-service' | 'active';
   features?: string[];
   currentDriverId?: string;
   photo?: string;
-  lastServiceDate?: string; // Added property
-  nextServiceDate?: string; // Added property
+  lastServiceDate?: string;
+  nextServiceDate?: string;
   fuelType?: string;
   fuelLevel?: number;
   mileage?: number;
-  purchaseDate?: string; // Added property
-  available?: boolean; // Added property
-  insuranceInfo?: { // Added property
+  purchaseDate?: string;
+  available?: boolean;
+  insuranceInfo?: {
     provider: string;
     policyNumber: string;
     expiryDate: string;
@@ -38,8 +38,8 @@ export interface MaintenanceRecord {
   cost: number;
   provider: string;
   mileage: number;
-  nextMaintenance?: string; // Added property
-  resolved?: boolean; // Added property
+  nextMaintenance?: string;
+  resolved?: boolean;
   attachments?: string[];
 }
 
@@ -62,6 +62,8 @@ export interface MaintenanceSchedule {
   endDate?: string;
   type?: string;
   technician?: string;
+  completed?: boolean;
+  notes?: string;
 }
 
 export interface IncidentRecord {
@@ -69,8 +71,8 @@ export interface IncidentRecord {
   vehicleId: string;
   date: string;
   driverId?: string;
-  driverName?: string; // Added property
-  clientName?: string; // Added property
+  driverName?: string;
+  clientName?: string;
   description: string;
   location?: string;
   severity: 'minor' | 'moderate' | 'major';
@@ -78,9 +80,9 @@ export interface IncidentRecord {
   insuranceClaim?: boolean;
   claimNumber?: string;
   cost?: number;
-  repairCost?: number; // Added property
-  resolved?: boolean; // Added property
-  damageDetails?: string; // Added property
+  repairCost?: number;
+  resolved?: boolean;
+  damageDetails?: string;
   attachments?: string[];
 }
 

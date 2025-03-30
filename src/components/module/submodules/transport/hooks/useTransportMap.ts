@@ -1,130 +1,144 @@
 
-import { useEffect, useRef, useState } from 'react';
-import { TransportVehicleWithLocation, MapConfig, MapHookResult } from '../types/map-types';
-import { configureLeafletIcons } from '../utils/leaflet-icon-setup';
-import { getTileLayerConfig, calculateMapCenter } from '../utils/map-utils';
-import { useMapMarkers } from './useMapMarkers';
-import 'leaflet/dist/leaflet.css'; // Import Leaflet CSS
+import { useRef, useState, useCallback } from 'react';
+import { MapConfig, MapHookResult, TransportVehicleWithLocation } from '../types/map-types';
 
+// Mock implementation of the map hook
 export const useTransportMap = (
-  mapElementRef: React.RefObject<HTMLDivElement>,
-  vehicles: TransportVehicleWithLocation[],
-  initialConfig?: Partial<MapConfig>
+  containerRef: React.RefObject<HTMLDivElement>,
+  vehicles: TransportVehicleWithLocation[] = []
 ): MapHookResult => {
-  const [mapInitialized, setMapInitialized] = useState(false);
-  const leafletMapRef = useRef<any>(null);
-  const [mapConfig, setMapConfig] = useState<MapConfig>({
-    zoom: 11,
-    centerLat: 48.852969,
-    centerLng: 2.349903,
+  const mapInstanceRef = useRef<any>(null);
+  const [isMapInitialized, setIsMapInitialized] = useState(false);
+  const [isMapLoaded, setIsMapLoaded] = useState(false);
+
+  // Default map configuration
+  const [mapConfiguration, setMapConfiguration] = useState<MapConfig>({
+    center: [48.8566, 2.3522], // Paris
+    zoom: 13,
     tileProvider: 'osm-france',
     showLabels: true,
-    ...initialConfig
+    centerLat: 48.8566,
+    centerLng: 2.3522
   });
-  
-  // Added to prevent continuous reloading
-  const initializationAttemptedRef = useRef(false);
-  const { markersRef, createVehicleMarkers, fitMapToMarkers } = useMapMarkers();
 
-  // Initialize and update map when vehicles or config change
-  useEffect(() => {
-    if (!mapElementRef.current) return;
-    
-    // Prevent repeated initialization attempts
-    if (!mapInitialized && initializationAttemptedRef.current) return;
-    
-    const initializeMap = async () => {
-      try {
-        // Set initialization flag to prevent multiple attempts
-        initializationAttemptedRef.current = true;
-        
-        // Configure Leaflet icons
-        const L = await configureLeafletIcons();
-        
-        // Initialize map if not already done
-        if (!mapInitialized) {
-          // Clean up existing map
-          if (leafletMapRef.current) {
-            leafletMapRef.current.remove();
-            leafletMapRef.current = null;
+  // Function to initialize the map
+  const initializeMap = useCallback(() => {
+    if (!containerRef.current || !window.L) {
+      return;
+    }
+
+    // Clean up existing map if any
+    if (mapInstanceRef.current) {
+      mapInstanceRef.current.remove();
+    }
+
+    try {
+      // Create map instance
+      mapInstanceRef.current = window.L.map(containerRef.current).setView(
+        [mapConfiguration.centerLat || mapConfiguration.center[0], mapConfiguration.centerLng || mapConfiguration.center[1]],
+        mapConfiguration.zoom
+      );
+
+      // Add tile layer based on provider
+      let tileLayer;
+      switch (mapConfiguration.tileProvider) {
+        case 'osm-france':
+          tileLayer = window.L.tileLayer('https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap France | &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          });
+          break;
+        case 'carto':
+          tileLayer = window.L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+          });
+          break;
+        default: // 'osm'
+          tileLayer = window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          });
+      }
+
+      tileLayer.addTo(mapInstanceRef.current);
+
+      // Add vehicle markers if showLabels is true
+      if (mapConfiguration.showLabels && vehicles.length > 0) {
+        vehicles.forEach(vehicle => {
+          if (vehicle.location) {
+            const { latitude, longitude, lat, lng } = vehicle.location;
+            const position = [lat || latitude, lng || longitude];
+            
+            const marker = window.L.marker(position as [number, number])
+              .addTo(mapInstanceRef.current)
+              .bindPopup(`
+                <b>${vehicle.name}</b><br>
+                ${vehicle.licensePlate}<br>
+                ${vehicle.location.status}
+              `);
           }
-          
-          // Calculate center position
-          const { latitude, longitude, zoom } = calculateMapCenter(
-            vehicles,
-            mapConfig.centerLat,
-            mapConfig.centerLng,
-            mapConfig.zoom
-          );
-          
-          // Create new map with correct sizing and options
-          const map = L.map(mapElementRef.current, {
-            zoomControl: true,
-            attributionControl: true,
-            scrollWheelZoom: true,
-            doubleClickZoom: true,
-            dragging: true,
-            maxBounds: [[-90, -180], [90, 180]]
-          }).setView([latitude, longitude], zoom);
-          
-          leafletMapRef.current = map;
-          
-          // Add tile layer based on config
-          const tileLayerConfig = getTileLayerConfig(mapConfig.tileProvider);
-          const tileLayer = L.tileLayer(tileLayerConfig.url, tileLayerConfig);
-          tileLayer.addTo(map);
-          
-          // Ensure map properly sizes itself - critical for proper display
-          setTimeout(() => {
-            map.invalidateSize(true);
-          }, 500);
-
-          setMapInitialized(true);
-        }
-        
-        // Add or update markers for all vehicles with location
-        if (mapInitialized && leafletMapRef.current) {
-          // Force map to update its container size again after initialization
-          leafletMapRef.current.invalidateSize(true);
-          
-          // Create new markers
-          const markers = await createVehicleMarkers(
-            leafletMapRef.current, 
-            vehicles, 
-            mapConfig.showLabels
-          );
-          
-          // Fit map to show all markers
-          fitMapToMarkers(leafletMapRef.current, markers);
-        }
-      } catch (error) {
-        console.error("Error initializing map:", error);
+        });
       }
-    };
-    
+
+      setIsMapInitialized(true);
+      setIsMapLoaded(true);
+    } catch (error) {
+      console.error("Error initializing map:", error);
+    }
+  }, [containerRef, mapConfiguration, vehicles]);
+
+  // Function to refresh the map
+  const refreshMap = useCallback(() => {
     initializeMap();
-  }, [vehicles, mapInitialized, mapElementRef, mapConfig, createVehicleMarkers, fitMapToMarkers]);
+  }, [initializeMap]);
 
-  // Clean up map on component unmount
-  useEffect(() => {
-    return () => {
-      if (leafletMapRef.current) {
-        leafletMapRef.current.remove();
-        leafletMapRef.current = null;
-      }
-    };
+  // Functions to manipulate the map
+  const setCenter = useCallback((coords: [number, number]) => {
+    if (mapInstanceRef.current) {
+      mapInstanceRef.current.setView(coords);
+    }
   }, []);
 
-  const forceRefreshMap = () => {
-    // Reset the initialization flag
-    initializationAttemptedRef.current = false;
-    setMapInitialized(false);
-  };
+  const setZoom = useCallback((zoom: number) => {
+    if (mapInstanceRef.current) {
+      mapInstanceRef.current.setZoom(zoom);
+    }
+  }, []);
 
-  return { 
-    mapInitialized,
-    mapConfig,
-    setMapConfig,
-    refreshMap: forceRefreshMap
+  const addMarker = useCallback((coords: [number, number], options = {}) => {
+    if (!mapInstanceRef.current) return null;
+    const marker = window.L.marker(coords, options).addTo(mapInstanceRef.current);
+    return marker;
+  }, []);
+
+  const removeMarker = useCallback((marker: any) => {
+    if (marker && mapInstanceRef.current) {
+      mapInstanceRef.current.removeLayer(marker);
+    }
+  }, []);
+
+  const drawRoute = useCallback((points: [number, number][], options = {}) => {
+    if (!mapInstanceRef.current) return null;
+    const polyline = window.L.polyline(points, options).addTo(mapInstanceRef.current);
+    return polyline;
+  }, []);
+
+  const clearRoute = useCallback((route: any) => {
+    if (route && mapInstanceRef.current) {
+      mapInstanceRef.current.removeLayer(route);
+    }
+  }, []);
+
+  return {
+    map: mapInstanceRef.current,
+    isLoaded: isMapLoaded,
+    setCenter,
+    setZoom,
+    addMarker,
+    removeMarker,
+    drawRoute,
+    clearRoute,
+    mapInitialized: isMapInitialized,
+    mapConfig: mapConfiguration,
+    setMapConfig: setMapConfiguration,
+    refreshMap
   };
 };

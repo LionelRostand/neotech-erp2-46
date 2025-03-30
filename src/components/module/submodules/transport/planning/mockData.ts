@@ -59,9 +59,11 @@ export const mockMaintenanceSchedules: MaintenanceSchedule[] = [
     endDate: "2023-11-22",
     type: "regular",
     description: "Changement d'huile et filtres",
-    completed: false,
     technician: "Garage Central",
-    notes: "Inclure vérification des freins"
+    notes: "Inclure vérification des freins",
+    taskName: "Maintenance régulière",
+    nextDue: "2024-05-20",
+    priority: "medium"
   },
   {
     id: "mnt-002",
@@ -70,9 +72,11 @@ export const mockMaintenanceSchedules: MaintenanceSchedule[] = [
     endDate: "2023-11-25",
     type: "repair",
     description: "Réparation système électrique",
-    completed: false,
     technician: "ElectroCar",
-    notes: "Problème de batterie détecté lors de la dernière location"
+    notes: "Problème de batterie détecté lors de la dernière location",
+    taskName: "Réparation",
+    nextDue: "2024-05-15",
+    priority: "high"
   },
   {
     id: "mnt-003",
@@ -81,9 +85,11 @@ export const mockMaintenanceSchedules: MaintenanceSchedule[] = [
     endDate: "2023-12-06",
     type: "inspection",
     description: "Contrôle technique annuel",
-    completed: false,
     technician: "Contrôle Auto",
-    notes: "Rendez-vous à 9h"
+    notes: "Rendez-vous à 9h",
+    taskName: "Contrôle technique",
+    nextDue: "2024-12-05",
+    priority: "low"
   }
 ];
 
@@ -91,6 +97,7 @@ export const mockMaintenanceSchedules: MaintenanceSchedule[] = [
 export const mockExtensionRequests: ExtensionRequest[] = [
   {
     id: "ext-001",
+    reservationId: "res-001",
     requestId: "TR-2023-002",
     clientName: "Marie Legrand",
     originalEndDate: "2023-11-21",
@@ -98,10 +105,14 @@ export const mockExtensionRequests: ExtensionRequest[] = [
     vehicleName: "BMW Série 5",
     status: "pending",
     reason: "Prolongation voyage d'affaires",
-    createdAt: "2023-11-18"
+    createdAt: "2023-11-18",
+    requestedBy: "Marie Legrand",
+    requestedAt: "2023-11-18",
+    additionalTime: 48 * 60 // 48 hours in minutes
   },
   {
     id: "ext-002",
+    reservationId: "res-002",
     requestId: "TR-2023-004",
     clientName: "Sophie Bernard",
     originalEndDate: "2023-11-20",
@@ -109,7 +120,10 @@ export const mockExtensionRequests: ExtensionRequest[] = [
     vehicleName: "Mercedes Classe V",
     status: "approved",
     reason: "Besoin supplémentaire du véhicule",
-    createdAt: "2023-11-17"
+    createdAt: "2023-11-17",
+    requestedBy: "Sophie Bernard",
+    requestedAt: "2023-11-17",
+    additionalTime: 48 * 60 // 48 hours in minutes
   }
 ];
 
@@ -129,7 +143,8 @@ export const mockDrivers: TransportDriver[] = [
     experience: 5,
     photo: "",
     skills: ["luxury", "airport", "events"],
-    preferredVehicleTypes: ["sedan", "luxury"]
+    preferredVehicleTypes: ["sedan", "luxury"],
+    status: "active"
   },
   {
     id: "drv-002",
@@ -145,7 +160,8 @@ export const mockDrivers: TransportDriver[] = [
     experience: 3,
     photo: "",
     skills: ["airport", "long-distance"],
-    preferredVehicleTypes: ["sedan"]
+    preferredVehicleTypes: ["sedan"],
+    status: "driving"
   },
   {
     id: "drv-003",
@@ -161,6 +177,7 @@ export const mockDrivers: TransportDriver[] = [
     experience: 7,
     photo: "",
     skills: ["luxury", "events", "night"],
-    preferredVehicleTypes: ["luxury"]
+    preferredVehicleTypes: ["luxury"],
+    status: "on-leave"
   }
 ];
