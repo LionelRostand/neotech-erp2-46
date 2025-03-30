@@ -27,8 +27,8 @@ export interface Reservation {
   clientName: string;
   date: string;
   time: string;
-  pickup: string;
-  dropoff: string;
+  pickup: string | {address: string};
+  dropoff: string | {address: string};
   service: TransportService;
   passengers: number;
   vehicleId?: string;
@@ -39,6 +39,12 @@ export interface Reservation {
   notes?: string;
   price?: number;
   paymentStatus?: 'pending' | 'paid' | 'partial' | 'refunded';
+  // Additional properties used in components
+  startDate?: string;
+  endDate?: string;
+  pickupLocation?: {address: string};
+  dropoffLocation?: {address: string};
+  totalAmount?: number;
 }
 
 export type ReservationStatus = 'pending' | 'confirmed' | 'in-progress' | 'completed' | 'cancelled';
@@ -50,6 +56,9 @@ export interface TransportReservation extends Reservation {
   luggage?: number;
   pickupInstructions?: string;
   additionalStops?: string[];
+  needsDriver?: boolean;
+  isPaid?: boolean;
+  contractGenerated?: boolean;
 }
 
 export interface ExtensionRequest {

@@ -19,6 +19,7 @@ export interface TransportClient {
     tier: string;
     lastActivity: string;
   };
+  loyaltyPoints?: number;
   createdAt: string;
   notes?: string[];
 }

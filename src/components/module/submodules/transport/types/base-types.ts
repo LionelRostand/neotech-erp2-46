@@ -1,7 +1,7 @@
 
 // Common base types for transport module
 
-export type TransportService = 'airport-transfer' | 'city-tour' | 'business-travel' | 'wedding' | 'event' | 'hourly-hire' | 'long-distance' | 'custom';
+export type TransportService = 'airport-transfer' | 'city-tour' | 'business-travel' | 'wedding' | 'event' | 'hourly-hire' | 'long-distance' | 'custom' | 'airport' | 'hourly' | 'pointToPoint';
 
 export interface Note {
   id: string;

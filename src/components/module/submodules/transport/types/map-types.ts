@@ -9,10 +9,15 @@ export interface VehicleLocation {
   speed: number;
   timestamp: string;
   status: 'idle' | 'driving' | 'stopped';
+  // Additional properties used in components
+  lat?: number; 
+  lng?: number;
+  lastUpdate?: string;
 }
 
 export interface TransportVehicleWithLocation extends TransportVehicle {
   location: VehicleLocation;
+  driverName?: string; // Added property
 }
 
 export interface MapConfig {
@@ -20,6 +25,10 @@ export interface MapConfig {
   zoom: number;
   tileProvider: string;
   apiKey?: string;
+  // Additional properties used in components
+  showLabels?: boolean;
+  centerLat?: number;
+  centerLng?: number;
 }
 
 export interface MapHookResult {
@@ -31,6 +40,11 @@ export interface MapHookResult {
   removeMarker: (marker: any) => void;
   drawRoute: (points: [number, number][], options?: any) => any;
   clearRoute: (route: any) => void;
+  // Additional properties used in components
+  mapInitialized?: boolean;
+  mapConfig?: MapConfig;
+  setMapConfig?: (config: MapConfig) => void;
+  refreshMap?: () => void;
 }
 
 // For backward compatibility
@@ -46,4 +60,14 @@ export interface ExtensionRequest {
   id: string;
   reservationId: string;
   status: 'pending' | 'approved' | 'rejected';
+  // Additional fields used in components
+  requestId?: string;
+  clientName?: string;
+  vehicleName?: string;
+  originalEndDate?: string;
+  requestedEndDate?: string;
+  reason?: string;
+  requestedAt?: string;
+  requestedBy?: string;
+  createdAt?: string;
 }
