@@ -14,4 +14,4 @@ export * from './renderers/TransportRenderer';
 export * from './renderers/GarageRenderer';
 export * from './renderers/SalonRenderer';
 export * from './renderers/RestaurantRenderer';
-export * from './renderers/WebsiteRenderer';  // Add this line to export WebsiteRenderer
+export * from './renderers/WebsiteRenderer';
