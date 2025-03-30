@@ -33,7 +33,7 @@ const SelectPatch: React.FC = () => {
         require('@radix-ui/react-select').Item = React.forwardRef((props: any, ref) => {
           // Ensure value is never empty
           const safeProps = {...props};
-          if (!safeProps.value) {
+          if (!safeProps.value || safeProps.value === '') {
             safeProps.value = `item-${Math.random().toString(36).substring(2, 9)}`;
             console.log('Patched empty Select.Item value with:', safeProps.value);
           }
@@ -52,6 +52,34 @@ const SelectPatch: React.FC = () => {
       toast.error("Failed to patch Select components", {
         description: "Some components may not work correctly"
       });
+    }
+    
+    // Additional patch to ensure SelectItem from UI components is also patched
+    try {
+      const SelectUIModule = require('@/components/ui/select');
+      if (SelectUIModule && SelectUIModule.SelectItem && !SelectUIModule.SelectItem.__patched) {
+        const OriginalUISelectItem = SelectUIModule.SelectItem;
+        
+        // @ts-ignore - Replace the component
+        SelectUIModule.SelectItem = React.forwardRef((props: any, ref) => {
+          // Ensure value is never empty
+          const safeProps = {...props};
+          if (!safeProps.value || safeProps.value === '') {
+            safeProps.value = `ui-item-${Math.random().toString(36).substring(2, 9)}`;
+            console.log('Patched empty UI SelectItem value with:', safeProps.value);
+          }
+          
+          return <OriginalUISelectItem {...safeProps} ref={ref} />;
+        });
+        
+        // Mark as patched
+        // @ts-ignore
+        SelectUIModule.SelectItem.__patched = true;
+        
+        console.log('UI SelectItem patched successfully');
+      }
+    } catch (error) {
+      console.error('Failed to patch UI SelectItem:', error);
     }
   }, []);
 
