@@ -1,71 +1,118 @@
 
-import { MapConfig, TransportVehicleWithLocation } from '../types/map-types';
+import { TransportVehicleWithLocation, MapConfig } from '../types/map-types';
 
-/**
- * Choose the correct tile layer URL and attribution based on provider
- */
-export const getTileLayerConfig = (provider: MapConfig['tileProvider']) => {
-  switch (provider) {
-    case 'osm':
-      return {
-        url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-        minZoom: 1,
-        maxZoom: 19
-      };
-    case 'carto':
-      return {
-        url: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
-        subdomains: 'abcd',
-        minZoom: 1,
-        maxZoom: 19
-      };
-    case 'osm-france':
-    default:
-      return {
-        url: 'https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png',
-        attribution: 'données © <a href="//osm.org/copyright">OpenStreetMap</a>/ODbL - rendu <a href="//openstreetmap.fr">OSM France</a>',
-        minZoom: 1,
-        maxZoom: 20
-      };
-  }
-};
-
-/**
- * Calculate the center coordinates and zoom level based on vehicles positions
- */
+// Calculate the optimal map center and zoom based on vehicle positions
 export const calculateMapCenter = (
   vehicles: TransportVehicleWithLocation[],
   defaultLat: number,
   defaultLng: number,
   defaultZoom: number
 ) => {
-  let latitude = defaultLat;
-  let longitude = defaultLng;
-  let zoom = defaultZoom;
+  // If there are no vehicles with location data, return default values
+  const vehiclesWithLocation = vehicles.filter(v => v.location && v.location.latitude && v.location.longitude);
   
-  const vehiclesWithLocation = vehicles.filter(v => v.location);
-  if (vehiclesWithLocation.length > 0) {
-    const bounds = vehiclesWithLocation.map(v => [v.location!.lat, v.location!.lng]);
-    if (bounds.length > 0) {
-      const firstVehicle = vehiclesWithLocation[0];
-      latitude = firstVehicle.location!.lat;
-      longitude = firstVehicle.location!.lng;
-    }
+  if (vehiclesWithLocation.length === 0) {
+    return { latitude: defaultLat, longitude: defaultLng, zoom: defaultZoom };
   }
+
+  // If there's only one vehicle, center on it
+  if (vehiclesWithLocation.length === 1) {
+    const vehicle = vehiclesWithLocation[0];
+    return { 
+      latitude: vehicle.location.latitude, 
+      longitude: vehicle.location.longitude,
+      zoom: Math.max(14, defaultZoom) // Higher zoom for single vehicle
+    };
+  }
+
+  // For multiple vehicles, calculate bounding box
+  let minLat = Infinity;
+  let maxLat = -Infinity;
+  let minLng = Infinity;
+  let maxLng = -Infinity;
+
+  vehiclesWithLocation.forEach(vehicle => {
+    const lat = vehicle.location.latitude;
+    const lng = vehicle.location.longitude;
+    
+    minLat = Math.min(minLat, lat);
+    maxLat = Math.max(maxLat, lat);
+    minLng = Math.min(minLng, lng);
+    maxLng = Math.max(maxLng, lng);
+  });
+
+  // Calculate center of bounding box
+  const latitude = (minLat + maxLat) / 2;
+  const longitude = (minLng + maxLng) / 2;
+
+  // Calculate appropriate zoom level based on bounding box size
+  // This is a simplified calculation - in real world applications, you might want to use
+  // a more sophisticated algorithm based on the map's viewport size
+  const latDiff = maxLat - minLat;
+  const lngDiff = maxLng - minLng;
+  const maxDiff = Math.max(latDiff, lngDiff);
+  
+  let zoom = defaultZoom;
+  if (maxDiff > 0.5) zoom = 8;
+  else if (maxDiff > 0.2) zoom = 10;
+  else if (maxDiff > 0.1) zoom = 11;
+  else if (maxDiff > 0.05) zoom = 12;
+  else if (maxDiff > 0.01) zoom = 13;
+  else zoom = 14;
   
   return { latitude, longitude, zoom };
 };
 
-/**
- * Get appropriate color for vehicle marker based on status
- */
+// Get marker color based on vehicle status
 export const getMarkerColorByStatus = (status: string): string => {
-  if (status === "arrêté") {
-    return "#FFC107"; // Yellow for stopped
-  } else if (status === "maintenance") {
-    return "#FF9800"; // Orange for maintenance
+  switch (status.toLowerCase()) {
+    case 'en service':
+    case 'available':
+    case 'active':
+      return '#22c55e'; // green-500
+    case 'arrêté':
+    case 'idle':
+      return '#eab308'; // yellow-500
+    case 'maintenance':
+      return '#f97316'; // orange-500
+    case 'issue':
+    case 'problem':
+      return '#ef4444'; // red-500
+    default:
+      return '#6b7280'; // gray-500
   }
-  return "#4CAF50"; // Default green
+};
+
+// Get tile layer configuration based on provider
+export const getTileLayerConfig = (provider: string = 'osm-france') => {
+  switch (provider) {
+    case 'osm-france':
+      return {
+        url: 'https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png',
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        minZoom: 2,
+        maxZoom: 19
+      };
+    case 'osm':
+      return {
+        url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        minZoom: 2,
+        maxZoom: 19
+      };
+    case 'carto':
+      return {
+        url: 'https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png',
+        attribution: '&copy; <a href="https://carto.com/attributions">CARTO</a>',
+        minZoom: 2,
+        maxZoom: 19
+      };
+    default:
+      return {
+        url: 'https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png',
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        minZoom: 2,
+        maxZoom: 19
+      };
+  }
 };

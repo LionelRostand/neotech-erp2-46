@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from 'react';
 import { TransportVehicleWithLocation, MapConfig, MapHookResult } from '../types/map-types';
 import { getTileLayerConfig, calculateMapCenter } from '../utils/map-utils';
@@ -76,6 +77,12 @@ export const useTransportMap = (
         // Add scale control
         L.control.scale({ imperial: false }).addTo(mapInstance);
         
+        // Add specific marker at the center for demonstration
+        L.marker([latitude, longitude])
+          .addTo(mapInstance)
+          .bindPopup("Centre de la carte")
+          .openPopup();
+        
         setMap(mapInstance);
         setMapInitialized(true);
         setIsLoaded(true);
@@ -83,6 +90,18 @@ export const useTransportMap = (
         // Add markers for vehicles - fixed parameter order for createVehicleMarkers
         const markers = await createVehicleMarkers(mapInstance, vehicles);
         markersRef.current = markers;
+        
+        // Also add simple Leaflet markers for each vehicle
+        vehicles.forEach(vehicle => {
+          if (vehicle.location) {
+            const { latitude: lat, longitude: lon } = vehicle.location;
+            // Add the marker to the map as requested
+            L.marker([lat, lon])
+              .addTo(mapInstance)
+              .bindPopup(`<b>${vehicle.name || 'Véhicule'}</b><br>${vehicle.licensePlate || ''}`)
+              .openPopup();
+          }
+        });
         
         // Fit map to markers
         if (markers.length > 0) {
@@ -111,10 +130,24 @@ export const useTransportMap = (
     const updateMarkers = async () => {
       if (!map || !mapInitialized) return;
       
+      // Clear previous markers
       clearMarkers();
-      // Fixed parameter order for createVehicleMarkers
+      
+      // Add the custom markers
       const markers = await createVehicleMarkers(map, vehicles);
       markersRef.current = markers;
+      
+      // Also add simple L.marker for each vehicle
+      vehicles.forEach(vehicle => {
+        if (vehicle.location) {
+          const { latitude: lat, longitude: lon } = vehicle.location;
+          // Add the marker to the map as requested
+          L.marker([lat, lon])
+            .addTo(map)
+            .bindPopup(`<b>${vehicle.name || 'Véhicule'}</b><br>${vehicle.licensePlate || ''}`)
+            .openPopup();
+        }
+      });
     };
     
     updateMarkers();
@@ -133,7 +166,26 @@ export const useTransportMap = (
   const addMarkers = (vehicles: TransportVehicleWithLocation[]) => {
     if (!map || !mapInitialized) return;
     
+    // Clear previous markers
+    map.eachLayer((layer: any) => {
+      if (layer instanceof L.Marker) {
+        map.removeLayer(layer);
+      }
+    });
+    
+    // Add custom markers
     createVehicleMarkers(map, vehicles);
+    
+    // Add simple markers
+    vehicles.forEach(vehicle => {
+      if (vehicle.location) {
+        const { latitude: lat, longitude: lon } = vehicle.location;
+        // Add the marker to the map as requested
+        L.marker([lat, lon])
+          .addTo(map)
+          .bindPopup(`<b>${vehicle.name || 'Véhicule'}</b><br>${vehicle.licensePlate || ''}`);
+      }
+    });
   };
   
   // Function to center on specific vehicle
@@ -142,7 +194,14 @@ export const useTransportMap = (
     
     const vehicle = vehicles.find(v => v.id === vehicleId);
     if (vehicle && vehicle.location) {
-      map.setView([vehicle.location.lat, vehicle.location.lng], mapConfig.zoom);
+      map.setView([vehicle.location.latitude, vehicle.location.longitude], mapConfig.zoom);
+      
+      // Add or update marker for this vehicle
+      const { latitude: lat, longitude: lon } = vehicle.location;
+      L.marker([lat, lon])
+        .addTo(map)
+        .bindPopup(`<b>${vehicle.name || 'Véhicule'}</b><br>${vehicle.licensePlate || ''}`)
+        .openPopup();
     }
   };
   
