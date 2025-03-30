@@ -7,6 +7,7 @@ import MaintenanceScheduleList from './MaintenanceScheduleList';
 import ExtensionRequestsList from './ExtensionRequestsList';
 import DriverAvailabilityTab from './DriverAvailabilityTab';
 import { usePlanning } from './context/PlanningContext';
+import { useMaintenanceSchedule } from '../hooks/useMaintenanceSchedule';
 
 interface PlanningTabContentProps {
   activeMode: string;
@@ -31,6 +32,9 @@ const PlanningTabContent: React.FC<PlanningTabContentProps> = ({
     handleAddMaintenance
   } = usePlanning();
 
+  // Convert vehicle maintenance schedules to map maintenance schedules
+  const { mapSchedules } = useMaintenanceSchedule(maintenanceSchedules);
+
   // Effect to refresh data when the component mounts
   useEffect(() => {
     refreshData();
@@ -43,7 +47,7 @@ const PlanningTabContent: React.FC<PlanningTabContentProps> = ({
       <TabsContent value="availability" className="mt-0 border-0 p-0">
         <AvailabilityCalendar 
           vehicles={vehicles}
-          maintenanceSchedules={maintenanceSchedules}
+          maintenanceSchedules={mapSchedules}
           onAddMaintenance={handleAddMaintenance}
         />
       </TabsContent>

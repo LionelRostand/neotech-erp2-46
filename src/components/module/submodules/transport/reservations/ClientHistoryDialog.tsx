@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -97,12 +96,17 @@ const ClientHistoryDialog: React.FC<ClientHistoryDialogProps> = ({
   const sortedCompleted = [...completedReservations].sort((a, b) => 
     new Date(b.date || '').getTime() - new Date(a.date || '').getTime()
   );
+  
+  // Get client name using firstName/lastName if available, otherwise fall back to name property
+  const clientFullName = client.firstName && client.lastName 
+    ? `${client.firstName} ${client.lastName}`
+    : client.name;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
-          <DialogTitle>Historique Client - {client.firstName} {client.lastName}</DialogTitle>
+          <DialogTitle>Historique Client - {clientFullName}</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-6">

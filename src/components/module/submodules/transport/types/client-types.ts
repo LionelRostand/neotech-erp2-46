@@ -16,6 +16,8 @@ export interface TransportClient {
   preferredVehicleTypes?: string[];
   loyaltyActivities?: LoyaltyActivity[];
   notes?: ClientNote[];
+  firstName?: string; // Adding firstName property
+  lastName?: string;  // Adding lastName property
 }
 
 export enum LoyaltyTier {
