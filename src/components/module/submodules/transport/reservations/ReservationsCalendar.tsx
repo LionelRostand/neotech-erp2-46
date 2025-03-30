@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { format, isSameDay } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { ChevronLeft, ChevronRight, Eye } from 'lucide-react';
-import { Reservation } from '../types/reservation-types';
+import { Reservation, getAddressString } from '../types/reservation-types';
 import ViewReservationDetailsDialog from './ViewReservationDetailsDialog';
 
 // Mock data for reservations
@@ -384,7 +384,7 @@ const ReservationsCalendar: React.FC = () => {
                           </Badge>
                           <h4 className="text-base font-medium mt-2">{reservation.clientName}</h4>
                           <p className="text-sm text-muted-foreground">
-                            {reservation.pickupLocation.address} → {reservation.dropoffLocation.address}
+                            {getAddressString(reservation.pickupLocation)} → {getAddressString(reservation.dropoffLocation)}
                           </p>
                         </div>
                         <Button 

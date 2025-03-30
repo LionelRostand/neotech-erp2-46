@@ -1,97 +1,50 @@
 
 import { TransportVehicle } from './vehicle-types';
-// Remove conflicting import
-// import { MaintenanceSchedule } from './vehicle-types';
 
 export interface VehicleLocation {
   vehicleId: string;
-  lat: number;
-  lng: number;
-  heading?: number;
-  speed?: number;
-  timestamp?: string; // For TransportGeolocation compatibility
-  // Add properties used by components
-  latitude?: number; // For backward compatibility
-  longitude?: number; // For backward compatibility
-  lastUpdate?: string;
-  status?: string;
+  latitude: number;
+  longitude: number;
+  speed: number;
+  direction: number;
+  timestamp: string;
+  address?: string;
+  status: string;
 }
 
 export interface TransportVehicleWithLocation extends TransportVehicle {
-  location?: VehicleLocation;
-  driverName?: string; // Add for VehicleDetailsDialog
-  color?: string; // Add for TransportGeolocation
+  location: VehicleLocation;
+  driverName?: string;
+  color?: string;
 }
 
 export interface MapConfig {
-  center: { lat: number; lng: number };
+  center: [number, number];
   zoom: number;
-  style?: string;
-  apiKey?: string;
-  // Add properties used in hooks
-  maxZoom?: number;
-  minZoom?: number;
-  tileProvider?: string;
-  showLabels?: boolean; // Add for TransportGeolocation
+  showTraffic: boolean;
+  showGeofences: boolean;
+  refreshInterval: number;
 }
 
 export interface MapHookResult {
-  isMapLoaded: boolean;
-  mapRef: any;
   vehicles: TransportVehicleWithLocation[];
   selectedVehicle: TransportVehicleWithLocation | null;
   setSelectedVehicle: (vehicle: TransportVehicleWithLocation | null) => void;
-  zoomToVehicle: (vehicleId: string) => void;
-  zoomToFitAllVehicles: () => void;
-  trackingMode: boolean;
-  setTrackingMode: (mode: boolean) => void;
-  // Add properties used in components
-  mapInitialized?: boolean;
-  mapConfig?: MapConfig;
-  setMapConfig?: (config: MapConfig) => void;
-  refreshMap?: () => void;
-  updateMarkers?: (vehicles: TransportVehicleWithLocation[], selectedId?: string) => void;
-}
-
-// Fix the re-export by defining the interface explicitly
-export interface MaintenanceSchedule {
-  id: string;
-  vehicleId: string;
-  scheduledDate: string;
-  type: string;
-  description: string;
-  estimatedDuration: number;
-  technicianAssigned?: string;
-  status: 'scheduled' | 'in-progress' | 'completed' | 'cancelled';
-  // Additional fields
-  startDate?: string;
-  endDate?: string;
-  technician?: string;
-  completed?: boolean;
-  notes?: string;
-  taskName?: string;
-  priority?: string;
-  nextDue?: string;
+  loading: boolean;
+  error: string | null;
 }
 
 export interface ExtensionRequest {
-  id: string; // Make id required
-  requestId: string; // Make requestId required
-  title: string;
-  description: string;
-  url?: string;
-  status: 'pending' | 'approved' | 'rejected';
-  requestDate: string;
-  // Make all required properties used in components required 
-  clientName: string;
+  id: string;
+  driverId: string;
+  driverName: string;
+  vehicleId: string;
   vehicleName: string;
-  originalEndDate: string;
-  requestedEndDate: string;
   reason: string;
-  extensionReason?: string;
-  createdAt: string;
+  status: 'pending' | 'approved' | 'rejected';
+  requestedExtension: number; // in hours
+  originalEndTime: string;
+  newEndTime: string;
+  timestamp: string;
+  responseMessage?: string;
 }
-
-// Add alias types for backward compatibility
-export type VehicleMaintenanceSchedule = MaintenanceSchedule;
-export type MapExtensionRequest = ExtensionRequest;

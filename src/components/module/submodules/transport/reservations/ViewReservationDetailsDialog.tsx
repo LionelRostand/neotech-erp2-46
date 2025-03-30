@@ -80,22 +80,22 @@ const ViewReservationDetailsDialog: React.FC<ViewReservationDetailsDialogProps> 
           <div className="grid grid-cols-2 gap-4 border-t border-gray-200 pt-4">
             <div>
               <h3 className="font-semibold">Date de début</h3>
-              <p>{formatDate(reservation.startDate)}</p>
+              <p>{reservation.startDate ? formatDate(reservation.startDate) : 'Non spécifiée'}</p>
             </div>
             <div>
               <h3 className="font-semibold">Date de fin</h3>
-              <p>{formatDate(reservation.endDate)}</p>
+              <p>{reservation.endDate ? formatDate(reservation.endDate) : 'Non spécifiée'}</p>
             </div>
           </div>
           
           <div className="border-t border-gray-200 pt-4">
             <h3 className="font-semibold">Adresse de départ</h3>
-            <p>{getAddressString(reservation.pickupLocation || { address: "Non spécifiée" })}</p>
+            <p>{getAddressString(reservation.pickupLocation)}</p>
           </div>
           
           <div className="border-t border-gray-200 pt-4">
             <h3 className="font-semibold">Adresse d'arrivée</h3>
-            <p>{getAddressString(reservation.dropoffLocation || { address: "Non spécifiée" })}</p>
+            <p>{getAddressString(reservation.dropoffLocation)}</p>
           </div>
           
           {reservation.totalAmount && (

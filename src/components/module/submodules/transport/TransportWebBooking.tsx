@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -43,33 +44,45 @@ const TransportWebBooking: React.FC = () => {
   const [mockRecentBookings] = useState<WebBooking[]>([
     {
       id: "wb-1001",
+      service: "airport",
       serviceId: "airport",
       clientName: "Jean Dupont",
       clientEmail: "jean.dupont@example.com",
       clientPhone: "+33612345678",
       date: "2023-09-25",
       time: "14:30",
+      pickup: "34 Avenue de la République, Paris",
+      dropoff: "Aéroport Charles de Gaulle, Terminal 2E",
       pickupLocation: "34 Avenue de la République, Paris",
       dropoffLocation: "Aéroport Charles de Gaulle, Terminal 2E",
       status: "confirmed",
       price: 75,
       paymentMethod: "card",
-      paymentStatus: "paid"
+      paymentStatus: "paid",
+      passengerCount: 2,
+      luggageCount: 2,
+      createdAt: new Date().toISOString()
     },
     {
       id: "wb-1002",
+      service: "hourly",
       serviceId: "hourly",
       clientName: "Marie Laurent",
       clientEmail: "marie.laurent@example.com",
       clientPhone: "+33623456789",
       date: "2023-09-27",
       time: "09:00",
+      pickup: "16 Rue de Rivoli, Paris",
+      dropoff: "Multiple destinations",
       pickupLocation: "16 Rue de Rivoli, Paris",
       dropoffLocation: "Multiple destinations",
       status: "new",
       price: 120,
       paymentMethod: "pending",
-      paymentStatus: "pending"
+      paymentStatus: "pending",
+      passengerCount: 1,
+      luggageCount: 1,
+      createdAt: new Date().toISOString()
     }
   ]);
 

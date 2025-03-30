@@ -39,5 +39,13 @@ export {
   type TransportReservationStatus
 } from './reservation-types';
 
+// Export from planning-types (new)
+export type { 
+  VehicleMaintenanceSchedule, 
+  MapExtensionRequest,
+  PlanningFilter,
+  PlanningItem
+} from './planning-types';
+
 // Export from other type files
 export * from './geolocation-types';

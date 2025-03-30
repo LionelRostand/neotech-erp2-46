@@ -18,7 +18,7 @@ export interface WebBookingService {
 
 export interface WebBooking {
   id: string;
-  service: WebBookingService | string;
+  service?: WebBookingService | string;
   serviceId?: string; // Add for backward compatibility
   clientName: string;
   clientEmail: string;
@@ -36,7 +36,7 @@ export interface WebBooking {
   paymentMethod?: string;
   paymentStatus?: string;
   price?: number;
-  createdAt: string;
+  createdAt?: string;
 }
 
 export interface LocationType {

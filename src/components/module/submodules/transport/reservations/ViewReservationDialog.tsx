@@ -44,18 +44,28 @@ const getStatusBadge = (status: string) => {
 };
 
 // Format service types for display
-const getServiceLabel = (service: string) => {
-  switch (service) {
-    case "airport-transfer": return "Transfert Aéroport";
-    case "city-tour": return "Visite de ville";
-    case "business-travel": return "Voyage d'affaires";
-    case "wedding": return "Mariage";
-    case "event": return "Événement";
-    case "hourly-hire": return "Location à l'heure";
-    case "long-distance": return "Longue distance";
-    case "custom": return "Personnalisé";
-    default: return service;
+const getServiceLabel = (service: string | { name: string } | undefined): string => {
+  if (!service) return "Service non spécifié";
+  
+  if (typeof service === "object" && service.name) {
+    return service.name;
   }
+  
+  if (typeof service === "string") {
+    switch (service) {
+      case "airport-transfer": return "Transfert Aéroport";
+      case "city-tour": return "Visite de ville";
+      case "business-travel": return "Voyage d'affaires";
+      case "wedding": return "Mariage";
+      case "event": return "Événement";
+      case "hourly-hire": return "Location à l'heure";
+      case "long-distance": return "Longue distance";
+      case "custom": return "Personnalisé";
+      default: return service;
+    }
+  }
+  
+  return "Service non spécifié";
 };
 
 // Helper function to safely access pickup/dropoff address
@@ -92,7 +102,7 @@ const ViewReservationDialog: React.FC<ViewReservationDialogProps> = ({
               <p className="text-sm font-medium">Référence</p>
               <p className="text-sm">{reservation.id}</p>
               <p className="text-sm font-medium mt-2">Service</p>
-              <p className="text-sm">{reservation.service ? getServiceLabel(reservation.service) : ''}</p>
+              <p className="text-sm">{getServiceLabel(reservation.service)}</p>
             </div>
           </div>
 
@@ -209,7 +219,7 @@ const ViewReservationDialog: React.FC<ViewReservationDialogProps> = ({
 
         <DialogFooter className="sm:justify-between">
           <div className="text-xs text-muted-foreground">
-            Créée le {new Date(reservation.createdAt).toLocaleString()}
+            Créée le {new Date(reservation.createdAt || '').toLocaleString()}
           </div>
           <div className="flex gap-2">
             {!reservation.contractGenerated && (
