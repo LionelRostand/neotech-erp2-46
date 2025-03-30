@@ -1,25 +1,40 @@
 
-import { Note, TransportBasic } from './base-types';
+// Define client-related types for the Transport module
 
-export interface TransportClient extends TransportBasic {
-  firstName?: string;
-  lastName?: string;
-  fullName?: string;
-  name?: string; // Pour la compatibilité avec les composants utilisant directement le nom
+export interface Client {
+  id: string;
+  name: string;
   email: string;
   phone: string;
-  address?: string;
-  company?: string;
-  status: 'active' | 'inactive' | 'blocked';
-  loyaltyPoints?: number;
-  vipStatus?: boolean;
-  preferredVehicleType?: string;
-  preferredDriverId?: string;
-  notes?: string[];
-  createdAt?: string;
-  updatedAt?: string;
+  address: string;
+  registrationDate: string;
+  lastActivity?: string;
+  loyaltyPoints: number;
+  status: 'active' | 'inactive';
 }
 
-export interface ClientNote extends Note {
+export interface LoyaltyTransaction {
+  id: string;
   clientId: string;
+  points: number;
+  type: 'earn' | 'redeem';
+  description: string;
+  date: string;
+}
+
+export interface LoyaltyReward {
+  id: string;
+  name: string;
+  description: string;
+  pointsRequired: number;
+  available: boolean;
+}
+
+export interface ClientFilters {
+  status?: string;
+  loyaltyTier?: string;
+  dateRange?: {
+    start: string;
+    end: string;
+  };
 }
