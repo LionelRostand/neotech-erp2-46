@@ -1,45 +1,32 @@
+// Define types related to reservations and booking for the Transport module
 
 export interface LocationType {
   address: string;
-  lat?: number;
-  lng?: number;
+  latitude?: number;
+  longitude?: number;
   name?: string;
-}
-
-export function getAddressString(location: string | LocationType): string {
-  if (typeof location === 'string') {
-    return location;
-  }
-  return location.address || '';
+  placeId?: string;
 }
 
 export interface WebBookingService {
   id: string;
   name: string;
-  description?: string;
+  description: string;
   price: number;
   duration: number;
+  available: boolean;
 }
 
 export interface WebBooking {
   id: string;
-  clientName: string;
-  clientEmail: string;
-  clientPhone: string;
   serviceId: string;
-  date: string;
-  time: string;
-  status: string;
+  clientId: string;
+  bookingDate: string;
+  pickupLocation: LocationType;
+  dropoffLocation: LocationType;
+  status: 'pending' | 'confirmed' | 'cancelled';
   notes?: string;
 }
-
-export type TransportReservationStatus = 
-  | 'pending'
-  | 'confirmed'
-  | 'in-progress'
-  | 'completed'
-  | 'cancelled'
-  | string; // For backward compatibility
 
 export interface Reservation {
   id: string;
@@ -51,14 +38,39 @@ export interface Reservation {
   endDate: string;
   pickupLocation: LocationType;
   dropoffLocation: LocationType;
-  status: TransportReservationStatus;
-  paymentStatus: 'paid' | 'partial' | 'pending' | 'cancelled';
+  status: 'pending' | 'confirmed' | 'in-progress' | 'completed' | 'cancelled';
+  paymentStatus: 'pending' | 'partial' | 'paid' | 'refunded';
   totalAmount: number;
   notes?: string;
   createdAt: string;
-  updatedAt: string;
+  updatedAt?: string;
 }
 
-export interface TransportReservation extends Reservation {
-  // Any additional fields specific to transport reservations
+export interface TransportReservation {
+  id: string;
+  clientId: string;
+  vehicleId: string;
+  driverId: string;
+  startLocation: LocationType;
+  endLocation: LocationType;
+  startTime: string;
+  endTime: string;
+  status: TransportReservationStatus;
+  price: number;
+  notes?: string;
+}
+
+export type TransportReservationStatus = 
+  | 'pending'
+  | 'confirmed'
+  | 'inProgress'
+  | 'completed'
+  | 'cancelled';
+
+// Add this utility function to safely get the address string
+export function getAddressString(location: LocationType | string): string {
+  if (typeof location === 'string') {
+    return location;
+  }
+  return location?.address || '';
 }

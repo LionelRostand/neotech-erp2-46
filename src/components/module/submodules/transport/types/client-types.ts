@@ -1,4 +1,5 @@
 
+
 // Define client-related types for the Transport module
 
 export interface Client {
@@ -51,3 +52,4 @@ export interface ClientNote {
   createdAt: string;
   createdBy: string;
 }
+
