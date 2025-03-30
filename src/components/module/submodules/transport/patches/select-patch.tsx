@@ -27,7 +27,8 @@ const SelectPatch: React.FC = () => {
       
       // Patch 2: Directly patch React.createElement to catch all SelectItem instances
       const originalCreateElement = React.createElement;
-      if (!React.createElement.__patched) {
+      // @ts-ignore - custom property
+      if (!originalCreateElement.hasOwnProperty('__patched')) {
         // @ts-ignore - custom property
         React.createElement = function patchedCreateElement(type, props, ...children) {
           // Check if this is a SelectItem component or something that could be one
@@ -63,13 +64,14 @@ const SelectPatch: React.FC = () => {
         };
         
         // @ts-ignore - custom property
-        React.createElement.__patched = true;
+        Object.defineProperty(React.createElement, '__patched', { value: true });
         console.log('React.createElement patched for SelectItems');
       }
 
       // Patch 3: Direct patch selectItems in state updates
       const originalSetState = React.Component.prototype.setState;
-      if (!originalSetState.__patched) {
+      // @ts-ignore - custom property
+      if (!originalSetState.hasOwnProperty('__patched')) {
         React.Component.prototype.setState = function patchedSetState(state, callback) {
           // Process the state if it's a function
           if (typeof state === 'function') {
@@ -127,7 +129,7 @@ const SelectPatch: React.FC = () => {
         }
         
         // @ts-ignore - custom property
-        originalSetState.__patched = true;
+        Object.defineProperty(originalSetState, '__patched', { value: true });
         console.log('React.Component.prototype.setState patched for SelectItems');
       }
 
