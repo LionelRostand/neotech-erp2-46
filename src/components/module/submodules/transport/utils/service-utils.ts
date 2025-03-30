@@ -17,3 +17,23 @@ export const convertToTransportService = (service: WebBookingService): Transport
   // Return the serviceType as a TransportService
   return service.serviceType as TransportService;
 };
+
+// Add missing functions
+export const stringToTransportService = (serviceStr: string): TransportService => {
+  switch (serviceStr) {
+    case 'airport':
+    case 'hourly':
+    case 'pointToPoint':
+    case 'dayTour':
+      return serviceStr as TransportService;
+    default:
+      return serviceStr;
+  }
+};
+
+export const transportServiceToString = (service: TransportService | { serviceType: string }): string => {
+  if (typeof service === 'string') {
+    return service;
+  }
+  return service.serviceType;
+};

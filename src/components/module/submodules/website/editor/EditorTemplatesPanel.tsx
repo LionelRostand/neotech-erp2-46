@@ -80,23 +80,24 @@ const EditorTemplatesPanel: React.FC<EditorTemplatesPanelProps> = ({ onClose }) 
   ];
 
   const handlePreview = (previewUrl: string) => {
-    window.open(previewUrl, '_blank');
+    // Open in a new browser window/tab when the preview button is clicked
+    window.open(previewUrl, '_blank', 'noopener,noreferrer');
   };
 
   const renderTemplateCards = (filteredTemplates: typeof templates) => (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       {filteredTemplates.map(template => (
-        <Card key={template.id} className="overflow-hidden h-full flex flex-col">
-          <AspectRatio ratio={16/9}>
+        <Card key={template.id} className="overflow-hidden h-full flex flex-col shadow-md hover:shadow-lg transition-shadow">
+          <AspectRatio ratio={16/9} className="bg-muted">
             <img 
               src={template.thumbnail} 
               alt={template.name} 
-              className="object-cover w-full h-full"
+              className="object-cover w-full h-full transition-transform hover:scale-105 duration-200"
             />
           </AspectRatio>
           <div className="p-3 flex-grow flex flex-col">
-            <h4 className="font-medium">{template.name}</h4>
-            <p className="text-xs text-muted-foreground mb-auto">{template.description}</p>
+            <h4 className="font-medium text-lg">{template.name}</h4>
+            <p className="text-xs text-muted-foreground mb-auto py-1">{template.description}</p>
             <div className="mt-3 flex justify-between">
               <Button size="sm" variant="outline" onClick={() => handlePreview(template.previewUrl)}>
                 <Eye className="mr-1 h-4 w-4" />

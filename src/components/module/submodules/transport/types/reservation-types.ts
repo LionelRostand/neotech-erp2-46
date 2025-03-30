@@ -18,7 +18,8 @@ export interface WebBookingService {
 
 export interface WebBooking {
   id: string;
-  service: WebBookingService;
+  service: WebBookingService | string;
+  serviceId?: string; // Add for backward compatibility
   clientName: string;
   clientEmail: string;
   clientPhone: string;
@@ -26,10 +27,15 @@ export interface WebBooking {
   time: string;
   pickup: string;
   dropoff: string;
+  pickupLocation?: string | LocationType; // Added for compatibility
+  dropoffLocation?: string | LocationType; // Added for compatibility
   passengerCount: number;
   luggageCount: number;
   specialRequests?: string;
-  status: 'pending' | 'confirmed' | 'cancelled';
+  status: 'pending' | 'confirmed' | 'cancelled' | 'new'; // Added 'new' status
+  paymentMethod?: string;
+  paymentStatus?: string;
+  price?: number;
   createdAt: string;
 }
 
@@ -46,8 +52,10 @@ export interface Reservation {
   clientName: string;
   startDate?: string; // For compatibility with mock data
   endDate?: string; // For compatibility with mock data
-  pickupLocation: LocationType;
-  dropoffLocation: LocationType;
+  pickupLocation: LocationType | string;
+  dropoffLocation: LocationType | string;
+  pickup?: string | LocationType; // Added for compatibility
+  dropoff?: string | LocationType; // Added for compatibility
   status: 'pending' | 'confirmed' | 'cancelled' | 'completed' | 'in-progress' | 'no-show';
   paymentStatus?: 'paid' | 'pending' | 'partial' | 'refunded';
   totalAmount?: number;
@@ -86,4 +94,6 @@ export interface TransportReservation {
   isPaid?: boolean;
   needsDriver?: boolean;
   contractGenerated?: boolean;
+  price?: number; // Add missing property
+  notes?: string; // Add missing property
 }

@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { ChevronsUpDown } from '@/components/ui/icons/chevrons-up-down';
+import { ChevronsUpDown } from 'lucide-react';
 
 // Export components used across the transport module
 export { ChevronsUpDown };

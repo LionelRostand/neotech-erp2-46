@@ -20,6 +20,7 @@ export interface VehicleLocation {
 export interface TransportVehicleWithLocation extends TransportVehicle {
   location?: VehicleLocation;
   driverName?: string; // Add for VehicleDetailsDialog
+  color?: string; // Add for TransportGeolocation
 }
 
 export interface MapConfig {
@@ -31,6 +32,7 @@ export interface MapConfig {
   maxZoom?: number;
   minZoom?: number;
   tileProvider?: string;
+  showLabels?: boolean; // Add for TransportGeolocation
 }
 
 export interface MapHookResult {
@@ -73,19 +75,23 @@ export interface MaintenanceSchedule {
 }
 
 export interface ExtensionRequest {
+  id: string; // Make id required
+  requestId: string; // Make requestId required
   title: string;
   description: string;
   url?: string;
   status: 'pending' | 'approved' | 'rejected';
   requestDate: string;
-  // Add missing properties used in components
-  id?: string;
-  requestId?: string;
-  clientName?: string;
-  vehicleName?: string;
-  originalEndDate?: string;
-  requestedEndDate?: string;
-  reason?: string;
+  // Make all required properties used in components required 
+  clientName: string;
+  vehicleName: string;
+  originalEndDate: string;
+  requestedEndDate: string;
+  reason: string;
   extensionReason?: string;
-  createdAt?: string;
+  createdAt: string;
 }
+
+// Add alias types for backward compatibility
+export type VehicleMaintenanceSchedule = MaintenanceSchedule;
+export type MapExtensionRequest = ExtensionRequest;
