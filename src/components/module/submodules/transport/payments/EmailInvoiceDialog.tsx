@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+
+import React, { useState } from 'react';
 import { 
   Dialog, 
   DialogContent, 
@@ -11,9 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Check, Clipboard, Mail, Send, X } from "lucide-react";
-import ChevronsUpDown from '@/components/icons/ChevronIcons';
 import { toast } from "sonner";
-import { initializeGlobalIcons } from '../utils/iconUtils';
 
 interface EmailInvoiceDialogProps {
   open: boolean;
@@ -30,11 +29,6 @@ const EmailInvoiceDialog: React.FC<EmailInvoiceDialogProps> = ({
   const [subject, setSubject] = useState(invoice ? `Facture ${invoice.number} - Transport` : '');
   const [message, setMessage] = useState('');
   const [isSending, setIsSending] = useState(false);
-  
-  // Ensure ChevronsUpDown is available globally
-  useEffect(() => {
-    initializeGlobalIcons();
-  }, []);
 
   const handleSendEmail = () => {
     if (!email.trim()) {

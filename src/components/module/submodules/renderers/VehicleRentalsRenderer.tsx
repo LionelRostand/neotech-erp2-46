@@ -18,6 +18,6 @@ export const renderVehicleRentalsSubmodule = (submoduleId: string, submodule: Su
     case 'rentals-reservations':
       return <ReservationsManagement />;
     default:
-      return <DefaultSubmoduleContent title={submodule.name} submodule={submodule} />;
+      return <DefaultSubmoduleContent submodule={submodule} />;
   }
 };

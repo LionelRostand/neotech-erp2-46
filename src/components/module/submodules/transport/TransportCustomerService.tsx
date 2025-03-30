@@ -1,22 +1,14 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs } from "@/components/ui/tabs";
 import CustomerServiceTabs from './customer-service/CustomerServiceTabs';
 import CustomerServiceContent from './customer-service/CustomerServiceContent';
-import ChevronsUpDown from '@/components/icons/ChevronIcons';
+// Import our icons utility to ensure ChevronsUpDown is available
+import "@/components/icons/ChevronIcons";
 
 const TransportCustomerService: React.FC = () => {
   const [activeTab, setActiveTab] = useState('chat');
-  
-  // Ensure ChevronsUpDown is available globally
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      console.log('Setting ChevronsUpDown on window from TransportCustomerService');
-      // @ts-ignore - We're explicitly adding this to the window object
-      window.ChevronsUpDown = ChevronsUpDown;
-    }
-  }, []);
 
   return (
     <div className="space-y-6">

@@ -218,17 +218,13 @@ const CreateReservationDialog: React.FC<CreateReservationDialogProps> = ({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Chauffeur</FormLabel>
-                    <Select 
-                      onValueChange={field.onChange} 
-                      value={field.value || "select-driver"}
-                    >
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Sélectionner un chauffeur" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="select-driver">Choisir un chauffeur</SelectItem>
                         {mockDrivers.map((driver) => (
                           <SelectItem key={driver.id} value={driver.id}>{driver.name}</SelectItem>
                         ))}

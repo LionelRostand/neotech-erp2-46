@@ -24,6 +24,6 @@ export const renderCrmSubmodule = (submoduleId: string, submodule: SubModule) =>
     case 'crm-settings':
       return <CrmSettings />;
     default:
-      return <DefaultSubmoduleContent title={submodule.name} submodule={submodule} />;
+      return <DefaultSubmoduleContent submodule={submodule} />;
   }
 };

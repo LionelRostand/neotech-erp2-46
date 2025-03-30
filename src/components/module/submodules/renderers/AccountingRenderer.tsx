@@ -24,6 +24,6 @@ export const renderAccountingSubmodule = (submoduleId: string, submodule: SubMod
     case 'accounting-settings':
       return <AccountingSettingsPage />;
     default:
-      return <DefaultSubmoduleContent title={submodule.name} submodule={submodule} />;
+      return <DefaultSubmoduleContent submodule={submodule} />;
   }
 };

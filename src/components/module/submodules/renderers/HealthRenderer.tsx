@@ -60,6 +60,6 @@ export const renderHealthSubmodule = (submoduleId: string, submodule: SubModule)
     case 'health-stats':
       return <StatsPage />;
     default:
-      return <DefaultSubmoduleContent title={submodule.name} submodule={submodule} />;
+      return <DefaultSubmoduleContent submodule={submodule} />;
   }
 };

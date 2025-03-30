@@ -27,6 +27,6 @@ export const renderMessagesSubmodule = (submoduleId: string, submodule: SubModul
     case 'messages-settings':
       return <MessagesSettingsPage />;
     default:
-      return <DefaultSubmoduleContent title={submodule.name} submodule={submodule} />;
+      return <DefaultSubmoduleContent submodule={submodule} />;
   }
 };

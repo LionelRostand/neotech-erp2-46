@@ -38,6 +38,6 @@ export const renderGarageSubmodule = (submoduleId: string, submodule: SubModule)
     case 'garage-settings':
       return <GarageSettings />;
     default:
-      return <DefaultSubmoduleContent title={submodule.name} submodule={submodule} />;
+      return <DefaultSubmoduleContent submodule={submodule} />;
   }
 };

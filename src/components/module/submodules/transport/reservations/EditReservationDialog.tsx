@@ -86,7 +86,7 @@ const EditReservationDialog: React.FC<EditReservationDialogProps> = ({
   const defaultValues: ReservationFormValues = {
     clientId: reservation.clientId,
     vehicleId: reservation.vehicleId,
-    driverId: reservation.driverId || undefined,
+    driverId: reservation.driverId,
     startDate: parse(reservation.startDate, "yyyy-MM-dd", new Date()),
     endDate: parse(reservation.endDate, "yyyy-MM-dd", new Date()),
     pickupLocation: reservation.pickupLocation,
@@ -224,20 +224,14 @@ const EditReservationDialog: React.FC<EditReservationDialogProps> = ({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Chauffeur</FormLabel>
-                    <Select 
-                      onValueChange={(value) => {
-                        // If "no-driver" is selected, set the value to undefined
-                        field.onChange(value === "no-driver" ? undefined : value);
-                      }} 
-                      value={field.value || "no-driver"}
-                    >
+                    <Select onValueChange={field.onChange} defaultValue={field.value || ""}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Sélectionner un chauffeur" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="no-driver">Sans chauffeur</SelectItem>
+                        <SelectItem value="">Sans chauffeur</SelectItem>
                         {mockDrivers.map((driver) => (
                           <SelectItem key={driver.id} value={driver.id}>{driver.name}</SelectItem>
                         ))}

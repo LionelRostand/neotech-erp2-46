@@ -2,74 +2,38 @@
 import React from 'react';
 import { TabsContent } from "@/components/ui/tabs";
 import ChatTab from './tabs/ChatTab';
-import PhoneSupportTab from './tabs/PhoneSupportTab';
-import EmailSupportTab from './tabs/EmailSupportTab';
-import ChatSupportTab from './tabs/ChatSupportTab';
 import MessagesTab from './tabs/MessagesTab';
-import EmailsTab from './tabs/EmailsTab';
 import CallsTab from './tabs/CallsTab';
-import HistoryTab from './tabs/HistoryTab';
+import EmailsTab from './tabs/EmailsTab';
 import CustomersTab from './tabs/CustomersTab';
 import SettingsTab from './tabs/SettingsTab';
-
-// Import ChevronsUpDown component explicitly from lucide-react
-import { ChevronsUpDown } from "lucide-react";
 
 interface CustomerServiceContentProps {
   activeTab: string;
 }
 
 const CustomerServiceContent: React.FC<CustomerServiceContentProps> = ({ activeTab }) => {
-  // Make ChevronsUpDown available to TransportPayments.tsx component
-  React.useEffect(() => {
-    if (typeof window !== 'undefined') {
-      // @ts-ignore - We're explicitly adding this to the window object
-      window.ChevronsUpDown = ChevronsUpDown;
-    }
-  }, []);
-  
   return (
-    <div className="space-y-6 mt-6">
-      <TabsContent value="chat" className="space-y-4">
+    <>
+      <TabsContent value="chat">
         <ChatTab />
       </TabsContent>
-      
-      <TabsContent value="phone" className="space-y-4">
-        <PhoneSupportTab />
-      </TabsContent>
-      
-      <TabsContent value="email" className="space-y-4">
-        <EmailSupportTab />
-      </TabsContent>
-      
-      <TabsContent value="live-chat" className="space-y-4">
-        <ChatSupportTab />
-      </TabsContent>
-      
-      <TabsContent value="messages" className="space-y-4">
+      <TabsContent value="messages">
         <MessagesTab />
       </TabsContent>
-      
-      <TabsContent value="emails" className="space-y-4">
-        <EmailsTab />
-      </TabsContent>
-      
-      <TabsContent value="calls" className="space-y-4">
+      <TabsContent value="calls">
         <CallsTab />
       </TabsContent>
-      
-      <TabsContent value="history" className="space-y-4">
-        <HistoryTab />
+      <TabsContent value="emails">
+        <EmailsTab />
       </TabsContent>
-      
-      <TabsContent value="customers" className="space-y-4">
+      <TabsContent value="customers">
         <CustomersTab />
       </TabsContent>
-      
-      <TabsContent value="settings" className="space-y-4">
+      <TabsContent value="settings">
         <SettingsTab />
       </TabsContent>
-    </div>
+    </>
   );
 };
 

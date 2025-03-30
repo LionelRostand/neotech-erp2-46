@@ -30,14 +30,12 @@ declare module 'jspdf-autotable' {
 
   function autoTable(doc: jsPDF, options: AutoTableOptions): void;
 
-  export default autoTable;
-}
-
-declare module 'jspdf' {
-  interface jsPDF {
-    autoTable(options: any): void;
-    lastAutoTable: {
-      finalY: number;
-    };
+  // Extend the jsPDF prototype
+  declare global {
+    interface jsPDF {
+      autoTable(options: AutoTableOptions): void;
+    }
   }
+
+  export default autoTable;
 }
