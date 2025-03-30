@@ -33,8 +33,8 @@ const MaintenanceTable: React.FC<MaintenanceTableProps> = ({
     const today = new Date();
     const scheduledDate = new Date(schedule.scheduledDate);
     
-    if (schedule.completed) {
-      return <Badge className="bg-green-500">Terminé</Badge>;
+    if (schedule.status === 'completed' || schedule.completed) {
+      return <Badge variant="success">Terminé</Badge>;
     } else if (scheduledDate < today) {
       return <Badge variant="destructive">En retard</Badge>;
     } else {
@@ -42,9 +42,9 @@ const MaintenanceTable: React.FC<MaintenanceTableProps> = ({
       const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
       
       if (diffDays <= 7) {
-        return <Badge variant="outline" className="border-amber-500 text-amber-500">Bientôt</Badge>;
+        return <Badge variant="warning">Bientôt</Badge>;
       } else {
-        return <Badge variant="outline" className="border-blue-500 text-blue-500">Planifié</Badge>;
+        return <Badge variant="info">Planifié</Badge>;
       }
     }
   };
@@ -82,7 +82,7 @@ const MaintenanceTable: React.FC<MaintenanceTableProps> = ({
                 <TableCell>{getMaintenanceTypeLabel(schedule.type)}</TableCell>
                 <TableCell>{schedule.description}</TableCell>
                 <TableCell>{formatDate(schedule.scheduledDate)}</TableCell>
-                <TableCell>{schedule.technician || '—'}</TableCell>
+                <TableCell>{schedule.technician || schedule.technicianAssigned || '—'}</TableCell>
                 <TableCell>{getStatusBadge(schedule)}</TableCell>
               </TableRow>
             ))}

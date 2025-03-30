@@ -22,11 +22,11 @@ const VehicleDetailsDialog: React.FC<VehicleDetailsDialogProps> = ({
   const renderStatusBadge = (status: string) => {
     switch (status) {
       case "en service":
-        return <Badge className="bg-green-500">En service</Badge>;
+        return <Badge variant="success">En service</Badge>;
       case "arrêté":
-        return <Badge className="bg-yellow-500">Arrêté</Badge>;
+        return <Badge variant="warning">Arrêté</Badge>;
       case "maintenance":
-        return <Badge className="bg-orange-500">Maintenance</Badge>;
+        return <Badge variant="warning">Maintenance</Badge>;
       default:
         return <Badge>{status}</Badge>;
     }
@@ -34,6 +34,25 @@ const VehicleDetailsDialog: React.FC<VehicleDetailsDialogProps> = ({
 
   const formatDate = (dateStr: string) => {
     return new Date(dateStr).toLocaleString('fr-FR');
+  };
+
+  // Get status safely from either location status or vehicle status
+  const getVehicleStatus = () => {
+    if (vehicle.location?.status) {
+      return vehicle.location.status;
+    }
+    
+    // Map vehicle status to French if location status is not available
+    switch(vehicle.status) {
+      case "active":
+        return "en service";
+      case "maintenance":
+        return "maintenance";
+      case "out-of-service":
+        return "hors service";
+      default:
+        return String(vehicle.status);
+    }
   };
 
   return (
@@ -52,7 +71,7 @@ const VehicleDetailsDialog: React.FC<VehicleDetailsDialogProps> = ({
         <div className="space-y-4">
           <div className="flex items-center justify-between border-b pb-2">
             <div className="font-medium text-lg">{vehicle.name}</div>
-            <div>{renderStatusBadge(vehicle.location?.status || "")}</div>
+            <div>{renderStatusBadge(getVehicleStatus())}</div>
           </div>
           
           <div className="grid grid-cols-2 gap-4">
@@ -89,7 +108,7 @@ const VehicleDetailsDialog: React.FC<VehicleDetailsDialogProps> = ({
                   <Clock className="h-4 w-4 text-muted-foreground" />
                   <div className="text-sm text-muted-foreground">Dernière mise à jour</div>
                 </div>
-                <div className="font-medium">{formatDate(vehicle.location?.lastUpdate || "")}</div>
+                <div className="font-medium">{vehicle.location?.lastUpdate ? formatDate(vehicle.location.lastUpdate) : "Non disponible"}</div>
               </div>
               
               <div className="space-y-1">
@@ -106,7 +125,8 @@ const VehicleDetailsDialog: React.FC<VehicleDetailsDialogProps> = ({
                   <div className="text-sm text-muted-foreground">Coordonnées</div>
                 </div>
                 <div className="font-medium">
-                  {vehicle.location?.lat.toFixed(6)}, {vehicle.location?.lng.toFixed(6)}
+                  {vehicle.location?.lat ? `${vehicle.location.lat.toFixed(6)}, ${vehicle.location.lng?.toFixed(6)}` : 
+                   `${vehicle.location.latitude.toFixed(6)}, ${vehicle.location.longitude.toFixed(6)}`}
                 </div>
               </div>
             </div>

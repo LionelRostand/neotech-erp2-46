@@ -41,11 +41,18 @@ export function useTransportMap(initialConfig?: MapConfig): MapHookResult {
         attribution: '&copy; OpenStreetMap contributors'
       });
     } else if (tileProvider === 'mapbox') {
-      tileLayer = L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}', {
+      const options: L.TileLayerOptions = {
         attribution: '&copy; Mapbox',
-        id: 'mapbox/streets-v11',
-        accessToken: process.env.MAPBOX_ACCESS_TOKEN || 'your-mapbox-access-token'
-      });
+        id: 'mapbox/streets-v11'
+      };
+      
+      // Using environment variable safely
+      const accessToken = process.env.MAPBOX_ACCESS_TOKEN || 'your-mapbox-access-token';
+      
+      tileLayer = L.tileLayer(
+        `https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token=${accessToken}`, 
+        options
+      );
     } else {
       tileLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; OpenStreetMap contributors'
@@ -98,6 +105,7 @@ export function useTransportMap(initialConfig?: MapConfig): MapHookResult {
     mapInitialized,
     setMapConfig,
     refreshMap,
-    updateMarkers
+    updateMarkers,
+    mapConfig
   };
 }

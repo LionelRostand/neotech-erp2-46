@@ -13,6 +13,14 @@ export const mockVehicles: TransportVehicle[] = [
     available: true,
     status: "active",
     purchaseDate: "2022-05-15",
+    make: "Mercedes",
+    model: "Classe E",
+    year: 2022,
+    vinNumber: "WMEEJ8AA3FK792135",
+    mileage: 25000,
+    fuelType: "Diesel",
+    fuelLevel: 0.75,
+    createdAt: "2022-05-01"
   },
   {
     id: "veh-002",
@@ -23,6 +31,14 @@ export const mockVehicles: TransportVehicle[] = [
     available: false,
     status: "maintenance",
     purchaseDate: "2021-08-10",
+    make: "BMW",
+    model: "Série 5",
+    year: 2021,
+    vinNumber: "WBKJD4C51BE778564",
+    mileage: 42000,
+    fuelType: "Essence",
+    fuelLevel: 0.3,
+    createdAt: "2021-08-01"
   },
   {
     id: "veh-003",
@@ -33,6 +49,14 @@ export const mockVehicles: TransportVehicle[] = [
     available: true,
     status: "active",
     purchaseDate: "2022-01-20",
+    make: "Audi",
+    model: "A6",
+    year: 2022,
+    vinNumber: "WAUZZZ4G1EN042620",
+    mileage: 18000,
+    fuelType: "Hybride",
+    fuelLevel: 0.85,
+    createdAt: "2022-01-10"
   },
   {
     id: "veh-004",
@@ -43,6 +67,14 @@ export const mockVehicles: TransportVehicle[] = [
     available: true,
     status: "active",
     purchaseDate: "2021-11-05",
+    make: "Mercedes",
+    model: "Classe V",
+    year: 2021,
+    vinNumber: "WDD2130841A965689",
+    mileage: 32000,
+    fuelType: "Diesel",
+    fuelLevel: 0.6,
+    createdAt: "2021-11-01"
   },
   {
     id: "veh-005",
@@ -53,6 +85,14 @@ export const mockVehicles: TransportVehicle[] = [
     available: false,
     status: "out-of-service",
     purchaseDate: "2022-03-15",
+    make: "Tesla",
+    model: "Model S",
+    year: 2022,
+    vinNumber: "5YJSA1E40FF119841",
+    mileage: 15000,
+    fuelType: "Électrique",
+    fuelLevel: 0.2,
+    createdAt: "2022-03-01"
   }
 ];
 
@@ -66,11 +106,14 @@ export const mockMaintenanceSchedules: MaintenanceSchedule[] = [
     type: "regular",
     description: "Changement d'huile et filtres",
     technician: "Garage Central",
-    notes: "Inclure vérification des freins",
     taskName: "Maintenance régulière",
     nextDue: "2024-05-20",
     priority: "medium",
-    completed: false
+    completed: false,
+    scheduledDate: "2023-11-20",
+    estimatedDuration: 120,
+    status: "scheduled",
+    technicianAssigned: "Garage Central"
   },
   {
     id: "mnt-002",
@@ -80,11 +123,14 @@ export const mockMaintenanceSchedules: MaintenanceSchedule[] = [
     type: "repair",
     description: "Réparation système électrique",
     technician: "ElectroCar",
-    notes: "Problème de batterie détecté lors de la dernière location",
     taskName: "Réparation",
     nextDue: "2024-05-15",
     priority: "high",
-    completed: false
+    completed: false,
+    scheduledDate: "2023-11-15",
+    estimatedDuration: 240,
+    status: "in-progress",
+    technicianAssigned: "ElectroCar"
   },
   {
     id: "mnt-003",
@@ -94,11 +140,14 @@ export const mockMaintenanceSchedules: MaintenanceSchedule[] = [
     type: "inspection",
     description: "Contrôle technique annuel",
     technician: "Contrôle Auto",
-    notes: "Rendez-vous à 9h",
     taskName: "Contrôle technique",
     nextDue: "2024-12-05",
     priority: "low",
-    completed: false
+    completed: false,
+    scheduledDate: "2023-12-05",
+    estimatedDuration: 60,
+    status: "scheduled",
+    technicianAssigned: "Contrôle Auto"
   }
 ];
 
@@ -115,10 +164,13 @@ export const mockExtensionRequests: ExtensionRequest[] = [
     status: "pending",
     reason: "Prolongation voyage d'affaires",
     createdAt: "2023-11-18",
-    requestedBy: "Marie Legrand",
+    requestDate: "2023-11-18",
     requestedAt: "2023-11-18",
     extraTimeMinutes: 48 * 60, // 48 hours in minutes
-    additionalTime: 48 * 60 // 48 hours in minutes
+    additionalTime: 48 * 60, // 48 hours in minutes
+    extensionReason: "Prolongation voyage d'affaires",
+    extensionDays: 2,
+    vehicleId: "veh-002"
   },
   {
     id: "ext-002",
@@ -131,10 +183,13 @@ export const mockExtensionRequests: ExtensionRequest[] = [
     status: "approved",
     reason: "Besoin supplémentaire du véhicule",
     createdAt: "2023-11-17",
-    requestedBy: "Sophie Bernard",
+    requestDate: "2023-11-17",
     requestedAt: "2023-11-17",
     extraTimeMinutes: 48 * 60, // 48 hours in minutes
-    additionalTime: 48 * 60 // 48 hours in minutes
+    additionalTime: 48 * 60, // 48 hours in minutes
+    extensionReason: "Besoin supplémentaire du véhicule",
+    extensionDays: 2,
+    vehicleId: "veh-004"
   }
 ];
 
@@ -155,7 +210,10 @@ export const mockDrivers: TransportDriver[] = [
     photo: "",
     skills: ["luxury", "airport", "events"],
     preferredVehicleTypes: ["sedan", "luxury"],
-    status: "active"
+    status: "active",
+    licenseType: "B",
+    hireDate: "2019-03-10",
+    createdAt: "2019-03-01"
   },
   {
     id: "drv-002",
@@ -172,7 +230,10 @@ export const mockDrivers: TransportDriver[] = [
     photo: "",
     skills: ["airport", "long-distance"],
     preferredVehicleTypes: ["sedan"],
-    status: "driving"
+    status: "driving",
+    licenseType: "B",
+    hireDate: "2020-01-15",
+    createdAt: "2020-01-01"
   },
   {
     id: "drv-003",
@@ -189,6 +250,9 @@ export const mockDrivers: TransportDriver[] = [
     photo: "",
     skills: ["luxury", "events", "night"],
     preferredVehicleTypes: ["luxury"],
-    status: "on-leave"
+    status: "on-leave",
+    licenseType: "D",
+    hireDate: "2018-06-22",
+    createdAt: "2018-06-01"
   }
 ];

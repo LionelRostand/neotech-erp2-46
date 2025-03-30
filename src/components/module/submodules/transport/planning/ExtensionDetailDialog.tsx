@@ -1,165 +1,126 @@
 
 import React from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { DialogHeader, DialogFooter, DialogTitle, DialogContent, Dialog, DialogDescription } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
-import { Calendar, Clock, MapPin, User, Car, FileText, Check, X, Printer } from "lucide-react";
-import { MapExtensionRequest as ExtensionRequest } from '../types';
-import { Separator } from "@/components/ui/separator";
+import { usePlanning } from './context/PlanningContext';
+import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
 
 interface ExtensionDetailDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  extension: ExtensionRequest | null;
-  onApprove: (id: string) => void;
-  onReject: (id: string) => void;
+  // No props needed, all data will come from context
 }
 
-const ExtensionDetailDialog: React.FC<ExtensionDetailDialogProps> = ({
-  open,
-  onOpenChange,
-  extension,
-  onApprove,
-  onReject
-}) => {
-  if (!extension) return null;
-  
-  const formatDate = (dateStr: string) => {
-    return new Date(dateStr).toLocaleDateString('fr-FR', { dateStyle: 'long' });
-  };
-  
-  const getStatusBadge = (status: "pending" | "approved" | "rejected") => {
-    switch (status) {
-      case 'approved':
-        return <Badge className="bg-green-500">Approuvée</Badge>;
-      case 'rejected':
-        return <Badge className="bg-red-500">Refusée</Badge>;
-      default:
-        return <Badge className="bg-yellow-500">En attente</Badge>;
+const ExtensionDetailDialog: React.FC<ExtensionDetailDialogProps> = () => {
+  const { 
+    showExtensionDetailsDialog, 
+    setShowExtensionDetailsDialog, 
+    selectedExtensionRequest,
+    handleResolveExtension 
+  } = usePlanning();
+
+  if (!selectedExtensionRequest) return null;
+
+  // Helper to format dates
+  const formatDate = (dateStr?: string) => {
+    if (!dateStr) return '—';
+    try {
+      return format(new Date(dateStr), 'PPP', { locale: fr });
+    } catch (error) {
+      return dateStr;
     }
   };
-  
-  const calculateExtensionDays = (start: string, end: string) => {
-    const startDate = new Date(start);
-    const endDate = new Date(end);
-    const diffTime = Math.abs(endDate.getTime() - startDate.getTime());
-    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+  // Helper to get status badge
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'pending':
+        return <Badge variant="outline" className="border-amber-500 text-amber-500">En attente</Badge>;
+      case 'approved':
+        return <Badge variant="success">Approuvée</Badge>;
+      case 'rejected':
+      case 'denied':
+        return <Badge variant="destructive">Rejetée</Badge>;
+      default:
+        return <Badge>{status}</Badge>;
+    }
   };
-  
-  const extensionDays = calculateExtensionDays(extension.originalEndDate, extension.requestedEndDate);
-  
+
+  // Handle approval or rejection
+  const handleAction = (approved: boolean) => {
+    if (selectedExtensionRequest) {
+      handleResolveExtension(selectedExtensionRequest.id, approved);
+    }
+  };
+
+  // Check if the extension can be handled (is not already approved or rejected)
+  const canBeHandled = selectedExtensionRequest.status === 'pending';
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px]">
+    <Dialog 
+      open={showExtensionDetailsDialog} 
+      onOpenChange={setShowExtensionDetailsDialog}
+    >
+      <DialogContent className="sm:max-w-[550px]">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Clock size={18} />
-            <span>Détails de la demande de prolongation</span>
+          <DialogTitle className="flex items-center justify-between">
+            <span>Demande d'extension</span>
+            {getStatusBadge(selectedExtensionRequest.status)}
           </DialogTitle>
-          <DialogDescription>
-            Réservation {extension.requestId}
-          </DialogDescription>
         </DialogHeader>
         
-        <div className="py-4 space-y-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <User size={20} className="text-blue-600" />
-              <div>
-                <div className="text-sm text-muted-foreground">Client</div>
-                <div className="font-medium">{extension.clientName}</div>
-              </div>
-            </div>
-            
-            <div>
-              {getStatusBadge(extension.status)}
-            </div>
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <p className="text-sm text-muted-foreground mb-1">Client</p>
+            <p className="font-medium">{selectedExtensionRequest.clientName}</p>
           </div>
           
-          <Card>
-            <CardContent className="pt-6 space-y-4">
-              <div className="flex items-center gap-3">
-                <Car size={20} className="text-blue-600" />
-                <div>
-                  <div className="text-sm text-muted-foreground">Véhicule</div>
-                  <div className="font-medium">{extension.vehicleName}</div>
-                </div>
-              </div>
-              
-              <Separator />
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div className="flex items-center gap-3">
-                  <Calendar size={20} className="text-blue-600" />
-                  <div>
-                    <div className="text-sm text-muted-foreground">Date de fin originale</div>
-                    <div className="font-medium">{formatDate(extension.originalEndDate)}</div>
-                  </div>
-                </div>
-                
-                <div className="flex items-center gap-3">
-                  <Calendar size={20} className="text-green-600" />
-                  <div>
-                    <div className="text-sm text-muted-foreground">Date de fin demandée</div>
-                    <div className="font-medium">{formatDate(extension.requestedEndDate)}</div>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="bg-slate-50 p-3 rounded-md">
-                <div className="text-sm font-medium mb-1">Motif de la prolongation</div>
-                <div className="text-sm">{extension.reason}</div>
-              </div>
-              
-              <div className="flex items-center justify-between">
-                <div className="text-sm text-muted-foreground">
-                  Durée de prolongation:
-                </div>
-                <Badge variant="outline" className="bg-blue-50 text-blue-800">
-                  {extensionDays} jour{extensionDays > 1 ? 's' : ''}
-                </Badge>
-              </div>
-            </CardContent>
-          </Card>
+          <div>
+            <p className="text-sm text-muted-foreground mb-1">Véhicule</p>
+            <p className="font-medium">{selectedExtensionRequest.vehicleName}</p>
+          </div>
+          
+          <div>
+            <p className="text-sm text-muted-foreground mb-1">Date de fin initiale</p>
+            <p className="font-medium">{formatDate(selectedExtensionRequest.originalEndDate)}</p>
+          </div>
+          
+          <div>
+            <p className="text-sm text-muted-foreground mb-1">Date de fin demandée</p>
+            <p className="font-medium">{formatDate(selectedExtensionRequest.requestedEndDate)}</p>
+          </div>
         </div>
         
-        <DialogFooter className="flex flex-col sm:flex-row gap-2 sm:justify-between">
-          <Button 
-            onClick={() => onOpenChange(false)} 
-            variant="outline"
-            className="flex items-center gap-1"
-          >
-            <Printer size={16} />
-            <span>Imprimer</span>
-          </Button>
-          
-          <div className="flex gap-2">
-            {extension.status === 'pending' && (
-              <>
-                <Button 
-                  onClick={() => onReject(extension.id)} 
-                  variant="destructive"
-                  className="flex items-center gap-1"
-                >
-                  <X size={16} />
-                  <span>Refuser</span>
-                </Button>
-                <Button 
-                  onClick={() => onApprove(extension.id)} 
-                  className="flex items-center gap-1"
-                >
-                  <Check size={16} />
-                  <span>Approuver</span>
-                </Button>
-              </>
-            )}
-            {extension.status !== 'pending' && (
-              <Button onClick={() => onOpenChange(false)}>
-                Fermer
+        <div className="border-t pt-4 mt-2">
+          <p className="text-sm text-muted-foreground mb-1">Motif de la demande</p>
+          <p>{selectedExtensionRequest.reason || selectedExtensionRequest.extensionReason || 'Aucun motif spécifié'}</p>
+        </div>
+        
+        <DialogFooter className="pt-4">
+          {canBeHandled ? (
+            <div className="flex gap-3 w-full">
+              <Button 
+                variant="outline" 
+                onClick={() => handleAction(false)}
+                className="flex-1"
+              >
+                Rejeter
               </Button>
-            )}
-          </div>
+              <Button 
+                onClick={() => handleAction(true)}
+                className="flex-1"
+              >
+                Approuver
+              </Button>
+            </div>
+          ) : (
+            <Button 
+              onClick={() => setShowExtensionDetailsDialog(false)}
+              className="w-full"
+            >
+              Fermer
+            </Button>
+          )}
         </DialogFooter>
       </DialogContent>
     </Dialog>

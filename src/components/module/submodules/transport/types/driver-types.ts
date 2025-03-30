@@ -28,6 +28,7 @@ export interface TransportDriver extends TransportBasic {
     onTimeRate?: number; // For backward compatibility
     customerSatisfaction?: number; // For backward compatibility
   };
+  createdAt: string;
 }
 
 export interface DriverNote extends Note {

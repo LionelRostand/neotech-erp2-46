@@ -63,6 +63,7 @@ export interface IncidentRecord {
   repairCost?: number;
   resolved?: boolean;
   damageDetails?: string;
+  insuranceClaim?: boolean; // Adding this for TransportFleet errors
 }
 
 export interface MaintenanceSchedule {
@@ -78,4 +79,9 @@ export interface MaintenanceSchedule {
   startDate?: string;
   endDate?: string;
   technician?: string;
+  completed?: boolean; // Add for MaintenanceTable
+  notes?: string; // Add for mockData
+  taskName?: string; // Add for mockData
+  priority?: string; // Add for mockData
+  nextDue?: string; // Add for mockData
 }

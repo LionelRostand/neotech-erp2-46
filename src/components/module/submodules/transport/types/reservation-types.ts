@@ -1,71 +1,100 @@
 
-import { TransportService } from './base-types';
+// Basic types for reservations
 
-// Define the service types for web booking that match the TransportService.serviceType
-export type WebBookingService = 'airport' | 'hourly' | 'pointToPoint' | 'dayTour';
-
-// Define the structure for a web booking
-export interface WebBooking {
-  id: string;
-  service: WebBookingService | string;
-  date: string;
-  time: string;
-  pickup: string | { address: string };
-  dropoff: string | { address: string };
-  clientInfo: {
-    firstName: string;
-    lastName: string;
-    email: string;
-    phone: string;
+export interface Location {
+  address: string;
+  coordinates?: {
+    lat: number;
+    lng: number;
   };
-  passengers: number;
-  vehicleType: string;
-  needsDriver: boolean;
-  status: 'new' | 'confirmed' | 'cancelled' | 'completed';
-  createdAt: string;
-  notes?: string;
 }
 
-// Define the structure for a reservation
+export type LocationType = string | { address: string };
+
+export const getAddressString = (location: LocationType): string => {
+  if (typeof location === 'string') {
+    return location;
+  }
+  return location.address || '';
+};
+
+export interface WebBookingService {
+  id: string;
+  name: string;
+  price: number;
+  description?: string;
+  duration?: number;
+  image?: string;
+  vehicleType?: string;
+}
+
+export interface WebBooking {
+  id: string;
+  serviceId: string;
+  clientName: string;
+  clientEmail: string;
+  clientPhone: string;
+  date: string;
+  time: string;
+  pickupLocation: LocationType;
+  dropoffLocation: LocationType;
+  status: string;
+  specialRequests?: string;
+  price: number;
+  paymentMethod?: string;
+  paymentStatus?: string;
+}
+
 export interface Reservation {
   id: string;
   clientId: string;
-  clientName?: string; // Added for backward compatibility
+  clientName: string;
   vehicleId?: string;
+  vehicleName?: string;
   driverId?: string;
-  service?: WebBookingService | string;
-  startDate: string;
-  endDate: string;
-  time?: string;
-  pickupLocation?: string | { address: string };
-  pickup?: string | { address: string };
-  dropoffLocation?: string | { address: string };
-  dropoff?: string | { address: string };
-  totalAmount?: number;
-  status: 'pending' | 'confirmed' | 'in-progress' | 'completed' | 'cancelled';
-  paymentStatus?: 'pending' | 'partial' | 'paid';
+  driverName?: string;
+  pickupDate: string;
+  pickupLocation: LocationType;
+  dropoffLocation: LocationType;
+  status: TransportReservationStatus;
+  passengerCount: number;
+  price: number;
+  type: string;
+  duration: number;
+  luggageCount?: number;
+  paymentMethod?: string;
+  paymentStatus?: string;
   notes?: string;
-  passengers?: number;
-  createdAt: string;
-  updatedAt?: string;
 }
 
-// Utility function to get address string from various address formats
-export function getAddressString(address: string | { address: string } | undefined): string {
-  if (!address) return 'No address';
-  if (typeof address === 'string') return address;
-  return address.address;
+export interface TransportReservation {
+  id: string;
+  title: string;
+  clientId: string;
+  clientName: string;
+  vehicleId: string;
+  vehicleName: string;
+  driverId?: string;
+  driverName?: string;
+  start: string;
+  end: string;
+  startLocation: LocationType;
+  endLocation: LocationType;
+  status: TransportReservationStatus;
+  price: number;
+  passengerCount: number;
+  luggageCount?: number;
+  type: string;
+  notes?: string;
+  paymentMethod?: string;
+  paymentStatus?: string;
+  color?: string;
+  borderColor?: string;
 }
 
-// Legacy reservation type for backward compatibility
-export interface TransportReservation extends Reservation {
-  // Additional properties used in existing components
-  date?: string;
-  price?: number;
-  isPaid?: boolean;
-  needsDriver?: boolean;
-  contractGenerated?: boolean;
-}
-
-// Status types for use in components
-export type TransportReservationStatus = 'pending' | 'confirmed' | 'in-progress' | 'completed' | 'cancelled';
+export type TransportReservationStatus = 
+  | 'pending'
+  | 'confirmed'
+  | 'completed'
+  | 'cancelled'
+  | 'no-show';

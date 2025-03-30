@@ -15,30 +15,13 @@ declare global {
   interface Window {
     map?: L.Map;
     markers?: L.LayerGroup;
-    markerClusterGroup?: L.MarkerClusterGroup;
-  }
-}
-
-// Extend Leaflet namespace to properly type MarkerClusterGroup
-declare module 'leaflet' {
-  namespace L {
-    interface MarkerClusterGroupOptions {
-      maxClusterRadius?: number;
-      disableClusteringAtZoom?: number;
-    }
-    
-    class MarkerClusterGroup extends FeatureGroup {
-      constructor(options?: MarkerClusterGroupOptions);
-      addLayer(layer: Layer): this;
-    }
-    
-    function markerClusterGroup(options?: MarkerClusterGroupOptions): MarkerClusterGroup;
+    markerClusterGroup?: any;
   }
 }
 
 export function useMapMarkers() {
   const markersRef = useRef<L.LayerGroup | null>(null);
-  const markerClusterGroupRef = useRef<L.MarkerClusterGroup | null>(null);
+  const markerClusterGroupRef = useRef<any>(null);
 
   const getVehicleIcon = (vehicleType: string, isSelected: boolean) => {
     if (isSelected) {
@@ -95,7 +78,8 @@ export function useMapMarkers() {
 
     // Create the marker group
     if (useCluster) {
-      markerClusterGroupRef.current = L.markerClusterGroup({
+      // Fix: Cast to any to avoid TypeScript errors with markerClusterGroup
+      markerClusterGroupRef.current = (L as any).markerClusterGroup({
         maxClusterRadius: 30,
         disableClusteringAtZoom: 15,
       });
@@ -118,18 +102,18 @@ export function useMapMarkers() {
       marker.on('click', () => onVehicleSelect(vehicle));
       
       // Add the marker to the appropriate group
-      if (useCluster) {
-        markerClusterGroupRef.current?.addLayer(marker);
-      } else {
-        markersRef.current?.addLayer(marker);
+      if (useCluster && markerClusterGroupRef.current) {
+        markerClusterGroupRef.current.addLayer(marker);
+      } else if (markersRef.current) {
+        markersRef.current.addLayer(marker);
       }
     });
     
     // Add the group to the map
-    if (useCluster) {
-      markerClusterGroupRef.current && map.addLayer(markerClusterGroupRef.current);
-    } else {
-      markersRef.current && map.addLayer(markersRef.current);
+    if (useCluster && markerClusterGroupRef.current) {
+      map.addLayer(markerClusterGroupRef.current);
+    } else if (markersRef.current) {
+      map.addLayer(markersRef.current);
     }
     
     // Store references globally for debugging

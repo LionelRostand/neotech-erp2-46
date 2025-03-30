@@ -10,6 +10,8 @@ export interface VehicleLocation {
   speed?: number;
   heading?: number;
   lastUpdate?: string;
+  status?: string; // Add status for VehicleDetailsDialog
+  vehicleId?: string; // Add vehicleId for TransportGeolocation
 }
 
 export interface TransportVehicleWithLocation extends TransportVehicle {
@@ -31,9 +33,11 @@ export interface MapHookResult {
   mapInitialized: boolean;
   setMapConfig: (config: MapConfig) => void;
   refreshMap: () => void;
+  updateMarkers: (vehicles: TransportVehicleWithLocation[], selectedId?: string) => void;
+  mapConfig?: MapConfig; // Add mapConfig for TransportGeolocation
 }
 
-export { MaintenanceSchedule };
+export type { MaintenanceSchedule };
 
 export interface ExtensionRequest {
   id: string;
@@ -44,7 +48,7 @@ export interface ExtensionRequest {
   originalEndDate?: string;
   extensionReason: string;
   extensionDays: number;
-  status: 'pending' | 'approved' | 'denied' | 'rejected';
+  status: 'pending' | 'approved' | 'rejected' | 'denied';
   approvedBy?: string;
   notes?: string;
   vehicleName?: string;
@@ -52,4 +56,7 @@ export interface ExtensionRequest {
   reason?: string;
   createdAt?: string;
   reservationId?: string;
+  requestedAt?: string; // Add for mockData
+  extraTimeMinutes?: number; // Add for mockData
+  additionalTime?: number; // Add for mockData
 }
