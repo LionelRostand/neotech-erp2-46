@@ -30,11 +30,12 @@ const SelectPatch: React.FC = () => {
         const OriginalComponent = originalSelectItem;
         
         // @ts-ignore - Extending the React component
-        require('@radix-ui/react-select').Item = React.forwardRef((props, ref) => {
+        require('@radix-ui/react-select').Item = React.forwardRef((props: any, ref) => {
           // Ensure value is never empty
           const safeProps = {...props};
           if (!safeProps.value) {
             safeProps.value = `item-${Math.random().toString(36).substr(2, 9)}`;
+            console.log('Patched empty Select.Item value with:', safeProps.value);
           }
           
           return <OriginalComponent {...safeProps} ref={ref} />;
@@ -48,6 +49,9 @@ const SelectPatch: React.FC = () => {
       }
     } catch (error) {
       console.error('Failed to patch Select components:', error);
+      toast.error("Failed to patch Select components", {
+        description: "Some components may not work correctly"
+      });
     }
   }, []);
 

@@ -4,6 +4,7 @@ import { Route } from "react-router-dom";
 import ModuleLayout from "@/components/module/ModuleLayout";
 import SubmodulePage from "@/components/module/SubmodulePage";
 import TransportSettingsWrapper from '@/components/module/submodules/transport/settings/TransportSettingsWrapper';
+import SelectPatch from '@/components/module/submodules/transport/patches/select-patch';
 
 export const TransportRoutes = (
   <Route key="transport" path="/modules/transport" element={<ModuleLayout moduleId={7} />}>

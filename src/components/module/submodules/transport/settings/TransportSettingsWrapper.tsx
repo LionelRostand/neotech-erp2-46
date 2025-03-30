@@ -2,7 +2,7 @@
 import React from 'react';
 import TransportSettings from '../TransportSettings';
 import SelectPatch from '../patches/select-patch';
-import ChevronsUpDown from '@/components/icons/ChevronsUpDown';
+import { ChevronsUpDown } from "lucide-react";
 
 // This component wraps the original TransportSettings component and adds the necessary patches
 const TransportSettingsWrapper: React.FC = () => {
