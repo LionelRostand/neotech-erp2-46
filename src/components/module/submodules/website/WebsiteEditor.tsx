@@ -27,7 +27,10 @@ import {
   Search,
   Settings,
   PanelLeft,
-  PanelRight
+  PanelRight,
+  Layers,
+  BoxSelect,
+  Edit3
 } from 'lucide-react';
 import EditorSidebar from './editor/EditorSidebar';
 import EditorToolbar from './editor/EditorToolbar';
@@ -43,6 +46,13 @@ const WebsiteEditor = () => {
   const [showProperties, setShowProperties] = useState(true);
   const [currentPage, setCurrentPage] = useState('home');
   const [selectedElement, setSelectedElement] = useState(null);
+  const [activeTab, setActiveTab] = useState<'elements' | 'components' | 'blocks'>('elements');
+
+  const handlePreviewClick = () => {
+    // URL à adapter selon la structure de votre application
+    const previewUrl = `/preview/website?page=${currentPage}`;
+    window.open(previewUrl, '_blank');
+  };
 
   return (
     <div className="h-[calc(100vh-120px)] flex flex-col">
@@ -90,7 +100,7 @@ const WebsiteEditor = () => {
               <Settings className="h-4 w-4 mr-1" />
               <span className="hidden sm:inline">Propriétés</span>
             </Button>
-            <Button size="sm">
+            <Button size="sm" onClick={handlePreviewClick}>
               <Eye className="h-4 w-4 mr-1" />
               <span className="hidden sm:inline">Aperçu</span>
             </Button>
@@ -106,7 +116,84 @@ const WebsiteEditor = () => {
         {/* Left Sidebar - Elements */}
         {!showTemplates && (
           <div className="w-64 border-r pr-2 overflow-y-auto">
-            <EditorSidebar />
+            <Tabs defaultValue={activeTab} onValueChange={(value) => setActiveTab(value as 'elements' | 'components' | 'blocks')} className="w-full">
+              <TabsList className="grid grid-cols-3 w-full">
+                <TabsTrigger value="elements">Éléments</TabsTrigger>
+                <TabsTrigger value="components">Composants</TabsTrigger>
+                <TabsTrigger value="blocks">Blocs</TabsTrigger>
+              </TabsList>
+              <TabsContent value="elements" className="mt-2">
+                <EditorSidebar />
+              </TabsContent>
+              <TabsContent value="components" className="mt-2">
+                <div className="space-y-3">
+                  <Card className="p-3 cursor-move hover:bg-muted transition-colors">
+                    <div className="flex items-center space-x-2">
+                      <Grid3X3 className="h-4 w-4 text-primary" />
+                      <span>Navigation</span>
+                    </div>
+                  </Card>
+                  <Card className="p-3 cursor-move hover:bg-muted transition-colors">
+                    <div className="flex items-center space-x-2">
+                      <FormInput className="h-4 w-4 text-primary" />
+                      <span>Formulaire de contact</span>
+                    </div>
+                  </Card>
+                  <Card className="p-3 cursor-move hover:bg-muted transition-colors">
+                    <div className="flex items-center space-x-2">
+                      <Image className="h-4 w-4 text-primary" />
+                      <span>Galerie d'images</span>
+                    </div>
+                  </Card>
+                  <Card className="p-3 cursor-move hover:bg-muted transition-colors">
+                    <div className="flex items-center space-x-2">
+                      <MessageSquare className="h-4 w-4 text-primary" />
+                      <span>Témoignages</span>
+                    </div>
+                  </Card>
+                  <Card className="p-3 cursor-move hover:bg-muted transition-colors">
+                    <div className="flex items-center space-x-2">
+                      <Search className="h-4 w-4 text-primary" />
+                      <span>Recherche</span>
+                    </div>
+                  </Card>
+                </div>
+              </TabsContent>
+              <TabsContent value="blocks" className="mt-2">
+                <div className="space-y-3">
+                  <Card className="p-3 cursor-move hover:bg-muted transition-colors">
+                    <div className="flex items-center space-x-2">
+                      <Layers className="h-4 w-4 text-primary" />
+                      <span>En-tête avec bannière</span>
+                    </div>
+                  </Card>
+                  <Card className="p-3 cursor-move hover:bg-muted transition-colors">
+                    <div className="flex items-center space-x-2">
+                      <BoxSelect className="h-4 w-4 text-primary" />
+                      <span>Grille de services</span>
+                    </div>
+                  </Card>
+                  <Card className="p-3 cursor-move hover:bg-muted transition-colors">
+                    <div className="flex items-center space-x-2">
+                      <Edit3 className="h-4 w-4 text-primary" />
+                      <span>Section blog</span>
+                    </div>
+                  </Card>
+                  <Card className="p-3 cursor-move hover:bg-muted transition-colors">
+                    <div className="flex items-center space-x-2">
+                      <PanelLeft className="h-4 w-4 text-primary" />
+                      <span>Bloc CTA</span>
+                    </div>
+                  </Card>
+                  <Card className="p-3 cursor-move hover:bg-muted transition-colors">
+                    <div className="flex items-center space-x-2">
+                      <PanelRight className="h-4 w-4 text-primary" />
+                      <span>Pied de page complet</span>
+                    </div>
+                  </Card>
+                </div>
+              </TabsContent>
+            </Tabs>
           </div>
         )}
 
