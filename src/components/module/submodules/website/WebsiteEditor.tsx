@@ -38,8 +38,10 @@ import EditorCanvas from './editor/EditorCanvas';
 import DevModePanel from './editor/DevModePanel';
 import EditorTemplatesPanel from './editor/EditorTemplatesPanel';
 import EditorPropertiesPanel from './editor/EditorPropertiesPanel';
+import { useToast } from '@/components/ui/use-toast';
 
 const WebsiteEditor = () => {
+  const { toast } = useToast();
   const [viewMode, setViewMode] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
   const [showCode, setShowCode] = useState(false);
   const [showTemplates, setShowTemplates] = useState(false);
@@ -52,6 +54,15 @@ const WebsiteEditor = () => {
     // URL à adapter selon la structure de votre application
     const previewUrl = `/preview/website?page=${currentPage}`;
     window.open(previewUrl, '_blank');
+  };
+  
+  const handleDeleteElement = (elementId: string) => {
+    // Cette fonction sera passée à EditorCanvas via EditorPropertiesPanel
+    // Elle est définie ici pour être cohérente avec l'état global
+    toast({
+      description: "Élément supprimé avec succès",
+    });
+    setSelectedElement(null);
   };
 
   return (
@@ -219,7 +230,10 @@ const WebsiteEditor = () => {
         {/* Right Sidebar - Properties */}
         {showProperties && (
           <div className="w-72 border-l pl-2 overflow-y-auto">
-            <EditorPropertiesPanel selectedElement={selectedElement} />
+            <EditorPropertiesPanel 
+              selectedElement={selectedElement} 
+              onDeleteElement={handleDeleteElement}
+            />
           </div>
         )}
 

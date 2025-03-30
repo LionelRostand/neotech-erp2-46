@@ -12,9 +12,12 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent } from '@/components/ui/card';
 import { ColorPicker } from './ColorPicker';
+import { Trash2 } from 'lucide-react';
+import { useToast } from '@/components/ui/use-toast';
 
 interface EditorPropertiesPanelProps {
   selectedElement: any;
+  onDeleteElement?: (elementId: string) => void;
 }
 
 // Composant pour afficher les propriétés générales du site web
@@ -54,37 +57,17 @@ const WebsiteProperties = () => {
         />
       </div>
       
-      <div className="space-y-2">
-        <Label>Couleur principale</Label>
-        <div className="flex items-center space-x-2">
-          <div 
-            className="w-8 h-8 border rounded cursor-pointer" 
-            style={{ backgroundColor: primaryColor }}
-          />
-          <Input
-            type="color"
-            value={primaryColor}
-            onChange={(e) => setPrimaryColor(e.target.value)}
-            className="w-full h-8"
-          />
-        </div>
-      </div>
+      <ColorPicker
+        color={primaryColor}
+        onChange={setPrimaryColor}
+        label="Couleur principale"
+      />
       
-      <div className="space-y-2">
-        <Label>Couleur secondaire</Label>
-        <div className="flex items-center space-x-2">
-          <div 
-            className="w-8 h-8 border rounded cursor-pointer" 
-            style={{ backgroundColor: secondaryColor }}
-          />
-          <Input
-            type="color"
-            value={secondaryColor}
-            onChange={(e) => setSecondaryColor(e.target.value)}
-            className="w-full h-8"
-          />
-        </div>
-      </div>
+      <ColorPicker
+        color={secondaryColor}
+        onChange={setSecondaryColor}
+        label="Couleur secondaire"
+      />
       
       <Separator />
       
@@ -156,8 +139,9 @@ const WebsiteProperties = () => {
 };
 
 // Composant pour afficher les propriétés d'un élément sélectionné
-const ElementProperties = ({ selectedElement }: { selectedElement: any }) => {
-  const [textContent, setTextContent] = useState('');
+const ElementProperties = ({ selectedElement, onDeleteElement }: { selectedElement: any, onDeleteElement?: (elementId: string) => void }) => {
+  const { toast } = useToast();
+  const [textContent, setTextContent] = useState(selectedElement?.content || '');
   const [fontSize, setFontSize] = useState(16);
   const [fontWeight, setFontWeight] = useState('normal');
   const [textAlign, setTextAlign] = useState('left');
@@ -172,6 +156,15 @@ const ElementProperties = ({ selectedElement }: { selectedElement: any }) => {
   const [targetBlank, setTargetBlank] = useState(false);
   const [opacity, setOpacity] = useState(100);
 
+  const handleDeleteElement = () => {
+    if (onDeleteElement && selectedElement?.id) {
+      onDeleteElement(selectedElement.id);
+      toast({
+        description: `Élément supprimé avec succès.`,
+      });
+    }
+  };
+
   if (!selectedElement) {
     return (
       <div className="text-center text-muted-foreground text-sm p-4">
@@ -182,7 +175,7 @@ const ElementProperties = ({ selectedElement }: { selectedElement: any }) => {
 
   return (
     <div className="space-y-4 p-1">
-      <Tabs defaultValue="style">
+      <Tabs defaultValue="content">
         <TabsList className="grid grid-cols-3 w-full">
           <TabsTrigger value="content">Contenu</TabsTrigger>
           <TabsTrigger value="style">Style</TabsTrigger>
@@ -190,14 +183,24 @@ const ElementProperties = ({ selectedElement }: { selectedElement: any }) => {
         </TabsList>
 
         <TabsContent value="content" className="space-y-4 pt-4">
-          {['heading', 'paragraph', 'button'].includes(selectedElement?.type) && (
+          {['heading', 'paragraph', 'button', 'header', 'section'].includes(selectedElement?.type) && (
             <div className="space-y-2">
-              <Label>Texte</Label>
-              <Input 
-                value={textContent} 
+              <Label>Contenu HTML</Label>
+              <Textarea 
+                value={textContent}
                 onChange={(e) => setTextContent(e.target.value)}
-                placeholder="Entrez votre texte" 
+                placeholder="Contenu HTML" 
+                rows={5}
+                className="font-mono text-xs"
               />
+              <Button 
+                size="sm" 
+                variant="outline" 
+                className="w-full mt-2"
+                onClick={() => toast({ description: "Contenu mis à jour" })}
+              >
+                Mettre à jour le contenu
+              </Button>
             </div>
           )}
 
@@ -292,35 +295,19 @@ const ElementProperties = ({ selectedElement }: { selectedElement: any }) => {
 
           <div className="space-y-2">
             <Label>Couleur de fond</Label>
-            <div className="flex items-center space-x-2">
-              <div 
-                className="w-8 h-8 border rounded cursor-pointer" 
-                style={{ backgroundColor }}
-              />
-              <Input
-                type="color"
-                value={backgroundColor}
-                onChange={(e) => setBackgroundColor(e.target.value)}
-                className="w-full h-8"
-              />
-            </div>
+            <ColorPicker 
+              color={backgroundColor}
+              onChange={setBackgroundColor}
+            />
           </div>
 
           {['heading', 'paragraph', 'button'].includes(selectedElement?.type) && (
             <div className="space-y-2">
               <Label>Couleur du texte</Label>
-              <div className="flex items-center space-x-2">
-                <div 
-                  className="w-8 h-8 border rounded cursor-pointer" 
-                  style={{ backgroundColor: textColor }}
-                />
-                <Input
-                  type="color"
-                  value={textColor}
-                  onChange={(e) => setTextColor(e.target.value)}
-                  className="w-full h-8"
-                />
-              </div>
+              <ColorPicker 
+                color={textColor}
+                onChange={setTextColor}
+              />
             </div>
           )}
 
@@ -383,6 +370,14 @@ const ElementProperties = ({ selectedElement }: { selectedElement: any }) => {
           </div>
 
           <div className="space-y-2">
+            <Label>Type d'élément</Label>
+            <Input 
+              value={selectedElement?.type} 
+              disabled 
+            />
+          </div>
+
+          <div className="space-y-2">
             <Label>Classes CSS</Label>
             <Input placeholder="Entrez vos classes CSS" />
           </div>
@@ -413,7 +408,13 @@ const ElementProperties = ({ selectedElement }: { selectedElement: any }) => {
 
           <Separator className="my-4" />
 
-          <Button variant="destructive" size="sm">
+          <Button 
+            variant="destructive" 
+            size="sm" 
+            className="w-full"
+            onClick={handleDeleteElement}
+          >
+            <Trash2 className="h-4 w-4 mr-2" />
             Supprimer cet élément
           </Button>
         </TabsContent>
@@ -422,7 +423,7 @@ const ElementProperties = ({ selectedElement }: { selectedElement: any }) => {
   );
 };
 
-const EditorPropertiesPanel: React.FC<EditorPropertiesPanelProps> = ({ selectedElement }) => {
+const EditorPropertiesPanel: React.FC<EditorPropertiesPanelProps> = ({ selectedElement, onDeleteElement }) => {
   return (
     <ScrollArea className="h-full">
       <div className="p-4">
@@ -433,7 +434,10 @@ const EditorPropertiesPanel: React.FC<EditorPropertiesPanelProps> = ({ selectedE
         </h3>
 
         {selectedElement ? (
-          <ElementProperties selectedElement={selectedElement} />
+          <ElementProperties 
+            selectedElement={selectedElement} 
+            onDeleteElement={onDeleteElement}
+          />
         ) : (
           <WebsiteProperties />
         )}

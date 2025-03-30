@@ -53,6 +53,11 @@ const EditorCanvas: React.FC<EditorCanvasProps> = ({ viewMode, onSelectElement }
     }
   };
 
+  const handleDeleteElement = (elementId: string) => {
+    const updatedElements = elements.filter(element => element.id !== elementId);
+    setElements(updatedElements);
+  };
+
   const createElementFromType = (type: string) => {
     const id = `${type}-${Date.now()}`;
     let content = '';
@@ -145,6 +150,15 @@ const EditorCanvas: React.FC<EditorCanvasProps> = ({ viewMode, onSelectElement }
             dangerouslySetInnerHTML={{ __html: element.content }}
           />
         ))}
+        
+        {elements.length === 0 && (
+          <div className="flex items-center justify-center p-10 h-96 text-muted-foreground">
+            <div className="text-center">
+              <p>Aucun élément dans la page</p>
+              <p className="text-sm">Faites glisser des éléments depuis le panneau de gauche</p>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
