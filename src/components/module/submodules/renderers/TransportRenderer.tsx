@@ -13,6 +13,11 @@ import TransportLoyalty from '../transport/TransportLoyalty';
 import TransportWebBooking from '../transport/TransportWebBooking';
 // Import our custom ChevronsUpDown component
 import ChevronsUpDown from '@/components/icons/ChevronIcons';
+// Import the icon initialization utility
+import { initializeGlobalIcons } from '../transport/utils/iconUtils';
+
+// Initialize icons immediately
+initializeGlobalIcons();
 
 // Make ChevronsUpDown available globally in a TypeScript-safe way
 if (typeof window !== 'undefined') {
@@ -29,10 +34,8 @@ interface TransportRendererProps {
 export const TransportRenderer: React.FC<TransportRendererProps> = ({ submoduleId, submodule }) => {
   // Make ChevronsUpDown available each time this component renders
   React.useEffect(() => {
-    if (typeof window !== 'undefined') {
-      // @ts-ignore - We're explicitly adding this to the window object
-      window.ChevronsUpDown = ChevronsUpDown;
-    }
+    // Use the utility function to ensure icon availability
+    initializeGlobalIcons();
   }, []);
 
   // Log the current submoduleId for debugging
