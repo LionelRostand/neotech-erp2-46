@@ -42,3 +42,10 @@ export type {
   MaintenanceSchedule as MapMaintenanceSchedule, 
   ExtensionRequest as MapExtensionRequest 
 } from './map-types';
+
+// Export geolocation-types
+export type {
+  VehicleAlert,
+  RouteOptimization,
+  AlertConfig
+} from './geolocation-types';

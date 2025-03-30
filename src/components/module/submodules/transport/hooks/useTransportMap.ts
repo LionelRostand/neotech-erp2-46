@@ -1,142 +1,187 @@
 
 import { useState, useEffect, useRef } from 'react';
-import { MapConfig, TransportVehicleWithLocation, MapHookResult } from '../types';
+import { TransportVehicleWithLocation, MapConfig, MapHookResult } from '../types/map-types';
+import { getTileLayerConfig, calculateMapCenter } from '../utils/map-utils';
+import { useMapMarkers } from './useMapMarkers';
+import { configureLeafletIcons } from '../utils/leaflet-icon-setup';
+import mapboxgl from 'mapbox-gl';
+import 'mapbox-gl/dist/mapbox-gl.css';
 
-// Default map configuration
-const DEFAULT_CONFIG: MapConfig = {
-  center: [48.866667, 2.333333], // Paris
-  zoom: 13,
-  style: 'mapbox://styles/mapbox/streets-v11',
-  minZoom: 3,
-  maxZoom: 18,
-  showLabels: true
-};
+const DEFAULT_CENTER_LAT = 48.8566;
+const DEFAULT_CENTER_LNG = 2.3522;
+const DEFAULT_ZOOM = 12;
 
-export const useTransportMap = (initialConfig?: Partial<MapConfig>): MapHookResult => {
-  // Combine default config with any provided config
+export const useTransportMap = (
+  mapRef: React.RefObject<HTMLDivElement>,
+  vehicles: TransportVehicleWithLocation[]
+): MapHookResult => {
+  const [map, setMap] = useState<any>(null);
+  const [mapInitialized, setMapInitialized] = useState<boolean>(false);
+  const [isLoaded, setIsLoaded] = useState<boolean>(false);
+  
+  const { createVehicleMarkers, fitMapToMarkers, clearMarkers } = useMapMarkers();
+  
   const [mapConfig, setMapConfig] = useState<MapConfig>({
-    ...DEFAULT_CONFIG,
-    ...initialConfig
+    center: [DEFAULT_CENTER_LAT, DEFAULT_CENTER_LNG],
+    zoom: DEFAULT_ZOOM,
+    tileProvider: 'osm-france',
+    showLabels: true,
   });
   
-  // Create refs and state
-  const mapRef = useRef<any>(null);
-  const mapContainerRef = useRef<HTMLDivElement>(null);
-  const [map, setMap] = useState<any>(null);
-  const [isLoaded, setIsLoaded] = useState(false);
-  const [mapInitialized, setMapInitialized] = useState(false);
+  // Use refs to store callbacks that need to access current state/props
+  const markersRef = useRef<any[]>([]);
+  const vehiclesRef = useRef(vehicles);
   
-  // Initialize the map
+  // Update ref when vehicles change
   useEffect(() => {
-    if (mapContainerRef.current && !mapInitialized) {
-      const initializeMap = async () => {
-        try {
-          // Dynamic import to avoid SSR issues
-          const mapboxgl = (await import('mapbox-gl')).default;
-          
-          // Set mapbox token (in a real app, this would be from env vars)
-          mapboxgl.accessToken = 'pk.YOUR_MAPBOX_TOKEN_HERE';
-          
-          // Create the map
-          const mapInstance = new mapboxgl.Map({
-            container: mapContainerRef.current!,
-            style: mapConfig.style || DEFAULT_CONFIG.style,
-            center: mapConfig.center,
-            zoom: mapConfig.zoom,
-            minZoom: mapConfig.minZoom,
-            maxZoom: mapConfig.maxZoom
-          });
-          
-          // Setup event listeners
-          mapInstance.on('load', () => {
-            setMap(mapInstance);
-            setIsLoaded(true);
-            setMapInitialized(true);
-            console.log('Map initialized');
-          });
-          
-          mapInstance.on('error', (e) => {
-            console.error('Mapbox error:', e);
-          });
-          
-        } catch (error) {
-          console.error('Error initializing map:', error);
-        }
-      };
-      
-      initializeMap();
-    }
-  }, [mapContainerRef, mapInitialized, mapConfig]);
+    vehiclesRef.current = vehicles;
+  }, [vehicles]);
   
-  // Add markers to the map
-  const addMarkers = (vehicles: TransportVehicleWithLocation[]) => {
+  // Initialize map
+  useEffect(() => {
+    const initMap = async () => {
+      if (!mapRef.current || mapInitialized) return;
+      
+      try {
+        // Configure Leaflet correctly
+        const L = await configureLeafletIcons();
+        
+        // Calculate optimal center and zoom based on vehicle positions
+        const { latitude, longitude, zoom } = calculateMapCenter(
+          vehicles,
+          DEFAULT_CENTER_LAT,
+          DEFAULT_CENTER_LNG,
+          DEFAULT_ZOOM
+        );
+        
+        // Get tile layer config based on provider
+        const tileLayerConfig = getTileLayerConfig(mapConfig.tileProvider);
+        
+        // Create map instance
+        const mapInstance = L.map(mapRef.current, {
+          center: [latitude, longitude],
+          zoom: zoom,
+          minZoom: tileLayerConfig.minZoom,
+          maxZoom: tileLayerConfig.maxZoom,
+          zoomControl: false,
+        });
+        
+        // Add tile layer
+        L.tileLayer(tileLayerConfig.url, {
+          attribution: tileLayerConfig.attribution,
+        }).addTo(mapInstance);
+        
+        // Add zoom control in the top-right corner
+        L.control.zoom({ position: 'topright' }).addTo(mapInstance);
+        
+        // Add scale control
+        L.control.scale({ imperial: false }).addTo(mapInstance);
+        
+        setMap(mapInstance);
+        setMapInitialized(true);
+        setIsLoaded(true);
+        
+        // Add markers for vehicles
+        const markers = await createVehicleMarkers(mapInstance, vehicles, mapConfig.showLabels);
+        markersRef.current = markers;
+        
+        // Fit map to markers
+        if (markers.length > 0) {
+          fitMapToMarkers(mapInstance, markers);
+        }
+      } catch (error) {
+        console.error("Error initializing map:", error);
+      }
+    };
+    
+    initMap();
+    
+    // Cleanup on unmount
+    return () => {
+      if (map) {
+        map.remove();
+        setMap(null);
+        setMapInitialized(false);
+        setIsLoaded(false);
+      }
+    };
+  }, [mapRef, mapInitialized]);
+  
+  // Update markers when vehicles change
+  useEffect(() => {
+    const updateMarkers = async () => {
+      if (!map || !mapInitialized) return;
+      
+      clearMarkers();
+      const markers = await createVehicleMarkers(map, vehicles, mapConfig.showLabels);
+      markersRef.current = markers;
+    };
+    
+    updateMarkers();
+  }, [vehicles, mapInitialized, map, mapConfig.showLabels, clearMarkers, createVehicleMarkers]);
+  
+  // Update map when config changes
+  useEffect(() => {
     if (!map) return;
     
-    // Clear existing markers
-    // In a real implementation, you would track and remove existing markers
+    // Update center and zoom
+    map.setView(mapConfig.center, mapConfig.zoom);
     
-    vehicles.forEach(vehicle => {
-      if (vehicle.location) {
-        try {
-          // Create marker
-          new mapboxgl.Marker()
-            .setLngLat([vehicle.location.longitude, vehicle.location.latitude])
-            .setPopup(
-              new mapboxgl.Popup({ offset: 25 })
-                .setHTML(`
-                  <h3>${vehicle.name}</h3>
-                  <p>${vehicle.licensePlate}</p>
-                  <p>Status: ${vehicle.status}</p>
-                `)
-            )
-            .addTo(map);
-        } catch (error) {
-          console.error(`Error adding marker for vehicle ${vehicle.id}:`, error);
-        }
-      }
-    });
+  }, [map, mapConfig.center, mapConfig.zoom]);
+  
+  // Function to add markers
+  const addMarkers = (vehicles: TransportVehicleWithLocation[]) => {
+    if (!map || !mapInitialized) return;
+    
+    createVehicleMarkers(map, vehicles, mapConfig.showLabels);
   };
   
-  // Center the map on a vehicle
+  // Function to center on specific vehicle
   const centerOnVehicle = (vehicleId: string) => {
-    // In a real app, you would look up the vehicle and center the map
-    console.log(`Centering on vehicle ${vehicleId}`);
-  };
-  
-  // Set the center of the map
-  const setCenter = (center: [number, number]) => {
-    if (map) {
-      map.setCenter(center);
-      setMapConfig(prev => ({ ...prev, center }));
+    if (!map) return;
+    
+    const vehicle = vehicles.find(v => v.id === vehicleId);
+    if (vehicle && vehicle.location) {
+      map.setView([vehicle.location.lat, vehicle.location.lng], mapConfig.zoom);
     }
   };
   
-  // Set the zoom level
-  const setZoom = (zoom: number) => {
-    if (map) {
-      map.setZoom(zoom);
-      setMapConfig(prev => ({ ...prev, zoom }));
-    }
-  };
-  
-  // Refresh the map
+  // Function to refresh map
   const refreshMap = () => {
+    if (!mapRef.current) return;
+    
+    // Destroy existing map
     if (map) {
-      map.resize();
+      map.remove();
+      setMap(null);
+      setMapInitialized(false);
     }
+    
+    // Re-initialize map
+    setMapInitialized(false);
+  };
+  
+  // Function to set center
+  const setCenter = (coords: [number, number]) => {
+    setMapConfig(prev => ({ ...prev, center: coords }));
+  };
+  
+  // Function to set zoom
+  const setZoom = (zoom: number) => {
+    setMapConfig(prev => ({ ...prev, zoom }));
   };
   
   return {
-    mapRef: mapContainerRef,
+    mapRef,
     isLoaded,
-    addMarkers, // Corrected from addMarker to addMarkers
+    map,
+    mapConfig,
+    mapInitialized,
+    addMarkers,
     centerOnVehicle,
     refreshMap,
-    map,
-    mapInitialized,
-    mapConfig,
     setMapConfig,
     setCenter,
-    setZoom
+    setZoom,
   };
 };

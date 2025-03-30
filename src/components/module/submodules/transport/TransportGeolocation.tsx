@@ -5,23 +5,20 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { TransportVehicle } from './types/transport-types';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { useTransportMap } from './hooks/useTransportMap';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
+import { TransportVehicleWithLocation, VehicleLocation } from './types/map-types';
+import { useTransportMap } from './hooks/useTransportMap';
 import VehicleDetailsDialog from './geolocation/VehicleDetailsDialog';
 import AlertConfigDialog from './geolocation/AlertConfigDialog';
 import AlertDetailsDialog from './geolocation/AlertDetailsDialog';
 
-const mockVehicles: (TransportVehicle & { 
-  location?: { lat: number; lng: number; lastUpdate: string; speed: number; status: string; }
-  driverName?: string;
-})[] = [
+const mockVehicles: TransportVehicleWithLocation[] = [
   {
     id: "v1",
     name: "Mercedes Classe E",
@@ -33,8 +30,13 @@ const mockVehicles: (TransportVehicle & {
     color: "white",
     fuelType: "diesel",
     location: {
+      vehicleId: "v1",
+      latitude: 48.856614,
+      longitude: 2.3522219,
       lat: 48.856614,
       lng: 2.3522219,
+      heading: 45,
+      timestamp: "2023-06-01T14:32:00",
       lastUpdate: "2023-06-01T14:32:00",
       speed: 45,
       status: "en service"
@@ -52,8 +54,13 @@ const mockVehicles: (TransportVehicle & {
     color: "black",
     fuelType: "electric",
     location: {
+      vehicleId: "v2",
+      latitude: 48.8584,
+      longitude: 2.2945,
       lat: 48.8584,
       lng: 2.2945,
+      heading: 0,
+      timestamp: "2023-06-01T14:30:00",
       lastUpdate: "2023-06-01T14:30:00",
       speed: 0,
       status: "arrêté"
@@ -71,8 +78,13 @@ const mockVehicles: (TransportVehicle & {
     color: "silver",
     fuelType: "diesel",
     location: {
+      vehicleId: "v3",
+      latitude: 48.8737,
+      longitude: 2.2950,
       lat: 48.8737,
       lng: 2.2950,
+      heading: 0,
+      timestamp: "2023-06-01T13:15:00",
       lastUpdate: "2023-06-01T13:15:00",
       speed: 0,
       status: "maintenance"
@@ -89,8 +101,13 @@ const mockVehicles: (TransportVehicle & {
     color: "blue",
     fuelType: "gasoline",
     location: {
+      vehicleId: "v4",
+      latitude: 48.8417,
+      longitude: 2.3324,
       lat: 48.8417,
       lng: 2.3324,
+      heading: 32,
+      timestamp: "2023-06-01T14:28:00",
       lastUpdate: "2023-06-01T14:28:00",
       speed: 32,
       status: "en service"
