@@ -8,84 +8,96 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/components/ui/use-toast';
 import { FileCode, Search, ArrowRight, Plus, LayoutGrid, LayoutList, Eye } from 'lucide-react';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
+import { WebsitePreview } from './website-preview/WebsitePreview';
+import TransportBookingTemplate from './templates/TransportBookingTemplate';
 
 const WebsiteTemplates = () => {
   const { toast } = useToast();
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [searchQuery, setSearchQuery] = useState('');
+  const [previewTemplate, setPreviewTemplate] = useState<string | null>(null);
 
   const templates = [
     {
       id: 'business-1',
       name: 'Business Pro',
       category: 'business',
-      thumbnail: 'https://via.placeholder.com/600x400?text=Business+Pro',
+      thumbnail: '/business-template.jpg',
       description: 'Template professionnel pour entreprises de services',
-      previewUrl: '/preview/templates/business-pro',
+      previewComponent: null,
       isPremium: false,
     },
     {
       id: 'business-2',
       name: 'Corporate',
       category: 'business',
-      thumbnail: 'https://via.placeholder.com/600x400?text=Corporate',
+      thumbnail: '/corporate-template.jpg',
       description: 'Design élégant pour sociétés et grandes entreprises',
-      previewUrl: '/preview/templates/corporate',
+      previewComponent: null,
       isPremium: true,
     },
     {
       id: 'ecommerce-1',
       name: 'Shop Modern',
       category: 'ecommerce',
-      thumbnail: 'https://via.placeholder.com/600x400?text=Shop+Modern',
+      thumbnail: '/ecommerce-template.jpg',
       description: 'Template e-commerce moderne avec fonctionnalités avancées',
-      previewUrl: '/preview/templates/shop-modern',
+      previewComponent: null,
       isPremium: true,
     },
     {
       id: 'ecommerce-2',
       name: 'Boutique',
       category: 'ecommerce',
-      thumbnail: 'https://via.placeholder.com/600x400?text=Boutique',
+      thumbnail: '/boutique-template.jpg',
       description: 'Design boutique pour commerce en ligne',
-      previewUrl: '/preview/templates/boutique',
+      previewComponent: null,
       isPremium: false,
     },
     {
       id: 'blog-1',
       name: 'Blog Standard',
       category: 'blog',
-      thumbnail: 'https://via.placeholder.com/600x400?text=Blog+Standard',
+      thumbnail: '/blog-template.jpg',
       description: 'Layout classique pour blog et sites d\'actualités',
-      previewUrl: '/preview/templates/blog-standard',
+      previewComponent: null,
       isPremium: false,
     },
     {
       id: 'blog-2',
       name: 'Magazine',
       category: 'blog',
-      thumbnail: 'https://via.placeholder.com/600x400?text=Magazine',
+      thumbnail: '/magazine-template.jpg',
       description: 'Style magazine pour contenus riches et médias',
-      previewUrl: '/preview/templates/magazine',
+      previewComponent: null,
       isPremium: true,
     },
     {
       id: 'portfolio-1',
       name: 'Portfolio Grid',
       category: 'portfolio',
-      thumbnail: 'https://via.placeholder.com/600x400?text=Portfolio+Grid',
+      thumbnail: '/portfolio-template.jpg',
       description: 'Présentation en grille pour portfolios créatifs',
-      previewUrl: '/preview/templates/portfolio-grid',
+      previewComponent: null,
       isPremium: false,
     },
     {
       id: 'portfolio-2',
       name: 'Showcase',
       category: 'portfolio',
-      thumbnail: 'https://via.placeholder.com/600x400?text=Showcase',
+      thumbnail: '/portfolio-showcase.jpg',
       description: 'Mise en avant de projets créatifs avec animations',
-      previewUrl: '/preview/templates/showcase',
+      previewComponent: null,
       isPremium: true,
+    },
+    {
+      id: 'transport-1',
+      name: 'Transport Booking',
+      category: 'transport',
+      thumbnail: '/transport-template.jpg',
+      description: 'Système de réservation de transport avec formulaire interactif',
+      previewComponent: <TransportBookingTemplate primaryColor="#3b82f6" secondaryColor="#6b7280" />,
+      isPremium: false,
     },
   ];
 
@@ -95,8 +107,12 @@ const WebsiteTemplates = () => {
            template.description.toLowerCase().includes(searchQuery.toLowerCase());
   });
 
-  const handlePreview = (previewUrl: string) => {
-    window.open(previewUrl, '_blank', 'noopener,noreferrer');
+  const handlePreview = (templateId: string) => {
+    setPreviewTemplate(templateId);
+  };
+
+  const closePreview = () => {
+    setPreviewTemplate(null);
   };
 
   const handleUseTemplate = (templateId: string) => {
@@ -104,6 +120,16 @@ const WebsiteTemplates = () => {
       title: "Template sélectionné",
       description: `Le template ${templates.find(t => t.id === templateId)?.name} va être appliqué à votre site.`,
     });
+  };
+
+  const getTemplatePreview = (templateId: string) => {
+    const template = templates.find(t => t.id === templateId);
+    return template?.previewComponent || (
+      <div className="flex flex-col items-center justify-center h-full bg-gray-100">
+        <h3 className="text-xl font-medium mb-2">{template?.name}</h3>
+        <p className="text-sm text-muted-foreground">Aperçu du template</p>
+      </div>
+    );
   };
 
   const renderGridView = (templates: typeof filteredTemplates) => (
@@ -117,7 +143,7 @@ const WebsiteTemplates = () => {
               className="object-cover w-full h-full transition-transform group-hover:scale-105 duration-200"
             />
             <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/50">
-              <Button variant="secondary" size="sm" className="mr-2" onClick={() => handlePreview(template.previewUrl)}>
+              <Button variant="secondary" size="sm" className="mr-2" onClick={() => handlePreview(template.id)}>
                 <Eye className="h-4 w-4 mr-1" />
                 Aperçu
               </Button>
@@ -170,7 +196,7 @@ const WebsiteTemplates = () => {
                 )}
               </div>
               <div className="flex mt-auto pt-4 justify-end">
-                <Button variant="outline" size="sm" className="mr-2" onClick={() => handlePreview(template.previewUrl)}>
+                <Button variant="outline" size="sm" className="mr-2" onClick={() => handlePreview(template.id)}>
                   <Eye className="h-4 w-4 mr-1" /> Aperçu
                 </Button>
                 <Button 
@@ -191,90 +217,119 @@ const WebsiteTemplates = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-3xl font-bold">Templates</h2>
-          <p className="text-muted-foreground">Choisissez un template pour votre site</p>
+      {previewTemplate ? (
+        <div className="bg-white rounded-lg shadow-md overflow-hidden">
+          <div className="p-4 border-b flex justify-between items-center">
+            <h2 className="text-xl font-medium">
+              Aperçu: {templates.find(t => t.id === previewTemplate)?.name}
+            </h2>
+            <Button variant="outline" onClick={closePreview}>
+              Fermer
+            </Button>
+          </div>
+          <div className="h-[600px]">
+            <WebsitePreview 
+              previewMode={true}
+              initialContent={[]}
+              customContent={getTemplatePreview(previewTemplate)}
+            />
+          </div>
         </div>
-        <Button>
-          <Plus className="mr-2 h-4 w-4" />
-          Template personnalisé
-        </Button>
-      </div>
-
-      <div className="flex items-center space-x-2">
-        <div className="relative flex-grow">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Rechercher un template..."
-            className="pl-8"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-        </div>
-        <div className="flex border rounded-md">
-          <Button
-            variant={viewMode === 'grid' ? 'default' : 'ghost'}
-            size="icon"
-            onClick={() => setViewMode('grid')}
-            className="rounded-r-none"
-          >
-            <LayoutGrid className="h-4 w-4" />
-          </Button>
-          <Button
-            variant={viewMode === 'list' ? 'default' : 'ghost'}
-            size="icon"
-            onClick={() => setViewMode('list')}
-            className="rounded-l-none"
-          >
-            <LayoutList className="h-4 w-4" />
-          </Button>
-        </div>
-      </div>
-
-      <Tabs defaultValue="all">
-        <TabsList className="mb-4">
-          <TabsTrigger value="all">Tous</TabsTrigger>
-          <TabsTrigger value="business">Business</TabsTrigger>
-          <TabsTrigger value="ecommerce">E-commerce</TabsTrigger>
-          <TabsTrigger value="blog">Blog</TabsTrigger>
-          <TabsTrigger value="portfolio">Portfolio</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="all">
-          {filteredTemplates.length === 0 ? (
-            <div className="text-center py-10">
-              <FileCode className="mx-auto h-12 w-12 text-muted-foreground" />
-              <h3 className="mt-4 text-lg font-medium">Aucun template trouvé</h3>
-              <p className="mt-2 text-sm text-muted-foreground">Essayez avec d'autres termes de recherche</p>
+      ) : (
+        <>
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-3xl font-bold">Templates</h2>
+              <p className="text-muted-foreground">Choisissez un template pour votre site</p>
             </div>
-          ) : viewMode === 'grid' ? renderGridView(filteredTemplates) : renderListView(filteredTemplates)}
-        </TabsContent>
-        
-        <TabsContent value="business">
-          {viewMode === 'grid' 
-            ? renderGridView(filteredTemplates.filter(t => t.category === 'business')) 
-            : renderListView(filteredTemplates.filter(t => t.category === 'business'))}
-        </TabsContent>
-        
-        <TabsContent value="ecommerce">
-          {viewMode === 'grid' 
-            ? renderGridView(filteredTemplates.filter(t => t.category === 'ecommerce')) 
-            : renderListView(filteredTemplates.filter(t => t.category === 'ecommerce'))}
-        </TabsContent>
-        
-        <TabsContent value="blog">
-          {viewMode === 'grid' 
-            ? renderGridView(filteredTemplates.filter(t => t.category === 'blog')) 
-            : renderListView(filteredTemplates.filter(t => t.category === 'blog'))}
-        </TabsContent>
-        
-        <TabsContent value="portfolio">
-          {viewMode === 'grid' 
-            ? renderGridView(filteredTemplates.filter(t => t.category === 'portfolio')) 
-            : renderListView(filteredTemplates.filter(t => t.category === 'portfolio'))}
-        </TabsContent>
-      </Tabs>
+            <Button>
+              <Plus className="mr-2 h-4 w-4" />
+              Template personnalisé
+            </Button>
+          </div>
+
+          <div className="flex items-center space-x-2">
+            <div className="relative flex-grow">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Rechercher un template..."
+                className="pl-8"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+            <div className="flex border rounded-md">
+              <Button
+                variant={viewMode === 'grid' ? 'default' : 'ghost'}
+                size="icon"
+                onClick={() => setViewMode('grid')}
+                className="rounded-r-none"
+              >
+                <LayoutGrid className="h-4 w-4" />
+              </Button>
+              <Button
+                variant={viewMode === 'list' ? 'default' : 'ghost'}
+                size="icon"
+                onClick={() => setViewMode('list')}
+                className="rounded-l-none"
+              >
+                <LayoutList className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+
+          <Tabs defaultValue="all">
+            <TabsList className="mb-4">
+              <TabsTrigger value="all">Tous</TabsTrigger>
+              <TabsTrigger value="business">Business</TabsTrigger>
+              <TabsTrigger value="ecommerce">E-commerce</TabsTrigger>
+              <TabsTrigger value="blog">Blog</TabsTrigger>
+              <TabsTrigger value="portfolio">Portfolio</TabsTrigger>
+              <TabsTrigger value="transport">Transport</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="all">
+              {filteredTemplates.length === 0 ? (
+                <div className="text-center py-10">
+                  <FileCode className="mx-auto h-12 w-12 text-muted-foreground" />
+                  <h3 className="mt-4 text-lg font-medium">Aucun template trouvé</h3>
+                  <p className="mt-2 text-sm text-muted-foreground">Essayez avec d'autres termes de recherche</p>
+                </div>
+              ) : viewMode === 'grid' ? renderGridView(filteredTemplates) : renderListView(filteredTemplates)}
+            </TabsContent>
+            
+            <TabsContent value="business">
+              {viewMode === 'grid' 
+                ? renderGridView(filteredTemplates.filter(t => t.category === 'business')) 
+                : renderListView(filteredTemplates.filter(t => t.category === 'business'))}
+            </TabsContent>
+            
+            <TabsContent value="ecommerce">
+              {viewMode === 'grid' 
+                ? renderGridView(filteredTemplates.filter(t => t.category === 'ecommerce')) 
+                : renderListView(filteredTemplates.filter(t => t.category === 'ecommerce'))}
+            </TabsContent>
+            
+            <TabsContent value="blog">
+              {viewMode === 'grid' 
+                ? renderGridView(filteredTemplates.filter(t => t.category === 'blog')) 
+                : renderListView(filteredTemplates.filter(t => t.category === 'blog'))}
+            </TabsContent>
+            
+            <TabsContent value="portfolio">
+              {viewMode === 'grid' 
+                ? renderGridView(filteredTemplates.filter(t => t.category === 'portfolio')) 
+                : renderListView(filteredTemplates.filter(t => t.category === 'portfolio'))}
+            </TabsContent>
+            
+            <TabsContent value="transport">
+              {viewMode === 'grid' 
+                ? renderGridView(filteredTemplates.filter(t => t.category === 'transport')) 
+                : renderListView(filteredTemplates.filter(t => t.category === 'transport'))}
+            </TabsContent>
+          </Tabs>
+        </>
+      )}
     </div>
   );
 };

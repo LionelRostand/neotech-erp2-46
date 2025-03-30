@@ -10,11 +10,13 @@ interface PreviewContentItem {
 interface WebsitePreviewProps {
   previewMode: boolean;
   initialContent?: PreviewContentItem[];
+  customContent?: React.ReactNode;
 }
 
 const WebsitePreview: React.FC<WebsitePreviewProps> = ({ 
   previewMode = true,
-  initialContent = []
+  initialContent = [],
+  customContent = null
 }) => {
   const [content] = useState<PreviewContentItem[]>(initialContent);
   
@@ -34,7 +36,9 @@ const WebsitePreview: React.FC<WebsitePreviewProps> = ({
       </div>
       
       <div className="preview-content">
-        {content.length === 0 ? (
+        {customContent ? (
+          <div className="h-full">{customContent}</div>
+        ) : content.length === 0 ? (
           <div className="flex flex-col items-center justify-center p-10 text-center">
             <div className="w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center mb-4">
               <span className="text-3xl">🌐</span>
