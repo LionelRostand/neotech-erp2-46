@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -6,7 +5,7 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Heading1,
   Heading2,
-  Paragraph,
+  Text, // Replace Paragraph with Text
   Image,
   Video,
   Link,
@@ -15,7 +14,7 @@ import {
   FormInput,
   ListOrdered,
   ListChecks,
-  Button as ButtonIcon,
+  ButtonSquare, // Replace Button with ButtonSquare
   Table,
   MapPin,
   Phone,
@@ -51,11 +50,11 @@ const EditorSidebar: React.FC = () => {
             <div className="grid grid-cols-2 gap-2">
               <ElementItem icon={<Heading1 size={16} />} label="Titre" />
               <ElementItem icon={<Heading2 size={16} />} label="Sous-titre" />
-              <ElementItem icon={<Paragraph size={16} />} label="Paragraphe" />
+              <ElementItem icon={<Text size={16} />} label="Paragraphe" />
               <ElementItem icon={<Image size={16} />} label="Image" />
               <ElementItem icon={<Video size={16} />} label="Vidéo" />
               <ElementItem icon={<Link size={16} />} label="Lien" />
-              <ElementItem icon={<ButtonIcon size={16} />} label="Bouton" />
+              <ElementItem icon={<ButtonSquare size={16} />} label="Bouton" />
               <ElementItem icon={<ListOrdered size={16} />} label="Liste" />
             </div>
           </div>
@@ -75,7 +74,7 @@ const EditorSidebar: React.FC = () => {
             <div className="grid grid-cols-2 gap-2">
               <ElementItem icon={<FormInput size={16} />} label="Champ texte" />
               <ElementItem icon={<ListChecks size={16} />} label="Case à cocher" />
-              <ElementItem icon={<ButtonIcon size={16} />} label="Bouton envoi" />
+              <ElementItem icon={<ButtonSquare size={16} />} label="Bouton envoi" />
               <ElementItem icon={<FileText size={16} />} label="Formulaire" />
             </div>
           </div>
