@@ -1,6 +1,7 @@
 
 import { Note } from './base-types';
 
+// Individual driver type
 export interface TransportDriver {
   id: string;
   firstName: string;
@@ -22,7 +23,7 @@ export interface TransportDriver {
   preferredVehicleTypes?: string[];
   notes?: string;
   // Additional properties needed by components
-  status?: "active" | "on-leave" | "inactive" | "driving" | "off-duty" | "vacation" | "sick";
+  status: "active" | "on-leave" | "inactive" | "driving" | "off-duty" | "vacation" | "sick";
   performance?: {
     onTimeRate: number;
     customerSatisfaction: number;

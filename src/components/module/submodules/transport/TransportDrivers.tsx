@@ -26,7 +26,7 @@ const mockDrivers: TransportDriver[] = [
     phone: "06 12 34 56 78",
     email: "jean.dupont@example.com",
     address: "15 rue des Lilas, 75001 Paris",
-    status: "active", // Changed from "available" to "active"
+    status: "active",
     rating: 4.8,
     hireDate: "2019-03-10",
     preferredVehicleType: "sedan",
@@ -44,7 +44,7 @@ const mockDrivers: TransportDriver[] = [
     phone: "07 98 76 54 32",
     email: "marie.laurent@example.com",
     address: "8 avenue Victor Hugo, 75016 Paris",
-    status: "driving", // Changed from "on-duty" to "driving"
+    status: "driving",
     rating: 4.5,
     hireDate: "2020-01-15",
     preferredVehicleType: "van",
@@ -62,7 +62,7 @@ const mockDrivers: TransportDriver[] = [
     phone: "06 45 67 89 12",
     email: "pierre.martin@example.com",
     address: "22 rue de la République, 69002 Lyon",
-    status: "off-duty", // Changed from "unavailable" to "off-duty"
+    status: "off-duty",
     rating: 4.2,
     hireDate: "2018-06-22",
     preferredVehicleType: "bus",
@@ -80,7 +80,7 @@ const mockDrivers: TransportDriver[] = [
     phone: "07 32 16 54 98",
     email: "sophie.moreau@example.com",
     address: "5 rue des Pyrénées, 31000 Toulouse",
-    status: "active", // Changed from "available" to "active"
+    status: "active",
     rating: 4.9,
     hireDate: "2021-02-05",
     preferredVehicleType: "luxury",
@@ -98,7 +98,7 @@ const mockDrivers: TransportDriver[] = [
     phone: "06 78 91 23 45",
     email: "thomas.bernard@example.com",
     address: "12 boulevard de la Mer, 06000 Nice",
-    status: "driving", // Changed from "on-duty" to "driving"
+    status: "driving",
     rating: 4.7,
     hireDate: "2019-11-18",
     preferredVehicleType: "sedan",

@@ -1,60 +1,66 @@
 
 import { Note } from './base-types';
-import { MaintenanceSchedule as MapMaintenanceSchedule } from './map-types';
 
 export interface TransportVehicle {
   id: string;
-  name: string;
+  licensePlate: string;
+  make: string;
+  model: string;
+  year: number;
   type: string;
   capacity: number;
-  licensePlate: string;
-  available: boolean;
-  status: "active" | "maintenance" | "out-of-service";
-  color?: string;
-  fuelType?: string;
-  mileage?: number;
-  purchaseDate?: string;
-  lastMaintenanceDate?: string;
-  nextMaintenanceDate?: string;
-  insuranceExpiryDate?: string;
-  notes?: string;
-  // Additional properties needed by components
-  lastServiceDate?: string;
-  nextServiceDate?: string;
-  insuranceInfo?: {
-    provider: string;
-    policyNumber: string;
-    expiryDate: string;
-  };
+  status: 'available' | 'in-use' | 'maintenance' | 'out-of-service';
+  features: string[];
+  currentDriverId?: string;
+  photo?: string;
+  lastMaintenance?: string;
+  nextMaintenance?: string;
+  fuelType: string;
+  fuelLevel: number;
+  mileage: number;
 }
-
-// Use the MaintenanceSchedule type from map-types.ts to avoid duplication
-export type MaintenanceSchedule = MapMaintenanceSchedule;
 
 export interface MaintenanceRecord {
   id: string;
   vehicleId: string;
-  type: "regular" | "repair" | "inspection";
   date: string;
+  type: string;
   description: string;
   cost: number;
   provider: string;
-  nextMaintenance: string;
-  resolved: boolean;
+  mileage: number;
+  attachments?: string[];
+}
+
+export interface MaintenanceSchedule {
+  id: string;
+  vehicleId: string;
+  taskName: string;
+  intervalType: 'time' | 'mileage';
+  timeInterval?: number; // in days
+  mileageInterval?: number; // in miles/km
+  lastPerformed: string;
+  lastMileage: number;
+  nextDue: string;
+  estimatedNextMileage: number;
+  priority: 'low' | 'medium' | 'high' | 'critical';
+  description?: string;
+  cost?: number;
 }
 
 export interface IncidentRecord {
   id: string;
   vehicleId: string;
   date: string;
+  driverId?: string;
   description: string;
-  severity: "minor" | "moderate" | "major";
-  driverName: string;
-  clientName: string;
-  damageDetails: string;
-  repairCost: number;
-  insuranceClaim: boolean;
-  resolved: boolean;
+  location?: string;
+  severity: 'minor' | 'moderate' | 'major';
+  status: 'reported' | 'in-review' | 'resolved';
+  insuranceClaim?: boolean;
+  claimNumber?: string;
+  cost?: number;
+  attachments?: string[];
 }
 
 export interface VehicleNote extends Note {

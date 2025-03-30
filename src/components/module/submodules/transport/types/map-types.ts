@@ -1,56 +1,49 @@
 
-import { TransportVehicle } from './transport-types';
+import { TransportVehicle } from "./vehicle-types";
 
 export interface VehicleLocation {
-  lat: number;
-  lng: number;
-  lastUpdate: string;
+  vehicleId: string;
+  latitude: number;
+  longitude: number;
+  heading: number;
   speed: number;
-  status: string;
+  timestamp: string;
+  status: 'idle' | 'driving' | 'stopped';
 }
 
 export interface TransportVehicleWithLocation extends TransportVehicle {
-  location?: VehicleLocation;
-  driverName?: string;
+  location: VehicleLocation;
 }
 
 export interface MapConfig {
+  center: [number, number];
   zoom: number;
-  centerLat: number;
-  centerLng: number;
-  tileProvider: 'osm' | 'osm-france' | 'carto';
-  showLabels: boolean;
+  tileProvider: string;
+  apiKey?: string;
 }
 
 export interface MapHookResult {
-  mapInitialized: boolean;
-  mapConfig: MapConfig;
-  setMapConfig: React.Dispatch<React.SetStateAction<MapConfig>>;
-  refreshMap: () => void;
+  map: any;
+  isLoaded: boolean;
+  setCenter: (coords: [number, number]) => void;
+  setZoom: (zoom: number) => void;
+  addMarker: (coords: [number, number], options?: any) => any;
+  removeMarker: (marker: any) => void;
+  drawRoute: (points: [number, number][], options?: any) => any;
+  clearRoute: (route: any) => void;
 }
 
-// Maintenance Schedule type for planning
+// For backward compatibility
 export interface MaintenanceSchedule {
   id: string;
   vehicleId: string;
-  type: 'regular' | 'repair' | 'inspection';
-  startDate: string;
-  endDate: string;
-  description: string;
-  technician?: string;
-  notes?: string;
-  completed: boolean;
+  taskName: string;
+  nextDue: string;
+  priority: 'low' | 'medium' | 'high' | 'critical';
 }
 
-// Extension request type for planning
 export interface ExtensionRequest {
   id: string;
-  requestId: string;
-  clientName: string;
-  vehicleName: string;
-  originalEndDate: string;
-  requestedEndDate: string;
-  reason: string;
+  reservationId: string;
   status: 'pending' | 'approved' | 'rejected';
-  createdAt: string;
 }

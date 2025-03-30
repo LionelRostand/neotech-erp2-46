@@ -1,30 +1,48 @@
 
-// Basic client types for TransportLoyalty component
+import { Note } from './base-types';
+
 export interface TransportClient {
   id: string;
   firstName: string;
   lastName: string;
+  company?: string;
   email: string;
   phone: string;
-  loyaltyPoints?: number;
-  memberSince?: string;
-  tier?: 'bronze' | 'silver' | 'gold' | 'platinum';
-  lastRide?: string;
-  totalRides?: number;
+  address?: string;
+  city?: string;
+  postalCode?: string;
+  country?: string;
+  vatNumber?: string;
+  preferredPaymentMethod?: string;
+  loyalty?: {
+    points: number;
+    tier: string;
+    lastActivity: string;
+  };
+  createdAt: string;
+  notes?: string[];
 }
 
 export interface LoyaltyTier {
+  id: string;
   name: string;
-  pointsRequired: number;
+  pointThreshold: number;
   benefits: string[];
+  discountPercentage: number;
   color: string;
 }
 
-export interface LoyaltyReward {
+export interface LoyaltyActivity {
   id: string;
-  name: string;
+  clientId: string;
+  date: string;
+  type: 'reservation' | 'purchase' | 'reward' | 'referral' | 'adjustment';
+  points: number;
   description: string;
-  pointsCost: number;
-  available: boolean;
-  image?: string;
+  reservationId?: string;
+  productId?: string;
+}
+
+export interface ClientNote extends Note {
+  clientId: string;
 }

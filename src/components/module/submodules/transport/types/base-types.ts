@@ -1,25 +1,42 @@
 
-// Define the TransportService type
-export type TransportService = "airport" | "hourly" | "pointToPoint" | "dayTour";
+// Common base types for transport module
+
+export type TransportService = 'airport-transfer' | 'city-tour' | 'business-travel' | 'wedding' | 'event' | 'hourly-hire' | 'long-distance' | 'custom';
+
+export interface Note {
+  id: string;
+  title: string;
+  content: string;
+  createdAt: string;
+  updatedAt: string;
+  createdBy: string;
+}
 
 export interface TransportDriver {
   id: string;
   firstName: string;
   lastName: string;
-  licenseNumber: string;
-  phoneNumber: string;
+  phone: string;
   email: string;
+  licenseNumber: string;
+  licenseExpiry: string;
+  licenseType?: string;
+  address?: string;
+  hireDate?: string;
+  preferredVehicleType?: string;
+  available: boolean;
+  onLeave?: boolean;
   rating: number;
-  status: 'available' | 'busy' | 'offline';
-  photo?: string;
-}
-
-export interface TransportVehicle {
-  id: string;
-  type: 'sedan' | 'van' | 'luxury' | 'bus';
-  licensePlate: string;
-  model: string;
-  capacity: number;
-  driver: string;
-  status: 'available' | 'in-use' | 'maintenance';
+  experience: number;
+  photo: string;
+  skills?: string[];
+  preferredVehicleTypes?: string[];
+  notes?: string;
+  status: "active" | "on-leave" | "inactive" | "driving" | "off-duty" | "vacation" | "sick";
+  performance?: {
+    onTimeRate: number;
+    customerSatisfaction: number;
+    safetyScore: number;
+    [key: string]: number;
+  };
 }
