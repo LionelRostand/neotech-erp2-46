@@ -5,7 +5,7 @@ import { getTileLayerConfig, calculateMapCenter } from '../utils/map-utils';
 import { useMapMarkers } from './useMapMarkers';
 import { configureLeafletIcons } from '../utils/leaflet-icon-setup';
 import 'mapbox-gl/dist/mapbox-gl.css';
-// Remove the mapboxgl import as we don't need it for Leaflet
+import * as L from 'leaflet';
 
 const DEFAULT_CENTER_LAT = 48.8566;
 const DEFAULT_CENTER_LNG = 2.3522;
@@ -44,7 +44,7 @@ export const useTransportMap = (
       
       try {
         // Configure Leaflet correctly
-        const L = await configureLeafletIcons();
+        await configureLeafletIcons();
         
         // Calculate optimal center and zoom based on vehicle positions
         const { latitude, longitude, zoom } = calculateMapCenter(
@@ -123,7 +123,7 @@ export const useTransportMap = (
         setIsLoaded(false);
       }
     };
-  }, [mapRef, mapInitialized]);
+  }, [mapRef, mapInitialized, vehicles, mapConfig.tileProvider, createVehicleMarkers, fitMapToMarkers]);
   
   // Update markers when vehicles change
   useEffect(() => {
@@ -131,7 +131,7 @@ export const useTransportMap = (
       if (!map || !mapInitialized) return;
       
       // Clear previous markers
-      clearMarkers();
+      clearMarkers(map, markersRef.current);
       
       // Add the custom markers
       const markers = await createVehicleMarkers(map, vehicles);

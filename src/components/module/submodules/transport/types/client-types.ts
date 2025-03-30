@@ -4,39 +4,21 @@ import { Note } from './base-types';
 export interface TransportClient {
   id: string;
   name: string;
+  firstName?: string;
+  lastName?: string;
   email: string;
   phone: string;
   address?: string;
+  company?: string;
+  vip: boolean;
   loyaltyPoints: number;
-  loyaltyTier: LoyaltyTier;
-  joinDate: string;
-  lastActivityDate?: string;
+  createdAt: string;
+  lastBooking?: string;
   totalBookings: number;
-  totalSpent: number;
-  preferredVehicleTypes?: string[];
-  loyaltyActivities?: LoyaltyActivity[];
-  notes?: ClientNote[];
-  firstName?: string;
-  lastName?: string;
+  preferredVehicleType?: string;
+  notes?: string[];
 }
 
-export enum LoyaltyTier {
-  Bronze = 'bronze',
-  Silver = 'silver',
-  Gold = 'gold',
-  Platinum = 'platinum'
-}
-
-export interface LoyaltyActivity {
-  id: string;
+export interface ClientNote extends Note {
   clientId: string;
-  activityType: 'booking' | 'referral' | 'review' | 'promotion';
-  description: string;
-  pointsEarned: number;
-  date: string;
-  reservationId?: string;
 }
-
-export type ClientNote = Note & {
-  clientId: string;
-};

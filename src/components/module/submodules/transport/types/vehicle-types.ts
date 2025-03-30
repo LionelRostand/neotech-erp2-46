@@ -1,6 +1,16 @@
-
-import { TransportDriver } from './base-types';
 import { Note } from './base-types';
+
+export interface TransportDriver {
+  id: string;
+  firstName: string;
+  lastName: string;
+  phone: string;
+  email: string;
+  licenseNumber: string;
+  licenseExpiry: string;
+  status: string;
+  rating: number;
+}
 
 export interface TransportVehicle {
   id: string;
@@ -9,7 +19,7 @@ export interface TransportVehicle {
   capacity: number;
   licensePlate: string;
   available: boolean;
-  status: string;
+  status: "available" | "in-use" | "maintenance" | "out-of-service" | "active";
   color?: string;
   fuelType?: string;
   currentDriverId?: string;
@@ -17,7 +27,6 @@ export interface TransportVehicle {
   maintenanceRecords?: MaintenanceRecord[];
   incidentRecords?: IncidentRecord[];
   notes?: VehicleNote[];
-  // Adding missing fields used in the application
   purchaseDate?: string;
   mileage?: number;
   lastServiceDate?: string;
@@ -42,7 +51,7 @@ export interface MaintenanceRecord {
   cost: number;
   provider: string;
   nextMaintenance?: string;
-  mileage?: number; // Already optional
+  mileage?: number;
   resolved: boolean;
 }
 
@@ -57,16 +66,15 @@ export interface IncidentRecord {
   damageDetails?: string;
   repairCost?: number;
   insuranceClaim?: boolean;
-  status: string; // Required field
+  status: string;
   resolved: boolean;
 }
 
-// Add MaintenanceSchedule to avoid conflicts with the one in map-types
 export interface MaintenanceSchedule {
   id: string;
   vehicleId: string;
   taskName: string;
-  startDate?: string;
+  startDate: string;
   endDate: string;
   type: string;
   priority: 'low' | 'medium' | 'high' | 'critical';
@@ -74,5 +82,5 @@ export interface MaintenanceSchedule {
   completed: boolean;
   notes?: string;
   description?: string;
-  nextDue?: string; // Add this field that's used in mockData
+  nextDue?: string;
 }

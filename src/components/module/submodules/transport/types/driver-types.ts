@@ -18,12 +18,12 @@ export interface TransportDriver {
   onLeave?: boolean;
   rating: number;
   experience: number;
-  photo: string;
+  photo?: string;
   skills?: string[];
   preferredVehicleTypes?: string[];
   notes?: string;
-  // Additional properties needed by components
-  status: "active" | "on-leave" | "inactive" | "driving" | "off-duty" | "vacation" | "sick";
+  // Status should include all the used statuses in the application
+  status: "active" | "inactive" | "vacation" | "sick" | "driving" | "off-duty" | "on-leave";
   performance?: {
     onTimeRate: number;
     customerSatisfaction: number;

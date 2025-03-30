@@ -45,11 +45,12 @@ export interface MapHookResult {
   setZoom?: (zoom: number) => void;
 }
 
+// Maintenance schedule type that's used in map components
 export interface MaintenanceSchedule {
   id: string;
   vehicleId: string;
   taskName: string;
-  startDate: string; // Required here (unlike vehicle-types.ts)
+  startDate: string;
   endDate: string;
   type: string;
   priority: 'low' | 'medium' | 'high' | 'critical';
@@ -57,16 +58,17 @@ export interface MaintenanceSchedule {
   completed: boolean;
   notes?: string;
   description?: string;
-  nextDue?: string; // Add this field for mockData
+  nextDue?: string;
 }
 
+// Extension request type that's used in map components
 export interface ExtensionRequest {
   id: string;
   reservationId: string;
   requestedBy: string;
   requestedAt: string;
   extraTimeMinutes: number;
-  additionalTime?: number; // Add this field that's used in mockData
+  additionalTime?: number;
   reason: string;
   status: 'pending' | 'approved' | 'rejected';
   handledBy?: string;

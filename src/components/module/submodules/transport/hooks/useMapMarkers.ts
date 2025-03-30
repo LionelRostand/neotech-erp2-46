@@ -16,11 +16,11 @@ export const useMapMarkers = () => {
       vehicles.forEach(vehicle => {
         if (!vehicle.location) return;
         
-        const { lat, lng } = vehicle.location;
-        if (!lat || !lng) return;
+        const { latitude, longitude } = vehicle.location;
+        if (!latitude || !longitude) return;
         
         // Create marker with custom icon
-        const marker = L.marker([lat, lng], {
+        const marker = L.marker([latitude, longitude], {
           icon: L.divIcon({
             className: 'custom-vehicle-marker',
             html: `<div style="background-color: ${getMarkerColorByStatus(vehicle.location.status || '')}; width: 12px; height: 12px; border-radius: 50%; border: 2px solid white;"></div>`,
@@ -49,9 +49,13 @@ export const useMapMarkers = () => {
     }
   }, []);
   
-  const clearMarkers = useCallback(() => {
-    // This would be implemented to remove existing markers
-    // Left empty as it would depend on how markers are stored
+  const clearMarkers = useCallback((map?: any, markers?: any[]) => {
+    // Fixed function signature to accept parameters
+    if (map && markers && markers.length > 0) {
+      markers.forEach(marker => {
+        map.removeLayer(marker);
+      });
+    }
   }, []);
   
   const fitMapToMarkers = useCallback((map: any, markers: any[]) => {
