@@ -1,146 +1,160 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Button } from '@/components/ui/button';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import {
-  Heading1,
-  Heading2,
-  Text,
-  Image,
-  Video,
-  Link,
+  Search,
   Layout,
-  LayoutGrid,
-  FormInput,
-  ListOrdered,
-  ListChecks,
-  Square,
-  Table,
-  MapPin,
-  Phone,
-  Mail,
-  Clock,
-  Calendar,
+  Type,
+  Image,
   FileText,
-  ShoppingCart,
-  Star,
-  Share2,
-  UserCircle,
-  MenuSquare
+  Columns,
+  FormInput,
+  Video,
+  ListOrdered,
+  Table,
+  Grid3X3,
+  Car
 } from 'lucide-react';
-import ElementItem from './ElementItem';
+import { Separator } from '@/components/ui/separator';
 
 const EditorSidebar: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<"components" | "blocks">("components");
-  
+  const handleDragStart = (e: React.DragEvent<HTMLDivElement>, elementType: string) => {
+    e.dataTransfer.setData('elementType', elementType);
+  };
+
   return (
-    <div className="w-64 border-r border-border h-full flex flex-col bg-background">
-      <div className="p-4 border-b border-border flex justify-between items-center">
-        <h2 className="text-sm font-medium">Éléments</h2>
-        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as "components" | "blocks")} className="w-[160px]">
-          <TabsList className="grid w-full grid-cols-2 h-7">
-            <TabsTrigger value="components" className="text-xs py-0.5">Composants</TabsTrigger>
-            <TabsTrigger value="blocks" className="text-xs py-0.5">Blocs</TabsTrigger>
-          </TabsList>
-        </Tabs>
+    <div className="h-full overflow-y-auto">
+      <div className="p-2">
+        <div className="relative">
+          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            type="search"
+            placeholder="Rechercher des éléments..."
+            className="pl-8"
+          />
+        </div>
       </div>
       
-      <ScrollArea className="flex-1 p-4">
-        {activeTab === "components" && (
-          <div className="space-y-6">
-            <div>
-              <h3 className="text-xs font-medium text-muted-foreground mb-3">Basiques</h3>
-              <div className="grid grid-cols-2 gap-2">
-                <ElementItem icon={<Heading1 size={16} />} label="Titre" />
-                <ElementItem icon={<Heading2 size={16} />} label="Sous-titre" />
-                <ElementItem icon={<Text size={16} />} label="Paragraphe" />
-                <ElementItem icon={<Image size={16} />} label="Image" />
-                <ElementItem icon={<Video size={16} />} label="Vidéo" />
-                <ElementItem icon={<Link size={16} />} label="Lien" />
-                <ElementItem icon={<Square size={16} />} label="Bouton" />
-                <ElementItem icon={<ListOrdered size={16} />} label="Liste" />
-              </div>
+      <div className="mt-4">
+        <h3 className="px-2 mb-2 font-medium">Structure</h3>
+        <div className="grid grid-cols-2 gap-1 px-1">
+          <Card 
+            className="p-3 text-center cursor-move hover:bg-muted transition-colors"
+            draggable
+            onDragStart={(e) => handleDragStart(e, 'section')}
+          >
+            <div className="flex flex-col items-center">
+              <Layout className="h-8 w-8 mb-1 text-primary" />
+              <span className="text-sm">Section</span>
             </div>
+          </Card>
+          <Card 
+            className="p-3 text-center cursor-move hover:bg-muted transition-colors"
+            draggable
+            onDragStart={(e) => handleDragStart(e, 'columns')}
+          >
+            <div className="flex flex-col items-center">
+              <Columns className="h-8 w-8 mb-1 text-primary" />
+              <span className="text-sm">Colonnes</span>
+            </div>
+          </Card>
+        </div>
+      </div>
+      
+      <Separator className="my-4" />
+      
+      <div>
+        <h3 className="px-2 mb-2 font-medium">Éléments Basiques</h3>
+        <div className="space-y-1 px-1">
+          <Card 
+            className="p-3 cursor-move hover:bg-muted transition-colors"
+            draggable
+            onDragStart={(e) => handleDragStart(e, 'heading')}
+          >
+            <div className="flex items-center space-x-2">
+              <Type className="h-4 w-4 text-primary" />
+              <span>Titre</span>
+            </div>
+          </Card>
+          <Card 
+            className="p-3 cursor-move hover:bg-muted transition-colors"
+            draggable
+            onDragStart={(e) => handleDragStart(e, 'paragraph')}
+          >
+            <div className="flex items-center space-x-2">
+              <FileText className="h-4 w-4 text-primary" />
+              <span>Paragraphe</span>
+            </div>
+          </Card>
+          <Card 
+            className="p-3 cursor-move hover:bg-muted transition-colors"
+            draggable
+            onDragStart={(e) => handleDragStart(e, 'image')}
+          >
+            <div className="flex items-center space-x-2">
+              <Image className="h-4 w-4 text-primary" />
+              <span>Image</span>
+            </div>
+          </Card>
+          <Card 
+            className="p-3 cursor-move hover:bg-muted transition-colors"
+            draggable
+            onDragStart={(e) => handleDragStart(e, 'button')}
+          >
+            <div className="flex items-center space-x-2">
+              <div className="h-4 w-4 bg-primary/80 rounded-sm"></div>
+              <span>Bouton</span>
+            </div>
+          </Card>
+          <Card 
+            className="p-3 cursor-move hover:bg-muted transition-colors"
+            draggable
+            onDragStart={(e) => handleDragStart(e, 'video')}
+          >
+            <div className="flex items-center space-x-2">
+              <Video className="h-4 w-4 text-primary" />
+              <span>Vidéo</span>
+            </div>
+          </Card>
+        </div>
+      </div>
+      
+      <Separator className="my-4" />
+      
+      <div>
+        <h3 className="px-2 mb-2 font-medium">Formulaires</h3>
+        <div className="space-y-1 px-1">
+          <Card 
+            className="p-3 cursor-move hover:bg-muted transition-colors"
+            draggable
+            onDragStart={(e) => handleDragStart(e, 'form')}
+          >
+            <div className="flex items-center space-x-2">
+              <FormInput className="h-4 w-4 text-primary" />
+              <span>Formulaire</span>
+            </div>
+          </Card>
+        </div>
+      </div>
 
-            <div>
-              <h3 className="text-xs font-medium text-muted-foreground mb-3">Structure</h3>
-              <div className="grid grid-cols-2 gap-2">
-                <ElementItem icon={<LayoutGrid size={16} />} label="Section" />
-                <ElementItem icon={<Layout size={16} />} label="Conteneur" />
-                <ElementItem icon={<LayoutGrid size={16} />} label="Colonnes" />
-                <ElementItem icon={<MenuSquare size={16} />} label="Menu" />
-              </div>
+      <Separator className="my-4" />
+      
+      <div>
+        <h3 className="px-2 mb-2 font-medium">Intégrations</h3>
+        <div className="space-y-1 px-1">
+          <Card 
+            className="p-3 cursor-move hover:bg-muted transition-colors"
+            draggable
+            onDragStart={(e) => handleDragStart(e, 'transport-booking')}
+          >
+            <div className="flex items-center space-x-2">
+              <Car className="h-4 w-4 text-primary" />
+              <span>Réservation Transport</span>
             </div>
-
-            <div>
-              <h3 className="text-xs font-medium text-muted-foreground mb-3">Formulaires</h3>
-              <div className="grid grid-cols-2 gap-2">
-                <ElementItem icon={<FormInput size={16} />} label="Champ texte" />
-                <ElementItem icon={<ListChecks size={16} />} label="Case à cocher" />
-                <ElementItem icon={<Square size={16} />} label="Bouton envoi" />
-                <ElementItem icon={<FileText size={16} />} label="Formulaire" />
-              </div>
-            </div>
-
-            <div>
-              <h3 className="text-xs font-medium text-muted-foreground mb-3">Contact</h3>
-              <div className="grid grid-cols-2 gap-2">
-                <ElementItem icon={<MapPin size={16} />} label="Adresse" />
-                <ElementItem icon={<Phone size={16} />} label="Téléphone" />
-                <ElementItem icon={<Mail size={16} />} label="Email" />
-                <ElementItem icon={<Clock size={16} />} label="Horaires" />
-              </div>
-            </div>
-          </div>
-        )}
-        
-        {activeTab === "blocks" && (
-          <div className="space-y-6">
-            <div>
-              <h3 className="text-xs font-medium text-muted-foreground mb-3">En-têtes</h3>
-              <div className="grid grid-cols-1 gap-2">
-                <ElementItem icon={<MenuSquare size={16} />} label="En-tête avec navigation" />
-                <ElementItem icon={<Image size={16} />} label="En-tête avec bannière" />
-                <ElementItem icon={<Layout size={16} />} label="En-tête centré" />
-              </div>
-            </div>
-            
-            <div>
-              <h3 className="text-xs font-medium text-muted-foreground mb-3">Sections</h3>
-              <div className="grid grid-cols-1 gap-2">
-                <ElementItem icon={<LayoutGrid size={16} />} label="Grille de cartes" />
-                <ElementItem icon={<Image size={16} />} label="Image avec texte" />
-                <ElementItem icon={<Star size={16} />} label="Témoignages" />
-                <ElementItem icon={<Calendar size={16} />} label="Événements" />
-              </div>
-            </div>
-            
-            <div>
-              <h3 className="text-xs font-medium text-muted-foreground mb-3">Commerce</h3>
-              <div className="grid grid-cols-1 gap-2">
-                <ElementItem icon={<ShoppingCart size={16} />} label="Liste de produits" />
-                <ElementItem icon={<ShoppingCart size={16} />} label="Produit vedette" />
-                <ElementItem icon={<ShoppingCart size={16} />} label="Panier" />
-              </div>
-            </div>
-            
-            <div>
-              <h3 className="text-xs font-medium text-muted-foreground mb-3">Pieds de page</h3>
-              <div className="grid grid-cols-1 gap-2">
-                <ElementItem icon={<Layout size={16} />} label="Pied de page simple" />
-                <ElementItem icon={<Layout size={16} />} label="Pied de page avec liens" />
-                <ElementItem icon={<Layout size={16} />} label="Pied de page complet" />
-              </div>
-            </div>
-          </div>
-        )}
-      </ScrollArea>
-
-      <div className="p-4 border-t border-border">
-        <Button variant="outline" size="sm" className="w-full">
-          Enregistrer
-        </Button>
+          </Card>
+        </div>
       </div>
     </div>
   );

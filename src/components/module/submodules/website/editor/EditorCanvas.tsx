@@ -56,6 +56,9 @@ const EditorCanvas: React.FC<EditorCanvasProps> = ({ viewMode, onSelectElement }
   const handleDeleteElement = (elementId: string) => {
     const updatedElements = elements.filter(element => element.id !== elementId);
     setElements(updatedElements);
+    toast({
+      description: "Élément supprimé avec succès.",
+    });
   };
 
   const createElementFromType = (type: string) => {
@@ -116,6 +119,48 @@ const EditorCanvas: React.FC<EditorCanvasProps> = ({ viewMode, onSelectElement }
           </div>
         `;
         break;
+      case 'transport-booking':
+        content = `
+          <div class="transport-booking-widget p-4">
+            <div class="bg-slate-900 text-white p-6 rounded-lg overflow-hidden relative">
+              <div style="background-image: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.7)), url(https://images.unsplash.com/photo-1599037779235-c3740ba54b89?q=80&w=1200); background-size: cover; background-position: center; position: absolute; top: 0; left: 0; right: 0; bottom: 0; z-index: 0;"></div>
+              <div class="relative z-10">
+                <h2 class="text-2xl font-bold mb-4">Réservez votre véhicule</h2>
+                <div class="bg-white text-slate-900 rounded-lg p-4">
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label class="block text-sm font-medium mb-1">Type de service</label>
+                      <select class="w-full border rounded p-2">
+                        <option>Transfert aéroport</option>
+                        <option>Transport à l'heure</option>
+                        <option>Aller simple</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label class="block text-sm font-medium mb-1">Date & Heure</label>
+                      <input type="text" class="w-full border rounded p-2" placeholder="25/07/2023 14:30" />
+                    </div>
+                    <div>
+                      <label class="block text-sm font-medium mb-1">Lieu de prise en charge</label>
+                      <input type="text" class="w-full border rounded p-2" placeholder="Adresse de départ..." />
+                    </div>
+                    <div>
+                      <label class="block text-sm font-medium mb-1">Passagers</label>
+                      <select class="w-full border rounded p-2">
+                        <option>1 personne</option>
+                        <option>2 personnes</option>
+                        <option>3 personnes</option>
+                        <option>4+ personnes</option>
+                      </select>
+                    </div>
+                  </div>
+                  <button class="w-full mt-4 bg-blue-600 text-white px-4 py-2 rounded font-medium">Réserver</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+        break;
       default:
         content = `<div class="p-4 border border-dashed rounded">Élément ${type}</div>`;
     }
@@ -128,7 +173,7 @@ const EditorCanvas: React.FC<EditorCanvasProps> = ({ viewMode, onSelectElement }
   };
 
   const handleElementClick = (element: any) => {
-    onSelectElement(element);
+    onSelectElement({...element, onDelete: () => handleDeleteElement(element.id)});
   };
 
   return (
