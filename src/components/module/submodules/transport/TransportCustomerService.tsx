@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs } from "@/components/ui/tabs";
 import CustomerServiceTabs from './customer-service/CustomerServiceTabs';
@@ -8,6 +8,13 @@ import ChevronsUpDown from "@/components/icons/ChevronIcons";
 
 const TransportCustomerService: React.FC = () => {
   const [activeTab, setActiveTab] = useState('chat');
+  
+  // Ensure ChevronsUpDown is available globally
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      window.ChevronsUpDown = ChevronsUpDown;
+    }
+  }, []);
 
   return (
     <div className="space-y-6">
