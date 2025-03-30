@@ -17,6 +17,16 @@ export interface TransportVehicle {
   maintenanceRecords?: MaintenanceRecord[];
   incidentRecords?: IncidentRecord[];
   notes?: VehicleNote[];
+  // Adding missing fields used in the application
+  purchaseDate?: string;
+  mileage?: number;
+  lastServiceDate?: string;
+  nextServiceDate?: string;
+  insuranceInfo?: {
+    provider: string;
+    policyNumber: string;
+    expiryDate: string;
+  };
 }
 
 export type VehicleNote = Note & {
@@ -32,7 +42,7 @@ export interface MaintenanceRecord {
   cost: number;
   provider: string;
   nextMaintenance?: string;
-  mileage?: number; // Make mileage optional
+  mileage?: number; // Already optional
   resolved: boolean;
 }
 
@@ -47,7 +57,7 @@ export interface IncidentRecord {
   damageDetails?: string;
   repairCost?: number;
   insuranceClaim?: boolean;
-  status: string; // Add required status property
+  status: string; // Required field
   resolved: boolean;
 }
 
@@ -64,4 +74,5 @@ export interface MaintenanceSchedule {
   completed: boolean;
   notes?: string;
   description?: string;
+  nextDue?: string; // Add this field that's used in mockData
 }

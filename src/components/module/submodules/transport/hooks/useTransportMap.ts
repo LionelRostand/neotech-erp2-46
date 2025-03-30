@@ -1,144 +1,142 @@
 
-import { useRef, useState, useCallback } from 'react';
-import { MapConfig, MapHookResult, TransportVehicleWithLocation } from '../types/map-types';
+import { useState, useEffect, useRef } from 'react';
+import { MapConfig, TransportVehicleWithLocation, MapHookResult } from '../types';
 
-// Mock implementation of the map hook
-export const useTransportMap = (
-  containerRef: React.RefObject<HTMLDivElement>,
-  vehicles: TransportVehicleWithLocation[] = []
-): MapHookResult => {
-  const mapInstanceRef = useRef<any>(null);
-  const [isMapInitialized, setIsMapInitialized] = useState(false);
-  const [isMapLoaded, setIsMapLoaded] = useState(false);
+// Default map configuration
+const DEFAULT_CONFIG: MapConfig = {
+  center: [48.866667, 2.333333], // Paris
+  zoom: 13,
+  style: 'mapbox://styles/mapbox/streets-v11',
+  minZoom: 3,
+  maxZoom: 18,
+  showLabels: true
+};
 
-  // Default map configuration
-  const [mapConfiguration, setMapConfiguration] = useState<MapConfig>({
-    center: [48.8566, 2.3522], // Paris
-    zoom: 13,
-    tileProvider: 'osm-france',
-    showLabels: true,
-    centerLat: 48.8566,
-    centerLng: 2.3522
+export const useTransportMap = (initialConfig?: Partial<MapConfig>): MapHookResult => {
+  // Combine default config with any provided config
+  const [mapConfig, setMapConfig] = useState<MapConfig>({
+    ...DEFAULT_CONFIG,
+    ...initialConfig
   });
-
-  // Function to initialize the map
-  const initializeMap = useCallback(() => {
-    if (!containerRef.current || !window.L) {
-      return;
+  
+  // Create refs and state
+  const mapRef = useRef<any>(null);
+  const mapContainerRef = useRef<HTMLDivElement>(null);
+  const [map, setMap] = useState<any>(null);
+  const [isLoaded, setIsLoaded] = useState(false);
+  const [mapInitialized, setMapInitialized] = useState(false);
+  
+  // Initialize the map
+  useEffect(() => {
+    if (mapContainerRef.current && !mapInitialized) {
+      const initializeMap = async () => {
+        try {
+          // Dynamic import to avoid SSR issues
+          const mapboxgl = (await import('mapbox-gl')).default;
+          
+          // Set mapbox token (in a real app, this would be from env vars)
+          mapboxgl.accessToken = 'pk.YOUR_MAPBOX_TOKEN_HERE';
+          
+          // Create the map
+          const mapInstance = new mapboxgl.Map({
+            container: mapContainerRef.current!,
+            style: mapConfig.style || DEFAULT_CONFIG.style,
+            center: mapConfig.center,
+            zoom: mapConfig.zoom,
+            minZoom: mapConfig.minZoom,
+            maxZoom: mapConfig.maxZoom
+          });
+          
+          // Setup event listeners
+          mapInstance.on('load', () => {
+            setMap(mapInstance);
+            setIsLoaded(true);
+            setMapInitialized(true);
+            console.log('Map initialized');
+          });
+          
+          mapInstance.on('error', (e) => {
+            console.error('Mapbox error:', e);
+          });
+          
+        } catch (error) {
+          console.error('Error initializing map:', error);
+        }
+      };
+      
+      initializeMap();
     }
-
-    // Clean up existing map if any
-    if (mapInstanceRef.current) {
-      mapInstanceRef.current.remove();
-    }
-
-    try {
-      // Create map instance
-      mapInstanceRef.current = window.L.map(containerRef.current).setView(
-        [mapConfiguration.centerLat || mapConfiguration.center[0], mapConfiguration.centerLng || mapConfiguration.center[1]],
-        mapConfiguration.zoom
-      );
-
-      // Add tile layer based on provider
-      let tileLayer;
-      switch (mapConfiguration.tileProvider) {
-        case 'osm-france':
-          tileLayer = window.L.tileLayer('https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png', {
-            attribution: '&copy; OpenStreetMap France | &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-          });
-          break;
-        case 'carto':
-          tileLayer = window.L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
-          });
-          break;
-        default: // 'osm'
-          tileLayer = window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-          });
+  }, [mapContainerRef, mapInitialized, mapConfig]);
+  
+  // Add markers to the map
+  const addMarkers = (vehicles: TransportVehicleWithLocation[]) => {
+    if (!map) return;
+    
+    // Clear existing markers
+    // In a real implementation, you would track and remove existing markers
+    
+    vehicles.forEach(vehicle => {
+      if (vehicle.location) {
+        try {
+          // Create marker
+          new mapboxgl.Marker()
+            .setLngLat([vehicle.location.longitude, vehicle.location.latitude])
+            .setPopup(
+              new mapboxgl.Popup({ offset: 25 })
+                .setHTML(`
+                  <h3>${vehicle.name}</h3>
+                  <p>${vehicle.licensePlate}</p>
+                  <p>Status: ${vehicle.status}</p>
+                `)
+            )
+            .addTo(map);
+        } catch (error) {
+          console.error(`Error adding marker for vehicle ${vehicle.id}:`, error);
+        }
       }
-
-      tileLayer.addTo(mapInstanceRef.current);
-
-      // Add vehicle markers if showLabels is true
-      if (mapConfiguration.showLabels && vehicles.length > 0) {
-        vehicles.forEach(vehicle => {
-          if (vehicle.location) {
-            const { latitude, longitude, lat, lng } = vehicle.location;
-            const position = [lat || latitude, lng || longitude];
-            
-            const marker = window.L.marker(position as [number, number])
-              .addTo(mapInstanceRef.current)
-              .bindPopup(`
-                <b>${vehicle.name}</b><br>
-                ${vehicle.licensePlate}<br>
-                ${vehicle.location.status}
-              `);
-          }
-        });
-      }
-
-      setIsMapInitialized(true);
-      setIsMapLoaded(true);
-    } catch (error) {
-      console.error("Error initializing map:", error);
+    });
+  };
+  
+  // Center the map on a vehicle
+  const centerOnVehicle = (vehicleId: string) => {
+    // In a real app, you would look up the vehicle and center the map
+    console.log(`Centering on vehicle ${vehicleId}`);
+  };
+  
+  // Set the center of the map
+  const setCenter = (center: [number, number]) => {
+    if (map) {
+      map.setCenter(center);
+      setMapConfig(prev => ({ ...prev, center }));
     }
-  }, [containerRef, mapConfiguration, vehicles]);
-
-  // Function to refresh the map
-  const refreshMap = useCallback(() => {
-    initializeMap();
-  }, [initializeMap]);
-
-  // Functions to manipulate the map
-  const setCenter = useCallback((coords: [number, number]) => {
-    if (mapInstanceRef.current) {
-      mapInstanceRef.current.setView(coords);
+  };
+  
+  // Set the zoom level
+  const setZoom = (zoom: number) => {
+    if (map) {
+      map.setZoom(zoom);
+      setMapConfig(prev => ({ ...prev, zoom }));
     }
-  }, []);
-
-  const setZoom = useCallback((zoom: number) => {
-    if (mapInstanceRef.current) {
-      mapInstanceRef.current.setZoom(zoom);
+  };
+  
+  // Refresh the map
+  const refreshMap = () => {
+    if (map) {
+      map.resize();
     }
-  }, []);
-
-  const addMarker = useCallback((coords: [number, number], options = {}) => {
-    if (!mapInstanceRef.current) return null;
-    const marker = window.L.marker(coords, options).addTo(mapInstanceRef.current);
-    return marker;
-  }, []);
-
-  const removeMarker = useCallback((marker: any) => {
-    if (marker && mapInstanceRef.current) {
-      mapInstanceRef.current.removeLayer(marker);
-    }
-  }, []);
-
-  const drawRoute = useCallback((points: [number, number][], options = {}) => {
-    if (!mapInstanceRef.current) return null;
-    const polyline = window.L.polyline(points, options).addTo(mapInstanceRef.current);
-    return polyline;
-  }, []);
-
-  const clearRoute = useCallback((route: any) => {
-    if (route && mapInstanceRef.current) {
-      mapInstanceRef.current.removeLayer(route);
-    }
-  }, []);
-
+  };
+  
   return {
-    map: mapInstanceRef.current,
-    isLoaded: isMapLoaded,
+    mapRef: mapContainerRef,
+    isLoaded,
+    addMarkers, // Corrected from addMarker to addMarkers
+    centerOnVehicle,
+    refreshMap,
+    map,
+    mapInitialized,
+    mapConfig,
+    setMapConfig,
     setCenter,
-    setZoom,
-    addMarker,
-    removeMarker,
-    drawRoute,
-    clearRoute,
-    mapInitialized: isMapInitialized,
-    mapConfig: mapConfiguration,
-    setMapConfig: setMapConfiguration,
-    refreshMap
+    setZoom
   };
 };

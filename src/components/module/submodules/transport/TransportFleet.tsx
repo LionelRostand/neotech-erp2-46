@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -118,7 +117,8 @@ const mockMaintenanceHistory = [
     cost: 280,
     provider: "Garage Central",
     nextMaintenance: "2023-11-20",
-    resolved: true
+    resolved: true,
+    mileage: 25000
   },
   {
     id: "mnt-002",
@@ -129,7 +129,8 @@ const mockMaintenanceHistory = [
     cost: 550,
     provider: "Garage Express",
     nextMaintenance: "2024-01-12",
-    resolved: true
+    resolved: true,
+    mileage: 42000
   },
   {
     id: "mnt-003",
@@ -140,7 +141,8 @@ const mockMaintenanceHistory = [
     cost: 120,
     provider: "Contrôle Auto",
     nextMaintenance: "2023-12-05",
-    resolved: true
+    resolved: true,
+    mileage: 35000
   },
   {
     id: "mnt-004",
@@ -151,11 +153,12 @@ const mockMaintenanceHistory = [
     cost: 1200,
     provider: "ElectroCar",
     nextMaintenance: "2024-03-10",
-    resolved: false
+    resolved: false,
+    mileage: 28000
   }
 ];
 
-// Mock incidents with corrected union types
+// Mock incidents with corrected union types and added status field
 const mockIncidents = [
   {
     id: "inc-001",
@@ -168,7 +171,8 @@ const mockIncidents = [
     damageDetails: "Rayure superficielle de 20cm",
     repairCost: 150,
     insuranceClaim: false,
-    resolved: true
+    resolved: true,
+    status: "closed"
   },
   {
     id: "inc-002",
@@ -181,7 +185,8 @@ const mockIncidents = [
     damageDetails: "Défaillance du système électrique - remorquage nécessaire",
     repairCost: 1800,
     insuranceClaim: true,
-    resolved: false
+    resolved: false,
+    status: "open"
   }
 ];
 

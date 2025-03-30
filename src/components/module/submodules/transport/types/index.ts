@@ -28,10 +28,10 @@ export { getAddressString, getAddressObject } from './reservation-types';
 // Export client-types
 export type { 
   TransportClient, 
-  LoyaltyTier, 
   LoyaltyActivity, 
   ClientNote 
 } from './client-types';
+export { LoyaltyTier } from './client-types';
 
 // Export map-types
 export type { 

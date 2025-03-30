@@ -1,5 +1,6 @@
 
-import { TransportVehicle, TransportDriver, VehicleMaintenanceSchedule as MaintenanceSchedule, MapExtensionRequest as ExtensionRequest } from '../types';
+import { TransportVehicle, TransportDriver } from '../types';
+import { VehicleMaintenanceSchedule as MaintenanceSchedule, MapExtensionRequest as ExtensionRequest } from '../types';
 
 // Mock vehicle data
 export const mockVehicles: TransportVehicle[] = [
@@ -11,6 +12,7 @@ export const mockVehicles: TransportVehicle[] = [
     licensePlate: "AB-123-CD",
     available: true,
     status: "active",
+    purchaseDate: "2022-05-15",
   },
   {
     id: "veh-002",
@@ -20,6 +22,7 @@ export const mockVehicles: TransportVehicle[] = [
     licensePlate: "EF-456-GH",
     available: false,
     status: "maintenance",
+    purchaseDate: "2021-08-10",
   },
   {
     id: "veh-003",
@@ -29,6 +32,7 @@ export const mockVehicles: TransportVehicle[] = [
     licensePlate: "IJ-789-KL",
     available: true,
     status: "active",
+    purchaseDate: "2022-01-20",
   },
   {
     id: "veh-004",
@@ -38,6 +42,7 @@ export const mockVehicles: TransportVehicle[] = [
     licensePlate: "MN-012-OP",
     available: true,
     status: "active",
+    purchaseDate: "2021-11-05",
   },
   {
     id: "veh-005",
@@ -47,6 +52,7 @@ export const mockVehicles: TransportVehicle[] = [
     licensePlate: "QR-345-ST",
     available: false,
     status: "out-of-service",
+    purchaseDate: "2022-03-15",
   }
 ];
 
@@ -63,7 +69,8 @@ export const mockMaintenanceSchedules: MaintenanceSchedule[] = [
     notes: "Inclure vérification des freins",
     taskName: "Maintenance régulière",
     nextDue: "2024-05-20",
-    priority: "medium"
+    priority: "medium",
+    completed: false
   },
   {
     id: "mnt-002",
@@ -76,7 +83,8 @@ export const mockMaintenanceSchedules: MaintenanceSchedule[] = [
     notes: "Problème de batterie détecté lors de la dernière location",
     taskName: "Réparation",
     nextDue: "2024-05-15",
-    priority: "high"
+    priority: "high",
+    completed: false
   },
   {
     id: "mnt-003",
@@ -89,7 +97,8 @@ export const mockMaintenanceSchedules: MaintenanceSchedule[] = [
     notes: "Rendez-vous à 9h",
     taskName: "Contrôle technique",
     nextDue: "2024-12-05",
-    priority: "low"
+    priority: "low",
+    completed: false
   }
 ];
 
@@ -108,6 +117,7 @@ export const mockExtensionRequests: ExtensionRequest[] = [
     createdAt: "2023-11-18",
     requestedBy: "Marie Legrand",
     requestedAt: "2023-11-18",
+    extraTimeMinutes: 48 * 60, // 48 hours in minutes
     additionalTime: 48 * 60 // 48 hours in minutes
   },
   {
@@ -123,6 +133,7 @@ export const mockExtensionRequests: ExtensionRequest[] = [
     createdAt: "2023-11-17",
     requestedBy: "Sophie Bernard",
     requestedAt: "2023-11-17",
+    extraTimeMinutes: 48 * 60, // 48 hours in minutes
     additionalTime: 48 * 60 // 48 hours in minutes
   }
 ];
