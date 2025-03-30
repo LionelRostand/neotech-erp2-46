@@ -25,12 +25,12 @@ export interface Reservation {
   id: string;
   clientId: string;
   clientName: string;
-  date: string;
-  time: string;
-  pickup: string | {address: string};
-  dropoff: string | {address: string};
-  service: TransportService;
-  passengers: number;
+  date?: string;
+  time?: string;
+  pickup?: string | {address: string};
+  dropoff?: string | {address: string};
+  service?: TransportService;
+  passengers?: number;
   vehicleId?: string;
   driverId?: string;
   status: ReservationStatus;
@@ -40,8 +40,8 @@ export interface Reservation {
   price?: number;
   paymentStatus?: 'pending' | 'paid' | 'partial' | 'refunded';
   // Additional properties used in components
-  startDate?: string;
-  endDate?: string;
+  startDate: string;
+  endDate: string;
   pickupLocation?: {address: string};
   dropoffLocation?: {address: string};
   totalAmount?: number;
@@ -66,7 +66,7 @@ export interface ExtensionRequest {
   reservationId: string;
   requestedBy: string;
   requestedAt: string;
-  additionalTime: number; // in minutes
+  extraTimeMinutes: number;
   reason: string;
   status: 'pending' | 'approved' | 'rejected';
   handledBy?: string;

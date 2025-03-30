@@ -6,7 +6,6 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Switch } from "@/components/ui/switch";
 import { CalendarIcon } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -82,18 +81,24 @@ const EditReservationDialog: React.FC<EditReservationDialogProps> = ({
   onOpenChange,
   reservation,
 }) => {
+  // Helper to get address string from location object or string
+  const getAddressString = (location: string | { address: string }): string => {
+    if (typeof location === 'string') return location;
+    return location.address;
+  };
+
   // Transform reservation data for the form
   const defaultValues: ReservationFormValues = {
     clientId: reservation.clientId,
-    vehicleId: reservation.vehicleId,
+    vehicleId: reservation.vehicleId || '',
     driverId: reservation.driverId,
     startDate: parse(reservation.startDate, "yyyy-MM-dd", new Date()),
     endDate: parse(reservation.endDate, "yyyy-MM-dd", new Date()),
-    pickupLocation: reservation.pickupLocation,
-    dropoffLocation: reservation.dropoffLocation,
-    totalAmount: reservation.totalAmount,
-    status: reservation.status as any,
-    paymentStatus: reservation.paymentStatus as any,
+    pickupLocation: getAddressString(reservation.pickupLocation || reservation.pickup || ''),
+    dropoffLocation: getAddressString(reservation.dropoffLocation || reservation.dropoff || ''),
+    totalAmount: reservation.totalAmount || 0,
+    status: (reservation.status as any) || 'pending',
+    paymentStatus: (reservation.paymentStatus as any) || 'pending',
     notes: reservation.notes || "",
   };
 
@@ -102,10 +107,31 @@ const EditReservationDialog: React.FC<EditReservationDialogProps> = ({
     defaultValues,
   });
 
-  const needsDriver = !!form.watch("driverId");
-
   const onSubmit = (data: ReservationFormValues) => {
     console.log("Form data:", data);
+    
+    // Préparer les données mises à jour
+    const updatedReservation = {
+      ...reservation,
+      clientId: data.clientId,
+      vehicleId: data.vehicleId,
+      driverId: data.driverId,
+      startDate: format(data.startDate, "yyyy-MM-dd"),
+      endDate: format(data.endDate, "yyyy-MM-dd"),
+      pickupLocation: { address: data.pickupLocation },
+      dropoffLocation: { address: data.dropoffLocation },
+      totalAmount: data.totalAmount,
+      status: data.status,
+      paymentStatus: data.paymentStatus,
+      notes: data.notes,
+      updatedAt: new Date().toISOString()
+    };
+    
+    console.log("Réservation mise à jour:", updatedReservation);
+    
+    // Dans une application réelle, vous enverriez ces données à votre API
+    // updateReservation(updatedReservation).then(...)
+    
     toast.success("Réservation mise à jour avec succès");
     onOpenChange(false);
   };
@@ -126,7 +152,7 @@ const EditReservationDialog: React.FC<EditReservationDialogProps> = ({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Client</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Sélectionner un client" />
@@ -149,7 +175,7 @@ const EditReservationDialog: React.FC<EditReservationDialogProps> = ({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Véhicule</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Sélectionner un véhicule" />
@@ -174,7 +200,7 @@ const EditReservationDialog: React.FC<EditReservationDialogProps> = ({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Statut</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Sélectionner un statut" />
@@ -199,7 +225,7 @@ const EditReservationDialog: React.FC<EditReservationDialogProps> = ({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Statut de paiement</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Sélectionner un statut de paiement" />
@@ -224,7 +250,7 @@ const EditReservationDialog: React.FC<EditReservationDialogProps> = ({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Chauffeur</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value || ""}>
+                    <Select onValueChange={field.onChange} value={field.value || ""}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Sélectionner un chauffeur" />

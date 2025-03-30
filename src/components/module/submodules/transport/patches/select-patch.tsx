@@ -25,59 +25,7 @@ const SelectPatch: React.FC = () => {
       
       console.log('Les composants Select ont été patchés avec succès');
       
-      // Patch 2: Directly patch @radix-ui/react-select Item component
-      try {
-        const originalSelectItem = require('@radix-ui/react-select').Item;
-        if (originalSelectItem && !originalSelectItem.__patched) {
-          const OriginalComponent = originalSelectItem;
-          
-          // Override the original component
-          require('@radix-ui/react-select').Item = React.forwardRef((props, ref) => {
-            // Ensure value is never empty
-            const safeProps = {...props};
-            if (!safeProps.value || safeProps.value === '') {
-              safeProps.value = `radix-item-${Math.random().toString(36).substring(2, 9)}`;
-              console.log('Radix UI Select.Item empty value patched with:', safeProps.value);
-            }
-            
-            return <OriginalComponent {...safeProps} ref={ref} />;
-          });
-          
-          // Mark as patched to avoid double patching
-          require('@radix-ui/react-select').Item.__patched = true;
-          console.log('Radix UI Select.Item successfully monkey patched');
-        }
-      } catch (error) {
-        console.error('Failed to patch Radix UI Select.Item:', error);
-      }
-
-      // Patch 3: Also patch the shadcn/ui SelectItem component
-      try {
-        const SelectUIModule = require('@/components/ui/select');
-        if (SelectUIModule && SelectUIModule.SelectItem && !SelectUIModule.SelectItem.__patched) {
-          const OriginalUISelectItem = SelectUIModule.SelectItem;
-          
-          // Replace the component
-          SelectUIModule.SelectItem = React.forwardRef((props, ref) => {
-            // Ensure value is never empty
-            const safeProps = {...props};
-            if (!safeProps.value || safeProps.value === '') {
-              safeProps.value = `ui-item-${Math.random().toString(36).substring(2, 9)}`;
-              console.log('UI SelectItem empty value patched with:', safeProps.value);
-            }
-            
-            return <OriginalUISelectItem {...safeProps} ref={ref} />;
-          });
-          
-          // Mark as patched
-          SelectUIModule.SelectItem.__patched = true;
-          console.log('UI SelectItem successfully patched');
-        }
-      } catch (error) {
-        console.error('Failed to patch UI SelectItem:', error);
-      }
-
-      // Patch 4: Patch React.createElement to catch all SelectItem instances
+      // Patch 2: Directly patch React.createElement to catch all SelectItem instances
       const originalCreateElement = React.createElement;
       if (!React.createElement.__patched) {
         // @ts-ignore - custom property
@@ -102,13 +50,11 @@ const SelectPatch: React.FC = () => {
             )
           ) {
             // Check if value exists and is not empty
-            if (!props.value || props.value === '') {
-              const newProps = { 
-                ...props, 
-                value: `patched-item-${Math.random().toString(36).substring(2, 9)}` 
-              };
-              console.log('React.createElement - SelectItem value patched:', newProps.value);
-              return originalCreateElement(type, newProps, ...children);
+            const safeProps = { ...props };
+            if (!safeProps.value || safeProps.value === '') {
+              safeProps.value = `patched-item-${Math.random().toString(36).substring(2, 9)}`;
+              console.log('React.createElement - SelectItem value patched:', safeProps.value);
+              return originalCreateElement(type, safeProps, ...children);
             }
           }
           
@@ -121,7 +67,7 @@ const SelectPatch: React.FC = () => {
         console.log('React.createElement patched for SelectItems');
       }
 
-      // Patch 5: Direct patch selectItems in state updates
+      // Patch 3: Direct patch selectItems in state updates
       const originalSetState = React.Component.prototype.setState;
       if (!originalSetState.__patched) {
         React.Component.prototype.setState = function patchedSetState(state, callback) {
