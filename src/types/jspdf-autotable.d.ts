@@ -28,12 +28,22 @@ declare module 'jspdf-autotable' {
     didDrawPage?: (data: any) => void;
   }
 
-  function autoTable(doc: jsPDF, options: AutoTableOptions): void;
+  // Add return type that includes lastAutoTable
+  interface AutoTableResult {
+    finalY: number;
+    pageNumber: number;
+    pageCount: number;
+    table: any;
+    cursor: any;
+  }
+
+  function autoTable(doc: jsPDF, options: AutoTableOptions): AutoTableResult;
 
   // Extend the jsPDF prototype
   declare global {
     interface jsPDF {
-      autoTable(options: AutoTableOptions): void;
+      autoTable(options: AutoTableOptions): AutoTableResult;
+      lastAutoTable: AutoTableResult;
     }
   }
 

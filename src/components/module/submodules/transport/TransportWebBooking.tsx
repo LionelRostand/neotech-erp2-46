@@ -297,9 +297,9 @@ const TransportWebBooking: React.FC = () => {
                         <td className="py-3 px-4">{booking.id}</td>
                         <td className="py-3 px-4">{`${booking.clientInfo.firstName} ${booking.clientInfo.lastName}`}</td>
                         <td className="py-3 px-4">
-                          {booking.service === 'airport' ? 'Transfert aéroport' : 
-                           booking.service === 'hourly' ? 'Service à l\'heure' : 
-                           booking.service === 'pointToPoint' ? 'Point à point' : 'Excursion journée'}
+                          {booking.service === "airport" ? 'Transfert aéroport' : 
+                           booking.service === "hourly" ? 'Service à l\'heure' : 
+                           booking.service === "pointToPoint" ? 'Point à point' : 'Excursion journée'}
                         </td>
                         <td className="py-3 px-4">{`${booking.date} ${booking.time}`}</td>
                         <td className="py-3 px-4">

@@ -17,3 +17,5 @@ if (typeof window !== 'undefined') {
   // @ts-ignore - Adding to window object
   window.ChevronsUpDown = LucideChevronsUpDown || ChevronsUpDown;
 }
+
+export default ChevronsUpDown;
