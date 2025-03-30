@@ -43,6 +43,21 @@ import EditorTemplatesPanel from './editor/EditorTemplatesPanel';
 import EditorPropertiesPanel from './editor/EditorPropertiesPanel';
 import EditorFloatingToolbar from './editor/EditorFloatingToolbar';
 import WebsitePreview from './website-preview/WebsitePreview';
+import { 
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter
+} from '@/components/ui/dialog';
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from '@/components/ui/select';
 
 const WebsiteEditor = () => {
   const { toast } = useToast();
@@ -61,6 +76,16 @@ const WebsiteEditor = () => {
   const [isPreviewMode, setIsPreviewMode] = useState(false);
   const [currentPageContent, setCurrentPageContent] = useState<any[]>([]);
   const [publishDialogOpen, setPublishDialogOpen] = useState(false);
+  
+  // Nouvel état pour la sélection de page
+  const [pageSelectDialogOpen, setPageSelectDialogOpen] = useState(false);
+  const [availablePages, setAvailablePages] = useState([
+    { id: 'home', name: 'Page d\'accueil', path: '/' },
+    { id: 'about', name: 'À propos', path: '/about' },
+    { id: 'services', name: 'Services', path: '/services' },
+    { id: 'contact', name: 'Contact', path: '/contact' },
+    { id: 'blog', name: 'Blog', path: '/blog' },
+  ]);
 
   // Importer les éléments existants lors du chargement initial
   useEffect(() => {
@@ -169,6 +194,23 @@ const WebsiteEditor = () => {
       description: "Site ouvert dans un nouvel onglet",
     });
   };
+  
+  // Nouvelle fonction pour gérer l'ouverture du sélecteur de page
+  const handleOpenPageSelector = () => {
+    setPageSelectDialogOpen(true);
+  };
+  
+  // Nouvelle fonction pour gérer la sélection d'une page
+  const handlePageSelection = (pageId: string) => {
+    const selectedPage = availablePages.find(page => page.id === pageId);
+    if (selectedPage) {
+      setCurrentPage(pageId);
+      toast({
+        description: `Page "${selectedPage.name}" chargée`,
+      });
+    }
+    setPageSelectDialogOpen(false);
+  };
 
   return (
     <div className="h-[calc(100vh-120px)] flex flex-col">
@@ -176,9 +218,11 @@ const WebsiteEditor = () => {
         <div className="flex items-center flex-wrap gap-2">
           <h2 className="text-2xl font-bold mr-4">Éditeur de site web</h2>
           <div>
-            <Button variant="outline" size="sm" className="mr-2">
+            <Button variant="outline" size="sm" className="mr-2" onClick={handleOpenPageSelector}>
               <Globe className="h-4 w-4 mr-1" />
-              <span>Page d'accueil</span>
+              <span>
+                {availablePages.find(p => p.id === currentPage)?.name || 'Page d\'accueil'}
+              </span>
               <ChevronsUpDown className="ml-2 h-4 w-4 opacity-50" />
             </Button>
           </div>
@@ -389,7 +433,7 @@ const WebsiteEditor = () => {
 
       {/* Bottom Status Bar */}
       <div className="border-t mt-2 py-1 px-2 flex justify-between text-xs text-muted-foreground">
-        <div>Page: {currentPage}</div>
+        <div>Page: {availablePages.find(p => p.id === currentPage)?.name || 'Page d\'accueil'}</div>
         <div>Mode: {isPreviewMode ? 'Prévisualisation' : isDirectEditMode ? 'Édition directe' : 'Édition standard'}</div>
       </div>
       
@@ -416,6 +460,43 @@ const WebsiteEditor = () => {
           </Card>
         </div>
       )}
+      
+      {/* Page Selection Dialog */}
+      <Dialog open={pageSelectDialogOpen} onOpenChange={setPageSelectDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Sélectionner une page</DialogTitle>
+            <DialogDescription>
+              Choisissez la page que vous souhaitez éditer.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <Select 
+              value={currentPage} 
+              onValueChange={handlePageSelection}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Sélectionner une page" />
+              </SelectTrigger>
+              <SelectContent>
+                {availablePages.map(page => (
+                  <SelectItem key={page.id} value={page.id}>
+                    {page.name} <span className="text-muted-foreground ml-2 text-xs">({page.path})</span>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setPageSelectDialogOpen(false)}>
+              Annuler
+            </Button>
+            <Button type="submit" onClick={() => setPageSelectDialogOpen(false)}>
+              Valider
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
