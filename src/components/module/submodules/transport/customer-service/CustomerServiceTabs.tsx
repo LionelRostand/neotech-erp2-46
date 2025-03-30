@@ -1,9 +1,7 @@
 
 import React from 'react';
 import { TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { MessageSquare, MessagesSquare, Phone, Mail, Users, Settings } from "lucide-react";
-// Import ChevronsUpDown directly from lucide-react
-import { ChevronsUpDown } from "lucide-react";
+import { MessageSquare, MessagesSquare, Phone, Mail, Users, Settings, ChevronsUpDown } from "lucide-react";
 
 interface CustomerServiceTabsProps {
   activeTab: string;
