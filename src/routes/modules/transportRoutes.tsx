@@ -3,6 +3,7 @@ import React from 'react';
 import { Route } from "react-router-dom";
 import ModuleLayout from "@/components/module/ModuleLayout";
 import SubmodulePage from "@/components/module/SubmodulePage";
+import TransportSettingsWrapper from '@/components/module/submodules/transport/settings/TransportSettingsWrapper';
 
 export const TransportRoutes = (
   <Route key="transport" path="/modules/transport" element={<ModuleLayout moduleId={7} />}>
@@ -17,6 +18,6 @@ export const TransportRoutes = (
     <Route path="customer-service" element={<SubmodulePage moduleId={7} submoduleId="transport-customer-service" />} />
     <Route path="loyalty" element={<SubmodulePage moduleId={7} submoduleId="transport-loyalty" />} />
     <Route path="web-booking" element={<SubmodulePage moduleId={7} submoduleId="transport-web-booking" />} />
-    <Route path="settings" element={<SubmodulePage moduleId={7} submoduleId="transport-settings" />} />
+    <Route path="settings" element={<TransportSettingsWrapper />} />
   </Route>
 );
