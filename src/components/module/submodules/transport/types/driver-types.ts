@@ -25,6 +25,9 @@ export interface TransportDriver extends TransportBasic {
     completedTrips: number;
     averageRating: number;
     onTimePercentage: number;
+    onTimeRate?: number;
+    satisfactionScore?: number;
+    safetyScore?: number;
   };
   specializations?: string[];
 }

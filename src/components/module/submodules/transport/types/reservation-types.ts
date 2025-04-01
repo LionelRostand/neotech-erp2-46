@@ -21,6 +21,7 @@ export interface Reservation extends TransportBasic {
   isPaid: boolean;
   paymentStatus?: 'paid' | 'unpaid' | 'partial' | 'refunded';
   notes: any[]; // Updated to be compatible with TransportBasic
+  totalAmount?: number; // Added to fix errors
 }
 
 export interface TransportReservation extends TransportBasic {
@@ -33,6 +34,8 @@ export interface TransportReservation extends TransportBasic {
   startTime: string;
   endTime: string;
   date: string;
+  time?: string; // Added to fix errors
+  service?: string; // Added to fix errors
   status: 'pending' | 'confirmed' | 'completed' | 'cancelled' | 'no-show';
   price: number;
   isPaid: boolean;
@@ -41,6 +44,8 @@ export interface TransportReservation extends TransportBasic {
   notes: any[]; // Updated to be compatible with TransportBasic
   createdAt: string;
   updatedAt?: string;
+  needsDriver?: boolean; // Added to fix errors
+  contractGenerated?: boolean; // Added to fix errors
 }
 
 export interface ReservationFilter {
@@ -66,3 +71,5 @@ export interface Address {
   lat?: number;
   lng?: number;
 }
+
+export type WebBookingStatus = 'pending' | 'confirmed' | 'canceled' | 'completed';

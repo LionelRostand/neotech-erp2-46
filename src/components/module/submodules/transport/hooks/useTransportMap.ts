@@ -1,149 +1,93 @@
 
-import { useRef, useCallback } from 'react';
-import mapboxgl from 'mapbox-gl';
-import 'mapbox-gl/dist/mapbox-gl.css';
-import { TransportVehicleWithLocation } from '../types/transport-types';
-import { getMarkerIconForVehicle, getVehiclePopupContent } from '../utils/map-utils';
+import { useEffect, useRef, useState } from 'react';
+import { TransportVehicleWithLocation } from '../types';
+import { getVehiclePopupContent } from '../utils/map-utils';
 
-// Mock MapBox token - should be replaced with an environment variable in production
-const MAPBOX_TOKEN = 'pk.eyJ1IjoibG92YWJsZWFpIiwiYSI6ImNrczczeXIybzFwZ2QycnNvemU5a3lrZ3UifQ.GwVUDxlh-WJtGWuUU-wZIQ';
+interface UseTransportMapOptions {
+  center?: [number, number];
+  zoom?: number;
+}
 
-mapboxgl.accessToken = MAPBOX_TOKEN;
+export const useTransportMap = (vehicles: TransportVehicleWithLocation[], options?: UseTransportMapOptions) => {
+  const mapInstance = useRef<any>(null);
+  const markerLayerRef = useRef<any>(null);
+  const markersRef = useRef<Map<string, any>>(new Map());
+  const [selectedVehicle, setSelectedVehicle] = useState<TransportVehicleWithLocation | null>(null);
+  const [isLoaded, setIsLoaded] = useState(false);
 
-export const useTransportMap = () => {
-  const mapContainer = useRef<HTMLDivElement>(null);
-  const map = useRef<mapboxgl.Map | null>(null);
-  const markers = useRef<mapboxgl.Marker[]>([]);
+  // Initialize the map
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
 
-  const clearMarkers = useCallback(() => {
-    markers.current.forEach(marker => marker.remove());
-    markers.current = [];
+    // Mock initialization for Leaflet map
+    const mockMap = {
+      setView: (center: [number, number], zoom: number) => {},
+      remove: () => {},
+      on: (event: string, callback: Function) => {},
+      flyTo: (center: [number, number], zoom: number) => {},
+    };
+
+    mapInstance.current = mockMap;
+    setIsLoaded(true);
+
+    return () => {
+      if (mapInstance.current) {
+        mapInstance.current.remove();
+      }
+    };
   }, []);
 
-  const initializeMap = useCallback(() => {
-    if (!mapContainer.current) return null;
-    
-    // Don't initialize the map if it already exists
-    if (map.current) return map.current;
+  // Update markers when vehicles change
+  useEffect(() => {
+    if (!isLoaded || !mapInstance.current) return;
 
-    map.current = new mapboxgl.Map({
-      container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/streets-v12',
-      center: [2.3522, 48.8566], // Paris
-      zoom: 12
-    });
+    // Clear existing markers
+    markersRef.current.clear();
 
-    map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
-    
-    return map.current;
-  }, []);
-
-  const addVehiclesToMap = useCallback((vehicles: TransportVehicleWithLocation[], onVehicleClick: (vehicle: TransportVehicleWithLocation) => void) => {
-    if (!map.current) return;
-    
-    clearMarkers();
-    
+    // Create new markers
     vehicles.forEach(vehicle => {
-      const { latitude, longitude } = vehicle.location.coordinates;
-      
-      const popup = new mapboxgl.Popup({ offset: 25 })
-        .setHTML(getVehiclePopupContent(vehicle));
-      
-      // Create marker element
-      const el = document.createElement('div');
-      el.className = 'vehicle-marker';
-      el.style.backgroundImage = `url('${getMarkerIconForVehicle(vehicle)}')`;
-      el.style.width = '25px';
-      el.style.height = '25px';
-      el.style.backgroundSize = '100%';
-      
-      // Create and add the marker
-      const marker = new mapboxgl.Marker(el)
-        .setLngLat([longitude, latitude])
-        .setPopup(popup)
-        .addTo(map.current);
-      
-      // Add click event to marker element
-      el.addEventListener('click', () => {
-        onVehicleClick(vehicle);
-      });
-      
-      markers.current.push(marker);
+      const position = [
+        vehicle.location.coordinates.latitude,
+        vehicle.location.coordinates.longitude
+      ] as [number, number];
+
+      // Create a marker for each vehicle
+      const marker = {
+        id: vehicle.id,
+        position,
+        bindPopup: (content: string) => {},
+        setIcon: (icon: any) => {},
+        on: (event: string, callback: Function) => {},
+      };
+
+      // Bind popup content
+      marker.bindPopup(getVehiclePopupContent(vehicle));
+
+      // Add marker to map
+      markersRef.current.set(vehicle.id, marker);
     });
+  }, [vehicles, isLoaded]);
 
-    // Add vehicle movement paths (simplified)
-    if (vehicles.length > 0 && map.current.getSource('route') === undefined) {
-      map.current.on('load', () => {
-        if (!map.current) return;
-        
-        // Mock route data
-        const routeData = {
-          type: 'Feature',
-          properties: {},
-          geometry: {
-            type: 'LineString',
-            coordinates: [
-              [2.3522, 48.8566],  // Paris center
-              [2.3442, 48.8496],  // Somewhere nearby
-              [2.3376, 48.8606]   // Another nearby location
-            ]
-          }
-        };
+  // Handle vehicle selection
+  const selectVehicle = (vehicleId: string) => {
+    const vehicle = vehicles.find(v => v.id === vehicleId) || null;
+    setSelectedVehicle(vehicle);
 
-        // Add source for vehicle route
-        map.current.addSource('route', {
-          type: 'geojson',
-          data: routeData as any
-        });
-
-        // Add route line layer
-        map.current.addLayer({
-          id: 'route',
-          type: 'line',
-          source: 'route',
-          layout: {
-            'line-join': 'round',
-            'line-cap': 'round'
-          },
-          paint: {
-            'line-color': '#0080ff',
-            'line-width': 3,
-            'line-opacity': 0.7
-          }
-        });
-        
-        // Add the vehicle radius (geofence)
-        map.current.addSource('vehicleRadius', {
-          type: 'geojson',
-          data: {
-            type: 'Feature',
-            properties: {},
-            geometry: {
-              type: 'Point',
-              coordinates: [2.3522, 48.8566] // Paris center
-            }
-          }
-        });
-        
-        map.current.addLayer({
-          id: 'vehicleRadius',
-          type: 'circle',
-          source: 'vehicleRadius',
-          paint: {
-            'circle-radius': 100,
-            'circle-color': '#0080ff',
-            'circle-opacity': 0.2,
-            'circle-stroke-width': 1,
-            'circle-stroke-color': '#0080ff'
-          }
-        });
-      });
+    if (vehicle && mapInstance.current) {
+      const position = [
+        vehicle.location.coordinates.latitude,
+        vehicle.location.coordinates.longitude
+      ] as [number, number];
+      
+      mapInstance.current.flyTo(position, 15);
     }
-  }, [clearMarkers]);
+  };
 
   return {
-    mapContainer,
-    initializeMap,
-    addVehiclesToMap
+    map: mapInstance.current,
+    markers: Array.from(markersRef.current.values()),
+    isLoaded,
+    selectedVehicle,
+    selectVehicle,
   };
 };

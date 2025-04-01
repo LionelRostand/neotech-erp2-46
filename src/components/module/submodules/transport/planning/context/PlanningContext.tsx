@@ -1,11 +1,72 @@
 
 import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
 import { TransportVehicle, TransportDriver, MaintenanceSchedule, MapExtensionRequest } from '../../types';
-import { useMaintenance } from '../../hooks/useMaintenance';
-import { useVehicles } from '../../hooks/useVehicles';
-import { useDrivers } from '../../hooks/useDrivers';
 import { useToast } from '@/hooks/use-toast';
-import { mockMaintenanceSchedules, mockExtensionRequests, mockDrivers, mockVehicles } from '../mockData';
+
+// Mock data for planning
+const mockVehicles: TransportVehicle[] = [
+  {
+    id: "veh-001",
+    name: "Mercedes Classe E",
+    type: "sedan",
+    capacity: 4,
+    licensePlate: "AB-123-CD",
+    available: true,
+    status: "active",
+    notes: []
+  },
+  // More mock vehicles...
+];
+
+const mockDrivers: TransportDriver[] = [
+  {
+    id: "drv-001",
+    firstName: "Jean",
+    lastName: "Dupont",
+    licenseNumber: "123456789",
+    licenseExpiry: "2025-06-15",
+    phone: "06 12 34 56 78",
+    email: "jean.dupont@example.com",
+    status: "active",
+    rating: 4.8,
+    available: true,
+    onLeave: false,
+    experience: 4,
+    language: ["French", "English"],
+    preferredVehicleType: ["sedan"],
+    notes: []
+  },
+  // More mock drivers...
+];
+
+const mockMaintenanceSchedules: MaintenanceSchedule[] = [
+  {
+    id: "maint-001",
+    vehicleId: "veh-002",
+    type: "oil-change",
+    description: "Changement d'huile planifié",
+    scheduledDate: "2023-12-15",
+    estimatedDuration: 120,
+    status: "scheduled",
+    notes: [],
+    technician: "Paul Dupuis",
+    technicianAssigned: true,
+    createdAt: "2023-11-20T10:00:00Z"
+  },
+  // More mock maintenance schedules...
+];
+
+const mockExtensionRequests: MapExtensionRequest[] = [
+  {
+    id: "ext-001",
+    driverId: "drv-001",
+    reason: "Traffic exceptionnel sur l'A1",
+    requestedAt: "2023-11-25T14:30:00Z",
+    status: "pending",
+    estimatedDelay: 45
+  },
+  // More mock extension requests...
+];
 
 export interface PlanningContextType {
   isLoading: boolean;
@@ -36,6 +97,9 @@ export const usePlanningContext = () => {
   }
   return context;
 };
+
+// Alias for components that were using usePlanning
+export const usePlanning = usePlanningContext;
 
 interface PlanningProviderProps {
   children: ReactNode;
@@ -72,7 +136,7 @@ export const PlanningProvider: React.FC<PlanningProviderProps> = ({ children }) 
       
       // Filter available drivers
       const availableDrivers = mockDrivers.filter(
-        driver => driver.available && driver.status !== "on-leave" && driver.status !== "off-duty"
+        driver => driver.available && driver.status !== "off-duty"
       );
       
     } catch (error) {

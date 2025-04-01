@@ -41,7 +41,14 @@ export type {
 } from './client-types';
 
 // Re-export reservation types
-export * from './reservation-types';
+export type {
+  Reservation,
+  TransportReservation,
+  ReservationFilter,
+  TransportReservationStatus,
+  Address,
+  WebBookingStatus as ReservationWebBookingStatus
+} from './reservation-types';
 
 // Re-export planning types
 export * from './planning-types';

@@ -58,3 +58,26 @@ export const getVehiclePopupContent = (vehicle: TransportVehicleWithLocation): s
 export const normalizeCoordinates = (location: VehicleLocation): [number, number] => {
   return [location.coordinates.latitude, location.coordinates.longitude];
 };
+
+// Create a marker on the map
+export const createMarker = (vehicle: TransportVehicleWithLocation): any => {
+  // This is a stub function that would be implemented in a real app
+  // with Leaflet or other mapping library
+  return {
+    id: vehicle.id,
+    vehicleId: vehicle.id,
+    position: normalizeCoordinates(vehicle.location),
+    icon: getMarkerIconForVehicle(vehicle.status, vehicle.location.status),
+    popupContent: getVehiclePopupContent(vehicle)
+  };
+};
+
+// Update marker position
+export const updateMarkerPosition = (marker: any, location: VehicleLocation): any => {
+  // This is a stub function that would be implemented in a real app
+  if (!marker) return null;
+  return {
+    ...marker,
+    position: normalizeCoordinates(location)
+  };
+};

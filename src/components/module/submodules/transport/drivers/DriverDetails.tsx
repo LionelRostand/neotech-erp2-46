@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -14,22 +13,19 @@ interface DriverDetailsProps {
   driver: TransportDriver;
 }
 
-const DriverDetails: React.FC<DriverDetailsProps> = ({ driver: initialDriver }) => {
+const DriverDetails: React.FC<{ driver: TransportDriver }> = ({ driver }) => {
   const [isEditing, setIsEditing] = useState(false);
-  const [driver, setDriver] = useState<TransportDriver>(initialDriver);
+  const [driver, setDriver] = useState<TransportDriver>(driver);
   const { toast } = useToast();
   
-  // Format date from YYYY-MM-DD to local date
   const formatDate = (dateStr: string) => {
     return new Date(dateStr).toLocaleDateString('fr-FR', { dateStyle: 'long' });
   };
   
-  // Get the initials from first name and last name
   const getInitials = (firstName: string, lastName: string) => {
     return `${firstName.charAt(0)}${lastName.charAt(0)}`;
   };
   
-  // Get badge for license expiry status
   const getLicenseExpiryBadge = () => {
     const expiryDate = new Date(driver.licenseExpiry);
     const today = new Date();
@@ -176,16 +172,12 @@ const DriverDetails: React.FC<DriverDetailsProps> = ({ driver: initialDriver }) 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-3">
               <h5 className="text-sm font-medium">Types de véhicules préférés</h5>
-              <div className="flex flex-wrap gap-2">
-                {driver.preferredVehicleTypes ? (
-                  driver.preferredVehicleTypes.map((type, index) => (
-                    <Badge key={index} variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-                      {type}
-                    </Badge>
-                  ))
-                ) : (
-                  <span className="text-sm text-muted-foreground">Aucune préférence spécifiée</span>
-                )}
+              <div className="flex flex-wrap gap-1">
+                {driver.preferredVehicleType && driver.preferredVehicleType.map((type, idx) => (
+                  <Badge key={idx} variant="outline" className="bg-gray-100">
+                    {formatVehicleType(type)}
+                  </Badge>
+                ))}
               </div>
             </div>
             

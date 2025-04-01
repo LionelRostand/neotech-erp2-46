@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -5,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CarFront, Plus, Search, Filter, FileText, Wrench, AlertTriangle } from "lucide-react";
-import { TransportVehicle } from './types/transport-types';
+import { TransportVehicle } from './types';
 import VehiclesTable from './fleet/VehiclesTable';
 import VehicleDetails from './fleet/VehicleDetails';
 import MaintenanceHistoryList from './fleet/MaintenanceHistoryList';
@@ -30,7 +31,8 @@ const mockVehicles: TransportVehicle[] = [
       provider: "AXA",
       policyNumber: "POL-12345",
       expiryDate: "2023-12-31"
-    }
+    },
+    notes: [] // Added notes array
   },
   {
     id: "veh-002",
@@ -48,7 +50,8 @@ const mockVehicles: TransportVehicle[] = [
       provider: "Allianz",
       policyNumber: "POL-67890",
       expiryDate: "2023-11-15"
-    }
+    },
+    notes: [] // Added notes array
   },
   {
     id: "veh-003",
@@ -66,7 +69,8 @@ const mockVehicles: TransportVehicle[] = [
       provider: "Generali",
       policyNumber: "POL-45678",
       expiryDate: "2024-01-20"
-    }
+    },
+    notes: [] // Added notes array
   },
   {
     id: "veh-004",
@@ -84,7 +88,8 @@ const mockVehicles: TransportVehicle[] = [
       provider: "AXA",
       policyNumber: "POL-98765",
       expiryDate: "2023-10-31"
-    }
+    },
+    notes: [] // Added notes array
   },
   {
     id: "veh-005",
@@ -102,7 +107,8 @@ const mockVehicles: TransportVehicle[] = [
       provider: "Maif",
       policyNumber: "POL-54321",
       expiryDate: "2024-03-15"
-    }
+    },
+    notes: [] // Added notes array
   }
 ];
 
@@ -158,17 +164,17 @@ const mockMaintenanceHistory = [
   }
 ];
 
-// Mock incidents with corrected union types and added status field
+// Mock incidents with corrected union types
 const mockIncidents = [
   {
     id: "inc-001",
     vehicleId: "veh-002",
     date: "2023-06-15",
     description: "Rayure portière avant droite",
-    severity: "minor" as "minor",
+    severity: "low" as "low", // Changed from "minor" to "low" to match enum
     driverName: "Sophie Martin",
     clientName: "Marie Legrand",
-    damageDetails: "Rayure superficielle de 20cm",
+    damageDescription: "Rayure superficielle de 20cm",
     repairCost: 150,
     insuranceClaim: false,
     resolved: true,
@@ -179,10 +185,10 @@ const mockIncidents = [
     vehicleId: "veh-005",
     date: "2023-09-05",
     description: "Problème électrique - véhicule immobilisé",
-    severity: "major" as "major",
+    severity: "high" as "high", // Changed from "major" to "high" to match enum
     driverName: "Nicolas Durand",
     clientName: "Sophie Bernard",
-    damageDetails: "Défaillance du système électrique - remorquage nécessaire",
+    damageDescription: "Défaillance du système électrique - remorquage nécessaire",
     repairCost: 1800,
     insuranceClaim: true,
     resolved: false,

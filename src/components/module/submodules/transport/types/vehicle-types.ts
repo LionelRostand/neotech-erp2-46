@@ -15,7 +15,7 @@ export interface TransportVehicle extends TransportBasic {
   insuranceExpiryDate?: string;
   lastInspectionDate?: string;
   fuelType?: string;
-  notes: VehicleNote[] | any[]; // Updated to be compatible with TransportBasic
+  notes: VehicleNote[] | any[]; // Allow empty arrays for mock data
   purchaseDate?: string;
   lastServiceDate?: string;
   nextServiceDate?: string;
@@ -69,7 +69,7 @@ export interface MaintenanceSchedule extends TransportBasic {
   scheduledDate: string;
   estimatedDuration: number; // in minutes
   status: 'pending' | 'in-progress' | 'scheduled' | 'completed' | 'cancelled';
-  notes: any[]; // Updated to be compatible with TransportBasic
+  notes: any[]; // Allow any[] to be compatible with TransportBasic
   startDate?: string;
   endDate?: string;
   technician?: string;

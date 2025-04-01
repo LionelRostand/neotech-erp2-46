@@ -19,6 +19,7 @@ export interface TransportClient extends TransportBasic {
   statistics?: ClientStatistics;
   webBookings?: WebBooking[];
   name?: string; // Added name property
+  loyaltyPoints?: number; // Added to fix errors
 }
 
 export interface ClientNote extends Note {
