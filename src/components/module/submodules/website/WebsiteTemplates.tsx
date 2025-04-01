@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from '@/components/ui/button';
 import { Download, Check, ExternalLink } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
+import { Link } from 'react-router-dom';
 
 interface Template {
   id: string;
@@ -62,6 +63,14 @@ const templates: Template[] = [
     previewImage: 'https://images.unsplash.com/photo-1607082349566-187342175e2f?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.0.3',
     category: 'E-commerce',
     tags: ['boutique', 'e-commerce', 'vente']
+  },
+  {
+    id: 'blog-standard',
+    name: 'Blog Standard',
+    description: 'Layout classique pour blog avec sections articles et catégories.',
+    previewImage: 'https://images.unsplash.com/photo-1499750310107-5fef28a66643?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.0.3',
+    category: 'Blog',
+    tags: ['blog', 'articles', 'contenu']
   }
 ];
 
@@ -197,9 +206,16 @@ const WebsiteTemplates = () => {
               </div>
             </CardContent>
             <CardFooter className="flex justify-between border-t pt-4">
-              <Button variant="outline" size="sm" className="w-1/2" onClick={() => window.open(`/modules/website/templates/${template.id}`, '_blank')}>
-                <ExternalLink className="h-4 w-4 mr-2" />
-                Aperçu
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="w-1/2"
+                asChild
+              >
+                <Link to={`/modules/website/templates/${template.id}`}>
+                  <ExternalLink className="h-4 w-4 mr-2" />
+                  Aperçu
+                </Link>
               </Button>
               <Button 
                 variant="default" 
