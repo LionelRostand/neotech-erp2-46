@@ -9,7 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import StatusBadge from '@/components/StatusBadge';
-import { formatPackageStatus, getStatusColor } from './mockTrackingData';
+import { formatPackageStatus, getStatusColor } from './utils/statusUtils';
 import { mockPackages } from '../mockPackages';
 
 interface TrackingHistoryProps {

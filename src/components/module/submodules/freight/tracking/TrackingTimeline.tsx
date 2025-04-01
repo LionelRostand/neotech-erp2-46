@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { TrackingEvent } from '@/types/freight';
-import { formatPackageStatus, getStatusColor } from './mockTrackingData';
+import { formatPackageStatus, getStatusColor } from './utils/statusUtils';
 import { format, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import StatusBadge from '@/components/StatusBadge';

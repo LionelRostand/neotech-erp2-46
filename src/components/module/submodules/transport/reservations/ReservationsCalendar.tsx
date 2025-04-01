@@ -1,12 +1,17 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Calendar } from "@/components/ui/calendar";
 import { format, isEqual, parseISO } from "date-fns";
 import { fr } from "date-fns/locale";
-import { Reservation } from '../types';
+import { Reservation, getAddressString } from '../types';
+import { Button } from '@/components/ui/button';
+import { ChevronLeft, ChevronRight, Eye } from 'lucide-react';
+import { Tabs, TabsList, TabsContent, TabsTrigger } from '@/components/ui/tabs';
+import ViewReservationDetailsDialog from './ViewReservationDetailsDialog';
 
-const mockReservations: Reservation[] = [
+const mockReservations: Partial<Reservation>[] = [
   {
     id: "rsv-001",
     client: "cli-001",
@@ -18,6 +23,7 @@ const mockReservations: Reservation[] = [
     pickupLocation: { address: "15 rue de Rivoli, 75001 Paris" },
     dropoffLocation: { address: "8 avenue des Champs-Élysées, 75008 Paris" },
     status: "confirmed",
+    serviceType: "airport-transfer",
     price: 250,
     paymentStatus: "paid",
     isPaid: true,
@@ -38,7 +44,9 @@ const mockReservations: Reservation[] = [
     pickupLocation: { address: "Aéroport CDG Terminal 2E, Paris" },
     dropoffLocation: { address: "25 rue du Faubourg Saint-Honoré, 75008 Paris" },
     status: "pending",
-    paymentStatus: "pending",
+    serviceType: "airport-transfer",
+    price: 120,
+    paymentStatus: "unpaid",
     isPaid: false,
     notes: [],
     createdAt: "2023-11-01T09:45:00",
@@ -57,6 +65,8 @@ const mockReservations: Reservation[] = [
     pickupLocation: { address: "Gare de Lyon, Paris" },
     dropoffLocation: { address: "Gare de Lyon, Paris" },
     status: "completed",
+    serviceType: "hourly-hire",
+    price: 320,
     paymentStatus: "paid",
     isPaid: true,
     notes: [{ content: "Location sans chauffeur" }],
@@ -76,6 +86,8 @@ const mockReservations: Reservation[] = [
     pickupLocation: { address: "Hôtel Ritz, Place Vendôme, Paris" },
     dropoffLocation: { address: "Opéra Garnier, Paris" },
     status: "confirmed",
+    serviceType: "point-to-point",
+    price: 180,
     paymentStatus: "partial",
     isPaid: false,
     notes: [],
@@ -95,7 +107,9 @@ const mockReservations: Reservation[] = [
     pickupLocation: { address: "Gare Montparnasse, Paris" },
     dropoffLocation: { address: "Gare Montparnasse, Paris" },
     status: "pending",
-    paymentStatus: "pending",
+    serviceType: "day-tour",
+    price: 420,
+    paymentStatus: "unpaid",
     isPaid: false,
     notes: [{ content: "Location sans chauffeur, kilométrage illimité" }],
     createdAt: "2023-11-07T10:10:00",
@@ -107,14 +121,14 @@ const mockReservations: Reservation[] = [
 
 const ReservationsCalendar: React.FC = () => {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
-  const [selectedReservation, setSelectedReservation] = useState<Reservation | null>(null);
+  const [selectedReservation, setSelectedReservation] = useState<Partial<Reservation> | null>(null);
   const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false);
   const [calendarView, setCalendarView] = useState<'month' | 'week' | 'day'>('month');
   
   const getReservationsForDate = (date: Date) => {
     return mockReservations.filter(reservation => {
-      const start = new Date(reservation.startDate);
-      const end = new Date(reservation.endDate);
+      const start = new Date(reservation.startDate!);
+      const end = new Date(reservation.endDate!);
       return date >= start && date <= end;
     });
   };
@@ -140,7 +154,7 @@ const ReservationsCalendar: React.FC = () => {
     }
   };
 
-  const handleViewDetails = (reservation: Reservation) => {
+  const handleViewDetails = (reservation: Partial<Reservation>) => {
     setSelectedReservation(reservation);
     setIsDetailsDialogOpen(true);
   };
@@ -232,7 +246,7 @@ const ReservationsCalendar: React.FC = () => {
                         className="p-2 border rounded-md hover:bg-muted transition-colors flex justify-between items-center"
                       >
                         <div>
-                          <Badge className={getStatusColor(reservation.status)}>
+                          <Badge className={getStatusColor(reservation.status || '')}>
                             {reservation.status === 'confirmed' ? 'Confirmée' :
                             reservation.status === 'pending' ? 'En attente' :
                             reservation.status === 'completed' ? 'Terminée' :
@@ -296,7 +310,7 @@ const ReservationsCalendar: React.FC = () => {
                             key={reservation.id}
                             className="text-xs p-1 rounded bg-muted overflow-hidden text-ellipsis whitespace-nowrap"
                           >
-                            <Badge className={getStatusColor(reservation.status)} variant="secondary" />
+                            <Badge className={getStatusColor(reservation.status || '')} variant="secondary" />
                             <span className="ml-1">{reservation.clientName}</span>
                           </div>
                         ))}
@@ -329,7 +343,7 @@ const ReservationsCalendar: React.FC = () => {
                     >
                       <div className="flex justify-between items-start">
                         <div>
-                          <Badge className={getStatusColor(reservation.status)}>
+                          <Badge className={getStatusColor(reservation.status || '')}>
                             {reservation.status === 'confirmed' ? 'Confirmée' :
                              reservation.status === 'pending' ? 'En attente' :
                              reservation.status === 'completed' ? 'Terminée' :
@@ -364,7 +378,7 @@ const ReservationsCalendar: React.FC = () => {
         <ViewReservationDetailsDialog
           open={isDetailsDialogOpen}
           onOpenChange={setIsDetailsDialogOpen}
-          reservation={selectedReservation}
+          reservation={selectedReservation as any}
         />
       )}
     </div>

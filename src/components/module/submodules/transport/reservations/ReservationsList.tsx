@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -8,7 +9,7 @@ import ViewReservationDetailsDialog from './ViewReservationDetailsDialog';
 import { toast } from "sonner";
 
 // Mock data pour les réservations
-const mockReservations: Reservation[] = [
+const mockReservations: Partial<Reservation>[] = [
   {
     id: "rsv-001",
     client: "cli-001",
@@ -20,6 +21,7 @@ const mockReservations: Reservation[] = [
     pickupLocation: { address: "15 rue de Rivoli, 75001 Paris" },
     dropoffLocation: { address: "8 avenue des Champs-Élysées, 75008 Paris" },
     status: "confirmed",
+    serviceType: "airport-transfer",
     price: 250,
     paymentStatus: "paid",
     isPaid: true,
@@ -41,12 +43,16 @@ const mockReservations: Reservation[] = [
     pickupLocation: { address: "Aéroport CDG Terminal 2E, Paris" },
     dropoffLocation: { address: "25 rue du Faubourg Saint-Honoré, 75008 Paris" },
     status: "pending",
+    serviceType: "airport-transfer",
     price: 120,
-    paymentStatus: "pending",
+    paymentStatus: "unpaid",
     isPaid: false,
     notes: [],
     createdAt: "2023-11-01T09:45:00",
-    updatedAt: "2023-11-01T09:45:00"
+    updatedAt: "2023-11-01T09:45:00",
+    pickup: "Aéroport CDG Terminal 2E, Paris",
+    dropoff: "25 rue du Faubourg Saint-Honoré, 75008 Paris",
+    totalAmount: 120
   },
   {
     id: "rsv-003",
@@ -59,12 +65,16 @@ const mockReservations: Reservation[] = [
     pickupLocation: { address: "Gare de Lyon, Paris" },
     dropoffLocation: { address: "Gare de Lyon, Paris" },
     status: "completed",
+    serviceType: "hourly-hire",
     price: 320,
     paymentStatus: "paid",
     isPaid: true,
     notes: [{ content: "Location sans chauffeur" }],
     createdAt: "2023-10-20T11:15:00",
-    updatedAt: "2023-11-10T18:30:00"
+    updatedAt: "2023-11-10T18:30:00",
+    pickup: "Gare de Lyon, Paris",
+    dropoff: "Gare de Lyon, Paris",
+    totalAmount: 320
   },
   {
     id: "rsv-004",
@@ -77,12 +87,16 @@ const mockReservations: Reservation[] = [
     pickupLocation: { address: "Hôtel Ritz, Place Vendôme, Paris" },
     dropoffLocation: { address: "Opéra Garnier, Paris" },
     status: "confirmed",
+    serviceType: "point-to-point",
     price: 180,
     paymentStatus: "partial",
     isPaid: false,
     notes: [],
     createdAt: "2023-11-05T16:20:00",
-    updatedAt: "2023-11-05T16:20:00"
+    updatedAt: "2023-11-05T16:20:00",
+    pickup: "Hôtel Ritz, Place Vendôme, Paris",
+    dropoff: "Opéra Garnier, Paris",
+    totalAmount: 180
   },
   {
     id: "rsv-005",
@@ -95,17 +109,21 @@ const mockReservations: Reservation[] = [
     pickupLocation: { address: "Gare Montparnasse, Paris" },
     dropoffLocation: { address: "Gare Montparnasse, Paris" },
     status: "pending",
+    serviceType: "day-tour",
     price: 420,
-    paymentStatus: "pending",
+    paymentStatus: "unpaid",
     isPaid: false,
     notes: [{ content: "Location sans chauffeur, kilométrage illimité" }],
     createdAt: "2023-11-07T10:10:00",
-    updatedAt: "2023-11-07T10:10:00"
+    updatedAt: "2023-11-07T10:10:00",
+    pickup: "Gare Montparnasse, Paris",
+    dropoff: "Gare Montparnasse, Paris",
+    totalAmount: 420
   }
 ];
 
 const ReservationsList: React.FC = () => {
-  const [selectedReservation, setSelectedReservation] = useState<Reservation | null>(null);
+  const [selectedReservation, setSelectedReservation] = useState<Partial<Reservation> | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false);
 
@@ -141,7 +159,7 @@ const ReservationsList: React.FC = () => {
         return <Badge variant="outline" className="bg-green-100 text-green-800 border-green-300">Payée</Badge>;
       case 'partial':
         return <Badge variant="outline" className="bg-yellow-100 text-yellow-800 border-yellow-300">Partielle</Badge>;
-      case 'pending':
+      case 'unpaid':
         return <Badge variant="outline" className="bg-gray-100 text-gray-800 border-gray-300">En attente</Badge>;
       default:
         return <Badge variant="outline">Inconnue</Badge>;
@@ -186,24 +204,24 @@ const ReservationsList: React.FC = () => {
               <TableRow key={reservation.id}>
                 <TableCell className="font-medium">{reservation.id}</TableCell>
                 <TableCell>{reservation.clientName}</TableCell>
-                <TableCell>{formatDate(reservation.startDate)}</TableCell>
-                <TableCell>{formatDate(reservation.endDate)}</TableCell>
+                <TableCell>{formatDate(reservation.startDate || '')}</TableCell>
+                <TableCell>{formatDate(reservation.endDate || '')}</TableCell>
                 <TableCell>{reservation.totalAmount} €</TableCell>
-                <TableCell>{getStatusBadge(reservation.status)}</TableCell>
-                <TableCell>{getPaymentBadge(reservation.paymentStatus)}</TableCell>
+                <TableCell>{getStatusBadge(reservation.status || '')}</TableCell>
+                <TableCell>{getPaymentBadge(reservation.paymentStatus || '')}</TableCell>
                 <TableCell className="text-right">
                   <div className="flex justify-end gap-2">
                     <Button 
                       variant="ghost" 
                       size="sm"
-                      onClick={() => handleEditClick(reservation)}
+                      onClick={() => handleEditClick(reservation as Reservation)}
                     >
                       Modifier
                     </Button>
                     <Button 
                       variant="ghost" 
                       size="sm"
-                      onClick={() => handleViewDetailsClick(reservation)}
+                      onClick={() => handleViewDetailsClick(reservation as Reservation)}
                     >
                       Détails
                     </Button>
@@ -220,12 +238,12 @@ const ReservationsList: React.FC = () => {
           <EditReservationDialog
             open={isEditDialogOpen}
             onOpenChange={setIsEditDialogOpen}
-            reservation={selectedReservation}
+            reservation={selectedReservation as Reservation}
           />
           <ViewReservationDetailsDialog
             open={isDetailsDialogOpen}
             onOpenChange={setIsDetailsDialogOpen}
-            reservation={selectedReservation}
+            reservation={selectedReservation as Reservation}
           />
         </>
       )}

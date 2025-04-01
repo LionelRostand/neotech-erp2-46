@@ -47,6 +47,7 @@ export type {
   ReservationFilter,
   TransportReservationStatus,
   Address,
+  PaymentStatus,
   WebBookingStatus as ReservationWebBookingStatus
 } from './reservation-types';
 

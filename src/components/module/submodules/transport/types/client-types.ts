@@ -1,3 +1,4 @@
+
 import { TransportBasic, Note } from './base-types';
 import { TransportService } from './base-types';
 
@@ -105,7 +106,14 @@ export interface WebBooking {
   vehicleTypePreference?: string;
 }
 
-export type WebBookingStatus = 'pending' | 'confirmed' | 'canceled' | 'completed' | 'new' | 'cancelled' | 'processed';
+export type WebBookingStatus = 
+  | 'pending' 
+  | 'confirmed' 
+  | 'canceled' 
+  | 'completed' 
+  | 'new' 
+  | 'cancelled' 
+  | 'processed'; // Added the missing status values
 
 export interface WebBookingService {
   id: string;

@@ -1,75 +1,76 @@
 
 import { TransportBasic } from './base-types';
-import { TransportClient } from './client-types';
+import { TransportService } from './base-types';
+import { WebBookingStatus } from './client-types';
 
-export interface Reservation extends TransportBasic {
+export interface TransportReservation extends TransportBasic {
+  clientId: string;
+  vehicleId: string;
+  driverId?: string;
+  date: string;
+  time: string;
+  status: TransportReservationStatus;
+  pickup: string | { address: string };
+  dropoff: string | { address: string };
+  needsDriver: boolean;
+  service?: TransportService | { name: string };
+  specialRequirements?: string;
+  createdBy?: string;
+  totalPrice?: number;
+  notes?: string;
+}
+
+export interface Reservation {
+  id: string;
   client: string;
   clientName: string;
   vehicle: string;
   driver: string;
   startDate: string;
   endDate: string;
+  pickupLocation: Address;
+  dropoffLocation: Address;
   status: string;
-  price: number;
+  price?: number;
   serviceType: string;
-  createdAt: string;
+  paymentStatus?: PaymentStatus;
+  isPaid?: boolean;
+  notes: any[];
+  createdAt?: string;
   updatedAt?: string;
-  pickupLocation?: { address: string };
-  dropoffLocation?: { address: string };
   pickup: string;
   dropoff: string;
-  isPaid: boolean;
-  paymentStatus?: 'paid' | 'unpaid' | 'partial' | 'refunded';
-  notes: any[]; // Updated to be compatible with TransportBasic
-  totalAmount?: number; // Added to fix errors
+  totalAmount: number;
 }
-
-export interface TransportReservation extends TransportBasic {
-  clientId: string;
-  clientName: string;
-  vehicleId: string;
-  driverId?: string;
-  pickup: string;
-  dropoff: string;
-  startTime: string;
-  endTime: string;
-  date: string;
-  time?: string; // Added to fix errors
-  service?: string; // Added to fix errors
-  status: 'pending' | 'confirmed' | 'completed' | 'cancelled' | 'no-show';
-  price: number;
-  isPaid: boolean;
-  paymentMethod?: string;
-  specialRequirements?: string;
-  notes: any[]; // Updated to be compatible with TransportBasic
-  createdAt: string;
-  updatedAt?: string;
-  needsDriver?: boolean; // Added to fix errors
-  contractGenerated?: boolean; // Added to fix errors
-}
-
-export interface ReservationFilter {
-  status?: string;
-  dateFrom?: string;
-  dateTo?: string;
-  client?: string;
-  vehicle?: string;
-  driver?: string;
-}
-
-export function getAddressString(address: string | { address: string }): string {
-  if (typeof address === 'string') {
-    return address;
-  }
-  return address?.address || '';
-}
-
-export type TransportReservationStatus = 'pending' | 'confirmed' | 'completed' | 'cancelled' | 'no-show';
 
 export interface Address {
   address: string;
-  lat?: number;
-  lng?: number;
+  city?: string;
+  state?: string;
+  postalCode?: string;
+  country?: string;
+  coordinates?: {
+    latitude: number;
+    longitude: number;
+  };
 }
 
-export type WebBookingStatus = 'pending' | 'confirmed' | 'canceled' | 'completed';
+export type TransportReservationStatus = 'pending' | 'confirmed' | 'in-progress' | 'completed' | 'no-show' | 'cancelled';
+export type PaymentStatus = 'paid' | 'unpaid' | 'partial' | 'refunded';
+
+export interface ReservationFilter {
+  status?: TransportReservationStatus[];
+  startDate?: Date;
+  endDate?: Date;
+  client?: string;
+  vehicle?: string;
+  driver?: string;
+  search?: string;
+}
+
+// Helper function to get a formatted address string from an Address object
+export const getAddressString = (location?: Address | string): string => {
+  if (!location) return '';
+  if (typeof location === 'string') return location;
+  return location.address || '';
+};

@@ -134,7 +134,7 @@ const ShipmentMap: React.FC<ShipmentMapProps> = ({ events, trackingCode }) => {
         if (markers.length > 1) {
           const points = events
             .filter(event => event.location)
-            .map(event => [event.location.latitude, event.location.longitude]);
+            .map(event => [event.location.latitude, event.location.longitude] as [number, number]);
           
           L.polyline(points, { 
             color: '#3b82f6', 
@@ -155,23 +155,26 @@ const ShipmentMap: React.FC<ShipmentMapProps> = ({ events, trackingCode }) => {
         }
         
         // Add package info card
-        const infoCard = L.control({ position: 'bottomleft' });
-        infoCard.onAdd = function() {
-          const div = L.DomUtil.create('div', 'info-card');
-          div.innerHTML = `
-            <div class="bg-white p-2 rounded shadow-md text-xs">
-              <div class="font-bold">Colis: ${trackingCode}</div>
-              <div>Mise à jour: ${new Date(events[0].timestamp).toLocaleDateString('fr-FR', { 
-                day: 'numeric', 
-                month: 'short',
-                hour: '2-digit', 
-                minute: '2-digit'
-              })}</div>
-            </div>
-          `;
-          return div;
-        };
-        infoCard.addTo(map);
+        const infoCardControl = L.Control.extend({
+          options: { position: 'bottomleft' },
+          onAdd: function(map: any) {
+            const div = L.DomUtil.create('div', 'info-card');
+            div.innerHTML = `
+              <div class="bg-white p-2 rounded shadow-md text-xs">
+                <div class="font-bold">Colis: ${trackingCode}</div>
+                <div>Mise à jour: ${new Date(events[0].timestamp).toLocaleDateString('fr-FR', { 
+                  day: 'numeric', 
+                  month: 'short',
+                  hour: '2-digit', 
+                  minute: '2-digit'
+                })}</div>
+              </div>
+            `;
+            return div;
+          }
+        });
+        
+        new infoCardControl().addTo(map);
         
       } catch (error) {
         console.error("Erreur lors de l'initialisation de la carte", error);

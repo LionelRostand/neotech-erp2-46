@@ -4,7 +4,7 @@ import { PackageStatus } from '@/types/freight';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
-import { formatPackageStatus } from './mockTrackingData';
+import { formatPackageStatus } from './utils/statusUtils';
 import { Badge } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 

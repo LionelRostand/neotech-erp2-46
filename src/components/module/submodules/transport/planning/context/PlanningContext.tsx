@@ -39,6 +39,7 @@ interface PlanningContextType {
   availabilityDate: Date;
   setAvailabilityDate: React.Dispatch<React.SetStateAction<Date>>;
   filteredDrivers: TransportDriver[];
+  isLoading: boolean; // Add isLoading property
 }
 
 // Create the context
@@ -55,6 +56,7 @@ export const PlanningProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     extensionRequests as unknown as MapExtensionRequest[]
   );
   const [driversData, setDriversData] = useState<TransportDriver[]>(drivers);
+  const [isLoading, setIsLoading] = useState<boolean>(false); // Add isLoading state
   
   // State for selected items
   const [selectedVehicle, setSelectedVehicle] = useState<TransportVehicle | null>(null);
@@ -83,10 +85,14 @@ export const PlanningProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   // Refresh data function
   const refreshData = useCallback(() => {
     // In a real app, this would fetch fresh data from an API
-    setVehiclesData(vehicles);
-    setMaintenanceSchedulesData(maintenanceSchedules as unknown as VehicleMaintenanceSchedule[]);
-    setExtensionRequestsData(extensionRequests as unknown as MapExtensionRequest[]);
-    setDriversData(drivers);
+    setIsLoading(true);
+    setTimeout(() => {
+      setVehiclesData(vehicles);
+      setMaintenanceSchedulesData(maintenanceSchedules as unknown as VehicleMaintenanceSchedule[]);
+      setExtensionRequestsData(extensionRequests as unknown as MapExtensionRequest[]);
+      setDriversData(drivers);
+      setIsLoading(false);
+    }, 500);
   }, []);
   
   // Function to add maintenance
@@ -152,6 +158,7 @@ export const PlanningProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     availabilityDate,
     setAvailabilityDate,
     filteredDrivers,
+    isLoading, // Include isLoading in the context value
   };
 
   return <PlanningContext.Provider value={value}>{children}</PlanningContext.Provider>;

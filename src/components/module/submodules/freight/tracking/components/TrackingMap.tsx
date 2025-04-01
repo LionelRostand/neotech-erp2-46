@@ -1,7 +1,7 @@
 
 import React, { useEffect, useRef } from 'react';
 import { TrackingEvent } from '@/types/freight';
-import { getTrackingMarkerHtml, getStatusColor } from '../utils/statusUtils';
+import { getTrackingMarkerHtml, getStatusColor, formatPackageStatus } from '../utils/statusUtils';
 import { configureLeafletIcons } from '@/components/module/submodules/transport/utils/leaflet-icon-setup';
 import 'leaflet/dist/leaflet.css';
 
@@ -94,7 +94,7 @@ const TrackingMap: React.FC<TrackingMapProps> = ({ events }) => {
         if (markers.length > 1) {
           const points = eventsWithLocation
             .filter(event => event.location)
-            .map(event => [event.location!.latitude, event.location!.longitude]);
+            .map(event => [event.location!.latitude, event.location!.longitude] as [number, number]);
           
           L.polyline(points, { 
             color: '#3b82f6', 
