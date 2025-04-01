@@ -1,5 +1,4 @@
 
-
 // Define client-related types for the Transport module
 
 export interface Client {
@@ -12,6 +11,8 @@ export interface Client {
   lastActivity?: string;
   loyaltyPoints: number;
   status: 'active' | 'inactive';
+  firstName?: string;  // Added for compatibility
+  lastName?: string;   // Added for compatibility
 }
 
 export interface LoyaltyTransaction {
@@ -43,6 +44,8 @@ export interface ClientFilters {
 // Adding these types for compatibility with the existing imports
 export interface TransportClient extends Client {
   // Additional properties from index.ts import
+  firstName?: string;
+  lastName?: string;
 }
 
 export interface ClientNote {
@@ -52,4 +55,3 @@ export interface ClientNote {
   createdAt: string;
   createdBy: string;
 }
-

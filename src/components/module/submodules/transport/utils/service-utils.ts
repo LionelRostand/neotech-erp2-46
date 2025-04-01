@@ -14,8 +14,8 @@ export const getServiceDisplayName = (serviceType: TransportService): string => 
 
 // Convert WebBookingService to TransportService
 export const convertToTransportService = (service: WebBookingService): TransportService => {
-  // Return the serviceType as a TransportService
-  return service.serviceType as TransportService;
+  // Return the serviceType as a TransportService or the id if serviceType is not available
+  return (service.serviceType as TransportService) || service.id;
 };
 
 // Add missing functions

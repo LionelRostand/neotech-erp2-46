@@ -1,3 +1,4 @@
+
 // Define types related to reservations and booking for the Transport module
 
 export interface LocationType {
@@ -15,6 +16,7 @@ export interface WebBookingService {
   price: number;
   duration: number;
   available: boolean;
+  serviceType?: string; // Added serviceType property
 }
 
 export interface WebBooking {
@@ -24,8 +26,11 @@ export interface WebBooking {
   bookingDate: string;
   pickupLocation: LocationType;
   dropoffLocation: LocationType;
-  status: 'pending' | 'confirmed' | 'cancelled';
+  status: 'pending' | 'confirmed' | 'cancelled' | 'new'; // Added 'new' status
   notes?: string;
+  clientName?: string; // Added properties used in components
+  date?: string;
+  time?: string;
 }
 
 export interface Reservation {
@@ -44,6 +49,8 @@ export interface Reservation {
   notes?: string;
   createdAt: string;
   updatedAt?: string;
+  pickup?: LocationType;  // Added for compatibility
+  dropoff?: LocationType;  // Added for compatibility
 }
 
 export interface TransportReservation {
@@ -58,6 +65,16 @@ export interface TransportReservation {
   status: TransportReservationStatus;
   price: number;
   notes?: string;
+  // Added missing properties used in components
+  service?: string | { name: string };
+  date?: string;
+  time?: string;
+  pickup?: string | LocationType;
+  dropoff?: string | LocationType;
+  isPaid?: boolean;
+  contractGenerated?: boolean;
+  needsDriver?: boolean;
+  createdAt?: string;
 }
 
 export type TransportReservationStatus = 

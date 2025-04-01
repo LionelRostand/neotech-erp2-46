@@ -53,7 +53,7 @@ export interface MapHookResult {
   mapConfig?: MapConfig;
   setMapConfig?: (config: MapConfig) => void;
   refreshMap?: () => void;
-  updateMarkers?: (vehicles: TransportVehicleWithLocation[], selectedId?: string) => void;
+  updateMarkers?: (vehicles: TransportVehicleWithLocation[]) => void;
 }
 
 export interface ExtensionRequest {
@@ -83,4 +83,3 @@ export interface ExtensionRequest {
   additionalTime?: number;
   extensionDays?: number;
 }
-

@@ -1,5 +1,4 @@
 
-
 import React from 'react';
 import { ChevronsUpDown as LucideChevronsUpDown } from 'lucide-react';
 
@@ -7,4 +6,3 @@ import { ChevronsUpDown as LucideChevronsUpDown } from 'lucide-react';
 export function ChevronsUpDown(props: React.SVGProps<SVGSVGElement>) {
   return <LucideChevronsUpDown {...props} />;
 }
-
