@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -19,7 +18,7 @@ import {
   Menu as MenuIcon,
   Flag,
   AlertTriangle,
-  FooterIcon
+  Footprints
 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 
@@ -60,7 +59,7 @@ const EditorSidebar: React.FC = () => {
             onDragStart={(e) => handleDragStart(e, 'footer')}
           >
             <div className="flex flex-col items-center">
-              <FooterIcon className="h-8 w-8 mb-1 text-primary" />
+              <Footprints className="h-8 w-8 mb-1 text-primary" />
               <span className="text-sm">Footer</span>
             </div>
           </Card>
