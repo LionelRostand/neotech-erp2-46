@@ -20,16 +20,22 @@ import {
   TableRow 
 } from '@/components/ui/table';
 import StatusBadge from '@/components/StatusBadge';
-import { toast } from 'sonner';
+import { useToast } from '@/hooks/use-toast';
+import ContainerFormDialog from './ContainerFormDialog';
+import ContainerDetailsDialog from './ContainerDetailsDialog';
 
 const FreightContainers: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortField, setSortField] = useState<string | null>(null);
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [filterStatus, setFilterStatus] = useState<string>('all');
+  const [showNewContainerDialog, setShowNewContainerDialog] = useState(false);
+  const [showContainerDetailsDialog, setShowContainerDetailsDialog] = useState(false);
+  const [selectedContainer, setSelectedContainer] = useState<any>(null);
+  const { toast } = useToast();
   
-  // Sample data
-  const containers = [
+  // État pour les conteneurs
+  const [containers, setContainers] = useState([
     { 
       id: 'CONT001', 
       number: 'CON12345678', 
@@ -85,7 +91,7 @@ const FreightContainers: React.FC = () => {
       departure: '2023-10-19',
       arrival: '2023-10-21'
     },
-  ];
+  ]);
   
   const getStatusColor = (status: string): "success" | "warning" | "danger" => {
     switch (status) {
@@ -155,16 +161,20 @@ const FreightContainers: React.FC = () => {
     window.location.href = `/modules/freight/tracking?container=${containerId}`;
   };
   
-  const handleViewDetails = (containerId: string) => {
-    toast.info(`Détails du conteneur ${containerId}`);
-    // Ici, vous pourriez ouvrir une boîte de dialogue ou naviguer vers une page de détails
+  const handleViewDetails = (container: any) => {
+    setSelectedContainer(container);
+    setShowContainerDetailsDialog(true);
+  };
+  
+  const handleSaveContainer = (newContainer: any) => {
+    setContainers(prev => [...prev, newContainer]);
   };
 
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">Gestion des Conteneurs</h1>
-        <Button>
+        <Button onClick={() => setShowNewContainerDialog(true)}>
           <Plus className="mr-2 h-4 w-4" />
           <span>Nouveau Conteneur</span>
         </Button>
@@ -280,7 +290,7 @@ const FreightContainers: React.FC = () => {
                           <Button 
                             variant="ghost" 
                             size="sm"
-                            onClick={() => handleViewDetails(container.id)}
+                            onClick={() => handleViewDetails(container)}
                             title="Détails du conteneur"
                           >
                             <Eye className="h-4 w-4" />
@@ -295,6 +305,22 @@ const FreightContainers: React.FC = () => {
           </div>
         </CardContent>
       </Card>
+      
+      {/* Dialogue de création de conteneur */}
+      <ContainerFormDialog 
+        isOpen={showNewContainerDialog}
+        onClose={() => setShowNewContainerDialog(false)}
+        onSave={handleSaveContainer}
+      />
+      
+      {/* Dialogue de détails du conteneur */}
+      {selectedContainer && (
+        <ContainerDetailsDialog 
+          isOpen={showContainerDetailsDialog}
+          onClose={() => setShowContainerDetailsDialog(false)}
+          container={selectedContainer}
+        />
+      )}
     </div>
   );
 };

@@ -18,18 +18,19 @@ import { useToast } from '@/hooks/use-toast';
 import { 
   DocumentDialog, 
   ActionButtons,
-  viewDocument,
   downloadDocument,
   printDocument,
   exportDocuments,
   viewArchives
 } from './helpers/FreightActionHelpers';
+import DocumentViewDialog from './DocumentViewDialog';
 
 const FreightDocuments: React.FC = () => {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("documents");
   const [showNewDocument, setShowNewDocument] = useState(false);
-  const [showArchives, setShowArchives] = useState(false);
+  const [showDocumentView, setShowDocumentView] = useState(false);
+  const [selectedDocument, setSelectedDocument] = useState<any>(null);
   
   // Sample shipping documents
   const documents = [
@@ -145,6 +146,20 @@ const FreightDocuments: React.FC = () => {
       title: "Utilisation du modèle",
       description: `Le modèle "${template.name}" a été utilisé pour créer un nouveau document.`,
     });
+  };
+  
+  // Fonctions pour les actions sur les documents
+  const handleViewDocument = (doc: any) => {
+    setSelectedDocument(doc);
+    setShowDocumentView(true);
+  };
+  
+  const handleDownloadDocument = (doc: any) => {
+    downloadDocument(doc, { toast });
+  };
+  
+  const handlePrintDocument = (doc: any) => {
+    printDocument(doc, { toast });
   };
   
   const getTypeIcon = (type: string) => {
@@ -280,9 +295,9 @@ const FreightDocuments: React.FC = () => {
                       <TableCell className="text-right">
                         <ActionButtons 
                           type="document"
-                          onView={() => viewDocument(doc, { toast })}
-                          onDownload={() => downloadDocument(doc, { toast })}
-                          onPrint={() => printDocument(doc, { toast })}
+                          onView={() => handleViewDocument(doc)}
+                          onDownload={() => handleDownloadDocument(doc)}
+                          onPrint={() => handlePrintDocument(doc)}
                         />
                       </TableCell>
                     </TableRow>
@@ -359,6 +374,17 @@ const FreightDocuments: React.FC = () => {
           isOpen={showNewDocument}
           onClose={() => setShowNewDocument(false)}
           onSave={handleSaveDocument}
+        />
+      )}
+      
+      {/* Dialog for viewing a document */}
+      {selectedDocument && (
+        <DocumentViewDialog 
+          isOpen={showDocumentView}
+          onClose={() => setShowDocumentView(false)}
+          document={selectedDocument}
+          onDownload={() => handleDownloadDocument(selectedDocument)}
+          onPrint={() => handlePrintDocument(selectedDocument)}
         />
       )}
     </div>
