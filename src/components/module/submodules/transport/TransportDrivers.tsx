@@ -29,10 +29,13 @@ const mockDrivers: TransportDriver[] = [
     status: "active",
     rating: 4.8,
     hireDate: "2019-03-10",
-    preferredVehicleType: "sedan",
+    preferredVehicleType: ["sedan"],
     available: true,
+    onLeave: false,
     experience: 4,
-    photo: "/assets/drivers/driver1.jpg"
+    photo: "/assets/drivers/driver1.jpg",
+    language: ["French", "English"],
+    notes: []
   },
   {
     id: "drv-002",
@@ -47,10 +50,13 @@ const mockDrivers: TransportDriver[] = [
     status: "driving",
     rating: 4.5,
     hireDate: "2020-01-15",
-    preferredVehicleType: "van",
+    preferredVehicleType: ["van"],
     available: false,
+    onLeave: false,
     experience: 3,
-    photo: "/assets/drivers/driver2.jpg"
+    photo: "/assets/drivers/driver2.jpg",
+    language: ["French"],
+    notes: []
   },
   {
     id: "drv-003",
@@ -65,10 +71,13 @@ const mockDrivers: TransportDriver[] = [
     status: "off-duty",
     rating: 4.2,
     hireDate: "2018-06-22",
-    preferredVehicleType: "bus",
+    preferredVehicleType: ["bus"],
     available: false,
+    onLeave: false,
     experience: 5,
-    photo: "/assets/drivers/driver3.jpg"
+    photo: "/assets/drivers/driver3.jpg",
+    language: ["French", "Spanish"],
+    notes: []
   },
   {
     id: "drv-004",
@@ -83,10 +92,13 @@ const mockDrivers: TransportDriver[] = [
     status: "active",
     rating: 4.9,
     hireDate: "2021-02-05",
-    preferredVehicleType: "luxury",
+    preferredVehicleType: ["luxury"],
     available: true,
+    onLeave: false,
     experience: 2,
-    photo: "/assets/drivers/driver4.jpg"
+    photo: "/assets/drivers/driver4.jpg",
+    language: ["French", "English", "German"],
+    notes: []
   },
   {
     id: "drv-005",
@@ -101,10 +113,13 @@ const mockDrivers: TransportDriver[] = [
     status: "driving",
     rating: 4.7,
     hireDate: "2019-11-18",
-    preferredVehicleType: "sedan",
+    preferredVehicleType: ["sedan"],
     available: false,
+    onLeave: false,
     experience: 3,
-    photo: "/assets/drivers/driver5.jpg"
+    photo: "/assets/drivers/driver5.jpg",
+    language: ["French", "Italian"],
+    notes: []
   }
 ];
 

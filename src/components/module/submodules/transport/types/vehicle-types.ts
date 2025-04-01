@@ -9,13 +9,21 @@ export interface TransportVehicle extends TransportBasic {
   year?: number;
   mileage?: number;
   available: boolean;
-  status: 'active' | 'maintenance' | 'inactive' | 'reserved';
+  status: 'active' | 'maintenance' | 'inactive' | 'reserved' | 'out-of-service';
   nextMaintenanceDate?: string;
   registrationDate?: string;
   insuranceExpiryDate?: string;
   lastInspectionDate?: string;
   fuelType?: string;
-  notes: VehicleNote[] | string;
+  notes: VehicleNote[] | any[]; // Updated to be compatible with TransportBasic
+  purchaseDate?: string;
+  lastServiceDate?: string;
+  nextServiceDate?: string;
+  insuranceInfo?: {
+    provider: string;
+    policyNumber: string;
+    expiryDate: string;
+  };
 }
 
 export interface VehicleNote extends Note {
@@ -32,6 +40,8 @@ export interface MaintenanceRecord extends TransportBasic {
   technician?: string;
   facility?: string;
   notes?: string[];
+  provider?: string;
+  nextMaintenance?: string;
 }
 
 export interface IncidentRecord extends TransportBasic {
@@ -46,6 +56,10 @@ export interface IncidentRecord extends TransportBasic {
   resolutionDate?: string;
   reportNumber?: string;
   notes?: string[];
+  severity?: 'low' | 'medium' | 'high' | 'critical';
+  driverName?: string;
+  clientName?: string;
+  repairCost?: number;
 }
 
 export interface MaintenanceSchedule extends TransportBasic {
@@ -54,6 +68,11 @@ export interface MaintenanceSchedule extends TransportBasic {
   description: string;
   scheduledDate: string;
   estimatedDuration: number; // in minutes
-  status: 'pending' | 'scheduled' | 'completed' | 'cancelled';
-  notes: string;
+  status: 'pending' | 'in-progress' | 'scheduled' | 'completed' | 'cancelled';
+  notes: any[]; // Updated to be compatible with TransportBasic
+  startDate?: string;
+  endDate?: string;
+  technician?: string;
+  technicianAssigned?: boolean;
+  completed?: boolean;
 }

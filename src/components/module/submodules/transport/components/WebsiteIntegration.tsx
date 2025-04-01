@@ -1,157 +1,194 @@
 
 import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
-import { WebsiteIntegration as WebsiteIntegrationType } from '../types/transport-types';
-import { generateIntegrationCode, createNewIntegration } from '../utils/website-integration';
-import { toast } from "@/components/ui/use-toast";
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useToast } from '@/hooks/use-toast';
+import { WebsiteIntegration } from '../types/integration-types';
 
 interface WebsiteIntegrationProps {
-  integration: WebsiteIntegrationType | null;
+  // Add the missing prop
+  onCreateIntegration?: (integration: WebsiteIntegration) => void;
 }
 
-const WebsiteIntegration: React.FC<WebsiteIntegrationProps> = ({ integration }) => {
-  const [isActive, setIsActive] = useState(integration?.status === 'active');
-  const [apiKey, setApiKey] = useState("abc123xyz789");
-  const [showCode, setShowCode] = useState(false);
-  const [integrationCode, setIntegrationCode] = useState("");
+const WebsiteIntegrationComponent: React.FC<WebsiteIntegrationProps> = ({ onCreateIntegration }) => {
+  const [integrationCode, setIntegrationCode] = useState<string>('');
+  const [previewUrl, setPreviewUrl] = useState<string>('');
+  const { toast } = useToast();
 
-  const handleStatusToggle = () => {
-    setIsActive(!isActive);
-    toast({
-      title: !isActive ? "Intégration activée" : "Intégration désactivée",
-      description: !isActive 
-        ? "L'intégration est maintenant active sur votre site web." 
-        : "L'intégration a été désactivée.",
-    });
-  };
-
-  const handleGenerateCode = () => {
-    // Generate the code using the utility function
-    const code = generateIntegrationCode(apiKey);
-    setIntegrationCode(code);
-    setShowCode(true);
+  const generateIntegrationCode = () => {
+    const code = `<script src="https://transport.example.com/widget.js"></script>
+<div id="transport-booking-widget" data-api-key="YOUR_API_KEY"></div>`;
     
+    setIntegrationCode(code);
     toast({
-      title: "Code généré",
-      description: "Le code d'intégration a été généré avec succès.",
+      title: "Code d'intégration généré",
+      description: "Copiez ce code dans le HTML de votre site web."
     });
-  };
-
-  const handleCreateIntegration = () => {
-    // Create a new integration if none exists
-    if (!integration) {
-      // Use the createNewIntegration function with moduleId parameter
-      const newIntegration = createNewIntegration("transport", "booking-page");
-      
-      toast({
-        title: "Intégration créée",
-        description: "Une nouvelle intégration a été créée avec succès.",
-      });
-    }
   };
 
   const handleCopyCode = () => {
     navigator.clipboard.writeText(integrationCode);
     toast({
-      title: "Code copié",
-      description: "Le code a été copié dans le presse-papiers.",
+      title: "Copié!",
+      description: "Le code a été copié dans le presse-papier."
     });
   };
 
+  const handlePreviewSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    // Fix: Use URL object to validate URL
+    try {
+      new URL(previewUrl);
+      toast({
+        title: "Prévisualisation",
+        description: "Chargement de la prévisualisation de l'intégration..."
+      });
+    } catch (error) {
+      toast({
+        title: "URL invalide",
+        description: "Veuillez entrer une URL valide.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleSaveIntegration = () => {
+    // Create and save the integration object
+    if (onCreateIntegration) {
+      const newIntegration: WebsiteIntegration = {
+        id: `integration-${Date.now()}`,
+        moduleId: 'transport',
+        pageId: 'booking',
+        status: 'active',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        formConfig: {
+          fields: [],
+          services: [],
+          submitButtonText: 'Réserver maintenant',
+          successMessage: 'Réservation effectuée avec succès',
+          termsAndConditionsText: 'J\'accepte les termes et conditions'
+        },
+        designConfig: {
+          primaryColor: '#1E40AF',
+          secondaryColor: '#60A5FA',
+          backgroundColor: '#FFFFFF',
+          textColor: '#111827',
+          borderRadius: '0.25rem',
+          buttonStyle: 'rounded',
+          fontFamily: 'Inter, sans-serif',
+          formWidth: '100%'
+        }
+      };
+      
+      onCreateIntegration(newIntegration);
+    }
+  };
+
   return (
-    <Card className="mt-6">
-      <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle>Intégration Site Web</CardTitle>
-        <div className="flex items-center space-x-2">
-          <Label htmlFor="integration-active">Activer l'intégration</Label>
-          <Switch
-            id="integration-active"
-            checked={isActive}
-            onCheckedChange={handleStatusToggle}
-          />
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="bg-gray-50 p-4 rounded-md">
-          <div className="flex justify-between items-start">
-            <div>
-              <h3 className="font-semibold">Widget de réservation</h3>
-              <p className="text-sm text-gray-600 mt-1">
-                {integration
-                  ? `ID de la page: ${integration.pageId}`
-                  : "Aucune intégration configurée"}
+    <div className="space-y-6">
+      <Tabs defaultValue="code">
+        <TabsList>
+          <TabsTrigger value="code">Code d'intégration</TabsTrigger>
+          <TabsTrigger value="preview">Prévisualisation</TabsTrigger>
+          <TabsTrigger value="settings">Paramètres</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="code" className="space-y-4">
+          <Card>
+            <CardContent className="pt-6">
+              <div className="space-y-4">
+                <div>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Générez un code d'intégration pour ajouter la fonctionnalité de réservation sur votre site web.
+                  </p>
+                  <Button onClick={generateIntegrationCode}>
+                    Générer le code
+                  </Button>
+                </div>
+                
+                {integrationCode && (
+                  <div className="space-y-2">
+                    <Label htmlFor="integration-code">Code d'intégration</Label>
+                    <div className="relative">
+                      <pre className="bg-muted p-4 rounded-md overflow-x-auto text-sm">
+                        {integrationCode}
+                      </pre>
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        className="absolute top-2 right-2"
+                        onClick={handleCopyCode}
+                      >
+                        Copier
+                      </Button>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Copiez ce code et collez-le dans votre site web où vous souhaitez afficher le widget de réservation.
+                    </p>
+                  </div>
+                )}
+                
+                <Button onClick={handleSaveIntegration} className="mt-4">
+                  Enregistrer l'intégration
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="preview">
+          <Card>
+            <CardContent className="pt-6">
+              <form onSubmit={handlePreviewSubmit} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="previewUrl">URL de votre site</Label>
+                  <Input 
+                    id="previewUrl"
+                    placeholder="https://votresite.com"
+                    value={previewUrl}
+                    onChange={(e) => setPreviewUrl(e.target.value)}
+                  />
+                </div>
+                
+                <Button type="submit">
+                  Prévisualiser l'intégration
+                </Button>
+              </form>
+              
+              {previewUrl && (
+                <div className="mt-6">
+                  <Label>Prévisualisation</Label>
+                  <div className="border rounded-md h-[400px] mt-2 flex items-center justify-center bg-muted">
+                    <p className="text-muted-foreground">
+                      Prévisualisation de l'intégration sur {previewUrl}
+                    </p>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="settings">
+          <Card>
+            <CardContent className="pt-6">
+              <p className="text-muted-foreground mb-4">
+                Configurez l'apparence et le comportement du widget de réservation.
               </p>
-            </div>
-            <Badge
-              variant={integration?.status === 'active' ? 'default' : 'outline'}
-            >
-              {!integration
-                ? "Non configuré"
-                : integration.status === 'active'
-                ? "Actif"
-                : integration.status === 'inactive'
-                ? "Inactif"
-                : "En attente"}
-            </Badge>
-          </div>
-
-          <div className="mt-4 space-y-3">
-            <div className="flex justify-between items-center">
-              <span className="text-sm font-medium">URL d'API:</span>
-              <span className="text-sm">https://api.votre-domaine.com/transport</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm font-medium">Clé API:</span>
-              <span className="text-sm font-mono">{apiKey}</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm font-medium">Dernière mise à jour:</span>
-              <span className="text-sm">{integration?.updatedAt ? new Date(integration.updatedAt).toLocaleDateString() : "N/A"}</span>
-            </div>
-          </div>
-        </div>
-
-        <div className="flex flex-col sm:flex-row gap-3">
-          <Button
-            variant="outline"
-            onClick={handleGenerateCode}
-            className="flex-1"
-          >
-            Générer le code d'intégration
-          </Button>
-          {!integration && (
-            <Button
-              onClick={handleCreateIntegration}
-              className="flex-1"
-            >
-              Créer une nouvelle intégration
-            </Button>
-          )}
-        </div>
-
-        {showCode && (
-          <div className="mt-4">
-            <h3 className="font-semibold mb-2">Code d'intégration</h3>
-            <div className="bg-gray-800 p-4 rounded-md text-white font-mono text-xs overflow-x-auto">
-              <pre>{integrationCode}</pre>
-            </div>
-            <Button
-              variant="outline"
-              onClick={handleCopyCode}
-              className="mt-2"
-              size="sm"
-            >
-              Copier le code
-            </Button>
-          </div>
-        )}
-      </CardContent>
-    </Card>
+              
+              <div className="space-y-4">
+                <p>Configuration non disponible pour le moment.</p>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+    </div>
   );
 };
 
-export default WebsiteIntegration;
+export default WebsiteIntegrationComponent;

@@ -19,6 +19,14 @@ export interface TransportDriver extends TransportBasic {
   hireDate?: string;
   status: 'active' | 'inactive' | 'driving' | 'on_leave' | 'off-duty';
   notes: DriverNote[];
+  photo?: string;
+  skills?: string[];
+  performance?: {
+    completedTrips: number;
+    averageRating: number;
+    onTimePercentage: number;
+  };
+  specializations?: string[];
 }
 
 export interface DriverNote extends Note {

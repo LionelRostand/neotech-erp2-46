@@ -1,6 +1,5 @@
 
-import { TransportBasic, Note } from './base-types';
-import { TransportService } from './base-types';
+import { TransportBasic, Note, TransportService } from './base-types';
 
 export interface TransportClient extends TransportBasic {
   firstName: string;
@@ -22,6 +21,7 @@ export interface TransportClient extends TransportBasic {
   preferredDriver?: string;
   notes: ClientNote[];
   status: 'active' | 'inactive' | 'banned';
+  name?: string; // Added to fix errors
 }
 
 export interface ClientNote extends Note {

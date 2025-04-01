@@ -156,7 +156,12 @@ const FreightContainers: React.FC = () => {
   };
   
   const handleViewTracking = (containerId: string) => {
-    toast.info(`Suivi du conteneur ${containerId} en cours de chargement...`);
+    // Fix: Changed toast.info to toast with appropriate variant
+    toast({
+      title: "Suivi du conteneur",
+      description: `Suivi du conteneur ${containerId} en cours de chargement...`,
+      variant: "default"
+    });
     // Navigation vers la page de suivi avec le conteneur sélectionné
     window.location.href = `/modules/freight/tracking?container=${containerId}`;
   };

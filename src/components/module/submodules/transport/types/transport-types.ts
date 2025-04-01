@@ -38,9 +38,17 @@ export type {
 import type { MapExtensionRequest as MER } from './map-types';
 export type { MER as ExtensionRequestType };
 
-// Export from other modules
+// Export from other modules without duplications
 export * from './geolocation-types';
+
+// Export client types directly
 export type * from './client-types';
+
+// Export reservation types
 export type * from './reservation-types';
+
+// Export planning types
 export type * from './planning-types';
+
+// Export integration types
 export type * from './integration-types';
