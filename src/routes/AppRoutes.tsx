@@ -17,6 +17,7 @@ import { HealthRoutes } from './modules/healthRoutes';
 import { RentalRoutes } from './modules/rentalRoutes';
 import { TransportRoutes } from './modules/transportRoutes';
 import { OtherModulesRoutes } from './modules/otherModulesRoutes';
+import { WebsiteRoutes } from './modules/websiteRoutes';
 
 const AppRoutes = () => (
   <Routes>
@@ -41,6 +42,7 @@ const AppRoutes = () => (
     {HealthRoutes}
     {RentalRoutes}
     {TransportRoutes}
+    {WebsiteRoutes}
     
     {/* Other module routes */}
     {OtherModulesRoutes}
