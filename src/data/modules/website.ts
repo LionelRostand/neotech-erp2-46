@@ -1,5 +1,5 @@
 
-import { Globe, Code, FileCode, PanelLeft, Palette, Image, Settings, Puzzle, Monitor, Brush } from 'lucide-react';
+import { Globe, Code, FileCode, PanelLeft, Palette, Image, Settings, Puzzle, Monitor, Brush, LayoutGrid } from 'lucide-react';
 import { AppModule, createIcon } from '../types/modules';
 
 export const websiteModule: AppModule = {
@@ -8,8 +8,9 @@ export const websiteModule: AppModule = {
   description: "Créez et gérez votre site web professionnel",
   href: "/modules/website",
   icon: createIcon(Globe),
-  category: 'digital', // Added the category property
+  category: 'digital',
   submodules: [
+    { id: "website-cms", name: "Gestion du Contenu (CMS)", href: "/modules/website/cms", icon: createIcon(LayoutGrid) },
     { id: "website-editor", name: "Éditeur", href: "/modules/website/editor", icon: createIcon(Code) },
     { id: "website-templates", name: "Templates", href: "/modules/website/templates", icon: createIcon(FileCode) },
     { id: "website-pages", name: "Pages", href: "/modules/website/pages", icon: createIcon(PanelLeft) },

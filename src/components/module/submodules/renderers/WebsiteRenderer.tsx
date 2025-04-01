@@ -11,6 +11,7 @@ import WebsiteModules from '../website/WebsiteModules';
 import WebsiteSettings from '../website/WebsiteSettings';
 import WebsitePublic from '../website/WebsitePublic';
 import WebsiteThemeEditor from '../website/WebsiteThemeEditor';
+import WebsiteCMS from '../website/WebsiteCMS';
 
 export const renderWebsiteSubmodule = (submoduleId: string, submodule: SubModule) => {
   switch (submoduleId) {
@@ -32,6 +33,8 @@ export const renderWebsiteSubmodule = (submoduleId: string, submodule: SubModule
       return <WebsitePublic />;
     case 'website-theme':
       return <WebsiteThemeEditor />;
+    case 'website-cms':
+      return <WebsiteCMS />;
     default:
       return <DefaultSubmoduleContent submodule={submodule} />;
   }
