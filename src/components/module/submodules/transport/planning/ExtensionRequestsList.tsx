@@ -2,14 +2,14 @@
 import React from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { MapExtensionRequest as ExtensionRequest } from '../types';
+import { MapExtensionRequest } from '../types/map-types';
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { CalendarRange } from "lucide-react";
 
 interface ExtensionRequestsListProps {
-  extensionRequests: ExtensionRequest[];
+  extensionRequests: MapExtensionRequest[];
   onViewDetails: (requestId: string) => void;
 }
 

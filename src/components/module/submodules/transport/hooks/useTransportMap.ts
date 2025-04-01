@@ -1,122 +1,149 @@
 
 import { useRef, useCallback } from 'react';
-import L from 'leaflet';
-import { TransportVehicleWithLocation, Coordinates } from '../types/transport-types';
-import { normalizeCoordinates } from '../utils/map-utils';
+import mapboxgl from 'mapbox-gl';
+import 'mapbox-gl/dist/mapbox-gl.css';
+import { TransportVehicleWithLocation } from '../types/transport-types';
+import { getMarkerIconForVehicle, getVehiclePopupContent } from '../utils/map-utils';
 
-export function useTransportMap() {
+// Mock MapBox token - should be replaced with an environment variable in production
+const MAPBOX_TOKEN = 'pk.eyJ1IjoibG92YWJsZWFpIiwiYSI6ImNrczczeXIybzFwZ2QycnNvemU5a3lrZ3UifQ.GwVUDxlh-WJtGWuUU-wZIQ';
+
+mapboxgl.accessToken = MAPBOX_TOKEN;
+
+export const useTransportMap = () => {
   const mapContainer = useRef<HTMLDivElement>(null);
-  const mapInstance = useRef<L.Map | null>(null);
-  const markersLayer = useRef<L.LayerGroup | null>(null);
+  const map = useRef<mapboxgl.Map | null>(null);
+  const markers = useRef<mapboxgl.Marker[]>([]);
 
-  const initializeMap = useCallback((): L.Map | null => {
-    if (!mapContainer.current) return null;
-    if (mapInstance.current) return mapInstance.current;
-
-    // Default center coordinates (Paris)
-    const defaultCoordinates: Coordinates = {
-      latitude: 48.8566,
-      longitude: 2.3522
-    };
-
-    // Create map
-    const map = L.map(mapContainer.current).setView(
-      [defaultCoordinates.latitude, defaultCoordinates.longitude], 
-      13
-    );
-
-    // Add tile layer
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-    }).addTo(map);
-
-    // Create markers layer
-    const markers = L.layerGroup().addTo(map);
-    markersLayer.current = markers;
-
-    // Store map instance
-    mapInstance.current = map;
-
-    return map;
+  const clearMarkers = useCallback(() => {
+    markers.current.forEach(marker => marker.remove());
+    markers.current = [];
   }, []);
 
-  const addVehiclesToMap = useCallback(
-    (
-      vehicles: TransportVehicleWithLocation[], 
-      onVehicleClick?: (vehicle: TransportVehicleWithLocation) => void
-    ) => {
-      if (!mapInstance.current || !markersLayer.current) return;
+  const initializeMap = useCallback(() => {
+    if (!mapContainer.current) return null;
+    
+    // Don't initialize the map if it already exists
+    if (map.current) return map.current;
 
-      // Clear existing markers
-      markersLayer.current.clearLayers();
+    map.current = new mapboxgl.Map({
+      container: mapContainer.current,
+      style: 'mapbox://styles/mapbox/streets-v12',
+      center: [2.3522, 48.8566], // Paris
+      zoom: 12
+    });
 
-      // Add new markers
-      vehicles.forEach(vehicle => {
-        const coords = normalizeCoordinates(vehicle.location);
-        
-        // Create marker
-        const marker = L.marker([coords.lat, coords.lng]);
-        
-        // Add popup
-        marker.bindPopup(`
-          <div>
-            <h3>${vehicle.name}</h3>
-            <p>${vehicle.licensePlate}</p>
-            <p>Status: ${vehicle.location.status}</p>
-          </div>
-        `);
-        
-        // Add click handler
-        if (onVehicleClick) {
-          marker.on('click', () => onVehicleClick(vehicle));
-        }
-        
-        // Add to layer
-        marker.addTo(markersLayer.current!);
+    map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
+    
+    return map.current;
+  }, []);
+
+  const addVehiclesToMap = useCallback((vehicles: TransportVehicleWithLocation[], onVehicleClick: (vehicle: TransportVehicleWithLocation) => void) => {
+    if (!map.current) return;
+    
+    clearMarkers();
+    
+    vehicles.forEach(vehicle => {
+      const { latitude, longitude } = vehicle.location.coordinates;
+      
+      const popup = new mapboxgl.Popup({ offset: 25 })
+        .setHTML(getVehiclePopupContent(vehicle));
+      
+      // Create marker element
+      const el = document.createElement('div');
+      el.className = 'vehicle-marker';
+      el.style.backgroundImage = `url('${getMarkerIconForVehicle(vehicle)}')`;
+      el.style.width = '25px';
+      el.style.height = '25px';
+      el.style.backgroundSize = '100%';
+      
+      // Create and add the marker
+      const marker = new mapboxgl.Marker(el)
+        .setLngLat([longitude, latitude])
+        .setPopup(popup)
+        .addTo(map.current);
+      
+      // Add click event to marker element
+      el.addEventListener('click', () => {
+        onVehicleClick(vehicle);
       });
       
-      // If we have vehicles, fit bounds
-      if (vehicles.length > 0) {
-        const bounds = L.latLngBounds(
-          vehicles.map(v => {
-            const coords = normalizeCoordinates(v.location);
-            return [coords.lat, coords.lng];
-          })
-        );
-        mapInstance.current.fitBounds(bounds, { padding: [50, 50] });
-      }
-    },
-    []
-  );
+      markers.current.push(marker);
+    });
 
-  const centerOnCoordinates = useCallback((coordinates: Coordinates, zoom: number = 15) => {
-    if (!mapInstance.current) return;
-    mapInstance.current.setView([coordinates.latitude, coordinates.longitude], zoom);
-  }, []);
+    // Add vehicle movement paths (simplified)
+    if (vehicles.length > 0 && map.current.getSource('route') === undefined) {
+      map.current.on('load', () => {
+        if (!map.current) return;
+        
+        // Mock route data
+        const routeData = {
+          type: 'Feature',
+          properties: {},
+          geometry: {
+            type: 'LineString',
+            coordinates: [
+              [2.3522, 48.8566],  // Paris center
+              [2.3442, 48.8496],  // Somewhere nearby
+              [2.3376, 48.8606]   // Another nearby location
+            ]
+          }
+        };
 
-  const addCircle = useCallback((coordinates: Coordinates, radius: number, options: L.CircleOptions = {}) => {
-    if (!mapInstance.current) return null;
-    
-    const defaultOptions: L.CircleOptions = {
-      color: '#3388ff',
-      fillColor: '#3388ff',
-      fillOpacity: 0.2,
-      weight: 2,
-      ...options
-    };
-    
-    return L.circle(
-      [coordinates.latitude, coordinates.longitude], 
-      radius, 
-      defaultOptions
-    ).addTo(mapInstance.current);
-  }, []);
+        // Add source for vehicle route
+        map.current.addSource('route', {
+          type: 'geojson',
+          data: routeData as any
+        });
+
+        // Add route line layer
+        map.current.addLayer({
+          id: 'route',
+          type: 'line',
+          source: 'route',
+          layout: {
+            'line-join': 'round',
+            'line-cap': 'round'
+          },
+          paint: {
+            'line-color': '#0080ff',
+            'line-width': 3,
+            'line-opacity': 0.7
+          }
+        });
+        
+        // Add the vehicle radius (geofence)
+        map.current.addSource('vehicleRadius', {
+          type: 'geojson',
+          data: {
+            type: 'Feature',
+            properties: {},
+            geometry: {
+              type: 'Point',
+              coordinates: [2.3522, 48.8566] // Paris center
+            }
+          }
+        });
+        
+        map.current.addLayer({
+          id: 'vehicleRadius',
+          type: 'circle',
+          source: 'vehicleRadius',
+          paint: {
+            'circle-radius': 100,
+            'circle-color': '#0080ff',
+            'circle-opacity': 0.2,
+            'circle-stroke-width': 1,
+            'circle-stroke-color': '#0080ff'
+          }
+        });
+      });
+    }
+  }, [clearMarkers]);
 
   return {
     mapContainer,
     initializeMap,
-    addVehiclesToMap,
-    centerOnCoordinates,
-    addCircle
+    addVehiclesToMap
   };
-}
+};

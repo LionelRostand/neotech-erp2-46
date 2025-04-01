@@ -1,87 +1,59 @@
 
-import { Note, TransportBasic } from './base-types';
+import { TransportBasic, Note } from './base-types';
 
 export interface TransportVehicle extends TransportBasic {
-  make?: string; // Made optional for compatibility
-  model?: string; // Made optional for compatibility
-  year?: number; // Made optional for compatibility
-  licensePlate: string;
-  vinNumber?: string; // Made optional for compatibility
-  status: 'available' | 'in-use' | 'maintenance' | 'out-of-service' | 'active';
+  name: string;
   type: string;
+  licensePlate: string;
   capacity: number;
-  mileage?: number; // Changed to optional to fix type errors
-  fuelType?: string; // Made optional for compatibility
-  fuelLevel?: number; // Made optional for compatibility
-  lastInspection?: string;
-  name?: string;
-  available?: boolean;
-  purchaseDate?: string;
-  lastServiceDate?: string;
-  nextServiceDate?: string;
-  insuranceInfo?: {
-    provider: string;
-    policyNumber: string;
-    expiryDate: string;
-  };
-  createdAt?: string; // Added for mockData compatibility
+  year?: number;
+  mileage?: number;
+  available: boolean;
+  status: 'active' | 'maintenance' | 'inactive' | 'reserved';
+  nextMaintenanceDate?: string;
+  registrationDate?: string;
+  insuranceExpiryDate?: string;
+  lastInspectionDate?: string;
+  fuelType?: string;
+  notes: VehicleNote[] | string;
 }
 
 export interface VehicleNote extends Note {
   vehicleId: string;
 }
 
-export interface MaintenanceRecord {
-  id: string;
+export interface MaintenanceRecord extends TransportBasic {
   vehicleId: string;
   type: string;
-  date: string;
   description: string;
-  cost: number;
-  technicianName?: string; // Made optional for mock data
-  parts?: string[];
-  nextServiceDue?: string;
-  odometerReading?: number; // Made optional for mock data
-  // For backward compatibility with existing components
-  provider?: string;
-  nextMaintenance?: string;
-  resolved?: boolean;
-}
-
-export interface IncidentRecord {
-  id: string;
-  vehicleId: string;
   date: string;
-  description: string;
-  location?: string; // Made optional for mock data
-  driverName?: string;
-  severity: 'minor' | 'moderate' | 'major';
-  status: 'reported' | 'investigating' | 'resolved' | string; // Added string for compatibility
+  odometer?: number;
   cost?: number;
-  // For backward compatibility with existing components
-  clientName?: string;
-  repairCost?: number;
-  resolved?: boolean;
-  damageDetails?: string;
-  insuranceClaim?: boolean | string; // Combined type to handle both use cases
+  technician?: string;
+  facility?: string;
+  notes?: string[];
 }
 
-export interface MaintenanceSchedule {
-  id: string;
+export interface IncidentRecord extends TransportBasic {
   vehicleId: string;
-  scheduledDate: string;
+  driverId?: string;
+  date: string;
+  location?: string;
+  description: string;
+  damageDescription?: string;
+  costEstimate?: number;
+  resolved: boolean;
+  resolutionDate?: string;
+  reportNumber?: string;
+  notes?: string[];
+}
+
+export interface MaintenanceSchedule extends TransportBasic {
+  vehicleId: string;
   type: string;
   description: string;
+  scheduledDate: string;
   estimatedDuration: number; // in minutes
-  technicianAssigned?: string;
-  status: 'scheduled' | 'in-progress' | 'completed' | 'cancelled';
-  // Additional fields needed by components
-  startDate?: string;
-  endDate?: string;
-  technician?: string;
-  completed?: boolean; // Add for MaintenanceTable
-  notes?: string; // Add for mockData
-  taskName?: string; // Add for mockData
-  priority?: string; // Add for mockData
-  nextDue?: string; // Add for mockData
+  status: 'pending' | 'scheduled' | 'completed' | 'cancelled';
+  notes: string;
 }

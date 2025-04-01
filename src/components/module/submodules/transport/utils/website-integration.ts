@@ -1,179 +1,103 @@
 
-import { WebsiteIntegration, WebBookingDesignConfig } from '../types/integration-types';
+import { WebsiteIntegration } from '../types/integration-types';
 
 /**
- * Generates HTML code for integrating the transport booking widget into a website
- * 
- * @param apiKey The API key for authentication
- * @param serviceId The ID of the service to pre-select (optional)
- * @param designConfig Custom design configuration (optional)
- * @returns HTML code string for website integration
+ * Generates integration code based on the configuration
+ * @param config Website integration configuration
+ * @returns Generated code as a string
  */
-export const generateIntegrationCode = (apiKey: string): string => {
+export const generateIntegrationCode = (config: WebsiteIntegration): string => {
+  const baseUrl = window.location.origin;
+  const moduleId = config.moduleId;
+  const integrationId = config.id;
+  
   return `
-<!-- Code d'intégration de réservation de transport -->
-<div id="transport-booking-widget" data-api-key="${apiKey}" data-service-id="1">
-  <script src="https://api.votre-domaine.com/transport/booking-widget.js"></script>
-</div>
-`;
+<!-- Transport Booking Widget -->
+<div id="transport-booking-${integrationId}"></div>
+<script>
+  (function() {
+    var script = document.createElement('script');
+    script.src = '${baseUrl}/api/bookings/widget.js?id=${integrationId}&moduleId=${moduleId}';
+    script.async = true;
+    document.head.appendChild(script);
+  })();
+</script>
+<!-- End Transport Booking Widget -->
+  `.trim();
 };
 
 /**
  * Creates a new website integration configuration
- * 
- * @param moduleId Module ID
- * @param pageId Page ID where the integration will be placed
- * @returns New WebsiteIntegration object
+ * @param moduleId ID of the module
+ * @param pageId ID of the page
+ * @param config Initial configuration
+ * @returns Promise resolving to the created integration
  */
-export const createNewIntegration = (moduleId: string, pageId: string): WebsiteIntegration => {
-  return {
-    id: `integration-${Date.now()}`,
-    moduleId,
-    pageId,
-    status: 'pending',
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-    formConfig: {
-      fields: [
-        {
-          name: 'name',
-          label: 'Nom complet',
-          type: 'text',
-          required: true,
-          visible: true
+export const createNewIntegration = (moduleId: string, pageId: string, config: any): Promise<WebsiteIntegration> => {
+  // This would typically be an API call
+  // For now, we'll mock the response
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve({
+        id: `integration-${Date.now()}`,
+        moduleId,
+        pageId,
+        status: 'active',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        formConfig: config.formConfig || {
+          fields: [],
+          services: [],
+          submitButtonText: 'Réserver',
+          successMessage: 'Merci pour votre réservation!',
+          termsAndConditionsText: 'En soumettant ce formulaire, vous acceptez nos conditions générales.'
         },
-        {
-          name: 'email',
-          label: 'Email',
-          type: 'email',
-          required: true,
-          visible: true
-        },
-        {
-          name: 'phone',
-          label: 'Téléphone',
-          type: 'tel',
-          required: true,
-          visible: true
-        },
-        {
-          name: 'date',
-          label: 'Date',
-          type: 'date',
-          required: true,
-          visible: true
+        designConfig: config.designConfig || {
+          primaryColor: '#3b82f6',
+          secondaryColor: '#1e40af',
+          backgroundColor: '#ffffff',
+          textColor: '#1f2937',
+          borderRadius: '0.375rem',
+          buttonStyle: 'rounded',
+          fontFamily: 'sans-serif',
+          formWidth: '100%'
         }
-      ],
-      services: [
-        {
-          id: '1',
-          name: 'Transport aéroport',
-          price: 50,
-          description: 'Navette depuis/vers l\'aéroport'
-        },
-        {
-          id: '2',
-          name: 'Location avec chauffeur',
-          price: 75,
-          description: 'Service de chauffeur privé à l\'heure'
-        }
-      ],
-      submitButtonText: 'Réserver maintenant',
-      successMessage: 'Votre réservation a été envoyée avec succès!',
-      termsAndConditionsText: 'En réservant, vous acceptez nos conditions générales.'
-    },
-    designConfig: {
-      primaryColor: '#1e40af',
-      secondaryColor: '#3b82f6',
-      backgroundColor: '#ffffff',
-      textColor: '#1f2937',
-      borderRadius: '8px',
-      buttonStyle: 'rounded',
-      customCss: '',
-      fontFamily: 'Inter, sans-serif',
-      formWidth: '100%'
-    }
-  };
+      });
+    }, 500);
+  });
 };
 
 /**
- * Generates CSS for the booking widget based on design config
- * 
- * @param config Design configuration
- * @returns CSS string
+ * Updates an existing integration configuration
+ * @param integrationId ID of the integration to update
+ * @param config New configuration
+ * @returns Promise resolving to the updated integration
  */
-export const generateWidgetCSS = (config: WebBookingDesignConfig): string => {
-  return `
-.transport-booking-widget {
-  background-color: ${config.backgroundColor};
-  color: ${config.textColor};
-  border-radius: ${config.borderRadius};
-  font-family: ${config.fontFamily};
-  max-width: ${config.formWidth};
-  margin: 0 auto;
-  padding: 20px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-
-.transport-booking-widget .widget-header {
-  margin-bottom: 20px;
-}
-
-.transport-booking-widget .widget-title {
-  font-size: 1.5rem;
-  font-weight: 600;
-  color: ${config.primaryColor};
-}
-
-.transport-booking-widget .widget-button {
-  background-color: ${config.primaryColor};
-  color: white;
-  border: none;
-  border-radius: ${config.buttonStyle === 'rounded' ? '9999px' : 
-                   config.buttonStyle === 'pill' ? '9999px' : '4px'};
-  padding: 10px 20px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background-color 0.2s;
-}
-
-.transport-booking-widget .widget-button:hover {
-  background-color: ${config.secondaryColor};
-}
-
-${config.customCss || ''}
-`;
+export const updateIntegration = (integrationId: string, config: Partial<WebsiteIntegration>): Promise<WebsiteIntegration> => {
+  // This would typically be an API call
+  // For now, we'll mock the response
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve({
+        ...config,
+        id: integrationId,
+        updatedAt: new Date().toISOString()
+      } as WebsiteIntegration);
+    }, 500);
+  });
 };
 
 /**
- * Updates an existing website integration
- * 
- * @param integration The integration to update
- * @param updates The updates to apply
- * @returns Updated WebsiteIntegration object
+ * Deletes an integration
+ * @param integrationId ID of the integration to delete
+ * @returns Promise resolving to success status
  */
-export const updateIntegration = (
-  integration: WebsiteIntegration,
-  updates: Partial<WebsiteIntegration>
-): WebsiteIntegration => {
-  return {
-    ...integration,
-    ...updates,
-    updatedAt: new Date().toISOString()
-  };
-};
-
-/**
- * Toggles the status of a website integration
- * 
- * @param integration The integration to toggle
- * @returns Updated WebsiteIntegration object with toggled status
- */
-export const toggleIntegrationStatus = (integration: WebsiteIntegration): WebsiteIntegration => {
-  const newStatus = integration.status === 'active' ? 'inactive' : 'active';
-  return {
-    ...integration,
-    status: newStatus,
-    updatedAt: new Date().toISOString()
-  };
+export const deleteIntegration = (integrationId: string): Promise<boolean> => {
+  // This would typically be an API call
+  // For now, we'll mock the response
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve(true);
+    }, 500);
+  });
 };

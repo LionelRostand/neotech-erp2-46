@@ -1,84 +1,58 @@
 
-import L from 'leaflet';
-import { VehicleLocation, Coordinates, TransportVehicleWithLocation } from '../types/transport-types';
+import { TransportVehicleWithLocation } from '../types/transport-types';
 
-// Helper function to check property existence and normalize coordinates
-export const normalizeCoordinates = (location: VehicleLocation): { lat: number; lng: number } => {
-  // If location already has lat/lng properties, use them
-  if ('lat' in location && 'lng' in location) {
-    return { lat: location.lat, lng: location.lng };
-  }
+// Function to get marker icon based on vehicle type and status
+export const getMarkerIconForVehicle = (vehicle: TransportVehicleWithLocation): string => {
+  // Base icon path
+  const basePath = '/assets/markers/';
   
-  // If location has coordinates.latitude/longitude properties, use them
-  if (location.coordinates && 'latitude' in location.coordinates && 'longitude' in location.coordinates) {
-    return { 
-      lat: location.coordinates.latitude, 
-      lng: location.coordinates.longitude 
-    };
-  }
+  // Determine color based on status
+  let color = 'blue';
+  if (vehicle.location.status === 'stopped') color = 'red';
+  else if (vehicle.location.status === 'idle') color = 'yellow';
   
-  // Default fallback (should never happen with proper types)
-  return { lat: 0, lng: 0 };
+  // Determine icon based on type
+  let icon = 'car';
+  if (vehicle.type === 'van' || vehicle.type === 'minibus') icon = 'van';
+  else if (vehicle.type === 'luxury') icon = 'luxury';
+  
+  // Default icon if asset not found
+  return `${basePath}${icon}-${color}.png`;
 };
 
-// Create a leaflet marker for a vehicle location
-export const createMarker = (
-  location: VehicleLocation, 
-  vehicle: TransportVehicleWithLocation,
-  onClick?: (vehicle: TransportVehicleWithLocation) => void
-): L.Marker => {
-  const coords = normalizeCoordinates(location);
-  const marker = L.marker([coords.lat, coords.lng]);
+// Function to generate HTML content for vehicle popups
+export const getVehiclePopupContent = (vehicle: TransportVehicleWithLocation): string => {
+  const { name, licensePlate, type, status } = vehicle;
+  const { status: locationStatus, speed } = vehicle.location;
   
-  // Set popup content
-  marker.bindPopup(`
-    <div class="p-2">
-      <h3 class="font-medium">${vehicle.name}</h3>
-      <p>${vehicle.licensePlate}</p>
-      <p>Status: ${location.status}</p>
+  // Get coordinates for display
+  const latitude = vehicle.location.coordinates.latitude;
+  const longitude = vehicle.location.coordinates.longitude;
+  
+  return `
+    <div class="vehicle-popup">
+      <h3 class="text-lg font-bold">${name}</h3>
+      <div class="text-sm">
+        <p><strong>Type:</strong> ${type}</p>
+        <p><strong>Plaque:</strong> ${licensePlate}</p>
+        <p><strong>Statut:</strong> ${status}</p>
+        <p><strong>Activité:</strong> ${locationStatus}</p>
+        <p><strong>Vitesse:</strong> ${speed} km/h</p>
+        <p><strong>Position:</strong> ${latitude.toFixed(5)}, ${longitude.toFixed(5)}</p>
+      </div>
     </div>
-  `);
+  `;
+};
+
+// Function to format coordinates for display
+export const formatCoordinates = (location: any): string => {
+  // Handle different coordinate formats
+  const latitude = location.coordinates?.latitude || location.latitude;
+  const longitude = location.coordinates?.longitude || location.longitude;
   
-  // Add click handler if provided
-  if (onClick) {
-    marker.on('click', () => onClick(vehicle));
+  if (latitude === undefined || longitude === undefined) {
+    return 'Coordonnées non disponibles';
   }
   
-  return marker;
-};
-
-// Function to update a marker's position
-export const updateMarkerPosition = (marker: L.Marker, location: VehicleLocation): void => {
-  const coords = normalizeCoordinates(location);
-  marker.setLatLng([coords.lat, coords.lng]);
-};
-
-// Calculate the distance between two coordinates in kilometers
-export const calculateDistance = (coord1: Coordinates, coord2: Coordinates): number => {
-  const R = 6371; // Earth's radius in km
-  const dLat = (coord2.latitude - coord1.latitude) * Math.PI / 180;
-  const dLon = (coord2.longitude - coord1.longitude) * Math.PI / 180;
-  const a = 
-    Math.sin(dLat/2) * Math.sin(dLat/2) +
-    Math.cos(coord1.latitude * Math.PI / 180) * Math.cos(coord2.latitude * Math.PI / 180) * 
-    Math.sin(dLon/2) * Math.sin(dLon/2); 
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
-  return R * c;
-};
-
-// Format a timestamp to a readable string
-export const formatTimestamp = (timestamp: string): string => {
-  const date = new Date(timestamp);
-  return date.toLocaleString();
-};
-
-// Get a color based on vehicle status
-export const getStatusColor = (status: string): string => {
-  switch (status) {
-    case 'moving': return '#4caf50'; // green
-    case 'stopped': return '#f44336'; // red
-    case 'idle': return '#ff9800'; // orange
-    case 'offline': return '#9e9e9e'; // gray
-    default: return '#2196f3'; // blue
-  }
+  return `${latitude.toFixed(5)}, ${longitude.toFixed(5)}`;
 };

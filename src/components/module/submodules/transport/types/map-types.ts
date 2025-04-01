@@ -10,10 +10,10 @@ export interface VehicleLocation {
   vehicleId: string;
   coordinates: Coordinates;
   timestamp: string;
-  status: 'offline' | 'idle' | 'moving' | 'stopped';
-  heading?: number;
-  speed?: number;
-  // Add these properties to support both coordinate access patterns
+  status: 'moving' | 'idle' | 'stopped';
+  speed: number;
+  heading: number;
+  // For compatibility
   lat?: number;
   lng?: number;
   latitude?: number;
@@ -22,53 +22,44 @@ export interface VehicleLocation {
 }
 
 export interface TransportVehicleWithLocation extends TransportVehicle {
-  location?: VehicleLocation;
-  driverName?: string; // Add this property to match usage
+  location: VehicleLocation;
+  capacity: number;
+  driverName?: string;
 }
 
 export interface MapConfig {
-  center: Coordinates;
+  center: [number, number];
   zoom: number;
-  showTraffic?: boolean;
-  showGeofences?: boolean;
-  refreshInterval?: number;
-  provider?: 'osm' | 'google' | 'mapbox';
-  maxZoom?: number;
-  minZoom?: number;
-  tileProvider?: string;
+  style: string;
+  markers?: MapMarker[];
+}
+
+export interface MapMarker {
+  id: string;
+  position: [number, number];
+  type: 'vehicle' | 'client' | 'depot';
+  status?: string;
+  title?: string;
+  iconUrl?: string;
 }
 
 export interface MapHookResult {
-  mapRef: React.RefObject<HTMLDivElement>;
-  isMapLoaded: boolean;
-  vehicles: TransportVehicleWithLocation[];
-  selectedVehicle: TransportVehicleWithLocation | null;
-  setSelectedVehicle: (vehicle: TransportVehicleWithLocation | null) => void;
-  loading: boolean;
-  error: Error | null;
-  zoomToVehicle: (vehicleId: string) => void;
-  zoomToFitAllVehicles: () => void;
-  trackingMode: boolean;
-  setTrackingMode: (enabled: boolean) => void;
-  mapInitialized?: boolean;
-  mapConfig?: MapConfig;
-  setMapConfig?: (config: MapConfig) => void;
-  refreshMap?: () => void;
-  updateMarkers?: (vehicles: TransportVehicleWithLocation[]) => void;
+  mapContainer: React.RefObject<HTMLDivElement>;
+  initializeMap: () => mapboxgl.Map | null;
+  addVehiclesToMap: (vehicles: TransportVehicleWithLocation[], onClick: (vehicle: TransportVehicleWithLocation) => void) => void;
 }
 
 export interface MapExtensionRequest {
   id: string;
   requestId: string;
-  type: 'traffic' | 'satellite' | 'terrain' | 'heatmap';
-  active: boolean;
-  config?: Record<string, any>;
-  status?: 'pending' | 'approved' | 'rejected';
-  clientName?: string;
-  vehicleName?: string;
-  originalEndDate?: string;
-  requestedEndDate?: string;
-  reason?: string;
+  clientName: string;
+  vehicleName: string;
+  originalEndDate: string;
+  requestedEndDate: string;
+  reason: string;
   extensionReason?: string;
-  createdAt?: string;
+  status: 'pending' | 'approved' | 'rejected';
+  createdAt: string;
+  type: string;
+  active: boolean;
 }

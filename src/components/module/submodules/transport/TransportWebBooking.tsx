@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import {
   Card,
@@ -20,8 +19,8 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "@/components/ui/use-toast";
 import { Copy, Check, Globe, Calendar, Users, MapPin, Car, Code, X } from "lucide-react";
-import { WebBooking, WebBookingStatus } from '../types/client-types';
-import { TransportService } from '../types/base-types';
+import { WebBookingStatus } from './types/reservation-types';
+import { TransportService } from './types/base-types';
 
 const TransportWebBooking = () => {
   const [activeTab, setActiveTab] = useState("general");

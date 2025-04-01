@@ -174,16 +174,16 @@ const TransportGeolocation = () => {
       {selectedVehicle && (
         <AlertDetailsDialog
           vehicle={selectedVehicle}
-          isOpen={isAlertDialogOpen}
-          onClose={() => setIsAlertDialogOpen(false)}
+          open={isAlertDialogOpen}
+          onOpenChange={setIsAlertDialogOpen}
           onConfigure={handleConfigureAlerts}
         />
       )}
 
       {/* Alert configuration dialog */}
       <AlertConfigDialog
-        isOpen={isAlertConfigOpen}
-        onClose={() => setIsAlertConfigOpen(false)}
+        open={isAlertConfigOpen}
+        onOpenChange={setIsAlertConfigOpen}
         onSave={handleSaveAlertConfig}
       />
     </div>

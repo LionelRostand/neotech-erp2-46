@@ -1,4 +1,3 @@
-
 import { TransportVehicle } from '../types/vehicle-types';
 import { MapExtensionRequest } from '../types/map-types';
 import { MaintenanceSchedule } from '../types/vehicle-types';
@@ -79,7 +78,7 @@ export const maintenanceSchedules: MaintenanceSchedule[] = [
     scheduledDate: '2023-06-20',
     estimatedDuration: 60, // minutes
     status: 'scheduled',
-    notes: [],
+    notes: "",
     createdAt: '2023-05-15T10:00:00Z',
     updatedAt: '2023-05-15T10:00:00Z'
   },
@@ -91,7 +90,7 @@ export const maintenanceSchedules: MaintenanceSchedule[] = [
     scheduledDate: '2023-06-22',
     estimatedDuration: 120, // minutes
     status: 'scheduled',
-    notes: [],
+    notes: "",
     createdAt: '2023-05-16T11:30:00Z',
     updatedAt: '2023-05-16T11:30:00Z'
   },
@@ -103,7 +102,7 @@ export const maintenanceSchedules: MaintenanceSchedule[] = [
     scheduledDate: '2023-06-25',
     estimatedDuration: 90, // minutes
     status: 'scheduled',
-    notes: [],
+    notes: "",
     createdAt: '2023-05-17T14:15:00Z',
     updatedAt: '2023-05-17T14:15:00Z'
   }
@@ -135,7 +134,9 @@ export const extensionRequests: MapExtensionRequest[] = [
     reason: 'Prolongation du séminaire d\'entreprise',
     extensionReason: 'Besoin du véhicule pour deux jours supplémentaires',
     status: 'pending',
-    createdAt: '2023-06-10T09:15:00Z'
+    createdAt: '2023-06-10T09:15:00Z',
+    type: 'extension',
+    active: true
   },
   {
     id: 'req2',
@@ -147,7 +148,9 @@ export const extensionRequests: MapExtensionRequest[] = [
     reason: 'Rendez-vous client supplémentaire',
     extensionReason: 'Réunion supplémentaire en fin de journée',
     status: 'approved',
-    createdAt: '2023-06-11T14:30:00Z'
+    createdAt: '2023-06-11T14:30:00Z',
+    type: 'extension',
+    active: true
   }
 ];
 
@@ -164,9 +167,8 @@ export const mockDrivers: TransportDriver[] = [
     onLeave: false,
     rating: 4.8,
     experience: 5, // in years
-    specializations: ['VIP', 'airport', 'long-distance'],
     language: ['french', 'english'],
-    preferredVehicles: ['sedan', 'luxury'],
+    preferredVehicleType: ['sedan', 'luxury'],
     status: 'active',
     notes: [],
     createdAt: '2021-03-15T10:00:00Z'
@@ -183,9 +185,8 @@ export const mockDrivers: TransportDriver[] = [
     onLeave: false,
     rating: 4.9,
     experience: 7, // in years
-    specializations: ['airport', 'events'],
     language: ['french', 'spanish', 'english'],
-    preferredVehicles: ['van', 'minibus'],
+    preferredVehicleType: ['van', 'minibus'],
     status: 'active',
     notes: [],
     createdAt: '2020-07-22T09:30:00Z'
@@ -202,9 +203,8 @@ export const mockDrivers: TransportDriver[] = [
     onLeave: true,
     rating: 4.7,
     experience: 3, // in years
-    specializations: ['airport', 'tourism'],
     language: ['french', 'english'],
-    preferredVehicles: ['sedan'],
+    preferredVehicleType: ['sedan'],
     status: 'on_leave',
     notes: [],
     createdAt: '2022-01-05T11:15:00Z'
@@ -222,7 +222,6 @@ export const vehicles: TransportVehicle[] = [
     mileage: 45000,
     available: true,
     status: "active",
-    maintenanceDate: "2023-05-15",
     nextMaintenanceDate: "2023-08-15",
     registrationDate: "2021-03-10",
     insuranceExpiryDate: "2024-03-10",
@@ -242,7 +241,6 @@ export const vehicles: TransportVehicle[] = [
     mileage: 25000,
     available: true,
     status: "active",
-    maintenanceDate: "2023-04-20",
     nextMaintenanceDate: "2023-07-20",
     registrationDate: "2022-01-15",
     insuranceExpiryDate: "2024-01-15",
@@ -262,7 +260,6 @@ export const vehicles: TransportVehicle[] = [
     mileage: 65000,
     available: false,
     status: "maintenance",
-    maintenanceDate: "2023-06-01",
     nextMaintenanceDate: "2023-09-01",
     registrationDate: "2020-10-05",
     insuranceExpiryDate: "2023-10-05",

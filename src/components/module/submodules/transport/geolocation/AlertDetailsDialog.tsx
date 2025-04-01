@@ -1,132 +1,97 @@
 
 import React from 'react';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { AlertTriangle, Car, Clock, MapPin } from "lucide-react";
+import { AlertCircle, MapPin, MoreHorizontal } from "lucide-react";
+import { TransportVehicleWithLocation } from '../types/transport-types';
+import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
 
 interface AlertDetailsDialogProps {
+  vehicle: TransportVehicleWithLocation;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  alert: any;
-  onResolve: (alertId: string) => void;
+  onConfigure: () => void;
 }
 
 const AlertDetailsDialog: React.FC<AlertDetailsDialogProps> = ({
+  vehicle,
   open,
   onOpenChange,
-  alert,
-  onResolve
+  onConfigure
 }) => {
-  if (!alert) return null;
+  const formatTime = (timestamp: string) => {
+    return format(new Date(timestamp), 'HH:mm', { locale: fr });
+  };
 
-  const renderAlertBadge = (type: string, status: string) => {
-    let bgColor = "bg-red-500";
-    
-    if (status === 'resolved') {
-      bgColor = "bg-gray-500";
+  const formatDate = (timestamp: string) => {
+    return format(new Date(timestamp), 'PP', { locale: fr });
+  };
+
+  // Mock alerts for the vehicle
+  const alerts = [
+    {
+      id: 'alert1',
+      type: 'speed',
+      message: 'Excès de vitesse détecté',
+      timestamp: new Date().toISOString(),
+      details: 'Vitesse détectée: 85 km/h dans une zone de 50 km/h'
+    },
+    {
+      id: 'alert2',
+      type: 'zone',
+      message: 'Entrée dans une zone non autorisée',
+      timestamp: new Date(Date.now() - 1800000).toISOString(), // 30 minutes ago
+      details: 'Véhicule entré dans la zone: Zone industrielle Nord'
     }
-    
-    return <Badge className={bgColor}>{type}</Badge>;
-  };
-
-  const formatDate = (dateStr: string) => {
-    return new Date(dateStr).toLocaleString('fr-FR');
-  };
-
-  const handleResolve = () => {
-    onResolve(alert.id);
-    onOpenChange(false);
-  };
+  ];
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[550px]">
+      <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <AlertTriangle className="h-5 w-5" />
-            <span>Détails de l'alerte</span>
-          </DialogTitle>
+          <DialogTitle>Alertes - {vehicle.name}</DialogTitle>
           <DialogDescription>
-            Informations détaillées sur l'alerte
+            Alertes récentes pour ce véhicule
           </DialogDescription>
         </DialogHeader>
-        
-        <div className="space-y-4">
-          <div className="flex justify-between items-center border-b pb-2">
-            <div className="flex items-center gap-2">
-              {renderAlertBadge(alert.type, alert.status)}
-              <h3 className="font-medium text-lg">{alert.vehicleName}</h3>
-            </div>
-            <div>
-              <Badge variant="outline" className={alert.status === 'resolved' ? 'bg-gray-100' : 'bg-red-100'}>
-                {alert.status === 'resolved' ? 'Résolu' : 'Non résolu'}
-              </Badge>
-            </div>
-          </div>
-          
-          <div className="space-y-2">
-            <div className="text-sm text-muted-foreground">Description</div>
-            <div className="text-base">{alert.message}</div>
-          </div>
-          
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1">
-              <div className="flex items-center gap-1">
-                <Car className="h-4 w-4 text-muted-foreground" />
-                <div className="text-sm text-muted-foreground">Véhicule</div>
+
+        <div className="space-y-6 py-4">
+          {alerts.map((alert) => (
+            <div key={alert.id} className="space-y-2">
+              <div className="flex items-center gap-2">
+                <AlertCircle className="h-4 w-4 text-red-500" />
+                <h4 className="font-medium">{alert.message}</h4>
+                <Badge 
+                  variant="secondary" 
+                  className="ml-auto"
+                >
+                  {formatTime(alert.timestamp)}
+                </Badge>
               </div>
-              <div className="font-medium">{alert.vehicleName} ({alert.licensePlate})</div>
-            </div>
-            
-            <div className="space-y-1">
-              <div className="flex items-center gap-1">
-                <Clock className="h-4 w-4 text-muted-foreground" />
-                <div className="text-sm text-muted-foreground">Date et heure</div>
-              </div>
-              <div className="font-medium">{formatDate(alert.timestamp)}</div>
-            </div>
-          </div>
-          
-          {alert.type === 'geofence' && (
-            <div className="border-t pt-4">
-              <h4 className="font-medium mb-2 flex items-center gap-2">
-                <MapPin className="h-4 w-4" />
-                <span>Localisation</span>
-              </h4>
-              <div className="text-sm">
-                Le véhicule est sorti de la zone autorisée à {formatDate(alert.timestamp)}.
-              </div>
-              <div className="mt-2 p-2 bg-gray-50 rounded-md">
-                <div className="text-sm">Coordonnées: {alert.location?.lat.toFixed(6)}, {alert.location?.lng.toFixed(6)}</div>
+              <p className="text-sm text-muted-foreground">{alert.details}</p>
+              <div className="flex items-center text-xs text-muted-foreground">
+                <MapPin className="h-3 w-3 mr-1" />
+                <span>
+                  Latitude: {vehicle.location.coordinates.latitude}, Longitude: {vehicle.location.coordinates.longitude}
+                </span>
               </div>
             </div>
-          )}
-          
-          {alert.type === 'speeding' && (
-            <div className="border-t pt-4">
-              <h4 className="font-medium mb-2 flex items-center gap-2">
-                <AlertTriangle className="h-4 w-4" />
-                <span>Détails de l'excès de vitesse</span>
-              </h4>
-              <div className="text-sm">
-                Vitesse détectée: <span className="font-medium">{alert.speed} km/h</span> dans une zone limitée à <span className="font-medium">{alert.speedLimit} km/h</span>
-              </div>
-            </div>
-          )}
+          ))}
         </div>
-        
-        <DialogFooter>
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={() => onOpenChange(false)}>
-              Fermer
-            </Button>
-            {alert.status !== 'resolved' && (
-              <Button onClick={handleResolve}>
-                Résoudre l'alerte
-              </Button>
-            )}
-          </div>
+
+        <DialogFooter className="flex justify-between items-center">
+          <Button 
+            variant="outline"
+            onClick={onConfigure}
+          >
+            Configurer les alertes
+          </Button>
+          
+          <Button onClick={() => onOpenChange(false)}>
+            Fermer
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

@@ -1,44 +1,60 @@
 
-// Define driver-related types for the Transport module
+import { TransportBasic, Note } from './base-types';
 
-export interface TransportDriver {
-  id: string;
+export interface TransportDriver extends TransportBasic {
   firstName: string;
   lastName: string;
-  email: string;
   phone: string;
+  email: string;
   licenseNumber: string;
   licenseType?: string;
   licenseExpiry: string;
-  status: 'active' | 'inactive' | 'on_leave' | 'driving' | 'off-duty';
-  rating: number;
-  hireDate: string;
-  profileImage?: string;
-  photo?: string;
   address?: string;
-  available?: boolean;
-  onLeave?: boolean;
-  experience?: number;
-  skills?: string[];
-  preferredVehicleType?: string;
-  preferredVehicleTypes?: string[];
-  createdAt?: string;
-  performance?: {
-    completedTrips?: number;
-    onTimeRate?: number;
-    satisfactionScore?: number;
-    cancelledTrips?: number;
-    totalDistance?: number;
-    avgRating?: number;
-    customerSatisfaction?: number;
-    safetyScore?: number;
-  };
+  available: boolean;
+  onLeave: boolean;
+  rating: number;
+  experience: number; // in years
+  language: string[];
+  preferredVehicleType: string[];
+  hireDate?: string;
+  status: 'active' | 'inactive' | 'driving' | 'on_leave' | 'off-duty';
+  notes: DriverNote[];
 }
 
-export interface DriverNote {
+export interface DriverNote extends Note {
+  driverId: string;
+}
+
+export interface DriverSchedule {
   id: string;
   driverId: string;
-  content: string;
+  date: string;
+  startTime: string;
+  endTime: string;
+  reservationId?: string;
+  type: 'reservation' | 'break' | 'off-duty' | 'holiday';
+  notes?: string;
   createdAt: string;
-  createdBy: string;
+  updatedAt?: string;
+}
+
+export interface DriverAvailabilityPeriod {
+  id: string;
+  driverId: string;
+  startDate: string;
+  endDate: string;
+  type: 'available' | 'unavailable' | 'vacation' | 'sick-leave';
+  reason?: string;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface DriverRatingEntry {
+  id: string;
+  driverId: string;
+  reservationId: string;
+  clientId: string;
+  rating: number;
+  comment?: string;
+  createdAt: string;
 }

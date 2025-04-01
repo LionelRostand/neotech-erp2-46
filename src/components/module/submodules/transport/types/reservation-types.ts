@@ -3,7 +3,7 @@ import { TransportBasic } from './base-types';
 import { TransportService } from './base-types';
 import { WebBookingService } from './integration-types';
 
-export interface TransportReservation extends TransportBasic {
+export interface TransportReservation extends Omit<TransportBasic, 'notes'> {
   clientId: string;
   clientName: string;
   vehicleId: string;
@@ -39,10 +39,26 @@ export interface Reservation {
   endDate: string;
   pickup: string;
   dropoff: string;
+  pickupLocation: Address;
+  dropoffLocation: Address;
   totalAmount: number;
   isPaid: boolean;
+  paymentStatus: string;
   status: string;
   notes?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface Address {
+  address: string;
+  city?: string;
+  zipCode?: string;
+  country?: string;
+  coordinates?: {
+    latitude: number;
+    longitude: number;
+  };
 }
 
 export interface WebBooking {
@@ -64,3 +80,17 @@ export interface WebBooking {
 }
 
 export type WebBookingStatus = 'new' | 'confirmed' | 'cancelled' | 'processed';
+
+// Helper function to get address string
+export const getAddressString = (address?: Address): string => {
+  if (!address) return '—';
+  return address.address;
+};
+
+// Define the reservation status type
+export type TransportReservationStatus = 
+  | 'pending'
+  | 'confirmed'
+  | 'completed'
+  | 'cancelled'
+  | 'no-show';

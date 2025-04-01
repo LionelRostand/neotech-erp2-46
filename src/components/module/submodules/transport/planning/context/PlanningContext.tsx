@@ -1,5 +1,5 @@
 
-import React, { createContext, useState, useContext, ReactNode } from 'react';
+import React, { createContext, useState, useContext, ReactNode, useCallback } from 'react';
 import { 
   TransportVehicle, 
   MaintenanceSchedule,
@@ -8,9 +8,7 @@ import {
 } from '../../types/transport-types';
 import { 
   mockDrivers, 
-  vehicles as mockVehicles, 
-  maintenanceSchedules, 
-  extensionRequests 
+  vehicles as mockVehicles
 } from '../mockData';
 
 interface PlanningContextType {
@@ -21,6 +19,11 @@ interface PlanningContextType {
   selectedVehicleId: string | null;
   selectedDriverId: string | null;
   selectedDate: Date;
+  selectedVehicle?: TransportVehicle | null;
+  selectedExtensionRequest?: MapExtensionRequest | null;
+  showMaintenanceDialog: boolean;
+  showExtensionDetailsDialog: boolean;
+  isLoading: boolean;
   setVehicles: (vehicles: TransportVehicle[]) => void;
   setMaintenanceSchedules: (schedules: MaintenanceSchedule[]) => void;
   setExtensionRequests: (requests: MapExtensionRequest[]) => void;
@@ -28,9 +31,17 @@ interface PlanningContextType {
   setSelectedVehicleId: (id: string | null) => void;
   setSelectedDriverId: (id: string | null) => void;
   setSelectedDate: (date: Date) => void;
+  setShowMaintenanceDialog: (show: boolean) => void;
+  setShowExtensionDetailsDialog: (show: boolean) => void;
   approveExtensionRequest: (id: string) => void;
   rejectExtensionRequest: (id: string) => void;
   deleteExtensionRequest: (id: string) => void;
+  refreshData: () => void;
+  openMaintenanceScheduleDialog: () => void;
+  openExtensionDetailsDialog: (id: string) => void;
+  handleAddMaintenance: (data: any) => void;
+  handleSaveMaintenance: (data: any) => void;
+  handleResolveExtension: (id: string, approved: boolean) => void;
 }
 
 interface PlanningProviderProps {
@@ -40,9 +51,17 @@ interface PlanningProviderProps {
 const PlanningContext = createContext<PlanningContextType | undefined>(undefined);
 
 export const PlanningProvider = ({ children }: PlanningProviderProps) => {
+  // Import local data
+  const localMaintenanceSchedules: MaintenanceSchedule[] = require('../mockData').maintenanceSchedules;
+  const localExtensionRequests: MapExtensionRequest[] = require('../mockData').extensionRequests;
+  
   const [vehicles, setVehicles] = useState<TransportVehicle[]>(mockVehicles);
-  const [maintenanceSchedules, setMaintenanceSchedules] = useState<MaintenanceSchedule[]>(maintenanceSchedules);
-  const [extensionRequests, setExtensionRequests] = useState<MapExtensionRequest[]>(extensionRequests);
+  const [maintenanceSchedules, setMaintenanceSchedules] = useState<MaintenanceSchedule[]>(localMaintenanceSchedules);
+  const [extensionRequests, setExtensionRequests] = useState<MapExtensionRequest[]>(localExtensionRequests);
+  const [isLoading, setIsLoading] = useState(false);
+  const [selectedExtensionRequest, setSelectedExtensionRequest] = useState<MapExtensionRequest | null>(null);
+  const [showMaintenanceDialog, setShowMaintenanceDialog] = useState(false);
+  const [showExtensionDetailsDialog, setShowExtensionDetailsDialog] = useState(false);
   
   // Convert mock drivers to ensure they match the TransportDriver type
   const typedMockDrivers: TransportDriver[] = mockDrivers.map(driver => {
@@ -65,6 +84,9 @@ export const PlanningProvider = ({ children }: PlanningProviderProps) => {
   const [selectedVehicleId, setSelectedVehicleId] = useState<string | null>(null);
   const [selectedDriverId, setSelectedDriverId] = useState<string | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+
+  // Get the selected vehicle
+  const selectedVehicle = selectedVehicleId ? vehicles.find(v => v.id === selectedVehicleId) : null;
 
   // Function to approve an extension request
   const approveExtensionRequest = (id: string) => {
@@ -91,6 +113,50 @@ export const PlanningProvider = ({ children }: PlanningProviderProps) => {
     );
   };
 
+  // Function to refresh data
+  const refreshData = useCallback(() => {
+    setIsLoading(true);
+    // Simulate API call
+    setTimeout(() => {
+      setIsLoading(false);
+    }, 500);
+  }, []);
+
+  // Open maintenance schedule dialog
+  const openMaintenanceScheduleDialog = () => {
+    setShowMaintenanceDialog(true);
+  };
+
+  // Open extension details dialog
+  const openExtensionDetailsDialog = (id: string) => {
+    const request = extensionRequests.find(req => req.id === id);
+    if (request) {
+      setSelectedExtensionRequest(request);
+      setShowExtensionDetailsDialog(true);
+    }
+  };
+
+  // Handle adding maintenance
+  const handleAddMaintenance = (data: any) => {
+    openMaintenanceScheduleDialog();
+  };
+
+  // Handle saving maintenance
+  const handleSaveMaintenance = (data: any) => {
+    console.log("Saving maintenance data:", data);
+    setShowMaintenanceDialog(false);
+  };
+
+  // Handle resolve extension
+  const handleResolveExtension = (id: string, approved: boolean) => {
+    if (approved) {
+      approveExtensionRequest(id);
+    } else {
+      rejectExtensionRequest(id);
+    }
+    setShowExtensionDetailsDialog(false);
+  };
+
   return (
     <PlanningContext.Provider
       value={{
@@ -101,6 +167,11 @@ export const PlanningProvider = ({ children }: PlanningProviderProps) => {
         selectedVehicleId,
         selectedDriverId,
         selectedDate,
+        selectedVehicle,
+        selectedExtensionRequest,
+        showMaintenanceDialog,
+        showExtensionDetailsDialog,
+        isLoading,
         setVehicles,
         setMaintenanceSchedules,
         setExtensionRequests,
@@ -108,9 +179,17 @@ export const PlanningProvider = ({ children }: PlanningProviderProps) => {
         setSelectedVehicleId,
         setSelectedDriverId,
         setSelectedDate,
+        setShowMaintenanceDialog,
+        setShowExtensionDetailsDialog,
         approveExtensionRequest,
         rejectExtensionRequest,
         deleteExtensionRequest,
+        refreshData,
+        openMaintenanceScheduleDialog,
+        openExtensionDetailsDialog,
+        handleAddMaintenance,
+        handleSaveMaintenance,
+        handleResolveExtension,
       }}
     >
       {children}

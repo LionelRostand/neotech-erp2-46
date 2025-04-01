@@ -1,5 +1,6 @@
 
 import { TransportBasic, Note } from './base-types';
+import { TransportService } from './base-types';
 
 export interface TransportClient extends TransportBasic {
   firstName: string;
@@ -105,7 +106,14 @@ export interface WebBooking {
   status: WebBookingStatus;
   createdAt: string;
   updatedAt: string;
-  service: TransportService;
+  service: WebBookingService;
+}
+
+export interface WebBookingService {
+  id: string;
+  name: string;
+  price?: number;
+  description?: string;
 }
 
 export type WebBookingStatus = 'new' | 'confirmed' | 'cancelled' | 'processed';
