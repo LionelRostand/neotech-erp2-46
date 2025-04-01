@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 interface PreviewContentItem {
   id: string;
@@ -18,7 +18,12 @@ const WebsitePreview: React.FC<WebsitePreviewProps> = ({
   initialContent = [],
   customContent = null
 }) => {
-  const [content] = useState<PreviewContentItem[]>(initialContent);
+  const [content, setContent] = useState<PreviewContentItem[]>(initialContent);
+  
+  // Mise à jour du contenu lorsque initialContent change
+  useEffect(() => {
+    setContent(initialContent);
+  }, [initialContent]);
   
   return (
     <div className="website-preview w-full min-h-[400px] bg-white">
@@ -30,7 +35,7 @@ const WebsitePreview: React.FC<WebsitePreviewProps> = ({
         </div>
         <div className="flex-1 flex justify-center">
           <div className="bg-white rounded-md px-3 py-1 text-xs text-center w-64 truncate">
-            https://example.com/
+            https://monsite.lovable.app/
           </div>
         </div>
       </div>

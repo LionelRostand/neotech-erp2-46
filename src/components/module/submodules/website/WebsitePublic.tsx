@@ -1,46 +1,68 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ChevronsUpDown } from '@/components/ui/ui-utils';
-import { Globe, Copy, ExternalLink, ArrowLeft, Edit, Share2 } from 'lucide-react';
+import { Globe, Copy, ExternalLink, ArrowLeft, Edit, Share2, Link2 } from 'lucide-react';
 import WebsitePreview from './website-preview/WebsitePreview';
 import { useToast } from '@/components/ui/use-toast';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 
-// Contenu d'exemple pour la prévisualisation
-const exampleContent = [
-  {
-    id: 'header-1',
-    type: 'header',
-    content: '<div class="p-4 bg-primary/10"><h1 class="text-2xl font-bold">Mon Site Web</h1><p>Bienvenue sur mon site</p></div>'
-  },
-  {
-    id: 'section-1',
-    type: 'section',
-    content: `
-      <div class="p-6">
-        <h2 class="text-xl font-bold mb-4">Section Principale</h2>
-        <p>Ceci est un exemple de section. Vous pouvez modifier ce contenu en double-cliquant dessus.</p>
-        <div class="mt-4">
-          <button class="bg-primary text-white px-4 py-2 rounded">En savoir plus</button>
-        </div>
-      </div>
-    `
-  },
-  {
-    id: 'image-1',
-    type: 'image',
-    content: '<div class="p-4"><img src="https://via.placeholder.com/800x400" class="w-full h-auto rounded" alt="Placeholder" /></div>'
-  }
-];
+interface PreviewContentItem {
+  id: string;
+  type: string;
+  content: string;
+}
 
 const WebsitePublic = () => {
   const { toast } = useToast();
   const [viewMode, setViewMode] = useState<'browser' | 'fullscreen'>('browser');
+  const [publishDialogOpen, setPublishDialogOpen] = useState(false);
+  const [domainType, setDomainType] = useState<'lovable' | 'custom'>('lovable');
+  const [customDomain, setCustomDomain] = useState('');
+  const [publishedContent, setPublishedContent] = useState<PreviewContentItem[]>([]);
+  
+  useEffect(() => {
+    // Charger le contenu publié depuis le localStorage
+    const savedContent = localStorage.getItem('website-published');
+    if (savedContent) {
+      setPublishedContent(JSON.parse(savedContent));
+    } else {
+      // Contenu d'exemple pour la prévisualisation si aucun contenu n'est publié
+      setPublishedContent([
+        {
+          id: 'header-1',
+          type: 'header',
+          content: '<div class="p-4 bg-primary/10"><h1 class="text-2xl font-bold">Mon Site Web</h1><p>Bienvenue sur mon site</p></div>'
+        },
+        {
+          id: 'section-1',
+          type: 'section',
+          content: `
+            <div class="p-6">
+              <h2 class="text-xl font-bold mb-4">Section Principale</h2>
+              <p>Ceci est un exemple de section. Vous pouvez modifier ce contenu en double-cliquant dessus.</p>
+              <div class="mt-4">
+                <button class="bg-primary text-white px-4 py-2 rounded">En savoir plus</button>
+              </div>
+            </div>
+          `
+        },
+        {
+          id: 'image-1',
+          type: 'image',
+          content: '<div class="p-4"><img src="https://via.placeholder.com/800x400" class="w-full h-auto rounded" alt="Placeholder" /></div>'
+        }
+      ]);
+    }
+  }, []);
 
   const handleCopyUrl = () => {
-    navigator.clipboard.writeText('https://monsite.example.com');
+    navigator.clipboard.writeText(domainType === 'custom' && customDomain ? customDomain : 'https://monsite.lovable.app');
     toast({
       description: 'URL copiée dans le presse-papier',
     });
@@ -54,6 +76,13 @@ const WebsitePublic = () => {
 
   const handleBackToEditor = () => {
     window.location.href = '/modules/website/editor';
+  };
+
+  const handlePublish = () => {
+    toast({
+      description: `Site web publié avec succès sur ${domainType === 'custom' && customDomain ? customDomain : 'monsite.lovable.app'}`,
+    });
+    setPublishDialogOpen(false);
   };
 
   return (
@@ -103,7 +132,7 @@ const WebsitePublic = () => {
               </TabsList>
               <TabsContent value="preview" className="space-y-4">
                 <div className="border rounded-lg overflow-hidden bg-muted/30">
-                  <WebsitePreview previewMode={true} initialContent={exampleContent} />
+                  <WebsitePreview previewMode={true} initialContent={publishedContent} />
                 </div>
               </TabsContent>
               <TabsContent value="settings">
@@ -134,7 +163,7 @@ const WebsitePublic = () => {
                       <div className="flex items-center justify-between p-3 border rounded-md">
                         <div className="flex items-center space-x-2">
                           <Globe className="h-4 w-4 text-muted-foreground" />
-                          <div>monsite.domaine.com</div>
+                          <div>{domainType === 'custom' && customDomain ? customDomain : 'monsite.lovable.app'}</div>
                         </div>
                         <div className="flex items-center space-x-2">
                           <div className="text-xs px-2 py-1 bg-green-100 text-green-800 rounded-full">Principal</div>
@@ -143,6 +172,15 @@ const WebsitePublic = () => {
                           </Button>
                         </div>
                       </div>
+                      <Button 
+                        variant="outline" 
+                        className="w-full" 
+                        size="sm"
+                        onClick={() => setPublishDialogOpen(true)}
+                      >
+                        <Link2 className="h-4 w-4 mr-2" />
+                        Configurer un domaine personnalisé
+                      </Button>
                     </div>
                   </div>
                 </div>
@@ -153,7 +191,7 @@ const WebsitePublic = () => {
             <Button variant="outline" className="mr-2" onClick={handleBackToEditor}>
               Retourner à l'éditeur
             </Button>
-            <Button>
+            <Button onClick={() => setPublishDialogOpen(true)}>
               Publier les modifications
             </Button>
           </CardFooter>
@@ -167,7 +205,7 @@ const WebsitePublic = () => {
             </Button>
             <div className="flex items-center">
               <Globe className="h-4 w-4 mr-1 text-primary" />
-              <span className="text-sm font-medium">monsite.domaine.com</span>
+              <span className="text-sm font-medium">{domainType === 'custom' && customDomain ? customDomain : 'monsite.lovable.app'}</span>
             </div>
             <Button variant="ghost" size="sm" onClick={handleBackToEditor}>
               <Edit className="h-4 w-4 mr-1" />
@@ -175,98 +213,63 @@ const WebsitePublic = () => {
             </Button>
           </div>
           <div className="flex-1 overflow-auto bg-white">
-            <WebsitePreview previewMode={true} initialContent={exampleContent} customContent={
-              <div className="min-h-screen bg-white">
-                <header className="bg-primary text-white p-6">
-                  <div className="container mx-auto">
-                    <h1 className="text-3xl font-bold">Mon Site Web</h1>
-                    <p className="mt-2">Bienvenue sur mon site professionnel</p>
-                  </div>
-                </header>
-                
-                <main className="container mx-auto py-8 px-4">
-                  <section className="mb-12">
-                    <h2 className="text-2xl font-bold mb-6">Nos Services</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                      <div className="bg-muted/30 p-6 rounded-lg">
-                        <h3 className="text-xl font-semibold mb-3">Service 1</h3>
-                        <p>Description détaillée du premier service offert par notre entreprise.</p>
-                      </div>
-                      <div className="bg-muted/30 p-6 rounded-lg">
-                        <h3 className="text-xl font-semibold mb-3">Service 2</h3>
-                        <p>Description détaillée du deuxième service offert par notre entreprise.</p>
-                      </div>
-                      <div className="bg-muted/30 p-6 rounded-lg">
-                        <h3 className="text-xl font-semibold mb-3">Service 3</h3>
-                        <p>Description détaillée du troisième service offert par notre entreprise.</p>
-                      </div>
-                    </div>
-                  </section>
-                  
-                  <section className="mb-12">
-                    <h2 className="text-2xl font-bold mb-6">À Propos</h2>
-                    <div className="flex flex-col md:flex-row gap-8 items-center">
-                      <div className="md:w-1/2">
-                        <p className="mb-4">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam in dui mauris. Vivamus hendrerit arcu sed erat molestie vehicula.</p>
-                        <p>Sed auctor neque eu tellus rhoncus ut eleifend nibh porttitor. Ut in nulla enim. Phasellus molestie magna non est bibendum non venenatis nisl tempor.</p>
-                      </div>
-                      <div className="md:w-1/2">
-                        <img src="https://via.placeholder.com/600x400" alt="À propos" className="rounded-lg w-full" />
-                      </div>
-                    </div>
-                  </section>
-                  
-                  <section>
-                    <h2 className="text-2xl font-bold mb-6">Contactez-nous</h2>
-                    <div className="bg-muted/30 p-6 rounded-lg">
-                      <form className="space-y-4">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div>
-                            <label className="block text-sm font-medium mb-1">Nom</label>
-                            <input type="text" className="w-full p-2 border rounded-md" placeholder="Votre nom" />
-                          </div>
-                          <div>
-                            <label className="block text-sm font-medium mb-1">Email</label>
-                            <input type="email" className="w-full p-2 border rounded-md" placeholder="votre@email.com" />
-                          </div>
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium mb-1">Message</label>
-                          <textarea className="w-full p-2 border rounded-md" rows={4} placeholder="Votre message"></textarea>
-                        </div>
-                        <div>
-                          <button type="submit" className="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary/90 transition-colors">
-                            Envoyer
-                          </button>
-                        </div>
-                      </form>
-                    </div>
-                  </section>
-                </main>
-                
-                <footer className="bg-gray-900 text-white py-6">
-                  <div className="container mx-auto px-4">
-                    <div className="flex flex-col md:flex-row justify-between items-center">
-                      <div>
-                        <h3 className="text-lg font-semibold">Mon Site Web</h3>
-                        <p className="text-sm text-gray-400 mt-1">© 2025 Tous droits réservés</p>
-                      </div>
-                      <div className="mt-4 md:mt-0">
-                        <ul className="flex space-x-4">
-                          <li><a href="#" className="hover:text-primary">Accueil</a></li>
-                          <li><a href="#" className="hover:text-primary">Services</a></li>
-                          <li><a href="#" className="hover:text-primary">À propos</a></li>
-                          <li><a href="#" className="hover:text-primary">Contact</a></li>
-                        </ul>
-                      </div>
-                    </div>
-                  </div>
-                </footer>
-              </div>
-            } />
+            <WebsitePreview previewMode={true} initialContent={publishedContent} />
           </div>
         </div>
       )}
+
+      <Dialog open={publishDialogOpen} onOpenChange={setPublishDialogOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Publier votre site web</DialogTitle>
+            <DialogDescription>
+              Configurez votre domaine et publiez votre site pour le rendre accessible au public.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4 space-y-4">
+            <div>
+              <h4 className="text-sm font-medium mb-2">Options de publication</h4>
+              <RadioGroup defaultValue="lovable" value={domainType} onValueChange={(value) => setDomainType(value as 'lovable' | 'custom')}>
+                <div className="flex items-center space-x-2 mb-2">
+                  <RadioGroupItem value="lovable" id="lovable" />
+                  <Label htmlFor="lovable">Utiliser un sous-domaine Lovable</Label>
+                </div>
+                <div className={`pl-6 mb-4 ${domainType === 'lovable' ? 'block' : 'hidden'}`}>
+                  <div className="flex items-center">
+                    <span className="text-sm text-muted-foreground mr-2">https://</span>
+                    <Input value="monsite.lovable.app" readOnly className="bg-muted/50" />
+                  </div>
+                </div>
+                
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="custom" id="custom" />
+                  <Label htmlFor="custom">Utiliser un domaine personnalisé</Label>
+                </div>
+                <div className={`pl-6 ${domainType === 'custom' ? 'block' : 'hidden'}`}>
+                  <div className="flex flex-col space-y-2">
+                    <Input 
+                      placeholder="www.mondomaine.com" 
+                      value={customDomain} 
+                      onChange={(e) => setCustomDomain(e.target.value)} 
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Vous devez configurer votre DNS pour pointer vers nos serveurs. Instructions détaillées disponibles après la publication.
+                    </p>
+                  </div>
+                </div>
+              </RadioGroup>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setPublishDialogOpen(false)}>
+              Annuler
+            </Button>
+            <Button onClick={handlePublish}>
+              Publier
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

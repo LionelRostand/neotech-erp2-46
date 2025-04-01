@@ -15,7 +15,11 @@ import {
   ListOrdered,
   Table,
   Grid3X3,
-  Car
+  Car,
+  Menu as MenuIcon,
+  Flag,
+  AlertTriangle,
+  FooterIcon
 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 
@@ -38,6 +42,32 @@ const EditorSidebar: React.FC = () => {
       </div>
       
       <div className="mt-4">
+        <h3 className="px-2 mb-2 font-medium">Navigation</h3>
+        <div className="grid grid-cols-2 gap-1 px-1">
+          <Card 
+            className="p-3 text-center cursor-move hover:bg-muted transition-colors"
+            draggable
+            onDragStart={(e) => handleDragStart(e, 'menu')}
+          >
+            <div className="flex flex-col items-center">
+              <MenuIcon className="h-8 w-8 mb-1 text-primary" />
+              <span className="text-sm">Menu</span>
+            </div>
+          </Card>
+          <Card 
+            className="p-3 text-center cursor-move hover:bg-muted transition-colors"
+            draggable
+            onDragStart={(e) => handleDragStart(e, 'footer')}
+          >
+            <div className="flex flex-col items-center">
+              <FooterIcon className="h-8 w-8 mb-1 text-primary" />
+              <span className="text-sm">Footer</span>
+            </div>
+          </Card>
+        </div>
+      </div>
+      
+      <div className="mt-4">
         <h3 className="px-2 mb-2 font-medium">Structure</h3>
         <div className="grid grid-cols-2 gap-1 px-1">
           <Card 
@@ -48,6 +78,16 @@ const EditorSidebar: React.FC = () => {
             <div className="flex flex-col items-center">
               <Layout className="h-8 w-8 mb-1 text-primary" />
               <span className="text-sm">Section</span>
+            </div>
+          </Card>
+          <Card 
+            className="p-3 text-center cursor-move hover:bg-muted transition-colors"
+            draggable
+            onDragStart={(e) => handleDragStart(e, 'banner')}
+          >
+            <div className="flex flex-col items-center">
+              <Flag className="h-8 w-8 mb-1 text-primary" />
+              <span className="text-sm">Bannière</span>
             </div>
           </Card>
           <Card 

@@ -1,8 +1,8 @@
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { useToast } from '@/components/ui/use-toast';
-import { Trash2 } from 'lucide-react';
+import { Trash2, Save, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface EditorCanvasProps {
@@ -38,6 +38,8 @@ const EditorCanvas: React.FC<EditorCanvasProps> = ({ viewMode, onSelectElement }
       content: '<div class="p-4"><img src="https://via.placeholder.com/800x400" class="w-full h-auto rounded" alt="Placeholder" /></div>'
     }
   ]);
+  
+  const [isDirty, setIsDirty] = useState(false);
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
@@ -49,19 +51,49 @@ const EditorCanvas: React.FC<EditorCanvasProps> = ({ viewMode, onSelectElement }
     if (elementType) {
       const newElement = createElementFromType(elementType);
       setElements([...elements, newElement]);
+      setIsDirty(true);
       toast({
         description: `Élément ${elementType} ajouté avec succès.`,
       });
     }
   };
 
+  const handleSave = () => {
+    localStorage.setItem('website-elements', JSON.stringify(elements));
+    setIsDirty(false);
+    toast({
+      description: "Modifications enregistrées avec succès.",
+    });
+  };
+
+  const handlePublish = () => {
+    localStorage.setItem('website-published', JSON.stringify(elements));
+    toast({
+      description: "Site web publié avec succès! Disponible sur votre domaine.",
+      action: (
+        <Button variant="outline" size="sm" onClick={() => window.open('/modules/website/public', '_blank')}>
+          Voir le site
+        </Button>
+      )
+    });
+  };
+
   const handleDeleteElement = (elementId: string) => {
     const updatedElements = elements.filter(element => element.id !== elementId);
     setElements(updatedElements);
+    setIsDirty(true);
     toast({
       description: "Élément supprimé avec succès.",
     });
   };
+
+  // Chargement des éléments sauvegardés au démarrage
+  useEffect(() => {
+    const savedElements = localStorage.getItem('website-elements');
+    if (savedElements) {
+      setElements(JSON.parse(savedElements));
+    }
+  }, []);
 
   const createElementFromType = (type: string) => {
     const id = `${type}-${Date.now()}`;
@@ -163,6 +195,73 @@ const EditorCanvas: React.FC<EditorCanvasProps> = ({ viewMode, onSelectElement }
           </div>
         `;
         break;
+      case 'menu':
+        content = `
+          <nav class="p-4 bg-primary text-white">
+            <div class="container mx-auto flex justify-between items-center">
+              <div class="font-bold text-xl">Logo</div>
+              <div class="hidden md:flex space-x-6">
+                <a href="#" class="hover:opacity-80 transition-opacity">Accueil</a>
+                <a href="#" class="hover:opacity-80 transition-opacity">Services</a>
+                <a href="#" class="hover:opacity-80 transition-opacity">À Propos</a>
+                <a href="#" class="hover:opacity-80 transition-opacity">Contact</a>
+              </div>
+              <div class="md:hidden">
+                <button class="p-2">Menu</button>
+              </div>
+            </div>
+          </nav>
+        `;
+        break;
+      case 'banner':
+        content = `
+          <div class="bg-primary/90 text-white p-10 text-center relative overflow-hidden">
+            <div class="absolute inset-0 bg-cover bg-center opacity-20" style="background-image: url('https://images.unsplash.com/photo-1522441815192-d9f04eb0615c?q=80&w=1200');"></div>
+            <div class="relative z-10 space-y-4 max-w-4xl mx-auto">
+              <h1 class="text-3xl md:text-5xl font-bold">Titre de votre bannière</h1>
+              <p class="text-lg md:text-xl">Une description attrayante pour captiver vos visiteurs et les encourager à en savoir plus.</p>
+              <div class="flex justify-center space-x-4 pt-4">
+                <button class="bg-white text-primary px-6 py-2 rounded-lg font-medium hover:bg-opacity-90 transition-colors">Découvrir</button>
+                <button class="bg-transparent border border-white px-6 py-2 rounded-lg font-medium hover:bg-white/10 transition-colors">En savoir plus</button>
+              </div>
+            </div>
+          </div>
+        `;
+        break;
+      case 'footer':
+        content = `
+          <footer class="bg-gray-800 text-white p-8">
+            <div class="container mx-auto">
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div>
+                  <h3 class="text-lg font-bold mb-4">À propos</h3>
+                  <p class="text-gray-300">Une brève description de votre entreprise et de ses services. Ajoutez ici des informations importantes.</p>
+                </div>
+                <div>
+                  <h3 class="text-lg font-bold mb-4">Liens rapides</h3>
+                  <ul class="space-y-2 text-gray-300">
+                    <li><a href="#" class="hover:text-white transition-colors">Accueil</a></li>
+                    <li><a href="#" class="hover:text-white transition-colors">Services</a></li>
+                    <li><a href="#" class="hover:text-white transition-colors">À propos</a></li>
+                    <li><a href="#" class="hover:text-white transition-colors">Contact</a></li>
+                  </ul>
+                </div>
+                <div>
+                  <h3 class="text-lg font-bold mb-4">Contact</h3>
+                  <ul class="space-y-2 text-gray-300">
+                    <li>Email: contact@example.com</li>
+                    <li>Téléphone: +33 1 23 45 67 89</li>
+                    <li>Adresse: 123 Rue des Exemples, 75000 Paris</li>
+                  </ul>
+                </div>
+              </div>
+              <div class="border-t border-gray-700 mt-8 pt-6 text-center text-gray-400">
+                <p>&copy; 2024 Votre Entreprise. Tous droits réservés.</p>
+              </div>
+            </div>
+          </footer>
+        `;
+        break;
       default:
         content = `<div class="p-4 border border-dashed rounded">Élément ${type}</div>`;
     }
@@ -179,47 +278,66 @@ const EditorCanvas: React.FC<EditorCanvasProps> = ({ viewMode, onSelectElement }
   };
 
   return (
-    <div 
-      className={`bg-white border rounded-lg shadow-sm overflow-auto ${
-        viewMode === 'mobile' ? 'max-w-[375px]' : viewMode === 'tablet' ? 'max-w-[768px]' : 'w-full'
-      } mx-auto`}
-      style={{ minHeight: '100%' }}
-      onDragOver={handleDragOver}
-      onDrop={handleDrop}
-      ref={canvasRef}
-    >
-      <div className="min-h-screen">
-        {elements.map((element) => (
-          <div 
-            key={element.id}
-            className="relative group hover:outline-dashed hover:outline-primary/40 hover:outline-2 cursor-pointer"
-          >
+    <div className="flex flex-col h-full">
+      <div className="flex justify-end gap-2 p-2 border-b">
+        <Button 
+          variant={isDirty ? "default" : "outline"} 
+          size="sm"
+          onClick={handleSave}
+        >
+          <Save className="h-4 w-4 mr-1" />
+          Enregistrer
+        </Button>
+        <Button 
+          variant="outline" 
+          size="sm"
+          onClick={handlePublish}
+        >
+          <Upload className="h-4 w-4 mr-1" />
+          Publier
+        </Button>
+      </div>
+      <div 
+        className={`bg-white border rounded-lg shadow-sm overflow-auto flex-1 ${
+          viewMode === 'mobile' ? 'max-w-[375px]' : viewMode === 'tablet' ? 'max-w-[768px]' : 'w-full'
+        } mx-auto`}
+        onDragOver={handleDragOver}
+        onDrop={handleDrop}
+        ref={canvasRef}
+      >
+        <div className="min-h-screen">
+          {elements.map((element) => (
             <div 
-              onClick={() => handleElementClick(element)}
-              dangerouslySetInnerHTML={{ __html: element.content }}
-            />
-            <Button
-              variant="destructive"
-              size="icon"
-              className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleDeleteElement(element.id);
-              }}
+              key={element.id}
+              className="relative group hover:outline-dashed hover:outline-primary/40 hover:outline-2 cursor-pointer"
             >
-              <Trash2 className="h-4 w-4" />
-            </Button>
-          </div>
-        ))}
-        
-        {elements.length === 0 && (
-          <div className="flex items-center justify-center p-10 h-96 text-muted-foreground">
-            <div className="text-center">
-              <p>Aucun élément dans la page</p>
-              <p className="text-sm">Faites glisser des éléments depuis le panneau de gauche</p>
+              <div 
+                onClick={() => handleElementClick(element)}
+                dangerouslySetInnerHTML={{ __html: element.content }}
+              />
+              <Button
+                variant="destructive"
+                size="icon"
+                className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleDeleteElement(element.id);
+                }}
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
             </div>
-          </div>
-        )}
+          ))}
+          
+          {elements.length === 0 && (
+            <div className="flex items-center justify-center p-10 h-96 text-muted-foreground">
+              <div className="text-center">
+                <p>Aucun élément dans la page</p>
+                <p className="text-sm">Faites glisser des éléments depuis le panneau de gauche</p>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
