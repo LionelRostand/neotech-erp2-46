@@ -1,7 +1,7 @@
 
 import React, { createContext, useContext, useState, useCallback } from 'react';
 import { TransportVehicle, TransportDriver, VehicleMaintenanceSchedule, MapExtensionRequest } from '../../types';
-// Import directly from mockData.ts with the correct export names
+// Fix imports to use the correct mockData export names
 import { mockVehicles, mockMaintenanceSchedules, mockExtensionRequests, mockDrivers } from '../mockData';
 
 // Define the type for the context value
@@ -48,14 +48,14 @@ const PlanningContext = createContext<PlanningContextType | null>(null);
 // Provider component
 export const PlanningProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   // State for data
-  const [vehiclesData, setVehiclesData] = useState<TransportVehicle[]>(mockVehicles);
+  const [vehiclesData, setVehiclesData] = useState<TransportVehicle[]>(mockVehicles as unknown as TransportVehicle[]);
   const [maintenanceSchedulesData, setMaintenanceSchedulesData] = useState<VehicleMaintenanceSchedule[]>(
     mockMaintenanceSchedules as unknown as VehicleMaintenanceSchedule[]
   );
   const [extensionRequestsData, setExtensionRequestsData] = useState<MapExtensionRequest[]>(
     mockExtensionRequests as unknown as MapExtensionRequest[]
   );
-  const [driversData, setDriversData] = useState<TransportDriver[]>(mockDrivers);
+  const [driversData, setDriversData] = useState<TransportDriver[]>(mockDrivers as unknown as TransportDriver[]);
   const [isLoading, setIsLoading] = useState<boolean>(false); // Add isLoading state
   
   // State for selected items
@@ -87,10 +87,10 @@ export const PlanningProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     // In a real app, this would fetch fresh data from an API
     setIsLoading(true);
     setTimeout(() => {
-      setVehiclesData(mockVehicles);
+      setVehiclesData(mockVehicles as unknown as TransportVehicle[]);
       setMaintenanceSchedulesData(mockMaintenanceSchedules as unknown as VehicleMaintenanceSchedule[]);
       setExtensionRequestsData(mockExtensionRequests as unknown as MapExtensionRequest[]);
-      setDriversData(mockDrivers);
+      setDriversData(mockDrivers as unknown as TransportDriver[]);
       setIsLoading(false);
     }, 500);
   }, []);

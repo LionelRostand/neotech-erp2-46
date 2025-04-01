@@ -63,17 +63,17 @@ export interface IncidentRecord extends TransportBasic {
 }
 
 // Modified to be compatible with VehicleMaintenanceSchedule
-export interface MaintenanceSchedule extends TransportBasic {
+export interface MaintenanceSchedule extends Omit<TransportBasic, 'notes'> {
   vehicleId: string;
   type: string;
   description: string;
   scheduledDate: string;
   estimatedDuration: number; // in minutes
   status: 'pending' | 'in-progress' | 'scheduled' | 'completed' | 'cancelled';
-  notes: any[] | string; // Updated to accept both array and string for compatibility
+  notes: any[] | string; // Accept both array and string for compatibility
   startDate?: string;
   endDate?: string;
   technician?: string;
-  technicianAssigned?: boolean;
+  technicianAssigned?: string | boolean; // Accept both string and boolean
   completed?: boolean;
 }
