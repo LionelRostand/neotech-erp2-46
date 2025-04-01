@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -21,10 +22,37 @@ import {
   Footprints
 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
+import ElementItem from './ElementItem';
 
 const EditorSidebar: React.FC = () => {
   const handleDragStart = (e: React.DragEvent<HTMLDivElement>, elementType: string) => {
     e.dataTransfer.setData('elementType', elementType);
+  };
+
+  // Group elements by category for better organization
+  const elements = {
+    navigation: [
+      { type: 'menu', icon: <MenuIcon className="h-8 w-8 mb-1 text-primary" />, label: 'Menu' },
+      { type: 'footer', icon: <Footprints className="h-8 w-8 mb-1 text-primary" />, label: 'Footer' }
+    ],
+    structure: [
+      { type: 'section', icon: <Layout className="h-8 w-8 mb-1 text-primary" />, label: 'Section' },
+      { type: 'banner', icon: <Flag className="h-8 w-8 mb-1 text-primary" />, label: 'Bannière' },
+      { type: 'columns', icon: <Columns className="h-8 w-8 mb-1 text-primary" />, label: 'Colonnes' }
+    ],
+    basic: [
+      { type: 'heading', icon: <Type className="h-4 w-4 text-primary" />, label: 'Titre' },
+      { type: 'paragraph', icon: <FileText className="h-4 w-4 text-primary" />, label: 'Paragraphe' },
+      { type: 'image', icon: <Image className="h-4 w-4 text-primary" />, label: 'Image' },
+      { type: 'button', icon: <div className="h-4 w-4 bg-primary/80 rounded-sm"></div>, label: 'Bouton' },
+      { type: 'video', icon: <Video className="h-4 w-4 text-primary" />, label: 'Vidéo' }
+    ],
+    forms: [
+      { type: 'form', icon: <FormInput className="h-4 w-4 text-primary" />, label: 'Formulaire' }
+    ],
+    integrations: [
+      { type: 'transport-booking', icon: <Car className="h-4 w-4 text-primary" />, label: 'Réservation Transport' }
+    ]
   };
 
   return (
@@ -43,62 +71,28 @@ const EditorSidebar: React.FC = () => {
       <div className="mt-4">
         <h3 className="px-2 mb-2 font-medium">Navigation</h3>
         <div className="grid grid-cols-2 gap-1 px-1">
-          <Card 
-            className="p-3 text-center cursor-move hover:bg-muted transition-colors"
-            draggable
-            onDragStart={(e) => handleDragStart(e, 'menu')}
-          >
-            <div className="flex flex-col items-center">
-              <MenuIcon className="h-8 w-8 mb-1 text-primary" />
-              <span className="text-sm">Menu</span>
-            </div>
-          </Card>
-          <Card 
-            className="p-3 text-center cursor-move hover:bg-muted transition-colors"
-            draggable
-            onDragStart={(e) => handleDragStart(e, 'footer')}
-          >
-            <div className="flex flex-col items-center">
-              <Footprints className="h-8 w-8 mb-1 text-primary" />
-              <span className="text-sm">Footer</span>
-            </div>
-          </Card>
+          {elements.navigation.map(element => (
+            <ElementItem
+              key={element.type}
+              icon={element.icon}
+              label={element.label}
+              className="p-3 text-center cursor-move hover:bg-muted transition-colors"
+            />
+          ))}
         </div>
       </div>
       
       <div className="mt-4">
         <h3 className="px-2 mb-2 font-medium">Structure</h3>
         <div className="grid grid-cols-2 gap-1 px-1">
-          <Card 
-            className="p-3 text-center cursor-move hover:bg-muted transition-colors"
-            draggable
-            onDragStart={(e) => handleDragStart(e, 'section')}
-          >
-            <div className="flex flex-col items-center">
-              <Layout className="h-8 w-8 mb-1 text-primary" />
-              <span className="text-sm">Section</span>
-            </div>
-          </Card>
-          <Card 
-            className="p-3 text-center cursor-move hover:bg-muted transition-colors"
-            draggable
-            onDragStart={(e) => handleDragStart(e, 'banner')}
-          >
-            <div className="flex flex-col items-center">
-              <Flag className="h-8 w-8 mb-1 text-primary" />
-              <span className="text-sm">Bannière</span>
-            </div>
-          </Card>
-          <Card 
-            className="p-3 text-center cursor-move hover:bg-muted transition-colors"
-            draggable
-            onDragStart={(e) => handleDragStart(e, 'columns')}
-          >
-            <div className="flex flex-col items-center">
-              <Columns className="h-8 w-8 mb-1 text-primary" />
-              <span className="text-sm">Colonnes</span>
-            </div>
-          </Card>
+          {elements.structure.map(element => (
+            <ElementItem
+              key={element.type}
+              icon={element.icon}
+              label={element.label}
+              className="p-3 text-center cursor-move hover:bg-muted transition-colors"
+            />
+          ))}
         </div>
       </div>
       
@@ -107,56 +101,14 @@ const EditorSidebar: React.FC = () => {
       <div>
         <h3 className="px-2 mb-2 font-medium">Éléments Basiques</h3>
         <div className="space-y-1 px-1">
-          <Card 
-            className="p-3 cursor-move hover:bg-muted transition-colors"
-            draggable
-            onDragStart={(e) => handleDragStart(e, 'heading')}
-          >
-            <div className="flex items-center space-x-2">
-              <Type className="h-4 w-4 text-primary" />
-              <span>Titre</span>
-            </div>
-          </Card>
-          <Card 
-            className="p-3 cursor-move hover:bg-muted transition-colors"
-            draggable
-            onDragStart={(e) => handleDragStart(e, 'paragraph')}
-          >
-            <div className="flex items-center space-x-2">
-              <FileText className="h-4 w-4 text-primary" />
-              <span>Paragraphe</span>
-            </div>
-          </Card>
-          <Card 
-            className="p-3 cursor-move hover:bg-muted transition-colors"
-            draggable
-            onDragStart={(e) => handleDragStart(e, 'image')}
-          >
-            <div className="flex items-center space-x-2">
-              <Image className="h-4 w-4 text-primary" />
-              <span>Image</span>
-            </div>
-          </Card>
-          <Card 
-            className="p-3 cursor-move hover:bg-muted transition-colors"
-            draggable
-            onDragStart={(e) => handleDragStart(e, 'button')}
-          >
-            <div className="flex items-center space-x-2">
-              <div className="h-4 w-4 bg-primary/80 rounded-sm"></div>
-              <span>Bouton</span>
-            </div>
-          </Card>
-          <Card 
-            className="p-3 cursor-move hover:bg-muted transition-colors"
-            draggable
-            onDragStart={(e) => handleDragStart(e, 'video')}
-          >
-            <div className="flex items-center space-x-2">
-              <Video className="h-4 w-4 text-primary" />
-              <span>Vidéo</span>
-            </div>
-          </Card>
+          {elements.basic.map(element => (
+            <ElementItem
+              key={element.type}
+              icon={element.icon}
+              label={element.label}
+              className="p-3 flex items-center space-x-2 cursor-move hover:bg-muted transition-colors"
+            />
+          ))}
         </div>
       </div>
       
@@ -165,16 +117,14 @@ const EditorSidebar: React.FC = () => {
       <div>
         <h3 className="px-2 mb-2 font-medium">Formulaires</h3>
         <div className="space-y-1 px-1">
-          <Card 
-            className="p-3 cursor-move hover:bg-muted transition-colors"
-            draggable
-            onDragStart={(e) => handleDragStart(e, 'form')}
-          >
-            <div className="flex items-center space-x-2">
-              <FormInput className="h-4 w-4 text-primary" />
-              <span>Formulaire</span>
-            </div>
-          </Card>
+          {elements.forms.map(element => (
+            <ElementItem
+              key={element.type}
+              icon={element.icon}
+              label={element.label}
+              className="p-3 flex items-center space-x-2 cursor-move hover:bg-muted transition-colors"
+            />
+          ))}
         </div>
       </div>
 
@@ -183,16 +133,14 @@ const EditorSidebar: React.FC = () => {
       <div>
         <h3 className="px-2 mb-2 font-medium">Intégrations</h3>
         <div className="space-y-1 px-1">
-          <Card 
-            className="p-3 cursor-move hover:bg-muted transition-colors"
-            draggable
-            onDragStart={(e) => handleDragStart(e, 'transport-booking')}
-          >
-            <div className="flex items-center space-x-2">
-              <Car className="h-4 w-4 text-primary" />
-              <span>Réservation Transport</span>
-            </div>
-          </Card>
+          {elements.integrations.map(element => (
+            <ElementItem
+              key={element.type}
+              icon={element.icon}
+              label={element.label}
+              className="p-3 flex items-center space-x-2 cursor-move hover:bg-muted transition-colors"
+            />
+          ))}
         </div>
       </div>
     </div>

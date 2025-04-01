@@ -13,69 +13,139 @@ interface EditorCanvasProps {
 const EditorCanvas: React.FC<EditorCanvasProps> = ({ viewMode, onSelectElement }) => {
   const { toast } = useToast();
   const canvasRef = useRef<HTMLDivElement>(null);
-  const [elements, setElements] = useState<any[]>([
-    {
-      id: 'header-1',
-      type: 'header',
-      content: '<div class="p-4 bg-primary/10"><h1 class="text-2xl font-bold">Mon Site Web</h1><p>Bienvenue sur mon site</p></div>'
-    },
-    {
-      id: 'section-1',
-      type: 'section',
-      content: `
-        <div class="p-6">
-          <h2 class="text-xl font-bold mb-4">Section Principale</h2>
-          <p>Ceci est un exemple de section. Vous pouvez modifier ce contenu en cliquant dessus.</p>
-          <div class="mt-4">
-            <button class="bg-primary text-white px-4 py-2 rounded">En savoir plus</button>
-          </div>
-        </div>
-      `
-    },
-    {
-      id: 'image-1',
-      type: 'image',
-      content: '<div class="p-4"><img src="https://via.placeholder.com/800x400" class="w-full h-auto rounded" alt="Placeholder" /></div>'
-    }
-  ]);
+  const [elements, setElements] = useState<any[]>([]);
   
   const [isDirty, setIsDirty] = useState(false);
+  const [draggingElement, setDraggingElement] = useState<string | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
+    // Add a visual indicator for where the element will be placed
+    const rect = canvasRef.current?.getBoundingClientRect();
+    if (rect) {
+      const y = e.clientY - rect.top;
+      const newIndex = findDropIndex(y);
+      setDragOverIndex(newIndex);
+    }
+  };
+
+  const findDropIndex = (y: number): number => {
+    if (!canvasRef.current || elements.length === 0) return 0;
+    
+    // Get all element containers
+    const elementContainers = canvasRef.current.querySelectorAll('.element-container');
+    for (let i = 0; i < elementContainers.length; i++) {
+      const rect = elementContainers[i].getBoundingClientRect();
+      const elementMidpoint = rect.top + rect.height / 2;
+      if (y < elementMidpoint) return i;
+    }
+    return elements.length;
+  };
+
+  const handleDragLeave = () => {
+    setDragOverIndex(null);
   };
 
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     const elementType = e.dataTransfer.getData('elementType');
+    
     if (elementType) {
       const newElement = createElementFromType(elementType);
-      setElements([...elements, newElement]);
+      
+      if (dragOverIndex !== null) {
+        // Insert at specific position
+        const newElements = [...elements];
+        newElements.splice(dragOverIndex, 0, newElement);
+        setElements(newElements);
+      } else {
+        // Add to end
+        setElements([...elements, newElement]);
+      }
+      
       setIsDirty(true);
+      setDragOverIndex(null);
       toast({
         description: `Élément ${elementType} ajouté avec succès.`,
       });
     }
   };
 
+  const handleElementDragStart = (e: React.DragEvent, index: number) => {
+    e.dataTransfer.setData('elementIndex', index.toString());
+    setDraggingElement(`element-${index}`);
+    // Use a ghost image
+    const ghostElement = document.createElement('div');
+    ghostElement.classList.add('bg-primary/20', 'p-4', 'rounded', 'text-sm');
+    ghostElement.textContent = 'Déplacer l\'élément ici';
+    document.body.appendChild(ghostElement);
+    e.dataTransfer.setDragImage(ghostElement, 20, 20);
+    setTimeout(() => {
+      document.body.removeChild(ghostElement);
+    }, 0);
+  };
+
+  const handleElementDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    const sourceIndex = parseInt(e.dataTransfer.getData('elementIndex'), 10);
+    
+    if (!isNaN(sourceIndex) && dragOverIndex !== null && sourceIndex !== dragOverIndex) {
+      // Move element from sourceIndex to dragOverIndex
+      const newElements = [...elements];
+      const [movedElement] = newElements.splice(sourceIndex, 1);
+      
+      // If moving down, we need to adjust the insertion index
+      const adjustedIndex = dragOverIndex > sourceIndex ? dragOverIndex - 1 : dragOverIndex;
+      newElements.splice(adjustedIndex, 0, movedElement);
+      
+      setElements(newElements);
+      setIsDirty(true);
+      toast({
+        description: "Élément déplacé avec succès.",
+      });
+    }
+    
+    setDraggingElement(null);
+    setDragOverIndex(null);
+  };
+
   const handleSave = () => {
-    localStorage.setItem('website-elements', JSON.stringify(elements));
-    setIsDirty(false);
-    toast({
-      description: "Modifications enregistrées avec succès.",
-    });
+    try {
+      localStorage.setItem('website-elements', JSON.stringify(elements));
+      setIsDirty(false);
+      toast({
+        description: "Modifications enregistrées avec succès.",
+      });
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Erreur",
+        description: "Impossible d'enregistrer les modifications.",
+      });
+      console.error("Save error:", error);
+    }
   };
 
   const handlePublish = () => {
-    localStorage.setItem('website-published', JSON.stringify(elements));
-    toast({
-      description: "Site web publié avec succès! Disponible sur votre domaine.",
-      action: (
-        <Button variant="outline" size="sm" onClick={() => window.open('/modules/website/public', '_blank')}>
-          Voir le site
-        </Button>
-      )
-    });
+    try {
+      localStorage.setItem('website-published', JSON.stringify(elements));
+      toast({
+        description: "Site web publié avec succès! Disponible sur votre domaine.",
+        action: (
+          <Button variant="outline" size="sm" onClick={() => window.open('/modules/website/public', '_blank')}>
+            Voir le site
+          </Button>
+        )
+      });
+    } catch (error) {
+      toast({
+        variant: "destructive", 
+        title: "Erreur de publication",
+        description: "Une erreur est survenue lors de la publication du site.",
+      });
+      console.error("Publish error:", error);
+    }
   };
 
   const handleDeleteElement = (elementId: string) => {
@@ -89,11 +159,19 @@ const EditorCanvas: React.FC<EditorCanvasProps> = ({ viewMode, onSelectElement }
 
   // Chargement des éléments sauvegardés au démarrage
   useEffect(() => {
-    const savedElements = localStorage.getItem('website-elements');
-    if (savedElements) {
-      setElements(JSON.parse(savedElements));
+    try {
+      const savedElements = localStorage.getItem('website-elements');
+      if (savedElements) {
+        setElements(JSON.parse(savedElements));
+      }
+    } catch (error) {
+      console.error("Error loading saved elements:", error);
+      toast({
+        variant: "destructive",
+        description: "Impossible de charger le contenu sauvegardé.",
+      });
     }
-  }, []);
+  }, [toast]);
 
   const createElementFromType = (type: string) => {
     const id = `${type}-${Date.now()}`;
@@ -302,14 +380,21 @@ const EditorCanvas: React.FC<EditorCanvasProps> = ({ viewMode, onSelectElement }
           viewMode === 'mobile' ? 'max-w-[375px]' : viewMode === 'tablet' ? 'max-w-[768px]' : 'w-full'
         } mx-auto`}
         onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
         onDrop={handleDrop}
         ref={canvasRef}
       >
         <div className="min-h-screen">
-          {elements.map((element) => (
+          {elements.map((element, index) => (
             <div 
               key={element.id}
-              className="relative group hover:outline-dashed hover:outline-primary/40 hover:outline-2 cursor-pointer"
+              id={`element-${index}`}
+              className={`element-container relative group hover:outline-dashed hover:outline-primary/40 hover:outline-2 cursor-pointer ${
+                draggingElement === `element-${index}` ? 'opacity-50' : ''
+              } ${dragOverIndex === index ? 'border-t-2 border-primary' : ''}`}
+              draggable
+              onDragStart={(e) => handleElementDragStart(e, index)}
+              onDrop={handleElementDrop}
             >
               <div 
                 onClick={() => handleElementClick(element)}
@@ -328,6 +413,10 @@ const EditorCanvas: React.FC<EditorCanvasProps> = ({ viewMode, onSelectElement }
               </Button>
             </div>
           ))}
+          
+          {dragOverIndex === elements.length && (
+            <div className="border-t-2 border-primary"></div>
+          )}
           
           {elements.length === 0 && (
             <div className="flex items-center justify-center p-10 h-96 text-muted-foreground">
