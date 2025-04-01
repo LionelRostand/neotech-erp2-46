@@ -8,7 +8,7 @@ import ExtensionRequestsList from './ExtensionRequestsList';
 import DriverAvailabilityTab from './DriverAvailabilityTab';
 import { usePlanning } from './context/PlanningContext';
 import { useMaintenanceSchedule } from '../hooks/useMaintenanceSchedule';
-import { TransportVehicle } from '../types';
+import { TransportVehicle, MaintenanceSchedule } from '../types';
 
 interface PlanningTabContentProps {
   activeMode: string;
@@ -33,8 +33,8 @@ const PlanningTabContent: React.FC<PlanningTabContentProps> = ({
   } = usePlanning();
 
   // Convert vehicle maintenance schedules to map maintenance schedules
-  // Removed the explicit type annotation causing the error
-  const { mapSchedules } = useMaintenanceSchedule(maintenanceSchedules);
+  // Use type assertion to treat maintenanceSchedules as compatible with MaintenanceSchedule[]
+  const { mapSchedules } = useMaintenanceSchedule(maintenanceSchedules as unknown as MaintenanceSchedule[]);
 
   // Adapter functions to match expected signatures
   const handleAddMaintenance = (vehicle: TransportVehicle) => {
@@ -62,14 +62,14 @@ const PlanningTabContent: React.FC<PlanningTabContentProps> = ({
       <TabsContent value="availability" className="mt-0 border-0 p-0">
         <AvailabilityCalendar 
           vehicles={vehicles}
-          maintenanceSchedules={maintenanceSchedules}
+          maintenanceSchedules={maintenanceSchedules as unknown as MaintenanceSchedule[]}
           onAddMaintenance={handleAddMaintenance}
         />
       </TabsContent>
       
       <TabsContent value="maintenance" className="mt-0 border-0 p-0">
         <MaintenanceScheduleList 
-          maintenanceSchedules={maintenanceSchedules}
+          maintenanceSchedules={maintenanceSchedules as unknown as MaintenanceSchedule[]}
           vehicles={vehicles}
           onAddMaintenance={handleAddMaintenance}
         />

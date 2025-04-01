@@ -2,7 +2,7 @@
 import { TransportBasic } from './base-types';
 import { TransportService } from './base-types';
 
-export interface TransportReservation extends TransportBasic {
+export interface TransportReservation extends Omit<TransportBasic, 'notes'> {
   clientId: string;
   vehicleId: string;
   driverId?: string;
@@ -16,7 +16,7 @@ export interface TransportReservation extends TransportBasic {
   specialRequirements?: string;
   createdBy?: string;
   totalPrice?: number;
-  notes?: string; // Changed from string to string? to match TransportBasic
+  notes?: string | any[]; // Modified to accept both string and array
   price?: number; // Added price field
   isPaid?: boolean; // Added isPaid field
   contractGenerated?: boolean; // Added contractGenerated field

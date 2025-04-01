@@ -48,19 +48,43 @@ const ReservationFormDialog: React.FC<ReservationFormDialogProps> = ({
       setFormData({
         clientId: reservation.clientId,
         vehicleId: reservation.vehicleId,
-        service: reservation.service || 'airport',
+        service: getServiceString(reservation.service),
         date: reservation.date ? new Date(reservation.date) : new Date(),
         time: reservation.time || '09:00',
-        pickupAddress: reservation.pickup,
-        dropoffAddress: reservation.dropoff,
-        price: reservation.price,
-        isPaid: reservation.isPaid,
+        pickupAddress: getAddressValue(reservation.pickup),
+        dropoffAddress: getAddressValue(reservation.dropoff),
+        price: reservation.price || 0,
+        isPaid: reservation.isPaid || false,
         needsDriver: reservation.needsDriver || true,
         driverId: reservation.driverId || '',
-        notes: reservation.notes || ''
+        notes: getNoteString(reservation.notes)
       });
     }
   }, [reservation]);
+
+  const getServiceString = (service?: TransportService | { name: string }): string => {
+    if (!service) return 'airport';
+    if (typeof service === 'object' && 'name' in service) return service.name;
+    return service as string;
+  };
+
+  const getAddressValue = (address?: string | { address: string }): string => {
+    if (!address) return '';
+    if (typeof address === 'object' && 'address' in address) return address.address;
+    return address;
+  };
+
+  const getNoteString = (notes?: string | any[]): string => {
+    if (!notes) return '';
+    if (typeof notes === 'string') return notes;
+    if (Array.isArray(notes) && notes.length > 0) {
+      const firstNote = notes[0];
+      if (typeof firstNote === 'object' && 'content' in firstNote) {
+        return firstNote.content;
+      }
+    }
+    return '';
+  };
 
   const handleChange = (field: string, value: any) => {
     setFormData(prev => ({
@@ -72,31 +96,27 @@ const ReservationFormDialog: React.FC<ReservationFormDialogProps> = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Prepare the data
     const reservationData = prepareReservationData(formData);
 
-    // Submit the form data
     onSubmit(reservationData);
 
-    // Show a success toast
     toast({
       title: "Réservation enregistrée",
       description: "La réservation a été enregistrée avec succès.",
     });
 
-    // Close the dialog
     onOpenChange(false);
   };
 
-  // When creating or editing reservations, transform notes to proper format:
-  const prepareReservationData = (formData) => {
-    // Convert string notes to array if needed
-    const notes = typeof formData.notes === 'string' 
-      ? formData.notes.length > 0 ? [{ content: formData.notes }] : []
+  const prepareReservationData = (formData: any) => {
+    const notes = typeof formData.notes === 'string' && formData.notes.length > 0 
+      ? [{ content: formData.notes }] 
       : formData.notes;
       
     return {
       ...formData,
+      pickup: formData.pickupAddress,
+      dropoff: formData.dropoffAddress,
       notes: notes
     };
   };

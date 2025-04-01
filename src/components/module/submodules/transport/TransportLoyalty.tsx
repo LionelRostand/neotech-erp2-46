@@ -2,7 +2,7 @@
 import React from 'react';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-// Changed import path to import from specific types file
+// Fixed import path to import from client-types directly
 import { TransportClient } from './types/client-types';
 
 const TransportLoyalty: React.FC = () => {

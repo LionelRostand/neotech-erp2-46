@@ -86,7 +86,7 @@ export const mockMaintenanceSchedules = [
     description: "Regular oil change and filter replacement",
     createdAt: "2023-06-01",
     assignedTo: "Mechanic A",
-    notes: "", // Changed from empty array to empty string
+    notes: [], // Changed from empty string to empty array
     // ... other required properties
   },
   {
@@ -99,7 +99,7 @@ export const mockMaintenanceSchedules = [
     description: "Annual service including brake check and fluid replacement",
     createdAt: "2023-06-10",
     assignedTo: "Mechanic B",
-    notes: "", // Changed from empty array to empty string
+    notes: [], // Changed from empty string to empty array
     // ... other required properties
   }
 ];
@@ -114,7 +114,8 @@ export const mockExtensionRequests = [
     reason: "Customer requested additional stop",
     approvedBy: "",
     approvedDate: "",
-    // vehicleId field removed
+    vehicleId: "1", // Added required vehicleId
+    vehicleName: "Mercedes E-Class", // Added required vehicleName
     // ... other required properties
   },
   {
@@ -126,7 +127,8 @@ export const mockExtensionRequests = [
     reason: "Traffic delay due to accident",
     approvedBy: "Supervisor A",
     approvedDate: "2023-06-12",
-    // vehicleId field removed
+    vehicleId: "2", // Added required vehicleId
+    vehicleName: "Tesla Model S", // Added required vehicleName
     // ... other required properties
   }
 ];

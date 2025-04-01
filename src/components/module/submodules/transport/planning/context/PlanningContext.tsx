@@ -1,8 +1,8 @@
 
 import React, { createContext, useContext, useState, useCallback } from 'react';
 import { TransportVehicle, TransportDriver, VehicleMaintenanceSchedule, MapExtensionRequest } from '../../types';
-// Import directly from mockData.ts
-import { vehicles, maintenanceSchedules, extensionRequests, drivers } from '../mockData';
+// Import directly from mockData.ts with the correct export names
+import { mockVehicles, mockMaintenanceSchedules, mockExtensionRequests, mockDrivers } from '../mockData';
 
 // Define the type for the context value
 interface PlanningContextType {
@@ -48,14 +48,14 @@ const PlanningContext = createContext<PlanningContextType | null>(null);
 // Provider component
 export const PlanningProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   // State for data
-  const [vehiclesData, setVehiclesData] = useState<TransportVehicle[]>(vehicles);
+  const [vehiclesData, setVehiclesData] = useState<TransportVehicle[]>(mockVehicles);
   const [maintenanceSchedulesData, setMaintenanceSchedulesData] = useState<VehicleMaintenanceSchedule[]>(
-    maintenanceSchedules as unknown as VehicleMaintenanceSchedule[]
+    mockMaintenanceSchedules as unknown as VehicleMaintenanceSchedule[]
   );
   const [extensionRequestsData, setExtensionRequestsData] = useState<MapExtensionRequest[]>(
-    extensionRequests as unknown as MapExtensionRequest[]
+    mockExtensionRequests as unknown as MapExtensionRequest[]
   );
-  const [driversData, setDriversData] = useState<TransportDriver[]>(drivers);
+  const [driversData, setDriversData] = useState<TransportDriver[]>(mockDrivers);
   const [isLoading, setIsLoading] = useState<boolean>(false); // Add isLoading state
   
   // State for selected items
@@ -87,10 +87,10 @@ export const PlanningProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     // In a real app, this would fetch fresh data from an API
     setIsLoading(true);
     setTimeout(() => {
-      setVehiclesData(vehicles);
-      setMaintenanceSchedulesData(maintenanceSchedules as unknown as VehicleMaintenanceSchedule[]);
-      setExtensionRequestsData(extensionRequests as unknown as MapExtensionRequest[]);
-      setDriversData(drivers);
+      setVehiclesData(mockVehicles);
+      setMaintenanceSchedulesData(mockMaintenanceSchedules as unknown as VehicleMaintenanceSchedule[]);
+      setExtensionRequestsData(mockExtensionRequests as unknown as MapExtensionRequest[]);
+      setDriversData(mockDrivers);
       setIsLoading(false);
     }, 500);
   }, []);

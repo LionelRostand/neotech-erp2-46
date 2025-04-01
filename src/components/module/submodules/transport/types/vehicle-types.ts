@@ -39,7 +39,7 @@ export interface MaintenanceRecord extends TransportBasic {
   cost?: number;
   technician?: string;
   facility?: string;
-  notes?: string[];
+  notes?: string[] | any[]; // Updated to be compatible with both string[] and any[]
   provider?: string;
   nextMaintenance?: string;
 }
@@ -55,13 +55,14 @@ export interface IncidentRecord extends TransportBasic {
   resolved: boolean;
   resolutionDate?: string;
   reportNumber?: string;
-  notes?: string[];
+  notes?: string[] | any[]; // Updated to be compatible with both string[] and any[]
   severity?: 'low' | 'medium' | 'high' | 'critical';
   driverName?: string;
   clientName?: string;
   repairCost?: number;
 }
 
+// Modified to be compatible with VehicleMaintenanceSchedule
 export interface MaintenanceSchedule extends TransportBasic {
   vehicleId: string;
   type: string;
@@ -69,7 +70,7 @@ export interface MaintenanceSchedule extends TransportBasic {
   scheduledDate: string;
   estimatedDuration: number; // in minutes
   status: 'pending' | 'in-progress' | 'scheduled' | 'completed' | 'cancelled';
-  notes: any[]; // Allow any[] to be compatible with TransportBasic
+  notes: any[] | string; // Updated to accept both array and string for compatibility
   startDate?: string;
   endDate?: string;
   technician?: string;
