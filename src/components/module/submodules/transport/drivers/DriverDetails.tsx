@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -5,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Phone, Mail, Calendar, User, Star, Briefcase, Clock, Car, Settings, Edit } from "lucide-react";
-import { TransportDriver } from '../types/transport-types';
+import { TransportDriver } from '../types';
 import EditDriverForm from './EditDriverForm';
 import { useToast } from "@/hooks/use-toast";
 
@@ -13,9 +14,9 @@ interface DriverDetailsProps {
   driver: TransportDriver;
 }
 
-const DriverDetails: React.FC<{ driver: TransportDriver }> = ({ driver }) => {
+const DriverDetails: React.FC<DriverDetailsProps> = ({ driver }) => {
   const [isEditing, setIsEditing] = useState(false);
-  const [driver, setDriver] = useState<TransportDriver>(driver);
+  const [driverData, setDriverData] = useState<TransportDriver>(driver);
   const { toast } = useToast();
   
   const formatDate = (dateStr: string) => {
@@ -26,8 +27,21 @@ const DriverDetails: React.FC<{ driver: TransportDriver }> = ({ driver }) => {
     return `${firstName.charAt(0)}${lastName.charAt(0)}`;
   };
   
+  const formatVehicleType = (type: string) => {
+    const typeMap: Record<string, string> = {
+      'sedan': 'Berline',
+      'van': 'Fourgon',
+      'suv': 'SUV',
+      'luxury': 'Premium',
+      'bus': 'Bus',
+      'electric': 'Électrique'
+    };
+    
+    return typeMap[type] || type;
+  };
+  
   const getLicenseExpiryBadge = () => {
-    const expiryDate = new Date(driver.licenseExpiry);
+    const expiryDate = new Date(driverData.licenseExpiry);
     const today = new Date();
     
     const diffTime = expiryDate.getTime() - today.getTime();
@@ -47,7 +61,7 @@ const DriverDetails: React.FC<{ driver: TransportDriver }> = ({ driver }) => {
   };
   
   const handleSave = (updatedDriver: TransportDriver) => {
-    setDriver(updatedDriver);
+    setDriverData(updatedDriver);
     setIsEditing(false);
     toast({
       title: "Modifications enregistrées",
@@ -66,7 +80,7 @@ const DriverDetails: React.FC<{ driver: TransportDriver }> = ({ driver }) => {
           <h3 className="text-xl font-bold">Modification du chauffeur</h3>
         </div>
         <EditDriverForm 
-          driver={driver} 
+          driver={driverData} 
           onSave={handleSave} 
           onCancel={handleCancel} 
         />
@@ -79,24 +93,24 @@ const DriverDetails: React.FC<{ driver: TransportDriver }> = ({ driver }) => {
       <div className="flex flex-col md:flex-row justify-between items-start gap-4">
         <div className="flex items-center gap-4">
           <Avatar className="h-20 w-20">
-            <AvatarImage src={driver.photo} alt={`${driver.firstName} ${driver.lastName}`} />
-            <AvatarFallback className="text-xl">{getInitials(driver.firstName, driver.lastName)}</AvatarFallback>
+            <AvatarImage src={driverData.photo} alt={`${driverData.firstName} ${driverData.lastName}`} />
+            <AvatarFallback className="text-xl">{getInitials(driverData.firstName, driverData.lastName)}</AvatarFallback>
           </Avatar>
           <div>
-            <h3 className="text-xl font-bold">{driver.firstName} {driver.lastName}</h3>
+            <h3 className="text-xl font-bold">{driverData.firstName} {driverData.lastName}</h3>
             <div className="flex items-center mt-1">
-              <Badge className={`${driver.available ? 'bg-green-500' : 'bg-red-500'} mr-2`}>
-                {driver.available ? 'Disponible' : 'Indisponible'}
+              <Badge className={`${driverData.available ? 'bg-green-500' : 'bg-red-500'} mr-2`}>
+                {driverData.available ? 'Disponible' : 'Indisponible'}
               </Badge>
               <div className="flex items-center">
                 <Star className="h-4 w-4 text-yellow-400 mr-1" />
-                <span>{driver.rating}</span>
+                <span>{driverData.rating}</span>
               </div>
             </div>
             <div className="flex items-center gap-4 mt-2">
               <div className="flex items-center text-sm text-muted-foreground">
                 <Briefcase className="h-4 w-4 mr-1" />
-                <span>{driver.experience} ans d'expérience</span>
+                <span>{driverData.experience} ans d'expérience</span>
               </div>
             </div>
           </div>
@@ -126,12 +140,12 @@ const DriverDetails: React.FC<{ driver: TransportDriver }> = ({ driver }) => {
             <div className="space-y-3">
               <div className="flex items-center">
                 <Phone className="h-4 w-4 mr-2 text-muted-foreground" />
-                <span>{driver.phone}</span>
+                <span>{driverData.phone}</span>
               </div>
               
               <div className="flex items-center">
                 <Mail className="h-4 w-4 mr-2 text-muted-foreground" />
-                <span>{driver.email}</span>
+                <span>{driverData.email}</span>
               </div>
             </div>
           </CardContent>
@@ -147,13 +161,13 @@ const DriverDetails: React.FC<{ driver: TransportDriver }> = ({ driver }) => {
             <div className="space-y-3">
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Numéro de permis:</span>
-                <span className="font-medium">{driver.licenseNumber}</span>
+                <span className="font-medium">{driverData.licenseNumber}</span>
               </div>
               
               <div className="flex justify-between items-center">
                 <span className="text-muted-foreground">Date d'expiration:</span>
                 <div className="flex items-center gap-2">
-                  <span>{formatDate(driver.licenseExpiry)}</span>
+                  <span>{formatDate(driverData.licenseExpiry)}</span>
                   {getLicenseExpiryBadge()}
                 </div>
               </div>
@@ -173,7 +187,7 @@ const DriverDetails: React.FC<{ driver: TransportDriver }> = ({ driver }) => {
             <div className="space-y-3">
               <h5 className="text-sm font-medium">Types de véhicules préférés</h5>
               <div className="flex flex-wrap gap-1">
-                {driver.preferredVehicleType && driver.preferredVehicleType.map((type, idx) => (
+                {driverData.preferredVehicleType && driverData.preferredVehicleType.map((type, idx) => (
                   <Badge key={idx} variant="outline" className="bg-gray-100">
                     {formatVehicleType(type)}
                   </Badge>
@@ -184,8 +198,8 @@ const DriverDetails: React.FC<{ driver: TransportDriver }> = ({ driver }) => {
             <div className="space-y-3">
               <h5 className="text-sm font-medium">Compétences</h5>
               <div className="flex flex-wrap gap-2">
-                {driver.skills ? (
-                  driver.skills.map((skill, index) => (
+                {driverData.skills ? (
+                  driverData.skills.map((skill, index) => (
                     <Badge key={index} variant="outline" className="bg-green-50 text-green-700 border-green-200">
                       {skill}
                     </Badge>
