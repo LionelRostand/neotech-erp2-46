@@ -1,4 +1,3 @@
-
 export interface Carrier {
   id: string;
   name: string;
@@ -154,4 +153,63 @@ export interface TrackingFilters {
   dateFrom?: Date;
   dateTo?: Date;
   carriers?: string[];
+}
+
+export interface Quote {
+  id: string;
+  clientName: string;
+  clientId: string;
+  createdAt: string;
+  validUntil: string;
+  status: 'pending' | 'accepted' | 'declined' | 'expired' | 'converted';
+  totalAmount: number;
+  items: QuoteItem[];
+  shipmentDetails: {
+    origin: string;
+    destination: string;
+    estimatedDistance: number;
+    weight: number;
+    volume: number;
+  };
+  acceptedDate?: string;
+  declinedDate?: string;
+  declineReason?: string;
+  convertedDate?: string;
+  invoiceId?: string;
+}
+
+export interface QuoteItem {
+  id: string;
+  description: string;
+  quantity: number;
+  unitPrice: number;
+  total: number;
+}
+
+export interface Invoice {
+  id: string;
+  reference: string;
+  clientName: string;
+  clientId: string;
+  createdAt: string;
+  dueDate: string;
+  status: 'paid' | 'unpaid' | 'partially_paid' | 'overdue' | 'cancelled';
+  totalAmount: number;
+  paidAmount?: number;
+  items: InvoiceItem[];
+  shipmentId?: string;
+  paymentDetails?: {
+    method: 'bank_transfer' | 'card' | 'cash' | 'check' | string;
+    date?: string;
+    transactionId?: string;
+  };
+  cancelReason?: string;
+}
+
+export interface InvoiceItem {
+  id: string;
+  description: string;
+  quantity: number;
+  unitPrice: number;
+  total: number;
 }

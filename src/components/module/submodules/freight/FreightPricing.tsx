@@ -3,6 +3,8 @@ import React, { useState } from 'react';
 import { Tabs, TabsList, TabsContent, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import PricingCalculator from './PricingCalculator';
+import QuotesManager from './quotes/QuotesManager';
+import InvoicesManager from './invoices/InvoicesManager';
 
 const FreightPricing: React.FC = () => {
   const [activeTab, setActiveTab] = useState('calculator');
@@ -29,35 +31,11 @@ const FreightPricing: React.FC = () => {
           </TabsContent>
           
           <TabsContent value="quotes" className="mt-0">
-            <Card>
-              <CardHeader>
-                <CardTitle>Devis</CardTitle>
-                <CardDescription>
-                  Créez et gérez les devis pour vos clients
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center py-12 text-muted-foreground">
-                  Le module de gestion des devis est en cours de développement
-                </div>
-              </CardContent>
-            </Card>
+            <QuotesManager />
           </TabsContent>
           
           <TabsContent value="invoices" className="mt-0">
-            <Card>
-              <CardHeader>
-                <CardTitle>Factures</CardTitle>
-                <CardDescription>
-                  Gérez les factures liées à vos expéditions
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center py-12 text-muted-foreground">
-                  Le module de gestion des factures est en cours de développement
-                </div>
-              </CardContent>
-            </Card>
+            <InvoicesManager />
           </TabsContent>
         </div>
       </Tabs>
