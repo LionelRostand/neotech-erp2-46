@@ -13,6 +13,7 @@ import { DocumentsRoutes } from "./modules/documentsRoutes";
 import { TransportRoutes } from "./modules/transportRoutes";
 import { GarageRoutes } from "./modules/garageRoutes";
 import { WebsiteRoutes } from "./modules/websiteRoutes";
+import { RentalRoutes } from "./modules/rentalRoutes";
 
 // Using placeholder components for missing pages
 const LoginPage = () => <div>Login Page</div>;
@@ -45,7 +46,7 @@ function AppRoutes() {
           {CrmRoutes}
           {HealthRoutes}
           {DocumentsRoutes}
-          {/* The RentalsRoutes import was removed as it's missing */}
+          {RentalRoutes}
           {TransportRoutes}
           {GarageRoutes}
           {WebsiteRoutes}

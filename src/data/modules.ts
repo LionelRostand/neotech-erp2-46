@@ -12,8 +12,7 @@ import { documentsModule } from './modules/documents';
 import { transportModule } from './modules/transport';
 import { garageModule } from './modules/garage';
 import { websiteModule } from './modules/website';
-// Import of rentalsModule is missing, commenting it out for now
-// import { rentalsModule } from './modules/rentals';
+import { vehicleRentalsModule } from './modules/vehicle-rentals';
 
 // Export des modules sous forme de tableau pour l'application
 export const modules = [
@@ -26,7 +25,7 @@ export const modules = [
   crmModule,
   healthModule,
   documentsModule,
-  // rentalsModule, // Commenting out as the module is missing
+  vehicleRentalsModule, // Updated to use vehicleRentalsModule instead of rentalsModule
   transportModule,
   garageModule,
   websiteModule,
