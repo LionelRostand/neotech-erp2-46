@@ -8,7 +8,7 @@ export type TransportReservationStatus = 'pending' | 'confirmed' | 'in-progress'
 export type LocationType = 'airport' | 'hotel' | 'address' | 'station' | 'poi';
 
 // Basic transport reservation interface
-export interface TransportReservation extends TransportBasic {
+export interface TransportReservation extends Omit<TransportBasic, 'notes'> {
   clientId: string;
   vehicleId: string;
   driverId?: string;
@@ -19,7 +19,7 @@ export interface TransportReservation extends TransportBasic {
   pickup: string | { address: string };
   dropoff: string | { address: string };
   service?: string;
-  notes?: string;
+  notes?: string; // Changed from any[] to string
   isPaid?: boolean;
   needsDriver?: boolean;
   contractGenerated?: boolean;
@@ -45,7 +45,7 @@ export interface Reservation {
 }
 
 // Web booking specific types
-export type WebBookingStatus = 'new' | 'processed' | 'cancelled';
+export type WebBookingStatus = 'new' | 'processed' | 'cancelled' | 'confirmed'; // Added 'confirmed'
 
 export interface WebBookingService {
   id: string;
@@ -65,8 +65,8 @@ export interface WebBooking {
   notes?: string;
   status: WebBookingStatus;
   createdAt: string;
-  service: string;
-  serviceId: string;
+  service: string; // Added to match usage
+  serviceId: string; // Added to match usage
 }
 
 // Helper function to get address string

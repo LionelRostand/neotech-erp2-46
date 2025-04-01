@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import L from 'leaflet';
 import { useMapMarkers } from './useMapMarkers';
-import { MapConfig, TransportVehicleWithLocation, MapHookResult } from '../types';
+import { MapConfig, TransportVehicleWithLocation, MapHookResult, Coordinates } from '../types';
 
 // Default map configuration
 const defaultConfig: MapConfig = {
@@ -18,7 +18,7 @@ const defaultConfig: MapConfig = {
 };
 
 // Helper function to convert Coordinates to Leaflet's LatLngExpression
-const toLatLng = (coords: { latitude: number; longitude: number }): L.LatLngExpression => {
+const toLatLng = (coords: Coordinates): L.LatLngExpression => {
   return [coords.latitude, coords.longitude];
 };
 

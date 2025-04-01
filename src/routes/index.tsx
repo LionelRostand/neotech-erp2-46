@@ -20,16 +20,14 @@ const AppLayout = ({ children }: { children: React.ReactNode }) => (
 const AppRoutes = () => {
   return (
     <Routes>
-      <Route element={<AppLayout />}>
-        <Route path="/" element={<Navigate to="/dashboard" />} />
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/settings" element={<Settings />} />
-        <Route path="/contact" element={<Contact />} />
-        
-        {/* Module routes */}
-        {TransportRoutes}
-        {GarageRoutes}
-      </Route>
+      <Route path="/" element={<AppLayout><Navigate to="/dashboard" /></AppLayout>} />
+      <Route path="/dashboard" element={<AppLayout><Dashboard /></AppLayout>} />
+      <Route path="/settings" element={<AppLayout><Settings /></AppLayout>} />
+      <Route path="/contact" element={<AppLayout><Contact /></AppLayout>} />
+      
+      {/* Module routes */}
+      {TransportRoutes}
+      {GarageRoutes}
     </Routes>
   );
 };

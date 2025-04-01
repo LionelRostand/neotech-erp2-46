@@ -1,95 +1,34 @@
 
-// Définition des types liés aux cartes pour le module Transport
+import { TransportVehicle } from './vehicle-types';
 
 export interface Coordinates {
   latitude: number;
   longitude: number;
-  // For Leaflet compatibility
-  lat?: number;
-  lng?: number;
 }
 
 export interface VehicleLocation {
-  id: string;
-  vehicleId?: string;
-  latitude: number;
-  longitude: number;
+  vehicleId: string;
+  coordinates: Coordinates;
   timestamp: string;
-  speed?: number;
+  status: 'offline' | 'idle' | 'moving' | 'stopped';
   heading?: number;
-  altitude?: number;
-  accuracy?: number;
-  status?: 'moving' | 'stopped' | 'idle' | 'offline';
-  lastUpdate?: string;
-  // Support for both naming conventions
-  lat?: number;
-  lng?: number;
+  speed?: number;
 }
 
-export interface TransportVehicleWithLocation {
-  id: string;
-  name: string;
-  type: string;
-  licensePlate: string;
-  capacity?: number;
-  status: string;
-  fuelType?: string;
-  driverName?: string;
-  location: VehicleLocation;
+export interface TransportVehicleWithLocation extends TransportVehicle {
+  location?: VehicleLocation;
 }
 
 export interface MapConfig {
   center: Coordinates;
   zoom: number;
-  provider: 'osm' | 'mapbox' | 'google' | 'osm-france' | 'carto';
-  style?: string;
-  apiKey?: string;
   showTraffic?: boolean;
-  showPOIs?: boolean;
-  showLabels?: boolean;
+  showGeofences?: boolean;
+  refreshInterval?: number;
+  provider?: 'osm' | 'google' | 'mapbox';
   maxZoom?: number;
   minZoom?: number;
   tileProvider?: string;
-  refreshInterval?: number;
-  showGeofences?: boolean;
-}
-
-export interface MapExtensionRequest {
-  id: string; // Adding required ID field
-  type: 'traffic' | 'satellite' | 'terrain' | 'heatmap';
-  active: boolean;
-  config?: Record<string, any>;
-  status: 'pending' | 'approved' | 'rejected'; // Adding status field
-  requestId: string; // Adding request ID field
-  clientName: string; // Adding client name field
-  vehicleName: string; // Adding vehicle name field
-  originalEndDate: string; // Adding original end date field
-  requestedEndDate: string; // Adding requested end date field
-  reason: string; // Adding reason field
-  extensionReason?: string; // Adding optional extension reason field
-  createdAt: string; // Adding creation date
-}
-
-export interface MapFilter {
-  type: 'vehicle' | 'driver' | 'zone';
-  value: string;
-  active: boolean;
-}
-
-export interface LocationHistoryEntry extends Coordinates {
-  timestamp: string;
-  speed: number;
-  status: string;
-}
-
-export interface GeofenceZone {
-  id: string;
-  name: string;
-  type: 'circle' | 'polygon' | 'rectangle';
-  coordinates: Coordinates[];
-  radius?: number;
-  color: string;
-  alerts?: boolean;
 }
 
 export interface MapHookResult {
@@ -103,13 +42,26 @@ export interface MapHookResult {
   zoomToVehicle: (vehicleId: string) => void;
   zoomToFitAllVehicles: () => void;
   trackingMode: boolean;
-  setTrackingMode: (mode: boolean) => void;
-  mapInitialized: boolean;
-  mapConfig: MapConfig;
-  setMapConfig: (config: MapConfig) => void;
-  refreshMap: () => void;
-  updateMarkers: (vehicles: TransportVehicleWithLocation[]) => void;
+  setTrackingMode: (enabled: boolean) => void;
+  mapInitialized?: boolean;
+  mapConfig?: MapConfig;
+  setMapConfig?: (config: MapConfig) => void;
+  refreshMap?: () => void;
+  updateMarkers?: (vehicles: TransportVehicleWithLocation[]) => void;
 }
 
-// Type alias for backward compatibility
-export type ExtensionRequest = MapExtensionRequest;
+export interface MapExtensionRequest {
+  id: string; // Added for components
+  requestId: string; // Added for components
+  type: 'traffic' | 'satellite' | 'terrain' | 'heatmap';
+  active: boolean;
+  config?: Record<string, any>;
+  status?: 'pending' | 'approved' | 'rejected'; // Added for components
+  clientName?: string; // Added for components
+  vehicleName?: string; // Added for components
+  originalEndDate?: string; // Added for components
+  requestedEndDate?: string; // Added for components
+  reason?: string; // Added for components
+  extensionReason?: string; // Added for components
+  createdAt?: string; // Added for components
+}

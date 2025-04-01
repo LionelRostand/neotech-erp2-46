@@ -24,14 +24,14 @@ export {
   type MaintenanceSchedule
 } from './vehicle-types';
 
-export {
+export type {
   // From map-types.ts
-  type VehicleLocation,
-  type Coordinates,
-  type TransportVehicleWithLocation,
-  type MapConfig,
-  type MapHookResult,
-  type MapExtensionRequest
+  VehicleLocation,
+  Coordinates,
+  TransportVehicleWithLocation,
+  MapConfig,
+  MapHookResult,
+  MapExtensionRequest
 } from './map-types';
 
 // Re-export with aliases to avoid ambiguity

@@ -13,10 +13,10 @@ import ViewReservationDetailsDialog from './ViewReservationDetailsDialog';
 const mockReservations: Reservation[] = [
   {
     id: "rsv-001",
-    vehicleId: "veh-001",
-    driverId: "drv-001",
-    clientId: "cli-001",
+    client: "cli-001",
     clientName: "Marie Martin",
+    vehicle: "veh-001",
+    driver: "drv-001",
     startDate: "2023-11-10",
     endDate: "2023-11-12",
     pickupLocation: { address: "15 rue de Rivoli, 75001 Paris" },
@@ -30,10 +30,10 @@ const mockReservations: Reservation[] = [
   },
   {
     id: "rsv-002",
-    vehicleId: "veh-002",
-    driverId: "drv-002",
-    clientId: "cli-002",
+    client: "cli-002",
     clientName: "Pierre Dubois",
+    vehicle: "veh-002",
+    driver: "drv-002",
     startDate: "2023-11-15",
     endDate: "2023-11-15",
     pickupLocation: { address: "Aéroport CDG Terminal 2E, Paris" },
@@ -47,9 +47,10 @@ const mockReservations: Reservation[] = [
   },
   {
     id: "rsv-003",
-    vehicleId: "veh-003",
-    clientId: "cli-003",
+    client: "cli-003",
     clientName: "Sophie Laurent",
+    vehicle: "veh-003",
+    driver: "drv-003",
     startDate: "2023-11-08",
     endDate: "2023-11-10",
     pickupLocation: { address: "Gare de Lyon, Paris" },
@@ -63,10 +64,10 @@ const mockReservations: Reservation[] = [
   },
   {
     id: "rsv-004",
-    vehicleId: "veh-001",
-    driverId: "drv-003",
-    clientId: "cli-004",
+    client: "cli-004",
     clientName: "Jean Moreau",
+    vehicle: "veh-001",
+    driver: "drv-003",
     startDate: "2023-11-20",
     endDate: "2023-11-20",
     pickupLocation: { address: "Hôtel Ritz, Place Vendôme, Paris" },
@@ -80,9 +81,10 @@ const mockReservations: Reservation[] = [
   },
   {
     id: "rsv-005",
-    vehicleId: "veh-004",
-    clientId: "cli-005",
+    client: "cli-005",
     clientName: "Isabelle Bernard",
+    vehicle: "veh-004",
+    driver: "drv-004",
     startDate: "2023-11-25",
     endDate: "2023-11-27",
     pickupLocation: { address: "Gare Montparnasse, Paris" },
@@ -96,37 +98,14 @@ const mockReservations: Reservation[] = [
   }
 ];
 
-const adjustReservationDates = (reservations: Reservation[]): Reservation[] => {
-  const today = new Date();
-  const currentYear = today.getFullYear();
-  const currentMonth = today.getMonth();
-  
-  return reservations.map((reservation, index) => {
-    const startDate = new Date(reservation.startDate);
-    const endDate = new Date(reservation.endDate);
-    
-    const newStartDate = new Date(currentYear, currentMonth, 5 + index * 3);
-    const duration = Math.floor((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
-    const newEndDate = new Date(currentYear, currentMonth, 5 + index * 3 + duration);
-    
-    return {
-      ...reservation,
-      startDate: newStartDate.toISOString().split('T')[0],
-      endDate: newEndDate.toISOString().split('T')[0],
-    };
-  });
-};
-
 const ReservationsCalendar: React.FC = () => {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [selectedReservation, setSelectedReservation] = useState<Reservation | null>(null);
   const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false);
   const [calendarView, setCalendarView] = useState<'month' | 'week' | 'day'>('month');
   
-  const adjustedReservations = adjustReservationDates(mockReservations);
-  
   const getReservationsForDate = (date: Date) => {
-    return adjustedReservations.filter(reservation => {
+    return mockReservations.filter(reservation => {
       const start = new Date(reservation.startDate);
       const end = new Date(reservation.endDate);
       return date >= start && date <= end;
@@ -157,26 +136,6 @@ const ReservationsCalendar: React.FC = () => {
   const handleViewDetails = (reservation: Reservation) => {
     setSelectedReservation(reservation);
     setIsDetailsDialogOpen(true);
-  };
-
-  const renderCellContent = (day: Date) => {
-    const reservationsForDay = getReservationsForDate(day);
-    
-    if (reservationsForDay.length === 0) return null;
-    
-    return (
-      <div className="absolute bottom-1 left-0 right-0 flex justify-center gap-1">
-        {reservationsForDay.slice(0, 3).map((reservation, i) => (
-          <div 
-            key={i}
-            className={`h-1 w-1 rounded-full ${getStatusColor(reservation.status)}`}
-          />
-        ))}
-        {reservationsForDay.length > 3 && (
-          <div className="h-1 w-1 rounded-full bg-gray-400" />
-        )}
-      </div>
-    );
   };
 
   return (

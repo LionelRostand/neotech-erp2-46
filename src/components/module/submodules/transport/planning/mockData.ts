@@ -1,7 +1,7 @@
-import { TransportVehicle, TransportDriver } from '../types';
-import { VehicleMaintenanceSchedule as MaintenanceSchedule, MapExtensionRequest as ExtensionRequest } from '../types';
 
-// Mock vehicle data
+import { TransportVehicle, TransportDriver, MaintenanceSchedule, MapExtensionRequest } from '../types';
+
+// Mock Vehicles
 export const mockVehicles: TransportVehicle[] = [
   {
     id: "veh-001",
@@ -12,14 +12,14 @@ export const mockVehicles: TransportVehicle[] = [
     available: true,
     status: "active",
     purchaseDate: "2022-05-15",
-    make: "Mercedes",
-    model: "Classe E",
-    year: 2022,
-    vinNumber: "WMEEJ8AA3FK792135",
+    lastServiceDate: "2023-05-20",
+    nextServiceDate: "2023-11-20",
     mileage: 25000,
-    fuelType: "Diesel",
-    fuelLevel: 0.75,
-    createdAt: "2022-05-01"
+    insuranceInfo: {
+      provider: "AXA",
+      policyNumber: "POL-12345",
+      expiryDate: "2023-12-31"
+    }
   },
   {
     id: "veh-002",
@@ -30,14 +30,14 @@ export const mockVehicles: TransportVehicle[] = [
     available: false,
     status: "maintenance",
     purchaseDate: "2021-08-10",
-    make: "BMW",
-    model: "Série 5",
-    year: 2021,
-    vinNumber: "WBKJD4C51BE778564",
+    lastServiceDate: "2023-07-12",
+    nextServiceDate: "2024-01-12",
     mileage: 42000,
-    fuelType: "Essence",
-    fuelLevel: 0.3,
-    createdAt: "2021-08-01"
+    insuranceInfo: {
+      provider: "Allianz",
+      policyNumber: "POL-67890",
+      expiryDate: "2023-11-15"
+    }
   },
   {
     id: "veh-003",
@@ -48,216 +48,185 @@ export const mockVehicles: TransportVehicle[] = [
     available: true,
     status: "active",
     purchaseDate: "2022-01-20",
-    make: "Audi",
-    model: "A6",
-    year: 2022,
-    vinNumber: "WAUZZZ4G1EN042620",
-    mileage: 18000,
-    fuelType: "Hybride",
-    fuelLevel: 0.85,
-    createdAt: "2022-01-10"
-  },
-  {
-    id: "veh-004",
-    name: "Mercedes Classe V",
-    type: "van",
-    capacity: 7,
-    licensePlate: "MN-012-OP",
-    available: true,
-    status: "active",
-    purchaseDate: "2021-11-05",
-    make: "Mercedes",
-    model: "Classe V",
-    year: 2021,
-    vinNumber: "WDD2130841A965689",
-    mileage: 32000,
-    fuelType: "Diesel",
-    fuelLevel: 0.6,
-    createdAt: "2021-11-01"
-  },
-  {
-    id: "veh-005",
-    name: "Tesla Model S",
-    type: "luxury",
-    capacity: 4,
-    licensePlate: "QR-345-ST",
-    available: false,
-    status: "out-of-service",
-    purchaseDate: "2022-03-15",
-    make: "Tesla",
-    model: "Model S",
-    year: 2022,
-    vinNumber: "5YJSA1E40FF119841",
-    mileage: 15000,
-    fuelType: "Électrique",
-    fuelLevel: 0.2,
-    createdAt: "2022-03-01"
+    lastServiceDate: "2023-06-05",
+    nextServiceDate: "2023-12-05",
+    mileage: 35000,
+    insuranceInfo: {
+      provider: "Generali",
+      policyNumber: "POL-45678",
+      expiryDate: "2024-01-20"
+    }
   }
 ];
 
-// Mock maintenance schedules
+// Mock Maintenance Schedules
 export const mockMaintenanceSchedules: MaintenanceSchedule[] = [
   {
-    id: "mnt-001",
-    vehicleId: "veh-002",
-    startDate: "2023-11-20",
-    endDate: "2023-11-22",
-    type: "regular",
-    description: "Changement d'huile et filtres",
-    technician: "Garage Central",
-    taskName: "Maintenance régulière",
-    nextDue: "2024-05-20",
-    priority: "medium",
-    completed: false,
-    scheduledDate: "2023-11-20",
-    estimatedDuration: 120,
-    status: "scheduled",
-    technicianAssigned: "Garage Central"
-  },
-  {
-    id: "mnt-002",
-    vehicleId: "veh-005",
-    startDate: "2023-11-15",
-    endDate: "2023-11-25",
-    type: "repair",
-    description: "Réparation système électrique",
-    technician: "ElectroCar",
-    taskName: "Réparation",
-    nextDue: "2024-05-15",
-    priority: "high",
-    completed: false,
-    scheduledDate: "2023-11-15",
-    estimatedDuration: 240,
-    status: "in-progress",
-    technicianAssigned: "ElectroCar"
-  },
-  {
-    id: "mnt-003",
+    id: "ms-001",
     vehicleId: "veh-001",
-    startDate: "2023-12-05",
-    endDate: "2023-12-06",
-    type: "inspection",
-    description: "Contrôle technique annuel",
-    technician: "Contrôle Auto",
-    taskName: "Contrôle technique",
-    nextDue: "2024-12-05",
-    priority: "low",
-    completed: false,
-    scheduledDate: "2023-12-05",
-    estimatedDuration: 60,
+    type: "oil-change",
+    startDate: "2023-11-20",
+    endDate: "2023-11-20",
     status: "scheduled",
-    technicianAssigned: "Contrôle Auto"
+    notes: "Routine oil change and filter replacement",
+    estimatedCost: 280,
+    priority: "normal",
+    assignedTo: "Garage Central"
+  },
+  {
+    id: "ms-002",
+    vehicleId: "veh-002",
+    type: "major-service",
+    startDate: "2023-11-10",
+    endDate: "2023-11-15",
+    status: "in-progress",
+    notes: "Brake system overhaul and general inspection",
+    estimatedCost: 950,
+    priority: "high",
+    assignedTo: "Garage Express"
+  },
+  {
+    id: "ms-003",
+    vehicleId: "veh-003",
+    type: "inspection",
+    startDate: "2023-12-05",
+    endDate: "2023-12-05",
+    status: "scheduled",
+    notes: "Annual technical inspection",
+    estimatedCost: 120,
+    priority: "normal",
+    assignedTo: "Contrôle Auto"
   }
 ];
 
-// Update only the problematic extension request objects with proper fields
-export const mockExtensionRequests: ExtensionRequest[] = [
+// Mock Extension Requests
+export const mockExtensionRequests: MapExtensionRequest[] = [
   {
     id: "ext-001",
-    type: "traffic",
-    active: true,
+    requestId: "req-001",
+    type: "satellite",
+    active: false,
     status: "pending",
-    requestId: "REQ-2023-001",
-    clientName: "Sophie Marceau",
+    clientName: "Marie Martin",
     vehicleName: "Mercedes Classe E",
     originalEndDate: "2023-11-15",
     requestedEndDate: "2023-11-18",
-    reason: "Besoin de prolonger pour un événement client",
-    createdAt: "2023-11-10"
+    reason: "Client needs extended service for business meetings",
+    createdAt: "2023-11-10T09:45:00",
+    config: {
+      resolution: "high",
+      provider: "mapbox"
+    }
   },
   {
     id: "ext-002",
-    type: "satellite",
+    requestId: "req-002",
+    type: "traffic",
     active: true,
     status: "approved",
-    requestId: "REQ-2023-002",
-    clientName: "Jean Dujardin",
-    vehicleName: "BMW Série 5",
-    originalEndDate: "2023-11-20",
+    clientName: "Jean Dupont",
+    vehicleName: "Audi A6",
+    originalEndDate: "2023-11-22",
     requestedEndDate: "2023-11-25",
-    reason: "Extension de séjour professionnel",
-    createdAt: "2023-11-12"
+    reason: "Extended family visit",
+    createdAt: "2023-11-18T14:30:00",
+    config: {
+      updateInterval: 300,
+      includeIncidents: true
+    }
   }
 ];
 
-// Fix the driver with incorrect status
-export const mockDrivers = [
+// Mock Drivers
+export const mockDrivers: TransportDriver[] = [
   {
     id: "drv-001",
     firstName: "Jean",
     lastName: "Dupont",
+    licenseNumber: "123456789",
+    licenseType: "B",
+    licenseExpiry: "2025-06-15",
     phone: "06 12 34 56 78",
     email: "jean.dupont@example.com",
-    licenseNumber: "123456789",
-    licenseExpiry: "2025-06-15",
-    available: true,
-    onLeave: false,
-    rating: 4.8,
-    experience: 5,
-    photo: "",
-    skills: ["luxury", "airport", "events"],
-    preferredVehicleTypes: ["sedan", "luxury"],
+    address: "15 rue des Lilas, 75001 Paris",
     status: "active",
-    licenseType: "B",
+    rating: 4.8,
     hireDate: "2019-03-10",
-    createdAt: "2019-03-01"
+    preferredVehicleType: "sedan",
+    available: true,
+    experience: 4,
+    photo: "/assets/drivers/driver1.jpg"
   },
   {
     id: "drv-002",
     firstName: "Marie",
-    lastName: "Martin",
-    phone: "06 98 76 54 32",
-    email: "marie.martin@example.com",
+    lastName: "Laurent",
     licenseNumber: "987654321",
-    licenseExpiry: "2024-03-20",
-    available: false,
-    onLeave: false,
-    rating: 4.5,
-    experience: 3,
-    photo: "",
-    skills: ["airport", "long-distance"],
-    preferredVehicleTypes: ["sedan"],
-    status: "driving",
     licenseType: "B",
+    licenseExpiry: "2024-11-30",
+    phone: "07 98 76 54 32",
+    email: "marie.laurent@example.com",
+    address: "8 avenue Victor Hugo, 75016 Paris",
+    status: "driving",
+    rating: 4.5,
     hireDate: "2020-01-15",
-    createdAt: "2020-01-01"
+    preferredVehicleType: "van",
+    available: false,
+    experience: 3,
+    photo: "/assets/drivers/driver2.jpg"
   },
   {
     id: "drv-003",
-    firstName: "Paul",
-    lastName: "Lefebvre",
-    phone: "07 12 34 56 78",
-    email: "paul.lefebvre@example.com",
+    firstName: "Pierre",
+    lastName: "Martin",
     licenseNumber: "456789123",
-    licenseExpiry: "2026-09-10",
-    available: true,
-    onLeave: true,
-    rating: 4.9,
-    experience: 7,
-    photo: "",
-    skills: ["luxury", "events", "night"],
-    preferredVehicleTypes: ["luxury"],
-    status: "on_leave",
     licenseType: "D",
+    licenseExpiry: "2023-12-25",
+    phone: "06 45 67 89 12",
+    email: "pierre.martin@example.com",
+    address: "22 rue de la République, 69002 Lyon",
+    status: "off-duty",
+    rating: 4.2,
     hireDate: "2018-06-22",
-    createdAt: "2018-06-01"
+    preferredVehicleType: "bus",
+    available: false,
+    experience: 5,
+    photo: "/assets/drivers/driver3.jpg"
+  },
+  {
+    id: "drv-004",
+    firstName: "Sophie",
+    lastName: "Moreau",
+    licenseNumber: "321654987",
+    licenseType: "B",
+    licenseExpiry: "2024-08-10",
+    phone: "07 32 16 54 98",
+    email: "sophie.moreau@example.com",
+    address: "5 rue des Pyrénées, 31000 Toulouse",
+    status: "active",
+    rating: 4.9,
+    hireDate: "2021-02-05",
+    preferredVehicleType: "luxury",
+    available: true,
+    experience: 2,
+    photo: "/assets/drivers/driver4.jpg"
   },
   {
     id: "drv-005",
-    firstName: "Claire",
-    lastName: "Fontaine",
-    email: "claire.fontaine@example.com",
-    phone: "+33 6 12 34 56 89",
-    licenseNumber: "12345XYZ",
-    licenseExpiry: "2025-06-15",
-    status: "on_leave",
-    rating: 4.6,
-    hireDate: "2020-03-15",
-    photo: "",
-    skills: ["airport", "long-distance"],
-    preferredVehicleTypes: ["sedan"],
-    licenseType: "B",
-    hireDate: "2020-03-15",
-    createdAt: "2020-03-01"
+    firstName: "Thomas",
+    lastName: "Bernard",
+    licenseNumber: "789123456",
+    licenseType: "B+E",
+    licenseExpiry: "2025-01-20",
+    phone: "06 78 91 23 45",
+    email: "thomas.bernard@example.com",
+    address: "12 boulevard de la Mer, 06000 Nice",
+    status: "on_leave", // Fixed from "on-leave" to "on_leave"
+    rating: 4.7,
+    hireDate: "2019-11-18",
+    preferredVehicleType: "sedan",
+    available: false,
+    experience: 3,
+    photo: "/assets/drivers/driver5.jpg"
   }
 ];

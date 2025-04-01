@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -12,10 +11,10 @@ import { toast } from "sonner";
 const mockReservations: Reservation[] = [
   {
     id: "rsv-001",
-    vehicleId: "veh-001",
-    driverId: "drv-001",
-    clientId: "cli-001",
+    client: "cli-001",
     clientName: "Marie Martin",
+    vehicle: "veh-001",
+    driver: "drv-001",
     startDate: "2023-11-10",
     endDate: "2023-11-12",
     pickupLocation: { address: "15 rue de Rivoli, 75001 Paris" },
@@ -29,10 +28,10 @@ const mockReservations: Reservation[] = [
   },
   {
     id: "rsv-002",
-    vehicleId: "veh-002",
-    driverId: "drv-002",
-    clientId: "cli-002",
+    client: "cli-002",
     clientName: "Pierre Dubois",
+    vehicle: "veh-002",
+    driver: "drv-002",
     startDate: "2023-11-15",
     endDate: "2023-11-15",
     pickupLocation: { address: "Aéroport CDG Terminal 2E, Paris" },
@@ -46,9 +45,10 @@ const mockReservations: Reservation[] = [
   },
   {
     id: "rsv-003",
-    vehicleId: "veh-003",
-    clientId: "cli-003",
+    client: "cli-003",
     clientName: "Sophie Laurent",
+    vehicle: "veh-003",
+    clientId: "cli-003",
     startDate: "2023-11-08",
     endDate: "2023-11-10",
     pickupLocation: { address: "Gare de Lyon, Paris" },
@@ -62,10 +62,10 @@ const mockReservations: Reservation[] = [
   },
   {
     id: "rsv-004",
-    vehicleId: "veh-001",
-    driverId: "drv-003",
-    clientId: "cli-004",
+    client: "cli-004",
     clientName: "Jean Moreau",
+    vehicle: "veh-001",
+    driver: "drv-003",
     startDate: "2023-11-20",
     endDate: "2023-11-20",
     pickupLocation: { address: "Hôtel Ritz, Place Vendôme, Paris" },
@@ -79,9 +79,10 @@ const mockReservations: Reservation[] = [
   },
   {
     id: "rsv-005",
-    vehicleId: "veh-004",
-    clientId: "cli-005",
+    client: "cli-005",
     clientName: "Isabelle Bernard",
+    vehicle: "veh-004",
+    clientId: "cli-005",
     startDate: "2023-11-25",
     endDate: "2023-11-27",
     pickupLocation: { address: "Gare Montparnasse, Paris" },
