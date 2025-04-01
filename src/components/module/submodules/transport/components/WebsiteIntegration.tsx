@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -89,7 +88,7 @@ const WebsiteIntegration: React.FC<WebsiteIntegrationProps> = ({
     navigator.clipboard.writeText(integrationCode);
     toast.success("Code d'intégration copié dans le presse-papier");
   };
-  
+
   // Si le module Website n'est pas installé, afficher un message
   if (!mockWebsiteModuleInstalled) {
     return (

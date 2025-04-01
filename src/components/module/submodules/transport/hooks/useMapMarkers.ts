@@ -25,7 +25,19 @@ export function useMapMarkers() {
     vehicles.forEach(vehicle => {
       if (!vehicle.location) return;
       
-      const { lat, lng } = vehicle.location;
+      // Handle both coordinate patterns (lat/lng and latitude/longitude)
+      let lat: number, lng: number;
+      
+      if (vehicle.location.coordinates) {
+        // Use coordinates object if available
+        lat = vehicle.location.coordinates.latitude;
+        lng = vehicle.location.coordinates.longitude;
+      } else {
+        // Fall back to direct lat/lng or latitude/longitude properties
+        lat = vehicle.location.lat || vehicle.location.latitude || 0;
+        lng = vehicle.location.lng || vehicle.location.longitude || 0;
+      }
+      
       if (!lat || !lng) return;
       
       // Create marker options

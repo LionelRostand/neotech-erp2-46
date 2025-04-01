@@ -9,8 +9,18 @@ export const calculateMapCenter = (
   defaultZoom: number
 ) => {
   // If there are no vehicles with location data, return default values
-  const vehiclesWithLocation = vehicles.filter(v => v.location && 
-    ((v.location.latitude && v.location.longitude) || (v.location.lat && v.location.lng)));
+  const vehiclesWithLocation = vehicles.filter(v => {
+    if (!v.location) return false;
+    
+    // Check for coordinates in any format
+    return (
+      (v.location.coordinates && (v.location.coordinates.latitude || v.location.coordinates.longitude)) || 
+      v.location.lat || 
+      v.location.lng || 
+      v.location.latitude || 
+      v.location.longitude
+    );
+  });
   
   if (vehiclesWithLocation.length === 0) {
     return { latitude: defaultLat, longitude: defaultLng, zoom: defaultZoom };
@@ -19,8 +29,19 @@ export const calculateMapCenter = (
   // If there's only one vehicle, center on it
   if (vehiclesWithLocation.length === 1) {
     const vehicle = vehiclesWithLocation[0];
-    const latitude = vehicle.location.lat || vehicle.location.latitude;
-    const longitude = vehicle.location.lng || vehicle.location.longitude;
+    
+    // Get coordinates in any available format
+    const latitude = 
+      (vehicle.location.coordinates ? vehicle.location.coordinates.latitude : undefined) || 
+      vehicle.location.lat || 
+      vehicle.location.latitude || 
+      defaultLat;
+      
+    const longitude = 
+      (vehicle.location.coordinates ? vehicle.location.coordinates.longitude : undefined) || 
+      vehicle.location.lng || 
+      vehicle.location.longitude || 
+      defaultLng;
     
     return { 
       latitude, 
@@ -36,13 +57,23 @@ export const calculateMapCenter = (
   let maxLng = -Infinity;
 
   vehiclesWithLocation.forEach(vehicle => {
-    const lat = vehicle.location.lat || vehicle.location.latitude;
-    const lng = vehicle.location.lng || vehicle.location.longitude;
+    // Get lat/lng from any available format
+    const lat = 
+      (vehicle.location.coordinates ? vehicle.location.coordinates.latitude : undefined) || 
+      vehicle.location.lat || 
+      vehicle.location.latitude;
+      
+    const lng = 
+      (vehicle.location.coordinates ? vehicle.location.coordinates.longitude : undefined) || 
+      vehicle.location.lng || 
+      vehicle.location.longitude;
     
-    minLat = Math.min(minLat, lat);
-    maxLat = Math.max(maxLat, lat);
-    minLng = Math.min(minLng, lng);
-    maxLng = Math.max(maxLng, lng);
+    if (lat !== undefined && lng !== undefined) {
+      minLat = Math.min(minLat, lat);
+      maxLat = Math.max(maxLat, lat);
+      minLng = Math.min(minLng, lng);
+      maxLng = Math.max(maxLng, lng);
+    }
   });
 
   // Calculate center of bounding box
@@ -123,8 +154,17 @@ export const getTileLayerConfig = (provider: string = 'osm-france') => {
 
 // Helper function to normalize coordinates (handles both lat/lng and latitude/longitude)
 export const getCoordinates = (location: any) => {
+  if (!location) return { lat: 0, lng: 0 };
+  
+  if (location.coordinates) {
+    return {
+      lat: location.coordinates.latitude || 0,
+      lng: location.coordinates.longitude || 0
+    };
+  }
+  
   return {
-    lat: location.lat || location.latitude,
-    lng: location.lng || location.longitude
+    lat: location.lat || location.latitude || 0,
+    lng: location.lng || location.longitude || 0
   };
 };

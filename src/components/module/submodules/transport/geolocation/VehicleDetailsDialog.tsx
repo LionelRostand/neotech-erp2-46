@@ -55,6 +55,34 @@ const VehicleDetailsDialog: React.FC<VehicleDetailsDialogProps> = ({
     }
   };
 
+  // Helper function to get coordinates string
+  const getCoordinatesString = () => {
+    if (!vehicle.location) return "Non disponible";
+    
+    // Try to get coordinates from various patterns
+    const lat = vehicle.location.coordinates?.latitude || 
+                vehicle.location.lat || 
+                vehicle.location.latitude;
+                
+    const lng = vehicle.location.coordinates?.longitude || 
+                vehicle.location.lng || 
+                vehicle.location.longitude;
+                
+    if (lat && lng) {
+      return `${Number(lat).toFixed(6)}, ${Number(lng).toFixed(6)}`;
+    }
+    
+    return "Non disponible";
+  };
+  
+  // Helper function to get last update timestamp
+  const getLastUpdate = () => {
+    if (!vehicle.location) return "Non disponible";
+    
+    const timestamp = vehicle.location.timestamp || vehicle.location.lastUpdate;
+    return timestamp ? formatDate(timestamp) : "Non disponible";
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[550px]">
@@ -108,7 +136,7 @@ const VehicleDetailsDialog: React.FC<VehicleDetailsDialogProps> = ({
                   <Clock className="h-4 w-4 text-muted-foreground" />
                   <div className="text-sm text-muted-foreground">Dernière mise à jour</div>
                 </div>
-                <div className="font-medium">{vehicle.location?.lastUpdate ? formatDate(vehicle.location.lastUpdate) : "Non disponible"}</div>
+                <div className="font-medium">{getLastUpdate()}</div>
               </div>
               
               <div className="space-y-1">
@@ -124,10 +152,7 @@ const VehicleDetailsDialog: React.FC<VehicleDetailsDialogProps> = ({
                   <MapPin className="h-4 w-4 text-muted-foreground" />
                   <div className="text-sm text-muted-foreground">Coordonnées</div>
                 </div>
-                <div className="font-medium">
-                  {vehicle.location?.lat ? `${vehicle.location.lat.toFixed(6)}, ${vehicle.location.lng?.toFixed(6)}` : 
-                   `${vehicle.location.latitude.toFixed(6)}, ${vehicle.location.longitude.toFixed(6)}`}
-                </div>
+                <div className="font-medium">{getCoordinatesString()}</div>
               </div>
             </div>
           </div>

@@ -1,27 +1,9 @@
 import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Separator } from "@/components/ui/separator";
-import { Switch } from "@/components/ui/switch";
-import { Globe, Settings, Users, Calendar, Car, MapPin, Code, X, Check, Copy } from 'lucide-react';
-import { WebBooking, WebBookingStatus } from './types/reservation-types';
-import { TransportService } from './types/base-types';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-  DialogClose
-} from "@/components/ui/dialog";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { toast } from "sonner";
+import { Badge } from "@/components/ui/badge";
+import { PlusCircle, Settings, Trash2, CheckCircle2, XCircle, AlertCircle } from "lucide-react";
 
 const TransportWebBooking: React.FC = () => {
   const [activeTab, setActiveTab] = useState('configuration');

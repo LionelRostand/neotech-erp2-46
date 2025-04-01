@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useTransportMap } from './hooks/useTransportMap';
-import { TransportVehicleWithLocation, VehicleLocation, Coordinates } from './types';
+import { TransportVehicleWithLocation } from './types';
 import 'leaflet/dist/leaflet.css';
 
 const VEHICLE_STATUS_MAP = {
@@ -22,6 +22,7 @@ const mockVehicleLocations: TransportVehicleWithLocation[] = [
     licensePlate: "AB-123-CD",
     available: true,
     status: "active",
+    capacity: 5, // Added capacity
     location: {
       vehicleId: "veh-001",
       coordinates: { latitude: 48.873792, longitude: 2.295028 },
@@ -38,6 +39,7 @@ const mockVehicleLocations: TransportVehicleWithLocation[] = [
     licensePlate: "EF-456-GH",
     available: true,
     status: "active",
+    capacity: 5, // Added capacity
     location: {
       vehicleId: "veh-002",
       coordinates: { latitude: 48.858370, longitude: 2.294481 },
@@ -54,6 +56,7 @@ const mockVehicleLocations: TransportVehicleWithLocation[] = [
     licensePlate: "QR-345-ST",
     available: false,
     status: "maintenance",
+    capacity: 5, // Added capacity
     location: {
       vehicleId: "veh-003",
       coordinates: { latitude: 48.843394, longitude: 2.326242 },
@@ -70,6 +73,7 @@ const mockVehicleLocations: TransportVehicleWithLocation[] = [
     licensePlate: "MN-012-OP",
     available: true,
     status: "active",
+    capacity: 8, // Added capacity
     location: {
       vehicleId: "veh-004",
       coordinates: { latitude: 48.861934, longitude: 2.339114 },

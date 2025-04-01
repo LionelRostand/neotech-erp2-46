@@ -23,8 +23,7 @@ export type {
   TransportVehicleWithLocation, 
   MapConfig, 
   MapHookResult, 
-  MapExtensionRequest,
-  ExtensionRequest
+  MapExtensionRequest
 } from './map-types';
 
 // Export from client-types.ts

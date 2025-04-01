@@ -99,7 +99,8 @@ export function useTransportMap(initialConfig?: MapConfig): MapHookResult {
     if (!map) return;
     
     clearMarkers(map);
-    addVehicleMarkers(map, vehicles);
+    // Fix the function call to match the expected parameters
+    addVehicleMarkers(map, vehicles, () => {}, undefined);
   }, [map, clearMarkers, addVehicleMarkers]);
 
   // Function to refresh the map

@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -48,7 +49,7 @@ const mockReservations: Reservation[] = [
     client: "cli-003",
     clientName: "Sophie Laurent",
     vehicle: "veh-003",
-    clientId: "cli-003",
+    driver: "", // Changed from clientId to driver
     startDate: "2023-11-08",
     endDate: "2023-11-10",
     pickupLocation: { address: "Gare de Lyon, Paris" },
@@ -82,7 +83,7 @@ const mockReservations: Reservation[] = [
     client: "cli-005",
     clientName: "Isabelle Bernard",
     vehicle: "veh-004",
-    clientId: "cli-005",
+    driver: "", // Changed from clientId to driver
     startDate: "2023-11-25",
     endDate: "2023-11-27",
     pickupLocation: { address: "Gare Montparnasse, Paris" },

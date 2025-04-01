@@ -19,7 +19,7 @@ export interface TransportReservation extends Omit<TransportBasic, 'notes'> {
   pickup: string | { address: string };
   dropoff: string | { address: string };
   service?: string;
-  notes?: string; // Changed from any[] to string
+  notes?: string;
   isPaid?: boolean;
   needsDriver?: boolean;
   contractGenerated?: boolean;
@@ -45,7 +45,7 @@ export interface Reservation {
 }
 
 // Web booking specific types
-export type WebBookingStatus = 'new' | 'processed' | 'cancelled' | 'confirmed'; // Added 'confirmed'
+export type WebBookingStatus = 'new' | 'processed' | 'cancelled' | 'confirmed';
 
 export interface WebBookingService {
   id: string;
@@ -65,8 +65,8 @@ export interface WebBooking {
   notes?: string;
   status: WebBookingStatus;
   createdAt: string;
-  service: string; // Added to match usage
-  serviceId: string; // Added to match usage
+  service: string;
+  serviceId: string;
 }
 
 // Helper function to get address string

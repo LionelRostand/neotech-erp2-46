@@ -2,26 +2,26 @@
 // Re-export all types from the separate type modules
 
 // Re-export specific types to avoid ambiguity
-export {
+export type {
   // From base-types.ts
-  type Note,
-  type TransportService,
-  type TransportBasic
+  Note,
+  TransportService,
+  TransportBasic
 } from './base-types';
 
-export {
+export type {
   // From driver-types.ts
-  type TransportDriver,
-  type DriverNote
+  TransportDriver,
+  DriverNote
 } from './driver-types';
 
-export {
+export type {
   // From vehicle-types.ts
-  type TransportVehicle,
-  type VehicleNote,
-  type MaintenanceRecord,
-  type IncidentRecord,
-  type MaintenanceSchedule
+  TransportVehicle,
+  VehicleNote,
+  MaintenanceRecord,
+  IncidentRecord,
+  MaintenanceSchedule
 } from './vehicle-types';
 
 export type {
@@ -35,8 +35,8 @@ export type {
 } from './map-types';
 
 // Re-export with aliases to avoid ambiguity
-import { MapExtensionRequest as MER } from './map-types';
-export { MER as ExtensionRequestType };
+import type { MapExtensionRequest as MER } from './map-types';
+export type { MER as ExtensionRequestType };
 
 // Export from other modules
 export * from './geolocation-types';

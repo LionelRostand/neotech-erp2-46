@@ -13,10 +13,17 @@ export interface VehicleLocation {
   status: 'offline' | 'idle' | 'moving' | 'stopped';
   heading?: number;
   speed?: number;
+  // Add these properties to support both coordinate access patterns
+  lat?: number;
+  lng?: number;
+  latitude?: number;
+  longitude?: number;
+  lastUpdate?: string;
 }
 
 export interface TransportVehicleWithLocation extends TransportVehicle {
   location?: VehicleLocation;
+  driverName?: string; // Add this property to match usage
 }
 
 export interface MapConfig {
@@ -51,17 +58,17 @@ export interface MapHookResult {
 }
 
 export interface MapExtensionRequest {
-  id: string; // Added for components
-  requestId: string; // Added for components
+  id: string;
+  requestId: string;
   type: 'traffic' | 'satellite' | 'terrain' | 'heatmap';
   active: boolean;
   config?: Record<string, any>;
-  status?: 'pending' | 'approved' | 'rejected'; // Added for components
-  clientName?: string; // Added for components
-  vehicleName?: string; // Added for components
-  originalEndDate?: string; // Added for components
-  requestedEndDate?: string; // Added for components
-  reason?: string; // Added for components
-  extensionReason?: string; // Added for components
-  createdAt?: string; // Added for components
+  status?: 'pending' | 'approved' | 'rejected';
+  clientName?: string;
+  vehicleName?: string;
+  originalEndDate?: string;
+  requestedEndDate?: string;
+  reason?: string;
+  extensionReason?: string;
+  createdAt?: string;
 }
