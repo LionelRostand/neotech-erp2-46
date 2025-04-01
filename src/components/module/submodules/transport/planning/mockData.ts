@@ -170,7 +170,13 @@ export const mockExtensionRequests: ExtensionRequest[] = [
     additionalTime: 48 * 60, // 48 hours in minutes
     extensionReason: "Prolongation voyage d'affaires",
     extensionDays: 2,
-    vehicleId: "veh-002"
+    vehicleId: "veh-002",
+    driverId: "drv-002",
+    driverName: "Marie Martin",
+    requestedExtension: 48, // 48 hours
+    originalEndTime: "2023-11-21T18:00:00",
+    newEndTime: "2023-11-23T18:00:00",
+    timestamp: "2023-11-18T10:30:00"
   },
   {
     id: "ext-002",
@@ -189,7 +195,13 @@ export const mockExtensionRequests: ExtensionRequest[] = [
     additionalTime: 48 * 60, // 48 hours in minutes
     extensionReason: "Besoin supplémentaire du véhicule",
     extensionDays: 2,
-    vehicleId: "veh-004"
+    vehicleId: "veh-004",
+    driverId: "drv-001",
+    driverName: "Jean Dupont",
+    requestedExtension: 48, // 48 hours
+    originalEndTime: "2023-11-20T16:00:00",
+    newEndTime: "2023-11-22T16:00:00",
+    timestamp: "2023-11-17T14:15:00"
   }
 ];
 

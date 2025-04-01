@@ -9,7 +9,7 @@ export interface VehicleLocation {
   lat?: number;
   lng?: number;
   speed: number;
-  direction: number;
+  direction?: number; // Made direction optional to fix type errors
   timestamp: string;
   lastUpdate?: string;
   address?: string;

@@ -58,8 +58,8 @@ export interface TransportReservation {
   clientId: string;
   vehicleId: string;
   driverId: string;
-  startLocation: LocationType;
-  endLocation: LocationType;
+  startLocation: LocationType | string; // Allow string type for compatibility
+  endLocation: LocationType | string; // Allow string type for compatibility
   startTime: string;
   endTime: string;
   status: TransportReservationStatus;

@@ -1,7 +1,6 @@
 
 import React, { useEffect } from 'react';
 import { ChevronsUpDown } from "lucide-react";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/patched-select';
 
 /**
  * SelectPatch ensures that required components are available for the Select component
@@ -16,19 +15,25 @@ const SelectPatch: React.FC = () => {
       window.ChevronsUpDown = ChevronsUpDown;
     }
     
-    // Make patched Select components available
-    if (typeof window !== 'undefined' && !window.PatchedSelectComponents) {
-      // @ts-ignore - Adding to window object
-      window.PatchedSelectComponents = {
-        Select,
-        SelectContent,
-        SelectItem,
-        SelectTrigger,
-        SelectValue
-      };
+    // Make patched Select components available if they exist and are imported
+    try {
+      const { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } = require('@/components/ui/patched-select');
+      
+      if (typeof window !== 'undefined' && !window.PatchedSelectComponents) {
+        // @ts-ignore - Adding to window object
+        window.PatchedSelectComponents = {
+          Select,
+          SelectContent,
+          SelectItem,
+          SelectTrigger,
+          SelectValue
+        };
+      }
+    } catch (error) {
+      console.warn('Patched select components not available');
     }
     
-    console.log('SelectPatch: Patched components are now available');
+    console.log('SelectPatch: Components are now available');
   }, []);
   
   return null;

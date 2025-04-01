@@ -6,3 +6,9 @@ import { ChevronsUpDown as LucideChevronsUpDown } from 'lucide-react';
 export function ChevronsUpDown(props: React.SVGProps<SVGSVGElement>) {
   return <LucideChevronsUpDown {...props} />;
 }
+
+// Global export to make the component available
+if (typeof window !== 'undefined') {
+  // @ts-ignore - Adding to window object
+  window.ChevronsUpDown = LucideChevronsUpDown;
+}
