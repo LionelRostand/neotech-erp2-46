@@ -64,14 +64,17 @@ const PlanningTabContent: React.FC<PlanningTabContentProps> = ({
   }, [refreshData]);
 
   // Function to convert maintenanceSchedules with proper typing for the AvailabilityCalendar
-  // Ensure notes property is always provided (as an empty array if missing)
+  // Ensure notes property is always provided and in the right format (string)
   const getFormattedMaintenanceSchedules = () => {
     return maintenanceSchedules.map(schedule => ({
       ...schedule,
       technicianAssigned: typeof schedule.technicianAssigned === 'boolean' 
         ? (schedule.technicianAssigned ? 'Yes' : 'No')
         : schedule.technicianAssigned || '',
-      notes: schedule.notes || [] // Ensure notes is always provided, defaulting to empty array if missing
+      // Convert notes to string if it's an array, otherwise use the provided string or empty string
+      notes: Array.isArray(schedule.notes) 
+        ? schedule.notes.join(', ') // Convert array to string by joining
+        : (schedule.notes || '') // Use existing string or empty string
     }));
   };
 
