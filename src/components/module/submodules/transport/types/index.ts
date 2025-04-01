@@ -36,7 +36,6 @@ export type {
   ClientStatistics,
   WebBookingUser,
   WebBooking,
-  WebBookingStatus,
   WebBookingService
 } from './client-types';
 
@@ -48,7 +47,8 @@ export type {
   TransportReservationStatus,
   Address,
   PaymentStatus,
-  WebBookingStatus as ReservationWebBookingStatus
+  // Explicitly re-export WebBookingStatus from reservation-types
+  WebBookingStatus
 } from './reservation-types';
 
 // Re-export planning types

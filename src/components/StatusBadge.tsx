@@ -1,7 +1,7 @@
 
 import { cn } from "@/lib/utils";
 
-export type StatusType = "success" | "warning" | "danger";
+export type StatusType = "success" | "warning" | "danger" | string; // Add string to make it more flexible
 
 interface StatusBadgeProps {
   status: StatusType;
@@ -20,7 +20,7 @@ const StatusBadge = ({ status, children, className }: StatusBadgeProps) => {
     <span 
       className={cn(
         "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium border", 
-        statusClasses[status], 
+        statusClasses[status as keyof typeof statusClasses] || "bg-gray-100 text-gray-800 border-gray-200", 
         className
       )}
     >

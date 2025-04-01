@@ -22,6 +22,13 @@ const TrackingTimeline: React.FC<TrackingTimelineProps> = ({ events, showMaps = 
     );
   }
 
+  // Convert status to appropriate StatusBadge type
+  const getStatusBadgeType = (status: string): "success" | "warning" | "danger" => {
+    if (status === 'delivered') return "success";
+    if (status === 'exception' || status === 'lost') return "danger";
+    return "warning";
+  };
+
   return (
     <div className="space-y-1">
       {events.map((event, index) => (
@@ -59,7 +66,7 @@ const TrackingTimeline: React.FC<TrackingTimelineProps> = ({ events, showMaps = 
                   </p>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <StatusBadge status={getStatusColor(event.status)}>
+                  <StatusBadge status={getStatusBadgeType(event.status)}>
                     {formatPackageStatus(event.status)}
                   </StatusBadge>
                   {event.isNotified ? (

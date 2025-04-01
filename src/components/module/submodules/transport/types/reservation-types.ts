@@ -1,7 +1,6 @@
 
 import { TransportBasic } from './base-types';
 import { TransportService } from './base-types';
-import { WebBookingStatus } from './client-types';
 
 export interface TransportReservation extends TransportBasic {
   clientId: string;
@@ -17,7 +16,10 @@ export interface TransportReservation extends TransportBasic {
   specialRequirements?: string;
   createdBy?: string;
   totalPrice?: number;
-  notes?: string;
+  notes?: string; // Changed from string to string? to match TransportBasic
+  price?: number; // Added price field
+  isPaid?: boolean; // Added isPaid field
+  contractGenerated?: boolean; // Added contractGenerated field
 }
 
 export interface Reservation {
@@ -74,3 +76,13 @@ export const getAddressString = (location?: Address | string): string => {
   if (typeof location === 'string') return location;
   return location.address || '';
 };
+
+// Export WebBookingStatus which was declared but not exported
+export type WebBookingStatus = 
+  | 'pending' 
+  | 'confirmed' 
+  | 'canceled' 
+  | 'completed' 
+  | 'new' 
+  | 'cancelled' 
+  | 'processed';

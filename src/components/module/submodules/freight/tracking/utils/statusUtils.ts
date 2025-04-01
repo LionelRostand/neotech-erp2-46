@@ -5,31 +5,31 @@ import { PackageStatus } from '@/types/freight';
 export const getStatusColor = (status: string): string => {
   switch (status) {
     case 'delivered':
-      return 'bg-green-500';
+      return 'success'; // Changed to match StatusType
     case 'in_transit':
-      return 'bg-blue-500';
+      return 'warning'; // Changed to match StatusType
     case 'processing':
-      return 'bg-amber-500';
+      return 'warning';
     case 'registered':
-      return 'bg-purple-500';
+      return 'warning';
     case 'out_for_delivery':
-      return 'bg-cyan-500';
+      return 'warning';
     case 'delayed':
-      return 'bg-orange-500';
+      return 'warning';
     case 'exception':
-      return 'bg-red-500';
+      return 'danger'; // Changed to match StatusType
     case 'returned':
-      return 'bg-gray-500';
-    case 'shipped':  // Adding additional status for shipped
-      return 'bg-blue-500';
-    case 'ready':    // Adding additional status for ready
-      return 'bg-teal-500';
-    case 'draft':    // Adding additional status for draft
-      return 'bg-gray-400';
-    case 'lost':     // Adding additional status for lost
-      return 'bg-red-600';
+      return 'warning';
+    case 'shipped':
+      return 'warning';
+    case 'ready':
+      return 'success';
+    case 'draft':
+      return 'warning';
+    case 'lost':
+      return 'danger';
     default:
-      return 'bg-gray-400';
+      return 'warning';
   }
 };
 
@@ -71,7 +71,12 @@ export const formatPackageStatus = (status: string): string => {
 export const getTrackingMarkerHtml = (status: string): string => {
   const color = getStatusColor(status);
   
+  const colorClass = color === 'success' ? 'bg-green-500' :
+                    color === 'warning' ? 'bg-amber-500' :
+                    color === 'danger' ? 'bg-red-500' :
+                    'bg-gray-400';
+  
   return `<div class="w-8 h-8 rounded-full bg-white p-1 shadow-md flex items-center justify-center">
-    <div class="w-6 h-6 rounded-full ${color}"></div>
+    <div class="w-6 h-6 rounded-full ${colorClass}"></div>
   </div>`;
 };

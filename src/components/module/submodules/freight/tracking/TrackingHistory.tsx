@@ -31,6 +31,13 @@ const TrackingHistory: React.FC<TrackingHistoryProps> = ({ onPackageSelect }) =>
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
     .slice(0, 5);
   
+  // Convert package status to StatusType
+  const getStatusBadgeType = (status: string): "success" | "warning" | "danger" => {
+    if (status === 'delivered' || status === 'ready') return "success";
+    if (status === 'exception' || status === 'lost') return "danger";
+    return "warning";
+  };
+  
   return (
     <Card>
       <CardHeader>
@@ -78,7 +85,7 @@ const TrackingHistory: React.FC<TrackingHistoryProps> = ({ onPackageSelect }) =>
                         {format(new Date(pkg.createdAt), 'dd MMM yyyy', { locale: fr })}
                       </TableCell>
                       <TableCell>
-                        <StatusBadge status={getStatusColor(pkg.status)}>
+                        <StatusBadge status={getStatusBadgeType(pkg.status)}>
                           {formatPackageStatus(pkg.status)}
                         </StatusBadge>
                       </TableCell>

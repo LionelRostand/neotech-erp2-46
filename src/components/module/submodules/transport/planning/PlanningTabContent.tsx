@@ -8,7 +8,7 @@ import ExtensionRequestsList from './ExtensionRequestsList';
 import DriverAvailabilityTab from './DriverAvailabilityTab';
 import { usePlanning } from './context/PlanningContext';
 import { useMaintenanceSchedule } from '../hooks/useMaintenanceSchedule';
-import { TransportVehicle, MapExtensionRequest } from '../types';
+import { TransportVehicle } from '../types';
 
 interface PlanningTabContentProps {
   activeMode: string;
@@ -33,6 +33,7 @@ const PlanningTabContent: React.FC<PlanningTabContentProps> = ({
   } = usePlanning();
 
   // Convert vehicle maintenance schedules to map maintenance schedules
+  // Removed the explicit type annotation causing the error
   const { mapSchedules } = useMaintenanceSchedule(maintenanceSchedules);
 
   // Adapter functions to match expected signatures
@@ -40,8 +41,13 @@ const PlanningTabContent: React.FC<PlanningTabContentProps> = ({
     openMaintenanceScheduleDialog(vehicle);
   };
 
-  const handleViewExtensionDetails = (request: MapExtensionRequest) => {
-    openExtensionDetailsDialog(request);
+  // Adapter for openExtensionDetailsDialog
+  const handleViewExtensionDetails = (requestId: string) => {
+    // Find the request by ID first
+    const request = extensionRequests.find(req => req.id === requestId);
+    if (request) {
+      openExtensionDetailsDialog(request);
+    }
   };
 
   // Effect to refresh data when the component mounts

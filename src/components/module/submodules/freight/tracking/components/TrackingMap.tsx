@@ -94,9 +94,10 @@ const TrackingMap: React.FC<TrackingMapProps> = ({ events }) => {
         if (markers.length > 1) {
           const points = eventsWithLocation
             .filter(event => event.location)
-            .map(event => [event.location!.latitude, event.location!.longitude] as [number, number]);
+            .map(event => [event.location!.latitude, event.location!.longitude]);
           
-          L.polyline(points, { 
+          // Type assertion for Leaflet's LatLngExpression[]
+          L.polyline(points as [number, number][], { 
             color: '#3b82f6', 
             weight: 3,
             opacity: 0.7,

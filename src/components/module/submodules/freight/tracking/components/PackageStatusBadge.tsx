@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { formatPackageStatus } from '../utils/statusUtils';
 
 interface PackageStatusBadgeProps {
-  status: string;
+  status: string; // Changed from PackageStatus to string
 }
 
 const PackageStatusBadge: React.FC<PackageStatusBadgeProps> = ({ status }) => {
