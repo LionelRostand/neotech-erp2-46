@@ -9,7 +9,7 @@ export * from './vehicle-types';
 export * from './driver-types';
 
 // Re-export map types explicitly to avoid ambiguity
-export { 
+export type {
   Coordinates, 
   VehicleLocation, 
   TransportVehicleWithLocation,
@@ -20,7 +20,7 @@ export {
 } from './map-types';
 
 // Re-export with aliases to avoid ambiguity
-export { MapExtensionRequest as ExtensionRequestType } from './map-types';
+export type { MapExtensionRequest as ExtensionRequestType } from './map-types';
 
 // Re-export geolocation types (excluding duplicates)
 export * from './geolocation-types';
@@ -55,3 +55,6 @@ export * from './planning-types';
 
 // Re-export integration types 
 export * from './integration-types';
+
+// Re-export the getAddressString utility function
+export { getAddressString } from './reservation-types';

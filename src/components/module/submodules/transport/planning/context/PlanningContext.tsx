@@ -1,246 +1,167 @@
 
-import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
-import { TransportVehicle, TransportDriver, MaintenanceSchedule, MapExtensionRequest } from '../../types';
-import { useToast } from '@/hooks/use-toast';
+import React, { createContext, useContext, useState, useCallback } from 'react';
+import { TransportVehicle, TransportDriver, VehicleMaintenanceSchedule, MapExtensionRequest } from '../../types';
+// Import directly from mockData.ts
+import { vehicles, maintenanceSchedules, extensionRequests, drivers } from '../mockData';
 
-// Mock data for planning
-const mockVehicles: TransportVehicle[] = [
-  {
-    id: "veh-001",
-    name: "Mercedes Classe E",
-    type: "sedan",
-    capacity: 4,
-    licensePlate: "AB-123-CD",
-    available: true,
-    status: "active",
-    notes: []
-  },
-  // More mock vehicles...
-];
-
-const mockDrivers: TransportDriver[] = [
-  {
-    id: "drv-001",
-    firstName: "Jean",
-    lastName: "Dupont",
-    licenseNumber: "123456789",
-    licenseExpiry: "2025-06-15",
-    phone: "06 12 34 56 78",
-    email: "jean.dupont@example.com",
-    status: "active",
-    rating: 4.8,
-    available: true,
-    onLeave: false,
-    experience: 4,
-    language: ["French", "English"],
-    preferredVehicleType: ["sedan"],
-    notes: []
-  },
-  // More mock drivers...
-];
-
-const mockMaintenanceSchedules: MaintenanceSchedule[] = [
-  {
-    id: "maint-001",
-    vehicleId: "veh-002",
-    type: "oil-change",
-    description: "Changement d'huile planifié",
-    scheduledDate: "2023-12-15",
-    estimatedDuration: 120,
-    status: "scheduled",
-    notes: [],
-    technician: "Paul Dupuis",
-    technicianAssigned: true,
-    createdAt: "2023-11-20T10:00:00Z"
-  },
-  // More mock maintenance schedules...
-];
-
-const mockExtensionRequests: MapExtensionRequest[] = [
-  {
-    id: "ext-001",
-    driverId: "drv-001",
-    reason: "Traffic exceptionnel sur l'A1",
-    requestedAt: "2023-11-25T14:30:00Z",
-    status: "pending",
-    estimatedDelay: 45
-  },
-  // More mock extension requests...
-];
-
-export interface PlanningContextType {
-  isLoading: boolean;
+// Define the type for the context value
+interface PlanningContextType {
   vehicles: TransportVehicle[];
+  maintenanceSchedules: VehicleMaintenanceSchedule[];
+  extensionRequests: MapExtensionRequest[];
   drivers: TransportDriver[];
   selectedVehicle: TransportVehicle | null;
+  setSelectedVehicle: (vehicle: TransportVehicle | null) => void;
+  selectedMaintenanceSchedule: VehicleMaintenanceSchedule | null;
+  setSelectedMaintenanceSchedule: (schedule: VehicleMaintenanceSchedule | null) => void;
   selectedExtensionRequest: MapExtensionRequest | null;
-  maintenanceSchedules: MaintenanceSchedule[];
-  extensionRequests: MapExtensionRequest[];
-  refreshData: () => void;
-  openMaintenanceScheduleDialog: (vehicle: TransportVehicle) => void;
-  openExtensionDetailsDialog: (request: MapExtensionRequest) => void;
-  showMaintenanceDialog: boolean;
-  setShowMaintenanceDialog: (show: boolean) => void;
+  setSelectedExtensionRequest: (request: MapExtensionRequest | null) => void;
+  showMaintenanceScheduleDialog: boolean;
+  setShowMaintenanceScheduleDialog: (show: boolean) => void;
   showExtensionDetailsDialog: boolean;
   setShowExtensionDetailsDialog: (show: boolean) => void;
-  handleSaveMaintenance: (maintenanceData: Partial<MaintenanceSchedule>) => void;
-  handleAddMaintenance: (vehicleId: string) => void;
-  handleResolveExtension: (requestId: string, approved: boolean, notes?: string) => void;
+  refreshData: () => void;
+  handleAddMaintenance: (vehicle: TransportVehicle) => void;
+  handleViewMaintenanceDetails: (schedule: VehicleMaintenanceSchedule) => void;
+  handleResolveExtension: (requestId: string, approved: boolean) => void;
+  openMaintenanceScheduleDialog: (vehicle: TransportVehicle) => void;
+  openExtensionDetailsDialog: (request: MapExtensionRequest) => void;
+  filters: {
+    status: string[];
+    vehicleType: string[];
+    priority: string[];
+  };
+  setFilters: React.Dispatch<React.SetStateAction<{
+    status: string[];
+    vehicleType: string[];
+    priority: string[];
+  }>>;
+  availabilityDate: Date;
+  setAvailabilityDate: React.Dispatch<React.SetStateAction<Date>>;
+  filteredDrivers: TransportDriver[];
 }
 
-const PlanningContext = createContext<PlanningContextType | undefined>(undefined);
+// Create the context
+const PlanningContext = createContext<PlanningContextType | null>(null);
 
-export const usePlanningContext = () => {
-  const context = useContext(PlanningContext);
-  if (!context) {
-    throw new Error('usePlanningContext must be used within a PlanningProvider');
-  }
-  return context;
-};
-
-// Alias for components that were using usePlanning
-export const usePlanning = usePlanningContext;
-
-interface PlanningProviderProps {
-  children: ReactNode;
-}
-
-export const PlanningProvider: React.FC<PlanningProviderProps> = ({ children }) => {
-  // Define state variables
-  const [isLoading, setIsLoading] = useState(true);
-  const [vehicles, setVehicles] = useState<TransportVehicle[]>([]);
-  const [drivers, setDrivers] = useState<TransportDriver[]>([]);
-  const [maintenanceSchedules, setMaintenanceSchedules] = useState<MaintenanceSchedule[]>([]);
-  const [extensionRequests, setExtensionRequests] = useState<MapExtensionRequest[]>([]);
+// Provider component
+export const PlanningProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  // State for data
+  const [vehiclesData, setVehiclesData] = useState<TransportVehicle[]>(vehicles);
+  const [maintenanceSchedulesData, setMaintenanceSchedulesData] = useState<VehicleMaintenanceSchedule[]>(
+    maintenanceSchedules as unknown as VehicleMaintenanceSchedule[]
+  );
+  const [extensionRequestsData, setExtensionRequestsData] = useState<MapExtensionRequest[]>(
+    extensionRequests as unknown as MapExtensionRequest[]
+  );
+  const [driversData, setDriversData] = useState<TransportDriver[]>(drivers);
+  
+  // State for selected items
   const [selectedVehicle, setSelectedVehicle] = useState<TransportVehicle | null>(null);
+  const [selectedMaintenanceSchedule, setSelectedMaintenanceSchedule] = useState<VehicleMaintenanceSchedule | null>(null);
   const [selectedExtensionRequest, setSelectedExtensionRequest] = useState<MapExtensionRequest | null>(null);
-  const [showMaintenanceDialog, setShowMaintenanceDialog] = useState(false);
+  
+  // Dialog visibility state
+  const [showMaintenanceScheduleDialog, setShowMaintenanceScheduleDialog] = useState(false);
   const [showExtensionDetailsDialog, setShowExtensionDetailsDialog] = useState(false);
   
-  const { toast } = useToast();
+  // Filters
+  const [filters, setFilters] = useState({
+    status: [],
+    vehicleType: [],
+    priority: [],
+  });
+  
+  // Date for availability view
+  const [availabilityDate, setAvailabilityDate] = useState(new Date());
 
-  // Fetch initial data
-  useEffect(() => {
-    loadData();
+  // Get filtered drivers (those who are available)
+  const filteredDrivers = driversData.filter(driver => 
+    driver.available && driver.status !== "on_leave"
+  );
+
+  // Refresh data function
+  const refreshData = useCallback(() => {
+    // In a real app, this would fetch fresh data from an API
+    setVehiclesData(vehicles);
+    setMaintenanceSchedulesData(maintenanceSchedules as unknown as VehicleMaintenanceSchedule[]);
+    setExtensionRequestsData(extensionRequests as unknown as MapExtensionRequest[]);
+    setDriversData(drivers);
   }, []);
   
-  // Load all data
-  const loadData = async () => {
-    setIsLoading(true);
-    try {
-      // In a real app, these would be API calls
-      setVehicles(mockVehicles);
-      setDrivers(mockDrivers);
-      setMaintenanceSchedules(mockMaintenanceSchedules);
-      setExtensionRequests(mockExtensionRequests);
-      
-      // Filter available drivers
-      const availableDrivers = mockDrivers.filter(
-        driver => driver.available && driver.status !== "off-duty"
-      );
-      
-    } catch (error) {
-      console.error("Error loading planning data:", error);
-      toast({
-        title: "Erreur",
-        description: "Erreur lors du chargement des données de planification",
-        variant: "destructive"
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-  
-  const refreshData = () => {
-    loadData();
-  };
-  
-  // Handle maintenance schedule dialog
-  const openMaintenanceScheduleDialog = (vehicle: TransportVehicle) => {
+  // Function to add maintenance
+  const handleAddMaintenance = useCallback((vehicle: TransportVehicle) => {
     setSelectedVehicle(vehicle);
-    setShowMaintenanceDialog(true);
-  };
+    setShowMaintenanceScheduleDialog(true);
+  }, []);
   
-  // Handle extension details dialog
-  const openExtensionDetailsDialog = (request: MapExtensionRequest) => {
-    setSelectedExtensionRequest(request);
-    setShowExtensionDetailsDialog(true);
-  };
+  // Function to view maintenance details
+  const handleViewMaintenanceDetails = useCallback((schedule: VehicleMaintenanceSchedule) => {
+    setSelectedMaintenanceSchedule(schedule);
+    setShowMaintenanceScheduleDialog(true);
+  }, []);
   
-  // Handle save maintenance
-  const handleSaveMaintenance = (maintenanceData: Partial<MaintenanceSchedule>) => {
-    // In a real app, this would be an API call
-    const newMaintenance = {
-      id: `maint-${Date.now()}`,
-      vehicleId: selectedVehicle?.id || '',
-      type: maintenanceData.type || 'regular',
-      description: maintenanceData.description || '',
-      scheduledDate: maintenanceData.scheduledDate || new Date().toISOString(),
-      estimatedDuration: maintenanceData.estimatedDuration || 60,
-      status: maintenanceData.status || 'scheduled',
-      notes: maintenanceData.notes || [],
-      createdAt: new Date().toISOString()
-    };
-    
-    setMaintenanceSchedules(prev => [...prev, newMaintenance as MaintenanceSchedule]);
-    
-    toast({
-      title: "Maintenance programmée",
-      description: `Maintenance programmée pour le véhicule ${selectedVehicle?.name}`,
-    });
-    
-    setShowMaintenanceDialog(false);
-  };
-  
-  // Handle add maintenance
-  const handleAddMaintenance = (vehicleId: string) => {
-    const vehicle = vehicles.find(v => v.id === vehicleId);
-    if (vehicle) {
-      openMaintenanceScheduleDialog(vehicle);
-    }
-  };
-  
-  // Handle resolve extension request
-  const handleResolveExtension = (requestId: string, approved: boolean, notes?: string) => {
-    setExtensionRequests(prev => 
+  // Function to resolve extension requests
+  const handleResolveExtension = useCallback((requestId: string, approved: boolean) => {
+    setExtensionRequestsData(prev => 
       prev.map(req => 
         req.id === requestId 
           ? { ...req, status: approved ? 'approved' : 'rejected' } 
           : req
       )
     );
-    
-    toast({
-      title: approved ? "Demande approuvée" : "Demande refusée",
-      description: `La demande d'extension a été ${approved ? 'approuvée' : 'refusée'}.`,
-    });
-    
     setShowExtensionDetailsDialog(false);
-  };
+  }, []);
   
+  // Convenience function to open maintenance schedule dialog
+  const openMaintenanceScheduleDialog = useCallback((vehicle: TransportVehicle) => {
+    setSelectedVehicle(vehicle);
+    setSelectedMaintenanceSchedule(null);
+    setShowMaintenanceScheduleDialog(true);
+  }, []);
+  
+  // Convenience function to open extension details dialog
+  const openExtensionDetailsDialog = useCallback((request: MapExtensionRequest) => {
+    setSelectedExtensionRequest(request);
+    setShowExtensionDetailsDialog(true);
+  }, []);
+
   const value = {
-    isLoading,
-    vehicles,
-    drivers,
+    vehicles: vehiclesData,
+    maintenanceSchedules: maintenanceSchedulesData,
+    extensionRequests: extensionRequestsData,
+    drivers: driversData,
     selectedVehicle,
+    setSelectedVehicle,
+    selectedMaintenanceSchedule,
+    setSelectedMaintenanceSchedule,
     selectedExtensionRequest,
-    maintenanceSchedules,
-    extensionRequests,
-    refreshData,
-    openMaintenanceScheduleDialog,
-    openExtensionDetailsDialog,
-    showMaintenanceDialog,
-    setShowMaintenanceDialog,
+    setSelectedExtensionRequest,
+    showMaintenanceScheduleDialog,
+    setShowMaintenanceScheduleDialog,
     showExtensionDetailsDialog,
     setShowExtensionDetailsDialog,
-    handleSaveMaintenance,
+    refreshData,
     handleAddMaintenance,
-    handleResolveExtension
+    handleViewMaintenanceDetails,
+    handleResolveExtension,
+    openMaintenanceScheduleDialog,
+    openExtensionDetailsDialog,
+    filters,
+    setFilters,
+    availabilityDate,
+    setAvailabilityDate,
+    filteredDrivers,
   };
-  
-  return (
-    <PlanningContext.Provider value={value}>
-      {children}
-    </PlanningContext.Provider>
-  );
+
+  return <PlanningContext.Provider value={value}>{children}</PlanningContext.Provider>;
+};
+
+// Custom hook to use the planning context
+export const usePlanning = () => {
+  const context = useContext(PlanningContext);
+  if (!context) {
+    throw new Error('usePlanning must be used within a PlanningProvider');
+  }
+  return context;
 };

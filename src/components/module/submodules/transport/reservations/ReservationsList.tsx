@@ -1,9 +1,8 @@
-
 import React, { useState } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Reservation } from '../types/reservation-types';
+import { Reservation } from '../types';
 import EditReservationDialog from './EditReservationDialog';
 import ViewReservationDetailsDialog from './ViewReservationDetailsDialog';
 import { toast } from "sonner";
@@ -21,11 +20,15 @@ const mockReservations: Reservation[] = [
     pickupLocation: { address: "15 rue de Rivoli, 75001 Paris" },
     dropoffLocation: { address: "8 avenue des Champs-Élysées, 75008 Paris" },
     status: "confirmed",
+    price: 250,
     paymentStatus: "paid",
-    totalAmount: 250,
-    notes: "Client VIP, prévoir eau minérale",
+    isPaid: true,
+    notes: [{ content: "Client VIP, prévoir eau minérale" }],
     createdAt: "2023-10-25T14:30:00",
-    updatedAt: "2023-10-25T14:30:00"
+    updatedAt: "2023-10-25T14:30:00",
+    pickup: "15 rue de Rivoli, 75001 Paris",
+    dropoff: "8 avenue des Champs-Élysées, 75008 Paris",
+    totalAmount: 250
   },
   {
     id: "rsv-002",
@@ -38,9 +41,10 @@ const mockReservations: Reservation[] = [
     pickupLocation: { address: "Aéroport CDG Terminal 2E, Paris" },
     dropoffLocation: { address: "25 rue du Faubourg Saint-Honoré, 75008 Paris" },
     status: "pending",
+    price: 120,
     paymentStatus: "pending",
-    totalAmount: 120,
-    notes: "",
+    isPaid: false,
+    notes: [],
     createdAt: "2023-11-01T09:45:00",
     updatedAt: "2023-11-01T09:45:00"
   },
@@ -55,9 +59,10 @@ const mockReservations: Reservation[] = [
     pickupLocation: { address: "Gare de Lyon, Paris" },
     dropoffLocation: { address: "Gare de Lyon, Paris" },
     status: "completed",
+    price: 320,
     paymentStatus: "paid",
-    totalAmount: 320,
-    notes: "Location sans chauffeur",
+    isPaid: true,
+    notes: [{ content: "Location sans chauffeur" }],
     createdAt: "2023-10-20T11:15:00",
     updatedAt: "2023-11-10T18:30:00"
   },
@@ -72,9 +77,10 @@ const mockReservations: Reservation[] = [
     pickupLocation: { address: "Hôtel Ritz, Place Vendôme, Paris" },
     dropoffLocation: { address: "Opéra Garnier, Paris" },
     status: "confirmed",
+    price: 180,
     paymentStatus: "partial",
-    totalAmount: 180,
-    notes: "",
+    isPaid: false,
+    notes: [],
     createdAt: "2023-11-05T16:20:00",
     updatedAt: "2023-11-05T16:20:00"
   },
@@ -89,9 +95,10 @@ const mockReservations: Reservation[] = [
     pickupLocation: { address: "Gare Montparnasse, Paris" },
     dropoffLocation: { address: "Gare Montparnasse, Paris" },
     status: "pending",
+    price: 420,
     paymentStatus: "pending",
-    totalAmount: 420,
-    notes: "Location sans chauffeur, kilométrage illimité",
+    isPaid: false,
+    notes: [{ content: "Location sans chauffeur, kilométrage illimité" }],
     createdAt: "2023-11-07T10:10:00",
     updatedAt: "2023-11-07T10:10:00"
   }

@@ -1,14 +1,10 @@
 import React, { useState } from 'react';
-import { Calendar } from "@/components/ui/calendar";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { format, isSameDay } from 'date-fns';
-import { fr } from 'date-fns/locale';
-import { ChevronLeft, ChevronRight, Eye } from 'lucide-react';
-import { Reservation, getAddressString } from '../types/reservation-types';
-import ViewReservationDetailsDialog from './ViewReservationDetailsDialog';
+import { Calendar } from "@/components/ui/calendar";
+import { format, isEqual, parseISO } from "date-fns";
+import { fr } from "date-fns/locale";
+import { Reservation } from '../types';
 
 const mockReservations: Reservation[] = [
   {
@@ -22,11 +18,14 @@ const mockReservations: Reservation[] = [
     pickupLocation: { address: "15 rue de Rivoli, 75001 Paris" },
     dropoffLocation: { address: "8 avenue des Champs-Élysées, 75008 Paris" },
     status: "confirmed",
+    price: 250,
     paymentStatus: "paid",
-    totalAmount: 250,
-    notes: "Client VIP, prévoir eau minérale",
+    isPaid: true,
+    notes: [{ content: "Client VIP, prévoir eau minérale" }],
     createdAt: "2023-10-25T14:30:00",
-    updatedAt: "2023-10-25T14:30:00"
+    pickup: "15 rue de Rivoli, 75001 Paris",
+    dropoff: "8 avenue des Champs-Élysées, 75008 Paris",
+    totalAmount: 250
   },
   {
     id: "rsv-002",
@@ -40,10 +39,12 @@ const mockReservations: Reservation[] = [
     dropoffLocation: { address: "25 rue du Faubourg Saint-Honoré, 75008 Paris" },
     status: "pending",
     paymentStatus: "pending",
-    totalAmount: 120,
-    notes: "",
+    isPaid: false,
+    notes: [],
     createdAt: "2023-11-01T09:45:00",
-    updatedAt: "2023-11-01T09:45:00"
+    pickup: "Aéroport CDG Terminal 2E, Paris",
+    dropoff: "25 rue du Faubourg Saint-Honoré, 75008 Paris",
+    totalAmount: 120
   },
   {
     id: "rsv-003",
@@ -57,10 +58,12 @@ const mockReservations: Reservation[] = [
     dropoffLocation: { address: "Gare de Lyon, Paris" },
     status: "completed",
     paymentStatus: "paid",
-    totalAmount: 320,
-    notes: "Location sans chauffeur",
+    isPaid: true,
+    notes: [{ content: "Location sans chauffeur" }],
     createdAt: "2023-10-20T11:15:00",
-    updatedAt: "2023-11-10T18:30:00"
+    pickup: "Gare de Lyon, Paris",
+    dropoff: "Gare de Lyon, Paris",
+    totalAmount: 320
   },
   {
     id: "rsv-004",
@@ -74,10 +77,12 @@ const mockReservations: Reservation[] = [
     dropoffLocation: { address: "Opéra Garnier, Paris" },
     status: "confirmed",
     paymentStatus: "partial",
-    totalAmount: 180,
-    notes: "",
+    isPaid: false,
+    notes: [],
     createdAt: "2023-11-05T16:20:00",
-    updatedAt: "2023-11-05T16:20:00"
+    pickup: "Hôtel Ritz, Place Vendôme, Paris",
+    dropoff: "Opéra Garnier, Paris",
+    totalAmount: 180
   },
   {
     id: "rsv-005",
@@ -91,10 +96,12 @@ const mockReservations: Reservation[] = [
     dropoffLocation: { address: "Gare Montparnasse, Paris" },
     status: "pending",
     paymentStatus: "pending",
-    totalAmount: 420,
-    notes: "Location sans chauffeur, kilométrage illimité",
+    isPaid: false,
+    notes: [{ content: "Location sans chauffeur, kilométrage illimité" }],
     createdAt: "2023-11-07T10:10:00",
-    updatedAt: "2023-11-07T10:10:00"
+    pickup: "Gare Montparnasse, Paris",
+    dropoff: "Gare Montparnasse, Paris",
+    totalAmount: 420
   }
 ];
 
@@ -267,7 +274,7 @@ const ReservationsCalendar: React.FC = () => {
                   const dayDate = new Date(startOfWeek);
                   dayDate.setDate(startOfWeek.getDate() + i);
                   
-                  const isToday = isSameDay(dayDate, new Date());
+                  const isToday = isEqual(dayDate, new Date());
                   const reservations = getReservationsForDate(dayDate);
 
                   return (

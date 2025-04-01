@@ -45,7 +45,7 @@ export interface MapMarker {
 
 export interface MapHookResult {
   mapContainer: React.RefObject<HTMLDivElement>;
-  initializeMap: () => mapboxgl.Map | null;
+  initializeMap: () => any | null; // Replace mapboxgl.Map with any to avoid dependency
   addVehiclesToMap: (vehicles: TransportVehicleWithLocation[], onClick: (vehicle: TransportVehicleWithLocation) => void) => void;
 }
 
@@ -62,4 +62,6 @@ export interface MapExtensionRequest {
   createdAt: string;
   type: string;
   active: boolean;
+  driverId?: string; // Added to fix type errors
+  driverName?: string; // Added to fix type errors
 }

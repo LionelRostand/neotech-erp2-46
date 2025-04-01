@@ -8,6 +8,7 @@ import ExtensionRequestsList from './ExtensionRequestsList';
 import DriverAvailabilityTab from './DriverAvailabilityTab';
 import { usePlanning } from './context/PlanningContext';
 import { useMaintenanceSchedule } from '../hooks/useMaintenanceSchedule';
+import { TransportVehicle, MapExtensionRequest } from '../types';
 
 interface PlanningTabContentProps {
   activeMode: string;
@@ -28,12 +29,20 @@ const PlanningTabContent: React.FC<PlanningTabContentProps> = ({
     drivers,
     refreshData,
     openMaintenanceScheduleDialog,
-    openExtensionDetailsDialog,
-    handleAddMaintenance
+    openExtensionDetailsDialog
   } = usePlanning();
 
   // Convert vehicle maintenance schedules to map maintenance schedules
   const { mapSchedules } = useMaintenanceSchedule(maintenanceSchedules);
+
+  // Adapter functions to match expected signatures
+  const handleAddMaintenance = (vehicle: TransportVehicle) => {
+    openMaintenanceScheduleDialog(vehicle);
+  };
+
+  const handleViewExtensionDetails = (request: MapExtensionRequest) => {
+    openExtensionDetailsDialog(request);
+  };
 
   // Effect to refresh data when the component mounts
   useEffect(() => {
@@ -47,7 +56,7 @@ const PlanningTabContent: React.FC<PlanningTabContentProps> = ({
       <TabsContent value="availability" className="mt-0 border-0 p-0">
         <AvailabilityCalendar 
           vehicles={vehicles}
-          maintenanceSchedules={mapSchedules}
+          maintenanceSchedules={maintenanceSchedules}
           onAddMaintenance={handleAddMaintenance}
         />
       </TabsContent>
@@ -63,7 +72,7 @@ const PlanningTabContent: React.FC<PlanningTabContentProps> = ({
       <TabsContent value="extensions" className="mt-0 border-0 p-0">
         <ExtensionRequestsList 
           extensionRequests={extensionRequests}
-          onViewDetails={openExtensionDetailsDialog}
+          onViewDetails={handleViewExtensionDetails}
         />
       </TabsContent>
       
