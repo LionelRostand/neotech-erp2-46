@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
 import { Button } from '@/components/ui/button';
-import { Eye, Save, Code, Settings, Undo, Redo, Layout, MoreVertical, TemplateIcon } from 'lucide-react';
+import { Eye, Save, Code, Settings, Undo, Redo, Layout, MoreVertical, FileText } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';

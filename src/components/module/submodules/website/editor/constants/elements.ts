@@ -2,8 +2,8 @@
 import React from 'react';
 import { createIcon } from '@/data/types/modules';
 import { 
-  LayoutGrid, Columns, Rows, Text, Heading, Image, Button as ButtonIcon, 
-  Form, Input, MessageSquare, Mail, Phone, ShoppingCart, CreditCard, Tag, 
+  LayoutGrid, Columns, Rows, Text, Heading, Image, 
+  Square as ButtonIcon, FormInput, MessageSquare, Mail, Phone, ShoppingCart, CreditCard, Tag, 
   MapPin, Twitter, Facebook, Instagram, Youtube, Share2, Upload, Video,
   Calendar, Clock, Users, List
 } from 'lucide-react';
@@ -47,8 +47,8 @@ export const websiteElements = {
     { type: 'share', label: 'Partage', icon: createIcon(Share2), category: 'social', draggable: true }
   ],
   forms: [
-    { type: 'form', label: 'Formulaire', icon: createIcon(Form), category: 'forms', draggable: true },
-    { type: 'input', label: 'Champ texte', icon: createIcon(Input), category: 'forms', draggable: true },
+    { type: 'form', label: 'Formulaire', icon: createIcon(FormInput), category: 'forms', draggable: true },
+    { type: 'input', label: 'Champ texte', icon: createIcon(FormInput), category: 'forms', draggable: true },
     { type: 'contact', label: 'Contact', icon: createIcon(MessageSquare), category: 'forms', draggable: true }
   ],
   integrations: [
