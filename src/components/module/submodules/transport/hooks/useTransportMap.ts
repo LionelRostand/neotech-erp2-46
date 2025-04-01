@@ -1,132 +1,122 @@
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useRef, useCallback } from 'react';
 import L from 'leaflet';
-import { useMapMarkers } from './useMapMarkers';
-import { MapConfig, TransportVehicleWithLocation, MapHookResult, Coordinates } from '../types';
+import { TransportVehicleWithLocation, Coordinates } from '../types/transport-types';
+import { normalizeCoordinates } from '../utils/map-utils';
 
-// Default map configuration
-const defaultConfig: MapConfig = {
-  center: { latitude: 48.866667, longitude: 2.333333 }, // Paris
-  zoom: 12,
-  showTraffic: false,
-  showGeofences: false,
-  refreshInterval: 30000,
-  provider: 'osm', // OpenStreetMap by default
-  maxZoom: 18,
-  minZoom: 3,
-  tileProvider: 'osm', // OpenStreetMap by default
-};
+export function useTransportMap() {
+  const mapContainer = useRef<HTMLDivElement>(null);
+  const mapInstance = useRef<L.Map | null>(null);
+  const markersLayer = useRef<L.LayerGroup | null>(null);
 
-// Helper function to convert Coordinates to Leaflet's LatLngExpression
-const toLatLng = (coords: Coordinates): L.LatLngExpression => {
-  return [coords.latitude, coords.longitude];
-};
+  const initializeMap = useCallback((): L.Map | null => {
+    if (!mapContainer.current) return null;
+    if (mapInstance.current) return mapInstance.current;
 
-export function useTransportMap(initialConfig?: MapConfig): MapHookResult {
-  const mapRef = useRef<HTMLDivElement>(null);
-  const [map, setMap] = useState<L.Map | null>(null);
-  const [mapConfig, setMapConfig] = useState<MapConfig>(initialConfig || defaultConfig);
-  const [mapInitialized, setMapInitialized] = useState(false);
-  const { clearMarkers, addVehicleMarkers } = useMapMarkers();
-
-  // Initialize the map when the component mounts
-  useEffect(() => {
-    if (!mapRef.current || map) return;
-
-    // Create the map
-    const mapInstance = L.map(mapRef.current, {
-      center: toLatLng(mapConfig.center),
-      zoom: mapConfig.zoom,
-      maxZoom: mapConfig.maxZoom || 18,
-      minZoom: mapConfig.minZoom || 3,
-    });
-
-    // Add the tile layer
-    const tileProvider = mapConfig.tileProvider || 'osm';
-    let tileLayer: L.TileLayer;
-
-    if (tileProvider === 'osm') {
-      tileLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; OpenStreetMap contributors'
-      });
-    } else if (tileProvider === 'mapbox') {
-      const options: L.TileLayerOptions = {
-        attribution: '&copy; Mapbox',
-        id: 'mapbox/streets-v11'
-      };
-      
-      // Using environment variable safely
-      const accessToken = process.env.MAPBOX_ACCESS_TOKEN || 'your-mapbox-access-token';
-      
-      tileLayer = L.tileLayer(
-        `https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token=${accessToken}`, 
-        options
-      );
-    } else {
-      tileLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; OpenStreetMap contributors'
-      });
-    }
-
-    tileLayer.addTo(mapInstance);
-    setMap(mapInstance);
-    setMapInitialized(true);
-
-    // Cleanup function
-    return () => {
-      mapInstance.remove();
-      setMap(null);
-      setMapInitialized(false);
+    // Default center coordinates (Paris)
+    const defaultCoordinates: Coordinates = {
+      latitude: 48.8566,
+      longitude: 2.3522
     };
+
+    // Create map
+    const map = L.map(mapContainer.current).setView(
+      [defaultCoordinates.latitude, defaultCoordinates.longitude], 
+      13
+    );
+
+    // Add tile layer
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(map);
+
+    // Create markers layer
+    const markers = L.layerGroup().addTo(map);
+    markersLayer.current = markers;
+
+    // Store map instance
+    mapInstance.current = map;
+
+    return map;
   }, []);
 
-  // Update the map when the configuration changes
-  useEffect(() => {
-    if (!map) return;
+  const addVehiclesToMap = useCallback(
+    (
+      vehicles: TransportVehicleWithLocation[], 
+      onVehicleClick?: (vehicle: TransportVehicleWithLocation) => void
+    ) => {
+      if (!mapInstance.current || !markersLayer.current) return;
 
-    map.setView(toLatLng(mapConfig.center), mapConfig.zoom);
-    
-    // Set tile layer based on provider if it changed
-    if (mapConfig.tileProvider) {
-      // Here we would need to remove the old layer and add a new one
-      // but for simplicity, we're just updating the view
-    }
-    
-  }, [map, mapConfig]);
+      // Clear existing markers
+      markersLayer.current.clearLayers();
 
-  // Function to clear and update markers
-  const updateMarkers = useCallback((vehicles: TransportVehicleWithLocation[]) => {
-    if (!map) return;
-    
-    clearMarkers(map);
-    // Fix the function call to match the expected parameters
-    addVehicleMarkers(map, vehicles, () => {}, undefined);
-  }, [map, clearMarkers, addVehicleMarkers]);
+      // Add new markers
+      vehicles.forEach(vehicle => {
+        const coords = normalizeCoordinates(vehicle.location);
+        
+        // Create marker
+        const marker = L.marker([coords.lat, coords.lng]);
+        
+        // Add popup
+        marker.bindPopup(`
+          <div>
+            <h3>${vehicle.name}</h3>
+            <p>${vehicle.licensePlate}</p>
+            <p>Status: ${vehicle.location.status}</p>
+          </div>
+        `);
+        
+        // Add click handler
+        if (onVehicleClick) {
+          marker.on('click', () => onVehicleClick(vehicle));
+        }
+        
+        // Add to layer
+        marker.addTo(markersLayer.current!);
+      });
+      
+      // If we have vehicles, fit bounds
+      if (vehicles.length > 0) {
+        const bounds = L.latLngBounds(
+          vehicles.map(v => {
+            const coords = normalizeCoordinates(v.location);
+            return [coords.lat, coords.lng];
+          })
+        );
+        mapInstance.current.fitBounds(bounds, { padding: [50, 50] });
+      }
+    },
+    []
+  );
 
-  // Function to refresh the map
-  const refreshMap = useCallback(() => {
-    if (!map) return;
+  const centerOnCoordinates = useCallback((coordinates: Coordinates, zoom: number = 15) => {
+    if (!mapInstance.current) return;
+    mapInstance.current.setView([coordinates.latitude, coordinates.longitude], zoom);
+  }, []);
+
+  const addCircle = useCallback((coordinates: Coordinates, radius: number, options: L.CircleOptions = {}) => {
+    if (!mapInstance.current) return null;
     
-    map.invalidateSize();
-  }, [map]);
+    const defaultOptions: L.CircleOptions = {
+      color: '#3388ff',
+      fillColor: '#3388ff',
+      fillOpacity: 0.2,
+      weight: 2,
+      ...options
+    };
+    
+    return L.circle(
+      [coordinates.latitude, coordinates.longitude], 
+      radius, 
+      defaultOptions
+    ).addTo(mapInstance.current);
+  }, []);
 
   return {
-    mapRef,
-    isMapLoaded: !!map,
-    vehicles: [],
-    selectedVehicle: null,
-    setSelectedVehicle: () => {},
-    loading: false,
-    error: null,
-    zoomToVehicle: () => {},
-    zoomToFitAllVehicles: () => {},
-    trackingMode: false,
-    setTrackingMode: () => {},
-    // Add additional properties
-    mapInitialized,
-    mapConfig,
-    setMapConfig,
-    refreshMap,
-    updateMarkers
+    mapContainer,
+    initializeMap,
+    addVehiclesToMap,
+    centerOnCoordinates,
+    addCircle
   };
 }

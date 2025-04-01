@@ -1,9 +1,12 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import LineChart from "@/components/ui/line-chart"; // Fixed import
+import LineChart from "@/components/ui/line-chart"; // Changed from named to default import
 import { Download, Filter, PlusCircle, Search } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { toast } from "@/components/ui/use-toast";
 
 const TransportPayments = () => {
   const [selectedMonth, setSelectedMonth] = useState("this-month");

@@ -1,47 +1,30 @@
 
-// Définition des types liés aux clients pour le module de transport
+import { TransportBasic, Note } from './base-types';
 
-export interface TransportClient {
-  id: string;
+export interface TransportClient extends TransportBasic {
   firstName: string;
   lastName: string;
+  fullName: string;
   email: string;
   phone: string;
-  company?: string;
   address?: string;
-  postalCode?: string;
   city?: string;
+  postalCode?: string;
   country?: string;
-  notes?: string;
-  createdAt: string;
-  updatedAt: string;
-  status: 'active' | 'inactive' | 'blocked';
-  type: 'individual' | 'corporate';
-  loyaltyPoints?: number;
-  preferredPaymentMethod?: string;
-  name?: string; // Added to support components using it
-}
-
-export interface ClientAddress {
-  id: string;
-  clientId: string;
-  name: string;
-  street: string;
-  postalCode: string;
-  city: string;
-  country: string;
-  isDefault: boolean;
-  type: 'home' | 'work' | 'other';
-}
-
-export interface ClientPreference {
-  id: string;
-  clientId: string;
+  company?: string;
+  vip: boolean;
+  loyaltyPoints: number;
+  joinDate: string;
+  lastActivity?: string;
+  totalBookings: number;
   preferredVehicleType?: string;
   preferredDriver?: string;
-  specialRequirements?: string;
-  communicationPreference?: 'email' | 'sms' | 'phone';
-  languagePreference?: string;
+  notes: ClientNote[];
+  status: 'active' | 'inactive' | 'banned';
+}
+
+export interface ClientNote extends Note {
+  clientId: string;
 }
 
 export interface LoyaltyProgram {
@@ -49,10 +32,10 @@ export interface LoyaltyProgram {
   name: string;
   description: string;
   pointsPerEuro: number;
-  minimumPointsForRedemption: number;
-  redemptionRatePerPoint: number;
-  rules: string[];
+  minimumPoints: number;
   tiers: LoyaltyTier[];
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface LoyaltyTier {
@@ -60,44 +43,69 @@ export interface LoyaltyTier {
   name: string;
   minimumPoints: number;
   benefits: string[];
-  discountPercentage: number;
+  discount: number; // percentage
+  specialOffers: boolean;
+  priorityBooking: boolean;
+  freeUpgrades: number;
 }
 
 export interface LoyaltyTransaction {
   id: string;
   clientId: string;
-  date: string;
-  type: 'earn' | 'redeem' | 'expire' | 'adjust';
   points: number;
+  type: 'earn' | 'spend' | 'expire' | 'adjust';
   reason: string;
   reservationId?: string;
+  createdAt: string;
 }
 
-export interface LoyaltyReward {
-  id: string;
-  name: string;
-  description: string;
-  pointsCost: number;
-  active: boolean;
-  expiryDate?: string;
-}
-
-export interface Client extends TransportClient {
-  // Additional fields for backward compatibility
-}
-
-export interface ClientNote {
+export interface ClientPreference {
   id: string;
   clientId: string;
-  title: string;
-  content: string;
+  preferenceKey: string;
+  preferenceValue: string;
   createdAt: string;
-  createdBy: string;
+  updatedAt: string;
 }
 
-export interface ClientFilters {
-  status?: string[];
-  type?: string[];
-  loyaltyLevel?: string[];
-  search?: string;
+export interface ClientStatistics {
+  totalSpent: number;
+  averagePerBooking: number;
+  bookingsCount: number;
+  cancelledBookings: number;
+  mostUsedService: string;
+  mostVisitedDestination: string;
+  firstBookingDate: string;
+  lastBookingDate: string;
 }
+
+export interface WebBookingUser {
+  id: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  phone: string;
+  verified: boolean;
+  clientId?: string;
+  createdAt: string;
+}
+
+export interface WebBooking {
+  id: string;
+  userId: string;
+  serviceId: string;
+  date: string;
+  time: string;
+  pickup: string;
+  dropoff: string;
+  passengers: number;
+  specialRequirements?: string;
+  price: number;
+  isPaid: boolean;
+  status: WebBookingStatus;
+  createdAt: string;
+  updatedAt: string;
+  service: TransportService;
+}
+
+export type WebBookingStatus = 'new' | 'confirmed' | 'cancelled' | 'processed';

@@ -1,100 +1,179 @@
 
-import { WebsiteIntegration, WebBookingFormConfig, WebBookingDesignConfig } from '../types/integration-types';
-import { v4 as uuidv4 } from 'uuid';
+import { WebsiteIntegration, WebBookingDesignConfig } from '../types/integration-types';
 
 /**
- * Generate code for embedding the booking form in a website
- * @param integration The integration configuration
- * @param type The type of code to generate (iframe or javascript)
- * @param domain The domain where the application is hosted
+ * Generates HTML code for integrating the transport booking widget into a website
+ * 
+ * @param apiKey The API key for authentication
+ * @param serviceId The ID of the service to pre-select (optional)
+ * @param designConfig Custom design configuration (optional)
+ * @returns HTML code string for website integration
  */
-export const generateIntegrationCode = (
-  integration: WebsiteIntegration,
-  type: 'iframe' | 'javascript',
-  domain: string
-): string => {
-  if (!integration || !integration.id) {
-    return '// Cannot generate code: Invalid integration configuration';
-  }
-  
-  if (type === 'iframe') {
-    return `<!-- Transport Booking Form Embed -->
-<iframe 
-  src="https://${domain}/embed/bookings/${integration.id}" 
-  width="100%" 
-  height="600" 
-  style="border: none; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);"
-  title="Service de réservation de transport"
-></iframe>`;
-  } else {
-    return `<!-- Transport Booking Form JavaScript Embed -->
-<div id="transport-booking-container"></div>
-<script>
-  (function() {
-    const script = document.createElement('script');
-    script.src = "https://${domain}/embed/bookings/${integration.id}/script.js";
-    script.async = true;
-    document.head.appendChild(script);
-  })();
-</script>`;
-  }
+export const generateIntegrationCode = (apiKey: string): string => {
+  return `
+<!-- Code d'intégration de réservation de transport -->
+<div id="transport-booking-widget" data-api-key="${apiKey}" data-service-id="1">
+  <script src="https://api.votre-domaine.com/transport/booking-widget.js"></script>
+</div>
+`;
 };
 
 /**
- * Create a new website integration 
+ * Creates a new website integration configuration
+ * 
+ * @param moduleId Module ID
+ * @param pageId Page ID where the integration will be placed
+ * @returns New WebsiteIntegration object
  */
 export const createNewIntegration = (moduleId: string, pageId: string): WebsiteIntegration => {
   return {
-    id: uuidv4(),
+    id: `integration-${Date.now()}`,
     moduleId,
     pageId,
-    status: 'active',
+    status: 'pending',
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
-    formConfig: getDefaultFormConfig(),
-    designConfig: getDefaultDesignConfig()
+    formConfig: {
+      fields: [
+        {
+          name: 'name',
+          label: 'Nom complet',
+          type: 'text',
+          required: true,
+          visible: true
+        },
+        {
+          name: 'email',
+          label: 'Email',
+          type: 'email',
+          required: true,
+          visible: true
+        },
+        {
+          name: 'phone',
+          label: 'Téléphone',
+          type: 'tel',
+          required: true,
+          visible: true
+        },
+        {
+          name: 'date',
+          label: 'Date',
+          type: 'date',
+          required: true,
+          visible: true
+        }
+      ],
+      services: [
+        {
+          id: '1',
+          name: 'Transport aéroport',
+          price: 50,
+          description: 'Navette depuis/vers l\'aéroport'
+        },
+        {
+          id: '2',
+          name: 'Location avec chauffeur',
+          price: 75,
+          description: 'Service de chauffeur privé à l\'heure'
+        }
+      ],
+      submitButtonText: 'Réserver maintenant',
+      successMessage: 'Votre réservation a été envoyée avec succès!',
+      termsAndConditionsText: 'En réservant, vous acceptez nos conditions générales.'
+    },
+    designConfig: {
+      primaryColor: '#1e40af',
+      secondaryColor: '#3b82f6',
+      backgroundColor: '#ffffff',
+      textColor: '#1f2937',
+      borderRadius: '8px',
+      buttonStyle: 'rounded',
+      customCss: '',
+      fontFamily: 'Inter, sans-serif',
+      formWidth: '100%'
+    }
   };
 };
 
 /**
- * Get default form configuration
+ * Generates CSS for the booking widget based on design config
+ * 
+ * @param config Design configuration
+ * @returns CSS string
  */
-const getDefaultFormConfig = (): WebBookingFormConfig => {
+export const generateWidgetCSS = (config: WebBookingDesignConfig): string => {
+  return `
+.transport-booking-widget {
+  background-color: ${config.backgroundColor};
+  color: ${config.textColor};
+  border-radius: ${config.borderRadius};
+  font-family: ${config.fontFamily};
+  max-width: ${config.formWidth};
+  margin: 0 auto;
+  padding: 20px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.transport-booking-widget .widget-header {
+  margin-bottom: 20px;
+}
+
+.transport-booking-widget .widget-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: ${config.primaryColor};
+}
+
+.transport-booking-widget .widget-button {
+  background-color: ${config.primaryColor};
+  color: white;
+  border: none;
+  border-radius: ${config.buttonStyle === 'rounded' ? '9999px' : 
+                   config.buttonStyle === 'pill' ? '9999px' : '4px'};
+  padding: 10px 20px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.transport-booking-widget .widget-button:hover {
+  background-color: ${config.secondaryColor};
+}
+
+${config.customCss || ''}
+`;
+};
+
+/**
+ * Updates an existing website integration
+ * 
+ * @param integration The integration to update
+ * @param updates The updates to apply
+ * @returns Updated WebsiteIntegration object
+ */
+export const updateIntegration = (
+  integration: WebsiteIntegration,
+  updates: Partial<WebsiteIntegration>
+): WebsiteIntegration => {
   return {
-    fields: [
-      { name: 'name', label: 'Nom', required: true, type: 'text', visible: true },
-      { name: 'email', label: 'Email', required: true, type: 'email', visible: true },
-      { name: 'phone', label: 'Téléphone', required: true, type: 'tel', visible: true },
-      { name: 'service', label: 'Service', required: true, type: 'select', visible: true },
-      { name: 'date', label: 'Date', required: true, type: 'date', visible: true },
-      { name: 'time', label: 'Heure', required: true, type: 'time', visible: true },
-      { name: 'passengers', label: 'Passagers', required: false, type: 'number', visible: true },
-      { name: 'notes', label: 'Notes', required: false, type: 'textarea', visible: true }
-    ],
-    services: [
-      { id: 'airport', name: 'Transfert Aéroport', price: 90, description: 'Transfert depuis/vers l\'aéroport' },
-      { id: 'hourly', name: 'Location à l\'heure', price: 70, description: 'Location avec chauffeur à l\'heure' },
-      { id: 'pointToPoint', name: 'Trajet Simple', price: 50, description: 'Transport d\'un point à un autre' }
-    ],
-    submitButtonText: 'Réserver maintenant',
-    successMessage: 'Nous avons bien reçu votre demande de réservation. Nous vous contacterons sous peu pour confirmer les détails.',
-    termsAndConditionsText: 'En soumettant ce formulaire, vous acceptez nos conditions générales d\'utilisation.'
+    ...integration,
+    ...updates,
+    updatedAt: new Date().toISOString()
   };
 };
 
 /**
- * Get default design configuration
+ * Toggles the status of a website integration
+ * 
+ * @param integration The integration to toggle
+ * @returns Updated WebsiteIntegration object with toggled status
  */
-const getDefaultDesignConfig = (): WebBookingDesignConfig => {
+export const toggleIntegrationStatus = (integration: WebsiteIntegration): WebsiteIntegration => {
+  const newStatus = integration.status === 'active' ? 'inactive' : 'active';
   return {
-    primaryColor: '#0284c7',
-    secondaryColor: '#f8fafc',
-    fontFamily: 'system-ui, sans-serif',
-    formWidth: '480px',
-    borderRadius: '8px',
-    buttonStyle: 'rounded',
-    backgroundColor: '#ffffff',
-    textColor: '#1e293b',
-    customCss: ''
+    ...integration,
+    status: newStatus,
+    updatedAt: new Date().toISOString()
   };
 };

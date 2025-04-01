@@ -1,177 +1,165 @@
 
 import React from 'react';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Car, Calendar, MapPin, Gauge, Clock, User } from "lucide-react";
-import { TransportVehicleWithLocation } from '../types/map-types';
+import { TransportVehicleWithLocation } from '../types/transport-types';
+import { normalizeCoordinates, formatTimestamp } from '../utils/map-utils';
 
 interface VehicleDetailsDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  vehicle: TransportVehicleWithLocation | null;
+  vehicle: TransportVehicleWithLocation;
+  isOpen: boolean;
+  onClose: () => void;
+  onShowAlerts: () => void;
 }
 
 const VehicleDetailsDialog: React.FC<VehicleDetailsDialogProps> = ({
-  open,
-  onOpenChange,
-  vehicle
+  vehicle,
+  isOpen,
+  onClose,
+  onShowAlerts
 }) => {
-  if (!vehicle) return null;
+  // Normalize coordinates for consistent access
+  const coordinates = normalizeCoordinates(vehicle.location);
 
-  const renderStatusBadge = (status: string) => {
+  const getStatusClass = (status: string) => {
     switch (status) {
-      case "en service":
-        return <Badge variant="success">En service</Badge>;
-      case "arrêté":
-        return <Badge variant="warning">Arrêté</Badge>;
-      case "maintenance":
-        return <Badge variant="warning">Maintenance</Badge>;
+      case 'moving':
+        return 'bg-green-100 text-green-800';
+      case 'idle':
+        return 'bg-blue-100 text-blue-800';
+      case 'stopped':
+        return 'bg-orange-100 text-orange-800';
+      case 'offline':
+        return 'bg-gray-100 text-gray-800';
       default:
-        return <Badge>{status}</Badge>;
+        return 'bg-gray-100 text-gray-800';
     }
   };
 
-  const formatDate = (dateStr: string) => {
-    return new Date(dateStr).toLocaleString('fr-FR');
-  };
-
-  // Get status safely from either location status or vehicle status
-  const getVehicleStatus = () => {
-    if (vehicle.location?.status) {
-      return vehicle.location.status;
-    }
-    
-    // Map vehicle status to French if location status is not available
-    switch(vehicle.status) {
-      case "active":
-        return "en service";
-      case "maintenance":
-        return "maintenance";
-      case "out-of-service":
-        return "hors service";
+  const getVehicleStatusClass = (status: string) => {
+    switch (status) {
+      case 'active':
+        return 'bg-green-100 text-green-800';
+      case 'maintenance':
+        return 'bg-orange-100 text-orange-800';
+      case 'out-of-service':
+        return 'bg-red-100 text-red-800';
       default:
-        return String(vehicle.status);
+        return 'bg-gray-100 text-gray-800';
     }
   };
 
-  // Helper function to get coordinates string
-  const getCoordinatesString = () => {
-    if (!vehicle.location) return "Non disponible";
-    
-    // Try to get coordinates from various patterns
-    const lat = vehicle.location.coordinates?.latitude || 
-                vehicle.location.lat || 
-                vehicle.location.latitude;
-                
-    const lng = vehicle.location.coordinates?.longitude || 
-                vehicle.location.lng || 
-                vehicle.location.longitude;
-                
-    if (lat && lng) {
-      return `${Number(lat).toFixed(6)}, ${Number(lng).toFixed(6)}`;
-    }
-    
-    return "Non disponible";
+  const getFormattedSpeed = (speed: number) => {
+    return `${speed} km/h`;
+  };
+
+  const getHeadingDirection = (heading: number) => {
+    const directions = ['Nord', 'Nord-Est', 'Est', 'Sud-Est', 'Sud', 'Sud-Ouest', 'Ouest', 'Nord-Ouest'];
+    const index = Math.round(((heading % 360) / 45)) % 8;
+    return directions[index];
   };
   
-  // Helper function to get last update timestamp
-  const getLastUpdate = () => {
-    if (!vehicle.location) return "Non disponible";
-    
-    const timestamp = vehicle.location.timestamp || vehicle.location.lastUpdate;
-    return timestamp ? formatDate(timestamp) : "Non disponible";
+  // Helper to get last update time - using timestamp directly since lastUpdate doesn't exist in the type
+  const getLastUpdateTime = () => {
+    if (vehicle.location.timestamp) {
+      return formatTimestamp(vehicle.location.timestamp);
+    }
+    return "Non disponible";
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[550px]">
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Car className="h-5 w-5" />
-            <span>Détails du véhicule</span>
+            <span>{vehicle.name}</span>
+            <span className={`text-xs px-2 py-1 rounded-full ${getVehicleStatusClass(vehicle.status)}`}>
+              {vehicle.status}
+            </span>
           </DialogTitle>
-          <DialogDescription>
-            Informations détaillées du véhicule {vehicle.name}
-          </DialogDescription>
         </DialogHeader>
-        
-        <div className="space-y-4">
-          <div className="flex items-center justify-between border-b pb-2">
-            <div className="font-medium text-lg">{vehicle.name}</div>
-            <div>{renderStatusBadge(getVehicleStatus())}</div>
-          </div>
-          
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1">
-              <div className="text-sm text-muted-foreground">Immatriculation</div>
-              <div className="font-medium">{vehicle.licensePlate}</div>
-            </div>
-            
-            <div className="space-y-1">
-              <div className="text-sm text-muted-foreground">Type</div>
-              <div className="font-medium">{vehicle.type}</div>
-            </div>
-            
-            <div className="space-y-1">
-              <div className="text-sm text-muted-foreground">Capacité</div>
-              <div className="font-medium">{vehicle.capacity} places</div>
-            </div>
-            
-            <div className="space-y-1">
-              <div className="text-sm text-muted-foreground">Carburant</div>
-              <div className="font-medium">{vehicle.fuelType}</div>
-            </div>
-          </div>
-          
-          <div className="border-t pt-4 mt-4">
-            <h4 className="font-medium mb-3 flex items-center gap-2">
-              <MapPin className="h-4 w-4" />
-              <span>Données de localisation</span>
-            </h4>
-            
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1">
-                <div className="flex items-center gap-1">
-                  <Clock className="h-4 w-4 text-muted-foreground" />
-                  <div className="text-sm text-muted-foreground">Dernière mise à jour</div>
-                </div>
-                <div className="font-medium">{getLastUpdate()}</div>
+
+        <div className="py-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <div>
+                <p className="text-sm font-medium text-gray-500">Immatriculation</p>
+                <p>{vehicle.licensePlate}</p>
               </div>
               
-              <div className="space-y-1">
-                <div className="flex items-center gap-1">
-                  <Gauge className="h-4 w-4 text-muted-foreground" />
-                  <div className="text-sm text-muted-foreground">Vitesse actuelle</div>
-                </div>
-                <div className="font-medium">{vehicle.location?.speed || 0} km/h</div>
+              <div>
+                <p className="text-sm font-medium text-gray-500">Type de véhicule</p>
+                <p>{vehicle.type}</p>
               </div>
-              
-              <div className="space-y-1">
-                <div className="flex items-center gap-1">
-                  <MapPin className="h-4 w-4 text-muted-foreground" />
-                  <div className="text-sm text-muted-foreground">Coordonnées</div>
+
+              <div>
+                <p className="text-sm font-medium text-gray-500">Capacité</p>
+                <p>{vehicle.capacity} passagers</p>
+              </div>
+
+              <div>
+                <p className="text-sm font-medium text-gray-500">Disponibilité</p>
+                <p>{vehicle.available ? 'Disponible' : 'Non disponible'}</p>
+              </div>
+
+              {vehicle.driverName && (
+                <div>
+                  <p className="text-sm font-medium text-gray-500">Chauffeur</p>
+                  <p>{vehicle.driverName}</p>
                 </div>
-                <div className="font-medium">{getCoordinatesString()}</div>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <div>
+                <p className="text-sm font-medium text-gray-500">Statut actuel</p>
+                <p className={`inline-block px-2 py-1 rounded-full text-xs ${getStatusClass(vehicle.location.status)}`}>
+                  {vehicle.location.status}
+                </p>
+              </div>
+
+              <div>
+                <p className="text-sm font-medium text-gray-500">Dernière mise à jour</p>
+                <p>{getLastUpdateTime()}</p>
+              </div>
+
+              <div>
+                <p className="text-sm font-medium text-gray-500">Position</p>
+                <p className="font-mono text-xs">
+                  {coordinates.lat.toFixed(6)}, {coordinates.lng.toFixed(6)}
+                </p>
+              </div>
+
+              <div>
+                <p className="text-sm font-medium text-gray-500">Vitesse</p>
+                <p>{getFormattedSpeed(vehicle.location.speed)}</p>
+              </div>
+
+              <div>
+                <p className="text-sm font-medium text-gray-500">Direction</p>
+                <p>{getHeadingDirection(vehicle.location.heading)}</p>
               </div>
             </div>
           </div>
-          
-          <div className="border-t pt-4 mt-4">
-            <h4 className="font-medium mb-2 flex items-center gap-2">
-              <User className="h-4 w-4" />
-              <span>Chauffeur assigné</span>
-            </h4>
-            <div className="text-muted-foreground">
-              {vehicle.driverName || "Aucun chauffeur assigné"}
-            </div>
+
+          {/* Map thumbnail could go here */}
+          <div className="mt-4 h-40 bg-gray-100 rounded flex items-center justify-center">
+            <p className="text-gray-500">Carte miniature</p>
           </div>
         </div>
-        
-        <DialogFooter>
-          <Button onClick={() => onOpenChange(false)}>
+
+        <DialogFooter className="flex justify-between sm:justify-between">
+          <Button variant="outline" onClick={onClose}>
             Fermer
           </Button>
+          <div className="space-x-2">
+            <Button variant="outline" onClick={onShowAlerts}>
+              Alertes
+            </Button>
+            <Button>
+              Itinéraire
+            </Button>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>

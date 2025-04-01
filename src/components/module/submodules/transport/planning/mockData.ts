@@ -1,199 +1,275 @@
-import {
-  MaintenanceSchedule,
-  PlanningItem,
-  VehicleMaintenanceSchedule,
-} from '../types/planning-types';
+
 import { TransportVehicle } from '../types/vehicle-types';
 import { MapExtensionRequest } from '../types/map-types';
+import { MaintenanceSchedule } from '../types/vehicle-types';
 import { TransportDriver } from '../types/driver-types';
 
-export const planningItems: PlanningItem[] = [
+export const planningItems = [
   {
-    id: 'pi-001',
-    title: 'Révision Mercedes Classe E',
-    vehicle: 'veh-001',
-    date: '2023-12-05',
-    time: '09:00',
+    id: '1',
+    title: 'Maintenance plannifiée',
+    start: new Date(2023, 5, 10, 9, 0),
+    end: new Date(2023, 5, 10, 17, 0),
     type: 'maintenance',
-    status: 'scheduled',
+    vehicleId: 'v1',
+    status: 'scheduled'
   },
   {
-    id: 'pi-002',
-    title: 'Nettoyage Intérieur BMW Série 5',
-    vehicle: 'veh-002',
-    date: '2023-12-06',
-    time: '14:00',
-    type: 'cleaning',
-    status: 'scheduled',
+    id: '2',
+    title: 'Réservation - Jean Dupont',
+    start: new Date(2023, 5, 11, 8, 30),
+    end: new Date(2023, 5, 11, 12, 0),
+    type: 'reservation',
+    vehicleId: 'v2',
+    status: 'confirmed'
   },
   {
-    id: 'pi-003',
-    title: 'Contrôle Technique Tesla Model S',
-    vehicle: 'veh-003',
-    date: '2023-12-07',
-    time: '10:00',
-    type: 'inspection',
-    status: 'in-progress',
+    id: '3',
+    title: 'Maintenance - Contrôle technique',
+    start: new Date(2023, 5, 12, 14, 0),
+    end: new Date(2023, 5, 12, 16, 30),
+    type: 'maintenance',
+    vehicleId: 'v3',
+    status: 'scheduled'
   },
   {
-    id: 'pi-004',
-    title: 'Changement Pneus Mercedes Classe V',
-    vehicle: 'veh-004',
-    date: '2023-12-08',
-    time: '11:00',
-    type: 'tire-change',
-    status: 'completed',
-  },
-];
-
-export const vehiclesMaintenanceSchedules: VehicleMaintenanceSchedule[] = [
-  {
-    vehicleId: 'veh-001',
-    maintenanceScheduleIds: ['ms-001', 'ms-002'],
+    id: '4',
+    title: 'Réservation - Marie Laurent',
+    start: new Date(2023, 5, 13, 9, 0),
+    end: new Date(2023, 5, 13, 18, 0),
+    type: 'reservation',
+    vehicleId: 'v1',
+    status: 'confirmed'
   },
   {
-    vehicleId: 'veh-002',
-    maintenanceScheduleIds: ['ms-003'],
+    id: '5',
+    title: 'Nettoyage approfondi',
+    start: new Date(2023, 5, 14, 8, 0),
+    end: new Date(2023, 5, 14, 11, 0),
+    type: 'maintenance',
+    vehicleId: 'v2',
+    status: 'completed'
   },
+  {
+    id: '6',
+    title: 'Inspection de routine',
+    start: new Date(2023, 5, 15, 13, 0),
+    end: new Date(2023, 5, 15, 15, 0),
+    type: 'maintenance',
+    vehicleId: 'v3',
+    status: 'scheduled'
+  },
+  {
+    id: '7',
+    title: 'Changement de pneus',
+    start: new Date(2023, 5, 16, 10, 0),
+    end: new Date(2023, 5, 16, 12, 0),
+    type: 'maintenance',
+    vehicleId: 'v1',
+    status: 'scheduled'
+  }
 ];
 
 export const maintenanceSchedules: MaintenanceSchedule[] = [
   {
-    id: "ms-001",
-    vehicleId: "veh-001",
-    scheduledDate: "2023-12-05",
-    type: "oil-change",
-    description: "Changement d'huile et filtre",
-    estimatedDuration: 60,
-    technicianAssigned: "Jean Dupont",
-    status: "completed",
-    startDate: "2023-12-05T09:00:00",
-    endDate: "2023-12-05T10:00:00",
-    technician: "Jean Dupont",
-    completed: true,
-    notes: "Réalisé dans les délais",
-    taskName: "Maintenance régulière",
-    priority: "medium",
-    nextDue: "2024-03-05"
+    id: 'ms1',
+    vehicleId: 'v1',
+    type: 'oil-change',
+    description: 'Changement d\'huile et filtre',
+    scheduledDate: '2023-06-20',
+    estimatedDuration: 60, // minutes
+    status: 'scheduled',
+    notes: [],
+    createdAt: '2023-05-15T10:00:00Z',
+    updatedAt: '2023-05-15T10:00:00Z'
   },
   {
-    id: "ms-002",
-    vehicleId: "veh-002",
-    scheduledDate: "2023-12-10",
-    type: "brake-inspection",
-    description: "Inspection et remplacement plaquettes de frein",
-    estimatedDuration: 120,
-    technicianAssigned: "Pierre Martin",
-    status: "scheduled",
-    startDate: "2023-12-10T14:00:00",
-    endDate: "2023-12-10T16:00:00",
-    technician: "Pierre Martin",
-    completed: false,
-    notes: "",
-    taskName: "Inspection freins",
-    priority: "high",
-    nextDue: "2024-02-10"
+    id: 'ms2',
+    vehicleId: 'v2',
+    type: 'inspection',
+    description: 'Inspection complète du véhicule',
+    scheduledDate: '2023-06-22',
+    estimatedDuration: 120, // minutes
+    status: 'scheduled',
+    notes: [],
+    createdAt: '2023-05-16T11:30:00Z',
+    updatedAt: '2023-05-16T11:30:00Z'
   },
   {
-    id: "ms-003",
-    vehicleId: "veh-004",
-    scheduledDate: "2023-12-15",
-    type: "tire-rotation",
-    description: "Rotation des pneus et vérification pression",
-    estimatedDuration: 45,
-    technicianAssigned: "Sophie Laurent",
-    status: "scheduled",
-    startDate: "2023-12-15T11:00:00",
-    endDate: "2023-12-15T11:45:00",
-    technician: "Sophie Laurent",
-    completed: false,
-    notes: "",
-    taskName: "Entretien pneus",
-    priority: "medium",
-    nextDue: "2024-01-15"
+    id: 'ms3',
+    vehicleId: 'v3',
+    type: 'brake-service',
+    description: 'Vérification et entretien des freins',
+    scheduledDate: '2023-06-25',
+    estimatedDuration: 90, // minutes
+    status: 'scheduled',
+    notes: [],
+    createdAt: '2023-05-17T14:15:00Z',
+    updatedAt: '2023-05-17T14:15:00Z'
+  }
+];
+
+export const vehicleMaintenanceSchedules = [
+  {
+    vehicleId: 'v1',
+    scheduleIds: ['ms1']
+  },
+  {
+    vehicleId: 'v2',
+    scheduleIds: ['ms2']
+  },
+  {
+    vehicleId: 'v3',
+    scheduleIds: ['ms3']
   }
 ];
 
 export const extensionRequests: MapExtensionRequest[] = [
   {
-    id: 'er-001',
-    requestId: 'req-001',
-    type: 'traffic',
-    active: true,
-    clientName: 'Air France',
-    vehicleName: 'Mercedes Classe E',
-    originalEndDate: '2023-12-20',
-    requestedEndDate: '2023-12-27',
-    reason: 'Période de forte affluence',
-    extensionReason: 'Prolongation de contrat',
-    createdAt: '2023-11-28',
+    id: 'req1',
+    requestId: 'ext-001',
+    clientName: 'Entreprise ABC',
+    vehicleName: 'Mercedes Sprinter',
+    originalEndDate: '2023-06-15T18:00:00Z',
+    requestedEndDate: '2023-06-17T18:00:00Z',
+    reason: 'Prolongation du séminaire d\'entreprise',
+    extensionReason: 'Besoin du véhicule pour deux jours supplémentaires',
     status: 'pending',
+    createdAt: '2023-06-10T09:15:00Z'
   },
   {
-    id: 'er-002',
-    requestId: 'req-002',
-    type: 'satellite',
-    active: false,
-    clientName: 'Total Energies',
-    vehicleName: 'BMW Série 5',
-    originalEndDate: '2023-12-15',
-    requestedEndDate: '2023-12-22',
-    reason: 'Suivi des interventions',
-    extensionReason: 'Nécessité de suivi précis',
-    createdAt: '2023-11-29',
+    id: 'req2',
+    requestId: 'ext-002',
+    clientName: 'Société XYZ',
+    vehicleName: 'Tesla Model X',
+    originalEndDate: '2023-06-16T12:00:00Z',
+    requestedEndDate: '2023-06-16T18:00:00Z',
+    reason: 'Rendez-vous client supplémentaire',
+    extensionReason: 'Réunion supplémentaire en fin de journée',
     status: 'approved',
-  },
-  {
-    id: 'er-003',
-    requestId: 'req-003',
-    type: 'terrain',
-    active: true,
-    clientName: 'SNCF',
-    vehicleName: 'Tesla Model S',
-    originalEndDate: '2023-12-10',
-    requestedEndDate: '2023-12-17',
-    reason: 'Amélioration de la navigation',
-    extensionReason: 'Conditions météorologiques difficiles',
-    createdAt: '2023-11-30',
-    status: 'rejected',
-  },
+    createdAt: '2023-06-11T14:30:00Z'
+  }
 ];
 
 export const mockDrivers: TransportDriver[] = [
   {
-    id: 'driver-001',
-    firstName: 'Jean',
-    lastName: 'Dupont',
-    email: 'jean.dupont@example.com',
-    phone: '0612345678',
-    licenseNumber: '123456789',
-    licenseExpiry: '2024-12-31',
-    status: 'active',
-    rating: 4.5,
-    hireDate: '2022-01-01',
-  },
-  {
-    id: 'driver-002',
-    firstName: 'Sophie',
+    id: 'driver1',
+    firstName: 'Thomas',
     lastName: 'Martin',
-    email: 'sophie.martin@example.com',
-    phone: '0623456789',
-    licenseNumber: '987654321',
-    licenseExpiry: '2025-06-30',
-    status: 'inactive',
-    rating: 4.2,
-    hireDate: '2022-03-15',
+    phone: '+33612345678',
+    email: 'thomas.martin@example.com',
+    licenseNumber: 'DL123456789',
+    licenseExpiry: '2025-05-15',
+    available: true,
+    onLeave: false,
+    rating: 4.8,
+    experience: 5, // in years
+    specializations: ['VIP', 'airport', 'long-distance'],
+    language: ['french', 'english'],
+    preferredVehicles: ['sedan', 'luxury'],
+    status: 'active',
+    notes: [],
+    createdAt: '2021-03-15T10:00:00Z'
   },
   {
-    id: 'driver-003',
-    firstName: 'Pierre',
-    lastName: 'Lefevre',
-    email: 'pierre.lefevre@example.com',
-    phone: '0634567890',
-    licenseNumber: '456789123',
-    licenseExpiry: '2024-09-30',
-    status: 'on_leave',
-    rating: 4.8,
-    hireDate: '2022-05-01',
+    id: 'driver2',
+    firstName: 'Sophie',
+    lastName: 'Bernard',
+    phone: '+33623456789',
+    email: 'sophie.bernard@example.com',
+    licenseNumber: 'DL987654321',
+    licenseExpiry: '2024-11-10',
+    available: true,
+    onLeave: false,
+    rating: 4.9,
+    experience: 7, // in years
+    specializations: ['airport', 'events'],
+    language: ['french', 'spanish', 'english'],
+    preferredVehicles: ['van', 'minibus'],
+    status: 'active',
+    notes: [],
+    createdAt: '2020-07-22T09:30:00Z'
   },
+  {
+    id: 'driver3',
+    firstName: 'Nicolas',
+    lastName: 'Petit',
+    phone: '+33634567890',
+    email: 'nicolas.petit@example.com',
+    licenseNumber: 'DL543216789',
+    licenseExpiry: '2025-02-20',
+    available: false,
+    onLeave: true,
+    rating: 4.7,
+    experience: 3, // in years
+    specializations: ['airport', 'tourism'],
+    language: ['french', 'english'],
+    preferredVehicles: ['sedan'],
+    status: 'on_leave',
+    notes: [],
+    createdAt: '2022-01-05T11:15:00Z'
+  }
+];
+
+export const vehicles: TransportVehicle[] = [
+  {
+    id: "v1",
+    name: "Mercedes Sprinter",
+    type: "van",
+    licensePlate: "AA-123-BB",
+    capacity: 8,
+    year: 2021,
+    mileage: 45000,
+    available: true,
+    status: "active",
+    maintenanceDate: "2023-05-15",
+    nextMaintenanceDate: "2023-08-15",
+    registrationDate: "2021-03-10",
+    insuranceExpiryDate: "2024-03-10",
+    lastInspectionDate: "2023-05-15",
+    fuelType: "diesel",
+    notes: [],
+    createdAt: "2021-03-10T10:00:00Z",
+    updatedAt: "2023-05-15T14:30:00Z"
+  },
+  {
+    id: "v2",
+    name: "Tesla Model 3",
+    type: "sedan",
+    licensePlate: "CC-456-DD",
+    capacity: 4,
+    year: 2022,
+    mileage: 25000,
+    available: true,
+    status: "active",
+    maintenanceDate: "2023-04-20",
+    nextMaintenanceDate: "2023-07-20",
+    registrationDate: "2022-01-15",
+    insuranceExpiryDate: "2024-01-15",
+    lastInspectionDate: "2023-04-20",
+    fuelType: "electric",
+    notes: [],
+    createdAt: "2022-01-15T09:45:00Z",
+    updatedAt: "2023-04-20T16:15:00Z"
+  },
+  {
+    id: "v3",
+    name: "BMW Série 5",
+    type: "luxury",
+    licensePlate: "EE-789-FF",
+    capacity: 5,
+    year: 2020,
+    mileage: 65000,
+    available: false,
+    status: "maintenance",
+    maintenanceDate: "2023-06-01",
+    nextMaintenanceDate: "2023-09-01",
+    registrationDate: "2020-10-05",
+    insuranceExpiryDate: "2023-10-05",
+    lastInspectionDate: "2023-06-01",
+    fuelType: "hybrid",
+    notes: [],
+    createdAt: "2020-10-05T11:30:00Z",
+    updatedAt: "2023-06-01T13:45:00Z"
+  }
 ];

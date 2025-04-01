@@ -1,170 +1,84 @@
 
-import { TransportVehicleWithLocation, MapConfig } from '../types/map-types';
+import L from 'leaflet';
+import { VehicleLocation, Coordinates, TransportVehicleWithLocation } from '../types/transport-types';
 
-// Calculate the optimal map center and zoom based on vehicle positions
-export const calculateMapCenter = (
-  vehicles: TransportVehicleWithLocation[],
-  defaultLat: number,
-  defaultLng: number,
-  defaultZoom: number
-) => {
-  // If there are no vehicles with location data, return default values
-  const vehiclesWithLocation = vehicles.filter(v => {
-    if (!v.location) return false;
-    
-    // Check for coordinates in any format
-    return (
-      (v.location.coordinates && (v.location.coordinates.latitude || v.location.coordinates.longitude)) || 
-      v.location.lat || 
-      v.location.lng || 
-      v.location.latitude || 
-      v.location.longitude
-    );
-  });
-  
-  if (vehiclesWithLocation.length === 0) {
-    return { latitude: defaultLat, longitude: defaultLng, zoom: defaultZoom };
+// Helper function to check property existence and normalize coordinates
+export const normalizeCoordinates = (location: VehicleLocation): { lat: number; lng: number } => {
+  // If location already has lat/lng properties, use them
+  if ('lat' in location && 'lng' in location) {
+    return { lat: location.lat, lng: location.lng };
   }
-
-  // If there's only one vehicle, center on it
-  if (vehiclesWithLocation.length === 1) {
-    const vehicle = vehiclesWithLocation[0];
-    
-    // Get coordinates in any available format
-    const latitude = 
-      (vehicle.location.coordinates ? vehicle.location.coordinates.latitude : undefined) || 
-      vehicle.location.lat || 
-      vehicle.location.latitude || 
-      defaultLat;
-      
-    const longitude = 
-      (vehicle.location.coordinates ? vehicle.location.coordinates.longitude : undefined) || 
-      vehicle.location.lng || 
-      vehicle.location.longitude || 
-      defaultLng;
-    
+  
+  // If location has coordinates.latitude/longitude properties, use them
+  if (location.coordinates && 'latitude' in location.coordinates && 'longitude' in location.coordinates) {
     return { 
-      latitude, 
-      longitude,
-      zoom: Math.max(14, defaultZoom) // Higher zoom for single vehicle
-    };
-  }
-
-  // For multiple vehicles, calculate bounding box
-  let minLat = Infinity;
-  let maxLat = -Infinity;
-  let minLng = Infinity;
-  let maxLng = -Infinity;
-
-  vehiclesWithLocation.forEach(vehicle => {
-    // Get lat/lng from any available format
-    const lat = 
-      (vehicle.location.coordinates ? vehicle.location.coordinates.latitude : undefined) || 
-      vehicle.location.lat || 
-      vehicle.location.latitude;
-      
-    const lng = 
-      (vehicle.location.coordinates ? vehicle.location.coordinates.longitude : undefined) || 
-      vehicle.location.lng || 
-      vehicle.location.longitude;
-    
-    if (lat !== undefined && lng !== undefined) {
-      minLat = Math.min(minLat, lat);
-      maxLat = Math.max(maxLat, lat);
-      minLng = Math.min(minLng, lng);
-      maxLng = Math.max(maxLng, lng);
-    }
-  });
-
-  // Calculate center of bounding box
-  const latitude = (minLat + maxLat) / 2;
-  const longitude = (minLng + maxLng) / 2;
-
-  // Calculate appropriate zoom level based on bounding box size
-  // This is a simplified calculation - in real world applications, you might want to use
-  // a more sophisticated algorithm based on the map's viewport size
-  const latDiff = maxLat - minLat;
-  const lngDiff = maxLng - minLng;
-  const maxDiff = Math.max(latDiff, lngDiff);
-  
-  let zoom = defaultZoom;
-  if (maxDiff > 0.5) zoom = 8;
-  else if (maxDiff > 0.2) zoom = 10;
-  else if (maxDiff > 0.1) zoom = 11;
-  else if (maxDiff > 0.05) zoom = 12;
-  else if (maxDiff > 0.01) zoom = 13;
-  else zoom = 14;
-  
-  return { latitude, longitude, zoom };
-};
-
-// Get marker color based on vehicle status
-export const getMarkerColorByStatus = (status: string): string => {
-  switch (status.toLowerCase()) {
-    case 'en service':
-    case 'available':
-    case 'active':
-      return '#22c55e'; // green-500
-    case 'arrêté':
-    case 'idle':
-      return '#eab308'; // yellow-500
-    case 'maintenance':
-      return '#f97316'; // orange-500
-    case 'issue':
-    case 'problem':
-      return '#ef4444'; // red-500
-    default:
-      return '#6b7280'; // gray-500
-  }
-};
-
-// Get tile layer configuration based on provider
-export const getTileLayerConfig = (provider: string = 'osm-france') => {
-  switch (provider) {
-    case 'osm-france':
-      return {
-        url: 'https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png',
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-        minZoom: 2,
-        maxZoom: 19
-      };
-    case 'osm':
-      return {
-        url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-        minZoom: 2,
-        maxZoom: 19
-      };
-    case 'carto':
-      return {
-        url: 'https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png',
-        attribution: '&copy; <a href="https://carto.com/attributions">CARTO</a>',
-        minZoom: 2,
-        maxZoom: 19
-      };
-    default:
-      return {
-        url: 'https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png',
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-        minZoom: 2,
-        maxZoom: 19
-      };
-  }
-};
-
-// Helper function to normalize coordinates (handles both lat/lng and latitude/longitude)
-export const getCoordinates = (location: any) => {
-  if (!location) return { lat: 0, lng: 0 };
-  
-  if (location.coordinates) {
-    return {
-      lat: location.coordinates.latitude || 0,
-      lng: location.coordinates.longitude || 0
+      lat: location.coordinates.latitude, 
+      lng: location.coordinates.longitude 
     };
   }
   
-  return {
-    lat: location.lat || location.latitude || 0,
-    lng: location.lng || location.longitude || 0
-  };
+  // Default fallback (should never happen with proper types)
+  return { lat: 0, lng: 0 };
+};
+
+// Create a leaflet marker for a vehicle location
+export const createMarker = (
+  location: VehicleLocation, 
+  vehicle: TransportVehicleWithLocation,
+  onClick?: (vehicle: TransportVehicleWithLocation) => void
+): L.Marker => {
+  const coords = normalizeCoordinates(location);
+  const marker = L.marker([coords.lat, coords.lng]);
+  
+  // Set popup content
+  marker.bindPopup(`
+    <div class="p-2">
+      <h3 class="font-medium">${vehicle.name}</h3>
+      <p>${vehicle.licensePlate}</p>
+      <p>Status: ${location.status}</p>
+    </div>
+  `);
+  
+  // Add click handler if provided
+  if (onClick) {
+    marker.on('click', () => onClick(vehicle));
+  }
+  
+  return marker;
+};
+
+// Function to update a marker's position
+export const updateMarkerPosition = (marker: L.Marker, location: VehicleLocation): void => {
+  const coords = normalizeCoordinates(location);
+  marker.setLatLng([coords.lat, coords.lng]);
+};
+
+// Calculate the distance between two coordinates in kilometers
+export const calculateDistance = (coord1: Coordinates, coord2: Coordinates): number => {
+  const R = 6371; // Earth's radius in km
+  const dLat = (coord2.latitude - coord1.latitude) * Math.PI / 180;
+  const dLon = (coord2.longitude - coord1.longitude) * Math.PI / 180;
+  const a = 
+    Math.sin(dLat/2) * Math.sin(dLat/2) +
+    Math.cos(coord1.latitude * Math.PI / 180) * Math.cos(coord2.latitude * Math.PI / 180) * 
+    Math.sin(dLon/2) * Math.sin(dLon/2); 
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
+  return R * c;
+};
+
+// Format a timestamp to a readable string
+export const formatTimestamp = (timestamp: string): string => {
+  const date = new Date(timestamp);
+  return date.toLocaleString();
+};
+
+// Get a color based on vehicle status
+export const getStatusColor = (status: string): string => {
+  switch (status) {
+    case 'moving': return '#4caf50'; // green
+    case 'stopped': return '#f44336'; // red
+    case 'idle': return '#ff9800'; // orange
+    case 'offline': return '#9e9e9e'; // gray
+    default: return '#2196f3'; // blue
+  }
 };

@@ -1,94 +1,69 @@
 
-import { useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import L from 'leaflet';
-import { TransportVehicleWithLocation } from '../types';
+import { TransportVehicleWithLocation } from '../types/transport-types';
+import { normalizeCoordinates, createMarker, updateMarkerPosition } from '../utils/map-utils';
 
-export function useMapMarkers() {
-  // Store markers for cleanup
-  const markers: L.Marker[] = [];
-  
-  // Clear all markers from the map
-  const clearMarkers = useCallback((map: L.Map) => {
-    markers.forEach(marker => {
-      map.removeLayer(marker);
-    });
-    markers.length = 0;
-  }, []);
-  
-  // Add vehicle markers to the map
-  const addVehicleMarkers = useCallback((
-    map: L.Map, 
-    vehicles: TransportVehicleWithLocation[], 
-    onMarkerClick: (vehicleId: string) => void,
-    selectedVehicleId?: string
-  ) => {
-    vehicles.forEach(vehicle => {
-      if (!vehicle.location) return;
-      
-      // Handle both coordinate patterns (lat/lng and latitude/longitude)
-      let lat: number, lng: number;
-      
-      if (vehicle.location.coordinates) {
-        // Use coordinates object if available
-        lat = vehicle.location.coordinates.latitude;
-        lng = vehicle.location.coordinates.longitude;
-      } else {
-        // Fall back to direct lat/lng or latitude/longitude properties
-        lat = vehicle.location.lat || vehicle.location.latitude || 0;
-        lng = vehicle.location.lng || vehicle.location.longitude || 0;
-      }
-      
-      if (!lat || !lng) return;
-      
-      // Create marker options
-      const markerOptions: L.MarkerOptions = {
-        icon: createVehicleIcon(vehicle.type, selectedVehicleId === vehicle.id),
-        title: vehicle.name || vehicle.licensePlate
+interface UseMapMarkersProps {
+  map: L.Map | null;
+  vehicles: TransportVehicleWithLocation[];
+  onMarkerClick?: (vehicle: TransportVehicleWithLocation) => void;
+}
+
+export const useMapMarkers = ({ map, vehicles, onMarkerClick }: UseMapMarkersProps) => {
+  const [markers, setMarkers] = useState<Record<string, L.Marker>>({});
+  const [markersLayer, setMarkersLayer] = useState<L.LayerGroup | null>(null);
+
+  // Initialize markers layer
+  useEffect(() => {
+    if (map && !markersLayer) {
+      const layer = L.layerGroup().addTo(map);
+      setMarkersLayer(layer);
+      return () => {
+        map.removeLayer(layer);
       };
-      
-      // Create and add marker
-      const marker = L.marker([lat, lng], markerOptions).addTo(map);
-      
-      // Add click handler
-      marker.on('click', () => {
-        onMarkerClick(vehicle.id);
-      });
-      
-      // Store marker for later cleanup
-      markers.push(marker);
-    });
-  }, []);
-  
-  return { clearMarkers, addVehicleMarkers };
-}
+    }
+  }, [map, markersLayer]);
 
-// Helper function to create vehicle icon
-function createVehicleIcon(vehicleType?: string, isSelected = false): L.DivIcon {
-  const iconSize = isSelected ? 36 : 32;
-  const borderClass = isSelected ? 'border-2 border-blue-500' : '';
-  let bgColor = 'bg-blue-500';
-  
-  switch (vehicleType) {
-    case 'sedan':
-      bgColor = 'bg-blue-500';
-      break;
-    case 'suv':
-      bgColor = 'bg-green-500';
-      break;
-    case 'van':
-      bgColor = 'bg-amber-500';
-      break;
-    case 'luxury':
-      bgColor = 'bg-purple-500';
-      break;
-    default:
-      bgColor = 'bg-gray-500';
-  }
-  
-  return L.divIcon({
-    className: `rounded-full ${bgColor} ${borderClass} flex items-center justify-center shadow-lg`,
-    iconSize: [iconSize, iconSize],
-    iconAnchor: [iconSize/2, iconSize/2],
-    html: `<div class="text-white text-xs font-bold">${vehicleType?.charAt(0).toUpperCase() || 'V'}</div>`
-  });
-}
+  // Create/update markers when vehicles change
+  useEffect(() => {
+    if (!map || !markersLayer) return;
+
+    // Track current markers to remove those that are no longer needed
+    const currentMarkers: Record<string, boolean> = {};
+    
+    vehicles.forEach(vehicle => {
+      const coords = normalizeCoordinates(vehicle.location);
+      currentMarkers[vehicle.id] = true;
+
+      if (markers[vehicle.id]) {
+        // Update existing marker
+        updateMarkerPosition(markers[vehicle.id], vehicle.location);
+      } else {
+        // Create new marker
+        const marker = createMarker(vehicle.location, vehicle, onMarkerClick);
+        marker.addTo(markersLayer);
+        setMarkers(prev => ({
+          ...prev,
+          [vehicle.id]: marker
+        }));
+      }
+    });
+
+    // Remove markers for vehicles that are no longer in the list
+    Object.keys(markers).forEach(vehicleId => {
+      if (!currentMarkers[vehicleId]) {
+        markersLayer.removeLayer(markers[vehicleId]);
+        setMarkers(prev => {
+          const updated = { ...prev };
+          delete updated[vehicleId];
+          return updated;
+        });
+      }
+    });
+  }, [map, markersLayer, vehicles, markers, onMarkerClick]);
+
+  return { markers };
+};
+
+export default useMapMarkers;

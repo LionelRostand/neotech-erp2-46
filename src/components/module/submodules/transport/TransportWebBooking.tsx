@@ -1,496 +1,436 @@
+
 import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { PlusCircle, Settings, Trash2, CheckCircle2, XCircle, AlertCircle } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { toast } from "@/components/ui/use-toast";
+import { Copy, Check, Globe, Calendar, Users, MapPin, Car, Code, X } from "lucide-react";
+import { WebBooking, WebBookingStatus } from '../types/client-types';
+import { TransportService } from '../types/base-types';
 
-const TransportWebBooking: React.FC = () => {
-  const [activeTab, setActiveTab] = useState('configuration');
-  const [configDialogOpen, setConfigDialogOpen] = useState(false);
-  const [integrationMethod, setIntegrationMethod] = useState<'iframe' | 'javascript'>('iframe');
-  const [customDomain, setCustomDomain] = useState('');
-  const [websiteTheme, setWebsiteTheme] = useState('light');
-  
-  const [formConfig, setFormConfig] = useState({
-    enableDriverSelection: true,
-    requireUserAccount: false,
-    enablePaymentOnline: true,
-    defaultService: 'airport' as TransportService,
-    requirePhoneNumber: true,
-    advanceBookingHours: 3,
-    maxBookingDaysInFuture: 30,
-    displayPricing: true
-  });
+const TransportWebBooking = () => {
+  const [activeTab, setActiveTab] = useState("general");
+  const [isIntegrationOpen, setIsIntegrationOpen] = useState(false);
+  const [integrationCode, setIntegrationCode] = useState("");
+  const [copySuccess, setCopySuccess] = useState(false);
 
-  const [mockBookings] = useState<WebBooking[]>([
+  const mockServices = [
     {
-      id: "web-001",
-      name: "Marie Martin",
-      email: "marie.martin@example.com",
-      phone: "+33 6 12 34 56 78",
-      date: "2023-11-20",
-      time: "14:30",
-      passengers: 2,
-      status: "new",
-      createdAt: "2023-11-10T15:30:00Z",
-      serviceId: "airport-transfer",
-      service: "Transfert Aéroport"
+      id: "1",
+      name: "Transport aéroport",
+      description: "Navette depuis/vers l'aéroport",
+      basePrice: 50,
+      active: true
     },
     {
-      id: "web-002",
-      name: "Pierre Dubois",
-      email: "pierre.dubois@example.com",
-      phone: "+33 7 98 76 54 32",
-      date: "2023-11-25",
-      time: "09:15",
-      passengers: 1,
-      notes: "Bagages volumineux",
-      status: "processed",
-      createdAt: "2023-11-12T09:45:00Z",
-      serviceId: "city-tour",
-      service: "Visite de Ville"
+      id: "2",
+      name: "Location avec chauffeur",
+      description: "Service de chauffeur privé à l'heure",
+      basePrice: 75,
+      active: true
+    },
+    {
+      id: "3",
+      name: "Navette entreprise",
+      description: "Transport régulier pour entreprises",
+      basePrice: 120,
+      active: false
     }
-  ]);
+  ];
 
-  const handleConfigChange = (key: string, value: any) => {
-    setFormConfig(prev => ({
-      ...prev,
-      [key]: value
-    }));
-  };
+  const mockWebBookings = [
+    {
+      id: "wb1",
+      userId: "u1",
+      serviceId: "1",
+      date: "2023-06-15",
+      time: "14:30",
+      pickup: "Aéroport Charles de Gaulle",
+      dropoff: "Paris Centre",
+      passengers: 3,
+      specialRequirements: "Beaucoup de bagages",
+      price: 65,
+      isPaid: true,
+      status: "confirmed" as WebBookingStatus,
+      createdAt: "2023-06-10T08:15:00Z",
+      updatedAt: "2023-06-10T08:20:00Z",
+      service: mockServices[0]
+    },
+    {
+      id: "wb2",
+      userId: "u2",
+      serviceId: "2",
+      date: "2023-06-16",
+      time: "09:00",
+      pickup: "Hôtel Marriott",
+      dropoff: "Versailles",
+      passengers: 2,
+      price: 150,
+      isPaid: false,
+      status: "new" as WebBookingStatus,
+      createdAt: "2023-06-11T12:05:00Z",
+      updatedAt: "2023-06-11T12:05:00Z",
+      service: mockServices[1]
+    },
+    {
+      id: "wb3",
+      userId: "u3",
+      serviceId: "1",
+      date: "2023-06-14",
+      time: "18:45",
+      pickup: "Aéroport d'Orly",
+      dropoff: "Montmartre",
+      passengers: 1,
+      price: 55,
+      isPaid: true,
+      status: "cancelled" as WebBookingStatus,
+      createdAt: "2023-06-09T17:30:00Z",
+      updatedAt: "2023-06-10T09:15:00Z",
+      service: mockServices[0]
+    }
+  ];
 
-  const getDomainBasedUrl = () => {
-    const domain = customDomain || 'votre-domaine.com';
-    return `https://${domain}/reservations-transport`;
-  };
-
-  const getIframeCode = () => {
-    return `<iframe src="${getDomainBasedUrl()}" 
-        width="100%" 
-        height="650" 
-        frameborder="0">
-</iframe>`;
-  };
-
-  const getJavascriptCode = () => {
-    return `<script>
-  (function() {
-    var s = document.createElement('script');
-    s.type = 'text/javascript';
-    s.async = true;
-    s.src = '${getDomainBasedUrl()}/embed.js';
-    var x = document.getElementsByTagName('script')[0];
-    x.parentNode.insertBefore(s, x);
-  })();
-</script>
-<div id="transport-booking-form"></div>`;
+  const handleGenerateCode = () => {
+    setIntegrationCode(`
+<!-- Code d'intégration de réservation de transport -->
+<div id="transport-booking-widget" data-api-key="YOUR_API_KEY" data-service-id="1">
+  <script src="https://api.votre-domaine.com/transport/booking-widget.js"></script>
+</div>
+    `);
+    setIsIntegrationOpen(true);
+    toast({
+      title: "Code généré",
+      description: "Le code d'intégration a été généré avec succès.",
+    });
   };
 
   const handleCopyCode = () => {
-    const code = integrationMethod === 'iframe' ? getIframeCode() : getJavascriptCode();
-    navigator.clipboard.writeText(code);
-    toast.success("Code d'intégration copié dans le presse-papier");
-  };
-
-  const getStatusBadge = (status: WebBookingStatus) => {
-    switch (status) {
-      case "new":
-        return <Badge className="bg-blue-500">Nouvelle</Badge>;
-      case "processed":
-        return <Badge className="bg-green-500">Traitée</Badge>;
-      case "cancelled":
-        return <Badge className="bg-red-500">Annulée</Badge>;
-      default:
-        return <Badge>Inconnue</Badge>;
-    }
+    navigator.clipboard.writeText(integrationCode);
+    setCopySuccess(true);
+    toast({
+      title: "Code copié",
+      description: "Le code a été copié dans le presse-papiers.",
+    });
+    setTimeout(() => setCopySuccess(false), 2000);
   };
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col space-y-2">
-        <h2 className="text-3xl font-bold">Réservation Web</h2>
-        <p className="text-muted-foreground">
-          Configurez et gérez le système de réservation en ligne pour vos clients
-        </p>
-      </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Statut du module</CardTitle>
-          <CardDescription>
-            Le module de réservation web est actif et disponible pour vos clients.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <div className="h-3 w-3 rounded-full bg-green-500"></div>
-              <span className="text-sm font-medium">Actif</span>
-            </div>
-            <Button variant="outline" size="sm" onClick={() => setConfigDialogOpen(true)}>
-              <Settings className="mr-2 h-4 w-4" />
-              Configurer l'intégration
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-      
-      <Tabs defaultValue="configuration" value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid grid-cols-4 mb-6">
-          <TabsTrigger value="configuration">
-            <Settings className="mr-2 h-4 w-4" />
-            Configuration
-          </TabsTrigger>
-          <TabsTrigger value="formulaire">
-            <Globe className="mr-2 h-4 w-4" />
-            Formulaire
-          </TabsTrigger>
-          <TabsTrigger value="reservations">
-            <Calendar className="mr-2 h-4 w-4" />
-            Réservations
-          </TabsTrigger>
-          <TabsTrigger value="integration">
-            <Users className="mr-2 h-4 w-4" />
-            Intégration
-          </TabsTrigger>
+      <h2 className="text-3xl font-bold">Réservation en ligne</h2>
+      <Tabs defaultValue="general" value={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="general">Général</TabsTrigger>
+          <TabsTrigger value="services">Services</TabsTrigger>
+          <TabsTrigger value="integration">Intégration Web</TabsTrigger>
         </TabsList>
-        
-        <TabsContent value="configuration" className="space-y-6">
+
+        <TabsContent value="general">
           <Card>
             <CardHeader>
-              <CardTitle>Paramètres généraux</CardTitle>
+              <CardTitle>Réservations en ligne récentes</CardTitle>
               <CardDescription>
-                Configurez les options principales du système de réservation en ligne.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label htmlFor="driver-selection">Sélection de chauffeur</Label>
-                  <p className="text-sm text-muted-foreground">
-                    Permettre aux clients de choisir s'ils souhaitent un chauffeur
-                  </p>
-                </div>
-                <Switch 
-                  id="driver-selection" 
-                  checked={formConfig.enableDriverSelection}
-                  onCheckedChange={(checked) => handleConfigChange('enableDriverSelection', checked)}
-                />
-              </div>
-              
-              <Separator />
-              
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label htmlFor="require-account">Compte utilisateur requis</Label>
-                  <p className="text-sm text-muted-foreground">
-                    Obliger les clients à créer un compte pour réserver
-                  </p>
-                </div>
-                <Switch 
-                  id="require-account" 
-                  checked={formConfig.requireUserAccount}
-                  onCheckedChange={(checked) => handleConfigChange('requireUserAccount', checked)}
-                />
-              </div>
-              
-              <Separator />
-              
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label htmlFor="online-payment">Paiement en ligne</Label>
-                  <p className="text-sm text-muted-foreground">
-                    Activer le paiement en ligne lors de la réservation
-                  </p>
-                </div>
-                <Switch 
-                  id="online-payment" 
-                  checked={formConfig.enablePaymentOnline}
-                  onCheckedChange={(checked) => handleConfigChange('enablePaymentOnline', checked)}
-                />
-              </div>
-              
-              <Separator />
-              
-              <div className="grid grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label htmlFor="default-service">Service par défaut</Label>
-                  <Select 
-                    value={formConfig.defaultService} 
-                    onValueChange={(value) => handleConfigChange('defaultService', value)}
-                  >
-                    <SelectTrigger id="default-service">
-                      <SelectValue placeholder="Sélectionner un service" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="airport">Transfert aéroport</SelectItem>
-                      <SelectItem value="hourly">Service à l'heure</SelectItem>
-                      <SelectItem value="pointToPoint">Point à point</SelectItem>
-                      <SelectItem value="dayTour">Excursion journée</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="booking-hours">Heures minimum avant réservation</Label>
-                  <Input 
-                    id="booking-hours" 
-                    type="number" 
-                    value={formConfig.advanceBookingHours}
-                    onChange={(e) => handleConfigChange('advanceBookingHours', parseInt(e.target.value))}
-                  />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-        
-        <TabsContent value="formulaire" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Personnalisation du formulaire</CardTitle>
-              <CardDescription>
-                Configurez les champs et l'apparence du formulaire de réservation.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="grid grid-cols-2 gap-6">
-                <div className="space-y-4">
-                  <h3 className="text-lg font-medium">Champs requis</h3>
-                  
-                  <div className="flex items-center justify-between">
-                    <Label htmlFor="require-phone">Numéro de téléphone</Label>
-                    <Switch 
-                      id="require-phone" 
-                      checked={formConfig.requirePhoneNumber}
-                      onCheckedChange={(checked) => handleConfigChange('requirePhoneNumber', checked)}
-                    />
-                  </div>
-                  
-                  <div className="flex items-center justify-between">
-                    <Label htmlFor="display-pricing">Afficher les prix</Label>
-                    <Switch 
-                      id="display-pricing" 
-                      checked={formConfig.displayPricing}
-                      onCheckedChange={(checked) => handleConfigChange('displayPricing', checked)}
-                    />
-                  </div>
-                </div>
-                
-                <div className="border rounded-md p-6">
-                  <h3 className="text-lg font-medium mb-4">Aperçu du formulaire</h3>
-                  <div className="space-y-2">
-                    <div className="flex items-center p-2 border rounded-md">
-                      <Car className="h-5 w-5 mr-2 text-gray-500" />
-                      <span>Type de véhicule</span>
-                    </div>
-                    <div className="flex items-center p-2 border rounded-md">
-                      <Calendar className="h-5 w-5 mr-2 text-gray-500" />
-                      <span>Date et heure</span>
-                    </div>
-                    <div className="flex items-center p-2 border rounded-md">
-                      <MapPin className="h-5 w-5 mr-2 text-gray-500" />
-                      <span>Adresses</span>
-                    </div>
-                    <div className="flex items-center p-2 border rounded-md">
-                      <Users className="h-5 w-5 mr-2 text-gray-500" />
-                      <span>Informations client</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-        
-        <TabsContent value="reservations" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Réservations récentes</CardTitle>
-              <CardDescription>
-                Consultez les réservations effectuées via le portail web.
+                Dernières réservations effectuées via votre site web
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="rounded-md border">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b bg-muted/50">
-                      <th className="py-3 px-4 text-left font-medium">ID</th>
-                      <th className="py-3 px-4 text-left font-medium">Client</th>
-                      <th className="py-3 px-4 text-left font-medium">Service</th>
-                      <th className="py-3 px-4 text-left font-medium">Date</th>
-                      <th className="py-3 px-4 text-left font-medium">Statut</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {mockBookings.map(booking => (
-                      <tr key={booking.id} className="border-b hover:bg-muted/50">
-                        <td className="py-3 px-4">{booking.id}</td>
-                        <td className="py-3 px-4">{booking.name}</td>
-                        <td className="py-3 px-4">
-                          {booking.serviceId === "airport-transfer" ? 'Transfert Aéroport' : 
-                           booking.serviceId === "city-tour" ? 'Visite de Ville' : 
-                           booking.serviceId === "airport" ? 'Transfert aéroport' : 
-                           booking.serviceId === "hourly" ? 'Service à l\'heure' : 
-                           booking.serviceId === "pointToPoint" ? 'Point à point' : 'Excursion journée'}
-                        </td>
-                        <td className="py-3 px-4">{`${booking.date} ${booking.time}`}</td>
-                        <td className="py-3 px-4">
-                          {getStatusBadge(booking.status)}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+              <div className="space-y-4">
+                {mockWebBookings.map((booking) => (
+                  <Card key={booking.id} className="overflow-hidden">
+                    <CardHeader className="pb-2">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <CardTitle className="text-lg">{booking.service.name}</CardTitle>
+                          <CardDescription>Réservation #{booking.id}</CardDescription>
+                        </div>
+                        {booking.status === "new" && (
+                          <Badge variant="outline" className="bg-blue-50 text-blue-600 hover:bg-blue-50">Nouveau</Badge>
+                        )}
+                        {booking.status === "confirmed" && (
+                          <Badge variant="outline" className="bg-green-50 text-green-600 hover:bg-green-50">Confirmé</Badge>
+                        )}
+                        {booking.status === "cancelled" && (
+                          <Badge variant="outline" className="bg-red-50 text-red-600 hover:bg-red-50">Annulé</Badge>
+                        )}
+                        {booking.status === "processed" && (
+                          <Badge>Traité</Badge>
+                        )}
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="flex items-center space-x-2">
+                          <Globe className="h-4 w-4 text-gray-500" />
+                          <span className="text-sm">{booking.service.name}</span>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Calendar className="h-4 w-4 text-gray-500" />
+                          <span className="text-sm">{booking.date} à {booking.time}</span>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <MapPin className="h-4 w-4 text-gray-500" />
+                          <span className="text-sm">{booking.pickup} → {booking.dropoff}</span>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Users className="h-4 w-4 text-gray-500" />
+                          <span className="text-sm">{booking.passengers} passagers</span>
+                        </div>
+                      </div>
+                    </CardContent>
+                    <CardFooter className="bg-gray-50 dark:bg-gray-800 flex justify-between">
+                      <div>
+                        <p className="text-sm font-medium">{booking.price.toFixed(2)} €</p>
+                        <p className="text-xs text-gray-500">{booking.isPaid ? "Payé" : "Non payé"}</p>
+                      </div>
+                      <Button size="sm">Voir les détails</Button>
+                    </CardFooter>
+                  </Card>
+                ))}
+              </div>
+            </CardContent>
+            <CardFooter>
+              <Button variant="outline" className="w-full">Voir toutes les réservations</Button>
+            </CardFooter>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="services">
+          <Card>
+            <CardHeader>
+              <CardTitle>Configuration des services</CardTitle>
+              <CardDescription>
+                Gérez les services disponibles à la réservation sur votre site
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <Card className="p-6">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h3 className="font-semibold">Transport aéroport</h3>
+                    <p className="text-sm text-gray-600">Navette depuis/vers l'aéroport</p>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Label htmlFor="airport-transfer-active" className="text-sm">Actif</Label>
+                    <Switch id="airport-transfer-active" defaultChecked />
+                  </div>
+                </div>
+                <Separator className="my-4" />
+                <div className="flex justify-between items-start">
+                  <div>
+                    <Label htmlFor="airport-transfer-vip" className="text-sm">Option VIP</Label>
+                    <Switch id="airport-transfer-vip" defaultChecked />
+                  </div>
+                </div>
+                <Separator className="my-4" />
+                <div className="flex justify-between items-start">
+                  <div>
+                    <Label htmlFor="airport-transfer-multi" className="text-sm">Multi-stops</Label>
+                    <Switch id="airport-transfer-multi" />
+                  </div>
+                </div>
+                <Separator className="my-4" />
+                <div className="flex justify-between items-start">
+                  <div>
+                    <Label htmlFor="airport-transfer-vehicle" className="text-sm">Type de véhicule</Label>
+                    <Select defaultValue="all">
+                      <SelectTrigger className="w-[180px] mt-1">
+                        <SelectValue placeholder="Tous les types" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Tous les types</SelectItem>
+                        <SelectItem value="sedan">Berline</SelectItem>
+                        <SelectItem value="van">Van</SelectItem>
+                        <SelectItem value="luxury">Luxe</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="airport-transfer-price" className="text-sm">Prix de base (€)</Label>
+                    <Input id="airport-transfer-price" type="number" defaultValue="50" className="w-[100px] mt-1" />
+                  </div>
+                </div>
+              </Card>
+
+              <Card className="p-6">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h3 className="font-semibold">Location avec chauffeur</h3>
+                    <p className="text-sm text-gray-600">Service de chauffeur privé à l'heure</p>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Label htmlFor="hourly-active" className="text-sm">Actif</Label>
+                    <Switch id="hourly-active" defaultChecked />
+                  </div>
+                </div>
+                <Separator className="my-4" />
+                <div className="flex justify-between items-start">
+                  <div>
+                    <Label htmlFor="hourly-min" className="text-sm">Durée minimale</Label>
+                    <Switch id="hourly-min" defaultChecked />
+                  </div>
+                </div>
+              </Card>
+
+              <div className="flex justify-center">
+                <Button className="w-full sm:w-auto">
+                  <Car className="h-4 w-4 mr-2" />
+                  Ajouter un nouveau service
+                </Button>
               </div>
             </CardContent>
           </Card>
         </TabsContent>
-        
-        <TabsContent value="integration" className="space-y-6">
+
+        <TabsContent value="integration">
           <Card>
             <CardHeader>
-              <CardTitle>Intégration</CardTitle>
+              <CardTitle>Intégration sur votre site web</CardTitle>
               <CardDescription>
-                Configurez l'intégration du formulaire de réservation sur votre site web.
+                Ajoutez facilement un module de réservation sur votre site internet
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="space-y-4">
-                <h3 className="text-lg font-medium">Code d'intégration</h3>
-                <div className="bg-muted p-4 rounded-md overflow-x-auto">
-                  <pre className="text-sm">
-                    {getIframeCode()}
-                  </pre>
+              <div className="flex flex-col md:flex-row md:items-center gap-4 justify-between">
+                <div>
+                  <h3 className="font-semibold">Module de réservation</h3>
+                  <p className="text-sm text-gray-600">Créez un widget personnalisé</p>
                 </div>
-                <Button variant="outline" size="sm" onClick={handleCopyCode}>
-                  <Copy className="mr-2 h-4 w-4" />
-                  Copier le code
+                <Button onClick={handleGenerateCode}>
+                  <Copy className="h-4 w-4 mr-2" />
+                  Générer le code
                 </Button>
               </div>
-              
               <Separator />
-              
-              <div className="space-y-4">
-                <h3 className="text-lg font-medium">Personnalisation</h3>
-                <div className="grid grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <Label htmlFor="integration-width">Largeur (px ou %)</Label>
-                    <Input id="integration-width" defaultValue="100%" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="integration-height">Hauteur (px)</Label>
-                    <Input id="integration-height" defaultValue="650" />
-                  </div>
+              <div className="grid md:grid-cols-2 gap-6">
+                <div>
+                  <Label htmlFor="domain-url" className="text-sm">URL de votre site</Label>
+                  <Input id="domain-url" placeholder="https://www.votresite.com" className="mt-1" />
+                </div>
+                <div>
+                  <Label htmlFor="api-key" className="text-sm">Clé API</Label>
+                  <Input id="api-key" placeholder="votre-clé-api" className="mt-1" />
                 </div>
               </div>
-              
-              <div className="p-4 bg-muted/50 rounded-md">
-                <h4 className="font-medium mb-2">Conseil d'intégration</h4>
-                <p className="text-sm text-muted-foreground">
-                  Pour une expérience optimale, nous recommandons de placer le formulaire de réservation sur une page dédiée de votre site web avec une largeur minimale de 600px.
-                </p>
-              </div>
+
+              <Card className="p-6 bg-gray-50 dark:bg-gray-800">
+                <div className="space-y-4">
+                  <div className="flex items-center">
+                    <Car className="h-5 w-5 mr-3 text-blue-600" />
+                    <h3 className="font-semibold">Aperçu du widget</h3>
+                  </div>
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <div>
+                      <Calendar className="h-5 w-5 mb-2 text-gray-500" />
+                      <p className="text-sm font-semibold">Date et heure flexibles</p>
+                      <p className="text-xs text-gray-500">Permet à vos clients de choisir le jour et l'heure qui leur conviennent</p>
+                    </div>
+                    <div>
+                      <MapPin className="h-5 w-5 mb-2 text-gray-500" />
+                      <p className="text-sm font-semibold">Adresses personnalisées</p>
+                      <p className="text-xs text-gray-500">Points de prise en charge et de dépose au choix</p>
+                    </div>
+                    <div>
+                      <Users className="h-5 w-5 mb-2 text-gray-500" />
+                      <p className="text-sm font-semibold">Options de service</p>
+                      <p className="text-xs text-gray-500">Sélection du nombre de passagers et des exigences spéciales</p>
+                    </div>
+                  </div>
+                </div>
+              </Card>
             </CardContent>
           </Card>
         </TabsContent>
       </Tabs>
 
-      {/* Dialog de configuration d'intégration */}
-      <Dialog open={configDialogOpen} onOpenChange={setConfigDialogOpen}>
-        <DialogContent className="sm:max-w-[600px]">
+      <Dialog open={isIntegrationOpen} onOpenChange={setIsIntegrationOpen}>
+        <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Code className="h-5 w-5" /> Configuration de l'intégration web
+            <DialogTitle>
+              <Code className="inline h-4 w-4 mr-2" />Code d'intégration
             </DialogTitle>
             <DialogDescription>
-              Personnalisez les paramètres d'intégration du formulaire de réservation sur votre site web.
+              Copiez ce code et collez-le sur votre site web.
             </DialogDescription>
           </DialogHeader>
-          
-          <div className="grid gap-6 py-4">
+          <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="domain">Domaine personnalisé</Label>
-              <div className="flex gap-2">
-                <span className="flex items-center bg-muted px-3 rounded-l-md border border-r-0">https://</span>
+              <Label htmlFor="integration-code" className="text-sm">Code HTML</Label>
+              <div className="relative">
                 <Input
-                  id="domain"
-                  placeholder="votre-domaine.com"
-                  value={customDomain}
-                  onChange={(e) => setCustomDomain(e.target.value)}
-                  className="rounded-l-none"
+                  id="integration-code"
+                  className="pr-10 font-mono text-xs"
+                  readOnly
+                  value={integrationCode}
+                  onClick={handleCopyCode}
                 />
               </div>
-              <p className="text-sm text-muted-foreground">
-                Le domaine sur lequel sera hébergé votre formulaire de réservation.
-              </p>
             </div>
-            
+
             <div className="space-y-2">
-              <Label>Méthode d'intégration</Label>
-              <RadioGroup value={integrationMethod} onValueChange={(value) => setIntegrationMethod(value as 'iframe' | 'javascript')}>
-                <div className="flex items-center space-x-2 border rounded-md p-3">
-                  <RadioGroupItem value="iframe" id="iframe" />
-                  <Label htmlFor="iframe" className="flex-grow cursor-pointer">
-                    <div className="font-medium">Iframe (Recommandé)</div>
-                    <div className="text-sm text-muted-foreground">Intégration simple via un cadre iframe.</div>
+              <Label htmlFor="where-to-place" className="">Où placer ce code?</Label>
+              <RadioGroup defaultValue="body">
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="body" id="body" />
+                  <Label htmlFor="body">
+                    Dans le corps de la page (<code className="text-xs bg-gray-100 p-1 rounded">&lt;body&gt;</code>)
                   </Label>
                 </div>
-                <div className="flex items-center space-x-2 border rounded-md p-3">
-                  <RadioGroupItem value="javascript" id="javascript" />
-                  <Label htmlFor="javascript" className="flex-grow cursor-pointer">
-                    <div className="font-medium">JavaScript</div>
-                    <div className="text-sm text-muted-foreground">Intégration avancée avec plus de flexibilité.</div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="div" id="div" />
+                  <Label htmlFor="div">
+                    Dans un div existant (où vous souhaitez afficher le widget)
                   </Label>
                 </div>
               </RadioGroup>
             </div>
-            
+
             <div className="space-y-2">
-              <Label htmlFor="theme">Thème d'affichage</Label>
-              <Select value={websiteTheme} onValueChange={setWebsiteTheme}>
-                <SelectTrigger id="theme">
-                  <SelectValue placeholder="Sélectionner un thème" />
+              <Label htmlFor="widget-style" className="text-sm">Style du widget</Label>
+              <Select defaultValue="light">
+                <SelectTrigger id="widget-style">
+                  <SelectValue placeholder="Choisir" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="light">Clair</SelectItem>
                   <SelectItem value="dark">Sombre</SelectItem>
-                  <SelectItem value="auto">Automatique (selon le thème du visiteur)</SelectItem>
+                  <SelectItem value="custom">Personnalisé (utilise vos couleurs)</SelectItem>
                 </SelectContent>
               </Select>
-              <p className="text-sm text-muted-foreground">
-                Le thème visuel du formulaire de réservation.
-              </p>
-            </div>
-            
-            <div className="bg-muted p-4 rounded-md space-y-2">
-              <h3 className="font-medium">Aperçu du code</h3>
-              <div className="bg-black text-white p-3 rounded-md overflow-x-auto text-sm font-mono">
-                {integrationMethod === 'iframe' ? getIframeCode() : getJavascriptCode()}
-              </div>
             </div>
           </div>
 
-          <DialogFooter className="flex justify-between items-center">
-            <Button variant="outline" onClick={() => setConfigDialogOpen(false)}>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsIntegrationOpen(false)}>
               <X className="h-4 w-4 mr-2" />
-              Annuler
+              Fermer
             </Button>
-            <div className="flex gap-3">
-              <Button variant="outline" onClick={handleCopyCode}>
-                <Copy className="h-4 w-4 mr-2" />
-                Copier le code
-              </Button>
-              <Button onClick={() => {
-                toast.success("Configuration d'intégration enregistrée");
-                setConfigDialogOpen(false);
-              }}>
-                <Check className="h-4 w-4 mr-2" />
-                Enregistrer
-              </Button>
-            </div>
+            <Button onClick={handleCopyCode}>
+              {copySuccess ? (
+                <>
+                  <Check className="h-4 w-4 mr-2" />
+                  Copié!
+                </>
+              ) : (
+                <>
+                  <Copy className="h-4 w-4 mr-2" />
+                  Copier le code
+                </>
+              )}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

@@ -40,7 +40,7 @@ export type { MER as ExtensionRequestType };
 
 // Export from other modules
 export * from './geolocation-types';
-export * from './client-types';
-export * from './reservation-types';
-export * from './planning-types';
-export * from './integration-types';
+export type * from './client-types';
+export type * from './reservation-types';
+export type * from './planning-types';
+export type * from './integration-types';
