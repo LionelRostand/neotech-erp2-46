@@ -1,11 +1,11 @@
 
 import React from 'react';
 
-const WebsiteSettings = () => {
+const WebsiteSettings: React.FC = () => {
   return (
-    <div>
-      <h2 className="text-3xl font-bold">Paramètres du site</h2>
-      <p className="mt-2 text-muted-foreground">Cette fonctionnalité sera disponible prochainement.</p>
+    <div className="space-y-6">
+      <h2 className="text-3xl font-bold">Paramètres</h2>
+      <p>Configuration des paramètres du site web.</p>
     </div>
   );
 };
