@@ -1,40 +1,25 @@
 
-import { Note, TransportBasic } from './base-types';
+// Define driver-related types for the Transport module
 
-export interface TransportDriver extends TransportBasic {
+export interface TransportDriver {
+  id: string;
   firstName: string;
   lastName: string;
   email: string;
   phone: string;
   licenseNumber: string;
-  licenseType: string;
   licenseExpiry: string;
-  status: 'active' | 'inactive' | 'vacation' | 'sick' | 'driving' | 'off-duty' | 'on-leave';
+  status: 'active' | 'inactive' | 'on_leave';
   rating: number;
-  address?: string;
-  photo?: string;
-  available?: boolean;
-  onLeave?: boolean;
   hireDate: string;
-  experience?: number;
-  preferredVehicleTypes?: string[];
-  preferredVehicleType?: string; // For backward compatibility
-  skills?: string[];
-  performance?: {
-    completedTrips: number;
-    customerRating: number;
-    onTimePercentage: number;
-    safetyScore: number;
-    onTimeRate?: number; // For backward compatibility
-    customerSatisfaction?: number; // For backward compatibility
-  };
-  name?: string; // Added for compatibility with ClientHistoryDialog
-  createdAt?: string; // Making createdAt optional
-  updatedAt?: string;
-  notes?: string[];
-  loyaltyPoints?: number; // Added for compatibility with ClientHistoryDialog
+  profileImage?: string;
+  address?: string;
 }
 
-export interface DriverNote extends Note {
+export interface DriverNote {
+  id: string;
   driverId: string;
+  content: string;
+  createdAt: string;
+  createdBy: string;
 }

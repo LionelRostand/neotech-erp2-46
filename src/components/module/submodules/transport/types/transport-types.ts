@@ -1,8 +1,11 @@
 
-// This file is deprecated. Please import from the specific type files or from './types/index.ts' instead
-// @ts-ignore
-// eslint-disable-next-line
-console.warn('Warning: Importing from transport-types.ts is deprecated. Please update imports to use the new type modules');
-
-// Re-export everything from the index file for backward compatibility
-export * from './index';
+// Re-export all types from the separate type modules for easy access
+export * from './base-types';
+export * from './driver-types';
+export * from './vehicle-types';
+export * from './map-types';
+export * from './client-types';
+export * from './reservation-types';
+export * from './planning-types';
+export * from './geolocation-types';
+export * from './integration-types';

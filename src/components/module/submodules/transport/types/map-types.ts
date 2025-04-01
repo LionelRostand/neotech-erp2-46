@@ -1,86 +1,62 @@
 
 import { TransportVehicle } from './vehicle-types';
 
+// Define map-related types for the Transport module
 export interface VehicleLocation {
-  vehicleId: string;
-  latitude: number;
-  longitude: number;
-  // Add lat/lng properties for compatibility
-  lat?: number;
-  lng?: number;
-  speed: number;
-  direction?: number; // Made direction optional to fix type errors
+  lat: number;
+  lng: number;
   timestamp: string;
-  lastUpdate?: string;
-  address?: string;
-  status: string;
-  heading?: number; // Added heading property
+  speed?: number;
+  heading?: number;
+  accuracy?: number;
 }
 
+// Combine vehicle with location data
 export interface TransportVehicleWithLocation extends TransportVehicle {
-  location: VehicleLocation;
-  driverName?: string;
-  color?: string;
-  mileage?: number; // Making mileage optional to fix the type errors
+  location?: VehicleLocation;
+  isMoving?: boolean;
+  lastUpdate?: string;
 }
 
 export interface MapConfig {
-  center: [number, number];
+  center: [number, number]; // [lat, lng]
   zoom: number;
-  showTraffic: boolean;
-  showGeofences: boolean;
-  refreshInterval: number;
-  // Add missing properties
+  showTraffic?: boolean;
+  showGeofences?: boolean;
+  refreshInterval?: number;
   maxZoom?: number;
   minZoom?: number;
-  tileProvider?: string;
-  showLabels?: boolean; // Added showLabels property
+  tileProvider?: 'osm' | 'mapbox' | 'google';
 }
 
 export interface MapHookResult {
+  mapRef: React.RefObject<HTMLDivElement>;
+  isMapLoaded: boolean;
   vehicles: TransportVehicleWithLocation[];
   selectedVehicle: TransportVehicleWithLocation | null;
   setSelectedVehicle: (vehicle: TransportVehicleWithLocation | null) => void;
   loading: boolean;
-  error: string | null;
-  // Add missing properties
-  mapRef?: React.RefObject<HTMLDivElement>;
-  isMapLoaded?: boolean;
-  zoomToVehicle?: (vehicleId: string) => void;
-  zoomToFitAllVehicles?: () => void;
-  trackingMode?: boolean;
-  setTrackingMode?: (mode: boolean) => void;
+  error: Error | null;
+  zoomToVehicle: (vehicleId: string) => void;
+  zoomToFitAllVehicles: () => void;
+  trackingMode: boolean;
+  setTrackingMode: (enabled: boolean) => void;
+  // Additional properties for advanced functionality
   mapInitialized?: boolean;
   mapConfig?: MapConfig;
   setMapConfig?: (config: MapConfig) => void;
   refreshMap?: () => void;
-  updateMarkers?: (vehicles: TransportVehicleWithLocation[]) => void;
+  updateMarkers?: (vehicles: TransportVehicleWithLocation[], selectedId?: string) => void;
 }
 
 export interface ExtensionRequest {
   id: string;
-  driverId: string;
-  driverName: string;
-  vehicleId: string;
-  vehicleName: string;
-  reason: string;
+  name: string;
+  description: string;
+  requestedBy: string;
+  requestDate: string;
   status: 'pending' | 'approved' | 'rejected';
-  requestedExtension: number; // in hours
-  originalEndTime: string;
-  newEndTime: string;
-  timestamp: string;
-  responseMessage?: string;
-  // Add missing properties used in components
-  requestId?: string;
-  clientName?: string;
-  originalEndDate?: string;
-  requestedEndDate?: string;
-  extensionReason?: string;
-  createdAt?: string;
-  reservationId?: string;
-  requestDate?: string; // Added requestDate property
-  requestedAt?: string;
-  extraTimeMinutes?: number;
-  additionalTime?: number;
-  extensionDays?: number;
+  priority: 'low' | 'medium' | 'high';
 }
+
+export type MapExtensionRequest = ExtensionRequest;

@@ -1,31 +1,24 @@
 
-import React, { useEffect, useRef } from 'react';
-import '../styles/leaflet-map.css';
+import React, { useEffect } from 'react';
 
-// This patch helps initialize Leaflet CSS when needed
-export const LeafletCssPatch = () => {
-  const cssInitRef = useRef(false);
-  
+/**
+ * This patch ensures Leaflet CSS is loaded for map components
+ */
+const LeafletCssPatch: React.FC = () => {
   useEffect(() => {
-    if (cssInitRef.current) return;
+    // Add Leaflet CSS if not already present
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+    link.integrity = 'sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=';
+    link.crossOrigin = '';
     
-    const initializeLeafletCss = async () => {
-      try {
-        // Make sure Leaflet CSS is loaded
-        const link = document.createElement('link');
-        link.rel = 'stylesheet';
-        link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
-        link.integrity = 'sha512-Rksm5RenBEKSKFjgI3a41vrjkw4EVPlJ3+OiI65vTjIdo9brlAacEuKOiQ5OFh7cOI1bkDwLqdLw3Zg0cRJAAQ==';
-        link.crossOrigin = '';
-        document.head.appendChild(link);
-        
-        cssInitRef.current = true;
-      } catch (error) {
-        console.error("Error initializing Leaflet CSS:", error);
-      }
-    };
-    
-    initializeLeafletCss();
+    // Check if the CSS is already loaded
+    const existingLink = document.querySelector('link[href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"]');
+    if (!existingLink) {
+      document.head.appendChild(link);
+      console.log('Leaflet CSS patch applied');
+    }
   }, []);
   
   return null;

@@ -1,7 +1,6 @@
-
 import React, { useState } from 'react';
 import { Calendar } from "@/components/ui/calendar";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
@@ -11,7 +10,6 @@ import { ChevronLeft, ChevronRight, Eye } from 'lucide-react';
 import { Reservation, getAddressString } from '../types/reservation-types';
 import ViewReservationDetailsDialog from './ViewReservationDetailsDialog';
 
-// Mock data for reservations
 const mockReservations: Reservation[] = [
   {
     id: "rsv-001",
@@ -98,18 +96,15 @@ const mockReservations: Reservation[] = [
   }
 ];
 
-// Adjust dates to be close to current date for demo
 const adjustReservationDates = (reservations: Reservation[]): Reservation[] => {
   const today = new Date();
   const currentYear = today.getFullYear();
   const currentMonth = today.getMonth();
   
   return reservations.map((reservation, index) => {
-    // Parse original dates
     const startDate = new Date(reservation.startDate);
     const endDate = new Date(reservation.endDate);
     
-    // Calculate new dates that are within the current month
     const newStartDate = new Date(currentYear, currentMonth, 5 + index * 3);
     const duration = Math.floor((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
     const newEndDate = new Date(currentYear, currentMonth, 5 + index * 3 + duration);
@@ -128,10 +123,8 @@ const ReservationsCalendar: React.FC = () => {
   const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false);
   const [calendarView, setCalendarView] = useState<'month' | 'week' | 'day'>('month');
   
-  // Adjust reservation dates to be around the current date
   const adjustedReservations = adjustReservationDates(mockReservations);
   
-  // Get reservations for the selected date
   const getReservationsForDate = (date: Date) => {
     return adjustedReservations.filter(reservation => {
       const start = new Date(reservation.startDate);
@@ -144,7 +137,6 @@ const ReservationsCalendar: React.FC = () => {
     ? getReservationsForDate(selectedDate) 
     : [];
 
-  // Get color for reservation status
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'confirmed':
@@ -162,19 +154,16 @@ const ReservationsCalendar: React.FC = () => {
     }
   };
 
-  // Handle view reservation details
   const handleViewDetails = (reservation: Reservation) => {
     setSelectedReservation(reservation);
     setIsDetailsDialogOpen(true);
   };
 
-  // Render content for a calendar cell
   const renderCellContent = (day: Date) => {
     const reservationsForDay = getReservationsForDate(day);
     
     if (reservationsForDay.length === 0) return null;
     
-    // If we have reservations for this day, show indicators
     return (
       <div className="absolute bottom-1 left-0 right-0 flex justify-center gap-1">
         {reservationsForDay.slice(0, 3).map((reservation, i) => (
@@ -286,8 +275,7 @@ const ReservationsCalendar: React.FC = () => {
                           </Badge>
                           <div className="font-medium mt-1">{reservation.clientName}</div>
                           <div className="text-sm text-muted-foreground">
-                            {reservation.pickupLocation.address.substring(0, 30)}
-                            {reservation.pickupLocation.address.length > 30 ? '...' : ''}
+                            {getAddressString(reservation.pickupLocation)}
                           </div>
                         </div>
                         <Button 

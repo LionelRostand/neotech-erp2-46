@@ -33,6 +33,8 @@ export interface WebBooking {
   clientName?: string; // Added properties used in components
   date?: string;
   time?: string;
+  serviceType?: string; // Add serviceType for compatibility
+  service?: string | WebBookingService; // Add service for existing code
 }
 
 export interface Reservation {
