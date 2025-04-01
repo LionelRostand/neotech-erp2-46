@@ -22,7 +22,8 @@ const WebsiteTemplatePreviewWrapper: React.FC = () => {
         </Button>
       </div>
       
-      <WebsiteTemplatePreview previewMode={true} />
+      {/* Updated to use correct props expected by WebsiteTemplatePreview */}
+      <WebsiteTemplatePreview />
     </div>
   );
 };

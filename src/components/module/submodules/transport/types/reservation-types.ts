@@ -1,4 +1,3 @@
-
 // Define types related to reservations and booking for the Transport module
 
 export interface LocationType {
@@ -8,6 +7,8 @@ export interface LocationType {
   name?: string;
   placeId?: string;
 }
+
+export type LocationInput = LocationType | string;
 
 export interface WebBookingService {
   id: string;
