@@ -1,202 +1,132 @@
 
 import React, { useState } from 'react';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import { Bold, Italic, Underline, Link, List, ListOrdered, Code, Image } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Bold, Italic, List, ListOrdered, AlignLeft, AlignCenter, AlignRight, Code, Heading1, Heading2, Image, Link } from 'lucide-react';
 
 interface ContentEditorProps {
-  initialContent?: string;
+  initialContent: string;
   onChange: (content: string) => void;
   onSave: () => void;
 }
 
 const ContentEditor: React.FC<ContentEditorProps> = ({
-  initialContent = '',
+  initialContent,
   onChange,
   onSave
 }) => {
-  const [content, setContent] = useState(initialContent);
-  const [mode, setMode] = useState<'wysiwyg' | 'markdown' | 'html'>('wysiwyg');
-  const [preview, setPreview] = useState(false);
-
-  const handleContentChange = (newContent: string) => {
-    setContent(newContent);
-    onChange(newContent);
+  const [content, setContent] = useState(initialContent || '');
+  const [editorMode, setEditorMode] = useState<'visual' | 'html' | 'markdown'>('visual');
+  
+  const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setContent(e.target.value);
+    onChange(e.target.value);
   };
-
-  const insertMarkdown = (markdownSyntax: string, placeholder: string = '') => {
-    const textarea = document.getElementById('markdown-editor') as HTMLTextAreaElement;
-    
-    if (textarea) {
-      const start = textarea.selectionStart;
-      const end = textarea.selectionEnd;
-      const selectedText = textarea.value.substring(start, end);
-      
-      let newText = '';
-      // If text is selected, wrap it with the markdown syntax
-      if (selectedText) {
-        newText = 
-          textarea.value.substring(0, start) + 
-          markdownSyntax.replace('{{text}}', selectedText) + 
-          textarea.value.substring(end);
-      } else {
-        // If no text is selected, insert markdown with placeholder
-        newText = 
-          textarea.value.substring(0, start) + 
-          markdownSyntax.replace('{{text}}', placeholder) + 
-          textarea.value.substring(end);
-      }
-      
-      handleContentChange(newText);
-      
-      // Set cursor position after insertion
-      setTimeout(() => {
-        textarea.focus();
-        const cursorPos = start + markdownSyntax.indexOf('{{text}}') + placeholder.length;
-        textarea.setSelectionRange(cursorPos, cursorPos + (selectedText ? selectedText.length : 0));
-      }, 0);
-    }
+  
+  const insertFormat = (format: string) => {
+    // Cette fonction ajouterait du formatage à l'éditeur visuel
+    // Elle serait implémentée en fonction de l'éditeur WYSIWYG choisi
+    console.log(`Inserting ${format} format`);
   };
-
-  const renderMarkdownPreview = (markdown: string) => {
-    // This is a very basic Markdown parser for preview purposes
-    // In a real implementation, you would use a library like marked or remark
-    let html = markdown
-      // Headers
-      .replace(/^# (.*?)$/gm, '<h1>$1</h1>')
-      .replace(/^## (.*?)$/gm, '<h2>$1</h2>')
-      .replace(/^### (.*?)$/gm, '<h3>$1</h3>')
-      // Bold
-      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-      // Italic
-      .replace(/\*(.*?)\*/g, '<em>$1</em>')
-      // Links
-      .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2">$1</a>')
-      // Images
-      .replace(/!\[(.*?)\]\((.*?)\)/g, '<img alt="$1" src="$2" />')
-      // Lists
-      .replace(/^\* (.*?)$/gm, '<ul><li>$1</li></ul>')
-      .replace(/^\d\. (.*?)$/gm, '<ol><li>$1</li></ol>')
-      // Line breaks
-      .replace(/\n/g, '<br />');
-      
-    return html;
-  };
-
+  
   return (
-    <div className="border rounded-md">
-      <Tabs defaultValue="wysiwyg" value={mode} onValueChange={(value) => setMode(value as any)}>
-        <div className="flex justify-between items-center p-2 border-b">
+    <div className="border rounded-md overflow-hidden">
+      <Tabs defaultValue="visual" value={editorMode} onValueChange={(v) => setEditorMode(v as any)}>
+        <div className="flex justify-between items-center px-3 py-2 border-b bg-muted/40">
           <TabsList>
-            <TabsTrigger value="wysiwyg">Éditeur Visuel</TabsTrigger>
+            <TabsTrigger value="visual">Visuel</TabsTrigger>
             <TabsTrigger value="markdown">Markdown</TabsTrigger>
             <TabsTrigger value="html">HTML</TabsTrigger>
           </TabsList>
-          
-          <div className="flex items-center space-x-2">
-            {mode === 'markdown' && !preview && (
-              <div className="flex space-x-1 mr-2">
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  onClick={() => insertMarkdown('**{{text}}**', 'texte en gras')}
-                >
-                  <Bold className="h-4 w-4" />
-                </Button>
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  onClick={() => insertMarkdown('*{{text}}*', 'texte en italique')}
-                >
-                  <Italic className="h-4 w-4" />
-                </Button>
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  onClick={() => insertMarkdown('[{{text}}](https://example.com)', 'lien')}
-                >
-                  <Link className="h-4 w-4" />
-                </Button>
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  onClick={() => insertMarkdown('![{{text}}](https://example.com/image.jpg)', 'description')}
-                >
-                  <Image className="h-4 w-4" />
-                </Button>
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  onClick={() => insertMarkdown('* {{text}}', 'élément de liste')}
-                >
-                  <List className="h-4 w-4" />
-                </Button>
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  onClick={() => insertMarkdown('1. {{text}}', 'élément numéroté')}
-                >
-                  <ListOrdered className="h-4 w-4" />
-                </Button>
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  onClick={() => insertMarkdown('`{{text}}`', 'code')}
-                >
-                  <Code className="h-4 w-4" />
-                </Button>
-              </div>
-            )}
-            
-            {mode === 'markdown' && (
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => setPreview(!preview)}
-              >
-                {preview ? 'Éditer' : 'Aperçu'}
-              </Button>
-            )}
-            
-            <Button size="sm" onClick={onSave}>Sauvegarder</Button>
-          </div>
+          <Button size="sm" onClick={onSave}>Enregistrer</Button>
         </div>
-
-        <TabsContent value="wysiwyg" className="p-0">
+        
+        <TabsContent value="visual" className="p-0">
+          <div className="p-2 border-b bg-muted/20">
+            <div className="flex flex-wrap gap-1">
+              <Button variant="ghost" size="sm" onClick={() => insertFormat('bold')}>
+                <Bold className="h-4 w-4" />
+              </Button>
+              <Button variant="ghost" size="sm" onClick={() => insertFormat('italic')}>
+                <Italic className="h-4 w-4" />
+              </Button>
+              <Button variant="ghost" size="sm" onClick={() => insertFormat('h1')}>
+                <Heading1 className="h-4 w-4" />
+              </Button>
+              <Button variant="ghost" size="sm" onClick={() => insertFormat('h2')}>
+                <Heading2 className="h-4 w-4" />
+              </Button>
+              <Button variant="ghost" size="sm" onClick={() => insertFormat('list')}>
+                <List className="h-4 w-4" />
+              </Button>
+              <Button variant="ghost" size="sm" onClick={() => insertFormat('ordered-list')}>
+                <ListOrdered className="h-4 w-4" />
+              </Button>
+              <Button variant="ghost" size="sm" onClick={() => insertFormat('align-left')}>
+                <AlignLeft className="h-4 w-4" />
+              </Button>
+              <Button variant="ghost" size="sm" onClick={() => insertFormat('align-center')}>
+                <AlignCenter className="h-4 w-4" />
+              </Button>
+              <Button variant="ghost" size="sm" onClick={() => insertFormat('align-right')}>
+                <AlignRight className="h-4 w-4" />
+              </Button>
+              <Button variant="ghost" size="sm" onClick={() => insertFormat('link')}>
+                <Link className="h-4 w-4" />
+              </Button>
+              <Button variant="ghost" size="sm" onClick={() => insertFormat('image')}>
+                <Image className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
           <div className="p-4 min-h-[300px]">
-            {/* Here would go a rich text editor like TinyMCE, CKEditor or Quill */}
-            <div className="bg-muted/30 p-4 text-center h-full flex flex-col items-center justify-center">
-              <p className="text-muted-foreground mb-4">Éditeur WYSIWYG</p>
-              <p className="text-sm">Dans une implémentation réelle, un éditeur riche comme TinyMCE, CKEditor ou Quill serait intégré ici.</p>
+            <div className="prose max-w-none">
+              <h1>Exemple de titre</h1>
+              <p>Ceci est un exemple de contenu éditable. Dans une version complète, un éditeur WYSIWYG (TinyMCE, Quill, etc.) serait intégré ici.</p>
+              <ul>
+                <li>Élément de liste 1</li>
+                <li>Élément de liste 2</li>
+                <li>Élément de liste 3</li>
+              </ul>
             </div>
           </div>
         </TabsContent>
-
+        
         <TabsContent value="markdown" className="p-0">
-          {preview ? (
-            <div 
-              className="p-4 min-h-[300px] prose prose-sm max-w-none" 
-              dangerouslySetInnerHTML={{ __html: renderMarkdownPreview(content) }}
-            />
-          ) : (
-            <Textarea
-              id="markdown-editor"
-              className="min-h-[300px] border-0 rounded-none font-mono"
-              placeholder="Écrivez du contenu en Markdown..."
-              value={content}
-              onChange={(e) => handleContentChange(e.target.value)}
-            />
-          )}
+          <div className="p-2 border-b bg-muted/20">
+            <div className="flex gap-1">
+              <Button variant="ghost" size="sm" onClick={() => insertFormat('md-bold')}>
+                <Bold className="h-4 w-4" />
+              </Button>
+              <Button variant="ghost" size="sm" onClick={() => insertFormat('md-italic')}>
+                <Italic className="h-4 w-4" />
+              </Button>
+              <Button variant="ghost" size="sm" onClick={() => insertFormat('md-heading')}>
+                <Heading1 className="h-4 w-4" />
+              </Button>
+              <Button variant="ghost" size="sm" onClick={() => insertFormat('md-link')}>
+                <Link className="h-4 w-4" />
+              </Button>
+              <Button variant="ghost" size="sm" onClick={() => insertFormat('md-code')}>
+                <Code className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+          <textarea
+            className="w-full h-[300px] p-4 font-mono text-sm"
+            value={content || `# Titre\n\nCeci est un paragraphe en **markdown**.\n\n- Item 1\n- Item 2\n- Item 3`}
+            onChange={handleContentChange}
+            placeholder="Écrivez votre contenu en markdown ici..."
+          ></textarea>
         </TabsContent>
-
+        
         <TabsContent value="html" className="p-0">
-          <Textarea
-            className="min-h-[300px] border-0 rounded-none font-mono"
-            placeholder="Écrivez du code HTML personnalisé..."
-            value={content}
-            onChange={(e) => handleContentChange(e.target.value)}
-          />
+          <textarea
+            className="w-full h-[350px] p-4 font-mono text-sm"
+            value={content || `<h1>Titre</h1>\n<p>Ceci est un paragraphe avec du <strong>HTML</strong>.</p>\n<ul>\n  <li>Item 1</li>\n  <li>Item 2</li>\n  <li>Item 3</li>\n</ul>`}
+            onChange={handleContentChange}
+            placeholder="Écrivez votre HTML ici..."
+          ></textarea>
         </TabsContent>
       </Tabs>
     </div>

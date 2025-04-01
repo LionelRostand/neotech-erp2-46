@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { 
@@ -14,7 +15,13 @@ import {
   MapPin,
   Calendar,
   Play,
-  SlidersVertical
+  SlidersVertical,
+  ShoppingCart,
+  FileCheck,
+  Share2,
+  BookOpen,
+  Users,
+  Phone
 } from 'lucide-react';
 
 interface DynamicBlockProps {
@@ -118,6 +125,29 @@ export const blockCategories = [
     ]
   },
   {
+    title: "E-Commerce",
+    blocks: [
+      {
+        id: "products",
+        title: "Produits",
+        icon: <ShoppingCart className="h-10 w-10 text-primary" />,
+        description: "Affichez des produits de votre catalogue"
+      },
+      {
+        id: "featured-products",
+        title: "Produits en vedette",
+        icon: <ShoppingCart className="h-10 w-10 text-primary" />,
+        description: "Mettez en avant certains produits"
+      },
+      {
+        id: "checkout",
+        title: "Panier & Commande",
+        icon: <FileCheck className="h-10 w-10 text-primary" />,
+        description: "Processus de paiement simplifié"
+      }
+    ]
+  },
+  {
     title: "Éléments d'information",
     blocks: [
       {
@@ -131,6 +161,35 @@ export const blockCategories = [
         title: "Calendrier",
         icon: <Calendar className="h-10 w-10 text-primary" />,
         description: "Affichage d'événements ou réservations"
+      },
+      {
+        id: "social",
+        title: "Réseaux sociaux",
+        icon: <Share2 className="h-10 w-10 text-primary" />,
+        description: "Partage sur les réseaux sociaux"
+      }
+    ]
+  },
+  {
+    title: "Pages spéciales",
+    blocks: [
+      {
+        id: "about",
+        title: "À propos",
+        icon: <BookOpen className="h-10 w-10 text-primary" />,
+        description: "Page de présentation de l'entreprise"
+      },
+      {
+        id: "team",
+        title: "Équipe",
+        icon: <Users className="h-10 w-10 text-primary" />,
+        description: "Présentation de votre équipe"
+      },
+      {
+        id: "contact",
+        title: "Contact",
+        icon: <Phone className="h-10 w-10 text-primary" />,
+        description: "Page de contact complète"
       }
     ]
   }

@@ -1,9 +1,7 @@
 
 import React, { useState } from 'react';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { 
   Select, 
   SelectContent, 
@@ -11,263 +9,195 @@ import {
   SelectTrigger, 
   SelectValue 
 } from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
-import { Switch } from '@/components/ui/switch';
-import { ArrowRight } from 'lucide-react';
-
-interface AnimationsPanelProps {
-  onApplyAnimation: (animation: AnimationConfig) => void;
-}
+import { Card, CardContent } from '@/components/ui/card';
+import { Play } from 'lucide-react';
 
 export interface AnimationConfig {
   type: string;
   duration: number;
   delay: number;
-  easing: string;
-  direction?: string;
-  iterations?: number;
-  trigger?: 'load' | 'scroll' | 'hover' | 'click';
-  custom?: string;
+  curve: string;
+  repeat: number;
+  direction: 'normal' | 'reverse' | 'alternate';
 }
 
-const predefinedAnimations = [
-  { name: 'Fade In', value: 'fade-in', preview: 'animate-fade-in' },
-  { name: 'Slide In (Left)', value: 'slide-in-left', preview: 'animate-slide-in-left' },
-  { name: 'Slide In (Right)', value: 'slide-in-right', preview: 'animate-slide-in-right' },
-  { name: 'Bounce', value: 'bounce', preview: 'animate-bounce' },
-  { name: 'Scale Up', value: 'scale-up', preview: 'animate-scale-in' },
-  { name: 'Pulse', value: 'pulse', preview: 'animate-pulse' },
-  { name: 'Spin', value: 'spin', preview: 'animate-spin' },
-  { name: 'Flip', value: 'flip', preview: 'animate-flip' },
-];
+interface AnimationsPanelProps {
+  onApplyAnimation: (config: AnimationConfig) => void;
+}
 
 const AnimationsPanel: React.FC<AnimationsPanelProps> = ({ onApplyAnimation }) => {
-  const [activeTab, setActiveTab] = useState('preset');
-  const [selectedAnimation, setSelectedAnimation] = useState<string>('fade-in');
-  const [duration, setDuration] = useState<number>(300);
-  const [delay, setDelay] = useState<number>(0);
-  const [easing, setEasing] = useState<string>('ease');
-  const [trigger, setTrigger] = useState<'load' | 'scroll' | 'hover' | 'click'>('load');
-  const [iterations, setIterations] = useState<number>(1);
-  const [infinite, setInfinite] = useState<boolean>(false);
-  const [direction, setDirection] = useState<string>('normal');
-  const [customCSS, setCustomCSS] = useState<string>('');
-  const [previewActive, setPreviewActive] = useState<boolean>(false);
+  const [animation, setAnimation] = useState<AnimationConfig>({
+    type: 'fade-in',
+    duration: 1000,
+    delay: 0,
+    curve: 'ease-in-out',
+    repeat: 0,
+    direction: 'normal'
+  });
 
-  const handleApplyAnimation = () => {
-    onApplyAnimation({
-      type: activeTab === 'preset' ? selectedAnimation : 'custom',
-      duration,
-      delay,
-      easing,
-      direction,
-      iterations: infinite ? -1 : iterations,
-      trigger,
-      custom: activeTab === 'custom' ? customCSS : undefined,
-    });
+  const handleChange = (key: keyof AnimationConfig, value: string | number) => {
+    setAnimation(prev => ({
+      ...prev,
+      [key]: value
+    }));
   };
 
-  const triggerPreview = () => {
-    setPreviewActive(false);
-    setTimeout(() => setPreviewActive(true), 10);
+  const handleApply = () => {
+    onApplyAnimation(animation);
   };
 
-  const getAnimationClass = () => {
-    const animation = predefinedAnimations.find(a => a.value === selectedAnimation);
-    return animation ? animation.preview : '';
+  const previewAnimation = () => {
+    // Prévisualisation de l'animation serait implémentée ici
+    console.log('Prévisualisation:', animation);
   };
 
   return (
-    <div className="space-y-4 p-4 max-w-md">
-      <div className="flex justify-between items-center">
-        <h3 className="text-lg font-medium">Animations</h3>
-        <Button size="sm" onClick={handleApplyAnimation}>Appliquer</Button>
-      </div>
-
-      <Tabs defaultValue="preset" value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid grid-cols-2">
-          <TabsTrigger value="preset">Prédéfinies</TabsTrigger>
-          <TabsTrigger value="custom">Personnalisées</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="preset" className="space-y-4 pt-4">
+    <div className="p-4 space-y-8">
+      <div className="space-y-6">
+        <h3 className="text-sm font-semibold text-muted-foreground tracking-wide uppercase">
+          Configuration de l'animation
+        </h3>
+        
+        <div className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="animation-type">Type d'animation</Label>
             <Select 
-              value={selectedAnimation} 
-              onValueChange={(value) => {
-                setSelectedAnimation(value);
-                triggerPreview();
-              }}
+              value={animation.type} 
+              onValueChange={(value) => handleChange('type', value)}
             >
-              <SelectTrigger id="animation-type">
-                <SelectValue placeholder="Sélectionner une animation" />
+              <SelectTrigger>
+                <SelectValue placeholder="Sélectionner un type" />
               </SelectTrigger>
               <SelectContent>
-                {predefinedAnimations.map((animation) => (
-                  <SelectItem key={animation.value} value={animation.value}>
-                    {animation.name}
-                  </SelectItem>
-                ))}
+                <SelectItem value="fade-in">Fondu (Fade In)</SelectItem>
+                <SelectItem value="slide-up">Glissement vers le haut</SelectItem>
+                <SelectItem value="slide-down">Glissement vers le bas</SelectItem>
+                <SelectItem value="slide-left">Glissement vers la gauche</SelectItem>
+                <SelectItem value="slide-right">Glissement vers la droite</SelectItem>
+                <SelectItem value="zoom-in">Zoom avant</SelectItem>
+                <SelectItem value="zoom-out">Zoom arrière</SelectItem>
+                <SelectItem value="bounce">Rebond</SelectItem>
+                <SelectItem value="rotate">Rotation</SelectItem>
+                <SelectItem value="pulse">Pulse</SelectItem>
               </SelectContent>
             </Select>
           </div>
-
-          <div className="border rounded-md p-6 flex justify-center items-center bg-muted/30 relative overflow-hidden">
-            <div 
-              className={`p-4 bg-primary text-primary-foreground rounded-md flex items-center justify-center ${previewActive ? getAnimationClass() : ''}`}
-              style={{ 
-                animationDuration: `${duration}ms`,
-                animationDelay: `${delay}ms`, 
-                animationTimingFunction: easing,
-                animationDirection: direction as any,
-                animationIterationCount: infinite ? 'infinite' : iterations.toString()
-              }}
-            >
-              <ArrowRight className="mr-2 h-5 w-5" /> Aperçu Animation
-            </div>
-            <Button 
-              variant="secondary" 
-              size="sm" 
-              className="absolute bottom-2 right-2"
-              onClick={triggerPreview}
-            >
-              Rejouer
-            </Button>
-          </div>
-        </TabsContent>
-
-        <TabsContent value="custom" className="space-y-4 pt-4">
+          
           <div className="space-y-2">
-            <Label htmlFor="custom-css">CSS personnalisé</Label>
-            <Textarea
-              id="custom-css"
-              placeholder="@keyframes custom-animation { /* ... */ }"
-              value={customCSS}
-              onChange={(e) => setCustomCSS(e.target.value)}
-              className="font-mono text-sm min-h-[150px]"
+            <div className="flex justify-between">
+              <Label htmlFor="duration">Durée (ms): {animation.duration}</Label>
+            </div>
+            <Slider 
+              id="duration"
+              value={[animation.duration]}
+              min={100}
+              max={5000}
+              step={100}
+              onValueChange={(value) => handleChange('duration', value[0])}
             />
           </div>
-        </TabsContent>
-      </Tabs>
-
-      <div className="space-y-4 pt-2">
-        <div className="space-y-2">
-          <div className="flex justify-between">
-            <Label htmlFor="duration">Durée ({duration}ms)</Label>
-          </div>
-          <Slider
-            id="duration"
-            min={100}
-            max={2000}
-            step={100}
-            value={[duration]}
-            onValueChange={(value) => setDuration(value[0])}
-            className="cursor-pointer"
-          />
-        </div>
-
-        <div className="space-y-2">
-          <div className="flex justify-between">
-            <Label htmlFor="delay">Délai ({delay}ms)</Label>
-          </div>
-          <Slider
-            id="delay"
-            min={0}
-            max={2000}
-            step={100}
-            value={[delay]}
-            onValueChange={(value) => setDelay(value[0])}
-            className="cursor-pointer"
-          />
-        </div>
-
-        <div className="grid grid-cols-2 gap-4">
+          
           <div className="space-y-2">
-            <Label htmlFor="easing">Effet de transition</Label>
-            <Select value={easing} onValueChange={setEasing}>
-              <SelectTrigger id="easing">
-                <SelectValue />
+            <div className="flex justify-between">
+              <Label htmlFor="delay">Délai (ms): {animation.delay}</Label>
+            </div>
+            <Slider 
+              id="delay"
+              value={[animation.delay]}
+              min={0}
+              max={2000}
+              step={100}
+              onValueChange={(value) => handleChange('delay', value[0])}
+            />
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="curve">Courbe d'animation</Label>
+            <Select 
+              value={animation.curve} 
+              onValueChange={(value) => handleChange('curve', value)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Courbe" />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="linear">Linéaire</SelectItem>
                 <SelectItem value="ease">Ease</SelectItem>
                 <SelectItem value="ease-in">Ease In</SelectItem>
                 <SelectItem value="ease-out">Ease Out</SelectItem>
                 <SelectItem value="ease-in-out">Ease In Out</SelectItem>
-                <SelectItem value="linear">Linear</SelectItem>
+                <SelectItem value="cubic-bezier">Cubic Bezier</SelectItem>
               </SelectContent>
             </Select>
           </div>
-
+          
           <div className="space-y-2">
-            <Label htmlFor="trigger">Déclencheur</Label>
-            <Select value={trigger} onValueChange={(value: any) => setTrigger(value)}>
-              <SelectTrigger id="trigger">
-                <SelectValue />
+            <Label htmlFor="repeat">Répétitions</Label>
+            <Select 
+              value={animation.repeat.toString()} 
+              onValueChange={(value) => handleChange('repeat', parseInt(value))}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Répétitions" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="load">Chargement</SelectItem>
-                <SelectItem value="scroll">Défilement</SelectItem>
-                <SelectItem value="hover">Survol</SelectItem>
-                <SelectItem value="click">Clic</SelectItem>
+                <SelectItem value="0">Aucune</SelectItem>
+                <SelectItem value="1">1 fois</SelectItem>
+                <SelectItem value="2">2 fois</SelectItem>
+                <SelectItem value="3">3 fois</SelectItem>
+                <SelectItem value="5">5 fois</SelectItem>
+                <SelectItem value="10">10 fois</SelectItem>
+                <SelectItem value="-1">Infini</SelectItem>
               </SelectContent>
             </Select>
           </div>
-        </div>
-
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="iterations">Nombre de répétitions</Label>
-            <Input
-              id="iterations"
-              type="number"
-              min={1}
-              value={iterations}
-              onChange={(e) => setIterations(parseInt(e.target.value) || 1)}
-              disabled={infinite}
-            />
-          </div>
-
+          
           <div className="space-y-2">
             <Label htmlFor="direction">Direction</Label>
-            <Select value={direction} onValueChange={setDirection}>
-              <SelectTrigger id="direction">
-                <SelectValue />
+            <Select 
+              value={animation.direction} 
+              onValueChange={(value) => handleChange('direction', value as 'normal' | 'reverse' | 'alternate')}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Direction" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="normal">Normal</SelectItem>
-                <SelectItem value="reverse">Inversée</SelectItem>
+                <SelectItem value="reverse">Inverse</SelectItem>
                 <SelectItem value="alternate">Alternée</SelectItem>
-                <SelectItem value="alternate-reverse">Alternée inversée</SelectItem>
               </SelectContent>
             </Select>
           </div>
         </div>
-
-        <div className="flex items-center space-x-2 pt-2">
-          <Switch
-            id="infinite"
-            checked={infinite}
-            onCheckedChange={setInfinite}
-          />
-          <Label htmlFor="infinite">Animation infinie</Label>
-        </div>
+      </div>
+      
+      <Card className="mt-6">
+        <CardContent className="p-4">
+          <h3 className="text-sm font-medium mb-4">Prévisualisation</h3>
+          <div className="bg-muted/50 h-32 flex items-center justify-center rounded-md">
+            <div className="text-center">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={previewAnimation}
+                className="mb-2"
+              >
+                <Play className="h-4 w-4 mr-2" />
+                Prévisualiser
+              </Button>
+              <p className="text-xs text-muted-foreground">Cliquez pour tester l'animation</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+      
+      <div className="flex justify-end">
+        <Button onClick={handleApply}>Appliquer l'animation</Button>
       </div>
     </div>
   );
 };
-
-const Textarea = React.forwardRef<HTMLTextAreaElement, React.TextareaHTMLAttributes<HTMLTextAreaElement>>(
-  ({ className, ...props }, ref) => {
-    return (
-      <textarea
-        className={`flex min-h-[60px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 ${className}`}
-        ref={ref}
-        {...props}
-      />
-    )
-  }
-);
-Textarea.displayName = "Textarea";
 
 export default AnimationsPanel;

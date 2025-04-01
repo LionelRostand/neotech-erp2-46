@@ -16,7 +16,10 @@ export const WebsiteRoutes = (
     <Route path="theme" element={<SubmodulePage moduleId={11} submoduleId="website-theme" />} />
     <Route path="media" element={<SubmodulePage moduleId={11} submoduleId="website-media" />} />
     <Route path="modules" element={<SubmodulePage moduleId={11} submoduleId="website-modules" />} />
+    <Route path="ecommerce" element={<SubmodulePage moduleId={11} submoduleId="website-ecommerce" />} />
+    <Route path="seo" element={<SubmodulePage moduleId={11} submoduleId="website-seo" />} />
     <Route path="public" element={<SubmodulePage moduleId={11} submoduleId="website-public" />} />
+    <Route path="domains" element={<SubmodulePage moduleId={11} submoduleId="website-domains" />} />
     <Route path="settings" element={<SubmodulePage moduleId={11} submoduleId="website-settings" />} />
     <Route path="preview/templates/:templateId" element={<WebsiteTemplatePreview />} />
   </Route>
