@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -26,6 +25,7 @@ import {
   DialogTitle,
   DialogTrigger 
 } from '@/components/ui/dialog';
+import { formatFileSize } from '@/components/module/documents/utils/formatUtils';
 
 interface MediaItem {
   id: string;
@@ -101,13 +101,6 @@ const WebsiteMedia: React.FC = () => {
     
     return true;
   });
-
-  const formatSize = (bytes: number) => {
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    if (bytes === 0) return '0 Byte';
-    const i = Math.floor(Math.log(bytes) / Math.log(1024));
-    return Math.round((bytes / Math.pow(1024, i))) + ' ' + sizes[i];
-  };
 
   const handleDeleteMedia = (id: string) => {
     setMediaItems(prev => prev.filter(item => item.id !== id));
@@ -269,7 +262,7 @@ const MediaCard: React.FC<MediaCardProps> = ({ item, onDelete }) => {
       <CardContent className="p-3">
         <div className="truncate font-medium">{item.name}</div>
         <div className="text-xs text-muted-foreground flex justify-between mt-1">
-          <span>{formatSize(item.size)}</span>
+          <span>{formatFileSize(item.size)}</span>
           <span>{item.uploadDate.toLocaleDateString()}</span>
         </div>
       </CardContent>
@@ -321,7 +314,7 @@ const MediaCard: React.FC<MediaCardProps> = ({ item, onDelete }) => {
           </div>
           <div className="text-sm text-muted-foreground">
             <p>Dimensions: {item.dimensions ? `${item.dimensions.width}x${item.dimensions.height}` : 'Non disponible'}</p>
-            <p>Taille: {formatSize(item.size)}</p>
+            <p>Taille: {formatFileSize(item.size)}</p>
             <p>Téléversé le: {item.uploadDate.toLocaleDateString()}</p>
           </div>
         </DialogContent>

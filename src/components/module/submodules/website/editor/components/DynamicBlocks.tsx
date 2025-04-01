@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { 
@@ -15,7 +14,7 @@ import {
   MapPin,
   Calendar,
   Play,
-  Slideshow
+  SlidersVertical
 } from 'lucide-react';
 
 interface DynamicBlockProps {
@@ -67,7 +66,7 @@ export const blockCategories = [
       {
         id: "carousel",
         title: "Carrousel",
-        icon: <Slideshow className="h-10 w-10 text-primary" />,
+        icon: <SlidersVertical className="h-10 w-10 text-primary" />,
         description: "Diaporama d'images et contenus"
       }
     ]
