@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Route } from "react-router-dom";
 import ModuleLayout from "@/components/module/ModuleLayout";
@@ -123,12 +124,20 @@ export const OtherModulesRoutes = [
       element={<SubmodulePage moduleId={11} submoduleId="website-design" />} 
     />
     <Route 
+      path="theme" 
+      element={<SubmodulePage moduleId={11} submoduleId="website-theme" />} 
+    />
+    <Route 
       path="media" 
       element={<SubmodulePage moduleId={11} submoduleId="website-media" />} 
     />
     <Route 
       path="modules" 
       element={<SubmodulePage moduleId={11} submoduleId="website-modules" />} 
+    />
+    <Route 
+      path="public" 
+      element={<SubmodulePage moduleId={11} submoduleId="website-public" />} 
     />
     <Route 
       path="settings" 
