@@ -8,12 +8,28 @@ export interface TransportDriver {
   email: string;
   phone: string;
   licenseNumber: string;
+  licenseType?: string;
   licenseExpiry: string;
-  status: 'active' | 'inactive' | 'on_leave';
+  status: 'active' | 'inactive' | 'on_leave' | 'driving' | 'off-duty';
   rating: number;
   hireDate: string;
   profileImage?: string;
+  photo?: string;
   address?: string;
+  available?: boolean;
+  onLeave?: boolean;
+  experience?: number;
+  skills?: string[];
+  preferredVehicleType?: string;
+  preferredVehicleTypes?: string[];
+  performance?: {
+    completedTrips?: number;
+    onTimeRate?: number;
+    satisfactionScore?: number;
+    cancelledTrips?: number;
+    totalDistance?: number;
+    avgRating?: number;
+  };
 }
 
 export interface DriverNote {

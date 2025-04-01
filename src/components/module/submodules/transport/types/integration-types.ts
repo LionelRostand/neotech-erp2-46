@@ -1,70 +1,94 @@
 
-import { TransportService } from './base-types';
+// Définition des types d'intégration pour le module transport
 
 export interface WebsiteIntegration {
   id: string;
-  websiteModuleId: string;
-  pageId?: string;
-  sectionId?: string;
+  name?: string;
+  moduleId: string;
+  pageId: string;
+  type: 'iframe' | 'javascript' | 'api';
   status: 'active' | 'inactive' | 'pending';
-  formConfig: WebBookingFormConfig;
-  designConfig: WebBookingDesignConfig;
-  lastUpdated: string;
+  settings?: Record<string, any>;
   createdAt: string;
+  updatedAt: string;
+  accessToken?: string;
+  allowedOrigins?: string[];
+  customizationOptions?: Record<string, any>;
 }
 
 export interface WebBookingFormConfig {
-  enableDriverSelection: boolean;
-  requireUserAccount: boolean;
-  enablePaymentOnline: boolean;
-  defaultService: string;
-  requirePhoneNumber: boolean;
-  advanceBookingHours: number;
-  maxBookingDaysInFuture: number;
-  displayPricing: boolean;
-  availableServices: string[];
-  customFields?: WebBookingCustomField[];
-}
-
-export interface WebBookingCustomField {
-  id: string;
-  name: string;
-  label: string;
-  type: 'text' | 'select' | 'checkbox' | 'number' | 'date' | 'time';
-  required: boolean;
-  options?: { label: string; value: string }[];
-  placeholder?: string;
-  defaultValue?: string;
-}
-
-export interface WebBookingDesignConfig {
-  colorScheme: 'light' | 'dark' | 'auto';
+  showHeader: boolean;
+  showLogo: boolean;
   primaryColor: string;
   secondaryColor: string;
   fontFamily: string;
-  borderRadius: 'none' | 'small' | 'medium' | 'large';
-  customCSS?: string;
-  logo?: string;
-  formWidth: 'narrow' | 'medium' | 'wide' | 'full';
+  fields: {
+    name: {
+      required: boolean;
+      visible: boolean;
+    };
+    email: {
+      required: boolean;
+      visible: boolean;
+    };
+    phone: {
+      required: boolean;
+      visible: boolean;
+    };
+    company: {
+      required: boolean;
+      visible: boolean;
+    };
+    message: {
+      required: boolean;
+      visible: boolean;
+    };
+    service: {
+      required: boolean;
+      visible: boolean;
+      options: string[];
+    };
+  };
+  steps: string[];
+  successMessage: string;
+  redirectUrl?: string;
 }
 
-export const defaultFormConfig: WebBookingFormConfig = {
-  enableDriverSelection: true,
-  requireUserAccount: false,
-  enablePaymentOnline: true,
-  defaultService: 'airport',
-  requirePhoneNumber: true,
-  advanceBookingHours: 3,
-  maxBookingDaysInFuture: 30,
-  displayPricing: true,
-  availableServices: ['airport', 'hourly', 'pointToPoint', 'dayTour'],
-};
+export interface WebBooking {
+  id: string;
+  clientId?: string;
+  clientName: string;
+  clientPhone?: string;
+  clientEmail?: string;
+  serviceId?: string;
+  service?: string;
+  pickupLocation: string;
+  dropoffLocation?: string;
+  pickupTime: string;
+  passengers: number;
+  status: 'pending' | 'confirmed' | 'cancelled';
+  source: 'website' | 'app' | 'phone' | 'email';
+  notes?: string;
+  createdAt: string;
+  vehicleType?: string;
+  estimatedPrice?: number;
+}
 
-export const defaultDesignConfig: WebBookingDesignConfig = {
-  colorScheme: 'light',
-  primaryColor: '#3b82f6',
-  secondaryColor: '#6b7280',
-  fontFamily: 'sans-serif',
-  borderRadius: 'medium',
-  formWidth: 'medium',
-};
+export interface ApiIntegrationCredentials {
+  clientId: string;
+  clientSecret: string;
+  apiKey: string;
+  scopes: string[];
+  createdAt: string;
+  expiresAt?: string;
+}
+
+export interface IntegrationProvider {
+  id: string;
+  name: string;
+  logo: string;
+  type: 'booking' | 'payment' | 'crm' | 'notification';
+  status: 'active' | 'inactive' | 'deprecated';
+  settings?: Record<string, any>;
+  documentationUrl: string;
+}

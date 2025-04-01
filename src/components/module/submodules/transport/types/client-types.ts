@@ -1,57 +1,73 @@
 
-// Define client-related types for the Transport module
+// Définition des types liés aux clients pour le module de transport
 
-export interface Client {
+export interface TransportClient {
   id: string;
-  name: string;
+  firstName: string;
+  lastName: string;
   email: string;
   phone: string;
-  address: string;
-  registrationDate: string;
-  lastActivity?: string;
-  loyaltyPoints: number;
-  status: 'active' | 'inactive';
-  firstName?: string;  // Added for compatibility
-  lastName?: string;   // Added for compatibility
+  company?: string;
+  address?: string;
+  postalCode?: string;
+  city?: string;
+  country?: string;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+  status: 'active' | 'inactive' | 'blocked';
+  type: 'individual' | 'corporate';
+  loyaltyPoints?: number;
+  preferredPaymentMethod?: string;
+}
+
+export interface ClientAddress {
+  id: string;
+  clientId: string;
+  name: string;
+  street: string;
+  postalCode: string;
+  city: string;
+  country: string;
+  isDefault: boolean;
+  type: 'home' | 'work' | 'other';
+}
+
+export interface ClientPreference {
+  id: string;
+  clientId: string;
+  preferredVehicleType?: string;
+  preferredDriver?: string;
+  specialRequirements?: string;
+  communicationPreference?: 'email' | 'sms' | 'phone';
+  languagePreference?: string;
+}
+
+export interface LoyaltyProgram {
+  id: string;
+  name: string;
+  description: string;
+  pointsPerEuro: number;
+  minimumPointsForRedemption: number;
+  redemptionRatePerPoint: number;
+  rules: string[];
+  tiers: LoyaltyTier[];
+}
+
+export interface LoyaltyTier {
+  id: string;
+  name: string;
+  minimumPoints: number;
+  benefits: string[];
+  discountPercentage: number;
 }
 
 export interface LoyaltyTransaction {
   id: string;
   clientId: string;
-  points: number;
-  type: 'earn' | 'redeem';
-  description: string;
   date: string;
-}
-
-export interface LoyaltyReward {
-  id: string;
-  name: string;
-  description: string;
-  pointsRequired: number;
-  available: boolean;
-}
-
-export interface ClientFilters {
-  status?: string;
-  loyaltyTier?: string;
-  dateRange?: {
-    start: string;
-    end: string;
-  };
-}
-
-// Adding these types for compatibility with the existing imports
-export interface TransportClient extends Client {
-  // Additional properties from index.ts import
-  firstName?: string;
-  lastName?: string;
-}
-
-export interface ClientNote {
-  id: string;
-  clientId: string;
-  content: string;
-  createdAt: string;
-  createdBy: string;
+  type: 'earn' | 'redeem' | 'expire' | 'adjust';
+  points: number;
+  reason: string;
+  reservationId?: string;
 }

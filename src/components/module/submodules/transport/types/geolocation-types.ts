@@ -1,44 +1,48 @@
 
-import { TransportVehicleWithLocation } from './map-types';
+// Définitions de types supplémentaires pour les fonctionnalités de géolocalisation
 
-export interface VehicleAlert {
-  id: string;
-  vehicleId: string;
-  vehicleName: string;
-  licensePlate: string;
-  type: 'speeding' | 'unauthorized' | 'geofence' | 'maintenance' | 'other';
-  message: string;
-  timestamp: string;
-  status: 'resolved' | 'unresolved';
-  location?: {
-    lat: number;
-    lng: number;
+import { Coordinates } from './map-types';
+
+export interface RouteSegment {
+  startPoint: Coordinates;
+  endPoint: Coordinates;
+  distance: number;
+  duration: number;
+  polyline: string;
+  trafficLevel?: 'low' | 'moderate' | 'high' | 'severe';
+}
+
+export interface RouteOptions {
+  avoidTolls?: boolean;
+  avoidHighways?: boolean;
+  avoidFerries?: boolean;
+  optimizeWaypoints?: boolean;
+  trafficAware?: boolean;
+  departureTime?: Date | 'now';
+  arrivalTime?: Date;
+  transportMode?: 'car' | 'truck' | 'bicycle' | 'pedestrian';
+}
+
+export interface GeocodingResult {
+  formattedAddress: string;
+  coordinates: Coordinates;
+  placeId?: string;
+  components?: {
+    street?: string;
+    houseNumber?: string;
+    neighborhood?: string;
+    locality?: string;
+    city?: string;
+    county?: string;
+    region?: string;
+    postalCode?: string;
+    country?: string;
+    countryCode?: string;
   };
-  speed?: number;
-  speedLimit?: number;
 }
 
-export interface RouteOptimization {
-  id: string;
-  vehicleId: string;
-  vehicleName: string;
-  currentRoute: string;
-  optimizedRoute: string;
-  savingsMinutes: number;
-  savingsKm: number;
-  applied: boolean;
-}
-
-export interface AlertConfig {
-  enableSpeedAlerts: boolean;
-  speedThreshold: string;
-  enableGeofenceAlerts: boolean;
-  enableUnauthorizedUseAlerts: boolean;
-  unauthorizedStartHour: string;
-  unauthorizedEndHour: string;
-  enableEmailNotifications: boolean;
-  enableSmsNotifications: boolean;
-  emailRecipients: string;
-  autoResolveAfterHours: string;
-  alertPriority: 'low' | 'medium' | 'high';
+export interface MapExtensionRequest {
+  type: 'traffic' | 'satellite' | 'terrain' | 'heatmap';
+  active: boolean;
+  config?: Record<string, any>;
 }
