@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/components/ui/use-toast';
 
@@ -12,6 +12,7 @@ interface ElementItemProps {
 
 const ElementItem: React.FC<ElementItemProps> = ({ icon, label, onClick, className }) => {
   const { toast } = useToast();
+  const [isDragging, setIsDragging] = useState(false);
   
   const handleDragStart = (e: React.DragEvent) => {
     e.dataTransfer.setData('elementType', label.toLowerCase());
@@ -30,6 +31,8 @@ const ElementItem: React.FC<ElementItemProps> = ({ icon, label, onClick, classNa
       document.body.removeChild(dragPreview);
     }, 0);
     
+    setIsDragging(true);
+    
     // Show toast when starting to drag
     toast({
       description: `Faites glisser l'élément ${label} sur la page`,
@@ -37,15 +40,22 @@ const ElementItem: React.FC<ElementItemProps> = ({ icon, label, onClick, classNa
     });
   };
 
+  const handleDragEnd = () => {
+    setIsDragging(false);
+  };
+
   return (
     <div
       className={cn(
-        "flex items-center justify-center border rounded-md hover:bg-accent cursor-grab transition-colors text-center",
+        "flex items-center justify-center border rounded-md transition-colors text-center",
+        "hover:bg-accent hover:border-primary/30 hover:shadow-sm",
+        isDragging ? "opacity-70 scale-95 border-primary" : "cursor-grab",
         className
       )}
       onClick={onClick}
       draggable
       onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
     >
       {React.isValidElement(icon) ? (
         <div className="flex items-center">

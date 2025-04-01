@@ -27,6 +27,7 @@ import {
 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import ElementItem from './ElementItem';
+import { TransportChevronsUpDown } from '@/components/icons/ChevronIcons';
 
 const EditorSidebar: React.FC = () => {
   // Group elements by category for better organization
@@ -78,44 +79,61 @@ const EditorSidebar: React.FC = () => {
       </div>
       
       <div className="mt-4">
-        <h3 className="px-2 mb-2 font-medium">Navigation</h3>
-        <div className="grid grid-cols-2 gap-1 px-1">
-          {elements.navigation.map(element => (
-            <ElementItem
-              key={element.type}
-              icon={element.icon}
-              label={element.label}
-              className="p-3 text-center cursor-move hover:bg-muted transition-colors"
-            />
-          ))}
-        </div>
+        <h3 className="px-2 mb-2 font-medium flex items-center justify-between">
+          Navigation
+          <TransportChevronsUpDown />
+        </h3>
+        <Card className="mx-2 mb-2 border border-dashed border-muted hover:border-primary/50 transition-colors">
+          <CardContent className="p-2">
+            <div className="grid grid-cols-2 gap-1">
+              {elements.navigation.map(element => (
+                <ElementItem
+                  key={element.type}
+                  icon={element.icon}
+                  label={element.label}
+                  className="p-3 text-center hover:bg-muted transition-colors"
+                />
+              ))}
+            </div>
+          </CardContent>
+        </Card>
       </div>
       
       <div className="mt-4">
-        <h3 className="px-2 mb-2 font-medium">Structure</h3>
-        <div className="grid grid-cols-2 gap-1 px-1">
-          {elements.structure.map(element => (
-            <ElementItem
-              key={element.type}
-              icon={element.icon}
-              label={element.label}
-              className="p-3 text-center cursor-move hover:bg-muted transition-colors"
-            />
-          ))}
-        </div>
+        <h3 className="px-2 mb-2 font-medium flex items-center justify-between">
+          Structure
+          <TransportChevronsUpDown />
+        </h3>
+        <Card className="mx-2 mb-2 border border-dashed border-muted hover:border-primary/50 transition-colors">
+          <CardContent className="p-2">
+            <div className="grid grid-cols-2 gap-1">
+              {elements.structure.map(element => (
+                <ElementItem
+                  key={element.type}
+                  icon={element.icon}
+                  label={element.label}
+                  className="p-3 text-center hover:bg-muted transition-colors"
+                />
+              ))}
+            </div>
+          </CardContent>
+        </Card>
       </div>
       
       <Separator className="my-4" />
       
       <div>
-        <h3 className="px-2 mb-2 font-medium">Éléments Basiques</h3>
-        <div className="space-y-1 px-1">
+        <h3 className="px-2 mb-2 font-medium flex items-center justify-between">
+          Éléments Basiques
+          <TransportChevronsUpDown />
+        </h3>
+        <div className="space-y-1 px-2">
           {elements.basic.map(element => (
             <ElementItem
               key={element.type}
               icon={element.icon}
               label={element.label}
-              className="p-3 flex items-center space-x-2 cursor-move hover:bg-muted transition-colors"
+              className="p-3 flex items-center space-x-2 hover:bg-muted transition-colors"
             />
           ))}
         </div>
@@ -124,14 +142,17 @@ const EditorSidebar: React.FC = () => {
       <Separator className="my-4" />
       
       <div>
-        <h3 className="px-2 mb-2 font-medium">E-commerce</h3>
-        <div className="space-y-1 px-1">
+        <h3 className="px-2 mb-2 font-medium flex items-center justify-between">
+          E-commerce
+          <TransportChevronsUpDown />
+        </h3>
+        <div className="space-y-1 px-2">
           {elements.commerce.map(element => (
             <ElementItem
               key={element.type}
               icon={element.icon}
               label={element.label}
-              className="p-3 flex items-center space-x-2 cursor-move hover:bg-muted transition-colors"
+              className="p-3 flex items-center space-x-2 hover:bg-muted transition-colors"
             />
           ))}
         </div>
@@ -140,14 +161,17 @@ const EditorSidebar: React.FC = () => {
       <Separator className="my-4" />
       
       <div>
-        <h3 className="px-2 mb-2 font-medium">Social</h3>
-        <div className="space-y-1 px-1">
+        <h3 className="px-2 mb-2 font-medium flex items-center justify-between">
+          Social
+          <TransportChevronsUpDown />
+        </h3>
+        <div className="space-y-1 px-2">
           {elements.social.map(element => (
             <ElementItem
               key={element.type}
               icon={element.icon}
               label={element.label}
-              className="p-3 flex items-center space-x-2 cursor-move hover:bg-muted transition-colors"
+              className="p-3 flex items-center space-x-2 hover:bg-muted transition-colors"
             />
           ))}
         </div>
@@ -156,14 +180,17 @@ const EditorSidebar: React.FC = () => {
       <Separator className="my-4" />
       
       <div>
-        <h3 className="px-2 mb-2 font-medium">Formulaires</h3>
-        <div className="space-y-1 px-1">
+        <h3 className="px-2 mb-2 font-medium flex items-center justify-between">
+          Formulaires
+          <TransportChevronsUpDown />
+        </h3>
+        <div className="space-y-1 px-2">
           {elements.forms.map(element => (
             <ElementItem
               key={element.type}
               icon={element.icon}
               label={element.label}
-              className="p-3 flex items-center space-x-2 cursor-move hover:bg-muted transition-colors"
+              className="p-3 flex items-center space-x-2 hover:bg-muted transition-colors"
             />
           ))}
         </div>
@@ -172,14 +199,17 @@ const EditorSidebar: React.FC = () => {
       <Separator className="my-4" />
       
       <div>
-        <h3 className="px-2 mb-2 font-medium">Intégrations</h3>
-        <div className="space-y-1 px-1">
+        <h3 className="px-2 mb-2 font-medium flex items-center justify-between">
+          Intégrations
+          <TransportChevronsUpDown />
+        </h3>
+        <div className="space-y-1 px-2">
           {elements.integrations.map(element => (
             <ElementItem
               key={element.type}
               icon={element.icon}
               label={element.label}
-              className="p-3 flex items-center space-x-2 cursor-move hover:bg-muted transition-colors"
+              className="p-3 flex items-center space-x-2 hover:bg-muted transition-colors"
             />
           ))}
         </div>
