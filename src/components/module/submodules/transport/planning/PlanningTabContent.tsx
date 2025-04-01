@@ -33,8 +33,16 @@ const PlanningTabContent: React.FC<PlanningTabContentProps> = ({
   } = usePlanning();
 
   // Convert vehicle maintenance schedules to map maintenance schedules
-  // Use type assertion to treat maintenanceSchedules as compatible with MaintenanceSchedule[]
-  const { mapSchedules } = useMaintenanceSchedule(maintenanceSchedules as unknown as MaintenanceSchedule[]);
+  // Use type assertion with the Omit utility to ensure compatibility
+  const { mapSchedules } = useMaintenanceSchedule(
+    maintenanceSchedules.map(schedule => ({
+      ...schedule,
+      // Ensure technicianAssigned is properly handled as string to avoid type errors
+      technicianAssigned: typeof schedule.technicianAssigned === 'boolean' 
+        ? (schedule.technicianAssigned ? 'Yes' : 'No')
+        : schedule.technicianAssigned || ''
+    })) as MaintenanceSchedule[]
+  );
 
   // Adapter functions to match expected signatures
   const handleAddMaintenance = (vehicle: TransportVehicle) => {
@@ -62,14 +70,24 @@ const PlanningTabContent: React.FC<PlanningTabContentProps> = ({
       <TabsContent value="availability" className="mt-0 border-0 p-0">
         <AvailabilityCalendar 
           vehicles={vehicles}
-          maintenanceSchedules={maintenanceSchedules as unknown as MaintenanceSchedule[]}
+          maintenanceSchedules={maintenanceSchedules.map(schedule => ({
+            ...schedule,
+            technicianAssigned: typeof schedule.technicianAssigned === 'boolean' 
+              ? (schedule.technicianAssigned ? 'Yes' : 'No')
+              : schedule.technicianAssigned || ''
+          })) as MaintenanceSchedule[]}
           onAddMaintenance={handleAddMaintenance}
         />
       </TabsContent>
       
       <TabsContent value="maintenance" className="mt-0 border-0 p-0">
         <MaintenanceScheduleList 
-          maintenanceSchedules={maintenanceSchedules as unknown as MaintenanceSchedule[]}
+          maintenanceSchedules={maintenanceSchedules.map(schedule => ({
+            ...schedule,
+            technicianAssigned: typeof schedule.technicianAssigned === 'boolean' 
+              ? (schedule.technicianAssigned ? 'Yes' : 'No')
+              : schedule.technicianAssigned || ''
+          })) as MaintenanceSchedule[]}
           vehicles={vehicles}
           onAddMaintenance={handleAddMaintenance}
         />
