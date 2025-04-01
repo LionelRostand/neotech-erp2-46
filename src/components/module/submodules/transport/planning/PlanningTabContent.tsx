@@ -63,6 +63,16 @@ const PlanningTabContent: React.FC<PlanningTabContentProps> = ({
     refreshData();
   }, [refreshData]);
 
+  // Function to convert maintenanceSchedules with proper typing for the AvailabilityCalendar
+  const getFormattedMaintenanceSchedules = () => {
+    return maintenanceSchedules.map(schedule => ({
+      ...schedule,
+      technicianAssigned: typeof schedule.technicianAssigned === 'boolean' 
+        ? (schedule.technicianAssigned ? 'Yes' : 'No')
+        : schedule.technicianAssigned || ''
+    }));
+  };
+
   return (
     <Tabs defaultValue="availability" value={activeTab} onValueChange={setActiveTab} className="w-full">
       <PlanningTabs />
@@ -70,24 +80,14 @@ const PlanningTabContent: React.FC<PlanningTabContentProps> = ({
       <TabsContent value="availability" className="mt-0 border-0 p-0">
         <AvailabilityCalendar 
           vehicles={vehicles}
-          maintenanceSchedules={maintenanceSchedules.map(schedule => ({
-            ...schedule,
-            technicianAssigned: typeof schedule.technicianAssigned === 'boolean' 
-              ? (schedule.technicianAssigned ? 'Yes' : 'No')
-              : schedule.technicianAssigned || ''
-          })) as MaintenanceSchedule[]}
+          maintenanceSchedules={getFormattedMaintenanceSchedules()}
           onAddMaintenance={handleAddMaintenance}
         />
       </TabsContent>
       
       <TabsContent value="maintenance" className="mt-0 border-0 p-0">
         <MaintenanceScheduleList 
-          maintenanceSchedules={maintenanceSchedules.map(schedule => ({
-            ...schedule,
-            technicianAssigned: typeof schedule.technicianAssigned === 'boolean' 
-              ? (schedule.technicianAssigned ? 'Yes' : 'No')
-              : schedule.technicianAssigned || ''
-          })) as MaintenanceSchedule[]}
+          maintenanceSchedules={getFormattedMaintenanceSchedules()}
           vehicles={vehicles}
           onAddMaintenance={handleAddMaintenance}
         />
