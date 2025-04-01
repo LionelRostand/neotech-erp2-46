@@ -2,6 +2,8 @@
 import React, { useState, useRef } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { useToast } from '@/components/ui/use-toast';
+import { Trash2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 interface EditorCanvasProps {
   viewMode: 'desktop' | 'tablet' | 'mobile';
@@ -190,10 +192,24 @@ const EditorCanvas: React.FC<EditorCanvasProps> = ({ viewMode, onSelectElement }
         {elements.map((element) => (
           <div 
             key={element.id}
-            className="relative hover:outline-dashed hover:outline-primary/40 hover:outline-2 cursor-pointer"
-            onClick={() => handleElementClick(element)}
-            dangerouslySetInnerHTML={{ __html: element.content }}
-          />
+            className="relative group hover:outline-dashed hover:outline-primary/40 hover:outline-2 cursor-pointer"
+          >
+            <div 
+              onClick={() => handleElementClick(element)}
+              dangerouslySetInnerHTML={{ __html: element.content }}
+            />
+            <Button
+              variant="destructive"
+              size="icon"
+              className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleDeleteElement(element.id);
+              }}
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
         ))}
         
         {elements.length === 0 && (

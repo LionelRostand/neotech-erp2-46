@@ -58,6 +58,8 @@ import {
   SelectTrigger,
   SelectValue
 } from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 const WebsiteEditor = () => {
   const { toast } = useToast();
@@ -86,6 +88,12 @@ const WebsiteEditor = () => {
     { id: 'contact', name: 'Contact', path: '/contact' },
     { id: 'blog', name: 'Blog', path: '/blog' },
   ]);
+  
+  // Nouveaux états pour la publication
+  const [domainSettings, setDomainSettings] = useState({
+    customDomain: '',
+    useLovableDomain: true
+  });
 
   // Importer les éléments existants lors du chargement initial
   useEffect(() => {
@@ -188,7 +196,14 @@ const WebsiteEditor = () => {
 
   const handleOpenPublishedSite = () => {
     // Ouvrir le site publié dans un nouvel onglet
-    window.open('/modules/website/public', '_blank');
+    let url = '/modules/website/public';
+    
+    // Si un domaine personnalisé est configuré et actif
+    if (!domainSettings.useLovableDomain && domainSettings.customDomain) {
+      url = `https://${domainSettings.customDomain}`;
+    }
+    
+    window.open(url, '_blank');
     setPublishDialogOpen(false);
     toast({
       description: "Site ouvert dans un nouvel onglet",
@@ -399,7 +414,7 @@ const WebsiteEditor = () => {
             <div className={`flex-1 p-4 overflow-auto ${viewMode === 'tablet' ? 'max-w-[768px] mx-auto' : viewMode === 'mobile' ? 'max-w-[375px] mx-auto' : ''}`}>
               <EditorCanvas 
                 viewMode={viewMode} 
-                onSelectElement={setSelectedElement} 
+                onSelectElement={handleElementSelection} 
               />
             </div>
           )}
@@ -437,29 +452,99 @@ const WebsiteEditor = () => {
         <div>Mode: {isPreviewMode ? 'Prévisualisation' : isDirectEditMode ? 'Édition directe' : 'Édition standard'}</div>
       </div>
       
-      {/* Publication Dialog */}
-      {publishDialogOpen && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <Card className="w-full max-w-md p-6 bg-background">
-            <h3 className="text-xl font-bold mb-4 flex items-center">
+      {/* Publication Dialog - Modifié pour inclure les options de domaine */}
+      <Dialog open={publishDialogOpen} onOpenChange={setPublishDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center">
               <Globe className="mr-2 h-5 w-5 text-primary" />
               Publication du site
-            </h3>
-            <p className="mb-6">
-              Votre site a été publié avec succès ! Vous pouvez maintenant y accéder en ligne.
-            </p>
-            <div className="flex gap-3 justify-end border-t pt-4">
-              <Button variant="outline" onClick={() => setPublishDialogOpen(false)}>
-                Fermer
-              </Button>
-              <Button onClick={handleOpenPublishedSite}>
-                <ExternalLink className="h-4 w-4 mr-2" />
-                Voir le site publié
-              </Button>
+            </DialogTitle>
+            <DialogDescription>
+              Configurez les options de publication et publiez votre site.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="py-4 space-y-4">
+            <div className="space-y-2">
+              <h3 className="font-medium">Domaine</h3>
+              
+              <div className="grid gap-2">
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="radio"
+                    id="lovable-domain"
+                    name="domain-type"
+                    checked={domainSettings.useLovableDomain}
+                    onChange={() => setDomainSettings({...domainSettings, useLovableDomain: true})}
+                    className="h-4 w-4"
+                  />
+                  <Label htmlFor="lovable-domain">
+                    Utiliser un sous-domaine Lovable
+                    <span className="block text-sm text-muted-foreground">votresite.lovable.app</span>
+                  </Label>
+                </div>
+                
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="radio"
+                    id="custom-domain"
+                    name="domain-type"
+                    checked={!domainSettings.useLovableDomain}
+                    onChange={() => setDomainSettings({...domainSettings, useLovableDomain: false})}
+                    className="h-4 w-4"
+                  />
+                  <Label htmlFor="custom-domain">
+                    Utiliser mon propre domaine
+                  </Label>
+                </div>
+                
+                {!domainSettings.useLovableDomain && (
+                  <div className="pl-6">
+                    <Input
+                      placeholder="www.mondomaine.com"
+                      value={domainSettings.customDomain}
+                      onChange={(e) => setDomainSettings({...domainSettings, customDomain: e.target.value})}
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Vous devrez configurer les DNS de votre domaine pour pointer vers nos serveurs.
+                    </p>
+                  </div>
+                )}
+              </div>
             </div>
-          </Card>
-        </div>
-      )}
+            
+            <div className="space-y-2">
+              <h3 className="font-medium">Paramètres de publication</h3>
+              <Select defaultValue="all">
+                <SelectTrigger>
+                  <SelectValue placeholder="Choisir les pages à publier" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Toutes les pages</SelectItem>
+                  <SelectItem value="selected">Pages sélectionnées</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="pt-2">
+              <p className="text-sm text-muted-foreground">
+                La publication peut prendre quelques minutes avant que les changements ne soient visibles.
+              </p>
+            </div>
+          </div>
+          
+          <DialogFooter className="gap-2 flex-wrap">
+            <Button variant="outline" onClick={() => setPublishDialogOpen(false)}>
+              Annuler
+            </Button>
+            <Button onClick={handleOpenPublishedSite}>
+              <ExternalLink className="h-4 w-4 mr-2" />
+              Publier et voir le site
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       
       {/* Page Selection Dialog */}
       <Dialog open={pageSelectDialogOpen} onOpenChange={setPageSelectDialogOpen}>
