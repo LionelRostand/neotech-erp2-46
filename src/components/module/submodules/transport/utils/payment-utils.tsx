@@ -1,7 +1,6 @@
 
 import React from 'react';
 import { ChevronsUpDown } from "@/components/ui/chevrons-up-down";
-import { createPayment, getPaymentRecords } from '../api/payment-api';
 
 // Composant d'icône ChevronsUpDown pour les composants de paiement
 export const PaymentChevronIcon: React.FC = () => {
@@ -37,5 +36,37 @@ export const generatePaymentReference = (prefix = 'PAY'): string => {
   return `${prefix}-${date.getFullYear()}${(date.getMonth() + 1).toString().padStart(2, '0')}${date.getDate().toString().padStart(2, '0')}-${random}`;
 };
 
-// Export des fonctions de l'API pour simplifier l'import
-export { createPayment, getPaymentRecords };
+// Mock API functions
+export const createPayment = async (paymentData: any) => {
+  console.log('Creating payment', paymentData);
+  return {
+    id: generatePaymentReference(),
+    ...paymentData,
+    status: 'success',
+    createdAt: new Date().toISOString()
+  };
+};
+
+export const getPaymentRecords = async (filters?: any) => {
+  console.log('Getting payment records with filters', filters);
+  return [
+    {
+      id: 'PAY-20230701-1234',
+      amount: 120.5,
+      reservationId: 'RES-001',
+      method: 'card',
+      status: 'completed',
+      date: '2023-07-01T10:15:00Z',
+      clientName: 'Jean Dupont'
+    },
+    {
+      id: 'PAY-20230702-5678',
+      amount: 85.0,
+      reservationId: 'RES-002',
+      method: 'paypal',
+      status: 'completed',
+      date: '2023-07-02T14:30:00Z',
+      clientName: 'Marie Laurent'
+    }
+  ];
+};

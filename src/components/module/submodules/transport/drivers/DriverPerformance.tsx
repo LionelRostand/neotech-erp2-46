@@ -28,6 +28,11 @@ const DriverPerformance: React.FC<DriverPerformanceProps> = ({ driver }) => {
     if (percentage >= 70) return "bg-yellow-500";
     return "bg-red-500";
   };
+
+  // Get safe performance values
+  const getOnTimeRate = () => driver.performance?.onTimeRate || 0;
+  const getSatisfactionScore = () => driver.performance?.satisfactionScore || 0;
+  const getSafetyScore = () => driver.performance?.safetyScore || 0;
   
   return (
     <div className="space-y-6">
@@ -37,10 +42,10 @@ const DriverPerformance: React.FC<DriverPerformanceProps> = ({ driver }) => {
             <div className="text-center">
               <Clock className="h-8 w-8 mx-auto mb-2 text-blue-500" />
               <h4 className="font-semibold text-lg">Ponctualité</h4>
-              <p className="text-3xl font-bold mt-2">{driver.performance?.onTimeRate || 0}%</p>
+              <p className="text-3xl font-bold mt-2">{getOnTimeRate()}%</p>
               <Progress 
-                value={driver.performance?.onTimeRate || 0} 
-                className={`h-2 mt-2 ${getColorClass(driver.performance?.onTimeRate || 0, 100)}`} 
+                value={getOnTimeRate()} 
+                className={`h-2 mt-2 ${getColorClass(getOnTimeRate(), 100)}`} 
               />
             </div>
           </CardContent>
@@ -51,10 +56,10 @@ const DriverPerformance: React.FC<DriverPerformanceProps> = ({ driver }) => {
             <div className="text-center">
               <UserCheck className="h-8 w-8 mx-auto mb-2 text-purple-500" />
               <h4 className="font-semibold text-lg">Satisfaction client</h4>
-              <p className="text-3xl font-bold mt-2">{driver.performance?.customerSatisfaction || 0}/5</p>
+              <p className="text-3xl font-bold mt-2">{getSatisfactionScore()}/5</p>
               <Progress 
-                value={(driver.performance?.customerSatisfaction || 0) * 20} 
-                className={`h-2 mt-2 ${getColorClass(driver.performance?.customerSatisfaction || 0, 5)}`} 
+                value={getSatisfactionScore() * 20} 
+                className={`h-2 mt-2 ${getColorClass(getSatisfactionScore(), 5)}`} 
               />
             </div>
           </CardContent>
@@ -65,10 +70,10 @@ const DriverPerformance: React.FC<DriverPerformanceProps> = ({ driver }) => {
             <div className="text-center">
               <Shield className="h-8 w-8 mx-auto mb-2 text-green-500" />
               <h4 className="font-semibold text-lg">Score de sécurité</h4>
-              <p className="text-3xl font-bold mt-2">{driver.performance?.safetyScore || 0}/100</p>
+              <p className="text-3xl font-bold mt-2">{getSafetyScore()}/100</p>
               <Progress 
-                value={driver.performance?.safetyScore || 0} 
-                className={`h-2 mt-2 ${getColorClass(driver.performance?.safetyScore || 0, 100)}`} 
+                value={getSafetyScore()} 
+                className={`h-2 mt-2 ${getColorClass(getSafetyScore(), 100)}`} 
               />
             </div>
           </CardContent>

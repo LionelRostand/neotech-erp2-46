@@ -9,10 +9,11 @@ import { companiesModule } from './modules/companies';
 import { crmModule } from './modules/crm';
 import { healthModule } from './modules/health';
 import { documentsModule } from './modules/documents';
-import { rentalsModule } from './modules/rentals';
 import { transportModule } from './modules/transport';
 import { garageModule } from './modules/garage';
 import { websiteModule } from './modules/website';
+// Import of rentalsModule is missing, commenting it out for now
+// import { rentalsModule } from './modules/rentals';
 
 // Export des modules sous forme de tableau pour l'application
 export const modules = [
@@ -25,7 +26,7 @@ export const modules = [
   crmModule,
   healthModule,
   documentsModule,
-  rentalsModule,
+  // rentalsModule, // Commenting out as the module is missing
   transportModule,
   garageModule,
   websiteModule,

@@ -19,20 +19,26 @@ export type {
 // Export from map-types.ts
 export type { 
   VehicleLocation, 
+  Coordinates,
   TransportVehicleWithLocation, 
   MapConfig, 
   MapHookResult, 
+  MapExtensionRequest,
   ExtensionRequest
 } from './map-types';
 
 // Export from client-types.ts
 export type { 
-  Client, 
   TransportClient, 
+  Client, 
+  ClientAddress,
   ClientNote, 
   LoyaltyTransaction, 
   LoyaltyReward, 
-  ClientFilters 
+  ClientFilters,
+  ClientPreference,
+  LoyaltyProgram,
+  LoyaltyTier
 } from './client-types';
 
 // Export from reservation-types
@@ -48,8 +54,7 @@ export {
 
 // Export from planning-types
 export type { 
-  VehicleMaintenanceSchedule, 
-  MapExtensionRequest,
+  VehicleMaintenanceSchedule,
   PlanningFilter,
   PlanningItem
 } from './planning-types';

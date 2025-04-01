@@ -10,5 +10,4 @@ export * from './planning-types';
 export * from './geolocation-types';
 export * from './integration-types';
 
-// Résoudre l'ambiguïté en ne réexportant pas les types dupliqués
-// Ne pas réexporter MapExtensionRequest depuis geolocation-types car déjà exporté depuis map-types
+// Note: We don't handle re-export ambiguities here as each module now exports unique types

@@ -1,97 +1,101 @@
 
-// Define types related to reservations and booking for the Transport module
-
-export interface LocationType {
-  address: string;
-  latitude?: number;
-  longitude?: number;
-  name?: string;
-  placeId?: string;
-}
-
-export type LocationInput = LocationType | string;
-
-export interface WebBookingService {
-  id: string;
-  name: string;
-  description: string;
-  price: number;
-  duration: number;
-  available: boolean;
-  serviceType?: string; // Added serviceType property
-}
-
-export interface WebBooking {
-  id: string;
-  serviceId: string;
-  clientId: string;
-  bookingDate: string;
-  pickupLocation: LocationType | string;  // Updated to accept string
-  dropoffLocation: LocationType | string;  // Updated to accept string
-  status: 'pending' | 'confirmed' | 'cancelled' | 'new'; // Added 'new' status
-  notes?: string;
-  clientName?: string; // Added properties used in components
-  date?: string;
-  time?: string;
-  serviceType?: string; // Add serviceType for compatibility
-  service?: string | WebBookingService; // Add service for existing code
-}
-
-export interface Reservation {
-  id: string;
-  vehicleId: string;
-  driverId?: string;
-  clientId: string;
-  clientName: string;
-  startDate: string;
-  endDate: string;
-  pickupLocation: LocationType | string;  // Updated to accept string
-  dropoffLocation: LocationType | string;  // Updated to accept string
-  status: 'pending' | 'confirmed' | 'in-progress' | 'completed' | 'cancelled';
-  paymentStatus: 'pending' | 'partial' | 'paid' | 'refunded';
-  totalAmount: number;
-  notes?: string;
-  createdAt: string;
-  updatedAt?: string;
-  pickup?: LocationType | string;  // Updated to accept string
-  dropoff?: LocationType | string;  // Updated to accept string
-}
+// Types related to reservations and bookings
 
 export interface TransportReservation {
   id: string;
   clientId: string;
-  vehicleId: string;
-  driverId: string;
-  startLocation: LocationType | string; // Allow string type for compatibility
-  endLocation: LocationType | string; // Allow string type for compatibility
-  startTime: string;
-  endTime: string;
+  driverId?: string;
+  vehicleId?: string;
+  serviceType: string;
+  pickupAddress: string;
+  dropoffAddress: string;
+  pickupTime: string;
+  pickupDate: string;
   status: TransportReservationStatus;
   price: number;
+  passengers: number;
+  distance?: number;
+  duration?: number;
+  paymentMethod?: string;
+  paymentStatus?: 'pending' | 'paid' | 'refunded' | 'cancelled';
   notes?: string;
-  // Added missing properties used in components
-  service?: string | { name: string };
-  date?: string;
-  time?: string;
-  pickup?: string | LocationType;
-  dropoff?: string | LocationType;
-  isPaid?: boolean;
-  contractGenerated?: boolean;
-  needsDriver?: boolean;
-  createdAt?: string;
+  createdAt: string;
+  updatedAt: string;
+  driverTip?: number;
+  luggage?: number;
 }
 
-export type TransportReservationStatus = 
-  | 'pending'
-  | 'confirmed'
-  | 'inProgress'
-  | 'completed'
-  | 'cancelled';
+export type TransportReservationStatus = 'pending' | 'confirmed' | 'in-progress' | 'completed' | 'cancelled';
 
-// Add this utility function to safely get the address string
-export function getAddressString(location: LocationType | string): string {
-  if (typeof location === 'string') {
-    return location;
-  }
-  return location?.address || '';
+export interface LocationType {
+  street: string;
+  number?: string;
+  city: string;
+  postalCode: string;
+  country: string;
+  additionalInfo?: string;
+}
+
+export interface WebBooking {
+  id: string;
+  serviceType: string;
+  date: string;
+  time: string;
+  pickupAddress: string;
+  dropoffAddress?: string;
+  clientName: string;
+  clientEmail: string;
+  clientPhone: string;
+  passengers: number;
+  notes?: string;
+  status: 'new' | 'processed' | 'cancelled';
+  createdAt: string;
+  price?: number;
+}
+
+export interface WebBookingService {
+  id: string;
+  name: string;
+  description?: string;
+  price?: number;
+  image?: string;
+  active: boolean;
+}
+
+export interface Reservation {
+  id: string;
+  type: string;
+  client: {
+    id: string;
+    name: string;
+    phone: string;
+    email: string;
+  };
+  pickup: {
+    address: string;
+    date: string;
+    time: string;
+  };
+  dropoff?: {
+    address: string;
+  };
+  vehicle?: {
+    id: string;
+    name: string;
+    type: string;
+  };
+  driver?: {
+    id: string;
+    name: string;
+    phone: string;
+  };
+  status: string;
+  price: number;
+  paymentStatus: string;
+  paymentMethod?: string;
+}
+
+// Helper function to format addresses
+export function getAddressString(location: LocationType): string {
+  return `${location.number ? location.number + ' ' : ''}${location.street}, ${location.postalCode} ${location.city}, ${location.country}`;
 }

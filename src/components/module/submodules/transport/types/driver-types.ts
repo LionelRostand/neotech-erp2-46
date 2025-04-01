@@ -22,6 +22,7 @@ export interface TransportDriver {
   skills?: string[];
   preferredVehicleType?: string;
   preferredVehicleTypes?: string[];
+  createdAt?: string;
   performance?: {
     completedTrips?: number;
     onTimeRate?: number;
@@ -29,6 +30,8 @@ export interface TransportDriver {
     cancelledTrips?: number;
     totalDistance?: number;
     avgRating?: number;
+    customerSatisfaction?: number;
+    safetyScore?: number;
   };
 }
 

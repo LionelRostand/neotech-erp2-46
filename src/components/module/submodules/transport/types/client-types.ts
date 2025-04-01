@@ -19,6 +19,7 @@ export interface TransportClient {
   type: 'individual' | 'corporate';
   loyaltyPoints?: number;
   preferredPaymentMethod?: string;
+  name?: string; // Added to support ClientHistoryDialog
 }
 
 export interface ClientAddress {
@@ -70,4 +71,33 @@ export interface LoyaltyTransaction {
   points: number;
   reason: string;
   reservationId?: string;
+}
+
+export interface LoyaltyReward {
+  id: string;
+  name: string;
+  description: string;
+  pointsCost: number;
+  active: boolean;
+  expiryDate?: string;
+}
+
+export interface Client extends TransportClient {
+  // Additional fields for backward compatibility
+}
+
+export interface ClientNote {
+  id: string;
+  clientId: string;
+  title: string;
+  content: string;
+  createdAt: string;
+  createdBy: string;
+}
+
+export interface ClientFilters {
+  status?: string[];
+  type?: string[];
+  loyaltyLevel?: string[];
+  search?: string;
 }
