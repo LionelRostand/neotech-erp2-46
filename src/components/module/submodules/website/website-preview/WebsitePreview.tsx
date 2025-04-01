@@ -7,7 +7,7 @@ import RestaurantMenuTemplate from '../templates/RestaurantMenuTemplate';
 interface WebsitePreviewProps {
   previewMode: boolean;
   activeTemplate?: string | null;
-  initialContent?: any[]; // Added initialContent prop
+  initialContent?: any[]; // Ajout de la propriété initialContent
 }
 
 const WebsitePreview: React.FC<WebsitePreviewProps> = ({ previewMode, activeTemplate, initialContent = [] }) => {

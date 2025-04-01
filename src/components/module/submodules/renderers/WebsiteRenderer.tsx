@@ -2,7 +2,6 @@
 import React from 'react';
 import DefaultSubmoduleContent from '../DefaultSubmoduleContent';
 import { SubModule } from '@/data/types/modules';
-import WebsiteDashboard from '../website/WebsiteDashboard';
 import WebsiteEditor from '../website/WebsiteEditor';
 import WebsiteTemplates from '../website/WebsiteTemplates';
 import WebsitePages from '../website/WebsitePages';
@@ -15,8 +14,6 @@ import WebsiteThemeEditor from '../website/WebsiteThemeEditor';
 
 export const renderWebsiteSubmodule = (submoduleId: string, submodule: SubModule) => {
   switch (submoduleId) {
-    case 'website-dashboard':
-      return <WebsiteDashboard />;
     case 'website-editor':
       return <WebsiteEditor />;
     case 'website-templates':
