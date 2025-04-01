@@ -26,8 +26,8 @@ export interface WebBooking {
   serviceId: string;
   clientId: string;
   bookingDate: string;
-  pickupLocation: LocationType;
-  dropoffLocation: LocationType;
+  pickupLocation: LocationType | string;  // Updated to accept string
+  dropoffLocation: LocationType | string;  // Updated to accept string
   status: 'pending' | 'confirmed' | 'cancelled' | 'new'; // Added 'new' status
   notes?: string;
   clientName?: string; // Added properties used in components
@@ -43,16 +43,16 @@ export interface Reservation {
   clientName: string;
   startDate: string;
   endDate: string;
-  pickupLocation: LocationType;
-  dropoffLocation: LocationType;
+  pickupLocation: LocationType | string;  // Updated to accept string
+  dropoffLocation: LocationType | string;  // Updated to accept string
   status: 'pending' | 'confirmed' | 'in-progress' | 'completed' | 'cancelled';
   paymentStatus: 'pending' | 'partial' | 'paid' | 'refunded';
   totalAmount: number;
   notes?: string;
   createdAt: string;
   updatedAt?: string;
-  pickup?: LocationType;  // Added for compatibility
-  dropoff?: LocationType;  // Added for compatibility
+  pickup?: LocationType | string;  // Updated to accept string
+  dropoff?: LocationType | string;  // Updated to accept string
 }
 
 export interface TransportReservation {

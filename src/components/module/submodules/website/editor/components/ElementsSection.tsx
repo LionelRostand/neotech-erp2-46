@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import ElementsSectionHeader from './ElementsSectionHeader';
+import ElementsSectionHeader from '../ElementsSectionHeader';
 import ElementsGrid from './ElementsGrid';
 import ElementsList from './ElementsList';
 import { ElementDefinition } from '../constants/elements';
