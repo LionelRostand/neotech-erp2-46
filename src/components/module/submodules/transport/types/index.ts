@@ -1,4 +1,3 @@
-
 // Export all types from the separate type modules
 
 // Export from base-types.ts
@@ -26,7 +25,14 @@ export type {
 } from './map-types';
 
 // Export from client-types.ts
-export type { Client, TransportClient, ClientNote, LoyaltyTransaction, LoyaltyReward, ClientFilters } from './client-types';
+export type { 
+  Client, 
+  TransportClient, 
+  ClientNote, 
+  LoyaltyTransaction, 
+  LoyaltyReward, 
+  ClientFilters 
+} from './client-types';
 
 // Export from reservation-types
 export {
@@ -50,4 +56,3 @@ export type {
 // Export from other type files
 export * from './geolocation-types';
 export * from './integration-types';
-

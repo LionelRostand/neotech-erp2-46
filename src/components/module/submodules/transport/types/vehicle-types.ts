@@ -10,7 +10,7 @@ export interface TransportVehicle extends TransportBasic {
   status: 'available' | 'in-use' | 'maintenance' | 'out-of-service' | 'active';
   type: string;
   capacity: number;
-  mileage: number;
+  mileage?: number; // Changed to optional to fix type errors
   fuelType?: string; // Made optional for compatibility
   fuelLevel?: number; // Made optional for compatibility
   lastInspection?: string;

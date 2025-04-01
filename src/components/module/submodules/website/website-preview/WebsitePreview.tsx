@@ -8,7 +8,7 @@ interface PreviewContentItem {
 }
 
 interface WebsitePreviewProps {
-  previewMode: boolean;
+  previewMode?: boolean;
   initialContent?: PreviewContentItem[];
   customContent?: React.ReactNode;
 }

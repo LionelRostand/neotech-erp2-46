@@ -8,7 +8,7 @@ export interface VehicleMaintenanceSchedule {
   type: string;
   description: string;
   estimatedDuration: number; // in minutes
-  technicianAssigned: string;
+  technicianAssigned?: string; // Made optional to match actual usage
   status: 'scheduled' | 'in-progress' | 'completed' | 'cancelled';
   priority: string;
   taskName: string;
