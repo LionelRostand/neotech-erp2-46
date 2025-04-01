@@ -4,7 +4,7 @@ import { useParams } from 'react-router-dom';
 import WebsitePreview from '../website-preview/WebsitePreview';
 
 const WebsiteTemplatePreviewWrapper: React.FC = () => {
-  const { templateId } = useParams();
+  const { templateId } = useParams<{ templateId: string }>();
 
   return (
     <div className="p-4 max-w-5xl mx-auto">

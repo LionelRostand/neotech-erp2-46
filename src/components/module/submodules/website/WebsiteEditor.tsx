@@ -87,7 +87,7 @@ const WebsiteEditor: React.FC = () => {
           </div>
           <div className="flex gap-2">
             <Button variant="outline" size="sm" onClick={() => setShowTemplateSelector(true)}>
-              <TemplateIcon className="h-4 w-4 mr-1" />
+              <FileText className="h-4 w-4 mr-1" />
               Templates
             </Button>
             <Button variant="outline" size="sm">

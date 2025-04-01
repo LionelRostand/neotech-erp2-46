@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useDrop } from 'react-dnd';
 import TransportBookingTemplate from '../templates/TransportBookingTemplate';
 import RestaurantMenuTemplate from '../templates/RestaurantMenuTemplate';
@@ -11,7 +11,6 @@ interface WebsitePreviewProps {
 
 const WebsitePreview: React.FC<WebsitePreviewProps> = ({ previewMode, activeTemplate }) => {
   const [elements, setElements] = useState<any[]>([]);
-  const [highlightDropZone, setHighlightDropZone] = useState(false);
 
   // Configuration du drop target pour le drag and drop
   const [{ isOver }, drop] = useDrop(() => ({
