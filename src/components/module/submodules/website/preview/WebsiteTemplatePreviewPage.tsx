@@ -5,20 +5,55 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Download } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import TransportBookingTemplate from '../templates/TransportBookingTemplate';
+import RestaurantMenuTemplate from '../templates/RestaurantMenuTemplate';
 
 const WebsiteTemplatePreviewPage: React.FC = () => {
   const { templateId } = useParams<{ templateId: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
+  const [installed, setInstalled] = useState(false);
 
   useEffect(() => {
+    // Vérifier si le template est déjà installé
+    const savedTemplates = localStorage.getItem('website-installed-templates');
+    const installedTemplates = savedTemplates ? JSON.parse(savedTemplates) : [];
+    setInstalled(installedTemplates.includes(templateId));
+    
     // Simuler un chargement
     const timer = setTimeout(() => setLoading(false), 500);
     return () => clearTimeout(timer);
-  }, []);
+  }, [templateId]);
 
   const handleInstall = () => {
+    // Récupérer la liste des templates installés
+    const savedTemplates = localStorage.getItem('website-installed-templates');
+    const installedTemplates = savedTemplates ? JSON.parse(savedTemplates) : [];
+    
+    // Vérifier si déjà installé
+    if (installedTemplates.includes(templateId)) {
+      toast({
+        title: "Déjà installé",
+        description: "Ce template est déjà installé sur votre site.",
+        duration: 3000,
+      });
+      return;
+    }
+    
+    // Ajouter le template à la liste des templates installés
+    const newInstalledTemplates = [...installedTemplates, templateId];
+    localStorage.setItem('website-installed-templates', JSON.stringify(newInstalledTemplates));
+    
+    // Trouver le template pour l'ajouter au storage
+    const templateData = {
+      id: templateId,
+      name: getTemplateName(templateId),
+      description: getTemplateDescription(templateId)
+    };
+    localStorage.setItem(`website-template-${templateId}`, JSON.stringify(templateData));
+    
+    setInstalled(true);
+    
     toast({
       title: "Template installé !",
       description: "Le template a été ajouté à votre site web.",
@@ -26,13 +61,39 @@ const WebsiteTemplatePreviewPage: React.FC = () => {
     });
     
     // Rediriger vers l'éditeur
-    navigate('/modules/website/editor');
+    setTimeout(() => navigate('/modules/website/editor'), 1500);
+  };
+
+  const getTemplateName = (id: string) => {
+    switch(id) {
+      case 'transport-1': return 'Transport Booking';
+      case 'restaurant-1': return 'Restaurant & Menu';
+      case 'business-1': return 'Business Landing';
+      case 'portfolio-1': return 'Portfolio Créatif';
+      case 'ecommerce-1': return 'Boutique en ligne';
+      case 'blog-1': return 'Blog Moderne';
+      default: return 'Template';
+    }
+  };
+  
+  const getTemplateDescription = (id: string) => {
+    switch(id) {
+      case 'transport-1': return 'Template pour réservation de transport avec formulaire intégré';
+      case 'restaurant-1': return 'Site pour restaurant avec menu interactif';
+      case 'business-1': return 'Template professionnel pour entreprise';
+      case 'portfolio-1': return 'Showcase pour professionnels créatifs';
+      case 'ecommerce-1': return 'Template e-commerce avec catalogue de produits';
+      case 'blog-1': return 'Template pour blog avec sections personnalisables';
+      default: return 'Description du template';
+    }
   };
 
   const renderTemplatePreview = () => {
     switch(templateId) {
       case 'transport-1':
         return <TransportBookingTemplate />;
+      case 'restaurant-1':
+        return <RestaurantMenuTemplate />;
       default:
         return (
           <div className="flex flex-col items-center justify-center p-12 text-center">
@@ -55,9 +116,13 @@ const WebsiteTemplatePreviewPage: React.FC = () => {
           </Button>
           <h1 className="text-2xl font-bold">Aperçu du template</h1>
         </div>
-        <Button onClick={handleInstall}>
+        <Button 
+          onClick={handleInstall}
+          disabled={installed}
+          variant={installed ? "outline" : "default"}
+        >
           <Download className="h-4 w-4 mr-2" />
-          Installer ce template
+          {installed ? "Déjà installé" : "Installer ce template"}
         </Button>
       </div>
       

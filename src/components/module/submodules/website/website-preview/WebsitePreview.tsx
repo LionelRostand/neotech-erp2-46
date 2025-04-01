@@ -1,72 +1,82 @@
 
 import React, { useState, useEffect } from 'react';
-
-interface PreviewContentItem {
-  id: string;
-  type: string;
-  content: string;
-}
+import { useDrop } from 'react-dnd';
+import TransportBookingTemplate from '../templates/TransportBookingTemplate';
+import RestaurantMenuTemplate from '../templates/RestaurantMenuTemplate';
 
 interface WebsitePreviewProps {
-  previewMode?: boolean;
-  initialContent?: PreviewContentItem[];
-  customContent?: React.ReactNode;
+  previewMode: boolean;
+  activeTemplate?: string | null;
 }
 
-const WebsitePreview: React.FC<WebsitePreviewProps> = ({ 
-  previewMode = true,
-  initialContent = [],
-  customContent = null
-}) => {
-  const [content, setContent] = useState<PreviewContentItem[]>(initialContent);
-  
-  // Mise à jour du contenu lorsque initialContent change
-  useEffect(() => {
-    setContent(initialContent);
-  }, [initialContent]);
-  
-  return (
-    <div className="website-preview w-full min-h-[400px] bg-white">
-      <div className="preview-browser-header bg-gray-100 flex items-center px-3 py-2 border-b">
-        <div className="flex space-x-1.5">
-          <div className="h-3 w-3 rounded-full bg-red-500"></div>
-          <div className="h-3 w-3 rounded-full bg-yellow-500"></div>
-          <div className="h-3 w-3 rounded-full bg-green-500"></div>
-        </div>
-        <div className="flex-1 flex justify-center">
-          <div className="bg-white rounded-md px-3 py-1 text-xs text-center w-64 truncate">
-            https://monsite.lovable.app/
-          </div>
-        </div>
-      </div>
-      
-      <div className="preview-content">
-        {customContent ? (
-          <div className="h-full">{customContent}</div>
-        ) : content.length === 0 ? (
-          <div className="flex flex-col items-center justify-center p-10 text-center">
-            <div className="w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center mb-4">
-              <span className="text-3xl">🌐</span>
-            </div>
-            <h3 className="text-lg font-medium">Aperçu du site</h3>
-            <p className="text-sm text-muted-foreground mt-1 max-w-md">
-              {previewMode ? 
-                "Ceci est une prévisualisation de votre site public. Les visiteurs verront cette version." : 
-                "Ceci est un aperçu de votre site. Vous pouvez modifier le contenu en cliquant sur les éléments."}
+const WebsitePreview: React.FC<WebsitePreviewProps> = ({ previewMode, activeTemplate }) => {
+  const [elements, setElements] = useState<any[]>([]);
+  const [highlightDropZone, setHighlightDropZone] = useState(false);
+
+  // Configuration du drop target pour le drag and drop
+  const [{ isOver }, drop] = useDrop(() => ({
+    accept: 'ELEMENT',
+    drop: (item: any) => {
+      handleDrop(item);
+      return item;
+    },
+    collect: (monitor) => ({
+      isOver: !!monitor.isOver(),
+      canDrop: !!monitor.canDrop(),
+    }),
+  }));
+
+  // Ajouter un élément déposé
+  const handleDrop = (item: any) => {
+    setElements(prev => [...prev, { ...item, id: `element-${Date.now()}` }]);
+  };
+
+  // Afficher le template actif
+  const renderTemplate = () => {
+    switch(activeTemplate) {
+      case 'transport-1':
+        return <TransportBookingTemplate />;
+      case 'restaurant-1':
+        return <RestaurantMenuTemplate />;
+      default:
+        return (
+          <div className="flex flex-col items-center justify-center p-12 text-center min-h-[500px]">
+            <h1 className="text-3xl font-bold mb-4">Mon site web</h1>
+            <p className="text-lg text-muted-foreground mb-8">
+              Faites glisser des éléments depuis la barre latérale pour commencer à construire votre site.
             </p>
+            
+            {elements.length > 0 && (
+              <div className="w-full max-w-md">
+                {elements.map(el => (
+                  <div key={el.id} className="p-2 mb-2 border rounded bg-white">
+                    {el.type}: {el.label}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
-        ) : (
-          <div className="preview-content-items">
-            {content.map((item) => (
-              <div 
-                key={item.id}
-                className={`preview-item preview-item-${item.type}`}
-                dangerouslySetInnerHTML={{ __html: item.content }}
-              />
-            ))}
-          </div>
-        )}
-      </div>
+        );
+    }
+  };
+
+  return (
+    <div 
+      ref={drop}
+      className={`w-full h-full overflow-y-auto border-2 ${isOver ? 'border-primary border-dashed' : 'border-transparent'}`}
+    >
+      {renderTemplate()}
+      
+      {elements.length > 0 && !activeTemplate && (
+        <div className="p-4">
+          <h3 className="text-lg font-medium mb-2">Éléments ajoutés:</h3>
+          {elements.map(el => (
+            <div key={el.id} className="p-2 mb-2 border rounded">
+              {el.label} ({el.type})
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 };

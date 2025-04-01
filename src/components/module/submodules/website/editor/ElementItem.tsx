@@ -1,26 +1,45 @@
 
 import React from 'react';
 import { cn } from '@/lib/utils';
+import { useDrag } from 'react-dnd';
 
 interface ElementItemProps {
   icon: React.ReactNode;
   label: string;
   className?: string;
-  onClick?: () => void;
+  type?: string;
+  draggable?: boolean;
 }
 
-const ElementItem: React.FC<ElementItemProps> = ({ icon, label, className, onClick }) => {
+const ElementItem: React.FC<ElementItemProps> = ({
+  icon,
+  label,
+  className,
+  type = 'unknown',
+  draggable = true
+}) => {
+  const [{ isDragging }, drag] = useDrag(() => ({
+    type: 'ELEMENT',
+    item: { type, label },
+    collect: monitor => ({
+      isDragging: !!monitor.isDragging(),
+    }),
+    canDrag: draggable
+  }));
+
   return (
-    <div 
+    <div
+      ref={drag}
       className={cn(
-        "rounded cursor-pointer border border-transparent transition-all hover:border-primary/20 hover:bg-primary/5",
+        'rounded cursor-pointer select-none',
+        isDragging ? 'opacity-50' : 'opacity-100',
+        draggable ? 'cursor-move' : 'cursor-default',
         className
       )}
-      onClick={onClick}
     >
-      <div className="flex items-center justify-center gap-2">
-        <span>{icon}</span>
-        <span className="text-sm">{label}</span>
+      <div className="flex flex-col items-center gap-1">
+        <div className="text-muted-foreground">{icon}</div>
+        <div className="text-xs">{label}</div>
       </div>
     </div>
   );
