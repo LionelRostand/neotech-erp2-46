@@ -1,14 +1,24 @@
 
 import { useEffect, useState } from 'react';
 import { TransportVehicleWithLocation } from '../types';
-import { normalizeCoordinates, createMarker, updateMarkerPosition } from '../utils/map-utils';
+import { normalizeCoordinates } from '../utils/map-utils';
 
 export const useMapMarkers = (vehicles: TransportVehicleWithLocation[]) => {
   const [markers, setMarkers] = useState<any[]>([]);
 
   useEffect(() => {
     // Create markers for all vehicles
-    const newMarkers = vehicles.map(vehicle => createMarker(vehicle));
+    const newMarkers = vehicles.map(vehicle => {
+      const normalizedPosition = normalizeCoordinates(vehicle.location);
+      return {
+        id: vehicle.id,
+        position: normalizedPosition,
+        type: 'vehicle',
+        status: vehicle.status,
+        title: vehicle.name,
+        vehicle: vehicle // Store the complete vehicle for popups
+      };
+    });
     setMarkers(newMarkers);
   }, [vehicles]);
 
@@ -16,7 +26,7 @@ export const useMapMarkers = (vehicles: TransportVehicleWithLocation[]) => {
     setMarkers(prev => 
       prev.map(marker => 
         marker.id === vehicleId 
-          ? updateMarkerPosition(marker, location)
+          ? { ...marker, position: normalizeCoordinates(location) }
           : marker
       )
     );

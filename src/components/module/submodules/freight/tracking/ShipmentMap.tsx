@@ -1,10 +1,12 @@
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { Package, MapPin, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card } from '@/components/ui/card';
 import { mockLocations } from './utils/locationUtils';
+import { configureLeafletIcons } from '@/components/module/submodules/transport/utils/leaflet-icon-setup';
+import 'leaflet/dist/leaflet.css';
 
 interface ShipmentMapProps {
   events: any[];
@@ -13,8 +15,10 @@ interface ShipmentMapProps {
 
 const ShipmentMap: React.FC<ShipmentMapProps> = ({ events, trackingCode }) => {
   const mapRef = useRef<HTMLDivElement>(null);
-  const [mapType, setMapType] = useState<string>('roadmap');
-  const [mapError, setMapError] = useState<boolean>(false);
+  const mapInstanceRef = useRef<any>(null);
+  const markersRef = useRef<any[]>([]);
+  const [mapType, setMapType] = React.useState<string>('roadmap');
+  const [mapError, setMapError] = React.useState<boolean>(false);
 
   // Filtrer les événements qui ont des coordonnées de localisation
   const locatedEvents = events.filter(event => event.location && event.location.latitude && event.location.longitude);
@@ -33,126 +37,185 @@ const ShipmentMap: React.FC<ShipmentMapProps> = ({ events, trackingCode }) => {
   useEffect(() => {
     if (!mapRef.current || events.length === 0) return;
     
-    try {
-      // Simule le rendu d'une carte avec des marqueurs
-      // Dans une implémentation réelle, utilisez Leaflet, Google Maps ou Mapbox
-      renderSimulatedMap();
-    } catch (error) {
-      console.error("Erreur lors de l'initialisation de la carte", error);
-      setMapError(true);
-    }
-    
-    // Fonction de simulation pour le rendu de la carte
-    function renderSimulatedMap() {
-      if (!mapRef.current) return;
-      
-      const mapContainer = mapRef.current;
-      
-      // Style de base de la carte
-      mapContainer.style.backgroundImage = mapType === 'satellite' 
-        ? 'url("https://miro.medium.com/max/1400/1*qZ1lrF9K7RuIgOQPNvNFLQ.png")' 
-        : 'url("https://i.stack.imgur.com/T9oHl.png")';
-      mapContainer.style.backgroundSize = 'cover';
-      mapContainer.style.backgroundPosition = 'center';
-      mapContainer.innerHTML = '';
-      
-      // Ajouter des marqueurs pour chaque événement avec localisation
-      events.forEach((event, index) => {
-        if (!event.location) return;
-        
-        // Créer un élément div pour représenter le marqueur
-        const marker = document.createElement('div');
-        marker.className = 'absolute z-10 flex flex-col items-center';
-        marker.style.transform = 'translate(-50%, -100%)';
-        
-        // Positionner le marqueur sur la "carte"
-        // Nous utilisons des valeurs relatives basées sur l'index pour la simulation
-        const left = 20 + (index * 15) + (Math.random() * 10);
-        const top = 30 + (index * 10) + (Math.random() * 10);
-        marker.style.left = `${Math.min(left, 80)}%`;
-        marker.style.top = `${Math.min(top, 70)}%`;
-        
-        // Créer l'icône du marqueur
-        const markerIcon = document.createElement('div');
-        markerIcon.className = `rounded-full p-1 ${index === 0 ? 'bg-primary text-white' : 'bg-white text-primary'} shadow-lg`;
-        
-        // Déterminer l'icône à afficher selon le type d'événement
-        let icon = '';
-        if (event.type === 'delivery') {
-          icon = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>`;
-        } else if (event.type === 'pickup') {
-          icon = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>`;
-        } else {
-          icon = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>`;
+    const initMap = async () => {
+      try {
+        // Clean up previous map if it exists
+        if (mapInstanceRef.current) {
+          mapInstanceRef.current.remove();
+          mapInstanceRef.current = null;
+          markersRef.current = [];
         }
         
-        markerIcon.innerHTML = icon;
-        marker.appendChild(markerIcon);
+        // Load Leaflet with configured icons
+        const L = await configureLeafletIcons();
         
-        // Créer l'étiquette pour le marqueur
-        const label = document.createElement('div');
-        label.className = 'bg-white px-2 py-1 rounded shadow-md text-xs mt-1';
-        label.textContent = new Date(event.timestamp).toLocaleDateString('fr-FR', { 
-          day: 'numeric', 
-          month: 'short' 
+        // Default center (Paris)
+        let center: [number, number] = [48.856614, 2.3522219];
+        let zoom = 5;
+        
+        // If we have events with location, use the most recent one for center
+        if (locatedEvents.length > 0) {
+          const latestEvent = locatedEvents[0];
+          center = [latestEvent.location.latitude, latestEvent.location.longitude];
+          zoom = 10;
+        }
+        
+        // Create map with the selected style
+        const map = L.map(mapRef.current).setView(center, zoom);
+        mapInstanceRef.current = map;
+        
+        // Add appropriate tile layer based on mapType
+        if (mapType === 'satellite') {
+          L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+            attribution: 'Imagery &copy; Esri',
+            maxZoom: 19
+          }).addTo(map);
+        } else {
+          L.tileLayer('https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png', {
+            attribution: 'données © <a href="//osm.org/copyright">OpenStreetMap</a>/ODbL - rendu <a href="//openstreetmap.fr">OSM France</a>',
+            maxZoom: 19
+          }).addTo(map);
+        }
+        
+        // Add markers for events with location
+        const markers: any[] = [];
+        
+        events.forEach((event, index) => {
+          if (!event.location) return;
+          
+          const { latitude, longitude } = event.location;
+          
+          // Create custom icon based on event type
+          const iconOptions: any = {
+            className: `event-marker-${event.type}`,
+            iconSize: [32, 32],
+            iconAnchor: [16, 16],
+            popupAnchor: [0, -16]
+          };
+          
+          let iconHtml = '';
+          const colorClass = getEventColor(event.type);
+          
+          iconHtml = `<div class="w-8 h-8 rounded-full bg-white p-1 shadow-md flex items-center justify-center">
+            <div class="w-6 h-6 rounded-full ${colorClass}"></div>
+          </div>`;
+          
+          iconOptions.html = iconHtml;
+          
+          const icon = L.divIcon(iconOptions);
+          
+          // Create marker
+          const marker = L.marker([latitude, longitude], { 
+            icon: icon, 
+            zIndexOffset: events.length - index // Latest events above older ones
+          }).addTo(map);
+          
+          // Create popup content
+          const popupContent = `
+            <div class="p-3">
+              <h3 class="font-bold">${getEventTypeLabel(event.type)}</h3>
+              <p class="text-sm">${event.description}</p>
+              <p class="text-sm text-muted-foreground">
+                ${event.location.city}, ${event.location.country}
+              </p>
+              <p class="text-sm text-muted-foreground">
+                ${new Date(event.timestamp).toLocaleString('fr-FR')}
+              </p>
+            </div>
+          `;
+          
+          marker.bindPopup(popupContent);
+          markers.push(marker);
         });
-        marker.appendChild(label);
         
-        // Ajouter un effet de survol
-        marker.addEventListener('mouseenter', () => {
-          label.className = 'bg-primary text-white px-2 py-1 rounded shadow-md text-xs mt-1';
-          label.textContent = event.description;
-        });
+        markersRef.current = markers;
         
-        marker.addEventListener('mouseleave', () => {
-          label.className = 'bg-white px-2 py-1 rounded shadow-md text-xs mt-1';
-          label.textContent = new Date(event.timestamp).toLocaleDateString('fr-FR', { 
-            day: 'numeric', 
-            month: 'short' 
-          });
-        });
+        // Draw path between markers if we have more than one
+        if (markers.length > 1) {
+          const points = events
+            .filter(event => event.location)
+            .map(event => [event.location.latitude, event.location.longitude]);
+          
+          L.polyline(points, { 
+            color: '#3b82f6', 
+            weight: 3,
+            opacity: 0.7,
+            dashArray: '5, 5' 
+          }).addTo(map);
+        }
         
-        mapContainer.appendChild(marker);
-      });
-      
-      // Tracer des lignes entre les marqueurs dans une implémentation réelle
-      // Pour cette simulation, nous dessinons une simple ligne en SVG
-      if (events.length > 1) {
-        const path = document.createElement('div');
-        path.className = 'absolute top-0 left-0 w-full h-full z-0';
-        path.innerHTML = `
-          <svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none">
-            <polyline 
-              points="${events.map((_, i) => {
-                const x = 20 + (i * 15) + (Math.random() * 10);
-                const y = 30 + (i * 10) + (Math.random() * 10);
-                return `${Math.min(x, 80)},${Math.min(y, 70)}`;
-              }).join(' ')}"
-              fill="none" 
-              stroke="#3b82f6" 
-              stroke-width="2"
-              stroke-dasharray="5,5"
-            />
-          </svg>
-        `;
-        mapContainer.appendChild(path);
+        // Fit map to show all markers
+        if (markers.length > 0) {
+          try {
+            const group = L.featureGroup(markers);
+            map.fitBounds(group.getBounds().pad(0.2));
+          } catch (error) {
+            console.error("Error fitting bounds", error);
+          }
+        }
+        
+        // Add package info card
+        const infoCard = L.control({ position: 'bottomleft' });
+        infoCard.onAdd = function() {
+          const div = L.DomUtil.create('div', 'info-card');
+          div.innerHTML = `
+            <div class="bg-white p-2 rounded shadow-md text-xs">
+              <div class="font-bold">Colis: ${trackingCode}</div>
+              <div>Mise à jour: ${new Date(events[0].timestamp).toLocaleDateString('fr-FR', { 
+                day: 'numeric', 
+                month: 'short',
+                hour: '2-digit', 
+                minute: '2-digit'
+              })}</div>
+            </div>
+          `;
+          return div;
+        };
+        infoCard.addTo(map);
+        
+      } catch (error) {
+        console.error("Erreur lors de l'initialisation de la carte", error);
+        setMapError(true);
       }
-      
-      // Ajouter des informations sur le colis
-      const infoCard = document.createElement('div');
-      infoCard.className = 'absolute bottom-2 left-2 bg-white p-2 rounded shadow-md text-xs';
-      infoCard.innerHTML = `
-        <div class="font-bold">Colis: ${trackingCode}</div>
-        <div>Mise à jour: ${new Date(events[0].timestamp).toLocaleDateString('fr-FR', { 
-          day: 'numeric', 
-          month: 'short',
-          hour: '2-digit', 
-          minute: '2-digit'
-        })}</div>
-      `;
-      mapContainer.appendChild(infoCard);
-    }
-  }, [events, mapType, trackingCode]);
+    };
+    
+    initMap();
+    
+    return () => {
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.remove();
+        mapInstanceRef.current = null;
+        markersRef.current = [];
+      }
+    };
+  }, [events, mapType, trackingCode, locatedEvents]);
+  
+  // Helper functions
+  const getEventTypeLabel = (type: string): string => {
+    const labels: Record<string, string> = {
+      'pickup': 'Pris en charge',
+      'transit': 'En transit',
+      'customs': 'Contrôle douanier',
+      'delivery': 'Livré',
+      'delay': 'Retardé',
+      'location': 'Mise à jour de position'
+    };
+    
+    return labels[type] || 'Mise à jour';
+  };
+  
+  const getEventColor = (type: string): string => {
+    const colors: Record<string, string> = {
+      'pickup': 'bg-purple-500',
+      'transit': 'bg-blue-500',
+      'customs': 'bg-amber-500',
+      'delivery': 'bg-green-500',
+      'delay': 'bg-orange-500',
+      'location': 'bg-gray-500'
+    };
+    
+    return colors[type] || 'bg-gray-400';
+  };
   
   // Gérer le changement de type de carte
   const handleMapTypeChange = (value: string) => {

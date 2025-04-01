@@ -1,9 +1,8 @@
 
 import React, { useState } from 'react';
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Search } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { Input } from '@/components/ui/input';
+import { Search, Loader2 } from 'lucide-react';
 
 interface TrackingSearchFormProps {
   onSearch: (trackingNumber: string) => void;
@@ -12,38 +11,30 @@ interface TrackingSearchFormProps {
 
 const TrackingSearchForm: React.FC<TrackingSearchFormProps> = ({ onSearch, isLoading }) => {
   const [trackingNumber, setTrackingNumber] = useState('');
-  const { toast } = useToast();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!trackingNumber) {
-      toast({
-        title: "Erreur",
-        description: "Veuillez entrer un numéro de référence.",
-        variant: "destructive"
-      });
-      return;
+    if (trackingNumber.trim()) {
+      onSearch(trackingNumber.trim());
     }
-    
-    onSearch(trackingNumber);
   };
 
   return (
     <form onSubmit={handleSubmit} className="flex gap-2">
       <Input
-        type="text"
-        placeholder="Entrez le numéro de référence"
+        placeholder="Entrez votre numéro de suivi"
         value={trackingNumber}
         onChange={(e) => setTrackingNumber(e.target.value)}
-      />
-      <Button 
-        type="submit"
         disabled={isLoading}
-        className="whitespace-nowrap"
-      >
-        {isLoading ? "Recherche..." : "Suivre le colis"}
-        <Search className="ml-2 h-4 w-4" />
+        className="flex-1"
+      />
+      <Button disabled={isLoading || !trackingNumber.trim()} type="submit">
+        {isLoading ? (
+          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+        ) : (
+          <Search className="mr-2 h-4 w-4" />
+        )}
+        Suivre
       </Button>
     </form>
   );

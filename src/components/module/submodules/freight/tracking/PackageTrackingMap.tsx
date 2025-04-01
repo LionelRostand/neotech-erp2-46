@@ -7,8 +7,6 @@ import TrackingSearchForm from './components/TrackingSearchForm';
 import MapDisplay from './components/MapDisplay';
 import MapStatusDisplay from './components/MapStatusDisplay';
 import 'leaflet/dist/leaflet.css';
-import 'leaflet.markercluster/dist/MarkerCluster.css';
-import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
 import './PackageTrackingStyles.css';
 
 interface PackageTrackingMapProps {
