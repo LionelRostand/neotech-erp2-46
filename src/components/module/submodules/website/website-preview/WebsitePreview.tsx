@@ -7,10 +7,11 @@ import RestaurantMenuTemplate from '../templates/RestaurantMenuTemplate';
 interface WebsitePreviewProps {
   previewMode: boolean;
   activeTemplate?: string | null;
+  initialContent?: any[]; // Added initialContent prop
 }
 
-const WebsitePreview: React.FC<WebsitePreviewProps> = ({ previewMode, activeTemplate }) => {
-  const [elements, setElements] = useState<any[]>([]);
+const WebsitePreview: React.FC<WebsitePreviewProps> = ({ previewMode, activeTemplate, initialContent = [] }) => {
+  const [elements, setElements] = useState<any[]>(initialContent);
 
   // Configuration du drop target pour le drag and drop
   const [{ isOver }, drop] = useDrop(() => ({
