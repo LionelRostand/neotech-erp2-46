@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -9,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import { Globe, Settings, Users, Calendar, Car, MapPin, Code, X, Check, Copy } from 'lucide-react';
-import { WebBooking } from './types/reservation-types';
+import { WebBooking, WebBookingStatus } from './types/reservation-types';
 import { TransportService } from './types/base-types';
 import {
   Dialog,
@@ -41,48 +40,33 @@ const TransportWebBooking: React.FC = () => {
     displayPricing: true
   });
 
-  const [mockRecentBookings] = useState<WebBooking[]>([
+  const [mockBookings] = useState<WebBooking[]>([
     {
-      id: "wb-1001",
-      service: "airport",
-      serviceId: "airport",
-      clientName: "Jean Dupont",
-      clientEmail: "jean.dupont@example.com",
-      clientPhone: "+33612345678",
-      date: "2023-09-25",
+      id: "web-001",
+      name: "Marie Martin",
+      email: "marie.martin@example.com",
+      phone: "+33 6 12 34 56 78",
+      date: "2023-11-20",
       time: "14:30",
-      pickup: "34 Avenue de la République, Paris",
-      dropoff: "Aéroport Charles de Gaulle, Terminal 2E",
-      pickupLocation: "34 Avenue de la République, Paris",
-      dropoffLocation: "Aéroport Charles de Gaulle, Terminal 2E",
-      status: "confirmed",
-      price: 75,
-      paymentMethod: "card",
-      paymentStatus: "paid",
-      passengerCount: 2,
-      luggageCount: 2,
-      createdAt: new Date().toISOString()
+      passengers: 2,
+      status: "new",
+      createdAt: "2023-11-10T15:30:00Z",
+      serviceId: "airport-transfer",
+      service: "Transfert Aéroport"
     },
     {
-      id: "wb-1002",
-      service: "hourly",
-      serviceId: "hourly",
-      clientName: "Marie Laurent",
-      clientEmail: "marie.laurent@example.com",
-      clientPhone: "+33623456789",
-      date: "2023-09-27",
-      time: "09:00",
-      pickup: "16 Rue de Rivoli, Paris",
-      dropoff: "Multiple destinations",
-      pickupLocation: "16 Rue de Rivoli, Paris",
-      dropoffLocation: "Multiple destinations",
-      status: "new",
-      price: 120,
-      paymentMethod: "pending",
-      paymentStatus: "pending",
-      passengerCount: 1,
-      luggageCount: 1,
-      createdAt: new Date().toISOString()
+      id: "web-002",
+      name: "Pierre Dubois",
+      email: "pierre.dubois@example.com",
+      phone: "+33 7 98 76 54 32",
+      date: "2023-11-25",
+      time: "09:15",
+      passengers: 1,
+      notes: "Bagages volumineux",
+      status: "processed",
+      createdAt: "2023-11-12T09:45:00Z",
+      serviceId: "city-tour",
+      service: "Visite de Ville"
     }
   ]);
 
@@ -124,6 +108,19 @@ const TransportWebBooking: React.FC = () => {
     const code = integrationMethod === 'iframe' ? getIframeCode() : getJavascriptCode();
     navigator.clipboard.writeText(code);
     toast.success("Code d'intégration copié dans le presse-papier");
+  };
+
+  const getStatusBadge = (status: WebBookingStatus) => {
+    switch (status) {
+      case "new":
+        return <Badge className="bg-blue-500">Nouvelle</Badge>;
+      case "processed":
+        return <Badge className="bg-green-500">Traitée</Badge>;
+      case "cancelled":
+        return <Badge className="bg-red-500">Annulée</Badge>;
+      default:
+        return <Badge>Inconnue</Badge>;
+    }
   };
 
   return (
@@ -345,26 +342,20 @@ const TransportWebBooking: React.FC = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {mockRecentBookings.map(booking => (
+                    {mockBookings.map(booking => (
                       <tr key={booking.id} className="border-b hover:bg-muted/50">
                         <td className="py-3 px-4">{booking.id}</td>
-                        <td className="py-3 px-4">{booking.clientName}</td>
+                        <td className="py-3 px-4">{booking.name}</td>
                         <td className="py-3 px-4">
-                          {booking.serviceId === "airport" ? 'Transfert aéroport' : 
+                          {booking.serviceId === "airport-transfer" ? 'Transfert Aéroport' : 
+                           booking.serviceId === "city-tour" ? 'Visite de Ville' : 
+                           booking.serviceId === "airport" ? 'Transfert aéroport' : 
                            booking.serviceId === "hourly" ? 'Service à l\'heure' : 
                            booking.serviceId === "pointToPoint" ? 'Point à point' : 'Excursion journée'}
                         </td>
                         <td className="py-3 px-4">{`${booking.date} ${booking.time}`}</td>
                         <td className="py-3 px-4">
-                          <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                            booking.status === 'confirmed' ? 'bg-green-100 text-green-800' : 
-                            booking.status === 'new' ? 'bg-blue-100 text-blue-800' : 
-                            'bg-gray-100 text-gray-800'
-                          }`}>
-                            {booking.status === 'confirmed' ? 'Confirmée' : 
-                             booking.status === 'new' ? 'Nouvelle' : 
-                             booking.status === 'cancelled' ? 'Annulée' : 'Inconnue'}
-                          </span>
+                          {getStatusBadge(booking.status)}
                         </td>
                       </tr>
                     ))}

@@ -62,3 +62,4 @@ export type {
 // Export from other type files
 export * from './geolocation-types';
 export * from './integration-types';
+export * from './permission-types';

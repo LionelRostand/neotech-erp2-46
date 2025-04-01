@@ -1,63 +1,77 @@
 
-import { generatePaymentReference } from "../utils/payment-utils";
+// Payment API mock functions
+import { toast } from "sonner";
 
-// Mock API functions for payment processing
+export interface PaymentRequest {
+  reservationId: string;
+  amount: number;
+  method: string;
+  cardNumber?: string;
+  cardExpiry?: string;
+  cardCVC?: string;
+  customerName?: string;
+}
 
-export const createPayment = async (paymentData: any) => {
-  console.log('Creating payment', paymentData);
-  return {
-    id: generatePaymentReference(),
-    ...paymentData,
-    status: 'success',
-    createdAt: new Date().toISOString()
-  };
+export interface RefundRequest {
+  paymentId: string;
+  reservationId: string;
+  amount: number;
+  reason: string;
+}
+
+export interface PaymentResponse {
+  success: boolean;
+  paymentId?: string;
+  message: string;
+  transactionReference?: string;
+  date?: string;
+}
+
+/**
+ * Process a payment for a reservation
+ */
+export const processPayment = async (paymentData: PaymentRequest): Promise<PaymentResponse> => {
+  // This is a mock function that simulates a payment API call
+  console.log("Processing payment:", paymentData);
+  
+  // Simulate API call delay
+  await new Promise(resolve => setTimeout(resolve, 1500));
+  
+  // Simulate success (in real app, would call actual payment processor)
+  if (Math.random() > 0.1) { // 90% success rate
+    return {
+      success: true,
+      paymentId: `pmt-${Date.now()}`,
+      message: "Payment processed successfully",
+      transactionReference: `tx-${Math.floor(Math.random() * 10000000)}`,
+      date: new Date().toISOString()
+    };
+  } else {
+    // Simulate occasional payment failure
+    throw new Error("Payment processing failed: Card declined");
+  }
 };
 
-export const getPaymentRecords = async (filters?: any) => {
-  console.log('Getting payment records with filters', filters);
-  return [
-    {
-      id: 'PAY-20230701-1234',
-      amount: 120.5,
-      reservationId: 'RES-001',
-      method: 'card',
-      status: 'completed',
-      date: '2023-07-01T10:15:00Z',
-      clientName: 'Jean Dupont'
-    },
-    {
-      id: 'PAY-20230702-5678',
-      amount: 85.0,
-      reservationId: 'RES-002',
-      method: 'paypal',
-      status: 'completed',
-      date: '2023-07-02T14:30:00Z',
-      clientName: 'Marie Laurent'
-    }
-  ];
-};
-
-export const processRefund = async (paymentId: string, amount?: number) => {
-  console.log(`Processing refund for payment ${paymentId}, amount: ${amount || 'full'}`);
-  return {
-    success: true,
-    refundId: `REF-${Date.now()}`,
-    paymentId,
-    amount: amount || 0,
-    date: new Date().toISOString()
-  };
-};
-
-export const getPaymentStatistics = async (period: 'day' | 'week' | 'month' | 'year') => {
-  console.log(`Getting payment statistics for period: ${period}`);
-  return {
-    totalAmount: 2450.75,
-    count: 28,
-    averageAmount: 87.53,
-    byMethod: {
-      card: 1520.50,
-      paypal: 430.25,
-      cash: 500.00
-    }
-  };
+/**
+ * Process a refund for a payment
+ */
+export const processRefund = async (refundData: RefundRequest): Promise<PaymentResponse> => {
+  console.log("Processing refund:", refundData);
+  
+  // Simulate API call delay
+  await new Promise(resolve => setTimeout(resolve, 1500));
+  
+  // Simulate success (in real app, would call actual payment processor)
+  if (Math.random() > 0.05) { // 95% success rate for refunds
+    return {
+      success: true,
+      paymentId: refundData.paymentId,
+      message: "Refund processed successfully",
+      transactionReference: `ref-${Math.floor(Math.random() * 10000000)}`,
+      date: new Date().toISOString()
+    };
+  } else {
+    // Simulate occasional refund failure
+    throw new Error("Refund processing failed: System error");
+  }
 };

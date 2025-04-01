@@ -11,6 +11,8 @@ export interface WebsiteIntegration {
   formConfig: WebBookingFormConfig;
   designConfig: WebBookingDesignConfig;
   websiteModuleId?: string;
+  pageId?: string; // Adding pageId field
+  status?: 'active' | 'inactive' | 'pending'; // Adding status field
 }
 
 export interface WebBookingFormConfig {
@@ -30,11 +32,13 @@ export interface WebBookingDesignConfig {
   primaryColor: string;
   secondaryColor: string;
   font: string;
+  fontFamily?: string; // Add fontFamily
   borderRadius: string;
   buttonStyle: 'rounded' | 'square' | 'pill';
   darkMode: boolean;
   logo?: string;
   customCss?: string;
+  formWidth?: string; // Add formWidth
 }
 
 export interface IntegrationLog {
@@ -96,9 +100,11 @@ export const defaultDesignConfig: WebBookingDesignConfig = {
   primaryColor: '#3b82f6',
   secondaryColor: '#f3f4f6',
   font: 'Inter, sans-serif',
+  fontFamily: 'Inter, sans-serif',
   borderRadius: '0.375rem',
   buttonStyle: 'rounded',
   darkMode: false,
+  formWidth: '100%',
 };
 
 export const defaultFormConfig: WebBookingFormConfig = {

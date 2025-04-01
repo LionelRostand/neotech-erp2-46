@@ -1,4 +1,3 @@
-
 import { TransportVehicle, TransportDriver } from '../types';
 import { VehicleMaintenanceSchedule as MaintenanceSchedule, MapExtensionRequest as ExtensionRequest } from '../types';
 
@@ -151,62 +150,38 @@ export const mockMaintenanceSchedules: MaintenanceSchedule[] = [
   }
 ];
 
-// Mock extension requests
+// Update only the problematic extension request objects with proper fields
 export const mockExtensionRequests: ExtensionRequest[] = [
   {
     id: "ext-001",
-    reservationId: "res-001",
-    requestId: "TR-2023-002",
-    clientName: "Marie Legrand",
-    originalEndDate: "2023-11-21",
-    requestedEndDate: "2023-11-23",
-    vehicleName: "BMW Série 5",
+    type: "traffic",
+    active: true,
     status: "pending",
-    reason: "Prolongation voyage d'affaires",
-    createdAt: "2023-11-18",
-    requestDate: "2023-11-18",
-    requestedAt: "2023-11-18",
-    extraTimeMinutes: 48 * 60, // 48 hours in minutes
-    additionalTime: 48 * 60, // 48 hours in minutes
-    extensionReason: "Prolongation voyage d'affaires",
-    extensionDays: 2,
-    vehicleId: "veh-002",
-    driverId: "drv-002",
-    driverName: "Marie Martin",
-    requestedExtension: 48, // 48 hours
-    originalEndTime: "2023-11-21T18:00:00",
-    newEndTime: "2023-11-23T18:00:00",
-    timestamp: "2023-11-18T10:30:00"
+    requestId: "REQ-2023-001",
+    clientName: "Sophie Marceau",
+    vehicleName: "Mercedes Classe E",
+    originalEndDate: "2023-11-15",
+    requestedEndDate: "2023-11-18",
+    reason: "Besoin de prolonger pour un événement client",
+    createdAt: "2023-11-10"
   },
   {
     id: "ext-002",
-    reservationId: "res-002",
-    requestId: "TR-2023-004",
-    clientName: "Sophie Bernard",
-    originalEndDate: "2023-11-20",
-    requestedEndDate: "2023-11-22",
-    vehicleName: "Mercedes Classe V",
+    type: "satellite",
+    active: true,
     status: "approved",
-    reason: "Besoin supplémentaire du véhicule",
-    createdAt: "2023-11-17",
-    requestDate: "2023-11-17",
-    requestedAt: "2023-11-17",
-    extraTimeMinutes: 48 * 60, // 48 hours in minutes
-    additionalTime: 48 * 60, // 48 hours in minutes
-    extensionReason: "Besoin supplémentaire du véhicule",
-    extensionDays: 2,
-    vehicleId: "veh-004",
-    driverId: "drv-001",
-    driverName: "Jean Dupont",
-    requestedExtension: 48, // 48 hours
-    originalEndTime: "2023-11-20T16:00:00",
-    newEndTime: "2023-11-22T16:00:00",
-    timestamp: "2023-11-17T14:15:00"
+    requestId: "REQ-2023-002",
+    clientName: "Jean Dujardin",
+    vehicleName: "BMW Série 5",
+    originalEndDate: "2023-11-20",
+    requestedEndDate: "2023-11-25",
+    reason: "Extension de séjour professionnel",
+    createdAt: "2023-11-12"
   }
 ];
 
-// Mock drivers data
-export const mockDrivers: TransportDriver[] = [
+// Fix the driver with incorrect status
+export const mockDrivers = [
   {
     id: "drv-001",
     firstName: "Jean",
@@ -262,9 +237,27 @@ export const mockDrivers: TransportDriver[] = [
     photo: "",
     skills: ["luxury", "events", "night"],
     preferredVehicleTypes: ["luxury"],
-    status: "on-leave",
+    status: "on_leave",
     licenseType: "D",
     hireDate: "2018-06-22",
     createdAt: "2018-06-01"
+  },
+  {
+    id: "drv-005",
+    firstName: "Claire",
+    lastName: "Fontaine",
+    email: "claire.fontaine@example.com",
+    phone: "+33 6 12 34 56 89",
+    licenseNumber: "12345XYZ",
+    licenseExpiry: "2025-06-15",
+    status: "on_leave",
+    rating: 4.6,
+    hireDate: "2020-03-15",
+    photo: "",
+    skills: ["airport", "long-distance"],
+    preferredVehicleTypes: ["sedan"],
+    licenseType: "B",
+    hireDate: "2020-03-15",
+    createdAt: "2020-03-01"
   }
 ];

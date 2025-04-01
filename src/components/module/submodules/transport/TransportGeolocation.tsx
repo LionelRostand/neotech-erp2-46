@@ -18,119 +18,96 @@ import VehicleDetailsDialog from './geolocation/VehicleDetailsDialog';
 import AlertConfigDialog from './geolocation/AlertConfigDialog';
 import AlertDetailsDialog from './geolocation/AlertDetailsDialog';
 
-const mockVehicles: TransportVehicleWithLocation[] = [
+const mockVehicleLocations: TransportVehicleWithLocation[] = [
   {
-    id: "v1",
+    id: "veh-001",
     name: "Mercedes Classe E",
     type: "sedan",
-    capacity: 4,
     licensePlate: "AB-123-CD",
-    available: false,
     status: "active",
-    color: "white",
-    fuelType: "diesel",
     location: {
-      vehicleId: "v1",
-      latitude: 48.856614,
-      longitude: 2.3522219,
-      lat: 48.856614,
-      lng: 2.3522219,
-      heading: 45,
-      timestamp: "2023-06-01T14:32:00",
-      lastUpdate: "2023-06-01T14:32:00",
-      speed: 45,
-      status: "en service"
-    },
-    driverName: "Thomas Durand"
-  },
-  {
-    id: "v2",
-    name: "Tesla Model S",
-    type: "luxury",
-    capacity: 5,
-    licensePlate: "EF-456-GH",
-    available: false,
-    status: "active",
-    color: "black",
-    fuelType: "electric",
-    location: {
-      vehicleId: "v2",
+      id: "loc-001",
+      vehicleId: "veh-001",
       latitude: 48.8584,
       longitude: 2.2945,
-      lat: 48.8584,
-      lng: 2.2945,
-      heading: 0,
-      timestamp: "2023-06-01T14:30:00",
-      lastUpdate: "2023-06-01T14:30:00",
-      speed: 0,
-      status: "arrêté"
-    },
-    driverName: "Sophie Martin"
-  },
-  {
-    id: "v3",
-    name: "Renault Trafic",
-    type: "van",
-    capacity: 9,
-    licensePlate: "IJ-789-KL",
-    available: true,
-    status: "maintenance",
-    color: "silver",
-    fuelType: "diesel",
-    location: {
-      vehicleId: "v3",
-      latitude: 48.8737,
-      longitude: 2.2950,
-      lat: 48.8737,
-      lng: 2.2950,
-      heading: 0,
-      timestamp: "2023-06-01T13:15:00",
-      lastUpdate: "2023-06-01T13:15:00",
-      speed: 0,
-      status: "maintenance"
+      timestamp: "2023-11-08T10:15:30Z",
+      speed: 35,
+      heading: 90,
+      status: "moving",
+      lastUpdate: "2023-11-08T10:15:30Z"
     }
   },
   {
-    id: "v4",
+    id: "veh-002",
     name: "BMW Série 5",
     type: "sedan",
-    capacity: 5,
-    licensePlate: "MN-012-OP",
-    available: true,
+    licensePlate: "EF-456-GH",
     status: "active",
-    color: "blue",
-    fuelType: "gasoline",
     location: {
-      vehicleId: "v4",
-      latitude: 48.8417,
-      longitude: 2.3324,
-      lat: 48.8417,
-      lng: 2.3324,
-      heading: 32,
-      timestamp: "2023-06-01T14:28:00",
-      lastUpdate: "2023-06-01T14:28:00",
-      speed: 32,
-      status: "en service"
-    },
-    driverName: "Marc Dupont"
+      id: "loc-002",
+      vehicleId: "veh-002",
+      latitude: 48.8738,
+      longitude: 2.2950,
+      timestamp: "2023-11-08T10:10:15Z",
+      speed: 0,
+      heading: 180,
+      status: "stopped",
+      lastUpdate: "2023-11-08T10:10:15Z"
+    }
+  },
+  {
+    id: "veh-003",
+    name: "Audi A6",
+    type: "sedan",
+    licensePlate: "IJ-789-KL",
+    status: "maintenance",
+    location: {
+      id: "loc-003",
+      vehicleId: "veh-003",
+      latitude: 48.8600,
+      longitude: 2.3400,
+      timestamp: "2023-11-08T09:45:00Z",
+      speed: 0,
+      heading: 0,
+      status: "idle",
+      lastUpdate: "2023-11-08T09:45:00Z"
+    }
+  },
+  {
+    id: "veh-004",
+    name: "Mercedes Classe V",
+    type: "van",
+    licensePlate: "MN-012-OP",
+    status: "active",
+    location: {
+      id: "loc-004",
+      vehicleId: "veh-004",
+      latitude: 48.8474,
+      longitude: 2.3520,
+      timestamp: "2023-11-08T10:18:45Z",
+      speed: 28,
+      heading: 270,
+      status: "moving",
+      lastUpdate: "2023-11-08T10:18:45Z"
+    }
   }
 ];
 
 const mockAlerts = [
   { 
     id: 'a1', 
-    vehicleId: 'v4', 
+    vehicleId: 'veh-004', 
     vehicleName: 'BMW Série 5', 
-    licensePlate: 'MN-012-OP', 
+    licensePlate: 'EF-456-GH', 
     type: 'unauthorized', 
     message: 'Utilisation en dehors des heures de service', 
     timestamp: '2023-06-01T02:14:00', 
     status: 'unresolved',
-    location: { lat: 48.8417, lng: 2.3324 }
+    location: { lat: 48.8584, lng: 2.2945 }
   },
   { 
     id: 'a2', 
-    vehicleId: 'v1', 
+    vehicleId: 'veh-001', 
     vehicleName: 'Mercedes Classe E', 
     licensePlate: 'AB-123-CD', 
     type: 'speeding', 
@@ -142,7 +119,7 @@ const mockAlerts = [
   },
   { 
     id: 'a3', 
-    vehicleId: 'v2', 
+    vehicleId: 'veh-002', 
     vehicleName: 'Tesla Model S', 
     licensePlate: 'EF-456-GH', 
     type: 'geofence', 
@@ -156,7 +133,7 @@ const mockAlerts = [
 const mockRoutes = [
   {
     id: 'r1',
-    vehicleId: 'v1',
+    vehicleId: 'veh-001',
     vehicleName: 'Mercedes Classe E',
     currentRoute: 'Paris Centre → Orly Airport',
     optimizedRoute: 'Paris Centre → A6 → Orly Airport',
@@ -166,7 +143,7 @@ const mockRoutes = [
   },
   {
     id: 'r2',
-    vehicleId: 'v4',
+    vehicleId: 'veh-004',
     vehicleName: 'BMW Série 5',
     currentRoute: 'Montmartre → Tour Eiffel',
     optimizedRoute: 'Montmartre → Opéra → Tour Eiffel',
@@ -189,15 +166,15 @@ const TransportGeolocation = () => {
   
   const mapRef = useRef<HTMLDivElement>(null);
   
-  const { mapInitialized, mapConfig, setMapConfig, refreshMap } = useTransportMap(mapRef, mockVehicles);
+  const { mapInitialized, mapConfig, setMapConfig, refreshMap, isMapLoaded, updateMarkers } = useTransportMap(mapRef, mockVehicleLocations);
 
   useEffect(() => {
-    if (activeTab === 'map' && mapRef.current && !mapInitialized) {
-      refreshMap();
+    if (isMapLoaded) {
+      updateMarkers(vehicleLocations);
     }
-  }, [activeTab, refreshMap, mapInitialized]);
+  }, [isMapLoaded, vehicleLocations, updateMarkers]);
 
-  const filteredVehicles = mockVehicles.filter(vehicle => 
+  const filteredVehicles = mockVehicleLocations.filter(vehicle => 
     vehicle.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     vehicle.licensePlate.toLowerCase().includes(searchTerm.toLowerCase())
   );

@@ -6,14 +6,20 @@ import { MapConfig, TransportVehicleWithLocation, MapHookResult } from '../types
 
 // Default map configuration
 const defaultConfig: MapConfig = {
-  center: [48.866667, 2.333333], // Paris
+  center: { latitude: 48.866667, longitude: 2.333333 }, // Paris
   zoom: 12,
   showTraffic: false,
   showGeofences: false,
   refreshInterval: 30000,
+  provider: 'osm', // OpenStreetMap by default
   maxZoom: 18,
   minZoom: 3,
   tileProvider: 'osm', // OpenStreetMap by default
+};
+
+// Helper function to convert Coordinates to Leaflet's LatLngExpression
+const toLatLng = (coords: { latitude: number; longitude: number }): L.LatLngExpression => {
+  return [coords.latitude, coords.longitude];
 };
 
 export function useTransportMap(initialConfig?: MapConfig): MapHookResult {
@@ -29,7 +35,7 @@ export function useTransportMap(initialConfig?: MapConfig): MapHookResult {
 
     // Create the map
     const mapInstance = L.map(mapRef.current, {
-      center: mapConfig.center,
+      center: toLatLng(mapConfig.center),
       zoom: mapConfig.zoom,
       maxZoom: mapConfig.maxZoom || 18,
       minZoom: mapConfig.minZoom || 3,
@@ -78,7 +84,7 @@ export function useTransportMap(initialConfig?: MapConfig): MapHookResult {
   useEffect(() => {
     if (!map) return;
 
-    map.setView(mapConfig.center, mapConfig.zoom);
+    map.setView(toLatLng(mapConfig.center), mapConfig.zoom);
     
     // Set tile layer based on provider if it changed
     if (mapConfig.tileProvider) {
@@ -89,11 +95,11 @@ export function useTransportMap(initialConfig?: MapConfig): MapHookResult {
   }, [map, mapConfig]);
 
   // Function to clear and update markers
-  const updateMarkers = useCallback((vehicles: TransportVehicleWithLocation[], selectedId?: string) => {
+  const updateMarkers = useCallback((vehicles: TransportVehicleWithLocation[]) => {
     if (!map) return;
     
     clearMarkers(map);
-    addVehicleMarkers(map, vehicles, () => {}, selectedId);
+    addVehicleMarkers(map, vehicles);
   }, [map, clearMarkers, addVehicleMarkers]);
 
   // Function to refresh the map

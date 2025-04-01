@@ -4,6 +4,9 @@
 export interface Coordinates {
   latitude: number;
   longitude: number;
+  // For Leaflet compatibility
+  lat?: number;
+  lng?: number;
 }
 
 export interface VehicleLocation {
@@ -52,9 +55,19 @@ export interface MapConfig {
 }
 
 export interface MapExtensionRequest {
+  id: string; // Adding required ID field
   type: 'traffic' | 'satellite' | 'terrain' | 'heatmap';
   active: boolean;
   config?: Record<string, any>;
+  status: 'pending' | 'approved' | 'rejected'; // Adding status field
+  requestId: string; // Adding request ID field
+  clientName: string; // Adding client name field
+  vehicleName: string; // Adding vehicle name field
+  originalEndDate: string; // Adding original end date field
+  requestedEndDate: string; // Adding requested end date field
+  reason: string; // Adding reason field
+  extensionReason?: string; // Adding optional extension reason field
+  createdAt: string; // Adding creation date
 }
 
 export interface MapFilter {
@@ -95,7 +108,7 @@ export interface MapHookResult {
   mapConfig: MapConfig;
   setMapConfig: (config: MapConfig) => void;
   refreshMap: () => void;
-  updateMarkers: (vehicles: TransportVehicleWithLocation[], selectedId?: string) => void;
+  updateMarkers: (vehicles: TransportVehicleWithLocation[]) => void;
 }
 
 // Type alias for backward compatibility

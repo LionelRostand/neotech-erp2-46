@@ -19,7 +19,7 @@ export interface TransportClient {
   type: 'individual' | 'corporate';
   loyaltyPoints?: number;
   preferredPaymentMethod?: string;
-  name?: string; // Added to support ClientHistoryDialog
+  name?: string; // Added to support components using it
 }
 
 export interface ClientAddress {

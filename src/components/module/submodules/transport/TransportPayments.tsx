@@ -60,6 +60,8 @@ import EmailInvoiceDialog from './payments/EmailInvoiceDialog';
 import RecordPaymentDialog from './payments/RecordPaymentDialog';
 import { jsPDF } from "jspdf";
 import 'jspdf-autotable';
+import { Collapsible, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { LineChart } from "@/components/ui/line-chart";
 
 const mockInvoices = [
   { 
@@ -335,7 +337,7 @@ const TransportPayments = () => {
         <h2 className="text-3xl font-bold">Gestion des Paiements</h2>
         <div className="flex gap-2">
           <Button variant="outline">
-            <ChevronsUpDown className="mr-2 h-4 w-4" /> Rapprochement bancaire
+            <ChevronDown className="mr-2 h-4 w-4" /> Rapprochement bancaire
           </Button>
           <Button onClick={() => setShowInvoiceDialog(true)}>
             <FileText className="mr-2 h-4 w-4" />
@@ -374,177 +376,187 @@ const TransportPayments = () => {
         </Button>
       </div>
       
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="invoices" className="flex items-center gap-2">
-            <FileText className="h-4 w-4" />
-            <span>Factures</span>
-          </TabsTrigger>
-          <TabsTrigger value="transactions" className="flex items-center gap-2">
-            <CreditCard className="h-4 w-4" />
-            <span>Transactions</span>
-          </TabsTrigger>
-        </TabsList>
+      <Collapsible defaultOpen={true} className="border rounded-md">
+        <CollapsibleTrigger className="flex w-full items-center justify-between p-4 font-medium">
+          <div className="flex items-center gap-2">
+            <LineChart className="h-5 w-5 text-muted-foreground" />
+            <span>Statistiques des paiements</span>
+          </div>
+          <ChevronDown className="h-4 w-4 transition-transform ui-open:rotate-180" />
+        </CollapsibleTrigger>
         
-        <TabsContent value="invoices" className="mt-4 space-y-4">
-          <Alert>
-            <AlertCircle className="h-4 w-4" />
-            <AlertTitle>Suivi de paiement</AlertTitle>
-            <AlertDescription>
-              2 factures en attente de paiement, 1 facture en retard nécessitant un rappel.
-            </AlertDescription>
-          </Alert>
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="invoices" className="flex items-center gap-2">
+              <FileText className="h-4 w-4" />
+              <span>Factures</span>
+            </TabsTrigger>
+            <TabsTrigger value="transactions" className="flex items-center gap-2">
+              <CreditCard className="h-4 w-4" />
+              <span>Transactions</span>
+            </TabsTrigger>
+          </TabsList>
           
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle>Liste des factures</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Numéro</TableHead>
-                    <TableHead>Client</TableHead>
-                    <TableHead>Véhicule</TableHead>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Échéance</TableHead>
-                    <TableHead>Montant</TableHead>
-                    <TableHead>Statut</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredInvoices.length === 0 ? (
+          <TabsContent value="invoices" className="mt-4 space-y-4">
+            <Alert>
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>Suivi de paiement</AlertTitle>
+              <AlertDescription>
+                2 factures en attente de paiement, 1 facture en retard nécessitant un rappel.
+              </AlertDescription>
+            </Alert>
+            
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle>Liste des factures</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
                     <TableRow>
-                      <TableCell colSpan={8} className="text-center h-24 text-muted-foreground">
-                        Aucune facture trouvée
-                      </TableCell>
+                      <TableHead>Numéro</TableHead>
+                      <TableHead>Client</TableHead>
+                      <TableHead>Véhicule</TableHead>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Échéance</TableHead>
+                      <TableHead>Montant</TableHead>
+                      <TableHead>Statut</TableHead>
+                      <TableHead>Actions</TableHead>
                     </TableRow>
-                  ) : (
-                    filteredInvoices.map((invoice) => (
-                      <TableRow key={invoice.id}>
-                        <TableCell className="font-medium">{invoice.number}</TableCell>
-                        <TableCell>{invoice.clientName}</TableCell>
-                        <TableCell>{invoice.vehicleInfo}</TableCell>
-                        <TableCell>{formatDate(invoice.date)}</TableCell>
-                        <TableCell>{formatDate(invoice.dueDate)}</TableCell>
-                        <TableCell>{formatCurrency(invoice.amount)}</TableCell>
-                        <TableCell>{getStatusBadge(invoice.status)}</TableCell>
-                        <TableCell>
-                          <div className="flex space-x-1">
-                            <Button 
-                              variant="ghost" 
-                              size="icon"
-                              onClick={() => handleViewDetails(invoice)}
-                              title="Voir détails"
-                            >
-                              <Eye className="h-4 w-4" />
-                            </Button>
-                            <Button 
-                              variant="ghost" 
-                              size="icon"
-                              onClick={() => handleEmailInvoice(invoice)}
-                              title="Envoyer par email"
-                            >
-                              <Mail className="h-4 w-4" />
-                            </Button>
-                            <Button 
-                              variant="ghost" 
-                              size="icon"
-                              onClick={() => handleDownloadPdf(invoice)}
-                              title="Télécharger PDF"
-                            >
-                              <Download className="h-4 w-4" />
-                            </Button>
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="icon">
-                                  <MoreHorizontal className="h-4 w-4" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                <DropdownMenuItem onClick={() => handleViewDetails(invoice)}>
-                                  <Eye className="h-4 w-4 mr-2" /> Voir détails
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => handleEmailInvoice(invoice)}>
-                                  <Mail className="h-4 w-4 mr-2" /> Envoyer par email
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => handleDownloadPdf(invoice)}>
-                                  <Download className="h-4 w-4 mr-2" /> Télécharger PDF
-                                </DropdownMenuItem>
-                                {invoice.status !== 'paid' && (
-                                  <DropdownMenuItem onClick={() => handleRecordPayment(invoice)}>
-                                    <CreditCard className="h-4 w-4 mr-2" /> Enregistrer un paiement
+                  </TableHeader>
+                  <TableBody>
+                    {filteredInvoices.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={8} className="text-center h-24 text-muted-foreground">
+                          Aucune facture trouvée
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      filteredInvoices.map((invoice) => (
+                        <TableRow key={invoice.id}>
+                          <TableCell className="font-medium">{invoice.number}</TableCell>
+                          <TableCell>{invoice.clientName}</TableCell>
+                          <TableCell>{invoice.vehicleInfo}</TableCell>
+                          <TableCell>{formatDate(invoice.date)}</TableCell>
+                          <TableCell>{formatDate(invoice.dueDate)}</TableCell>
+                          <TableCell>{formatCurrency(invoice.amount)}</TableCell>
+                          <TableCell>{getStatusBadge(invoice.status)}</TableCell>
+                          <TableCell>
+                            <div className="flex space-x-1">
+                              <Button 
+                                variant="ghost" 
+                                size="icon"
+                                onClick={() => handleViewDetails(invoice)}
+                                title="Voir détails"
+                              >
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                              <Button 
+                                variant="ghost" 
+                                size="icon"
+                                onClick={() => handleEmailInvoice(invoice)}
+                                title="Envoyer par email"
+                              >
+                                <Mail className="h-4 w-4" />
+                              </Button>
+                              <Button 
+                                variant="ghost" 
+                                size="icon"
+                                onClick={() => handleDownloadPdf(invoice)}
+                                title="Télécharger PDF"
+                              >
+                                <Download className="h-4 w-4" />
+                              </Button>
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button variant="ghost" size="icon">
+                                    <MoreHorizontal className="h-4 w-4" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                  <DropdownMenuItem onClick={() => handleViewDetails(invoice)}>
+                                    <Eye className="h-4 w-4 mr-2" /> Voir détails
                                   </DropdownMenuItem>
-                                )}
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        </TabsContent>
-        
-        <TabsContent value="transactions" className="mt-4">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle>Historique des transactions</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Client</TableHead>
-                    <TableHead>Facture</TableHead>
-                    <TableHead>Méthode</TableHead>
-                    <TableHead>Montant</TableHead>
-                    <TableHead>Détails</TableHead>
-                    <TableHead>Statut</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredTransactions.length === 0 ? (
+                                  <DropdownMenuItem onClick={() => handleEmailInvoice(invoice)}>
+                                    <Mail className="h-4 w-4 mr-2" /> Envoyer par email
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => handleDownloadPdf(invoice)}>
+                                    <Download className="h-4 w-4 mr-2" /> Télécharger PDF
+                                  </DropdownMenuItem>
+                                  {invoice.status !== 'paid' && (
+                                    <DropdownMenuItem onClick={() => handleRecordPayment(invoice)}>
+                                      <CreditCard className="h-4 w-4 mr-2" /> Enregistrer un paiement
+                                    </DropdownMenuItem>
+                                  )}
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </TabsContent>
+          
+          <TabsContent value="transactions" className="mt-4">
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle>Historique des transactions</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
                     <TableRow>
-                      <TableCell colSpan={8} className="text-center h-24 text-muted-foreground">
-                        Aucune transaction trouvée
-                      </TableCell>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Client</TableHead>
+                      <TableHead>Facture</TableHead>
+                      <TableHead>Méthode</TableHead>
+                      <TableHead>Montant</TableHead>
+                      <TableHead>Détails</TableHead>
+                      <TableHead>Statut</TableHead>
+                      <TableHead>Actions</TableHead>
                     </TableRow>
-                  ) : (
-                    filteredTransactions.map((tx) => (
-                      <TableRow key={tx.id}>
-                        <TableCell>{formatDate(tx.date)}</TableCell>
-                        <TableCell>{tx.clientName}</TableCell>
-                        <TableCell>{tx.invoiceNumber || '-'}</TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                            {getPaymentMethodIcon(tx.method)}
-                            <span>{getPaymentMethodName(tx.method)}</span>
-                          </div>
-                        </TableCell>
-                        <TableCell>{formatCurrency(tx.amount)}</TableCell>
-                        <TableCell className="text-sm text-muted-foreground">{tx.details}</TableCell>
-                        <TableCell>{getStatusBadge(tx.status)}</TableCell>
-                        <TableCell>
-                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredTransactions.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={8} className="text-center h-24 text-muted-foreground">
+                          Aucune transaction trouvée
                         </TableCell>
                       </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+                    ) : (
+                      filteredTransactions.map((tx) => (
+                        <TableRow key={tx.id}>
+                          <TableCell>{formatDate(tx.date)}</TableCell>
+                          <TableCell>{tx.clientName}</TableCell>
+                          <TableCell>{tx.invoiceNumber || '-'}</TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                              {getPaymentMethodIcon(tx.method)}
+                              <span>{getPaymentMethodName(tx.method)}</span>
+                            </div>
+                          </TableCell>
+                          <TableCell>{formatCurrency(tx.amount)}</TableCell>
+                          <TableCell className="text-sm text-muted-foreground">{tx.details}</TableCell>
+                          <TableCell>{getStatusBadge(tx.status)}</TableCell>
+                          <TableCell>
+                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      </Collapsible>
       
       <Dialog open={showAddPaymentDialog} onOpenChange={setShowAddPaymentDialog}>
         <DialogContent className="sm:max-w-md">
