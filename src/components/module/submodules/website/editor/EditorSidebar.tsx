@@ -19,16 +19,16 @@ import {
   Menu as MenuIcon,
   Flag,
   AlertTriangle,
-  Footprints
+  Footprints,
+  Award,
+  Users,
+  MessageSquare,
+  ShoppingCart
 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import ElementItem from './ElementItem';
 
 const EditorSidebar: React.FC = () => {
-  const handleDragStart = (e: React.DragEvent<HTMLDivElement>, elementType: string) => {
-    e.dataTransfer.setData('elementType', elementType);
-  };
-
   // Group elements by category for better organization
   const elements = {
     navigation: [
@@ -38,7 +38,8 @@ const EditorSidebar: React.FC = () => {
     structure: [
       { type: 'section', icon: <Layout className="h-8 w-8 mb-1 text-primary" />, label: 'Section' },
       { type: 'banner', icon: <Flag className="h-8 w-8 mb-1 text-primary" />, label: 'Bannière' },
-      { type: 'columns', icon: <Columns className="h-8 w-8 mb-1 text-primary" />, label: 'Colonnes' }
+      { type: 'columns', icon: <Columns className="h-8 w-8 mb-1 text-primary" />, label: 'Colonnes' },
+      { type: 'features', icon: <Award className="h-8 w-8 mb-1 text-primary" />, label: 'Fonctionnalités' }
     ],
     basic: [
       { type: 'heading', icon: <Type className="h-4 w-4 text-primary" />, label: 'Titre' },
@@ -46,6 +47,14 @@ const EditorSidebar: React.FC = () => {
       { type: 'image', icon: <Image className="h-4 w-4 text-primary" />, label: 'Image' },
       { type: 'button', icon: <div className="h-4 w-4 bg-primary/80 rounded-sm"></div>, label: 'Bouton' },
       { type: 'video', icon: <Video className="h-4 w-4 text-primary" />, label: 'Vidéo' }
+    ],
+    commerce: [
+      { type: 'products', icon: <ShoppingCart className="h-4 w-4 text-primary" />, label: 'Produits' },
+      { type: 'pricing', icon: <AlertTriangle className="h-4 w-4 text-primary" />, label: 'Tarifs' }
+    ],
+    social: [
+      { type: 'testimonials', icon: <MessageSquare className="h-4 w-4 text-primary" />, label: 'Témoignages' },
+      { type: 'team', icon: <Users className="h-4 w-4 text-primary" />, label: 'Équipe' }
     ],
     forms: [
       { type: 'form', icon: <FormInput className="h-4 w-4 text-primary" />, label: 'Formulaire' }
@@ -102,6 +111,38 @@ const EditorSidebar: React.FC = () => {
         <h3 className="px-2 mb-2 font-medium">Éléments Basiques</h3>
         <div className="space-y-1 px-1">
           {elements.basic.map(element => (
+            <ElementItem
+              key={element.type}
+              icon={element.icon}
+              label={element.label}
+              className="p-3 flex items-center space-x-2 cursor-move hover:bg-muted transition-colors"
+            />
+          ))}
+        </div>
+      </div>
+      
+      <Separator className="my-4" />
+      
+      <div>
+        <h3 className="px-2 mb-2 font-medium">E-commerce</h3>
+        <div className="space-y-1 px-1">
+          {elements.commerce.map(element => (
+            <ElementItem
+              key={element.type}
+              icon={element.icon}
+              label={element.label}
+              className="p-3 flex items-center space-x-2 cursor-move hover:bg-muted transition-colors"
+            />
+          ))}
+        </div>
+      </div>
+      
+      <Separator className="my-4" />
+      
+      <div>
+        <h3 className="px-2 mb-2 font-medium">Social</h3>
+        <div className="space-y-1 px-1">
+          {elements.social.map(element => (
             <ElementItem
               key={element.type}
               icon={element.icon}

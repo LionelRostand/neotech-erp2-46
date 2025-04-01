@@ -293,7 +293,7 @@ const EditorCanvas: React.FC<EditorCanvasProps> = ({ viewMode, onSelectElement }
         break;
       case 'banner':
         content = `
-          <div class="bg-primary/90 text-white p-10 text-center relative overflow-hidden">
+          <div class="bg-gradient-to-r from-primary/90 to-primary/70 text-white p-10 text-center relative overflow-hidden">
             <div class="absolute inset-0 bg-cover bg-center opacity-20" style="background-image: url('https://images.unsplash.com/photo-1522441815192-d9f04eb0615c?q=80&w=1200');"></div>
             <div class="relative z-10 space-y-4 max-w-4xl mx-auto">
               <h1 class="text-3xl md:text-5xl font-bold">Titre de votre bannière</h1>
@@ -304,6 +304,337 @@ const EditorCanvas: React.FC<EditorCanvasProps> = ({ viewMode, onSelectElement }
               </div>
             </div>
           </div>
+        `;
+        break;
+      case 'features':
+        content = `
+          <section class="py-16">
+            <div class="container mx-auto px-4">
+              <h2 class="text-3xl font-bold text-center mb-12">Nos Fonctionnalités</h2>
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow">
+                  <div class="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                  <h3 class="text-xl font-semibold mb-2">Fonctionnalité 1</h3>
+                  <p class="text-gray-600">Description détaillée de cette fonctionnalité et de ses avantages pour vos utilisateurs.</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow">
+                  <div class="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
+                  </div>
+                  <h3 class="text-xl font-semibold mb-2">Fonctionnalité 2</h3>
+                  <p class="text-gray-600">Description détaillée de cette fonctionnalité et de ses avantages pour vos utilisateurs.</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow">
+                  <div class="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                  </div>
+                  <h3 class="text-xl font-semibold mb-2">Fonctionnalité 3</h3>
+                  <p class="text-gray-600">Description détaillée de cette fonctionnalité et de ses avantages pour vos utilisateurs.</p>
+                </div>
+              </div>
+            </div>
+          </section>
+        `;
+        break;
+      case 'products':
+        content = `
+          <section class="py-12 bg-gray-50">
+            <div class="container mx-auto px-4">
+              <h2 class="text-3xl font-bold text-center mb-8">Nos Produits</h2>
+              <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
+                  <div class="h-48 bg-gray-200"></div>
+                  <div class="p-4">
+                    <h3 class="font-semibold text-lg mb-1">Produit 1</h3>
+                    <p class="text-gray-600 text-sm mb-2">Catégorie</p>
+                    <div class="flex justify-between items-center">
+                      <span class="font-bold text-primary">59,99 €</span>
+                      <button class="bg-primary text-white px-3 py-1 rounded text-sm">Acheter</button>
+                    </div>
+                  </div>
+                </div>
+                <div class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
+                  <div class="h-48 bg-gray-200"></div>
+                  <div class="p-4">
+                    <h3 class="font-semibold text-lg mb-1">Produit 2</h3>
+                    <p class="text-gray-600 text-sm mb-2">Catégorie</p>
+                    <div class="flex justify-between items-center">
+                      <span class="font-bold text-primary">49,99 €</span>
+                      <button class="bg-primary text-white px-3 py-1 rounded text-sm">Acheter</button>
+                    </div>
+                  </div>
+                </div>
+                <div class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
+                  <div class="h-48 bg-gray-200"></div>
+                  <div class="p-4">
+                    <h3 class="font-semibold text-lg mb-1">Produit 3</h3>
+                    <p class="text-gray-600 text-sm mb-2">Catégorie</p>
+                    <div class="flex justify-between items-center">
+                      <span class="font-bold text-primary">39,99 €</span>
+                      <button class="bg-primary text-white px-3 py-1 rounded text-sm">Acheter</button>
+                    </div>
+                  </div>
+                </div>
+                <div class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
+                  <div class="h-48 bg-gray-200"></div>
+                  <div class="p-4">
+                    <h3 class="font-semibold text-lg mb-1">Produit 4</h3>
+                    <p class="text-gray-600 text-sm mb-2">Catégorie</p>
+                    <div class="flex justify-between items-center">
+                      <span class="font-bold text-primary">29,99 €</span>
+                      <button class="bg-primary text-white px-3 py-1 rounded text-sm">Acheter</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+        `;
+        break;
+      case 'pricing':
+        content = `
+          <section class="py-16 bg-white">
+            <div class="container mx-auto px-4">
+              <h2 class="text-3xl font-bold text-center mb-3">Nos Tarifs</h2>
+              <p class="text-center text-gray-600 max-w-2xl mx-auto mb-10">Choisissez le plan qui correspond le mieux à vos besoins.</p>
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="border rounded-lg overflow-hidden hover:shadow-lg transition-shadow">
+                  <div class="bg-gray-50 p-6 text-center">
+                    <h3 class="text-xl font-bold">Basique</h3>
+                    <div class="mt-3 flex items-center justify-center">
+                      <span class="text-4xl font-bold">19€</span>
+                      <span class="text-gray-500 ml-2">/mois</span>
+                    </div>
+                  </div>
+                  <div class="p-6">
+                    <ul class="space-y-3">
+                      <li class="flex items-center">
+                        <svg class="h-5 w-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                        <span>Fonctionnalité basique 1</span>
+                      </li>
+                      <li class="flex items-center">
+                        <svg class="h-5 w-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                        <span>Fonctionnalité basique 2</span>
+                      </li>
+                      <li class="flex items-center">
+                        <svg class="h-5 w-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                        <span>Fonctionnalité basique 3</span>
+                      </li>
+                    </ul>
+                    <button class="mt-6 w-full bg-primary text-white py-2 rounded-md">Choisir</button>
+                  </div>
+                </div>
+                <div class="border rounded-lg overflow-hidden shadow-lg relative">
+                  <div class="absolute top-0 right-0 bg-primary text-white text-xs px-3 py-1 rounded-bl-lg">Populaire</div>
+                  <div class="bg-primary bg-opacity-10 p-6 text-center">
+                    <h3 class="text-xl font-bold text-primary">Standard</h3>
+                    <div class="mt-3 flex items-center justify-center">
+                      <span class="text-4xl font-bold">49€</span>
+                      <span class="text-gray-500 ml-2">/mois</span>
+                    </div>
+                  </div>
+                  <div class="p-6">
+                    <ul class="space-y-3">
+                      <li class="flex items-center">
+                        <svg class="h-5 w-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                        <span>Toutes les fonctionnalités basiques</span>
+                      </li>
+                      <li class="flex items-center">
+                        <svg class="h-5 w-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                        <span>Fonctionnalité standard 1</span>
+                      </li>
+                      <li class="flex items-center">
+                        <svg class="h-5 w-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                        <span>Fonctionnalité standard 2</span>
+                      </li>
+                    </ul>
+                    <button class="mt-6 w-full bg-primary text-white py-2 rounded-md">Choisir</button>
+                  </div>
+                </div>
+                <div class="border rounded-lg overflow-hidden hover:shadow-lg transition-shadow">
+                  <div class="bg-gray-50 p-6 text-center">
+                    <h3 class="text-xl font-bold">Premium</h3>
+                    <div class="mt-3 flex items-center justify-center">
+                      <span class="text-4xl font-bold">99€</span>
+                      <span class="text-gray-500 ml-2">/mois</span>
+                    </div>
+                  </div>
+                  <div class="p-6">
+                    <ul class="space-y-3">
+                      <li class="flex items-center">
+                        <svg class="h-5 w-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                        <span>Toutes les fonctionnalités standard</span>
+                      </li>
+                      <li class="flex items-center">
+                        <svg class="h-5 w-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                        <span>Fonctionnalité premium 1</span>
+                      </li>
+                      <li class="flex items-center">
+                        <svg class="h-5 w-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                        <span>Support prioritaire</span>
+                      </li>
+                    </ul>
+                    <button class="mt-6 w-full bg-primary text-white py-2 rounded-md">Choisir</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+        `;
+        break;
+      case 'testimonials':
+        content = `
+          <section class="py-16 bg-gray-50">
+            <div class="container mx-auto px-4">
+              <h2 class="text-3xl font-bold text-center mb-12">Témoignages Clients</h2>
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                  <div class="flex items-center mb-4">
+                    <div class="h-12 w-12 rounded-full bg-gray-300 mr-4"></div>
+                    <div>
+                      <h4 class="font-semibold">Client 1</h4>
+                      <p class="text-sm text-gray-600">PDG, Entreprise</p>
+                    </div>
+                  </div>
+                  <p class="italic text-gray-700">"Ce produit a transformé notre façon de travailler. Je ne peux plus m'en passer et le recommande vivement à tous mes collègues."</p>
+                  <div class="flex mt-3 text-yellow-400">
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+                  </div>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                  <div class="flex items-center mb-4">
+                    <div class="h-12 w-12 rounded-full bg-gray-300 mr-4"></div>
+                    <div>
+                      <h4 class="font-semibold">Client 2</h4>
+                      <p class="text-sm text-gray-600">Directeur Marketing</p>
+                    </div>
+                  </div>
+                  <p class="italic text-gray-700">"Une solution intuitive et puissante qui a permis d'améliorer significativement notre productivité. Le support client est également excellent."</p>
+                  <div class="flex mt-3 text-yellow-400">
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+                  </div>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                  <div class="flex items-center mb-4">
+                    <div class="h-12 w-12 rounded-full bg-gray-300 mr-4"></div>
+                    <div>
+                      <h4 class="font-semibold">Client 3</h4>
+                      <p class="text-sm text-gray-600">Responsable IT</p>
+                    </div>
+                  </div>
+                  <p class="italic text-gray-700">"L'intégration a été simple et rapide. La solution répond parfaitement à nos besoins et le prix est très raisonnable par rapport à la valeur apportée."</p>
+                  <div class="flex mt-3 text-yellow-400">
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+        `;
+        break;
+      case 'team':
+        content = `
+          <section class="py-16 bg-white">
+            <div class="container mx-auto px-4">
+              <h2 class="text-3xl font-bold text-center mb-12">Notre Équipe</h2>
+              <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                <div class="text-center">
+                  <div class="w-32 h-32 bg-gray-300 rounded-full mx-auto mb-4"></div>
+                  <h3 class="font-bold text-lg">Nom Prénom</h3>
+                  <p class="text-primary mb-2">PDG & Fondateur</p>
+                  <p class="text-sm text-gray-600 mb-4">Courte description du rôle et de l'expertise de cette personne.</p>
+                  <div class="flex justify-center space-x-3">
+                    <a href="#" class="text-gray-500 hover:text-primary">
+                      <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg>
+                    </a>
+                    <a href="#" class="text-gray-500 hover:text-primary">
+                      <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24"><path d="M24 4.557c-.883.392-1.832.656-2.828.775 1.017-.609 1.798-1.574 2.165-2.724-.951.564-2.005.974-3.127 1.195-.897-.957-2.178-1.555-3.594-1.555-3.179 0-5.515 2.966-4.797 6.045-4.091-.205-7.719-2.165-10.148-5.144-1.29 2.213-.669 5.108 1.523 6.574-.806-.026-1.566-.247-2.229-.616-.054 2.281 1.581 4.415 3.949 4.89-.693.188-1.452.232-2.224.084.626 1.956 2.444 3.379 4.6 3.419-2.07 1.623-4.678 2.348-7.29 2.04 2.179 1.397 4.768 2.212 7.548 2.212 9.142 0 14.307-7.721 13.995-14.646.962-.695 1.797-1.562 2.457-2.549z"/></svg>
+                    </a>
+                  </div>
+                </div>
+                <div class="text-center">
+                  <div class="w-32 h-32 bg-gray-300 rounded-full mx-auto mb-4"></div>
+                  <h3 class="font-bold text-lg">Nom Prénom</h3>
+                  <p class="text-primary mb-2">Directeur Technique</p>
+                  <p class="text-sm text-gray-600 mb-4">Courte description du rôle et de l'expertise de cette personne.</p>
+                  <div class="flex justify-center space-x-3">
+                    <a href="#" class="text-gray-500 hover:text-primary">
+                      <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg>
+                    </a>
+                    <a href="#" class="text-gray-500 hover:text-primary">
+                      <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24"><path d="M24 4.557c-.883.392-1.832.656-2.828.775 1.017-.609 1.798-1.574 2.165-2.724-.951.564-2.005.974-3.127 1.195-.897-.957-2.178-1.555-3.594-1.555-3.179 0-5.515 2.966-4.797 6.045-4.091-.205-7.719-2.165-10.148-5.144-1.29 2.213-.669 5.108 1.523 6.574-.806-.026-1.566-.247-2.229-.616-.054 2.281 1.581 4.415 3.949 4.89-.693.188-1.452.232-2.224.084.626 1.956 2.444 3.379 4.6 3.419-2.07 1.623-4.678 2.348-7.29 2.04 2.179 1.397 4.768 2.212 7.548 2.212 9.142 0 14.307-7.721 13.995-14.646.962-.695 1.797-1.562 2.457-2.549z"/></svg>
+                    </a>
+                  </div>
+                </div>
+                <div class="text-center">
+                  <div class="w-32 h-32 bg-gray-300 rounded-full mx-auto mb-4"></div>
+                  <h3 class="font-bold text-lg">Nom Prénom</h3>
+                  <p class="text-primary mb-2">Directeur Marketing</p>
+                  <p class="text-sm text-gray-600 mb-4">Courte description du rôle et de l'expertise de cette personne.</p>
+                  <div class="flex justify-center space-x-3">
+                    <a href="#" class="text-gray-500 hover:text-primary">
+                      <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg>
+                    </a>
+                    <a href="#" class="text-gray-500 hover:text-primary">
+                      <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24"><path d="M24 4.557c-.883.392-1.832.656-2.828.775 1.017-.609 1.798-1.574 2.165-2.724-.951.564-2.005.974-3.127 1.195-.897-.957-2.178-1.555-3.594-1.555-3.179 0-5.515 2.966-4.797 6.045-4.091-.205-7.719-2.165-10.148-5.144-1.29 2.213-.669 5.108 1.523 6.574-.806-.026-1.566-.247-2.229-.616-.054 2.281 1.581 4.415 3.949 4.89-.693.188-1.452.232-2.224.084.626 1.956 2.444 3.379 4.6 3.419-2.07 1.623-4.678 2.348-7.29 2.04 2.179 1.397 4.768 2.212 7.548 2.212 9.142 0 14.307-7.721 13.995-14.646.962-.695 1.797-1.562 2.457-2.549z"/></svg>
+                    </a>
+                  </div>
+                </div>
+                <div class="text-center">
+                  <div class="w-32 h-32 bg-gray-300 rounded-full mx-auto mb-4"></div>
+                  <h3 class="font-bold text-lg">Nom Prénom</h3>
+                  <p class="text-primary mb-2">Responsable Commercial</p>
+                  <p class="text-sm text-gray-600 mb-4">Courte description du rôle et de l'expertise de cette personne.</p>
+                  <div class="flex justify-center space-x-3">
+                    <a href="#" class="text-gray-500 hover:text-primary">
+                      <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg>
+                    </a>
+                    <a href="#" class="text-gray-500 hover:text-primary">
+                      <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24"><path d="M24 4.557c-.883.392-1.832.656-2.828.775 1.017-.609 1.798-1.574 2.165-2.724-.951.564-2.005.974-3.127 1.195-.897-.957-2.178-1.555-3.594-1.555-3.179 0-5.515 2.966-4.797 6.045-4.091-.205-7.719-2.165-10.148-5.144-1.29 2.213-.669 5.108 1.523 6.574-.806-.026-1.566-.247-2.229-.616-.054 2.281 1.581 4.415 3.949 4.89-.693.188-1.452.232-2.224.084.626 1.956 2.444 3.379 4.6 3.419-2.07 1.623-4.678 2.348-7.29 2.04 2.179 1.397 4.768 2.212 7.548 2.212 9.142 0 14.307-7.721 13.995-14.646.962-.695 1.797-1.562 2.457-2.549z"/></svg>
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
         `;
         break;
       case 'footer':
