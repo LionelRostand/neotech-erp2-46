@@ -21,6 +21,7 @@ export interface TransportVehicleWithLocation extends TransportVehicle {
   location: VehicleLocation;
   driverName?: string;
   color?: string;
+  mileage?: number; // Making mileage optional to fix the type errors
 }
 
 export interface MapConfig {

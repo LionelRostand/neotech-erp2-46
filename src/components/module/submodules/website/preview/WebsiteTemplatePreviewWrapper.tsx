@@ -22,7 +22,7 @@ const WebsiteTemplatePreviewWrapper: React.FC = () => {
         </Button>
       </div>
       
-      <WebsiteTemplatePreview />
+      <WebsiteTemplatePreview previewMode={true} />
     </div>
   );
 };
