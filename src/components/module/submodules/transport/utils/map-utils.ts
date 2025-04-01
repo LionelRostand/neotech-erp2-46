@@ -1,88 +1,60 @@
 
-import { Coordinates, VehicleLocation } from '../types';
-import L from 'leaflet';
+import { TransportVehicleWithLocation, VehicleLocation } from '../types';
 
-export const formatCoordinates = (coords: Coordinates): string => {
-  return `${coords.latitude.toFixed(4)}, ${coords.longitude.toFixed(4)}`;
+// Format coordinates for display
+export const formatCoordinates = (location: VehicleLocation): string => {
+  const { latitude, longitude } = location.coordinates;
+  return `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`;
 };
 
-export const normalizeCoordinates = (coords: any): Coordinates => {
-  if (!coords) return { latitude: 0, longitude: 0 };
+// Get status text
+export const getStatusText = (status: string): string => {
+  switch (status) {
+    case 'moving':
+      return 'En mouvement';
+    case 'idle':
+      return 'À l\'arrêt';
+    case 'stopped':
+      return 'Immobilisé';
+    default:
+      return status;
+  }
+};
 
-  // Handle different coordinate formats
-  if (typeof coords.lat !== 'undefined' && typeof coords.lng !== 'undefined') {
-    return { latitude: coords.lat, longitude: coords.lng };
-  } else if (typeof coords.latitude !== 'undefined' && typeof coords.longitude !== 'undefined') {
-    return { latitude: coords.latitude, longitude: coords.longitude };
+// Get marker icon for vehicle based on status
+export const getMarkerIconForVehicle = (vehicleStatus: string, locationStatus?: string): string => {
+  if (vehicleStatus === 'maintenance') {
+    return 'https://cdn-icons-png.flaticon.com/512/4426/4426072.png';
   }
   
-  return { latitude: 0, longitude: 0 };
-};
-
-export const calculateDistance = (coords1: Coordinates, coords2: Coordinates): number => {
-  // Simple Euclidean distance - in a real app use a proper geodesic calculation
-  const lat1 = coords1.latitude;
-  const lon1 = coords1.longitude;
-  const lat2 = coords2.latitude;
-  const lon2 = coords2.longitude;
-  
-  const R = 6371e3; // metres
-  const φ1 = lat1 * Math.PI/180; // φ, λ in radians
-  const φ2 = lat2 * Math.PI/180;
-  const Δφ = (lat2-lat1) * Math.PI/180;
-  const Δλ = (lon2-lon1) * Math.PI/180;
-
-  const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
-            Math.cos(φ1) * Math.cos(φ2) *
-            Math.sin(Δλ/2) * Math.sin(Δλ/2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-  const d = R * c; // in metres
-  
-  return d / 1000; // in kilometers
-};
-
-export const createMarker = (
-  map: L.Map, 
-  position: [number, number], 
-  options?: L.MarkerOptions
-): L.Marker => {
-  const marker = L.marker(position, options);
-  marker.addTo(map);
-  return marker;
-};
-
-export const updateMarkerPosition = (
-  marker: L.Marker,
-  position: [number, number]
-): void => {
-  marker.setLatLng(position);
-};
-
-export const createVehicleIcon = (status: string): L.Icon => {
-  // Create icons based on vehicle status
-  const iconUrl = status === 'moving' 
-    ? '/assets/icons/vehicle-moving.svg'
-    : status === 'idle' 
-      ? '/assets/icons/vehicle-idle.svg'
-      : '/assets/icons/vehicle-stopped.svg';
-      
-  return L.icon({
-    iconUrl,
-    iconSize: [32, 32],
-    iconAnchor: [16, 16],
-    popupAnchor: [0, -16]
-  });
-};
-
-export const getMapCenter = (locations: VehicleLocation[]): [number, number] => {
-  if (locations.length === 0) {
-    // Default to Paris
-    return [48.8566, 2.3522];
+  if (locationStatus === 'moving') {
+    return 'https://cdn-icons-png.flaticon.com/512/3097/3097144.png';
   }
   
-  // Calculate the center of all locations
-  const latSum = locations.reduce((sum, loc) => sum + normalizeCoordinates(loc.coordinates).latitude, 0);
-  const lngSum = locations.reduce((sum, loc) => sum + normalizeCoordinates(loc.coordinates).longitude, 0);
+  if (locationStatus === 'idle') {
+    return 'https://cdn-icons-png.flaticon.com/512/3097/3097156.png';
+  }
   
-  return [latSum / locations.length, lngSum / locations.length];
+  if (locationStatus === 'stopped') {
+    return 'https://cdn-icons-png.flaticon.com/512/3097/3097150.png';
+  }
+
+  return 'https://cdn-icons-png.flaticon.com/512/3097/3097156.png'; // Default icon
+};
+
+// Generate popup content for a vehicle
+export const getVehiclePopupContent = (vehicle: TransportVehicleWithLocation): string => {
+  return `
+    <div class="p-2">
+      <h3 class="font-bold">${vehicle.name}</h3>
+      <p>Plaque: ${vehicle.licensePlate}</p>
+      <p>Statut: ${getStatusText(vehicle.location.status)}</p>
+      <p>Vitesse: ${vehicle.location.speed} km/h</p>
+    </div>
+  `;
+};
+
+// Utility function to convert LeafletJS coordinates to VehicleLocation format
+export const normalizeCoordinates = (location: VehicleLocation): [number, number] => {
+  return [location.coordinates.latitude, location.coordinates.longitude];
 };

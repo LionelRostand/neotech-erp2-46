@@ -1,10 +1,11 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Search, MapPin, Bell, Settings } from 'lucide-react';
-import { TransportVehicleWithLocation } from './types/map-types';
+import { TransportVehicleWithLocation } from './types';
 import AlertDetailsDialog from './geolocation/AlertDetailsDialog';
 import AlertConfigDialog from './geolocation/AlertConfigDialog';
 import VehicleMap from './geolocation/VehicleMap';
@@ -125,6 +126,22 @@ const TransportGeolocation = () => {
     setIsAlertConfigOpen(true);
   };
 
+  // Handle configure alerts from alert details dialog
+  const handleConfigureAlerts = () => {
+    setIsAlertDialogOpen(false);
+    setIsAlertConfigOpen(true);
+  };
+
+  // Handle save alert configuration
+  const handleSaveAlertConfig = (config: any) => {
+    console.log('Alert configuration saved:', config);
+    // In a real app, you would send this to an API
+    toast({
+      title: "Configuration sauvegardée",
+      description: "Les paramètres d'alerte ont été mis à jour."
+    });
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -199,6 +216,7 @@ const TransportGeolocation = () => {
           open={isAlertDialogOpen}
           onOpenChange={setIsAlertDialogOpen}
           vehicle={selectedVehicle}
+          onConfigure={handleConfigureAlerts}
         />
       )}
       
@@ -206,6 +224,7 @@ const TransportGeolocation = () => {
       <AlertConfigDialog
         open={isAlertConfigOpen}
         onOpenChange={setIsAlertConfigOpen}
+        onSave={handleSaveAlertConfig}
       />
     </div>
   );

@@ -1,6 +1,4 @@
 
-// Re-export all types from the separate type modules
-
 // Re-export specific types from base-types
 export * from './base-types';
 
@@ -27,7 +25,7 @@ export { MapExtensionRequest as ExtensionRequestType } from './map-types';
 // Re-export geolocation types (excluding duplicates)
 export * from './geolocation-types';
 
-// Re-export client types explicitly
+// Re-export client types explicitly using type keyword
 export type {
   TransportClient,
   ClientNote,
@@ -36,13 +34,11 @@ export type {
   LoyaltyTransaction,
   ClientPreference,
   ClientStatistics,
-  WebBookingUser
+  WebBookingUser,
+  WebBooking,
+  WebBookingStatus,
+  WebBookingService
 } from './client-types';
-
-// Re-export client types with aliases
-export type { WebBooking as ClientWebBooking } from './client-types';
-export type { WebBookingStatus as ClientWebBookingStatus } from './client-types';
-export type { WebBookingService as ClientWebBookingService } from './client-types';
 
 // Re-export reservation types
 export * from './reservation-types';

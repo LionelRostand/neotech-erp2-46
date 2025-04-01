@@ -12,7 +12,10 @@ export type {
 export type {
   // From driver-types.ts
   TransportDriver,
-  DriverNote
+  DriverNote,
+  DriverSchedule,
+  DriverAvailabilityPeriod,
+  DriverRatingEntry
 } from './driver-types';
 
 export type {
@@ -41,8 +44,20 @@ export type { MER as ExtensionRequestType };
 // Export from other modules without duplications
 export * from './geolocation-types';
 
-// Export client types directly
-export type * from './client-types';
+// Export client types explicitly
+export type {
+  TransportClient,
+  ClientNote,
+  LoyaltyProgram,
+  LoyaltyTier,
+  LoyaltyTransaction,
+  ClientPreference,
+  ClientStatistics,
+  WebBookingUser,
+  WebBooking,
+  WebBookingStatus,
+  WebBookingService
+} from './client-types';
 
 // Export reservation types
 export type * from './reservation-types';

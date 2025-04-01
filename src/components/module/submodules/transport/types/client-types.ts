@@ -1,27 +1,24 @@
 
-import { TransportBasic, Note, TransportService } from './base-types';
+import { TransportBasic, Note } from './base-types';
+import { TransportService } from './base-types';
 
 export interface TransportClient extends TransportBasic {
   firstName: string;
   lastName: string;
-  fullName: string;
   email: string;
   phone: string;
-  address?: string;
-  city?: string;
-  postalCode?: string;
-  country?: string;
+  address: string;
   company?: string;
-  vip: boolean;
-  loyaltyPoints: number;
-  joinDate: string;
-  lastActivity?: string;
-  totalBookings: number;
-  preferredVehicleType?: string;
-  preferredDriver?: string;
+  clientType: 'individual' | 'corporate' | 'vip';
+  loyaltyProgram?: LoyaltyProgram;
   notes: ClientNote[];
-  status: 'active' | 'inactive' | 'banned';
-  name?: string; // Added to fix errors
+  createdAt: string;
+  updatedAt?: string;
+  active: boolean;
+  preferences?: ClientPreference[];
+  statistics?: ClientStatistics;
+  webBookings?: WebBooking[];
+  name?: string; // Added name property
 }
 
 export interface ClientNote extends Note {
@@ -30,13 +27,12 @@ export interface ClientNote extends Note {
 
 export interface LoyaltyProgram {
   id: string;
-  name: string;
-  description: string;
-  pointsPerEuro: number;
-  minimumPoints: number;
-  tiers: LoyaltyTier[];
-  createdAt: string;
-  updatedAt: string;
+  clientId: string;
+  tier: LoyaltyTier;
+  points: number;
+  joinDate: string;
+  transactions: LoyaltyTransaction[];
+  expiryDate?: string;
 }
 
 export interface LoyaltyTier {
@@ -44,76 +40,96 @@ export interface LoyaltyTier {
   name: string;
   minimumPoints: number;
   benefits: string[];
-  discount: number; // percentage
-  specialOffers: boolean;
-  priorityBooking: boolean;
-  freeUpgrades: number;
+  discountPercentage: number;
+  color: string;
+  icon?: string;
 }
 
 export interface LoyaltyTransaction {
   id: string;
   clientId: string;
-  points: number;
-  type: 'earn' | 'spend' | 'expire' | 'adjust';
-  reason: string;
   reservationId?: string;
+  points: number;
+  type: 'earn' | 'redeem' | 'expire' | 'adjust';
+  description: string;
   createdAt: string;
 }
 
 export interface ClientPreference {
   id: string;
   clientId: string;
-  preferenceKey: string;
-  preferenceValue: string;
-  createdAt: string;
-  updatedAt: string;
+  category: string;
+  value: string;
+  isDefault: boolean;
 }
 
 export interface ClientStatistics {
+  totalReservations: number;
+  completedReservations: number;
+  canceledReservations: number;
   totalSpent: number;
-  averagePerBooking: number;
-  bookingsCount: number;
-  cancelledBookings: number;
-  mostUsedService: string;
-  mostVisitedDestination: string;
-  firstBookingDate: string;
-  lastBookingDate: string;
+  averageRating: number;
+  lastReservationDate?: string;
 }
 
 export interface WebBookingUser {
   id: string;
+  clientId: string;
   email: string;
-  firstName: string;
-  lastName: string;
-  phone: string;
-  verified: boolean;
-  clientId?: string;
+  passwordHash: string;
+  lastLogin?: string;
   createdAt: string;
+  updatedAt?: string;
+  active: boolean;
+  verified: boolean;
+  verificationToken?: string;
+  passwordResetToken?: string;
+  passwordResetExpiry?: string;
 }
 
 export interface WebBooking {
   id: string;
-  userId: string;
-  serviceId: string;
-  date: string;
-  time: string;
-  pickup: string;
-  dropoff: string;
+  clientId: string;
+  service: TransportService;
+  pickupDate: string;
+  pickupTime: string;
+  pickupLocation: string;
+  dropoffLocation: string;
   passengers: number;
   specialRequirements?: string;
-  price: number;
-  isPaid: boolean;
   status: WebBookingStatus;
   createdAt: string;
-  updatedAt: string;
-  service: WebBookingService;
+  updatedAt?: string;
+  estimatedPrice?: number;
+  reservationId?: string;
+  vehicleTypePreference?: string;
 }
+
+export type WebBookingStatus = 'pending' | 'confirmed' | 'canceled' | 'completed';
 
 export interface WebBookingService {
   id: string;
   name: string;
-  price?: number;
-  description?: string;
+  description: string;
+  isActive: boolean;
+  basePrice: number;
+  pricePerKm?: number;
+  pricePerMinute?: number;
+  minimumPrice: number;
+  vehicleTypes: string[];
+  serviceOptions: {
+    id: string;
+    name: string;
+    price: number;
+    description: string;
+  }[];
+  availability: {
+    dayOfWeek: number;
+    startTime: string;
+    endTime: string;
+  }[];
+  leadTimeHours: number;
+  maxPassengers: number;
+  createdAt: string;
+  updatedAt?: string;
 }
-
-export type WebBookingStatus = 'new' | 'confirmed' | 'cancelled' | 'processed';

@@ -7,18 +7,20 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { AlertCircle, MapPin, Timer, Share2, AlertOctagon, Bell } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 interface AlertConfigDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSave: (config: any) => void;
+  onSave?: (config: any) => void;
 }
 
 const AlertConfigDialog: React.FC<AlertConfigDialogProps> = ({
   open,
   onOpenChange,
-  onSave
+  onSave = () => {} // Default empty function if not provided
 }) => {
+  const { toast } = useToast();
   const [config, setConfig] = useState({
     speedAlerts: true,
     maxSpeed: "130",
@@ -40,6 +42,11 @@ const AlertConfigDialog: React.FC<AlertConfigDialogProps> = ({
 
   const handleSubmit = () => {
     onSave(config);
+    toast({
+      title: "Configuration sauvegardée",
+      description: "Les paramètres d'alerte ont été mis à jour."
+    });
+    onOpenChange(false);
   };
 
   return (

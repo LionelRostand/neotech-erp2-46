@@ -4,7 +4,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { AlertCircle, MapPin, MoreHorizontal } from "lucide-react";
-import { TransportVehicleWithLocation } from '../types/transport-types';
+import { TransportVehicleWithLocation } from '../types';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
@@ -12,14 +12,14 @@ interface AlertDetailsDialogProps {
   vehicle: TransportVehicleWithLocation;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onConfigure: () => void;
+  onConfigure?: () => void;
 }
 
 const AlertDetailsDialog: React.FC<AlertDetailsDialogProps> = ({
   vehicle,
   open,
   onOpenChange,
-  onConfigure
+  onConfigure = () => {} // Default empty function if not provided
 }) => {
   const formatTime = (timestamp: string) => {
     return format(new Date(timestamp), 'HH:mm', { locale: fr });
