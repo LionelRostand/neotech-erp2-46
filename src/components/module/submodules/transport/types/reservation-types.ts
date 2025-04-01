@@ -1,3 +1,4 @@
+
 // Define types related to reservations and booking for the Transport module
 
 export interface LocationType {
