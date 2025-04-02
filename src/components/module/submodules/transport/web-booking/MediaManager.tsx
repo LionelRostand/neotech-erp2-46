@@ -1,323 +1,172 @@
 
 import React, { useState } from 'react';
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Label } from '@/components/ui/label';
+import { Search, Upload, Image, Trash2, Edit2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { 
-  Grid2X2, 
-  List, 
-  Upload, 
-  Trash2, 
-  Search, 
-  Image as ImageIcon, 
-  FileVideo, 
-  File, 
-  FolderPlus
-} from 'lucide-react';
 
-interface MediaItem {
-  id: string;
-  name: string;
-  type: 'image' | 'video' | 'document';
-  url: string;
-  size: string;
-  date: string;
-}
-
-const sampleMedia: MediaItem[] = [
-  {
-    id: '1',
-    name: 'voiture-principale.jpg',
-    type: 'image',
-    url: 'https://images.unsplash.com/photo-1546614042-7df3c24c9e5d',
-    size: '1.2 MB',
-    date: '12/05/2023'
-  },
-  {
-    id: '2',
-    name: 'logo-entreprise.png',
-    type: 'image',
-    url: 'https://images.unsplash.com/photo-1586880244406-8c84e87180df',
-    size: '345 KB',
-    date: '02/04/2023'
-  },
-  {
-    id: '3',
-    name: 'video-presentation.mp4',
-    type: 'video',
-    url: 'https://example.com/video.mp4',
-    size: '14.8 MB',
-    date: '28/03/2023'
-  },
-  {
-    id: '4',
-    name: 'banniere-site.jpg',
-    type: 'image',
-    url: 'https://images.unsplash.com/photo-1449965408869-eaa3f722e40d',
-    size: '2.4 MB',
-    date: '15/04/2023'
-  },
-  {
-    id: '5',
-    name: 'conditions-utilisation.pdf',
-    type: 'document',
-    url: 'https://example.com/document.pdf',
-    size: '567 KB',
-    date: '05/02/2023'
-  },
-  {
-    id: '6',
-    name: 'flotte-vehicules.jpg',
-    type: 'image',
-    url: 'https://images.unsplash.com/photo-1580273916550-e323be2ae537',
-    size: '1.8 MB',
-    date: '22/05/2023'
-  },
-];
-
-const MediaManager: React.FC = () => {
-  const [view, setView] = useState<'grid' | 'list'>('grid');
-  const [mediaFilter, setMediaFilter] = useState('all');
-  const [selectedMedia, setSelectedMedia] = useState<string[]>([]);
-  const [searchTerm, setSearchTerm] = useState('');
+const MediaManager = () => {
   const { toast } = useToast();
+  const [activeTab, setActiveTab] = useState('uploaded');
+  const [searchTerm, setSearchTerm] = useState('');
+  
+  // Mock data for uploaded images
+  const [uploadedImages, setUploadedImages] = useState([
+    { id: 1, name: 'hero-background.jpg', url: '/images/car1.jpg', size: '1.2 MB', date: '2023-06-15' },
+    { id: 2, name: 'compact-car.jpg', url: '/images/car2.jpg', size: '0.8 MB', date: '2023-06-14' },
+    { id: 3, name: 'sedan.jpg', url: '/images/car3.jpg', size: '1.5 MB', date: '2023-06-10' },
+    { id: 4, name: 'luxury-car.jpg', url: '/images/car4.jpg', size: '2.1 MB', date: '2023-06-08' },
+    { id: 5, name: 'agency-paris.jpg', url: '/images/agency1.jpg', size: '1.8 MB', date: '2023-06-05' },
+    { id: 6, name: 'agency-lyon.jpg', url: '/images/agency2.jpg', size: '1.6 MB', date: '2023-06-01' }
+  ]);
 
+  // Mock function for file upload
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
+      // In a real application, you would upload the file to a server here
+      const file = e.target.files[0];
+      
+      // Create a mock image object
+      const newImage = {
+        id: Date.now(),
+        name: file.name,
+        url: URL.createObjectURL(file), // This creates a temporary local URL for preview
+        size: `${(file.size / (1024 * 1024)).toFixed(2)} MB`,
+        date: new Date().toISOString().split('T')[0]
+      };
+      
+      setUploadedImages([newImage, ...uploadedImages]);
+      
       toast({
-        title: "Fichier(s) téléchargé(s)",
-        description: `${e.target.files.length} fichier(s) en cours de traitement.`,
-        duration: 3000,
+        title: "Image téléchargée",
+        description: `${file.name} a été téléchargée avec succès.`,
       });
     }
   };
 
-  const handleMediaSelect = (id: string) => {
-    if (selectedMedia.includes(id)) {
-      setSelectedMedia(selectedMedia.filter((mediaId) => mediaId !== id));
-    } else {
-      setSelectedMedia([...selectedMedia, id]);
-    }
-  };
-
-  const handleDeleteSelected = () => {
+  const handleDeleteImage = (id: number) => {
+    // Remove the image from the state
+    setUploadedImages(uploadedImages.filter(image => image.id !== id));
+    
     toast({
-      title: "Médias supprimés",
-      description: `${selectedMedia.length} élément(s) supprimé(s) avec succès.`,
-      duration: 3000,
+      title: "Image supprimée",
+      description: "L'image a été supprimée avec succès.",
     });
-    setSelectedMedia([]);
   };
 
-  const filteredMedia = sampleMedia.filter((media) => {
-    const matchesType = mediaFilter === 'all' || media.type === mediaFilter;
-    const matchesSearch = media.name.toLowerCase().includes(searchTerm.toLowerCase());
-    return matchesType && matchesSearch;
-  });
-
-  const getIconForType = (type: string) => {
-    switch (type) {
-      case 'image':
-        return <ImageIcon className="h-8 w-8 text-blue-500" />;
-      case 'video':
-        return <FileVideo className="h-8 w-8 text-purple-500" />;
-      case 'document':
-        return <File className="h-8 w-8 text-amber-500" />;
-      default:
-        return <File className="h-8 w-8 text-gray-500" />;
-    }
-  };
+  // Filter images based on search term
+  const filteredImages = uploadedImages.filter(image => 
+    image.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between gap-4">
-        <div className="flex gap-2 items-center">
-          <div className="relative flex-1 min-w-[200px]">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input 
-              placeholder="Rechercher des médias..." 
-              className="pl-8"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
-          <div className="flex border rounded-md p-1">
-            <Button
-              variant={view === 'grid' ? 'default' : 'ghost'}
-              size="sm"
-              className="h-8 w-8 p-0"
-              onClick={() => setView('grid')}
-            >
-              <Grid2X2 className="h-4 w-4" />
-              <span className="sr-only">Vue grille</span>
-            </Button>
-            <Button
-              variant={view === 'list' ? 'default' : 'ghost'}
-              size="sm"
-              className="h-8 w-8 p-0"
-              onClick={() => setView('list')}
-            >
-              <List className="h-4 w-4" />
-              <span className="sr-only">Vue liste</span>
-            </Button>
-          </div>
-        </div>
-
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={() => setSelectedMedia([])}>
-            Annuler la sélection
-          </Button>
-          <Button variant="outline" onClick={handleDeleteSelected} disabled={selectedMedia.length === 0}>
-            <Trash2 className="h-4 w-4 mr-2" />
-            Supprimer ({selectedMedia.length})
-          </Button>
-          <div className="relative">
-            <Input 
-              type="file" 
-              id="file-upload" 
-              className="hidden" 
-              multiple 
-              onChange={handleFileUpload}
-            />
-            <Button asChild>
-              <label htmlFor="file-upload" className="cursor-pointer">
-                <Upload className="h-4 w-4 mr-2" />
-                Télécharger
-              </label>
-            </Button>
-          </div>
-        </div>
+      <div>
+        <h3 className="text-lg font-medium mb-4">Gestionnaire de médias</h3>
+        <p className="text-sm text-muted-foreground mb-4">
+          Téléchargez et gérez les images qui seront utilisées sur votre site de réservation.
+        </p>
       </div>
 
-      <Tabs defaultValue="all" onValueChange={(value) => setMediaFilter(value)}>
-        <TabsList>
-          <TabsTrigger value="all">Tous</TabsTrigger>
-          <TabsTrigger value="image">Images</TabsTrigger>
-          <TabsTrigger value="video">Vidéos</TabsTrigger>
-          <TabsTrigger value="document">Documents</TabsTrigger>
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="mb-4">
+          <TabsTrigger value="uploaded">Images téléchargées</TabsTrigger>
+          <TabsTrigger value="upload">Télécharger une image</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="all" className="mt-6">
-          {renderMediaContent(filteredMedia)}
+        <TabsContent value="uploaded" className="space-y-4">
+          <div className="flex items-center space-x-2">
+            <div className="relative flex-grow">
+              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input 
+                placeholder="Rechercher une image..." 
+                className="pl-8" 
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+            <Button variant="outline" onClick={() => setActiveTab('upload')}>
+              <Upload className="h-4 w-4 mr-2" />
+              Télécharger
+            </Button>
+          </div>
+
+          {filteredImages.length === 0 ? (
+            <div className="text-center py-8">
+              <Image className="h-12 w-12 mx-auto text-muted-foreground" />
+              <p className="mt-2 text-muted-foreground">Aucune image trouvée</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-6">
+              {filteredImages.map(image => (
+                <div key={image.id} className="border rounded overflow-hidden group relative">
+                  <div className="aspect-video bg-gray-200 relative">
+                    <img 
+                      src={image.url} 
+                      alt={image.name} 
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        // If image fails to load, show a placeholder
+                        e.currentTarget.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='3' width='18' height='18' rx='2' ry='2'/%3E%3Ccircle cx='8.5' cy='8.5' r='1.5'/%3E%3Cpolyline points='21 15 16 10 5 21'/%3E%3C/svg%3E";
+                        e.currentTarget.style.padding = "20%";
+                        e.currentTarget.style.boxSizing = "border-box";
+                      }}
+                    />
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all flex items-center justify-center opacity-0 group-hover:opacity-100">
+                      <div className="flex space-x-2">
+                        <Button size="icon" variant="secondary" onClick={() => alert(`Éditer ${image.name}`)}>
+                          <Edit2 className="h-4 w-4" />
+                        </Button>
+                        <Button size="icon" variant="destructive" onClick={() => handleDeleteImage(image.id)}>
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="p-2">
+                    <p className="text-sm font-medium truncate" title={image.name}>{image.name}</p>
+                    <p className="text-xs text-muted-foreground">{image.size} • {image.date}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </TabsContent>
-        <TabsContent value="image" className="mt-6">
-          {renderMediaContent(filteredMedia)}
-        </TabsContent>
-        <TabsContent value="video" className="mt-6">
-          {renderMediaContent(filteredMedia)}
-        </TabsContent>
-        <TabsContent value="document" className="mt-6">
-          {renderMediaContent(filteredMedia)}
+
+        <TabsContent value="upload" className="space-y-6">
+          <div className="border-2 border-dashed rounded-lg p-8 text-center">
+            <div className="flex flex-col items-center">
+              <Upload className="h-8 w-8 text-muted-foreground mb-2" />
+              <h4 className="text-lg font-medium mb-1">Déposez vos fichiers ici</h4>
+              <p className="text-sm text-muted-foreground mb-4">ou cliquez pour parcourir</p>
+              <Label htmlFor="file-upload" className="cursor-pointer">
+                <Input 
+                  id="file-upload" 
+                  type="file" 
+                  accept="image/*" 
+                  className="hidden" 
+                  onChange={handleFileUpload}
+                />
+                <Button type="button" variant="outline">Parcourir les fichiers</Button>
+              </Label>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <h4 className="font-medium">Informations importantes</h4>
+            <ul className="text-sm text-muted-foreground list-disc pl-5 space-y-1">
+              <li>Taille maximale: 5MB par image</li>
+              <li>Formats acceptés: JPG, PNG, GIF, WEBP</li>
+              <li>Résolution recommandée pour les images de fond: 1920x1080px minimum</li>
+              <li>Résolution recommandée pour les images de véhicules: 800x600px minimum</li>
+            </ul>
+          </div>
         </TabsContent>
       </Tabs>
-
-      {filteredMedia.length === 0 && (
-        <div className="text-center p-12 border rounded-lg bg-muted/20">
-          <ImageIcon className="h-12 w-12 mx-auto text-muted-foreground" />
-          <h3 className="mt-4 text-lg font-medium">Aucun média trouvé</h3>
-          <p className="text-sm text-muted-foreground mt-2">
-            Aucun média ne correspond à votre recherche. Essayez avec d'autres termes.
-          </p>
-        </div>
-      )}
-
-      <div className="flex justify-between items-center text-sm text-muted-foreground pt-4 border-t">
-        <span>{filteredMedia.length} élément(s)</span>
-        <Button variant="outline" size="sm">
-          <FolderPlus className="h-4 w-4 mr-2" />
-          Nouveau dossier
-        </Button>
-      </div>
     </div>
   );
-
-  function renderMediaContent(media: MediaItem[]) {
-    if (view === 'grid') {
-      return (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {media.map((item) => (
-            <Card 
-              key={item.id} 
-              className={`overflow-hidden cursor-pointer transition-all ${
-                selectedMedia.includes(item.id) ? 'ring-2 ring-primary' : ''
-              }`}
-              onClick={() => handleMediaSelect(item.id)}
-            >
-              <div className="aspect-square relative">
-                {item.type === 'image' ? (
-                  <img
-                    src={item.url}
-                    alt={item.name}
-                    className="object-cover w-full h-full"
-                  />
-                ) : (
-                  <div className="flex items-center justify-center h-full bg-muted">
-                    {getIconForType(item.type)}
-                  </div>
-                )}
-                {selectedMedia.includes(item.id) && (
-                  <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
-                    <div className="h-6 w-6 rounded-full bg-primary flex items-center justify-center text-primary-foreground">
-                      ✓
-                    </div>
-                  </div>
-                )}
-              </div>
-              <CardContent className="p-3">
-                <p className="text-sm font-medium truncate" title={item.name}>
-                  {item.name}
-                </p>
-                <div className="flex justify-between mt-1 text-xs text-muted-foreground">
-                  <span>{item.size}</span>
-                  <span>{item.date}</span>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      );
-    }
-
-    return (
-      <div className="border rounded-md overflow-hidden">
-        <table className="w-full text-sm">
-          <thead className="bg-muted text-muted-foreground">
-            <tr className="border-b">
-              <th className="text-left py-2 pl-4 font-medium">Nom</th>
-              <th className="text-left py-2 font-medium hidden md:table-cell">Type</th>
-              <th className="text-left py-2 font-medium hidden md:table-cell">Taille</th>
-              <th className="text-left py-2 font-medium hidden md:table-cell">Date</th>
-            </tr>
-          </thead>
-          <tbody>
-            {media.map((item) => (
-              <tr 
-                key={item.id} 
-                className={`border-b hover:bg-muted/50 cursor-pointer ${
-                  selectedMedia.includes(item.id) ? 'bg-primary/10' : ''
-                }`}
-                onClick={() => handleMediaSelect(item.id)}
-              >
-                <td className="py-2 pl-4">
-                  <div className="flex items-center gap-3">
-                    <div className="flex-shrink-0">
-                      {getIconForType(item.type)}
-                    </div>
-                    <span>{item.name}</span>
-                  </div>
-                </td>
-                <td className="py-2 hidden md:table-cell">{item.type}</td>
-                <td className="py-2 hidden md:table-cell">{item.size}</td>
-                <td className="py-2 hidden md:table-cell">{item.date}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    );
-  }
 };
 
 export default MediaManager;
