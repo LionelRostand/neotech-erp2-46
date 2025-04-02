@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -13,32 +12,25 @@ import ViewReservationDetailsDialog from './ViewReservationDetailsDialog';
 
 const mockReservations: Partial<Reservation>[] = [
   {
-    id: "rsv-001",
-    client: "cli-001",
-    clientName: "Marie Martin",
-    vehicle: "veh-001",
-    driver: "drv-001",
+    id: "res001",
+    client: "Marie Dupont",
+    clientName: "Marie Dupont",
     startDate: "2023-11-10",
     endDate: "2023-11-12",
-    pickupLocation: { address: "15 rue de Rivoli, 75001 Paris" },
-    dropoffLocation: { address: "8 avenue des Champs-Élysées, 75008 Paris" },
+    pickupLocation: { address: "15 Rue de la Paix, Paris" },
+    dropoffLocation: { address: "Charles de Gaulle Airport, Terminal 2E" },
+    totalAmount: 320,
     status: "confirmed",
-    serviceType: "airport-transfer",
-    price: 250,
     paymentStatus: "paid",
-    isPaid: true,
-    notes: [{ content: "Client VIP, prévoir eau minérale" }],
-    createdAt: "2023-10-25T14:30:00",
-    pickup: "15 rue de Rivoli, 75001 Paris",
-    dropoff: "8 avenue des Champs-Élysées, 75008 Paris",
-    totalAmount: 250
+    notes: "Client VIP, préférence siège avant",
+    vehicle: "Mercedes Classe E",
+    date: "2023-11-10",
+    time: "09:00"
   },
   {
     id: "rsv-002",
-    client: "cli-002",
+    client: "Pierre Dubois",
     clientName: "Pierre Dubois",
-    vehicle: "veh-002",
-    driver: "drv-002",
     startDate: "2023-11-15",
     endDate: "2023-11-15",
     pickupLocation: { address: "Aéroport CDG Terminal 2E, Paris" },
@@ -56,10 +48,8 @@ const mockReservations: Partial<Reservation>[] = [
   },
   {
     id: "rsv-003",
-    client: "cli-003",
+    client: "Sophie Laurent",
     clientName: "Sophie Laurent",
-    vehicle: "veh-003",
-    driver: "drv-003",
     startDate: "2023-11-08",
     endDate: "2023-11-10",
     pickupLocation: { address: "Gare de Lyon, Paris" },
@@ -77,10 +67,8 @@ const mockReservations: Partial<Reservation>[] = [
   },
   {
     id: "rsv-004",
-    client: "cli-004",
+    client: "Jean Moreau",
     clientName: "Jean Moreau",
-    vehicle: "veh-001",
-    driver: "drv-003",
     startDate: "2023-11-20",
     endDate: "2023-11-20",
     pickupLocation: { address: "Hôtel Ritz, Place Vendôme, Paris" },
@@ -98,10 +86,8 @@ const mockReservations: Partial<Reservation>[] = [
   },
   {
     id: "rsv-005",
-    client: "cli-005",
+    client: "Isabelle Bernard",
     clientName: "Isabelle Bernard",
-    vehicle: "veh-004",
-    driver: "drv-004",
     startDate: "2023-11-25",
     endDate: "2023-11-27",
     pickupLocation: { address: "Gare Montparnasse, Paris" },

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -55,29 +54,23 @@ const ViewReservationDetailsDialog: React.FC<ViewReservationDetailsDialogProps> 
     }
   };
 
-  // Extract notes content from the notes object or array
+  // Safely handle reservation.notes with null checks
   const getNotes = () => {
-    if (!reservation.notes) return 'Aucune note';
+    if (!reservation.notes) return '';
     
-    if (Array.isArray(reservation.notes)) {
-      // If it's an array of note objects with content property
-      return reservation.notes.map((note, index) => {
-        if (typeof note === 'object' && note !== null && 'content' in note) {
-          return <p key={index}>{note.content as string}</p>;
-        } else if (typeof note === 'string') {
-          return <p key={index}>{note}</p>;
-        }
-        return null;
-      });
-    } else if (typeof reservation.notes === 'object' && reservation.notes !== null && 'content' in reservation.notes) {
-      // If it's a single note object with content property
-      return (reservation.notes as {content: string}).content;
-    } else if (typeof reservation.notes === 'string') {
-      // If it's a plain string
+    if (typeof reservation.notes === 'string') {
       return reservation.notes;
     }
+
+    if (Array.isArray(reservation.notes) && reservation.notes.length > 0) {
+      const firstNote = reservation.notes[0];
+      if (typeof firstNote === 'object' && firstNote && 'content' in firstNote) {
+        return firstNote.content;
+      }
+      return Array.isArray(reservation.notes) ? reservation.notes.join(', ') : String(reservation.notes);
+    }
     
-    return 'Format de note non reconnu';
+    return '';
   };
 
   return (

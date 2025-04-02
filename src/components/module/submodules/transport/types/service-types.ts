@@ -32,7 +32,10 @@ export interface TransportService {
   isActive: boolean;
 }
 
-export function serviceToString(service: TransportService): string {
+export function serviceToString(service: TransportService | string): string {
+  if (typeof service === 'string') {
+    return service;
+  }
   return service.name;
 }
 

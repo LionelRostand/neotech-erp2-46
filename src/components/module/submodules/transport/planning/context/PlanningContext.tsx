@@ -1,19 +1,16 @@
-
 import React, { createContext, useContext, useState, useCallback } from 'react';
-import { TransportVehicle, TransportDriver, VehicleMaintenanceSchedule, MapExtensionRequest } from '../../types';
-// Fix imports to use the correct mockData export names
+import { TransportVehicle, TransportDriver, MaintenanceSchedule, MapExtensionRequest } from '../../types';
 import { mockVehicles, mockMaintenanceSchedules, mockExtensionRequests, mockDrivers } from '../mockData';
 
-// Define the type for the context value
 interface PlanningContextType {
   vehicles: TransportVehicle[];
-  maintenanceSchedules: VehicleMaintenanceSchedule[];
+  maintenanceSchedules: MaintenanceSchedule[];
   extensionRequests: MapExtensionRequest[];
   drivers: TransportDriver[];
   selectedVehicle: TransportVehicle | null;
   setSelectedVehicle: (vehicle: TransportVehicle | null) => void;
-  selectedMaintenanceSchedule: VehicleMaintenanceSchedule | null;
-  setSelectedMaintenanceSchedule: (schedule: VehicleMaintenanceSchedule | null) => void;
+  selectedMaintenanceSchedule: MaintenanceSchedule | null;
+  setSelectedMaintenanceSchedule: (schedule: MaintenanceSchedule | null) => void;
   selectedExtensionRequest: MapExtensionRequest | null;
   setSelectedExtensionRequest: (request: MapExtensionRequest | null) => void;
   showMaintenanceScheduleDialog: boolean;
@@ -22,7 +19,7 @@ interface PlanningContextType {
   setShowExtensionDetailsDialog: (show: boolean) => void;
   refreshData: () => void;
   handleAddMaintenance: (vehicle: TransportVehicle) => void;
-  handleViewMaintenanceDetails: (schedule: VehicleMaintenanceSchedule) => void;
+  handleViewMaintenanceDetails: (schedule: MaintenanceSchedule) => void;
   handleResolveExtension: (requestId: string, approved: boolean) => void;
   openMaintenanceScheduleDialog: (vehicle: TransportVehicle) => void;
   openExtensionDetailsDialog: (request: MapExtensionRequest) => void;
@@ -39,75 +36,62 @@ interface PlanningContextType {
   availabilityDate: Date;
   setAvailabilityDate: React.Dispatch<React.SetStateAction<Date>>;
   filteredDrivers: TransportDriver[];
-  isLoading: boolean; // Add isLoading property
+  isLoading: boolean;
 }
 
-// Create the context
 const PlanningContext = createContext<PlanningContextType | null>(null);
 
-// Provider component
 export const PlanningProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  // State for data
   const [vehiclesData, setVehiclesData] = useState<TransportVehicle[]>(mockVehicles as unknown as TransportVehicle[]);
-  const [maintenanceSchedulesData, setMaintenanceSchedulesData] = useState<VehicleMaintenanceSchedule[]>(
-    mockMaintenanceSchedules as unknown as VehicleMaintenanceSchedule[]
+  const [maintenanceSchedulesData, setMaintenanceSchedulesData] = useState<MaintenanceSchedule[]>(
+    mockMaintenanceSchedules as unknown as MaintenanceSchedule[]
   );
   const [extensionRequestsData, setExtensionRequestsData] = useState<MapExtensionRequest[]>(
     mockExtensionRequests as unknown as MapExtensionRequest[]
   );
   const [driversData, setDriversData] = useState<TransportDriver[]>(mockDrivers as unknown as TransportDriver[]);
-  const [isLoading, setIsLoading] = useState<boolean>(false); // Add isLoading state
-  
-  // State for selected items
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+
   const [selectedVehicle, setSelectedVehicle] = useState<TransportVehicle | null>(null);
-  const [selectedMaintenanceSchedule, setSelectedMaintenanceSchedule] = useState<VehicleMaintenanceSchedule | null>(null);
+  const [selectedMaintenanceSchedule, setSelectedMaintenanceSchedule] = useState<MaintenanceSchedule | null>(null);
   const [selectedExtensionRequest, setSelectedExtensionRequest] = useState<MapExtensionRequest | null>(null);
-  
-  // Dialog visibility state
+
   const [showMaintenanceScheduleDialog, setShowMaintenanceScheduleDialog] = useState(false);
   const [showExtensionDetailsDialog, setShowExtensionDetailsDialog] = useState(false);
-  
-  // Filters
+
   const [filters, setFilters] = useState({
     status: [],
     vehicleType: [],
     priority: [],
   });
-  
-  // Date for availability view
+
   const [availabilityDate, setAvailabilityDate] = useState(new Date());
 
-  // Get filtered drivers (those who are available)
   const filteredDrivers = driversData.filter(driver => 
     driver.available && driver.status !== "on_leave"
   );
 
-  // Refresh data function
   const refreshData = useCallback(() => {
-    // In a real app, this would fetch fresh data from an API
     setIsLoading(true);
     setTimeout(() => {
       setVehiclesData(mockVehicles as unknown as TransportVehicle[]);
-      setMaintenanceSchedulesData(mockMaintenanceSchedules as unknown as VehicleMaintenanceSchedule[]);
+      setMaintenanceSchedulesData(mockMaintenanceSchedules as unknown as MaintenanceSchedule[]);
       setExtensionRequestsData(mockExtensionRequests as unknown as MapExtensionRequest[]);
       setDriversData(mockDrivers as unknown as TransportDriver[]);
       setIsLoading(false);
     }, 500);
   }, []);
-  
-  // Function to add maintenance
+
   const handleAddMaintenance = useCallback((vehicle: TransportVehicle) => {
     setSelectedVehicle(vehicle);
     setShowMaintenanceScheduleDialog(true);
   }, []);
-  
-  // Function to view maintenance details
-  const handleViewMaintenanceDetails = useCallback((schedule: VehicleMaintenanceSchedule) => {
+
+  const handleViewMaintenanceDetails = useCallback((schedule: MaintenanceSchedule) => {
     setSelectedMaintenanceSchedule(schedule);
     setShowMaintenanceScheduleDialog(true);
   }, []);
-  
-  // Function to resolve extension requests
+
   const handleResolveExtension = useCallback((requestId: string, approved: boolean) => {
     setExtensionRequestsData(prev => 
       prev.map(req => 
@@ -118,15 +102,13 @@ export const PlanningProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     );
     setShowExtensionDetailsDialog(false);
   }, []);
-  
-  // Convenience function to open maintenance schedule dialog
+
   const openMaintenanceScheduleDialog = useCallback((vehicle: TransportVehicle) => {
     setSelectedVehicle(vehicle);
     setSelectedMaintenanceSchedule(null);
     setShowMaintenanceScheduleDialog(true);
   }, []);
-  
-  // Convenience function to open extension details dialog
+
   const openExtensionDetailsDialog = useCallback((request: MapExtensionRequest) => {
     setSelectedExtensionRequest(request);
     setShowExtensionDetailsDialog(true);
@@ -158,13 +140,12 @@ export const PlanningProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     availabilityDate,
     setAvailabilityDate,
     filteredDrivers,
-    isLoading, // Include isLoading in the context value
+    isLoading,
   };
 
   return <PlanningContext.Provider value={value}>{children}</PlanningContext.Provider>;
 };
 
-// Custom hook to use the planning context
 export const usePlanning = () => {
   const context = useContext(PlanningContext);
   if (!context) {

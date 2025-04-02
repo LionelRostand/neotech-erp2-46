@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -10,7 +11,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { CalendarIcon, Check } from "lucide-react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
-import { TransportService, TransportReservation, TransportReservationStatus, getAddressString } from '../types';
+import { TransportService, TransportReservation, TransportReservationStatus, getAddressString, stringToService, serviceToString } from '../types';
 import { useToast } from "@/hooks/use-toast";
 
 interface ReservationFormDialogProps {
@@ -31,7 +32,7 @@ const ReservationFormDialog: React.FC<ReservationFormDialogProps> = ({
   const [formData, setFormData] = useState({
     clientId: '',
     vehicleId: '',
-    service: 'airport' as TransportService,
+    service: 'airport',
     date: new Date(),
     time: '09:00',
     pickupAddress: '',
@@ -46,8 +47,8 @@ const ReservationFormDialog: React.FC<ReservationFormDialogProps> = ({
   useEffect(() => {
     if (reservation) {
       setFormData({
-        clientId: reservation.clientId,
-        vehicleId: reservation.vehicleId,
+        clientId: reservation.clientId || '',
+        vehicleId: reservation.vehicleId || '',
         service: getServiceString(reservation.service),
         date: reservation.date ? new Date(reservation.date) : new Date(),
         time: reservation.time || '09:00',
@@ -62,10 +63,11 @@ const ReservationFormDialog: React.FC<ReservationFormDialogProps> = ({
     }
   }, [reservation]);
 
-  const getServiceString = (service?: TransportService | { name: string }): string => {
+  const getServiceString = (service?: TransportService | { name: string } | string): string => {
     if (!service) return 'airport';
     if (typeof service === 'object' && 'name' in service) return service.name;
-    return service as string;
+    if (typeof service === 'string') return service;
+    return serviceToString(service);
   };
 
   const getAddressValue = (address?: string | { address: string }): string => {
@@ -115,6 +117,7 @@ const ReservationFormDialog: React.FC<ReservationFormDialogProps> = ({
       
     return {
       ...formData,
+      service: stringToService(formData.service), // Convert string to TransportService
       pickup: formData.pickupAddress,
       dropoff: formData.dropoffAddress,
       notes: notes

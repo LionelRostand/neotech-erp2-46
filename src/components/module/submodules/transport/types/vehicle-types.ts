@@ -40,7 +40,7 @@ export interface MaintenanceRecord {
   type: string;
   cost: number;
   description: string;
-  technician: string;
+  technician: string; // Required property
   notes?: string;
   partsCost?: number;
   laborCost?: number;
@@ -55,12 +55,12 @@ export interface IncidentRecord {
   id: string;
   vehicleId: string;
   date: string;
-  type: string;
+  type: string; // Required property
   description: string;
-  location: string;
-  reportedBy: string;
+  location: string; // Required property
+  reportedBy: string; // Required property
   status: 'open' | 'investigating' | 'resolved' | 'closed';
-  priority: 'low' | 'medium' | 'high';
+  priority: 'low' | 'medium' | 'high'; // Required property
   resolution?: string;
   attachments?: string[];
   severity?: 'low' | 'medium' | 'high' | 'minor' | 'moderate' | 'major';
@@ -76,17 +76,21 @@ export interface MaintenanceSchedule {
   id: string;
   vehicleId: string;
   scheduledDate: string;
+  startDate: string;
+  endDate: string;
   type: string;
   description: string;
   estimatedDuration: number;
-  technicianAssigned?: string; // Made optional to match usage
+  technicianAssigned?: string; // Optional here, but will be required in useMaintenanceSchedule
   status: 'scheduled' | 'in-progress' | 'completed' | 'cancelled';
   priority?: string;
   taskName?: string;
   nextDue?: string;
   completed?: boolean;
-  startDate?: string;
-  endDate?: string;
   technician?: string;
   notes?: string | string[];
 }
+
+// Type alias for VehicleMaintenanceSchedule to maintain compatibility
+export type VehicleMaintenanceSchedule = MaintenanceSchedule;
+

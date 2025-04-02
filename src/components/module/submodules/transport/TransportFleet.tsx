@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -124,7 +123,8 @@ const mockMaintenanceHistory = [
     provider: "Garage Central",
     nextMaintenance: "2023-11-20",
     resolved: true,
-    mileage: 25000
+    mileage: 25000,
+    technician: "John Smith"
   },
   {
     id: "mnt-002",
@@ -136,7 +136,8 @@ const mockMaintenanceHistory = [
     provider: "Garage Express",
     nextMaintenance: "2024-01-12",
     resolved: true,
-    mileage: 42000
+    mileage: 42000,
+    technician: "Mike Johnson"
   },
   {
     id: "mnt-003",
@@ -148,7 +149,8 @@ const mockMaintenanceHistory = [
     provider: "Contrôle Auto",
     nextMaintenance: "2023-12-05",
     resolved: true,
-    mileage: 35000
+    mileage: 35000,
+    technician: "Alice Brown"
   },
   {
     id: "mnt-004",
@@ -160,7 +162,8 @@ const mockMaintenanceHistory = [
     provider: "ElectroCar",
     nextMaintenance: "2024-03-10",
     resolved: false,
-    mileage: 28000
+    mileage: 28000,
+    technician: "Robert Davis"
   }
 ];
 
@@ -171,28 +174,36 @@ const mockIncidents = [
     vehicleId: "veh-002",
     date: "2023-06-15",
     description: "Rayure portière avant droite",
-    severity: "low" as "low", // Changed from "minor" to "low" to match enum
+    severity: "low" as "low",
     driverName: "Sophie Martin",
     clientName: "Marie Legrand",
     damageDescription: "Rayure superficielle de 20cm",
     repairCost: 150,
     insuranceClaim: false,
     resolved: true,
-    status: "closed"
+    status: "closed",
+    type: "scratch",
+    location: "Parking client",
+    reportedBy: "Sophie Martin",
+    priority: "low" as "low"
   },
   {
     id: "inc-002",
     vehicleId: "veh-005",
     date: "2023-09-05",
     description: "Problème électrique - véhicule immobilisé",
-    severity: "high" as "high", // Changed from "major" to "high" to match enum
+    severity: "high" as "high",
     driverName: "Nicolas Durand",
     clientName: "Sophie Bernard",
     damageDescription: "Défaillance du système électrique - remorquage nécessaire",
     repairCost: 1800,
     insuranceClaim: true,
     resolved: false,
-    status: "open"
+    status: "open",
+    type: "electrical",
+    location: "Route nationale 7",
+    reportedBy: "Nicolas Durand",
+    priority: "high" as "high"
   }
 ];
 

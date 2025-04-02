@@ -1,4 +1,3 @@
-
 import { TransportVehicle, TransportDriver, MaintenanceSchedule, MapExtensionRequest } from '../types';
 
 // Mock vehicles data
@@ -95,52 +94,55 @@ export const mockMaintenanceSchedules: Partial<MaintenanceSchedule>[] = [
   }
 ];
 
-// Mock extension requests
-export const mockExtensionRequests: Partial<MapExtensionRequest>[] = [
+// Mock extension requests with corrected properties
+export const mockExtensionRequests = [
   {
     id: "ext-001",
-    reservationId: "res-001",
-    vehicleId: "veh-001",
-    vehicleName: "Mercedes Classe E",
-    driverId: "drv-002",
-    driverName: "Marie Laurent",
     requestId: "REQ-001",
+    clientName: "Marie Dupont",
+    vehicleName: "Mercedes S-Class",
+    driverName: "Jean Martin",
+    originalEndDate: "2023-11-15",
+    requestedEndDate: "2023-11-16",
+    originalEndTime: "18:00",
+    newEndTime: "12:00",
     status: "pending",
-    reason: "Client needs the vehicle for an extra day due to extended meeting",
-    originalEndDate: "2023-06-20",
-    requestedEndDate: "2023-06-21",
-    clientName: "Acme Corp",
-    timestamp: "2023-06-18T14:30:00"
+    reason: "Client meeting extended",
+    extensionReason: "Business needs",
+    reservationId: "res-001",
+    vehicleId: "v1"
   },
   {
     id: "ext-002",
-    reservationId: "res-005",
-    vehicleId: "veh-003",
-    vehicleName: "BMW Série 5",
-    driverId: "drv-001",
-    driverName: "Jean Dupont",
     requestId: "REQ-002",
+    clientName: "Pierre Leroy",
+    vehicleName: "BMW 5 Series",
+    driverName: "Sophie Dubois",
+    originalEndDate: "2023-11-18",
+    requestedEndDate: "2023-11-19",
+    originalEndTime: "20:00",
+    newEndTime: "12:00",
     status: "approved",
-    reason: "Extended business trip",
-    originalEndDate: "2023-06-25",
-    requestedEndDate: "2023-06-27",
-    clientName: "Global Industries",
-    timestamp: "2023-06-22T09:15:00"
+    reason: "Flight delay",
+    extensionReason: "Travel complications",
+    reservationId: "res-003",
+    vehicleId: "v2"
   },
   {
     id: "ext-003",
-    reservationId: "res-008",
-    vehicleId: "veh-004",
-    vehicleName: "Tesla Model S",
-    driverId: "drv-004",
-    driverName: "Julie Leroy",
     requestId: "REQ-003",
+    clientName: "Lucas Bernard",
+    vehicleName: "Tesla Model X",
+    driverName: "Marc Petit",
+    originalEndDate: "2023-11-20",
+    requestedEndDate: "2023-11-21",
+    originalEndTime: "14:00",
+    newEndTime: "14:00",
     status: "rejected",
-    reason: "Vehicle needed for another reservation",
-    originalEndDate: "2023-07-02",
-    requestedEndDate: "2023-07-05",
-    clientName: "Tech Innovations",
-    timestamp: "2023-06-28T16:45:00"
+    reason: "Personal reasons",
+    extensionReason: "Vehicle needed for another reservation",
+    reservationId: "res-005",
+    vehicleId: "v4"
   }
 ];
 
