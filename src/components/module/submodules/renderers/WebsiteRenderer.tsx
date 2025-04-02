@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { WebsitePages } from '../website/WebsitePages';
+import WebsitePages from '../website/WebsitePages';
 import WebsiteTemplates from '../website/WebsiteTemplates';
 import { SubModule } from '@/data/types/modules';
 
