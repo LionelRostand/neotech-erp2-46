@@ -1,7 +1,7 @@
 
 import React from 'react';
-import { Card } from '@/components/ui/card';
 import TransportBookingTemplate from '../../website/templates/TransportBookingTemplate';
+import CustomerContactForm from './CustomerContactForm';
 
 interface WebBookingPreviewProps {
   isEditing: boolean;
@@ -20,6 +20,10 @@ const WebBookingPreview: React.FC<WebBookingPreviewProps> = ({ isEditing }) => {
       </div>
       <div className={isEditing ? "p-4 bg-background overflow-auto" : ""}>
         <TransportBookingTemplate isEditable={isEditing} />
+        
+        <div className="mt-8">
+          <CustomerContactForm isEditable={isEditing} />
+        </div>
       </div>
     </div>
   );

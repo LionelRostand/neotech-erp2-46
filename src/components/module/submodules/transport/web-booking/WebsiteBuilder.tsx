@@ -4,12 +4,13 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
-import { Eye, Save, Edit, Settings, Image, Undo, Redo } from 'lucide-react';
+import { Eye, Save, Edit, Settings, Image, Undo, Redo, MessageSquare } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import WebBookingPreview from './WebBookingPreview';
 import WebBookingEditorSidebar from './WebBookingEditorSidebar';
 import SettingsForm from './SettingsForm';
 import MediaManager from './MediaManager';
+import CustomerContactForm from './CustomerContactForm';
 
 const WebsiteBuilder: React.FC = () => {
   const [activeTab, setActiveTab] = useState('design');
@@ -99,6 +100,10 @@ const WebsiteBuilder: React.FC = () => {
                   <Image className="h-4 w-4 mr-1" />
                   Médias
                 </TabsTrigger>
+                <TabsTrigger value="contact" className="flex items-center">
+                  <MessageSquare className="h-4 w-4 mr-1" />
+                  Contact
+                </TabsTrigger>
               </TabsList>
             </div>
 
@@ -130,6 +135,19 @@ const WebsiteBuilder: React.FC = () => {
 
             <TabsContent value="media" className="h-[calc(100vh-334px)] p-4 overflow-y-auto">
               <MediaManager />
+            </TabsContent>
+
+            <TabsContent value="contact" className="h-[calc(100vh-334px)] p-4 overflow-y-auto">
+              <div className="space-y-6">
+                <div>
+                  <h3 className="text-lg font-medium mb-2">Formulaire de contact client</h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Ce formulaire permettra à vos clients de vous contacter directement depuis votre site de réservation.
+                    Les messages seront transmis au service client.
+                  </p>
+                </div>
+                <CustomerContactForm isEditable={true} />
+              </div>
             </TabsContent>
           </Tabs>
         </div>
