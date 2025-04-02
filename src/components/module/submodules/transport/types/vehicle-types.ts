@@ -79,7 +79,7 @@ export interface MaintenanceSchedule {
   type: string;
   description: string;
   estimatedDuration: number;
-  technicianAssigned: string; // Changed from optional to required
+  technicianAssigned?: string; // Made optional to match usage
   status: 'scheduled' | 'in-progress' | 'completed' | 'cancelled';
   priority?: string;
   taskName?: string;

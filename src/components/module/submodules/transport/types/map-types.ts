@@ -9,6 +9,10 @@ export interface Coordinates {
   heading?: number;
   speed?: number;
   timestamp?: string;
+  coordinates?: {
+    latitude: number;
+    longitude: number;
+  };
 }
 
 export interface VehicleLocation {
@@ -49,11 +53,30 @@ export interface MapHookResult {
 }
 
 export interface MapExtensionRequest {
+  id: string;
   vehicleId: string;
-  type: 'route' | 'alert' | 'history';
-  startDate?: string;
-  endDate?: string;
-  parameters?: Record<string, any>;
+  vehicleName: string;
+  driverId?: string;
+  driverName?: string;
+  status: 'pending' | 'approved' | 'rejected';
+  reason: string;
+  requestedExtension?: number; // in hours
+  originalEndTime?: string;
+  newEndTime?: string;
+  timestamp?: string;
+  // Additional properties for mockData compatibility
+  requestId?: string;
+  clientName?: string;
+  originalEndDate?: string;
+  requestedEndDate?: string;
+  extensionReason?: string;
+  createdAt?: string;
+  requestDate?: string;
+  requestedAt?: string;
+  extraTimeMinutes?: number;
+  additionalTime?: number;
+  extensionDays?: number;
+  responseMessage?: string;
 }
 
 export type MapMarker = {

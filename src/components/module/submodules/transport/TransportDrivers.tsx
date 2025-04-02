@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -35,7 +34,8 @@ const mockDrivers: TransportDriver[] = [
     experience: 4,
     photo: "/assets/drivers/driver1.jpg",
     language: ["French", "English"],
-    notes: []
+    notes: [],
+    licensesTypes: ["B"]
   },
   {
     id: "drv-002",
@@ -56,7 +56,8 @@ const mockDrivers: TransportDriver[] = [
     experience: 3,
     photo: "/assets/drivers/driver2.jpg",
     language: ["French"],
-    notes: []
+    notes: [],
+    licensesTypes: ["B"]
   },
   {
     id: "drv-003",
@@ -77,7 +78,8 @@ const mockDrivers: TransportDriver[] = [
     experience: 5,
     photo: "/assets/drivers/driver3.jpg",
     language: ["French", "Spanish"],
-    notes: []
+    notes: [],
+    licensesTypes: ["D"]
   },
   {
     id: "drv-004",
@@ -98,7 +100,8 @@ const mockDrivers: TransportDriver[] = [
     experience: 2,
     photo: "/assets/drivers/driver4.jpg",
     language: ["French", "English", "German"],
-    notes: []
+    notes: [],
+    licensesTypes: ["B"]
   },
   {
     id: "drv-005",
@@ -119,7 +122,8 @@ const mockDrivers: TransportDriver[] = [
     experience: 3,
     photo: "/assets/drivers/driver5.jpg",
     language: ["French", "Italian"],
-    notes: []
+    notes: [],
+    licensesTypes: ["B", "BE"]
   }
 ];
 

@@ -1,7 +1,9 @@
+
 import { TransportBasic, Note } from './base-types';
 import { TransportService } from './base-types';
 
-export interface TransportClient extends Omit<TransportBasic, 'name'> {
+export interface TransportClient {
+  id: string;
   firstName: string;
   lastName: string;
   email: string;
@@ -19,6 +21,8 @@ export interface TransportClient extends Omit<TransportBasic, 'name'> {
   webBookings?: WebBooking[];
   name?: string;
   loyaltyPoints?: number;
+  status?: string; // Added for compatibility
+  description?: string; // Added for compatibility
 }
 
 export interface ClientNote extends Note {
