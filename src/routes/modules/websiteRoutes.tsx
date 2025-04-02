@@ -4,6 +4,7 @@ import { Route } from "react-router-dom";
 import ModuleLayout from "@/components/module/ModuleLayout";
 import SubmodulePage from "@/components/module/SubmodulePage";
 import WebsiteTemplatePreview from "@/components/module/submodules/website/WebsiteTemplatePreview";
+import WebsiteTemplatePreviewPage from "@/components/module/submodules/website/preview/WebsiteTemplatePreviewPage";
 
 export const WebsiteRoutes = (
   <Route key="website" path="/modules/website" element={<ModuleLayout moduleId={11} />}>
@@ -20,6 +21,6 @@ export const WebsiteRoutes = (
     <Route path="public" element={<SubmodulePage moduleId={11} submoduleId="website-public" />} />
     <Route path="domains" element={<SubmodulePage moduleId={11} submoduleId="website-domains" />} />
     <Route path="settings" element={<SubmodulePage moduleId={11} submoduleId="website-settings" />} />
-    <Route path="preview/templates/:templateId" element={<WebsiteTemplatePreview />} />
+    <Route path="preview/templates/:templateId" element={<WebsiteTemplatePreviewPage />} />
   </Route>
 );
