@@ -1,87 +1,53 @@
 
-// map-types.ts
 export interface Coordinates {
   latitude: number;
   longitude: number;
-  // Additional properties used in components
-  vehicleId?: string;
-  status?: string;
-  heading?: number;
-  speed?: number;
-  timestamp?: string;
-  coordinates?: {
-    latitude: number;
-    longitude: number;
-  };
 }
 
 export interface VehicleLocation {
-  vehicleId: string;
-  coordinates: Coordinates;
-  timestamp: string;
-  status: string;
-  heading: number;
-  speed: number;
-}
-
-export interface TransportVehicleWithLocation {
-  id: string;
-  name: string;
-  type: string;
-  licensePlate: string;
-  status: string;
-  available: boolean;
-  capacity?: number;
-  driverName?: string;
-  location: VehicleLocation;
-  notes: any[];
-}
-
-export interface MapConfig {
-  center: [number, number];
-  zoom: number;
-  markers: any[];
-  selectedVehicleId?: string;
-}
-
-export interface MapHookResult {
-  map: any;
-  markers: any[];
-  isLoaded: boolean;
-  selectedVehicle: TransportVehicleWithLocation | null;
-  selectVehicle: (vehicleId: string) => void;
+  lat: number;
+  lng: number;
+  address?: string;
 }
 
 export interface MapExtensionRequest {
   id: string;
-  vehicleId: string;
+  requestId: string;
+  clientName: string;
   vehicleName: string;
-  driverId?: string;
   driverName?: string;
+  originalEndDate: string;
+  requestedEndDate: string;
+  originalEndTime: string;
+  newEndTime: string;
   status: 'pending' | 'approved' | 'rejected';
   reason: string;
-  requestedExtension?: number; // in hours
-  originalEndTime?: string;
-  newEndTime?: string;
-  timestamp?: string;
-  // Additional properties for mockData compatibility
-  requestId?: string;
-  clientName?: string;
-  originalEndDate?: string;
-  requestedEndDate?: string;
   extensionReason?: string;
-  createdAt?: string;
-  requestDate?: string;
-  requestedAt?: string;
-  extraTimeMinutes?: number;
-  additionalTime?: number;
-  extensionDays?: number;
-  responseMessage?: string;
+  reservationId: string;
 }
 
-export type MapMarker = {
+export interface MapMarker {
   id: string;
-  position: [number, number];
-  icon?: any;
-  popup?: string;
-};
+  position: Coordinates;
+  type: 'vehicle' | 'client' | 'depot' | 'driver' | 'destination';
+  title: string;
+  details?: {
+    status?: string;
+    info?: string;
+    image?: string;
+  };
+}
+
+export interface MapRoute {
+  id: string;
+  path: Coordinates[];
+  type: 'active' | 'planned' | 'completed';
+  vehicleId?: string;
+}
+
+export function normalizeCoordinates(location: VehicleLocation): Coordinates {
+  return {
+    latitude: location.lat,
+    longitude: location.lng
+  };
+}

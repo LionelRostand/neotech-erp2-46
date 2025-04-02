@@ -20,3 +20,29 @@ export interface ServicePricing {
   pricePerMinute?: number;
   minimumPrice?: number;
 }
+
+export interface TransportService {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  type: 'standard' | 'premium' | 'luxury' | 'custom';
+  availability?: ServiceAvailability[];
+  pricing?: ServicePricing;
+  isActive: boolean;
+}
+
+export function serviceToString(service: TransportService): string {
+  return service.name;
+}
+
+export function stringToService(serviceName: string): TransportService {
+  return {
+    id: 'default',
+    name: serviceName,
+    description: 'Service par défaut',
+    price: 0,
+    type: 'standard',
+    isActive: true
+  };
+}
