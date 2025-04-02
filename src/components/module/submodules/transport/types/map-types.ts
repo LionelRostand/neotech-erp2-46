@@ -28,26 +28,30 @@ export interface TransportVehicleWithLocation {
   status: string;
   available: boolean;
   capacity?: number;
-  location: TransportVehicleLocation;
+  location: VehicleLocation | TransportVehicleLocation;
   notes: any[];
   [key: string]: any;
 }
 
 export interface MapExtensionRequest {
   id: string;
-  requestId: string;
-  clientName: string;
-  vehicleName: string;
+  requestId?: string;
+  clientName?: string;
+  vehicleName?: string;
   driverName?: string;
-  originalEndDate: string;
-  requestedEndDate: string;
-  originalEndTime: string;
-  newEndTime: string;
-  status: 'pending' | 'approved' | 'rejected';
-  reason: string;
+  originalEndDate?: string;
+  requestedEndDate?: string;
+  originalEndTime?: string;
+  newEndTime?: string;
+  status?: 'pending' | 'approved' | 'rejected';
+  reason?: string;
   extensionReason?: string;
-  reservationId: string;
-  vehicleId: string;  // Added for compatibility
+  reservationId?: string;
+  vehicleId?: string;
+  timestamp?: string;
+  type?: 'traffic' | 'satellite' | 'terrain' | 'heatmap';
+  active?: boolean;
+  config?: Record<string, any>;
 }
 
 export interface MapMarker {
@@ -83,12 +87,3 @@ export interface MapHookResult {
   selectedVehicle: TransportVehicleWithLocation | null;
   selectVehicle: (vehicleId: string) => void;
 }
-
-// Function to normalize location data into Coordinates format
-export function normalizeCoordinates(location: VehicleLocation | { lat: number; lng: number }): Coordinates {
-  return {
-    latitude: location.lat,
-    longitude: location.lng
-  };
-}
-

@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -48,6 +49,7 @@ const ViewReservationDetailsDialog: React.FC<ViewReservationDetailsDialogProps> 
       case 'partial':
         return <Badge variant="outline" className="bg-yellow-100 text-yellow-800 border-yellow-300">Partielle</Badge>;
       case 'pending':
+      case 'unpaid':
         return <Badge variant="outline" className="bg-gray-100 text-gray-800 border-gray-300">En attente</Badge>;
       default:
         return <Badge variant="outline">Inconnue</Badge>;
@@ -67,7 +69,7 @@ const ViewReservationDetailsDialog: React.FC<ViewReservationDetailsDialogProps> 
       if (typeof firstNote === 'object' && firstNote && 'content' in firstNote) {
         return firstNote.content;
       }
-      return Array.isArray(reservation.notes) ? reservation.notes.join(', ') : String(reservation.notes);
+      return Array.isArray(reservation.notes) ? String(reservation.notes.join(', ')) : String(reservation.notes);
     }
     
     return '';
@@ -84,7 +86,7 @@ const ViewReservationDetailsDialog: React.FC<ViewReservationDetailsDialogProps> 
           <div className="flex justify-between items-center">
             <div>
               <h3 className="font-semibold text-lg">Client</h3>
-              <p>{reservation.clientName}</p>
+              <p>{reservation.clientName || 'Non spécifié'}</p>
             </div>
             <div>
               <h3 className="font-semibold text-lg">Statut</h3>
@@ -116,7 +118,7 @@ const ViewReservationDetailsDialog: React.FC<ViewReservationDetailsDialogProps> 
             <p>{getAddressString(reservation.dropoffLocation)}</p>
           </div>
           
-          {reservation.totalAmount && (
+          {reservation.totalAmount !== undefined && (
             <div className="border-t border-gray-200 pt-4">
               <h3 className="font-semibold">Montant total</h3>
               <p className="text-xl font-semibold">{reservation.totalAmount} €</p>

@@ -32,17 +32,16 @@ const PlanningTabContent: React.FC<PlanningTabContentProps> = ({
     openExtensionDetailsDialog
   } = usePlanning();
 
-  // Convert vehicle maintenance schedules to map maintenance schedules
-  // Use type assertion with the Omit utility to ensure compatibility
-  const { mapSchedules } = useMaintenanceSchedule(
-    maintenanceSchedules.map(schedule => ({
-      ...schedule,
-      // Ensure technicianAssigned is properly handled as string to avoid type errors
-      technicianAssigned: typeof schedule.technicianAssigned === 'boolean' 
-        ? (schedule.technicianAssigned ? 'Yes' : 'No')
-        : schedule.technicianAssigned || ''
-    })) as MaintenanceSchedule[]
-  );
+  // Convert maintenance schedules to properly formatted objects with required technician
+  const formattedSchedules = maintenanceSchedules.map(schedule => ({
+    ...schedule,
+    technicianAssigned: typeof schedule.technicianAssigned === 'boolean' 
+      ? (schedule.technicianAssigned ? 'Yes' : 'No')
+      : (schedule.technicianAssigned || schedule.technician || 'Unassigned')
+  }));
+
+  // Use the useMaintenanceSchedule hook with properly formatted schedules
+  const { mapSchedules } = useMaintenanceSchedule(formattedSchedules);
 
   // Adapter functions to match expected signatures
   const handleAddMaintenance = (vehicle: TransportVehicle) => {
@@ -70,7 +69,7 @@ const PlanningTabContent: React.FC<PlanningTabContentProps> = ({
       ...schedule,
       technicianAssigned: typeof schedule.technicianAssigned === 'boolean' 
         ? (schedule.technicianAssigned ? 'Yes' : 'No')
-        : schedule.technicianAssigned || '',
+        : (schedule.technicianAssigned || schedule.technician || 'Unassigned'),
       // Convert notes to string if it's an array, otherwise use the provided string or empty string
       notes: Array.isArray(schedule.notes) 
         ? schedule.notes.join(', ') // Convert array to string by joining

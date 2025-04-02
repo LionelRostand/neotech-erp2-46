@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CarFront, Plus, Search, Filter, FileText, Wrench, AlertTriangle } from "lucide-react";
-import { TransportVehicle } from './types';
+import { TransportVehicle, MaintenanceRecord, IncidentRecord } from './types';
 import VehiclesTable from './fleet/VehiclesTable';
 import VehicleDetails from './fleet/VehicleDetails';
 import MaintenanceHistoryList from './fleet/MaintenanceHistoryList';
@@ -111,12 +111,12 @@ const mockVehicles: TransportVehicle[] = [
   }
 ];
 
-// Mock maintenance history with corrected union types
-const mockMaintenanceHistory = [
+// Mock maintenance history with corrected types
+const mockMaintenanceHistory: MaintenanceRecord[] = [
   {
     id: "mnt-001",
     vehicleId: "veh-001",
-    type: "regular" as "regular",
+    type: "regular",
     date: "2023-05-20",
     description: "Changement d'huile et filtres",
     cost: 280,
@@ -129,7 +129,7 @@ const mockMaintenanceHistory = [
   {
     id: "mnt-002",
     vehicleId: "veh-002",
-    type: "repair" as "repair",
+    type: "repair",
     date: "2023-07-12",
     description: "Problème de freins",
     cost: 550,
@@ -142,7 +142,7 @@ const mockMaintenanceHistory = [
   {
     id: "mnt-003",
     vehicleId: "veh-003",
-    type: "inspection" as "inspection",
+    type: "inspection",
     date: "2023-06-05",
     description: "Contrôle technique",
     cost: 120,
@@ -155,7 +155,7 @@ const mockMaintenanceHistory = [
   {
     id: "mnt-004",
     vehicleId: "veh-005",
-    type: "repair" as "repair",
+    type: "repair",
     date: "2023-09-10",
     description: "Problème de batterie",
     cost: 1200,
@@ -167,14 +167,14 @@ const mockMaintenanceHistory = [
   }
 ];
 
-// Mock incidents with corrected union types
-const mockIncidents = [
+// Mock incidents with corrected types
+const mockIncidents: IncidentRecord[] = [
   {
     id: "inc-001",
     vehicleId: "veh-002",
     date: "2023-06-15",
     description: "Rayure portière avant droite",
-    severity: "low" as "low",
+    severity: "low",
     driverName: "Sophie Martin",
     clientName: "Marie Legrand",
     damageDescription: "Rayure superficielle de 20cm",
@@ -185,14 +185,14 @@ const mockIncidents = [
     type: "scratch",
     location: "Parking client",
     reportedBy: "Sophie Martin",
-    priority: "low" as "low"
+    priority: "low"
   },
   {
     id: "inc-002",
     vehicleId: "veh-005",
     date: "2023-09-05",
     description: "Problème électrique - véhicule immobilisé",
-    severity: "high" as "high",
+    severity: "high",
     driverName: "Nicolas Durand",
     clientName: "Sophie Bernard",
     damageDescription: "Défaillance du système électrique - remorquage nécessaire",
@@ -203,7 +203,7 @@ const mockIncidents = [
     type: "electrical",
     location: "Route nationale 7",
     reportedBy: "Nicolas Durand",
-    priority: "high" as "high"
+    priority: "high"
   }
 ];
 

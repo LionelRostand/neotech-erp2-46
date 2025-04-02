@@ -11,7 +11,6 @@ import { toast } from "sonner";
 const mockReservations: Partial<Reservation>[] = [
   {
     id: "res001",
-    client: "Marie Dupont",
     clientName: "Marie Dupont",
     startDate: "2023-11-10", 
     endDate: "2023-11-12",
@@ -21,15 +20,11 @@ const mockReservations: Partial<Reservation>[] = [
     status: "confirmed",
     paymentStatus: "paid",
     notes: "Client VIP, préférence siège avant",
-    createdAt: "2023-10-25T14:30:00",
-    updatedAt: "2023-10-25T14:30:00",
     pickup: "15 Rue de la Paix, Paris",
-    dropoff: "Charles de Gaulle Airport, Terminal 2E",
-    totalAmount: 320
+    dropoff: "Charles de Gaulle Airport, Terminal 2E"
   },
   {
     id: "res002",
-    client: "Pierre Dubois",
     clientName: "Pierre Dubois",
     startDate: "2023-11-15",
     endDate: "2023-11-15",
@@ -38,15 +33,12 @@ const mockReservations: Partial<Reservation>[] = [
     status: "pending",
     paymentStatus: "unpaid",
     notes: "Location sans chauffeur",
-    createdAt: "2023-11-01T09:45:00",
-    updatedAt: "2023-11-01T09:45:00",
     pickup: "Aéroport CDG Terminal 2E, Paris",
     dropoff: "25 rue du Faubourg Saint-Honoré, 75008 Paris",
     totalAmount: 120
   },
   {
     id: "res003",
-    client: "Sophie Laurent",
     clientName: "Sophie Laurent",
     startDate: "2023-11-08",
     endDate: "2023-11-10",
@@ -55,15 +47,12 @@ const mockReservations: Partial<Reservation>[] = [
     status: "completed",
     paymentStatus: "paid",
     notes: "Location sans chauffeur",
-    createdAt: "2023-10-20T11:15:00",
-    updatedAt: "2023-11-10T18:30:00",
     pickup: "Gare de Lyon, Paris",
     dropoff: "Gare de Lyon, Paris",
     totalAmount: 320
   },
   {
     id: "res004",
-    client: "Jean Moreau",
     clientName: "Jean Moreau",
     startDate: "2023-11-20",
     endDate: "2023-11-20",
@@ -72,15 +61,12 @@ const mockReservations: Partial<Reservation>[] = [
     status: "confirmed",
     paymentStatus: "partial",
     notes: "Location sans chauffeur",
-    createdAt: "2023-11-05T16:20:00",
-    updatedAt: "2023-11-05T16:20:00",
     pickup: "Hôtel Ritz, Place Vendôme, Paris",
     dropoff: "Opéra Garnier, Paris",
     totalAmount: 180
   },
   {
     id: "res005",
-    client: "Isabelle Bernard",
     clientName: "Isabelle Bernard",
     startDate: "2023-11-25",
     endDate: "2023-11-27",
@@ -89,8 +75,6 @@ const mockReservations: Partial<Reservation>[] = [
     status: "pending",
     paymentStatus: "unpaid",
     notes: "Location sans chauffeur",
-    createdAt: "2023-11-07T10:10:00",
-    updatedAt: "2023-11-07T10:10:00",
     pickup: "Gare Montparnasse, Paris",
     dropoff: "Gare Montparnasse, Paris",
     totalAmount: 420

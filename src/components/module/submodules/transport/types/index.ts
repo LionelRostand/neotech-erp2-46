@@ -16,3 +16,6 @@ export type { TransportVehicleWithLocation } from './map-types';
 
 // Export web booking related types
 export type { WebBookingConfig, MenuItem, BannerConfig } from './web-booking-types';
+
+// Export map related types
+export type { MapConfig, MapHookResult } from './map-types';

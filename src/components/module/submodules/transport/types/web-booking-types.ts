@@ -30,6 +30,11 @@ export interface WebBookingConfig {
     paymentOptions: string[];
     termsUrl: string;
   };
+  // Additional properties for web application
+  siteTitle: string;
+  enableBookingForm: boolean;
+  requiredFields: string[];
+  bannerConfig: BannerConfig;
 }
 
 export interface MenuItem {
@@ -37,6 +42,7 @@ export interface MenuItem {
   label: string;
   url: string;
   isExternal: boolean;
+  isActive: boolean;
   children?: MenuItem[];
 }
 
@@ -47,4 +53,13 @@ export interface BannerConfig {
   textColor: string;
   link?: string;
   position: 'top' | 'bottom';
+  // Additional properties
+  title?: string;
+  subtitle?: string;
+  backgroundColor?: string;
+  backgroundImage?: string;
+  buttonText?: string;
+  buttonLink?: string;
+  overlay?: boolean;
+  overlayOpacity?: number;
 }

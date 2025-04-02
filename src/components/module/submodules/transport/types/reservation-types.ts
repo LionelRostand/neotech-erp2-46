@@ -1,71 +1,102 @@
 
-// Export bare minimum to make sure getAddressString is exported
-export interface Address {
-  street: string;
-  city: string;
-  postalCode: string;
-  country: string;
-  additionalInfo?: string;
-}
+// reservation-types.ts
 
-export interface TransportReservation {
-  // Complete structure to make TypeScript happy
-  id: string;
-  status?: string;
-  price?: number;
-  date?: string;
-  time?: string;
-  pickup?: string | { address: string };
-  dropoff?: string | { address: string };
-  service?: any;
-  clientId?: string;
-  vehicleId?: string;
-  driverId?: string;
-  isPaid?: boolean;
-  needsDriver?: boolean;
-  contractGenerated?: boolean;
-  notes?: string;
-  createdAt?: string;
+export interface Address {
+  street?: string;
+  city?: string;
+  postalCode?: string;
+  country?: string;
+  address?: string; // Full formatted address
+  lat?: number;
+  lng?: number;
 }
 
 export interface Reservation {
-  // Complete structure to make TypeScript happy
   id: string;
-  client?: string;
+  startDate?: string;
+  endDate?: string;
+  pickupLocation: Address;
+  dropoffLocation: Address;
+  status: string;
+  paymentStatus?: string;
+  clientId?: string;
   clientName?: string;
+  totalAmount?: number;
+  notes?: string | Array<{content: string}> | any[];
+  createdAt?: string;
+  updatedAt?: string;
+  pickup?: string; // Short form pickup address
+  dropoff?: string; // Short form dropoff address
+  client?: string; // Client name for backward compatibility
+  date?: string; // For calendar use
   vehicle?: string;
   driver?: string;
-  startDate?: string;
-  endDate?: string;
-  pickupLocation?: any;
-  dropoffLocation?: any;
-  totalAmount?: number;
-  status?: string;
-  paymentStatus?: string;
-  notes?: string;
 }
 
-export type TransportReservationStatus = 'pending' | 'confirmed' | 'in-progress' | 'completed' | 'cancelled';
+export type TransportReservationStatus = 
+  | 'pending'
+  | 'confirmed'
+  | 'in-progress'
+  | 'completed'
+  | 'cancelled'
+  | 'no-show';
 
-export type PaymentStatus = 'pending' | 'partial' | 'paid' | 'refunded';
+export type PaymentStatus = 
+  | 'unpaid'
+  | 'partial'
+  | 'paid'
+  | 'refunded';
 
-export interface ReservationFilter {
-  startDate?: string;
-  endDate?: string;
-  status?: TransportReservationStatus;
+export interface TransportReservation {
+  id: string;
+  clientId?: string;
+  clientName?: string;
   vehicleId?: string;
   driverId?: string;
-  clientId?: string;
+  service?: any;
+  date?: string;
+  time?: string;
+  pickup?: string;
+  dropoff?: string;
+  pickupLocation?: Address;
+  dropoffLocation?: Address;
+  status?: TransportReservationStatus;
+  paymentStatus?: PaymentStatus;
+  price?: number;
+  isPaid?: boolean;
+  notes?: string | Array<{content: string}> | any[];
+  createdAt?: string;
+  updatedAt?: string;
+  needsDriver?: boolean;
+  contractGenerated?: boolean;
 }
 
-// This is the missing function that needs to be exported
-export function getAddressString(address: Address): string {
-  const parts = [
-    address.street,
-    address.city,
-    address.postalCode,
-    address.country
-  ].filter(Boolean);
+export interface ReservationFilter {
+  dateRange?: {
+    startDate: string;
+    endDate: string;
+  };
+  status?: TransportReservationStatus[];
+  vehicleTypes?: string[];
+  clients?: string[];
+  drivers?: string[];
+}
+
+// Helper function to get a formatted address string from an Address object
+export function getAddressString(address: Address | undefined): string {
+  if (!address) {
+    return 'Non spécifié';
+  }
   
-  return parts.join(', ');
+  if (address.address) {
+    return address.address;
+  }
+  
+  const parts = [];
+  if (address.street) parts.push(address.street);
+  if (address.city) parts.push(address.city);
+  if (address.postalCode) parts.push(address.postalCode);
+  if (address.country) parts.push(address.country);
+  
+  return parts.length > 0 ? parts.join(', ') : 'Non spécifié';
 }

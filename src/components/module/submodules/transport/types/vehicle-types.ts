@@ -5,30 +5,27 @@ export interface TransportVehicle {
   name: string;
   type: string;
   licensePlate: string;
-  status: 'available' | 'maintenance' | 'reserved' | 'unavailable' | 'active' | 'out-of-service';
-  lastMaintenanceDate?: string;
-  nextMaintenanceDate?: string;
-  mileage?: number;
-  capacity?: number;
   available: boolean;
-  location?: { lat: number; lng: number };
+  status: 'active' | 'maintenance' | 'out-of-service' | 'reserved';
   purchaseDate?: string;
   lastServiceDate?: string;
   nextServiceDate?: string;
+  mileage?: number;
   insuranceInfo?: {
     provider: string;
     policyNumber: string;
     expiryDate: string;
   };
   notes: any[];
-  driverName?: string;
-  [key: string]: any; // Allow for additional properties
+  capacity?: number;
+  [key: string]: any;
 }
 
 export interface VehicleNote {
   id: string;
   vehicleId: string;
-  text: string;
+  title: string;
+  note: string;
   author: string;
   createdAt: string;
 }
@@ -36,61 +33,55 @@ export interface VehicleNote {
 export interface MaintenanceRecord {
   id: string;
   vehicleId: string;
+  type: 'regular' | 'repair' | 'inspection';
   date: string;
-  type: string;
-  cost: number;
   description: string;
-  technician: string; // Required property
-  notes?: string;
-  partsCost?: number;
-  laborCost?: number;
-  attachments?: string[];
-  provider?: string;
+  cost: number;
+  provider: string;
   nextMaintenance?: string;
-  mileage?: number;
-  resolved?: boolean;
+  resolved: boolean;
+  mileage: number;
+  technician: string;
 }
 
 export interface IncidentRecord {
   id: string;
   vehicleId: string;
   date: string;
-  type: string; // Required property
   description: string;
-  location: string; // Required property
-  reportedBy: string; // Required property
-  status: 'open' | 'investigating' | 'resolved' | 'closed';
-  priority: 'low' | 'medium' | 'high'; // Required property
-  resolution?: string;
-  attachments?: string[];
-  severity?: 'low' | 'medium' | 'high' | 'minor' | 'moderate' | 'major';
+  severity: 'low' | 'moderate' | 'high';
   driverName?: string;
   clientName?: string;
   damageDescription?: string;
   repairCost?: number;
   insuranceClaim?: boolean;
   resolved?: boolean;
+  status: 'open' | 'investigating' | 'resolved' | 'closed';
+  type: string;
+  location: string;
+  reportedBy: string;
+  priority: 'low' | 'medium' | 'high';
 }
 
 export interface MaintenanceSchedule {
-  id: string;
+  id?: string;
   vehicleId: string;
   scheduledDate: string;
-  startDate: string;
-  endDate: string;
   type: string;
   description: string;
   estimatedDuration: number;
-  technicianAssigned?: string; // Optional here, but will be required in useMaintenanceSchedule
+  technicianAssigned?: string;
   status: 'scheduled' | 'in-progress' | 'completed' | 'cancelled';
   priority?: string;
   taskName?: string;
   nextDue?: string;
   completed?: boolean;
+  startDate?: string;
+  endDate?: string;
   technician?: string;
   notes?: string | string[];
 }
 
-// Type alias for VehicleMaintenanceSchedule to maintain compatibility
-export type VehicleMaintenanceSchedule = MaintenanceSchedule;
-
+export type MaintenanceScheduleWithTechnician = Omit<MaintenanceSchedule, 'technicianAssigned'> & {
+  technicianAssigned: string;
+};
