@@ -7,8 +7,7 @@ import WebsiteTemplatePreview from "@/components/module/submodules/website/Websi
 
 export const WebsiteRoutes = (
   <Route key="website" path="/modules/website" element={<ModuleLayout moduleId={11} />}>
-    <Route index element={<SubmodulePage moduleId={11} submoduleId="website-cms" />} />
-    <Route path="cms" element={<SubmodulePage moduleId={11} submoduleId="website-cms" />} />
+    <Route index element={<SubmodulePage moduleId={11} submoduleId="website-editor" />} />
     <Route path="editor" element={<SubmodulePage moduleId={11} submoduleId="website-editor" />} />
     <Route path="templates" element={<SubmodulePage moduleId={11} submoduleId="website-templates" />} />
     <Route path="pages" element={<SubmodulePage moduleId={11} submoduleId="website-pages" />} />

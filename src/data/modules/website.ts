@@ -10,7 +10,6 @@ export const websiteModule: AppModule = {
   icon: createIcon(Globe),
   category: 'digital',
   submodules: [
-    { id: "website-cms", name: "Gestion du Contenu (CMS)", href: "/modules/website/cms", icon: createIcon(LayoutGrid) },
     { id: "website-editor", name: "Éditeur", href: "/modules/website/editor", icon: createIcon(Code) },
     { id: "website-templates", name: "Templates", href: "/modules/website/templates", icon: createIcon(FileCode) },
     { id: "website-pages", name: "Pages", href: "/modules/website/pages", icon: createIcon(PanelLeft) },
