@@ -1,23 +1,50 @@
 
-import { useMemo } from 'react';
-import { MaintenanceSchedule } from '../types';
+import { useState, useEffect, useCallback } from 'react';
+import { VehicleMaintenanceSchedule } from '../types';
 
-export const useMaintenanceSchedule = (
-  maintenanceSchedules: MaintenanceSchedule[]
-) => {
-  const mapSchedules = useMemo(() => {
-    return maintenanceSchedules.map(schedule => {
-      // Ensure scheduledDate is always defined for MapMaintenanceSchedule
-      const mapSchedule = {
+export interface MaintenanceSchedule extends VehicleMaintenanceSchedule {
+  technicianAssigned: string;
+}
+
+export const useMaintenanceSchedule = (initialSchedules: MaintenanceSchedule[] = []) => {
+  const [schedules, setSchedules] = useState<MaintenanceSchedule[]>(initialSchedules);
+  
+  useEffect(() => {
+    setSchedules(initialSchedules);
+  }, [initialSchedules]);
+
+  const mapSchedules = useCallback((scheduleList: MaintenanceSchedule[]) => {
+    return scheduleList.map(schedule => {
+      return {
         ...schedule,
-        startDate: schedule.startDate || schedule.scheduledDate || new Date().toISOString(), // Default to current date if undefined
-        endDate: schedule.endDate || schedule.scheduledDate || new Date().toISOString(), // Add endDate if not present
+        technicianAssigned: typeof schedule.technicianAssigned === 'string' 
+          ? schedule.technicianAssigned 
+          : '',
       };
-      return mapSchedule;
     });
-  }, [maintenanceSchedules]);
+  }, []);
+
+  const addSchedule = useCallback((schedule: MaintenanceSchedule) => {
+    setSchedules(prev => [...prev, schedule]);
+  }, []);
+
+  const updateSchedule = useCallback((id: string, updatedSchedule: Partial<MaintenanceSchedule>) => {
+    setSchedules(prev => 
+      prev.map(schedule => 
+        schedule.id === id ? { ...schedule, ...updatedSchedule } : schedule
+      )
+    );
+  }, []);
+
+  const deleteSchedule = useCallback((id: string) => {
+    setSchedules(prev => prev.filter(schedule => schedule.id !== id));
+  }, []);
 
   return {
+    schedules,
     mapSchedules,
+    addSchedule,
+    updateSchedule,
+    deleteSchedule,
   };
 };

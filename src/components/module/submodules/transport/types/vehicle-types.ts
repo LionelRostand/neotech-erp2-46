@@ -1,79 +1,71 @@
 
-import { TransportBasic, Note } from './base-types';
-
-export interface TransportVehicle extends TransportBasic {
+// vehicle-types.ts
+export interface TransportVehicle {
+  id: string;
   name: string;
   type: string;
   licensePlate: string;
-  capacity: number;
-  year?: number;
-  mileage?: number;
-  available: boolean;
-  status: 'active' | 'maintenance' | 'inactive' | 'reserved' | 'out-of-service';
+  status: 'available' | 'maintenance' | 'reserved' | 'unavailable';
+  lastMaintenanceDate?: string;
   nextMaintenanceDate?: string;
-  registrationDate?: string;
-  insuranceExpiryDate?: string;
-  lastInspectionDate?: string;
-  fuelType?: string;
-  notes: VehicleNote[] | any[]; // Allow empty arrays for mock data
-  purchaseDate?: string;
-  lastServiceDate?: string;
-  nextServiceDate?: string;
-  insuranceInfo?: {
-    provider: string;
-    policyNumber: string;
-    expiryDate: string;
-  };
+  mileage?: number;
+  capacity?: number;
+  available: boolean;
+  location?: { lat: number; lng: number };
+  [key: string]: any; // Allow for additional properties
 }
 
-export interface VehicleNote extends Note {
+export interface VehicleNote {
+  id: string;
   vehicleId: string;
+  text: string;
+  author: string;
+  createdAt: string;
 }
 
-export interface MaintenanceRecord extends TransportBasic {
+export interface MaintenanceRecord {
+  id: string;
   vehicleId: string;
+  date: string;
+  type: string;
+  cost: number;
+  description: string;
+  technician: string;
+  notes?: string;
+  partsCost?: number;
+  laborCost?: number;
+  attachments?: string[];
+}
+
+export interface IncidentRecord {
+  id: string;
+  vehicleId: string;
+  date: string;
   type: string;
   description: string;
-  date: string;
-  odometer?: number;
-  cost?: number;
-  technician?: string;
-  facility?: string;
-  notes?: string[] | any[]; // Updated to be compatible with both string[] and any[]
-  provider?: string;
-  nextMaintenance?: string;
+  location: string;
+  reportedBy: string;
+  status: 'open' | 'investigating' | 'resolved';
+  priority: 'low' | 'medium' | 'high';
+  resolution?: string;
+  attachments?: string[];
 }
 
-export interface IncidentRecord extends TransportBasic {
+export interface MaintenanceSchedule {
+  id: string;
   vehicleId: string;
-  driverId?: string;
-  date: string;
-  location?: string;
-  description: string;
-  damageDescription?: string;
-  costEstimate?: number;
-  resolved: boolean;
-  resolutionDate?: string;
-  reportNumber?: string;
-  notes?: string[] | any[]; // Updated to be compatible with both string[] and any[]
-  severity?: 'low' | 'medium' | 'high' | 'critical';
-  driverName?: string;
-  clientName?: string;
-  repairCost?: number;
-}
-
-// Modified to be compatible with VehicleMaintenanceSchedule
-export interface MaintenanceSchedule extends Omit<TransportBasic, 'notes'> {
-  vehicleId: string;
-  type: string;
-  description: string;
   scheduledDate: string;
-  estimatedDuration: number; // in minutes
-  status: 'pending' | 'in-progress' | 'scheduled' | 'completed' | 'cancelled';
-  notes: any[] | string; // Accept both array and string for compatibility
+  type: string;
+  description: string;
+  estimatedDuration: number;
+  technicianAssigned?: string;
+  status: 'scheduled' | 'in-progress' | 'completed' | 'cancelled';
+  priority?: string;
+  taskName?: string;
+  nextDue?: string;
+  completed?: boolean;
   startDate?: string;
   endDate?: string;
   technician?: string;
-  technicianAssigned?: string | boolean; // Accept both string and boolean
-  completed?: boolean;
+  notes?: string | string[];
 }

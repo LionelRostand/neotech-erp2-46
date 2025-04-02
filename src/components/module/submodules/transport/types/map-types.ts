@@ -1,69 +1,72 @@
 
-import { TransportVehicle } from './vehicle-types';
-import { createRef, RefObject } from 'react';
-
+// map-types.ts
 export interface Coordinates {
-  latitude: number;
-  longitude: number;
+  lat: number;
+  lng: number;
 }
 
 export interface VehicleLocation {
   vehicleId: string;
   coordinates: Coordinates;
   timestamp: string;
-  status: 'moving' | 'idle' | 'stopped';
-  speed: number;
-  heading: number;
-  // For compatibility
-  lat?: number;
-  lng?: number;
-  latitude?: number;
-  longitude?: number;
-  lastUpdate?: string;
+  speed?: number;
+  heading?: number;
+  status?: string;
 }
 
-export interface TransportVehicleWithLocation extends TransportVehicle {
-  location: VehicleLocation;
-  capacity: number;
-  driverName?: string;
+export interface TransportVehicleWithLocation {
+  id: string;
+  name: string;
+  type: string;
+  licensePlate: string;
+  location: Coordinates;
+  status: string;
+  driverId?: string;
 }
 
 export interface MapConfig {
-  center: [number, number];
+  centerCoordinates: Coordinates;
   zoom: number;
-  style: string;
-  markers?: MapMarker[];
-}
-
-export interface MapMarker {
-  id: string;
-  position: [number, number];
-  type: 'vehicle' | 'client' | 'depot';
-  status?: string;
-  title?: string;
-  iconUrl?: string;
+  mapType: 'streets' | 'satellite';
+  showTraffic: boolean;
+  autoRefresh: boolean;
+  refreshInterval: number;
 }
 
 export interface MapHookResult {
-  mapContainer: RefObject<HTMLDivElement>;
-  initializeMap: () => any | null; // Replace mapboxgl.Map with any to avoid dependency
-  addVehiclesToMap: (vehicles: TransportVehicleWithLocation[], onClick: (vehicle: TransportVehicleWithLocation) => void) => void;
+  vehicles: TransportVehicleWithLocation[];
+  selectedVehicle: TransportVehicleWithLocation | null;
+  mapConfig: MapConfig;
+  isLoading: boolean;
+  error: string | null;
+  selectVehicle: (id: string) => void;
+  updateMapConfig: (config: Partial<MapConfig>) => void;
+  refreshData: () => void;
 }
 
 export interface MapExtensionRequest {
   id: string;
-  requestId: string;
-  clientName: string;
+  reservationId?: string;
+  vehicleId: string;
   vehicleName: string;
-  originalEndDate: string;
-  requestedEndDate: string;
-  reason: string;
-  extensionReason?: string;
-  status: 'pending' | 'approved' | 'rejected';
-  createdAt: string;
-  type: string;
-  active: boolean;
   driverId?: string;
   driverName?: string;
-  vehicleId?: string;
+  status: 'pending' | 'approved' | 'rejected';
+  reason: string;
+  requestedExtension?: number;
+  originalEndTime?: string;
+  newEndTime?: string;
+  timestamp?: string;
+  requestId?: string;
+  clientName?: string;
+  originalEndDate?: string;
+  requestedEndDate?: string;
+  extensionReason?: string;
+  createdAt?: string;
+  requestDate?: string;
+  requestedAt?: string;
+  extraTimeMinutes?: number;
+  additionalTime?: number;
+  extensionDays?: number;
+  responseMessage?: string;
 }

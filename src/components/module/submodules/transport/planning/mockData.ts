@@ -1,253 +1,208 @@
-import { TransportVehicle } from '../types';
 
-export const mockVehicles = [
-  {
-    id: "1",
-    name: "Mercedes E-Class",
-    licensePlate: "AB-123-CD",
-    vehicleType: "sedan",
+import { TransportVehicle, TransportDriver, VehicleMaintenanceSchedule, MapExtensionRequest } from '../types';
+
+// Mock vehicles data
+export const mockVehicles: TransportVehicle[] = [
+  { 
+    id: 'v1', 
+    name: 'Mercedes Sprinter', 
+    type: 'van', 
+    licensePlate: 'AB-123-CD', 
+    status: 'available',
+    lastMaintenanceDate: '2024-02-15',
+    nextMaintenanceDate: '2024-08-15',
+    mileage: 45000,
+    capacity: 8,
+    available: true,
+    location: { lat: 48.8566, lng: 2.3522 }
+  },
+  { 
+    id: 'v2', 
+    name: 'Tesla Model S', 
+    type: 'sedan', 
+    licensePlate: 'EF-456-GH', 
+    status: 'maintenance',
+    lastMaintenanceDate: '2024-03-01',
+    nextMaintenanceDate: '2024-09-01',
+    mileage: 32000,
     capacity: 4,
-    make: "Mercedes-Benz",
-    model: "E300",
-    year: 2023,
-    mileage: 15000,
-    status: "active", // Changed from "available" to "active"
-    lastMaintenanceDate: "2023-05-15",
-    nextMaintenanceDate: "2023-08-15",
-    createdAt: "2023-01-10",
-    notes: [], // Initialize as empty array
-    active: true,
-    // ... other required properties
+    available: false,
+    location: { lat: 48.8566, lng: 2.3522 }
   },
-  {
-    id: "2",
-    name: "Tesla Model S",
-    licensePlate: "EF-456-GH",
-    vehicleType: "luxury",
+  { 
+    id: 'v3', 
+    name: 'Renault Trafic', 
+    type: 'van', 
+    licensePlate: 'IJ-789-KL', 
+    status: 'reserved',
+    lastMaintenanceDate: '2024-01-20',
+    nextMaintenanceDate: '2024-07-20',
+    mileage: 68000,
+    capacity: 9,
+    available: false,
+    location: { lat: 48.8566, lng: 2.3522 }
+  },
+  { 
+    id: 'v4', 
+    name: 'BMW 5 Series', 
+    type: 'sedan', 
+    licensePlate: 'MN-012-OP', 
+    status: 'available',
+    lastMaintenanceDate: '2024-02-28',
+    nextMaintenanceDate: '2024-08-28',
+    mileage: 28000,
     capacity: 5,
-    make: "Tesla",
-    model: "Model S",
-    year: 2023,
-    mileage: 8500,
-    status: "active", // Changed from "available" to "active"
-    lastMaintenanceDate: "2023-06-01",
-    nextMaintenanceDate: "2023-09-01",
-    createdAt: "2023-02-15",
-    notes: [], // Initialize as empty array
-    active: true,
-    // ... other required properties
+    available: true,
+    location: { lat: 48.8566, lng: 2.3522 }
   },
-  {
-    id: "3",
-    name: "Toyota Sienna",
-    licensePlate: "IJ-789-KL",
-    vehicleType: "van",
-    capacity: 7,
-    make: "Toyota",
-    model: "Sienna",
-    year: 2022,
-    mileage: 25000,
-    status: "active", // Changed from "available" to "active"
-    lastMaintenanceDate: "2023-04-20",
-    nextMaintenanceDate: "2023-07-20",
-    createdAt: "2023-01-05",
-    notes: [], // Initialize as empty array
-    active: true,
-    // ... other required properties
-  },
-  {
-    id: "4",
-    name: "Ford Transit",
-    licensePlate: "MN-012-OP",
-    vehicleType: "minibus",
-    capacity: 14,
-    make: "Ford",
-    model: "Transit",
-    year: 2021,
-    mileage: 42000,
-    status: "active", // Changed from "available" to "active"
-    lastMaintenanceDate: "2023-05-05",
-    nextMaintenanceDate: "2023-08-05",
-    createdAt: "2022-11-15",
-    notes: [], // Initialize as empty array
-    active: true,
-    // ... other required properties
-  }
 ];
 
-export const mockMaintenanceSchedules = [
+// Mock maintenance schedules
+export const mockMaintenanceSchedules: VehicleMaintenanceSchedule[] = [
   {
-    id: "ms1",
-    vehicleId: "1",
-    scheduledDate: "2023-07-15",
-    estimatedDuration: 4,
-    maintenanceType: "oil_change",
-    status: "scheduled",
-    description: "Regular oil change and filter replacement",
-    createdAt: "2023-06-01",
-    assignedTo: "Mechanic A",
-    notes: [], // Changed from empty string to empty array
-    // ... other required properties
+    id: 'm1',
+    vehicleId: 'v2',
+    scheduledDate: '2024-04-15',
+    type: 'regular',
+    description: 'Entretien régulier',
+    estimatedDuration: 180,
+    status: 'scheduled',
+    startDate: '2024-04-15T08:00:00',
+    endDate: '2024-04-15T11:00:00',
+    technician: 'Jean Dupont',
+    notes: 'Changement de filtres et vidange'
   },
   {
-    id: "ms2",
-    vehicleId: "2",
-    scheduledDate: "2023-07-25",
-    estimatedDuration: 8,
-    maintenanceType: "major_service",
-    status: "scheduled",
-    description: "Annual service including brake check and fluid replacement",
-    createdAt: "2023-06-10",
-    assignedTo: "Mechanic B",
-    notes: [], // Changed from empty string to empty array
-    // ... other required properties
-  }
-];
-
-export const mockExtensionRequests = [
-  {
-    id: "req1",
-    requestDate: "2023-06-10",
-    requestedBy: "Driver A",
-    requestType: "location_extension",
-    status: "pending",
-    reason: "Customer requested additional stop",
-    approvedBy: "",
-    approvedDate: "",
-    vehicleId: "1", // Added required vehicleId
-    vehicleName: "Mercedes E-Class", // Added required vehicleName
-    // ... other required properties
+    id: 'm2',
+    vehicleId: 'v1',
+    scheduledDate: '2024-04-22',
+    type: 'repair',
+    description: 'Réparation des freins',
+    estimatedDuration: 240,
+    status: 'scheduled',
+    startDate: '2024-04-22T09:00:00',
+    endDate: '2024-04-22T13:00:00',
+    technician: 'Marie Martin',
+    notes: 'Remplacement des plaquettes de frein avant et arrière'
   },
   {
-    id: "req2",
-    requestDate: "2023-06-12",
-    requestedBy: "Driver B",
-    requestType: "time_extension",
-    status: "approved",
-    reason: "Traffic delay due to accident",
-    approvedBy: "Supervisor A",
-    approvedDate: "2023-06-12",
-    vehicleId: "2", // Added required vehicleId
-    vehicleName: "Tesla Model S", // Added required vehicleName
-    // ... other required properties
-  }
+    id: 'm3',
+    vehicleId: 'v3',
+    scheduledDate: '2024-05-05',
+    type: 'inspection',
+    description: 'Contrôle technique',
+    estimatedDuration: 120,
+    status: 'scheduled',
+    startDate: '2024-05-05T14:00:00',
+    endDate: '2024-05-05T16:00:00',
+    technician: 'Thomas Bernard',
+    notes: 'Contrôle technique obligatoire'
+  },
 ];
 
-export const mockDrivers = [
+// Mock extension requests
+export const mockExtensionRequests: MapExtensionRequest[] = [
   {
-    id: "d1",
-    firstName: "Jean",
-    lastName: "Dupont",
-    phone: "+33612345678",
-    email: "jean.dupont@example.com",
-    licenseNumber: "12345678",
-    licenseType: "B",
-    licenseExpiry: "2025-06-15",
+    id: 'e1',
+    vehicleId: 'v3',
+    vehicleName: 'Renault Trafic',
+    driverId: 'd2',
+    driverName: 'Sophie Martin',
+    status: 'pending',
+    reason: 'Retard du client pour le retour',
+    requestedExtension: 2,
+    originalEndTime: '2024-04-15T18:00:00',
+    newEndTime: '2024-04-15T20:00:00',
+    timestamp: '2024-04-15T16:30:00'
+  },
+  {
+    id: 'e2',
+    vehicleId: 'v1',
+    vehicleName: 'Mercedes Sprinter',
+    driverId: 'd1',
+    driverName: 'Pierre Dubois',
+    status: 'approved',
+    reason: 'Prolongation demandée par le client',
+    requestedExtension: 4,
+    originalEndTime: '2024-04-16T14:00:00',
+    newEndTime: '2024-04-16T18:00:00',
+    timestamp: '2024-04-16T10:15:00'
+  },
+  {
+    id: 'e3',
+    vehicleId: 'v4',
+    vehicleName: 'BMW 5 Series',
+    driverId: 'd3',
+    driverName: 'Alexandre Petit',
+    status: 'rejected',
+    reason: 'Besoin d\'un véhicule supplémentaire',
+    requestedExtension: 3,
+    originalEndTime: '2024-04-17T12:00:00',
+    newEndTime: '2024-04-17T15:00:00',
+    timestamp: '2024-04-17T09:45:00'
+  },
+];
+
+// Mock drivers data
+export const mockDrivers: TransportDriver[] = [
+  {
+    id: 'd1',
+    firstName: 'Pierre',
+    lastName: 'Dubois',
+    email: 'pierre.dubois@example.com',
+    phone: '+33 6 12 34 56 78',
     available: true,
     onLeave: false,
-    rating: 4.8,
     experience: 5,
-    language: ["French", "English"],
-    preferredVehicleType: ["sedan", "luxury"],
-    status: "active",
-    notes: [],
-    photo: "/avatars/driver-1.jpg",
-    skills: ["night-driving", "vip-service"],
-    performance: {
-      completedTrips: 342,
-      averageRating: 4.8,
-      onTimePercentage: 97,
-      satisfactionScore: 4.7
-    }
+    licensesTypes: ['B', 'D'],
+    status: 'active',
+    rating: 4.8,
+    skills: ['luxury', 'airport'],
+    photo: 'https://randomuser.me/api/portraits/men/32.jpg',
   },
   {
-    id: "d2",
-    firstName: "Marie",
-    lastName: "Laurent",
-    phone: "+33623456789",
-    email: "marie.laurent@example.com",
-    licenseNumber: "87654321",
-    licenseType: "D",
-    licenseExpiry: "2024-11-20",
+    id: 'd2',
+    firstName: 'Sophie',
+    lastName: 'Martin',
+    email: 'sophie.martin@example.com',
+    phone: '+33 6 23 45 67 89',
     available: true,
     onLeave: false,
-    rating: 4.9,
+    experience: 3,
+    licensesTypes: ['B'],
+    status: 'active',
+    rating: 4.5,
+    skills: ['events', 'night'],
+    photo: 'https://randomuser.me/api/portraits/women/44.jpg',
+  },
+  {
+    id: 'd3',
+    firstName: 'Alexandre',
+    lastName: 'Petit',
+    email: 'alex.petit@example.com',
+    phone: '+33 6 34 56 78 90',
+    available: false,
+    onLeave: true,
     experience: 8,
-    language: ["French", "Spanish", "English"],
-    preferredVehicleType: ["van", "minibus"],
-    status: "active",
-    notes: [],
-    photo: "/avatars/driver-2.jpg",
-    skills: ["group-transport", "tourism"],
-    performance: {
-      completedTrips: 512,
-      averageRating: 4.9,
-      onTimePercentage: 99,
-      satisfactionScore: 4.9
-    }
-  }
-];
-
-export const mockDriverSchedules = [
-  {
-    id: "ds1",
-    driverId: "d1",
-    date: "2023-07-15",
-    startTime: "08:00",
-    endTime: "16:00",
-    reservationId: "r1",
-    type: "reservation",
-    createdAt: "2023-06-01"
+    licensesTypes: ['B', 'D'],
+    status: 'on_leave',
+    rating: 4.9,
+    skills: ['luxury', 'long-distance'],
+    photo: 'https://randomuser.me/api/portraits/men/67.jpg',
   },
   {
-    id: "ds2",
-    driverId: "d1",
-    date: "2023-07-16",
-    startTime: "09:00",
-    endTime: "17:00",
-    reservationId: "r2",
-    type: "reservation",
-    createdAt: "2023-06-02"
+    id: 'd4',
+    firstName: 'Marie',
+    lastName: 'Leroy',
+    email: 'marie.leroy@example.com',
+    phone: '+33 6 45 67 89 01',
+    available: true,
+    onLeave: false,
+    experience: 2,
+    licensesTypes: ['B'],
+    status: 'active',
+    rating: 4.2,
+    skills: ['airport', 'night'],
+    photo: 'https://randomuser.me/api/portraits/women/22.jpg',
   },
-  {
-    id: "ds3",
-    driverId: "d2",
-    date: "2023-07-15",
-    startTime: "07:00",
-    endTime: "15:00",
-    reservationId: "r3",
-    type: "reservation",
-    createdAt: "2023-06-03"
-  },
-  {
-    id: "ds4",
-    driverId: "d2",
-    date: "2023-07-17",
-    startTime: "10:00",
-    endTime: "18:00",
-    type: "off-duty",
-    notes: "Personal appointment",
-    createdAt: "2023-06-05"
-  }
-];
-
-export const mockDriverAvailability = [
-  {
-    id: "da1",
-    driverId: "d1",
-    startDate: "2023-07-20",
-    endDate: "2023-07-25",
-    type: "vacation",
-    reason: "Annual leave",
-    createdAt: "2023-06-10"
-  },
-  {
-    id: "da2",
-    driverId: "d2",
-    startDate: "2023-08-01",
-    endDate: "2023-08-03",
-    type: "unavailable",
-    reason: "Training",
-    createdAt: "2023-06-15"
-  }
 ];

@@ -1,25 +1,39 @@
 
-// Base types used across transport module
-
+// base-types.ts
 export interface Note {
   id: string;
   title: string;
   content: string;
+  authorId: string;
+  authorName: string;
   createdAt: string;
-  createdBy: string;
   updatedAt?: string;
+  entityId: string;
+  entityType: 'vehicle' | 'driver' | 'client' | 'reservation';
+  priority?: 'low' | 'medium' | 'high';
+  category?: string;
+  tags?: string[];
 }
 
-export type TransportService = 
-  | 'airport'
-  | 'hourly'
-  | 'pointToPoint'
-  | 'dayTour'
-  | string; // Adding string for backward compatibility
+export interface TransportService {
+  id: string;
+  name: string;
+  description: string;
+  type: string;
+  basePrice: number;
+  pricePerKm?: number;
+  pricePerMinute?: number;
+  minDuration?: number;
+  vehicleTypes: string[];
+  active: boolean;
+}
 
 export interface TransportBasic {
   id: string;
-  createdAt?: string; // Making optional to fix the errors
-  updatedAt?: string;
-  notes?: any[];
+  name: string;
+  description?: string;
+  createdAt: string;
+  updatedAt: string;
+  status: string;
+  [key: string]: any;
 }
