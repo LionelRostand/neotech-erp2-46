@@ -14,6 +14,7 @@ import CustomerContactForm from './CustomerContactForm';
 import DevModePanel from '../../website/editor/DevModePanel';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
+import { WebBookingConfig } from '../types';
 
 const WebsiteBuilder: React.FC = () => {
   const [activeTab, setActiveTab] = useState('design');
@@ -22,6 +23,34 @@ const WebsiteBuilder: React.FC = () => {
   const [isEditing, setIsEditing] = useState(true);
   const [showDevMode, setShowDevMode] = useState(false);
   const { toast } = useToast();
+  
+  // Sample initial config for the website
+  const [webConfig, setWebConfig] = useState<WebBookingConfig>({
+    siteTitle: "RentaCar - Location de véhicules",
+    logo: "/logo.png",
+    primaryColor: "#ff5f00",
+    secondaryColor: "#003366",
+    fontFamily: "Inter",
+    enableBookingForm: true,
+    requiredFields: ["pickup_location", "dropoff_location", "pickup_date", "dropoff_date"],
+    menuItems: [
+      { id: '1', label: 'Accueil', url: '/', isActive: true },
+      { id: '2', label: 'Nos Véhicules', url: '/vehicules', isActive: true },
+      { id: '3', label: 'Tarifs', url: '/tarifs', isActive: true },
+      { id: '4', label: 'Contact', url: '/contact', isActive: true },
+    ],
+    bannerConfig: {
+      title: "Réservez votre véhicule en quelques clics",
+      subtitle: "Des tarifs compétitifs et un service de qualité pour tous vos déplacements",
+      backgroundColor: "#003366",
+      textColor: "#ffffff",
+      backgroundImage: "/images/car1.jpg",
+      buttonText: "Réserver maintenant",
+      buttonLink: "#reservation",
+      overlay: true,
+      overlayOpacity: 50,
+    }
+  });
 
   const handleSave = () => {
     setSavedMessage('Modifications enregistrées');
@@ -43,6 +72,10 @@ const WebsiteBuilder: React.FC = () => {
 
   const toggleDevMode = () => {
     setShowDevMode(!showDevMode);
+  };
+
+  const updateConfig = (newConfig: WebBookingConfig) => {
+    setWebConfig(newConfig);
   };
 
   return (
@@ -144,7 +177,7 @@ const WebsiteBuilder: React.FC = () => {
                   
                   <ResizablePanel defaultSize={defaultLayout[1]} className="bg-background">
                     <div className="h-full overflow-y-auto p-4">
-                      <WebBookingPreview isEditing={true} />
+                      <WebBookingPreview isEditing={true} config={webConfig} />
                     </div>
                   </ResizablePanel>
                 </ResizablePanelGroup>
@@ -178,7 +211,7 @@ const WebsiteBuilder: React.FC = () => {
               <CardTitle>Prévisualisation du site</CardTitle>
             </CardHeader>
             <CardContent className="p-0 h-[calc(100vh-356px)] overflow-auto">
-              <WebBookingPreview isEditing={false} />
+              <WebBookingPreview isEditing={false} config={webConfig} />
             </CardContent>
             <CardFooter className="border-t p-4 flex justify-between">
               <div>

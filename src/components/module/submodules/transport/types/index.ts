@@ -1,31 +1,15 @@
 
-// index.ts - reexport all types
+// Re-export all the types
 export * from './base-types';
-export * from './driver-types';
 export * from './vehicle-types';
-export * from './map-types';
-export * from './planning-types';
-export * from './reservation-types';
+export * from './driver-types';
 export * from './client-types';
+export * from './reservation-types';
+export * from './map-types';
+export * from './transport-types';
+export * from './service-types';
 
-// Simple interim types for modules in development
-export interface GeolocationConfig {
-  centerLat: number;
-  centerLng: number;
-  zoom: number;
-  refreshInterval: number;
-}
-
-export interface ReservationBasic {
-  id: string;
-  clientName: string;
-  startDate: string;
-  endDate: string;
-  status: string;
-  vehicleId?: string;
-  driverId?: string;
-}
-
+// Export web-booking specific types
 export interface WebBookingConfig {
   siteTitle: string;
   logo?: string;
@@ -34,7 +18,25 @@ export interface WebBookingConfig {
   fontFamily: string;
   enableBookingForm: boolean;
   requiredFields: string[];
+  menuItems?: MenuItem[];
+  bannerConfig?: BannerConfig;
 }
 
-// Re-export the getAddressString function explicitly
-export { getAddressString } from './reservation-types';
+export interface MenuItem {
+  id: string;
+  label: string;
+  url: string;
+  isActive: boolean;
+}
+
+export interface BannerConfig {
+  title: string;
+  subtitle: string;
+  backgroundColor: string;
+  textColor: string;
+  backgroundImage: string;
+  buttonText: string;
+  buttonLink: string;
+  overlay: boolean;
+  overlayOpacity: number;
+}

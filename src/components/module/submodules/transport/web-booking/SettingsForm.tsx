@@ -6,8 +6,10 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { WebBookingConfig } from '../types';
+import { WebBookingConfig, MenuItem, BannerConfig } from '../types';
 import { useToast } from '@/hooks/use-toast';
+import MenuEditor from './MenuEditor';
+import BannerEditor from './BannerEditor';
 
 const SettingsForm = () => {
   const { toast } = useToast();
@@ -20,7 +22,24 @@ const SettingsForm = () => {
     secondaryColor: "#003366",
     fontFamily: "Inter",
     enableBookingForm: true,
-    requiredFields: ["pickup_location", "dropoff_location", "pickup_date", "dropoff_date"]
+    requiredFields: ["pickup_location", "dropoff_location", "pickup_date", "dropoff_date"],
+    menuItems: [
+      { id: '1', label: 'Accueil', url: '/', isActive: true },
+      { id: '2', label: 'Nos Véhicules', url: '/vehicules', isActive: true },
+      { id: '3', label: 'Tarifs', url: '/tarifs', isActive: true },
+      { id: '4', label: 'Contact', url: '/contact', isActive: true },
+    ],
+    bannerConfig: {
+      title: "Réservez votre véhicule en quelques clics",
+      subtitle: "Des tarifs compétitifs et un service de qualité pour tous vos déplacements",
+      backgroundColor: "#003366",
+      textColor: "#ffffff",
+      backgroundImage: "/images/car1.jpg",
+      buttonText: "Réserver maintenant",
+      buttonLink: "#reservation",
+      overlay: true,
+      overlayOpacity: 50,
+    }
   });
 
   const handleChange = (field: keyof WebBookingConfig, value: any) => {
@@ -48,6 +67,14 @@ const SettingsForm = () => {
     });
   };
 
+  const handleMenuChange = (items: MenuItem[]) => {
+    handleChange('menuItems', items);
+  };
+
+  const handleBannerChange = (bannerConfig: BannerConfig) => {
+    handleChange('bannerConfig', bannerConfig);
+  };
+
   const handleSave = () => {
     // In a real application, this would save to a backend
     console.log("Saving configuration:", config);
@@ -64,6 +91,8 @@ const SettingsForm = () => {
         <TabsList>
           <TabsTrigger value="general">Général</TabsTrigger>
           <TabsTrigger value="appearance">Apparence</TabsTrigger>
+          <TabsTrigger value="menu">Menu</TabsTrigger>
+          <TabsTrigger value="banner">Bannière</TabsTrigger>
           <TabsTrigger value="booking">Réservation</TabsTrigger>
         </TabsList>
         
@@ -196,6 +225,20 @@ const SettingsForm = () => {
               </div>
             </div>
           </div>
+        </TabsContent>
+
+        <TabsContent value="menu" className="space-y-6 mt-6">
+          <MenuEditor 
+            initialMenuItems={config.menuItems} 
+            onMenuChange={handleMenuChange} 
+          />
+        </TabsContent>
+
+        <TabsContent value="banner" className="space-y-6 mt-6">
+          <BannerEditor 
+            initialConfig={config.bannerConfig} 
+            onConfigChange={handleBannerChange}
+          />
         </TabsContent>
         
         <TabsContent value="booking" className="space-y-6 mt-6">
