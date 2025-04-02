@@ -55,6 +55,30 @@ const ViewReservationDetailsDialog: React.FC<ViewReservationDetailsDialogProps> 
     }
   };
 
+  // Extract notes content from the notes object or array
+  const getNotes = () => {
+    if (!reservation.notes) return 'Aucune note';
+    
+    if (Array.isArray(reservation.notes)) {
+      // If it's an array of note objects with content property
+      return reservation.notes.map((note, index) => 
+        typeof note === 'object' && note.content 
+          ? <p key={index}>{note.content}</p>
+          : typeof note === 'string'
+            ? <p key={index}>{note}</p>
+            : null
+      );
+    } else if (typeof reservation.notes === 'object' && 'content' in reservation.notes) {
+      // If it's a single note object with content property
+      return reservation.notes.content;
+    } else if (typeof reservation.notes === 'string') {
+      // If it's a plain string
+      return reservation.notes;
+    }
+    
+    return 'Format de note non reconnu';
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[600px]">
@@ -108,7 +132,7 @@ const ViewReservationDetailsDialog: React.FC<ViewReservationDetailsDialogProps> 
           {reservation.notes && (
             <div className="border-t border-gray-200 pt-4">
               <h3 className="font-semibold">Notes</h3>
-              <p>{reservation.notes}</p>
+              <div>{getNotes()}</div>
             </div>
           )}
         </div>
