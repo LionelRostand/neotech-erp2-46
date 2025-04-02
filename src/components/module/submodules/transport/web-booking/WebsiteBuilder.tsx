@@ -9,6 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import WebBookingPreview from './WebBookingPreview';
 import WebBookingEditorSidebar from './WebBookingEditorSidebar';
 import SettingsForm from './SettingsForm';
+import MediaManager from './MediaManager';
 
 const WebsiteBuilder: React.FC = () => {
   const [activeTab, setActiveTab] = useState('design');
@@ -127,22 +128,8 @@ const WebsiteBuilder: React.FC = () => {
               <SettingsForm />
             </TabsContent>
 
-            <TabsContent value="media" className="h-[calc(100vh-334px)] p-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Gestion des médias</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground">
-                    Gérez les images, vidéos et autres médias utilisés sur votre site de réservation.
-                  </p>
-                  <div className="mt-6">
-                    <p className="text-center text-muted-foreground">
-                      La gestion des médias sera disponible prochainement.
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
+            <TabsContent value="media" className="h-[calc(100vh-334px)] p-4 overflow-y-auto">
+              <MediaManager />
             </TabsContent>
           </Tabs>
         </div>
