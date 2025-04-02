@@ -1,459 +1,307 @@
 
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useToast } from '@/hooks/use-toast';
-import { WebsiteIntegration as WebsiteIntegrationType } from '../types/integration-types';
-import { 
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form';
-import { useForm } from 'react-hook-form';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
-import { generateIntegrationCode } from '../utils/website-integration';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Card, CardContent } from '@/components/ui/card';
+import { Copy, Check, Code, ExternalLink } from 'lucide-react';
+import { WebsiteIntegration as WebsiteIntegrationType } from '../types/integration-types';
+import { v4 as uuidv4 } from 'uuid';
 
 interface WebsiteIntegrationProps {
-  onCreateIntegration?: (integration: WebsiteIntegrationType) => void;
+  onCreateIntegration: (integration: WebsiteIntegrationType) => void;
 }
 
-const WebsiteIntegrationComponent: React.FC<WebsiteIntegrationProps> = ({ onCreateIntegration }) => {
-  const [integrationCode, setIntegrationCode] = useState<string>('');
-  const [previewUrl, setPreviewUrl] = useState<string>('');
-  const [selectedIntegrationType, setSelectedIntegrationType] = useState('script');
-  const { toast } = useToast();
-
-  const form = useForm({
-    defaultValues: {
-      websiteUrl: '',
-      integrationMethod: 'script',
-      autoResize: true,
-      language: 'fr',
-    },
+const WebsiteIntegration: React.FC<WebsiteIntegrationProps> = ({ onCreateIntegration }) => {
+  const [activeTab, setActiveTab] = useState('embed');
+  const [copied, setCopied] = useState(false);
+  const [customization, setCustomization] = useState({
+    hideHeader: false,
+    hideFooter: false,
+    autoHeight: true,
+    darkMode: false,
+    customColors: false
   });
 
-  const handleGenerateCode = () => {
+  // Code d'intégration pour l'iframe
+  const embedCode = `<iframe 
+  src="https://booking.example.com/transport?hide_header=${customization.hideHeader}&hide_footer=${customization.hideFooter}&auto_height=${customization.autoHeight}&dark_mode=${customization.darkMode}" 
+  style="width:100%; height:600px; border:none; border-radius:4px;" 
+  title="Réservation de transport" 
+  allow="geolocation">
+</iframe>`;
+
+  // Code pour l'API
+  const apiCode = `// Exemple d'utilisation de l'API de réservation
+fetch('https://api.example.com/transport/booking', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'X-API-Key': 'YOUR_API_KEY'
+  },
+  body: JSON.stringify({
+    origin: '123 Rue Principale, Paris',
+    destination: 'Aéroport Charles de Gaulle',
+    date: '2023-06-15',
+    time: '14:30',
+    passengers: 2,
+    vehicle_type: 'standard'
+  })
+})
+.then(response => response.json())
+.then(data => console.log(data))
+.catch(error => console.error('Error:', error));`;
+
+  const handleCopy = (code: string) => {
+    navigator.clipboard.writeText(code);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleCreateIntegration = () => {
+    // Créer une nouvelle intégration
     const newIntegration: WebsiteIntegrationType = {
-      id: `integration-${Date.now()}`,
+      id: uuidv4(),
       moduleId: 'transport',
       pageId: 'booking',
       status: 'active',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       formConfig: {
-        fields: [],
-        services: [],
+        fields: [
+          { name: 'origin', label: 'Départ', type: 'text', required: true, visible: true },
+          { name: 'destination', label: 'Destination', type: 'text', required: true, visible: true },
+          { name: 'date', label: 'Date', type: 'date', required: true, visible: true },
+          { name: 'time', label: 'Heure', type: 'time', required: true, visible: true },
+          { name: 'passengers', label: 'Passagers', type: 'select', required: true, visible: true, 
+            options: [
+              { value: '1', label: '1' },
+              { value: '2', label: '2' },
+              { value: '3', label: '3' },
+              { value: '4', label: '4+' }
+            ] 
+          },
+        ],
+        services: [
+          { id: '1', name: 'Standard' },
+          { id: '2', name: 'Premium' },
+          { id: '3', name: 'Van' }
+        ],
         submitButtonText: 'Réserver maintenant',
-        successMessage: 'Réservation effectuée avec succès',
-        termsAndConditionsText: 'J\'accepte les termes et conditions'
+        successMessage: 'Votre réservation a été effectuée avec succès !',
+        termsAndConditionsText: 'En réservant, vous acceptez nos conditions générales.'
       },
       designConfig: {
         primaryColor: '#1E40AF',
         secondaryColor: '#60A5FA',
         backgroundColor: '#FFFFFF',
         textColor: '#111827',
-        borderRadius: '0.25rem',
+        borderRadius: 'medium',
         buttonStyle: 'rounded',
-        fontFamily: 'Inter, sans-serif',
-        formWidth: '100%'
+        fontFamily: 'Inter',
+        formWidth: '100%',
       }
     };
     
-    const code = generateIntegrationCode(newIntegration);
-    setIntegrationCode(code);
-    
-    toast({
-      title: "Code d'intégration généré",
-      description: "Copiez ce code dans le HTML de votre site web."
-    });
-  };
-
-  const handleCopyCode = () => {
-    navigator.clipboard.writeText(integrationCode);
-    toast({
-      title: "Copié!",
-      description: "Le code a été copié dans le presse-papier."
-    });
-  };
-
-  const handlePreviewSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      new URL(previewUrl);
-      toast({
-        title: "Prévisualisation",
-        description: "Chargement de la prévisualisation de l'intégration..."
-      });
-    } catch (error) {
-      toast({
-        title: "URL invalide",
-        description: "Veuillez entrer une URL valide.",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const handleSaveIntegration = () => {
-    if (onCreateIntegration) {
-      const newIntegration: WebsiteIntegrationType = {
-        id: `integration-${Date.now()}`,
-        moduleId: 'transport',
-        pageId: 'booking',
-        status: 'active',
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        formConfig: {
-          fields: [
-            { 
-              name: 'name', 
-              label: 'Nom', 
-              type: 'text', 
-              required: true, 
-              visible: true 
-            },
-            { 
-              name: 'email', 
-              label: 'Email', 
-              type: 'email', 
-              required: true, 
-              visible: true 
-            },
-            { 
-              name: 'phone', 
-              label: 'Téléphone', 
-              type: 'tel', 
-              required: true, 
-              visible: true 
-            },
-            { 
-              name: 'service', 
-              label: 'Service', 
-              type: 'select', 
-              required: true, 
-              visible: true,
-              options: [
-                { value: 'airport', label: 'Transfert aéroport' },
-                { value: 'dayRent', label: 'Location journée' },
-                { value: 'touristic', label: 'Visite touristique' }
-              ]
-            },
-          ],
-          services: [
-            { id: 'airport', name: 'Transfert aéroport', price: 50 },
-            { id: 'dayRent', name: 'Location journée', price: 120 },
-            { id: 'touristic', name: 'Visite touristique', price: 80 }
-          ],
-          submitButtonText: 'Réserver maintenant',
-          successMessage: 'Réservation effectuée avec succès',
-          termsAndConditionsText: 'J\'accepte les termes et conditions'
-        },
-        designConfig: {
-          primaryColor: '#1E40AF',
-          secondaryColor: '#60A5FA',
-          backgroundColor: '#FFFFFF',
-          textColor: '#111827',
-          borderRadius: '0.375rem',
-          buttonStyle: 'rounded',
-          fontFamily: 'Inter, sans-serif',
-          formWidth: '100%'
-        }
-      };
-      
-      onCreateIntegration(newIntegration);
-      toast({
-        title: "Intégration enregistrée",
-        description: "Votre configuration d'intégration a été sauvegardée avec succès."
-      });
-    }
+    onCreateIntegration(newIntegration);
   };
 
   return (
     <div className="space-y-6">
-      <Tabs defaultValue="code">
-        <TabsList className="grid grid-cols-3 w-full">
-          <TabsTrigger value="code">Code d'intégration</TabsTrigger>
-          <TabsTrigger value="preview">Prévisualisation</TabsTrigger>
-          <TabsTrigger value="settings">Paramètres</TabsTrigger>
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="mb-4">
+          <TabsTrigger value="embed">Code d'intégration</TabsTrigger>
+          <TabsTrigger value="api">API</TabsTrigger>
+          <TabsTrigger value="direct-link">Lien direct</TabsTrigger>
         </TabsList>
-        
-        <TabsContent value="code" className="space-y-4">
-          <Card>
-            <CardContent className="pt-6">
+
+        <TabsContent value="embed" className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <h4 className="text-base font-medium mb-2">Options d'intégration</h4>
               <div className="space-y-4">
-                <Form {...form}>
-                  <div className="grid gap-4 md:grid-cols-2">
-                    <FormField
-                      control={form.control}
-                      name="websiteUrl"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>URL de votre site web</FormLabel>
-                          <FormControl>
-                            <Input placeholder="https://example.com" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <FormField
-                      control={form.control}
-                      name="integrationMethod"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Méthode d'intégration</FormLabel>
-                          <Select onValueChange={(value) => {
-                            field.onChange(value);
-                            setSelectedIntegrationType(value);
-                          }} defaultValue={field.value}>
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Choisir une méthode" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="script">Script JavaScript</SelectItem>
-                              <SelectItem value="iframe">iFrame</SelectItem>
-                              <SelectItem value="api">API REST</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="hide-header">Masquer l'en-tête</Label>
+                  <Switch 
+                    id="hide-header" 
+                    checked={customization.hideHeader} 
+                    onCheckedChange={(checked) => setCustomization(prev => ({ ...prev, hideHeader: checked }))} 
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="hide-footer">Masquer le pied de page</Label>
+                  <Switch 
+                    id="hide-footer" 
+                    checked={customization.hideFooter}
+                    onCheckedChange={(checked) => setCustomization(prev => ({ ...prev, hideFooter: checked }))}
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="auto-height">Hauteur automatique</Label>
+                  <Switch 
+                    id="auto-height" 
+                    checked={customization.autoHeight}
+                    onCheckedChange={(checked) => setCustomization(prev => ({ ...prev, autoHeight: checked }))}
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="dark-mode">Mode sombre</Label>
+                  <Switch 
+                    id="dark-mode" 
+                    checked={customization.darkMode}
+                    onCheckedChange={(checked) => setCustomization(prev => ({ ...prev, darkMode: checked }))}
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="custom-colors">Utiliser couleurs personnalisées</Label>
+                  <Switch 
+                    id="custom-colors" 
+                    checked={customization.customColors}
+                    onCheckedChange={(checked) => setCustomization(prev => ({ ...prev, customColors: checked }))}
+                  />
+                </div>
+              </div>
+            </div>
 
-                    <FormField
-                      control={form.control}
-                      name="autoResize"
-                      render={({ field }) => (
-                        <FormItem className="flex flex-row items-center justify-between space-x-2 rounded-md border p-3">
-                          <div>
-                            <FormLabel>Redimensionnement automatique</FormLabel>
-                            <p className="text-sm text-muted-foreground">
-                              Ajuster automatiquement la taille du formulaire
-                            </p>
-                          </div>
-                          <FormControl>
-                            <Switch
-                              checked={field.value}
-                              onCheckedChange={field.onChange}
-                            />
-                          </FormControl>
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="language"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Langue</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Choisir une langue" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="fr">Français</SelectItem>
-                              <SelectItem value="en">Anglais</SelectItem>
-                              <SelectItem value="es">Espagnol</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                  
-                  <Button onClick={handleGenerateCode} className="mt-6">
-                    Générer le code d'intégration
-                  </Button>
-                </Form>
-                
-                {integrationCode && (
-                  <div className="space-y-2 mt-6">
-                    <Label htmlFor="integration-code">Code d'intégration</Label>
-                    <div className="relative">
-                      <pre className="bg-muted p-4 rounded-md overflow-x-auto text-sm">
-                        {integrationCode}
-                      </pre>
-                      <Button 
-                        size="sm" 
-                        variant="outline"
-                        className="absolute top-2 right-2"
-                        onClick={handleCopyCode}
-                      >
-                        Copier
-                      </Button>
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                      Copiez ce code et collez-le dans votre site web où vous souhaitez afficher le widget de réservation.
-                    </p>
-                  </div>
-                )}
-                
-                <Button onClick={handleSaveIntegration} className="mt-4">
-                  Enregistrer l'intégration
+            <div>
+              <h4 className="text-base font-medium mb-2">Code à intégrer</h4>
+              <div className="relative">
+                <div className="bg-gray-50 border rounded-md p-3 font-mono text-sm overflow-x-auto">
+                  <pre className="whitespace-pre-wrap">{embedCode}</pre>
+                </div>
+                <Button 
+                  size="sm" 
+                  variant="ghost" 
+                  className="absolute top-2 right-2" 
+                  onClick={() => handleCopy(embedCode)}
+                >
+                  {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
                 </Button>
               </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-        
-        <TabsContent value="preview">
-          <Card>
-            <CardContent className="pt-6">
-              <form onSubmit={handlePreviewSubmit} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="previewUrl">URL de votre site</Label>
-                  <div className="flex w-full space-x-2">
-                    <Input 
-                      id="previewUrl"
-                      placeholder="https://votresite.com"
-                      value={previewUrl}
-                      onChange={(e) => setPreviewUrl(e.target.value)}
-                      className="flex-1"
-                    />
-                    <Button type="submit">
-                      Prévisualiser
-                    </Button>
-                  </div>
-                </div>
-                
-                {previewUrl && (
-                  <div className="mt-6">
-                    <Label>Prévisualisation</Label>
-                    <div className="border rounded-md h-[400px] mt-2 flex flex-col items-center justify-center bg-muted">
-                      <iframe 
-                        src={previewUrl.startsWith('http') ? previewUrl : `https://${previewUrl}`}
-                        className="w-full h-full border-0"
-                        title="Prévisualisation du widget"
-                        sandbox="allow-scripts allow-same-origin"
-                      />
-                    </div>
-                  </div>
-                )}
-              </form>
-            </CardContent>
-          </Card>
-        </TabsContent>
-        
-        <TabsContent value="settings">
-          <Card>
-            <CardContent className="pt-6">
-              <p className="text-muted-foreground mb-4">
-                Configurez l'apparence et le comportement du widget de réservation.
+              <p className="text-sm text-muted-foreground mt-2">
+                Copiez ce code et collez-le dans la section appropriée de votre site web.
               </p>
-              
-              <div className="space-y-4">
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div>
-                    <Label htmlFor="primary-color">Couleur principale</Label>
-                    <div className="flex gap-2 mt-1">
-                      <Input 
-                        id="primary-color" 
-                        type="color" 
-                        defaultValue="#1E40AF" 
-                        className="w-12 h-10 p-1"
-                      />
-                      <Input defaultValue="#1E40AF" className="flex-1" />
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <Label htmlFor="secondary-color">Couleur secondaire</Label>
-                    <div className="flex gap-2 mt-1">
-                      <Input 
-                        id="secondary-color" 
-                        type="color" 
-                        defaultValue="#60A5FA" 
-                        className="w-12 h-10 p-1"
-                      />
-                      <Input defaultValue="#60A5FA" className="flex-1" />
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <Label htmlFor="font-family">Police d'écriture</Label>
-                    <Select defaultValue="inter">
-                      <SelectTrigger id="font-family">
-                        <SelectValue placeholder="Choisir une police" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="inter">Inter</SelectItem>
-                        <SelectItem value="roboto">Roboto</SelectItem>
-                        <SelectItem value="opensans">Open Sans</SelectItem>
-                        <SelectItem value="montserrat">Montserrat</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  <div>
-                    <Label htmlFor="border-radius">Arrondi des bordures</Label>
-                    <Select defaultValue="md">
-                      <SelectTrigger id="border-radius">
-                        <SelectValue placeholder="Choisir un style" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="none">Aucun</SelectItem>
-                        <SelectItem value="sm">Petit (2px)</SelectItem>
-                        <SelectItem value="md">Moyen (4px)</SelectItem>
-                        <SelectItem value="lg">Grand (8px)</SelectItem>
-                        <SelectItem value="full">Complet</SelectItem>
-                      </SelectContent>
-                    </Select>
+            </div>
+          </div>
+
+          <Card className="mt-6">
+            <CardContent className="pt-6">
+              <h4 className="text-base font-medium mb-2">Aperçu de l'intégration</h4>
+              <div className="border rounded-md p-4 bg-gray-50">
+                <div className="aspect-video bg-gray-100 flex items-center justify-center">
+                  <div className="text-center p-4">
+                    <Code className="h-12 w-12 text-muted-foreground mx-auto mb-2" />
+                    <p className="text-muted-foreground">Aperçu de l'intégration</p>
                   </div>
                 </div>
-                
-                <div className="pt-4">
-                  <h4 className="font-medium mb-2">Options de formulaire</h4>
-                  
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between border p-3 rounded-md">
-                      <div>
-                        <Label>Champ Nom</Label>
-                        <p className="text-sm text-muted-foreground">Afficher le champ nom</p>
-                      </div>
-                      <Switch defaultChecked />
-                    </div>
-                    
-                    <div className="flex items-center justify-between border p-3 rounded-md">
-                      <div>
-                        <Label>Champ Email</Label>
-                        <p className="text-sm text-muted-foreground">Afficher le champ email</p>
-                      </div>
-                      <Switch defaultChecked />
-                    </div>
-                    
-                    <div className="flex items-center justify-between border p-3 rounded-md">
-                      <div>
-                        <Label>Champ Téléphone</Label>
-                        <p className="text-sm text-muted-foreground">Afficher le champ téléphone</p>
-                      </div>
-                      <Switch defaultChecked />
-                    </div>
-                  </div>
-                </div>
-                
-                <Button className="mt-4">
-                  Sauvegarder les paramètres
-                </Button>
               </div>
             </CardContent>
           </Card>
+          
+          <div className="flex justify-end">
+            <Button onClick={handleCreateIntegration}>
+              Créer l'intégration
+            </Button>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="api" className="space-y-4">
+          <div>
+            <h4 className="text-base font-medium mb-2">API de réservation</h4>
+            <p className="text-muted-foreground mb-4">
+              Utilisez notre API pour intégrer les fonctionnalités de réservation directement dans votre application.
+            </p>
+
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="api-key">Clé API</Label>
+                <div className="flex mt-1">
+                  <Input id="api-key" value="••••••••••••••••••••••••••••••" readOnly className="rounded-r-none" />
+                  <Button variant="outline" className="rounded-l-none border-l-0" onClick={() => handleCopy("YOUR_API_KEY")}>
+                    {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Ne partagez jamais votre clé API publiquement.
+                </p>
+              </div>
+
+              <div>
+                <Label>Exemple de code</Label>
+                <div className="relative mt-1">
+                  <div className="bg-gray-50 border rounded-md p-3 font-mono text-sm overflow-x-auto">
+                    <pre className="whitespace-pre-wrap">{apiCode}</pre>
+                  </div>
+                  <Button 
+                    size="sm" 
+                    variant="ghost" 
+                    className="absolute top-2 right-2" 
+                    onClick={() => handleCopy(apiCode)}
+                  >
+                    {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 mt-6">
+              <Button variant="outline">
+                <ExternalLink className="h-4 w-4 mr-2" />
+                Documentation API
+              </Button>
+              <Button variant="outline">
+                Régénérer la clé API
+              </Button>
+            </div>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="direct-link" className="space-y-4">
+          <div>
+            <h4 className="text-base font-medium mb-2">Lien direct vers le système de réservation</h4>
+            <p className="text-muted-foreground mb-4">
+              Partagez ce lien pour permettre à vos clients d'accéder directement au système de réservation.
+            </p>
+
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="booking-link">URL de réservation</Label>
+                <div className="flex mt-1">
+                  <Input id="booking-link" value="https://booking.example.com/transport" readOnly className="rounded-r-none" />
+                  <Button variant="outline" className="rounded-l-none border-l-0" onClick={() => handleCopy("https://booking.example.com/transport")}>
+                    {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                  </Button>
+                </div>
+              </div>
+
+              <div>
+                <Label htmlFor="custom-slug">Personnaliser l'URL</Label>
+                <div className="flex items-center mt-1">
+                  <div className="bg-gray-50 border border-r-0 rounded-l-md px-3 py-2 text-muted-foreground">
+                    https://booking.example.com/
+                  </div>
+                  <Input id="custom-slug" placeholder="mon-service" className="rounded-l-none" />
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 mt-6">
+              <Button>
+                Mettre à jour l'URL
+              </Button>
+              <Button variant="outline">
+                <ExternalLink className="h-4 w-4 mr-2" />
+                Ouvrir dans un nouvel onglet
+              </Button>
+            </div>
+          </div>
         </TabsContent>
       </Tabs>
     </div>
   );
 };
 
-export default WebsiteIntegrationComponent;
+export default WebsiteIntegration;

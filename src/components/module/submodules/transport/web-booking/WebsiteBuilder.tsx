@@ -8,6 +8,7 @@ import { Eye, Save, Edit, Settings, Image, Undo, Redo } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import WebBookingPreview from './WebBookingPreview';
 import WebBookingEditorSidebar from './WebBookingEditorSidebar';
+import SettingsForm from './SettingsForm';
 
 const WebsiteBuilder: React.FC = () => {
   const [activeTab, setActiveTab] = useState('design');
@@ -122,22 +123,8 @@ const WebsiteBuilder: React.FC = () => {
               </ResizablePanelGroup>
             </TabsContent>
 
-            <TabsContent value="settings" className="h-[calc(100vh-334px)] p-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Paramètres du site de réservation</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground">
-                    Configurez les paramètres généraux de votre site de réservation, comme le titre, la description, les couleurs, etc.
-                  </p>
-                  <div className="mt-6">
-                    <p className="text-center text-muted-foreground">
-                      La gestion des paramètres sera disponible prochainement.
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
+            <TabsContent value="settings" className="h-[calc(100vh-334px)] p-4 overflow-y-auto">
+              <SettingsForm />
             </TabsContent>
 
             <TabsContent value="media" className="h-[calc(100vh-334px)] p-4">
