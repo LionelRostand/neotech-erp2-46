@@ -61,16 +61,17 @@ const ViewReservationDetailsDialog: React.FC<ViewReservationDetailsDialogProps> 
     
     if (Array.isArray(reservation.notes)) {
       // If it's an array of note objects with content property
-      return reservation.notes.map((note, index) => 
-        typeof note === 'object' && note.content 
-          ? <p key={index}>{note.content}</p>
-          : typeof note === 'string'
-            ? <p key={index}>{note}</p>
-            : null
-      );
-    } else if (typeof reservation.notes === 'object' && 'content' in reservation.notes) {
+      return reservation.notes.map((note, index) => {
+        if (typeof note === 'object' && note !== null && 'content' in note) {
+          return <p key={index}>{note.content as string}</p>;
+        } else if (typeof note === 'string') {
+          return <p key={index}>{note}</p>;
+        }
+        return null;
+      });
+    } else if (typeof reservation.notes === 'object' && reservation.notes !== null && 'content' in reservation.notes) {
       // If it's a single note object with content property
-      return reservation.notes.content;
+      return (reservation.notes as {content: string}).content;
     } else if (typeof reservation.notes === 'string') {
       // If it's a plain string
       return reservation.notes;

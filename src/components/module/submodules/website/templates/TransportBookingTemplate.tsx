@@ -10,10 +10,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { DatePicker } from '@/components/ui/date-picker';
 import { Car, Calendar, Clock } from 'lucide-react';
 
-const TransportBookingTemplate: React.FC = () => {
+interface TransportBookingTemplateProps {
+  isEditable?: boolean;
+}
+
+const TransportBookingTemplate: React.FC<TransportBookingTemplateProps> = ({ isEditable = false }) => {
   return (
     <div className="max-w-5xl mx-auto p-8">
       <header className="text-center mb-12">
@@ -83,6 +86,20 @@ const TransportBookingTemplate: React.FC = () => {
                   </SelectContent>
                 </Select>
               </div>
+
+              {isEditable && (
+                <div className="space-y-2">
+                  <Label htmlFor="contact-email">Email</Label>
+                  <Input id="contact-email" type="email" placeholder="votre@email.com" />
+                </div>
+              )}
+              
+              {isEditable && (
+                <div className="space-y-2">
+                  <Label htmlFor="contact-phone">Téléphone</Label>
+                  <Input id="contact-phone" type="tel" placeholder="Votre numéro de téléphone" />
+                </div>
+              )}
             </div>
             
             <Button className="w-full">Réserver maintenant</Button>
