@@ -5,6 +5,7 @@ export * from './driver-types';
 export * from './vehicle-types';
 export * from './map-types';
 export * from './planning-types';
+export * from './reservation-types';
 
 // Simple interim types for modules in development
 export interface GeolocationConfig {

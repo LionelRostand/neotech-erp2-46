@@ -33,13 +33,12 @@ export type {
   Coordinates,
   TransportVehicleWithLocation,
   MapConfig,
-  MapHookResult,
-  MapExtensionRequest
+  MapHookResult
 } from './map-types';
 
-// Re-export with aliases to avoid ambiguity
-import type { MapExtensionRequest as MER } from './map-types';
-export type { MER as ExtensionRequestType };
+// Use named imports to avoid duplicate exports
+import { MapExtensionRequest } from './map-types';
+export type { MapExtensionRequest };
 
 // Export from other modules without duplications
 export * from './geolocation-types';
@@ -59,11 +58,19 @@ export type {
   WebBookingService
 } from './client-types';
 
-// Export reservation types
-export type * from './reservation-types';
+// Export reservation types and helpers
+export type { 
+  TransportReservation, 
+  Reservation,
+  Address,
+  TransportReservationStatus,
+  PaymentStatus,
+  ReservationFilter
+} from './reservation-types';
+export { getAddressString } from './reservation-types';
 
 // Export planning types
-export type * from './planning-types';
+export * from './planning-types';
 
 // Export integration types
-export type * from './integration-types';
+export * from './integration-types';
