@@ -1,4 +1,3 @@
-
 // driver-types.ts
 export interface TransportDriver {
   id: string;
@@ -10,10 +9,24 @@ export interface TransportDriver {
   onLeave: boolean;
   experience: number;
   licensesTypes: string[];
-  status: 'active' | 'inactive' | 'on_leave';
+  status: 'active' | 'inactive' | 'on_leave' | 'driving' | 'off-duty';
   rating: number;
   skills?: string[];
   photo?: string;
+  licenseNumber?: string;
+  licenseType?: string;
+  licenseExpiry?: string;
+  address?: string;
+  hireDate?: string;
+  preferredVehicleType?: string[];
+  language?: string[];
+  notes?: any[];
+  performance?: {
+    completedTrips: number;
+    averageRating: number;
+    onTimePercentage: number;
+  };
+  name?: string; // For compatibility with some components
 }
 
 export interface DriverNote {

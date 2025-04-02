@@ -1,8 +1,7 @@
-
 import { TransportBasic, Note } from './base-types';
 import { TransportService } from './base-types';
 
-export interface TransportClient extends TransportBasic {
+export interface TransportClient extends Omit<TransportBasic, 'name'> {
   firstName: string;
   lastName: string;
   email: string;
@@ -18,8 +17,8 @@ export interface TransportClient extends TransportBasic {
   preferences?: ClientPreference[];
   statistics?: ClientStatistics;
   webBookings?: WebBooking[];
-  name?: string; // Added name property
-  loyaltyPoints?: number; // Added to fix errors
+  name?: string;
+  loyaltyPoints?: number;
 }
 
 export interface ClientNote extends Note {
@@ -113,7 +112,7 @@ export type WebBookingStatus =
   | 'completed' 
   | 'new' 
   | 'cancelled' 
-  | 'processed'; // Added the missing status values
+  | 'processed';
 
 export interface WebBookingService {
   id: string;

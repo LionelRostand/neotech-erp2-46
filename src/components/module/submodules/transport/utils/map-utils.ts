@@ -1,67 +1,56 @@
 
-import { VehicleLocation, Coordinates, MapMarker, TransportVehicleWithLocation } from '../types';
+import { TransportVehicleWithLocation, VehicleLocation, Coordinates, MapMarker } from '../types';
+import { format } from 'date-fns';
 
-// Normalize coordinates to [longitude, latitude] format
-export function normalizeCoordinates(location: VehicleLocation | Coordinates): [number, number] {
-  if ('coordinates' in location) {
-    // It's a VehicleLocation
-    return [location.coordinates.longitude, location.coordinates.latitude];
-  }
-  // It's a Coordinates object
-  return [location.longitude, location.latitude];
-}
+// Get a formatted string of coordinates for display
+export const getCoordinatesString = (coordinates: Coordinates): string => {
+  return `${coordinates.longitude.toFixed(5)}, ${coordinates.latitude.toFixed(5)}`;
+};
 
-// Create a marker from a vehicle
-export function createMarker(vehicle: TransportVehicleWithLocation): MapMarker {
+// Get a Google Maps URL for the coordinates
+export const getGoogleMapsUrl = (coordinates: Coordinates): string => {
+  return `https://maps.google.com/?q=${coordinates.longitude},${coordinates.latitude}`;
+};
+
+// Get map marker for a vehicle
+export const getVehicleMarker = (vehicle: TransportVehicleWithLocation): MapMarker => {
   return {
     id: vehicle.id,
-    position: normalizeCoordinates(vehicle.location),
-    type: 'vehicle',
-    status: vehicle.status,
-    title: vehicle.name
+    position: [
+      vehicle.location.coordinates.latitude,
+      vehicle.location.coordinates.longitude
+    ],
+    popup: getVehiclePopupContent(vehicle),
+    icon: getVehicleIcon(vehicle)
   };
-}
+};
 
-// Update marker position
-export function updateMarkerPosition(marker: MapMarker, location: VehicleLocation | Coordinates): MapMarker {
-  return {
-    ...marker,
-    position: normalizeCoordinates(location)
-  };
-}
+// Get custom icon for a vehicle based on its type and status
+export const getVehicleIcon = (vehicle: TransportVehicleWithLocation) => {
+  // This would typically return a custom icon based on vehicle type and status
+  // For now, just return a placeholder
+  return {};
+};
 
-// Generate vehicle popup content
-export function getVehiclePopupContent(vehicle: TransportVehicleWithLocation): string {
-  const { name, licensePlate, status, location } = vehicle;
+// Generate popup content for a vehicle marker
+export const getVehiclePopupContent = (vehicle: TransportVehicleWithLocation): string => {
+  const { name, licensePlate, type } = vehicle;
+  const { coordinates, status, speed, timestamp } = vehicle.location;
+  
+  // Format speed with units
+  const speedDisplay = speed ? `${speed} km/h` : 'N/A';
+  
+  // Format timestamp if available
+  const timeDisplay = timestamp ? format(new Date(timestamp), 'HH:mm:ss') : 'N/A';
+  
+  // Build popup HTML content
   return `
-    <div class="p-3">
-      <h3 class="font-bold mb-1">${name}</h3>
-      <p class="text-sm mb-1">Plaque: ${licensePlate}</p>
-      <p class="text-sm mb-1">Statut: ${status}</p>
-      <p class="text-sm mb-1">Vitesse: ${location.speed || 0} km/h</p>
-      <p class="text-sm text-muted-foreground">Dernière mise à jour: 
-        ${new Date(location.timestamp).toLocaleString('fr-FR')}
-      </p>
+    <div class="vehicle-popup">
+      <h3>${name}</h3>
+      <p>${licensePlate} | ${type}</p>
+      <p>Status: ${status}</p>
+      <p>Speed: ${speedDisplay}</p>
+      <p>Last Update: ${timeDisplay}</p>
     </div>
   `;
-}
-
-// Generate tracking marker HTML for different statuses
-export function getTrackingMarkerHtml(status: string): string {
-  const statusColors: Record<string, string> = {
-    'delivered': 'bg-green-500',
-    'in_transit': 'bg-blue-500',
-    'processing': 'bg-amber-500',
-    'registered': 'bg-purple-500',
-    'out_for_delivery': 'bg-cyan-500',
-    'delayed': 'bg-orange-500',
-    'exception': 'bg-red-500',
-    'returned': 'bg-gray-500'
-  };
-  
-  const color = statusColors[status] || 'bg-gray-400';
-  
-  return `<div class="w-8 h-8 rounded-full bg-white p-1 shadow-md flex items-center justify-center">
-    <div class="w-6 h-6 rounded-full ${color}"></div>
-  </div>`;
-}
+};

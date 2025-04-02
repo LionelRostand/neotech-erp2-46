@@ -6,6 +6,7 @@ export * from './vehicle-types';
 export * from './map-types';
 export * from './planning-types';
 export * from './reservation-types';
+export * from './client-types';
 
 // Simple interim types for modules in development
 export interface GeolocationConfig {
@@ -34,3 +35,6 @@ export interface WebBookingConfig {
   enableBookingForm: boolean;
   requiredFields: string[];
 }
+
+// Re-export the getAddressString function explicitly
+export { getAddressString } from './reservation-types';

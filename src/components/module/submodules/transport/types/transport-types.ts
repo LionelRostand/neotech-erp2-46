@@ -33,7 +33,8 @@ export type {
   Coordinates,
   TransportVehicleWithLocation,
   MapConfig,
-  MapHookResult
+  MapHookResult,
+  MapMarker
 } from './map-types';
 
 // Use named imports to avoid duplicate exports

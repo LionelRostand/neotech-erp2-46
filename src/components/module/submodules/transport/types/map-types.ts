@@ -1,17 +1,23 @@
 
 // map-types.ts
 export interface Coordinates {
-  lat: number;
-  lng: number;
+  latitude: number;
+  longitude: number;
+  // Additional properties used in components
+  vehicleId?: string;
+  status?: string;
+  heading?: number;
+  speed?: number;
+  timestamp?: string;
 }
 
 export interface VehicleLocation {
   vehicleId: string;
   coordinates: Coordinates;
   timestamp: string;
-  speed?: number;
-  heading?: number;
-  status?: string;
+  status: string;
+  heading: number;
+  speed: number;
 }
 
 export interface TransportVehicleWithLocation {
@@ -19,54 +25,40 @@ export interface TransportVehicleWithLocation {
   name: string;
   type: string;
   licensePlate: string;
-  location: Coordinates;
   status: string;
-  driverId?: string;
+  available: boolean;
+  capacity?: number;
+  driverName?: string;
+  location: VehicleLocation;
+  notes: any[];
 }
 
 export interface MapConfig {
-  centerCoordinates: Coordinates;
+  center: [number, number];
   zoom: number;
-  mapType: 'streets' | 'satellite';
-  showTraffic: boolean;
-  autoRefresh: boolean;
-  refreshInterval: number;
+  markers: any[];
+  selectedVehicleId?: string;
 }
 
 export interface MapHookResult {
-  vehicles: TransportVehicleWithLocation[];
+  map: any;
+  markers: any[];
+  isLoaded: boolean;
   selectedVehicle: TransportVehicleWithLocation | null;
-  mapConfig: MapConfig;
-  isLoading: boolean;
-  error: string | null;
-  selectVehicle: (id: string) => void;
-  updateMapConfig: (config: Partial<MapConfig>) => void;
-  refreshData: () => void;
+  selectVehicle: (vehicleId: string) => void;
 }
 
 export interface MapExtensionRequest {
-  id: string;
-  reservationId?: string;
   vehicleId: string;
-  vehicleName: string;
-  driverId?: string;
-  driverName?: string;
-  status: 'pending' | 'approved' | 'rejected';
-  reason: string;
-  requestedExtension?: number;
-  originalEndTime?: string;
-  newEndTime?: string;
-  timestamp?: string;
-  requestId?: string;
-  clientName?: string;
-  originalEndDate?: string;
-  requestedEndDate?: string;
-  extensionReason?: string;
-  createdAt?: string;
-  requestDate?: string;
-  requestedAt?: string;
-  extraTimeMinutes?: number;
-  additionalTime?: number;
-  extensionDays?: number;
-  responseMessage?: string;
+  type: 'route' | 'alert' | 'history';
+  startDate?: string;
+  endDate?: string;
+  parameters?: Record<string, any>;
 }
+
+export type MapMarker = {
+  id: string;
+  position: [number, number];
+  icon?: any;
+  popup?: string;
+};

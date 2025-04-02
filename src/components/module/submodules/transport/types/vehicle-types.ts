@@ -5,13 +5,23 @@ export interface TransportVehicle {
   name: string;
   type: string;
   licensePlate: string;
-  status: 'available' | 'maintenance' | 'reserved' | 'unavailable';
+  status: 'available' | 'maintenance' | 'reserved' | 'unavailable' | 'active' | 'out-of-service';
   lastMaintenanceDate?: string;
   nextMaintenanceDate?: string;
   mileage?: number;
   capacity?: number;
   available: boolean;
   location?: { lat: number; lng: number };
+  purchaseDate?: string;
+  lastServiceDate?: string;
+  nextServiceDate?: string;
+  insuranceInfo?: {
+    provider: string;
+    policyNumber: string;
+    expiryDate: string;
+  };
+  notes: any[];
+  driverName?: string;
   [key: string]: any; // Allow for additional properties
 }
 
@@ -35,6 +45,10 @@ export interface MaintenanceRecord {
   partsCost?: number;
   laborCost?: number;
   attachments?: string[];
+  provider?: string;
+  nextMaintenance?: string;
+  mileage?: number;
+  resolved?: boolean;
 }
 
 export interface IncidentRecord {
@@ -45,10 +59,17 @@ export interface IncidentRecord {
   description: string;
   location: string;
   reportedBy: string;
-  status: 'open' | 'investigating' | 'resolved';
+  status: 'open' | 'investigating' | 'resolved' | 'closed';
   priority: 'low' | 'medium' | 'high';
   resolution?: string;
   attachments?: string[];
+  severity?: 'low' | 'medium' | 'high' | 'minor' | 'moderate' | 'major';
+  driverName?: string;
+  clientName?: string;
+  damageDescription?: string;
+  repairCost?: number;
+  insuranceClaim?: boolean;
+  resolved?: boolean;
 }
 
 export interface MaintenanceSchedule {
@@ -58,7 +79,7 @@ export interface MaintenanceSchedule {
   type: string;
   description: string;
   estimatedDuration: number;
-  technicianAssigned?: string;
+  technicianAssigned: string; // Changed from optional to required
   status: 'scheduled' | 'in-progress' | 'completed' | 'cancelled';
   priority?: string;
   taskName?: string;
