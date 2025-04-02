@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { TabsContent } from '@/components/ui/tabs';
+import { Tabs, TabsContent } from '@/components/ui/tabs';
 import { Card, CardContent } from '@/components/ui/card';
 import WebsiteIntegration from '../components/WebsiteIntegration';
 import { useToast } from '@/hooks/use-toast';
@@ -23,8 +23,8 @@ const WebBookingTabs: React.FC<WebsiteTabsProps> = ({ activeTab }) => {
   };
 
   return (
-    <>
-      <TabsContent value="integration" className={activeTab === 'integration' ? '' : 'hidden'}>
+    <Tabs value={activeTab} className="w-full">
+      <TabsContent value="integration">
         <Card>
           <CardContent className="pt-6">
             <h3 className="text-lg font-medium mb-4">Intégration sur votre site web</h3>
@@ -33,7 +33,7 @@ const WebBookingTabs: React.FC<WebsiteTabsProps> = ({ activeTab }) => {
         </Card>
       </TabsContent>
       
-      <TabsContent value="design" className={activeTab === 'design' ? '' : 'hidden'}>
+      <TabsContent value="design">
         <Card>
           <CardContent className="pt-6">
             <h3 className="text-lg font-medium mb-4">Personnalisation du design</h3>
@@ -48,7 +48,7 @@ const WebBookingTabs: React.FC<WebsiteTabsProps> = ({ activeTab }) => {
         </Card>
       </TabsContent>
       
-      <TabsContent value="analytics" className={activeTab === 'analytics' ? '' : 'hidden'}>
+      <TabsContent value="analytics">
         <Card>
           <CardContent className="pt-6">
             <h3 className="text-lg font-medium mb-4">Statistiques de réservation</h3>
@@ -61,7 +61,7 @@ const WebBookingTabs: React.FC<WebsiteTabsProps> = ({ activeTab }) => {
           </CardContent>
         </Card>
       </TabsContent>
-    </>
+    </Tabs>
   );
 };
 
