@@ -67,7 +67,7 @@ const WebsitePages: React.FC = () => {
     },
     {
       id: '5',
-      title: 'Promotion d'été',
+      title: "Promotion d'été",
       url: '/promo-ete',
       type: 'landing',
       status: 'draft',
