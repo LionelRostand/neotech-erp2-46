@@ -49,6 +49,11 @@ export const COLLECTIONS = {
     PACKAGE_TYPES: 'freight_package_types'
   },
   
+  // Ajouter les collections directes pour résoudre les erreurs
+  HEALTH_CONSULTATIONS: 'health_consultations',
+  HEALTH_INSURANCE: 'health_insurance',
+  HEALTH_BILLING: 'health_billing',
+  
   HEALTH: {
     PATIENTS: 'health_patients',
     APPOINTMENTS: 'health_appointments',
