@@ -29,8 +29,8 @@ const BadgePreviewDialog: React.FC<BadgePreviewDialogProps> = ({
           <div className="text-blue-100 mb-6">{selectedBadge.id}</div>
           
           <Avatar className="h-24 w-24 border-4 border-white mb-3">
-            {selectedEmployee?.photoURL ? (
-              <AvatarImage src={selectedEmployee.photoURL} />
+            {selectedEmployee && (selectedEmployee.photoURL || selectedEmployee.photo) ? (
+              <AvatarImage src={selectedEmployee.photoURL || selectedEmployee.photo || ''} />
             ) : null}
             <AvatarFallback className="bg-blue-500 text-xl">
               {selectedEmployee ? (

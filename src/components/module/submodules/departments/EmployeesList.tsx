@@ -40,8 +40,8 @@ const EmployeesList: React.FC<EmployeesListProps> = ({
               onCheckedChange={() => onEmployeeSelection(employee.id)}
             />
             <Avatar className="h-8 w-8">
-              {employee.photoURL ? (
-                <AvatarImage src={employee.photoURL} alt={`${employee.firstName} ${employee.lastName}`} />
+              {(employee.photoURL || employee.photo) ? (
+                <AvatarImage src={employee.photoURL || employee.photo} alt={`${employee.firstName} ${employee.lastName}`} />
               ) : null}
               <AvatarFallback>
                 {employee.firstName?.[0]}{employee.lastName?.[0]}
@@ -54,7 +54,7 @@ const EmployeesList: React.FC<EmployeesListProps> = ({
               {employee.firstName} {employee.lastName}
               <br />
               <span className="text-xs text-muted-foreground">
-                {employee.title || "Sans poste"}
+                {employee.title || employee.position || "Sans poste"}
               </span>
             </label>
           </div>

@@ -22,9 +22,10 @@ export const useEmployeeData = () => {
     if (!employees || !departments) return employees || [];
     
     return employees.map(employee => {
-      // Rechercher le département de l'employé
-      if (employee.departmentId) {
-        const department = departments.find(d => d.id === employee.departmentId);
+      // Rechercher le département de l'employé via departmentId ou department
+      const departmentId = employee.departmentId || employee.department;
+      if (departmentId) {
+        const department = departments.find(d => d.id === departmentId);
         if (department) {
           return {
             ...employee,
@@ -49,8 +50,9 @@ export const useEmployeeData = () => {
       
       // Compter les employés par département
       employees.forEach(employee => {
-        if (employee.departmentId && result[employee.departmentId] !== undefined) {
-          result[employee.departmentId]++;
+        const departmentId = employee.departmentId || employee.department;
+        if (departmentId && result[departmentId] !== undefined) {
+          result[departmentId]++;
         }
       });
     }

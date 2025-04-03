@@ -7,6 +7,7 @@ export interface Employee {
   phone?: string;
   address?: string;
   department: string;
+  departmentId?: string; // Added this property
   position: string;
   contract: string;
   hireDate: string;
@@ -15,8 +16,10 @@ export interface Employee {
   createdAt?: string;
   updatedAt?: string;
   photo?: string;
+  photoURL?: string; // Added this property
   professionalEmail?: string;
   company?: string;
+  title?: string; // Added this property
   // Add missing properties
   education?: EducationItem[];
   skills?: string[];

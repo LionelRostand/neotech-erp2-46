@@ -35,7 +35,7 @@ export const useDepartments = () => {
   // Load departments from Firestore on component mount or when hrDepartments change
   useEffect(() => {
     if (hrDepartments && hrDepartments.length > 0) {
-      setDepartments(hrDepartments);
+      setDepartments(hrDepartments as Department[]);
       setLoading(false);
     } else {
       loadDepartmentsFromFirestore();
@@ -56,7 +56,7 @@ export const useDepartments = () => {
       const data = await departmentService.getAll();
       
       if (data.length > 0) {
-        setDepartments(data);
+        setDepartments(data as Department[]);
       } else {
         // If no departments found, initialize with default departments
         const defaultDepartments = createDefaultDepartments();
@@ -223,7 +223,10 @@ export const useDepartments = () => {
   const getDepartmentEmployeesById = (departmentId: string) => {
     if (!employees || !employees.length) return [];
     
-    return employees.filter(emp => emp.departmentId === departmentId);
+    return employees.filter(emp => {
+      const empDeptId = emp.departmentId || emp.department;
+      return empDeptId === departmentId;
+    });
   };
 
   return {
