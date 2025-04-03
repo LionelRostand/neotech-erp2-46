@@ -116,6 +116,9 @@ export const COLLECTIONS = {
     ATTENDANCE: 'hr_attendance',
     TIME_SHEETS: 'hr_timesheets',
     ABSENCE_REQUESTS: 'hr_absence_requests',
-    DOCUMENTS: 'hr_documents'
+    DOCUMENTS: 'hr_documents',
+    RECRUITMENT: 'hr_recruitment',
+    REPORTS: 'hr_reports',
+    ALERTS: 'hr_alerts'
   }
 };

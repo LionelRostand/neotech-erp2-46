@@ -110,7 +110,7 @@ export const useHrModuleData = () => {
     [orderBy('weekStartDate', 'desc')]
   );
 
-  // Récupération des absences
+  // Récupération des demandes d'absence
   const { 
     data: absenceRequests, 
     isLoading: isAbsenceRequestsLoading, 
@@ -130,6 +130,46 @@ export const useHrModuleData = () => {
     [orderBy('uploadDate', 'desc')]
   );
 
+  // Récupération des entreprises
+  const { 
+    data: companies, 
+    isLoading: isCompaniesLoading, 
+    error: companiesError 
+  } = useCollectionData(
+    COLLECTIONS.COMPANIES,
+    [orderBy('name')]
+  );
+
+  // Récupération des recrutements
+  const { 
+    data: recruitmentPosts, 
+    isLoading: isRecruitmentLoading, 
+    error: recruitmentError 
+  } = useCollectionData(
+    COLLECTIONS.HR.RECRUITMENT,
+    [orderBy('openDate', 'desc')]
+  );
+
+  // Récupération des rapports
+  const { 
+    data: hrReports, 
+    isLoading: isReportsLoading, 
+    error: reportsError 
+  } = useCollectionData(
+    COLLECTIONS.HR.REPORTS,
+    [orderBy('createdDate', 'desc')]
+  );
+
+  // Récupération des alertes
+  const { 
+    data: hrAlerts, 
+    isLoading: isAlertsLoading, 
+    error: alertsError 
+  } = useCollectionData(
+    COLLECTIONS.HR.ALERTS,
+    [orderBy('createdDate', 'desc')]
+  );
+
   // Vérifier si des données sont en cours de chargement
   const isLoading = 
     isEmployeesLoading || 
@@ -143,7 +183,11 @@ export const useHrModuleData = () => {
     isAttendanceLoading ||
     isTimeSheetsLoading ||
     isAbsenceRequestsLoading ||
-    isHrDocumentsLoading;
+    isHrDocumentsLoading ||
+    isCompaniesLoading ||
+    isRecruitmentLoading ||
+    isReportsLoading ||
+    isAlertsLoading;
 
   // Combiner toutes les erreurs potentielles
   const error = 
@@ -158,7 +202,11 @@ export const useHrModuleData = () => {
     attendanceError ||
     timeSheetsError ||
     absenceRequestsError ||
-    hrDocumentsError;
+    hrDocumentsError ||
+    companiesError ||
+    recruitmentError ||
+    reportsError ||
+    alertsError;
 
   return {
     employees: employees || [],
@@ -173,6 +221,10 @@ export const useHrModuleData = () => {
     timeSheets: timeSheets || [],
     absenceRequests: absenceRequests || [],
     hrDocuments: hrDocuments || [],
+    companies: companies || [],
+    recruitmentPosts: recruitmentPosts || [],
+    hrReports: hrReports || [],
+    hrAlerts: hrAlerts || [],
     isLoading,
     error
   };

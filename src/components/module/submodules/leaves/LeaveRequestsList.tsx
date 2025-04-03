@@ -1,49 +1,47 @@
 
 import React from 'react';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import { Button } from '@/components/ui/button';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Check, X, AlertCircle, Loader2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { useLeaveData } from '@/hooks/useLeaveData';
+import { CheckCircle2, XCircle } from 'lucide-react';
+import { useLeaveData, Leave } from '@/hooks/useLeaveData';
 
 interface LeaveRequestsListProps {
   onApprove: (id: string) => void;
   onReject: (id: string) => void;
 }
 
-export const LeaveRequestsList = ({ onApprove, onReject }: LeaveRequestsListProps) => {
+export const LeaveRequestsList: React.FC<LeaveRequestsListProps> = ({ 
+  onApprove,
+  onReject
+}) => {
   const { leaves, isLoading, error } = useLeaveData();
+
+  // Filtrer les congés en attente
+  const pendingLeaves = leaves.filter(leave => leave.status === 'En attente');
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="h-8 w-8 text-gray-400 animate-spin" />
-        <p className="ml-2 text-gray-500">Chargement des demandes de congés...</p>
+      <div className="flex justify-center items-center py-8">
+        <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent"></div>
+        <p className="ml-2">Chargement des demandes...</p>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <AlertCircle className="h-8 w-8 text-red-500" />
-        <p className="ml-2 text-red-500">Erreur lors du chargement des données</p>
+      <div className="p-4 bg-red-50 text-red-700 rounded-md">
+        Une erreur est survenue lors du chargement des demandes de congés.
       </div>
     );
   }
 
-  if (!leaves || leaves.length === 0) {
+  if (pendingLeaves.length === 0) {
     return (
-      <div className="text-center py-10">
-        <p className="text-gray-500">Aucune demande de congé trouvée</p>
+      <div className="py-8 text-center text-gray-500">
+        Aucune demande de congé en attente
       </div>
     );
   }
@@ -55,15 +53,14 @@ export const LeaveRequestsList = ({ onApprove, onReject }: LeaveRequestsListProp
           <TableRow>
             <TableHead className="w-[250px]">Employé</TableHead>
             <TableHead>Type</TableHead>
-            <TableHead>Date début</TableHead>
-            <TableHead>Date fin</TableHead>
-            <TableHead>Jours</TableHead>
+            <TableHead>Période</TableHead>
+            <TableHead>Durée</TableHead>
             <TableHead>Statut</TableHead>
             <TableHead className="text-right">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {leaves.map((leave) => (
+          {pendingLeaves.map((leave) => (
             <TableRow key={leave.id}>
               <TableCell className="font-medium">
                 <div className="flex items-center space-x-3">
@@ -78,45 +75,42 @@ export const LeaveRequestsList = ({ onApprove, onReject }: LeaveRequestsListProp
                 </div>
               </TableCell>
               <TableCell>{leave.type}</TableCell>
-              <TableCell>{leave.startDate}</TableCell>
-              <TableCell>{leave.endDate}</TableCell>
-              <TableCell>{leave.days}</TableCell>
+              <TableCell>
+                <span className="whitespace-nowrap">{leave.startDate}</span>
+                <span className="mx-1">-</span>
+                <span className="whitespace-nowrap">{leave.endDate}</span>
+              </TableCell>
+              <TableCell>{leave.days} jour{leave.days > 1 ? 's' : ''}</TableCell>
               <TableCell>
                 <Badge
                   className={
-                    leave.status === 'Approuvé'
+                    leave.status === 'En attente'
+                      ? 'bg-blue-100 text-blue-800'
+                      : leave.status === 'Approuvé'
                       ? 'bg-green-100 text-green-800'
-                      : leave.status === 'Refusé'
-                      ? 'bg-red-100 text-red-800'
-                      : 'bg-yellow-100 text-yellow-800'
+                      : 'bg-red-100 text-red-800'
                   }
                 >
                   {leave.status}
                 </Badge>
               </TableCell>
-              <TableCell className="text-right">
-                {leave.status === 'En attente' && (
-                  <>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => onApprove(leave.id)}
-                      className="text-green-600 hover:text-green-700 hover:bg-green-50"
-                    >
-                      <Check className="h-4 w-4 mr-1" />
-                      Approuver
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => onReject(leave.id)}
-                      className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                    >
-                      <X className="h-4 w-4 mr-1" />
-                      Refuser
-                    </Button>
-                  </>
-                )}
+              <TableCell className="text-right space-x-2">
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  onClick={() => onApprove(leave.id)}
+                  className="text-green-600"
+                >
+                  <CheckCircle2 className="h-4 w-4 mr-1" />
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  onClick={() => onReject(leave.id)}
+                  className="text-red-600"
+                >
+                  <XCircle className="h-4 w-4 mr-1" />
+                </Button>
               </TableCell>
             </TableRow>
           ))}

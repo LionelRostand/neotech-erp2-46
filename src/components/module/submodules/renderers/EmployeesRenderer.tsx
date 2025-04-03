@@ -20,7 +20,7 @@ import EmployeesDepartments from '../departments/EmployeesDepartments';
 import EmployeesHierarchy from '../EmployeesHierarchy';
 import EmployeesCompanies from '../employees/EmployeesCompanies';
 import SalarySlips from '../salaries/SalarySlips';
-import EmployeesLeaves from '../leaves/EmployeesLeaves';
+import EmployeesLeaves from '../EmployeesLeaves';
 
 export const renderEmployeesSubmodule = (submoduleId: string, submodule: SubModule) => {
   console.log('Rendering employee submodule:', submoduleId);

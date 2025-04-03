@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -159,9 +160,7 @@ const EmployeesLeaves: React.FC = () => {
         <TabsContent value="soldes">
           <Card>
             <CardContent className="p-6">
-              <div className="py-8 text-center text-gray-500">
-                Soldes de congés par employé (à implémenter)
-              </div>
+              <LeaveBalanceCards />
             </CardContent>
           </Card>
         </TabsContent>

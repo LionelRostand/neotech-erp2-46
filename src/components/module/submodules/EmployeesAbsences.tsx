@@ -1,299 +1,258 @@
 
 import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Input } from '@/components/ui/input';
+import { Card, CardContent } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
+import { 
+  Calendar, 
+  ListFilter, 
+  Plus,
+  Download,
+  FileText,
+  CheckCircle2,
+  XCircle
+} from 'lucide-react';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Search, AlertCircle, Mail, MessageSquare } from 'lucide-react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { toast } from 'sonner';
-
-interface AbsentEmployee {
-  id: number;
-  name: string;
-  department: string;
-  lastPresence: string;
-  status: string;
-  email: string;
-}
+import { useAbsencesData } from '@/hooks/useAbsencesData';
 
 const EmployeesAbsences: React.FC = () => {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [isEmailDialogOpen, setIsEmailDialogOpen] = useState(false);
-  const [isContactDialogOpen, setIsContactDialogOpen] = useState(false);
-  const [selectedEmployee, setSelectedEmployee] = useState<AbsentEmployee | null>(null);
-  const [messageContent, setMessageContent] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  
-  // Sample absences data - employees who haven't validated their presence
-  const [absentEmployees, setAbsentEmployees] = useState<AbsentEmployee[]>([
-    { id: 1, name: 'Thomas Martin', department: 'Marketing', lastPresence: '2025-03-10', status: 'Non validé', email: 'thomas.martin@example.com' },
-    { id: 2, name: 'Sophie Dubois', department: 'Développement', lastPresence: '2025-03-12', status: 'Non validé', email: 'sophie.dubois@example.com' },
-    { id: 3, name: 'Jean Dupont', department: 'Finance', lastPresence: '2025-03-08', status: 'Non validé', email: 'jean.dupont@example.com' },
-    { id: 4, name: 'Marie Lambert', department: 'Ressources Humaines', lastPresence: '2025-03-11', status: 'Non validé', email: 'marie.lambert@example.com' },
-    { id: 5, name: 'Pierre Durand', department: 'Développement', lastPresence: '2025-03-09', status: 'Non validé', email: 'pierre.durand@example.com' },
-  ]);
-  
-  // Filter employees based on search query
-  const filteredEmployees = absentEmployees.filter(
-    employee => 
-      employee.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      employee.department.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const [activeTab, setActiveTab] = useState('attente');
+  const { absences, stats, isLoading, error } = useAbsencesData();
 
-  const handleSendEmail = () => {
-    if (!selectedEmployee) return;
-    
-    setIsLoading(true);
-    
-    // Simulation d'envoi d'email
-    setTimeout(() => {
-      toast.success(`Email de rappel envoyé à ${selectedEmployee.name}`);
-      setIsLoading(false);
-      setIsEmailDialogOpen(false);
-      setMessageContent('');
-    }, 1500);
+  const handleApproveAbsence = (id: string) => {
+    // Dans une application réelle, nous mettrions à jour Firebase ici
+    toast.success(`Demande d'absence #${id} approuvée`);
   };
 
-  const handleSendMessage = () => {
-    if (!selectedEmployee || !messageContent.trim()) {
-      toast.error("Veuillez saisir un message");
-      return;
-    }
-    
-    setIsLoading(true);
-    
-    // Simulation d'envoi de message interne
-    setTimeout(() => {
-      toast.success(`Message envoyé à ${selectedEmployee.name}`);
-      setIsLoading(false);
-      setIsContactDialogOpen(false);
-      setMessageContent('');
-    }, 1500);
+  const handleRejectAbsence = (id: string) => {
+    // Dans une application réelle, nous mettrions à jour Firebase ici
+    toast.success(`Demande d'absence #${id} refusée`);
   };
 
-  const handleSendBulkEmail = () => {
-    setIsLoading(true);
-    
-    // Simulation d'envoi d'emails en masse
-    setTimeout(() => {
-      toast.success(`Emails de rappel envoyés à ${filteredEmployees.length} employés`);
-      setIsLoading(false);
-    }, 2000);
+  const handleExportData = () => {
+    toast.success("Export des données d'absences démarré");
+    // Logique d'export à implémenter
   };
 
-  const handleValidateManually = (employee: AbsentEmployee) => {
-    const updatedEmployees = absentEmployees.map(emp => 
-      emp.id === employee.id ? { ...emp, status: 'Validé manuellement' } : emp
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent"></div>
+        <p className="ml-2">Chargement des absences...</p>
+      </div>
     );
-    
-    setAbsentEmployees(updatedEmployees);
-    toast.success(`Présence de ${employee.name} validée manuellement`);
-  };
+  }
+
+  if (error) {
+    return (
+      <div className="bg-red-50 text-red-700 p-4 rounded-md">
+        Une erreur est survenue lors du chargement des absences.
+      </div>
+    );
+  }
+
+  const filteredAbsences = activeTab === 'toutes' 
+    ? absences 
+    : activeTab === 'attente'
+    ? absences.filter(absence => absence.status === 'En attente')
+    : activeTab === 'validees'
+    ? absences.filter(absence => absence.status === 'Validé')
+    : absences.filter(absence => absence.status === 'Refusé');
 
   return (
     <div className="space-y-6">
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-lg font-medium">Employés sans validation de présence</CardTitle>
-          <AlertCircle className="h-5 w-5 text-amber-500" />
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-muted-foreground mb-4">
-            Liste des employés qui n'ont pas validé leur présence dans le module "Présences".
-          </p>
-          
-          <div className="flex items-center space-x-2 mb-4">
-            <div className="relative flex-1">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                type="search"
-                placeholder="Rechercher un employé..."
-                className="w-full pl-8"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
+      {/* Header with actions */}
+      <div className="flex flex-col space-y-4 md:flex-row md:justify-between md:items-center">
+        <div>
+          <h2 className="text-2xl font-bold">Gestion des absences</h2>
+          <p className="text-gray-500">Suivi des absences et autorisations</p>
+        </div>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm">
+            <ListFilter className="h-4 w-4 mr-2" />
+            Filtres
+          </Button>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={handleExportData}
+          >
+            <Download className="h-4 w-4 mr-2" />
+            Exporter
+          </Button>
+          <Button size="sm">
+            <Plus className="h-4 w-4 mr-2" />
+            Nouvelle absence
+          </Button>
+        </div>
+      </div>
+
+      {/* Stats cards */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <Card className="bg-blue-50">
+          <CardContent className="p-4 flex items-center justify-between">
+            <div>
+              <h3 className="text-sm font-medium text-blue-900">En attente</h3>
+              <p className="text-2xl font-bold text-blue-700">{stats.pending}</p>
             </div>
-            <Button variant="outline">Filtrer</Button>
-            <Button onClick={() => {
-              if (filteredEmployees.length === 0) {
-                toast.error("Aucun employé à notifier");
-                return;
-              }
-              handleSendBulkEmail();
-            }}>
-              {isLoading ? (
-                <span className="h-4 w-4 border-2 border-current border-r-transparent animate-spin rounded-full mr-2"></span>
-              ) : (
-                <Mail className="mr-2 h-4 w-4" />
-              )}
-              Envoyer rappel
-            </Button>
-          </div>
-          
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Employé</TableHead>
-                  <TableHead>Département</TableHead>
-                  <TableHead>Dernière présence</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredEmployees.length > 0 ? (
-                  filteredEmployees.map((employee) => (
-                    <TableRow key={employee.id}>
-                      <TableCell className="font-medium">{employee.name}</TableCell>
-                      <TableCell>{employee.department}</TableCell>
-                      <TableCell>{new Date(employee.lastPresence).toLocaleDateString('fr-FR')}</TableCell>
-                      <TableCell>
-                        <Badge variant="outline" className={
-                          employee.status === 'Validé manuellement'
-                            ? "bg-green-100 text-green-800"
-                            : "bg-amber-100 text-amber-800"
-                        }>
-                          {employee.status}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <Button 
-                          variant="ghost" 
-                          size="sm"
-                          onClick={() => {
-                            setSelectedEmployee(employee);
-                            setIsContactDialogOpen(true);
-                          }}
-                        >
-                          Contacter
-                        </Button>
-                        <Button 
-                          variant="ghost" 
-                          size="sm"
-                          onClick={() => handleValidateManually(employee)}
-                          disabled={employee.status === 'Validé manuellement'}
-                        >
-                          Valider manuellement
-                        </Button>
-                      </TableCell>
+            <Calendar className="h-8 w-8 text-blue-500" />
+          </CardContent>
+        </Card>
+        
+        <Card className="bg-green-50">
+          <CardContent className="p-4 flex items-center justify-between">
+            <div>
+              <h3 className="text-sm font-medium text-green-900">Validées</h3>
+              <p className="text-2xl font-bold text-green-700">{stats.validated}</p>
+            </div>
+            <CheckCircle2 className="h-8 w-8 text-green-500" />
+          </CardContent>
+        </Card>
+        
+        <Card className="bg-red-50">
+          <CardContent className="p-4 flex items-center justify-between">
+            <div>
+              <h3 className="text-sm font-medium text-red-900">Refusées</h3>
+              <p className="text-2xl font-bold text-red-700">{stats.rejected}</p>
+            </div>
+            <XCircle className="h-8 w-8 text-red-500" />
+          </CardContent>
+        </Card>
+        
+        <Card className="bg-gray-50">
+          <CardContent className="p-4 flex items-center justify-between">
+            <div>
+              <h3 className="text-sm font-medium text-gray-900">Total</h3>
+              <p className="text-2xl font-bold text-gray-700">{stats.total}</p>
+            </div>
+            <FileText className="h-8 w-8 text-gray-500" />
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Tabs for different views */}
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="w-full max-w-3xl grid grid-cols-4">
+          <TabsTrigger value="attente" className="flex items-center">
+            <Calendar className="h-4 w-4 mr-2" />
+            En attente
+          </TabsTrigger>
+          <TabsTrigger value="validees" className="flex items-center">
+            <CheckCircle2 className="h-4 w-4 mr-2" />
+            Validées
+          </TabsTrigger>
+          <TabsTrigger value="refusees" className="flex items-center">
+            <XCircle className="h-4 w-4 mr-2" />
+            Refusées
+          </TabsTrigger>
+          <TabsTrigger value="toutes" className="flex items-center">
+            <FileText className="h-4 w-4 mr-2" />
+            Toutes
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value={activeTab}>
+          <Card>
+            <CardContent className="p-6">
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-[250px]">Employé</TableHead>
+                      <TableHead>Type</TableHead>
+                      <TableHead>Dates</TableHead>
+                      <TableHead>Durée</TableHead>
+                      <TableHead>Statut</TableHead>
+                      <TableHead>Raison</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={5} className="h-24 text-center">
-                      Aucun employé trouvé
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Dialog for email reminder */}
-      <Dialog open={isEmailDialogOpen} onOpenChange={setIsEmailDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Envoyer un email de rappel</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 py-2">
-            <div>
-              <Label className="text-sm text-gray-500">Destinataire</Label>
-              <p className="font-medium">{selectedEmployee?.name} - {selectedEmployee?.email}</p>
-            </div>
-            
-            <div>
-              <Label className="text-sm text-gray-500">Objet</Label>
-              <p className="font-medium">Rappel : Validation de présence requise</p>
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="email-message">Message</Label>
-              <Textarea 
-                id="email-message" 
-                rows={6}
-                value={messageContent || `Bonjour ${selectedEmployee?.name},\n\nNous vous rappelons que vous n'avez pas validé votre présence depuis le ${selectedEmployee ? new Date(selectedEmployee.lastPresence).toLocaleDateString('fr-FR') : ''}.\n\nMerci de vous connecter au module "Présences" pour régulariser votre situation.\n\nCordialement,\nLe service RH`}
-                onChange={(e) => setMessageContent(e.target.value)}
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsEmailDialogOpen(false)}>Annuler</Button>
-            <Button onClick={handleSendEmail} disabled={isLoading}>
-              {isLoading ? (
-                <span className="h-4 w-4 border-2 border-current border-r-transparent animate-spin rounded-full mr-2"></span>
-              ) : (
-                <Mail className="mr-2 h-4 w-4" />
-              )}
-              Envoyer l'email
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Dialog for contact options */}
-      <Dialog open={isContactDialogOpen} onOpenChange={setIsContactDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Contacter {selectedEmployee?.name}</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-6 py-2">
-            <div className="grid grid-cols-2 gap-4">
-              <Button 
-                variant="outline" 
-                className="flex flex-col items-center justify-center h-24"
-                onClick={() => {
-                  setIsContactDialogOpen(false);
-                  setIsEmailDialogOpen(true);
-                }}
-              >
-                <Mail className="h-8 w-8 mb-2" />
-                <span>Email</span>
-              </Button>
-              
-              <Button 
-                variant="outline" 
-                className="flex flex-col items-center justify-center h-24"
-                onClick={() => {
-                  // On garde la boîte de dialogue ouverte mais on change son contenu
-                  setMessageContent(`Bonjour ${selectedEmployee?.name},\n\nNous avons remarqué que vous n'avez pas validé votre présence depuis le ${selectedEmployee ? new Date(selectedEmployee.lastPresence).toLocaleDateString('fr-FR') : ''}.\n\nMerci de régulariser votre situation.\n\nCordialement.`);
-                }}
-              >
-                <MessageSquare className="h-8 w-8 mb-2" />
-                <span>Message interne</span>
-              </Button>
-            </div>
-            
-            {messageContent && (
-              <div className="space-y-2">
-                <Label htmlFor="contact-message">Message</Label>
-                <Textarea 
-                  id="contact-message" 
-                  rows={6}
-                  value={messageContent}
-                  onChange={(e) => setMessageContent(e.target.value)}
-                />
-                <div className="flex justify-end">
-                  <Button onClick={handleSendMessage} disabled={isLoading}>
-                    {isLoading ? (
-                      <span className="h-4 w-4 border-2 border-current border-r-transparent animate-spin rounded-full mr-2"></span>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredAbsences.length > 0 ? (
+                      filteredAbsences.map((absence) => (
+                        <TableRow key={absence.id}>
+                          <TableCell className="font-medium">
+                            <div className="flex items-center space-x-3">
+                              <Avatar className="h-8 w-8">
+                                <AvatarImage src={absence.employeePhoto} alt={absence.employeeName} />
+                                <AvatarFallback>{absence.employeeName?.charAt(0) || '?'}</AvatarFallback>
+                              </Avatar>
+                              <div>
+                                <p className="font-medium">{absence.employeeName}</p>
+                                <p className="text-xs text-gray-500">{absence.department}</p>
+                              </div>
+                            </div>
+                          </TableCell>
+                          <TableCell>{absence.type}</TableCell>
+                          <TableCell>
+                            <span className="whitespace-nowrap">{absence.startDate}</span>
+                            <span className="mx-1">-</span>
+                            <span className="whitespace-nowrap">{absence.endDate}</span>
+                          </TableCell>
+                          <TableCell>{absence.days} jour{absence.days > 1 ? 's' : ''}</TableCell>
+                          <TableCell>
+                            <Badge
+                              className={
+                                absence.status === 'En attente'
+                                  ? 'bg-blue-100 text-blue-800'
+                                  : absence.status === 'Validé'
+                                  ? 'bg-green-100 text-green-800'
+                                  : 'bg-red-100 text-red-800'
+                              }
+                            >
+                              {absence.status}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="max-w-[200px] truncate">
+                            {absence.reason || '-'}
+                          </TableCell>
+                          <TableCell className="text-right space-x-2">
+                            {absence.status === 'En attente' ? (
+                              <>
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm"
+                                  onClick={() => handleApproveAbsence(absence.id)}
+                                  className="text-green-600"
+                                >
+                                  <CheckCircle2 className="h-4 w-4 mr-1" />
+                                  Approuver
+                                </Button>
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm"
+                                  onClick={() => handleRejectAbsence(absence.id)}
+                                  className="text-red-600"
+                                >
+                                  <XCircle className="h-4 w-4 mr-1" />
+                                  Refuser
+                                </Button>
+                              </>
+                            ) : (
+                              <Button variant="ghost" size="sm">
+                                Détails
+                              </Button>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      ))
                     ) : (
-                      <MessageSquare className="mr-2 h-4 w-4" />
+                      <TableRow>
+                        <TableCell colSpan={7} className="h-24 text-center">
+                          Aucune demande d'absence trouvée
+                        </TableCell>
+                      </TableRow>
                     )}
-                    Envoyer le message
-                  </Button>
-                </div>
+                  </TableBody>
+                </Table>
               </div>
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
