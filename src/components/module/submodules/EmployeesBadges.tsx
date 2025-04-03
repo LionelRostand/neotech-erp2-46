@@ -4,19 +4,19 @@ import { Badge as BadgeIcon, Plus, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { Employee } from '@/types/employee';
-import { BadgeData } from './badges/BadgeTypes';
-import CreateBadgeDialog from './badges/CreateBadgeDialog';
-import BadgePreviewDialog from './badges/BadgePreviewDialog';
-import BadgeStats from './badges/BadgeStats';
-import BadgesTable from './badges/BadgesTable';
+import { BadgeData } from './employees/badges/BadgeTypes';
+import CreateBadgeDialog from './employees/badges/CreateBadgeDialog';
+import BadgePreviewDialog from './employees/badges/BadgePreviewDialog';
+import BadgeStats from './employees/badges/BadgeStats';
+import BadgesTable from './employees/badges/BadgesTable';
 import { getBadges, addBadge, deleteDocument } from './employees/services/badgeService';
-import { useEmployeeData } from '@/hooks/useEmployeeData';
+import { useHrModuleData } from '@/hooks/useHrModuleData';
 
 const EmployeesBadges: React.FC = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [badgesList, setBadgesList] = useState<BadgeData[]>([]);
   const [loading, setLoading] = useState(true);
-  const { employees } = useEmployeeData();
+  const { employees } = useHrModuleData();
   
   const [isBadgePreviewOpen, setIsBadgePreviewOpen] = useState(false);
   const [selectedBadge, setSelectedBadge] = useState<BadgeData | null>(null);
@@ -34,59 +34,7 @@ const EmployeesBadges: React.FC = () => {
       setBadgesList(data);
     } catch (error) {
       console.error("Erreur lors du chargement des badges:", error);
-      // Utiliser des données fictives en cas d'erreur
-      setBadgesList([
-        {
-          id: "B-2458",
-          date: "2023-10-15",
-          employeeId: "EMP001",
-          employeeName: "Martin Dupont",
-          department: "Sécurité",
-          accessLevel: "Sécurité Niveau 3",
-          status: "success",
-          statusText: "Actif"
-        },
-        {
-          id: "B-2457",
-          date: "2023-10-14",
-          employeeId: "EMP002",
-          employeeName: "Sophie Martin",
-          department: "Administration",
-          accessLevel: "Administration",
-          status: "success",
-          statusText: "Actif"
-        },
-        {
-          id: "B-2456",
-          date: "2023-10-12",
-          employeeId: "EMP003",
-          employeeName: "Jean Lefebvre",
-          department: "IT",
-          accessLevel: "IT",
-          status: "warning",
-          statusText: "En attente"
-        },
-        {
-          id: "B-2455",
-          date: "2023-10-10",
-          employeeId: "EMP004",
-          employeeName: "Emma Bernard",
-          department: "RH",
-          accessLevel: "RH",
-          status: "success",
-          statusText: "Actif"
-        },
-        {
-          id: "B-2454",
-          date: "2023-10-09",
-          employeeId: "EMP005",
-          employeeName: "Thomas Petit",
-          department: "Marketing",
-          accessLevel: "Marketing",
-          status: "danger",
-          statusText: "Désactivé"
-        }
-      ]);
+      toast.error("Échec du chargement des badges");
     } finally {
       setLoading(false);
     }

@@ -1,124 +1,71 @@
 
-import { useEffect, useState } from 'react';
-import { Employee } from '@/types/employee';
-import { getEmployeesData, refreshEmployeesData } from '@/components/module/submodules/employees/services/employeeService';
-import { toast } from 'sonner';
-import { useAuth } from './useAuth';
-import { usePermissions } from './usePermissions';
+import { useHrModuleData } from './useHrModuleData';
+import { useMemo } from 'react';
 
+/**
+ * Hook pour accéder facilement aux données des employés
+ * Ce hook est un wrapper autour de useHrModuleData qui facilite
+ * l'accès aux données spécifiques des employés
+ */
 export const useEmployeeData = () => {
-  const [employees, setEmployees] = useState<Employee[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const { isOffline, currentUser } = useAuth();
-  const { isAdmin, checkPermission } = usePermissions('employees');
-
-  useEffect(() => {
-    if (currentUser) {
-      loadEmployees();
-    }
-  }, [currentUser]);
-
-  const loadEmployees = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      
-      // Check if user has permission to view employee data
-      const canViewEmployees = isAdmin || await checkPermission('employees', 'view');
-      
-      if (!canViewEmployees) {
-        console.warn("L'utilisateur n'a pas les permissions pour voir les données employés");
-        setError("Accès refusé. Vous n'avez pas les permissions nécessaires.");
-        setLoading(false);
-        return;
-      }
-      
-      const data = await getEmployeesData();
-      setEmployees(data);
-    } catch (err) {
-      console.error("Erreur lors du chargement des employés:", err);
-      setError("Impossible de charger les données des employés");
-      toast.error("Échec du chargement des données");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const refreshEmployees = async () => {
-    if (isOffline) {
-      toast.warning("Mode hors-ligne actif. Impossible d'actualiser les données.");
-      return employees; // Retourner les données actuellement en mémoire
-    }
-
-    try {
-      setLoading(true);
-      setError(null);
-      
-      // Check if user has permission to view employee data
-      const canViewEmployees = isAdmin || await checkPermission('employees', 'view');
-      
-      if (!canViewEmployees) {
-        console.warn("L'utilisateur n'a pas les permissions pour voir les données employés");
-        setError("Accès refusé. Vous n'avez pas les permissions nécessaires.");
-        return employees; // Retourner les données actuelles
-      }
-      
-      const refreshedData = await refreshEmployeesData();
-      setEmployees(refreshedData);
-      return refreshedData;
-    } catch (err) {
-      console.error("Erreur lors de l'actualisation des employés:", err);
-      setError("Impossible d'actualiser les données des employés");
-      toast.error("Échec de l'actualisation des données");
-      return employees; // Retourner les données non actualisées en cas d'erreur
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const filterEmployeesByCompany = (companyId: string) => {
-    if (companyId === 'all') {
-      return employees;
-    }
-    return employees.filter(emp => emp.company === companyId);
-  };
-
-  const filterEmployeesByDepartment = (department: string) => {
-    if (department === 'all') {
-      return employees;
-    }
-    return employees.filter(emp => emp.department === department);
-  };
-
-  const filterEmployeesByStatus = (status: string) => {
-    if (status === 'all') {
-      return employees;
-    }
-    return employees.filter(emp => emp.status === status);
-  };
-
-  const searchEmployees = (query: string) => {
-    if (!query) {
-      return employees;
-    }
-    const lowerQuery = query.toLowerCase();
-    return employees.filter(emp => 
-      `${emp.firstName} ${emp.lastName}`.toLowerCase().includes(lowerQuery) ||
-      emp.email.toLowerCase().includes(lowerQuery) ||
-      emp.position.toLowerCase().includes(lowerQuery) ||
-      emp.department.toLowerCase().includes(lowerQuery)
-    );
-  };
-
-  return {
+  const { 
     employees,
-    loading,
-    error,
-    refreshEmployees,
-    filterEmployeesByCompany,
-    filterEmployeesByDepartment,
-    filterEmployeesByStatus,
-    searchEmployees
+    departments,
+    contracts,
+    badges,
+    isLoading,
+    error
+  } = useHrModuleData();
+  
+  // Traitement pour enrichir les données des employés avec leurs départements
+  const enrichedEmployees = useMemo(() => {
+    if (!employees || !departments) return employees || [];
+    
+    return employees.map(employee => {
+      // Rechercher le département de l'employé
+      if (employee.departmentId) {
+        const department = departments.find(d => d.id === employee.departmentId);
+        if (department) {
+          return {
+            ...employee,
+            department: department.name,
+            departmentColor: department.color
+          };
+        }
+      }
+      return employee;
+    });
+  }, [employees, departments]);
+  
+  // Obtenir le nombre d'employés par département
+  const employeesByDepartment = useMemo(() => {
+    const result: Record<string, number> = {};
+    
+    if (employees && departments) {
+      // Initialiser tous les départements à 0
+      departments.forEach(dept => {
+        result[dept.id] = 0;
+      });
+      
+      // Compter les employés par département
+      employees.forEach(employee => {
+        if (employee.departmentId && result[employee.departmentId] !== undefined) {
+          result[employee.departmentId]++;
+        }
+      });
+    }
+    
+    return result;
+  }, [employees, departments]);
+  
+  return {
+    employees: enrichedEmployees,
+    rawEmployees: employees || [],
+    departments: departments || [],
+    contracts: contracts || [],
+    badges: badges || [],
+    employeesByDepartment,
+    isLoading,
+    error
   };
 };

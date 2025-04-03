@@ -1,52 +1,66 @@
 
 import React from 'react';
-import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Employee } from '@/types/employee';
 
 interface EmployeesListProps {
   employees: Employee[];
   selectedEmployees: string[];
   onEmployeeSelection: (employeeId: string) => void;
-  id?: string;
+  id: string;
 }
 
-const EmployeesList: React.FC<EmployeesListProps> = ({
-  employees,
-  selectedEmployees,
+const EmployeesList: React.FC<EmployeesListProps> = ({ 
+  employees, 
+  selectedEmployees, 
   onEmployeeSelection,
-  id = '',
+  id
 }) => {
-  const prefix = id ? `${id}-` : '';
+  if (!employees.length) {
+    return (
+      <div className="text-center py-8">
+        <p className="text-muted-foreground">Aucun employé disponible</p>
+      </div>
+    );
+  }
   
   return (
-    <div className="mb-4">
-      <h3 className="text-sm font-medium mb-2">Sélectionnez les employés à assigner à ce département:</h3>
-      <div className="border rounded-md">
-        <ScrollArea className="h-[250px] w-full">
-          <div className="p-4 space-y-3">
-            {employees.map(employee => (
-              <div key={employee.id} className="flex items-center space-x-2">
-                <Checkbox 
-                  id={`${prefix}employee-${employee.id}`}
-                  checked={selectedEmployees.includes(employee.id)}
-                  onCheckedChange={() => onEmployeeSelection(employee.id)}
-                />
-                <label 
-                  htmlFor={`${prefix}employee-${employee.id}`}
-                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer flex-1"
-                >
-                  {employee.firstName} {employee.lastName} - {employee.position}
-                </label>
-              </div>
-            ))}
+    <ScrollArea className="h-[300px] border rounded-md p-4">
+      <div className="space-y-4">
+        {employees.map((employee) => (
+          <div 
+            key={employee.id}
+            className="flex items-center space-x-3 hover:bg-gray-50 p-2 rounded-md"
+          >
+            <Checkbox 
+              id={`${id}-employee-${employee.id}`}
+              checked={selectedEmployees.includes(employee.id)}
+              onCheckedChange={() => onEmployeeSelection(employee.id)}
+            />
+            <Avatar className="h-8 w-8">
+              {employee.photoURL ? (
+                <AvatarImage src={employee.photoURL} alt={`${employee.firstName} ${employee.lastName}`} />
+              ) : null}
+              <AvatarFallback>
+                {employee.firstName?.[0]}{employee.lastName?.[0]}
+              </AvatarFallback>
+            </Avatar>
+            <label 
+              htmlFor={`${id}-employee-${employee.id}`}
+              className="text-sm font-medium leading-none cursor-pointer flex-1"
+            >
+              {employee.firstName} {employee.lastName}
+              <br />
+              <span className="text-xs text-muted-foreground">
+                {employee.title || "Sans poste"}
+              </span>
+            </label>
           </div>
-        </ScrollArea>
+        ))}
       </div>
-      <p className="text-sm text-muted-foreground mt-2">
-        {selectedEmployees.length} employé(s) sélectionné(s)
-      </p>
-    </div>
+    </ScrollArea>
   );
 };
 

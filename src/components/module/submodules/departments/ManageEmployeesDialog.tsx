@@ -1,11 +1,14 @@
 
 import React from 'react';
-import { DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { 
+  DialogContent, DialogHeader, DialogTitle, DialogFooter,
+} from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Employee } from '@/types/employee';
 import { Department } from './types';
+import { useEmployeeData } from '@/hooks/useEmployeeData';
 import EmployeesList from './EmployeesList';
-import { employees } from '@/data/employees';
 
 interface ManageEmployeesDialogProps {
   department: Department;
@@ -20,56 +23,54 @@ const ManageEmployeesDialog: React.FC<ManageEmployeesDialogProps> = ({
   department,
   selectedEmployees,
   onEmployeeSelection,
-  getDepartmentEmployees,
   onClose,
-  onSave,
+  onSave
 }) => {
-  if (!department) {
-    return null;
-  }
-
+  const { employees } = useEmployeeData();
+  const [searchQuery, setSearchQuery] = React.useState('');
+  
+  // Filtrer les employés en fonction de la recherche
+  const filteredEmployees = searchQuery 
+    ? employees.filter(emp => 
+        `${emp.firstName} ${emp.lastName}`.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    : employees;
+  
   return (
-    <DialogContent className="sm:max-w-[500px]">
+    <DialogContent className="sm:max-w-[600px]">
       <DialogHeader>
         <DialogTitle>
-          <div className="flex items-center space-x-2">
-            <div 
-              className="w-3 h-3 rounded-full" 
-              style={{ backgroundColor: department.color }}
-            ></div>
-            <span>Gérer les employés - {department.name}</span>
-          </div>
+          Gérer les employés - {department.name}
         </DialogTitle>
       </DialogHeader>
       
-      <div className="py-4">
-        <EmployeesList 
-          employees={employees}
-          selectedEmployees={selectedEmployees}
-          onEmployeeSelection={onEmployeeSelection}
-          id="manage"
+      <div className="mb-4">
+        <Input
+          type="search"
+          placeholder="Rechercher un employé..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
         />
-        
-        {getDepartmentEmployees(department.id).length > 0 && (
-          <div className="mt-6">
-            <h3 className="text-sm font-medium mb-2">Employés actuels du département:</h3>
-            <div className="space-y-2">
-              {getDepartmentEmployees(department.id).map(emp => (
-                <div key={emp.id} className="flex items-center gap-2 p-2 bg-gray-50 rounded-md">
-                  <div className="font-medium">{emp.firstName} {emp.lastName}</div>
-                  <div className="text-sm text-gray-500">- {emp.position}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+      </div>
+      
+      <EmployeesList
+        employees={filteredEmployees}
+        selectedEmployees={selectedEmployees}
+        onEmployeeSelection={onEmployeeSelection}
+        id="manage"
+      />
+      
+      <div className="mt-4 text-sm text-muted-foreground">
+        {selectedEmployees.length} employé{selectedEmployees.length !== 1 ? 's' : ''} sélectionné{selectedEmployees.length !== 1 ? 's' : ''}
       </div>
       
       <DialogFooter>
         <Button variant="outline" onClick={onClose}>
           Annuler
         </Button>
-        <Button onClick={onSave}>Enregistrer</Button>
+        <Button onClick={onSave}>
+          Enregistrer
+        </Button>
       </DialogFooter>
     </DialogContent>
   );

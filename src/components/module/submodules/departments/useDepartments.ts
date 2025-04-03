@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { Department, DepartmentFormData } from './types';
 import { useDepartmentService } from './services/departmentService';
+import { useEmployeeData } from '@/hooks/useEmployeeData';
 import { 
   createDefaultDepartments, 
   createEmptyFormData, 
@@ -15,6 +16,9 @@ export const useDepartments = () => {
   // Department service for Firebase operations
   const departmentService = useDepartmentService();
   
+  // Utiliser notre hook pour récupérer les données
+  const { employees, departments: hrDepartments } = useEmployeeData();
+
   // Departments data state
   const [departments, setDepartments] = useState<Department[]>([]);
   const [loading, setLoading] = useState(true);
@@ -28,10 +32,15 @@ export const useDepartments = () => {
   const [activeTab, setActiveTab] = useState("department-info");
   const [selectedEmployees, setSelectedEmployees] = useState<string[]>([]);
 
-  // Load departments from Firestore on component mount
+  // Load departments from Firestore on component mount or when hrDepartments change
   useEffect(() => {
-    loadDepartmentsFromFirestore();
-  }, []);
+    if (hrDepartments && hrDepartments.length > 0) {
+      setDepartments(hrDepartments);
+      setLoading(false);
+    } else {
+      loadDepartmentsFromFirestore();
+    }
+  }, [hrDepartments]);
 
   // Effect to sync with hierarchy whenever departments change
   useEffect(() => {
@@ -61,9 +70,7 @@ export const useDepartments = () => {
       }
     } catch (error) {
       console.error("Error loading departments:", error);
-      
-      // Fallback to default departments if Firebase load fails
-      setDepartments(createDefaultDepartments());
+      toast.error("Erreur lors du chargement des départements");
     } finally {
       setLoading(false);
     }
@@ -212,9 +219,11 @@ export const useDepartments = () => {
     }
   };
 
-  // Get employees for a specific department
+  // Get employees for a specific department using real data
   const getDepartmentEmployeesById = (departmentId: string) => {
-    return getDepartmentEmployees(departmentId, departments);
+    if (!employees || !employees.length) return [];
+    
+    return employees.filter(emp => emp.departmentId === departmentId);
   };
 
   return {

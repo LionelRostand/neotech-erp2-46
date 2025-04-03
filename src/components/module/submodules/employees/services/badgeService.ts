@@ -2,12 +2,13 @@
 import { addDocument } from '@/hooks/firestore/create-operations';
 import { getAllDocuments } from '@/hooks/firestore/read-operations';
 import { updateDocument } from '@/hooks/firestore/update-operations';
-import { deleteDocument } from '@/hooks/firestore/delete-operations';
+import { deleteDocument as deleteFirestoreDocument } from '@/hooks/firestore/delete-operations';
 import { toast } from 'sonner';
 import { BadgeData } from '../badges/BadgeTypes';
+import { COLLECTIONS } from '@/lib/firebase-collections';
 
 // Collection où sont stockés les badges
-const BADGES_COLLECTION = 'employee_badges';
+const BADGES_COLLECTION = COLLECTIONS.HR.BADGES;
 
 /**
  * Récupère tous les badges employés depuis Firestore
@@ -58,7 +59,7 @@ export const updateBadge = async (id: string, badgeData: Partial<BadgeData>): Pr
  */
 export const deleteBadge = async (id: string): Promise<boolean> => {
   try {
-    await deleteDocument(BADGES_COLLECTION, id);
+    await deleteFirestoreDocument(BADGES_COLLECTION, id);
     toast.success("Badge supprimé avec succès");
     return true;
   } catch (error) {
@@ -81,3 +82,6 @@ export const getEmployeeBadges = async (employeeId: string): Promise<BadgeData[]
     return [];
   }
 };
+
+// Exporter la fonction de suppression
+export { deleteFirestoreDocument as deleteDocument };

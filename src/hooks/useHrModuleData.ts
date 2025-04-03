@@ -1,11 +1,13 @@
 
 import { useCollectionData } from './useCollectionData';
 import { COLLECTIONS } from '@/lib/firebase-collections';
-import { orderBy } from 'firebase/firestore';
-import { Employee } from '@/types/employee';
+import { orderBy, query, where } from 'firebase/firestore';
+import type { Employee } from '@/types/employee';
+import type { DocumentData } from 'firebase/firestore';
 
 /**
  * Hook centralisé pour récupérer toutes les données liées au module Employés/RH
+ * directement depuis Firebase
  */
 export const useHrModuleData = () => {
   // Récupération des employés
@@ -78,6 +80,56 @@ export const useHrModuleData = () => {
     [orderBy('startDate')]
   );
 
+  // Récupération des badges
+  const { 
+    data: badges, 
+    isLoading: isBadgesLoading, 
+    error: badgesError 
+  } = useCollectionData(
+    COLLECTIONS.HR.BADGES,
+    [orderBy('date', 'desc')]
+  );
+
+  // Récupération des présences
+  const { 
+    data: attendance, 
+    isLoading: isAttendanceLoading, 
+    error: attendanceError 
+  } = useCollectionData(
+    COLLECTIONS.HR.ATTENDANCE,
+    [orderBy('date', 'desc')]
+  );
+
+  // Récupération des feuilles de temps
+  const { 
+    data: timeSheets, 
+    isLoading: isTimeSheetsLoading, 
+    error: timeSheetsError 
+  } = useCollectionData(
+    COLLECTIONS.HR.TIME_SHEETS,
+    [orderBy('weekStartDate', 'desc')]
+  );
+
+  // Récupération des absences
+  const { 
+    data: absenceRequests, 
+    isLoading: isAbsenceRequestsLoading, 
+    error: absenceRequestsError 
+  } = useCollectionData(
+    COLLECTIONS.HR.ABSENCE_REQUESTS,
+    [orderBy('startDate')]
+  );
+
+  // Récupération des documents RH
+  const { 
+    data: hrDocuments, 
+    isLoading: isHrDocumentsLoading, 
+    error: hrDocumentsError 
+  } = useCollectionData(
+    COLLECTIONS.HR.DOCUMENTS,
+    [orderBy('uploadDate', 'desc')]
+  );
+
   // Vérifier si des données sont en cours de chargement
   const isLoading = 
     isEmployeesLoading || 
@@ -86,7 +138,12 @@ export const useHrModuleData = () => {
     isContractsLoading || 
     isDepartmentsLoading ||
     isEvaluationsLoading ||
-    isTrainingsLoading;
+    isTrainingsLoading ||
+    isBadgesLoading ||
+    isAttendanceLoading ||
+    isTimeSheetsLoading ||
+    isAbsenceRequestsLoading ||
+    isHrDocumentsLoading;
 
   // Combiner toutes les erreurs potentielles
   const error = 
@@ -96,16 +153,26 @@ export const useHrModuleData = () => {
     contractsError || 
     departmentsError ||
     evaluationsError ||
-    trainingsError;
+    trainingsError ||
+    badgesError ||
+    attendanceError ||
+    timeSheetsError ||
+    absenceRequestsError ||
+    hrDocumentsError;
 
   return {
-    employees,
-    payslips,
-    leaveRequests,
-    contracts,
-    departments,
-    evaluations,
-    trainings,
+    employees: employees || [],
+    payslips: payslips || [],
+    leaveRequests: leaveRequests || [],
+    contracts: contracts || [],
+    departments: departments || [],
+    evaluations: evaluations || [],
+    trainings: trainings || [],
+    badges: badges || [],
+    attendance: attendance || [],
+    timeSheets: timeSheets || [],
+    absenceRequests: absenceRequests || [],
+    hrDocuments: hrDocuments || [],
     isLoading,
     error
   };
