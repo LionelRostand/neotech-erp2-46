@@ -1,330 +1,333 @@
-
-import React from 'react';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { WebBookingConfig, MenuItem, BannerConfig } from '../types';
-import CustomerContactForm from './CustomerContactForm';
+import React, { useState } from 'react';
+import { WebBookingConfig } from '../types/web-booking-types';
 
 interface WebBookingPreviewProps {
   isEditing: boolean;
-  config?: WebBookingConfig;
+  config: WebBookingConfig;
 }
 
-const WebBookingPreview: React.FC<WebBookingPreviewProps> = ({ 
-  isEditing, 
-  config = {
-    siteTitle: "RentaCar - Location de véhicules",
-    logo: "/logo.png",
-    primaryColor: "#ff5f00",
-    secondaryColor: "#003366",
-    fontFamily: "Inter",
-    enableBookingForm: true,
-    requiredFields: ["pickup_location", "dropoff_location", "pickup_date", "dropoff_date"],
-    menuItems: [
-      { id: '1', label: 'Accueil', url: '/', isActive: true },
-      { id: '2', label: 'Nos Véhicules', url: '/vehicules', isActive: true },
-      { id: '3', label: 'Tarifs', url: '/tarifs', isActive: true },
-      { id: '4', label: 'Contact', url: '/contact', isActive: true },
-    ],
-    bannerConfig: {
-      title: "Réservez votre véhicule en quelques clics",
-      subtitle: "Des tarifs compétitifs et un service de qualité pour tous vos déplacements",
-      backgroundColor: "#003366",
-      textColor: "#ffffff",
-      backgroundImage: "/images/car1.jpg",
-      buttonText: "Réserver maintenant",
-      buttonLink: "#reservation",
-      overlay: true,
-      overlayOpacity: 50,
-    }
-  } 
-}) => {
-  const getOverlayStyle = () => {
-    const bannerConfig = config.bannerConfig;
-    if (!bannerConfig || !bannerConfig.overlay) return {};
-    return {
-      backgroundColor: `rgba(0,0,0,${bannerConfig.overlayOpacity / 100})`
-    };
+const WebBookingPreview: React.FC<WebBookingPreviewProps> = ({ isEditing, config }) => {
+  const [activeMenuPath, setActiveMenuPath] = useState('/');
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
+  
+  const handleMenuClick = (path: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    setActiveMenuPath(path);
+    setShowMobileMenu(false);
   };
-
+  
+  const renderContent = () => {
+    switch(activeMenuPath) {
+      case '/':
+        return <HomePage config={config} />;
+      case '/vehicules':
+        return <VehiclesPage config={config} />;
+      case '/tarifs':
+        return <PricingPage config={config} />;
+      case '/contact':
+        return <ContactPage config={config} />;
+      default:
+        return <HomePage config={config} />;
+    }
+  };
+  
   return (
-    <div className="border rounded-lg overflow-hidden bg-white">
-      {/* Header */}
-      <header className="border-b">
-        <div className="container mx-auto py-4 px-6 flex justify-between items-center">
-          <div className="flex items-center">
-            {config.logo && (
-              <img src={config.logo} alt="Logo" className="h-10 w-auto mr-4" />
-            )}
-            <h1 className="text-xl font-bold">{config.siteTitle}</h1>
-          </div>
-          
-          <nav>
-            <ul className="flex space-x-6">
-              {config.menuItems?.filter(item => item.isActive).map(item => (
-                <li key={item.id}>
-                  <a 
-                    href="#" 
-                    className="text-gray-800 hover:text-[#ff5f00]"
-                    onClick={(e) => e.preventDefault()}
+    <div className={`w-full ${isEditing ? 'bg-gray-50 border rounded' : ''}`}>
+      <div className="flex flex-col min-h-[600px]">
+        {/* Header */}
+        <header className={`py-4 px-6`} style={{ backgroundColor: config.headerBackground || '#ffffff' }}>
+          <div className="container mx-auto flex justify-between items-center">
+            <div className="flex items-center">
+              {config.logo && (
+                <img src={config.logo} alt="Logo" className="h-10 mr-3" />
+              )}
+              <div>
+                <h1 className="font-bold text-xl">{config.title}</h1>
+                <p className="text-sm text-gray-600">{config.subtitle}</p>
+              </div>
+            </div>
+            
+            {/* Desktop Menu */}
+            <nav className="hidden md:flex space-x-6">
+              {config.menuItems
+                .filter(item => item.isActive !== false)
+                .map(item => (
+                  <a
+                    key={item.id}
+                    href={item.url}
+                    className={`text-sm font-medium transition-colors hover:text-primary ${activeMenuPath === item.url ? 'text-primary font-bold' : 'text-gray-700'}`}
+                    onClick={(e) => handleMenuClick(item.url, e)}
+                    style={{ color: activeMenuPath === item.url ? config.primaryColor : undefined }}
                   >
                     {item.label}
                   </a>
-                </li>
-              ))}
-            </ul>
-          </nav>
-        </div>
-      </header>
-
-      {/* Banner */}
-      {config.bannerConfig && (
-        <div 
-          className="relative overflow-hidden"
-          style={{ backgroundColor: config.bannerConfig.backgroundColor }}
-        >
-          {config.bannerConfig.backgroundImage && (
-            <img 
-              src={config.bannerConfig.backgroundImage} 
-              alt="Banner" 
-              className="w-full object-cover"
-              style={{ height: '400px' }}
-            />
-          )}
-          
-          {config.bannerConfig.overlay && (
-            <div 
-              className="absolute inset-0"
-              style={getOverlayStyle()}
-            ></div>
-          )}
-          
-          <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-8">
-            <h2 
-              className="text-4xl font-bold mb-4"
-              style={{ color: config.bannerConfig.textColor }}
-            >
-              {config.bannerConfig.title}
-            </h2>
-            
-            <p
-              className="text-xl mb-8 max-w-3xl"
-              style={{ color: config.bannerConfig.textColor }}
-            >
-              {config.bannerConfig.subtitle}
-            </p>
-            
-            <Button
-              size="lg"
-              className="text-white"
-              style={{ backgroundColor: config.primaryColor }}
-              onClick={(e) => e.preventDefault()}
-            >
-              {config.bannerConfig.buttonText}
-            </Button>
-          </div>
-        </div>
-      )}
-
-      {/* Main Content */}
-      <main className="container mx-auto py-8 px-6">
-        {/* Quick Search Form */}
-        <Card className="p-6 mb-12 shadow-lg -mt-16 relative z-10 mx-auto max-w-4xl bg-white">
-          <h3 className="text-lg font-bold mb-4 text-center">Réservez votre véhicule</h3>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <label className="block text-sm font-medium mb-1">Lieu de prise en charge</label>
-              <select className="w-full border rounded p-2">
-                <option>Paris Gare de Lyon</option>
-                <option>Paris CDG Aéroport</option>
-                <option>Paris Orly Aéroport</option>
-                <option>Lyon Centre</option>
-              </select>
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium mb-1">Date de départ</label>
-              <input type="date" className="w-full border rounded p-2" />
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium mb-1">Date de retour</label>
-              <input type="date" className="w-full border rounded p-2" />
-            </div>
-          </div>
-          
-          <div className="mt-4 text-center">
-            <Button 
-              className="text-white px-8" 
-              style={{ backgroundColor: config.primaryColor }}
-            >
-              Rechercher
-            </Button>
-          </div>
-        </Card>
-
-        {/* Car Categories */}
-        <section className="mb-12">
-          <h3 className="text-2xl font-bold mb-6 text-center">Nos catégories de véhicules</h3>
-          
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            {[
-              { name: 'Économique', image: '/images/car1.jpg', price: 'À partir de 39€/jour' },
-              { name: 'Compacte', image: '/images/car2.jpg', price: 'À partir de 45€/jour' },
-              { name: 'Berline', image: '/images/car3.jpg', price: 'À partir de 65€/jour' },
-              { name: 'SUV', image: '/images/car4.jpg', price: 'À partir de 70€/jour' }
-            ].map((category, index) => (
-              <Card key={index} className="overflow-hidden">
-                <div className="aspect-video bg-gray-200 relative">
-                  <img 
-                    src={category.image} 
-                    alt={category.name} 
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <div className="p-4 text-center">
-                  <h4 className="font-bold">{category.name}</h4>
-                  <p className="text-sm text-gray-600 mt-1">{category.price}</p>
-                  <Button 
-                    variant="outline"
-                    className="mt-2 w-full border-[#ff5f00] text-[#ff5f00] hover:bg-[#ff5f00] hover:text-white"
-                  >
-                    Voir les véhicules
-                  </Button>
-                </div>
-              </Card>
-            ))}
-          </div>
-        </section>
-
-        {/* Features */}
-        <section className="mb-12 py-12 bg-gray-50 -mx-6 px-6">
-          <h3 className="text-2xl font-bold mb-6 text-center">Pourquoi nous choisir</h3>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="text-center p-4">
-              <div className="w-16 h-16 bg-[#ff5f00] rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white">
-                  <path d="M12 22s8-4 8-10V6l-8-4-8 4v6c0 6 8 10 8 10Z" />
-                  <path d="m9 12 2 2 4-4" />
-                </svg>
-              </div>
-              <h4 className="text-lg font-bold mb-2">Assurance tous risques</h4>
-              <p className="text-gray-600">Tous nos véhicules sont assurés pour votre tranquillité d'esprit.</p>
-            </div>
-            
-            <div className="text-center p-4">
-              <div className="w-16 h-16 bg-[#ff5f00] rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white">
-                  <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
-                </svg>
-              </div>
-              <h4 className="text-lg font-bold mb-2">Assistance 24/7</h4>
-              <p className="text-gray-600">Notre service client est disponible à tout moment pour vous aider.</p>
-            </div>
-            
-            <div className="text-center p-4">
-              <div className="w-16 h-16 bg-[#ff5f00] rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white">
-                  <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" />
-                  <line x1="4" x2="4" y1="22" y2="15" />
-                </svg>
-              </div>
-              <h4 className="text-lg font-bold mb-2">Kilométrage illimité</h4>
-              <p className="text-gray-600">Profitez de la liberté avec notre option kilométrage illimité.</p>
-            </div>
-          </div>
-        </section>
-
-        {/* Contact Section */}
-        <section className="mb-12">
-          <h3 className="text-2xl font-bold mb-6 text-center">Contactez-nous</h3>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div>
-              <CustomerContactForm isEditable={false} />
-            </div>
-            
-            <div className="bg-gray-100 p-6 rounded">
-              <h4 className="font-bold mb-4">Nos agences</h4>
-              
-              <div className="space-y-4">
-                <div>
-                  <h5 className="font-medium">Paris Centre</h5>
-                  <p className="text-sm">123 Avenue des Champs-Élysées, 75008 Paris</p>
-                  <p className="text-sm">Tél: 01 23 45 67 89</p>
-                </div>
-                
-                <div>
-                  <h5 className="font-medium">Lyon Centre</h5>
-                  <p className="text-sm">45 Rue de la République, 69002 Lyon</p>
-                  <p className="text-sm">Tél: 04 56 78 90 12</p>
-                </div>
-                
-                <div>
-                  <h5 className="font-medium">Marseille Centre</h5>
-                  <p className="text-sm">78 La Canebière, 13001 Marseille</p>
-                  <p className="text-sm">Tél: 04 91 23 45 67</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-      </main>
-
-      {/* Footer */}
-      <footer className="bg-gray-800 text-white py-8 px-6">
-        <div className="container mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-            <div>
-              <h4 className="font-bold mb-4">À propos de nous</h4>
-              <p className="text-sm text-gray-300">RentaCar est une entreprise française de location de véhicules présente dans toutes les grandes villes françaises.</p>
-            </div>
-            
-            <div>
-              <h4 className="font-bold mb-4">Liens utiles</h4>
-              <ul className="space-y-2 text-sm text-gray-300">
-                {config.menuItems?.filter(item => item.isActive).map(item => (
-                  <li key={item.id}>
-                    <a href="#" className="hover:text-[#ff5f00]">{item.label}</a>
-                  </li>
                 ))}
-              </ul>
-            </div>
+            </nav>
             
-            <div>
-              <h4 className="font-bold mb-4">Nos services</h4>
-              <ul className="space-y-2 text-sm text-gray-300">
-                <li><a href="#" className="hover:text-[#ff5f00]">Location courte durée</a></li>
-                <li><a href="#" className="hover:text-[#ff5f00]">Location longue durée</a></li>
-                <li><a href="#" className="hover:text-[#ff5f00]">Location avec chauffeur</a></li>
-                <li><a href="#" className="hover:text-[#ff5f00]">Services aux entreprises</a></li>
-              </ul>
-            </div>
-            
-            <div>
-              <h4 className="font-bold mb-4">Nous contacter</h4>
-              <ul className="space-y-2 text-sm text-gray-300">
-                <li>Tél: 01 23 45 67 89</li>
-                <li>Email: contact@rentacar.fr</li>
-                <li>Adresse: 123 Avenue des Champs-Élysées, 75008 Paris</li>
-              </ul>
-            </div>
+            {/* Mobile Menu Button */}
+            <button 
+              className="md:hidden text-gray-700"
+              onClick={() => setShowMobileMenu(!showMobileMenu)}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                {showMobileMenu ? (
+                  <path d="M18 6L6 18M6 6l12 12" />
+                ) : (
+                  <path d="M3 12h18M3 6h18M3 18h18" />
+                )}
+              </svg>
+            </button>
           </div>
           
-          <div className="border-t border-gray-600 mt-8 pt-6 text-sm text-gray-400 flex justify-between">
-            <p>&copy; 2023 RentaCar. Tous droits réservés.</p>
-            <div className="space-x-4">
-              <a href="#" className="hover:text-[#ff5f00]">Mentions légales</a>
-              <a href="#" className="hover:text-[#ff5f00]">CGV</a>
-              <a href="#" className="hover:text-[#ff5f00]">Politique de confidentialité</a>
+          {/* Mobile Menu */}
+          {showMobileMenu && (
+            <div className="md:hidden mt-4 px-4 py-3 bg-gray-50 rounded-lg">
+              {config.menuItems
+                .filter(item => item.isActive !== false)
+                .map(item => (
+                  <a
+                    key={item.id}
+                    href={item.url}
+                    className={`block py-2 text-sm font-medium ${activeMenuPath === item.url ? 'font-bold' : 'text-gray-700'}`}
+                    onClick={(e) => handleMenuClick(item.url, e)}
+                    style={{ color: activeMenuPath === item.url ? config.primaryColor : undefined }}
+                  >
+                    {item.label}
+                  </a>
+                ))}
+            </div>
+          )}
+        </header>
+        
+        {/* Banner if enabled */}
+        {config.banner?.enabled && (
+          <div 
+            className="py-2 px-4 text-center text-sm"
+            style={{ 
+              backgroundColor: config.banner.background,
+              color: config.banner.textColor
+            }}
+          >
+            {config.banner.text}
+            {config.banner.link && (
+              <a href={config.banner.link} className="underline ml-2">En savoir plus</a>
+            )}
+          </div>
+        )}
+        
+        {/* Main Content */}
+        <main className="flex-grow">
+          {renderContent()}
+        </main>
+        
+        {/* Footer */}
+        <footer className="py-8 px-6" style={{ backgroundColor: config.footerBackground || '#f5f5f5' }}>
+          <div className="container mx-auto">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              <div>
+                <h3 className="font-bold mb-4">Contact</h3>
+                <p className="text-sm">{config.contactInfo.address}</p>
+                <p className="text-sm mt-2">{config.contactInfo.phone}</p>
+                <p className="text-sm mt-2">{config.contactInfo.email}</p>
+              </div>
+              
+              <div>
+                <h3 className="font-bold mb-4">Liens rapides</h3>
+                <ul className="space-y-2">
+                  {config.menuItems
+                    .filter(item => item.isActive !== false)
+                    .map(item => (
+                      <li key={item.id}>
+                        <a 
+                          href={item.url}
+                          className="text-sm hover:underline"
+                          onClick={(e) => handleMenuClick(item.url, e)}
+                        >
+                          {item.label}
+                        </a>
+                      </li>
+                    ))}
+                </ul>
+              </div>
+              
+              <div>
+                <h3 className="font-bold mb-4">Suivez-nous</h3>
+                <div className="flex space-x-4">
+                  {config.socialLinks?.facebook && (
+                    <a href={config.socialLinks.facebook} target="_blank" rel="noopener noreferrer" className="text-gray-600 hover:text-gray-900">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path>
+                      </svg>
+                    </a>
+                  )}
+                  {config.socialLinks?.twitter && (
+                    <a href={config.socialLinks.twitter} target="_blank" rel="noopener noreferrer" className="text-gray-600 hover:text-gray-900">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z"></path>
+                      </svg>
+                    </a>
+                  )}
+                  {config.socialLinks?.instagram && (
+                    <a href={config.socialLinks.instagram} target="_blank" rel="noopener noreferrer" className="text-gray-600 hover:text-gray-900">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+                        <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+                        <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+                      </svg>
+                    </a>
+                  )}
+                </div>
+              </div>
+            </div>
+            
+            <div className="mt-8 pt-8 border-t text-center text-sm text-gray-500">
+              &copy; {new Date().getFullYear()} {config.title}. Tous droits réservés.
             </div>
           </div>
-        </div>
-      </footer>
+        </footer>
+      </div>
     </div>
   );
 };
+
+// Page components
+const HomePage = ({ config }: { config: WebBookingConfig }) => (
+  <div className="container mx-auto py-12">
+    <h2 className="text-3xl font-bold mb-6" style={{ color: config.primaryColor }}>Bienvenue sur {config.title}</h2>
+    <p className="text-gray-700 leading-relaxed">
+      Découvrez notre large gamme de véhicules disponibles à la location. Que vous ayez besoin d'une voiture compacte pour la ville ou d'un véhicule spacieux pour vos voyages en famille, nous avons ce qu'il vous faut.
+    </p>
+    {config.bannerConfig?.backgroundImage && (
+      <div className="relative mt-8 rounded-lg overflow-hidden">
+        <img
+          src={config.bannerConfig.backgroundImage}
+          alt={config.bannerConfig.title}
+          className="w-full h-64 object-cover"
+        />
+        <div className="absolute inset-0 bg-black" style={{ opacity: config.bannerConfig.overlayOpacity ? config.bannerConfig.overlayOpacity / 100 : 0.5 }} />
+        <div className="absolute inset-0 flex items-center justify-center text-center text-white p-8">
+          <div>
+            <h3 className="text-2xl font-bold mb-2">{config.bannerConfig.title}</h3>
+            <p className="text-lg">{config.bannerConfig.subtitle}</p>
+          </div>
+        </div>
+      </div>
+    )}
+  </div>
+);
+
+const VehiclesPage = ({ config }: { config: WebBookingConfig }) => (
+  <div className="container mx-auto py-12">
+    <h2 className="text-3xl font-bold mb-6" style={{ color: config.primaryColor }}>Nos Véhicules</h2>
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {/* Mock Vehicle Cards */}
+      <div className="border rounded-lg overflow-hidden shadow-md">
+        <img src="https://via.placeholder.com/400x200" alt="Vehicle" className="w-full h-40 object-cover" />
+        <div className="p-4">
+          <h3 className="font-semibold text-lg">Compacte</h3>
+          <p className="text-sm text-gray-600">Idéale pour la ville</p>
+        </div>
+      </div>
+      <div className="border rounded-lg overflow-hidden shadow-md">
+        <img src="https://via.placeholder.com/400x200" alt="Vehicle" className="w-full h-40 object-cover" />
+        <div className="p-4">
+          <h3 className="font-semibold text-lg">Familiale</h3>
+          <p className="text-sm text-gray-600">Spacieuse et confortable</p>
+        </div>
+      </div>
+      <div className="border rounded-lg overflow-hidden shadow-md">
+        <img src="https://via.placeholder.com/400x200" alt="Vehicle" className="w-full h-40 object-cover" />
+        <div className="p-4">
+          <h3 className="font-semibold text-lg">Utilitaire</h3>
+          <p className="text-sm text-gray-600">Pour vos besoins professionnels</p>
+        </div>
+      </div>
+    </div>
+  </div>
+);
+
+const PricingPage = ({ config }: { config: WebBookingConfig }) => (
+  <div className="container mx-auto py-12">
+    <h2 className="text-3xl font-bold mb-6" style={{ color: config.primaryColor }}>Tarifs</h2>
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {/* Mock Pricing Cards */}
+      <div className="border rounded-lg overflow-hidden shadow-md">
+        <div className="p-4">
+          <h3 className="font-semibold text-lg">Compacte</h3>
+          <p className="text-2xl font-bold">{config.primaryColor && <span style={{ color: config.primaryColor }}>35€</span>}/jour</p>
+          <ul className="mt-4 space-y-2">
+            <li className="text-sm text-gray-600">Kilométrage illimité</li>
+            <li className="text-sm text-gray-600">Assurance incluse</li>
+          </ul>
+        </div>
+      </div>
+      <div className="border rounded-lg overflow-hidden shadow-md">
+        <div className="p-4">
+          <h3 className="font-semibold text-lg">Familiale</h3>
+          <p className="text-2xl font-bold">{config.primaryColor && <span style={{ color: config.primaryColor }}>55€</span>}/jour</p>
+          <ul className="mt-4 space-y-2">
+            <li className="text-sm text-gray-600">Kilométrage illimité</li>
+            <li className="text-sm text-gray-600">Siège enfant offert</li>
+          </ul>
+        </div>
+      </div>
+      <div className="border rounded-lg overflow-hidden shadow-md">
+        <div className="p-4">
+          <h3 className="font-semibold text-lg">Utilitaire</h3>
+          <p className="text-2xl font-bold">{config.primaryColor && <span style={{ color: config.primaryColor }}>75€</span>}/jour</p>
+          <ul className="mt-4 space-y-2">
+            <li className="text-sm text-gray-600">200km inclus</li>
+            <li className="text-sm text-gray-600">Assistance 24/7</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+);
+
+const ContactPage = ({ config }: { config: WebBookingConfig }) => (
+  <div className="container mx-auto py-12">
+    <h2 className="text-3xl font-bold mb-6" style={{ color: config.primaryColor }}>Contactez-nous</h2>
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+      <div>
+        <p className="text-gray-700 leading-relaxed mb-4">
+          N'hésitez pas à nous contacter pour toute question ou demande de réservation.
+        </p>
+        <ul className="space-y-2">
+          <li className="text-gray-700">
+            <strong>Adresse:</strong> {config.contactInfo.address}
+          </li>
+          <li className="text-gray-700">
+            <strong>Téléphone:</strong> {config.contactInfo.phone}
+          </li>
+          <li className="text-gray-700">
+            <strong>Email:</strong> {config.contactInfo.email}
+          </li>
+        </ul>
+      </div>
+      <div>
+        {/* Mock Contact Form */}
+        <div className="border rounded-lg p-6">
+          <h3 className="font-semibold text-lg mb-4">Formulaire de contact</h3>
+          <form>
+            <div className="mb-4">
+              <label htmlFor="name" className="block text-sm font-medium text-gray-700">Nom</label>
+              <input type="text" id="name" className="mt-1 p-2 w-full border rounded-md" />
+            </div>
+            <div className="mb-4">
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email</label>
+              <input type="email" id="email" className="mt-1 p-2 w-full border rounded-md" />
+            </div>
+            <div className="mb-4">
+              <label htmlFor="message" className="block text-sm font-medium text-gray-700">Message</label>
+              <textarea id="message" rows={4} className="mt-1 p-2 w-full border rounded-md"></textarea>
+            </div>
+            <button type="submit" className="bg-primary text-white py-2 px-4 rounded-md" style={{ backgroundColor: config.primaryColor }}>Envoyer</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+);
 
 export default WebBookingPreview;

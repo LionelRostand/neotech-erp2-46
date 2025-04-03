@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
@@ -11,6 +11,7 @@ const MediaManager = () => {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState('uploaded');
   const [searchTerm, setSearchTerm] = useState('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   // Mock data for uploaded images
   const [uploadedImages, setUploadedImages] = useState([
@@ -22,27 +23,39 @@ const MediaManager = () => {
     { id: 6, name: 'agency-lyon.jpg', url: '/images/agency2.jpg', size: '1.6 MB', date: '2023-06-01' }
   ]);
 
-  // Mock function for file upload
+  // Function for file upload
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
-      // In a real application, you would upload the file to a server here
-      const file = e.target.files[0];
-      
-      // Create a mock image object
-      const newImage = {
-        id: Date.now(),
-        name: file.name,
-        url: URL.createObjectURL(file), // This creates a temporary local URL for preview
-        size: `${(file.size / (1024 * 1024)).toFixed(2)} MB`,
-        date: new Date().toISOString().split('T')[0]
-      };
-      
-      setUploadedImages([newImage, ...uploadedImages]);
+      // Process each file
+      Array.from(e.target.files).forEach(file => {
+        // Create a mock image object with local URL
+        const newImage = {
+          id: Date.now() + Math.random(),
+          name: file.name,
+          url: URL.createObjectURL(file), // Create a local object URL
+          size: `${(file.size / (1024 * 1024)).toFixed(2)} MB`,
+          date: new Date().toISOString().split('T')[0]
+        };
+        
+        setUploadedImages(prev => [newImage, ...prev]);
+      });
       
       toast({
-        title: "Image téléchargée",
-        description: `${file.name} a été téléchargée avec succès.`,
+        title: "Images téléversées",
+        description: `${e.target.files.length} image(s) ont été téléversées avec succès.`,
+        duration: 3000,
       });
+      
+      // Reset the file input
+      if (e.target) {
+        e.target.value = '';
+      }
+    }
+  };
+
+  const handleBrowseClick = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
     }
   };
 
@@ -53,7 +66,40 @@ const MediaManager = () => {
     toast({
       title: "Image supprimée",
       description: "L'image a été supprimée avec succès.",
+      duration: 3000,
     });
+  };
+
+  // Handle drag and drop
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    e.currentTarget.classList.add('border-primary');
+  };
+  
+  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    e.currentTarget.classList.remove('border-primary');
+  };
+  
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    e.currentTarget.classList.remove('border-primary');
+    
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      // Create a synthetic event for our handler
+      const fileList = e.dataTransfer.files;
+      const syntheticEvent = {
+        target: {
+          files: fileList,
+          value: ''
+        }
+      } as React.ChangeEvent<HTMLInputElement>;
+      
+      handleFileUpload(syntheticEvent);
+    }
   };
 
   // Filter images based on search term
@@ -66,14 +112,14 @@ const MediaManager = () => {
       <div>
         <h3 className="text-lg font-medium mb-4">Gestionnaire de médias</h3>
         <p className="text-sm text-muted-foreground mb-4">
-          Téléchargez et gérez les images qui seront utilisées sur votre site de réservation.
+          Téléversez et gérez les images qui seront utilisées sur votre site de réservation.
         </p>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="mb-4">
-          <TabsTrigger value="uploaded">Images téléchargées</TabsTrigger>
-          <TabsTrigger value="upload">Télécharger une image</TabsTrigger>
+          <TabsTrigger value="uploaded">Images téléversées</TabsTrigger>
+          <TabsTrigger value="upload">Téléverser une image</TabsTrigger>
         </TabsList>
 
         <TabsContent value="uploaded" className="space-y-4">
@@ -89,7 +135,7 @@ const MediaManager = () => {
             </div>
             <Button variant="outline" onClick={() => setActiveTab('upload')}>
               <Upload className="h-4 w-4 mr-2" />
-              Télécharger
+              Téléverser
             </Button>
           </div>
 
@@ -136,21 +182,28 @@ const MediaManager = () => {
         </TabsContent>
 
         <TabsContent value="upload" className="space-y-6">
-          <div className="border-2 border-dashed rounded-lg p-8 text-center">
+          <div 
+            className="border-2 border-dashed rounded-lg p-8 text-center transition-colors"
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+          >
             <div className="flex flex-col items-center">
               <Upload className="h-8 w-8 text-muted-foreground mb-2" />
               <h4 className="text-lg font-medium mb-1">Déposez vos fichiers ici</h4>
               <p className="text-sm text-muted-foreground mb-4">ou cliquez pour parcourir</p>
-              <Label htmlFor="file-upload" className="cursor-pointer">
-                <Input 
-                  id="file-upload" 
-                  type="file" 
-                  accept="image/*" 
-                  className="hidden" 
-                  onChange={handleFileUpload}
-                />
-                <Button type="button" variant="outline">Parcourir les fichiers</Button>
-              </Label>
+              <input 
+                id="file-upload" 
+                ref={fileInputRef}
+                type="file" 
+                accept="image/*" 
+                className="hidden" 
+                onChange={handleFileUpload}
+                multiple
+              />
+              <Button type="button" variant="outline" onClick={handleBrowseClick}>
+                Parcourir les fichiers
+              </Button>
             </div>
           </div>
 

@@ -1,17 +1,19 @@
-import React from 'react';
+
+import React, { useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { WebBookingConfig, MenuItem, BannerConfigExtended } from '../types';
+import { WebBookingConfig, MenuItem } from '../types/web-booking-types';
 import { useToast } from '@/hooks/use-toast';
 import MenuEditor from './MenuEditor';
 import BannerEditor from './BannerEditor';
 
 const SettingsForm = () => {
   const { toast } = useToast();
+  const logoFileInputRef = useRef<HTMLInputElement>(null);
 
   // Sample initial config
   const [config, setConfig] = React.useState<WebBookingConfig>({
@@ -101,13 +103,37 @@ const SettingsForm = () => {
     handleChange('menuItems', items);
   };
 
-  const handleBannerChange = (bannerConfig: BannerConfigExtended) => {
+  const handleBannerChange = (bannerConfig: any) => {
     handleChange('bannerConfig', bannerConfig);
+  };
+  
+  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      const file = e.target.files[0];
+      const logoUrl = URL.createObjectURL(file);
+      
+      handleChange('logo', logoUrl);
+      
+      toast({
+        title: "Logo téléversé",
+        description: `${file.name} a été défini comme logo du site.`,
+        duration: 3000,
+      });
+    }
+  };
+  
+  const triggerLogoFileInput = () => {
+    if (logoFileInputRef.current) {
+      logoFileInputRef.current.click();
+    }
   };
 
   const handleSave = () => {
     // In a real application, this would save to a backend
     console.log("Saving configuration:", config);
+    
+    // Save to localStorage for persistence
+    localStorage.setItem('web-booking-config', JSON.stringify(config));
     
     toast({
       title: "Configuration sauvegardée",
@@ -140,15 +166,25 @@ const SettingsForm = () => {
             </div>
             
             <div>
-              <Label htmlFor="logo">Logo (URL)</Label>
+              <Label htmlFor="logo">Logo</Label>
               <div className="flex mt-1">
                 <Input 
                   id="logo" 
                   value={config.logo || ''}
                   onChange={(e) => handleChange('logo', e.target.value)}
                   className="flex-1" 
+                  placeholder="URL du logo ou téléverser une image"
                 />
-                <Button variant="outline" className="ml-2">Parcourir</Button>
+                <input 
+                  type="file" 
+                  ref={logoFileInputRef}
+                  className="hidden" 
+                  accept="image/*"
+                  onChange={handleLogoUpload}
+                />
+                <Button variant="outline" className="ml-2" onClick={triggerLogoFileInput}>
+                  Parcourir
+                </Button>
               </div>
               {config.logo && (
                 <div className="mt-2 p-2 border rounded inline-block">

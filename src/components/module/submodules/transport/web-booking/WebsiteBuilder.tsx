@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+
+import React, { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
-import { Eye, Save, Edit, Settings, Image, Undo, Redo, MessageSquare, Code } from 'lucide-react';
+import { Eye, Save, Edit, Settings, Image, Undo, Redo, MessageSquare, Code, Globe } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import WebBookingPreview from './WebBookingPreview';
 import WebBookingEditorSidebar from './WebBookingEditorSidebar';
@@ -14,6 +15,7 @@ import DevModePanel from '../../website/editor/DevModePanel';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { WebBookingConfig } from '../types';
+import PublishDialog from './PublishDialog';
 
 const WebsiteBuilder: React.FC = () => {
   const [activeTab, setActiveTab] = useState('design');
@@ -21,6 +23,9 @@ const WebsiteBuilder: React.FC = () => {
   const [savedMessage, setSavedMessage] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(true);
   const [showDevMode, setShowDevMode] = useState(false);
+  const [isPublishDialogOpen, setIsPublishDialogOpen] = useState(false);
+  const [isPublished, setIsPublished] = useState(false);
+  const [publishedUrl, setPublishedUrl] = useState('');
   const { toast } = useToast();
   
   // Sample initial config for the website
@@ -90,14 +95,28 @@ const WebsiteBuilder: React.FC = () => {
       duration: 3000,
     });
     setTimeout(() => setSavedMessage(null), 3000);
+    
+    // Simuler la sauvegarde dans un stockage persistant
+    localStorage.setItem('web-booking-config', JSON.stringify(webConfig));
   };
 
   const handlePublish = () => {
+    setIsPublishDialogOpen(true);
+  };
+
+  const completePublish = () => {
+    // Générer une URL publique (simulation)
+    const publicUrl = `https://rentacar-${Math.floor(Math.random() * 1000)}.booking-demo.com`;
+    setPublishedUrl(publicUrl);
+    setIsPublished(true);
+    
     toast({
       title: "Site publié",
       description: "Votre site de réservation est maintenant accessible au public.",
       duration: 3000,
     });
+    
+    setIsPublishDialogOpen(false);
   };
 
   const toggleDevMode = () => {
@@ -160,8 +179,24 @@ const WebsiteBuilder: React.FC = () => {
             <Button onClick={handlePublish}>
               Publier
             </Button>
+            
+            {isPublished && (
+              <Button variant="outline" size="sm" onClick={() => window.open(publishedUrl, '_blank')}>
+                <Globe className="h-4 w-4 mr-1" />
+                Voir le site
+              </Button>
+            )}
           </div>
         </div>
+
+        {/* Publier le site dialog */}
+        <PublishDialog 
+          isOpen={isPublishDialogOpen} 
+          onClose={() => setIsPublishDialogOpen(false)}
+          onPublish={completePublish}
+          publishedUrl={publishedUrl}
+          isPublished={isPublished}
+        />
 
         {isEditing ? (
           <div className="border rounded-lg overflow-hidden h-[calc(100vh-280px)]">
