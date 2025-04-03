@@ -67,6 +67,7 @@ const ModuleCard: React.FC<ModuleCardProps> = ({
               onClick={() => setShowDashboard(!showDashboard)}
               className="ml-auto h-7 w-7 p-0 mr-1"
               title="Aperçu du tableau de bord"
+              disabled={module.configCompleted}
             >
               <LayoutDashboard size={16} />
             </Button>
@@ -77,6 +78,7 @@ const ModuleCard: React.FC<ModuleCardProps> = ({
                 size="sm" 
                 onClick={() => onToggleExpansion(module.id)}
                 className="ml-auto h-7 w-7 p-0"
+                disabled={module.configCompleted}
               >
                 {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
               </Button>
@@ -87,16 +89,16 @@ const ModuleCard: React.FC<ModuleCardProps> = ({
       <CardContent className="py-3 px-4 flex-1 text-sm">
         <p className="text-sm text-gray-600">{module.description}</p>
         
-        {/* Dashboard Preview */}
-        {showDashboard && (
+        {/* Dashboard Preview - only show if not config completed */}
+        {showDashboard && !module.configCompleted && (
           <div className="mt-3 border-t pt-3">
             <h3 className="font-medium mb-2 text-sm">Aperçu du tableau de bord:</h3>
             <ModuleDashboardPreview moduleId={module.id} />
           </div>
         )}
         
-        {/* Sous-modules (visible uniquement si le module est installé et développé) */}
-        {isInstalled && isExpanded && module.submodules && (
+        {/* Sous-modules (visible uniquement si le module est installé et développé et pas configuration complétée) */}
+        {isInstalled && isExpanded && module.submodules && !module.configCompleted && (
           <div className="mt-3 border-t pt-3">
             <h3 className="font-medium mb-2 text-sm">Fonctionnalités disponibles:</h3>
             <div className="grid grid-cols-1 gap-1.5">
@@ -114,37 +116,37 @@ const ModuleCard: React.FC<ModuleCardProps> = ({
       </CardContent>
       <CardFooter className="bg-gray-50 flex justify-between py-2 px-4">
         {isInstalled ? (
-          <div className="w-full flex items-center justify-between">
+          <div className="w-full flex items-center justify-between flex-wrap gap-2">
             <Button variant="ghost" size="sm" className="text-green-600 h-7 text-xs" disabled>
               <Check className="mr-1 h-3 w-3" />
               Installé
             </Button>
             
-            <div className="space-x-2 flex items-center">
+            <div className="flex items-center gap-2 flex-wrap">
               {/* Configuration completion toggle */}
               <div className="flex items-center gap-2">
                 <Settings size={14} className="text-gray-500" />
-                <span className="text-xs text-gray-600">Configuration terminée:</span>
+                <span className="text-xs text-gray-600 whitespace-nowrap">Configuration terminée:</span>
                 <Switch 
                   checked={module.configCompleted || false} 
                   onCheckedChange={handleConfigToggle}
-                  disabled={module.configCompleted}
                   aria-label="Marquer la configuration comme terminée"
                 />
               </div>
               
-              {/* Uninstall button */}
-              <Button 
-                variant="outline" 
-                size="sm"
-                className="text-red-600 hover:text-red-700 hover:bg-red-50 h-7 text-xs"
-                onClick={() => onUninstall(module.id)}
-                title="Désinstaller le module"
-                disabled={module.configCompleted}
-              >
-                <Trash2 className="mr-1 h-3 w-3" />
-                Désinstaller
-              </Button>
+              {/* Uninstall button - only show if config not completed */}
+              {!module.configCompleted && (
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  className="text-red-600 hover:text-red-700 hover:bg-red-50 h-7 text-xs whitespace-nowrap"
+                  onClick={() => onUninstall(module.id)}
+                  title="Désinstaller le module"
+                >
+                  <Trash2 className="mr-1 h-3 w-3" />
+                  Désinstaller
+                </Button>
+              )}
             </div>
           </div>
         ) : (
