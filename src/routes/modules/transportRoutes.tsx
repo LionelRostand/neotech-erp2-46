@@ -7,6 +7,8 @@ import TransportSettingsWrapper from '@/components/module/submodules/transport/s
 import SelectPatch from '@/components/module/submodules/transport/patches/select-patch';
 import GeolocationMapPatch from '@/components/module/submodules/transport/patches/geolocation-patch';
 import LeafletCssPatch from '@/components/module/submodules/transport/patches/leaflet-css-patch';
+import WebBookingPreview from '@/components/module/submodules/transport/web-booking/WebBookingPreview';
+import NotFound from '@/pages/NotFound';
 
 // Composant d'enveloppe pour appliquer SelectPatch et map patches à chaque sous-module
 const WithPatches: React.FC<{ children: React.ReactNode }> = ({ children }) => (
@@ -32,5 +34,14 @@ export const TransportRoutes = (
     <Route path="loyalty" element={<WithPatches><SubmodulePage moduleId={7} submoduleId="transport-loyalty" /></WithPatches>} />
     <Route path="web-booking" element={<WithPatches><SubmodulePage moduleId={7} submoduleId="transport-web-booking" /></WithPatches>} />
     <Route path="settings" element={<TransportSettingsWrapper />} />
+    
+    {/* Web Booking Site Preview Routes - catch any public site routes in preview */}
+    <Route path="web-booking/preview" element={<WithPatches><WebBookingPreview isEditing={false} preview={true} /></WithPatches>} />
+    <Route path="web-booking/preview/vehicules" element={<WithPatches><WebBookingPreview isEditing={false} preview={true} currentPage="vehicules" /></WithPatches>} />
+    <Route path="web-booking/preview/tarifs" element={<WithPatches><WebBookingPreview isEditing={false} preview={true} currentPage="tarifs" /></WithPatches>} />
+    <Route path="web-booking/preview/contact" element={<WithPatches><WebBookingPreview isEditing={false} preview={true} currentPage="contact" /></WithPatches>} />
+    
+    {/* Catch any other transport paths with a 404 */}
+    <Route path="*" element={<NotFound />} />
   </Route>
 );

@@ -1,5 +1,6 @@
+
 import React from 'react';
-import { Routes } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 
 // Import route modules
 import { IndexRoutes } from './modules/indexRoutes';
@@ -18,6 +19,7 @@ import { RentalRoutes } from './modules/rentalRoutes';
 import { TransportRoutes } from './modules/transportRoutes';
 import { OtherModulesRoutes } from './modules/otherModulesRoutes';
 import { WebsiteRoutes } from './modules/websiteRoutes';
+import NotFound from '@/pages/NotFound';
 
 const AppRoutes = () => (
   <Routes>
@@ -46,6 +48,9 @@ const AppRoutes = () => (
     
     {/* Other module routes */}
     {OtherModulesRoutes}
+    
+    {/* Catch-all route for 404s */}
+    <Route path="*" element={<NotFound />} />
   </Routes>
 );
 
