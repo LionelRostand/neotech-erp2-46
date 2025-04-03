@@ -56,7 +56,18 @@ export const COLLECTIONS = {
     INSURANCE: 'health_insurance',
     BILLING: 'health_billing',
     STAFF: 'health_staff',
-    DOCTORS: 'health_doctors'
+    DOCTORS: 'health_doctors',
+    NURSES: 'health_nurses',
+    MEDICAL_RECORDS: 'health_medical_records',
+    PRESCRIPTIONS: 'health_prescriptions',
+    PHARMACY: 'health_pharmacy',
+    ADMISSIONS: 'health_admissions',
+    ROOMS: 'health_rooms',
+    LABORATORY: 'health_laboratory',
+    SETTINGS: 'health_settings',
+    STATS: 'health_stats',
+    INTEGRATIONS: 'health_integrations',
+    ASSETS: 'health_assets'
   },
   
   LIBRARY: {

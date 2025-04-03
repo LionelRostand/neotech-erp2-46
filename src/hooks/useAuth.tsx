@@ -68,7 +68,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                 console.log("Using cached user data");
               }
             }
-          }, 3, `auth_get_user_${user.uid}`);
+          });
           
         } catch (error) {
           console.error("Erreur lors de la récupération des données utilisateur", error);

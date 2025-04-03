@@ -32,6 +32,24 @@ export const isNetworkError = (error: any): boolean => {
 };
 
 /**
+ * Vérifie si une erreur est liée à une limitation de débit (rate limit)
+ */
+export const isRateLimitError = (error: any): boolean => {
+  if (!error) return false;
+  
+  const errorCode = error.code || '';
+  const errorMessage = error.message || '';
+  
+  return (
+    errorCode.includes('resource-exhausted') ||
+    errorMessage.includes('quota') ||
+    errorMessage.includes('rate limit') ||
+    errorMessage.includes('too many requests') ||
+    (errorCode.includes('429') || errorMessage.includes('429')) // HTTP 429 Too Many Requests
+  );
+};
+
+/**
  * Active la connexion réseau Firestore
  * @returns Promise<boolean> - true si réussi
  */
