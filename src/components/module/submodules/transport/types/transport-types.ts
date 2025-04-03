@@ -1,12 +1,80 @@
 
 // Re-export and types that need to be commonly accessible
 import { TransportService, TransportServiceDetails } from './service-types';
+import { 
+  TransportVehicle as VehicleType, 
+  MaintenanceRecord as MaintenanceRecordType,
+  IncidentRecord as IncidentRecordType
+} from './vehicle-types';
 
 // Export service types using export type syntax
 export type { TransportService, TransportServiceDetails };
 
 // Re-export utility functions
 export { stringToService, serviceToString } from '../utils/service-utils';
+
+// Define TransportDriver interface
+export interface TransportDriver {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  licenseType: string;
+  licenseNumber: string;
+  licenseExpiry: string;
+  status: 'active' | 'inactive' | 'on-trip' | 'on-break';
+  available: boolean;
+  rating: number;
+  hireDate: string;
+  photo?: string;
+  preferredVehicleType?: string;
+  notes: any[];
+  address?: string;
+  emergencyContact?: {
+    name: string;
+    relationship: string;
+    phone: string;
+  };
+  performance?: {
+    completedTrips: number;
+    cancelledTrips: number;
+    totalRatings: number;
+    averageRating: number;
+    totalHours: number;
+    totalDistance: number;
+  };
+  [key: string]: any;
+}
+
+// Export TransportVehicle type compatible with both implementations
+export interface TransportVehicle extends VehicleType {
+  status: 'active' | 'maintenance' | 'inactive' | 'out-of-service' | 'reserved' | 'available';
+}
+
+// Export TransportVehicleWithLocation type
+export interface TransportVehicleWithLocation extends TransportVehicle {
+  driverName?: string;
+  location: {
+    vehicleId: string;
+    coordinates: { latitude: number; longitude: number };
+    timestamp: string;
+    status: string;
+    heading: number;
+    speed: number;
+  }
+}
+
+// Export IncidentRecord type
+export interface IncidentRecord extends IncidentRecordType {
+  status: 'reported' | 'investigating' | 'resolved' | 'open' | 'closed';
+  severity: 'low' | 'medium' | 'high' | 'critical';
+  location?: { latitude: number; longitude: number } | string;
+}
+
+// Export MaintenanceRecord type
+export interface MaintenanceRecord extends MaintenanceRecordType {
+  type: 'regular' | 'emergency' | 'inspection' | 'repair';
+}
 
 // Any other types specific to transport module can be defined here
 export interface TransportSettings {
@@ -19,75 +87,4 @@ export interface TransportSettings {
   };
   defaultCurrency: string;
   taxRate: number;
-}
-
-// Export TransportVehicle type
-export interface TransportVehicle {
-  id: string;
-  name: string;
-  type: string;
-  licensePlate: string;
-  status: 'active' | 'maintenance' | 'inactive';
-  available: boolean;
-  capacity: number;
-  notes: any[];
-}
-
-// Export TransportVehicleWithLocation type
-export interface TransportVehicleWithLocation extends TransportVehicle {
-  location: {
-    vehicleId: string;
-    coordinates: { latitude: number; longitude: number };
-    timestamp: string;
-    status: string;
-    heading: number;
-    speed: number;
-  }
-}
-
-// Export IncidentRecord type
-export interface IncidentRecord {
-  id: string;
-  vehicleId: string;
-  date: string;
-  description: string;
-  severity: 'low' | 'medium' | 'high' | 'critical';
-  status: 'reported' | 'investigating' | 'resolved';
-  location?: { latitude: number; longitude: number };
-  reportedBy: string;
-}
-
-// Export MaintenanceRecord type
-export interface MaintenanceRecord {
-  id: string;
-  vehicleId: string;
-  date: string;
-  description: string;
-  type: 'regular' | 'emergency' | 'inspection';
-  cost: number;
-  performedBy: string;
-  notes?: string;
-}
-
-// Export TransportReservation type
-export interface TransportReservation {
-  id: string;
-  clientId: string;
-  clientName: string;
-  driverId?: string;
-  driverName?: string;
-  vehicleId?: string;
-  vehicleName?: string;
-  status: 'pending' | 'confirmed' | 'in-progress' | 'completed' | 'cancelled';
-  pickupLocation: string;
-  dropoffLocation: string;
-  pickupTime: string;
-  estimatedDropoffTime: string;
-  actualDropoffTime?: string;
-  price: number;
-  paymentStatus: 'pending' | 'paid' | 'refunded' | 'cancelled';
-  paymentMethod?: string;
-  notes?: string | any[];
-  createdAt: string;
-  updatedAt: string;
 }

@@ -1,48 +1,24 @@
 
-// Définitions de types supplémentaires pour les fonctionnalités de géolocalisation
-
-import { Coordinates } from './map-types';
-
-export interface RouteSegment {
-  startPoint: Coordinates;
-  endPoint: Coordinates;
-  distance: number;
-  duration: number;
-  polyline: string;
-  trafficLevel?: 'low' | 'moderate' | 'high' | 'severe';
+// geolocation-types.ts
+export interface Coordinates {
+  latitude: number;
+  longitude: number;
 }
 
-export interface RouteOptions {
-  avoidTolls?: boolean;
-  avoidHighways?: boolean;
-  avoidFerries?: boolean;
-  optimizeWaypoints?: boolean;
-  trafficAware?: boolean;
-  departureTime?: Date | 'now';
-  arrivalTime?: Date;
-  transportMode?: 'car' | 'truck' | 'bicycle' | 'pedestrian';
-}
-
-export interface GeocodingResult {
-  formattedAddress: string;
+export interface VehicleLocation {
+  vehicleId: string;
   coordinates: Coordinates;
-  placeId?: string;
-  components?: {
-    street?: string;
-    houseNumber?: string;
-    neighborhood?: string;
-    locality?: string;
-    city?: string;
-    county?: string;
-    region?: string;
-    postalCode?: string;
-    country?: string;
-    countryCode?: string;
-  };
+  timestamp: string;
+  status: string;
+  heading: number;
+  speed: number;
 }
 
-export interface MapExtensionRequest {
-  type: 'traffic' | 'satellite' | 'terrain' | 'heatmap';
-  active: boolean;
-  config?: Record<string, any>;
+export interface TransportVehicleLocation {
+  vehicleId: string;
+  coordinates: Coordinates;
+  timestamp: string;
+  status: string;
+  heading: number;
+  speed: number;
 }

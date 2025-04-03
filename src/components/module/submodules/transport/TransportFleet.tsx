@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -5,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CarFront, Plus, Search, Filter, FileText, Wrench, AlertTriangle } from "lucide-react";
-import { TransportVehicle, MaintenanceRecord, IncidentRecord } from './types';
+import { TransportVehicle, MaintenanceRecord, IncidentRecord } from './types/vehicle-types';
 import VehiclesTable from './fleet/VehiclesTable';
 import VehicleDetails from './fleet/VehicleDetails';
 import MaintenanceHistoryList from './fleet/MaintenanceHistoryList';
@@ -121,6 +122,7 @@ const mockMaintenanceHistory: MaintenanceRecord[] = [
     description: "Changement d'huile et filtres",
     cost: 280,
     provider: "Garage Central",
+    performedBy: "John Smith",
     nextMaintenance: "2023-11-20",
     resolved: true,
     mileage: 25000,
@@ -134,6 +136,7 @@ const mockMaintenanceHistory: MaintenanceRecord[] = [
     description: "Problème de freins",
     cost: 550,
     provider: "Garage Express",
+    performedBy: "Mike Johnson",
     nextMaintenance: "2024-01-12",
     resolved: true,
     mileage: 42000,
@@ -147,6 +150,7 @@ const mockMaintenanceHistory: MaintenanceRecord[] = [
     description: "Contrôle technique",
     cost: 120,
     provider: "Contrôle Auto",
+    performedBy: "Alice Brown",
     nextMaintenance: "2023-12-05",
     resolved: true,
     mileage: 35000,
@@ -160,6 +164,7 @@ const mockMaintenanceHistory: MaintenanceRecord[] = [
     description: "Problème de batterie",
     cost: 1200,
     provider: "ElectroCar",
+    performedBy: "Robert Davis",
     nextMaintenance: "2024-03-10",
     resolved: false,
     mileage: 28000,

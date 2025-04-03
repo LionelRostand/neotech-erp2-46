@@ -33,7 +33,7 @@ export interface VehicleNote {
 export interface MaintenanceRecord {
   id: string;
   vehicleId: string;
-  type: 'regular' | 'repair' | 'inspection';
+  type: 'regular' | 'repair' | 'inspection' | 'emergency';
   date: string;
   description: string;
   cost: number;
@@ -43,6 +43,7 @@ export interface MaintenanceRecord {
   resolved: boolean;
   mileage: number;
   technician: string;
+  notes?: string;
 }
 
 export interface IncidentRecord {
@@ -57,7 +58,7 @@ export interface IncidentRecord {
   repairCost?: number;
   insuranceClaim?: boolean;
   resolved?: boolean;
-  status: 'open' | 'investigating' | 'resolved' | 'closed';
+  status: 'open' | 'investigating' | 'resolved' | 'closed' | 'reported';
   type: string;
   location: string;
   reportedBy: string;

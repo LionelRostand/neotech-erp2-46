@@ -3,21 +3,18 @@
 export interface ServiceOption {
   id: string;
   name: string;
-  description: string;
+  description?: string;
   price: number;
-  available: boolean;
-  vehicleTypes: string[];
-  category: string;
-  duration: number;
+  isDefault?: boolean;
 }
 
 export interface ServiceAvailability {
+  id: string;
   serviceId: string;
-  dayOfWeek: number;
+  dayOfWeek: 0 | 1 | 2 | 3 | 4 | 5 | 6;
   startTime: string;
   endTime: string;
-  available: boolean;
-  maxBookings: number;
+  isAvailable: boolean;
 }
 
 export interface ServicePricing {
@@ -25,45 +22,41 @@ export interface ServicePricing {
   serviceId: string;
   name: string;
   basePrice: number;
-  distancePricing?: {
-    ratePerKm: number;
-    minDistance?: number;
-    maxDistance?: number;
-  };
-  timePricing?: {
-    ratePerHour: number;
-    minimumHours?: number;
-  };
-  extras?: {
-    id: string;
-    name: string;
-    price: number;
-    description?: string;
-  }[];
+  pricePerKm?: number;
+  pricePerMin?: number;
+  minDistance?: number;
+  maxDistance?: number;
+  discountPercent?: number;
+  isDefault?: boolean;
 }
 
 export interface TransportService {
   id: string;
   name: string;
   description: string;
-  basePrice: number;
-  category: string;
+  type: string;
+  imageUrl?: string;
   isActive: boolean;
-  vehicleTypes: string[];
-  maxPassengers: number;
-  maxLuggage: number;
-  features: string[];
-  cancellationPolicy: string;
-  availabilityHours?: {
-    dayOfWeek: number;
-    startTime: string;
-    endTime: string;
-  }[];
-  pricing?: ServicePricing;
-  [key: string]: any;
+  pricing: ServicePricing;
+  availability?: ServiceAvailability[];
+  options?: ServiceOption[];
+  vehicleTypes?: string[];
+  createdAt: string;
+  updatedAt: string;
 }
 
-export interface TransportServiceDetails extends TransportService {
-  availability: ServiceAvailability[];
+// Fix the extension of TransportServiceDetails
+export interface TransportServiceDetails {
+  id: string;
+  name: string;
+  description: string;
+  type: string;
+  imageUrl?: string;
+  isActive: boolean;
   pricing: ServicePricing[];
+  availability?: ServiceAvailability[];
+  options?: ServiceOption[];
+  vehicleTypes?: string[];
+  createdAt: string;
+  updatedAt: string;
 }

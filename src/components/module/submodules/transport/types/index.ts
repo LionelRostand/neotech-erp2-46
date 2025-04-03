@@ -5,14 +5,8 @@ export * from './client-types';
 export * from './geolocation-types';
 export * from './planning-types';
 
-// Export driver types
-export type {
-  TransportDriver,
-  DriverNote,
-  DriverSchedule,
-  DriverAvailabilityPeriod,
-  DriverRatingEntry
-} from './driver-types';
+// Export driver types from transport-types
+export { TransportDriver } from './transport-types';
 
 // Export vehicle types
 export type {
@@ -24,10 +18,13 @@ export type {
   MaintenanceScheduleWithTechnician
 } from './vehicle-types';
 
-// Export reservation types
-export type {
-  TransportReservation
+// Export reservation types with explicit naming to avoid ambiguity
+export type { 
+  TransportReservation,
+  Reservation,
+  TransportReservationStatus
 } from './reservation-types';
+export { getAddressString } from './reservation-types';
 
 // Export service types
 export type {
@@ -42,7 +39,7 @@ export type {
 export type {
   MapExtensionRequest,
   TransportVehicleWithLocation
-} from './map-types';
+} from './transport-types';
 
 // Export web booking types
 export * from './web-booking-types';

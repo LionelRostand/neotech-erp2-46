@@ -1,5 +1,5 @@
-
-import { Coordinates, VehicleLocation, TransportVehicleLocation, TransportVehicleWithLocation } from '../types';
+import { Coordinates, VehicleLocation, TransportVehicleLocation } from '../types/geolocation-types';
+import { TransportVehicleWithLocation } from '../types';
 
 // Normalize coordinates from different sources to a standard Coordinates format
 export function normalizeCoordinates(location: VehicleLocation | { lat: number; lng: number; } | TransportVehicleLocation): Coordinates {

@@ -1,4 +1,3 @@
-
 import { addDays, addHours, format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { TransportVehicle } from '../types/vehicle-types';
@@ -133,12 +132,12 @@ export const mockDrivers: TransportDriver[] = [
     phone: "+33612345678",
     licenseNumber: "12AB34567",
     licenseExpiry: "2025-06-30",
-    status: "active", // Changed from "available" to "active"
+    status: "active",
     rating: 4.8,
     notes: [],
-    address: "15 Rue de la Paix, 75001 Paris, France", // Changed from object to string
+    address: "15 Rue de la Paix, 75001 Paris, France",
     hireDate: "2020-03-15",
-    assignedVehicleId: "v1" // Changed from vehicleId to assignedVehicleId
+    assignedVehicleId: "v1"
   },
   {
     id: "d2",
@@ -148,12 +147,12 @@ export const mockDrivers: TransportDriver[] = [
     phone: "+33623456789",
     licenseNumber: "23CD45678",
     licenseExpiry: "2024-11-15",
-    status: "driving", // Changed from "on-duty" to "driving"
+    status: "driving",
     rating: 4.9,
     notes: [],
-    address: "27 Avenue des Champs-Élysées, 75008 Paris, France", // Changed from object to string
+    address: "27 Avenue des Champs-Élysées, 75008 Paris, France",
     hireDate: "2019-07-10",
-    assignedVehicleId: "v3" // Changed from vehicleId to assignedVehicleId
+    assignedVehicleId: "v3"
   },
   {
     id: "d3",
@@ -166,9 +165,9 @@ export const mockDrivers: TransportDriver[] = [
     status: "off-duty",
     rating: 4.7,
     notes: [],
-    address: "8 Rue de Rivoli, 75004 Paris, France", // Changed from object to string
+    address: "8 Rue de Rivoli, 75004 Paris, France",
     hireDate: "2021-01-05",
-    assignedVehicleId: "v5" // Changed from vehicleId to assignedVehicleId
+    assignedVehicleId: "v5"
   }
 ];
 
@@ -184,16 +183,8 @@ export const mockReservations: TransportReservation[] = [
     time: "14:00",
     pickup: "15 Rue de la Paix, Paris",
     dropoff: "Charles de Gaulle Airport, Terminal 2E",
-    pickupLocation: {
-      address: "15 Rue de la Paix, Paris",
-      lat: 48.8688,
-      lng: 2.3295
-    },
-    dropoffLocation: {
-      address: "Charles de Gaulle Airport, Terminal 2E",
-      lat: 49.0097,
-      lng: 2.5479
-    },
+    pickupLocation: "15 Rue de la Paix, Paris",
+    dropoffLocation: "Charles de Gaulle Airport, Terminal 2E",
     status: "confirmed",
     paymentStatus: "paid",
     price: 320,
@@ -210,18 +201,10 @@ export const mockReservations: TransportReservation[] = [
     time: "10:30",
     pickup: "Aéroport CDG Terminal 2E, Paris",
     dropoff: "25 rue du Faubourg Saint-Honoré, 75008 Paris",
-    pickupLocation: {
-      address: "Aéroport CDG Terminal 2E, Paris",
-      lat: 49.0097,
-      lng: 2.5479
-    },
-    dropoffLocation: {
-      address: "25 rue du Faubourg Saint-Honoré, 75008 Paris",
-      lat: 48.8708,
-      lng: 2.3176
-    },
+    pickupLocation: "Aéroport CDG Terminal 2E, Paris",
+    dropoffLocation: "25 rue du Faubourg Saint-Honoré, 75008 Paris",
     status: "pending",
-    paymentStatus: "unpaid",
+    paymentStatus: "pending",
     price: 120,
     isPaid: false,
     notes: "Besoin d'un siège enfant"
@@ -289,8 +272,8 @@ export const generateScheduleData = () => {
         startTime: format(startTime, 'HH:mm'),
         endTime: format(endTime, 'HH:mm'),
         status: Math.random() > 0.9 ? 'pending' : 'confirmed',
-        vehicleId: driver.assignedVehicleId, // Changed from vehicleId to assignedVehicleId
-        vehicleName: mockVehicles.find(v => v.id === driver.assignedVehicleId)?.name || 'Non assigné' // Changed from vehicleId to assignedVehicleId
+        vehicleId: driver.assignedVehicleId,
+        vehicleName: mockVehicles.find(v => v.id === driver.assignedVehicleId)?.name || 'Non assigné'
       });
     }
   }
