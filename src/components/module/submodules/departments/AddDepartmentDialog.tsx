@@ -6,10 +6,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Employee } from '@/types/employee';
 import { DepartmentFormData, departmentColors } from './types';
 import EmployeesList from './EmployeesList';
-import { employees } from '@/data/employees';
+import { useEmployeeData } from '@/hooks/useEmployeeData';
 
 interface AddDepartmentDialogProps {
   formData: DepartmentFormData;
@@ -36,6 +35,9 @@ const AddDepartmentDialog: React.FC<AddDepartmentDialogProps> = ({
   onClose,
   onSave,
 }) => {
+  // Utiliser les données des employés depuis Firebase
+  const { employees, isLoading } = useEmployeeData();
+
   return (
     <DialogContent className="sm:max-w-[600px]">
       <DialogHeader>
@@ -100,11 +102,15 @@ const AddDepartmentDialog: React.FC<AddDepartmentDialogProps> = ({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">Aucun responsable</SelectItem>
-                  {employees.map((employee) => (
-                    <SelectItem key={employee.id} value={employee.id}>
-                      {employee.firstName} {employee.lastName}
-                    </SelectItem>
-                  ))}
+                  {isLoading ? (
+                    <SelectItem value="loading" disabled>Chargement...</SelectItem>
+                  ) : (
+                    employees?.map((employee) => (
+                      <SelectItem key={employee.id} value={employee.id}>
+                        {employee.firstName} {employee.lastName}
+                      </SelectItem>
+                    ))
+                  )}
                 </SelectContent>
               </Select>
             </div>
@@ -135,7 +141,7 @@ const AddDepartmentDialog: React.FC<AddDepartmentDialogProps> = ({
         
         <TabsContent value="department-employees" className="py-4">
           <EmployeesList 
-            employees={employees}
+            employees={employees || []}
             selectedEmployees={selectedEmployees}
             onEmployeeSelection={onEmployeeSelection}
             id="add"

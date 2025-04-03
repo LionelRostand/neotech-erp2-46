@@ -17,7 +17,7 @@ import EmployeesRecruitment from '../EmployeesRecruitment';
 import EmployeesReports from '../EmployeesReports';
 import EmployeesAlerts from '../EmployeesAlerts';
 import EmployeesSettings from '../EmployeesSettings';
-import EmployeesDepartments from '../departments/EmployeesDepartments';
+import EmployeesDepartments from '../EmployeesDepartments';
 import EmployeesHierarchy from '../EmployeesHierarchy';
 import EmployeesCompanies from '../employees/EmployeesCompanies';
 import SalarySlips from '../salaries/SalarySlips';
