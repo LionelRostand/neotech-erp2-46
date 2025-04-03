@@ -3,15 +3,16 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { TimeReport } from '@/types/timesheet';
 import { Plus, RefreshCw } from 'lucide-react';
 import { useTimeSheetData } from '@/hooks/useTimeSheetData';
 import TimesheetTable from './timesheet/TimesheetTable';
 import { toast } from 'sonner';
+import CreateTimesheetDialog from './timesheet/CreateTimesheetDialog';
 
 const EmployeesTimesheet: React.FC = () => {
   const [activeTab, setActiveTab] = useState<string>("all");
   const { timeSheets, timesheetsByStatus, isLoading } = useTimeSheetData();
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
   
   const handleViewTimesheet = (id: string) => {
     toast.info("Visualisation de la feuille de temps " + id);
@@ -39,8 +40,7 @@ const EmployeesTimesheet: React.FC = () => {
   };
   
   const handleCreateNew = () => {
-    toast.info("Création d'une nouvelle feuille de temps");
-    // Implémentation à venir: Ouvrir un formulaire de création
+    setShowCreateDialog(true);
   };
   
   return (
@@ -159,6 +159,13 @@ const EmployeesTimesheet: React.FC = () => {
           />
         </TabsContent>
       </Tabs>
+      
+      {/* Dialog for creating a new timesheet */}
+      <CreateTimesheetDialog 
+        open={showCreateDialog} 
+        onOpenChange={setShowCreateDialog}
+        onSuccess={handleRefresh}
+      />
     </div>
   );
 };
