@@ -1,21 +1,30 @@
-
 export interface TransportVehicle {
   id: string;
   name: string;
   type: string;
-  model: string;
-  make: string;
-  year: number;
+  model?: string;
+  make?: string;
+  year?: number;
   licensePlate: string;
   capacity: number;
   status: 'active' | 'maintenance' | 'out-of-service' | 'reserved' | 'available' | 'inactive';
   available: boolean;
-  location: string;
+  location?: string;
   notes: VehicleNote[];
-  maintenanceSchedule: MaintenanceRecord[];
-  incidentRecords: IncidentRecord[];
-  createdAt: string;
-  updatedAt: string;
+  maintenanceSchedule?: MaintenanceRecord[];
+  incidentRecords?: IncidentRecord[];
+  createdAt?: string;
+  updatedAt?: string;
+  purchaseDate?: string;
+  lastServiceDate?: string;
+  nextServiceDate?: string;
+  mileage?: number;
+  insuranceInfo?: {
+    provider: string;
+    policyNumber: string;
+    expiryDate: string;
+  };
+  driverName?: string;
 }
 
 export interface VehicleNote {
@@ -28,23 +37,38 @@ export interface VehicleNote {
 
 export interface MaintenanceRecord {
   id: string;
-  date: string;
+  vehicleId: string;
   type: string;
+  date: string;
   description: string;
   cost: number;
   technician?: string;
   location?: string;
+  provider?: string;
+  performedBy?: string;
+  nextMaintenance?: string;
+  resolved?: boolean;
+  mileage?: number;
 }
 
 export interface IncidentRecord {
   id: string;
+  vehicleId: string;
   date: string;
   type: string;
   description: string;
   reportedBy: string;
   severity: 'low' | 'medium' | 'high' | 'critical';
-  status: 'reported' | 'investigating' | 'resolved';
+  status: 'reported' | 'investigating' | 'resolved' | 'open' | 'closed';
   resolvedAt?: string;
+  driverName?: string;
+  clientName?: string;
+  damageDescription?: string;
+  repairCost?: number;
+  insuranceClaim?: boolean;
+  resolved?: boolean;
+  priority?: string;
+  location?: string | { latitude: number; longitude: number };
 }
 
 export interface MaintenanceSchedule {

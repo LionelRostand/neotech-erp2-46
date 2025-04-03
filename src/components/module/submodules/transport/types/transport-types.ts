@@ -40,8 +40,14 @@ export interface TransportVehicleWithLocation {
   }
 }
 
-// Export IncidentRecord type - fix location type
-export interface IncidentRecord extends Omit<IncidentRecordType, 'location'> {
+// Export IncidentRecord type for transport-types
+export interface IncidentRecord {
+  id: string;
+  vehicleId: string;
+  date: string;
+  type: string;
+  description: string;
+  reportedBy: string;
   status: 'reported' | 'investigating' | 'resolved' | 'open' | 'closed';
   severity: 'low' | 'medium' | 'high' | 'critical';
   location?: string | { latitude: number; longitude: number };
@@ -51,12 +57,19 @@ export interface IncidentRecord extends Omit<IncidentRecordType, 'location'> {
   resolved?: boolean;
 }
 
-// Export MaintenanceRecord type - make provider optional
-export interface MaintenanceRecord extends Omit<MaintenanceRecordType, 'provider'> {
+// Export MaintenanceRecord type for transport-types
+export interface MaintenanceRecord {
+  id: string;
+  vehicleId: string;
   type: 'regular' | 'emergency' | 'inspection' | 'repair';
+  date: string;
+  description: string;
+  cost: number;
   performedBy: string;
   provider?: string;
   nextMaintenance?: string;
+  location?: string;
+  technician?: string;
 }
 
 // Any other types specific to transport module can be defined here

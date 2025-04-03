@@ -93,11 +93,11 @@ const DriverAvailability: React.FC<DriverAvailabilityProps> = ({
                 <div className="flex justify-between items-center p-3 rounded-md bg-gray-50">
                   <span>Statut du chauffeur:</span>
                   <Badge className={
-                    driver.status === 'active' ? "bg-green-500" : 
+                    driver.status === 'available' || driver.status === 'active' ? "bg-green-500" : 
                     driver.status === 'on_leave' ? "bg-yellow-500" : 
                     "bg-red-500"
                   }>
-                    {driver.status === 'active' ? "Actif" : 
+                    {driver.status === 'available' || driver.status === 'active' ? "Actif" : 
                      driver.status === 'on_leave' ? "En congé" : 
                      "Inactif"}
                   </Badge>

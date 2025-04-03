@@ -9,7 +9,7 @@ export interface VehicleMaintenanceSchedule {
   description: string;
   estimatedDuration: number; // in minutes
   technicianAssigned?: string; // Made optional to match actual usage
-  status: 'scheduled' | 'in-progress' | 'completed' | 'cancelled';
+  status: 'scheduled' | 'in-progress' | 'completed' | 'cancelled' | 'overdue';
   priority?: string; // Made optional to fix type error
   taskName?: string;
   nextDue?: string;

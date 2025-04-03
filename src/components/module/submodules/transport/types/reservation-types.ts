@@ -1,4 +1,3 @@
-
 // Create this file if it doesn't exist or update it
 export interface TransportReservation {
   id: string;
@@ -23,6 +22,7 @@ export interface TransportReservation {
   needsDriver?: boolean;
   contractGenerated?: boolean;
   notes?: string[];
+  requestId?: string; // Adding requestId field
 }
 
 export interface Reservation {
@@ -58,4 +58,3 @@ export const getAddressString = (location: string | { address: string; datetime?
 
 // Add export for TransportReservationStatus
 export type TransportReservationStatus = 'pending' | 'confirmed' | 'completed' | 'cancelled' | 'in-progress';
-

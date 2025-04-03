@@ -2,34 +2,29 @@
 export interface Coordinates {
   lat: number;
   lng: number;
+  // For backward compatibility
+  latitude?: number;
+  longitude?: number;
 }
 
 export interface VehicleLocation {
   vehicleId: string;
-  location: Coordinates;
-  heading?: number;
-  speed?: number;
-  updatedAt?: string;
+  coordinates: Coordinates;
+  timestamp: string;
 }
 
-export interface TransportVehicleLocation {
-  vehicleId: string;
-  location: Coordinates;
-  timestamp: string;
-  speed?: number;
-  heading?: number;
-  status?: 'moving' | 'stopped' | 'parked' | 'offline';
+export interface TransportVehicleLocation extends VehicleLocation {
+  status: string;
+  heading: number;
+  speed: number;
 }
 
 export interface MapBounds {
-  north: number;
-  south: number;
-  east: number;
-  west: number;
+  northEast: Coordinates;
+  southWest: Coordinates;
 }
 
 export interface MapViewSettings {
   center: Coordinates;
   zoom: number;
-  bounds?: MapBounds;
 }

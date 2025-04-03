@@ -1,4 +1,3 @@
-
 // Create or update driver-types.ts with necessary properties
 export interface TransportDriver {
   id: string;
@@ -8,17 +7,29 @@ export interface TransportDriver {
   phone: string;
   address: string;
   licenseNumber: string;
-  status: 'available' | 'busy' | 'on_leave' | 'off_duty';
+  licenseExpiry: string;
+  status: 'available' | 'busy' | 'on_leave' | 'off_duty' | 'active' | 'driving' | 'off-duty';
   available: boolean;
   onLeave?: boolean;
   vehicleId?: string;
   notes: DriverNote[];
-  schedule: DriverSchedule[];
+  schedule?: DriverSchedule[];
   rating?: number;
-  createdAt: string;
-  updatedAt: string;
   experience?: number;
   skills?: string[];
+  photo?: string;
+  preferredVehicleType?: string[];
+  language?: string[];
+  licensesTypes?: string[];
+  performance?: {
+    completedTrips: number;
+    rating: number;
+    onTimePercentage: number;
+    cancelRate: number;
+  };
+  hireDate?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface DriverNote {
