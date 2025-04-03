@@ -8,6 +8,7 @@ export const COLLECTIONS = {
   SETTINGS: 'settings',
   MODULES: 'modules',
   CONTACTS: 'contacts', // Top-level contacts collection
+  EMPLOYEE_BADGES: 'employee_badges', // Nouvelle collection pour les badges d'employés
   
   // Collection paths for top-level directories
   MESSAGES: {
@@ -101,7 +102,7 @@ export const COLLECTIONS = {
     DOCUMENTS: 'company_documents'
   },
   
-  // Nouvelles collections pour les ressources humaines
+  // Collections pour les ressources humaines
   HR: {
     ROOT: 'hr',
     EMPLOYEES: 'employees',
@@ -110,6 +111,11 @@ export const COLLECTIONS = {
     CONTRACTS: 'hr_contracts',
     EVALUATIONS: 'hr_evaluations',
     DEPARTMENTS: 'hr_departments',
-    TRAININGS: 'hr_trainings'
+    TRAININGS: 'hr_trainings',
+    BADGES: 'employee_badges',
+    ATTENDANCE: 'hr_attendance',
+    TIME_SHEETS: 'hr_timesheets',
+    ABSENCE_REQUESTS: 'hr_absence_requests',
+    DOCUMENTS: 'hr_documents'
   }
 };

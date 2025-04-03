@@ -52,16 +52,57 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
     
-    // Règles pour les modules spécifiques
-    
-    // Gestion d'entreprise
+    // Règles spécifiques pour le module Employés/RH
     match /employees/{document=**} {
-      allow read: if isAuthenticated() && (hasPermission('employees', 'read') || isAdmin());
+      allow read: if isAuthenticated() && (hasPermission('employees', 'view') || isAdmin());
       allow create: if isAuthenticated() && (hasPermission('employees', 'create') || isAdmin());
-      allow update: if isAuthenticated() && (hasPermission('employees', 'update') || isAdmin());
+      allow update: if isAuthenticated() && (hasPermission('employees', 'edit') || isAdmin());
       allow delete: if isAuthenticated() && (hasPermission('employees', 'delete') || isAdmin());
     }
     
+    match /hr_departments/{document=**} {
+      allow read: if isAuthenticated() && (hasPermission('employees', 'view') || isAdmin());
+      allow create: if isAuthenticated() && (hasPermission('employees', 'create') || isAdmin());
+      allow update: if isAuthenticated() && (hasPermission('employees', 'edit') || isAdmin());
+      allow delete: if isAuthenticated() && (hasPermission('employees', 'delete') || isAdmin());
+    }
+    
+    match /hr_payslips/{document=**} {
+      allow read: if isAuthenticated() && (hasPermission('employees', 'view') || isAdmin());
+      allow create: if isAuthenticated() && (hasPermission('employees', 'create') || isAdmin());
+      allow update: if isAuthenticated() && (hasPermission('employees', 'edit') || isAdmin());
+      allow delete: if isAuthenticated() && (hasPermission('employees', 'delete') || isAdmin());
+    }
+    
+    match /hr_leave_requests/{document=**} {
+      allow read: if isAuthenticated() && (hasPermission('employees', 'view') || isAdmin());
+      allow create: if isAuthenticated() && (hasPermission('employees', 'create') || isAdmin() || isOwner(resource.data.employeeId));
+      allow update: if isAuthenticated() && (hasPermission('employees', 'edit') || isAdmin() || isOwner(resource.data.employeeId));
+      allow delete: if isAuthenticated() && (hasPermission('employees', 'delete') || isAdmin());
+    }
+    
+    match /hr_contracts/{document=**} {
+      allow read: if isAuthenticated() && (hasPermission('employees', 'view') || isAdmin() || isOwner(resource.data.employeeId));
+      allow create: if isAuthenticated() && (hasPermission('employees', 'create') || isAdmin());
+      allow update: if isAuthenticated() && (hasPermission('employees', 'edit') || isAdmin());
+      allow delete: if isAuthenticated() && (hasPermission('employees', 'delete') || isAdmin());
+    }
+    
+    match /hr_evaluations/{document=**} {
+      allow read: if isAuthenticated() && (hasPermission('employees', 'view') || isAdmin() || isOwner(resource.data.employeeId));
+      allow create: if isAuthenticated() && (hasPermission('employees', 'create') || isAdmin());
+      allow update: if isAuthenticated() && (hasPermission('employees', 'edit') || isAdmin());
+      allow delete: if isAuthenticated() && (hasPermission('employees', 'delete') || isAdmin());
+    }
+    
+    match /hr_trainings/{document=**} {
+      allow read: if isAuthenticated() && (hasPermission('employees', 'view') || isAdmin());
+      allow create: if isAuthenticated() && (hasPermission('employees', 'create') || isAdmin());
+      allow update: if isAuthenticated() && (hasPermission('employees', 'edit') || isAdmin());
+      allow delete: if isAuthenticated() && (hasPermission('employees', 'delete') || isAdmin());
+    }
+    
+    // Règles pour les entreprises (utilisées dans le module Employés)
     match /companies/{document=**} {
       allow read: if isAuthenticated() && (hasPermission('companies', 'read') || isAdmin());
       allow write: if isAuthenticated() && (hasPermission('companies', 'write') || isAdmin());
