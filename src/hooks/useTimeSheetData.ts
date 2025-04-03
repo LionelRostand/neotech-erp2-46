@@ -32,12 +32,12 @@ export const useTimeSheetData = () => {
         : 'Date inconnue';
       
       return {
-        ...sheet,
-        employeeName: employee ? `${employee.firstName} ${employee.lastName}` : sheet.employeeId,
+        ...sheet, // Conserver toutes les propriétés d'origine
+        employeeName: employee ? `${employee.firstName} ${employee.lastName}` : sheet.employeeId || 'Inconnu',
         employeePhoto: employee?.photo || employee?.photoURL,
         lastUpdateText
       };
-    });
+    }) as TimeReport[];
   }, [timeSheets, employees]);
   
   // Organiser les feuilles de temps par statut
@@ -52,9 +52,9 @@ export const useTimeSheetData = () => {
     if (enrichedTimeSheets && enrichedTimeSheets.length > 0) {
       enrichedTimeSheets.forEach(sheet => {
         if (sheet.status && result[sheet.status]) {
-          result[sheet.status].push(sheet as TimeReport);
+          result[sheet.status].push(sheet);
         } else {
-          result['En cours'].push(sheet as TimeReport);
+          result['En cours'].push(sheet);
         }
       });
     }

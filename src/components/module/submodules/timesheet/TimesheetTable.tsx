@@ -76,7 +76,7 @@ const TimesheetTable: React.FC<TimesheetTableProps> = ({
               <td className="py-3">
                 <StatusBadge status={timesheet.status} />
               </td>
-              <td className="py-3 text-muted-foreground">{timesheet.lastUpdated}</td>
+              <td className="py-3 text-muted-foreground">{timesheet.lastUpdateText || timesheet.lastUpdated}</td>
               <td className="py-3 pr-4 text-right">
                 <div className="flex justify-end gap-2">
                   {timesheet.status === 'Soumis' && (
