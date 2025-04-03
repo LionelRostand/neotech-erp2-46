@@ -3,49 +3,47 @@
 export interface ServiceOption {
   id: string;
   name: string;
-  price: number;
   description: string;
+  price: number;
+  available: boolean;
+  vehicleTypes: string[];
+  category: string;
+  duration?: number;
+  image?: string;
 }
 
 export interface ServiceAvailability {
-  dayOfWeek: number;
-  startTime: string;
-  endTime: string;
+  serviceId: string;
+  dayOfWeek: number; // 0-6 for Sunday-Saturday
+  startTime: string; // HH:MM format
+  endTime: string;   // HH:MM format
+  available: boolean;
+  maxBookings?: number;
 }
 
-// Additional service-related types used throughout the application
 export interface ServicePricing {
+  serviceId: string;
   basePrice: number;
   pricePerKm?: number;
   pricePerMinute?: number;
-  minimumPrice?: number;
+  minimumDuration?: number;
+  minimumDistance?: number;
+  rushHourMultiplier?: number;
+  peakSeasonMultiplier?: number;
+  weekendMultiplier?: number;
 }
 
-export interface TransportService {
+// This was causing the conflict in types/index.ts
+// Renamed from TransportService to TransportServiceDetails
+export interface TransportServiceDetails {
   id: string;
   name: string;
   description: string;
-  price: number;
-  type: 'standard' | 'premium' | 'luxury' | 'custom';
-  availability?: ServiceAvailability[];
-  pricing?: ServicePricing;
-  isActive: boolean;
-}
-
-export function serviceToString(service: TransportService | string): string {
-  if (typeof service === 'string') {
-    return service;
-  }
-  return service.name;
-}
-
-export function stringToService(serviceName: string): TransportService {
-  return {
-    id: 'default',
-    name: serviceName,
-    description: 'Service par défaut',
-    price: 0,
-    type: 'standard',
-    isActive: true
-  };
+  type: string;
+  basePrice: number;
+  pricePerKm?: number;
+  pricePerMinute?: number;
+  minDuration?: number;
+  vehicleTypes: string[];
+  active: boolean;
 }

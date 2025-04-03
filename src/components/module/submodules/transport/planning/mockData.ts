@@ -1,3 +1,4 @@
+
 import { addDays, addHours, format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { TransportVehicle } from '../types/vehicle-types';
@@ -132,17 +133,12 @@ export const mockDrivers: TransportDriver[] = [
     phone: "+33612345678",
     licenseNumber: "12AB34567",
     licenseExpiry: "2025-06-30",
-    status: "available",
+    status: "active", // Changed from "available" to "active"
     rating: 4.8,
     notes: [],
-    address: {
-      street: "15 Rue de la Paix",
-      city: "Paris",
-      postalCode: "75001",
-      country: "France"
-    },
+    address: "15 Rue de la Paix, 75001 Paris, France", // Changed from object to string
     hireDate: "2020-03-15",
-    vehicleId: "v1"
+    assignedVehicleId: "v1" // Changed from vehicleId to assignedVehicleId
   },
   {
     id: "d2",
@@ -152,17 +148,12 @@ export const mockDrivers: TransportDriver[] = [
     phone: "+33623456789",
     licenseNumber: "23CD45678",
     licenseExpiry: "2024-11-15",
-    status: "on-duty",
+    status: "driving", // Changed from "on-duty" to "driving"
     rating: 4.9,
     notes: [],
-    address: {
-      street: "27 Avenue des Champs-Élysées",
-      city: "Paris",
-      postalCode: "75008",
-      country: "France"
-    },
+    address: "27 Avenue des Champs-Élysées, 75008 Paris, France", // Changed from object to string
     hireDate: "2019-07-10",
-    vehicleId: "v3"
+    assignedVehicleId: "v3" // Changed from vehicleId to assignedVehicleId
   },
   {
     id: "d3",
@@ -175,14 +166,9 @@ export const mockDrivers: TransportDriver[] = [
     status: "off-duty",
     rating: 4.7,
     notes: [],
-    address: {
-      street: "8 Rue de Rivoli",
-      city: "Paris",
-      postalCode: "75004",
-      country: "France"
-    },
+    address: "8 Rue de Rivoli, 75004 Paris, France", // Changed from object to string
     hireDate: "2021-01-05",
-    vehicleId: "v5"
+    assignedVehicleId: "v5" // Changed from vehicleId to assignedVehicleId
   }
 ];
 
@@ -303,8 +289,8 @@ export const generateScheduleData = () => {
         startTime: format(startTime, 'HH:mm'),
         endTime: format(endTime, 'HH:mm'),
         status: Math.random() > 0.9 ? 'pending' : 'confirmed',
-        vehicleId: driver.vehicleId,
-        vehicleName: mockVehicles.find(v => v.id === driver.vehicleId)?.name || 'Non assigné'
+        vehicleId: driver.assignedVehicleId, // Changed from vehicleId to assignedVehicleId
+        vehicleName: mockVehicles.find(v => v.id === driver.assignedVehicleId)?.name || 'Non assigné' // Changed from vehicleId to assignedVehicleId
       });
     }
   }

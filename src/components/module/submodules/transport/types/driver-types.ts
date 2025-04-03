@@ -6,28 +6,18 @@ export interface TransportDriver {
   lastName: string;
   email: string;
   phone: string;
-  available: boolean;
-  onLeave: boolean;
-  experience: number;
-  licensesTypes: string[];
+  licenseNumber: string;
+  licenseExpiry: string;
   status: 'active' | 'inactive' | 'on_leave' | 'driving' | 'off-duty';
-  rating: number;
+  rating?: number;
+  notes: any[];
+  address: string;
+  hireDate: string;
+  assignedVehicleId?: string;
+  experience?: number;
+  available?: boolean;
+  onLeave?: boolean;
   skills?: string[];
-  photo?: string;
-  licenseNumber?: string;
-  licenseType?: string;
-  licenseExpiry?: string;
-  address?: string;
-  hireDate?: string;
-  preferredVehicleType?: string[];
-  language?: string[];
-  notes?: any[];
-  performance?: {
-    completedTrips: number;
-    averageRating: number;
-    onTimePercentage: number;
-  };
-  name?: string; // For compatibility with some components
 }
 
 export interface DriverNote {
@@ -42,10 +32,10 @@ export interface DriverNote {
 export interface DriverSchedule {
   id: string;
   driverId: string;
+  date: string;
   startTime: string;
   endTime: string;
-  type: string;
-  description?: string;
+  status: 'pending' | 'confirmed' | 'cancelled';
 }
 
 export interface DriverAvailabilityPeriod {
@@ -53,16 +43,17 @@ export interface DriverAvailabilityPeriod {
   driverId: string;
   startDate: string;
   endDate: string;
+  type: 'available' | 'unavailable' | 'leave';
   reason?: string;
-  type: 'available' | 'unavailable' | 'vacation' | 'sick_leave' | 'training';
 }
 
 export interface DriverRatingEntry {
   id: string;
   driverId: string;
   rating: number;
-  feedback?: string;
+  comment?: string;
   clientId?: string;
   clientName?: string;
-  date: string;
+  reservationId?: string;
+  createdAt: string;
 }

@@ -5,7 +5,6 @@ export * from './vehicle-types';
 export * from './reservation-types';
 export * from './client-types';
 export * from './map-types';
-export * from './service-types';
 export * from './web-booking-types';
 export * from './geolocation-types';
 
@@ -38,5 +37,12 @@ export type {
   MaintenanceScheduleWithTechnician
 } from './vehicle-types';
 
-// Export from the other modules
+// Export from the other modules (removing ambiguous TransportService export)
 export * from './transport-types';
+export * from './planning-types';
+
+// Re-export base types explicitly to avoid ambiguity
+export type {
+  Note,
+  TransportBasic
+} from './base-types';

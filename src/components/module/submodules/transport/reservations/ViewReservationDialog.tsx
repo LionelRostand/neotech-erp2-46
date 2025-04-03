@@ -75,6 +75,33 @@ const getLocationAddress = (location?: string | { address: string }): string => 
   return location.address || "";
 };
 
+// Helper to format reservation notes for display
+const formatNotes = (notes: any): string => {
+  if (!notes) return '';
+  
+  if (typeof notes === 'string') {
+    return notes;
+  }
+  
+  if (Array.isArray(notes)) {
+    if (notes.length === 0) return '';
+    
+    return notes.map(note => {
+      if (typeof note === 'string') return note;
+      if (typeof note === 'object' && note && 'content' in note) {
+        return note.content;
+      }
+      return JSON.stringify(note);
+    }).join(', ');
+  }
+  
+  if (typeof notes === 'object' && notes !== null) {
+    return Object.values(notes).join(', ');
+  }
+  
+  return String(notes);
+};
+
 const ViewReservationDialog: React.FC<ViewReservationDialogProps> = ({
   open,
   onOpenChange,
@@ -211,7 +238,7 @@ const ViewReservationDialog: React.FC<ViewReservationDialogProps> = ({
               <Separator />
               <div>
                 <p className="text-sm font-medium mb-2">Notes</p>
-                <p className="text-sm bg-muted p-3 rounded">{reservation.notes}</p>
+                <p className="text-sm bg-muted p-3 rounded">{formatNotes(reservation.notes)}</p>
               </div>
             </>
           )}

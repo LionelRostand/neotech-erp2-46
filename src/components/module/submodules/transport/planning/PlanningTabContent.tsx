@@ -7,7 +7,6 @@ import MaintenanceScheduleList from './MaintenanceScheduleList';
 import ExtensionRequestsList from './ExtensionRequestsList';
 import DriverAvailabilityTab from './DriverAvailabilityTab';
 import { usePlanning } from './context/PlanningContext';
-import { useMaintenanceSchedule } from '../hooks/useMaintenanceSchedule';
 import { TransportVehicle, MaintenanceSchedule } from '../types';
 
 interface PlanningTabContentProps {
@@ -39,9 +38,6 @@ const PlanningTabContent: React.FC<PlanningTabContentProps> = ({
       ? (schedule.technicianAssigned ? 'Yes' : 'No')
       : (schedule.technicianAssigned || schedule.technician || 'Unassigned')
   }));
-
-  // Use the useMaintenanceSchedule hook with properly formatted schedules
-  const { mapSchedules } = useMaintenanceSchedule(formattedSchedules);
 
   // Adapter functions to match expected signatures
   const handleAddMaintenance = (vehicle: TransportVehicle) => {
