@@ -100,7 +100,7 @@ const EmployeesCompanies: React.FC = () => {
             <div>
               <h3 className="text-sm font-medium text-amber-900">Pays</h3>
               <p className="text-2xl font-bold text-amber-700">
-                {Array.from(new Set(companies.map(c => c.country))).length}
+                {Array.from(new Set(companies.map(c => c.country).filter(Boolean))).length}
               </p>
             </div>
             <Globe className="h-8 w-8 text-amber-500" />

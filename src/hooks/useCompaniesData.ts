@@ -28,61 +28,9 @@ export const useCompaniesData = () => {
   // Enrichir les entreprises avec des informations supplémentaires
   const formattedCompanies = useMemo(() => {
     if (!companies || companies.length === 0) {
-      // Fournir quelques données fictives pour démonstration
-      // Ces données devraient venir de Firebase à terme
-      return [
-        {
-          id: 'comp-1',
-          name: 'Enterprise Solutions',
-          logo: '/logos/enterprise-solutions.png',
-          address: '123 Avenue des Affaires',
-          city: 'Paris',
-          country: 'France',
-          phone: '+33 1 23 45 67 89',
-          email: 'contact@enterprise-solutions.com',
-          website: 'www.enterprise-solutions.com',
-          industry: 'Technologie',
-          size: 'Grande',
-          status: 'Actif',
-          employeesCount: 78,
-          createdDate: '2010-05-15',
-        },
-        {
-          id: 'comp-2',
-          name: 'TechInnovation',
-          logo: '/logos/techinnovation.png',
-          address: '456 Rue de l\'Innovation',
-          city: 'Lyon',
-          country: 'France',
-          phone: '+33 4 56 78 90 12',
-          email: 'info@techinnovation.fr',
-          website: 'www.techinnovation.fr',
-          industry: 'Technologie',
-          size: 'Moyenne',
-          status: 'Actif',
-          employeesCount: 42,
-          createdDate: '2015-09-22',
-        },
-        {
-          id: 'comp-3',
-          name: 'GreenCo',
-          logo: '/logos/greenco.png',
-          address: '789 Boulevard Écologique',
-          city: 'Bordeaux',
-          country: 'France',
-          phone: '+33 5 67 89 01 23',
-          email: 'contact@greenco.fr',
-          website: 'www.greenco.fr',
-          industry: 'Environnement',
-          size: 'Petite',
-          status: 'Actif',
-          employeesCount: 15,
-          createdDate: '2019-03-10',
-        }
-      ] as Company[];
+      return [];
     }
     
-    // Quand nous aurons des données réelles, nous les traiterons ici
     return companies.map(company => {
       // Calculer le nombre d'employés pour cette entreprise
       const companyEmployeesCount = employees 

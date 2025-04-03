@@ -28,58 +28,9 @@ export const useAlertsData = () => {
   // Enrichir les alertes avec des informations supplémentaires
   const formattedAlerts = useMemo(() => {
     if (!hrAlerts || hrAlerts.length === 0) {
-      // Fournir quelques données fictives pour démonstration
-      // Ces données devraient venir de Firebase à terme
-      return [
-        {
-          id: 'alert-1',
-          title: 'Contrat à renouveler',
-          type: 'Contrat',
-          severity: 'Haute',
-          createdDate: '2023-03-10',
-          status: 'Active',
-          description: 'Le contrat de Jean Dupont expire dans 15 jours',
-          employeeId: 'emp-001',
-          employeeName: 'Jean Dupont',
-          employeePhoto: '/avatars/jean.jpg',
-          dueDate: '2023-03-25',
-          assignedToId: 'emp-004',
-          assignedToName: 'Sophie Lefèvre',
-        },
-        {
-          id: 'alert-2',
-          title: 'Document manquant',
-          type: 'Document',
-          severity: 'Moyenne',
-          createdDate: '2023-03-08',
-          status: 'En attente',
-          description: 'La carte vitale de Marie Lambert n\'a pas été fournie',
-          employeeId: 'emp-002',
-          employeeName: 'Marie Lambert',
-          employeePhoto: '/avatars/marie.jpg',
-          dueDate: '2023-03-20',
-          assignedToId: 'emp-002',
-          assignedToName: 'Marie Lambert',
-        },
-        {
-          id: 'alert-3',
-          title: 'Trop d\'absences',
-          type: 'Absence',
-          severity: 'Moyenne',
-          createdDate: '2023-02-25',
-          status: 'Résolue',
-          description: 'Pierre Martin a dépassé son quota d\'absences pour le mois',
-          employeeId: 'emp-003',
-          employeeName: 'Pierre Martin',
-          employeePhoto: '/avatars/pierre.jpg',
-          resolvedDate: '2023-03-05',
-          assignedToId: 'emp-005',
-          assignedToName: 'Thomas Dubois',
-        }
-      ] as Alert[];
+      return [];
     }
     
-    // Quand nous aurons des données réelles, nous les traiterons ici
     return hrAlerts.map(alert => {
       const employee = alert.employeeId && employees
         ? employees.find(emp => emp.id === alert.employeeId)

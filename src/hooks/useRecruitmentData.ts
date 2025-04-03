@@ -20,57 +20,14 @@ export interface Recruitment {
  * Hook pour accéder aux données de recrutement directement depuis Firebase
  */
 export const useRecruitmentData = () => {
-  // Pour l'instant, nous utilisons le hook centralisé, mais dans le futur
-  // une collection spécifique pourrait être ajoutée pour le recrutement
   const { recruitmentPosts, employees, departments, isLoading, error } = useHrModuleData();
   
   // Enrichir les postes de recrutement avec des informations supplémentaires
   const formattedRecruitmentPosts = useMemo(() => {
     if (!recruitmentPosts || recruitmentPosts.length === 0) {
-      // Fournir quelques données fictives pour démonstration
-      // Ces données devraient venir de Firebase à terme
-      return [
-        {
-          id: 'rec-1',
-          position: 'Développeur Frontend',
-          department: 'Informatique',
-          status: 'Ouvert',
-          openDate: '2023-03-15',
-          applicationCount: 12,
-          hiringManagerId: 'emp-001',
-          hiringManagerName: 'Jean Dupont',
-          priority: 'Haute',
-          description: 'Nous recherchons un développeur Frontend expérimenté maîtrisant React.'
-        },
-        {
-          id: 'rec-2',
-          position: 'Chef de projet',
-          department: 'Marketing',
-          status: 'En cours',
-          openDate: '2023-02-10',
-          applicationCount: 8,
-          hiringManagerId: 'emp-002',
-          hiringManagerName: 'Marie Lambert',
-          priority: 'Moyenne',
-          description: 'Chef de projet marketing digital avec expérience en gestion d\'équipe.'
-        },
-        {
-          id: 'rec-3',
-          position: 'Comptable',
-          department: 'Finance',
-          status: 'Clôturé',
-          openDate: '2023-01-05',
-          closeDate: '2023-02-28',
-          applicationCount: 15,
-          hiringManagerId: 'emp-003',
-          hiringManagerName: 'Pierre Martin',
-          priority: 'Basse',
-          description: 'Poste pourvu, candidat sélectionné.'
-        }
-      ] as Recruitment[];
+      return [];
     }
     
-    // Quand nous aurons des données réelles, nous les traiterons ici
     return recruitmentPosts.map(post => {
       const hiringManager = post.hiringManagerId && employees
         ? employees.find(emp => emp.id === post.hiringManagerId)
