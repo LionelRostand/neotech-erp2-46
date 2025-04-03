@@ -1,50 +1,27 @@
 
-import { 
-  collection, 
-  doc, 
-  CollectionReference, 
-  DocumentReference,
-  Timestamp,
-  serverTimestamp
-} from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { doc, DocumentReference, collection, CollectionReference } from 'firebase/firestore';
 
-// Get a Firestore collection reference
-export const getCollectionRef = (collectionPath: string): CollectionReference => {
-  return collection(db, collectionPath);
+/**
+ * Obtient une référence à un document dans Firestore
+ * @param collectionName Nom de la collection
+ * @param docId ID du document
+ * @returns Référence DocumentReference
+ */
+export const getDocRef = (collectionName: string, docId: string): DocumentReference => {
+  return doc(db, collectionName, docId);
 };
 
-// Get a Firestore document reference
-export const getDocRef = (collectionPath: string, docId: string): DocumentReference => {
-  return doc(db, collectionPath, docId);
+/**
+ * Obtient une référence à une collection dans Firestore
+ * @param collectionName Nom de la collection
+ * @returns Référence CollectionReference
+ */
+export const getCollectionRef = (collectionName: string): CollectionReference => {
+  return collection(db, collectionName);
 };
 
-// Format document data with timestamps for created/updated timestamps
-export const formatDocumentWithTimestamps = (data: any) => {
-  const now = serverTimestamp();
-  return {
-    ...data,
-    createdAt: data.createdAt || now,
-    updatedAt: now
-  };
-};
-
-// Convert Firestore timestamps to Date objects
-export const convertTimestamps = (data: any): any => {
-  if (!data) return data;
-  
-  const result = { ...data };
-  
-  Object.keys(result).forEach(key => {
-    // Convert Timestamp to Date
-    if (result[key] instanceof Timestamp) {
-      result[key] = result[key].toDate();
-    }
-    // Recursively convert nested objects
-    else if (result[key] && typeof result[key] === 'object') {
-      result[key] = convertTimestamps(result[key]);
-    }
-  });
-  
-  return result;
+// Fonction pour générer un ID unique pour les documents
+export const generateDocId = (): string => {
+  return `id_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 };

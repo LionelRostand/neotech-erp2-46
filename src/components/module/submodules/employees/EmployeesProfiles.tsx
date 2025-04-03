@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Employee } from '@/types/employee';
@@ -37,7 +36,6 @@ const EmployeesProfiles: React.FC = () => {
     { id: 'greenco', name: 'GreenCo' },
   ];
 
-  // Charger les données des employés depuis Firebase au chargement du composant
   useEffect(() => {
     loadEmployeesData();
   }, []);
@@ -76,11 +74,9 @@ const EmployeesProfiles: React.FC = () => {
   const handleAddEmployee = async (newEmployee: Partial<Employee>) => {
     setLoading(true);
     try {
-      // Ajouter l'employé à Firebase
       const addedEmployee = await addEmployee(newEmployee as Omit<Employee, 'id'>);
       
       if (addedEmployee) {
-        // Ajouter au state local pour actualisation immédiate de l'UI
         setEmployees(prev => [...prev, addedEmployee]);
         toast.success("Employé ajouté avec succès.");
       } else {
@@ -105,16 +101,13 @@ const EmployeesProfiles: React.FC = () => {
     
     setLoading(true);
     try {
-      // Mettre à jour l'employé dans Firebase
       const updatedEmployee = await updateEmployee(employeeToEdit.id, updatedEmployeeData);
       
       if (updatedEmployee) {
-        // Mettre à jour le state local
         setEmployees(prev => prev.map(emp => 
           emp.id === employeeToEdit.id ? updatedEmployee : emp
         ));
         
-        // Si l'employé est actuellement sélectionné, mettre à jour aussi
         if (selectedEmployee && selectedEmployee.id === employeeToEdit.id) {
           setSelectedEmployee(updatedEmployee);
         }
@@ -135,14 +128,11 @@ const EmployeesProfiles: React.FC = () => {
   const handleDeleteEmployee = async (employeeId: string) => {
     setLoading(true);
     try {
-      // Supprimer l'employé de Firebase
       const success = await deleteEmployee(employeeId);
       
       if (success) {
-        // Mettre à jour le state local
         setEmployees(prev => prev.filter(emp => emp.id !== employeeId));
         
-        // Si l'employé supprimé est celui qui est affiché, revenir à la liste
         if (selectedEmployee && selectedEmployee.id === employeeId) {
           setSelectedEmployee(null);
         }
@@ -160,10 +150,7 @@ const EmployeesProfiles: React.FC = () => {
   };
 
   const handleExportPdf = () => {
-    // Show loading dialog
     setIsPdfExportOpen(true);
-    // The actual PDF export is now handled in EmployeeDetails component
-    // This is just for UI feedback
     setTimeout(() => {
       setIsPdfExportOpen(false);
     }, 1000);
@@ -264,7 +251,6 @@ const EmployeesProfiles: React.FC = () => {
         />
       )}
 
-      {/* Dialogue de simulation d'export PDF */}
       <Dialog open={isPdfExportOpen} onOpenChange={setIsPdfExportOpen}>
         <DialogContent>
           <DialogHeader>

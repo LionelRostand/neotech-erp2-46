@@ -96,7 +96,7 @@ export const deleteEmployee = async (id: string): Promise<boolean> => {
   try {
     console.log(`Suppression de l'employé ${id} dans Firestore...`);
     await executeWithNetworkRetry(async () => {
-      return await deleteDocument(COLLECTIONS.EMPLOYEES, id);
+      return await deleteDocument(COLLECTIONS.HR.EMPLOYEES, id);
     });
     
     console.log('Employé supprimé avec succès');
