@@ -16,7 +16,7 @@ export const getEmployeesData = async (): Promise<Employee[]> => {
     // Utilisation de executeWithNetworkRetry pour gérer automatiquement les erreurs réseau
     const firestoreData = await executeWithNetworkRetry(async () => {
       // Utilisation de la collection définie dans COLLECTIONS pour garantir la cohérence
-      return await getAllDocuments(COLLECTIONS.EMPLOYEES);
+      return await getAllDocuments(COLLECTIONS.HR.EMPLOYEES);
     });
     
     // Vérifier si les données sont valides et non vides

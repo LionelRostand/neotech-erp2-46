@@ -1,6 +1,6 @@
 
 import { db } from '@/lib/firebase';
-import { doc, DocumentReference, collection, CollectionReference } from 'firebase/firestore';
+import { doc, DocumentReference, collection, CollectionReference, Timestamp, DocumentData } from 'firebase/firestore';
 
 /**
  * Obtient une référence à un document dans Firestore
@@ -24,4 +24,20 @@ export const getCollectionRef = (collectionName: string): CollectionReference =>
 // Fonction pour générer un ID unique pour les documents
 export const generateDocId = (): string => {
   return `id_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+};
+
+/**
+ * Ajoute des horodatages (createdAt, updatedAt) aux documents
+ * @param data Données du document
+ * @returns Données avec les horodatages ajoutés
+ */
+export const formatDocumentWithTimestamps = (data: DocumentData): DocumentData => {
+  const now = Timestamp.now();
+  
+  return {
+    ...data,
+    updatedAt: now,
+    // Ajouter createdAt seulement s'il n'existe pas déjà
+    ...(data.createdAt ? {} : { createdAt: now })
+  };
 };
