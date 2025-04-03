@@ -1,46 +1,53 @@
 
 import React from 'react';
+import { Card, CardContent } from '@/components/ui/card';
+import { SunMedium, Clock, Calendar } from 'lucide-react';
 
 export const LeaveBalanceCards: React.FC = () => {
+  // In a real app, this would be fetched from Firebase
+  const balances = {
+    paid: 25,
+    sick: 12,
+    specialLeave: 5,
+    usedPaid: 10,
+    usedSick: 2,
+    usedSpecial: 0
+  };
+
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-      <div className="bg-white p-4 border rounded-md">
-        <div className="text-sm text-gray-500 mb-1">Congés payés</div>
-        <div className="flex items-end">
-          <div className="text-2xl font-bold">15</div>
-          <div className="text-sm text-gray-500 ml-1">/ 25 jours</div>
-        </div>
-        <div className="w-full bg-gray-200 rounded-full h-1.5 mt-2">
-          <div className="bg-green-500 h-1.5 rounded-full" style={{ width: '60%' }}></div>
-        </div>
-      </div>
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <Card>
+        <CardContent className="p-4 flex items-center justify-between">
+          <div>
+            <h3 className="text-sm font-medium text-gray-700">Congés payés</h3>
+            <p className="text-2xl font-bold">{balances.paid - balances.usedPaid} / {balances.paid}</p>
+            <p className="text-xs text-gray-500">{balances.usedPaid} jours utilisés</p>
+          </div>
+          <SunMedium className="h-10 w-10 text-yellow-500" />
+        </CardContent>
+      </Card>
       
-      <div className="bg-white p-4 border rounded-md">
-        <div className="text-sm text-gray-500 mb-1">RTT</div>
-        <div className="flex items-end">
-          <div className="text-2xl font-bold">8</div>
-          <div className="text-sm text-gray-500 ml-1">/ 12 jours</div>
-        </div>
-        <div className="w-full bg-gray-200 rounded-full h-1.5 mt-2">
-          <div className="bg-blue-500 h-1.5 rounded-full" style={{ width: '67%' }}></div>
-        </div>
-      </div>
+      <Card>
+        <CardContent className="p-4 flex items-center justify-between">
+          <div>
+            <h3 className="text-sm font-medium text-gray-700">Congés maladie</h3>
+            <p className="text-2xl font-bold">{balances.sick - balances.usedSick} / {balances.sick}</p>
+            <p className="text-xs text-gray-500">{balances.usedSick} jours utilisés</p>
+          </div>
+          <Clock className="h-10 w-10 text-blue-500" />
+        </CardContent>
+      </Card>
       
-      <div className="bg-white p-4 border rounded-md">
-        <div className="text-sm text-gray-500 mb-1">Demandes en attente</div>
-        <div className="text-2xl font-bold">3</div>
-        <div className="text-xs text-amber-600 mt-2">
-          2 demandes à approuver
-        </div>
-      </div>
-      
-      <div className="bg-white p-4 border rounded-md">
-        <div className="text-sm text-gray-500 mb-1">Congés approuvés (mois)</div>
-        <div className="text-2xl font-bold">7</div>
-        <div className="text-xs text-gray-500 mt-2">
-          Sur 15 demandes ce mois-ci
-        </div>
-      </div>
+      <Card>
+        <CardContent className="p-4 flex items-center justify-between">
+          <div>
+            <h3 className="text-sm font-medium text-gray-700">Congés exceptionnels</h3>
+            <p className="text-2xl font-bold">{balances.specialLeave - balances.usedSpecial} / {balances.specialLeave}</p>
+            <p className="text-xs text-gray-500">{balances.usedSpecial} jours utilisés</p>
+          </div>
+          <Calendar className="h-10 w-10 text-purple-500" />
+        </CardContent>
+      </Card>
     </div>
   );
 };

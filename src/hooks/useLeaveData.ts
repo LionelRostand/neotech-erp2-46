@@ -20,6 +20,7 @@ export interface Leave {
   approverName?: string;
   approvedDate?: string;
   comments?: string;
+  department?: string; // Added this property to resolve the TypeScript error
 }
 
 /**

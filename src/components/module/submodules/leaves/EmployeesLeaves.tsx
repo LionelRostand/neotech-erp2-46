@@ -13,7 +13,7 @@ import {
   FileText
 } from 'lucide-react';
 import { LeaveRequestsList } from './LeaveRequestsList';
-import { LeaveBalanceCards } from '../EmployeesLeaves'; // Importer depuis le composant existant
+import { LeaveBalanceCards } from './LeaveBalanceCards';
 import { toast } from 'sonner';
 import { useLeaveData } from '@/hooks/useLeaveData';
 
