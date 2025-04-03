@@ -2,7 +2,7 @@
 import React from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { TransportVehicle } from '../types/transport-types';
+import { TransportVehicle } from '../types/vehicle-types';
 
 interface VehiclesTableProps {
   vehicles: TransportVehicle[];

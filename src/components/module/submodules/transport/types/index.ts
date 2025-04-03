@@ -12,8 +12,8 @@ export type {
   MapViewSettings 
 } from './geolocation-types';
 
-// Export map types explicitly
-export type { MapExtensionRequest } from './map-types';
+// Export map types explicitly - avoiding the conflict by renaming
+export { MapExtensionRequest } from './map-types';
 
 export * from './planning-types';
 

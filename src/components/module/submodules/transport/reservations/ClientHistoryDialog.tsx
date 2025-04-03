@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -41,6 +42,16 @@ const ClientHistoryDialog: React.FC<ClientHistoryDialogProps> = ({
         return <Badge>Inconnue</Badge>;
     }
   };
+  
+  // Helper function to safely display pickup/dropoff locations
+  const displayLocation = (location: string | { address: string; datetime: string }) => {
+    if (typeof location === 'string') {
+      return location;
+    } else if (location && typeof location === 'object') {
+      return location.address;
+    }
+    return 'Non spécifié';
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -82,10 +93,10 @@ const ClientHistoryDialog: React.FC<ClientHistoryDialogProps> = ({
                     </div>
                     <div className="mt-2">
                       <p className="text-sm">
-                        Départ: {reservation.pickup || 'Non spécifié'}
+                        Départ: {displayLocation(reservation.pickup)}
                       </p>
                       <p className="text-sm">
-                        Arrivée: {reservation.dropoff || 'Non spécifié'}
+                        Arrivée: {displayLocation(reservation.dropoff)}
                       </p>
                     </div>
                   </div>

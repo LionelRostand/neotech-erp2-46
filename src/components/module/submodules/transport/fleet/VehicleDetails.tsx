@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Calendar, Clock, CarFront, FileCheck, Wrench, Users, Info, Edit, AlertTriangle } from "lucide-react";
-import { TransportVehicle } from '../types/transport-types';
+import { TransportVehicle } from '../types/vehicle-types';
 
 interface VehicleDetailsProps {
   vehicle: TransportVehicle;

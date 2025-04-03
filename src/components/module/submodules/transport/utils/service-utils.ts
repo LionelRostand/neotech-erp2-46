@@ -2,7 +2,7 @@
 import { TransportService } from '../types';
 
 // Convert string to TransportService object
-export const stringToService = (serviceString: string): TransportService | { name: string } => {
+export const stringToService = (serviceString: string): TransportService => {
   // If we have a simple string, create a minimal service object
   return {
     name: serviceString,

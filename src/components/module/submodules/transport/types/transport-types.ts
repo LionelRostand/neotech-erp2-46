@@ -10,7 +10,7 @@ import {
 // Export service types using export type syntax
 export type { TransportService, TransportServiceDetails };
 
-// Define TransportVehicle interface - fixing status type to include 'inactive'
+// Define TransportVehicleWithLocation interface
 export interface TransportVehicleWithLocation {
   id: string;
   name: string;

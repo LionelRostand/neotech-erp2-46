@@ -1,111 +1,41 @@
 
-// reservation-types.ts
-
+// Create this file if it doesn't exist or update it
 export interface TransportReservation {
   id: string;
   clientId: string;
-  clientName?: string;
+  clientName: string;
   vehicleId: string;
   vehicleName?: string;
-  driverId: string;
+  driverId?: string;
   driverName?: string;
-  status: 'pending' | 'confirmed' | 'in-progress' | 'completed' | 'cancelled';
-  pickupAddress: {
-    street: string;
-    city: string;
-    postalCode: string;
-    country: string;
-  };
-  dropoffAddress: {
-    street: string;
-    city: string;
-    postalCode: string;
-    country: string;
-  };
-  pickupTime: string;
-  dropoffTime: string;
-  date: string;
-  distance: number;
-  price: number;
-  paymentMethod: string;
-  paymentStatus: 'paid' | 'pending' | 'failed' | 'partial' | 'unpaid';
-  notes?: string | Array<{content: string}>;
+  status: string;
   createdAt: string;
-  updatedAt: string;
-  
-  // Additional fields needed by components
-  pickup?: {
-    address: string;
-    datetime: string;
-  } | string;
-  dropoff?: {
-    address: string;
-    datetime: string;
-  } | string;
-  service?: string | { name: string };
+  updatedAt?: string;
+  date: string;
   time?: string;
-  startDate?: string;
-  endDate?: string;
-  totalAmount?: number;
+  pickup: string | { address: string; datetime: string };
+  dropoff: string | { address: string; datetime: string };
+  service?: string;
+  amount: number;
+  paymentStatus: 'pending' | 'paid' | 'failed';
   isPaid?: boolean;
   needsDriver?: boolean;
   contractGenerated?: boolean;
+  notes?: string[];
 }
 
-export interface Reservation extends TransportReservation {
-  pickup?: {
-    address: string;
-    datetime: string;
-  } | string;
-  dropoff?: {
-    address: string;
-    datetime: string;
-  } | string;
-  client?: string;
-  vehicle?: string;
-  driver?: string;
-  pickupLocation?: { address: string };
-  dropoffLocation?: { address: string };
-  startDate?: string;
-  endDate?: string;
-  totalAmount?: number;
-}
-
-// Helper function to format addresses
-export const getAddressString = (address: any): string => {
-  if (typeof address === 'string') return address;
-  
-  if (address && typeof address === 'object') {
-    if ('street' in address) {
-      const { street, city, postalCode, country } = address;
-      return `${street}, ${city}, ${postalCode}, ${country}`;
-    }
-    if ('address' in address) {
-      return address.address;
-    }
-  }
-  
-  return "Adresse non disponible";
-};
-
-export interface ReservationNote {
+export interface Reservation {
   id: string;
-  reservationId: string;
-  note: string;
-  author: string;
-  timestamp: string;
+  clientId: string;
+  vehicleId: string;
+  driverId?: string;
+  startDate: string;
+  endDate: string;
+  status: string;
+  pickupLocation: string;
+  dropoffLocation: string;
+  totalAmount: number;
+  createdAt: string;
+  updatedAt?: string;
+  notes?: string[];
 }
-
-// Adding TransportReservationStatus type which is used in ReservationFormDialog
-export type TransportReservationStatus = 'pending' | 'confirmed' | 'in-progress' | 'completed' | 'cancelled';
-
-// Add utility functions for working with services
-export const stringToService = (serviceString: string): string | { name: string } => {
-  return { name: serviceString };
-};
-
-export const serviceToString = (service: string | { name: string } | undefined): string => {
-  if (!service) return 'airport';
-  if (typeof service === 'object' && 'name' in service) return service.name;
-  return service;
-};

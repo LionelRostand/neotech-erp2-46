@@ -1,6 +1,19 @@
 
 import { TransportVehicleWithLocation } from '../types/transport-types';
 
+// Add the missing function to generate popup content
+export const getVehiclePopupContent = (vehicle: TransportVehicleWithLocation): string => {
+  return `
+    <div class="p-2">
+      <h3 class="font-bold">${vehicle.name}</h3>
+      <p>Plaque: ${vehicle.licensePlate}</p>
+      <p>Statut: ${vehicle.status}</p>
+      ${vehicle.driverName ? `<p>Chauffeur: ${vehicle.driverName}</p>` : ''}
+      <p>Dernière mise à jour: ${new Date(vehicle.location.timestamp).toLocaleString()}</p>
+    </div>
+  `;
+};
+
 // Function to convert location data to map markers
 export const convertToMapMarkers = (vehicles: TransportVehicleWithLocation[]) => {
   return vehicles.map(vehicle => ({
