@@ -23,6 +23,9 @@ export const useTimeSheetData = () => {
     if (!timeSheets || !employees) return [];
 
     return timeSheets.map(sheet => {
+      // Conserver toutes les propriétés d'origine de la feuille de temps
+      const enrichedSheet = { ...sheet };
+      
       // Trouver l'employé correspondant
       const employee = employees.find(emp => emp.id === sheet.employeeId);
       
@@ -31,12 +34,12 @@ export const useTimeSheetData = () => {
         ? formatDistanceToNow(new Date(sheet.updatedAt), { addSuffix: true, locale: fr })
         : 'Date inconnue';
       
-      return {
-        ...sheet, // Conserver toutes les propriétés d'origine
-        employeeName: employee ? `${employee.firstName} ${employee.lastName}` : sheet.employeeId || 'Inconnu',
-        employeePhoto: employee?.photo || employee?.photoURL,
-        lastUpdateText
-      };
+      // Ajouter les informations enrichies
+      enrichedSheet.employeeName = employee ? `${employee.firstName} ${employee.lastName}` : sheet.employeeId || 'Inconnu';
+      enrichedSheet.employeePhoto = employee?.photo || employee?.photoURL;
+      enrichedSheet.lastUpdateText = lastUpdateText;
+      
+      return enrichedSheet;
     }) as TimeReport[];
   }, [timeSheets, employees]);
   

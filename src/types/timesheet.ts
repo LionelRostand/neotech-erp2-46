@@ -18,4 +18,8 @@ export interface TimeReport {
   comments?: string;
   updatedAt?: string;
   createdAt?: string;
+  approvedAt?: string;
+  rejectedAt?: string;
+  submittedAt?: string;
+  rejectionReason?: string;
 }

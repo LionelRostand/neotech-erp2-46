@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Download, Plus, Filter, Check, X, Clock, FileText } from 'lucide-react';
@@ -11,6 +11,7 @@ import TimesheetStats from './timesheet/TimesheetStats';
 import TimesheetForm from './timesheet/TimesheetForm';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import * as XLSX from 'xlsx';
+import { approveTimeSheet, rejectTimeSheet } from './timesheet/services/timesheetService';
 
 const EmployeesTimesheet: React.FC = () => {
   const { timeSheets, timeSheetsByStatus, timeSheetStats, isLoading } = useTimeSheetData();
@@ -30,13 +31,29 @@ const EmployeesTimesheet: React.FC = () => {
           : timeSheetsByStatus['En cours'];
 
   // Gérer la validation d'une feuille de temps
-  const handleApprove = (id: string) => {
-    toast.success(`Feuille de temps ${id} approuvée`);
+  const handleApprove = async (id: string) => {
+    try {
+      const result = await approveTimeSheet(id);
+      if (result) {
+        toast.success(`Feuille de temps ${id} approuvée`);
+      }
+    } catch (error) {
+      console.error('Erreur lors de l\'approbation:', error);
+      toast.error('Erreur lors de l\'approbation de la feuille de temps');
+    }
   };
 
   // Gérer le rejet d'une feuille de temps
-  const handleReject = (id: string) => {
-    toast.success(`Feuille de temps ${id} rejetée`);
+  const handleReject = async (id: string) => {
+    try {
+      const result = await rejectTimeSheet(id);
+      if (result) {
+        toast.success(`Feuille de temps ${id} rejetée`);
+      }
+    } catch (error) {
+      console.error('Erreur lors du rejet:', error);
+      toast.error('Erreur lors du rejet de la feuille de temps');
+    }
   };
 
   // Gérer la création d'une nouvelle feuille de temps
