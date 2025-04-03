@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -7,7 +6,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Card, CardContent } from "@/components/ui/card";
 import { fr } from 'date-fns/locale';
 import { Car, CalendarCheck } from "lucide-react";
-import { TransportDriver } from '../types/transport-types';
+import { TransportDriver } from '../types';
 
 interface AssignedReservation {
   id: string;
@@ -32,12 +31,10 @@ const DriverAvailability: React.FC<DriverAvailabilityProps> = ({
 }) => {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   
-  // Format date from YYYY-MM-DD to local date
   const formatDate = (dateStr: string) => {
     return new Date(dateStr).toLocaleDateString('fr-FR', { dateStyle: 'long' });
   };
   
-  // Get formatted service type
   const getServiceLabel = (service: string) => {
     switch (service) {
       case "airport-transfer": return "Transfert Aéroport";
@@ -52,7 +49,6 @@ const DriverAvailability: React.FC<DriverAvailabilityProps> = ({
     }
   };
   
-  // Get reservation status badge
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "confirmed":
@@ -70,7 +66,6 @@ const DriverAvailability: React.FC<DriverAvailabilityProps> = ({
     }
   };
   
-  // Filter reservations for selected date
   const getReservationsForDate = (date: Date) => {
     const dateStr = date.toISOString().split('T')[0];
     return assignedReservations.filter(res => res.date === dateStr);

@@ -38,6 +38,7 @@ export interface MaintenanceRecord {
   description: string;
   cost: number;
   provider: string;
+  performedBy: string;
   nextMaintenance?: string;
   resolved: boolean;
   mileage: number;
@@ -49,7 +50,7 @@ export interface IncidentRecord {
   vehicleId: string;
   date: string;
   description: string;
-  severity: 'low' | 'moderate' | 'high';
+  severity: 'low' | 'medium' | 'high' | 'critical';
   driverName?: string;
   clientName?: string;
   damageDescription?: string;

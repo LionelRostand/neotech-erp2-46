@@ -1,5 +1,5 @@
 
-// Import the correct type
+// Import the correct type from service-types directly
 import type { TransportService } from '../types/service-types';
 
 /**

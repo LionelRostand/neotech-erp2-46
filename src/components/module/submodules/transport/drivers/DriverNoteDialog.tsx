@@ -1,11 +1,10 @@
-
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { DialogHeader, DialogFooter, DialogTitle, DialogContent, Dialog, DialogDescription } from "@/components/ui/dialog";
 import { Clock, Book } from "lucide-react";
-import { TransportDriver } from '../types/transport-types';
+import { TransportDriver } from '../types';
 
 interface DriverNoteDialogProps {
   open: boolean;

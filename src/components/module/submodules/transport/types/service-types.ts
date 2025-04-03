@@ -8,52 +8,62 @@ export interface ServiceOption {
   available: boolean;
   vehicleTypes: string[];
   category: string;
-  duration?: number;
-  image?: string;
+  duration: number;
 }
 
 export interface ServiceAvailability {
   serviceId: string;
-  dayOfWeek: number; // 0-6 for Sunday-Saturday
-  startTime: string; // HH:MM format
-  endTime: string;   // HH:MM format
+  dayOfWeek: number;
+  startTime: string;
+  endTime: string;
   available: boolean;
-  maxBookings?: number;
+  maxBookings: number;
 }
 
 export interface ServicePricing {
-  serviceId: string;
-  basePrice: number;
-  pricePerKm?: number;
-  pricePerMinute?: number;
-  minimumDuration?: number;
-  minimumDistance?: number;
-  rushHourMultiplier?: number;
-  peakSeasonMultiplier?: number;
-  weekendMultiplier?: number;
-}
-
-// This was causing the conflict in types/index.ts
-// Renamed from TransportService to TransportServiceDetails
-export interface TransportServiceDetails {
   id: string;
+  serviceId: string;
   name: string;
-  description: string;
-  type: string;
   basePrice: number;
-  pricePerKm?: number;
-  pricePerMinute?: number;
-  minDuration?: number;
-  vehicleTypes: string[];
-  active: boolean;
+  distancePricing?: {
+    ratePerKm: number;
+    minDistance?: number;
+    maxDistance?: number;
+  };
+  timePricing?: {
+    ratePerHour: number;
+    minimumHours?: number;
+  };
+  extras?: {
+    id: string;
+    name: string;
+    price: number;
+    description?: string;
+  }[];
 }
 
-// Add the TransportService interface that was missing
 export interface TransportService {
   id: string;
   name: string;
   description: string;
-  price: number;
-  type: string;
+  basePrice: number;
+  category: string;
   isActive: boolean;
+  vehicleTypes: string[];
+  maxPassengers: number;
+  maxLuggage: number;
+  features: string[];
+  cancellationPolicy: string;
+  availabilityHours?: {
+    dayOfWeek: number;
+    startTime: string;
+    endTime: string;
+  }[];
+  pricing?: ServicePricing;
+  [key: string]: any;
+}
+
+export interface TransportServiceDetails extends TransportService {
+  availability: ServiceAvailability[];
+  pricing: ServicePricing[];
 }

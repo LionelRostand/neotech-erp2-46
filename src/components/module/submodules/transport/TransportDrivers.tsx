@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -5,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Search, UserIcon, Clock, Star, FileText } from "lucide-react";
-import { TransportDriver } from './types/transport-types';
+import { TransportDriver } from './types';
 import DriversTable from './drivers/DriversTable';
 import DriverDetails from './drivers/DriverDetails';
 import DriverAvailability from './drivers/DriverAvailability';
