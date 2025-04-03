@@ -66,11 +66,8 @@ const ViewReservationDetailsDialog: React.FC<ViewReservationDetailsDialogProps> 
 
     if (Array.isArray(reservation.notes)) {
       if (reservation.notes.length > 0) {
-        const firstNote = reservation.notes[0];
-        if (typeof firstNote === 'object' && firstNote && 'content' in firstNote) {
-          return firstNote.content;
-        }
-        return String(reservation.notes.join(', '));
+        // Just return the array as a string without trying to access .content
+        return reservation.notes.join(', ');
       }
     }
     

@@ -17,7 +17,8 @@ export interface TransportReservation {
   dropoff: string | { address: string; datetime: string };
   service?: string;
   amount: number;
-  paymentStatus: 'pending' | 'paid' | 'failed';
+  price?: number; // Add this field to fix price errors
+  paymentStatus: 'pending' | 'paid' | 'failed' | 'partial' | 'unpaid';
   isPaid?: boolean;
   needsDriver?: boolean;
   contractGenerated?: boolean;
@@ -27,6 +28,7 @@ export interface TransportReservation {
 export interface Reservation {
   id: string;
   clientId: string;
+  clientName: string; // Add clientName
   vehicleId: string;
   driverId?: string;
   startDate: string;
@@ -35,7 +37,25 @@ export interface Reservation {
   pickupLocation: string;
   dropoffLocation: string;
   totalAmount: number;
+  paymentStatus?: 'pending' | 'paid' | 'failed' | 'partial' | 'unpaid';
   createdAt: string;
   updatedAt?: string;
   notes?: string[];
 }
+
+// Helper function to extract address from different formats
+export const getAddressString = (location: string | { address: string; datetime?: string }): string => {
+  if (typeof location === 'string') {
+    return location;
+  }
+  
+  if (location && typeof location === 'object' && 'address' in location) {
+    return location.address;
+  }
+  
+  return "Address not available";
+};
+
+// Add export for TransportReservationStatus
+export type TransportReservationStatus = 'pending' | 'confirmed' | 'completed' | 'cancelled' | 'in-progress';
+
