@@ -1,6 +1,7 @@
+
 import React, { createContext, useContext, useState, useCallback } from 'react';
 import { TransportVehicle, TransportDriver, MaintenanceSchedule, MapExtensionRequest } from '../../types';
-import { mockVehicles, mockMaintenanceSchedules, mockExtensionRequests, mockDrivers } from '../mockData';
+import { mockVehicles, mockDrivers, mockExtensionRequests, generateMaintenanceSchedules } from '../mockData';
 
 interface PlanningContextType {
   vehicles: TransportVehicle[];
@@ -44,7 +45,7 @@ const PlanningContext = createContext<PlanningContextType | null>(null);
 export const PlanningProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [vehiclesData, setVehiclesData] = useState<TransportVehicle[]>(mockVehicles as unknown as TransportVehicle[]);
   const [maintenanceSchedulesData, setMaintenanceSchedulesData] = useState<MaintenanceSchedule[]>(
-    mockMaintenanceSchedules as unknown as MaintenanceSchedule[]
+    generateMaintenanceSchedules() as unknown as MaintenanceSchedule[]
   );
   const [extensionRequestsData, setExtensionRequestsData] = useState<MapExtensionRequest[]>(
     mockExtensionRequests as unknown as MapExtensionRequest[]
@@ -75,7 +76,7 @@ export const PlanningProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     setIsLoading(true);
     setTimeout(() => {
       setVehiclesData(mockVehicles as unknown as TransportVehicle[]);
-      setMaintenanceSchedulesData(mockMaintenanceSchedules as unknown as MaintenanceSchedule[]);
+      setMaintenanceSchedulesData(generateMaintenanceSchedules() as unknown as MaintenanceSchedule[]);
       setExtensionRequestsData(mockExtensionRequests as unknown as MapExtensionRequest[]);
       setDriversData(mockDrivers as unknown as TransportDriver[]);
       setIsLoading(false);

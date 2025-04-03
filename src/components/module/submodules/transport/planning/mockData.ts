@@ -1,3 +1,4 @@
+
 import { addDays, addHours, format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { TransportVehicle } from '../types/vehicle-types';
@@ -377,3 +378,6 @@ export const formatDate = (date: string) => {
 export const formatTime = (time: string) => {
   return format(new Date(`2000-01-01T${time}`), 'HH:mm');
 };
+
+// Ensure that we're exporting both functions that may be needed by PlanningContext
+export { generateMaintenanceSchedules as mockMaintenanceSchedules };
