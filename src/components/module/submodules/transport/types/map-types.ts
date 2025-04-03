@@ -1,19 +1,28 @@
 
-// Define types specific to map functionality
-
 export interface MapExtensionRequest {
   id: string;
-  extended: boolean;
-  fullscreen: boolean;
-  status: 'pending' | 'approved' | 'rejected';
-  clientName: string;
+  requestId: string;
+  vehicleId: string;
   vehicleName: string;
+  driverId?: string;
   driverName?: string;
+  status: 'pending' | 'approved' | 'rejected';
   reason: string;
-  originalEndTime: string;
-  newEndTime: string;
-  originalEndDate: string;
-  requestedEndDate: string;
+  requestedExtension?: number;
+  originalEndTime?: string;
+  newEndTime?: string;
+  timestamp?: string;
+  clientName?: string;
+  originalEndDate?: string;
+  requestedEndDate?: string;
   extensionReason?: string;
-  requestId: string; // Making this field required
+  createdAt?: string;
+  requestDate?: string;
+  requestedAt?: string;
+  extraTimeMinutes?: number;
+  additionalTime?: number;
+  extensionDays?: number;
+  responseMessage?: string;
+  extended?: boolean;
+  fullscreen?: boolean;
 }

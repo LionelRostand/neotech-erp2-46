@@ -1,213 +1,214 @@
+
 import React, { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Switch } from "@/components/ui/switch";
-import { Reservation } from '../types/reservation-types';
-import { toast } from "sonner";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Reservation } from '../types';
 
 interface EditReservationDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  reservation: Reservation;
-  onReservationUpdated?: (reservation: Reservation) => void;
+  reservation: Reservation | null;
+  onSave: (updatedReservation: Reservation) => void;
 }
 
 const EditReservationDialog: React.FC<EditReservationDialogProps> = ({
   open,
   onOpenChange,
   reservation,
-  onReservationUpdated
+  onSave
 }) => {
-  // Parse notes to string for the textarea
-  const parseNotesToString = (notes: any): string => {
-    if (!notes) return '';
-    
-    if (typeof notes === 'string') {
-      return notes;
-    }
-    
-    if (Array.isArray(notes)) {
-      if (notes.length > 0 && typeof notes[0] === 'object' && 'content' in notes[0]) {
-        return notes.map(note => note.content).join('\n');
-      }
-      return notes.join('\n');
-    }
-    
-    return String(notes);
-  };
-
-  // Form state
+  // Set initial values from reservation or with defaults
   const [formData, setFormData] = useState({
-    client: reservation.client,
-    vehicle: reservation.vehicle,
-    driver: reservation.driver,
-    startDate: reservation.startDate,
-    endDate: reservation.endDate,
-    pickupLocation: reservation.pickupLocation.address,
-    dropoffLocation: reservation.dropoffLocation.address,
-    totalAmount: reservation.totalAmount,
-    status: reservation.status,
-    paymentStatus: reservation.paymentStatus,
-    notes: parseNotesToString(reservation.notes)
+    clientId: reservation?.clientId || '',
+    clientName: reservation?.clientName || '',
+    vehicleId: reservation?.vehicleId || '',
+    driverId: reservation?.driverId || '',
+    startDate: reservation?.startDate || '',
+    endDate: reservation?.endDate || '',
+    pickupLocation: reservation?.pickupLocation || '',
+    dropoffLocation: reservation?.dropoffLocation || '',
+    totalAmount: reservation?.totalAmount || 0,
+    status: reservation?.status || 'pending',
+    notes: reservation?.notes?.join('\n') || '',
   });
 
-  // Handle form field changes
-  const handleChange = (field: string, value: string | number) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }));
-  };
-
-  // Handle form submission
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // In a real app, you would submit to an API
-    console.log('Submitting updated reservation:', formData);
-    
-    // Mock update
-    const updatedReservation = {
-      ...reservation,
-      ...formData,
-      pickupLocation: { address: formData.pickupLocation },
-      dropoffLocation: { address: formData.dropoffLocation },
-      updatedAt: new Date().toISOString()
-    };
-    
-    // Notify parent component
-    if (onReservationUpdated) {
-      onReservationUpdated(updatedReservation);
+    if (reservation) {
+      onSave({
+        ...reservation,
+        clientId: formData.clientId,
+        clientName: formData.clientName,
+        vehicleId: formData.vehicleId,
+        driverId: formData.driverId,
+        startDate: formData.startDate,
+        endDate: formData.endDate,
+        pickupLocation: formData.pickupLocation,
+        dropoffLocation: formData.dropoffLocation,
+        totalAmount: formData.totalAmount,
+        status: formData.status,
+        notes: formData.notes ? formData.notes.split('\n') : [],
+        updatedAt: new Date().toISOString()
+      });
     }
     
-    toast.success('Réservation mise à jour avec succès');
     onOpenChange(false);
   };
 
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: name === 'totalAmount' ? parseFloat(value) : value,
+    }));
+  };
+
+  const handleSelectChange = (name: string, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  if (!reservation) return null;
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px]">
+      <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle>Modifier la réservation</DialogTitle>
-          <DialogDescription>
-            Réservation #{reservation.id} - {reservation.clientName}
-          </DialogDescription>
         </DialogHeader>
-
+        
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
+            <div>
+              <Label htmlFor="clientName">Client</Label>
+              <Input 
+                id="clientName" 
+                name="clientName" 
+                value={formData.clientName} 
+                onChange={handleInputChange} 
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="vehicleId">Véhicule ID</Label>
+              <Input 
+                id="vehicleId" 
+                name="vehicleId" 
+                value={formData.vehicleId} 
+                onChange={handleInputChange} 
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="driverId">Chauffeur ID</Label>
+              <Input 
+                id="driverId" 
+                name="driverId" 
+                value={formData.driverId} 
+                onChange={handleInputChange} 
+              />
+            </div>
+            
+            <div>
               <Label htmlFor="status">Statut</Label>
               <Select 
+                name="status" 
                 value={formData.status} 
-                onValueChange={(value) => handleChange('status', value)}
+                onValueChange={(value) => handleSelectChange('status', value)}
               >
-                <SelectTrigger id="status">
-                  <SelectValue placeholder="Sélectionner un statut" />
+                <SelectTrigger>
+                  <SelectValue placeholder="Choisir un statut" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="pending">En attente</SelectItem>
                   <SelectItem value="confirmed">Confirmée</SelectItem>
-                  <SelectItem value="in-progress">En cours</SelectItem>
                   <SelectItem value="completed">Terminée</SelectItem>
                   <SelectItem value="cancelled">Annulée</SelectItem>
+                  <SelectItem value="in-progress">En cours</SelectItem>
                 </SelectContent>
               </Select>
             </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="paymentStatus">Statut de paiement</Label>
-              <Select 
-                value={formData.paymentStatus} 
-                onValueChange={(value) => handleChange('paymentStatus', value)}
-              >
-                <SelectTrigger id="paymentStatus">
-                  <SelectValue placeholder="Statut de paiement" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="pending">En attente</SelectItem>
-                  <SelectItem value="partial">Partiel</SelectItem>
-                  <SelectItem value="paid">Payé</SelectItem>
-                  <SelectItem value="refunded">Remboursé</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
+            
+            <div>
               <Label htmlFor="startDate">Date de début</Label>
-              <Input
-                id="startDate"
-                type="date"
-                value={formData.startDate}
-                onChange={(e) => handleChange('startDate', e.target.value)}
+              <Input 
+                id="startDate" 
+                name="startDate" 
+                type="datetime-local" 
+                value={formData.startDate} 
+                onChange={handleInputChange} 
               />
             </div>
-
-            <div className="space-y-2">
+            
+            <div>
               <Label htmlFor="endDate">Date de fin</Label>
-              <Input
-                id="endDate"
-                type="date"
-                value={formData.endDate}
-                onChange={(e) => handleChange('endDate', e.target.value)}
+              <Input 
+                id="endDate" 
+                name="endDate" 
+                type="datetime-local" 
+                value={formData.endDate} 
+                onChange={handleInputChange} 
               />
             </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
+            
+            <div>
               <Label htmlFor="pickupLocation">Lieu de prise en charge</Label>
-              <Input
-                id="pickupLocation"
-                value={formData.pickupLocation}
-                onChange={(e) => handleChange('pickupLocation', e.target.value)}
+              <Input 
+                id="pickupLocation" 
+                name="pickupLocation" 
+                value={formData.pickupLocation} 
+                onChange={handleInputChange} 
               />
             </div>
-
-            <div className="space-y-2">
+            
+            <div>
               <Label htmlFor="dropoffLocation">Lieu de dépose</Label>
-              <Input
-                id="dropoffLocation"
-                value={formData.dropoffLocation}
-                onChange={(e) => handleChange('dropoffLocation', e.target.value)}
+              <Input 
+                id="dropoffLocation" 
+                name="dropoffLocation" 
+                value={formData.dropoffLocation} 
+                onChange={handleInputChange} 
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="totalAmount">Montant total</Label>
+              <Input 
+                id="totalAmount" 
+                name="totalAmount" 
+                type="number" 
+                value={formData.totalAmount} 
+                onChange={handleInputChange} 
               />
             </div>
           </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="totalAmount">Montant total (€)</Label>
-            <Input
-              id="totalAmount"
-              type="number"
-              value={formData.totalAmount}
-              onChange={(e) => handleChange('totalAmount', parseFloat(e.target.value))}
-            />
-          </div>
-
-          <div className="space-y-2">
+          
+          <div>
             <Label htmlFor="notes">Notes</Label>
-            <Textarea
-              id="notes"
-              value={formData.notes}
-              onChange={(e) => handleChange('notes', e.target.value)}
-              rows={3}
+            <Textarea 
+              id="notes" 
+              name="notes" 
+              value={formData.notes} 
+              onChange={handleInputChange} 
+              rows={3} 
             />
           </div>
-
-          <DialogFooter>
+          
+          <div className="flex justify-end space-x-2">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Annuler
             </Button>
             <Button type="submit">
-              Enregistrer les modifications
+              Enregistrer
             </Button>
-          </DialogFooter>
+          </div>
         </form>
       </DialogContent>
     </Dialog>

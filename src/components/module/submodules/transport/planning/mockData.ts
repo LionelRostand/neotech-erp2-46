@@ -1,9 +1,11 @@
+
 import {
   DriverAvailabilityPeriod,
   MapExtensionRequest,
   TransportDriver,
   TransportVehicle,
   TransportVehicleLocation,
+  MaintenanceSchedule
 } from '../types';
 
 export const mockDrivers: TransportDriver[] = [
@@ -15,13 +17,15 @@ export const mockDrivers: TransportDriver[] = [
     phone: '+33612345678',
     address: '123 Rue de la Paix, 75001 Paris',
     licenseNumber: '1234567890',
-    availability: 'Available',
+    status: 'available', // Changed from availability to status
+    available: true,      // Added available field
     vehicleId: 'vehicle-1',
     notes: [],
     schedule: [],
     rating: 4.5,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
+    experience: 5, // Added for DriverAvailabilityTab
   },
   {
     id: 'driver-2',
@@ -31,13 +35,15 @@ export const mockDrivers: TransportDriver[] = [
     phone: '+33698765432',
     address: '456 Avenue des Champs-Élysées, 75008 Paris',
     licenseNumber: '0987654321',
-    availability: 'Busy',
+    status: 'busy', // Changed from availability to status
+    available: false, // Added available field
     vehicleId: 'vehicle-2',
     notes: [],
     schedule: [],
     rating: 4.8,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
+    experience: 8, // Added for DriverAvailabilityTab
   },
   {
     id: 'driver-3',
@@ -47,13 +53,15 @@ export const mockDrivers: TransportDriver[] = [
     phone: '+33655555555',
     address: '789 Rue de Rivoli, 75001 Paris',
     licenseNumber: '5555555555',
-    availability: 'Available',
+    status: 'available', // Changed from availability to status
+    available: true, // Added available field
     vehicleId: 'vehicle-3',
     notes: [],
     schedule: [],
     rating: 4.2,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
+    experience: 3, // Added for DriverAvailabilityTab
   },
   {
     id: 'driver-4',
@@ -63,13 +71,16 @@ export const mockDrivers: TransportDriver[] = [
     phone: '+33611111111',
     address: '10 Avenue Montaigne, 75008 Paris',
     licenseNumber: '1111111111',
-    availability: 'On Leave',
+    status: 'on_leave', // Changed from availability to status
+    available: false, // Added available field
     vehicleId: 'vehicle-4',
     notes: [],
     schedule: [],
     rating: 4.9,
+    onLeave: true, // Added for DriverAvailabilityTab
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
+    experience: 10, // Added for DriverAvailabilityTab
   },
   {
     id: 'driver-5',
@@ -79,13 +90,15 @@ export const mockDrivers: TransportDriver[] = [
     phone: '+33622222222',
     address: '22 Rue du Faubourg Saint-Honoré, 75008 Paris',
     licenseNumber: '2222222222',
-    availability: 'Available',
+    status: 'available', // Changed from availability to status
+    available: true, // Added available field
     vehicleId: 'vehicle-5',
     notes: [],
     schedule: [],
     rating: 4.6,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
+    experience: 6, // Added for DriverAvailabilityTab
   },
 ];
 
@@ -99,7 +112,8 @@ export const mockVehicles: TransportVehicle[] = [
     year: 2018,
     licensePlate: 'AB-123-CD',
     capacity: 8,
-    availability: 'Available',
+    status: 'available', // Changed from availability to status
+    available: true, // Added available field 
     location: 'Paris',
     notes: [],
     maintenanceSchedule: [],
@@ -116,7 +130,8 @@ export const mockVehicles: TransportVehicle[] = [
     year: 2020,
     licensePlate: 'EF-456-GH',
     capacity: 5,
-    availability: 'In Maintenance',
+    status: 'maintenance', // Changed from availability to status
+    available: false, // Added available field
     location: 'Lyon',
     notes: [],
     maintenanceSchedule: [],
@@ -133,7 +148,8 @@ export const mockVehicles: TransportVehicle[] = [
     year: 2019,
     licensePlate: 'IJ-789-KL',
     capacity: 5,
-    availability: 'Available',
+    status: 'available', // Changed from availability to status
+    available: true, // Added available field
     location: 'Marseille',
     notes: [],
     maintenanceSchedule: [],
@@ -150,7 +166,8 @@ export const mockVehicles: TransportVehicle[] = [
     year: 2021,
     licensePlate: 'MN-012-OP',
     capacity: 5,
-    availability: 'Available',
+    status: 'available', // Changed from availability to status
+    available: true, // Added available field
     location: 'Toulouse',
     notes: [],
     maintenanceSchedule: [],
@@ -167,7 +184,8 @@ export const mockVehicles: TransportVehicle[] = [
     year: 2022,
     licensePlate: 'QR-345-ST',
     capacity: 5,
-    availability: 'Available',
+    status: 'available', // Changed from availability to status
+    available: true, // Added available field
     location: 'Bordeaux',
     notes: [],
     maintenanceSchedule: [],
@@ -180,32 +198,42 @@ export const mockVehicles: TransportVehicle[] = [
 export const mockVehicleLocations: TransportVehicleLocation[] = [
   {
     vehicleId: 'vehicle-1',
-    latitude: 48.8566,
-    longitude: 2.3522,
+    location: {
+      lat: 48.8566,
+      lng: 2.3522
+    },
     timestamp: new Date().toISOString(),
   },
   {
     vehicleId: 'vehicle-2',
-    latitude: 45.7640,
-    longitude: 4.8357,
+    location: {
+      lat: 45.7640,
+      lng: 4.8357
+    },
     timestamp: new Date().toISOString(),
   },
   {
     vehicleId: 'vehicle-3',
-    latitude: 43.2965,
-    longitude: 5.3698,
+    location: {
+      lat: 43.2965,
+      lng: 5.3698
+    },
     timestamp: new Date().toISOString(),
   },
   {
     vehicleId: 'vehicle-4',
-    latitude: 43.6043,
-    longitude: 1.4429,
+    location: {
+      lat: 43.6043,
+      lng: 1.4429
+    },
     timestamp: new Date().toISOString(),
   },
   {
     vehicleId: 'vehicle-5',
-    latitude: 44.8378,
-    longitude: -0.5792,
+    location: {
+      lat: 44.8378,
+      lng: -0.5792
+    },
     timestamp: new Date().toISOString(),
   },
 ];
@@ -234,57 +262,160 @@ export const driverSchedules = [
 export const driverAvailability: DriverAvailabilityPeriod[] = [
   {
     driverId: 'driver-1',
-    startTime: '08:00',
-    endTime: '17:00',
     startDate: '2023-08-15',
     endDate: '2023-08-20',
+    availabilitySlots: [
+      {
+        startTime: '08:00',
+        endTime: '17:00'
+      }
+    ]
   },
   {
     driverId: 'driver-2',
-    startTime: '09:00',
-    endTime: '18:00',
     startDate: '2023-08-15',
     endDate: '2023-08-20',
+    availabilitySlots: [
+      {
+        startTime: '09:00',
+        endTime: '18:00'
+      }
+    ]
   },
   {
     driverId: 'driver-3',
-    startTime: '10:00',
-    endTime: '19:00',
     startDate: '2023-08-15',
     endDate: '2023-08-20',
+    availabilitySlots: [
+      {
+        startTime: '10:00',
+        endTime: '19:00'
+      }
+    ]
   },
 ];
 
-export const extensionRequests: MapExtensionRequest[] = [
+export const mockExtensionRequests: MapExtensionRequest[] = [
   {
     id: "ext-1",
-    extended: true,
-    fullscreen: false,
-    status: "pending" as const,
-    clientName: "Entreprise ABC",
+    requestId: "req-001",
+    vehicleId: "vehicle-1",
     vehicleName: "Mercedes Sprinter",
+    driverId: "driver-1",
     driverName: "Jean Dupont",
+    status: "pending",
     reason: "Client needs the vehicle for another two hours",
     originalEndTime: "16:00",
     newEndTime: "18:00",
+    clientName: "Entreprise ABC",
     originalEndDate: "2023-08-15",
     requestedEndDate: "2023-08-15",
     extensionReason: "Meeting running longer than expected",
-    requestId: "req-001"
   },
   {
     id: "ext-2",
-    extended: false,
-    fullscreen: true,
-    status: "approved" as const,
-    clientName: "Société XYZ",
+    requestId: "req-002",
+    vehicleId: "vehicle-2",
     vehicleName: "BMW X5",
+    driverId: "driver-2",
     driverName: "Marie Martin",
+    status: "approved",
     reason: "Client requested a larger display for presentation",
     originalEndTime: "14:00",
     newEndTime: "14:00",
+    clientName: "Société XYZ",
     originalEndDate: "2023-08-16",
     requestedEndDate: "2023-08-16",
-    requestId: "req-002"
   },
 ];
+
+// Add the missing generateMaintenanceSchedules function
+export const generateMaintenanceSchedules = (): MaintenanceSchedule[] => {
+  const now = new Date();
+  const tomorrow = new Date(now);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  
+  const nextWeek = new Date(now);
+  nextWeek.setDate(nextWeek.getDate() + 7);
+  
+  const nextMonth = new Date(now);
+  nextMonth.setDate(nextMonth.getDate() + 30);
+  
+  return [
+    {
+      id: 'maint-1',
+      vehicleId: 'vehicle-1',
+      scheduledDate: tomorrow.toISOString(),
+      startDate: tomorrow.toISOString(),
+      endDate: tomorrow.toISOString(),
+      type: 'regular',
+      description: 'Changement d\'huile et filtre',
+      estimatedDuration: 60,
+      technicianAssigned: 'Marc Dubois',
+      status: 'scheduled',
+      priority: 'medium',
+      technician: 'Marc Dubois',
+      notes: 'Prévoir remplacement des plaquettes de frein'
+    },
+    {
+      id: 'maint-2',
+      vehicleId: 'vehicle-2',
+      scheduledDate: now.toISOString(),
+      startDate: now.toISOString(),
+      endDate: tomorrow.toISOString(),
+      type: 'repair',
+      description: 'Réparation de la climatisation',
+      estimatedDuration: 180,
+      technicianAssigned: 'Lucie Martin',
+      status: 'in-progress',
+      priority: 'high',
+      technician: 'Lucie Martin',
+      notes: 'Pièce de rechange commandée'
+    },
+    {
+      id: 'maint-3',
+      vehicleId: 'vehicle-3',
+      scheduledDate: nextWeek.toISOString(),
+      startDate: nextWeek.toISOString(),
+      endDate: nextWeek.toISOString(),
+      type: 'inspection',
+      description: 'Contrôle technique annuel',
+      estimatedDuration: 120,
+      technicianAssigned: 'Thomas Petit',
+      status: 'scheduled',
+      priority: 'medium',
+      technician: 'Thomas Petit',
+      notes: 'Véhicule à récupérer la veille'
+    },
+    {
+      id: 'maint-4',
+      vehicleId: 'vehicle-4',
+      scheduledDate: nextMonth.toISOString(),
+      startDate: nextMonth.toISOString(),
+      endDate: nextMonth.toISOString(),
+      type: 'regular',
+      description: 'Remplacement des pneus',
+      estimatedDuration: 90,
+      technicianAssigned: 'Amandine Robert',
+      status: 'scheduled',
+      priority: 'low',
+      technician: 'Amandine Robert',
+      notes: 'Commander 4 pneus été'
+    },
+    {
+      id: 'maint-5',
+      vehicleId: 'vehicle-5',
+      scheduledDate: tomorrow.toISOString(),
+      startDate: tomorrow.toISOString(),
+      endDate: nextWeek.toISOString(),
+      type: 'repair',
+      description: 'Réparation de la carrosserie',
+      estimatedDuration: 480,
+      technicianAssigned: 'Vincent Bernard',
+      status: 'scheduled',
+      priority: 'medium',
+      technician: 'Vincent Bernard',
+      notes: 'Dommage côté conducteur suite à un accrochage'
+    }
+  ];
+};
