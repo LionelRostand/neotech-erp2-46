@@ -1,100 +1,60 @@
 
 import React from 'react';
+import { modules } from '@/data/modules';
 import { SubModule } from '@/data/types/modules';
-import {
-  renderEmployeesSubmodule,
-  renderFreightSubmodule,
-  renderProjectsSubmodule,
-  renderAccountingSubmodule,
-  renderMessagesSubmodule,
-  renderCompaniesSubmodule,
-  renderCrmSubmodule,
-  renderHealthSubmodule,
-  renderDocumentsSubmodule,
-  renderVehicleRentalsSubmodule,
-  renderTransportSubmodule,
-  renderGarageSubmodule,
-  SalonRenderer,
-  RestaurantRenderer,
-  renderWebsiteSubmodule
-} from './renderers';
+import { renderChatSubmodule } from './renderers/ChatRenderer';
+import { renderEmployeesSubmodule } from './renderers/EmployeesRenderer';
+import { renderAccountingSubmodule } from './renderers/AccountingRenderer';
+import { renderFreightSubmodule } from './renderers/FreightRenderer';
+import { renderBomSubmodule } from './renderers/BomRenderer';
+import { renderProjectsSubmodule } from './renderers/ProjectsRenderer';
+import { renderSalesSubmodule } from './renderers/SalesRenderer';
+import { renderHealthSubmodule } from './renderers/HealthRenderer';
+import { renderMessagingSubmodule } from './renderers/MessagingRenderer';
+import { renderProductionSubmodule } from './renderers/ProductionRenderer';
+import { renderWarehouseSubmodule } from './renderers/WarehouseRenderer';
+import { renderTreasurySubmodule } from './renderers/TreasuryRenderer';
+import DefaultSubmoduleContent from './DefaultSubmoduleContent';
 
-interface RenderSubmoduleContentProps {
+interface SubmoduleRenderProps {
   submoduleId: string;
   submodule: SubModule;
 }
 
-export const renderSubmoduleContent = ({ submoduleId, submodule }: RenderSubmoduleContentProps) => {
-  console.log('renderSubmoduleContent called with:', submoduleId);
+export const renderSubmoduleContent = ({ submoduleId, submodule }: SubmoduleRenderProps) => {
+  console.log('SubmoduleRenderer - Rendering submodule:', submoduleId);
   
-  // Use specific renderer based on module prefix
-  if (submoduleId.startsWith('employees-')) {
-    return renderEmployeesSubmodule(submoduleId, submodule);
+  // Déterminer le module parent du sous-module
+  const modulePrefix = submoduleId.split('-')[0];
+  
+  // Sélectionner le bon renderer en fonction du module
+  switch (modulePrefix) {
+    case 'chat':
+      return renderChatSubmodule(submoduleId, submodule);
+    case 'employees':
+      return renderEmployeesSubmodule(submoduleId, submodule);
+    case 'accounting':
+      return renderAccountingSubmodule(submoduleId, submodule);
+    case 'freight':
+      return renderFreightSubmodule(submoduleId, submodule);
+    case 'bom':
+      return renderBomSubmodule(submoduleId, submodule);
+    case 'projects':
+      return renderProjectsSubmodule(submoduleId, submodule);
+    case 'sales':
+      return renderSalesSubmodule(submoduleId, submodule);
+    case 'health':
+      return renderHealthSubmodule(submoduleId, submodule);
+    case 'messaging':
+      return renderMessagingSubmodule(submoduleId, submodule);
+    case 'production':
+      return renderProductionSubmodule(submoduleId, submodule);
+    case 'warehouse':
+      return renderWarehouseSubmodule(submoduleId, submodule);
+    case 'treasury':
+      return renderTreasurySubmodule(submoduleId, submodule);
+    default:
+      console.warn(`No renderer found for submodule: ${submoduleId}`);
+      return <DefaultSubmoduleContent submodule={submodule} />;
   }
-  
-  if (submoduleId.startsWith('freight-')) {
-    return renderFreightSubmodule(submoduleId, submodule);
-  }
-  
-  if (submoduleId.startsWith('projects-')) {
-    return renderProjectsSubmodule(submoduleId, submodule);
-  }
-  
-  if (submoduleId.startsWith('accounting-')) {
-    return renderAccountingSubmodule(submoduleId, submodule);
-  }
-  
-  if (submoduleId.startsWith('messages-')) {
-    return renderMessagesSubmodule(submoduleId, submodule);
-  }
-  
-  if (submoduleId.startsWith('companies-')) {
-    console.log('Delegating to renderCompaniesSubmodule for:', submoduleId);
-    return renderCompaniesSubmodule(submoduleId, submodule);
-  }
-  
-  if (submoduleId.startsWith('crm-')) {
-    return renderCrmSubmodule(submoduleId, submodule);
-  }
-  
-  if (submoduleId.startsWith('health-')) {
-    return renderHealthSubmodule(submoduleId, submodule);
-  }
-  
-  if (submoduleId.startsWith('documents-')) {
-    return renderDocumentsSubmodule(submoduleId, submodule);
-  }
-  
-  if (submoduleId.startsWith('rentals-')) {
-    return renderVehicleRentalsSubmodule(submoduleId, submodule);
-  }
-  
-  if (submoduleId.startsWith('transport-')) {
-    console.log('Delegating to renderTransportSubmodule for:', submoduleId);
-    return renderTransportSubmodule(submoduleId, submodule);
-  }
-  
-  if (submoduleId.startsWith('garage-')) {
-    console.log('Delegating to renderGarageSubmodule for:', submoduleId);
-    return renderGarageSubmodule(submoduleId, submodule);
-  }
-  
-  if (submoduleId.startsWith('salon-')) {
-    console.log('Delegating to SalonRenderer for:', submoduleId);
-    return <SalonRenderer submoduleId={submoduleId} submodule={submodule} />;
-  }
-  
-  if (submoduleId.startsWith('restaurant-')) {
-    console.log('Delegating to RestaurantRenderer for:', submoduleId);
-    return <RestaurantRenderer submoduleId={submoduleId} submodule={submodule} />;
-  }
-  
-  if (submoduleId.startsWith('website-')) {
-    console.log('Delegating to renderWebsiteSubmodule for:', submoduleId);
-    return renderWebsiteSubmodule(submoduleId, submodule);
-  }
-  
-  // Fallback to default content rendering
-  console.warn('No renderer found for:', submoduleId);
-  return <div>Module content not implemented: {submoduleId}</div>;
 };

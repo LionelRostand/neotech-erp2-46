@@ -7,7 +7,6 @@ import EmployeesProfiles from '../employees/EmployeesProfiles';
 import EmployeesBadges from '../EmployeesBadges';
 import EmployeesAttendance from '../EmployeesAttendance';
 import EmployeesTimesheet from '../EmployeesTimesheet';
-import EmployeesLeaves from '../EmployeesLeaves';
 import EmployeesAbsences from '../EmployeesAbsences';
 import EmployeesContracts from '../EmployeesContracts';
 import EmployeesDocuments from '../EmployeesDocuments';
@@ -21,6 +20,7 @@ import EmployeesDepartments from '../departments/EmployeesDepartments';
 import EmployeesHierarchy from '../EmployeesHierarchy';
 import EmployeesCompanies from '../employees/EmployeesCompanies';
 import SalarySlips from '../salaries/SalarySlips';
+import EmployeesLeaves from '../leaves/EmployeesLeaves';
 
 export const renderEmployeesSubmodule = (submoduleId: string, submodule: SubModule) => {
   console.log('Rendering employee submodule:', submoduleId);

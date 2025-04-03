@@ -5,6 +5,7 @@ import ModuleLayout from "@/components/module/ModuleLayout";
 import SubmodulePage from "@/components/module/SubmodulePage";
 import SalarySlips from "@/components/module/submodules/salaries/SalarySlips";
 import EmployeesDepartments from "@/components/module/submodules/departments/EmployeesDepartments";
+import EmployeesLeaves from "@/components/module/submodules/leaves/EmployeesLeaves";
 
 export const EmployeesRoutes = (
   <Route key="employees" path="/modules/employees" element={<ModuleLayout moduleId={1} />}>
@@ -16,7 +17,7 @@ export const EmployeesRoutes = (
     <Route path="hierarchy" element={<SubmodulePage moduleId={1} submoduleId="employees-hierarchy" />} />
     <Route path="attendance" element={<SubmodulePage moduleId={1} submoduleId="employees-attendance" />} />
     <Route path="timesheet" element={<SubmodulePage moduleId={1} submoduleId="employees-timesheet" />} />
-    <Route path="leaves" element={<SubmodulePage moduleId={1} submoduleId="employees-leaves" />} />
+    <Route path="leaves" element={<EmployeesLeaves />} />
     <Route path="absences" element={<SubmodulePage moduleId={1} submoduleId="employees-absences" />} />
     <Route path="contracts" element={<SubmodulePage moduleId={1} submoduleId="employees-contracts" />} />
     <Route path="documents" element={<SubmodulePage moduleId={1} submoduleId="employees-documents" />} />
