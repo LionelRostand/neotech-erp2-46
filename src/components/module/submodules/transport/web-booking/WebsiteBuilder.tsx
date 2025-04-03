@@ -1,5 +1,5 @@
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
@@ -14,7 +14,7 @@ import CustomerContactForm from './CustomerContactForm';
 import DevModePanel from '../../website/editor/DevModePanel';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
-import { WebBookingConfig } from '../types';
+import { WebBookingConfig } from '../types/web-booking-types';
 import PublishDialog from './PublishDialog';
 
 const WebsiteBuilder: React.FC = () => {
@@ -87,6 +87,19 @@ const WebsiteBuilder: React.FC = () => {
     }
   });
 
+  // Load saved configuration from localStorage on component mount
+  useEffect(() => {
+    const savedConfig = localStorage.getItem('web-booking-config');
+    if (savedConfig) {
+      try {
+        const parsedConfig = JSON.parse(savedConfig);
+        setWebConfig(parsedConfig);
+      } catch (error) {
+        console.error('Failed to parse saved config:', error);
+      }
+    }
+  }, []);
+
   const handleSave = () => {
     setSavedMessage('Modifications enregistrées');
     toast({
@@ -96,7 +109,7 @@ const WebsiteBuilder: React.FC = () => {
     });
     setTimeout(() => setSavedMessage(null), 3000);
     
-    // Simuler la sauvegarde dans un stockage persistant
+    // Sauvegarder dans un stockage persistant
     localStorage.setItem('web-booking-config', JSON.stringify(webConfig));
   };
 
@@ -104,10 +117,10 @@ const WebsiteBuilder: React.FC = () => {
     setIsPublishDialogOpen(true);
   };
 
-  const completePublish = () => {
+  const completePublish = (customDomain?: string) => {
     // Générer une URL publique (simulation)
-    const publicUrl = `https://rentacar-${Math.floor(Math.random() * 1000)}.booking-demo.com`;
-    setPublishedUrl(publicUrl);
+    const domain = customDomain || `rentacar-${Math.floor(Math.random() * 1000)}.booking-demo.com`;
+    setPublishedUrl(domain);
     setIsPublished(true);
     
     toast({
@@ -123,8 +136,12 @@ const WebsiteBuilder: React.FC = () => {
     setShowDevMode(!showDevMode);
   };
 
-  const updateConfig = (newConfig: WebBookingConfig) => {
-    setWebConfig(newConfig);
+  const updateConfig = (newConfig: Partial<WebBookingConfig>) => {
+    setWebConfig(prev => ({ ...prev, ...newConfig }));
+  };
+
+  const handleSettingsUpdate = (updatedConfig: WebBookingConfig) => {
+    setWebConfig(updatedConfig);
   };
 
   return (
@@ -233,7 +250,7 @@ const WebsiteBuilder: React.FC = () => {
                       {showDevMode ? (
                         <DevModePanel onClose={toggleDevMode} />
                       ) : (
-                        <WebBookingEditorSidebar />
+                        <WebBookingEditorSidebar config={webConfig} onConfigUpdate={updateConfig} />
                       )}
                     </div>
                   </ResizablePanel>
@@ -249,7 +266,7 @@ const WebsiteBuilder: React.FC = () => {
               </TabsContent>
 
               <TabsContent value="settings" className="h-[calc(100vh-334px)] p-4 overflow-y-auto">
-                <SettingsForm />
+                <SettingsForm initialConfig={webConfig} onSave={handleSettingsUpdate} />
               </TabsContent>
 
               <TabsContent value="media" className="h-[calc(100vh-334px)] p-4 overflow-y-auto">

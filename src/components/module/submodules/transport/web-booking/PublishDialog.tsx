@@ -9,13 +9,13 @@ import {
   DialogHeader, 
   DialogTitle 
 } from '@/components/ui/dialog';
-import { Globe, CheckCircle2, Loader2 } from 'lucide-react';
+import { Globe, CheckCircle2, Loader2, Edit2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 
 interface PublishDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  onPublish: () => void;
+  onPublish: (domain?: string) => void;
   publishedUrl: string;
   isPublished: boolean;
 }
@@ -29,6 +29,8 @@ const PublishDialog: React.FC<PublishDialogProps> = ({
 }) => {
   const [isPublishing, setIsPublishing] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [customDomain, setCustomDomain] = useState('');
+  const [isEditingDomain, setIsEditingDomain] = useState(false);
 
   const handlePublish = () => {
     setIsPublishing(true);
@@ -40,10 +42,14 @@ const PublishDialog: React.FC<PublishDialogProps> = ({
       
       // Appeler la fonction onPublish après un délai pour montrer le succès
       setTimeout(() => {
-        onPublish();
+        onPublish(customDomain || undefined);
         setShowSuccess(false);
       }, 1500);
     }, 2000);
+  };
+
+  const handleDomainChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setCustomDomain(e.target.value);
   };
 
   return (
@@ -66,10 +72,36 @@ const PublishDialog: React.FC<PublishDialogProps> = ({
             <div className="space-y-2">
               <p className="text-sm text-muted-foreground">URL publique de votre site :</p>
               <div className="flex gap-2">
-                <Input value={publishedUrl} readOnly className="flex-1" />
-                <Button variant="outline" size="sm" onClick={() => navigator.clipboard.writeText(publishedUrl)}>
-                  Copier
-                </Button>
+                {isEditingDomain ? (
+                  <div className="flex-1 flex gap-2">
+                    <Input 
+                      value={customDomain || publishedUrl} 
+                      onChange={handleDomainChange}
+                      placeholder="Entrez un domaine personnalisé"
+                      className="flex-1"
+                    />
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => {
+                        setIsEditingDomain(false);
+                        onPublish(customDomain);
+                      }}
+                    >
+                      Sauvegarder
+                    </Button>
+                  </div>
+                ) : (
+                  <>
+                    <Input value={publishedUrl} readOnly className="flex-1" />
+                    <Button variant="outline" size="sm" onClick={() => navigator.clipboard.writeText(publishedUrl)}>
+                      Copier
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={() => setIsEditingDomain(true)}>
+                      <Edit2 className="h-4 w-4" />
+                    </Button>
+                  </>
+                )}
               </div>
             </div>
             
@@ -83,6 +115,18 @@ const PublishDialog: React.FC<PublishDialogProps> = ({
               En publiant votre site, il sera accessible à toute personne disposant du lien.
               Vous pourrez toujours modifier votre site après publication.
             </p>
+            
+            <div className="space-y-2">
+              <p className="text-sm font-medium">Domaine personnalisé (optionnel) :</p>
+              <Input
+                placeholder="example.booking-demo.com"
+                value={customDomain}
+                onChange={handleDomainChange}
+              />
+              <p className="text-xs text-muted-foreground">
+                Laissez vide pour utiliser un domaine automatique.
+              </p>
+            </div>
             
             {showSuccess ? (
               <div className="flex flex-col items-center justify-center py-4">

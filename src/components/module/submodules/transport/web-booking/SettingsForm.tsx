@@ -1,5 +1,5 @@
 
-import React, { useRef } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -10,13 +10,19 @@ import { WebBookingConfig, MenuItem } from '../types/web-booking-types';
 import { useToast } from '@/hooks/use-toast';
 import MenuEditor from './MenuEditor';
 import BannerEditor from './BannerEditor';
+import { ColorPicker } from '../../website/editor/ColorPicker';
 
-const SettingsForm = () => {
+interface SettingsFormProps {
+  initialConfig?: WebBookingConfig;
+  onSave?: (config: WebBookingConfig) => void;
+}
+
+const SettingsForm: React.FC<SettingsFormProps> = ({ initialConfig, onSave }) => {
   const { toast } = useToast();
   const logoFileInputRef = useRef<HTMLInputElement>(null);
 
   // Sample initial config
-  const [config, setConfig] = React.useState<WebBookingConfig>({
+  const [config, setConfig] = React.useState<WebBookingConfig>(initialConfig || {
     title: "RentaCar - Location de véhicules",
     subtitle: "Location de véhicules de qualité",
     logo: "/logo.png",
@@ -74,11 +80,26 @@ const SettingsForm = () => {
     }
   });
 
+  // Update config when initialConfig changes
+  useEffect(() => {
+    if (initialConfig) {
+      setConfig(initialConfig);
+    }
+  }, [initialConfig]);
+
   const handleChange = (field: keyof WebBookingConfig, value: any) => {
     setConfig(prev => ({
       ...prev,
       [field]: value
     }));
+    
+    // If onSave is provided, call it to update the parent component
+    if (onSave) {
+      onSave({
+        ...config,
+        [field]: value
+      });
+    }
   };
 
   const handleRequiredFieldToggle = (field: string) => {
@@ -100,25 +121,54 @@ const SettingsForm = () => {
   };
 
   const handleMenuChange = (items: MenuItem[]) => {
-    handleChange('menuItems', items);
+    const updatedConfig = {
+      ...config,
+      menuItems: items
+    };
+    setConfig(updatedConfig);
+    if (onSave) {
+      onSave(updatedConfig);
+    }
   };
 
   const handleBannerChange = (bannerConfig: any) => {
-    handleChange('bannerConfig', bannerConfig);
+    const updatedConfig = {
+      ...config,
+      bannerConfig
+    };
+    setConfig(updatedConfig);
+    if (onSave) {
+      onSave(updatedConfig);
+    }
   };
   
   const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
       const file = e.target.files[0];
-      const logoUrl = URL.createObjectURL(file);
+      const reader = new FileReader();
       
-      handleChange('logo', logoUrl);
+      reader.onload = (event) => {
+        if (event.target && event.target.result) {
+          const logoUrl = event.target.result.toString();
+          const updatedConfig = {
+            ...config,
+            logo: logoUrl
+          };
+          
+          setConfig(updatedConfig);
+          if (onSave) {
+            onSave(updatedConfig);
+          }
+          
+          toast({
+            title: "Logo téléversé",
+            description: `${file.name} a été défini comme logo du site.`,
+            duration: 3000,
+          });
+        }
+      };
       
-      toast({
-        title: "Logo téléversé",
-        description: `${file.name} a été défini comme logo du site.`,
-        duration: 3000,
-      });
+      reader.readAsDataURL(file);
     }
   };
   
@@ -134,6 +184,11 @@ const SettingsForm = () => {
     
     // Save to localStorage for persistence
     localStorage.setItem('web-booking-config', JSON.stringify(config));
+    
+    // Call the onSave prop if provided
+    if (onSave) {
+      onSave(config);
+    }
     
     toast({
       title: "Configuration sauvegardée",
@@ -159,7 +214,7 @@ const SettingsForm = () => {
               <Label htmlFor="site-title">Titre du site</Label>
               <Input 
                 id="site-title" 
-                value={config.siteTitle}
+                value={config.siteTitle || ''}
                 onChange={(e) => handleChange('siteTitle', e.target.value)}
                 className="mt-1" 
               />
@@ -225,34 +280,18 @@ const SettingsForm = () => {
               <div>
                 <Label htmlFor="primary-color">Couleur principale</Label>
                 <div className="flex mt-1 items-center gap-2">
-                  <input 
-                    type="color" 
-                    id="primary-color" 
-                    value={config.primaryColor}
-                    onChange={(e) => handleChange('primaryColor', e.target.value)}
-                    className="w-10 h-10 p-1 border rounded"
-                  />
-                  <Input 
-                    value={config.primaryColor}
-                    onChange={(e) => handleChange('primaryColor', e.target.value)}
-                    className="flex-1" 
+                  <ColorPicker 
+                    color={config.primaryColor || '#ff5f00'}
+                    onChange={(color) => handleChange('primaryColor', color)}
                   />
                 </div>
               </div>
               <div>
                 <Label htmlFor="secondary-color">Couleur secondaire</Label>
                 <div className="flex mt-1 items-center gap-2">
-                  <input 
-                    type="color" 
-                    id="secondary-color" 
-                    value={config.secondaryColor}
-                    onChange={(e) => handleChange('secondaryColor', e.target.value)}
-                    className="w-10 h-10 p-1 border rounded"
-                  />
-                  <Input 
-                    value={config.secondaryColor}
-                    onChange={(e) => handleChange('secondaryColor', e.target.value)}
-                    className="flex-1" 
+                  <ColorPicker 
+                    color={config.secondaryColor || '#003366'}
+                    onChange={(color) => handleChange('secondaryColor', color)}
                   />
                 </div>
               </div>
@@ -326,7 +365,7 @@ const SettingsForm = () => {
                 <div className="flex items-center space-x-2">
                   <Switch 
                     id="req-pickup-location" 
-                    checked={config.requiredFields.includes('pickup_location')}
+                    checked={config.requiredFields?.includes('pickup_location')}
                     onCheckedChange={() => handleRequiredFieldToggle('pickup_location')}
                   />
                   <Label htmlFor="req-pickup-location">Lieu de départ</Label>
@@ -334,7 +373,7 @@ const SettingsForm = () => {
                 <div className="flex items-center space-x-2">
                   <Switch 
                     id="req-dropoff-location" 
-                    checked={config.requiredFields.includes('dropoff_location')}
+                    checked={config.requiredFields?.includes('dropoff_location')}
                     onCheckedChange={() => handleRequiredFieldToggle('dropoff_location')}
                   />
                   <Label htmlFor="req-dropoff-location">Lieu de retour</Label>
@@ -342,7 +381,7 @@ const SettingsForm = () => {
                 <div className="flex items-center space-x-2">
                   <Switch 
                     id="req-pickup-date" 
-                    checked={config.requiredFields.includes('pickup_date')}
+                    checked={config.requiredFields?.includes('pickup_date')}
                     onCheckedChange={() => handleRequiredFieldToggle('pickup_date')}
                   />
                   <Label htmlFor="req-pickup-date">Date de départ</Label>
@@ -350,7 +389,7 @@ const SettingsForm = () => {
                 <div className="flex items-center space-x-2">
                   <Switch 
                     id="req-dropoff-date" 
-                    checked={config.requiredFields.includes('dropoff_date')}
+                    checked={config.requiredFields?.includes('dropoff_date')}
                     onCheckedChange={() => handleRequiredFieldToggle('dropoff_date')}
                   />
                   <Label htmlFor="req-dropoff-date">Date de retour</Label>
@@ -358,7 +397,7 @@ const SettingsForm = () => {
                 <div className="flex items-center space-x-2">
                   <Switch 
                     id="req-driver-info" 
-                    checked={config.requiredFields.includes('driver_info')}
+                    checked={config.requiredFields?.includes('driver_info')}
                     onCheckedChange={() => handleRequiredFieldToggle('driver_info')}
                   />
                   <Label htmlFor="req-driver-info">Informations du conducteur</Label>
@@ -366,7 +405,7 @@ const SettingsForm = () => {
                 <div className="flex items-center space-x-2">
                   <Switch 
                     id="req-phone" 
-                    checked={config.requiredFields.includes('phone')}
+                    checked={config.requiredFields?.includes('phone')}
                     onCheckedChange={() => handleRequiredFieldToggle('phone')}
                   />
                   <Label htmlFor="req-phone">Téléphone</Label>

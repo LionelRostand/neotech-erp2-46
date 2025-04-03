@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+
+import React from 'react';
 import { WebBookingConfig } from '../types/web-booking-types';
 
 interface WebBookingPreviewProps {
@@ -7,327 +8,234 @@ interface WebBookingPreviewProps {
 }
 
 const WebBookingPreview: React.FC<WebBookingPreviewProps> = ({ isEditing, config }) => {
-  const [activeMenuPath, setActiveMenuPath] = useState('/');
-  const [showMobileMenu, setShowMobileMenu] = useState(false);
-  
-  const handleMenuClick = (path: string, e: React.MouseEvent) => {
-    e.preventDefault();
-    setActiveMenuPath(path);
-    setShowMobileMenu(false);
+  const { 
+    siteTitle, 
+    title, 
+    subtitle, 
+    logo, 
+    primaryColor, 
+    secondaryColor, 
+    bannerConfig, 
+    menuItems,
+    contactInfo
+  } = config;
+
+  // Generate inline styles for preview
+  const headerStyle = {
+    backgroundColor: config.headerBackground || '#ffffff',
+    borderBottom: '1px solid rgba(0,0,0,0.1)'
   };
-  
-  const renderContent = () => {
-    switch(activeMenuPath) {
-      case '/':
-        return <HomePage config={config} />;
-      case '/vehicules':
-        return <VehiclesPage config={config} />;
-      case '/tarifs':
-        return <PricingPage config={config} />;
-      case '/contact':
-        return <ContactPage config={config} />;
-      default:
-        return <HomePage config={config} />;
-    }
+
+  const bannerStyle = {
+    backgroundColor: bannerConfig?.backgroundColor || '#003366',
+    color: bannerConfig?.textColor || '#ffffff',
+    backgroundImage: bannerConfig?.backgroundImage ? `url(${bannerConfig.backgroundImage})` : 'none',
+    backgroundSize: 'cover',
+    backgroundPosition: 'center',
+    position: 'relative' as 'relative'
   };
-  
+
+  const overlayStyle = {
+    position: 'absolute' as 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0,0,0,' + (bannerConfig?.overlayOpacity || 50) / 100 + ')',
+    zIndex: 1
+  };
+
+  const contentStyle = {
+    position: 'relative' as 'relative',
+    zIndex: 2,
+    padding: '3rem 1.5rem'
+  };
+
+  const buttonStyle = {
+    backgroundColor: primaryColor,
+    color: '#ffffff',
+    padding: '0.75rem 1.5rem',
+    borderRadius: '0.25rem',
+    fontWeight: 600,
+    display: 'inline-block',
+    marginTop: '1rem',
+    cursor: 'pointer'
+  };
+
+  const footerStyle = {
+    backgroundColor: config.footerBackground || '#f5f5f5'
+  };
+
   return (
-    <div className={`w-full ${isEditing ? 'bg-gray-50 border rounded' : ''}`}>
-      <div className="flex flex-col min-h-[600px]">
-        {/* Header */}
-        <header className={`py-4 px-6`} style={{ backgroundColor: config.headerBackground || '#ffffff' }}>
-          <div className="container mx-auto flex justify-between items-center">
-            <div className="flex items-center">
-              {config.logo && (
-                <img src={config.logo} alt="Logo" className="h-10 mr-3" />
-              )}
-              <div>
-                <h1 className="font-bold text-xl">{config.title}</h1>
-                <p className="text-sm text-gray-600">{config.subtitle}</p>
-              </div>
-            </div>
-            
-            {/* Desktop Menu */}
-            <nav className="hidden md:flex space-x-6">
-              {config.menuItems
-                .filter(item => item.isActive !== false)
-                .map(item => (
-                  <a
-                    key={item.id}
-                    href={item.url}
-                    className={`text-sm font-medium transition-colors hover:text-primary ${activeMenuPath === item.url ? 'text-primary font-bold' : 'text-gray-700'}`}
-                    onClick={(e) => handleMenuClick(item.url, e)}
-                    style={{ color: activeMenuPath === item.url ? config.primaryColor : undefined }}
-                  >
-                    {item.label}
-                  </a>
-                ))}
-            </nav>
-            
-            {/* Mobile Menu Button */}
-            <button 
-              className="md:hidden text-gray-700"
-              onClick={() => setShowMobileMenu(!showMobileMenu)}
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                {showMobileMenu ? (
-                  <path d="M18 6L6 18M6 6l12 12" />
-                ) : (
-                  <path d="M3 12h18M3 6h18M3 18h18" />
-                )}
-              </svg>
-            </button>
+    <div className="w-full bg-white shadow-sm rounded-md overflow-hidden border">
+      {/* Header */}
+      <header style={headerStyle} className="px-6 py-4">
+        <div className="flex justify-between items-center">
+          <div className="flex items-center gap-2">
+            {logo && (
+              <img src={logo} alt="Logo" className="h-8 w-auto" />
+            )}
+            <h1 className="font-bold text-xl">{siteTitle || title}</h1>
           </div>
           
-          {/* Mobile Menu */}
-          {showMobileMenu && (
-            <div className="md:hidden mt-4 px-4 py-3 bg-gray-50 rounded-lg">
-              {config.menuItems
-                .filter(item => item.isActive !== false)
-                .map(item => (
-                  <a
-                    key={item.id}
-                    href={item.url}
-                    className={`block py-2 text-sm font-medium ${activeMenuPath === item.url ? 'font-bold' : 'text-gray-700'}`}
-                    onClick={(e) => handleMenuClick(item.url, e)}
-                    style={{ color: activeMenuPath === item.url ? config.primaryColor : undefined }}
-                  >
+          <nav>
+            <ul className="flex gap-6">
+              {menuItems?.map(item => (
+                <li key={item.id} className={`${item.isActive ? 'font-semibold' : ''}`}>
+                  <a href={item.url} style={{ color: item.isActive ? primaryColor : 'inherit' }}>
                     {item.label}
                   </a>
-                ))}
-            </div>
-          )}
-        </header>
-        
-        {/* Banner if enabled */}
-        {config.banner?.enabled && (
-          <div 
-            className="py-2 px-4 text-center text-sm"
-            style={{ 
-              backgroundColor: config.banner.background,
-              color: config.banner.textColor
-            }}
-          >
-            {config.banner.text}
-            {config.banner.link && (
-              <a href={config.banner.link} className="underline ml-2">En savoir plus</a>
+                </li>
+              ))}
+            </ul>
+          </nav>
+        </div>
+      </header>
+
+      {/* Banner */}
+      {bannerConfig && (
+        <div style={bannerStyle} className="relative text-center">
+          {bannerConfig.overlay && <div style={overlayStyle}></div>}
+          <div style={contentStyle}>
+            <h2 className="text-3xl font-bold mb-2">{bannerConfig.title || title}</h2>
+            <p className="text-xl mb-4">{bannerConfig.subtitle || subtitle}</p>
+            {bannerConfig.buttonText && (
+              <a href={bannerConfig.buttonLink || '#'} style={buttonStyle}>
+                {bannerConfig.buttonText}
+              </a>
             )}
           </div>
-        )}
-        
-        {/* Main Content */}
-        <main className="flex-grow">
-          {renderContent()}
-        </main>
-        
-        {/* Footer */}
-        <footer className="py-8 px-6" style={{ backgroundColor: config.footerBackground || '#f5f5f5' }}>
-          <div className="container mx-auto">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              <div>
-                <h3 className="font-bold mb-4">Contact</h3>
-                <p className="text-sm">{config.contactInfo.address}</p>
-                <p className="text-sm mt-2">{config.contactInfo.phone}</p>
-                <p className="text-sm mt-2">{config.contactInfo.email}</p>
-              </div>
-              
-              <div>
-                <h3 className="font-bold mb-4">Liens rapides</h3>
-                <ul className="space-y-2">
-                  {config.menuItems
-                    .filter(item => item.isActive !== false)
-                    .map(item => (
-                      <li key={item.id}>
-                        <a 
-                          href={item.url}
-                          className="text-sm hover:underline"
-                          onClick={(e) => handleMenuClick(item.url, e)}
-                        >
-                          {item.label}
-                        </a>
-                      </li>
-                    ))}
-                </ul>
-              </div>
-              
-              <div>
-                <h3 className="font-bold mb-4">Suivez-nous</h3>
-                <div className="flex space-x-4">
-                  {config.socialLinks?.facebook && (
-                    <a href={config.socialLinks.facebook} target="_blank" rel="noopener noreferrer" className="text-gray-600 hover:text-gray-900">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path>
-                      </svg>
-                    </a>
-                  )}
-                  {config.socialLinks?.twitter && (
-                    <a href={config.socialLinks.twitter} target="_blank" rel="noopener noreferrer" className="text-gray-600 hover:text-gray-900">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z"></path>
-                      </svg>
-                    </a>
-                  )}
-                  {config.socialLinks?.instagram && (
-                    <a href={config.socialLinks.instagram} target="_blank" rel="noopener noreferrer" className="text-gray-600 hover:text-gray-900">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
-                        <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
-                        <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
-                      </svg>
-                    </a>
-                  )}
+        </div>
+      )}
+
+      {/* Booking Form Section */}
+      <section className="px-6 py-8">
+        <div className="max-w-4xl mx-auto">
+          <h2 style={{ color: secondaryColor }} className="text-2xl font-bold mb-6">Réservez votre véhicule en quelques clics</h2>
+          
+          <div className="grid md:grid-cols-2 gap-8">
+            <div>
+              <div className="bg-gray-100 p-6 rounded-lg">
+                <h3 className="text-lg font-semibold mb-4">Formulaire de réservation</h3>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Lieu de prise en charge</label>
+                    <input type="text" className="w-full px-3 py-2 border rounded" placeholder="Aéroport, gare, adresse..." />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Lieu de retour</label>
+                    <input type="text" className="w-full px-3 py-2 border rounded" placeholder="Même adresse que la prise en charge" />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Date de départ</label>
+                      <input type="date" className="w-full px-3 py-2 border rounded" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Heure</label>
+                      <input type="time" className="w-full px-3 py-2 border rounded" />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Date de retour</label>
+                      <input type="date" className="w-full px-3 py-2 border rounded" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Heure</label>
+                      <input type="time" className="w-full px-3 py-2 border rounded" />
+                    </div>
+                  </div>
+                  
+                  <button type="submit" style={{ backgroundColor: primaryColor }} className="w-full py-2 px-4 text-white rounded">
+                    Rechercher un véhicule
+                  </button>
                 </div>
               </div>
             </div>
             
-            <div className="mt-8 pt-8 border-t text-center text-sm text-gray-500">
-              &copy; {new Date().getFullYear()} {config.title}. Tous droits réservés.
+            <div>
+              <h3 className="text-lg font-semibold mb-4">Nos services</h3>
+              <ul className="space-y-3">
+                <li className="flex items-start gap-2">
+                  <svg className="w-5 h-5 text-green-500 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
+                  </svg>
+                  <span>Annulation gratuite jusqu'à 48h avant la prise en charge</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <svg className="w-5 h-5 text-green-500 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
+                  </svg>
+                  <span>Kilométrage illimité sur tous nos véhicules</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <svg className="w-5 h-5 text-green-500 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
+                  </svg>
+                  <span>Assistance 24h/24 et 7j/7</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <svg className="w-5 h-5 text-green-500 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
+                  </svg>
+                  <span>Véhicules récents et bien entretenus</span>
+                </li>
+              </ul>
+              
+              <div className="mt-6 p-4 bg-gray-100 rounded-lg">
+                <h4 className="font-semibold mb-2">Besoin d'aide ?</h4>
+                <p className="text-sm text-gray-600 mb-2">Notre équipe est disponible pour vous aider dans votre réservation</p>
+                <div className="text-sm">
+                  <p><strong>Téléphone :</strong> {contactInfo?.phone}</p>
+                  <p><strong>Email :</strong> {contactInfo?.email}</p>
+                </div>
+              </div>
             </div>
           </div>
-        </footer>
-      </div>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer style={footerStyle} className="px-6 py-8">
+        <div className="max-w-6xl mx-auto">
+          <div className="grid md:grid-cols-3 gap-8">
+            <div>
+              <h3 className="font-bold text-lg mb-4">{siteTitle || title}</h3>
+              <p className="text-sm text-gray-600 mb-4">{subtitle}</p>
+              <p className="text-sm">{contactInfo?.address}</p>
+            </div>
+            
+            <div>
+              <h3 className="font-bold text-lg mb-4">Liens rapides</h3>
+              <ul className="space-y-2">
+                {menuItems?.map(item => (
+                  <li key={item.id}>
+                    <a href={item.url} className="text-sm hover:underline">
+                      {item.label}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            
+            <div>
+              <h3 className="font-bold text-lg mb-4">Contact</h3>
+              <ul className="space-y-2 text-sm">
+                <li>Téléphone : {contactInfo?.phone}</li>
+                <li>Email : {contactInfo?.email}</li>
+                <li>Adresse : {contactInfo?.address}</li>
+              </ul>
+            </div>
+          </div>
+          
+          <div className="border-t mt-8 pt-6 text-sm text-center text-gray-600">
+            <p>&copy; {new Date().getFullYear()} {siteTitle || title}. Tous droits réservés.</p>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 };
-
-// Page components
-const HomePage = ({ config }: { config: WebBookingConfig }) => (
-  <div className="container mx-auto py-12">
-    <h2 className="text-3xl font-bold mb-6" style={{ color: config.primaryColor }}>Bienvenue sur {config.title}</h2>
-    <p className="text-gray-700 leading-relaxed">
-      Découvrez notre large gamme de véhicules disponibles à la location. Que vous ayez besoin d'une voiture compacte pour la ville ou d'un véhicule spacieux pour vos voyages en famille, nous avons ce qu'il vous faut.
-    </p>
-    {config.bannerConfig?.backgroundImage && (
-      <div className="relative mt-8 rounded-lg overflow-hidden">
-        <img
-          src={config.bannerConfig.backgroundImage}
-          alt={config.bannerConfig.title}
-          className="w-full h-64 object-cover"
-        />
-        <div className="absolute inset-0 bg-black" style={{ opacity: config.bannerConfig.overlayOpacity ? config.bannerConfig.overlayOpacity / 100 : 0.5 }} />
-        <div className="absolute inset-0 flex items-center justify-center text-center text-white p-8">
-          <div>
-            <h3 className="text-2xl font-bold mb-2">{config.bannerConfig.title}</h3>
-            <p className="text-lg">{config.bannerConfig.subtitle}</p>
-          </div>
-        </div>
-      </div>
-    )}
-  </div>
-);
-
-const VehiclesPage = ({ config }: { config: WebBookingConfig }) => (
-  <div className="container mx-auto py-12">
-    <h2 className="text-3xl font-bold mb-6" style={{ color: config.primaryColor }}>Nos Véhicules</h2>
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {/* Mock Vehicle Cards */}
-      <div className="border rounded-lg overflow-hidden shadow-md">
-        <img src="https://via.placeholder.com/400x200" alt="Vehicle" className="w-full h-40 object-cover" />
-        <div className="p-4">
-          <h3 className="font-semibold text-lg">Compacte</h3>
-          <p className="text-sm text-gray-600">Idéale pour la ville</p>
-        </div>
-      </div>
-      <div className="border rounded-lg overflow-hidden shadow-md">
-        <img src="https://via.placeholder.com/400x200" alt="Vehicle" className="w-full h-40 object-cover" />
-        <div className="p-4">
-          <h3 className="font-semibold text-lg">Familiale</h3>
-          <p className="text-sm text-gray-600">Spacieuse et confortable</p>
-        </div>
-      </div>
-      <div className="border rounded-lg overflow-hidden shadow-md">
-        <img src="https://via.placeholder.com/400x200" alt="Vehicle" className="w-full h-40 object-cover" />
-        <div className="p-4">
-          <h3 className="font-semibold text-lg">Utilitaire</h3>
-          <p className="text-sm text-gray-600">Pour vos besoins professionnels</p>
-        </div>
-      </div>
-    </div>
-  </div>
-);
-
-const PricingPage = ({ config }: { config: WebBookingConfig }) => (
-  <div className="container mx-auto py-12">
-    <h2 className="text-3xl font-bold mb-6" style={{ color: config.primaryColor }}>Tarifs</h2>
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {/* Mock Pricing Cards */}
-      <div className="border rounded-lg overflow-hidden shadow-md">
-        <div className="p-4">
-          <h3 className="font-semibold text-lg">Compacte</h3>
-          <p className="text-2xl font-bold">{config.primaryColor && <span style={{ color: config.primaryColor }}>35€</span>}/jour</p>
-          <ul className="mt-4 space-y-2">
-            <li className="text-sm text-gray-600">Kilométrage illimité</li>
-            <li className="text-sm text-gray-600">Assurance incluse</li>
-          </ul>
-        </div>
-      </div>
-      <div className="border rounded-lg overflow-hidden shadow-md">
-        <div className="p-4">
-          <h3 className="font-semibold text-lg">Familiale</h3>
-          <p className="text-2xl font-bold">{config.primaryColor && <span style={{ color: config.primaryColor }}>55€</span>}/jour</p>
-          <ul className="mt-4 space-y-2">
-            <li className="text-sm text-gray-600">Kilométrage illimité</li>
-            <li className="text-sm text-gray-600">Siège enfant offert</li>
-          </ul>
-        </div>
-      </div>
-      <div className="border rounded-lg overflow-hidden shadow-md">
-        <div className="p-4">
-          <h3 className="font-semibold text-lg">Utilitaire</h3>
-          <p className="text-2xl font-bold">{config.primaryColor && <span style={{ color: config.primaryColor }}>75€</span>}/jour</p>
-          <ul className="mt-4 space-y-2">
-            <li className="text-sm text-gray-600">200km inclus</li>
-            <li className="text-sm text-gray-600">Assistance 24/7</li>
-          </ul>
-        </div>
-      </div>
-    </div>
-  </div>
-);
-
-const ContactPage = ({ config }: { config: WebBookingConfig }) => (
-  <div className="container mx-auto py-12">
-    <h2 className="text-3xl font-bold mb-6" style={{ color: config.primaryColor }}>Contactez-nous</h2>
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-      <div>
-        <p className="text-gray-700 leading-relaxed mb-4">
-          N'hésitez pas à nous contacter pour toute question ou demande de réservation.
-        </p>
-        <ul className="space-y-2">
-          <li className="text-gray-700">
-            <strong>Adresse:</strong> {config.contactInfo.address}
-          </li>
-          <li className="text-gray-700">
-            <strong>Téléphone:</strong> {config.contactInfo.phone}
-          </li>
-          <li className="text-gray-700">
-            <strong>Email:</strong> {config.contactInfo.email}
-          </li>
-        </ul>
-      </div>
-      <div>
-        {/* Mock Contact Form */}
-        <div className="border rounded-lg p-6">
-          <h3 className="font-semibold text-lg mb-4">Formulaire de contact</h3>
-          <form>
-            <div className="mb-4">
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700">Nom</label>
-              <input type="text" id="name" className="mt-1 p-2 w-full border rounded-md" />
-            </div>
-            <div className="mb-4">
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email</label>
-              <input type="email" id="email" className="mt-1 p-2 w-full border rounded-md" />
-            </div>
-            <div className="mb-4">
-              <label htmlFor="message" className="block text-sm font-medium text-gray-700">Message</label>
-              <textarea id="message" rows={4} className="mt-1 p-2 w-full border rounded-md"></textarea>
-            </div>
-            <button type="submit" className="bg-primary text-white py-2 px-4 rounded-md" style={{ backgroundColor: config.primaryColor }}>Envoyer</button>
-          </form>
-        </div>
-      </div>
-    </div>
-  </div>
-);
 
 export default WebBookingPreview;
