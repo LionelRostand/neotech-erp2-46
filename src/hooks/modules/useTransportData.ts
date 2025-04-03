@@ -1,86 +1,150 @@
 
-import { useCollectionData } from '../useCollectionData';
-import { COLLECTIONS } from '@/lib/firebase-collections';
-import { orderBy } from 'firebase/firestore';
-import { 
-  TransportDriver, 
-  TransportVehicle,
-  TransportReservation
-} from '@/components/module/submodules/transport/types';
-
-// Import service-related types directly from service-types
-import {
+import { useState } from 'react';
+import { toast } from "@/hooks/use-toast";
+import type { 
+  TransportVehicle, 
+  TransportDriver,
+  TransportReservation,
   ServiceOption,
   ServiceAvailability
-} from '@/components/module/submodules/transport/types/service-types';
+} from '@/components/module/submodules/transport/types';
 
-/**
- * Hook to fetch data for the Transport module
- */
+// Add mock data for testing
+const mockServices: ServiceOption[] = [
+  {
+    id: "s1",
+    name: "Standard Transfer",
+    description: "Point-to-point transfer in standard vehicle",
+    price: 50,
+    available: true,
+    vehicleTypes: ["sedan", "compact"],
+    category: "transfer",
+    duration: 60
+  },
+  {
+    id: "s2",
+    name: "Airport Pickup",
+    description: "Airport pickup with waiting time included",
+    price: 75,
+    available: true,
+    vehicleTypes: ["sedan", "luxury", "van"],
+    category: "airport",
+    duration: 90
+  }
+];
+
+const mockServiceAvailability: ServiceAvailability[] = [
+  {
+    serviceId: "s1",
+    dayOfWeek: 1,
+    startTime: "08:00",
+    endTime: "20:00",
+    available: true,
+    maxBookings: 20
+  },
+  {
+    serviceId: "s1",
+    dayOfWeek: 2,
+    startTime: "08:00",
+    endTime: "20:00",
+    available: true,
+    maxBookings: 20
+  }
+];
+
+// Create a hook to manage transport data
 export const useTransportData = () => {
-  // Fetch drivers
-  const { 
-    data: drivers, 
-    isLoading: isDriversLoading, 
-    error: driversError 
-  } = useCollectionData<TransportDriver>(
-    COLLECTIONS.TRANSPORT.DRIVERS,
-    [orderBy('lastName')]
-  );
-
-  // Fetch vehicles
-  const { 
-    data: vehicles, 
-    isLoading: isVehiclesLoading, 
-    error: vehiclesError 
-  } = useCollectionData<TransportVehicle>(
-    COLLECTIONS.TRANSPORT.VEHICLES,
-    [orderBy('name')]
-  );
-
-  // Fetch reservations
-  const { 
-    data: reservations, 
-    isLoading: isReservationsLoading, 
-    error: reservationsError 
-  } = useCollectionData<TransportReservation>(
-    COLLECTIONS.TRANSPORT.RESERVATIONS,
-    [orderBy('createdAt', 'desc')]
-  );
-
-  // Fetch clients
-  const { 
-    data: clients, 
-    isLoading: isClientsLoading, 
-    error: clientsError 
-  } = useCollectionData(
-    COLLECTIONS.TRANSPORT.CLIENTS,
-    [orderBy('createdAt', 'desc')]
-  );
-
-  // Fetch services
-  const { 
-    data: services, 
-    isLoading: isServicesLoading, 
-    error: servicesError 
-  } = useCollectionData<ServiceOption>(
-    COLLECTIONS.TRANSPORT.SETTINGS,
-    []
-  );
-
-  // Check if any data is still loading
-  const isLoading = isDriversLoading || isVehiclesLoading || isReservationsLoading || isClientsLoading || isServicesLoading;
-
-  // Combine all possible errors
-  const error = driversError || vehiclesError || reservationsError || clientsError || servicesError;
-
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
+  
+  // Mock function to fetch services
+  const fetchServices = async (): Promise<ServiceOption[]> => {
+    setLoading(true);
+    setError(null);
+    
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        setLoading(false);
+        resolve(mockServices);
+      }, 500);
+    });
+  };
+  
+  // Mock function to fetch service availability
+  const fetchServiceAvailability = async (serviceId: string): Promise<ServiceAvailability[]> => {
+    setLoading(true);
+    setError(null);
+    
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        const filtered = mockServiceAvailability.filter(item => item.serviceId === serviceId);
+        setLoading(false);
+        resolve(filtered);
+      }, 500);
+    });
+  };
+  
+  // Mock function to create a service
+  const createService = async (service: Omit<ServiceOption, 'id'>): Promise<ServiceOption> => {
+    setLoading(true);
+    setError(null);
+    
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        const newService = {
+          ...service,
+          id: `s${mockServices.length + 1}`
+        };
+        
+        setLoading(false);
+        toast({
+          title: "Service créé",
+          description: `Le service ${newService.name} a été créé avec succès.`,
+        });
+        
+        resolve(newService);
+      }, 800);
+    });
+  };
+  
+  // Mock function to update a service
+  const updateService = async (id: string, service: Partial<ServiceOption>): Promise<ServiceOption> => {
+    setLoading(true);
+    setError(null);
+    
+    return new Promise((resolve, reject) => {
+      setTimeout(() => {
+        const serviceIndex = mockServices.findIndex(s => s.id === id);
+        
+        if (serviceIndex === -1) {
+          setLoading(false);
+          setError(new Error("Service not found"));
+          reject(new Error("Service not found"));
+          return;
+        }
+        
+        const updatedService = {
+          ...mockServices[serviceIndex],
+          ...service
+        };
+        
+        setLoading(false);
+        toast({
+          title: "Service mis à jour",
+          description: `Le service ${updatedService.name} a été mis à jour avec succès.`,
+        });
+        
+        resolve(updatedService);
+      }, 800);
+    });
+  };
+  
   return {
-    drivers,
-    vehicles,
-    reservations,
-    clients,
-    services,
-    isLoading,
-    error
+    loading,
+    error,
+    fetchServices,
+    fetchServiceAvailability,
+    createService,
+    updateService
   };
 };

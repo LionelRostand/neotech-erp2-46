@@ -1,19 +1,31 @@
 
-import { TransportService } from '../types/service-types';
+// Import the correct type
+import type { TransportService } from '../types/service-types';
 
-// Convert string to a TransportService object
-export const stringToService = (serviceName: string): TransportService => {
-  return {
-    id: `service-${Date.now()}`,
-    name: serviceName,
-    description: 'Service standard',
-    price: 0,
-    type: 'standard',
-    isActive: true
-  };
+/**
+ * Convert a string to a service object
+ */
+export const stringToService = (serviceString: string): TransportService | null => {
+  if (!serviceString) return null;
+  
+  try {
+    return JSON.parse(serviceString);
+  } catch (e) {
+    console.error('Error parsing service string:', e);
+    return null;
+  }
 };
 
-// Convert a TransportService to string
+/**
+ * Convert a service object to a string
+ */
 export const serviceToString = (service: TransportService): string => {
-  return service.name;
+  if (!service) return '';
+  
+  try {
+    return JSON.stringify(service);
+  } catch (e) {
+    console.error('Error stringifying service:', e);
+    return '';
+  }
 };

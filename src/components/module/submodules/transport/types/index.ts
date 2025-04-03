@@ -1,5 +1,5 @@
 
-// Export all types from the submodules
+// Re-export all types from the individual modules
 export * from './driver-types';
 export * from './vehicle-types';
 export * from './reservation-types';
@@ -7,56 +7,15 @@ export * from './client-types';
 export * from './map-types';
 export * from './web-booking-types';
 export * from './geolocation-types';
+export * from './transport-types';
+export * from './planning-types';
+export * from './base-types';
 
-// Export the service-types explicitly to avoid ambiguity
+// Explicitly re-export service types to avoid ambiguity
 export type {
   ServiceOption,
   ServiceAvailability,
   ServicePricing,
+  TransportService,
   TransportServiceDetails
 } from './service-types';
-
-// Fix for the MapExtensionRequest issues
-export type { MapExtensionRequest } from './map-types';
-
-// Export TransportVehicleWithLocation specifically
-export type { TransportVehicleWithLocation } from './map-types';
-
-// Export web booking related types
-export type { 
-  WebBookingConfig, 
-  MenuItem, 
-  BannerConfig,
-  BannerConfigExtended 
-} from './web-booking-types';
-
-// Export map related types
-export type { 
-  MapConfig, 
-  MapHookResult, 
-  VehicleLocation,
-  TransportVehicleLocation,
-  Coordinates
-} from './map-types';
-
-// Export maintenance related types
-export type {
-  MaintenanceSchedule,
-  MaintenanceScheduleWithTechnician
-} from './vehicle-types';
-
-// Export from the other modules with careful handling of TransportService
-export * from './transport-types';
-export * from './planning-types';
-
-// Re-export base types explicitly to avoid ambiguity
-export type {
-  Note,
-  TransportBasic
-} from './base-types';
-
-// Export TransportService from service-types (non-ambiguous way)
-export type { TransportService } from './service-types';
-
-// Re-export utility functions for services
-export { stringToService, serviceToString } from '../utils/service-utils';

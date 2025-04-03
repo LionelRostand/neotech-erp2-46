@@ -1,59 +1,113 @@
 
-import React, { useState } from 'react';
-import { TabsContent } from "@/components/ui/tabs";
-import DashboardHeader from './components/DashboardHeader';
-import TransportAlerts from './components/TransportAlerts';
-import KeyStatsGrid from './components/KeyStatsGrid';
-import RevenueChart from './components/RevenueChart';
-import UpcomingReservations from './components/UpcomingReservations';
-import RecentReservations from './components/RecentReservations';
-import VehiclesStatus from './components/VehiclesStatus';
-import { useTransportStats } from './hooks/useTransportStats';
+import React from 'react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import ModuleContainer from '../../ModuleContainer';
+import { ArrowUpCircle, AlertTriangle, Clock, Calendar } from 'lucide-react';
 
-const TransportDashboard = () => {
-  const [activeTab, setActiveTab] = useState("day");
-  const { stats, revenueData, recentReservations } = useTransportStats(activeTab);
-
+const TransportDashboard: React.FC = () => {
   return (
     <div className="space-y-6">
-      <DashboardHeader 
-        title="Transport - Tableau de bord" 
-        activeTab={activeTab} 
-        setActiveTab={setActiveTab} 
-      />
+      <ModuleContainer title="Aperçu des activités">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <DashboardCard
+            title="Réservations aujourd'hui"
+            value="12"
+            icon={<Calendar className="h-5 w-5 text-blue-500" />}
+            trend="+3"
+          />
+          <DashboardCard
+            title="Véhicules actifs"
+            value="8"
+            icon={<ArrowUpCircle className="h-5 w-5 text-green-500" />}
+            trend="-1"
+            trendNegative
+          />
+          <DashboardCard
+            title="Incidents en cours"
+            value="2"
+            icon={<AlertTriangle className="h-5 w-5 text-amber-500" />}
+            trend="0"
+          />
+          <DashboardCard
+            title="Temps de réponse moyen"
+            value="5 min"
+            icon={<Clock className="h-5 w-5 text-purple-500" />}
+            trend="-2 min"
+            trendPositive
+          />
+        </div>
+      </ModuleContainer>
+      
+      <ModuleContainer>
+        <Tabs defaultValue="reservations">
+          <TabsList className="w-full max-w-md mx-auto mb-6">
+            <TabsTrigger value="reservations" className="flex-1">Réservations</TabsTrigger>
+            <TabsTrigger value="fleet" className="flex-1">Flotte</TabsTrigger>
+            <TabsTrigger value="drivers" className="flex-1">Chauffeurs</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="reservations">
+            <div className="border rounded-md p-4">
+              <h3 className="font-medium mb-2">Aperçu des réservations</h3>
+              <p className="text-sm text-gray-500">
+                Consultez ici les données relatives aux réservations de transport.
+              </p>
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="fleet">
+            <div className="border rounded-md p-4">
+              <h3 className="font-medium mb-2">Aperçu de la flotte</h3>
+              <p className="text-sm text-gray-500">
+                État et disponibilité de la flotte de véhicules.
+              </p>
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="drivers">
+            <div className="border rounded-md p-4">
+              <h3 className="font-medium mb-2">Disponibilité des chauffeurs</h3>
+              <p className="text-sm text-gray-500">
+                Statut et disponibilité des chauffeurs.
+              </p>
+            </div>
+          </TabsContent>
+        </Tabs>
+      </ModuleContainer>
+    </div>
+  );
+};
 
-      {/* Alerts */}
-      <TransportAlerts 
-        maintenanceVehicles={stats.maintenanceVehicles}
-        pendingPayments={stats.pendingPayments}
-        todayReservations={stats.todayReservations}
-      />
+interface DashboardCardProps {
+  title: string;
+  value: string;
+  icon: React.ReactNode;
+  trend: string;
+  trendPositive?: boolean;
+  trendNegative?: boolean;
+}
 
-      {/* Key stats */}
-      <KeyStatsGrid stats={stats} />
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Revenue Chart */}
-        <RevenueChart revenueData={revenueData} />
-
-        {/* Upcoming reservations */}
-        <UpcomingReservations 
-          todayReservations={stats.todayReservations}
-          upcomingReservations={stats.upcomingReservations}
-        />
+const DashboardCard: React.FC<DashboardCardProps> = ({
+  title,
+  value,
+  icon,
+  trend,
+  trendPositive,
+  trendNegative
+}) => {
+  return (
+    <div className="border rounded-md p-4">
+      <div className="flex items-center justify-between mb-1">
+        <span className="text-sm text-gray-500">{title}</span>
+        {icon}
       </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Recent reservations */}
-        <RecentReservations reservations={recentReservations} />
-
-        {/* Vehicles status */}
-        <VehiclesStatus 
-          availableVehicles={stats.availableVehicles}
-          inUseVehicles={stats.inUseVehicles}
-          maintenanceVehicles={stats.maintenanceVehicles}
-          totalVehicles={stats.totalVehicles}
-        />
+      <div className="flex items-end justify-between">
+        <span className="text-2xl font-bold">{value}</span>
+        {trend && (
+          <span className={`text-xs ${trendPositive ? 'text-green-500' : trendNegative ? 'text-red-500' : 'text-gray-500'}`}>
+            {trend}
+          </span>
+        )}
       </div>
     </div>
   );
