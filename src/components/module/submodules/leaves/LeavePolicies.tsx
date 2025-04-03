@@ -1,210 +1,109 @@
 
-import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Checkbox } from '@/components/ui/checkbox';
-import { toast } from 'sonner';
+import React from 'react';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/components/ui/accordion';
 
 export const LeavePolicies: React.FC = () => {
-  const [isEditing, setIsEditing] = useState(false);
-  const [policies, setPolicies] = useState({
-    minRequestDays: 3,
-    maxConsecutiveDays: 25,
-    allowHalfDays: true,
-    managerApprovalRequired: true,
-    allowNegativeBalance: false,
-    weekendCountAsLeave: false,
-    autoApproveUnder: 2,
-    carryOverLimit: 5,
-    notificationDays: 2
-  });
-
-  const handleSave = () => {
-    toast.success("Politiques de congés mises à jour avec succès");
-    setIsEditing(false);
-  };
+  // Dans une application réelle, ces données viendraient de Firebase
+  const policies = [
+    {
+      id: '1',
+      title: 'Congés payés',
+      summary: '25 jours par an pour tous les employés à temps plein',
+      details: `
+        Chaque employé à temps plein a droit à 25 jours de congés payés par année civile.
+        Les congés sont acquis à raison de 2,08 jours par mois travaillé.
+        Les demandes doivent être soumises au moins 2 semaines à l'avance.
+        La période de référence s'étend du 1er janvier au 31 décembre.
+        Les jours de congés non pris peuvent être reportés jusqu'au 31 mars de l'année suivante.
+      `
+    },
+    {
+      id: '2',
+      title: 'RTT (Réduction du Temps de Travail)',
+      summary: '12 jours par an pour les employés sur base 39h',
+      details: `
+        Les salariés travaillant 39h par semaine bénéficient de 12 jours de RTT par an.
+        Les RTT sont acquis dès le début de l'année civile.
+        50% des jours de RTT sont à la libre disposition du salarié, 50% sont fixés par l'employeur.
+        Les RTT non pris au 31 décembre sont perdus sauf accord spécifique.
+      `
+    },
+    {
+      id: '3',
+      title: 'Congés exceptionnels',
+      summary: 'Accordés pour événements familiaux et personnels',
+      details: `
+        Mariage/PACS du salarié : 4 jours ouvrables
+        Mariage d'un enfant : 1 jour ouvrable
+        Naissance ou adoption : 3 jours ouvrables
+        Décès du conjoint ou d'un enfant : 5 jours ouvrables
+        Décès d'un parent : 3 jours ouvrables
+        Décès d'un grand-parent, frère, sœur : 1 jour ouvrable
+        Déménagement : 1 jour ouvrable par an
+      `
+    },
+    {
+      id: '4',
+      title: 'Congés maladie',
+      summary: 'Indemnisation selon ancienneté après 1 an',
+      details: `
+        Tout arrêt maladie doit être justifié par un certificat médical envoyé dans les 48h.
+        Après 1 an d'ancienneté, maintien du salaire selon les conditions suivantes :
+        - De 1 à 5 ans d'ancienneté : 30 jours à 90% puis 30 jours à 66%
+        - De 6 à 10 ans d'ancienneté : 40 jours à 90% puis 40 jours à 66%
+        - Plus de 10 ans d'ancienneté : 60 jours à 90% puis 60 jours à 66%
+      `
+    },
+    {
+      id: '5',
+      title: 'Congés sans solde',
+      summary: 'Possible après accord de la direction',
+      details: `
+        Les congés sans solde sont accordés à la discrétion de la direction.
+        La demande doit être soumise au moins 1 mois à l'avance.
+        La durée maximale est de 3 mois, renouvelable une fois.
+        Pendant cette période, le contrat de travail est suspendu.
+        L'employé ne perçoit pas de salaire et n'acquiert pas de congés payés.
+        Le retour est garanti sur le même poste ou un poste équivalent.
+      `
+    }
+  ];
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h3 className="text-lg font-semibold">Politiques de congés</h3>
-        {!isEditing ? (
-          <Button onClick={() => setIsEditing(true)}>Modifier</Button>
-        ) : (
-          <div className="space-x-2">
-            <Button variant="outline" onClick={() => setIsEditing(false)}>Annuler</Button>
-            <Button onClick={handleSave}>Enregistrer</Button>
-          </div>
-        )}
+      <div>
+        <h3 className="text-lg font-semibold mb-2">Politiques de congés</h3>
+        <p className="text-gray-600 mb-4">
+          Consultez les différents types de congés et les règles associées
+        </p>
       </div>
       
-      <div className="grid gap-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="minRequestDays">Délai minimum de demande (jours)</Label>
-              <Input 
-                id="minRequestDays" 
-                type="number" 
-                value={policies.minRequestDays} 
-                onChange={(e) => isEditing && setPolicies({...policies, minRequestDays: parseInt(e.target.value)})}
-                disabled={!isEditing}
-              />
-              <p className="text-xs text-gray-500">
-                Nombre de jours minimum avant la date de début pour soumettre une demande
-              </p>
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="maxConsecutiveDays">Jours consécutifs maximum</Label>
-              <Input 
-                id="maxConsecutiveDays" 
-                type="number" 
-                value={policies.maxConsecutiveDays} 
-                onChange={(e) => isEditing && setPolicies({...policies, maxConsecutiveDays: parseInt(e.target.value)})}
-                disabled={!isEditing}
-              />
-              <p className="text-xs text-gray-500">
-                Nombre maximum de jours consécutifs pouvant être pris
-              </p>
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="carryOverLimit">Report maximum (jours)</Label>
-              <Input 
-                id="carryOverLimit" 
-                type="number" 
-                value={policies.carryOverLimit} 
-                onChange={(e) => isEditing && setPolicies({...policies, carryOverLimit: parseInt(e.target.value)})}
-                disabled={!isEditing}
-              />
-              <p className="text-xs text-gray-500">
-                Nombre de jours pouvant être reportés à l'année suivante
-              </p>
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="notificationDays">Délai de notification (jours)</Label>
-              <Input 
-                id="notificationDays" 
-                type="number" 
-                value={policies.notificationDays} 
-                onChange={(e) => isEditing && setPolicies({...policies, notificationDays: parseInt(e.target.value)})}
-                disabled={!isEditing}
-              />
-              <p className="text-xs text-gray-500">
-                Nombre de jours avant l'expiration pour envoyer une notification
-              </p>
-            </div>
-          </div>
-          
-          <div className="space-y-4">
-            <div className="flex items-start space-x-2">
-              <Checkbox 
-                id="allowHalfDays" 
-                checked={policies.allowHalfDays} 
-                onCheckedChange={(checked) => isEditing && setPolicies({...policies, allowHalfDays: checked as boolean})}
-                disabled={!isEditing}
-              />
-              <div className="space-y-1 leading-none">
-                <Label htmlFor="allowHalfDays" className="text-sm font-medium">
-                  Autoriser les demi-journées
-                </Label>
-                <p className="text-xs text-gray-500">
-                  Permettre aux employés de demander des demi-journées de congé
-                </p>
+      <Accordion type="single" collapsible className="w-full">
+        {policies.map((policy) => (
+          <AccordionItem key={policy.id} value={policy.id}>
+            <AccordionTrigger className="hover:bg-gray-50 px-4">
+              <div className="text-left">
+                <div className="font-medium">{policy.title}</div>
+                <div className="text-sm text-gray-500">{policy.summary}</div>
               </div>
-            </div>
-            
-            <div className="flex items-start space-x-2">
-              <Checkbox 
-                id="managerApprovalRequired" 
-                checked={policies.managerApprovalRequired} 
-                onCheckedChange={(checked) => isEditing && setPolicies({...policies, managerApprovalRequired: checked as boolean})}
-                disabled={!isEditing}
-              />
-              <div className="space-y-1 leading-none">
-                <Label htmlFor="managerApprovalRequired" className="text-sm font-medium">
-                  Approbation du manager requise
-                </Label>
-                <p className="text-xs text-gray-500">
-                  Les demandes de congé doivent être approuvées par un manager
-                </p>
-              </div>
-            </div>
-            
-            <div className="flex items-start space-x-2">
-              <Checkbox 
-                id="allowNegativeBalance" 
-                checked={policies.allowNegativeBalance} 
-                onCheckedChange={(checked) => isEditing && setPolicies({...policies, allowNegativeBalance: checked as boolean})}
-                disabled={!isEditing}
-              />
-              <div className="space-y-1 leading-none">
-                <Label htmlFor="allowNegativeBalance" className="text-sm font-medium">
-                  Autoriser le solde négatif
-                </Label>
-                <p className="text-xs text-gray-500">
-                  Permettre aux employés de prendre plus de congés que leur solde actuel
-                </p>
-              </div>
-            </div>
-            
-            <div className="flex items-start space-x-2">
-              <Checkbox 
-                id="weekendCountAsLeave" 
-                checked={policies.weekendCountAsLeave} 
-                onCheckedChange={(checked) => isEditing && setPolicies({...policies, weekendCountAsLeave: checked as boolean})}
-                disabled={!isEditing}
-              />
-              <div className="space-y-1 leading-none">
-                <Label htmlFor="weekendCountAsLeave" className="text-sm font-medium">
-                  Compter les week-ends comme des congés
-                </Label>
-                <p className="text-xs text-gray-500">
-                  Les week-ends entre deux jours de congé sont comptés comme des jours de congé
-                </p>
-              </div>
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="autoApproveUnder">Approbation automatique sous (jours)</Label>
-              <Input 
-                id="autoApproveUnder" 
-                type="number" 
-                value={policies.autoApproveUnder} 
-                onChange={(e) => isEditing && setPolicies({...policies, autoApproveUnder: parseInt(e.target.value)})}
-                disabled={!isEditing}
-              />
-              <p className="text-xs text-gray-500">
-                Les demandes de moins de ce nombre de jours sont approuvées automatiquement
-              </p>
-            </div>
-          </div>
-        </div>
-        
-        <div className="mt-6 p-4 bg-blue-50 rounded-md">
-          <h4 className="font-medium text-blue-900 mb-2">Types de congés configurés</h4>
-          <div className="space-y-2">
-            <div className="flex justify-between p-2 bg-white rounded-md">
-              <span className="font-medium">Congés payés</span>
-              <span>25 jours / an</span>
-            </div>
-            <div className="flex justify-between p-2 bg-white rounded-md">
-              <span className="font-medium">RTT</span>
-              <span>12 jours / an</span>
-            </div>
-            <div className="flex justify-between p-2 bg-white rounded-md">
-              <span className="font-medium">Congés sans solde</span>
-              <span>Illimité (soumis à approbation)</span>
-            </div>
-            <div className="flex justify-between p-2 bg-white rounded-md">
-              <span className="font-medium">Jours maladie</span>
-              <span>Illimité (justificatif requis)</span>
-            </div>
-          </div>
-        </div>
+            </AccordionTrigger>
+            <AccordionContent className="px-4 pt-2 pb-4 text-gray-700 whitespace-pre-line">
+              {policy.details}
+            </AccordionContent>
+          </AccordionItem>
+        ))}
+      </Accordion>
+      
+      <div className="bg-blue-50 border border-blue-200 rounded-md p-4 mt-6">
+        <h4 className="text-blue-800 font-medium mb-2">Note importante</h4>
+        <p className="text-blue-700 text-sm">
+          Ces politiques sont susceptibles d'évoluer. Veuillez consulter le département RH pour toute question spécifique concernant vos droits à congés.
+        </p>
       </div>
     </div>
   );

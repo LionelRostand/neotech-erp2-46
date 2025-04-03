@@ -1,16 +1,9 @@
 
-export * from './EmployeesRenderer';
-export * from './FreightRenderer';
-export * from './ProjectsRenderer';
-export * from './AccountingRenderer';
-export * from './MessagesRenderer';
-export * from './CompaniesRenderer';
-export * from './CrmRenderer';
-export * from './HealthRenderer';
-export * from './DocumentsRenderer';
-export * from './VehicleRentalsRenderer';
-export * from './TransportRenderer';
-export * from './GarageRenderer';
-export * from './SalonRenderer';
-export * from './RestaurantRenderer';
-export * from './WebsiteRenderer';
+// Export all renderer functions
+export { renderEmployeesSubmodule } from './EmployeesRenderer';
+export { renderAccountingSubmodule } from './AccountingRenderer';
+export { renderFreightSubmodule } from './FreightRenderer';
+export { renderProjectsSubmodule } from './ProjectsRenderer';
+export { renderHealthSubmodule } from './HealthRenderer';
+
+// Add more exporters as needed

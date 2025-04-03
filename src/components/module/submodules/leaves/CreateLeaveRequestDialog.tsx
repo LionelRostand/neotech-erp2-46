@@ -1,16 +1,16 @@
 
 import React, { useState } from 'react';
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
-  DialogTitle, 
-  DialogFooter 
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter
 } from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { 
   Select, 
   SelectContent, 
@@ -18,8 +18,8 @@ import {
   SelectTrigger, 
   SelectValue 
 } from '@/components/ui/select';
-import { CalendarIcon } from 'lucide-react';
-import { format, addDays, differenceInBusinessDays } from 'date-fns';
+import { useHrModuleData } from '@/hooks/useHrModuleData';
+import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { toast } from 'sonner';
 
@@ -29,200 +29,180 @@ interface CreateLeaveRequestDialogProps {
   onSubmit: (data: any) => void;
 }
 
-const LEAVE_TYPES = [
-  { value: 'paid', label: 'Congés payés' },
-  { value: 'rtt', label: 'RTT' },
-  { value: 'sick', label: 'Maladie' },
-  { value: 'unpaid', label: 'Sans solde' },
-  { value: 'family', label: 'Événement familial' },
-];
-
-export const CreateLeaveRequestDialog: React.FC<CreateLeaveRequestDialogProps> = ({
-  isOpen,
+export const CreateLeaveRequestDialog: React.FC<CreateLeaveRequestDialogProps> = ({ 
+  isOpen, 
   onClose,
   onSubmit
 }) => {
+  const { employees } = useHrModuleData();
+  const [selectedEmployee, setSelectedEmployee] = useState('');
   const [leaveType, setLeaveType] = useState('');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
-  const [halfDay, setHalfDay] = useState('');
   const [reason, setReason] = useState('');
-  const [comment, setComment] = useState('');
-  const [daysCount, setDaysCount] = useState<number | null>(null);
-
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  const handleSubmit = () => {
+    if (!selectedEmployee) {
+      toast.error("Veuillez sélectionner un employé");
+      return;
+    }
+    
+    if (!leaveType) {
+      toast.error("Veuillez sélectionner un type de congé");
+      return;
+    }
+    
+    if (!startDate) {
+      toast.error("Veuillez sélectionner une date de début");
+      return;
+    }
+    
+    if (!endDate) {
+      toast.error("Veuillez sélectionner une date de fin");
+      return;
+    }
+    
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    
+    if (start > end) {
+      toast.error("La date de fin doit être postérieure à la date de début");
+      return;
+    }
+    
+    setIsSubmitting(true);
+    
+    // Calculer le nombre de jours
+    const diffTime = Math.abs(end.getTime() - start.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1; // +1 car inclusif
+    
+    // Récupérer l'employé sélectionné
+    const employee = employees?.find(emp => emp.id === selectedEmployee);
+    
+    const newLeaveRequest = {
+      employeeId: selectedEmployee,
+      type: leaveType,
+      startDate: format(start, 'yyyy-MM-dd'),
+      endDate: format(end, 'yyyy-MM-dd'),
+      days: diffDays,
+      status: 'En attente',
+      reason,
+      requestDate: new Date().toISOString(),
+      employeeName: employee ? `${employee.firstName} ${employee.lastName}` : 'Employé inconnu',
+    };
+    
+    // Simuler une latence réseau
+    setTimeout(() => {
+      onSubmit(newLeaveRequest);
+      setIsSubmitting(false);
+      resetForm();
+    }, 1000);
+  };
+  
   const resetForm = () => {
+    setSelectedEmployee('');
     setLeaveType('');
     setStartDate('');
     setEndDate('');
-    setHalfDay('');
     setReason('');
-    setComment('');
-    setDaysCount(null);
   };
-
-  const calculateDays = () => {
-    if (!startDate) return;
-    
-    const start = new Date(startDate);
-    const end = endDate ? new Date(endDate) : start;
-    
-    if (start && end) {
-      let days = differenceInBusinessDays(end, start) + 1;
-      
-      if (halfDay === 'start' || halfDay === 'end') {
-        days -= 0.5;
-      } else if (halfDay === 'both') {
-        days -= 1;
-      }
-      
-      setDaysCount(Math.max(0, days));
-    }
-  };
-
-  const handleSubmit = () => {
-    if (!leaveType || !startDate) {
-      toast.error("Veuillez remplir tous les champs obligatoires");
-      return;
-    }
-    
-    if (!daysCount || daysCount <= 0) {
-      toast.error("La période sélectionnée ne contient pas de jours ouvrés");
-      return;
-    }
-    
-    const formData = {
-      type: leaveType,
-      startDate,
-      endDate: endDate || startDate,
-      halfDay,
-      daysCount,
-      reason,
-      comment
-    };
-    
-    onSubmit(formData);
-    resetForm();
-  };
-
+  
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+    <Dialog open={isOpen} onOpenChange={(open) => {
+      if (!open) onClose();
+    }}>
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>Nouvelle demande de congé</DialogTitle>
         </DialogHeader>
         
-        <div className="space-y-4 py-2">
+        <div className="space-y-4 py-4">
           <div className="space-y-2">
-            <Label htmlFor="leave-type">Type de congé *</Label>
-            <Select value={leaveType} onValueChange={setLeaveType}>
-              <SelectTrigger id="leave-type">
-                <SelectValue placeholder="Sélectionnez un type de congé" />
+            <Label htmlFor="employee">Employé</Label>
+            <Select 
+              value={selectedEmployee} 
+              onValueChange={setSelectedEmployee}
+            >
+              <SelectTrigger id="employee">
+                <SelectValue placeholder="Sélectionner un employé" />
               </SelectTrigger>
               <SelectContent>
-                {LEAVE_TYPES.map(type => (
-                  <SelectItem key={type.value} value={type.value}>
-                    {type.label}
+                {employees?.map(employee => (
+                  <SelectItem key={employee.id} value={employee.id}>
+                    {employee.firstName} {employee.lastName}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
           
+          <div className="space-y-2">
+            <Label htmlFor="leaveType">Type de congé</Label>
+            <Select 
+              value={leaveType} 
+              onValueChange={setLeaveType}
+            >
+              <SelectTrigger id="leaveType">
+                <SelectValue placeholder="Sélectionner un type de congé" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Congés payés">Congés payés</SelectItem>
+                <SelectItem value="RTT">RTT</SelectItem>
+                <SelectItem value="Congé sans solde">Congé sans solde</SelectItem>
+                <SelectItem value="Congé maladie">Congé maladie</SelectItem>
+                <SelectItem value="Congé exceptionnel">Congé exceptionnel</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="start-date">Date de début *</Label>
-              <div className="relative">
-                <CalendarIcon className="absolute left-3 top-3 h-4 w-4 text-gray-500" />
-                <Input 
-                  id="start-date" 
-                  type="date"
-                  className="pl-9" 
-                  value={startDate}
-                  onChange={(e) => {
-                    setStartDate(e.target.value);
-                    if (!endDate || new Date(e.target.value) > new Date(endDate)) {
-                      setEndDate(e.target.value);
-                    }
-                  }}
-                  onBlur={calculateDays}
-                />
-              </div>
+              <Label htmlFor="startDate">Date de début</Label>
+              <Input 
+                id="startDate" 
+                type="date" 
+                value={startDate} 
+                onChange={(e) => setStartDate(e.target.value)}
+              />
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="end-date">Date de fin</Label>
-              <div className="relative">
-                <CalendarIcon className="absolute left-3 top-3 h-4 w-4 text-gray-500" />
-                <Input 
-                  id="end-date" 
-                  type="date"
-                  className="pl-9" 
-                  value={endDate}
-                  min={startDate}
-                  onChange={(e) => setEndDate(e.target.value)}
-                  onBlur={calculateDays}
-                />
-              </div>
+              <Label htmlFor="endDate">Date de fin</Label>
+              <Input 
+                id="endDate" 
+                type="date" 
+                value={endDate} 
+                onChange={(e) => setEndDate(e.target.value)}
+              />
             </div>
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="half-day">Demi-journée</Label>
-            <Select value={halfDay} onValueChange={(value) => {
-              setHalfDay(value);
-              setTimeout(calculateDays, 0);
-            }}>
-              <SelectTrigger id="half-day">
-                <SelectValue placeholder="Journée complète" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">Journée complète</SelectItem>
-                <SelectItem value="start">Demi-journée en début de période</SelectItem>
-                <SelectItem value="end">Demi-journée en fin de période</SelectItem>
-                <SelectItem value="both">Demi-journée en début et fin de période</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          
-          {daysCount !== null && (
-            <div className="bg-blue-50 p-3 rounded-md">
-              <p className="text-sm">
-                <span className="font-medium">Nombre de jours : </span>
-                {daysCount} jour{daysCount !== 1 ? 's' : ''} ouvré{daysCount !== 1 ? 's' : ''}
-              </p>
-            </div>
-          )}
-          
-          <div className="space-y-2">
-            <Label htmlFor="reason">Motif</Label>
-            <Select value={reason} onValueChange={setReason}>
-              <SelectTrigger id="reason">
-                <SelectValue placeholder="Sélectionnez un motif (optionnel)" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="vacation">Vacances</SelectItem>
-                <SelectItem value="personal">Raison personnelle</SelectItem>
-                <SelectItem value="family">Événement familial</SelectItem>
-                <SelectItem value="medical">Rendez-vous médical</SelectItem>
-                <SelectItem value="other">Autre</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="comment">Commentaire</Label>
+            <Label htmlFor="reason">Motif (optionnel)</Label>
             <Textarea 
-              id="comment" 
-              placeholder="Commentaire additionnel (optionnel)" 
-              value={comment}
-              onChange={(e) => setComment(e.target.value)}
+              id="reason" 
+              value={reason} 
+              onChange={(e) => setReason(e.target.value)}
+              placeholder="Précisez le motif de votre demande de congé"
+              rows={3}
             />
           </div>
         </div>
         
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>Annuler</Button>
-          <Button onClick={handleSubmit}>Soumettre la demande</Button>
+          <Button 
+            onClick={handleSubmit}
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? (
+              <span className="flex items-center">
+                <span className="h-4 w-4 mr-2 border-2 border-current border-r-transparent rounded-full animate-spin"></span>
+                Envoi en cours...
+              </span>
+            ) : 'Soumettre la demande'}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
