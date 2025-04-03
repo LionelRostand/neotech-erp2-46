@@ -73,9 +73,9 @@ export const useEvaluationsData = () => {
 
   // Obtenir des statistiques sur les évaluations
   const evaluationStats = useMemo(() => {
-    const planned = formattedEvaluations.filter(eval => eval.status === 'Planifiée').length;
-    const completed = formattedEvaluations.filter(eval => eval.status === 'Complétée').length;
-    const cancelled = formattedEvaluations.filter(eval => eval.status === 'Annulée').length;
+    const planned = formattedEvaluations.filter(evaluation => evaluation.status === 'Planifiée').length;
+    const completed = formattedEvaluations.filter(evaluation => evaluation.status === 'Complétée').length;
+    const cancelled = formattedEvaluations.filter(evaluation => evaluation.status === 'Annulée').length;
     const total = formattedEvaluations.length;
     
     return { planned, completed, cancelled, total };
