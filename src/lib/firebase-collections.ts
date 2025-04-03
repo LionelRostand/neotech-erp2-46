@@ -7,7 +7,12 @@ export const COLLECTIONS = {
   COMPANIES: 'companies',
   SETTINGS: 'settings',
   DOCUMENTS: 'documents',
-  MESSAGES: 'messages',
+  MESSAGES: {
+    INBOX: 'messages_inbox',
+    SCHEDULED: 'messages_scheduled',
+    ARCHIVED: 'messages_archived',
+    METRICS: 'messages_metrics'
+  },
   CONTACTS: 'contacts',
   EMPLOYEES: 'employees',
   USER_PERMISSIONS: 'user_permissions',
@@ -17,14 +22,17 @@ export const COLLECTIONS = {
     INVOICES: 'accounting_invoices',
     PAYMENTS: 'accounting_payments',
     REPORTS: 'accounting_reports',
-    SETTINGS: 'accounting_settings'
+    SETTINGS: 'accounting_settings',
+    TRANSACTIONS: 'accounting_transactions',
+    PERMISSIONS: 'accounting_permissions'
   },
   
   CRM: {
     CLIENTS: 'crm_clients',
     PROSPECTS: 'crm_prospects',
     OPPORTUNITIES: 'crm_opportunities',
-    ACTIVITIES: 'crm_activities'
+    ACTIVITIES: 'crm_activities',
+    CONTACTS: 'crm_contacts'
   },
   
   FREIGHT: {
@@ -33,7 +41,12 @@ export const COLLECTIONS = {
     TRACKING: 'freight_tracking',
     INVOICES: 'freight_invoices',
     DOCUMENTS: 'freight_documents',
-    SETTINGS: 'freight_settings'
+    SETTINGS: 'freight_settings',
+    CARRIERS: 'freight_carriers',
+    PACKAGES: 'freight_packages',
+    ROUTES: 'freight_routes',
+    TRACKING_EVENTS: 'freight_tracking_events',
+    PACKAGE_TYPES: 'freight_package_types'
   },
   
   HEALTH: {
@@ -42,7 +55,8 @@ export const COLLECTIONS = {
     CONSULTATIONS: 'health_consultations',
     INSURANCE: 'health_insurance',
     BILLING: 'health_billing',
-    STAFF: 'health_staff'
+    STAFF: 'health_staff',
+    DOCTORS: 'health_doctors'
   },
   
   LIBRARY: {
@@ -50,21 +64,24 @@ export const COLLECTIONS = {
     MEMBERS: 'library_members',
     LOANS: 'library_loans',
     RESERVATIONS: 'library_reservations',
-    SETTINGS: 'library_settings'
+    SETTINGS: 'library_settings',
+    STATS: 'library_stats'
   },
   
   PROJECTS: {
     PROJECTS: 'projects_projects',
     TASKS: 'projects_tasks',
     TEAMS: 'projects_teams',
-    REPORTS: 'projects_reports'
+    REPORTS: 'projects_reports',
+    NOTIFICATIONS: 'projects_notifications'
   },
   
   TRANSPORT: {
     VEHICLES: 'transport_vehicles',
     DRIVERS: 'transport_drivers',
     ROUTES: 'transport_routes',
-    RESERVATIONS: 'transport_reservations'
+    RESERVATIONS: 'transport_reservations',
+    CLIENTS: 'transport_clients'
   },
   
   // Collections du module HR/Employés
