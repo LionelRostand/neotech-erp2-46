@@ -1,3 +1,4 @@
+
 // Create or update driver-types.ts with necessary properties
 export interface TransportDriver {
   id: string;
@@ -26,6 +27,7 @@ export interface TransportDriver {
     rating: number;
     onTimePercentage: number;
     cancelRate: number;
+    averageRating?: number; // Add this for backward compatibility
   };
   hireDate?: string;
   createdAt?: string;

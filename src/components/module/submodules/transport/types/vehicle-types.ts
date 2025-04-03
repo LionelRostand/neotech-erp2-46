@@ -1,3 +1,4 @@
+
 export interface TransportVehicle {
   id: string;
   name: string;
@@ -38,7 +39,7 @@ export interface VehicleNote {
 export interface MaintenanceRecord {
   id: string;
   vehicleId: string;
-  type: string;
+  type: 'regular' | 'emergency' | 'inspection' | 'repair';
   date: string;
   description: string;
   cost: number;
@@ -82,7 +83,7 @@ export interface MaintenanceSchedule {
   estimatedDuration: number;
   technicianAssigned?: string | boolean;
   technician?: string;
-  status: 'scheduled' | 'in-progress' | 'completed' | 'cancelled';
+  status: 'scheduled' | 'in-progress' | 'completed' | 'cancelled' | 'overdue';
   priority?: string;
   taskName?: string;
   nextDue?: string;

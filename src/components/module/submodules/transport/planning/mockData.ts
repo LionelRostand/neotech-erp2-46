@@ -1,4 +1,3 @@
-
 import {
   DriverAvailabilityPeriod,
   MapExtensionRequest,
@@ -17,15 +16,16 @@ export const mockDrivers: TransportDriver[] = [
     phone: '+33612345678',
     address: '123 Rue de la Paix, 75001 Paris',
     licenseNumber: '1234567890',
-    status: 'available', // Changed from availability to status
-    available: true,      // Added available field
+    licenseExpiry: '2025-05-15',
+    status: 'available',
+    available: true,
     vehicleId: 'vehicle-1',
     notes: [],
     schedule: [],
     rating: 4.5,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
-    experience: 5, // Added for DriverAvailabilityTab
+    experience: 5,
   },
   {
     id: 'driver-2',
@@ -35,15 +35,16 @@ export const mockDrivers: TransportDriver[] = [
     phone: '+33698765432',
     address: '456 Avenue des Champs-Élysées, 75008 Paris',
     licenseNumber: '0987654321',
-    status: 'busy', // Changed from availability to status
-    available: false, // Added available field
+    licenseExpiry: '2024-08-20',
+    status: 'busy',
+    available: false,
     vehicleId: 'vehicle-2',
     notes: [],
     schedule: [],
     rating: 4.8,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
-    experience: 8, // Added for DriverAvailabilityTab
+    experience: 8,
   },
   {
     id: 'driver-3',
@@ -53,15 +54,16 @@ export const mockDrivers: TransportDriver[] = [
     phone: '+33655555555',
     address: '789 Rue de Rivoli, 75001 Paris',
     licenseNumber: '5555555555',
-    status: 'available', // Changed from availability to status
-    available: true, // Added available field
+    licenseExpiry: '2023-11-30',
+    status: 'available',
+    available: true,
     vehicleId: 'vehicle-3',
     notes: [],
     schedule: [],
     rating: 4.2,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
-    experience: 3, // Added for DriverAvailabilityTab
+    experience: 3,
   },
   {
     id: 'driver-4',
@@ -71,16 +73,17 @@ export const mockDrivers: TransportDriver[] = [
     phone: '+33611111111',
     address: '10 Avenue Montaigne, 75008 Paris',
     licenseNumber: '1111111111',
-    status: 'on_leave', // Changed from availability to status
-    available: false, // Added available field
+    licenseExpiry: '2024-02-15',
+    status: 'on_leave',
+    available: false,
     vehicleId: 'vehicle-4',
     notes: [],
     schedule: [],
     rating: 4.9,
-    onLeave: true, // Added for DriverAvailabilityTab
+    onLeave: true,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
-    experience: 10, // Added for DriverAvailabilityTab
+    experience: 10,
   },
   {
     id: 'driver-5',
@@ -90,15 +93,16 @@ export const mockDrivers: TransportDriver[] = [
     phone: '+33622222222',
     address: '22 Rue du Faubourg Saint-Honoré, 75008 Paris',
     licenseNumber: '2222222222',
-    status: 'available', // Changed from availability to status
-    available: true, // Added available field
+    licenseExpiry: '2024-06-10',
+    status: 'available',
+    available: true,
     vehicleId: 'vehicle-5',
     notes: [],
     schedule: [],
     rating: 4.6,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
-    experience: 6, // Added for DriverAvailabilityTab
+    experience: 6,
   },
 ];
 
@@ -112,8 +116,8 @@ export const mockVehicles: TransportVehicle[] = [
     year: 2018,
     licensePlate: 'AB-123-CD',
     capacity: 8,
-    status: 'available', // Changed from availability to status
-    available: true, // Added available field 
+    status: 'available',
+    available: true,
     location: 'Paris',
     notes: [],
     maintenanceSchedule: [],
@@ -130,8 +134,8 @@ export const mockVehicles: TransportVehicle[] = [
     year: 2020,
     licensePlate: 'EF-456-GH',
     capacity: 5,
-    status: 'maintenance', // Changed from availability to status
-    available: false, // Added available field
+    status: 'maintenance',
+    available: false,
     location: 'Lyon',
     notes: [],
     maintenanceSchedule: [],
@@ -148,8 +152,8 @@ export const mockVehicles: TransportVehicle[] = [
     year: 2019,
     licensePlate: 'IJ-789-KL',
     capacity: 5,
-    status: 'available', // Changed from availability to status
-    available: true, // Added available field
+    status: 'available',
+    available: true,
     location: 'Marseille',
     notes: [],
     maintenanceSchedule: [],
@@ -166,8 +170,8 @@ export const mockVehicles: TransportVehicle[] = [
     year: 2021,
     licensePlate: 'MN-012-OP',
     capacity: 5,
-    status: 'available', // Changed from availability to status
-    available: true, // Added available field
+    status: 'available',
+    available: true,
     location: 'Toulouse',
     notes: [],
     maintenanceSchedule: [],
@@ -184,8 +188,8 @@ export const mockVehicles: TransportVehicle[] = [
     year: 2022,
     licensePlate: 'QR-345-ST',
     capacity: 5,
-    status: 'available', // Changed from availability to status
-    available: true, // Added available field
+    status: 'available',
+    available: true,
     location: 'Bordeaux',
     notes: [],
     maintenanceSchedule: [],
@@ -198,43 +202,58 @@ export const mockVehicles: TransportVehicle[] = [
 export const mockVehicleLocations: TransportVehicleLocation[] = [
   {
     vehicleId: 'vehicle-1',
-    location: {
+    coordinates: {
       lat: 48.8566,
       lng: 2.3522
     },
     timestamp: new Date().toISOString(),
+    status: 'active',
+    heading: 90,
+    speed: 0
   },
   {
     vehicleId: 'vehicle-2',
-    location: {
+    coordinates: {
       lat: 45.7640,
       lng: 4.8357
     },
     timestamp: new Date().toISOString(),
+    status: 'active',
+    heading: 180,
+    speed: 0
   },
   {
     vehicleId: 'vehicle-3',
-    location: {
+    coordinates: {
       lat: 43.2965,
       lng: 5.3698
     },
     timestamp: new Date().toISOString(),
+    status: 'active',
+    heading: 270,
+    speed: 0
   },
   {
     vehicleId: 'vehicle-4',
-    location: {
+    coordinates: {
       lat: 43.6043,
       lng: 1.4429
     },
     timestamp: new Date().toISOString(),
+    status: 'active',
+    heading: 0,
+    speed: 0
   },
   {
     vehicleId: 'vehicle-5',
-    location: {
+    coordinates: {
       lat: 44.8378,
       lng: -0.5792
     },
     timestamp: new Date().toISOString(),
+    status: 'active',
+    heading: 45,
+    speed: 0
   },
 ];
 
@@ -329,7 +348,6 @@ export const mockExtensionRequests: MapExtensionRequest[] = [
   },
 ];
 
-// Add the missing generateMaintenanceSchedules function
 export const generateMaintenanceSchedules = (): MaintenanceSchedule[] => {
   const now = new Date();
   const tomorrow = new Date(now);

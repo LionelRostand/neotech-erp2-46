@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -13,11 +14,12 @@ const DriverPerformance: React.FC<DriverPerformanceProps> = ({ driver }) => {
   // Default values if performance data is missing
   const performance = driver.performance || {
     completedTrips: 0,
-    averageRating: 0,
-    onTimePercentage: 0
+    rating: 0,
+    onTimePercentage: 0,
+    cancelRate: 0
   };
   
-  // Calculate performance level
+  // Calculate performance level based on rating
   const getPerformanceLevel = (rating: number) => {
     if (rating >= 4.8) return { label: "Excellent", color: "bg-green-500" };
     if (rating >= 4.5) return { label: "Très bon", color: "bg-green-400" };
@@ -26,7 +28,11 @@ const DriverPerformance: React.FC<DriverPerformanceProps> = ({ driver }) => {
     return { label: "À améliorer", color: "bg-red-500" };
   };
   
-  const performanceLevel = getPerformanceLevel(performance.averageRating);
+  // Use either averageRating or rating property from the performance object
+  const ratingValue = performance.averageRating !== undefined ? 
+    performance.averageRating : performance.rating;
+  
+  const performanceLevel = getPerformanceLevel(ratingValue);
   
   return (
     <div className="space-y-6">
@@ -48,7 +54,7 @@ const DriverPerformance: React.FC<DriverPerformanceProps> = ({ driver }) => {
           <div className="text-sm text-gray-500">Ponctualité</div>
         </div>
         <div className="text-center">
-          <div className="text-2xl font-bold">{performance.averageRating.toFixed(1) || 0}</div>
+          <div className="text-2xl font-bold">{ratingValue.toFixed(1)}</div>
           <div className="text-sm text-gray-500">Note moyenne</div>
         </div>
         <div className="text-center">
@@ -67,9 +73,9 @@ const DriverPerformance: React.FC<DriverPerformanceProps> = ({ driver }) => {
                   <Star className="h-4 w-4 mr-2 text-yellow-500" />
                   <span className="text-sm font-medium">Satisfaction client</span>
                 </div>
-                <span className="text-sm font-bold">{performance.averageRating.toFixed(1)}/5</span>
+                <span className="text-sm font-bold">{ratingValue.toFixed(1)}/5</span>
               </div>
-              <Progress value={performance.averageRating * 20} className="h-2" />
+              <Progress value={ratingValue * 20} className="h-2" />
             </div>
             
             <div className="space-y-2">
