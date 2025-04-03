@@ -4,7 +4,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { FileText, Wrench, CarFront, FileCheck, FileQuestion, Edit, Plus } from "lucide-react";
-import { MaintenanceRecord } from '../types/transport-types';
+import { MaintenanceRecord } from '../types/vehicle-types';
 
 interface MaintenanceHistoryListProps {
   maintenanceRecords: MaintenanceRecord[];

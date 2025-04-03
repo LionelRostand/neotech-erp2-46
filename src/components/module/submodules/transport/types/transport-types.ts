@@ -40,37 +40,14 @@ export interface TransportVehicleWithLocation {
   }
 }
 
-// Export IncidentRecord type for transport-types
-export interface IncidentRecord {
-  id: string;
-  vehicleId: string;
-  date: string;
-  type: string;
-  description: string;
-  reportedBy: string;
+// Export IncidentRecord type for transport-types - making it compatible with the vehicle-types definition
+export interface IncidentRecord extends Omit<IncidentRecordType, 'status'> {
   status: 'reported' | 'investigating' | 'resolved' | 'open' | 'closed';
-  severity: 'low' | 'medium' | 'high' | 'critical';
   location?: string | { latitude: number; longitude: number };
-  driverName?: string;
-  clientName?: string;
-  repairCost?: number;
-  resolved?: boolean;
 }
 
-// Export MaintenanceRecord type for transport-types
-export interface MaintenanceRecord {
-  id: string;
-  vehicleId: string;
-  type: 'regular' | 'emergency' | 'inspection' | 'repair';
-  date: string;
-  description: string;
-  cost: number;
-  performedBy: string;
-  provider?: string;
-  nextMaintenance?: string;
-  location?: string;
-  technician?: string;
-}
+// Export MaintenanceRecord type directly from vehicle-types to ensure they stay in sync
+export type MaintenanceRecord = MaintenanceRecordType;
 
 // Any other types specific to transport module can be defined here
 export interface TransportSettings {

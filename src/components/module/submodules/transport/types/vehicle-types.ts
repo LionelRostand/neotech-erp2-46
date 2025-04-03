@@ -46,7 +46,7 @@ export interface MaintenanceRecord {
   technician?: string;
   location?: string;
   provider?: string;
-  performedBy?: string;
+  performedBy: string; // Changed from optional to required
   nextMaintenance?: string;
   resolved?: boolean;
   mileage?: number;
