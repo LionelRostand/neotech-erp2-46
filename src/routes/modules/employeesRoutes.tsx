@@ -4,6 +4,7 @@ import { Route } from "react-router-dom";
 import ModuleLayout from "@/components/module/ModuleLayout";
 import SubmodulePage from "@/components/module/SubmodulePage";
 import SalarySlips from "@/components/module/submodules/salaries/SalarySlips";
+import EmployeesDepartments from "@/components/module/submodules/departments/EmployeesDepartments";
 
 export const EmployeesRoutes = (
   <Route key="employees" path="/modules/employees" element={<ModuleLayout moduleId={1} />}>
@@ -11,7 +12,7 @@ export const EmployeesRoutes = (
     <Route path="dashboard" element={<SubmodulePage moduleId={1} submoduleId="employees-dashboard" />} />
     <Route path="profiles" element={<SubmodulePage moduleId={1} submoduleId="employees-profiles" />} />
     <Route path="badges" element={<SubmodulePage moduleId={1} submoduleId="employees-badges" />} />
-    <Route path="departments" element={<SubmodulePage moduleId={1} submoduleId="employees-departments" />} />
+    <Route path="departments" element={<EmployeesDepartments />} />
     <Route path="hierarchy" element={<SubmodulePage moduleId={1} submoduleId="employees-hierarchy" />} />
     <Route path="attendance" element={<SubmodulePage moduleId={1} submoduleId="employees-attendance" />} />
     <Route path="timesheet" element={<SubmodulePage moduleId={1} submoduleId="employees-timesheet" />} />

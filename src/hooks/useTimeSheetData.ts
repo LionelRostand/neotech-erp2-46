@@ -34,7 +34,7 @@ export const useTimeSheetData = () => {
         employeePhoto: employee?.photoURL || employee?.photo || '',
         lastUpdateText: formatDate(timeSheet.updatedAt || timeSheet.lastUpdated || timeSheet.createdAt || new Date().toISOString())
       } as TimeReport;
-    });
+    }) as TimeReport[];
   }, [timeSheets, employees]);
   
   // Filtrer les feuilles de temps par statut
