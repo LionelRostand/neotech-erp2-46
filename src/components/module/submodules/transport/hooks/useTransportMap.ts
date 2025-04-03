@@ -46,9 +46,10 @@ export const useTransportMap = (vehicles: TransportVehicleWithLocation[], option
 
     // Create new markers
     vehicles.forEach(vehicle => {
+      const location = vehicle.location;
       const position = [
-        vehicle.location.coordinates.latitude,
-        vehicle.location.coordinates.longitude
+        'coordinates' in location ? location.coordinates.latitude : location.lat,
+        'coordinates' in location ? location.coordinates.longitude : location.lng
       ] as [number, number];
 
       // Create a marker for each vehicle
@@ -74,9 +75,10 @@ export const useTransportMap = (vehicles: TransportVehicleWithLocation[], option
     setSelectedVehicle(vehicle);
 
     if (vehicle && mapInstance.current) {
+      const location = vehicle.location;
       const position = [
-        vehicle.location.coordinates.latitude,
-        vehicle.location.coordinates.longitude
+        'coordinates' in location ? location.coordinates.latitude : location.lat,
+        'coordinates' in location ? location.coordinates.longitude : location.lng
       ] as [number, number];
       
       mapInstance.current.flyTo(position, 15);

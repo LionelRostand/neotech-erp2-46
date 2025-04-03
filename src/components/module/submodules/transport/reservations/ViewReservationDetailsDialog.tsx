@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -64,12 +63,14 @@ const ViewReservationDetailsDialog: React.FC<ViewReservationDetailsDialogProps> 
       return reservation.notes;
     }
 
-    if (Array.isArray(reservation.notes) && reservation.notes.length > 0) {
-      const firstNote = reservation.notes[0];
-      if (typeof firstNote === 'object' && firstNote && 'content' in firstNote) {
-        return firstNote.content;
+    if (Array.isArray(reservation.notes)) {
+      if (reservation.notes.length > 0) {
+        const firstNote = reservation.notes[0];
+        if (typeof firstNote === 'object' && firstNote && 'content' in firstNote) {
+          return firstNote.content;
+        }
+        return String(reservation.notes.join(', '));
       }
-      return Array.isArray(reservation.notes) ? String(reservation.notes.join(', ')) : String(reservation.notes);
     }
     
     return '';

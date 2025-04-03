@@ -6,7 +6,7 @@ export interface TransportVehicle {
   type: string;
   licensePlate: string;
   available: boolean;
-  status: 'active' | 'maintenance' | 'out-of-service' | 'reserved';
+  status: 'active' | 'maintenance' | 'out-of-service' | 'reserved' | 'available';
   purchaseDate?: string;
   lastServiceDate?: string;
   nextServiceDate?: string;
@@ -71,7 +71,7 @@ export interface MaintenanceSchedule {
   description: string;
   estimatedDuration: number;
   technicianAssigned?: string;
-  status: 'scheduled' | 'in-progress' | 'completed' | 'cancelled';
+  status: 'scheduled' | 'in-progress' | 'completed' | 'cancelled' | 'overdue';
   priority?: string;
   taskName?: string;
   nextDue?: string;

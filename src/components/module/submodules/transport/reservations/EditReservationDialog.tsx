@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -23,11 +22,29 @@ const EditReservationDialog: React.FC<EditReservationDialogProps> = ({
   reservation,
   onReservationUpdated
 }) => {
+  // Parse notes to string for the textarea
+  const parseNotesToString = (notes: any): string => {
+    if (!notes) return '';
+    
+    if (typeof notes === 'string') {
+      return notes;
+    }
+    
+    if (Array.isArray(notes)) {
+      if (notes.length > 0 && typeof notes[0] === 'object' && 'content' in notes[0]) {
+        return notes.map(note => note.content).join('\n');
+      }
+      return notes.join('\n');
+    }
+    
+    return String(notes);
+  };
+
   // Form state
   const [formData, setFormData] = useState({
-    client: reservation.client, // Use client instead of clientId
-    vehicle: reservation.vehicle, // Use vehicle instead of vehicleId 
-    driver: reservation.driver, // Use driver instead of driverId
+    client: reservation.client,
+    vehicle: reservation.vehicle,
+    driver: reservation.driver,
     startDate: reservation.startDate,
     endDate: reservation.endDate,
     pickupLocation: reservation.pickupLocation.address,
@@ -35,7 +52,7 @@ const EditReservationDialog: React.FC<EditReservationDialogProps> = ({
     totalAmount: reservation.totalAmount,
     status: reservation.status,
     paymentStatus: reservation.paymentStatus,
-    notes: reservation.notes
+    notes: parseNotesToString(reservation.notes)
   });
 
   // Handle form field changes

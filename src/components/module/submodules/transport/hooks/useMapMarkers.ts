@@ -9,12 +9,16 @@ export const useMapMarkers = (vehicles: TransportVehicleWithLocation[]) => {
   useEffect(() => {
     // Create markers for all vehicles
     const newMarkers = vehicles.map(vehicle => {
-      const normalizedPosition = normalizeCoordinates(vehicle.location);
+      const location = vehicle.location;
+      const normalizedPosition = 'coordinates' in location 
+        ? location.coordinates
+        : { latitude: location.lat, longitude: location.lng };
+        
       return {
         id: vehicle.id,
         position: normalizedPosition,
         type: 'vehicle',
-        status: vehicle.status,
+        status: location.status || 'unknown',
         title: vehicle.name,
         vehicle: vehicle // Store the complete vehicle for popups
       };
@@ -26,7 +30,12 @@ export const useMapMarkers = (vehicles: TransportVehicleWithLocation[]) => {
     setMarkers(prev => 
       prev.map(marker => 
         marker.id === vehicleId 
-          ? { ...marker, position: normalizeCoordinates(location) }
+          ? { 
+              ...marker, 
+              position: 'coordinates' in location 
+                ? location.coordinates
+                : { latitude: location.lat, longitude: location.lng }
+            }
           : marker
       )
     );

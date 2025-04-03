@@ -31,10 +31,10 @@ export interface WebBookingConfig {
     termsUrl: string;
   };
   // Additional properties for web application
-  siteTitle: string;
-  enableBookingForm: boolean;
-  requiredFields: string[];
-  bannerConfig: BannerConfig;
+  siteTitle?: string;
+  enableBookingForm?: boolean;
+  requiredFields?: string[];
+  bannerConfig?: BannerConfigExtended;
 }
 
 export interface MenuItem {
@@ -42,7 +42,7 @@ export interface MenuItem {
   label: string;
   url: string;
   isExternal: boolean;
-  isActive: boolean;
+  isActive?: boolean;
   children?: MenuItem[];
 }
 
@@ -53,10 +53,14 @@ export interface BannerConfig {
   textColor: string;
   link?: string;
   position: 'top' | 'bottom';
-  // Additional properties
+}
+
+// Extended banner config used in the web booking UI
+export interface BannerConfigExtended extends Partial<BannerConfig> {
   title?: string;
   subtitle?: string;
   backgroundColor?: string;
+  textColor?: string;
   backgroundImage?: string;
   buttonText?: string;
   buttonLink?: string;

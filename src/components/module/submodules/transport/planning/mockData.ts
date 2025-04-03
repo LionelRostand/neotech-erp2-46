@@ -1,190 +1,379 @@
-import { TransportVehicle, TransportDriver, MaintenanceSchedule, MapExtensionRequest } from '../types';
+import { addDays, addHours, format } from 'date-fns';
+import { fr } from 'date-fns/locale';
+import { TransportVehicle } from '../types/vehicle-types';
+import { TransportDriver } from '../types/driver-types';
+import { TransportReservation } from '../types/reservation-types';
+import { MapExtensionRequest } from '../types/map-types';
 
-// Mock vehicles data
-export const mockVehicles: Partial<TransportVehicle>[] = [
+// Sample vehicles
+export const mockVehicles = [
   {
-    id: "veh-001",
-    name: "Mercedes Classe E",
-    type: "sedan",
+    id: "v1",
+    name: "Mercedes Sprinter",
+    type: "van",
     licensePlate: "AB-123-CD",
-    status: "available",
-    lastMaintenanceDate: "2023-04-15",
-    nextMaintenanceDate: "2023-07-15",
-    mileage: 45230,
-    capacity: 4,
+    status: "active", // Changed from 'available' to 'active'
     available: true,
-    location: { lat: 48.8566, lng: 2.3522 },
-    notes: []
+    capacity: 8,
+    notes: [],
+    lastServiceDate: "2023-09-15",
+    nextServiceDate: "2023-12-15",
+    mileage: 45000,
+    purchaseDate: "2021-03-10",
+    insuranceInfo: {
+      provider: "AXA",
+      policyNumber: "POL-12345",
+      expiryDate: "2024-03-10"
+    }
   },
   {
-    id: "veh-002",
-    name: "Mercedes Classe V",
+    id: "v2",
+    name: "Renault Trafic",
     type: "van",
     licensePlate: "CD-456-EF",
     status: "maintenance",
-    lastMaintenanceDate: "2023-03-20",
-    nextMaintenanceDate: "2023-06-20",
-    mileage: 78650,
-    capacity: 7,
     available: false,
-    location: { lat: 48.8606, lng: 2.3376 },
-    notes: []
+    capacity: 9,
+    notes: [
+      {
+        id: "n1",
+        vehicleId: "v2",
+        title: "Problème de freins",
+        note: "Freins à vérifier lors de la maintenance",
+        author: "Jean Dupont",
+        createdAt: "2023-10-15T10:30:00Z"
+      }
+    ],
+    lastServiceDate: "2023-08-20",
+    nextServiceDate: "2023-11-20",
+    mileage: 62000,
+    purchaseDate: "2020-06-15",
+    insuranceInfo: {
+      provider: "Allianz",
+      policyNumber: "POL-67890",
+      expiryDate: "2024-06-15"
+    }
   },
   {
-    id: "veh-003",
-    name: "BMW Série 5",
+    id: "v3",
+    name: "Mercedes S-Class",
     type: "sedan",
     licensePlate: "EF-789-GH",
-    status: "reserved",
-    lastMaintenanceDate: "2023-05-05",
-    nextMaintenanceDate: "2023-08-05",
-    mileage: 32150,
-    capacity: 4,
-    available: false,
-    location: { lat: 48.8744, lng: 2.3526 },
-    notes: []
-  },
-  {
-    id: "veh-004",
-    name: "Tesla Model S",
-    type: "electric",
-    licensePlate: "GH-012-IJ",
-    status: "available",
-    lastMaintenanceDate: "2023-05-25",
-    nextMaintenanceDate: "2023-08-25",
-    mileage: 15780,
-    capacity: 5,
+    status: "active",
     available: true,
-    location: { lat: 48.8647, lng: 2.3407 },
-    notes: []
+    capacity: 4,
+    notes: [],
+    lastServiceDate: "2023-09-05",
+    nextServiceDate: "2023-12-05",
+    mileage: 28000,
+    purchaseDate: "2022-01-20",
+    insuranceInfo: {
+      provider: "AXA",
+      policyNumber: "POL-24680",
+      expiryDate: "2024-01-20"
+    }
+  },
+  {
+    id: "v4",
+    name: "BMW 7 Series",
+    type: "sedan",
+    licensePlate: "GH-012-IJ",
+    status: "out-of-service",
+    available: false,
+    capacity: 4,
+    notes: [
+      {
+        id: "n2",
+        vehicleId: "v4",
+        title: "Accident",
+        note: "Véhicule accidenté, en attente de réparation",
+        author: "Marie Durand",
+        createdAt: "2023-10-10T14:15:00Z"
+      }
+    ],
+    lastServiceDate: "2023-07-12",
+    nextServiceDate: "2023-10-12",
+    mileage: 35000,
+    purchaseDate: "2021-11-05",
+    insuranceInfo: {
+      provider: "Generali",
+      policyNumber: "POL-13579",
+      expiryDate: "2024-11-05"
+    }
+  },
+  {
+    id: "v5",
+    name: "Tesla Model Y",
+    type: "suv",
+    licensePlate: "VE-456-ZZ",
+    status: "active", // Changed from 'available' to 'active'
+    available: true,
+    capacity: 5,
+    notes: [],
+    lastServiceDate: "2023-10-01",
+    nextServiceDate: "2024-01-01",
+    mileage: 15000,
+    purchaseDate: "2023-02-15",
+    insuranceInfo: {
+      provider: "Maif",
+      policyNumber: "POL-97531",
+      expiryDate: "2024-02-15"
+    }
   }
 ];
 
-// Mock maintenance schedules
-export const mockMaintenanceSchedules: Partial<MaintenanceSchedule>[] = [
+// Sample drivers
+export const mockDrivers: TransportDriver[] = [
   {
-    id: "maint-001",
-    vehicleId: "veh-002",
-    scheduledDate: "2023-06-15",
-    type: "regular",
-    description: "Entretien périodique",
-    estimatedDuration: 120,
-    technicianAssigned: "Jean Dupont",
-    status: "scheduled"
-  },
-  {
-    id: "maint-002",
-    vehicleId: "veh-001",
-    scheduledDate: "2023-07-10",
-    type: "inspection",
-    description: "Contrôle technique obligatoire",
-    estimatedDuration: 90,
-    technicianAssigned: "Pierre Martin",
-    status: "scheduled"
-  },
-  {
-    id: "maint-003",
-    vehicleId: "veh-004",
-    scheduledDate: "2023-06-05",
-    type: "repair",
-    description: "Remplacement des plaquettes de frein",
-    estimatedDuration: 60,
-    technicianAssigned: "Sophie Dubois",
-    status: "completed"
-  }
-];
-
-// Mock extension requests with corrected properties
-export const mockExtensionRequests = [
-  {
-    id: "ext-001",
-    requestId: "REQ-001",
-    clientName: "Marie Dupont",
-    vehicleName: "Mercedes S-Class",
-    driverName: "Jean Martin",
-    originalEndDate: "2023-11-15",
-    requestedEndDate: "2023-11-16",
-    originalEndTime: "18:00",
-    newEndTime: "12:00",
-    status: "pending",
-    reason: "Client meeting extended",
-    extensionReason: "Business needs",
-    reservationId: "res-001",
+    id: "d1",
+    firstName: "Jean",
+    lastName: "Martin",
+    email: "jean.martin@example.com",
+    phone: "+33612345678",
+    licenseNumber: "12AB34567",
+    licenseExpiry: "2025-06-30",
+    status: "available",
+    rating: 4.8,
+    notes: [],
+    address: {
+      street: "15 Rue de la Paix",
+      city: "Paris",
+      postalCode: "75001",
+      country: "France"
+    },
+    hireDate: "2020-03-15",
     vehicleId: "v1"
   },
   {
-    id: "ext-002",
-    requestId: "REQ-002",
-    clientName: "Pierre Leroy",
-    vehicleName: "BMW 5 Series",
-    driverName: "Sophie Dubois",
-    originalEndDate: "2023-11-18",
-    requestedEndDate: "2023-11-19",
-    originalEndTime: "20:00",
-    newEndTime: "12:00",
-    status: "approved",
-    reason: "Flight delay",
-    extensionReason: "Travel complications",
-    reservationId: "res-003",
-    vehicleId: "v2"
+    id: "d2",
+    firstName: "Sophie",
+    lastName: "Dubois",
+    email: "sophie.dubois@example.com",
+    phone: "+33623456789",
+    licenseNumber: "23CD45678",
+    licenseExpiry: "2024-11-15",
+    status: "on-duty",
+    rating: 4.9,
+    notes: [],
+    address: {
+      street: "27 Avenue des Champs-Élysées",
+      city: "Paris",
+      postalCode: "75008",
+      country: "France"
+    },
+    hireDate: "2019-07-10",
+    vehicleId: "v3"
   },
   {
-    id: "ext-003",
-    requestId: "REQ-003",
-    clientName: "Lucas Bernard",
-    vehicleName: "Tesla Model X",
-    driverName: "Marc Petit",
-    originalEndDate: "2023-11-20",
-    requestedEndDate: "2023-11-21",
-    originalEndTime: "14:00",
-    newEndTime: "14:00",
-    status: "rejected",
-    reason: "Personal reasons",
-    extensionReason: "Vehicle needed for another reservation",
-    reservationId: "res-005",
-    vehicleId: "v4"
+    id: "d3",
+    firstName: "Pierre",
+    lastName: "Leroy",
+    email: "pierre.leroy@example.com",
+    phone: "+33634567890",
+    licenseNumber: "34DE56789",
+    licenseExpiry: "2026-02-28",
+    status: "off-duty",
+    rating: 4.7,
+    notes: [],
+    address: {
+      street: "8 Rue de Rivoli",
+      city: "Paris",
+      postalCode: "75004",
+      country: "France"
+    },
+    hireDate: "2021-01-05",
+    vehicleId: "v5"
   }
 ];
 
-// Mock drivers data
-export const mockDrivers: Partial<TransportDriver>[] = [
+// Sample reservations
+export const mockReservations: TransportReservation[] = [
   {
-    id: "drv-001",
-    firstName: "Jean",
-    lastName: "Dupont",
-    email: "jean.dupont@example.com",
-    phone: "06 12 34 56 78",
-    available: true,
-    onLeave: false,
-    status: "active",
-    experience: 5,
-    rating: 4.8,
-    licensesTypes: ["B", "C"]
+    id: "res001",
+    clientId: "c1",
+    clientName: "Marie Dupont",
+    vehicleId: "v3",
+    driverId: "d2",
+    date: "2023-11-10",
+    time: "14:00",
+    pickup: "15 Rue de la Paix, Paris",
+    dropoff: "Charles de Gaulle Airport, Terminal 2E",
+    pickupLocation: {
+      address: "15 Rue de la Paix, Paris",
+      lat: 48.8688,
+      lng: 2.3295
+    },
+    dropoffLocation: {
+      address: "Charles de Gaulle Airport, Terminal 2E",
+      lat: 49.0097,
+      lng: 2.5479
+    },
+    status: "confirmed",
+    paymentStatus: "paid",
+    price: 320,
+    isPaid: true,
+    notes: "Client VIP, préférence siège avant"
   },
   {
-    id: "drv-002",
-    firstName: "Marie",
-    lastName: "Laurent",
-    email: "marie.laurent@example.com",
-    phone: "07 23 45 67 89",
-    available: false,
-    onLeave: false,
-    status: "driving",
-    experience: 3,
-    rating: 4.7,
-    licensesTypes: ["B"]
-  },
-  {
-    id: "drv-003",
-    firstName: "Pierre",
-    lastName: "Martin",
-    email: "pierre.martin@example.com",
-    phone: "06 34 56 78 90",
-    available: false,
-    onLeave: true,
-    status: "on_leave",
-    experience: 7,
-    rating: 4.9,
-    licensesTypes: ["B", "D"]
+    id: "res002",
+    clientId: "c2",
+    clientName: "Pierre Dubois",
+    vehicleId: "v1",
+    driverId: "d1",
+    date: "2023-11-15",
+    time: "10:30",
+    pickup: "Aéroport CDG Terminal 2E, Paris",
+    dropoff: "25 rue du Faubourg Saint-Honoré, 75008 Paris",
+    pickupLocation: {
+      address: "Aéroport CDG Terminal 2E, Paris",
+      lat: 49.0097,
+      lng: 2.5479
+    },
+    dropoffLocation: {
+      address: "25 rue du Faubourg Saint-Honoré, 75008 Paris",
+      lat: 48.8708,
+      lng: 2.3176
+    },
+    status: "pending",
+    paymentStatus: "unpaid",
+    price: 120,
+    isPaid: false,
+    notes: "Besoin d'un siège enfant"
   }
 ];
+
+// For MapExtensionRequest, make sure the vehicleId property is valid
+export const mockExtensionRequests = [
+  {
+    id: "ext1",
+    requestId: "REQ-001",
+    clientName: "Marie Dupont",
+    vehicleName: "Mercedes Sprinter",
+    vehicleId: "v1", // This is valid now
+    driverName: "Jean Martin",
+    originalEndDate: "2023-10-20",
+    requestedEndDate: "2023-10-21",
+    status: "pending",
+    reason: "Client request",
+    reservationId: "res001",
+    timestamp: "2023-10-18T14:30:00Z",
+    type: "traffic"
+  },
+  {
+    id: "ext2",
+    requestId: "REQ-002",
+    clientName: "Pierre Dubois",
+    vehicleName: "Tesla Model Y",
+    vehicleId: "v5",
+    driverName: "Pierre Leroy",
+    originalEndDate: "2023-10-25",
+    requestedEndDate: "2023-10-26",
+    status: "approved",
+    reason: "Traffic conditions",
+    reservationId: "res002",
+    timestamp: "2023-10-22T09:15:00Z",
+    type: "satellite"
+  }
+];
+
+// Generate schedule data for the next 14 days
+export const generateScheduleData = () => {
+  const today = new Date();
+  const scheduleData = [];
+
+  // Generate driver schedules
+  for (const driver of mockDrivers) {
+    for (let i = 0; i < 14; i++) {
+      const date = addDays(today, i);
+      const dateStr = format(date, 'yyyy-MM-dd');
+      const isWeekend = date.getDay() === 0 || date.getDay() === 6;
+      
+      // Skip some days randomly to simulate days off
+      if (Math.random() > 0.8 || isWeekend) continue;
+      
+      const startHour = 8 + Math.floor(Math.random() * 3); // Start between 8-10 AM
+      const startTime = addHours(date, startHour);
+      const endTime = addHours(startTime, 8 + Math.floor(Math.random() * 4)); // 8-12 hour shifts
+      
+      scheduleData.push({
+        id: `sch-${driver.id}-${dateStr}`,
+        driverId: driver.id,
+        driverName: `${driver.firstName} ${driver.lastName}`,
+        date: dateStr,
+        startTime: format(startTime, 'HH:mm'),
+        endTime: format(endTime, 'HH:mm'),
+        status: Math.random() > 0.9 ? 'pending' : 'confirmed',
+        vehicleId: driver.vehicleId,
+        vehicleName: mockVehicles.find(v => v.id === driver.vehicleId)?.name || 'Non assigné'
+      });
+    }
+  }
+
+  return scheduleData;
+};
+
+// Generate maintenance schedules
+export const generateMaintenanceSchedules = () => {
+  const schedules = [];
+  const today = new Date();
+  
+  for (const vehicle of mockVehicles) {
+    // Past maintenance (completed)
+    schedules.push({
+      id: `maint-${vehicle.id}-past`,
+      vehicleId: vehicle.id,
+      scheduledDate: addDays(today, -Math.floor(Math.random() * 30)).toISOString(),
+      type: "oil_change",
+      description: "Changement d'huile et filtres",
+      estimatedDuration: 60,
+      status: "completed",
+      priority: "medium",
+      technicianAssigned: "Pierre Durant",
+      completed: true
+    });
+    
+    // Future maintenance
+    if (Math.random() > 0.3) {
+      schedules.push({
+        id: `maint-${vehicle.id}-future`,
+        vehicleId: vehicle.id,
+        scheduledDate: addDays(today, Math.floor(Math.random() * 30) + 1).toISOString(),
+        type: Math.random() > 0.5 ? "inspection" : "tire_change",
+        description: Math.random() > 0.5 ? "Inspection complète" : "Changement des pneus",
+        estimatedDuration: 120,
+        status: "scheduled",
+        priority: "high",
+        technicianAssigned: "Marie Lambert",
+        completed: false
+      });
+    }
+    
+    // Overdue maintenance (for some vehicles)
+    if (Math.random() > 0.7) {
+      schedules.push({
+        id: `maint-${vehicle.id}-overdue`,
+        vehicleId: vehicle.id,
+        scheduledDate: addDays(today, -Math.floor(Math.random() * 10) - 1).toISOString(),
+        type: "brake_service",
+        description: "Vérification et remplacement des plaquettes de frein",
+        estimatedDuration: 90,
+        status: "overdue",
+        priority: "high",
+        technicianAssigned: "Jean Dupont",
+        completed: false
+      });
+    }
+  }
+  
+  return schedules;
+};
+
+// Format date for display
+export const formatDate = (date: string) => {
+  return format(new Date(date), 'PP', { locale: fr });
+};
+
+// Format time for display
+export const formatTime = (time: string) => {
+  return format(new Date(`2000-01-01T${time}`), 'HH:mm');
+};

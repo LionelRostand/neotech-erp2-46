@@ -8,6 +8,12 @@ export interface VehicleLocation {
   lat: number;
   lng: number;
   address?: string;
+  // Adding fields needed by components
+  coordinates?: Coordinates;
+  status?: 'moving' | 'idle' | 'stopped';
+  heading?: number;
+  speed?: number;
+  timestamp?: string;
 }
 
 export interface TransportVehicleLocation {
@@ -30,6 +36,7 @@ export interface TransportVehicleWithLocation {
   capacity?: number;
   location: VehicleLocation | TransportVehicleLocation;
   notes: any[];
+  driverName?: string;
   [key: string]: any;
 }
 
@@ -38,6 +45,7 @@ export interface MapExtensionRequest {
   requestId?: string;
   clientName?: string;
   vehicleName?: string;
+  vehicleId?: string;
   driverName?: string;
   originalEndDate?: string;
   requestedEndDate?: string;
@@ -47,7 +55,6 @@ export interface MapExtensionRequest {
   reason?: string;
   extensionReason?: string;
   reservationId?: string;
-  vehicleId?: string;
   timestamp?: string;
   type?: 'traffic' | 'satellite' | 'terrain' | 'heatmap';
   active?: boolean;

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
@@ -26,18 +25,49 @@ const WebsiteBuilder: React.FC = () => {
   
   // Sample initial config for the website
   const [webConfig, setWebConfig] = useState<WebBookingConfig>({
-    siteTitle: "RentaCar - Location de véhicules",
+    title: "RentaCar - Location de véhicules",
+    subtitle: "Location de véhicules de qualité",
     logo: "/logo.png",
     primaryColor: "#ff5f00",
     secondaryColor: "#003366",
     fontFamily: "Inter",
+    headerBackground: "#ffffff",
+    footerBackground: "#f5f5f5",
+    banner: {
+      enabled: true,
+      text: "Réservez votre véhicule en quelques clics",
+      background: "#003366",
+      textColor: "#ffffff",
+      position: "top"
+    },
+    contactInfo: {
+      phone: "+33 1 23 45 67 89",
+      email: "contact@rentacar.fr",
+      address: "15 Avenue des Champs-Élysées, 75008 Paris"
+    },
+    socialLinks: {
+      facebook: "https://facebook.com/rentacar",
+      twitter: "https://twitter.com/rentacar",
+      instagram: "https://instagram.com/rentacar",
+      linkedin: "https://linkedin.com/company/rentacar"
+    },
+    bookingFormSettings: {
+      requireLogin: false,
+      showPrices: true,
+      allowTimeSelection: true,
+      requirePhoneNumber: true,
+      allowComments: true,
+      paymentOptions: ["credit-card", "paypal", "bank-transfer"],
+      termsUrl: "/terms"
+    },
+    siteTitle: "RentaCar - Location de véhicules",
     enableBookingForm: true,
     requiredFields: ["pickup_location", "dropoff_location", "pickup_date", "dropoff_date"],
     menuItems: [
-      { id: '1', label: 'Accueil', url: '/', isActive: true },
-      { id: '2', label: 'Nos Véhicules', url: '/vehicules', isActive: true },
-      { id: '3', label: 'Tarifs', url: '/tarifs', isActive: true },
-      { id: '4', label: 'Contact', url: '/contact', isActive: true },
+      { id: '1', label: 'Accueil', url: '/', isExternal: false, isActive: true },
+      { id: '2', label: 'Nos Véhicules', url: '/vehicules', isExternal: false, isActive: true },
+      { id: '3', label: 'Tarifs', url: '/tarifs', isExternal: false, isActive: true },
+      { id: '4', label: 'Contact', url: '/contact', isExternal: false, isActive: true },
     ],
     bannerConfig: {
       title: "Réservez votre véhicule en quelques clics",

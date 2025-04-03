@@ -1,195 +1,219 @@
 import React, { useState } from 'react';
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
+import { format } from "date-fns";
+import { enUS } from "date-fns/locale";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { CalendarIcon, Clock, MapPin, User } from "lucide-react";
-import { Reservation } from '../types';
-import ViewReservationDialog from './ViewReservationDialog';
-import { getAddressString } from '../types/reservation-types';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-// Mock data for reservations
-const mockReservations: Partial<Reservation>[] = [
-  {
-    id: "res001",
-    clientName: "Marie Dupont",
-    startDate: "2023-11-10", 
-    endDate: "2023-11-12",
-    pickupLocation: { address: "15 Rue de la Paix, Paris" },
-    dropoffLocation: { address: "Charles de Gaulle Airport, Terminal 2E" },
-    totalAmount: 320,
-    status: "confirmed",
-    paymentStatus: "paid",
-    notes: "Client VIP, préférence siège avant",
-    pickup: "15 Rue de la Paix, Paris",
-    dropoff: "Charles de Gaulle Airport, Terminal 2E"
-  },
-  {
-    id: "res002",
-    clientName: "Pierre Dubois",
-    startDate: "2023-11-15",
-    endDate: "2023-11-15",
-    pickupLocation: { address: "Aéroport CDG Terminal 2E, Paris" },
-    dropoffLocation: { address: "25 rue du Faubourg Saint-Honoré, 75008 Paris" },
-    status: "pending",
-    paymentStatus: "unpaid",
-    notes: "Location sans chauffeur",
-    pickup: "Aéroport CDG Terminal 2E, Paris",
-    dropoff: "25 rue du Faubourg Saint-Honoré, 75008 Paris",
-    totalAmount: 120
-  },
-  {
-    id: "res003",
-    clientName: "Sophie Laurent",
-    startDate: "2023-11-08",
-    endDate: "2023-11-10",
-    pickupLocation: { address: "Gare de Lyon, Paris" },
-    dropoffLocation: { address: "Gare de Lyon, Paris" },
-    status: "completed",
-    paymentStatus: "paid",
-    notes: "Location sans chauffeur",
-    pickup: "Gare de Lyon, Paris",
-    dropoff: "Gare de Lyon, Paris",
-    totalAmount: 320
-  },
-  {
-    id: "res004",
-    clientName: "Jean Moreau",
-    startDate: "2023-11-20",
-    endDate: "2023-11-20",
-    pickupLocation: { address: "Hôtel Ritz, Place Vendôme, Paris" },
-    dropoffLocation: { address: "Opéra Garnier, Paris" },
-    status: "confirmed",
-    paymentStatus: "partial",
-    notes: "Location sans chauffeur",
-    pickup: "Hôtel Ritz, Place Vendôme, Paris",
-    dropoff: "Opéra Garnier, Paris",
-    totalAmount: 180
-  },
-  {
-    id: "res005",
-    clientName: "Isabelle Bernard",
-    startDate: "2023-11-25",
-    endDate: "2023-11-27",
-    pickupLocation: { address: "Gare Montparnasse, Paris" },
-    dropoffLocation: { address: "Gare Montparnasse, Paris" },
-    status: "pending",
-    paymentStatus: "unpaid",
-    notes: "Location sans chauffeur",
-    pickup: "Gare Montparnasse, Paris",
-    dropoff: "Gare Montparnasse, Paris",
-    totalAmount: 420
-  }
-];
+interface Reservation {
+  id: string;
+  client: string;
+  clientName: string;
+  date: string;
+  startDate: string;
+  endDate: string;
+  pickupLocation: { address: string };
+  dropoffLocation: { address: string };
+  totalAmount: number;
+  status: string;
+  paymentStatus: string;
+  notes: string | any[] | { content: string }[];
+  vehicle: string;
+  driver: string;
+}
 
 const ReservationsCalendar: React.FC = () => {
   const [date, setDate] = useState<Date | undefined>(new Date());
-  const [activeTab, setActiveTab] = useState("calendar");
-  const [selectedReservation, setSelectedReservation] = useState<Reservation | null>(null);
-  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
+  const [reservationDetails, setReservationDetails] = useState<Reservation | null>(null);
 
-  // Filter reservations for the selected date
-  const selectedDateReservations = mockReservations.filter(reservation => {
-    if (!reservation.startDate) return false;
-    const reservationDate = new Date(reservation.startDate);
-    return (
-      date &&
-      reservationDate.getFullYear() === date.getFullYear() &&
-      reservationDate.getMonth() === date.getMonth() &&
-      reservationDate.getDate() === date.getDate()
-    );
-  });
-
-  // Extract notes for the selected date
-  const selectedDateNotes = selectedDateReservations.map(reservation => reservation.notes) || [];
-
-  // Extract pickup locations for the selected date
-  const selectedDatePickups = selectedDateReservations.map(reservation => reservation.pickupLocation?.address) || [];
-
-  // Extract dropoff locations for the selected date
-  const selectedDateDropoffs = selectedDateReservations.map(reservation => reservation.dropoffLocation?.address) || [];
-
-  const handleViewDetailsClick = (reservation: Reservation) => {
-    setSelectedReservation(reservation);
-    setIsViewDialogOpen(true);
+  const handleDateSelect = (selectedDate: Date) => {
+    setDate(selectedDate);
+    const formattedDate = format(selectedDate, 'yyyy-MM-dd');
+    const reservation = mockReservations.find(res => res.date === formattedDate) as Reservation;
+    setReservationDetails(reservation || null);
   };
 
+  // Fix the notes handling in mock data
+  const mockReservations = [
+    {
+      id: "res001",
+      client: "Marie Dupont",
+      clientName: "Marie Dupont",
+      date: "2023-11-10", // Added explicitly
+      startDate: "2023-11-10", 
+      endDate: "2023-11-12",
+      pickupLocation: { address: "15 Rue de la Paix, Paris" },
+      dropoffLocation: { address: "Charles de Gaulle Airport, Terminal 2E" },
+      totalAmount: 320,
+      status: "confirmed" as any, // Force type assertion
+      paymentStatus: "paid",
+      notes: "Client VIP, préférence siège avant",
+      vehicle: "Mercedes S-Class",
+      driver: "Jean Dupuis"
+    },
+    {
+      id: "res002",
+      client: "Pierre Dubois",
+      clientName: "Pierre Dubois",
+      date: "2023-11-15", // Added explicitly
+      startDate: "2023-11-15",
+      endDate: "2023-11-15",
+      pickupLocation: { address: "Aéroport CDG Terminal 2E, Paris" },
+      dropoffLocation: { address: "25 rue du Faubourg Saint-Honoré, 75008 Paris" },
+      totalAmount: 120,
+      status: "pending" as any, // Force type assertion
+      paymentStatus: "unpaid",
+      notes: "Location sans chauffeur",
+      vehicle: "Renault Trafic",
+      driver: "Luc Martin"
+    },
+    {
+      id: "res003",
+      client: "Sophie Laurent",
+      clientName: "Sophie Laurent",
+      date: "2023-11-08", // Added explicitly
+      startDate: "2023-11-08",
+      endDate: "2023-11-10",
+      pickupLocation: { address: "Gare de Lyon, Paris" },
+      dropoffLocation: { address: "Gare de Lyon, Paris" },
+      totalAmount: 320,
+      status: "completed" as any, // Force type assertion
+      paymentStatus: "paid",
+      notes: "Client régulier",
+      vehicle: "Peugeot 508",
+      driver: "Jean Martin"
+    },
+    {
+      id: "res004",
+      client: "Jean Moreau",
+      clientName: "Jean Moreau",
+      date: "2023-11-20", // Added explicitly
+      startDate: "2023-11-20",
+      endDate: "2023-11-20",
+      pickupLocation: { address: "Hôtel Ritz, Place Vendôme, Paris" },
+      dropoffLocation: { address: "Opéra Garnier, Paris" },
+      totalAmount: 180,
+      status: "confirmed" as any, // Force type assertion
+      paymentStatus: "partial",
+      notes: "Demande de siège bébé",
+      vehicle: "Mercedes Classe E",
+      driver: "Pierre Dubois"
+    },
+    {
+      id: "res005",
+      client: "Isabelle Bernard",
+      clientName: "Isabelle Bernard",
+      date: "2023-11-25", // Added explicitly
+      startDate: "2023-11-25",
+      endDate: "2023-11-27",
+      pickupLocation: { address: "Gare Montparnasse, Paris" },
+      dropoffLocation: { address: "Gare Montparnasse, Paris" },
+      totalAmount: 420,
+      status: "pending" as any, // Force type assertion
+      paymentStatus: "unpaid",
+      notes: "Besoin d'un grand coffre",
+      vehicle: "Renault Espace",
+      driver: "Sophie Laurent"
+    }
+  ];
+
   return (
-    <>
+    <div className="space-y-6">
       <Card>
-        <CardContent className="grid gap-4">
-          <Tabs defaultValue="calendar" className="w-full">
-            <TabsList>
-              <TabsTrigger value="calendar">Calendrier</TabsTrigger>
-              <TabsTrigger value="details">Détails du jour</TabsTrigger>
-            </TabsList>
-            <div className="grid gap-4">
-              <Tabs.Content value="calendar" className="focus:outline-none">
-                <Calendar
-                  mode="single"
-                  selected={date}
-                  onSelect={setDate}
-                  className="rounded-md border"
-                />
-              </Tabs.Content>
-              <Tabs.Content value="details" className="focus:outline-none space-y-4">
-                <h2 className="text-lg font-semibold">
-                  Réservations du {date ? date.toLocaleDateString() : "sélectionnez une date"}
-                </h2>
-                {selectedDateReservations.length === 0 ? (
-                  <p>Aucune réservation pour cette date.</p>
-                ) : (
-                  <div className="space-y-2">
-                    {selectedDateReservations.map((reservation) => (
-                      <div key={reservation.id} className="border rounded-md p-4">
-                        <div className="flex justify-between items-center">
-                          <h3 className="text-md font-semibold">
-                            {reservation.clientName}
-                          </h3>
-                          <div>
-                            <Button size="sm" onClick={() => handleViewDetailsClick(reservation as Reservation)}>
-                              Voir détails
-                            </Button>
-                          </div>
-                        </div>
-                        <div className="grid grid-cols-2 gap-2 text-sm">
-                          <div className="flex items-center">
-                            <CalendarIcon className="h-4 w-4 mr-1" />
-                            {reservation.startDate && new Date(reservation.startDate).toLocaleDateString()}
-                          </div>
-                          <div className="flex items-center">
-                            <Clock className="h-4 w-4 mr-1" />
-                            {reservation.startDate && new Date(reservation.startDate).toLocaleTimeString()}
-                          </div>
-                          <div className="flex items-center">
-                            <MapPin className="h-4 w-4 mr-1" />
-                            {reservation.pickupLocation && getAddressString(reservation.pickupLocation)}
-                          </div>
-                          <div className="flex items-center">
-                            <User className="h-4 w-4 mr-1" />
-                            {reservation.notes}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-sm font-medium">
+            Réservations
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="pl-2">
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant={"outline"}
+                className={cn(
+                  "w-[300px] justify-start text-left font-normal",
+                  !date && "text-muted-foreground"
                 )}
-              </Tabs.Content>
-            </div>
-          </Tabs>
+              >
+                <Calendar className="mr-2 h-4 w-4" />
+                {date ? format(date, "PPP", { locale: enUS }) : <span>Choisir une date</span>}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                mode="single"
+                selected={date}
+                onSelect={handleDateSelect}
+                disabled={(date) =>
+                  date < new Date("2023-01-01")
+                }
+                initialFocus
+              />
+            </PopoverContent>
+          </Popover>
         </CardContent>
       </Card>
-
-      {/* View Reservation Dialog */}
-      {selectedReservation && (
-        <ViewReservationDialog
-          open={isViewDialogOpen}
-          onOpenChange={setIsViewDialogOpen}
-          reservation={selectedReservation}
-        />
-      )}
-    </>
+      <Tabs defaultValue="calendar" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="calendar">Calendrier</TabsTrigger>
+          <TabsTrigger value="list">Liste</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="calendar">
+          {/* Calendar content */}
+        </TabsContent>
+        
+        <TabsContent value="list">
+          {/* List content */}
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle>Réservations à venir</CardTitle>
+              <CardDescription>
+                Gérez vos réservations et consultez les détails
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {reservationDetails ? (
+                <div className="grid gap-4">
+                  <div className="space-y-1">
+                    <h4 className="text-sm font-semibold">Client</h4>
+                    <p className="text-sm">{reservationDetails.clientName}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <h4 className="text-sm font-semibold">Véhicule</h4>
+                    <p className="text-sm">{reservationDetails.vehicle}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <h4 className="text-sm font-semibold">Chauffeur</h4>
+                    <p className="text-sm">{reservationDetails.driver}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <h4 className="text-sm font-semibold">Statut</h4>
+                    <Badge variant="secondary">{reservationDetails.status}</Badge>
+                  </div>
+                  {reservationDetails.notes && (
+                    <div className="col-span-2">
+                      <h4 className="font-medium">Notes</h4>
+                      <p>{typeof reservationDetails.notes === 'string' ? 
+                           reservationDetails.notes : 
+                           Array.isArray(reservationDetails.notes) ? 
+                           String(reservationDetails.notes) : 
+                           'Aucune note'}</p>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <p>Aucune réservation pour cette date.</p>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+    </div>
   );
 };
 
