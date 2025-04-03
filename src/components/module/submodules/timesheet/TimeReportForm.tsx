@@ -8,7 +8,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { CalendarIcon, CheckCircle } from 'lucide-react';
+import { CalendarIcon } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { TimeReport, TimeReportStatus } from '@/types/timesheet';
@@ -22,6 +22,7 @@ interface TimeReportFormProps {
 const TimeReportForm: React.FC<TimeReportFormProps> = ({ onSubmit, onCancel }) => {
   const [title, setTitle] = useState('');
   const [employeeName, setEmployeeName] = useState('');
+  const [employeeId, setEmployeeId] = useState('');  // Added employeeId state
   const [startDate, setStartDate] = useState<Date | undefined>(new Date());
   const [endDate, setEndDate] = useState<Date | undefined>(new Date());
   const [totalHours, setTotalHours] = useState('');
@@ -32,7 +33,7 @@ const TimeReportForm: React.FC<TimeReportFormProps> = ({ onSubmit, onCancel }) =
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!title || !employeeName || !startDate || !endDate || !totalHours) {
+    if (!title || !employeeName || !employeeId || !startDate || !endDate || !totalHours) {
       toast.error('Veuillez remplir tous les champs obligatoires');
       return;
     }
@@ -48,15 +49,19 @@ const TimeReportForm: React.FC<TimeReportFormProps> = ({ onSubmit, onCancel }) =
     onSubmit({
       title,
       employeeName,
+      employeeId,  // Include employeeId in submission
       startDate: formattedStartDate,
       endDate: formattedEndDate,
       totalHours: Number(totalHours),
-      status
+      status,
+      // Add remaining required fields with default values
+      lastUpdateText: ''
     });
     
     // Reset form
     setTitle('');
     setEmployeeName('');
+    setEmployeeId('');
     setStartDate(new Date());
     setEndDate(new Date());
     setTotalHours('');
@@ -66,7 +71,7 @@ const TimeReportForm: React.FC<TimeReportFormProps> = ({ onSubmit, onCancel }) =
   };
 
   const goToNextStep = () => {
-    if (!title || !employeeName || !startDate || !endDate) {
+    if (!title || !employeeName || !employeeId || !startDate || !endDate) {
       toast.error('Veuillez remplir tous les champs obligatoires avant de continuer');
       return;
     }
@@ -109,6 +114,21 @@ const TimeReportForm: React.FC<TimeReportFormProps> = ({ onSubmit, onCancel }) =
                   onChange={(e) => setEmployeeName(e.target.value)}
                   className="w-full"
                   placeholder="Nom de l'employé"
+                  required
+                />
+              </div>
+              
+              {/* Added employeeId field */}
+              <div>
+                <Label htmlFor="employeeId" className="block mb-2">
+                  ID Employé <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  id="employeeId"
+                  value={employeeId}
+                  onChange={(e) => setEmployeeId(e.target.value)}
+                  className="w-full"
+                  placeholder="Ex: EMP001"
                   required
                 />
               </div>

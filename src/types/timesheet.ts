@@ -14,7 +14,7 @@ export interface TimeReport {
   createdAt?: string;
   updatedAt?: string;
   lastUpdated: string;
-  lastUpdateText?: string;
+  lastUpdateText: string;
   submittedAt?: string;
   approvedAt?: string;
   approvedBy?: string;

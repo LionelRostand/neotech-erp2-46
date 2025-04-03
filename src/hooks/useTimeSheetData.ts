@@ -13,8 +13,8 @@ export const useTimeSheetData = () => {
   
   // Enrichir les feuilles de temps avec les noms des employés
   const formattedTimeSheets = useMemo(() => {
-    if (!timeSheets || timeSheets.length === 0) return [];
-    if (!employees || employees.length === 0) return timeSheets;
+    if (!timeSheets || timeSheets.length === 0) return [] as TimeReport[];
+    if (!employees || employees.length === 0) return timeSheets as TimeReport[];
     
     return timeSheets.map(timeSheet => {
       const employee = employees.find(emp => emp.id === timeSheet.employeeId);
@@ -22,18 +22,19 @@ export const useTimeSheetData = () => {
       // S'assurer que toutes les propriétés nécessaires sont présentes
       return {
         ...timeSheet, // Garder toutes les propriétés existantes
-        id: timeSheet.id,
-        title: timeSheet.title,
-        startDate: timeSheet.startDate,
-        endDate: timeSheet.endDate,
+        id: timeSheet.id || '',
+        title: timeSheet.title || '',
+        employeeId: timeSheet.employeeId || '',
+        startDate: timeSheet.startDate || new Date().toISOString(),
+        endDate: timeSheet.endDate || new Date().toISOString(),
         totalHours: timeSheet.totalHours || 0,
-        status: timeSheet.status as TimeReportStatus,
+        status: (timeSheet.status as TimeReportStatus) || "En cours",
         lastUpdated: timeSheet.updatedAt || timeSheet.lastUpdated || timeSheet.createdAt || new Date().toISOString(),
         employeeName: employee ? `${employee.firstName} ${employee.lastName}` : (timeSheet.employeeName || 'Employé inconnu'),
         employeePhoto: employee?.photoURL || employee?.photo || '',
         lastUpdateText: formatDate(timeSheet.updatedAt || timeSheet.lastUpdated || timeSheet.createdAt || new Date().toISOString())
       } as TimeReport;
-    });
+    }) as TimeReport[];
   }, [timeSheets, employees]);
   
   // Filtrer les feuilles de temps par statut
