@@ -4,22 +4,23 @@ import { useHrModuleData } from './useHrModuleData';
 
 export interface Training {
   id: string;
+  employeeId: string;
+  employeeName?: string;
+  employeePhoto?: string;
   title: string;
   description?: string;
-  startDate: string;
-  endDate: string;
-  status: 'À venir' | 'En cours' | 'Terminée' | 'Annulée';
   type: string;
+  status: 'Planifiée' | 'En cours' | 'Terminée' | 'Annulée';
+  startDate: string;
+  endDate?: string;
+  duration?: number;
+  provider?: string;
   location?: string;
-  participants: {
-    id: string;
-    name: string;
-    photo?: string;
-  }[];
-  trainerId?: string;
-  trainerName?: string;
+  cost?: number;
   department?: string;
   skills?: string[];
+  certificate?: boolean;
+  certificateURL?: string;
 }
 
 /**
@@ -28,62 +29,33 @@ export interface Training {
 export const useTrainingsData = () => {
   const { trainings, employees, isLoading, error } = useHrModuleData();
   
-  // Enrichir les formations avec les informations des participants
+  // Enrichir les formations avec les noms des employés
   const formattedTrainings = useMemo(() => {
     if (!trainings || trainings.length === 0) return [];
     
     return trainings.map(training => {
-      // Déterminer le statut de la formation
-      const now = new Date();
-      const startDate = new Date(training.startDate);
-      const endDate = new Date(training.endDate);
-      
-      let status: 'À venir' | 'En cours' | 'Terminée' | 'Annulée' = 'À venir';
-      if (startDate <= now && now <= endDate) {
-        status = 'En cours';
-      } else if (now > endDate) {
-        status = 'Terminée';
-      }
-      
-      if (training.status === 'cancelled') {
-        status = 'Annulée';
-      }
-      
-      // Récupérer les informations des participants
-      const participants = training.participantIds?.map(participantId => {
-        const participant = employees?.find(emp => emp.id === participantId);
-        return {
-          id: participantId,
-          name: participant 
-            ? `${participant.firstName} ${participant.lastName}` 
-            : 'Participant inconnu',
-          photo: participant?.photoURL || participant?.photo,
-        };
-      }) || [];
-      
-      // Récupérer les informations du formateur
-      let trainerName = training.trainerName;
-      if (training.trainerId && employees) {
-        const trainer = employees.find(emp => emp.id === training.trainerId);
-        if (trainer) {
-          trainerName = `${trainer.firstName} ${trainer.lastName}`;
-        }
-      }
+      // Trouver l'employé associé à cette formation
+      const employee = employees?.find(emp => emp.id === training.employeeId);
       
       return {
         id: training.id,
+        employeeId: training.employeeId,
+        employeeName: employee ? `${employee.firstName} ${employee.lastName}` : 'Employé inconnu',
+        employeePhoto: employee?.photoURL || employee?.photo || '',
         title: training.title || 'Formation sans titre',
         description: training.description,
-        startDate: formatDate(training.startDate),
-        endDate: formatDate(training.endDate),
-        status,
         type: training.type || 'Formation professionnelle',
+        status: training.status || 'Planifiée',
+        startDate: formatDate(training.startDate),
+        endDate: training.endDate ? formatDate(training.endDate) : undefined,
+        duration: training.duration || calculateDuration(training.startDate, training.endDate),
+        provider: training.provider,
         location: training.location,
-        participants,
-        trainerId: training.trainerId,
-        trainerName: trainerName || 'Formateur externe',
-        department: training.department,
-        skills: training.skills,
+        cost: training.cost,
+        department: employee?.department || 'Non spécifié',
+        skills: training.skills || [],
+        certificate: training.certificate || false,
+        certificateURL: training.certificateURL,
       } as Training;
     });
   }, [trainings, employees]);
@@ -98,15 +70,31 @@ export const useTrainingsData = () => {
     }
   };
 
+  // Fonction pour calculer la durée en jours
+  const calculateDuration = (startDate?: string, endDate?: string) => {
+    if (!startDate || !endDate) return 1;
+    
+    try {
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      const diffTime = Math.abs(end.getTime() - start.getTime());
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      return diffDays || 1;
+    } catch (error) {
+      console.error('Erreur de calcul de durée:', error);
+      return 1;
+    }
+  };
+
   // Obtenir des statistiques sur les formations
   const trainingStats = useMemo(() => {
-    const upcoming = formattedTrainings.filter(training => training.status === 'À venir').length;
+    const planned = formattedTrainings.filter(training => training.status === 'Planifiée').length;
     const inProgress = formattedTrainings.filter(training => training.status === 'En cours').length;
     const completed = formattedTrainings.filter(training => training.status === 'Terminée').length;
     const cancelled = formattedTrainings.filter(training => training.status === 'Annulée').length;
     const total = formattedTrainings.length;
     
-    return { upcoming, inProgress, completed, cancelled, total };
+    return { planned, inProgress, completed, cancelled, total };
   }, [formattedTrainings]);
   
   return {

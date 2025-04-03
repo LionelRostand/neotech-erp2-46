@@ -1,949 +1,220 @@
 
 import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { 
+  FileSignature, 
+  ListFilter, 
+  Plus,
+  Download,
+  FileText,
+  Calendar,
+  Clock,
+  CheckCircle
+} from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Eye, Download, Edit, Trash2, FileText, Filter, Plus, Search, CalendarIcon } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { toast } from 'sonner';
-import { employees } from '@/data/employees';
-import { jsPDF } from 'jspdf';
-import 'jspdf-autotable';
-
-// Types
-interface Contract {
-  id: string;
-  employeeId: string;
-  employeeName: string;
-  type: string;
-  startDate: string;
-  endDate: string | null;
-  status: 'active' | 'expired' | 'terminated';
-  salary: number;
-  position: string;
-  department: string;
-  documents: string[];
-}
-
-// Sample contracts data
-const initialContracts: Contract[] = [
-  {
-    id: 'CTR001',
-    employeeId: 'EMP001',
-    employeeName: 'Martin Dupont',
-    type: 'CDI',
-    startDate: '2020-05-15',
-    endDate: null,
-    status: 'active',
-    salary: 45000,
-    position: 'Développeur Frontend',
-    department: 'IT',
-    documents: ['Contrat signé', 'Fiche de poste']
-  },
-  {
-    id: 'CTR002',
-    employeeId: 'EMP002',
-    employeeName: 'Lionel Djossa',
-    type: 'CDI',
-    startDate: '2019-03-10',
-    endDate: null,
-    status: 'active',
-    salary: 65000,
-    position: 'Directeur Technique',
-    department: 'Direction',
-    documents: ['Contrat signé', 'Accord de confidentialité']
-  },
-  {
-    id: 'CTR003',
-    employeeId: 'EMP003',
-    employeeName: 'Sophie Martin',
-    type: 'CDD',
-    startDate: '2022-01-15',
-    endDate: '2023-01-14',
-    status: 'expired',
-    salary: 38000,
-    position: 'Chargée de Marketing',
-    department: 'Marketing',
-    documents: ['Contrat signé', 'Avenant prolongation']
-  }
-];
+import { useContractsData } from '@/hooks/useContractsData';
 
 const EmployeesContracts: React.FC = () => {
-  const [contracts, setContracts] = useState<Contract[]>(initialContracts);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedContract, setSelectedContract] = useState<Contract | null>(null);
-  
-  // Dialog states
-  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [isFilterDialogOpen, setIsFilterDialogOpen] = useState(false);
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  
-  // Form state for editing or adding
-  const [formData, setFormData] = useState<Partial<Contract>>({
-    employeeId: '',
-    type: 'CDI',
-    startDate: '',
-    endDate: '',
-    salary: 0,
-    position: '',
-    department: '',
-    documents: []
-  });
-  
-  // Filter contracts based on search query
-  const filteredContracts = contracts.filter(contract =>
-    contract.employeeName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    contract.type.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    contract.department.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    contract.position.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-  
-  // Handle viewing contract details
-  const handleViewContract = (contract: Contract) => {
-    setSelectedContract(contract);
-    setIsViewDialogOpen(true);
+  const [activeTab, setActiveTab] = useState('actifs');
+  const { contracts, stats, isLoading, error } = useContractsData();
+
+  const handleExportData = () => {
+    toast.success("Export des contrats démarré");
+    // Logique d'export à implémenter
   };
-  
-  // Handle editing contract
-  const handleEditContract = (contract: Contract) => {
-    setSelectedContract(contract);
-    setFormData(contract);
-    setIsEditDialogOpen(true);
-  };
-  
-  // Handle deleting contract
-  const handleDeleteContract = (contract: Contract) => {
-    setSelectedContract(contract);
-    setIsDeleteDialogOpen(true);
-  };
-  
-  // Handle form input change
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: name === 'salary' ? parseFloat(value) : value
-    }));
-  };
-  
-  // Handle select change
-  const handleSelectChange = (field: string, value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }));
-  };
-  
-  // Handle contract deletion confirmation
-  const confirmDeleteContract = () => {
-    if (selectedContract) {
-      setContracts(contracts.filter(contract => contract.id !== selectedContract.id));
-      toast.success(`Contrat de ${selectedContract.employeeName} supprimé avec succès`);
-      setIsDeleteDialogOpen(false);
-      setSelectedContract(null);
-    }
-  };
-  
-  // Handle contract update
-  const handleUpdateContract = () => {
-    if (selectedContract && formData) {
-      // Validate required fields
-      if (!formData.employeeId || !formData.type || !formData.startDate || !formData.salary) {
-        toast.error("Veuillez remplir tous les champs obligatoires");
-        return;
-      }
-      
-      // Find the employee
-      const employee = employees.find(emp => emp.id === formData.employeeId);
-      if (!employee) {
-        toast.error("Employé non trouvé");
-        return;
-      }
-      
-      // Update the contract
-      const updatedContract: Contract = {
-        ...selectedContract,
-        ...formData,
-        employeeName: `${employee.firstName} ${employee.lastName}`,
-        status: formData.endDate && new Date(formData.endDate) < new Date() ? 'expired' : 'active'
-      };
-      
-      setContracts(contracts.map(contract => 
-        contract.id === selectedContract.id ? updatedContract : contract
-      ));
-      
-      toast.success(`Contrat de ${updatedContract.employeeName} mis à jour avec succès`);
-      setIsEditDialogOpen(false);
-      setSelectedContract(null);
-      setFormData({});
-    }
-  };
-  
-  // Handle adding a new contract
-  const handleAddContract = () => {
-    // Validate required fields
-    if (!formData.employeeId || !formData.type || !formData.startDate || !formData.salary) {
-      toast.error("Veuillez remplir tous les champs obligatoires");
-      return;
-    }
-    
-    // Find the employee
-    const employee = employees.find(emp => emp.id === formData.employeeId);
-    if (!employee) {
-      toast.error("Employé non trouvé");
-      return;
-    }
-    
-    // Create a new contract
-    const newContract: Contract = {
-      id: `CTR${contracts.length + 1}`.padStart(6, '0'),
-      employeeId: formData.employeeId,
-      employeeName: `${employee.firstName} ${employee.lastName}`,
-      type: formData.type || 'CDI',
-      startDate: formData.startDate || new Date().toISOString().split('T')[0],
-      endDate: formData.endDate || null,
-      status: 'active',
-      salary: formData.salary || 0,
-      position: formData.position || employee.position,
-      department: formData.department || employee.department,
-      documents: formData.documents || []
-    };
-    
-    setContracts([...contracts, newContract]);
-    toast.success(`Contrat pour ${newContract.employeeName} ajouté avec succès`);
-    setIsAddDialogOpen(false);
-    setFormData({});
-  };
-  
-  // Handle downloading contract as PDF
-  const handleDownloadContract = (contract: Contract) => {
-    // Create a new PDF document
-    const doc = new jsPDF();
-    
-    // Add company logo on left side
-    doc.setDrawColor(200, 200, 200);
-    doc.setFillColor(240, 240, 240);
-    doc.roundedRect(15, 15, 50, 25, 3, 3, 'FD');
-    doc.setFontSize(12);
-    doc.setTextColor(80, 80, 80);
-    doc.text("LOGO", 40, 30, { align: "center" });
-    
-    // Add company information on right side
-    doc.setFontSize(14);
-    doc.setFont("helvetica", "bold");
-    doc.setTextColor(40, 40, 40);
-    doc.text("Enterprise Solutions", 140, 20, { align: "center" });
-    doc.setFontSize(10);
-    doc.setFont("helvetica", "normal");
-    doc.text("123 Avenue des Affaires", 140, 26, { align: "center" });
-    doc.text("75000 Paris, France", 140, 32, { align: "center" });
-    doc.text("SIRET: 123 456 789 00010", 140, 38, { align: "center" });
-    
-    // Document title
-    doc.setFontSize(20);
-    doc.setTextColor(44, 62, 80);
-    doc.text("CONTRAT DE TRAVAIL", 105, 55, { align: "center" });
-    
-    // Add contract type subheader
-    doc.setFontSize(16);
-    doc.text(`${contract.type}`, 105, 65, { align: "center" });
-    
-    // Add horizontal line
-    doc.setDrawColor(44, 62, 80);
-    doc.line(20, 70, 190, 70);
-    
-    // Add contract information
-    doc.setFontSize(12);
-    doc.setTextColor(0, 0, 0);
-    
-    // Company information
-    doc.setFontSize(12);
-    doc.setFont("helvetica", "bold");
-    doc.text("ENTRE LES SOUSSIGNÉS :", 20, 80);
-    doc.setFont("helvetica", "normal");
-    doc.text("La société Enterprise Solutions, représentée par M. Jean Directeur", 20, 90);
-    doc.text("Siège social : 123 Avenue des Affaires, 75000 Paris", 20, 97);
-    doc.text("SIRET : 123 456 789 00010", 20, 104);
-    doc.text("Ci-après désignée « l'employeur »", 20, 111);
-    
-    // Employee information
-    doc.setFont("helvetica", "bold");
-    doc.text("ET :", 20, 125);
-    doc.setFont("helvetica", "normal");
-    doc.text(`M./Mme ${contract.employeeName}`, 20, 135);
-    doc.text(`Demeurant à : [Adresse de l'employé]`, 20, 142);
-    doc.text(`Ci-après désigné(e) « le salarié »`, 20, 149);
-    
-    // Contract details
-    doc.setFont("helvetica", "bold");
-    doc.text("IL A ÉTÉ CONVENU CE QUI SUIT :", 20, 165);
-    doc.setFont("helvetica", "normal");
-    
-    // Article 1
-    doc.setFont("helvetica", "bold");
-    doc.text("Article 1 : Engagement", 20, 175);
-    doc.setFont("helvetica", "normal");
-    doc.text(`Le salarié est engagé en qualité de ${contract.position} au sein du département`, 20, 182);
-    doc.text(`${contract.department}, à compter du ${new Date(contract.startDate).toLocaleDateString('fr-FR')}.`, 20, 189);
-    
-    if (contract.endDate) {
-      doc.text(`Ce contrat est conclu pour une durée déterminée jusqu'au ${new Date(contract.endDate).toLocaleDateString('fr-FR')}.`, 20, 196);
-    } else {
-      doc.text("Ce contrat est conclu pour une durée indéterminée.", 20, 196);
-    }
-    
-    // Article 2
-    doc.setFont("helvetica", "bold");
-    doc.text("Article 2 : Rémunération", 20, 210);
-    doc.setFont("helvetica", "normal");
-    doc.text(`Le salarié percevra une rémunération annuelle brute de ${contract.salary.toLocaleString('fr-FR')} euros,`, 20, 217);
-    doc.text("versée sur 12 mois.", 20, 224);
-    
-    // Add signatures section
-    doc.setFontSize(12);
-    doc.setFont("helvetica", "bold");
-    doc.text("Fait à Paris, le " + new Date().toLocaleDateString('fr-FR'), 20, 240);
-    
-    doc.text("Signature de l'employeur", 40, 260);
-    doc.text("Signature du salarié", 140, 260);
-    doc.text("(Précédée de la mention « Lu et approuvé »)", 120, 267);
-    
-    // Add contract ID as footer
-    doc.setFontSize(8);
-    doc.setTextColor(100, 100, 100);
-    doc.text(`Réf: ${contract.id}`, 185, 290, { align: "right" });
-    
-    // Save the PDF
-    doc.save(`contrat-${contract.id}-${contract.employeeName.replace(/\s+/g, '-').toLowerCase()}.pdf`);
-    
-    toast.success("Contrat téléchargé avec succès");
-  };
-  
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent"></div>
+        <p className="ml-2">Chargement des contrats...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-red-50 text-red-700 p-4 rounded-md">
+        Une erreur est survenue lors du chargement des contrats.
+      </div>
+    );
+  }
+
+  const filteredContracts = activeTab === 'tous' 
+    ? contracts 
+    : activeTab === 'actifs'
+    ? contracts.filter(contract => contract.status === 'Actif')
+    : activeTab === 'futurs'
+    ? contracts.filter(contract => contract.status === 'À venir')
+    : contracts.filter(contract => contract.status === 'Expiré');
+
   return (
     <div className="space-y-6">
-      <div className="flex flex-col space-y-4 md:flex-row md:justify-between md:items-center md:space-y-0">
+      {/* Header with actions */}
+      <div className="flex flex-col space-y-4 md:flex-row md:justify-between md:items-center">
         <div>
           <h2 className="text-2xl font-bold">Gestion des contrats</h2>
-          <p className="text-gray-500">Gérez les contrats de travail des employés</p>
+          <p className="text-gray-500">Contrats et conditions d'emploi</p>
         </div>
-        
-        <div className="flex flex-col space-y-2 sm:flex-row sm:space-y-0 sm:space-x-2">
-          <Button variant="outline" size="sm" onClick={() => setIsFilterDialogOpen(true)}>
-            <Filter className="h-4 w-4 mr-2" />
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm">
+            <ListFilter className="h-4 w-4 mr-2" />
             Filtres
           </Button>
-          
-          <Button size="sm" onClick={() => {
-            setFormData({
-              employeeId: '',
-              type: 'CDI',
-              startDate: new Date().toISOString().split('T')[0],
-              endDate: '',
-              salary: 0,
-              position: '',
-              department: '',
-              documents: []
-            });
-            setIsAddDialogOpen(true);
-          }}>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={handleExportData}
+          >
+            <Download className="h-4 w-4 mr-2" />
+            Exporter
+          </Button>
+          <Button size="sm">
             <Plus className="h-4 w-4 mr-2" />
             Nouveau contrat
           </Button>
         </div>
       </div>
-      
-      {/* Search */}
-      <div className="relative w-full max-w-md">
-        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
-        <Input
-          type="search"
-          placeholder="Rechercher par employé, type, département..."
-          className="pl-8 w-full"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-        />
+
+      {/* Stats cards */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <Card className="bg-green-50">
+          <CardContent className="p-4 flex items-center justify-between">
+            <div>
+              <h3 className="text-sm font-medium text-green-900">Contrats actifs</h3>
+              <p className="text-2xl font-bold text-green-700">{stats.active}</p>
+            </div>
+            <CheckCircle className="h-8 w-8 text-green-500" />
+          </CardContent>
+        </Card>
+        
+        <Card className="bg-blue-50">
+          <CardContent className="p-4 flex items-center justify-between">
+            <div>
+              <h3 className="text-sm font-medium text-blue-900">À venir</h3>
+              <p className="text-2xl font-bold text-blue-700">{stats.upcoming}</p>
+            </div>
+            <Calendar className="h-8 w-8 text-blue-500" />
+          </CardContent>
+        </Card>
+        
+        <Card className="bg-amber-50">
+          <CardContent className="p-4 flex items-center justify-between">
+            <div>
+              <h3 className="text-sm font-medium text-amber-900">Contrats expirés</h3>
+              <p className="text-2xl font-bold text-amber-700">{stats.expired}</p>
+            </div>
+            <Clock className="h-8 w-8 text-amber-500" />
+          </CardContent>
+        </Card>
+        
+        <Card className="bg-gray-50">
+          <CardContent className="p-4 flex items-center justify-between">
+            <div>
+              <h3 className="text-sm font-medium text-gray-900">Total</h3>
+              <p className="text-2xl font-bold text-gray-700">{stats.total}</p>
+            </div>
+            <FileText className="h-8 w-8 text-gray-500" />
+          </CardContent>
+        </Card>
       </div>
-      
-      {/* Contracts Table */}
-      <Card>
-        <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>ID</TableHead>
-                <TableHead>Employé</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Début</TableHead>
-                <TableHead>Fin</TableHead>
-                <TableHead>Statut</TableHead>
-                <TableHead>Poste</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredContracts.map((contract) => (
-                <TableRow key={contract.id}>
-                  <TableCell className="font-mono text-xs">{contract.id}</TableCell>
-                  <TableCell className="font-medium">{contract.employeeName}</TableCell>
-                  <TableCell>{contract.type}</TableCell>
-                  <TableCell>{new Date(contract.startDate).toLocaleDateString('fr-FR')}</TableCell>
-                  <TableCell>
-                    {contract.endDate 
-                      ? new Date(contract.endDate).toLocaleDateString('fr-FR') 
-                      : '—'}
-                  </TableCell>
-                  <TableCell>
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                      contract.status === 'active' ? 'bg-green-100 text-green-800' :
-                      contract.status === 'expired' ? 'bg-amber-100 text-amber-800' :
-                      'bg-red-100 text-red-800'
-                    }`}>
-                      {contract.status === 'active' ? 'Actif' :
-                       contract.status === 'expired' ? 'Expiré' :
-                       'Résilié'}
-                    </span>
-                  </TableCell>
-                  <TableCell>{contract.position}</TableCell>
-                  <TableCell className="text-right">
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      onClick={() => handleViewContract(contract)}
-                    >
-                      <Eye className="h-4 w-4" />
-                    </Button>
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      onClick={() => handleDownloadContract(contract)}
-                    >
-                      <Download className="h-4 w-4" />
-                    </Button>
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      onClick={() => handleEditContract(contract)}
-                    >
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      onClick={() => handleDeleteContract(contract)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-              
-              {filteredContracts.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={8} className="text-center py-6 text-gray-500">
-                    Aucun contrat trouvé
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
-      
-      {/* View Contract Dialog */}
-      {selectedContract && (
-        <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
-          <DialogContent className="sm:max-w-lg">
-            <DialogHeader>
-              <DialogTitle>Détails du contrat</DialogTitle>
-            </DialogHeader>
-            
-            <div className="py-4">
-              <div className="flex justify-between items-center mb-4">
-                <div>
-                  <h3 className="font-bold text-lg">{selectedContract.employeeName}</h3>
-                  <p className="text-gray-500">{selectedContract.position}</p>
-                </div>
-                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                  selectedContract.status === 'active' ? 'bg-green-100 text-green-800' :
-                  selectedContract.status === 'expired' ? 'bg-amber-100 text-amber-800' :
-                  'bg-red-100 text-red-800'
-                }`}>
-                  {selectedContract.status === 'active' ? 'Actif' :
-                   selectedContract.status === 'expired' ? 'Expiré' :
-                   'Résilié'}
-                </span>
+
+      {/* Contract types tabs */}
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="w-full max-w-3xl grid grid-cols-4">
+          <TabsTrigger value="tous" className="flex items-center">
+            <FileText className="h-4 w-4 mr-2" />
+            Tous
+          </TabsTrigger>
+          <TabsTrigger value="actifs" className="flex items-center">
+            <CheckCircle className="h-4 w-4 mr-2" />
+            Actifs
+          </TabsTrigger>
+          <TabsTrigger value="futurs" className="flex items-center">
+            <Calendar className="h-4 w-4 mr-2" />
+            À venir
+          </TabsTrigger>
+          <TabsTrigger value="expires" className="flex items-center">
+            <Clock className="h-4 w-4 mr-2" />
+            Expirés
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value={activeTab}>
+          <Card>
+            <CardContent className="p-6">
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-[250px]">Employé</TableHead>
+                      <TableHead>Type</TableHead>
+                      <TableHead>Position</TableHead>
+                      <TableHead>Date début</TableHead>
+                      <TableHead>Date fin</TableHead>
+                      <TableHead>Statut</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredContracts.length > 0 ? (
+                      filteredContracts.map((contract) => (
+                        <TableRow key={contract.id}>
+                          <TableCell className="font-medium">
+                            <div className="flex items-center space-x-3">
+                              <Avatar className="h-8 w-8">
+                                <AvatarImage src={contract.employeePhoto} alt={contract.employeeName} />
+                                <AvatarFallback>{contract.employeeName?.charAt(0) || '?'}</AvatarFallback>
+                              </Avatar>
+                              <div>
+                                <p className="font-medium">{contract.employeeName}</p>
+                                <p className="text-xs text-gray-500">{contract.department}</p>
+                              </div>
+                            </div>
+                          </TableCell>
+                          <TableCell>{contract.type}</TableCell>
+                          <TableCell>{contract.position}</TableCell>
+                          <TableCell>{contract.startDate}</TableCell>
+                          <TableCell>{contract.endDate || 'Indéterminée'}</TableCell>
+                          <TableCell>
+                            <Badge
+                              className={
+                                contract.status === 'Actif'
+                                  ? 'bg-green-100 text-green-800'
+                                  : contract.status === 'À venir'
+                                  ? 'bg-blue-100 text-blue-800'
+                                  : 'bg-amber-100 text-amber-800'
+                              }
+                            >
+                              {contract.status}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <Button variant="ghost" size="sm">
+                              Détails
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    ) : (
+                      <TableRow>
+                        <TableCell colSpan={7} className="h-24 text-center">
+                          Aucun contrat trouvé
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
               </div>
-              
-              <div className="grid grid-cols-2 gap-4 mb-4">
-                <div>
-                  <p className="text-sm text-gray-500">ID du contrat</p>
-                  <p className="font-mono">{selectedContract.id}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">Département</p>
-                  <p>{selectedContract.department}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">Type de contrat</p>
-                  <p>{selectedContract.type}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">Salaire annuel</p>
-                  <p>{selectedContract.salary.toLocaleString('fr-FR')} €</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">Date de début</p>
-                  <p>{new Date(selectedContract.startDate).toLocaleDateString('fr-FR')}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">Date de fin</p>
-                  <p>{selectedContract.endDate 
-                      ? new Date(selectedContract.endDate).toLocaleDateString('fr-FR') 
-                      : 'N/A'}</p>
-                </div>
-              </div>
-              
-              <div className="mt-6">
-                <h4 className="font-medium mb-2">Documents associés</h4>
-                <div className="bg-gray-50 p-3 rounded-md">
-                  {selectedContract.documents.length > 0 ? (
-                    <ul className="space-y-2">
-                      {selectedContract.documents.map((doc, idx) => (
-                        <li key={idx} className="flex items-center gap-2">
-                          <FileText className="h-4 w-4 text-gray-400" />
-                          {doc}
-                        </li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <p className="text-gray-500 text-center py-2">Aucun document associé</p>
-                  )}
-                </div>
-              </div>
-            </div>
-            
-            <DialogFooter>
-              <Button 
-                variant="outline" 
-                onClick={() => handleDownloadContract(selectedContract)}
-              >
-                <Download className="h-4 w-4 mr-2" />
-                Télécharger le contrat
-              </Button>
-              <Button onClick={() => handleEditContract(selectedContract)}>
-                <Edit className="h-4 w-4 mr-2" />
-                Modifier
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      )}
-      
-      {/* Edit Contract Dialog */}
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="sm:max-w-lg">
-          <DialogHeader>
-            <DialogTitle>Modifier le contrat</DialogTitle>
-          </DialogHeader>
-          
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <label htmlFor="employeeId" className="text-right text-sm font-medium">
-                Employé
-              </label>
-              <div className="col-span-3">
-                <Select 
-                  value={formData.employeeId} 
-                  onValueChange={(value) => handleSelectChange('employeeId', value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Sélectionner un employé" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {employees.map(employee => (
-                      <SelectItem key={employee.id} value={employee.id}>
-                        {employee.firstName} {employee.lastName}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            
-            <div className="grid grid-cols-4 items-center gap-4">
-              <label htmlFor="type" className="text-right text-sm font-medium">
-                Type de contrat
-              </label>
-              <div className="col-span-3">
-                <Select 
-                  value={formData.type} 
-                  onValueChange={(value) => handleSelectChange('type', value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Sélectionner un type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="CDI">CDI</SelectItem>
-                    <SelectItem value="CDD">CDD</SelectItem>
-                    <SelectItem value="Intérim">Intérim</SelectItem>
-                    <SelectItem value="Stage">Stage</SelectItem>
-                    <SelectItem value="Apprentissage">Apprentissage</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            
-            <div className="grid grid-cols-4 items-center gap-4">
-              <label htmlFor="position" className="text-right text-sm font-medium">
-                Poste
-              </label>
-              <div className="col-span-3">
-                <Input
-                  id="position"
-                  name="position"
-                  value={formData.position || ''}
-                  onChange={handleInputChange}
-                />
-              </div>
-            </div>
-            
-            <div className="grid grid-cols-4 items-center gap-4">
-              <label htmlFor="department" className="text-right text-sm font-medium">
-                Département
-              </label>
-              <div className="col-span-3">
-                <Input
-                  id="department"
-                  name="department"
-                  value={formData.department || ''}
-                  onChange={handleInputChange}
-                />
-              </div>
-            </div>
-            
-            <div className="grid grid-cols-4 items-center gap-4">
-              <label htmlFor="salary" className="text-right text-sm font-medium">
-                Salaire annuel
-              </label>
-              <div className="col-span-3">
-                <Input
-                  id="salary"
-                  name="salary"
-                  type="number"
-                  value={formData.salary || ''}
-                  onChange={handleInputChange}
-                />
-              </div>
-            </div>
-            
-            <div className="grid grid-cols-4 items-center gap-4">
-              <label htmlFor="startDate" className="text-right text-sm font-medium">
-                Date de début
-              </label>
-              <div className="col-span-3">
-                <Input
-                  id="startDate"
-                  name="startDate"
-                  type="date"
-                  value={formData.startDate || ''}
-                  onChange={handleInputChange}
-                />
-              </div>
-            </div>
-            
-            <div className="grid grid-cols-4 items-center gap-4">
-              <label htmlFor="endDate" className="text-right text-sm font-medium">
-                Date de fin
-              </label>
-              <div className="col-span-3">
-                <Input
-                  id="endDate"
-                  name="endDate"
-                  type="date"
-                  value={formData.endDate || ''}
-                  onChange={handleInputChange}
-                  disabled={formData.type === 'CDI'}
-                />
-                {formData.type === 'CDI' && (
-                  <p className="text-xs text-gray-500 mt-1">Non applicable pour un CDI</p>
-                )}
-              </div>
-            </div>
-          </div>
-          
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
-              Annuler
-            </Button>
-            <Button onClick={handleUpdateContract}>
-              Mettre à jour
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-      
-      {/* Add Contract Dialog */}
-      <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-        <DialogContent className="sm:max-w-lg">
-          <DialogHeader>
-            <DialogTitle>Nouveau contrat</DialogTitle>
-          </DialogHeader>
-          
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <label htmlFor="employeeId" className="text-right text-sm font-medium">
-                Employé
-              </label>
-              <div className="col-span-3">
-                <Select 
-                  value={formData.employeeId} 
-                  onValueChange={(value) => handleSelectChange('employeeId', value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Sélectionner un employé" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {employees.map(employee => (
-                      <SelectItem key={employee.id} value={employee.id}>
-                        {employee.firstName} {employee.lastName}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            
-            <div className="grid grid-cols-4 items-center gap-4">
-              <label htmlFor="type" className="text-right text-sm font-medium">
-                Type de contrat
-              </label>
-              <div className="col-span-3">
-                <Select 
-                  value={formData.type} 
-                  onValueChange={(value) => handleSelectChange('type', value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Sélectionner un type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="CDI">CDI</SelectItem>
-                    <SelectItem value="CDD">CDD</SelectItem>
-                    <SelectItem value="Intérim">Intérim</SelectItem>
-                    <SelectItem value="Stage">Stage</SelectItem>
-                    <SelectItem value="Apprentissage">Apprentissage</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            
-            <div className="grid grid-cols-4 items-center gap-4">
-              <label htmlFor="position" className="text-right text-sm font-medium">
-                Poste
-              </label>
-              <div className="col-span-3">
-                <Input
-                  id="position"
-                  name="position"
-                  value={formData.position || ''}
-                  onChange={handleInputChange}
-                  placeholder="Ex: Développeur Frontend"
-                />
-              </div>
-            </div>
-            
-            <div className="grid grid-cols-4 items-center gap-4">
-              <label htmlFor="department" className="text-right text-sm font-medium">
-                Département
-              </label>
-              <div className="col-span-3">
-                <Input
-                  id="department"
-                  name="department"
-                  value={formData.department || ''}
-                  onChange={handleInputChange}
-                  placeholder="Ex: IT"
-                />
-              </div>
-            </div>
-            
-            <div className="grid grid-cols-4 items-center gap-4">
-              <label htmlFor="salary" className="text-right text-sm font-medium">
-                Salaire annuel
-              </label>
-              <div className="col-span-3">
-                <Input
-                  id="salary"
-                  name="salary"
-                  type="number"
-                  value={formData.salary || ''}
-                  onChange={handleInputChange}
-                  placeholder="Ex: 45000"
-                />
-              </div>
-            </div>
-            
-            <div className="grid grid-cols-4 items-center gap-4">
-              <label htmlFor="startDate" className="text-right text-sm font-medium">
-                Date de début
-              </label>
-              <div className="col-span-3">
-                <Input
-                  id="startDate"
-                  name="startDate"
-                  type="date"
-                  value={formData.startDate || ''}
-                  onChange={handleInputChange}
-                />
-              </div>
-            </div>
-            
-            <div className="grid grid-cols-4 items-center gap-4">
-              <label htmlFor="endDate" className="text-right text-sm font-medium">
-                Date de fin
-              </label>
-              <div className="col-span-3">
-                <Input
-                  id="endDate"
-                  name="endDate"
-                  type="date"
-                  value={formData.endDate || ''}
-                  onChange={handleInputChange}
-                  disabled={formData.type === 'CDI'}
-                />
-                {formData.type === 'CDI' && (
-                  <p className="text-xs text-gray-500 mt-1">Non applicable pour un CDI</p>
-                )}
-              </div>
-            </div>
-          </div>
-          
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
-              Annuler
-            </Button>
-            <Button onClick={handleAddContract}>
-              Ajouter
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-      
-      {/* Delete Confirmation Dialog */}
-      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Confirmer la suppression</DialogTitle>
-          </DialogHeader>
-          
-          <div className="py-4">
-            <p>Êtes-vous sûr de vouloir supprimer le contrat de {selectedContract?.employeeName} ?</p>
-            <p className="text-sm text-gray-500 mt-2">Cette action est irréversible.</p>
-          </div>
-          
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
-              Annuler
-            </Button>
-            <Button variant="destructive" onClick={confirmDeleteContract}>
-              Supprimer
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-      
-      {/* Filter Dialog */}
-      <Dialog open={isFilterDialogOpen} onOpenChange={setIsFilterDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Filtrer les contrats</DialogTitle>
-          </DialogHeader>
-          
-          <div className="grid gap-4 py-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">
-                Type de contrat
-              </label>
-              <Select>
-                <SelectTrigger>
-                  <SelectValue placeholder="Tous les types" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Tous les types</SelectItem>
-                  <SelectItem value="CDI">CDI</SelectItem>
-                  <SelectItem value="CDD">CDD</SelectItem>
-                  <SelectItem value="Intérim">Intérim</SelectItem>
-                  <SelectItem value="Stage">Stage</SelectItem>
-                  <SelectItem value="Apprentissage">Apprentissage</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="space-y-2">
-              <label className="text-sm font-medium">
-                Statut
-              </label>
-              <Select>
-                <SelectTrigger>
-                  <SelectValue placeholder="Tous les statuts" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Tous les statuts</SelectItem>
-                  <SelectItem value="active">Actif</SelectItem>
-                  <SelectItem value="expired">Expiré</SelectItem>
-                  <SelectItem value="terminated">Résilié</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="space-y-2">
-              <label className="text-sm font-medium">
-                Département
-              </label>
-              <Select>
-                <SelectTrigger>
-                  <SelectValue placeholder="Tous les départements" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Tous les départements</SelectItem>
-                  <SelectItem value="IT">IT</SelectItem>
-                  <SelectItem value="Marketing">Marketing</SelectItem>
-                  <SelectItem value="Direction">Direction</SelectItem>
-                  <SelectItem value="RH">RH</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">
-                  Date début (min)
-                </label>
-                <Input type="date" />
-              </div>
-              
-              <div className="space-y-2">
-                <label className="text-sm font-medium">
-                  Date début (max)
-                </label>
-                <Input type="date" />
-              </div>
-            </div>
-          </div>
-          
-          <DialogFooter>
-            <Button variant="outline">
-              Réinitialiser
-            </Button>
-            <Button>
-              Appliquer
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
