@@ -1,86 +1,71 @@
 
-// Define types for transport reservations
-export interface PickupLocation {
-  address: string;
-  coordinates?: {
-    latitude: number;
-    longitude: number;
-  };
-}
-
-export interface TransportReservationStatus {
-  confirmed: 'confirmed';
-  pending: 'pending'; 
-  completed: 'completed';
-  cancelled: 'cancelled';
-}
+// reservation-types.ts
 
 export interface TransportReservation {
   id: string;
   clientId: string;
+  clientName?: string;
   vehicleId: string;
-  driverId?: string;
-  status: string;
+  vehicleName?: string;
+  driverId: string;
+  driverName?: string;
+  status: 'pending' | 'confirmed' | 'in-progress' | 'completed' | 'cancelled';
+  pickupAddress: {
+    street: string;
+    city: string;
+    postalCode: string;
+    country: string;
+  };
+  dropoffAddress: {
+    street: string;
+    city: string;
+    postalCode: string;
+    country: string;
+  };
+  pickupTime: string;
+  dropoffTime: string;
+  date: string;
+  distance: number;
   price: number;
+  paymentMethod: string;
+  paymentStatus: 'paid' | 'pending' | 'failed';
+  notes?: string;
   createdAt: string;
   updatedAt: string;
-  pickup?: string | { address: string };
-  dropoff?: string | { address: string };
-  service?: string | { name: string };
-  paymentStatus?: string;
-  date?: string;
-  time?: string;
-  isPaid?: boolean;
-  contractGenerated?: boolean;
-  notes?: string | any[] | null;
-  pickupLocation?: any;
-  dropoffLocation?: any;
-  pickupTime?: string;
-  estimatedDropoffTime?: string;
-  needsDriver?: boolean;
 }
 
-// Interface for compatibility with existing components
-export interface Reservation {
+export interface Reservation extends TransportReservation {
+  pickup?: {
+    address: string;
+    datetime: string;
+  };
+  dropoff?: {
+    address: string;
+    datetime: string;
+  };
+}
+
+// Helper function to format addresses
+export const getAddressString = (address: any): string => {
+  if (typeof address === 'string') return address;
+  
+  if (address && typeof address === 'object') {
+    if ('street' in address) {
+      const { street, city, postalCode, country } = address;
+      return `${street}, ${city}, ${postalCode}, ${country}`;
+    }
+    if ('address' in address) {
+      return address.address;
+    }
+  }
+  
+  return "Adresse non disponible";
+};
+
+export interface ReservationNote {
   id: string;
-  clientName?: string;
-  vehicleId?: string;
-  driverId?: string;
-  status: string;
-  startDate?: string;
-  endDate?: string;
-  pickupLocation: any;
-  dropoffLocation: any;
-  totalAmount?: number;
-  notes?: string | any[] | null;
-  paymentStatus?: string;
-  clientId?: string;
-}
-
-/**
- * Helper function to extract readable address string from location data
- */
-export function getAddressString(location: any): string {
-  if (!location) return 'Adresse non spécifiée';
-  
-  if (typeof location === 'string') {
-    return location;
-  }
-  
-  if (typeof location === 'object') {
-    if (location.address) {
-      return location.address;
-    }
-    
-    // If we have lat/lng coordinates
-    if (location.lat && location.lng) {
-      return `${location.lat}, ${location.lng}`;
-    }
-    
-    if (location.latitude && location.longitude) {
-      return `${location.latitude}, ${location.longitude}`;
-    }
-  }
-  
-  return 'Adresse non spécifiée';
+  reservationId: string;
+  note: string;
+  author: string;
+  timestamp: string;
 }

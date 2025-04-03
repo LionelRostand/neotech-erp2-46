@@ -1,20 +1,24 @@
 
 // service-types.ts
+
 export interface ServiceOption {
   id: string;
   name: string;
-  description?: string;
+  description: string;
   price: number;
-  isDefault?: boolean;
+  isAvailable: boolean;
+  vehicleTypes: string[];
+  category: string;
+  duration: number;
 }
 
 export interface ServiceAvailability {
-  id: string;
   serviceId: string;
-  dayOfWeek: 0 | 1 | 2 | 3 | 4 | 5 | 6;
+  dayOfWeek: number;
   startTime: string;
   endTime: string;
   isAvailable: boolean;
+  maxBookings: number;
 }
 
 export interface ServicePricing {
@@ -23,11 +27,13 @@ export interface ServicePricing {
   name: string;
   basePrice: number;
   pricePerKm?: number;
-  pricePerMin?: number;
-  minDistance?: number;
-  maxDistance?: number;
-  discountPercent?: number;
-  isDefault?: boolean;
+  pricePerMinute?: number;
+  minimumCharge?: number;
+  specialRates?: {
+    nightRate?: number;
+    weekendRate?: number;
+    holidayRate?: number;
+  };
 }
 
 export interface TransportService {
@@ -35,28 +41,20 @@ export interface TransportService {
   name: string;
   description: string;
   type: string;
-  imageUrl?: string;
-  isActive: boolean;
-  pricing: ServicePricing;
-  availability?: ServiceAvailability[];
-  options?: ServiceOption[];
-  vehicleTypes?: string[];
-  createdAt: string;
-  updatedAt: string;
+  basePrice: number;
+  pricePerKm?: number;
+  pricePerMinute?: number;
+  minDuration?: number;
+  vehicleTypes: string[];
+  active: boolean;
 }
 
-// Fix the extension of TransportServiceDetails
-export interface TransportServiceDetails {
-  id: string;
-  name: string;
-  description: string;
-  type: string;
-  imageUrl?: string;
-  isActive: boolean;
-  pricing: ServicePricing[];
-  availability?: ServiceAvailability[];
-  options?: ServiceOption[];
-  vehicleTypes?: string[];
-  createdAt: string;
-  updatedAt: string;
+export interface TransportServiceDetails extends TransportService {
+  availabilities: {
+    day: string;
+    hours: string;
+    maxBookings: number;
+  }[];
+  requirements?: string[];
+  additionalInfo?: string;
 }

@@ -10,7 +10,7 @@ import {
 // Export service types using export type syntax
 export type { TransportService, TransportServiceDetails };
 
-// Define TransportVehicle interface
+// Define TransportVehicle interface - fix status type to match expected values
 export interface TransportVehicle extends VehicleType {
   status: 'active' | 'maintenance' | 'inactive' | 'out-of-service' | 'reserved' | 'available';
 }
@@ -28,19 +28,19 @@ export interface TransportVehicleWithLocation extends TransportVehicle {
   }
 }
 
-// Export IncidentRecord type
-export interface IncidentRecord extends IncidentRecordType {
+// Export IncidentRecord type - fix location type
+export interface IncidentRecord extends Omit<IncidentRecordType, 'location'> {
   status: 'reported' | 'investigating' | 'resolved' | 'open' | 'closed';
   severity: 'low' | 'medium' | 'high' | 'critical';
-  location?: { latitude: number; longitude: number } | string;
+  location?: string | { latitude: number; longitude: number };
   driverName?: string;
   clientName?: string;
   repairCost?: number;
   resolved?: boolean;
 }
 
-// Export MaintenanceRecord type
-export interface MaintenanceRecord extends MaintenanceRecordType {
+// Export MaintenanceRecord type - make provider optional
+export interface MaintenanceRecord extends Omit<MaintenanceRecordType, 'provider'> {
   type: 'regular' | 'emergency' | 'inspection' | 'repair';
   performedBy: string;
   provider?: string;

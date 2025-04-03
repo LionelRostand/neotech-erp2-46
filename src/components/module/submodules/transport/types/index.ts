@@ -4,8 +4,10 @@ export * from './base-types';
 export * from './client-types';
 export * from './geolocation-types';
 export * from './planning-types';
+export * from './map-types';
 
-// Export driver types from driver-types
+// Export driver types from driver-types explicitly
+export type { TransportDriver } from './driver-types';
 export * from './driver-types';
 
 // Export vehicle types
@@ -30,9 +32,10 @@ export type {
   TransportServiceDetails
 } from './service-types';
 
-// Export map types
+// Export map types, ensuring no duplicate exports
 export type {
-  TransportVehicleWithLocation
+  TransportVehicleWithLocation,
+  TransportSettings
 } from './transport-types';
 
 // Export web booking types
@@ -40,6 +43,3 @@ export * from './web-booking-types';
 
 // Re-export utility functions
 export { stringToService, serviceToString } from '../utils/service-utils';
-
-// Export other transport types
-export type { TransportSettings } from './transport-types';

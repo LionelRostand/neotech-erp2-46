@@ -16,7 +16,7 @@ const mockServices: ServiceOption[] = [
     name: "Standard Transfer",
     description: "Point-to-point transfer in standard vehicle",
     price: 50,
-    available: true,
+    isAvailable: true,
     vehicleTypes: ["sedan", "compact"],
     category: "transfer",
     duration: 60
@@ -26,7 +26,7 @@ const mockServices: ServiceOption[] = [
     name: "Airport Pickup",
     description: "Airport pickup with waiting time included",
     price: 75,
-    available: true,
+    isAvailable: true,
     vehicleTypes: ["sedan", "luxury", "van"],
     category: "airport",
     duration: 90
@@ -39,7 +39,7 @@ const mockServiceAvailability: ServiceAvailability[] = [
     dayOfWeek: 1,
     startTime: "08:00",
     endTime: "20:00",
-    available: true,
+    isAvailable: true,
     maxBookings: 20
   },
   {
@@ -47,7 +47,7 @@ const mockServiceAvailability: ServiceAvailability[] = [
     dayOfWeek: 2,
     startTime: "08:00",
     endTime: "20:00",
-    available: true,
+    isAvailable: true,
     maxBookings: 20
   }
 ];
