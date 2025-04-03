@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { TransportReservation } from '../types/transport-types';
+import { TransportReservation } from '../types/reservation-types';
 import { toast } from "sonner";
 import { deleteDocument } from '@/hooks/firestore/delete-operations';
 

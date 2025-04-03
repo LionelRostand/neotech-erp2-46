@@ -1,6 +1,6 @@
 
 import { useEffect, useRef, useState } from 'react';
-import { TransportVehicleWithLocation } from '../types';
+import { TransportVehicleWithLocation, Coordinates } from '../types';
 import { getVehiclePopupContent } from '../utils/map-utils';
 
 interface UseTransportMapOptions {
@@ -47,10 +47,23 @@ export const useTransportMap = (vehicles: TransportVehicleWithLocation[], option
     // Create new markers
     vehicles.forEach(vehicle => {
       const location = vehicle.location;
-      const position = [
-        'coordinates' in location ? location.coordinates.latitude : location.lat,
-        'coordinates' in location ? location.coordinates.longitude : location.lng
-      ] as [number, number];
+      let position: [number, number];
+      
+      // Extract position based on the structure available
+      if ('coordinates' in location && location.coordinates) {
+        position = [
+          location.coordinates.latitude,
+          location.coordinates.longitude
+        ];
+      } else if ('lat' in location && 'lng' in location) {
+        position = [
+          (location as any).lat || 0,
+          (location as any).lng || 0
+        ];
+      } else {
+        // Default fallback position
+        position = [0, 0];
+      }
 
       // Create a marker for each vehicle
       const marker = {
@@ -76,10 +89,23 @@ export const useTransportMap = (vehicles: TransportVehicleWithLocation[], option
 
     if (vehicle && mapInstance.current) {
       const location = vehicle.location;
-      const position = [
-        'coordinates' in location ? location.coordinates.latitude : location.lat,
-        'coordinates' in location ? location.coordinates.longitude : location.lng
-      ] as [number, number];
+      let position: [number, number];
+      
+      // Extract position based on the structure available
+      if ('coordinates' in location && location.coordinates) {
+        position = [
+          location.coordinates.latitude,
+          location.coordinates.longitude
+        ];
+      } else if ('lat' in location && 'lng' in location) {
+        position = [
+          (location as any).lat || 0,
+          (location as any).lng || 0
+        ];
+      } else {
+        // Default fallback position
+        position = [0, 0];
+      }
       
       mapInstance.current.flyTo(position, 15);
     }

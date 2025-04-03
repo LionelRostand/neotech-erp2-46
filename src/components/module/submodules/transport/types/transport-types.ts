@@ -10,49 +10,7 @@ import {
 // Export service types using export type syntax
 export type { TransportService, TransportServiceDetails };
 
-// Define TransportDriver interface
-export interface TransportDriver {
-  id: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone: string;
-  licenseNumber: string;
-  licenseExpiry: string;
-  status: 'active' | 'inactive' | 'on-trip' | 'on-break';
-  rating?: number;
-  notes: any[];
-  address: string;
-  hireDate: string;
-  assignedVehicleId?: string;
-  experience?: number;
-  available?: boolean;
-  onLeave?: boolean;
-  skills?: string[];
-  photo?: string;
-  preferredVehicleType?: string;
-  language: string[];
-  licensesTypes: string[];
-  performance?: {
-    completedTrips: number;
-    cancelledTrips: number;
-    totalRatings: number;
-    averageRating: number;
-    totalHours: number;
-    totalDistance: number;
-  } | {
-    completedTrips: number;
-    averageRating: number;
-    onTimePercentage: number;
-  };
-  emergencyContact?: {
-    name: string;
-    relationship: string;
-    phone: string;
-  };
-}
-
-// Export TransportVehicle type compatible with both implementations
+// Define TransportVehicle interface
 export interface TransportVehicle extends VehicleType {
   status: 'active' | 'maintenance' | 'inactive' | 'out-of-service' | 'reserved' | 'available';
 }

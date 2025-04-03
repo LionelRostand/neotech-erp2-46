@@ -1,9 +1,9 @@
+
 import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Reservation } from '../types'; 
-import { getAddressString } from '../types';
+import { Reservation, getAddressString } from '../types/reservation-types'; 
 
 interface ViewReservationDetailsDialogProps {
   open: boolean;

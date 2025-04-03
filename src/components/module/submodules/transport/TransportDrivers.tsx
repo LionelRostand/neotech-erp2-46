@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -21,7 +20,6 @@ const mockDrivers: TransportDriver[] = [
     firstName: "Jean",
     lastName: "Dupont",
     licenseNumber: "123456789",
-    licenseType: "B",
     licenseExpiry: "2025-06-15",
     phone: "06 12 34 56 78",
     email: "jean.dupont@example.com",
@@ -43,7 +41,6 @@ const mockDrivers: TransportDriver[] = [
     firstName: "Marie",
     lastName: "Laurent",
     licenseNumber: "987654321",
-    licenseType: "B",
     licenseExpiry: "2024-11-30",
     phone: "07 98 76 54 32",
     email: "marie.laurent@example.com",
@@ -65,7 +62,6 @@ const mockDrivers: TransportDriver[] = [
     firstName: "Pierre",
     lastName: "Martin",
     licenseNumber: "456789123",
-    licenseType: "D",
     licenseExpiry: "2023-12-25",
     phone: "06 45 67 89 12",
     email: "pierre.martin@example.com",
@@ -87,7 +83,6 @@ const mockDrivers: TransportDriver[] = [
     firstName: "Sophie",
     lastName: "Moreau",
     licenseNumber: "321654987",
-    licenseType: "B",
     licenseExpiry: "2024-08-10",
     phone: "07 32 16 54 98",
     email: "sophie.moreau@example.com",
@@ -109,7 +104,6 @@ const mockDrivers: TransportDriver[] = [
     firstName: "Thomas",
     lastName: "Bernard",
     licenseNumber: "789123456",
-    licenseType: "B+E",
     licenseExpiry: "2025-01-20",
     phone: "06 78 91 23 45",
     email: "thomas.bernard@example.com",

@@ -1,7 +1,6 @@
 
 import { useEffect, useState } from 'react';
-import { TransportVehicleWithLocation } from '../types';
-import { normalizeCoordinates } from '../utils/map-utils';
+import { TransportVehicleWithLocation, Coordinates } from '../types';
 
 export const useMapMarkers = (vehicles: TransportVehicleWithLocation[]) => {
   const [markers, setMarkers] = useState<any[]>([]);
@@ -10,9 +9,20 @@ export const useMapMarkers = (vehicles: TransportVehicleWithLocation[]) => {
     // Create markers for all vehicles
     const newMarkers = vehicles.map(vehicle => {
       const location = vehicle.location;
-      const normalizedPosition = 'coordinates' in location 
-        ? location.coordinates
-        : { latitude: location.lat, longitude: location.lng };
+      let normalizedPosition: Coordinates;
+      
+      // Access the coordinates based on the available structure
+      if ('coordinates' in location && location.coordinates) {
+        normalizedPosition = location.coordinates;
+      } else if ('lat' in location && 'lng' in location) {
+        normalizedPosition = { 
+          latitude: (location as any).lat, 
+          longitude: (location as any).lng 
+        };
+      } else {
+        // Default fallback position
+        normalizedPosition = { latitude: 0, longitude: 0 };
+      }
         
       return {
         id: vehicle.id,
@@ -34,7 +44,10 @@ export const useMapMarkers = (vehicles: TransportVehicleWithLocation[]) => {
               ...marker, 
               position: 'coordinates' in location 
                 ? location.coordinates
-                : { latitude: location.lat, longitude: location.lng }
+                : { 
+                    latitude: (location as any).lat || 0, 
+                    longitude: (location as any).lng || 0 
+                  }
             }
           : marker
       )
