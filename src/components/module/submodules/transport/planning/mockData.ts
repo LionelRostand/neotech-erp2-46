@@ -1,4 +1,3 @@
-
 import { addDays, addHours, format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { TransportVehicle } from '../types/vehicle-types';
@@ -13,7 +12,7 @@ export const mockVehicles = [
     name: "Mercedes Sprinter",
     type: "van",
     licensePlate: "AB-123-CD",
-    status: "active", // Changed from 'available' to 'active'
+    status: "active",
     available: true,
     capacity: 8,
     notes: [],
@@ -107,7 +106,7 @@ export const mockVehicles = [
     name: "Tesla Model Y",
     type: "suv",
     licensePlate: "VE-456-ZZ",
-    status: "active", // Changed from 'available' to 'active'
+    status: "active",
     available: true,
     capacity: 5,
     notes: [],
@@ -250,7 +249,7 @@ export const mockExtensionRequests = [
     requestId: "REQ-001",
     clientName: "Marie Dupont",
     vehicleName: "Mercedes Sprinter",
-    vehicleId: "v1", // This is valid now
+    vehicleId: "v1",
     driverName: "Jean Martin",
     originalEndDate: "2023-10-20",
     requestedEndDate: "2023-10-21",
@@ -379,5 +378,5 @@ export const formatTime = (time: string) => {
   return format(new Date(`2000-01-01T${time}`), 'HH:mm');
 };
 
-// Ensure that we're exporting both functions that may be needed by PlanningContext
+// Export generateMaintenanceSchedules with alias mockMaintenanceSchedules for backward compatibility
 export { generateMaintenanceSchedules as mockMaintenanceSchedules };
