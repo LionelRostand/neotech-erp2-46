@@ -9,6 +9,7 @@ export interface AppModule {
   icon: React.ReactNode;
   category: 'business' | 'services' | 'digital' | 'communication';  // Nouvelle propriété de catégorie
   submodules?: SubModule[];
+  configCompleted?: boolean; // New property to track if configuration is completed
 }
 
 export interface SubModule {

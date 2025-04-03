@@ -7,18 +7,22 @@ interface ModuleListProps {
   modules: AppModule[];
   installedModules: number[];
   expandedModule: number | null;
+  configCompletedModules?: number[];
   onInstall: (moduleId: number) => void;
   onUninstall: (moduleId: number) => void;
   onToggleExpansion: (moduleId: number) => void;
+  onToggleConfigCompleted?: (moduleId: number, completed: boolean) => void;
 }
 
 const ModuleList: React.FC<ModuleListProps> = ({
   modules,
   installedModules,
   expandedModule,
+  configCompletedModules = [],
   onInstall,
   onUninstall,
-  onToggleExpansion
+  onToggleExpansion,
+  onToggleConfigCompleted
 }) => {
   // Split modules into two equal columns
   const splitModules = () => {
@@ -43,32 +47,50 @@ const ModuleList: React.FC<ModuleListProps> = ({
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       {/* Left Column */}
       <div className="space-y-4">
-        {leftColumnModules.map(module => (
-          <ModuleCard
-            key={module.id}
-            module={module}
-            isInstalled={installedModules.includes(module.id)}
-            isExpanded={expandedModule === module.id}
-            onInstall={onInstall}
-            onUninstall={onUninstall}
-            onToggleExpansion={onToggleExpansion}
-          />
-        ))}
+        {leftColumnModules.map(module => {
+          // Add configCompleted property to module
+          const enhancedModule = {
+            ...module,
+            configCompleted: configCompletedModules.includes(module.id)
+          };
+          
+          return (
+            <ModuleCard
+              key={module.id}
+              module={enhancedModule}
+              isInstalled={installedModules.includes(module.id)}
+              isExpanded={expandedModule === module.id}
+              onInstall={onInstall}
+              onUninstall={onUninstall}
+              onToggleExpansion={onToggleExpansion}
+              onToggleConfigCompleted={onToggleConfigCompleted}
+            />
+          );
+        })}
       </div>
       
       {/* Right Column */}
       <div className="space-y-4">
-        {rightColumnModules.map(module => (
-          <ModuleCard
-            key={module.id}
-            module={module}
-            isInstalled={installedModules.includes(module.id)}
-            isExpanded={expandedModule === module.id}
-            onInstall={onInstall}
-            onUninstall={onUninstall}
-            onToggleExpansion={onToggleExpansion}
-          />
-        ))}
+        {rightColumnModules.map(module => {
+          // Add configCompleted property to module
+          const enhancedModule = {
+            ...module,
+            configCompleted: configCompletedModules.includes(module.id)
+          };
+          
+          return (
+            <ModuleCard
+              key={module.id}
+              module={enhancedModule}
+              isInstalled={installedModules.includes(module.id)}
+              isExpanded={expandedModule === module.id}
+              onInstall={onInstall}
+              onUninstall={onUninstall}
+              onToggleExpansion={onToggleExpansion}
+              onToggleConfigCompleted={onToggleConfigCompleted}
+            />
+          );
+        })}
       </div>
     </div>
   );

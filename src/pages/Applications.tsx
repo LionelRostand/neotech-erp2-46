@@ -14,25 +14,36 @@ import { cn } from '@/lib/utils';
 
 const Applications: React.FC = () => {
   const [installedModules, setInstalledModules] = useState<number[]>([]);
+  const [configCompletedModules, setConfigCompletedModules] = useState<number[]>([]);
   const [expandedModule, setExpandedModule] = useState<number | null>(null);
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [activeCategory, setActiveCategory] = useState<string>('all');
   
-  // Charger les modules installés depuis le localStorage au chargement
+  // Load installed modules and config completed modules from localStorage on load
   useEffect(() => {
     const savedModules = localStorage.getItem('installedModules');
     if (savedModules) {
       setInstalledModules(JSON.parse(savedModules));
     }
+    
+    const savedConfigCompletedModules = localStorage.getItem('configCompletedModules');
+    if (savedConfigCompletedModules) {
+      setConfigCompletedModules(JSON.parse(savedConfigCompletedModules));
+    }
   }, []);
   
-  // Sauvegarder les modules installés dans le localStorage
+  // Save installed modules to localStorage
   useEffect(() => {
     localStorage.setItem('installedModules', JSON.stringify(installedModules));
-    // Déclencher un événement personnalisé pour notifier le DashboardLayout
+    // Trigger a custom event to notify the DashboardLayout
     const event = new CustomEvent('modulesChanged', { detail: installedModules });
     window.dispatchEvent(event);
   }, [installedModules]);
+  
+  // Save config completed modules to localStorage
+  useEffect(() => {
+    localStorage.setItem('configCompletedModules', JSON.stringify(configCompletedModules));
+  }, [configCompletedModules]);
   
   const handleInstall = (moduleId: number) => {
     if (!installedModules.includes(moduleId)) {
@@ -49,6 +60,16 @@ const Applications: React.FC = () => {
   };
   
   const handleUninstall = (moduleId: number) => {
+    // Check if module configuration is marked as completed
+    if (configCompletedModules.includes(moduleId)) {
+      toast({
+        title: "Action impossible",
+        description: "Vous ne pouvez pas désinstaller un module dont la configuration est marquée comme terminée.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     const newInstalledModules = installedModules.filter(id => id !== moduleId);
     setInstalledModules(newInstalledModules);
     
@@ -67,6 +88,16 @@ const Applications: React.FC = () => {
       setExpandedModule(moduleId);
     }
   };
+  
+  const handleToggleConfigCompleted = (moduleId: number, completed: boolean) => {
+    if (completed) {
+      if (!configCompletedModules.includes(moduleId)) {
+        setConfigCompletedModules(prev => [...prev, moduleId]);
+      }
+    } else {
+      setConfigCompletedModules(prev => prev.filter(id => id !== moduleId));
+    }
+  };
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
@@ -76,7 +107,7 @@ const Applications: React.FC = () => {
     setSearchTerm('');
   };
 
-  // Filtrer les modules en fonction du terme de recherche et de la catégorie active
+  // Filter modules based on search term and active category
   const filteredModules = modules.filter(module => {
     const matchesSearch = 
       module.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -87,13 +118,13 @@ const Applications: React.FC = () => {
     return matchesSearch && matchesCategory;
   });
   
-  // Grouper les modules par catégorie
+  // Group modules by category
   const businessModules = modules.filter(m => m.category === 'business');
   const servicesModules = modules.filter(m => m.category === 'services');
   const digitalModules = modules.filter(m => m.category === 'digital');
   const communicationModules = modules.filter(m => m.category === 'communication');
   
-  // Obtenir les noms des catégories pour l'affichage
+  // Get category name for display
   const getCategoryName = (category: string): string => {
     switch (category) {
       case 'business': return 'Gestion d\'entreprise';
@@ -104,7 +135,7 @@ const Applications: React.FC = () => {
     }
   };
   
-  // Obtenir l'icône de la catégorie
+  // Get category icon
   const getCategoryIcon = (category: string) => {
     switch (category) {
       case 'business': return <Building2 size={18} />;
@@ -193,10 +224,12 @@ const Applications: React.FC = () => {
                         m.description.toLowerCase().includes(searchTerm.toLowerCase())
                       )}
                       installedModules={installedModules}
+                      configCompletedModules={configCompletedModules}
                       expandedModule={expandedModule}
                       onInstall={handleInstall}
                       onUninstall={handleUninstall}
                       onToggleExpansion={toggleModuleExpansion}
+                      onToggleConfigCompleted={handleToggleConfigCompleted}
                     />
                   </div>
                 )}
@@ -213,10 +246,12 @@ const Applications: React.FC = () => {
                         m.description.toLowerCase().includes(searchTerm.toLowerCase())
                       )}
                       installedModules={installedModules}
+                      configCompletedModules={configCompletedModules}
                       expandedModule={expandedModule}
                       onInstall={handleInstall}
                       onUninstall={handleUninstall}
                       onToggleExpansion={toggleModuleExpansion}
+                      onToggleConfigCompleted={handleToggleConfigCompleted}
                     />
                   </div>
                 )}
@@ -233,10 +268,12 @@ const Applications: React.FC = () => {
                         m.description.toLowerCase().includes(searchTerm.toLowerCase())
                       )}
                       installedModules={installedModules}
+                      configCompletedModules={configCompletedModules}
                       expandedModule={expandedModule}
                       onInstall={handleInstall}
                       onUninstall={handleUninstall}
                       onToggleExpansion={toggleModuleExpansion}
+                      onToggleConfigCompleted={handleToggleConfigCompleted}
                     />
                   </div>
                 )}
@@ -253,10 +290,12 @@ const Applications: React.FC = () => {
                         m.description.toLowerCase().includes(searchTerm.toLowerCase())
                       )}
                       installedModules={installedModules}
+                      configCompletedModules={configCompletedModules}
                       expandedModule={expandedModule}
                       onInstall={handleInstall}
                       onUninstall={handleUninstall}
                       onToggleExpansion={toggleModuleExpansion}
+                      onToggleConfigCompleted={handleToggleConfigCompleted}
                     />
                   </div>
                 )}
@@ -272,10 +311,12 @@ const Applications: React.FC = () => {
                 <ModuleList 
                   modules={filteredModules}
                   installedModules={installedModules}
+                  configCompletedModules={configCompletedModules}
                   expandedModule={expandedModule}
                   onInstall={handleInstall}
                   onUninstall={handleUninstall}
                   onToggleExpansion={toggleModuleExpansion}
+                  onToggleConfigCompleted={handleToggleConfigCompleted}
                 />
               </>
             )}

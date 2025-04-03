@@ -2,10 +2,11 @@
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Check, Trash2, Download, ChevronDown, ChevronUp, LayoutDashboard } from 'lucide-react';
+import { Check, Trash2, Download, ChevronDown, ChevronUp, LayoutDashboard, Settings } from 'lucide-react';
 import { AppModule } from '@/data/types/modules';
 import ModuleDashboardPreview from './ModuleDashboardPreview';
 import { toast } from "@/hooks/use-toast";
+import { Switch } from "@/components/ui/switch";
 
 interface ModuleCardProps {
   module: AppModule;
@@ -14,6 +15,7 @@ interface ModuleCardProps {
   onInstall: (moduleId: number) => void;
   onUninstall: (moduleId: number) => void;
   onToggleExpansion: (moduleId: number) => void;
+  onToggleConfigCompleted?: (moduleId: number, completed: boolean) => void;
 }
 
 const ModuleCard: React.FC<ModuleCardProps> = ({
@@ -22,9 +24,30 @@ const ModuleCard: React.FC<ModuleCardProps> = ({
   isExpanded,
   onInstall,
   onUninstall,
-  onToggleExpansion
+  onToggleExpansion,
+  onToggleConfigCompleted
 }) => {
   const [showDashboard, setShowDashboard] = useState(false);
+
+  const handleConfigToggle = (checked: boolean) => {
+    if (onToggleConfigCompleted) {
+      onToggleConfigCompleted(module.id, checked);
+      
+      if (checked) {
+        toast({
+          title: "Configuration terminée",
+          description: `La configuration du module ${module.name} a été marquée comme terminée.`,
+          variant: "default",
+        });
+      } else {
+        toast({
+          title: "Configuration active",
+          description: `La configuration du module ${module.name} est maintenant active.`,
+          variant: "default",
+        });
+      }
+    }
+  };
 
   return (
     <Card className="border border-gray-200 transition-all hover:shadow-md flex flex-col">
@@ -97,14 +120,27 @@ const ModuleCard: React.FC<ModuleCardProps> = ({
               Installé
             </Button>
             
-            <div className="space-x-2 flex">
-              {/* Only showing the Uninstall button now */}
+            <div className="space-x-2 flex items-center">
+              {/* Configuration completion toggle */}
+              <div className="flex items-center gap-2">
+                <Settings size={14} className="text-gray-500" />
+                <span className="text-xs text-gray-600">Configuration terminée:</span>
+                <Switch 
+                  checked={module.configCompleted || false} 
+                  onCheckedChange={handleConfigToggle}
+                  disabled={module.configCompleted}
+                  aria-label="Marquer la configuration comme terminée"
+                />
+              </div>
+              
+              {/* Uninstall button */}
               <Button 
                 variant="outline" 
                 size="sm"
                 className="text-red-600 hover:text-red-700 hover:bg-red-50 h-7 text-xs"
                 onClick={() => onUninstall(module.id)}
                 title="Désinstaller le module"
+                disabled={module.configCompleted}
               >
                 <Trash2 className="mr-1 h-3 w-3" />
                 Désinstaller
