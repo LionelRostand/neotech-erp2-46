@@ -1,64 +1,86 @@
 
-// Add reservation-types.ts if it doesn't exist or update it
+// Define types for transport reservations
+export interface PickupLocation {
+  address: string;
+  coordinates?: {
+    latitude: number;
+    longitude: number;
+  };
+}
+
+export interface TransportReservationStatus {
+  confirmed: 'confirmed';
+  pending: 'pending'; 
+  completed: 'completed';
+  cancelled: 'cancelled';
+}
+
 export interface TransportReservation {
   id: string;
   clientId: string;
-  clientName: string;
+  vehicleId: string;
   driverId?: string;
-  driverName?: string;
-  vehicleId?: string;
-  vehicleName?: string;
-  status: 'pending' | 'confirmed' | 'in-progress' | 'completed' | 'cancelled';
-  pickupLocation: string | { address: string; lat?: number; lng?: number };
-  dropoffLocation: string | { address: string; lat?: number; lng?: number };
-  pickupTime: string;
-  estimatedDropoffTime: string;
-  actualDropoffTime?: string;
+  status: string;
   price: number;
-  paymentStatus: 'pending' | 'paid' | 'refunded' | 'cancelled';
-  paymentMethod?: string;
-  notes?: string | any[];
   createdAt: string;
   updatedAt: string;
-  
-  // Add missing properties referenced in ClientHistoryDialog and other components
+  pickup?: string | { address: string };
+  dropoff?: string | { address: string };
+  service?: string | { name: string };
+  paymentStatus?: string;
   date?: string;
   time?: string;
-  pickup?: string | { address: string; lat?: number; lng?: number };
-  dropoff?: string | { address: string; lat?: number; lng?: number };
-  service?: string;
-  
-  // Add missing properties for ContractGenerationDialog and ViewReservationDialog
-  needsDriver?: boolean;
   isPaid?: boolean;
   contractGenerated?: boolean;
+  notes?: string | any[] | null;
+  pickupLocation?: any;
+  dropoffLocation?: any;
+  pickupTime?: string;
+  estimatedDropoffTime?: string;
+  needsDriver?: boolean;
 }
 
-// Add the Reservation type used in several components
+// Interface for compatibility with existing components
 export interface Reservation {
   id: string;
-  client: string;
-  clientName: string;
-  vehicle?: string;
-  driver?: string;
-  startDate: string;
-  endDate: string;
-  pickupLocation: { address: string; lat?: number; lng?: number };
-  dropoffLocation: { address: string; lat?: number; lng?: number };
-  status: 'pending' | 'confirmed' | 'in-progress' | 'completed' | 'cancelled';
-  paymentStatus: 'pending' | 'partial' | 'paid' | 'refunded';
-  totalAmount: number;
-  notes?: string | any[];
-  updatedAt?: string;
-  createdAt?: string;
+  clientName?: string;
+  vehicleId?: string;
+  driverId?: string;
+  status: string;
+  startDate?: string;
+  endDate?: string;
+  pickupLocation: any;
+  dropoffLocation: any;
+  totalAmount?: number;
+  notes?: string | any[] | null;
+  paymentStatus?: string;
+  clientId?: string;
 }
 
-// Add reservation status type
-export type TransportReservationStatus = 'pending' | 'confirmed' | 'in-progress' | 'completed' | 'cancelled';
-
-// Add helper function for getting string address from location object
-export const getAddressString = (location: string | { address: string }): string => {
-  if (!location) return "";
-  if (typeof location === "string") return location;
-  return location.address || "";
-};
+/**
+ * Helper function to extract readable address string from location data
+ */
+export function getAddressString(location: any): string {
+  if (!location) return 'Adresse non spécifiée';
+  
+  if (typeof location === 'string') {
+    return location;
+  }
+  
+  if (typeof location === 'object') {
+    if (location.address) {
+      return location.address;
+    }
+    
+    // If we have lat/lng coordinates
+    if (location.lat && location.lng) {
+      return `${location.lat}, ${location.lng}`;
+    }
+    
+    if (location.latitude && location.longitude) {
+      return `${location.latitude}, ${location.longitude}`;
+    }
+  }
+  
+  return 'Adresse non spécifiée';
+}

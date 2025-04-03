@@ -8,7 +8,7 @@ export interface TransportDriver {
   phone: string;
   licenseNumber: string;
   licenseExpiry: string;
-  status: 'active' | 'inactive' | 'on_leave' | 'driving' | 'off-duty';
+  status: 'active' | 'inactive' | 'on-trip' | 'on-break' | 'driving' | 'off-duty' | 'on_leave';
   rating?: number;
   notes: any[];
   address: string;
@@ -20,14 +20,13 @@ export interface TransportDriver {
   skills?: string[];
   photo?: string;
   preferredVehicleType?: string[];
+  language: string[];
+  licensesTypes: string[];
   performance?: {
     completedTrips: number;
     averageRating: number;
     onTimePercentage: number;
   };
-  licenseType?: string;
-  language?: string[];
-  licensesTypes?: string[];
 }
 
 export interface DriverNote {

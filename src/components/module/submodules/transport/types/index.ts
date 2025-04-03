@@ -5,8 +5,9 @@ export * from './client-types';
 export * from './geolocation-types';
 export * from './planning-types';
 
-// Export driver types from transport-types
-export { TransportDriver } from './transport-types';
+// Export driver types from driver-types and transport-types explicitly to avoid ambiguity
+export type { TransportDriver } from './driver-types';
+export { TransportDriver as TransportDriverBase } from './transport-types';
 
 // Export vehicle types
 export type {
@@ -37,9 +38,11 @@ export type {
 
 // Export map types
 export type {
-  MapExtensionRequest,
   TransportVehicleWithLocation
 } from './transport-types';
+export type { 
+  MapExtensionRequest
+} from './geolocation-types';
 
 // Export web booking types
 export * from './web-booking-types';

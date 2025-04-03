@@ -10,31 +10,29 @@ import {
 // Export service types using export type syntax
 export type { TransportService, TransportServiceDetails };
 
-// Re-export utility functions
-export { stringToService, serviceToString } from '../utils/service-utils';
-
 // Define TransportDriver interface
 export interface TransportDriver {
   id: string;
-  name: string;
+  firstName: string;
+  lastName: string;
   email: string;
   phone: string;
-  licenseType: string;
   licenseNumber: string;
   licenseExpiry: string;
   status: 'active' | 'inactive' | 'on-trip' | 'on-break';
-  available: boolean;
-  rating: number;
+  rating?: number;
+  notes: any[];
+  address: string;
   hireDate: string;
+  assignedVehicleId?: string;
+  experience?: number;
+  available?: boolean;
+  onLeave?: boolean;
+  skills?: string[];
   photo?: string;
   preferredVehicleType?: string;
-  notes: any[];
-  address?: string;
-  emergencyContact?: {
-    name: string;
-    relationship: string;
-    phone: string;
-  };
+  language: string[];
+  licensesTypes: string[];
   performance?: {
     completedTrips: number;
     cancelledTrips: number;
@@ -42,8 +40,16 @@ export interface TransportDriver {
     averageRating: number;
     totalHours: number;
     totalDistance: number;
+  } | {
+    completedTrips: number;
+    averageRating: number;
+    onTimePercentage: number;
   };
-  [key: string]: any;
+  emergencyContact?: {
+    name: string;
+    relationship: string;
+    phone: string;
+  };
 }
 
 // Export TransportVehicle type compatible with both implementations
@@ -69,11 +75,18 @@ export interface IncidentRecord extends IncidentRecordType {
   status: 'reported' | 'investigating' | 'resolved' | 'open' | 'closed';
   severity: 'low' | 'medium' | 'high' | 'critical';
   location?: { latitude: number; longitude: number } | string;
+  driverName?: string;
+  clientName?: string;
+  repairCost?: number;
+  resolved?: boolean;
 }
 
 // Export MaintenanceRecord type
 export interface MaintenanceRecord extends MaintenanceRecordType {
   type: 'regular' | 'emergency' | 'inspection' | 'repair';
+  performedBy: string;
+  provider?: string;
+  nextMaintenance?: string;
 }
 
 // Any other types specific to transport module can be defined here
