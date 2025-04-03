@@ -1,84 +1,50 @@
 
-import { TransportVehicleWithLocation, Coordinates, VehicleLocation } from '../types';
+import { TransportVehicleWithLocation } from '../types/transport-types';
 
-// Normalize coordinates from different possible formats
-export const normalizeCoordinates = (location: any): Coordinates => {
-  if (!location) return { latitude: 0, longitude: 0 };
-  
-  // If location already has coordinates in the right format
-  if (location.coordinates && typeof location.coordinates === 'object') {
-    const { latitude, longitude } = location.coordinates;
-    if (typeof latitude === 'number' && typeof longitude === 'number') {
-      return { latitude, longitude };
+// Function to convert location data to map markers
+export const convertToMapMarkers = (vehicles: TransportVehicleWithLocation[]) => {
+  return vehicles.map(vehicle => ({
+    id: vehicle.id,
+    position: [vehicle.location.coordinates.latitude, vehicle.location.coordinates.longitude],
+    name: vehicle.name,
+    status: vehicle.status,
+    info: {
+      licensePlate: vehicle.licensePlate,
+      driverName: vehicle.driverName || 'No driver assigned',
+      lastUpdate: new Date(vehicle.location.timestamp).toLocaleString()
     }
-  }
-  
-  // If location has lat/lng format
-  if (typeof location.lat === 'number' && typeof location.lng === 'number') {
-    return {
-      latitude: location.lat,
-      longitude: location.lng
-    };
-  }
-  
-  // If location has latitude/longitude directly
-  if (typeof location.latitude === 'number' && typeof location.longitude === 'number') {
-    return {
-      latitude: location.latitude,
-      longitude: location.longitude
-    };
-  }
-  
-  return { latitude: 0, longitude: 0 };
+  }));
 };
 
-export const getVehiclePopupContent = (vehicle: TransportVehicleWithLocation): string => {
-  const location = vehicle.location;
-  const status = location.status || 'unknown';
-  
-  let address = '';
-  if (location && typeof location === 'object') {
-    if ('address' in location && location.address) {
-      address = location.address;
-    } else {
-      const coords = normalizeCoordinates(location);
-      address = `${coords.latitude.toFixed(5)}, ${coords.longitude.toFixed(5)}`;
-    }
+// Function to get center coordinates for a map from vehicle locations
+export const getCenterCoordinates = (vehicles: TransportVehicleWithLocation[]) => {
+  if (vehicles.length === 0) {
+    return [48.8566, 2.3522]; // Default to Paris coordinates
   }
-  
-  const driverInfo = vehicle.driverName ? `<br/><b>Chauffeur:</b> ${vehicle.driverName}` : '';
-  
-  return `
-    <div>
-      <h3 class="font-bold">${vehicle.name}</h3>
-      <p><b>Statut:</b> ${status}</p>
-      <p><b>Emplacement:</b> ${address}</p>
-      ${driverInfo}
-      <p><b>Vitesse:</b> ${location.speed || 0} km/h</p>
-    </div>
-  `;
+
+  const totalLat = vehicles.reduce((sum, vehicle) => 
+    sum + vehicle.location.coordinates.latitude, 0);
+  const totalLng = vehicles.reduce((sum, vehicle) => 
+    sum + vehicle.location.coordinates.longitude, 0);
+
+  return [totalLat / vehicles.length, totalLng / vehicles.length];
 };
 
-export const getMapBounds = (locations: any[]): any => {
-  if (!locations || locations.length === 0) {
-    return null;
+// Function to handle geolocation API errors
+export const handleGeolocationError = (error: GeolocationPositionError): string => {
+  switch (error.code) {
+    case error.PERMISSION_DENIED:
+      return "L'utilisateur a refusé la demande de géolocalisation.";
+    case error.POSITION_UNAVAILABLE:
+      return "Les informations de localisation sont indisponibles.";
+    case error.TIMEOUT:
+      return "La demande d'obtention de la position de l'utilisateur a expiré.";
+    default:
+      return `Une erreur inconnue est survenue: ${String(error.message)}`;
   }
-  
-  const bounds = {
-    north: -90,
-    south: 90,
-    east: -180,
-    west: 180
-  };
-  
-  locations.forEach(loc => {
-    const coords = normalizeCoordinates(loc);
-    
-    if (coords.latitude > bounds.north) bounds.north = coords.latitude;
-    if (coords.latitude < bounds.south) bounds.south = coords.latitude;
-    if (coords.longitude > bounds.east) bounds.east = coords.longitude;
-    if (coords.longitude < bounds.west) bounds.west = coords.longitude;
-  });
-  
-  return bounds;
+};
+
+// Function to format coordinates for display
+export const formatCoordinates = (coords: { latitude: number; longitude: number }): string => {
+  return `${coords.latitude.toFixed(6)}, ${coords.longitude.toFixed(6)}`;
 };

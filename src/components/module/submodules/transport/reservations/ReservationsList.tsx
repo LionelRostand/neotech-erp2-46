@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -20,8 +21,14 @@ const mockReservations: Partial<Reservation>[] = [
     status: "confirmed",
     paymentStatus: "paid",
     notes: "Client VIP, préférence siège avant",
-    pickup: "15 Rue de la Paix, Paris",
-    dropoff: "Charles de Gaulle Airport, Terminal 2E"
+    pickup: {
+      address: "15 Rue de la Paix, Paris",
+      datetime: "2023-11-10T09:00:00"
+    },
+    dropoff: {
+      address: "Charles de Gaulle Airport, Terminal 2E",
+      datetime: "2023-11-12T17:00:00"
+    }
   },
   {
     id: "res002",
@@ -31,10 +38,16 @@ const mockReservations: Partial<Reservation>[] = [
     pickupLocation: { address: "Aéroport CDG Terminal 2E, Paris" },
     dropoffLocation: { address: "25 rue du Faubourg Saint-Honoré, 75008 Paris" },
     status: "pending",
-    paymentStatus: "unpaid",
+    paymentStatus: "pending",
     notes: "Location sans chauffeur",
-    pickup: "Aéroport CDG Terminal 2E, Paris",
-    dropoff: "25 rue du Faubourg Saint-Honoré, 75008 Paris",
+    pickup: {
+      address: "Aéroport CDG Terminal 2E, Paris",
+      datetime: "2023-11-15T10:00:00"
+    },
+    dropoff: {
+      address: "25 rue du Faubourg Saint-Honoré, 75008 Paris",
+      datetime: "2023-11-15T18:00:00"
+    },
     totalAmount: 120
   },
   {
@@ -47,8 +60,14 @@ const mockReservations: Partial<Reservation>[] = [
     status: "completed",
     paymentStatus: "paid",
     notes: "Location sans chauffeur",
-    pickup: "Gare de Lyon, Paris",
-    dropoff: "Gare de Lyon, Paris",
+    pickup: {
+      address: "Gare de Lyon, Paris",
+      datetime: "2023-11-08T14:00:00"
+    },
+    dropoff: {
+      address: "Gare de Lyon, Paris",
+      datetime: "2023-11-10T12:00:00"
+    },
     totalAmount: 320
   },
   {
@@ -61,8 +80,14 @@ const mockReservations: Partial<Reservation>[] = [
     status: "confirmed",
     paymentStatus: "partial",
     notes: "Location sans chauffeur",
-    pickup: "Hôtel Ritz, Place Vendôme, Paris",
-    dropoff: "Opéra Garnier, Paris",
+    pickup: {
+      address: "Hôtel Ritz, Place Vendôme, Paris",
+      datetime: "2023-11-20T09:00:00"
+    },
+    dropoff: {
+      address: "Opéra Garnier, Paris",
+      datetime: "2023-11-20T19:00:00"
+    },
     totalAmount: 180
   },
   {
@@ -73,10 +98,16 @@ const mockReservations: Partial<Reservation>[] = [
     pickupLocation: { address: "Gare Montparnasse, Paris" },
     dropoffLocation: { address: "Gare Montparnasse, Paris" },
     status: "pending",
-    paymentStatus: "unpaid",
+    paymentStatus: "pending",
     notes: "Location sans chauffeur",
-    pickup: "Gare Montparnasse, Paris",
-    dropoff: "Gare Montparnasse, Paris",
+    pickup: {
+      address: "Gare Montparnasse, Paris",
+      datetime: "2023-11-25T10:00:00"
+    },
+    dropoff: {
+      address: "Gare Montparnasse, Paris",
+      datetime: "2023-11-27T18:00:00"
+    },
     totalAmount: 420
   }
 ];

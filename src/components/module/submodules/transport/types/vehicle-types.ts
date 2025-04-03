@@ -6,7 +6,7 @@ export interface TransportVehicle {
   type: string;
   licensePlate: string;
   available: boolean;
-  status: 'active' | 'maintenance' | 'out-of-service' | 'reserved' | 'available';
+  status: 'active' | 'maintenance' | 'out-of-service' | 'reserved' | 'available' | 'inactive';
   purchaseDate?: string;
   lastServiceDate?: string;
   nextServiceDate?: string;

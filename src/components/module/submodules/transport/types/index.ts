@@ -2,13 +2,29 @@
 // Re-export all types from the individual modules with explicit exports to avoid ambiguity
 export * from './base-types';
 export * from './client-types';
-export * from './geolocation-types';
+
+// Export geolocation types but exclude MapExtensionRequest to avoid conflict
+export type { 
+  Coordinates, 
+  VehicleLocation, 
+  TransportVehicleLocation, 
+  MapBounds, 
+  MapViewSettings 
+} from './geolocation-types';
+
+// Export map types explicitly
+export type { MapExtensionRequest } from './map-types';
+
 export * from './planning-types';
-export * from './map-types';
 
 // Export driver types from driver-types explicitly
-export type { TransportDriver } from './driver-types';
-export * from './driver-types';
+export type { 
+  TransportDriver, 
+  DriverNote, 
+  DriverSchedule,
+  DriverAvailabilityPeriod,
+  DriverRatingEntry 
+} from './driver-types';
 
 // Export vehicle types
 export type {
@@ -32,7 +48,7 @@ export type {
   TransportServiceDetails
 } from './service-types';
 
-// Export map types, ensuring no duplicate exports
+// Export transport types, ensuring no duplicate exports
 export type {
   TransportVehicleWithLocation,
   TransportSettings

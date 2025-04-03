@@ -1,80 +1,43 @@
 
-import { TransportVehicleWithLocation } from "../types/map-types";
+import { TransportVehicle } from '../types/vehicle-types';
+import { TransportVehicleWithLocation } from '../types/transport-types';
 
-export const getVehicleStatusLabel = (status: string): string => {
-  switch (status.toLowerCase()) {
-    case 'active':
-      return 'En service';
-    case 'maintenance':
-      return 'En maintenance';
-    case 'out-of-service':
-      return 'Hors service';
-    case 'available':
-      return 'Disponible';
-    case 'unavailable':
-      return 'Indisponible';
-    default:
-      return status;
-  }
-};
-
-export const getVehicleTypeLabel = (type: string): string => {
-  switch (type.toLowerCase()) {
-    case 'sedan':
-      return 'Berline';
-    case 'suv':
-      return 'SUV';
-    case 'van':
-      return 'Minivan';
-    case 'bus':
-      return 'Bus';
-    case 'minibus':
-      return 'Minibus';
-    case 'luxury':
-      return 'Luxe';
-    default:
-      return type;
-  }
-};
-
+// Function to get status badge color
 export const getVehicleStatusColor = (status: string): string => {
   switch (status.toLowerCase()) {
     case 'active':
-    case 'available':
-    case 'en service':
       return 'bg-green-500';
     case 'maintenance':
-    case 'en maintenance':
-      return 'bg-yellow-500';
+      return 'bg-amber-500';
+    case 'reserved':
+      return 'bg-blue-500';
     case 'out-of-service':
-    case 'hors service':
-    case 'unavailable':
-    case 'indisponible':
       return 'bg-red-500';
-    default:
+    case 'inactive':
       return 'bg-gray-500';
+    case 'available':
+      return 'bg-emerald-500';
+    default:
+      return 'bg-gray-400';
   }
 };
 
-// Generate a formatted vehicle ID
-export const generateVehicleId = (): string => {
-  const prefix = 'VEH';
-  const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
-  return `${prefix}-${random}`;
+// Function to check if vehicle needs maintenance
+export const needsMaintenance = (vehicle: TransportVehicle): boolean => {
+  if (!vehicle.lastServiceDate || !vehicle.nextServiceDate) return false;
+  
+  const nextService = new Date(vehicle.nextServiceDate);
+  const today = new Date();
+  
+  // Return true if next service date is within 7 days or past due
+  const daysUntilService = Math.ceil((nextService.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+  return daysUntilService <= 7;
 };
 
-// Calculate vehicle age in years from purchase date
-export const calculateVehicleAge = (purchaseDate: string): number => {
-  const purchase = new Date(purchaseDate);
-  const now = new Date();
-  return now.getFullYear() - purchase.getFullYear();
-};
-
-// Check if maintenance is due soon (within 30 days)
-export const isMaintenanceDueSoon = (nextServiceDate: string): boolean => {
-  const service = new Date(nextServiceDate);
-  const now = new Date();
-  const diffTime = service.getTime() - now.getTime();
-  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-  return diffDays > 0 && diffDays <= 30;
+// Function to format vehicle type for display
+export const formatVehicleType = (type: string): string => {
+  return type
+    .split('_')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
 };

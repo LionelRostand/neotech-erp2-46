@@ -10,13 +10,25 @@ import {
 // Export service types using export type syntax
 export type { TransportService, TransportServiceDetails };
 
-// Define TransportVehicle interface - fix status type to match expected values
-export interface TransportVehicle extends VehicleType {
-  status: 'active' | 'maintenance' | 'inactive' | 'out-of-service' | 'reserved' | 'available';
-}
-
-// Export TransportVehicleWithLocation type
-export interface TransportVehicleWithLocation extends TransportVehicle {
+// Define TransportVehicle interface - fixing status type to include 'inactive'
+export interface TransportVehicleWithLocation {
+  id: string;
+  name: string;
+  type: string;
+  licensePlate: string;
+  available: boolean;
+  status: 'active' | 'maintenance' | 'out-of-service' | 'reserved' | 'available' | 'inactive';
+  purchaseDate?: string;
+  lastServiceDate?: string;
+  nextServiceDate?: string;
+  mileage?: number;
+  insuranceInfo?: {
+    provider: string;
+    policyNumber: string;
+    expiryDate: string;
+  };
+  notes: any[];
+  capacity?: number;
   driverName?: string;
   location: {
     vehicleId: string;

@@ -15,4 +15,5 @@ export interface MapExtensionRequest {
   originalEndDate: string;
   requestedEndDate: string;
   extensionReason?: string;
+  requestId?: string; // Adding this field which is used in ExtensionRequestsList
 }
