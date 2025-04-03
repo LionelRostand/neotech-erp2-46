@@ -47,3 +47,13 @@ export interface TransportServiceDetails {
   vehicleTypes: string[];
   active: boolean;
 }
+
+// Add the TransportService interface that was missing
+export interface TransportService {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  type: string;
+  isActive: boolean;
+}

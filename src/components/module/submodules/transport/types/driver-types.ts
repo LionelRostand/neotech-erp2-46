@@ -18,6 +18,17 @@ export interface TransportDriver {
   available?: boolean;
   onLeave?: boolean;
   skills?: string[];
+  // Add missing properties that were causing errors
+  photo?: string;
+  preferredVehicleType?: string[];
+  performance?: {
+    completedTrips: number;
+    averageRating: number;
+    onTimePercentage: number;
+  };
+  licenseType?: string;
+  language?: string[];
+  licensesTypes?: string[];
 }
 
 export interface DriverNote {

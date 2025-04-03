@@ -5,10 +5,14 @@ import { orderBy } from 'firebase/firestore';
 import { 
   TransportDriver, 
   TransportVehicle,
-  TransportReservation,
+  TransportReservation
+} from '@/components/module/submodules/transport/types';
+
+// Import service-related types directly from service-types
+import {
   ServiceOption,
   ServiceAvailability
-} from '@/components/module/submodules/transport/types';
+} from '@/components/module/submodules/transport/types/service-types';
 
 /**
  * Hook to fetch data for the Transport module
