@@ -29,7 +29,8 @@ const mockReservations: TransportReservation[] = [
     price: 120,
     paymentStatus: 'paid',
     isPaid: true,
-    notes: ['Client VIP', 'Prévoir eau fraîche']
+    notes: ['Client VIP', 'Prévoir eau fraîche'],
+    requestId: 'req-001', // Adding required field
   },
   {
     id: 'res-002',
@@ -50,7 +51,8 @@ const mockReservations: TransportReservation[] = [
     price: 85,
     paymentStatus: 'pending',
     isPaid: false,
-    needsDriver: true
+    needsDriver: true,
+    requestId: 'req-002', // Adding required field
   }
 ];
 
@@ -58,8 +60,9 @@ const TransportReservations = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [reservations] = useState<TransportReservation[]>(mockReservations);
   
-  const handleViewDetails = (reservationId: string) => {
-    console.log('Viewing details for reservation:', reservationId);
+  // Update the handler to accept a TransportReservation
+  const handleViewDetails = (reservation: TransportReservation) => {
+    console.log('Viewing details for reservation:', reservation.id);
   };
   
   return (

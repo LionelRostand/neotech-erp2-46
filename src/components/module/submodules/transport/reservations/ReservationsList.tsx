@@ -1,145 +1,102 @@
-// ReservationsList.tsx
+
 import React from 'react';
 import {
   Table,
   TableBody,
-  TableCaption,
   TableCell,
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
-import { TransportReservation, Reservation } from '../types';
+} from '@/components/ui/table';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Eye } from 'lucide-react';
+import { TransportReservation } from '../types';
+import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
 
 interface ReservationsListProps {
-  reservations: (TransportReservation | Reservation)[];
-  onViewDetails: (reservation: TransportReservation | Reservation) => void;
+  reservations: TransportReservation[];
+  onViewDetails: (reservation: TransportReservation) => void;
 }
 
+const getStatusBadge = (status: string) => {
+  switch (status) {
+    case 'confirmed':
+      return <Badge className="bg-green-500">Confirmée</Badge>;
+    case 'pending':
+      return <Badge className="bg-yellow-500">En attente</Badge>;
+    case 'cancelled':
+      return <Badge className="bg-red-500">Annulée</Badge>;
+    case 'completed':
+      return <Badge className="bg-blue-500">Terminée</Badge>;
+    default:
+      return <Badge>{status}</Badge>;
+  }
+};
+
 const ReservationsList: React.FC<ReservationsListProps> = ({ reservations, onViewDetails }) => {
-
-  // Mock data for demonstration purposes
-  const mockReservations: Reservation[] = [
-    {
-      id: "res1",
-      clientId: "client1",
-      clientName: "Acme Corporation",
-      vehicleId: "vehicle1",
-      driverId: "driver1",
-      startDate: "2023-08-15",
-      endDate: "2023-08-16",
-      status: "confirmed",
-      pickupLocation: "123 Main St, Paris",
-      dropoffLocation: "456 Elm St, Paris",
-      totalAmount: 250,
-      paymentStatus: "paid",
-      createdAt: "2023-08-10",
-      notes: ["Client requested water bottles"]
-    },
-    {
-      id: "res2",
-      clientId: "client2",
-      clientName: "Beta Industries",
-      vehicleId: "vehicle2",
-      driverId: "driver2",
-      startDate: "2023-08-20",
-      endDate: "2023-08-21",
-      status: "pending",
-      pickupLocation: "789 Oak St, London",
-      dropoffLocation: "101 Pine St, London",
-      totalAmount: 300,
-      paymentStatus: "pending",
-      createdAt: "2023-08-12",
-      notes: ["Waiting for client confirmation"]
-    },
-  ];
-
-  // Mock transport reservations should use the correct structure
-  const mockTransportReservations: TransportReservation[] = [
-    {
-      id: "tres1",
-      clientId: "client1",
-      clientName: "Acme Corporation",
-      vehicleId: "vehicle1",
-      vehicleName: "Mercedes Sprinter",
-      driverId: "driver1",
-      driverName: "Jean Dupont",
-      status: "confirmed",
-      date: "2023-08-15",
-      time: "09:00",
-      pickup: { address: "123 Main St, Paris", datetime: "2023-08-15T09:00:00" },
-      dropoff: { address: "456 Elm St, Paris", datetime: "2023-08-15T17:00:00" },
-      service: "airport",
-      amount: 250,
-      price: 250,
-      paymentStatus: "paid",
-      isPaid: true,
-      needsDriver: true,
-      contractGenerated: true,
-      createdAt: "2023-08-10",
-      notes: ["Client requested water bottles"]
-    },
-    {
-      id: "tres2",
-      clientId: "client2",
-      clientName: "Beta Industries",
-      vehicleId: "vehicle2",
-      vehicleName: "BMW X5",
-      driverId: "driver2",
-      driverName: "Marie Martin",
-      status: "pending",
-      date: "2023-08-20",
-      time: "14:00",
-      pickup: { address: "789 Oak St, London", datetime: "2023-08-20T14:00:00" },
-      dropoff: { address: "101 Pine St, London", datetime: "2023-08-20T22:00:00" },
-      service: "business",
-      amount: 300,
-      price: 300,
-      paymentStatus: "pending",
-      isPaid: false,
-      needsDriver: true,
-      contractGenerated: false,
-      createdAt: "2023-08-12",
-      notes: ["Waiting for client confirmation"]
-    },
-  ];
+  const formatDate = (dateString: string) => {
+    try {
+      return format(new Date(dateString), 'PP', { locale: fr });
+    } catch (e) {
+      return dateString;
+    }
+  };
 
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>ID</TableHead>
-          <TableHead>Client</TableHead>
-          <TableHead>Date</TableHead>
-          <TableHead>Status</TableHead>
-          <TableHead>Actions</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {mockReservations.map((reservation) => (
-          <TableRow key={reservation.id}>
-            <TableCell>{reservation.id}</TableCell>
-            <TableCell>{reservation.clientName}</TableCell>
-            <TableCell>{reservation.startDate}</TableCell>
-            <TableCell>{reservation.status}</TableCell>
-            <TableCell>
-              <button onClick={() => onViewDetails(reservation)}>View Details</button>
-            </TableCell>
+    <div className="rounded-md border">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Référence</TableHead>
+            <TableHead>Client</TableHead>
+            <TableHead>Date</TableHead>
+            <TableHead>Destination</TableHead>
+            <TableHead>Véhicule</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead>Paiement</TableHead>
+            <TableHead className="text-right">Actions</TableHead>
           </TableRow>
-        ))}
-        {mockTransportReservations.map((reservation) => (
-          <TableRow key={reservation.id}>
-            <TableCell>{reservation.id}</TableCell>
-            <TableCell>{reservation.clientName}</TableCell>
-            <TableCell>{reservation.date}</TableCell>
-            <TableCell>{reservation.status}</TableCell>
-            <TableCell>
-              <button onClick={() => onViewDetails(reservation)}>View Details</button>
-            </TableCell>
-          </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+        </TableHeader>
+        <TableBody>
+          {reservations.map((reservation) => (
+            <TableRow key={reservation.id}>
+              <TableCell className="font-medium">{reservation.id}</TableCell>
+              <TableCell>{reservation.clientName}</TableCell>
+              <TableCell>{formatDate(reservation.date)}</TableCell>
+              <TableCell className="max-w-[200px] truncate">
+                {typeof reservation.dropoff === 'string' ? reservation.dropoff : reservation.dropoff.address}
+              </TableCell>
+              <TableCell>{reservation.vehicleName}</TableCell>
+              <TableCell>{getStatusBadge(reservation.status)}</TableCell>
+              <TableCell>
+                <Badge variant={reservation.isPaid ? "outline" : "secondary"}>
+                  {reservation.isPaid ? "Payée" : "En attente"}
+                </Badge>
+              </TableCell>
+              <TableCell className="text-right">
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => onViewDetails(reservation)}
+                >
+                  <Eye className="h-4 w-4 mr-2" />
+                  Détails
+                </Button>
+              </TableCell>
+            </TableRow>
+          ))}
+          {reservations.length === 0 && (
+            <TableRow>
+              <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                Aucune réservation trouvée
+              </TableCell>
+            </TableRow>
+          )}
+        </TableBody>
+      </Table>
+    </div>
   );
 };
 
