@@ -6,7 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { WebBookingConfig } from '../types/web-booking-types';
 import { ColorPicker } from '../../website/editor/ColorPicker';
-import { PlusCircle, Trash2, DragHandleDots2 } from 'lucide-react';
+import { PlusCircle, Trash2, GripVertical } from 'lucide-react';
 
 interface WebBookingEditorSidebarProps {
   config: WebBookingConfig;
@@ -36,7 +36,7 @@ const WebBookingEditorSidebar: React.FC<WebBookingEditorSidebarProps> = ({
           <div className="border rounded-md p-3 bg-background hover:bg-accent/20 cursor-pointer">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <DragHandleDots2 className="h-5 w-5 text-muted-foreground" />
+                <GripVertical className="h-5 w-5 text-muted-foreground" />
                 <span>En-tête</span>
               </div>
             </div>
@@ -45,7 +45,7 @@ const WebBookingEditorSidebar: React.FC<WebBookingEditorSidebarProps> = ({
           <div className="border rounded-md p-3 bg-background hover:bg-accent/20 cursor-pointer">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <DragHandleDots2 className="h-5 w-5 text-muted-foreground" />
+                <GripVertical className="h-5 w-5 text-muted-foreground" />
                 <span>Bannière</span>
               </div>
             </div>
@@ -54,7 +54,7 @@ const WebBookingEditorSidebar: React.FC<WebBookingEditorSidebarProps> = ({
           <div className="border rounded-md p-3 bg-background hover:bg-accent/20 cursor-pointer">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <DragHandleDots2 className="h-5 w-5 text-muted-foreground" />
+                <GripVertical className="h-5 w-5 text-muted-foreground" />
                 <span>Formulaire de réservation</span>
               </div>
             </div>
@@ -63,7 +63,7 @@ const WebBookingEditorSidebar: React.FC<WebBookingEditorSidebarProps> = ({
           <div className="border rounded-md p-3 bg-background hover:bg-accent/20 cursor-pointer">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <DragHandleDots2 className="h-5 w-5 text-muted-foreground" />
+                <GripVertical className="h-5 w-5 text-muted-foreground" />
                 <span>Nos services</span>
               </div>
             </div>
@@ -72,7 +72,7 @@ const WebBookingEditorSidebar: React.FC<WebBookingEditorSidebarProps> = ({
           <div className="border rounded-md p-3 bg-background hover:bg-accent/20 cursor-pointer">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <DragHandleDots2 className="h-5 w-5 text-muted-foreground" />
+                <GripVertical className="h-5 w-5 text-muted-foreground" />
                 <span>Pied de page</span>
               </div>
             </div>
