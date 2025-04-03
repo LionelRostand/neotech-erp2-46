@@ -1,91 +1,69 @@
 
 import { useMemo } from 'react';
 import { useHrModuleData } from './useHrModuleData';
-import { formatDistanceToNow } from 'date-fns';
+import { TimeReport, TimeReportStatus } from '@/types/timesheet';
+import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { TimeReport } from '@/types/timesheet';
 
 /**
  * Hook pour accéder aux données des feuilles de temps
- * Ce hook est un wrapper autour de useHrModuleData qui facilite
- * l'accès aux données spécifiques des feuilles de temps
  */
 export const useTimeSheetData = () => {
-  const {
-    timeSheets,
-    employees,
-    isLoading,
-    error
-  } = useHrModuleData();
-
-  // Traitement pour enrichir les feuilles de temps avec les informations des employés
-  const enrichedTimeSheets = useMemo(() => {
-    if (!timeSheets || !employees) return [];
-
-    return timeSheets.map(sheet => {
-      // Conserver toutes les propriétés d'origine de la feuille de temps
-      const enrichedSheet = { ...sheet };
+  const { timeSheets, employees, isLoading, error } = useHrModuleData();
+  
+  // Enrichir les feuilles de temps avec les noms des employés
+  const formattedTimeSheets = useMemo(() => {
+    if (!timeSheets || timeSheets.length === 0) return [];
+    if (!employees || employees.length === 0) return timeSheets;
+    
+    return timeSheets.map(timeSheet => {
+      const employee = employees.find(emp => emp.id === timeSheet.employeeId);
       
-      // Trouver l'employé correspondant
-      const employee = employees.find(emp => emp.id === sheet.employeeId);
-      
-      // Calculer quand la feuille a été mise à jour pour la dernière fois
-      const lastUpdateText = sheet.updatedAt 
-        ? formatDistanceToNow(new Date(sheet.updatedAt), { addSuffix: true, locale: fr })
-        : 'Date inconnue';
-      
-      // Ajouter les informations enrichies
-      enrichedSheet.employeeName = employee ? `${employee.firstName} ${employee.lastName}` : sheet.employeeId || 'Inconnu';
-      enrichedSheet.employeePhoto = employee?.photo || employee?.photoURL;
-      enrichedSheet.lastUpdateText = lastUpdateText;
-      
-      return enrichedSheet;
-    }) as TimeReport[];
+      // S'assurer que toutes les propriétés nécessaires sont présentes
+      return {
+        ...timeSheet, // Garder toutes les propriétés existantes
+        id: timeSheet.id,
+        title: timeSheet.title,
+        startDate: timeSheet.startDate,
+        endDate: timeSheet.endDate,
+        totalHours: timeSheet.totalHours || 0,
+        status: timeSheet.status as TimeReportStatus,
+        lastUpdated: timeSheet.updatedAt || timeSheet.lastUpdated || timeSheet.createdAt || new Date().toISOString(),
+        employeeName: employee ? `${employee.firstName} ${employee.lastName}` : (timeSheet.employeeName || 'Employé inconnu'),
+        employeePhoto: employee?.photoURL || employee?.photo || '',
+        lastUpdateText: formatDate(timeSheet.updatedAt || timeSheet.lastUpdated || timeSheet.createdAt || new Date().toISOString())
+      } as TimeReport;
+    });
   }, [timeSheets, employees]);
   
-  // Organiser les feuilles de temps par statut
-  const timeSheetsByStatus = useMemo(() => {
-    const result: Record<string, TimeReport[]> = {
-      'En cours': [],
-      'Soumis': [],
-      'Validé': [],
-      'Rejeté': []
-    };
-    
-    if (enrichedTimeSheets && enrichedTimeSheets.length > 0) {
-      enrichedTimeSheets.forEach(sheet => {
-        if (sheet.status && result[sheet.status]) {
-          result[sheet.status].push(sheet);
-        } else {
-          result['En cours'].push(sheet);
-        }
-      });
-    }
-    
-    return result;
-  }, [enrichedTimeSheets]);
-
-  // Obtenir les statistiques des feuilles de temps
-  const timeSheetStats = useMemo(() => {
-    const totalTimeSheets = enrichedTimeSheets.length;
-    const pendingApproval = enrichedTimeSheets.filter(sheet => sheet.status === 'Soumis').length;
-    const approved = enrichedTimeSheets.filter(sheet => sheet.status === 'Validé').length;
-    const rejected = enrichedTimeSheets.filter(sheet => sheet.status === 'Rejeté').length;
+  // Filtrer les feuilles de temps par statut
+  const getTimesheetsByStatus = useMemo(() => {
+    const pending = formattedTimeSheets.filter(ts => ts.status === "Soumis");
+    const active = formattedTimeSheets.filter(ts => ts.status === "En cours");
+    const validated = formattedTimeSheets.filter(ts => ts.status === "Validé");
+    const rejected = formattedTimeSheets.filter(ts => ts.status === "Rejeté");
     
     return {
-      totalTimeSheets,
-      pendingApproval,
-      approved,
+      pending,
+      active,
+      validated,
       rejected,
-      completionRate: totalTimeSheets > 0 ? Math.round((approved / totalTimeSheets) * 100) : 0
+      all: formattedTimeSheets
     };
-  }, [enrichedTimeSheets]);
-
+  }, [formattedTimeSheets]);
+  
+  // Fonction pour formater la date
+  const formatDate = (dateString: string) => {
+    try {
+      return format(new Date(dateString), 'dd MMM yyyy', { locale: fr });
+    } catch (error) {
+      return dateString;
+    }
+  };
+  
   return {
-    timeSheets: enrichedTimeSheets,
-    rawTimeSheets: timeSheets || [],
-    timeSheetsByStatus,
-    timeSheetStats,
+    timeSheets: formattedTimeSheets,
+    timesheetsByStatus: getTimesheetsByStatus,
     isLoading,
     error
   };
