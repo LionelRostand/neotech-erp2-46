@@ -5,13 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Plus, Trash2, GripVertical, ChevronUp, ChevronDown } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-
-interface MenuItem {
-  id: string;
-  label: string;
-  url: string;
-  isActive: boolean;
-}
+import { MenuItem } from '../types/web-booking-types';
 
 interface MenuEditorProps {
   initialMenuItems?: MenuItem[];
@@ -21,10 +15,10 @@ interface MenuEditorProps {
 const MenuEditor: React.FC<MenuEditorProps> = ({ initialMenuItems = [], onMenuChange }) => {
   const { toast } = useToast();
   const [menuItems, setMenuItems] = useState<MenuItem[]>(initialMenuItems.length > 0 ? initialMenuItems : [
-    { id: '1', label: 'Accueil', url: '/', isActive: true },
-    { id: '2', label: 'Nos Véhicules', url: '/vehicules', isActive: true },
-    { id: '3', label: 'Tarifs', url: '/tarifs', isActive: true },
-    { id: '4', label: 'Contact', url: '/contact', isActive: true },
+    { id: '1', label: 'Accueil', url: '/', isExternal: false, isActive: true },
+    { id: '2', label: 'Nos Véhicules', url: '/vehicules', isExternal: false, isActive: true },
+    { id: '3', label: 'Tarifs', url: '/tarifs', isExternal: false, isActive: true },
+    { id: '4', label: 'Contact', url: '/contact', isExternal: false, isActive: true },
   ]);
   const [draggedItemIndex, setDraggedItemIndex] = useState<number | null>(null);
 
@@ -33,6 +27,7 @@ const MenuEditor: React.FC<MenuEditorProps> = ({ initialMenuItems = [], onMenuCh
       id: `item-${Date.now()}`,
       label: 'Nouveau menu',
       url: '/nouveau',
+      isExternal: false,
       isActive: true,
     };
     const newMenuItems = [...menuItems, newItem];

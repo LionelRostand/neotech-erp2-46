@@ -35,11 +35,12 @@ export const TransportRoutes = (
     <Route path="web-booking" element={<WithPatches><SubmodulePage moduleId={7} submoduleId="transport-web-booking" /></WithPatches>} />
     <Route path="settings" element={<TransportSettingsWrapper />} />
     
-    {/* Web Booking Site Preview Routes - catch any public site routes in preview */}
+    {/* Web Booking Site Preview Routes - catch all preview paths properly */}
     <Route path="web-booking/preview" element={<WithPatches><WebBookingPreview isEditing={false} preview={true} /></WithPatches>} />
     <Route path="web-booking/preview/vehicules" element={<WithPatches><WebBookingPreview isEditing={false} preview={true} currentPage="vehicules" /></WithPatches>} />
     <Route path="web-booking/preview/tarifs" element={<WithPatches><WebBookingPreview isEditing={false} preview={true} currentPage="tarifs" /></WithPatches>} />
     <Route path="web-booking/preview/contact" element={<WithPatches><WebBookingPreview isEditing={false} preview={true} currentPage="contact" /></WithPatches>} />
+    <Route path="web-booking/edit" element={<WithPatches><WebBookingPreview isEditing={true} /></WithPatches>} />
     
     {/* Catch any other transport paths with a 404 */}
     <Route path="*" element={<NotFound />} />
