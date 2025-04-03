@@ -86,7 +86,7 @@ export const useCompaniesData = () => {
     return companies.map(company => {
       // Calculer le nombre d'employés pour cette entreprise
       const companyEmployeesCount = employees 
-        ? employees.filter(emp => emp.companyId === company.id || emp.company === company.id).length
+        ? employees.filter(emp => emp.company === company.id || emp.company === company.name).length
         : 0;
       
       return {
