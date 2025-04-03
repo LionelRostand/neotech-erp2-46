@@ -2,257 +2,203 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from '@/components/ui/select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { CalendarIcon } from 'lucide-react';
-import { format } from 'date-fns';
+import { format, startOfWeek, endOfWeek, addDays } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useHrModuleData } from '@/hooks/useHrModuleData';
+import { Calendar as CalendarIcon } from 'lucide-react';
+import { DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 interface TimesheetFormProps {
   onSubmit: (data: any) => void;
   onCancel: () => void;
-  initialData?: any;
-  isEditing?: boolean;
 }
 
-const TimesheetForm: React.FC<TimesheetFormProps> = ({ 
-  onSubmit, 
-  onCancel,
-  initialData,
-  isEditing = false
-}) => {
-  const { employees } = useHrModuleData();
-  const [activeTab, setActiveTab] = useState('details');
-  
+const TimesheetForm: React.FC<TimesheetFormProps> = ({ onSubmit, onCancel }) => {
   const [formData, setFormData] = useState({
-    title: initialData?.title || '',
-    employeeId: initialData?.employeeId || '',
-    startDate: initialData?.startDate ? new Date(initialData.startDate) : new Date(),
-    endDate: initialData?.endDate ? new Date(initialData.endDate) : new Date(),
-    totalHours: initialData?.totalHours || 40,
-    status: initialData?.status || 'En cours',
-    description: initialData?.description || '',
-    tasks: initialData?.tasks || '',
-    comments: initialData?.comments || ''
+    employeeId: '',
+    employeeName: '',
+    weekStartDate: startOfWeek(new Date(), { weekStartsOn: 1 }),
+    status: 'pending',
+    hours: {
+      monday: 8,
+      tuesday: 8,
+      wednesday: 8,
+      thursday: 8,
+      friday: 8,
+      saturday: 0,
+      sunday: 0,
+    },
+    totalHours: 40,
+    notes: '',
+    createdAt: new Date(),
   });
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+  const [weekStartDateOpen, setWeekStartDateOpen] = useState(false);
+
+  const handleChange = (field: string, value: any) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleSelectChange = (name: string, value: any) => {
-    setFormData(prev => ({ ...prev, [name]: value }));
+  const handleHoursChange = (day: string, value: string) => {
+    const numValue = parseFloat(value) || 0;
+    const newHours = { ...formData.hours, [day]: numValue };
+    
+    // Calculate total hours
+    const totalHours = Object.values(newHours).reduce((sum, val) => sum + val, 0);
+    
+    setFormData(prev => ({
+      ...prev,
+      hours: newHours,
+      totalHours
+    }));
   };
 
-  const handleDateChange = (name: string, date: Date | undefined) => {
-    if (date) {
-      setFormData(prev => ({ ...prev, [name]: date }));
-    }
+  const handleWeekSelection = (date: Date) => {
+    const weekStart = startOfWeek(date, { weekStartsOn: 1 });
+    setFormData(prev => ({
+      ...prev,
+      weekStartDate: weekStart
+    }));
+    setWeekStartDateOpen(false);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Transformer les dates en format ISO pour le stockage
-    const dataToSubmit = {
-      ...formData,
-      startDate: formData.startDate.toISOString().split('T')[0],
-      endDate: formData.endDate.toISOString().split('T')[0]
-    };
-    
-    onSubmit(dataToSubmit);
+    onSubmit(formData);
   };
 
+  // Calculate week end date
+  const weekEndDate = endOfWeek(formData.weekStartDate, { weekStartsOn: 1 });
+
+  // Get day names for the selected week
+  const dayNames = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'];
+  const dayKeys = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+  
+  // Format dates for display
+  const dayDates = dayKeys.map((_, index) => 
+    format(addDays(formData.weekStartDate, index), 'dd/MM', { locale: fr })
+  );
+
   return (
-    <form onSubmit={handleSubmit}>
+    <form onSubmit={handleSubmit} className="space-y-4">
       <DialogHeader>
-        <DialogTitle>{isEditing ? 'Modifier' : 'Créer'} une feuille de temps</DialogTitle>
+        <DialogTitle>Nouvelle feuille de temps</DialogTitle>
       </DialogHeader>
       
-      <Tabs defaultValue="details" value={activeTab} onValueChange={setActiveTab} className="pt-4">
-        <TabsList className="grid grid-cols-3 mb-6">
-          <TabsTrigger value="details">Détails</TabsTrigger>
-          <TabsTrigger value="tasks">Tâches</TabsTrigger>
-          <TabsTrigger value="comments">Commentaires</TabsTrigger>
-        </TabsList>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label htmlFor="employeeName" className="block text-sm font-medium mb-1">
+            Employé
+          </label>
+          <Input 
+            id="employeeName" 
+            placeholder="Nom de l'employé"
+            value={formData.employeeName}
+            onChange={(e) => handleChange('employeeName', e.target.value)}
+            required
+          />
+        </div>
         
-        <TabsContent value="details" className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="title">Titre</Label>
-            <Input
-              id="title"
-              name="title"
-              value={formData.title}
-              onChange={handleInputChange}
-              placeholder="Titre de la feuille de temps"
-              required
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="employeeId">Employé</Label>
-            <Select 
-              value={formData.employeeId} 
-              onValueChange={value => handleSelectChange('employeeId', value)}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Sélectionner un employé" />
-              </SelectTrigger>
-              <SelectContent>
-                {employees?.map(employee => (
-                  <SelectItem key={employee.id} value={employee.id}>
-                    {employee.firstName} {employee.lastName}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>Date de début</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className="w-full justify-start text-left"
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {formData.startDate 
-                      ? format(formData.startDate, 'PPP', { locale: fr }) 
-                      : "Sélectionnez une date"}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0">
-                  <Calendar
-                    mode="single"
-                    selected={formData.startDate}
-                    onSelect={date => handleDateChange('startDate', date)}
-                    locale={fr}
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
-            
-            <div className="space-y-2">
-              <Label>Date de fin</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className="w-full justify-start text-left"
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {formData.endDate 
-                      ? format(formData.endDate, 'PPP', { locale: fr }) 
-                      : "Sélectionnez une date"}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0">
-                  <Calendar
-                    mode="single"
-                    selected={formData.endDate}
-                    onSelect={date => handleDateChange('endDate', date)}
-                    locale={fr}
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="totalHours">Heures totales</Label>
-              <Input
-                id="totalHours"
-                name="totalHours"
+        <div>
+          <label className="block text-sm font-medium mb-1">
+            Semaine commençant le
+          </label>
+          <Popover open={weekStartDateOpen} onOpenChange={setWeekStartDateOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                className="w-full justify-start text-left font-normal"
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {format(formData.weekStartDate, "dd/MM/yyyy")} - {format(weekEndDate, "dd/MM/yyyy")}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0">
+              <Calendar
+                mode="single"
+                selected={formData.weekStartDate}
+                onSelect={handleWeekSelection}
+                initialFocus
+                locale={fr}
+                weekStartsOn={1}
+              />
+            </PopoverContent>
+          </Popover>
+        </div>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium mb-3">
+          Heures travaillées
+        </label>
+        <div className="grid grid-cols-7 gap-2">
+          {dayNames.map((day, index) => (
+            <div key={day} className="flex flex-col items-center">
+              <span className="text-xs font-medium">{day}</span>
+              <span className="text-xs text-gray-500 mb-1">{dayDates[index]}</span>
+              <Input 
                 type="number"
-                value={formData.totalHours}
-                onChange={handleInputChange}
-                min={0}
-                required
+                min="0"
+                max="24"
+                step="0.5"
+                value={formData.hours[dayKeys[index] as keyof typeof formData.hours]}
+                onChange={(e) => handleHoursChange(dayKeys[index], e.target.value)}
+                className="w-full text-center"
               />
             </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="status">Statut</Label>
-              <Select 
-                value={formData.status} 
-                onValueChange={value => handleSelectChange('status', value)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Statut" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="En cours">En cours</SelectItem>
-                  <SelectItem value="Soumis">Soumis</SelectItem>
-                  <SelectItem value="Validé">Validé</SelectItem>
-                  <SelectItem value="Rejeté">Rejeté</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
-            <textarea
-              id="description"
-              name="description"
-              value={formData.description}
-              onChange={handleInputChange}
-              placeholder="Description de la feuille de temps"
-              className="w-full min-h-[100px] px-3 py-2 border rounded-md resize-none"
-            />
-          </div>
-        </TabsContent>
+          ))}
+        </div>
+      </div>
+
+      <div className="flex justify-between items-center">
+        <div>
+          <label htmlFor="status" className="block text-sm font-medium mb-1">
+            Statut
+          </label>
+          <Select 
+            value={formData.status}
+            onValueChange={(value) => handleChange('status', value)}
+          >
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Sélectionner un statut" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="pending">En attente</SelectItem>
+              <SelectItem value="active">En cours</SelectItem>
+              <SelectItem value="validated">Validée</SelectItem>
+              <SelectItem value="rejected">Rejetée</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
         
-        <TabsContent value="tasks" className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="tasks">Tâches réalisées</Label>
-            <textarea
-              id="tasks"
-              name="tasks"
-              value={formData.tasks}
-              onChange={handleInputChange}
-              placeholder="Liste des tâches réalisées pendant cette période..."
-              className="w-full min-h-[200px] px-3 py-2 border rounded-md resize-none"
-            />
-          </div>
-        </TabsContent>
-        
-        <TabsContent value="comments" className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="comments">Commentaires</Label>
-            <textarea
-              id="comments"
-              name="comments"
-              value={formData.comments}
-              onChange={handleInputChange}
-              placeholder="Commentaires additionnels..."
-              className="w-full min-h-[200px] px-3 py-2 border rounded-md resize-none"
-            />
-          </div>
-        </TabsContent>
-      </Tabs>
-      
-      <DialogFooter className="pt-6">
+        <div className="text-right">
+          <span className="block text-sm font-medium mb-1">Total des heures</span>
+          <span className="text-2xl font-bold">{formData.totalHours}h</span>
+        </div>
+      </div>
+
+      <div>
+        <label htmlFor="notes" className="block text-sm font-medium mb-1">
+          Notes
+        </label>
+        <Textarea 
+          id="notes"
+          placeholder="Notes ou commentaires"
+          value={formData.notes}
+          onChange={(e) => handleChange('notes', e.target.value)}
+          rows={3}
+        />
+      </div>
+
+      <DialogFooter>
         <Button type="button" variant="outline" onClick={onCancel}>
           Annuler
         </Button>
         <Button type="submit">
-          {isEditing ? 'Mettre à jour' : 'Créer'}
+          Soumettre
         </Button>
       </DialogFooter>
     </form>

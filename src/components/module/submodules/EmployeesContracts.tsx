@@ -18,14 +18,48 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { toast } from 'sonner';
 import { useContractsData } from '@/hooks/useContractsData';
+import CreateContractDialog from './contracts/CreateContractDialog';
+import { exportToExcel } from '@/utils/exportUtils';
+import { exportToPdf } from '@/utils/pdfUtils';
 
 const EmployeesContracts: React.FC = () => {
   const [activeTab, setActiveTab] = useState('actifs');
   const { contracts, stats, isLoading, error } = useContractsData();
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
 
-  const handleExportData = () => {
-    toast.success("Export des contrats démarré");
-    // Logique d'export à implémenter
+  const handleExportData = (format: 'excel' | 'pdf') => {
+    const filteredContracts = activeTab === 'tous' 
+      ? contracts 
+      : activeTab === 'actifs'
+      ? contracts.filter(contract => contract.status === 'Actif')
+      : activeTab === 'futurs'
+      ? contracts.filter(contract => contract.status === 'À venir')
+      : contracts.filter(contract => contract.status === 'Expiré');
+    
+    if (format === 'excel') {
+      exportToExcel(
+        filteredContracts, 
+        'Contrats', 
+        'liste_contrats'
+      );
+      toast.success("Export Excel en cours...");
+    } else {
+      exportToPdf(
+        filteredContracts, 
+        'Liste des Contrats', 
+        'liste_contrats'
+      );
+      toast.success("Export PDF en cours...");
+    }
+  };
+
+  const handleCreateNew = () => {
+    setShowCreateDialog(true);
+  };
+
+  const handleRefresh = () => {
+    toast.success("Données actualisées");
+    // Les données sont automatiquement rechargées grâce au hook useContractsData
   };
 
   if (isLoading) {
@@ -61,7 +95,7 @@ const EmployeesContracts: React.FC = () => {
           <h2 className="text-2xl font-bold">Gestion des contrats</h2>
           <p className="text-gray-500">Contrats et conditions d'emploi</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <Button variant="outline" size="sm">
             <ListFilter className="h-4 w-4 mr-2" />
             Filtres
@@ -69,12 +103,20 @@ const EmployeesContracts: React.FC = () => {
           <Button 
             variant="outline" 
             size="sm" 
-            onClick={handleExportData}
+            onClick={() => handleExportData('excel')}
           >
             <Download className="h-4 w-4 mr-2" />
-            Exporter
+            Exporter Excel
           </Button>
-          <Button size="sm">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => handleExportData('pdf')}
+          >
+            <Download className="h-4 w-4 mr-2" />
+            Exporter PDF
+          </Button>
+          <Button size="sm" onClick={handleCreateNew}>
             <Plus className="h-4 w-4 mr-2" />
             Nouveau contrat
           </Button>
@@ -215,6 +257,13 @@ const EmployeesContracts: React.FC = () => {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Dialog for creating a new contract */}
+      <CreateContractDialog 
+        open={showCreateDialog}
+        onOpenChange={setShowCreateDialog}
+        onSuccess={handleRefresh}
+      />
     </div>
   );
 };
