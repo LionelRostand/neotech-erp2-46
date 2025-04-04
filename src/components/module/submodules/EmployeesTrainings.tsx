@@ -18,14 +18,84 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { toast } from 'sonner';
 import { useTrainingsData } from '@/hooks/useTrainingsData';
+import CreateTrainingDialog from './trainings/CreateTrainingDialog';
+import TrainingsFilter from './trainings/TrainingsFilter';
+import ExportTrainingsDialog from './trainings/ExportTrainingsDialog';
 
 const EmployeesTrainings: React.FC = () => {
   const [activeTab, setActiveTab] = useState('formations');
   const { trainings, stats, isLoading, error } = useTrainingsData();
+  const [filteredTrainings, setFilteredTrainings] = useState(trainings);
+  const [filters, setFilters] = useState({});
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [showFilterDialog, setShowFilterDialog] = useState(false);
+  const [showExportDialog, setShowExportDialog] = useState(false);
+
+  React.useEffect(() => {
+    setFilteredTrainings(trainings);
+  }, [trainings]);
+
+  const applyFilters = (newFilters: any) => {
+    setFilters(newFilters);
+    
+    // Appliquer les filtres sur les données
+    if (Object.keys(newFilters).length === 0) {
+      setFilteredTrainings(trainings);
+      return;
+    }
+    
+    const filtered = trainings.filter(training => {
+      let pass = true;
+      
+      if (newFilters.employee && training.employeeName) {
+        pass = pass && training.employeeName.toLowerCase().includes(newFilters.employee.toLowerCase());
+      }
+      
+      if (newFilters.title && training.title) {
+        pass = pass && training.title.toLowerCase().includes(newFilters.title.toLowerCase());
+      }
+      
+      if (newFilters.type && training.type) {
+        pass = pass && training.type === newFilters.type;
+      }
+      
+      if (newFilters.department && training.department) {
+        pass = pass && training.department === newFilters.department;
+      }
+      
+      if (newFilters.status) {
+        pass = pass && training.status === newFilters.status;
+      }
+      
+      if (newFilters.provider && training.provider) {
+        pass = pass && training.provider.toLowerCase().includes(newFilters.provider.toLowerCase());
+      }
+      
+      if (newFilters.dateFrom) {
+        const trainingDate = new Date(training.startDate.split('/').reverse().join('-'));
+        const fromDate = new Date(newFilters.dateFrom);
+        pass = pass && trainingDate >= fromDate;
+      }
+      
+      if (newFilters.dateTo) {
+        const trainingDate = new Date(training.startDate.split('/').reverse().join('-'));
+        const toDate = new Date(newFilters.dateTo);
+        pass = pass && trainingDate <= toDate;
+      }
+      
+      if (newFilters.certificate) {
+        const certValue = newFilters.certificate === 'true';
+        pass = pass && training.certificate === certValue;
+      }
+      
+      return pass;
+    });
+    
+    setFilteredTrainings(filtered);
+  };
 
   const handleExportData = () => {
-    toast.success("Export des données de formations démarré");
-    // Logique d'export à implémenter
+    setShowExportDialog(true);
   };
 
   if (isLoading) {
@@ -54,19 +124,31 @@ const EmployeesTrainings: React.FC = () => {
           <p className="text-gray-500">Planification et suivi des formations professionnelles</p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm">
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => setShowFilterDialog(true)}
+          >
             <ListFilter className="h-4 w-4 mr-2" />
             Filtres
+            {Object.keys(filters).length > 0 && (
+              <span className="ml-1 h-5 w-5 rounded-full bg-primary text-[10px] text-primary-foreground flex items-center justify-center">
+                {Object.keys(filters).length}
+              </span>
+            )}
           </Button>
           <Button 
             variant="outline" 
-            size="sm" 
+            size="sm"
             onClick={handleExportData}
           >
             <Download className="h-4 w-4 mr-2" />
             Exporter
           </Button>
-          <Button size="sm">
+          <Button 
+            size="sm"
+            onClick={() => setShowCreateDialog(true)}
+          >
             <Plus className="h-4 w-4 mr-2" />
             Nouvelle formation
           </Button>
@@ -160,8 +242,8 @@ const EmployeesTrainings: React.FC = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {trainings.length > 0 ? (
-                      trainings.map((training) => (
+                    {filteredTrainings.length > 0 ? (
+                      filteredTrainings.map((training) => (
                         <TableRow key={training.id}>
                           <TableCell className="font-medium">
                             <div className="flex items-center space-x-3">
@@ -240,6 +322,24 @@ const EmployeesTrainings: React.FC = () => {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Dialog Modals */}
+      <CreateTrainingDialog
+        open={showCreateDialog}
+        onOpenChange={setShowCreateDialog}
+      />
+      
+      <TrainingsFilter
+        open={showFilterDialog}
+        onOpenChange={setShowFilterDialog}
+        onApplyFilters={applyFilters}
+      />
+      
+      <ExportTrainingsDialog
+        open={showExportDialog}
+        onOpenChange={setShowExportDialog}
+        data={filteredTrainings}
+      />
     </div>
   );
 };

@@ -18,14 +18,75 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { toast } from 'sonner';
 import { useEvaluationsData } from '@/hooks/useEvaluationsData';
+import CreateEvaluationDialog from './evaluations/CreateEvaluationDialog';
+import EvaluationsFilter from './evaluations/EvaluationsFilter';
+import ExportEvaluationsDialog from './evaluations/ExportEvaluationsDialog';
 
 const EmployeesEvaluations: React.FC = () => {
   const [activeTab, setActiveTab] = useState('evaluations');
   const { evaluations, stats, isLoading, error } = useEvaluationsData();
+  const [filteredEvaluations, setFilteredEvaluations] = useState(evaluations);
+  const [filters, setFilters] = useState({});
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [showFilterDialog, setShowFilterDialog] = useState(false);
+  const [showExportDialog, setShowExportDialog] = useState(false);
+
+  React.useEffect(() => {
+    setFilteredEvaluations(evaluations);
+  }, [evaluations]);
+
+  const applyFilters = (newFilters: any) => {
+    setFilters(newFilters);
+    
+    // Appliquer les filtres sur les données
+    if (Object.keys(newFilters).length === 0) {
+      setFilteredEvaluations(evaluations);
+      return;
+    }
+    
+    const filtered = evaluations.filter(eval => {
+      let pass = true;
+      
+      if (newFilters.employee && eval.employeeName) {
+        pass = pass && eval.employeeName.toLowerCase().includes(newFilters.employee.toLowerCase());
+      }
+      
+      if (newFilters.department && eval.department) {
+        pass = pass && eval.department === newFilters.department;
+      }
+      
+      if (newFilters.status) {
+        pass = pass && eval.status === newFilters.status;
+      }
+      
+      if (newFilters.dateFrom) {
+        const evalDate = new Date(eval.date.split('/').reverse().join('-'));
+        const fromDate = new Date(newFilters.dateFrom);
+        pass = pass && evalDate >= fromDate;
+      }
+      
+      if (newFilters.dateTo) {
+        const evalDate = new Date(eval.date.split('/').reverse().join('-'));
+        const toDate = new Date(newFilters.dateTo);
+        pass = pass && evalDate <= toDate;
+      }
+      
+      if (newFilters.scoreMin && eval.score !== undefined) {
+        pass = pass && eval.score >= parseInt(newFilters.scoreMin);
+      }
+      
+      if (newFilters.scoreMax && eval.score !== undefined) {
+        pass = pass && eval.score <= parseInt(newFilters.scoreMax);
+      }
+      
+      return pass;
+    });
+    
+    setFilteredEvaluations(filtered);
+  };
 
   const handleExportData = () => {
-    toast.success("Export des données d'évaluations démarré");
-    // Logique d'export à implémenter
+    setShowExportDialog(true);
   };
 
   if (isLoading) {
@@ -54,9 +115,18 @@ const EmployeesEvaluations: React.FC = () => {
           <p className="text-gray-500">Entretiens et évaluations professionnelles</p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm">
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => setShowFilterDialog(true)}
+          >
             <ListFilter className="h-4 w-4 mr-2" />
             Filtres
+            {Object.keys(filters).length > 0 && (
+              <span className="ml-1 h-5 w-5 rounded-full bg-primary text-[10px] text-primary-foreground flex items-center justify-center">
+                {Object.keys(filters).length}
+              </span>
+            )}
           </Button>
           <Button 
             variant="outline" 
@@ -66,7 +136,10 @@ const EmployeesEvaluations: React.FC = () => {
             <Download className="h-4 w-4 mr-2" />
             Exporter
           </Button>
-          <Button size="sm">
+          <Button 
+            size="sm"
+            onClick={() => setShowCreateDialog(true)}
+          >
             <Plus className="h-4 w-4 mr-2" />
             Nouvelle évaluation
           </Button>
@@ -149,8 +222,8 @@ const EmployeesEvaluations: React.FC = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {evaluations.length > 0 ? (
-                      evaluations.map((evaluation) => (
+                    {filteredEvaluations.length > 0 ? (
+                      filteredEvaluations.map((evaluation) => (
                         <TableRow key={evaluation.id}>
                           <TableCell className="font-medium">
                             <div className="flex items-center space-x-3">
@@ -230,6 +303,24 @@ const EmployeesEvaluations: React.FC = () => {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Dialog Modals */}
+      <CreateEvaluationDialog
+        open={showCreateDialog}
+        onOpenChange={setShowCreateDialog}
+      />
+      
+      <EvaluationsFilter
+        open={showFilterDialog}
+        onOpenChange={setShowFilterDialog}
+        onApplyFilters={applyFilters}
+      />
+      
+      <ExportEvaluationsDialog
+        open={showExportDialog}
+        onOpenChange={setShowExportDialog}
+        data={filteredEvaluations}
+      />
     </div>
   );
 };
