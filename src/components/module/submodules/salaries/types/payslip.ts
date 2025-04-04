@@ -1,11 +1,11 @@
 
 export interface PaySlipDetail {
-  name: string;
+  name?: string;
   amount: number;
   type: "earning" | "deduction";
   base?: string;
   rate?: string;
-  label?: string;
+  label: string;
 }
 
 export interface PaySlip {

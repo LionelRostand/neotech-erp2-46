@@ -10,10 +10,11 @@ export interface PaySlipEmployee {
 
 export interface PaySlipDetail {
   label: string;
-  base: string;
+  base?: string;
   rate?: string;
   amount: number;
   type: "earning" | "deduction";
+  name?: string;
 }
 
 export interface PaySlip {
@@ -29,7 +30,7 @@ export interface PaySlip {
   employerName: string;
   employerAddress: string;
   employerSiret: string;
-  // Nouveaux champs pour la législation française
+  // Champs spécifiques pour la législation française
   conges?: {
     acquired: number;
     taken: number;
@@ -45,4 +46,8 @@ export interface PaySlip {
     netSalary: number;
     taxableIncome: number;
   };
+  status?: "draft" | "published" | "paid";
+  date?: string;
+  employeeId?: string;
+  employeeName?: string;
 }

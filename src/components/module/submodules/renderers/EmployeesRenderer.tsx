@@ -18,6 +18,7 @@ import EmployeesCompanies from '../employees/EmployeesCompanies';
 import EmployeesHierarchy from '../employees/EmployeesHierarchy';
 import EmployeesDepartments from '../departments/EmployeesDepartments';
 import EmployeesRecruitment from '../EmployeesRecruitment';
+import SalarySlips from '../salaries/SalarySlips';
 import DefaultSubmoduleContent from '../DefaultSubmoduleContent';
 
 export const renderEmployeesSubmodule = (submoduleId: string, submodule: SubModule) => {
@@ -58,6 +59,8 @@ export const renderEmployeesSubmodule = (submoduleId: string, submodule: SubModu
       return <EmployeesAlerts />;
     case 'employees-companies':
       return <EmployeesCompanies />;
+    case 'employees-salaries':
+      return <SalarySlips />;
     default:
       return <DefaultSubmoduleContent submodule={submodule} />;
   }
