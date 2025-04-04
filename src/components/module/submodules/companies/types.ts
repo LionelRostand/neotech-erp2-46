@@ -1,4 +1,5 @@
 
+// Company main types
 export interface Company {
   id: string;
   name: string;
@@ -11,67 +12,70 @@ export interface Company {
   siret?: string;
   logo?: string;
   logoUrl?: string;
-  city?: string;
-  country?: string;
   phone?: string;
   email?: string;
   website?: string;
   industry?: string;
   size?: string;
-  status?: string;
+  status: 'active' | 'inactive' | 'pending';
+  employeesCount?: number;
+  createdAt: string;
+  updatedAt: string;
   registrationNumber?: string;
   contactName?: string;
   contactEmail?: string;
-  employeesCount?: number;
+}
+
+// Company contacts
+export interface CompanyContact {
+  id: string;
+  companyId: string;
+  firstName: string;
+  lastName: string;
+  position?: string;
+  email?: string;
+  phone?: string;
+  isMainContact?: boolean;
   createdAt: string;
   updatedAt: string;
 }
 
+// Company documents
+export interface CompanyDocument {
+  id: string;
+  companyId: string;
+  name: string;
+  type: string;
+  url: string;
+  size?: number;
+  contentType?: string;
+  createdBy?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Company filters
 export interface CompanyFilters {
   status?: string;
   industry?: string;
   size?: string;
-  search?: string;
   startDate?: string;
   endDate?: string;
 }
 
-export interface CompanyContact {
-  id: string;
-  name: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone?: string;
-  role?: string;
-  position?: string;
-  companyId: string;
-  isMain?: boolean;
-}
-
-export interface CompanyDocument {
-  id: string;
-  name: string;
-  type: string;
-  size: number;
-  fileSize?: number;
-  uploadDate: string;
-  url: string;
-  companyId: string;
-  createdAt?: string;
-}
-
-export interface CompanyPermission {
-  moduleId: string;
-  canView: boolean;
-  canCreate: boolean;
-  canEdit: boolean;
-  canDelete: boolean;
-}
-
+// Company user permissions
 export interface CompanyUserPermission {
   userId: string;
   userName: string;
   userEmail: string;
+  userRole: string;
   permissions: CompanyPermission[];
+}
+
+// Company permission
+export interface CompanyPermission {
+  id: string;
+  name: string;
+  description: string;
+  value: boolean;
 }

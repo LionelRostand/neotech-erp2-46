@@ -1,3 +1,4 @@
+
 // Firebase collections constants
 
 export const COLLECTIONS = {
@@ -16,8 +17,26 @@ export const COLLECTIONS = {
     DOCUMENTS: 'hr_documents',
     REPORTS: 'hr_reports',
     ALERTS: 'hr_alerts',
-    ABSENCES: 'hr_absences'
+    ABSENCES: 'hr_absences',
+    ABSENCE_REQUESTS: 'hr_absence_requests',
+    TIME_SHEETS: 'hr_time_sheets'
   },
+  
+  // For direct access (legacy)
+  EMPLOYEES: 'hr_employees',
+  PAYSLIPS: 'hr_payslips',
+  LEAVE_REQUESTS: 'hr_leaves',
+  CONTRACTS: 'hr_contracts',
+  DEPARTMENTS: 'hr_departments',
+  EVALUATIONS: 'hr_evaluations',
+  TRAININGS: 'hr_trainings',
+  BADGES: 'hr_badges',
+  ATTENDANCE: 'hr_attendance',
+  TIMESHEETS: 'hr_timesheets',
+  DOCUMENTS: 'hr_documents',
+  REPORTS: 'hr_reports',
+  ALERTS: 'hr_alerts',
+  ABSENCES: 'hr_absences',
   
   // Document collections
   DOCUMENTS: 'documents',

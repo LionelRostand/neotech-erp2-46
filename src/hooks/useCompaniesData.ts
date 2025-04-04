@@ -1,113 +1,119 @@
-import { useEffect, useState, useMemo } from 'react';
-import { getCompanies } from '@/components/module/submodules/companies/services/companyService';
-import { Company } from '@/components/module/submodules/companies/types';
-import { useHrModuleData } from './useHrModuleData';
 
-export const useCompaniesData = () => {
+import { useState, useEffect, useCallback } from 'react';
+import { useCompanyService } from '@/components/module/submodules/companies/services/companyService';
+import { Company, CompanyFilters } from '@/components/module/submodules/companies/types';
+import { toast } from 'sonner';
+
+export const useCompaniesData = (initialFilters: CompanyFilters = {}) => {
+  const companyService = useCompanyService();
   const [companies, setCompanies] = useState<Company[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [filteredCompanies, setFilteredCompanies] = useState<Company[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
-  const { employees } = useHrModuleData();
+  const [filters, setFilters] = useState<CompanyFilters>(initialFilters);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [pagination, setPagination] = useState({
+    page: 1,
+    limit: 50,
+    totalItems: 0,
+    totalPages: 1
+  });
 
-  useEffect(() => {
-    const fetchCompanies = async () => {
-      setLoading(true);
-      try {
-        const data = await getCompanies();
-        setCompanies(data);
-      } catch (err) {
-        setError(err instanceof Error ? err : new Error('Failed to fetch companies'));
-        console.error('Error fetching companies:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
+  // Load companies
+  const loadCompanies = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      
+      // Fetch companies with pagination and filters
+      const result = await companyService.getCompanies(
+        pagination.page,
+        pagination.limit,
+        filters,
+        searchQuery
+      );
+      
+      setCompanies(result.companies);
+      setFilteredCompanies(result.companies); // Initially the same
+      setPagination(result.pagination);
+      
+    } catch (err) {
+      console.error("Error loading companies:", err);
+      setError(err instanceof Error ? err : new Error('Failed to load companies'));
+      toast.error("Erreur lors du chargement des entreprises");
+    } finally {
+      setIsLoading(false);
+    }
+  }, [pagination.page, pagination.limit, filters, searchQuery, companyService]);
 
-    fetchCompanies();
+  // Apply filters
+  const applyFilters = useCallback(() => {
+    // If we're using server-side filtering, this should just trigger a reload
+    loadCompanies();
+  }, [loadCompanies]);
+
+  // Handle filters change
+  const handleFilterChange = useCallback((newFilters: CompanyFilters) => {
+    setFilters(newFilters);
+    // Reset to first page when filters change
+    setPagination(prev => ({
+      ...prev,
+      page: 1
+    }));
   }, []);
 
-  // Update company objects with proper fields
-  export const processCompanyData = (company: any): Company => {
-    return {
-      id: company.id || '',
-      name: company.name || '',
-      address: company.address || {
-        street: '',
-        city: '',
-        postalCode: '',
-        country: ''
-      },
-      siret: company.siret || '',
-      logo: company.logo || company.logoUrl || '',
-      logoUrl: company.logoUrl || company.logo || '',
-      city: company.city || company.address?.city || '',
-      country: company.country || company.address?.country || '',
-      phone: company.phone || '',
-      email: company.email || '',
-      website: company.website || '',
-      industry: company.industry || '',
-      size: company.size || '',
-      status: company.status || 'active',
-      registrationNumber: company.registrationNumber || company.siret || '',
-      contactName: company.contactName || '',
-      contactEmail: company.contactEmail || '',
-      employeesCount: company.employeesCount || 0,
-      createdAt: company.createdAt || new Date().toISOString(),
-      updatedAt: company.updatedAt || new Date().toISOString()
-    };
-  };
+  // Reset filters
+  const resetFilters = useCallback(() => {
+    setFilters({});
+    setSearchQuery('');
+    setPagination(prev => ({
+      ...prev,
+      page: 1
+    }));
+  }, []);
 
-  // Get company metrics
-  const companyMetrics = useMemo(() => {
-    // Count employees per company
-    const employeesPerCompany = employees.reduce((acc, employee) => {
-      const companyId = typeof employee.company === 'string' 
-        ? employee.company 
-        : employee.company?.id || '';
-      
-      if (companyId) {
-        acc[companyId] = (acc[companyId] || 0) + 1;
-      }
-      return acc;
-    }, {} as Record<string, number>);
+  // Handle search
+  const handleSearch = useCallback((query: string) => {
+    setSearchQuery(query);
+    setPagination(prev => ({
+      ...prev,
+      page: 1
+    }));
+  }, []);
 
-    return companies.map(company => {
-      const employeeCount = employeesPerCompany[company.id] || 0;
-      return {
-        id: company.id,
-        name: company.name,
-        logoUrl: company.logo || company.logoUrl,
-        city: company.address?.city || company.city,
-        country: company.address?.country || company.country,
-        phone: company.phone,
-        email: company.email,
-        website: company.website,
-        industry: company.industry,
-        size: company.size,
-        status: company.status,
-        employeesCount: company.employeesCount || employeeCount,
-        createdAt: company.createdAt,
-        updatedAt: company.updatedAt
-      };
-    });
-  }, [companies, employees]);
+  // Handle page change
+  const handlePageChange = useCallback((newPage: number) => {
+    setPagination(prev => ({
+      ...prev,
+      page: newPage
+    }));
+  }, []);
+
+  // Load companies on initial render and when dependencies change
+  useEffect(() => {
+    loadCompanies();
+  }, [loadCompanies]);
+
+  // Apply filters when filters change
+  useEffect(() => {
+    applyFilters();
+  }, [applyFilters, filters]);
 
   return {
     companies,
-    companyMetrics,
-    loading,
+    filteredCompanies,
+    isLoading,
     error,
-    refresh: async () => {
-      setLoading(true);
-      try {
-        const data = await getCompanies();
-        setCompanies(data);
-      } catch (err) {
-        setError(err instanceof Error ? err : new Error('Failed to refresh companies'));
-        console.error('Error refreshing companies:', err);
-      } finally {
-        setLoading(false);
-      }
-    }
+    pagination,
+    filters,
+    searchQuery,
+    setCompanies,
+    loadCompanies,
+    handleFilterChange,
+    resetFilters,
+    handleSearch,
+    handlePageChange
   };
 };
+
+export default useCompaniesData;

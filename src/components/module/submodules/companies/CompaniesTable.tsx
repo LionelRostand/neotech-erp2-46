@@ -1,135 +1,169 @@
 
 import React from 'react';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Company } from './types';
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Eye, Edit, Trash2 } from 'lucide-react';
+import { Edit, Trash2, Users, FileText, Building } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
 interface CompaniesTableProps {
   companies: Company[];
-  loading: boolean;
-  onView: (company: Company) => void;
-  onEdit?: (company: Company) => void;
-  onDelete?: (company: Company) => void;
+  isLoading: boolean;
+  onEdit: (company: Company) => void;
+  onDelete: (company: Company) => void;
+  onManageEmployees?: (company: Company) => void;
+  onManageDocuments?: (company: Company) => void;
+  onViewDetails?: (company: Company) => void;
 }
 
 const CompaniesTable: React.FC<CompaniesTableProps> = ({
   companies,
-  loading,
-  onView,
+  isLoading,
   onEdit,
-  onDelete
+  onDelete,
+  onManageEmployees,
+  onManageDocuments,
+  onViewDetails
 }) => {
-  // Helper function to safely format dates
-  const formatDate = (dateString: string) => {
-    try {
-      return format(new Date(dateString), 'dd MMM yyyy', { locale: fr });
-    } catch (error) {
-      return "—";
-    }
+  // Format address as single line text
+  const formatAddress = (address: any) => {
+    if (!address) return '-';
+    
+    const parts = [];
+    if (address.street) parts.push(address.street);
+    if (address.city) parts.push(address.city);
+    if (address.postalCode) parts.push(address.postalCode);
+    if (address.country) parts.push(address.country);
+    
+    return parts.length > 0 ? parts.join(', ') : '-';
   };
 
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>Nom</TableHead>
-          <TableHead>SIRET/Numéro</TableHead>
-          <TableHead>Contact</TableHead>
-          <TableHead>Statut</TableHead>
-          <TableHead>Date de création</TableHead>
-          <TableHead className="text-right">Actions</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {loading ? (
+    <div className="rounded-md border">
+      <Table>
+        <TableHeader>
           <TableRow>
-            <TableCell colSpan={6} className="text-center py-10 text-muted-foreground">
-              Chargement des entreprises...
-            </TableCell>
+            <TableHead className="min-w-[200px]">Entreprise</TableHead>
+            <TableHead>Adresse</TableHead>
+            <TableHead>Contact</TableHead>
+            <TableHead>Statut</TableHead>
+            <TableHead>Créée le</TableHead>
+            <TableHead className="text-right">Actions</TableHead>
           </TableRow>
-        ) : companies.length > 0 ? (
-          companies.map((company) => (
-            <TableRow 
-              key={company.id} 
-              className="cursor-pointer hover:bg-muted/50"
-              onClick={() => onView(company)}
-            >
-              <TableCell className="font-medium">{company.name}</TableCell>
-              <TableCell>{company.siret || company.registrationNumber || "—"}</TableCell>
-              <TableCell>{company.contactEmail || company.contactName || "—"}</TableCell>
-              <TableCell>
-                <span className={`px-2 py-1 rounded-full text-xs ${
-                  company.status === 'active' ? 'bg-green-100 text-green-800' :
-                  company.status === 'inactive' ? 'bg-gray-100 text-gray-800' :
-                  company.status === 'pending' ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-800'
-                }`}>
-                  {company.status === 'active' ? 'Actif' :
-                   company.status === 'inactive' ? 'Inactif' :
-                   company.status === 'pending' ? 'En attente' : '—'}
-                </span>
+        </TableHeader>
+        <TableBody>
+          {isLoading ? (
+            <TableRow>
+              <TableCell colSpan={6} className="text-center py-8">
+                Chargement des entreprises...
               </TableCell>
-              <TableCell>
-                {company.createdAt ? formatDate(company.createdAt) : "—"}
+            </TableRow>
+          ) : companies.length === 0 ? (
+            <TableRow>
+              <TableCell colSpan={6} className="text-center py-8">
+                Aucune entreprise trouvée
               </TableCell>
-              <TableCell className="text-right">
-                <div className="flex justify-end space-x-2" onClick={e => e.stopPropagation()}>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onView(company);
-                    }}
+            </TableRow>
+          ) : (
+            companies.map((company) => (
+              <TableRow key={company.id}>
+                <TableCell className="font-medium">
+                  <div className="flex flex-col">
+                    <span className="font-semibold">{company.name}</span>
+                    <span className="text-xs text-gray-500">SIRET: {company.siret || 'Non renseigné'}</span>
+                  </div>
+                </TableCell>
+                <TableCell>
+                  {formatAddress(company.address)}
+                </TableCell>
+                <TableCell>
+                  <div className="flex flex-col">
+                    <span>{company.email || '-'}</span>
+                    <span className="text-xs text-gray-500">{company.phone || '-'}</span>
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <Badge 
+                    className={
+                      company.status === 'active' 
+                        ? 'bg-green-100 text-green-800 hover:bg-green-100' 
+                        : company.status === 'inactive'
+                        ? 'bg-red-100 text-red-800 hover:bg-red-100'
+                        : 'bg-yellow-100 text-yellow-800 hover:bg-yellow-100'
+                    }
                   >
-                    <Eye className="h-4 w-4" />
-                  </Button>
-                  {onEdit && (
+                    {company.status === 'active' 
+                      ? 'Actif' 
+                      : company.status === 'inactive' 
+                      ? 'Inactif' 
+                      : 'En attente'}
+                  </Badge>
+                </TableCell>
+                <TableCell>
+                  {company.createdAt 
+                    ? format(new Date(company.createdAt), 'dd/MM/yyyy', { locale: fr })
+                    : '-'
+                  }
+                </TableCell>
+                <TableCell className="text-right">
+                  <div className="flex justify-end space-x-1">
+                    {onViewDetails && (
+                      <Button 
+                        variant="ghost" 
+                        size="icon"
+                        onClick={() => onViewDetails(company)}
+                        title="Voir détails"
+                      >
+                        <Building className="h-4 w-4" />
+                      </Button>
+                    )}
+                    {onManageEmployees && (
+                      <Button 
+                        variant="ghost" 
+                        size="icon"
+                        onClick={() => onManageEmployees(company)}
+                        title="Gérer les employés"
+                      >
+                        <Users className="h-4 w-4" />
+                      </Button>
+                    )}
+                    {onManageDocuments && (
+                      <Button 
+                        variant="ghost" 
+                        size="icon"
+                        onClick={() => onManageDocuments(company)}
+                        title="Gérer les documents"
+                      >
+                        <FileText className="h-4 w-4" />
+                      </Button>
+                    )}
                     <Button 
                       variant="ghost" 
-                      size="sm" 
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onEdit(company);
-                      }}
+                      size="icon"
+                      onClick={() => onEdit(company)}
+                      title="Modifier"
                     >
                       <Edit className="h-4 w-4" />
                     </Button>
-                  )}
-                  {onDelete && (
                     <Button 
                       variant="ghost" 
-                      size="sm"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onDelete(company);
-                      }}
+                      size="icon"
+                      onClick={() => onDelete(company)}
+                      title="Supprimer"
+                      className="text-red-500"
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
-                  )}
-                </div>
-              </TableCell>
-            </TableRow>
-          ))
-        ) : (
-          <TableRow>
-            <TableCell colSpan={6} className="text-center py-10 text-muted-foreground">
-              Aucune entreprise trouvée
-            </TableCell>
-          </TableRow>
-        )}
-      </TableBody>
-    </Table>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))
+          )}
+        </TableBody>
+      </Table>
+    </div>
   );
 };
 
