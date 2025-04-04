@@ -1,587 +1,535 @@
 
 import React, { useState, useMemo } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription
+} from '@/components/ui/card';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
+} from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
+import { File, FileText, Filter, Plus, Search } from 'lucide-react';
+import { useRecruitmentData, RecruitmentPost } from '@/hooks/useRecruitmentData';
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select';
+import RecruitmentStats from './employees/RecruitmentStats';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { toast } from 'sonner';
-import { 
-  Search, 
-  Plus, 
-  Filter, 
-  Download, 
-  FileText,
-  File
-} from 'lucide-react';
-import { useRecruitmentData, RecruitmentPost } from '@/hooks/useRecruitmentData';
-import { exportToExcel } from '@/utils/exportUtils';
-import { exportToPdf } from '@/utils/pdfUtils';
 
-const EmployeesRecruitment = () => {
+const EmployeesRecruitment: React.FC = () => {
   const { recruitmentPosts, stats, isLoading } = useRecruitmentData();
-  const [filterOpen, setFilterOpen] = useState(false);
-  const [newOfferOpen, setNewOfferOpen] = useState(false);
-  const [exportOpen, setExportOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [filters, setFilters] = useState({
-    department: '',
-    status: '',
-    priority: '',
-    location: ''
-  });
-  
-  const [newOffer, setNewOffer] = useState<Partial<RecruitmentPost>>({
+  const [searchTerm, setSearchTerm] = useState<string>("");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [departmentFilter, setDepartmentFilter] = useState<string>("all");
+  const [isJobFormOpen, setIsJobFormOpen] = useState(false);
+  const [isExportDialogOpen, setIsExportDialogOpen] = useState(false);
+  const [isFilterDialogOpen, setIsFilterDialogOpen] = useState(false);
+  const [exportFormat, setExportFormat] = useState("pdf");
+
+  // Form state for new job
+  const [newJob, setNewJob] = useState({
     position: '',
     department: '',
+    location: '',
+    contractType: 'CDI',
+    salary: '',
     description: '',
     requirements: '',
-    contractType: 'CDI',
-    location: 'Paris',
-    salary: '',
-    priority: 'Moyenne',
-    status: 'Ouvert',
-    openDate: new Date().toLocaleDateString('fr-FR'),
-    hiringManagerId: 'user-1',
-    hiringManagerName: 'Jean Dupont'
+    priority: 'Normale'
   });
-  
-  // Filter and search posts
+
+  // Filter state
+  const [filters, setFilters] = useState({
+    dateFrom: '',
+    dateTo: '',
+    hiringManager: 'all',
+    priority: 'all',
+    location: 'all',
+    contractType: 'all'
+  });
+
   const filteredPosts = useMemo(() => {
     return recruitmentPosts.filter(post => {
-      // Search filter
-      if (searchQuery && !post.position.toLowerCase().includes(searchQuery.toLowerCase()) && 
-          !post.department.toLowerCase().includes(searchQuery.toLowerCase())) {
-        return false;
-      }
-      
-      // Department filter
-      if (filters.department && post.department !== filters.department) {
-        return false;
-      }
+      // Search term filter
+      const matchesSearch = searchTerm === "" || 
+        post.position.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        post.department.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        post.description.toLowerCase().includes(searchTerm.toLowerCase());
       
       // Status filter
-      if (filters.status && post.status !== filters.status) {
-        return false;
-      }
+      const matchesStatus = statusFilter === "all" || post.status === statusFilter;
       
-      // Priority filter
-      if (filters.priority && post.priority !== filters.priority) {
-        return false;
-      }
+      // Department filter
+      const matchesDepartment = departmentFilter === "all" || post.department === departmentFilter;
       
-      // Location filter
-      if (filters.location && post.location !== filters.location) {
-        return false;
-      }
-      
-      return true;
+      return matchesSearch && matchesStatus && matchesDepartment;
     });
-  }, [recruitmentPosts, searchQuery, filters]);
-  
-  // Get unique values for filters
-  const departments = useMemo(() => [...new Set(recruitmentPosts.map(p => p.department))], [recruitmentPosts]);
-  const statuses = useMemo(() => [...new Set(recruitmentPosts.map(p => p.status))], [recruitmentPosts]);
-  const priorities = useMemo(() => [...new Set(recruitmentPosts.map(p => p.priority))], [recruitmentPosts]);
-  const locations = useMemo(() => [...new Set(recruitmentPosts.map(p => p.location))], [recruitmentPosts]);
-  
+  }, [recruitmentPosts, searchTerm, statusFilter, departmentFilter]);
+
+  // Get unique departments for filter
+  const departments = useMemo(() => {
+    const depts = new Set<string>();
+    recruitmentPosts.forEach(post => depts.add(post.department));
+    return Array.from(depts);
+  }, [recruitmentPosts]);
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setNewOffer(prev => ({ ...prev, [name]: value }));
+    setNewJob(prev => ({
+      ...prev,
+      [name]: value
+    }));
   };
   
   const handleSelectChange = (name: string, value: string) => {
-    setNewOffer(prev => ({ ...prev, [name]: value }));
-  };
-  
-  const handleCreateOffer = () => {
-    // In a real app, this would call an API
-    toast.success("Offre d'emploi créée avec succès");
-    setNewOfferOpen(false);
-  };
-  
-  const handleExport = (format: 'excel' | 'pdf') => {
-    const dataToExport = filteredPosts.map(post => ({
-      Position: post.position,
-      Département: post.department,
-      'Date d\'ouverture': post.openDate,
-      'Date limite': post.applicationDeadline || 'Non spécifiée',
-      'Responsable': post.hiringManagerName,
-      Statut: post.status,
-      Priorité: post.priority,
-      Lieu: post.location,
-      'Type de contrat': post.contractType,
-      Salaire: post.salary,
-      'Nb candidatures': post.applicationCount
+    setNewJob(prev => ({
+      ...prev,
+      [name]: value
     }));
-    
-    if (format === 'excel') {
-      exportToExcel(dataToExport, 'Offres_emploi', 'offres_emploi');
-    } else {
-      exportToPdf(dataToExport, 'Offres d\'emploi', 'offres_emploi');
-    }
-    
-    setExportOpen(false);
-    toast.success(`Export en ${format === 'excel' ? 'Excel' : 'PDF'} réussi`);
   };
-  
-  const resetFilters = () => {
-    setFilters({
+
+  const handleFilterChange = (name: string, value: string) => {
+    setFilters(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const applyAdvancedFilters = () => {
+    // This would apply the filters from the filter dialog
+    // For now we just close the dialog
+    setIsFilterDialogOpen(false);
+  };
+
+  const handleSubmitNewJob = () => {
+    // Here we would submit the new job post
+    console.log("New job submitted:", newJob);
+    setIsJobFormOpen(false);
+    
+    // Reset form
+    setNewJob({
+      position: '',
       department: '',
-      status: '',
-      priority: '',
-      location: ''
+      location: '',
+      contractType: 'CDI',
+      salary: '',
+      description: '',
+      requirements: '',
+      priority: 'Normale'
     });
-    setFilterOpen(false);
   };
-  
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent"></div>
-        <p className="ml-2">Chargement des offres d'emploi...</p>
-      </div>
-    );
-  }
-  
+
+  const handleExport = () => {
+    // Here we would handle exporting the data
+    console.log("Exporting in format:", exportFormat);
+    setIsExportDialogOpen(false);
+  };
+
+  const getPriorityBadge = (priority: string) => {
+    switch (priority) {
+      case 'Haute':
+        return <Badge variant="destructive">{priority}</Badge>;
+      case 'Moyenne':
+        return <Badge variant="warning">{priority}</Badge>;
+      case 'Basse':
+        return <Badge variant="outline">{priority}</Badge>;
+      default:
+        return <Badge>{priority}</Badge>;
+    }
+  };
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'Ouvert':
+        return <Badge variant="success">{status}</Badge>;
+      case 'En cours':
+        return <Badge variant="default">{status}</Badge>;
+      case 'Clôturé':
+        return <Badge variant="secondary">{status}</Badge>;
+      default:
+        return <Badge>{status}</Badge>;
+    }
+  };
+
   return (
     <div className="space-y-6">
-      {/* Header with stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="bg-blue-50">
-          <CardContent className="p-4 flex items-center justify-between">
-            <div>
-              <h3 className="text-sm font-medium text-blue-900">Offres ouvertes</h3>
-              <p className="text-2xl font-bold text-blue-700">{stats.open}</p>
-            </div>
-            <div className="bg-blue-100 p-3 rounded-full">
-              <FileText className="h-6 w-6 text-blue-500" />
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card className="bg-amber-50">
-          <CardContent className="p-4 flex items-center justify-between">
-            <div>
-              <h3 className="text-sm font-medium text-amber-900">En cours</h3>
-              <p className="text-2xl font-bold text-amber-700">{stats.inProgress}</p>
-            </div>
-            <div className="bg-amber-100 p-3 rounded-full">
-              <FileText className="h-6 w-6 text-amber-500" />
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card className="bg-green-50">
-          <CardContent className="p-4 flex items-center justify-between">
-            <div>
-              <h3 className="text-sm font-medium text-green-900">Clôturées</h3>
-              <p className="text-2xl font-bold text-green-700">{stats.closed}</p>
-            </div>
-            <div className="bg-green-100 p-3 rounded-full">
-              <FileText className="h-6 w-6 text-green-500" />
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card className="bg-purple-50">
-          <CardContent className="p-4 flex items-center justify-between">
-            <div>
-              <h3 className="text-sm font-medium text-purple-900">Candidatures</h3>
-              <p className="text-2xl font-bold text-purple-700">{stats.totalApplications}</p>
-            </div>
-            <div className="bg-purple-100 p-3 rounded-full">
-              <FileText className="h-6 w-6 text-purple-500" />
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      <RecruitmentStats stats={stats} />
       
-      {/* Search and actions */}
-      <div className="flex flex-col space-y-4 md:flex-row md:justify-between md:items-center">
-        <div className="relative w-full md:w-96">
-          <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-500" />
-          <Input
-            placeholder="Rechercher une offre..."
-            className="pl-8"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-        </div>
-        
-        <div className="flex space-x-2">
-          <Button variant="outline" onClick={() => setFilterOpen(true)}>
-            <Filter className="h-4 w-4 mr-2" />
-            Filtres
-          </Button>
-          <Button variant="outline" onClick={() => setExportOpen(true)}>
-            <Download className="h-4 w-4 mr-2" />
-            Exporter
-          </Button>
-          <Button onClick={() => setNewOfferOpen(true)}>
-            <Plus className="h-4 w-4 mr-2" />
-            Nouvelle offre
-          </Button>
-        </div>
-      </div>
-      
-      {/* Content */}
       <Card>
-        <CardContent className="p-6">
-          <Tabs defaultValue="list" className="w-full">
-            <TabsList className="mb-4">
-              <TabsTrigger value="list">Liste des offres</TabsTrigger>
-              <TabsTrigger value="stats">Statistiques</TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="list" className="space-y-4">
-              {filteredPosts.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
-                  Aucune offre d'emploi ne correspond à vos critères.
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div>
+            <CardTitle>Offres d'emploi</CardTitle>
+            <CardDescription>Gérez vos offres d'emploi et suivez les candidatures</CardDescription>
+          </div>
+          <div className="flex space-x-2">
+            <Dialog open={isFilterDialogOpen} onOpenChange={setIsFilterDialogOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline">
+                  <Filter className="w-4 h-4 mr-2" />
+                  Filtres avancés
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Filtres avancés</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4 py-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>Date de début</Label>
+                      <Input 
+                        type="date" 
+                        value={filters.dateFrom}
+                        onChange={(e) => handleFilterChange('dateFrom', e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Date de fin</Label>
+                      <Input 
+                        type="date" 
+                        value={filters.dateTo}
+                        onChange={(e) => handleFilterChange('dateTo', e.target.value)}
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label>Responsable du recrutement</Label>
+                    <Select 
+                      value={filters.hiringManager} 
+                      onValueChange={(value) => handleFilterChange('hiringManager', value)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Sélectionner" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Tous</SelectItem>
+                        <SelectItem value="user-2">Marie Dubois</SelectItem>
+                        <SelectItem value="user-3">Pierre Martin</SelectItem>
+                        <SelectItem value="user-4">Sophie Bernard</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label>Priorité</Label>
+                    <Select 
+                      value={filters.priority} 
+                      onValueChange={(value) => handleFilterChange('priority', value)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Sélectionner" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Toutes</SelectItem>
+                        <SelectItem value="Haute">Haute</SelectItem>
+                        <SelectItem value="Moyenne">Moyenne</SelectItem>
+                        <SelectItem value="Basse">Basse</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label>Lieu</Label>
+                    <Select 
+                      value={filters.location} 
+                      onValueChange={(value) => handleFilterChange('location', value)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Sélectionner" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Tous</SelectItem>
+                        <SelectItem value="Paris">Paris</SelectItem>
+                        <SelectItem value="Lyon">Lyon</SelectItem>
+                        <SelectItem value="Toulouse">Toulouse</SelectItem>
+                        <SelectItem value="Bordeaux">Bordeaux</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label>Type de contrat</Label>
+                    <Select 
+                      value={filters.contractType} 
+                      onValueChange={(value) => handleFilterChange('contractType', value)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Sélectionner" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Tous</SelectItem>
+                        <SelectItem value="CDI">CDI</SelectItem>
+                        <SelectItem value="CDD">CDD</SelectItem>
+                        <SelectItem value="Interim">Interim</SelectItem>
+                        <SelectItem value="Stage">Stage</SelectItem>
+                        <SelectItem value="Alternance">Alternance</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
-              ) : (
-                <div className="space-y-4">
-                  {filteredPosts.map((post) => (
-                    <Card key={post.id} className="overflow-hidden">
-                      <div className="bg-gray-50 px-4 py-2 border-b flex justify-between items-center">
-                        <div className="font-medium text-lg">{post.position}</div>
-                        <Badge 
-                          className={
-                            post.status === 'Ouvert' ? 'bg-green-100 text-green-800' : 
-                            post.status === 'En cours' ? 'bg-amber-100 text-amber-800' : 
-                            'bg-gray-100 text-gray-800'
-                          }
-                        >
-                          {post.status}
-                        </Badge>
-                      </div>
-                      
-                      <CardContent className="p-4">
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                          <div>
-                            <p className="text-sm text-gray-500">Département</p>
-                            <p className="font-medium">{post.department}</p>
-                          </div>
-                          <div>
-                            <p className="text-sm text-gray-500">Lieu</p>
-                            <p className="font-medium">{post.location}</p>
-                          </div>
-                          <div>
-                            <p className="text-sm text-gray-500">Type de contrat</p>
-                            <p className="font-medium">{post.contractType}</p>
-                          </div>
-                          <div>
-                            <p className="text-sm text-gray-500">Date d'ouverture</p>
-                            <p className="font-medium">{post.openDate}</p>
-                          </div>
-                          <div>
-                            <p className="text-sm text-gray-500">Date limite</p>
-                            <p className="font-medium">{post.applicationDeadline || 'Non spécifiée'}</p>
-                          </div>
-                          <div>
-                            <p className="text-sm text-gray-500">Responsable</p>
-                            <p className="font-medium">{post.hiringManagerName}</p>
-                          </div>
-                        </div>
-                        
-                        <div className="mt-4">
-                          <p className="text-sm text-gray-500">Description</p>
-                          <p className="mt-1 text-sm">{post.description}</p>
-                        </div>
-                        
-                        {post.requirements && (
-                          <div className="mt-4">
-                            <p className="text-sm text-gray-500">Prérequis</p>
-                            <p className="mt-1 text-sm">{post.requirements}</p>
-                          </div>
-                        )}
-                        
-                        <div className="mt-4 flex justify-between items-center">
-                          <div>
-                            <Badge variant="outline" className="mr-2">{post.salary}</Badge>
-                            <Badge 
-                              variant="outline" 
-                              className={
-                                post.priority === 'Haute' ? 'border-red-500 text-red-500' : 
-                                post.priority === 'Moyenne' ? 'border-amber-500 text-amber-500' : 
-                                'border-green-500 text-green-500'
-                              }
-                            >
-                              Priorité: {post.priority}
-                            </Badge>
-                          </div>
-                          <div className="text-sm text-gray-500">
-                            {post.applicationCount} candidature{post.applicationCount > 1 ? 's' : ''}
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              )}
-            </TabsContent>
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setIsFilterDialogOpen(false)}>Annuler</Button>
+                  <Button onClick={applyAdvancedFilters}>Appliquer les filtres</Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
             
-            <TabsContent value="stats">
-              <div className="py-8 text-center text-gray-500">
-                Module de statistiques de recrutement à venir.
-              </div>
-            </TabsContent>
-          </Tabs>
-        </CardContent>
-      </Card>
-      
-      {/* Filter Dialog */}
-      <Dialog open={filterOpen} onOpenChange={setFilterOpen}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Filtrer les offres</DialogTitle>
-          </DialogHeader>
-          
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label htmlFor="department-filter">Département</Label>
-              <Select 
-                value={filters.department} 
-                onValueChange={(value) => setFilters(prev => ({ ...prev, department: value }))}
+            <Dialog open={isExportDialogOpen} onOpenChange={setIsExportDialogOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline">
+                  <FileText className="w-4 h-4 mr-2" />
+                  Exporter
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Exporter les données</DialogTitle>
+                </DialogHeader>
+                <div className="py-4">
+                  <div className="space-y-2">
+                    <Label>Format d'export</Label>
+                    <Select value={exportFormat} onValueChange={setExportFormat}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Sélectionner un format" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="pdf">PDF</SelectItem>
+                        <SelectItem value="excel">Excel</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setIsExportDialogOpen(false)}>Annuler</Button>
+                  <Button onClick={handleExport}>Exporter</Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+            
+            <Dialog open={isJobFormOpen} onOpenChange={setIsJobFormOpen}>
+              <DialogTrigger asChild>
+                <Button>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Nouvelle offre
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-3xl">
+                <DialogHeader>
+                  <DialogTitle>Créer une nouvelle offre d'emploi</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4 py-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="position">Intitulé du poste</Label>
+                      <Input 
+                        id="position" 
+                        name="position" 
+                        value={newJob.position}
+                        onChange={handleInputChange}
+                        placeholder="Développeur Full-Stack"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="department">Département</Label>
+                      <Input 
+                        id="department" 
+                        name="department" 
+                        value={newJob.department}
+                        onChange={handleInputChange}
+                        placeholder="IT"
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="location">Lieu</Label>
+                      <Input 
+                        id="location" 
+                        name="location" 
+                        value={newJob.location}
+                        onChange={handleInputChange}
+                        placeholder="Paris"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="contractType">Type de contrat</Label>
+                      <Select 
+                        value={newJob.contractType} 
+                        onValueChange={(value) => handleSelectChange('contractType', value)}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Sélectionner" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="CDI">CDI</SelectItem>
+                          <SelectItem value="CDD">CDD</SelectItem>
+                          <SelectItem value="Stage">Stage</SelectItem>
+                          <SelectItem value="Alternance">Alternance</SelectItem>
+                          <SelectItem value="Freelance">Freelance</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="salary">Rémunération</Label>
+                      <Input 
+                        id="salary" 
+                        name="salary" 
+                        value={newJob.salary}
+                        onChange={handleInputChange}
+                        placeholder="45-55K€"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="priority">Priorité</Label>
+                      <Select 
+                        value={newJob.priority} 
+                        onValueChange={(value) => handleSelectChange('priority', value)}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Sélectionner" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Haute">Haute</SelectItem>
+                          <SelectItem value="Moyenne">Moyenne</SelectItem>
+                          <SelectItem value="Normale">Normale</SelectItem>
+                          <SelectItem value="Basse">Basse</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="description">Description du poste</Label>
+                    <Textarea 
+                      id="description" 
+                      name="description" 
+                      value={newJob.description}
+                      onChange={handleInputChange}
+                      placeholder="Description détaillée du poste..."
+                      rows={4}
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="requirements">Prérequis</Label>
+                    <Textarea 
+                      id="requirements" 
+                      name="requirements" 
+                      value={newJob.requirements}
+                      onChange={handleInputChange}
+                      placeholder="Compétences et qualifications requises..."
+                      rows={3}
+                    />
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setIsJobFormOpen(false)}>Annuler</Button>
+                  <Button onClick={handleSubmitNewJob}>Créer l'offre</Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          </div>
+        </CardHeader>
+        
+        <CardContent>
+          <div className="flex flex-col md:flex-row justify-between mb-4 gap-4">
+            <div className="flex flex-1 items-center border rounded-md px-3 py-2">
+              <Search className="h-4 w-4 text-muted-foreground mr-2" />
+              <Input 
+                placeholder="Rechercher une offre..." 
+                className="border-0 p-0 focus-visible:ring-0 focus-visible:ring-offset-0"
+                value={searchTerm}
+                onChange={e => setSearchTerm(e.target.value)}
+              />
+            </div>
+            <div className="flex gap-2">
+              <Select
+                defaultValue="all"
+                onValueChange={setStatusFilter}
               >
-                <SelectTrigger id="department-filter">
-                  <SelectValue placeholder="Tous les départements" />
+                <SelectTrigger className="w-[150px]">
+                  <SelectValue placeholder="Statut" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Tous les départements</SelectItem>
-                  {departments.map((dept) => (
+                  <SelectItem value="all">Tous les statuts</SelectItem>
+                  <SelectItem value="Ouvert">Ouvert</SelectItem>
+                  <SelectItem value="En cours">En cours</SelectItem>
+                  <SelectItem value="Clôturé">Clôturé</SelectItem>
+                </SelectContent>
+              </Select>
+              
+              <Select 
+                defaultValue="all"
+                onValueChange={setDepartmentFilter}
+              >
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Département" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Tous les départements</SelectItem>
+                  {departments.map(dept => (
                     <SelectItem key={dept} value={dept}>{dept}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
-            
-            <div className="grid gap-2">
-              <Label htmlFor="status-filter">Statut</Label>
-              <Select 
-                value={filters.status} 
-                onValueChange={(value) => setFilters(prev => ({ ...prev, status: value }))}
-              >
-                <SelectTrigger id="status-filter">
-                  <SelectValue placeholder="Tous les statuts" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="">Tous les statuts</SelectItem>
-                  {statuses.map((status) => (
-                    <SelectItem key={status} value={status}>{status}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="grid gap-2">
-              <Label htmlFor="priority-filter">Priorité</Label>
-              <Select 
-                value={filters.priority} 
-                onValueChange={(value) => setFilters(prev => ({ ...prev, priority: value }))}
-              >
-                <SelectTrigger id="priority-filter">
-                  <SelectValue placeholder="Toutes les priorités" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="">Toutes les priorités</SelectItem>
-                  {priorities.map((priority) => (
-                    <SelectItem key={priority} value={priority}>{priority}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="grid gap-2">
-              <Label htmlFor="location-filter">Lieu</Label>
-              <Select 
-                value={filters.location} 
-                onValueChange={(value) => setFilters(prev => ({ ...prev, location: value }))}
-              >
-                <SelectTrigger id="location-filter">
-                  <SelectValue placeholder="Tous les lieux" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="">Tous les lieux</SelectItem>
-                  {locations.map((location) => (
-                    <SelectItem key={location} value={location}>{location}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
           </div>
           
-          <DialogFooter>
-            <Button variant="outline" onClick={resetFilters}>Réinitialiser</Button>
-            <Button onClick={() => setFilterOpen(false)}>Appliquer</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-      
-      {/* New Offer Dialog */}
-      <Dialog open={newOfferOpen} onOpenChange={setNewOfferOpen}>
-        <DialogContent className="sm:max-w-[600px]">
-          <DialogHeader>
-            <DialogTitle>Nouvelle offre d'emploi</DialogTitle>
-          </DialogHeader>
-          
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="grid gap-2">
-                <Label htmlFor="position">Intitulé du poste *</Label>
-                <Input
-                  id="position"
-                  name="position"
-                  value={newOffer.position}
-                  onChange={handleInputChange}
-                  placeholder="Ex: Développeur Full-Stack"
-                />
-              </div>
-              
-              <div className="grid gap-2">
-                <Label htmlFor="department">Département *</Label>
-                <Input
-                  id="department"
-                  name="department"
-                  value={newOffer.department}
-                  onChange={handleInputChange}
-                  placeholder="Ex: IT"
-                />
-              </div>
-            </div>
-            
-            <div className="grid gap-2">
-              <Label htmlFor="description">Description du poste *</Label>
-              <Textarea
-                id="description"
-                name="description"
-                value={newOffer.description}
-                onChange={handleInputChange}
-                placeholder="Détaillez les responsabilités et missions principales"
-                rows={3}
-              />
-            </div>
-            
-            <div className="grid gap-2">
-              <Label htmlFor="requirements">Prérequis</Label>
-              <Textarea
-                id="requirements"
-                name="requirements"
-                value={newOffer.requirements}
-                onChange={handleInputChange}
-                placeholder="Expérience, diplômes, compétences requises..."
-                rows={3}
-              />
-            </div>
-            
-            <div className="grid grid-cols-2 gap-4">
-              <div className="grid gap-2">
-                <Label htmlFor="contractType">Type de contrat</Label>
-                <Select
-                  value={newOffer.contractType}
-                  onValueChange={(value) => handleSelectChange("contractType", value)}
-                >
-                  <SelectTrigger id="contractType">
-                    <SelectValue placeholder="Type de contrat" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="CDI">CDI</SelectItem>
-                    <SelectItem value="CDD">CDD</SelectItem>
-                    <SelectItem value="Stage">Stage</SelectItem>
-                    <SelectItem value="Alternance">Alternance</SelectItem>
-                    <SelectItem value="Freelance">Freelance</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div className="grid gap-2">
-                <Label htmlFor="location">Lieu</Label>
-                <Input
-                  id="location"
-                  name="location"
-                  value={newOffer.location}
-                  onChange={handleInputChange}
-                  placeholder="Ex: Paris"
-                />
-              </div>
-            </div>
-            
-            <div className="grid grid-cols-2 gap-4">
-              <div className="grid gap-2">
-                <Label htmlFor="salary">Salaire</Label>
-                <Input
-                  id="salary"
-                  name="salary"
-                  value={newOffer.salary}
-                  onChange={handleInputChange}
-                  placeholder="Ex: 45-55K€"
-                />
-              </div>
-              
-              <div className="grid gap-2">
-                <Label htmlFor="priority">Priorité</Label>
-                <Select
-                  value={newOffer.priority}
-                  onValueChange={(value) => handleSelectChange("priority", value)}
-                >
-                  <SelectTrigger id="priority">
-                    <SelectValue placeholder="Priorité" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Haute">Haute</SelectItem>
-                    <SelectItem value="Moyenne">Moyenne</SelectItem>
-                    <SelectItem value="Basse">Basse</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
+          <div className="rounded-md border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Poste</TableHead>
+                  <TableHead>Département</TableHead>
+                  <TableHead>Statut</TableHead>
+                  <TableHead>Priorité</TableHead>
+                  <TableHead>Candidatures</TableHead>
+                  <TableHead>Lieu</TableHead>
+                  <TableHead>Date d'ouverture</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {isLoading ? (
+                  <TableRow>
+                    <TableCell colSpan={7} className="text-center py-4">Chargement des données...</TableCell>
+                  </TableRow>
+                ) : filteredPosts.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={7} className="text-center py-4">Aucune offre trouvée</TableCell>
+                  </TableRow>
+                ) : (
+                  filteredPosts.map((post: RecruitmentPost) => (
+                    <TableRow key={post.id} className="cursor-pointer hover:bg-muted/50">
+                      <TableCell className="font-medium">{post.position}</TableCell>
+                      <TableCell>{post.department}</TableCell>
+                      <TableCell>{getStatusBadge(post.status)}</TableCell>
+                      <TableCell>{getPriorityBadge(post.priority)}</TableCell>
+                      <TableCell>{post.applicationCount}</TableCell>
+                      <TableCell>{post.location}</TableCell>
+                      <TableCell>{post.openDate}</TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
           </div>
-          
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setNewOfferOpen(false)}>Annuler</Button>
-            <Button onClick={handleCreateOffer}>Créer l'offre</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-      
-      {/* Export Dialog */}
-      <Dialog open={exportOpen} onOpenChange={setExportOpen}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Exporter les offres</DialogTitle>
-          </DialogHeader>
-          
-          <div className="grid gap-4 py-4">
-            <p className="text-sm text-gray-500">
-              Sélectionnez le format d'export pour {filteredPosts.length} offre(s) d'emploi.
-            </p>
-            
-            <div className="grid grid-cols-2 gap-4">
-              <Button 
-                variant="outline" 
-                className="h-24 flex flex-col"
-                onClick={() => handleExport('excel')}
-              >
-                <File className="h-8 w-8 mb-2" />
-                Format Excel
-              </Button>
-              
-              <Button 
-                variant="outline" 
-                className="h-24 flex flex-col"
-                onClick={() => handleExport('pdf')}
-              >
-                <FileText className="h-8 w-8 mb-2" />
-                Format PDF
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+        </CardContent>
+      </Card>
     </div>
   );
 };
