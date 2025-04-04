@@ -1,465 +1,582 @@
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { 
-  Briefcase, 
-  ListFilter, 
-  Plus,
-  Download,
-  FileText,
-  Clock,
-  CheckCircle2,
-  XCircle,
-  FileExcel,
-  FilePdf
-} from 'lucide-react';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
-import { useRecruitmentData } from '@/hooks/useRecruitmentData';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { RecruitmentForm, RecruitmentOffer } from './recruitment/RecruitmentForm';
-import jsPDF from 'jspdf';
-import 'jspdf-autotable';
-import * as XLSX from 'xlsx';
+import { 
+  Search, 
+  Plus, 
+  Filter, 
+  Download, 
+  FileText,
+  File
+} from 'lucide-react';
+import { useRecruitmentData, RecruitmentPost } from '@/hooks/useRecruitmentData';
+import { exportToExcel } from '@/utils/exportUtils';
+import { exportToPdf } from '@/utils/pdfUtils';
 
-const EmployeesRecruitment: React.FC = () => {
-  const [activeTab, setActiveTab] = useState('ouverts');
-  const { recruitmentPosts, stats, isLoading, error } = useRecruitmentData();
-  const [isFormOpen, setIsFormOpen] = useState(false);
-  const [isFilterDialogOpen, setIsFilterDialogOpen] = useState(false);
-  const [isExportDialogOpen, setIsExportDialogOpen] = useState(false);
-  const [posts, setPosts] = useState(recruitmentPosts || []);
+const EmployeesRecruitment = () => {
+  const { recruitmentPosts, stats, isLoading } = useRecruitmentData();
+  const [filterOpen, setFilterOpen] = useState(false);
+  const [newOfferOpen, setNewOfferOpen] = useState(false);
+  const [exportOpen, setExportOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const [filters, setFilters] = useState({
     department: '',
-    priority: '',
     status: '',
+    priority: '',
+    location: ''
   });
-
-  const handleCreateOffer = (data: any) => {
-    const newOffer = {
-      id: `job-${Date.now()}`,
-      position: data.position,
-      department: data.department,
-      openDate: data.openDate.toLocaleDateString('fr-FR'),
-      applicationDeadline: data.applicationDeadline.toLocaleDateString('fr-FR'),
-      hiringManagerName: data.hiringManagerName,
-      hiringManagerId: data.hiringManagerId || 'user-1',
-      status: data.status,
-      priority: data.priority,
-      location: data.location,
-      contractType: data.contractType,
-      salary: data.salary,
-      description: data.description,
-      requirements: data.requirements,
-      applicationCount: 0,
-    };
-    
-    setPosts([newOffer, ...posts]);
-    setIsFormOpen(false);
-    toast.success('Offre de recrutement créée avec succès');
-  };
-
-  const handleExportData = (format: 'pdf' | 'excel') => {
-    const filteredPosts = posts.filter(post => {
-      if (activeTab === 'ouverts' && post.status !== 'Ouvert') return false;
-      if (activeTab === 'en-cours' && post.status !== 'En cours') return false;
-      if (activeTab === 'clotures' && !['Clôturé', 'Abandonné'].includes(post.status)) return false;
+  
+  const [newOffer, setNewOffer] = useState<Partial<RecruitmentPost>>({
+    position: '',
+    department: '',
+    description: '',
+    requirements: '',
+    contractType: 'CDI',
+    location: 'Paris',
+    salary: '',
+    priority: 'Moyenne',
+    status: 'Ouvert',
+    openDate: new Date().toLocaleDateString('fr-FR'),
+    hiringManagerId: 'user-1',
+    hiringManagerName: 'Jean Dupont'
+  });
+  
+  // Filter and search posts
+  const filteredPosts = useMemo(() => {
+    return recruitmentPosts.filter(post => {
+      // Search filter
+      if (searchQuery && !post.position.toLowerCase().includes(searchQuery.toLowerCase()) && 
+          !post.department.toLowerCase().includes(searchQuery.toLowerCase())) {
+        return false;
+      }
       
-      if (filters.department && post.department !== filters.department) return false;
-      if (filters.priority && post.priority !== filters.priority) return false;
-      if (filters.status && post.status !== filters.status) return false;
+      // Department filter
+      if (filters.department && post.department !== filters.department) {
+        return false;
+      }
+      
+      // Status filter
+      if (filters.status && post.status !== filters.status) {
+        return false;
+      }
+      
+      // Priority filter
+      if (filters.priority && post.priority !== filters.priority) {
+        return false;
+      }
+      
+      // Location filter
+      if (filters.location && post.location !== filters.location) {
+        return false;
+      }
       
       return true;
     });
+  }, [recruitmentPosts, searchQuery, filters]);
+  
+  // Get unique values for filters
+  const departments = useMemo(() => [...new Set(recruitmentPosts.map(p => p.department))], [recruitmentPosts]);
+  const statuses = useMemo(() => [...new Set(recruitmentPosts.map(p => p.status))], [recruitmentPosts]);
+  const priorities = useMemo(() => [...new Set(recruitmentPosts.map(p => p.priority))], [recruitmentPosts]);
+  const locations = useMemo(() => [...new Set(recruitmentPosts.map(p => p.location))], [recruitmentPosts]);
+  
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setNewOffer(prev => ({ ...prev, [name]: value }));
+  };
+  
+  const handleSelectChange = (name: string, value: string) => {
+    setNewOffer(prev => ({ ...prev, [name]: value }));
+  };
+  
+  const handleCreateOffer = () => {
+    // In a real app, this would call an API
+    toast.success("Offre d'emploi créée avec succès");
+    setNewOfferOpen(false);
+  };
+  
+  const handleExport = (format: 'excel' | 'pdf') => {
+    const dataToExport = filteredPosts.map(post => ({
+      Position: post.position,
+      Département: post.department,
+      'Date d\'ouverture': post.openDate,
+      'Date limite': post.applicationDeadline || 'Non spécifiée',
+      'Responsable': post.hiringManagerName,
+      Statut: post.status,
+      Priorité: post.priority,
+      Lieu: post.location,
+      'Type de contrat': post.contractType,
+      Salaire: post.salary,
+      'Nb candidatures': post.applicationCount
+    }));
     
-    if (format === 'pdf') {
-      // Generate PDF
-      const doc = new jsPDF();
-      
-      // Add title
-      doc.setFontSize(16);
-      doc.setFont('helvetica', 'bold');
-      doc.text('Liste des offres de recrutement', 105, 20, { align: 'center' });
-      
-      // Add date
-      doc.setFontSize(10);
-      doc.setFont('helvetica', 'normal');
-      doc.text(`Exporté le ${new Date().toLocaleDateString()}`, 105, 30, { align: 'center' });
-      
-      const tableColumn = ["Poste", "Département", "Date d'ouverture", "Responsable", "Candidatures", "Priorité", "Statut"];
-      const tableRows = filteredPosts.map(post => [
-        post.position,
-        post.department,
-        post.openDate,
-        post.hiringManagerName,
-        post.applicationCount?.toString() || "0",
-        post.priority,
-        post.status
-      ]);
-      
-      doc.autoTable({
-        startY: 40,
-        head: [tableColumn],
-        body: tableRows,
-        theme: 'grid',
-        headStyles: { fillColor: [41, 128, 185], textColor: [255, 255, 255] },
-        alternateRowStyles: { fillColor: [245, 247, 250] },
-      });
-      
-      doc.save('liste_offres_recrutement.pdf');
+    if (format === 'excel') {
+      exportToExcel(dataToExport, 'Offres_emploi', 'offres_emploi');
     } else {
-      // Generate Excel
-      const data = filteredPosts.map(post => ({
-        'Poste': post.position,
-        'Département': post.department,
-        'Date d\'ouverture': post.openDate,
-        'Date limite': post.applicationDeadline || 'Non spécifiée',
-        'Responsable': post.hiringManagerName,
-        'Candidatures': post.applicationCount || 0,
-        'Lieu': post.location,
-        'Type de contrat': post.contractType,
-        'Salaire': post.salary,
-        'Priorité': post.priority,
-        'Statut': post.status
-      }));
-      
-      const ws = XLSX.utils.json_to_sheet(data);
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, "Offres de recrutement");
-      XLSX.writeFile(wb, "offres_recrutement.xlsx");
+      exportToPdf(dataToExport, 'Offres d\'emploi', 'offres_emploi');
     }
     
-    setIsExportDialogOpen(false);
-    toast.success(`Données exportées au format ${format === 'pdf' ? 'PDF' : 'Excel'}`);
+    setExportOpen(false);
+    toast.success(`Export en ${format === 'excel' ? 'Excel' : 'PDF'} réussi`);
   };
-
-  const handleApplyFilters = () => {
-    setIsFilterDialogOpen(false);
-    toast.success('Filtres appliqués');
+  
+  const resetFilters = () => {
+    setFilters({
+      department: '',
+      status: '',
+      priority: '',
+      location: ''
+    });
+    setFilterOpen(false);
   };
-
+  
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent"></div>
-        <p className="ml-2">Chargement des données de recrutement...</p>
+        <p className="ml-2">Chargement des offres d'emploi...</p>
       </div>
     );
   }
-
-  if (error) {
-    return (
-      <div className="bg-red-50 text-red-700 p-4 rounded-md">
-        Une erreur est survenue lors du chargement des données de recrutement.
-      </div>
-    );
-  }
-
-  const filteredPosts = posts.filter(post => {
-    if (activeTab === 'ouverts' && post.status !== 'Ouvert') return false;
-    if (activeTab === 'en-cours' && post.status !== 'En cours') return false;
-    if (activeTab === 'clotures' && !['Clôturé', 'Abandonné'].includes(post.status)) return false;
-    
-    if (filters.department && post.department !== filters.department) return false;
-    if (filters.priority && post.priority !== filters.priority) return false;
-    if (filters.status && post.status !== filters.status) return false;
-    
-    return true;
-  });
-
+  
   return (
     <div className="space-y-6">
-      {/* Header with actions */}
-      <div className="flex flex-col space-y-4 md:flex-row md:justify-between md:items-center">
-        <div>
-          <h2 className="text-2xl font-bold">Recrutement</h2>
-          <p className="text-gray-500">Gestion des offres d'emploi et candidatures</p>
-        </div>
-        <div className="flex gap-2">
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={() => setIsFilterDialogOpen(true)}
-          >
-            <ListFilter className="h-4 w-4 mr-2" />
-            Filtres
-          </Button>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={() => setIsExportDialogOpen(true)}
-          >
-            <Download className="h-4 w-4 mr-2" />
-            Exporter
-          </Button>
-          <Button 
-            size="sm"
-            onClick={() => setIsFormOpen(true)}
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Nouvelle offre
-          </Button>
-        </div>
-      </div>
-
-      {/* Stats cards */}
+      {/* Header with stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="bg-green-50">
-          <CardContent className="p-4 flex items-center justify-between">
-            <div>
-              <h3 className="text-sm font-medium text-green-900">Postes ouverts</h3>
-              <p className="text-2xl font-bold text-green-700">{stats.open}</p>
-            </div>
-            <Briefcase className="h-8 w-8 text-green-500" />
-          </CardContent>
-        </Card>
-        
         <Card className="bg-blue-50">
           <CardContent className="p-4 flex items-center justify-between">
             <div>
-              <h3 className="text-sm font-medium text-blue-900">En recrutement</h3>
-              <p className="text-2xl font-bold text-blue-700">{stats.inProgress}</p>
+              <h3 className="text-sm font-medium text-blue-900">Offres ouvertes</h3>
+              <p className="text-2xl font-bold text-blue-700">{stats.open}</p>
             </div>
-            <Clock className="h-8 w-8 text-blue-500" />
+            <div className="bg-blue-100 p-3 rounded-full">
+              <FileText className="h-6 w-6 text-blue-500" />
+            </div>
           </CardContent>
         </Card>
         
         <Card className="bg-amber-50">
           <CardContent className="p-4 flex items-center justify-between">
             <div>
-              <h3 className="text-sm font-medium text-amber-900">Postes pourvus</h3>
-              <p className="text-2xl font-bold text-amber-700">{stats.closed}</p>
+              <h3 className="text-sm font-medium text-amber-900">En cours</h3>
+              <p className="text-2xl font-bold text-amber-700">{stats.inProgress}</p>
             </div>
-            <CheckCircle2 className="h-8 w-8 text-amber-500" />
+            <div className="bg-amber-100 p-3 rounded-full">
+              <FileText className="h-6 w-6 text-amber-500" />
+            </div>
           </CardContent>
         </Card>
         
-        <Card className="bg-gray-50">
+        <Card className="bg-green-50">
           <CardContent className="p-4 flex items-center justify-between">
             <div>
-              <h3 className="text-sm font-medium text-gray-900">Candidatures</h3>
-              <p className="text-2xl font-bold text-gray-700">{stats.totalApplications}</p>
+              <h3 className="text-sm font-medium text-green-900">Clôturées</h3>
+              <p className="text-2xl font-bold text-green-700">{stats.closed}</p>
             </div>
-            <FileText className="h-8 w-8 text-gray-500" />
+            <div className="bg-green-100 p-3 rounded-full">
+              <FileText className="h-6 w-6 text-green-500" />
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card className="bg-purple-50">
+          <CardContent className="p-4 flex items-center justify-between">
+            <div>
+              <h3 className="text-sm font-medium text-purple-900">Candidatures</h3>
+              <p className="text-2xl font-bold text-purple-700">{stats.totalApplications}</p>
+            </div>
+            <div className="bg-purple-100 p-3 rounded-full">
+              <FileText className="h-6 w-6 text-purple-500" />
+            </div>
           </CardContent>
         </Card>
       </div>
-
-      {/* Tabs for different views */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="w-full max-w-3xl grid grid-cols-4">
-          <TabsTrigger value="ouverts" className="flex items-center">
-            <Briefcase className="h-4 w-4 mr-2" />
-            Ouverts
-          </TabsTrigger>
-          <TabsTrigger value="en-cours" className="flex items-center">
-            <Clock className="h-4 w-4 mr-2" />
-            En cours
-          </TabsTrigger>
-          <TabsTrigger value="clotures" className="flex items-center">
-            <CheckCircle2 className="h-4 w-4 mr-2" />
-            Clôturés
-          </TabsTrigger>
-          <TabsTrigger value="tous" className="flex items-center">
-            <FileText className="h-4 w-4 mr-2" />
-            Tous
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value={activeTab}>
-          <Card>
-            <CardContent className="p-6">
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Poste</TableHead>
-                      <TableHead>Département</TableHead>
-                      <TableHead>Date d'ouverture</TableHead>
-                      <TableHead>Responsable</TableHead>
-                      <TableHead>Candidatures</TableHead>
-                      <TableHead>Priorité</TableHead>
-                      <TableHead>Statut</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredPosts.length > 0 ? (
-                      filteredPosts.map((post) => (
-                        <TableRow key={post.id}>
-                          <TableCell className="font-medium">{post.position}</TableCell>
-                          <TableCell>{post.department}</TableCell>
-                          <TableCell>{post.openDate}</TableCell>
-                          <TableCell>{post.hiringManagerName}</TableCell>
-                          <TableCell>{post.applicationCount || 0}</TableCell>
-                          <TableCell>
-                            <Badge
-                              className={
-                                post.priority === 'Haute'
-                                  ? 'bg-red-100 text-red-800'
-                                  : post.priority === 'Moyenne'
-                                  ? 'bg-amber-100 text-amber-800'
-                                  : 'bg-blue-100 text-blue-800'
-                              }
-                            >
-                              {post.priority}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            <Badge
-                              className={
-                                post.status === 'Ouvert'
-                                  ? 'bg-green-100 text-green-800'
-                                  : post.status === 'En cours'
-                                  ? 'bg-blue-100 text-blue-800'
-                                  : post.status === 'Clôturé'
-                                  ? 'bg-amber-100 text-amber-800'
-                                  : 'bg-gray-100 text-gray-800'
-                              }
-                            >
-                              {post.status}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <Button variant="ghost" size="sm">
-                              Détails
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      ))
-                    ) : (
-                      <TableRow>
-                        <TableCell colSpan={8} className="h-24 text-center">
-                          Aucun poste trouvé
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
-
-      {/* Form Dialog */}
-      <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
-        <DialogContent className="max-w-4xl">
-          <DialogHeader>
-            <DialogTitle>Créer une nouvelle offre</DialogTitle>
-          </DialogHeader>
-          <RecruitmentForm 
-            onSubmit={handleCreateOffer} 
-            onCancel={() => setIsFormOpen(false)} 
+      
+      {/* Search and actions */}
+      <div className="flex flex-col space-y-4 md:flex-row md:justify-between md:items-center">
+        <div className="relative w-full md:w-96">
+          <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-500" />
+          <Input
+            placeholder="Rechercher une offre..."
+            className="pl-8"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
           />
-        </DialogContent>
-      </Dialog>
-
+        </div>
+        
+        <div className="flex space-x-2">
+          <Button variant="outline" onClick={() => setFilterOpen(true)}>
+            <Filter className="h-4 w-4 mr-2" />
+            Filtres
+          </Button>
+          <Button variant="outline" onClick={() => setExportOpen(true)}>
+            <Download className="h-4 w-4 mr-2" />
+            Exporter
+          </Button>
+          <Button onClick={() => setNewOfferOpen(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            Nouvelle offre
+          </Button>
+        </div>
+      </div>
+      
+      {/* Content */}
+      <Card>
+        <CardContent className="p-6">
+          <Tabs defaultValue="list" className="w-full">
+            <TabsList className="mb-4">
+              <TabsTrigger value="list">Liste des offres</TabsTrigger>
+              <TabsTrigger value="stats">Statistiques</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="list" className="space-y-4">
+              {filteredPosts.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  Aucune offre d'emploi ne correspond à vos critères.
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {filteredPosts.map((post) => (
+                    <Card key={post.id} className="overflow-hidden">
+                      <div className="bg-gray-50 px-4 py-2 border-b flex justify-between items-center">
+                        <div className="font-medium text-lg">{post.position}</div>
+                        <Badge 
+                          className={
+                            post.status === 'Ouvert' ? 'bg-green-100 text-green-800' : 
+                            post.status === 'En cours' ? 'bg-amber-100 text-amber-800' : 
+                            'bg-gray-100 text-gray-800'
+                          }
+                        >
+                          {post.status}
+                        </Badge>
+                      </div>
+                      
+                      <CardContent className="p-4">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                          <div>
+                            <p className="text-sm text-gray-500">Département</p>
+                            <p className="font-medium">{post.department}</p>
+                          </div>
+                          <div>
+                            <p className="text-sm text-gray-500">Lieu</p>
+                            <p className="font-medium">{post.location}</p>
+                          </div>
+                          <div>
+                            <p className="text-sm text-gray-500">Type de contrat</p>
+                            <p className="font-medium">{post.contractType}</p>
+                          </div>
+                          <div>
+                            <p className="text-sm text-gray-500">Date d'ouverture</p>
+                            <p className="font-medium">{post.openDate}</p>
+                          </div>
+                          <div>
+                            <p className="text-sm text-gray-500">Date limite</p>
+                            <p className="font-medium">{post.applicationDeadline || 'Non spécifiée'}</p>
+                          </div>
+                          <div>
+                            <p className="text-sm text-gray-500">Responsable</p>
+                            <p className="font-medium">{post.hiringManagerName}</p>
+                          </div>
+                        </div>
+                        
+                        <div className="mt-4">
+                          <p className="text-sm text-gray-500">Description</p>
+                          <p className="mt-1 text-sm">{post.description}</p>
+                        </div>
+                        
+                        {post.requirements && (
+                          <div className="mt-4">
+                            <p className="text-sm text-gray-500">Prérequis</p>
+                            <p className="mt-1 text-sm">{post.requirements}</p>
+                          </div>
+                        )}
+                        
+                        <div className="mt-4 flex justify-between items-center">
+                          <div>
+                            <Badge variant="outline" className="mr-2">{post.salary}</Badge>
+                            <Badge 
+                              variant="outline" 
+                              className={
+                                post.priority === 'Haute' ? 'border-red-500 text-red-500' : 
+                                post.priority === 'Moyenne' ? 'border-amber-500 text-amber-500' : 
+                                'border-green-500 text-green-500'
+                              }
+                            >
+                              Priorité: {post.priority}
+                            </Badge>
+                          </div>
+                          <div className="text-sm text-gray-500">
+                            {post.applicationCount} candidature{post.applicationCount > 1 ? 's' : ''}
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </TabsContent>
+            
+            <TabsContent value="stats">
+              <div className="py-8 text-center text-gray-500">
+                Module de statistiques de recrutement à venir.
+              </div>
+            </TabsContent>
+          </Tabs>
+        </CardContent>
+      </Card>
+      
       {/* Filter Dialog */}
-      <Dialog open={isFilterDialogOpen} onOpenChange={setIsFilterDialogOpen}>
-        <DialogContent>
+      <Dialog open={filterOpen} onOpenChange={setFilterOpen}>
+        <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle>Filtrer les offres</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4 pt-4">
-            <div className="space-y-2">
-              <Label htmlFor="department">Département</Label>
-              <Select
-                value={filters.department}
-                onValueChange={(value) => setFilters({...filters, department: value})}
+          
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="department-filter">Département</Label>
+              <Select 
+                value={filters.department} 
+                onValueChange={(value) => setFilters(prev => ({ ...prev, department: value }))}
               >
-                <SelectTrigger id="department">
+                <SelectTrigger id="department-filter">
                   <SelectValue placeholder="Tous les départements" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="">Tous les départements</SelectItem>
-                  <SelectItem value="IT">IT</SelectItem>
-                  <SelectItem value="RH">Ressources Humaines</SelectItem>
-                  <SelectItem value="Finance">Finance</SelectItem>
-                  <SelectItem value="Marketing">Marketing</SelectItem>
-                  <SelectItem value="Commercial">Commercial</SelectItem>
+                  {departments.map((dept) => (
+                    <SelectItem key={dept} value={dept}>{dept}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
             
-            <div className="space-y-2">
-              <Label htmlFor="priority">Priorité</Label>
-              <Select
-                value={filters.priority}
-                onValueChange={(value) => setFilters({...filters, priority: value})}
+            <div className="grid gap-2">
+              <Label htmlFor="status-filter">Statut</Label>
+              <Select 
+                value={filters.status} 
+                onValueChange={(value) => setFilters(prev => ({ ...prev, status: value }))}
               >
-                <SelectTrigger id="priority">
-                  <SelectValue placeholder="Toutes les priorités" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="">Toutes les priorités</SelectItem>
-                  <SelectItem value="Haute">Haute</SelectItem>
-                  <SelectItem value="Moyenne">Moyenne</SelectItem>
-                  <SelectItem value="Basse">Basse</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="status">Statut</Label>
-              <Select
-                value={filters.status}
-                onValueChange={(value) => setFilters({...filters, status: value})}
-              >
-                <SelectTrigger id="status">
+                <SelectTrigger id="status-filter">
                   <SelectValue placeholder="Tous les statuts" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="">Tous les statuts</SelectItem>
-                  <SelectItem value="Ouvert">Ouvert</SelectItem>
-                  <SelectItem value="En cours">En cours</SelectItem>
-                  <SelectItem value="Clôturé">Clôturé</SelectItem>
-                  <SelectItem value="Abandonné">Abandonné</SelectItem>
+                  {statuses.map((status) => (
+                    <SelectItem key={status} value={status}>{status}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
             
-            <div className="flex justify-end space-x-2 pt-4">
-              <Button variant="outline" onClick={() => setIsFilterDialogOpen(false)}>
-                Annuler
-              </Button>
-              <Button onClick={handleApplyFilters}>
-                Appliquer les filtres
-              </Button>
+            <div className="grid gap-2">
+              <Label htmlFor="priority-filter">Priorité</Label>
+              <Select 
+                value={filters.priority} 
+                onValueChange={(value) => setFilters(prev => ({ ...prev, priority: value }))}
+              >
+                <SelectTrigger id="priority-filter">
+                  <SelectValue placeholder="Toutes les priorités" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">Toutes les priorités</SelectItem>
+                  {priorities.map((priority) => (
+                    <SelectItem key={priority} value={priority}>{priority}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="grid gap-2">
+              <Label htmlFor="location-filter">Lieu</Label>
+              <Select 
+                value={filters.location} 
+                onValueChange={(value) => setFilters(prev => ({ ...prev, location: value }))}
+              >
+                <SelectTrigger id="location-filter">
+                  <SelectValue placeholder="Tous les lieux" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">Tous les lieux</SelectItem>
+                  {locations.map((location) => (
+                    <SelectItem key={location} value={location}>{location}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={resetFilters}>Réinitialiser</Button>
+            <Button onClick={() => setFilterOpen(false)}>Appliquer</Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
-
-      {/* Export Dialog */}
-      <Dialog open={isExportDialogOpen} onOpenChange={setIsExportDialogOpen}>
-        <DialogContent>
+      
+      {/* New Offer Dialog */}
+      <Dialog open={newOfferOpen} onOpenChange={setNewOfferOpen}>
+        <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
-            <DialogTitle>Exporter les données</DialogTitle>
+            <DialogTitle>Nouvelle offre d'emploi</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4 pt-4">
-            <p className="text-sm text-gray-500">Choisissez le format d'export</p>
+          
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="position">Intitulé du poste *</Label>
+                <Input
+                  id="position"
+                  name="position"
+                  value={newOffer.position}
+                  onChange={handleInputChange}
+                  placeholder="Ex: Développeur Full-Stack"
+                />
+              </div>
+              
+              <div className="grid gap-2">
+                <Label htmlFor="department">Département *</Label>
+                <Input
+                  id="department"
+                  name="department"
+                  value={newOffer.department}
+                  onChange={handleInputChange}
+                  placeholder="Ex: IT"
+                />
+              </div>
+            </div>
             
-            <div className="flex justify-center space-x-4">
-              <Button
-                variant="outline"
-                className="flex-1 flex-col h-auto py-4"
-                onClick={() => handleExportData('pdf')}
+            <div className="grid gap-2">
+              <Label htmlFor="description">Description du poste *</Label>
+              <Textarea
+                id="description"
+                name="description"
+                value={newOffer.description}
+                onChange={handleInputChange}
+                placeholder="Détaillez les responsabilités et missions principales"
+                rows={3}
+              />
+            </div>
+            
+            <div className="grid gap-2">
+              <Label htmlFor="requirements">Prérequis</Label>
+              <Textarea
+                id="requirements"
+                name="requirements"
+                value={newOffer.requirements}
+                onChange={handleInputChange}
+                placeholder="Expérience, diplômes, compétences requises..."
+                rows={3}
+              />
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="contractType">Type de contrat</Label>
+                <Select
+                  value={newOffer.contractType}
+                  onValueChange={(value) => handleSelectChange("contractType", value)}
+                >
+                  <SelectTrigger id="contractType">
+                    <SelectValue placeholder="Type de contrat" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="CDI">CDI</SelectItem>
+                    <SelectItem value="CDD">CDD</SelectItem>
+                    <SelectItem value="Stage">Stage</SelectItem>
+                    <SelectItem value="Alternance">Alternance</SelectItem>
+                    <SelectItem value="Freelance">Freelance</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="grid gap-2">
+                <Label htmlFor="location">Lieu</Label>
+                <Input
+                  id="location"
+                  name="location"
+                  value={newOffer.location}
+                  onChange={handleInputChange}
+                  placeholder="Ex: Paris"
+                />
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="salary">Salaire</Label>
+                <Input
+                  id="salary"
+                  name="salary"
+                  value={newOffer.salary}
+                  onChange={handleInputChange}
+                  placeholder="Ex: 45-55K€"
+                />
+              </div>
+              
+              <div className="grid gap-2">
+                <Label htmlFor="priority">Priorité</Label>
+                <Select
+                  value={newOffer.priority}
+                  onValueChange={(value) => handleSelectChange("priority", value)}
+                >
+                  <SelectTrigger id="priority">
+                    <SelectValue placeholder="Priorité" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Haute">Haute</SelectItem>
+                    <SelectItem value="Moyenne">Moyenne</SelectItem>
+                    <SelectItem value="Basse">Basse</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setNewOfferOpen(false)}>Annuler</Button>
+            <Button onClick={handleCreateOffer}>Créer l'offre</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Export Dialog */}
+      <Dialog open={exportOpen} onOpenChange={setExportOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Exporter les offres</DialogTitle>
+          </DialogHeader>
+          
+          <div className="grid gap-4 py-4">
+            <p className="text-sm text-gray-500">
+              Sélectionnez le format d'export pour {filteredPosts.length} offre(s) d'emploi.
+            </p>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <Button 
+                variant="outline" 
+                className="h-24 flex flex-col"
+                onClick={() => handleExport('excel')}
               >
-                <FilePdf className="h-8 w-8 mb-2" />
-                <span>PDF</span>
+                <File className="h-8 w-8 mb-2" />
+                Format Excel
               </Button>
               
-              <Button
-                variant="outline"
-                className="flex-1 flex-col h-auto py-4"
-                onClick={() => handleExportData('excel')}
+              <Button 
+                variant="outline" 
+                className="h-24 flex flex-col"
+                onClick={() => handleExport('pdf')}
               >
-                <FileExcel className="h-8 w-8 mb-2" />
-                <span>Excel</span>
+                <FileText className="h-8 w-8 mb-2" />
+                Format PDF
               </Button>
             </div>
           </div>
@@ -470,7 +587,3 @@ const EmployeesRecruitment: React.FC = () => {
 };
 
 export default EmployeesRecruitment;
-
-// Import missing components
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';

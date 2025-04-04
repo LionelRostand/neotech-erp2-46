@@ -1,496 +1,561 @@
 
-import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Building, Download, FileExcel, FilePdf, Filter, Plus } from 'lucide-react';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import React, { useState, useMemo } from 'react';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Search, Filter, Download, Plus, Building, User, File, FileText } from 'lucide-react';
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { toast } from 'sonner';
-import { CompanyForm } from './CompanyForm';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import jsPDF from 'jspdf';
-import 'jspdf-autotable';
-import * as XLSX from 'xlsx';
+import { Company, useCompaniesData } from '@/hooks/useCompaniesData';
+import { exportToExcel } from '@/utils/exportUtils';
+import { exportToPdf } from '@/utils/pdfUtils';
 
-export interface Company {
-  id: string;
-  name: string;
-  siret: string;
-  address: {
-    street: string;
-    city: string;
-    postalCode: string;
-    country: string;
-  };
-  contactName: string;
-  contactEmail: string;
-  contactPhone: string;
-  sector: string;
-  employeeCount: number;
-  status: 'active' | 'inactive' | 'prospect';
-  createdAt: Date;
-}
-
-const MOCK_COMPANIES: Company[] = [
-  {
-    id: 'comp-1',
-    name: 'TechInnovation',
-    siret: '123 456 789 00012',
-    address: {
-      street: '15 Rue de la Paix',
-      city: 'Paris',
-      postalCode: '75001',
-      country: 'France',
-    },
-    contactName: 'Jean Martin',
-    contactEmail: 'jean.martin@techinnovation.fr',
-    contactPhone: '01 23 45 67 89',
-    sector: 'IT',
-    employeeCount: 87,
-    status: 'active',
-    createdAt: new Date('2022-01-15'),
-  },
-  {
-    id: 'comp-2',
-    name: 'Green Solutions',
-    siret: '987 654 321 00098',
-    address: {
-      street: '42 Avenue des Champs-Élysées',
-      city: 'Paris',
-      postalCode: '75008',
-      country: 'France',
-    },
-    contactName: 'Marie Durand',
-    contactEmail: 'mdurand@greensolutions.fr',
-    contactPhone: '01 98 76 54 32',
-    sector: 'Environnement',
-    employeeCount: 34,
-    status: 'active',
-    createdAt: new Date('2022-05-03'),
-  },
-  {
-    id: 'comp-3',
-    name: 'Construct Plus',
-    siret: '456 789 123 00045',
-    address: {
-      street: '8 Rue du Commerce',
-      city: 'Lyon',
-      postalCode: '69002',
-      country: 'France',
-    },
-    contactName: 'Pierre Lefebvre',
-    contactEmail: 'p.lefebvre@constructplus.fr',
-    contactPhone: '04 56 78 91 23',
-    sector: 'Construction',
-    employeeCount: 156,
-    status: 'active',
-    createdAt: new Date('2021-11-20'),
-  },
-  {
-    id: 'comp-4',
-    name: 'Media Vision',
-    siret: '789 123 456 00078',
-    address: {
-      street: '25 Rue de la République',
-      city: 'Marseille',
-      postalCode: '13001',
-      country: 'France',
-    },
-    contactName: 'Sophie Bernard',
-    contactEmail: 'sbernard@mediavision.fr',
-    contactPhone: '04 91 23 45 67',
-    sector: 'Médias',
-    employeeCount: 42,
-    status: 'inactive',
-    createdAt: new Date('2022-09-15'),
-  },
-];
-
-const EmployeesCompanies: React.FC = () => {
-  const [companies, setCompanies] = useState<Company[]>(MOCK_COMPANIES);
-  const [isCompanyFormOpen, setIsCompanyFormOpen] = useState(false);
-  const [isFilterDialogOpen, setIsFilterDialogOpen] = useState(false);
-  const [isExportDialogOpen, setIsExportDialogOpen] = useState(false);
+const EmployeesCompanies = () => {
+  const { companies, stats, isLoading } = useCompaniesData();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showFilters, setShowFilters] = useState(false);
+  const [exportDialogOpen, setExportDialogOpen] = useState(false);
+  const [newCompanyDialogOpen, setNewCompanyDialogOpen] = useState(false);
   const [filters, setFilters] = useState({
-    sector: '',
     status: '',
-    minEmployees: '',
+    industry: '',
+    size: '',
   });
-  const [activeTab, setActiveTab] = useState('all');
 
-  const handleCreateCompany = (newCompany: Omit<Company, 'id' | 'createdAt'>) => {
-    const companyWithId = {
-      ...newCompany,
-      id: `comp-${companies.length + 1}`,
-      createdAt: new Date(),
-    } as Company;
-    
-    setCompanies([...companies, companyWithId]);
-    setIsCompanyFormOpen(false);
-    toast.success('Entreprise ajoutée avec succès');
-  };
+  // New company form state
+  const [newCompany, setNewCompany] = useState<Partial<Company>>({
+    name: '',
+    address: '',
+    city: '',
+    country: 'France',
+    industry: '',
+    size: 'PME',
+    email: '',
+    phone: '',
+    website: '',
+    status: 'Actif'
+  });
 
-  const handleApplyFilters = () => {
-    setIsFilterDialogOpen(false);
-    toast.success('Filtres appliqués');
-  };
+  // Get unique values for filters
+  const industries = useMemo(() => 
+    [...new Set(companies.map(c => c.industry).filter(Boolean))], 
+    [companies]
+  );
+  
+  const sizes = useMemo(() => 
+    [...new Set(companies.map(c => c.size).filter(Boolean))], 
+    [companies]
+  );
 
-  const handleExportData = (format: 'pdf' | 'excel') => {
-    const filteredCompanies = companies.filter(company => {
-      if (activeTab === 'active' && company.status !== 'active') return false;
-      if (activeTab === 'inactive' && company.status !== 'inactive') return false;
-      return true;
-    });
-    
-    if (format === 'pdf') {
-      // Generate PDF
-      const doc = new jsPDF();
-      
-      // Add title
-      doc.setFontSize(16);
-      doc.setFont('helvetica', 'bold');
-      doc.text('Liste des entreprises', 105, 20, { align: 'center' });
-      
-      // Add date
-      doc.setFontSize(10);
-      doc.setFont('helvetica', 'normal');
-      doc.text(`Exporté le ${new Date().toLocaleDateString()}`, 105, 30, { align: 'center' });
-      
-      // Add filter info if applicable
-      if (filters.sector || filters.status || filters.minEmployees) {
-        doc.text('Filtres appliqués:', 20, 40);
-        let yPos = 45;
-        
-        if (filters.sector) {
-          doc.text(`Secteur: ${filters.sector}`, 20, yPos);
-          yPos += 5;
-        }
-        
-        if (filters.status) {
-          doc.text(`Statut: ${filters.status}`, 20, yPos);
-          yPos += 5;
-        }
-        
-        if (filters.minEmployees) {
-          doc.text(`Nombre minimum d'employés: ${filters.minEmployees}`, 20, yPos);
-          yPos += 5;
-        }
+  // Filter companies based on search and filters
+  const filteredCompanies = useMemo(() => {
+    return companies.filter(company => {
+      // Search filter
+      if (searchQuery && !company.name.toLowerCase().includes(searchQuery.toLowerCase())) {
+        return false;
       }
       
-      const tableColumn = ["Nom", "Siret", "Contact", "Secteur", "Employés", "Statut"];
-      const tableRows = filteredCompanies.map(company => [
-        company.name,
-        company.siret,
-        `${company.contactName} - ${company.contactEmail}`,
-        company.sector,
-        company.employeeCount.toString(),
-        company.status === 'active' ? 'Actif' : 'Inactif'
-      ]);
+      // Status filter
+      if (filters.status && company.status !== filters.status) {
+        return false;
+      }
       
-      doc.autoTable({
-        startY: filters.sector || filters.status || filters.minEmployees ? 55 : 40,
-        head: [tableColumn],
-        body: tableRows,
-        theme: 'grid',
-        headStyles: { fillColor: [41, 128, 185], textColor: [255, 255, 255] },
-        alternateRowStyles: { fillColor: [245, 247, 250] },
-      });
+      // Industry filter
+      if (filters.industry && company.industry !== filters.industry) {
+        return false;
+      }
       
-      doc.save('liste_entreprises.pdf');
-    } else {
-      // Generate Excel
-      const data = filteredCompanies.map(company => ({
-        'Nom': company.name,
-        'SIRET': company.siret,
-        'Adresse': `${company.address.street}, ${company.address.postalCode} ${company.address.city}, ${company.address.country}`,
-        'Contact': company.contactName,
-        'Email': company.contactEmail,
-        'Téléphone': company.contactPhone,
-        'Secteur': company.sector,
-        'Nombre Employés': company.employeeCount,
-        'Statut': company.status === 'active' ? 'Actif' : 'Inactif',
-        'Date de création': company.createdAt.toLocaleDateString()
-      }));
+      // Size filter
+      if (filters.size && company.size !== filters.size) {
+        return false;
+      }
       
-      const ws = XLSX.utils.json_to_sheet(data);
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, "Entreprises");
-      XLSX.writeFile(wb, "liste_entreprises.xlsx");
-    }
-    
-    setIsExportDialogOpen(false);
-    toast.success(`Données exportées au format ${format === 'pdf' ? 'PDF' : 'Excel'}`);
+      return true;
+    });
+  }, [companies, searchQuery, filters]);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setNewCompany(prev => ({ ...prev, [name]: value }));
   };
 
-  const filteredCompanies = companies.filter(company => {
-    if (activeTab === 'active' && company.status !== 'active') return false;
-    if (activeTab === 'inactive' && company.status !== 'inactive') return false;
+  const handleSelectChange = (name: string, value: string) => {
+    setNewCompany(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleCreateCompany = () => {
+    // In a real app, this would save to the backend
+    toast.success(`Entreprise ${newCompany.name} créée avec succès`);
+    setNewCompanyDialogOpen(false);
+    // Reset form
+    setNewCompany({
+      name: '',
+      address: '',
+      city: '',
+      country: 'France',
+      industry: '',
+      size: 'PME',
+      email: '',
+      phone: '',
+      website: '',
+      status: 'Actif'
+    });
+  };
+
+  const handleExport = (format: 'excel' | 'pdf') => {
+    const dataToExport = filteredCompanies.map(company => ({
+      Nom: company.name,
+      Adresse: company.address,
+      Ville: company.city,
+      Pays: company.country,
+      Téléphone: company.phone,
+      Email: company.email,
+      Site: company.website,
+      Industrie: company.industry,
+      Taille: company.size,
+      Statut: company.status,
+      'Nombre d\'employés': company.employeesCount
+    }));
     
-    if (filters.sector && company.sector !== filters.sector) return false;
-    if (filters.status && company.status !== filters.status) return false;
-    if (filters.minEmployees && company.employeeCount < parseInt(filters.minEmployees)) return false;
+    if (format === 'excel') {
+      exportToExcel(dataToExport, 'Entreprises', 'entreprises');
+      toast.success('Les données ont été exportées en Excel avec succès');
+    } else {
+      exportToPdf(dataToExport, 'Liste des entreprises', 'entreprises');
+      toast.success('Les données ont été exportées en PDF avec succès');
+    }
     
-    return true;
-  });
+    setExportDialogOpen(false);
+  };
+
+  const resetFilters = () => {
+    setFilters({
+      status: '',
+      industry: '',
+      size: '',
+    });
+    setShowFilters(false);
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent"></div>
+        <p className="ml-2">Chargement des données...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
-      {/* Header with actions */}
-      <div className="flex flex-col space-y-4 md:flex-row md:justify-between md:items-center">
-        <div>
-          <h2 className="text-2xl font-bold">Entreprises</h2>
-          <p className="text-gray-500">Gestion des entreprises partenaires</p>
-        </div>
-        <div className="flex gap-2">
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={() => setIsFilterDialogOpen(true)}
-          >
-            <Filter className="h-4 w-4 mr-2" />
-            Filtres
-          </Button>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={() => setIsExportDialogOpen(true)}
-          >
-            <Download className="h-4 w-4 mr-2" />
-            Exporter
-          </Button>
-          <Button 
-            size="sm"
-            onClick={() => setIsCompanyFormOpen(true)}
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Nouvelle entreprise
-          </Button>
-        </div>
-      </div>
-
-      {/* Stats cards */}
+      {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
+        <Card className="bg-blue-50">
           <CardContent className="p-4 flex items-center justify-between">
             <div>
-              <h3 className="text-sm font-medium text-gray-500">Total entreprises</h3>
-              <p className="text-2xl font-bold">{companies.length}</p>
+              <h3 className="text-sm font-medium text-blue-900">Entreprises actives</h3>
+              <p className="text-2xl font-bold text-blue-700">{stats.active}</p>
             </div>
-            <Building className="h-8 w-8 text-gray-400" />
-          </CardContent>
-        </Card>
-        
-        <Card className="bg-green-50">
-          <CardContent className="p-4 flex items-center justify-between">
-            <div>
-              <h3 className="text-sm font-medium text-green-900">Actives</h3>
-              <p className="text-2xl font-bold text-green-700">{companies.filter(c => c.status === 'active').length}</p>
+            <div className="bg-blue-100 p-3 rounded-full">
+              <Building className="h-6 w-6 text-blue-500" />
             </div>
-            <Building className="h-8 w-8 text-green-500" />
           </CardContent>
         </Card>
         
         <Card className="bg-amber-50">
           <CardContent className="p-4 flex items-center justify-between">
             <div>
-              <h3 className="text-sm font-medium text-amber-900">Inactives</h3>
-              <p className="text-2xl font-bold text-amber-700">{companies.filter(c => c.status === 'inactive').length}</p>
+              <h3 className="text-sm font-medium text-amber-900">Entreprises inactives</h3>
+              <p className="text-2xl font-bold text-amber-700">{stats.inactive}</p>
             </div>
-            <Building className="h-8 w-8 text-amber-500" />
+            <div className="bg-amber-100 p-3 rounded-full">
+              <Building className="h-6 w-6 text-amber-500" />
+            </div>
           </CardContent>
         </Card>
         
-        <Card className="bg-blue-50">
+        <Card className="bg-green-50">
           <CardContent className="p-4 flex items-center justify-between">
             <div>
-              <h3 className="text-sm font-medium text-blue-900">Employés total</h3>
-              <p className="text-2xl font-bold text-blue-700">{companies.reduce((acc, curr) => acc + curr.employeeCount, 0)}</p>
+              <h3 className="text-sm font-medium text-green-900">Total entreprises</h3>
+              <p className="text-2xl font-bold text-green-700">{stats.total}</p>
             </div>
-            <Building className="h-8 w-8 text-blue-500" />
+            <div className="bg-green-100 p-3 rounded-full">
+              <Building className="h-6 w-6 text-green-500" />
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card className="bg-purple-50">
+          <CardContent className="p-4 flex items-center justify-between">
+            <div>
+              <h3 className="text-sm font-medium text-purple-900">Total employés</h3>
+              <p className="text-2xl font-bold text-purple-700">{stats.totalEmployees}</p>
+            </div>
+            <div className="bg-purple-100 p-3 rounded-full">
+              <User className="h-6 w-6 text-purple-500" />
+            </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Tabs for filtering */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full max-w-md grid-cols-3">
-          <TabsTrigger value="all">Toutes</TabsTrigger>
-          <TabsTrigger value="active">Actives</TabsTrigger>
-          <TabsTrigger value="inactive">Inactives</TabsTrigger>
-        </TabsList>
+      {/* Search and Actions */}
+      <div className="flex flex-col space-y-4 md:flex-row md:justify-between md:items-center">
+        <div className="relative w-full md:w-96">
+          <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-500" />
+          <Input
+            placeholder="Rechercher une entreprise..."
+            className="pl-8"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </div>
+        
+        <div className="flex space-x-2">
+          <Button variant="outline" onClick={() => setShowFilters(true)}>
+            <Filter className="h-4 w-4 mr-2" />
+            Filtres
+          </Button>
+          <Button variant="outline" onClick={() => setExportDialogOpen(true)}>
+            <Download className="h-4 w-4 mr-2" />
+            Exporter
+          </Button>
+          <Button onClick={() => setNewCompanyDialogOpen(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            Nouvelle entreprise
+          </Button>
+        </div>
+      </div>
 
-        <TabsContent value={activeTab}>
-          <Card>
-            <CardContent className="p-6">
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="w-[200px]">Entreprise</TableHead>
-                      <TableHead>SIRET</TableHead>
-                      <TableHead>Contact</TableHead>
-                      <TableHead>Secteur</TableHead>
-                      <TableHead>Employés</TableHead>
-                      <TableHead>Statut</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
+      {/* Companies Table */}
+      <Card>
+        <CardContent className="p-0">
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-[300px]">Entreprise</TableHead>
+                  <TableHead>Localisation</TableHead>
+                  <TableHead>Industrie</TableHead>
+                  <TableHead>Taille</TableHead>
+                  <TableHead>Employés</TableHead>
+                  <TableHead>Statut</TableHead>
+                  <TableHead className="text-right">Action</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredCompanies.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={7} className="h-24 text-center">
+                      Aucune entreprise trouvée
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  filteredCompanies.map((company) => (
+                    <TableRow key={company.id}>
+                      <TableCell className="font-medium">
+                        <div className="flex items-center space-x-3">
+                          <Avatar className="h-8 w-8">
+                            {company.logo ? (
+                              <AvatarImage src={company.logo} alt={company.name} />
+                            ) : (
+                              <AvatarFallback className="bg-blue-100 text-blue-600">
+                                {company.name.substring(0, 2).toUpperCase()}
+                              </AvatarFallback>
+                            )}
+                          </Avatar>
+                          <div>
+                            <p className="font-medium">{company.name}</p>
+                            {company.website && (
+                              <a href={company.website} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-600 hover:underline">
+                                {company.website.replace(/^https?:\/\//i, '')}
+                              </a>
+                            )}
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        {company.city && company.country ? `${company.city}, ${company.country}` : company.city || company.country || '-'}
+                      </TableCell>
+                      <TableCell>{company.industry || '-'}</TableCell>
+                      <TableCell>{company.size || '-'}</TableCell>
+                      <TableCell>{company.employeesCount || 0}</TableCell>
+                      <TableCell>
+                        <Badge
+                          className={
+                            company.status === 'Actif'
+                              ? 'bg-green-100 text-green-800'
+                              : 'bg-gray-100 text-gray-800'
+                          }
+                        >
+                          {company.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Button variant="ghost" size="sm">
+                          Voir
+                        </Button>
+                      </TableCell>
                     </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredCompanies.length > 0 ? (
-                      filteredCompanies.map((company) => (
-                        <TableRow key={company.id}>
-                          <TableCell className="font-medium">{company.name}</TableCell>
-                          <TableCell>{company.siret}</TableCell>
-                          <TableCell>
-                            <div>
-                              <div>{company.contactName}</div>
-                              <div className="text-xs text-gray-500">{company.contactEmail}</div>
-                            </div>
-                          </TableCell>
-                          <TableCell>{company.sector}</TableCell>
-                          <TableCell>{company.employeeCount}</TableCell>
-                          <TableCell>
-                            <Badge
-                              className={
-                                company.status === 'active'
-                                  ? 'bg-green-100 text-green-800'
-                                  : 'bg-amber-100 text-amber-800'
-                              }
-                            >
-                              {company.status === 'active' ? 'Actif' : 'Inactif'}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <Button variant="ghost" size="sm">
-                              Détails
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      ))
-                    ) : (
-                      <TableRow>
-                        <TableCell colSpan={7} className="h-24 text-center">
-                          Aucune entreprise trouvée
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
-
-      {/* Company Form Dialog */}
-      <Dialog open={isCompanyFormOpen} onOpenChange={setIsCompanyFormOpen}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Ajouter une entreprise</DialogTitle>
-          </DialogHeader>
-          <CompanyForm onSubmit={handleCreateCompany} onCancel={() => setIsCompanyFormOpen(false)} />
-        </DialogContent>
-      </Dialog>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Filter Dialog */}
-      <Dialog open={isFilterDialogOpen} onOpenChange={setIsFilterDialogOpen}>
-        <DialogContent>
+      <Dialog open={showFilters} onOpenChange={setShowFilters}>
+        <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle>Filtrer les entreprises</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4 pt-4">
-            <div className="space-y-2">
-              <Label htmlFor="sector">Secteur</Label>
-              <Select
-                value={filters.sector}
-                onValueChange={(value) => setFilters({...filters, sector: value})}
+          
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="status-filter">Statut</Label>
+              <Select 
+                value={filters.status} 
+                onValueChange={(value) => setFilters(prev => ({ ...prev, status: value }))}
               >
-                <SelectTrigger id="sector">
-                  <SelectValue placeholder="Tous les secteurs" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="">Tous les secteurs</SelectItem>
-                  <SelectItem value="IT">IT</SelectItem>
-                  <SelectItem value="Environnement">Environnement</SelectItem>
-                  <SelectItem value="Construction">Construction</SelectItem>
-                  <SelectItem value="Médias">Médias</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="status">Statut</Label>
-              <Select
-                value={filters.status}
-                onValueChange={(value) => setFilters({...filters, status: value})}
-              >
-                <SelectTrigger id="status">
+                <SelectTrigger id="status-filter">
                   <SelectValue placeholder="Tous les statuts" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="">Tous les statuts</SelectItem>
-                  <SelectItem value="active">Actif</SelectItem>
-                  <SelectItem value="inactive">Inactif</SelectItem>
+                  <SelectItem value="Actif">Actif</SelectItem>
+                  <SelectItem value="Inactif">Inactif</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             
-            <div className="space-y-2">
-              <Label htmlFor="minEmployees">Nombre minimum d'employés</Label>
-              <Input
-                id="minEmployees"
-                type="number"
-                value={filters.minEmployees}
-                onChange={(e) => setFilters({...filters, minEmployees: e.target.value})}
-              />
+            <div className="grid gap-2">
+              <Label htmlFor="industry-filter">Industrie</Label>
+              <Select 
+                value={filters.industry} 
+                onValueChange={(value) => setFilters(prev => ({ ...prev, industry: value }))}
+              >
+                <SelectTrigger id="industry-filter">
+                  <SelectValue placeholder="Toutes les industries" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">Toutes les industries</SelectItem>
+                  {industries.map((industry) => (
+                    <SelectItem key={industry} value={industry}>{industry}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             
-            <div className="flex justify-end space-x-2 pt-4">
-              <Button variant="outline" onClick={() => setIsFilterDialogOpen(false)}>
-                Annuler
+            <div className="grid gap-2">
+              <Label htmlFor="size-filter">Taille</Label>
+              <Select 
+                value={filters.size} 
+                onValueChange={(value) => setFilters(prev => ({ ...prev, size: value }))}
+              >
+                <SelectTrigger id="size-filter">
+                  <SelectValue placeholder="Toutes les tailles" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">Toutes les tailles</SelectItem>
+                  {sizes.map((size) => (
+                    <SelectItem key={size} value={size}>{size}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={resetFilters}>Réinitialiser</Button>
+            <Button onClick={() => setShowFilters(false)}>Appliquer</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Export Dialog */}
+      <Dialog open={exportDialogOpen} onOpenChange={setExportDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Exporter les entreprises</DialogTitle>
+          </DialogHeader>
+          
+          <div className="grid gap-4 py-4">
+            <p className="text-sm text-gray-500">
+              Sélectionnez le format d'export pour {filteredCompanies.length} entreprise(s).
+            </p>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <Button 
+                variant="outline" 
+                className="h-24 flex flex-col"
+                onClick={() => handleExport('excel')}
+              >
+                <File className="h-8 w-8 mb-2" />
+                Format Excel
               </Button>
-              <Button onClick={handleApplyFilters}>
-                Appliquer les filtres
+              
+              <Button 
+                variant="outline" 
+                className="h-24 flex flex-col"
+                onClick={() => handleExport('pdf')}
+              >
+                <FileText className="h-8 w-8 mb-2" />
+                Format PDF
               </Button>
             </div>
           </div>
         </DialogContent>
       </Dialog>
 
-      {/* Export Dialog */}
-      <Dialog open={isExportDialogOpen} onOpenChange={setIsExportDialogOpen}>
-        <DialogContent>
+      {/* New Company Dialog */}
+      <Dialog open={newCompanyDialogOpen} onOpenChange={setNewCompanyDialogOpen}>
+        <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
-            <DialogTitle>Exporter les données</DialogTitle>
+            <DialogTitle>Nouvelle entreprise</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4 pt-4">
-            <p className="text-sm text-gray-500">Choisissez le format d'export</p>
+          
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="name">Nom de l'entreprise *</Label>
+              <Input
+                id="name"
+                name="name"
+                value={newCompany.name}
+                onChange={handleInputChange}
+                placeholder="Nom de l'entreprise"
+              />
+            </div>
             
-            <div className="flex justify-center space-x-4">
-              <Button
-                variant="outline"
-                className="flex-1 flex-col h-auto py-4"
-                onClick={() => handleExportData('pdf')}
-              >
-                <FilePdf className="h-8 w-8 mb-2" />
-                <span>PDF</span>
-              </Button>
+            <div className="grid gap-2">
+              <Label htmlFor="address">Adresse</Label>
+              <Input
+                id="address"
+                name="address"
+                value={newCompany.address}
+                onChange={handleInputChange}
+                placeholder="Adresse"
+              />
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="city">Ville</Label>
+                <Input
+                  id="city"
+                  name="city"
+                  value={newCompany.city}
+                  onChange={handleInputChange}
+                  placeholder="Ville"
+                />
+              </div>
               
-              <Button
-                variant="outline"
-                className="flex-1 flex-col h-auto py-4"
-                onClick={() => handleExportData('excel')}
-              >
-                <FileExcel className="h-8 w-8 mb-2" />
-                <span>Excel</span>
-              </Button>
+              <div className="grid gap-2">
+                <Label htmlFor="country">Pays</Label>
+                <Input
+                  id="country"
+                  name="country"
+                  value={newCompany.country}
+                  onChange={handleInputChange}
+                  placeholder="Pays"
+                />
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="phone">Téléphone</Label>
+                <Input
+                  id="phone"
+                  name="phone"
+                  value={newCompany.phone}
+                  onChange={handleInputChange}
+                  placeholder="Téléphone"
+                />
+              </div>
+              
+              <div className="grid gap-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  name="email"
+                  value={newCompany.email}
+                  onChange={handleInputChange}
+                  placeholder="Email"
+                />
+              </div>
+            </div>
+            
+            <div className="grid gap-2">
+              <Label htmlFor="website">Site web</Label>
+              <Input
+                id="website"
+                name="website"
+                value={newCompany.website}
+                onChange={handleInputChange}
+                placeholder="https://example.com"
+              />
+            </div>
+            
+            <div className="grid grid-cols-3 gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="industry">Industrie</Label>
+                <Input
+                  id="industry"
+                  name="industry"
+                  value={newCompany.industry}
+                  onChange={handleInputChange}
+                  placeholder="Ex: Technologies, Santé..."
+                />
+              </div>
+              
+              <div className="grid gap-2">
+                <Label htmlFor="size">Taille</Label>
+                <Select
+                  value={newCompany.size}
+                  onValueChange={(value) => handleSelectChange("size", value)}
+                >
+                  <SelectTrigger id="size">
+                    <SelectValue placeholder="Taille de l'entreprise" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="TPE">TPE</SelectItem>
+                    <SelectItem value="PME">PME</SelectItem>
+                    <SelectItem value="ETI">ETI</SelectItem>
+                    <SelectItem value="GE">Grande Entreprise</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="grid gap-2">
+                <Label htmlFor="status">Statut</Label>
+                <Select
+                  value={newCompany.status}
+                  onValueChange={(value) => handleSelectChange("status", value)}
+                >
+                  <SelectTrigger id="status">
+                    <SelectValue placeholder="Statut" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Actif">Actif</SelectItem>
+                    <SelectItem value="Inactif">Inactif</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setNewCompanyDialogOpen(false)}>Annuler</Button>
+            <Button onClick={handleCreateCompany}>Créer l'entreprise</Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
