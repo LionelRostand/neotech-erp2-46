@@ -2,7 +2,6 @@
 import React from 'react';
 import { SubModule } from '@/data/types/modules';
 import EmployeesDashboard from '../EmployeesDashboard';
-import EmployeesProfiles from '../EmployeesProfiles';
 import EmployeesBadges from '../EmployeesBadges';
 import EmployeesContracts from '../EmployeesContracts';
 import EmployeesAttendance from '../EmployeesAttendance';
@@ -19,6 +18,8 @@ import EmployeesDepartments from '../departments/EmployeesDepartments';
 import EmployeesCompanies from '../employees/EmployeesCompanies';
 import SalarySlips from '../salaries/SalarySlips';
 import PaySlipGenerator from '../salaries/PaySlipGenerator';
+import EmployeesProfiles from '../employees/EmployeesProfiles';
+import EmployeesHierarchy from '../employees/EmployeesHierarchy';
 
 export const renderEmployeesSubmodule = (submoduleId: string, submodule: SubModule) => {
   switch (submoduleId) {
@@ -33,6 +34,9 @@ export const renderEmployeesSubmodule = (submoduleId: string, submodule: SubModu
     
     case 'employees-departments':
       return <EmployeesDepartments />;
+    
+    case 'employees-hierarchy':
+      return <EmployeesHierarchy />;
     
     case 'employees-contracts':
       return <EmployeesContracts />;
