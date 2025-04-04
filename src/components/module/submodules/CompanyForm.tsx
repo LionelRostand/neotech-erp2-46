@@ -290,7 +290,7 @@ const CompanyForm: React.FC<CompanyFormProps> = ({
               Annuler
             </Button>
             <Button type="submit">
-              {isEditing ? 'Mettre à jour' : 'Ajouter l'entreprise'}
+              {isEditing ? 'Mettre à jour' : 'Ajouter l\'entreprise'}
             </Button>
           </DialogFooter>
         </form>
