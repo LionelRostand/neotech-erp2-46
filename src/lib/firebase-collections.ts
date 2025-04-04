@@ -1,4 +1,3 @@
-
 // Firebase collections constants
 
 export const COLLECTIONS = {

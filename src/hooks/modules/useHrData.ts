@@ -73,7 +73,7 @@ export const useHrData = () => {
     isLoading: isAbsenceRequestsLoading,
     error: absenceRequestsError
   } = useCollectionData(
-    COLLECTIONS.HR.ABSENCES,
+    COLLECTIONS.HR.ABSENCE_REQUESTS,
     [orderBy('startDate')]
   );
 
@@ -94,7 +94,7 @@ export const useHrData = () => {
     error: timeSheetsError
   } = useCollectionData(
     COLLECTIONS.HR.TIMESHEETS,
-    [orderBy('date', 'desc')]
+    [orderBy('startDate', 'desc')]
   );
 
   // Fetch evaluations

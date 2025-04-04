@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -10,18 +10,20 @@ import { format, startOfWeek, endOfWeek, addDays } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { Calendar as CalendarIcon } from 'lucide-react';
 import { DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Employee } from '@/types/employee';
 
 interface TimesheetFormProps {
   onSubmit: (data: any) => void;
   onCancel: () => void;
+  employees: Employee[];
 }
 
-const TimesheetForm: React.FC<TimesheetFormProps> = ({ onSubmit, onCancel }) => {
+const TimesheetForm: React.FC<TimesheetFormProps> = ({ onSubmit, onCancel, employees }) => {
   const [formData, setFormData] = useState({
     employeeId: '',
-    employeeName: '',
     weekStartDate: startOfWeek(new Date(), { weekStartsOn: 1 }),
-    status: 'pending',
+    weekEndDate: endOfWeek(new Date(), { weekStartsOn: 1 }),
+    status: 'active',
     hours: {
       monday: 8,
       tuesday: 8,
@@ -58,9 +60,11 @@ const TimesheetForm: React.FC<TimesheetFormProps> = ({ onSubmit, onCancel }) => 
 
   const handleWeekSelection = (date: Date) => {
     const weekStart = startOfWeek(date, { weekStartsOn: 1 });
+    const weekEnd = endOfWeek(date, { weekStartsOn: 1 });
     setFormData(prev => ({
       ...prev,
-      weekStartDate: weekStart
+      weekStartDate: weekStart,
+      weekEndDate: weekEnd
     }));
     setWeekStartDateOpen(false);
   };
@@ -70,8 +74,18 @@ const TimesheetForm: React.FC<TimesheetFormProps> = ({ onSubmit, onCancel }) => 
     onSubmit(formData);
   };
 
+  // Initialize with the first employee if available
+  useEffect(() => {
+    if (employees && employees.length > 0 && !formData.employeeId) {
+      setFormData(prev => ({
+        ...prev,
+        employeeId: employees[0].id
+      }));
+    }
+  }, [employees, formData.employeeId]);
+
   // Calculate week end date
-  const weekEndDate = endOfWeek(formData.weekStartDate, { weekStartsOn: 1 });
+  const weekEndDate = formData.weekEndDate || endOfWeek(formData.weekStartDate, { weekStartsOn: 1 });
 
   // Get day names for the selected week
   const dayNames = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'];
@@ -90,16 +104,24 @@ const TimesheetForm: React.FC<TimesheetFormProps> = ({ onSubmit, onCancel }) => 
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label htmlFor="employeeName" className="block text-sm font-medium mb-1">
+          <label htmlFor="employeeId" className="block text-sm font-medium mb-1">
             Employé
           </label>
-          <Input 
-            id="employeeName" 
-            placeholder="Nom de l'employé"
-            value={formData.employeeName}
-            onChange={(e) => handleChange('employeeName', e.target.value)}
-            required
-          />
+          <Select 
+            value={formData.employeeId}
+            onValueChange={(value) => handleChange('employeeId', value)}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Sélectionner un employé" />
+            </SelectTrigger>
+            <SelectContent>
+              {employees.map((employee) => (
+                <SelectItem key={employee.id} value={employee.id}>
+                  {employee.firstName} {employee.lastName}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
         
         <div>
@@ -166,8 +188,8 @@ const TimesheetForm: React.FC<TimesheetFormProps> = ({ onSubmit, onCancel }) => 
               <SelectValue placeholder="Sélectionner un statut" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="pending">En attente</SelectItem>
               <SelectItem value="active">En cours</SelectItem>
+              <SelectItem value="pending">Soumis</SelectItem>
               <SelectItem value="validated">Validée</SelectItem>
               <SelectItem value="rejected">Rejetée</SelectItem>
             </SelectContent>

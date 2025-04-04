@@ -7,6 +7,7 @@ import EmployeesProfiles from '../employees/EmployeesProfiles';
 import EmployeesHierarchy from '../employees/EmployeesHierarchy';
 import EmployeesLeaves from '../employees/EmployeesLeaves';
 import SalarySlips from '../salaries/SalarySlips';
+import EmployeesTimesheet from '../EmployeesTimesheet';
 import { SubModule } from '@/data/types/modules';
 import { useHrModuleData } from '@/hooks/useHrModuleData';
 
@@ -28,6 +29,8 @@ export const renderEmployeesSubmodule = (submoduleId: string, submodule: SubModu
       return <EmployeesLeaves />;
     case 'employees-salaries':
       return <SalarySlips employees={employees} companies={companies} />;
+    case 'employees-timesheet':
+      return <EmployeesTimesheet />;
     default:
       return (
         <div className="container mx-auto py-4">
