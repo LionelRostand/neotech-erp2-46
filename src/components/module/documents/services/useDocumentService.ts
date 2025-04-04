@@ -21,9 +21,12 @@ export const useDocumentService = () => {
           size: 2500000,
           createdAt: new Date('2024-03-15'),
           updatedAt: new Date('2024-03-15'),
-          userId: 'user-1',
+          createdBy: userId, // Changed from userId to createdBy
           isEncrypted: false,
-          isArchived: false,
+          status: 'active', // Changed from isArchived to status
+          path: '/mock/contrat.pdf', // Changed from fileUrl to path
+          format: 'pdf', // Added format property
+          versions: [], // Added versions property
           permissions: [
             {
               userId: 'user-1',
@@ -34,8 +37,8 @@ export const useDocumentService = () => {
             }
           ],
           tags: ['contrat', 'rh'],
-          fileUrl: '/mock/contrat.pdf',
-          thumbnailUrl: '/mock/thumbnail-pdf.png'
+          description: 'Contrat de travail standard', // Added description
+          department: 'RH', // Added department
         },
         {
           id: 'doc-2',
@@ -44,9 +47,12 @@ export const useDocumentService = () => {
           size: 1200000,
           createdAt: new Date('2024-02-20'),
           updatedAt: new Date('2024-02-20'),
-          userId: 'user-1',
+          createdBy: userId, // Changed from userId to createdBy
           isEncrypted: true,
-          isArchived: false,
+          status: 'active', // Changed from isArchived to status
+          path: '/mock/attestation.pdf', // Changed from fileUrl to path
+          format: 'pdf', // Added format property
+          versions: [], // Added versions property
           permissions: [
             {
               userId: 'user-1',
@@ -57,8 +63,8 @@ export const useDocumentService = () => {
             }
           ],
           tags: ['formation', 'attestation'],
-          fileUrl: '/mock/attestation.pdf',
-          thumbnailUrl: '/mock/thumbnail-pdf.png'
+          description: 'Attestation de formation professionnelle', // Added description
+          department: 'Formation', // Added department
         }
       ];
       
@@ -84,13 +90,16 @@ export const useDocumentService = () => {
         size: 1500000,
         createdAt: new Date(),
         updatedAt: new Date(),
-        userId: 'user-1',
+        createdBy: 'user-1', // Changed from userId to createdBy
         isEncrypted: false,
-        isArchived: false,
+        status: 'active', // Changed from isArchived to status
+        path: '/mock/document.pdf', // Changed from fileUrl to path
+        format: 'pdf', // Added format property
+        versions: [], // Added versions property
         permissions: [],
         tags: [],
-        fileUrl: '/mock/document.pdf',
-        thumbnailUrl: '/mock/thumbnail-pdf.png'
+        description: 'Document demandé', // Added description
+        department: 'General', // Added department
       };
     } catch (error) {
       console.error('Error fetching document:', error);
@@ -113,9 +122,12 @@ export const useDocumentService = () => {
         size: file.size,
         createdAt: new Date(),
         updatedAt: new Date(),
-        userId: 'current-user',
+        createdBy: 'current-user', // Changed from userId to createdBy
         isEncrypted: false,
-        isArchived: false,
+        status: 'active', // Changed from isArchived to status
+        path: URL.createObjectURL(file), // Changed from fileUrl to path
+        format: file.name.split('.').pop() || 'unknown', // Added format based on file extension
+        versions: [], // Added versions property
         permissions: [{
           userId: 'current-user',
           userName: 'Current User',
@@ -124,8 +136,8 @@ export const useDocumentService = () => {
           grantedBy: 'system',
         }],
         tags: [metadata.documentType || 'document'],
-        fileUrl: URL.createObjectURL(file),
-        thumbnailUrl: '/mock/thumbnail-generic.png'
+        description: metadata.description || '', // Added description
+        department: metadata.department || '', // Added department
       };
       
       return newDocument;
