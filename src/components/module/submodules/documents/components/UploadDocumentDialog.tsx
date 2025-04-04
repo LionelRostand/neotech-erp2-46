@@ -108,7 +108,7 @@ const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
                 <SelectValue placeholder="Associer à un employé" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Non assigné</SelectItem>
+                <SelectItem value="none">Non assigné</SelectItem>
                 <SelectItem value="emp1">Jean Dupont</SelectItem>
                 <SelectItem value="emp2">Marie Martin</SelectItem>
                 <SelectItem value="emp3">Lucas Bernard</SelectItem>
