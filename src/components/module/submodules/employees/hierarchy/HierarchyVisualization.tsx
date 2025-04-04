@@ -99,7 +99,8 @@ export const OrganizationChart: React.FC<{ node: ChartNode; searchQuery: string 
         )}
       </div>
       
-      <style jsx>{`
+      <style>
+        {`
         .org-chart {
           display: flex;
           flex-direction: column;
@@ -131,7 +132,8 @@ export const OrganizationChart: React.FC<{ node: ChartNode; searchQuery: string 
           flex-direction: column;
           align-items: center;
         }
-      `}</style>
+        `}
+      </style>
     </div>
   );
 };
@@ -157,7 +159,8 @@ const SubTree: React.FC<{ node: ChartNode }> = ({ node }) => {
         </>
       )}
       
-      <style jsx>{`
+      <style>
+        {`
         .subtree {
           display: flex;
           flex-direction: column;
@@ -187,7 +190,8 @@ const SubTree: React.FC<{ node: ChartNode }> = ({ node }) => {
           flex-direction: column;
           align-items: center;
         }
-      `}</style>
+        `}
+      </style>
     </div>
   );
 };

@@ -7,29 +7,27 @@ export interface Employee {
   phone?: string;
   address?: string;
   department: string;
-  departmentId?: string; // Added this property
+  departmentId?: string;
   position: string;
   contract: string;
   hireDate: string;
   manager?: string;
+  managerId?: string; // Added managerId property
   status: string;
   createdAt?: string;
   updatedAt?: string;
   photo?: string;
-  photoURL?: string; // Added this property
+  photoURL?: string;
   professionalEmail?: string;
   company?: string;
-  title?: string; // Added this property
-  // Add missing properties
+  title?: string;
   education?: EducationItem[];
   skills?: string[];
   documents?: Document[];
   workSchedule?: {
     [key: string]: string;
   };
-  // Ajout d'un tableau pour stocker les références aux fiches de paie
   payslips?: string[];
-  // Ajout d'un champ pour le salaire de base
   baseSalary?: number;
 }
 

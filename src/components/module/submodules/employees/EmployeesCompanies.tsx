@@ -1,12 +1,33 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription
-} from '@/components/ui/card';
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogDescription
+} from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle
+} from '@/components/ui/alert-dialog';
+import { Input } from '@/components/ui/input';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger
+} from '@/components/ui/dropdown-menu';
 import {
   Table,
   TableBody,
@@ -15,401 +36,327 @@ import {
   TableHeader,
   TableRow
 } from '@/components/ui/table';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { MoreHorizontal, Plus, Search, RefreshCw } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { File, FileText, Filter, Plus, Search } from 'lucide-react';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Label } from '@/components/ui/label';
-import { Company } from '../CompanyForm';
-import CompanyForm from '../CompanyForm';
+import { Skeleton } from '@/components/ui/skeleton';
+import { toast } from 'sonner';
+import { CompanyForm } from './CompanyForm';
+import { useAuth } from '@/hooks/useAuth';
 
-// Sample data for companies
-const initialCompanies: Company[] = [
-  {
-    id: 'enterprise1',
-    name: 'Enterprise Solutions',
-    address: '15 Rue de la Paix',
-    city: 'Paris',
-    postalCode: '75001',
-    country: 'France',
-    phone: '+33 1 23 45 67 89',
-    email: 'contact@enterprise-solutions.fr',
-    website: 'https://enterprise-solutions.fr',
-    contactPerson: 'Jean Dupont',
-    sector: 'Technologies',
-    size: 'medium',
-    status: 'active',
-    description: 'Entreprise spécialisée dans les solutions informatiques pour PME',
-    createdAt: '2022-05-15'
-  },
-  {
-    id: 'techinno',
-    name: 'TechInnovation',
-    address: '5 Quai des Bergues',
-    city: 'Lyon',
-    postalCode: '69002',
-    country: 'France',
-    phone: '+33 4 56 78 90 12',
-    email: 'info@techinnovation.fr',
-    website: 'https://techinnovation.fr',
-    contactPerson: 'Marie Legrand',
-    sector: 'Recherche et Développement',
-    size: 'large',
-    status: 'active',
-    description: 'Leader en innovation technologique et recherche appliquée',
-    createdAt: '2021-03-10'
-  },
-  {
-    id: 'greenco',
-    name: 'GreenCo',
-    address: '27 Boulevard de la Liberté',
-    city: 'Toulouse',
-    postalCode: '31000',
-    country: 'France',
-    phone: '+33 5 67 89 01 23',
-    email: 'contact@greenco.fr',
-    website: 'https://greenco.fr',
-    contactPerson: 'Lucas Martin',
-    sector: 'Développement Durable',
-    size: 'small',
-    status: 'active',
-    description: 'Solutions écologiques pour entreprises responsables',
-    createdAt: '2023-01-22'
-  }
-];
+// Define Company type
+export interface Company {
+  id: string;
+  name: string;
+  address: string;
+  city: string;
+  postalCode: string;
+  country: string;
+  phone: string;
+  email: string;
+  website: string;
+  contactPerson: string;
+  sector: string;
+  size: string;
+  status: 'active' | 'inactive';
+  description: string;
+  createdAt: string;
+}
 
 const EmployeesCompanies: React.FC = () => {
-  const [companies, setCompanies] = useState<Company[]>(initialCompanies);
-  const [searchTerm, setSearchTerm] = useState<string>("");
-  const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [sectorFilter, setSectorFilter] = useState<string>("all");
-  const [isCompanyFormOpen, setIsCompanyFormOpen] = useState(false);
-  const [isExportDialogOpen, setIsExportDialogOpen] = useState(false);
-  const [isFilterDialogOpen, setIsFilterDialogOpen] = useState(false);
-  const [exportFormat, setExportFormat] = useState("pdf");
-  const [editingCompany, setEditingCompany] = useState<Company | undefined>(undefined);
+  const [companies, setCompanies] = useState<Company[]>([]);
+  const [filteredCompanies, setFilteredCompanies] = useState<Company[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [currentCompany, setCurrentCompany] = useState<Company | null>(null);
+  const [loading, setLoading] = useState(true);
+  const { isOffline } = useAuth();
 
-  // Filters state
-  const [filters, setFilters] = useState({
-    size: 'all',
-    country: 'all',
-    createdFrom: '',
-    createdTo: ''
-  });
+  useEffect(() => {
+    fetchCompanies();
+  }, []);
 
-  const handleFilterChange = (name: string, value: string) => {
-    setFilters(prev => ({
-      ...prev,
-      [name]: value
-    }));
+  useEffect(() => {
+    if (searchQuery.trim() === '') {
+      setFilteredCompanies(companies);
+    } else {
+      const query = searchQuery.toLowerCase();
+      const filtered = companies.filter(company =>
+        company.name.toLowerCase().includes(query) ||
+        company.sector.toLowerCase().includes(query) ||
+        company.contactPerson.toLowerCase().includes(query) ||
+        company.city.toLowerCase().includes(query)
+      );
+      setFilteredCompanies(filtered);
+    }
+  }, [searchQuery, companies]);
+
+  const fetchCompanies = async () => {
+    setLoading(true);
+    try {
+      // Mock data for now
+      const mockCompanies: Company[] = [
+        {
+          id: '1',
+          name: 'TechInnovation',
+          address: '123 Tech Avenue',
+          city: 'Paris',
+          postalCode: '75001',
+          country: 'France',
+          phone: '+33 1 23 45 67 89',
+          email: 'contact@techinnovation.fr',
+          website: 'www.techinnovation.fr',
+          contactPerson: 'Jean Dupont',
+          sector: 'IT',
+          size: 'medium',
+          status: 'active',
+          description: 'Société spécialisée en développement de logiciels',
+          createdAt: '2023-01-15T10:30:00Z'
+        },
+        {
+          id: '2',
+          name: 'GreenCo',
+          address: '45 Rue Verte',
+          city: 'Lyon',
+          postalCode: '69002',
+          country: 'France',
+          phone: '+33 4 56 78 90 12',
+          email: 'info@greenco.fr',
+          website: 'www.greenco.fr',
+          contactPerson: 'Marie Laurent',
+          sector: 'Environnement',
+          size: 'small',
+          status: 'active',
+          description: 'Solutions écologiques pour entreprises',
+          createdAt: '2023-03-22T14:15:00Z'
+        }
+      ];
+      
+      setCompanies(mockCompanies);
+      setFilteredCompanies(mockCompanies);
+      
+      // In a real application, you would fetch from your API
+      // const response = await fetch('/api/companies');
+      // const data = await response.json();
+      // setCompanies(data);
+      // setFilteredCompanies(data);
+    } catch (error) {
+      console.error('Erreur lors du chargement des entreprises:', error);
+      toast.error('Impossible de charger les entreprises');
+    } finally {
+      setLoading(false);
+    }
   };
-
-  const applyAdvancedFilters = () => {
-    setIsFilterDialogOpen(false);
-    // Apply the filters logic would go here
-  };
-
-  // Get unique sectors for filter
-  const sectors = React.useMemo(() => {
-    const sectorSet = new Set<string>();
-    companies.forEach(company => {
-      if (company.sector) sectorSet.add(company.sector);
-    });
-    return Array.from(sectorSet);
-  }, [companies]);
-
-  // Filtered companies based on search and filters
-  const filteredCompanies = React.useMemo(() => {
-    return companies.filter(company => {
-      // Search term filter
-      const matchesSearch = searchTerm === "" || 
-        company.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        company.city.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (company.contactPerson && company.contactPerson.toLowerCase().includes(searchTerm.toLowerCase()));
-      
-      // Status filter
-      const matchesStatus = statusFilter === "all" || company.status === statusFilter;
-      
-      // Sector filter
-      const matchesSector = sectorFilter === "all" || company.sector === sectorFilter;
-      
-      return matchesSearch && matchesStatus && matchesSector;
-    });
-  }, [companies, searchTerm, statusFilter, sectorFilter]);
 
   const handleAddCompany = (companyData: Partial<Company>) => {
-    const newCompany: Company = {
+    const newCompany = {
       ...companyData,
-      id: `company-${Date.now()}`, // Generate a simple unique ID
-      createdAt: new Date().toISOString().split('T')[0],
+      id: `COMP${Date.now().toString().slice(-6)}`,
+      createdAt: new Date().toISOString()
     } as Company;
-    
-    setCompanies([...companies, newCompany]);
-    setIsCompanyFormOpen(false);
+
+    setCompanies(prev => [newCompany, ...prev]);
+    toast.success('Entreprise ajoutée avec succès');
+    setIsAddDialogOpen(false);
   };
 
-  const handleEditCompany = (companyData: Partial<Company>) => {
-    if (!editingCompany) return;
-    
-    const updatedCompanies = companies.map(company => 
-      company.id === editingCompany.id 
-        ? { ...company, ...companyData } 
-        : company
-    );
-    
-    setCompanies(updatedCompanies);
-    setEditingCompany(undefined);
+  const handleEditCompany = (companyId: string) => {
+    const company = companies.find(c => c.id === companyId);
+    if (company) {
+      setCurrentCompany(company);
+      setIsEditDialogOpen(true);
+    }
   };
 
-  const handleExport = () => {
-    // Handle export logic here
-    console.log(`Exporting companies in ${exportFormat} format`);
-    setIsExportDialogOpen(false);
+  const handleUpdateCompany = (companyData: Partial<Company>) => {
+    if (!currentCompany) return;
+
+    const updatedCompany = {
+      ...currentCompany,
+      ...companyData
+    };
+
+    setCompanies(prev => prev.map(c => c.id === currentCompany.id ? updatedCompany as Company : c));
+    toast.success('Entreprise mise à jour avec succès');
+    setIsEditDialogOpen(false);
   };
 
-  const openEditForm = (company: Company) => {
-    setEditingCompany(company);
+  const handleDeleteClick = (companyId: string) => {
+    const company = companies.find(c => c.id === companyId);
+    if (company) {
+      setCurrentCompany(company);
+      setIsDeleteDialogOpen(true);
+    }
+  };
+
+  const handleDeleteConfirm = () => {
+    if (!currentCompany) return;
+
+    setCompanies(prev => prev.filter(c => c.id !== currentCompany.id));
+    toast.success('Entreprise supprimée avec succès');
+    setIsDeleteDialogOpen(false);
   };
 
   return (
     <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <div>
+          <h2 className="text-2xl font-bold">Entreprises</h2>
+          <p className="text-gray-500">Gérez les entreprises et leurs informations</p>
+        </div>
+        <div className="flex space-x-2">
+          <Button variant="outline" onClick={fetchCompanies} className="flex items-center gap-2">
+            <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+            Actualiser
+          </Button>
+          <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+            <DialogTrigger asChild>
+              <Button className="flex items-center gap-2">
+                <Plus className="h-4 w-4" />
+                Nouvelle entreprise
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-2xl">
+              <DialogHeader>
+                <DialogTitle>Ajouter une nouvelle entreprise</DialogTitle>
+              </DialogHeader>
+              <CompanyForm
+                onClose={() => setIsAddDialogOpen(false)}
+                onSave={handleAddCompany}
+              />
+            </DialogContent>
+          </Dialog>
+        </div>
+      </div>
+
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <div>
-            <CardTitle>Entreprises</CardTitle>
-            <CardDescription>Gérez les entreprises partenaires</CardDescription>
-          </div>
-          <div className="flex space-x-2">
-            <Dialog open={isFilterDialogOpen} onOpenChange={setIsFilterDialogOpen}>
-              <DialogTrigger asChild>
-                <Button variant="outline">
-                  <Filter className="w-4 h-4 mr-2" />
-                  Filtres avancés
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Filtres avancés</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4 py-4">
-                  <div className="grid grid-cols-1 gap-4">
-                    <div className="space-y-2">
-                      <Label>Taille d'entreprise</Label>
-                      <Select 
-                        value={filters.size} 
-                        onValueChange={(value) => handleFilterChange('size', value)}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Sélectionner" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="all">Toutes les tailles</SelectItem>
-                          <SelectItem value="micro">Micro (1-9 employés)</SelectItem>
-                          <SelectItem value="small">Petite (10-49 employés)</SelectItem>
-                          <SelectItem value="medium">Moyenne (50-249 employés)</SelectItem>
-                          <SelectItem value="large">Grande (250+ employés)</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label>Pays</Label>
-                    <Select 
-                      value={filters.country} 
-                      onValueChange={(value) => handleFilterChange('country', value)}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Sélectionner" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">Tous les pays</SelectItem>
-                        <SelectItem value="France">France</SelectItem>
-                        <SelectItem value="Belgique">Belgique</SelectItem>
-                        <SelectItem value="Suisse">Suisse</SelectItem>
-                        <SelectItem value="Canada">Canada</SelectItem>
-                        <SelectItem value="Luxembourg">Luxembourg</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label>Date de création (depuis)</Label>
-                      <Input 
-                        type="date" 
-                        value={filters.createdFrom}
-                        onChange={(e) => handleFilterChange('createdFrom', e.target.value)}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Date de création (jusqu'à)</Label>
-                      <Input 
-                        type="date" 
-                        value={filters.createdTo}
-                        onChange={(e) => handleFilterChange('createdTo', e.target.value)}
-                      />
-                    </div>
-                  </div>
-                </div>
-                <DialogFooter>
-                  <Button variant="outline" onClick={() => setIsFilterDialogOpen(false)}>Annuler</Button>
-                  <Button onClick={applyAdvancedFilters}>Appliquer les filtres</Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
-            
-            <Dialog open={isExportDialogOpen} onOpenChange={setIsExportDialogOpen}>
-              <DialogTrigger asChild>
-                <Button variant="outline">
-                  <FileText className="w-4 h-4 mr-2" />
-                  Exporter
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Exporter les entreprises</DialogTitle>
-                </DialogHeader>
-                <div className="py-4">
-                  <div className="space-y-2">
-                    <Label>Format d'export</Label>
-                    <Select value={exportFormat} onValueChange={setExportFormat}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Sélectionner un format" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="pdf">PDF</SelectItem>
-                        <SelectItem value="excel">Excel</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-                <DialogFooter>
-                  <Button variant="outline" onClick={() => setIsExportDialogOpen(false)}>Annuler</Button>
-                  <Button onClick={handleExport}>Exporter</Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
-            
-            <Button onClick={() => setIsCompanyFormOpen(true)}>
-              <Plus className="w-4 h-4 mr-2" />
-              Nouvelle entreprise
-            </Button>
-          </div>
-        </CardHeader>
-        
-        <CardContent>
-          <div className="flex flex-col md:flex-row justify-between mb-4 gap-4">
-            <div className="flex flex-1 items-center border rounded-md px-3 py-2">
-              <Search className="h-4 w-4 text-muted-foreground mr-2" />
-              <Input 
-                placeholder="Rechercher une entreprise..." 
-                className="border-0 p-0 focus-visible:ring-0 focus-visible:ring-offset-0"
-                value={searchTerm}
-                onChange={e => setSearchTerm(e.target.value)}
+        <CardContent className="p-6 space-y-4">
+          <div className="flex items-center space-x-2">
+            <div className="relative flex-1">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
+              <Input
+                placeholder="Rechercher une entreprise..."
+                className="pl-8"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
-            <div className="flex gap-2">
-              <Select
-                defaultValue="all"
-                onValueChange={setStatusFilter}
-              >
-                <SelectTrigger className="w-[150px]">
-                  <SelectValue placeholder="Statut" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Tous les statuts</SelectItem>
-                  <SelectItem value="active">Actif</SelectItem>
-                  <SelectItem value="inactive">Inactif</SelectItem>
-                </SelectContent>
-              </Select>
-              
-              <Select 
-                defaultValue="all"
-                onValueChange={setSectorFilter}
-              >
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Secteur" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Tous les secteurs</SelectItem>
-                  {sectors.map(sector => (
-                    <SelectItem key={sector} value={sector}>{sector}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+          </div>
+
+          {loading ? (
+            <div className="space-y-2">
+              {[1, 2, 3, 4].map(i => (
+                <div key={i} className="flex items-center space-x-4 py-4">
+                  <Skeleton className="h-12 w-12 rounded-full" />
+                  <div className="space-y-2">
+                    <Skeleton className="h-4 w-[250px]" />
+                    <Skeleton className="h-4 w-[200px]" />
+                  </div>
+                </div>
+              ))}
             </div>
-          </div>
-          
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Nom</TableHead>
-                  <TableHead>Ville</TableHead>
-                  <TableHead>Contact</TableHead>
-                  <TableHead>Secteur</TableHead>
-                  <TableHead>Taille</TableHead>
-                  <TableHead>Statut</TableHead>
-                  <TableHead>Date de création</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredCompanies.length === 0 ? (
+          ) : (
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center py-4">Aucune entreprise trouvée</TableCell>
+                    <TableHead>Nom</TableHead>
+                    <TableHead>Secteur</TableHead>
+                    <TableHead>Contact</TableHead>
+                    <TableHead>Ville</TableHead>
+                    <TableHead>Statut</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
-                ) : (
-                  filteredCompanies.map((company) => (
-                    <TableRow 
-                      key={company.id} 
-                      className="cursor-pointer hover:bg-muted/50"
-                      onClick={() => openEditForm(company)}
-                    >
-                      <TableCell className="font-medium">{company.name}</TableCell>
-                      <TableCell>{company.city}</TableCell>
-                      <TableCell>{company.contactPerson || 'Non spécifié'}</TableCell>
-                      <TableCell>{company.sector || 'Non spécifié'}</TableCell>
-                      <TableCell>
-                        {company.size === 'micro' && 'Micro'}
-                        {company.size === 'small' && 'Petite'}
-                        {company.size === 'medium' && 'Moyenne'}
-                        {company.size === 'large' && 'Grande'}
+                </TableHeader>
+                <TableBody>
+                  {filteredCompanies.length > 0 ? (
+                    filteredCompanies.map((company) => (
+                      <TableRow key={company.id}>
+                        <TableCell className="font-medium">{company.name}</TableCell>
+                        <TableCell>{company.sector}</TableCell>
+                        <TableCell>{company.contactPerson}</TableCell>
+                        <TableCell>{company.city}</TableCell>
+                        <TableCell>
+                          <Badge variant={company.status === 'active' ? 'default' : 'secondary'}>
+                            {company.status === 'active' ? 'Actif' : 'Inactif'}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" className="h-8 w-8 p-0">
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem
+                                onClick={() => handleEditCompany(company.id)}
+                              >
+                                Modifier
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => handleDeleteClick(company.id)}
+                                className="text-red-600"
+                              >
+                                Supprimer
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={6} className="text-center py-6 text-gray-500">
+                        Aucune entreprise trouvée
                       </TableCell>
-                      <TableCell>
-                        <Badge variant={company.status === 'active' ? 'success' : 'secondary'}>
-                          {company.status === 'active' ? 'Actif' : 'Inactif'}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>{company.createdAt}</TableCell>
                     </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </div>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          )}
         </CardContent>
       </Card>
-      
-      {/* Company Form */}
-      <CompanyForm 
-        isOpen={isCompanyFormOpen}
-        onClose={() => setIsCompanyFormOpen(false)}
-        onSave={handleAddCompany}
-      />
-      
-      {/* Edit Company Form */}
-      {editingCompany && (
-        <CompanyForm 
-          isOpen={!!editingCompany}
-          onClose={() => setEditingCompany(undefined)}
-          onSave={handleEditCompany}
-          company={editingCompany}
-          isEditing={true}
-        />
-      )}
+
+      {/* Edit Company Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogTrigger asChild>
+          <span></span> {/* Empty trigger for controlled dialog */}
+        </DialogTrigger>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Modifier l'entreprise</DialogTitle>
+          </DialogHeader>
+          {currentCompany && (
+            <CompanyForm
+              company={currentCompany}
+              isEditing={true}
+              onClose={() => setIsEditDialogOpen(false)}
+              onSave={handleUpdateCompany}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Êtes-vous sûr ?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Cette action supprimera définitivement l'entreprise {currentCompany?.name} et ne peut pas être annulée.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteConfirm} className="bg-red-600 hover:bg-red-700">
+              Confirmer la suppression
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
