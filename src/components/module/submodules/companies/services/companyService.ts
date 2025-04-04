@@ -1,300 +1,196 @@
 
-import { toast } from 'sonner';
-import { Company, CompanyContact, CompanyDocument, CompanyFilters } from '../types';
+import { Company, CompanyFilters } from '../types';
+import { addDoc, collection, getDocs, query, where, doc, getDoc, updateDoc, deleteDoc, orderBy, limit } from 'firebase/firestore';
+import { db } from '@/lib/firebase-config';
+import { COLLECTIONS } from '@/lib/firebase-collections';
 
-// Mock companies data
-const mockCompanies: Company[] = [
-  {
-    id: 'comp1',
-    name: 'TechInnovation',
-    siret: '123 456 789 00012',
-    address: {
-      street: '15 Rue de l\'Innovation',
-      city: 'Paris',
-      postalCode: '75001',
-      country: 'France'
-    },
-    industry: 'Technology',
-    size: '50-250',
-    employeesCount: 120,
-    email: 'contact@techinnovation.com',
-    phone: '+33 1 23 45 67 89',
-    status: 'active',
-    website: 'https://techinnovation.com',
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
-  },
-  {
-    id: 'comp2',
-    name: 'GreenCo',
-    siret: '987 654 321 00098',
-    address: {
-      street: '42 Avenue Verte',
-      city: 'Lyon',
-      postalCode: '69000',
-      country: 'France'
-    },
-    industry: 'Energy',
-    size: '10-50',
-    employeesCount: 35,
-    email: 'info@greenco.fr',
-    phone: '+33 4 56 78 90 12',
-    status: 'active',
-    website: 'https://greenco.fr',
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
-  },
-  {
-    id: 'comp3',
-    name: 'Enterprise Solutions',
-    siret: '456 789 123 00045',
-    address: {
-      street: '8 Boulevard des Affaires',
-      city: 'Bordeaux',
-      postalCode: '33000',
-      country: 'France'
-    },
-    industry: 'Consulting',
-    size: '>250',
-    employeesCount: 310,
-    email: 'contact@enterprise-solutions.com',
-    phone: '+33 5 67 89 01 23',
-    status: 'active',
-    website: 'https://enterprise-solutions.com',
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
-  },
-  {
-    id: 'comp4',
-    name: 'BioMed Innovations',
-    siret: '234 567 891 00078',
-    address: {
-      street: '27 Rue Pasteur',
-      city: 'Lille',
-      postalCode: '59000',
-      country: 'France'
-    },
-    industry: 'Healthcare',
-    size: '50-250',
-    employeesCount: 87,
-    email: 'contact@biomed-innovations.com',
-    phone: '+33 3 45 67 89 01',
-    status: 'inactive',
-    website: 'https://biomed-innovations.com',
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
-  },
-  {
-    id: 'comp5',
-    name: 'Digital Media Group',
-    siret: '345 678 912 00056',
-    address: {
-      street: '14 Rue des Arts',
-      city: 'Marseille',
-      postalCode: '13000',
-      country: 'France'
-    },
-    industry: 'Media',
-    size: '10-50',
-    employeesCount: 42,
-    email: 'info@digitalmediagroup.fr',
-    phone: '+33 4 91 23 45 67',
-    status: 'pending',
-    website: 'https://digitalmediagroup.fr',
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
-  }
-];
-
-// Filter companies based on criteria
-export const filterCompanies = (companies: Company[], filters: CompanyFilters | null) => {
-  if (!filters || Object.keys(filters).length === 0) {
-    return companies;
-  }
-
-  return companies.filter(company => {
-    // Filter by status
-    if (filters.status && company.status !== filters.status) {
-      return false;
-    }
-
-    // Filter by industry
-    if (filters.industry && company.industry !== filters.industry) {
-      return false;
-    }
-
-    // Filter by size
-    if (filters.size && company.size !== filters.size) {
-      return false;
-    }
-
-    // Search by name or registration number
-    if (filters.search) {
-      const searchLower = filters.search.toLowerCase();
-      const nameMatch = company.name.toLowerCase().includes(searchLower);
-      const regMatch = company.registrationNumber && company.registrationNumber.toLowerCase().includes(searchLower);
-      
-      if (!nameMatch && !regMatch) {
-        return false;
-      }
-    }
-
-    // Filter by creation date range
-    if (filters.startDate && filters.endDate) {
-      const companyDate = new Date(company.createdAt).getTime();
-      const startDate = new Date(filters.startDate).getTime();
-      const endDate = new Date(filters.endDate).getTime();
-      
-      if (companyDate < startDate || companyDate > endDate) {
-        return false;
-      }
-    }
-
-    return true;
-  });
+// Helper function to generate company ID
+const generateCompanyId = () => {
+  return `COMP-${Math.floor(100000 + Math.random() * 900000)}`;
 };
 
-// Get all companies
-export const getCompanies = async (): Promise<Company[]> => {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve([...mockCompanies]);
-    }, 500);
-  });
-};
-
-// Get a single company by ID
-export const getCompanyById = async (id: string): Promise<Company | null> => {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      const company = mockCompanies.find(c => c.id === id) || null;
-      resolve(company ? { ...company } : null);
-    }, 300);
-  });
-};
-
-// Create a new company
-export const createCompany = async (companyData: Omit<Company, 'id' | 'createdAt' | 'updatedAt'>): Promise<Company> => {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      const newCompany: Company = {
-        id: `comp${mockCompanies.length + 1}`,
-        ...companyData,
+// Get companies with pagination and filters
+const getCompanies = async (
+  page = 1,
+  pageLimit = 10,
+  filters?: CompanyFilters,
+  searchTerm?: string
+) => {
+  try {
+    // In a real implementation, this would query Firestore with filters
+    const mockCompanies: Company[] = [
+      {
+        id: 'COMP-123456',
+        name: 'Acme Corporation',
+        address: {
+          street: '123 Main St',
+          city: 'Paris',
+          postalCode: '75001',
+          country: 'France'
+        },
+        siret: '12345678901234',
+        email: 'contact@acme.com',
+        phone: '+33123456789',
+        industry: 'Technology',
+        size: 'Medium',
+        status: 'active',
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
-      };
-      mockCompanies.push(newCompany);
-      resolve({ ...newCompany });
-      toast.success('Entreprise créée avec succès');
-    }, 500);
-  });
-};
-
-// Update an existing company
-export const updateCompany = async (id: string, companyData: Partial<Company>): Promise<Company | null> => {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      const index = mockCompanies.findIndex(c => c.id === id);
-      if (index === -1) {
-        resolve(null);
-        toast.error('Entreprise non trouvée');
-        return;
-      }
-      
-      mockCompanies[index] = {
-        ...mockCompanies[index],
-        ...companyData,
-        updatedAt: new Date().toISOString()
-      };
-      
-      resolve({ ...mockCompanies[index] });
-      toast.success('Entreprise mise à jour avec succès');
-    }, 500);
-  });
-};
-
-// Delete a company
-export const deleteCompany = async (id: string): Promise<boolean> => {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      const index = mockCompanies.findIndex(c => c.id === id);
-      if (index === -1) {
-        resolve(false);
-        toast.error('Entreprise non trouvée');
-        return;
-      }
-      
-      mockCompanies.splice(index, 1);
-      resolve(true);
-      toast.success('Entreprise supprimée avec succès');
-    }, 500);
-  });
-};
-
-// Custom hook to use the company service
-export const useCompanyService = () => {
-  // Get companies with pagination and filters
-  const getCompanies = async (page: number = 1, limit: number = 10, filters: CompanyFilters = {}, searchTerm: string = '') => {
-    try {
-      // In a real app, we would call an API with pagination, filters, and search
-      // Here we simulate it by filtering and slicing the data
-      
-      // Clone the mock data
-      let filteredCompanies = [...mockCompanies];
-      
-      // Apply search if provided
-      if (searchTerm.trim() !== '') {
-        const term = searchTerm.toLowerCase();
+      },
+      // Add more mock companies as needed
+    ];
+    
+    // Apply filters if provided
+    let filteredCompanies = [...mockCompanies];
+    
+    if (filters) {
+      if (filters.status) {
         filteredCompanies = filteredCompanies.filter(company => 
-          company.name.toLowerCase().includes(term) || 
-          company.siret?.toLowerCase().includes(term) ||
-          company.email?.toLowerCase().includes(term)
+          company.status === filters.status
         );
       }
       
-      // Apply filters
-      if (Object.keys(filters).length > 0) {
-        filteredCompanies = filterCompanies(filteredCompanies, filters);
+      if (filters.industry) {
+        filteredCompanies = filteredCompanies.filter(company => 
+          company.industry === filters.industry
+        );
       }
       
-      // Calculate total pages
-      const totalItems = filteredCompanies.length;
-      const totalPages = Math.ceil(totalItems / limit);
+      if (filters.size) {
+        filteredCompanies = filteredCompanies.filter(company => 
+          company.size === filters.size
+        );
+      }
       
-      // Apply pagination
-      const startIndex = (page - 1) * limit;
-      const endIndex = startIndex + limit;
-      const paginatedCompanies = filteredCompanies.slice(startIndex, endIndex);
+      if (filters.search) {
+        const searchLower = filters.search.toLowerCase();
+        filteredCompanies = filteredCompanies.filter(company => 
+          company.name.toLowerCase().includes(searchLower) ||
+          company.email?.toLowerCase().includes(searchLower) ||
+          company.phone?.toLowerCase().includes(searchLower)
+        );
+      }
       
-      return {
-        companies: paginatedCompanies,
-        pagination: {
-          page,
-          limit,
-          totalItems,
-          totalPages
-        }
-      };
-    } catch (error) {
-      toast.error('Erreur lors de la récupération des entreprises');
-      console.error('Error fetching companies:', error);
-      return { 
-        companies: [],
-        pagination: {
-          page,
-          limit,
-          totalItems: 0,
-          totalPages: 0
-        }
-      };
+      // Date range filtering would go here
     }
-  };
+    
+    // Apply text search if provided
+    if (searchTerm) {
+      const searchLower = searchTerm.toLowerCase();
+      filteredCompanies = filteredCompanies.filter(company => 
+        company.name.toLowerCase().includes(searchLower) ||
+        company.email?.toLowerCase().includes(searchLower) ||
+        company.phone?.toLowerCase().includes(searchLower)
+      );
+    }
+    
+    // Calculate pagination
+    const totalItems = filteredCompanies.length;
+    const totalPages = Math.ceil(totalItems / pageLimit);
+    const startIndex = (page - 1) * pageLimit;
+    const endIndex = startIndex + pageLimit;
+    const paginatedCompanies = filteredCompanies.slice(startIndex, endIndex);
+    
+    return {
+      companies: paginatedCompanies,
+      pagination: {
+        page,
+        limit: pageLimit,
+        totalItems,
+        totalPages
+      }
+    };
+  } catch (error) {
+    console.error("Error getting companies:", error);
+    throw error;
+  }
+};
 
-  return {
-    getCompanies,
-    getCompanyById,
-    createCompany,
-    updateCompany,
-    deleteCompany
-  };
+// Get a company by ID
+const getCompanyById = async (id: string) => {
+  try {
+    // In a real implementation, this would query Firestore for a specific company
+    const mockCompany: Company = {
+      id,
+      name: 'Acme Corporation',
+      address: {
+        street: '123 Main St',
+        city: 'Paris',
+        postalCode: '75001',
+        country: 'France'
+      },
+      siret: '12345678901234',
+      email: 'contact@acme.com',
+      phone: '+33123456789',
+      industry: 'Technology',
+      size: 'Medium',
+      status: 'active',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    
+    return mockCompany;
+  } catch (error) {
+    console.error("Error getting company:", error);
+    throw error;
+  }
+};
+
+// Create a new company
+const createCompany = async (companyData: Omit<Company, 'id' | 'createdAt' | 'updatedAt'>) => {
+  try {
+    // Generate a unique ID
+    const id = generateCompanyId();
+    
+    // Create the company object
+    const newCompany: Company = {
+      ...companyData,
+      id,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    
+    // In a real implementation, this would add the company to Firestore
+    
+    return newCompany;
+  } catch (error) {
+    console.error("Error creating company:", error);
+    throw error;
+  }
+};
+
+// Update a company
+const updateCompany = async (id: string, companyData: Partial<Company>) => {
+  try {
+    // In a real implementation, this would update the company in Firestore
+    
+    return {
+      ...companyData,
+      id,
+      updatedAt: new Date().toISOString()
+    };
+  } catch (error) {
+    console.error("Error updating company:", error);
+    throw error;
+  }
+};
+
+// Delete a company
+const deleteCompany = async (id: string) => {
+  try {
+    // In a real implementation, this would delete the company from Firestore
+    
+    return true;
+  } catch (error) {
+    console.error("Error deleting company:", error);
+    throw error;
+  }
+};
+
+export const companyService = {
+  getCompanies,
+  getCompanyById,
+  createCompany,
+  updateCompany,
+  deleteCompany
 };

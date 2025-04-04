@@ -36,6 +36,7 @@ export interface CompanyContact {
   email?: string;
   phone?: string;
   isMainContact?: boolean;
+  isMain?: boolean; // Adding this for backwards compatibility
   createdAt: string;
   updatedAt: string;
 }
@@ -48,6 +49,7 @@ export interface CompanyDocument {
   type: string;
   url: string;
   size?: number;
+  fileSize?: number; // Adding this for backwards compatibility
   contentType?: string;
   createdBy?: string;
   createdAt: string;
@@ -61,6 +63,7 @@ export interface CompanyFilters {
   size?: string;
   startDate?: string;
   endDate?: string;
+  search?: string; // Adding this property
 }
 
 // Company user permissions
@@ -78,4 +81,9 @@ export interface CompanyPermission {
   name: string;
   description: string;
   value: boolean;
+  moduleId?: string; // Adding this property
+  canView?: boolean; // Adding these properties
+  canCreate?: boolean;
+  canEdit?: boolean;
+  canDelete?: boolean;
 }

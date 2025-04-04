@@ -1,107 +1,104 @@
 
 import React, { useState, useEffect } from 'react';
-import CompaniesToolbar from './CompaniesToolbar';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Card } from '@/components/ui/card';
+import { Plus, Search, X } from 'lucide-react';
+import { Company, CompanyFilters } from './types';
+import { companyService } from './services/companyService';
 import CompaniesTable from './CompaniesTable';
 import CompaniesFilters from './CompaniesFilters';
-import { Company, CompanyFilters } from './types';
-import { useCompanyService } from './services/companyService';
-import { Card, CardContent } from '@/components/ui/card';
-import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 
 const CompaniesList: React.FC = () => {
-  const { getCompanies } = useCompanyService();
   const [companies, setCompanies] = useState<Company[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [searchTerm, setSearchTerm] = useState<string>('');
-  const [filters, setFilters] = useState<CompanyFilters>({
-    status: undefined, // Using undefined instead of 'all' for type safety
-  });
-  const [showFilters, setShowFilters] = useState<boolean>(true);
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    fetchCompanies();
-  }, []);
-
-  const fetchCompanies = async () => {
-    setLoading(true);
+  const [isLoading, setIsLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filters, setFilters] = useState<CompanyFilters>({});
+  
+  // Function to load companies
+  const loadCompanies = async () => {
+    setIsLoading(true);
     try {
-      const { companies: companiesData } = await getCompanies(1, 100, filters, searchTerm);
-      setCompanies(companiesData);
+      const response = await companyService.getCompanies(1, 100, filters, searchTerm);
+      setCompanies(response.companies);
     } catch (error) {
-      console.error('Error fetching companies:', error);
+      console.error('Error loading companies:', error);
+      toast.error('Failed to load companies');
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
-
-  const handleFilterChange = (key: string, value: string) => {
-    setFilters(prev => ({ 
-      ...prev, 
-      [key]: value === 'all' ? undefined : value 
-    }));
-  };
-
-  const handleResetFilters = () => {
-    setFilters({ 
-      status: undefined 
-    });
-  };
-
-  const handleSearchChange = (value: string) => {
-    setSearchTerm(value);
-  };
-
-  const handleSearch = () => {
-    fetchCompanies();
-  };
-
-  const handleCreateCompany = () => {
-    navigate('/modules/companies/create');
-  };
-
+  
+  // Load companies on mount and when filters or search change
+  useEffect(() => {
+    loadCompanies();
+  }, [searchTerm, filters]);
+  
+  // Handle company view
   const handleViewCompany = (company: Company) => {
+    // Implementation would navigate to a detailed view of the company
     console.log('View company:', company);
-    // Implementation for viewing company details
   };
-
-  const handleToggleFilters = () => {
-    setShowFilters(!showFilters);
+  
+  // Handle search
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    loadCompanies();
   };
-
+  
+  // Update filters
+  const handleFilterChange = (newFilters: CompanyFilters) => {
+    setFilters(newFilters);
+  };
+  
   return (
     <div className="space-y-6">
-      <CompaniesToolbar 
-        searchTerm={searchTerm}
-        onSearchChange={handleSearchChange}
-        onSearch={handleSearch}
-        onCreateCompany={handleCreateCompany}
-        onRefresh={fetchCompanies}
-        onToggleFilters={handleToggleFilters}
-        showFilters={showFilters}
-      />
-      
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        {showFilters && (
-          <div className="md:col-span-1">
-            <Card className="sticky top-6">
-              <CardContent className="p-4">
-                <CompaniesFilters 
-                  filters={filters}
-                  onFilterChange={handleFilterChange}
-                  onResetFilters={handleResetFilters}
-                />
-              </CardContent>
-            </Card>
-          </div>
-        )}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <h1 className="text-2xl font-bold">Liste des entreprises</h1>
         
-        <div className={showFilters ? "md:col-span-3" : "md:col-span-4"}>
-          <CompaniesTable 
-            companies={companies} 
-            loading={loading} 
-            onView={handleViewCompany}
-          />
+        <div className="flex gap-2 w-full md:w-auto">
+          <form onSubmit={handleSearch} className="relative w-full md:w-auto">
+            <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Rechercher une entreprise..."
+              className="pl-8 w-full md:w-[250px]"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+            {searchTerm && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="absolute right-0 top-0 h-full"
+                onClick={() => setSearchTerm('')}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            )}
+          </form>
+          
+          <Button onClick={() => window.location.href = '/modules/companies/create'}>
+            <Plus className="mr-2 h-4 w-4" />
+            Ajouter
+          </Button>
+        </div>
+      </div>
+      
+      <div className="grid gap-6 md:grid-cols-4">
+        <div className="md:col-span-1">
+          <CompaniesFilters onFilterChange={handleFilterChange} />
+        </div>
+        
+        <div className="md:col-span-3">
+          <Card>
+            <CompaniesTable 
+              companies={companies} 
+              isLoading={isLoading} 
+              onView={handleViewCompany}
+            />
+          </Card>
         </div>
       </div>
     </div>

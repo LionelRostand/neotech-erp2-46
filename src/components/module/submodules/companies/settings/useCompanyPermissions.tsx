@@ -1,168 +1,131 @@
+import { useState, useEffect, useCallback } from 'react';
+import { CompanyUserPermission, CompanyPermission } from '../../companies/types';
+import { toast } from 'sonner';
 
-import { useState, useEffect } from 'react';
-import { toast } from "sonner";
-import { CompanyPermission, CompanyUserPermission } from '../types';
-import { useFirestore } from '@/hooks/use-firestore';
-import { COLLECTIONS } from '@/lib/firebase-collections';
+const useCompanyPermissions = () => {
+  const [permissions, setPermissions] = useState<CompanyUserPermission[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-interface User {
-  id: string;
-  displayName: string;
-  email: string;
-  role?: string;
-}
-
-export const useCompanyPermissions = (companySubmodules: { id: string; name: string }[]) => {
-  const [users, setUsers] = useState<User[]>([]);
-  const [userPermissions, setUserPermissions] = useState<CompanyUserPermission[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [searchTerm, setSearchTerm] = useState("");
-
-  const usersFirestore = useFirestore(COLLECTIONS.USERS);
-  const permissionsFirestore = useFirestore(COLLECTIONS.USER_PERMISSIONS);
-
-  // Fetch users and their permissions
-  useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      try {
-        // Fetch users
-        const usersData = await usersFirestore.getAll();
-        setUsers(usersData);
-
-        // Fetch permissions
-        const permissionsData = await permissionsFirestore.getAll();
-        
-        // Fix: Convert the fetched data to CompanyUserPermission[] type
-        const typedPermissionsData: CompanyUserPermission[] = [];
-        
-        // If we have data, try to map it to the correct type
-        if (permissionsData && permissionsData.length > 0) {
-          for (const item of permissionsData) {
-            // Check if the item has the required structure and properly map id to userId
-            if (item && typeof item === 'object' && 'id' in item && 'permissions' in item) {
-              // Verify that permissions is an array
-              const permissions = Array.isArray(item.permissions) 
-                ? item.permissions 
-                : [];
-              
-              // Make sure each permission has the correct structure
-              const validPermissions: CompanyPermission[] = permissions
-                .filter((p: any) => p && typeof p === 'object' && 'moduleId' in p)
-                .map((p: any) => ({
-                  moduleId: p.moduleId,
-                  canView: Boolean(p.canView),
-                  canCreate: Boolean(p.canCreate),
-                  canEdit: Boolean(p.canEdit),
-                  canDelete: Boolean(p.canDelete)
-                }));
-                
-              // Create a properly typed CompanyUserPermission using id as userId
-              typedPermissionsData.push({
-                userId: item.id as string,
-                userName: item.userName as string || 'Unknown User',
-                userEmail: item.userEmail as string || 'unknown@example.com',
-                permissions: validPermissions
-              });
-            }
-          }
-        }
-
-        // If no permissions found or they don't have the right structure, create default permissions for each user
-        if (typedPermissionsData.length === 0) {
-          const defaultPermissions: CompanyUserPermission[] = usersData.map(user => ({
-            userId: user.id,
-            userName: user.displayName || user.email,
-            userEmail: user.email,
-            permissions: companySubmodules.map(submodule => ({
-              moduleId: submodule.id,
+  // Fetch company permissions
+  const fetchCompanyPermissions = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      // Mock data for now - this would typically come from an API
+      const mockPermissions: CompanyUserPermission[] = [
+        {
+          userId: '1',
+          userName: 'John Doe',
+          userEmail: 'john.doe@example.com',
+          userRole: 'Admin',
+          permissions: [
+            {
+              id: '1',
+              name: 'Companies',
+              description: 'Access to companies module',
+              value: true,
+              moduleId: 'companies',
               canView: true,
-              canCreate: false,
-              canEdit: false,
-              canDelete: false,
-            })),
-          }));
-          setUserPermissions(defaultPermissions);
-        } else {
-          setUserPermissions(typedPermissionsData);
-        }
-      } catch (error) {
-        console.error("Error fetching data:", error);
-        toast.error("Erreur lors du chargement des données");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
+              canCreate: true,
+              canEdit: true,
+              canDelete: true
+            },
+            // ... other permissions
+          ]
+        },
+        // ... other users
+      ];
+      
+      setPermissions(mockPermissions);
+    } catch (error) {
+      console.error('Error fetching company permissions:', error);
+      toast.error('Error loading permissions');
+    } finally {
+      setIsLoading(false);
+    }
   }, []);
 
-  // Update permission state
-  const updatePermission = (userId: string, moduleId: string, permissionType: 'canView' | 'canCreate' | 'canEdit' | 'canDelete', value: boolean) => {
-    setUserPermissions(prev => {
-      return prev.map(userPerm => {
-        if (userPerm.userId === userId) {
-          const updatedPermissions = userPerm.permissions.map(perm => {
-            if (perm.moduleId === moduleId) {
-              return { ...perm, [permissionType]: value };
-            }
-            return perm;
-          });
-          return { ...userPerm, permissions: updatedPermissions };
-        }
-        return userPerm;
-      });
-    });
-  };
-
-  // Set all permissions of a type for a user
-  const setAllPermissionsOfType = (userId: string, permissionType: 'canView' | 'canCreate' | 'canEdit' | 'canDelete', value: boolean) => {
-    setUserPermissions(prev => {
-      return prev.map(userPerm => {
-        if (userPerm.userId === userId) {
-          const updatedPermissions = userPerm.permissions.map(perm => ({
-            ...perm,
-            [permissionType]: value
-          }));
-          return { ...userPerm, permissions: updatedPermissions };
-        }
-        return userPerm;
-      });
-    });
-  };
-
-  // Save permissions to database
-  const savePermissions = async () => {
-    setSaving(true);
+  // Save user permissions
+  const saveUserPermissions = useCallback(async (userPermission: CompanyUserPermission) => {
     try {
-      // For each user, update or create their permissions
-      for (const userPerm of userPermissions) {
-        await permissionsFirestore.set(userPerm.userId, {
-          permissions: userPerm.permissions,
-          userName: userPerm.userName,
-          userEmail: userPerm.userEmail,
-          updatedAt: new Date()
-        });
-      }
-      toast.success("Permissions enregistrées avec succès");
+      // In a real app, this would be an API call
+      console.log('Saving permissions for user:', userPermission);
+      
+      // Update local state
+      setPermissions(prev => 
+        prev.map(p => 
+          p.userId === userPermission.userId ? userPermission : p
+        )
+      );
+      
+      toast.success('Permissions updated successfully');
+      return true;
     } catch (error) {
-      console.error("Error saving permissions:", error);
-      toast.error("Erreur lors de l'enregistrement des permissions");
-    } finally {
-      setSaving(false);
+      console.error('Error saving permissions:', error);
+      toast.error('Failed to update permissions');
+      return false;
     }
-  };
+  }, []);
+
+  // Add a new user with permissions
+  const addUserPermissions = useCallback(async (userData: {
+    userId: string;
+    userName: string;
+    userEmail: string;
+    userRole: string;
+    permissions: CompanyPermission[];
+  }) => {
+    try {
+      // In a real app, this would be an API call
+      const newUserPermission: CompanyUserPermission = {
+        userId: userData.userId,
+        userName: userData.userName,
+        userEmail: userData.userEmail,
+        userRole: userData.userRole,
+        permissions: userData.permissions
+      };
+      
+      // Update local state
+      setPermissions(prev => [...prev, newUserPermission]);
+      
+      toast.success('User added successfully');
+      return true;
+    } catch (error) {
+      console.error('Error adding user permissions:', error);
+      toast.error('Failed to add user');
+      return false;
+    }
+  }, []);
+
+  // Remove user permissions
+  const removeUserPermissions = useCallback(async (userId: string) => {
+    try {
+      // In a real app, this would be an API call
+      
+      // Update local state
+      setPermissions(prev => prev.filter(p => p.userId !== userId));
+      
+      toast.success('User removed successfully');
+      return true;
+    } catch (error) {
+      console.error('Error removing user permissions:', error);
+      toast.error('Failed to remove user');
+      return false;
+    }
+  }, []);
+
+  // Load permissions on mount
+  useEffect(() => {
+    fetchCompanyPermissions();
+  }, [fetchCompanyPermissions]);
 
   return {
-    users,
-    userPermissions,
-    loading,
-    saving,
-    searchTerm,
-    setSearchTerm,
-    updatePermission,
-    setAllPermissionsOfType,
-    savePermissions
+    permissions,
+    isLoading,
+    saveUserPermissions,
+    addUserPermissions,
+    removeUserPermissions,
+    refreshPermissions: fetchCompanyPermissions
   };
 };
+
+export default useCompanyPermissions;

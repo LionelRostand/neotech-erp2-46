@@ -23,6 +23,13 @@ export interface WorkSchedule {
   sunday?: string;
 }
 
+export interface EmployeeAddress {
+  street?: string;
+  city?: string;
+  postalCode?: string;
+  country?: string;
+}
+
 export interface Employee {
   id: string;
   firstName: string;
@@ -37,12 +44,7 @@ export interface Employee {
   hireDate?: string;
   startDate?: string;
   status?: 'active' | 'inactive' | 'onLeave' | 'Actif';
-  address?: {
-    street?: string;
-    city?: string;
-    postalCode?: string;
-    country?: string;
-  };
+  address?: string | EmployeeAddress;
   contract?: string;
   socialSecurityNumber?: string;
   birthDate?: string;

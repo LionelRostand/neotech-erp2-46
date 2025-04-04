@@ -38,7 +38,7 @@ export const COLLECTIONS = {
   ABSENCES: 'hr_absences',
   
   // Document collections
-  DOCUMENTS: 'documents',
+  DOC_COLLECTIONS: 'documents',
   
   // User permissions
   USER_PERMISSIONS: 'user_permissions',
