@@ -1,5 +1,4 @@
-
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { toast } from 'sonner';
 import { PaySlip } from '@/types/payslip';
 import { Employee } from '@/types/employee';
@@ -111,13 +110,18 @@ export const usePayslipGenerator = () => {
 
     const totalGrossAmount = grossAmount + overtimePay;
 
+    const csgCrds = totalGrossAmount * 0.0975;
     const csgDeductible = totalGrossAmount * 0.0675;
     const csgNonDeductible = totalGrossAmount * 0.029;
-    const healthInsurance = totalGrossAmount * 0.0095;
-    const pension = totalGrossAmount * 0.031;
-    const unemployment = totalGrossAmount * 0.019;
-    const totalDeductions = csgDeductible + csgNonDeductible + healthInsurance + pension + unemployment;
+    const healthInsurance = totalGrossAmount * 0.0075;
+    const pension = totalGrossAmount * 0.0410;
+    const unemployment = totalGrossAmount * 0.024;
+    const retirementComplementary = totalGrossAmount * 0.0380;
+    
+    const totalDeductions = csgCrds + healthInsurance + pension + unemployment + retirementComplementary;
     const netSalary = totalGrossAmount - totalDeductions;
+
+    const taxableIncome = totalGrossAmount * 0.98 - (healthInsurance + pension + unemployment + retirementComplementary);
 
     const details: any[] = [
       { label: 'Salaire de base', base: '151.67 H', rate: `${(grossAmount / 151.67).toFixed(2)} €/H`, amount: grossAmount, type: 'earning' },
@@ -135,10 +139,11 @@ export const usePayslipGenerator = () => {
 
     details.push(
       { label: 'CSG déductible', base: `${totalGrossAmount.toFixed(2)} €`, rate: '6,75 %', amount: csgDeductible, type: 'deduction' },
-      { label: 'CSG non déductible', base: `${totalGrossAmount.toFixed(2)} €`, rate: '2,90 %', amount: csgNonDeductible, type: 'deduction' },
-      { label: 'Assurance maladie', base: `${totalGrossAmount.toFixed(2)} €`, rate: '0,95 %', amount: healthInsurance, type: 'deduction' },
-      { label: 'Retraite complémentaire', base: `${totalGrossAmount.toFixed(2)} €`, rate: '3,10 %', amount: pension, type: 'deduction' },
-      { label: 'Assurance chômage', base: `${totalGrossAmount.toFixed(2)} €`, rate: '1,90 %', amount: unemployment, type: 'deduction' }
+      { label: 'CSG/CRDS non déductible', base: `${totalGrossAmount.toFixed(2)} €`, rate: '2,90 %', amount: csgNonDeductible, type: 'deduction' },
+      { label: 'Sécurité sociale - Maladie', base: `${totalGrossAmount.toFixed(2)} €`, rate: '0,75 %', amount: healthInsurance, type: 'deduction' },
+      { label: 'Assurance vieillesse', base: `${totalGrossAmount.toFixed(2)} €`, rate: '4,10 %', amount: pension, type: 'deduction' },
+      { label: 'Retraite complémentaire', base: `${totalGrossAmount.toFixed(2)} €`, rate: '3,80 %', amount: retirementComplementary, type: 'deduction' },
+      { label: 'Assurance chômage', base: `${totalGrossAmount.toFixed(2)} €`, rate: '2,40 %', amount: unemployment, type: 'deduction' }
     );
 
     const payslip: PaySlip = {
@@ -148,7 +153,7 @@ export const usePayslipGenerator = () => {
         lastName,
         employeeId: selectedEmployee?.id || `EMP${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`,
         role: selectedEmployee?.position || 'Employé',
-        socialSecurityNumber: '9 99 99 99 999 999 99',
+        socialSecurityNumber: '1 99 99 99 999 999 99',
         startDate: selectedEmployee?.hireDate || '01/01/2023'
       },
       period: period,
@@ -160,7 +165,22 @@ export const usePayslipGenerator = () => {
       paymentDate: new Date().toLocaleDateString('fr-FR'),
       employerName: companyName || 'Votre Entreprise SARL',
       employerAddress: companyAddress || '1 Rue des Entrepreneurs, 75002 Paris',
-      employerSiret: companySiret || '987 654 321 00098'
+      employerSiret: companySiret || '987 654 321 00098',
+      conges: {
+        acquired: 2.5,
+        taken: 0,
+        balance: 25
+      },
+      rtt: {
+        acquired: 1,
+        taken: 0,
+        balance: 9
+      },
+      annualCumulative: {
+        grossSalary: totalGrossAmount * 9,
+        netSalary: netSalary * 9,
+        taxableIncome: taxableIncome * 9
+      }
     };
 
     setCurrentPayslip(payslip);

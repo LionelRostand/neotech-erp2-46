@@ -1,424 +1,368 @@
 
 import React, { useRef } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import { PaySlip } from '@/types/payslip';
-import { Button } from '@/components/ui/button';
-import { Download, FileText } from 'lucide-react';
-import jsPDF from 'jspdf';
+import { FileText } from 'lucide-react';
+import { jsPDF } from 'jspdf';
 import 'jspdf-autotable';
-import { format } from 'date-fns';
-import { fr } from 'date-fns/locale';
+import DownloadButton from './components/DownloadButton';
 import PayslipHeader from './components/PayslipHeader';
 
 interface PaySlipTemplateProps {
   payslip: PaySlip;
-  onDownload?: () => void;
 }
 
-const PaySlipTemplate: React.FC<PaySlipTemplateProps> = ({ payslip, onDownload }) => {
+const PaySlipTemplate: React.FC<PaySlipTemplateProps> = ({ payslip }) => {
   const payslipRef = useRef<HTMLDivElement>(null);
-  
-  const formatCurrency = (value: number): string => {
-    return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(value);
-  };
-  
+
   const handleDownloadPDF = () => {
     if (!payslipRef.current) return;
     
     const doc = new jsPDF();
     
-    // Add company logo placeholder
-    doc.setFillColor(240, 240, 240);
-    doc.rect(15, 15, 40, 20, 'F');
+    // Configuration du document
+    doc.setFont('helvetica');
     doc.setFontSize(10);
-    doc.setTextColor(100);
-    doc.text('LOGO', 35, 25, { align: 'center' });
     
-    // Add title
+    // En-tête - Informations de l'entreprise
     doc.setFontSize(16);
     doc.setFont('helvetica', 'bold');
-    doc.setTextColor(0);
-    doc.text('BULLETIN DE PAIE', 105, 20, { align: 'center' });
-    
-    // Add subtitle with period
+    doc.text("BULLETIN DE PAIE", 105, 15, { align: 'center' });
     doc.setFontSize(10);
     doc.setFont('helvetica', 'normal');
-    doc.text(`EN EUROS - ${payslip.period}`, 105, 25, { align: 'center' });
     
-    // Add company info
-    doc.setFontSize(10);
-    doc.text(payslip.employerName, 140, 35);
-    doc.text(payslip.employerAddress, 140, 40);
-    doc.text(`SIRET: ${payslip.employerSiret}`, 140, 45);
-    
-    // Add employee info and header
-    doc.setFontSize(14);
-    doc.setFont('helvetica', 'bold');
-    doc.text(`Bonjour ${payslip.employee.firstName} ${payslip.employee.lastName}`, 20, 45);
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'normal');
-    doc.text(`Voici votre bulletin de paie de ${payslip.period}`, 20, 52);
-    
-    // Add employee details
-    doc.text(`Employé: ${payslip.employee.firstName} ${payslip.employee.lastName}`, 20, 60);
-    doc.text(`Poste: ${payslip.employee.role}`, 20, 65);
-    doc.text(`N° SS: ${payslip.employee.socialSecurityNumber}`, 20, 70);
-    doc.text(`Date d'embauche: ${payslip.employee.startDate}`, 20, 75);
-    
-    // Add salary summary
-    doc.setFillColor(240, 248, 255);
-    doc.rect(15, 85, 180, 50, 'F');
-    
-    doc.setFontSize(11);
-    doc.text("Votre salaire avant impôt", 20, 95);
-    doc.text(formatCurrency(payslip.grossSalary), 170, 95, { align: 'right' });
-    doc.setFontSize(9);
-    doc.text(`Prélèvement à la source (3,60 %)`, 20, 100);
-    const taxAmount = payslip.grossSalary * 0.036;
-    doc.text(formatCurrency(taxAmount), 170, 100, { align: 'right' });
-    
-    doc.setFontSize(11);
-    doc.text("Votre salaire après impôt", 20, 110);
-    doc.text(formatCurrency(payslip.netSalary), 170, 110, { align: 'right' });
-    doc.setFontSize(9);
-    doc.text(`Ce montant vous sera transféré le ${payslip.paymentDate}`, 20, 115);
-    
-    doc.setFontSize(11);
-    doc.text("Votre montant net social", 20, 125);
-    doc.text(formatCurrency(payslip.grossSalary - payslip.totalDeductions), 170, 125, { align: 'right' });
-    doc.setFontSize(9);
-    doc.text("Ce montant sert au calcul de vos aides sociales", 20, 130);
-    
-    // Add salary details table
-    doc.setFontSize(12);
-    doc.setFont('helvetica', 'bold');
-    doc.text("Calcul du salaire net", 20, 150);
-    
-    const salaryData: any[] = [];
-    
-    // Add earnings
-    const earnings = payslip.details.filter(d => d.type === 'earning');
-    earnings.forEach(item => {
-      salaryData.push([
-        item.label,
-        item.base || '',
-        item.rate || '',
-        formatCurrency(item.amount)
-      ]);
-    });
-    
-    // Add total gross
-    salaryData.push([
-      'Rémunération brute',
-      '',
-      '',
-      formatCurrency(payslip.grossSalary)
-    ]);
-    
-    // Add deductions
-    const deductions = payslip.details.filter(d => d.type === 'deduction');
-    deductions.forEach(item => {
-      salaryData.push([
-        item.label,
-        item.base || '',
-        item.rate || '',
-        `- ${formatCurrency(item.amount)}`
-      ]);
-    });
-    
-    // Add tax line
-    salaryData.push([
-      'Prélèvement à la source',
-      '',
-      '',
-      `- ${formatCurrency(taxAmount)}`
-    ]);
-    
-    // Add net to pay
-    salaryData.push([
-      'Net à payer',
-      '',
-      '',
-      formatCurrency(payslip.netSalary)
-    ]);
-    
-    doc.autoTable({
-      startY: 155,
-      head: [['Désignation', 'Base', 'Taux', 'Montant']],
-      body: salaryData,
-      theme: 'grid',
-      styles: { fontSize: 9, cellPadding: 2 },
-      headStyles: { fillColor: [220, 230, 240], textColor: [0, 0, 0] },
-      alternateRowStyles: { fillColor: [248, 250, 252] },
-    });
-    
-    // Add leave balances
-    const leaveY = (doc as any).lastAutoTable.finalY + 15;
-    doc.setFontSize(12);
-    doc.setFont('helvetica', 'bold');
-    doc.text("Soldes de congés", 20, leaveY);
-    
-    const leaveData = [
-      ['CP N-2', '5,00', '5,00', '0,00'],
-      ['CP N-1', '25,00', '25,00', '0,00'],
-      ['CP N', '18,75', '1,50', '17,25']
-    ];
-    
-    doc.autoTable({
-      startY: leaveY + 5,
-      head: [['Type', 'Acquis', 'Pris', 'Solde']],
-      body: leaveData,
-      theme: 'grid',
-      styles: { fontSize: 9, cellPadding: 2 },
-      headStyles: { fillColor: [220, 230, 240], textColor: [0, 0, 0] },
-      alternateRowStyles: { fillColor: [248, 250, 252] },
-    });
-    
-    // Add yearly totals
-    const yearlyY = (doc as any).lastAutoTable.finalY + 15;
-    doc.setFontSize(12);
-    doc.setFont('helvetica', 'bold');
-    doc.text("Cumuls DEPUIS JANV. 2023", 20, yearlyY);
-    
-    const yearlyData = [
-      ['Salaire net imposable', formatCurrency(payslip.grossSalary * 11)],
-      ['Salaire brut', formatCurrency(payslip.grossSalary * 12)],
-      ['Prélèvement à la source', formatCurrency(taxAmount * 12)],
-      ['Heures supplémentaires exonérées', formatCurrency(1079)],
-      ['Temps travaillé', '333 h'],
-    ];
-    
-    doc.autoTable({
-      startY: yearlyY + 5,
-      body: yearlyData,
-      theme: 'grid',
-      styles: { fontSize: 9, cellPadding: 2 },
-      alternateRowStyles: { fillColor: [248, 250, 252] },
-    });
-    
-    // Add QR Code placeholder
-    const qrY = (doc as any).lastAutoTable.finalY + 15;
-    doc.setFillColor(240, 240, 240);
-    doc.rect(20, qrY, 30, 30, 'F');
+    // Logo placeholder (on n'affiche pas le nom de l'entreprise comme demandé)
+    doc.rect(14, 20, 30, 15);
     doc.setFontSize(8);
-    doc.text("Vérifiez l'intégrité du bulletin", 35, qrY + 10);
-    doc.text("CODE DE VÉRIFICATION: " + Math.random().toString(36).substring(2, 8).toUpperCase(), 20, qrY + 35);
+    doc.text("LOGO", 29, 28, { align: 'center' });
     
-    // Add footer
+    // Informations employeur
     doc.setFontSize(9);
-    doc.setTextColor(100);
-    doc.text("Dans votre intérêt et pour vous aider à faire valoir vos droits, conservez ce document sans limitation de durée.", 105, 280, { align: 'center' });
+    doc.text("Adresse:", 140, 22);
+    doc.text(payslip.employerAddress, 140, 26);
+    doc.text("SIRET: " + payslip.employerSiret, 140, 30);
     
-    // Save the PDF
-    doc.save(`bulletin_de_paie_${payslip.period.replace(' ', '_')}.pdf`);
+    // Informations employé
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'bold');
+    doc.text("INFORMATIONS SALARIÉ", 14, 45);
+    doc.setFont('helvetica', 'normal');
     
-    if (onDownload) {
-      onDownload();
-    }
+    doc.text(`Nom, Prénom: ${payslip.employee.lastName} ${payslip.employee.firstName}`, 14, 52);
+    doc.text(`Emploi: ${payslip.employee.role}`, 14, 57);
+    doc.text(`N° SS: ${payslip.employee.socialSecurityNumber}`, 14, 62);
+    doc.text(`Date d'entrée: ${payslip.employee.startDate}`, 14, 67);
+    
+    // Période et date de paiement
+    doc.text(`Période: ${payslip.period}`, 120, 52);
+    doc.text(`Date de paiement: ${payslip.paymentDate}`, 120, 57);
+    doc.text(`Heures travaillées: ${payslip.hoursWorked.toFixed(2)}h`, 120, 62);
+    
+    // Rubriques de paie
+    doc.setFont('helvetica', 'bold');
+    doc.text("RUBRIQUES", 14, 80);
+    doc.text("BASE", 100, 80);
+    doc.text("TAUX", 125, 80);
+    doc.text("MONTANT (€)", 170, 80);
+    
+    // Ligne de séparation
+    doc.setDrawColor(220, 220, 220);
+    doc.line(14, 83, 195, 83);
+    
+    // Salaires et cotisations
+    let y = 88;
+    doc.setFont('helvetica', 'normal');
+    
+    // Grouper par type (gains puis déductions)
+    const earnings = payslip.details.filter(detail => detail.type === 'earning');
+    const deductions = payslip.details.filter(detail => detail.type === 'deduction');
+    
+    // Afficher les gains
+    doc.setFont('helvetica', 'bold');
+    doc.text("SALAIRE", 14, y);
+    y += 5;
+    doc.setFont('helvetica', 'normal');
+    
+    earnings.forEach(item => {
+      doc.text(item.label, 14, y);
+      doc.text(item.base || '', 100, y);
+      doc.text(item.rate || '', 125, y);
+      doc.text(item.amount.toFixed(2), 170, y, { align: 'right' });
+      y += 5;
+    });
+    
+    y += 2;
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'bold');
+    doc.text("TOTAL BRUT", 14, y);
+    doc.text(payslip.grossSalary.toFixed(2), 170, y, { align: 'right' });
+    y += 8;
+    
+    // Afficher les déductions
+    doc.setFont('helvetica', 'bold');
+    doc.text("COTISATIONS ET CONTRIBUTIONS SOCIALES", 14, y);
+    y += 5;
+    doc.setFont('helvetica', 'normal');
+    
+    deductions.forEach(item => {
+      doc.text(item.label, 14, y);
+      doc.text(item.base || '', 100, y);
+      doc.text(item.rate || '', 125, y);
+      doc.text(item.amount.toFixed(2), 170, y, { align: 'right' });
+      y += 5;
+    });
+    
+    y += 2;
+    doc.setFont('helvetica', 'bold');
+    doc.text("TOTAL COTISATIONS", 14, y);
+    doc.text(payslip.totalDeductions.toFixed(2), 170, y, { align: 'right' });
+    y += 8;
+    
+    // Net à payer
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'bold');
+    doc.text("NET À PAYER", 14, y);
+    doc.text(payslip.netSalary.toFixed(2) + " €", 170, y, { align: 'right' });
+    y += 8;
+    
+    // Congés et RTT
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'bold');
+    doc.text("CONGÉS ET ABSENCES", 14, y);
+    y += 5;
+    doc.setFont('helvetica', 'normal');
+    
+    // Droits à congés (exemple de données)
+    const congesAcquis = 2.5;
+    const congesPris = 0;
+    const congesRestants = 25;
+    const rttAcquis = 1;
+    const rttPris = 0;
+    const rttRestants = 9;
+    
+    doc.text("Congés payés acquis période:", 14, y);
+    doc.text(congesAcquis.toFixed(2) + " jours", 100, y, { align: 'right' });
+    y += 5;
+    doc.text("Congés payés pris période:", 14, y);
+    doc.text(congesPris.toFixed(2) + " jours", 100, y, { align: 'right' });
+    y += 5;
+    doc.text("Solde congés payés:", 14, y);
+    doc.text(congesRestants.toFixed(2) + " jours", 100, y, { align: 'right' });
+    y += 5;
+    
+    // RTT
+    doc.text("RTT acquis période:", 14, y);
+    doc.text(rttAcquis.toFixed(2) + " jours", 100, y, { align: 'right' });
+    y += 5;
+    doc.text("RTT pris période:", 14, y);
+    doc.text(rttPris.toFixed(2) + " jours", 100, y, { align: 'right' });
+    y += 5;
+    doc.text("Solde RTT:", 14, y);
+    doc.text(rttRestants.toFixed(2) + " jours", 100, y, { align: 'right' });
+    y += 8;
+    
+    // Cumuls annuels
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'bold');
+    doc.text("CUMULS ANNUELS", 14, y);
+    y += 5;
+    doc.setFont('helvetica', 'normal');
+    
+    // Données de cumul (exemples)
+    const cumulBrut = payslip.grossSalary * 9;
+    const cumulNet = payslip.netSalary * 9;
+    const cumulImposable = payslip.netSalary * 0.93 * 9; // Exemple de calcul
+    
+    doc.text("Brut annuel:", 14, y);
+    doc.text(cumulBrut.toFixed(2) + " €", 100, y, { align: 'right' });
+    y += 5;
+    doc.text("Net annuel:", 14, y);
+    doc.text(cumulNet.toFixed(2) + " €", 100, y, { align: 'right' });
+    y += 5;
+    doc.text("Net imposable annuel:", 14, y);
+    doc.text(cumulImposable.toFixed(2) + " €", 100, y, { align: 'right' });
+    
+    // Pied de page
+    const pageHeight = doc.internal.pageSize.height;
+    doc.setFontSize(8);
+    doc.text("* Ce bulletin de paie est un document à conserver sans limitation de durée", 105, pageHeight - 10, { align: 'center' });
+    
+    // Enregistrer le document PDF
+    doc.save(`bulletin-de-paie-${payslip.period.replace(/\s+/g, '-')}.pdf`);
   };
   
+  const handlePrint = () => {
+    window.print();
+  };
+  
+  // Calculer le cumul imposable pour l'affichage
+  const imposable = payslip.netSalary * 0.93; // Exemple de calcul simplifié
+  
   return (
-    <div>
-      <div className="flex justify-between mb-4">
-        <h2 className="text-2xl font-bold">Bulletin de Paie</h2>
-        <Button 
-          variant="default" 
-          size="sm" 
-          onClick={handleDownloadPDF}
-          className="bg-blue-600 hover:bg-blue-700"
-        >
-          <Download className="mr-2 h-4 w-4" /> Télécharger PDF
-        </Button>
+    <div className="space-y-4 max-w-4xl mx-auto">
+      {/* Actions buttons */}
+      <div className="flex justify-end gap-2 print:hidden">
+        <DownloadButton onClick={handleDownloadPDF} />
       </div>
       
-      <Card className="print:shadow-none" ref={payslipRef}>
-        <CardContent className="p-8">
-          <PayslipHeader onPrint={handleDownloadPDF} />
-          
-          {/* French Payslip Header */}
-          <div className="flex justify-between items-start mb-10 pt-6 border-t">
-            <div>
-              <h2 className="text-2xl font-bold">BULLETIN DE PAIE</h2>
-              <p className="text-gray-600">EN EUROS - {payslip.period}</p>
-            </div>
-            <div className="text-right">
-              <p className="font-medium">{payslip.employerName}</p>
-              <p className="text-sm text-gray-600">{payslip.employerAddress}</p>
-              <p className="text-sm text-gray-600">SIRET: {payslip.employerSiret}</p>
-            </div>
+      {/* Preview Card */}
+      <Card className="p-6 print:shadow-none print:border-0" ref={payslipRef}>
+        {/* Header */}
+        <PayslipHeader onPrint={handlePrint} />
+        
+        {/* Enterprise Information */}
+        <div className="flex justify-between items-start mb-6 mt-4 print:mt-0">
+          <div className="flex-shrink-0 w-24 h-24 border border-gray-200 flex items-center justify-center">
+            <FileText className="h-12 w-12 text-gray-300" />
+            <span className="sr-only">Logo entreprise</span>
           </div>
-          
-          {/* Employee greeting */}
-          <div className="bg-blue-50 p-6 rounded-lg mb-10">
-            <h2 className="text-xl font-bold">Bonjour {payslip.employee.firstName} {payslip.employee.lastName}</h2>
-            <p className="text-gray-600">Voici votre bulletin de paie de {payslip.period}</p>
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
-              <div>
-                <h3 className="font-semibold">Votre salaire avant impôt</h3>
-                <p className="text-xl font-bold">{formatCurrency(payslip.grossSalary)}</p>
-                <p className="text-xs text-gray-500">Prélèvement à la source (3,60 %): {formatCurrency(payslip.grossSalary * 0.036)}</p>
-              </div>
-              
-              <div>
-                <h3 className="font-semibold">Votre salaire après impôt</h3>
-                <p className="text-xl font-bold">{formatCurrency(payslip.netSalary)}</p>
-                <p className="text-xs text-gray-500">Ce montant vous sera transféré le {payslip.paymentDate}</p>
-              </div>
-              
-              <div>
-                <h3 className="font-semibold">Votre montant net social</h3>
-                <p className="text-xl font-bold">{formatCurrency(payslip.grossSalary - payslip.totalDeductions)}</p>
-                <p className="text-xs text-gray-500">Ce montant sert au calcul de vos aides sociales</p>
-              </div>
-            </div>
+          <div className="text-right">
+            <p className="font-bold">Entreprise</p>
+            <p className="text-sm">{payslip.employerAddress}</p>
+            <p className="text-sm">SIRET: {payslip.employerSiret}</p>
           </div>
-          
-          {/* Salary details */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
-            <div className="border rounded-lg p-6">
-              <div className="flex items-center mb-4">
-                <div className="bg-blue-100 p-2 rounded-full mr-3">
-                  <FileText className="h-5 w-5 text-blue-600" />
-                </div>
-                <h3 className="text-lg font-bold">Calcul du salaire net</h3>
-              </div>
-              
-              <table className="w-full">
-                <tbody>
-                  <tr className="border-b">
-                    <td colSpan={2} className="py-2 font-medium">Rémunération brute</td>
-                    <td className="py-2 text-right font-bold">{formatCurrency(payslip.grossSalary)}</td>
-                  </tr>
-                  
-                  {payslip.details.filter(d => d.type === 'earning' && d.label !== 'Salaire de base').map((detail, index) => (
-                    <tr key={`earning-${index}`} className="text-sm text-gray-600">
-                      <td colSpan={2} className="py-1 pl-4">{detail.label}</td>
-                      <td className="py-1 text-right">{formatCurrency(detail.amount)}</td>
+        </div>
+        
+        {/* Employee and period information */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 pb-6 border-b">
+          <div>
+            <h3 className="font-bold mb-2 uppercase text-gray-600 text-sm">Informations salarié</h3>
+            <p><span className="font-medium">Nom, Prénom:</span> {payslip.employee.lastName} {payslip.employee.firstName}</p>
+            <p><span className="font-medium">Emploi:</span> {payslip.employee.role}</p>
+            <p><span className="font-medium">N° SS:</span> {payslip.employee.socialSecurityNumber}</p>
+            <p><span className="font-medium">Date d'entrée:</span> {payslip.employee.startDate}</p>
+          </div>
+          <div>
+            <h3 className="font-bold mb-2 uppercase text-gray-600 text-sm">Période de paie</h3>
+            <p><span className="font-medium">Période:</span> {payslip.period}</p>
+            <p><span className="font-medium">Date de paiement:</span> {payslip.paymentDate}</p>
+            <p><span className="font-medium">Heures travaillées:</span> {payslip.hoursWorked.toFixed(2)}h</p>
+          </div>
+        </div>
+        
+        {/* Payslip details */}
+        <div className="mb-6">
+          <h3 className="font-bold mb-2 uppercase text-gray-600 text-sm">Détail des rubriques</h3>
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-gray-200">
+                  <th className="text-left py-2">Rubrique</th>
+                  <th className="text-right px-2 py-2">Base</th>
+                  <th className="text-right px-2 py-2">Taux</th>
+                  <th className="text-right py-2">Montant (€)</th>
+                </tr>
+              </thead>
+              <tbody>
+                {/* Earnings section */}
+                <tr className="bg-gray-50">
+                  <td colSpan={4} className="py-2 font-bold">RÉMUNÉRATION</td>
+                </tr>
+                {payslip.details
+                  .filter(detail => detail.type === 'earning')
+                  .map((detail, index) => (
+                    <tr key={`earning-${index}`} className="border-b border-gray-100">
+                      <td className="py-1">{detail.label}</td>
+                      <td className="text-right px-2">{detail.base}</td>
+                      <td className="text-right px-2">{detail.rate}</td>
+                      <td className="text-right font-medium">{detail.amount.toFixed(2)}</td>
                     </tr>
                   ))}
-                  
-                  <tr className="border-t border-b">
-                    <td colSpan={2} className="py-2 font-medium">Cotisations et contributions salariales</td>
-                    <td className="py-2 text-right text-red-600 font-medium">- {formatCurrency(payslip.totalDeductions)}</td>
-                  </tr>
-                  
-                  {payslip.details.filter(d => d.type === 'deduction').map((detail, index) => (
-                    <tr key={`deduction-${index}`} className="text-sm text-gray-600">
-                      <td className="py-1 pl-4">{detail.label}</td>
-                      <td className="py-1 text-gray-500 text-right pr-4">{detail.rate}</td>
-                      <td className="py-1 text-right text-red-600">- {formatCurrency(detail.amount)}</td>
+                <tr className="border-b border-gray-200 font-semibold">
+                  <td colSpan={3} className="py-2">Total Brut</td>
+                  <td className="text-right">{payslip.grossSalary.toFixed(2)}</td>
+                </tr>
+                
+                {/* Deductions section */}
+                <tr className="bg-gray-50">
+                  <td colSpan={4} className="py-2 font-bold">COTISATIONS ET CONTRIBUTIONS SOCIALES</td>
+                </tr>
+                {payslip.details
+                  .filter(detail => detail.type === 'deduction')
+                  .map((detail, index) => (
+                    <tr key={`deduction-${index}`} className="border-b border-gray-100">
+                      <td className="py-1">{detail.label}</td>
+                      <td className="text-right px-2">{detail.base}</td>
+                      <td className="text-right px-2">{detail.rate}</td>
+                      <td className="text-right font-medium">{detail.amount.toFixed(2)}</td>
                     </tr>
                   ))}
-                  
-                  <tr className="border-t">
-                    <td colSpan={2} className="py-2 font-medium">Prélèvement à la source</td>
-                    <td className="py-2 text-right text-red-600 font-medium">- {formatCurrency(payslip.grossSalary * 0.036)}</td>
-                  </tr>
-                  
-                  <tr className="border-t">
-                    <td colSpan={2} className="py-3 font-bold">Net à payer</td>
-                    <td className="py-3 text-right font-bold text-lg">{formatCurrency(payslip.netSalary)}</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-            
-            <div>
-              {/* Leave balances */}
-              <div className="border rounded-lg p-6 mb-6">
-                <div className="flex items-center mb-4">
-                  <h3 className="text-lg font-bold">Congés disponibles</h3>
-                </div>
-                
-                <table className="w-full">
-                  <thead>
-                    <tr className="text-sm font-medium text-gray-700 border-b">
-                      <th className="text-left py-2">Type</th>
-                      <th className="text-center py-2">Acquis</th>
-                      <th className="text-center py-2">Pris</th>
-                      <th className="text-right py-2">Solde</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td className="py-2">CP N-2</td>
-                      <td className="py-2 text-center">5,00</td>
-                      <td className="py-2 text-center">5,00</td>
-                      <td className="py-2 text-right font-bold">0,00</td>
-                    </tr>
-                    <tr>
-                      <td className="py-2">CP N-1</td>
-                      <td className="py-2 text-center">25,00</td>
-                      <td className="py-2 text-center">25,00</td>
-                      <td className="py-2 text-right font-bold">0,00</td>
-                    </tr>
-                    <tr>
-                      <td className="py-2">CP N</td>
-                      <td className="py-2 text-center">18,75</td>
-                      <td className="py-2 text-center">1,50</td>
-                      <td className="py-2 text-right font-bold">17,25</td>
-                    </tr>
-                    <tr className="border-t">
-                      <td colSpan={3} className="py-2 font-medium">Total congés disponibles</td>
-                      <td className="py-2 text-right font-bold">17,25</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-              
-              {/* Yearly totals */}
-              <div className="border rounded-lg p-6">
-                <div className="flex items-center mb-4">
-                  <h3 className="text-lg font-bold">Cumuls DEPUIS JANV. 2023</h3>
-                </div>
-                
-                <table className="w-full">
-                  <tbody>
-                    <tr>
-                      <td className="py-2">Salaire net imposable</td>
-                      <td className="py-2 text-right font-bold">{formatCurrency(payslip.grossSalary * 11)}</td>
-                    </tr>
-                    <tr>
-                      <td className="py-2">Salaire brut</td>
-                      <td className="py-2 text-right">{formatCurrency(payslip.grossSalary * 12)}</td>
-                    </tr>
-                    <tr>
-                      <td className="py-2">Prélèvement à la source</td>
-                      <td className="py-2 text-right">{formatCurrency(payslip.grossSalary * 0.036 * 12)}</td>
-                    </tr>
-                    <tr>
-                      <td className="py-2">Heures supplémentaires exonérées</td>
-                      <td className="py-2 text-right">{formatCurrency(1079)}</td>
-                    </tr>
-                    <tr>
-                      <td className="py-2">Temps travaillé</td>
-                      <td className="py-2 text-right">333 h</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
+                <tr className="border-b border-gray-200 font-semibold">
+                  <td colSpan={3} className="py-2">Total Cotisations</td>
+                  <td className="text-right">{payslip.totalDeductions.toFixed(2)}</td>
+                </tr>
+              </tbody>
+              <tfoot>
+                <tr className="font-bold text-lg">
+                  <td colSpan={3} className="pt-4">NET À PAYER</td>
+                  <td className="text-right pt-4">{payslip.netSalary.toFixed(2)} €</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+        
+        {/* Leave balances */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+          {/* Congés et RTT */}
+          <div>
+            <h3 className="font-bold mb-2 uppercase text-gray-600 text-sm">Congés et RTT</h3>
+            <table className="w-full">
+              <tbody>
+                <tr className="border-b border-gray-100">
+                  <td className="py-1">Congés acquis période:</td>
+                  <td className="text-right">2,5 jours</td>
+                </tr>
+                <tr className="border-b border-gray-100">
+                  <td className="py-1">Congés pris période:</td>
+                  <td className="text-right">0 jour</td>
+                </tr>
+                <tr className="border-b border-gray-100">
+                  <td className="py-1 font-medium">Solde congés:</td>
+                  <td className="text-right font-medium">25 jours</td>
+                </tr>
+                <tr className="border-b border-gray-100">
+                  <td className="py-1">RTT acquis période:</td>
+                  <td className="text-right">1 jour</td>
+                </tr>
+                <tr className="border-b border-gray-100">
+                  <td className="py-1">RTT pris période:</td>
+                  <td className="text-right">0 jour</td>
+                </tr>
+                <tr className="border-b border-gray-100">
+                  <td className="py-1 font-medium">Solde RTT:</td>
+                  <td className="text-right font-medium">9 jours</td>
+                </tr>
+              </tbody>
+            </table>
           </div>
           
-          {/* Footer / QR Code */}
-          <div className="flex justify-between items-center mt-12 pt-6 border-t">
-            <div className="flex items-start">
-              <div className="bg-gray-200 w-24 h-24 flex items-center justify-center">
-                <span className="text-xs text-gray-500">QR Code</span>
-              </div>
-              <div className="ml-4">
-                <p className="text-xs text-gray-500">Vérifiez l'intégrité du bulletin</p>
-                <p className="text-xs font-mono mt-2">CODE DE VÉRIFICATION: {Math.random().toString(36).substring(2, 8).toUpperCase()}</p>
-              </div>
-            </div>
-            
-            <div className="text-right">
-              <p className="text-xs text-gray-500">Dans votre intérêt et pour vous aider à faire valoir vos droits,</p>
-              <p className="text-xs text-gray-500">conservez ce document sans limitation de durée</p>
-            </div>
+          {/* Cumuls */}
+          <div>
+            <h3 className="font-bold mb-2 uppercase text-gray-600 text-sm">Cumuls annuels</h3>
+            <table className="w-full">
+              <tbody>
+                <tr className="border-b border-gray-100">
+                  <td className="py-1">Brut annuel:</td>
+                  <td className="text-right">{(payslip.grossSalary * 9).toFixed(2)} €</td>
+                </tr>
+                <tr className="border-b border-gray-100">
+                  <td className="py-1">Net annuel:</td>
+                  <td className="text-right">{(payslip.netSalary * 9).toFixed(2)} €</td>
+                </tr>
+                <tr className="border-b border-gray-100">
+                  <td className="py-1 font-medium">Net imposable annuel:</td>
+                  <td className="text-right font-medium">{imposable.toFixed(2)} €</td>
+                </tr>
+              </tbody>
+            </table>
           </div>
-        </CardContent>
+        </div>
+        
+        {/* Footer notice */}
+        <div className="text-center text-xs text-gray-500 mt-6 pt-6 border-t">
+          <p>* Ce bulletin de paie est un document à conserver sans limitation de durée</p>
+        </div>
       </Card>
     </div>
   );

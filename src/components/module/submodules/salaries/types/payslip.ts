@@ -3,6 +3,9 @@ export interface PaySlipDetail {
   name: string;
   amount: number;
   type: "earning" | "deduction";
+  base?: string;
+  rate?: string;
+  label?: string;
 }
 
 export interface PaySlip {
@@ -16,4 +19,24 @@ export interface PaySlip {
   totalDeductions: number;
   date: string;
   status: "draft" | "published" | "paid";
+  // Champs spécifiques pour la législation française
+  hoursWorked?: number;
+  employerName?: string;
+  employerAddress?: string;
+  employerSiret?: string;
+  conges?: {
+    acquired: number;
+    taken: number;
+    balance: number;
+  };
+  rtt?: {
+    acquired: number;
+    taken: number;
+    balance: number;
+  };
+  annualCumulative?: {
+    grossSalary: number;
+    netSalary: number;
+    taxableIncome: number;
+  };
 }

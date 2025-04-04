@@ -13,7 +13,7 @@ export interface PaySlipDetail {
   base: string;
   rate?: string;
   amount: number;
-  type: "earning" | "deduction"; // Make sure both values are allowed
+  type: "earning" | "deduction";
 }
 
 export interface PaySlip {
@@ -29,4 +29,20 @@ export interface PaySlip {
   employerName: string;
   employerAddress: string;
   employerSiret: string;
+  // Nouveaux champs pour la législation française
+  conges?: {
+    acquired: number;
+    taken: number;
+    balance: number;
+  };
+  rtt?: {
+    acquired: number;
+    taken: number;
+    balance: number;
+  };
+  annualCumulative?: {
+    grossSalary: number;
+    netSalary: number;
+    taxableIncome: number;
+  };
 }
