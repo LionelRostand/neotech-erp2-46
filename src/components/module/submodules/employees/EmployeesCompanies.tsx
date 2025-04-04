@@ -40,7 +40,7 @@ import { MoreHorizontal, Plus, Search, RefreshCw } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
-import { CompanyForm } from './CompanyForm';
+import CompanyForm from '../CompanyForm';
 import { useAuth } from '@/hooks/useAuth';
 
 // Define Company type
@@ -222,6 +222,7 @@ const EmployeesCompanies: React.FC = () => {
                 <DialogTitle>Ajouter une nouvelle entreprise</DialogTitle>
               </DialogHeader>
               <CompanyForm
+                isOpen={isAddDialogOpen}
                 onClose={() => setIsAddDialogOpen(false)}
                 onSave={handleAddCompany}
               />
@@ -322,15 +323,13 @@ const EmployeesCompanies: React.FC = () => {
 
       {/* Edit Company Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogTrigger asChild>
-          <span></span> {/* Empty trigger for controlled dialog */}
-        </DialogTrigger>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>Modifier l'entreprise</DialogTitle>
           </DialogHeader>
           {currentCompany && (
             <CompanyForm
+              isOpen={isEditDialogOpen}
               company={currentCompany}
               isEditing={true}
               onClose={() => setIsEditDialogOpen(false)}
