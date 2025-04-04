@@ -1,45 +1,29 @@
 
+import { Company } from '@/components/module/submodules/companies/types';
+
 export interface Employee {
   id: string;
   firstName: string;
   lastName: string;
   email: string;
   phone?: string;
-  address?: string;
-  department: string;
-  departmentId?: string;
-  position: string;
-  contract: string;
-  hireDate: string;
-  manager?: string;
-  managerId?: string;
-  status: string;
-  createdAt?: string;
-  updatedAt?: string;
+  position?: string;
+  department?: string;
   photo?: string;
   photoURL?: string;
-  professionalEmail?: string;
-  company?: string;
-  title?: string;
-  education?: EducationItem[];
-  skills?: string[];
-  documents?: Document[];
-  workSchedule?: {
-    [key: string]: string;
+  hireDate?: string;
+  startDate?: string;
+  status?: 'active' | 'inactive' | 'onLeave';
+  address?: {
+    street?: string;
+    city?: string;
+    postalCode?: string;
+    country?: string;
   };
-  payslips?: string[];
-  baseSalary?: number;
+  contract?: string;
   socialSecurityNumber?: string;
-}
-
-export interface EducationItem {
-  degree: string;
-  school: string;
-  year: string;
-}
-
-export interface Document {
-  name: string;
-  date: string;
-  type: string;
+  birthDate?: string;
+  documents?: string[];
+  company?: string | Company;
+  role?: string;
 }

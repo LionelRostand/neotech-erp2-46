@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import DataTable from '@/components/DataTable'; // Changed to default import
 import { Column } from '@/components/DataTable';
 import { useSalarySlipsData } from '@/hooks/useSalarySlipsData';
-import { Download, Filter, Plus, Search } from 'lucide-react';
+import { Download, Filter, Plus, Search, Settings } from 'lucide-react';
 import PaySlipGenerator from './PaySlipGenerator';
 import PayslipViewer from './components/PayslipViewer';
 import { PaySlip } from '@/types/payslip';
@@ -22,6 +22,7 @@ import 'jspdf-autotable';
 import { Employee } from '@/types/employee';
 import { Company } from '../companies/types';
 import { SalarySlip } from '@/hooks/useSalarySlipsData';
+import PayslipConfiguration from './components/PayslipConfiguration';
 
 interface SalarySlipsProps {
   employees?: Employee[];
@@ -33,6 +34,7 @@ const SalarySlips: React.FC<SalarySlipsProps> = ({ employees, companies }) => {
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
   const [isFilterDialogOpen, setIsFilterDialogOpen] = useState(false);
   const [isGeneratorOpen, setIsGeneratorOpen] = useState(false);
+  const [isConfigOpen, setIsConfigOpen] = useState(false);
   const [selectedPayslip, setSelectedPayslip] = useState<PaySlip | null>(null);
   const [isViewerOpen, setIsViewerOpen] = useState(false);
   const { salarySlips, stats, isLoading, error } = useSalarySlipsData();
@@ -182,6 +184,7 @@ const SalarySlips: React.FC<SalarySlipsProps> = ({ employees, companies }) => {
           <TabsList>
             <TabsTrigger value="overview">Aperçu</TabsTrigger>
             <TabsTrigger value="list">Liste</TabsTrigger>
+            <TabsTrigger value="config">Configuration</TabsTrigger>
           </TabsList>
           <TabsContent value="overview" className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -249,6 +252,10 @@ const SalarySlips: React.FC<SalarySlipsProps> = ({ employees, companies }) => {
                     />
                   </DialogContent>
                 </Dialog>
+                <Button variant="outline" onClick={() => setIsConfigOpen(true)}>
+                  <Settings className="w-4 h-4 mr-2" />
+                  Configurer
+                </Button>
                 <Dialog open={isGeneratorOpen} onOpenChange={setIsGeneratorOpen}>
                   <DialogTrigger asChild>
                     <Button>
@@ -269,12 +276,21 @@ const SalarySlips: React.FC<SalarySlipsProps> = ({ employees, companies }) => {
               onRowClick={handleRowClick}
             />
           </TabsContent>
+          <TabsContent value="config" className="space-y-4">
+            <PayslipConfiguration />
+          </TabsContent>
         </Tabs>
       </CardContent>
 
       <Dialog open={isViewerOpen} onOpenChange={setIsViewerOpen}>
         <DialogContent>
           {selectedPayslip && <PayslipViewer payslip={selectedPayslip} />}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isConfigOpen} onOpenChange={setIsConfigOpen}>
+        <DialogContent className="max-w-4xl">
+          <PayslipConfiguration />
         </DialogContent>
       </Dialog>
     </Card>

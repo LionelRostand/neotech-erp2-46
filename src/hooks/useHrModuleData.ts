@@ -1,230 +1,80 @@
 
-import { useCollectionData } from './useCollectionData';
-import { COLLECTIONS } from '@/lib/firebase-collections';
-import { orderBy, query, where } from 'firebase/firestore';
-import type { Employee } from '@/types/employee';
-import type { DocumentData } from 'firebase/firestore';
+import { useEffect, useState } from 'react';
+import { useHrData } from './modules/useHrData';
+import { Company } from '@/components/module/submodules/companies/types';
+import { Employee } from '@/types/employee';
 
 /**
- * Hook centralisé pour récupérer toutes les données liées au module Employés/RH
- * directement depuis Firebase
+ * Hook to fetch and process HR module data
  */
 export const useHrModuleData = () => {
-  // Récupération des employés
-  const { 
-    data: employees, 
-    isLoading: isEmployeesLoading, 
-    error: employeesError 
-  } = useCollectionData<Employee>(
-    COLLECTIONS.HR.EMPLOYEES,
-    [orderBy('lastName')]
-  );
+  const { employees: rawEmployees, payslips, contracts, departments, isLoading, error } = useHrData();
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [companies, setCompanies] = useState<Company[]>([]);
 
-  // Récupération des fiches de paie
-  const { 
-    data: payslips, 
-    isLoading: isPayslipsLoading, 
-    error: payslipsError 
-  } = useCollectionData(
-    COLLECTIONS.HR.PAYSLIPS,
-    [orderBy('date', 'desc')]
-  );
+  // Process employees data
+  useEffect(() => {
+    if (rawEmployees) {
+      const processedEmployees = rawEmployees.map(emp => ({
+        id: emp.id,
+        firstName: emp.firstName || '',
+        lastName: emp.lastName || '',
+        email: emp.email || '',
+        phone: emp.phone || '',
+        position: emp.position || emp.role || 'Employé',
+        department: emp.department || 'Non spécifié',
+        photo: emp.photoURL || emp.photo || '',
+        hireDate: emp.hireDate || emp.startDate || new Date().toISOString(),
+        status: emp.status || 'active',
+        address: emp.address || {},
+        contract: emp.contract || '',
+        socialSecurityNumber: emp.socialSecurityNumber || '1 99 99 99 999 999 99',
+        birthDate: emp.birthDate || '',
+        documents: emp.documents || [],
+      })) as Employee[];
+      
+      setEmployees(processedEmployees);
+    }
+  }, [rawEmployees]);
 
-  // Récupération des demandes de congés
-  const { 
-    data: leaveRequests, 
-    isLoading: isLeaveRequestsLoading, 
-    error: leaveRequestsError 
-  } = useCollectionData(
-    COLLECTIONS.HR.LEAVE_REQUESTS,
-    [orderBy('startDate')]
-  );
-
-  // Récupération des contrats
-  const { 
-    data: contracts, 
-    isLoading: isContractsLoading, 
-    error: contractsError 
-  } = useCollectionData(
-    COLLECTIONS.HR.CONTRACTS,
-    [orderBy('startDate', 'desc')]
-  );
-
-  // Récupération des départements
-  const { 
-    data: departments, 
-    isLoading: isDepartmentsLoading, 
-    error: departmentsError 
-  } = useCollectionData(
-    COLLECTIONS.HR.DEPARTMENTS,
-    [orderBy('name')]
-  );
-
-  // Récupération des évaluations
-  const { 
-    data: evaluations, 
-    isLoading: isEvaluationsLoading, 
-    error: evaluationsError 
-  } = useCollectionData(
-    COLLECTIONS.HR.EVALUATIONS,
-    [orderBy('date', 'desc')]
-  );
-
-  // Récupération des formations
-  const { 
-    data: trainings, 
-    isLoading: isTrainingsLoading, 
-    error: trainingsError 
-  } = useCollectionData(
-    COLLECTIONS.HR.TRAININGS,
-    [orderBy('startDate')]
-  );
-
-  // Récupération des badges
-  const { 
-    data: badges, 
-    isLoading: isBadgesLoading, 
-    error: badgesError 
-  } = useCollectionData(
-    COLLECTIONS.HR.BADGES,
-    [orderBy('date', 'desc')]
-  );
-
-  // Récupération des présences
-  const { 
-    data: attendance, 
-    isLoading: isAttendanceLoading, 
-    error: attendanceError 
-  } = useCollectionData(
-    COLLECTIONS.HR.ATTENDANCE,
-    [orderBy('date', 'desc')]
-  );
-
-  // Récupération des feuilles de temps
-  const { 
-    data: timeSheets, 
-    isLoading: isTimeSheetsLoading, 
-    error: timeSheetsError 
-  } = useCollectionData(
-    COLLECTIONS.HR.TIME_SHEETS,
-    [orderBy('weekStartDate', 'desc')]
-  );
-
-  // Récupération des demandes d'absence
-  const { 
-    data: absenceRequests, 
-    isLoading: isAbsenceRequestsLoading, 
-    error: absenceRequestsError 
-  } = useCollectionData(
-    COLLECTIONS.HR.ABSENCE_REQUESTS,
-    [orderBy('startDate')]
-  );
-
-  // Récupération des documents RH
-  const { 
-    data: hrDocuments, 
-    isLoading: isHrDocumentsLoading, 
-    error: hrDocumentsError 
-  } = useCollectionData(
-    COLLECTIONS.HR.DOCUMENTS,
-    [orderBy('uploadDate', 'desc')]
-  );
-
-  // Récupération des entreprises
-  const { 
-    data: companies, 
-    isLoading: isCompaniesLoading, 
-    error: companiesError 
-  } = useCollectionData(
-    COLLECTIONS.COMPANIES,
-    [orderBy('name')]
-  );
-
-  // Récupération des recrutements
-  const { 
-    data: recruitmentPosts, 
-    isLoading: isRecruitmentLoading, 
-    error: recruitmentError 
-  } = useCollectionData(
-    COLLECTIONS.HR.RECRUITMENT,
-    [orderBy('openDate', 'desc')]
-  );
-
-  // Récupération des rapports
-  const { 
-    data: hrReports, 
-    isLoading: isReportsLoading, 
-    error: reportsError 
-  } = useCollectionData(
-    COLLECTIONS.HR.REPORTS,
-    [orderBy('createdDate', 'desc')]
-  );
-
-  // Récupération des alertes
-  const { 
-    data: hrAlerts, 
-    isLoading: isAlertsLoading, 
-    error: alertsError 
-  } = useCollectionData(
-    COLLECTIONS.HR.ALERTS,
-    [orderBy('createdDate', 'desc')]
-  );
-
-  // Vérifier si des données sont en cours de chargement
-  const isLoading = 
-    isEmployeesLoading || 
-    isPayslipsLoading || 
-    isLeaveRequestsLoading || 
-    isContractsLoading || 
-    isDepartmentsLoading ||
-    isEvaluationsLoading ||
-    isTrainingsLoading ||
-    isBadgesLoading ||
-    isAttendanceLoading ||
-    isTimeSheetsLoading ||
-    isAbsenceRequestsLoading ||
-    isHrDocumentsLoading ||
-    isCompaniesLoading ||
-    isRecruitmentLoading ||
-    isReportsLoading ||
-    isAlertsLoading;
-
-  // Combiner toutes les erreurs potentielles
-  const error = 
-    employeesError || 
-    payslipsError || 
-    leaveRequestsError || 
-    contractsError || 
-    departmentsError ||
-    evaluationsError ||
-    trainingsError ||
-    badgesError ||
-    attendanceError ||
-    timeSheetsError ||
-    absenceRequestsError ||
-    hrDocumentsError ||
-    companiesError ||
-    recruitmentError ||
-    reportsError ||
-    alertsError;
+  // Extract companies from employees if available
+  useEffect(() => {
+    if (employees && employees.length > 0) {
+      // Create a map to ensure unique companies
+      const companiesMap = new Map<string, Company>();
+      
+      employees.forEach(emp => {
+        if (emp.company) {
+          const companyId = typeof emp.company === 'string' ? emp.company : emp.company.id;
+          
+          if (!companiesMap.has(companyId)) {
+            if (typeof emp.company === 'string') {
+              // Only has the id, create a basic company object
+              companiesMap.set(companyId, {
+                id: companyId,
+                name: 'Entreprise',
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString()
+              });
+            } else {
+              // Has the full company object
+              companiesMap.set(companyId, emp.company as Company);
+            }
+          }
+        }
+      });
+      
+      // Convert map to array
+      setCompanies(Array.from(companiesMap.values()));
+    }
+  }, [employees]);
 
   return {
-    employees: employees || [],
-    payslips: payslips || [],
-    leaveRequests: leaveRequests || [],
-    contracts: contracts || [],
-    departments: departments || [],
-    evaluations: evaluations || [],
-    trainings: trainings || [],
-    badges: badges || [],
-    attendance: attendance || [],
-    timeSheets: timeSheets || [],
-    absenceRequests: absenceRequests || [],
-    hrDocuments: hrDocuments || [],
-    companies: companies || [],
-    recruitmentPosts: recruitmentPosts || [],
-    hrReports: hrReports || [],
-    hrAlerts: hrAlerts || [],
+    employees,
+    payslips,
+    contracts,
+    departments,
+    companies,
     isLoading,
     error
   };

@@ -1,25 +1,33 @@
 
 import React from 'react';
 
-interface CompanyInfoSectionProps {
+export interface CompanyInfoSectionProps {
   name: string;
   address: string;
   siret: string;
+  logo?: string;
 }
 
 const CompanyInfoSection: React.FC<CompanyInfoSectionProps> = ({
   name,
   address,
-  siret
+  siret,
+  logo
 }) => {
   return (
-    <div className="space-y-1">
-      <div className="w-24 h-16 bg-gray-200 flex items-center justify-center rounded-md mb-2">
-        <span className="text-xs text-gray-500">Logo</span>
-      </div>
+    <div className="space-y-2">
+      {logo && (
+        <img 
+          src={logo} 
+          alt={`Logo ${name}`} 
+          className="h-12 w-auto object-contain" 
+        />
+      )}
       <h3 className="font-bold text-lg">{name}</h3>
-      <p className="text-sm">{address}</p>
-      <p className="text-sm text-gray-600">SIRET: {siret}</p>
+      <div className="space-y-1 text-sm">
+        <p>{address}</p>
+        <p><span className="font-medium">SIRET:</span> {siret}</p>
+      </div>
     </div>
   );
 };
