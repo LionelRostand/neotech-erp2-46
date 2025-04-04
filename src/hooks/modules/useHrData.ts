@@ -93,7 +93,7 @@ export const useHrData = () => {
     isLoading: isTimeSheetsLoading,
     error: timeSheetsError
   } = useCollectionData(
-    COLLECTIONS.HR.TIME_SHEETS,
+    COLLECTIONS.HR.TIMESHEETS,
     [orderBy('date', 'desc')]
   );
 

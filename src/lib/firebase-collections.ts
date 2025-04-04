@@ -26,7 +26,12 @@ export const COLLECTIONS = {
   USER_PERMISSIONS: 'user_permissions',
   
   // Message collections
-  MESSAGES: 'messages',
+  MESSAGES: {
+    INBOX: 'messages_inbox',
+    ARCHIVED: 'messages_archived',
+    SCHEDULED: 'messages_scheduled',
+    METRICS: 'messages_metrics'
+  },
   CONTACTS: 'contacts',
   
   // Freight collections
@@ -46,14 +51,22 @@ export const COLLECTIONS = {
     APPOINTMENTS: 'health_appointments',
     PRESCRIPTIONS: 'health_prescriptions',
     STAFF: 'health_staff',
-    BILLING: 'health_billing'
+    BILLING: 'health_billing',
+    DOCTORS: 'health_doctors',
+    CONSULTATIONS: 'health_consultations',
+    INSURANCE: 'health_insurance'
   },
   HEALTH_CONSULTATIONS: 'health_consultations',
   HEALTH_INSURANCE: 'health_insurance',
   HEALTH_BILLING: 'health_billing',
   
   // Library module collections
-  LIBRARY: 'library',
+  LIBRARY: {
+    BOOKS: 'library_books',
+    MEMBERS: 'library_members',
+    LOANS: 'library_loans',
+    STATS: 'library_stats'
+  },
   
   // Projects module collections
   PROJECTS: {
@@ -68,7 +81,9 @@ export const COLLECTIONS = {
   ACCOUNTING: {
     INVOICES: 'accounting_invoices',
     PAYMENTS: 'accounting_payments',
-    EXPENSES: 'accounting_expenses'
+    EXPENSES: 'accounting_expenses',
+    TRANSACTIONS: 'accounting_transactions',
+    PERMISSIONS: 'accounting_permissions'
   },
   
   // CRM module collections
@@ -76,7 +91,9 @@ export const COLLECTIONS = {
     LEADS: 'crm_leads',
     OPPORTUNITIES: 'crm_opportunities',
     CONTACTS: 'crm_contacts',
-    ACCOUNTS: 'crm_accounts'
+    ACCOUNTS: 'crm_accounts',
+    PROSPECTS: 'crm_prospects',
+    CLIENTS: 'crm_clients'
   },
   
   // Transport module collections
@@ -84,7 +101,9 @@ export const COLLECTIONS = {
     VEHICLES: 'transport_vehicles',
     DRIVERS: 'transport_drivers',
     MAINTENANCE: 'transport_maintenance',
-    ROUTES: 'transport_routes'
+    ROUTES: 'transport_routes',
+    RESERVATIONS: 'transport_reservations',
+    CLIENTS: 'transport_clients'
   },
   
   // Other collections can be added as needed
