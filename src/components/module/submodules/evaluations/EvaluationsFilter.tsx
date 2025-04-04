@@ -106,7 +106,7 @@ const EvaluationsFilter: React.FC<EvaluationsFilterProps> = ({
                   <SelectValue placeholder="Tous les départements" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Tous les départements</SelectItem>
+                  <SelectItem value="all">Tous les départements</SelectItem>
                   {departments.map((dept) => (
                     <SelectItem key={dept.id} value={dept.id}>
                       {dept.name}
@@ -126,7 +126,7 @@ const EvaluationsFilter: React.FC<EvaluationsFilterProps> = ({
                   <SelectValue placeholder="Tous les statuts" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Tous les statuts</SelectItem>
+                  <SelectItem value="all">Tous les statuts</SelectItem>
                   <SelectItem value="Planifiée">Planifiée</SelectItem>
                   <SelectItem value="Complétée">Complétée</SelectItem>
                   <SelectItem value="Annulée">Annulée</SelectItem>
