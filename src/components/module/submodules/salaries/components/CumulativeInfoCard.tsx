@@ -2,13 +2,16 @@
 import React from 'react';
 
 interface CumulativeInfoCardProps {
-  grossSalary: number;
-  hoursWorked: number;
+  annualCumulative: {
+    grossSalary: number;
+    netSalary: number;
+    taxableIncome: number;
+  };
 }
 
-const CumulativeInfoCard: React.FC<CumulativeInfoCardProps> = ({ grossSalary, hoursWorked }) => {
+const CumulativeInfoCard: React.FC<CumulativeInfoCardProps> = ({ annualCumulative }) => {
   return (
-    <div className="bg-amber-50 rounded-lg p-5 mb-6">
+    <div className="bg-amber-50 rounded-lg p-5">
       <div className="flex items-center mb-4">
         <div className="bg-amber-100 rounded-full p-2 mr-3">
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -22,23 +25,19 @@ const CumulativeInfoCard: React.FC<CumulativeInfoCardProps> = ({ grossSalary, ho
       <div className="space-y-2">
         <div className="flex justify-between">
           <p>Salaire net imposable</p>
-          <p className="font-medium">{(grossSalary * 2.07).toFixed(2)} €</p>
+          <p className="font-medium">{annualCumulative.taxableIncome.toFixed(2)} €</p>
         </div>
         <div className="flex justify-between">
           <p>Salaire brut</p>
-          <p className="font-medium">{(grossSalary * 2.85).toFixed(2)} €</p>
+          <p className="font-medium">{annualCumulative.grossSalary.toFixed(2)} €</p>
         </div>
         <div className="flex justify-between">
           <p>Prélèvement à la source</p>
-          <p className="font-medium">{(grossSalary * 0.075).toFixed(2)} €</p>
+          <p className="font-medium">{(annualCumulative.netSalary * 0.075).toFixed(2)} €</p>
         </div>
         <div className="flex justify-between">
           <p>Montant net des heures supplémentaires exonérées</p>
-          <p className="font-medium">{(grossSalary * 0.28).toFixed(2)} €</p>
-        </div>
-        <div className="flex justify-between">
-          <p>Temps travaillé</p>
-          <p className="font-medium">{hoursWorked.toFixed(0)} h</p>
+          <p className="font-medium">{(annualCumulative.netSalary * 0.28).toFixed(2)} €</p>
         </div>
       </div>
     </div>

@@ -18,8 +18,7 @@ export const usePayslipGenerator = () => {
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
   const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
 
-  const handleEmployeeSelect = (e: React.ChangeEvent<HTMLSelectElement>, employees: Employee[]) => {
-    const employeeId = e.target.value;
+  const handleEmployeeSelect = (employeeId: string, employees: Employee[]) => {
     if (!employeeId) {
       setSelectedEmployee(null);
       setEmployeeName('');

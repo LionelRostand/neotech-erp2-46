@@ -18,7 +18,9 @@ export interface PaySlip {
   netSalary: number;
   totalDeductions: number;
   date: string;
-  status: "draft" | "published" | "paid";
+  status: "draft" | "published" | "paid" | "Généré" | "Envoyé" | "Validé";
+  pdfUrl?: string;
+  department?: string;
   // Champs spécifiques pour la législation française
   hoursWorked?: number;
   employerName?: string;

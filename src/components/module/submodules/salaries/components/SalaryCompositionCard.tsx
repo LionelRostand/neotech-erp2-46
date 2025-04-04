@@ -1,57 +1,75 @@
 
 import React from 'react';
+import { PaySlipDetail } from '@/types/payslip';
 
-const SalaryCompositionCard: React.FC = () => {
+interface SalaryCompositionCardProps {
+  details: PaySlipDetail[];
+  grossSalary: number;
+  totalDeductions: number;
+  netSalary: number;
+}
+
+const SalaryCompositionCard: React.FC<SalaryCompositionCardProps> = ({
+  details,
+  grossSalary,
+  totalDeductions,
+  netSalary
+}) => {
+  const earnings = details.filter(detail => detail.type === 'earning');
+  const deductions = details.filter(detail => detail.type === 'deduction');
+
   return (
-    <div className="border rounded-lg p-5 mb-6">
-      <div className="flex items-center mb-4">
-        <div className="bg-rose-50 rounded-full p-2 mr-3">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M19 6v12M12 6v12M5 12h14"/>
-          </svg>
-        </div>
-        <h3 className="font-bold text-lg">Composition du salaire brut</h3>
-      </div>
-      
-      <div className="flex justify-center">
-        <div className="w-40 h-40 relative">
-          {/* Simple circular representation */}
-          <div className="w-full h-full rounded-full border-[20px] border-blue-900"></div>
-          <div className="absolute top-0 right-0 w-full h-full rounded-full border-[20px] border-blue-400 border-t-transparent border-r-transparent border-b-transparent" style={{transform: 'rotate(45deg)'}}></div>
-          <div className="absolute top-0 right-0 w-full h-full rounded-full border-[20px] border-blue-200 border-t-transparent border-r-transparent border-l-transparent" style={{transform: 'rotate(260deg)'}}></div>
-        </div>
-      </div>
-      
-      <div className="grid grid-cols-2 gap-4 mt-4">
-        <div className="flex items-center">
-          <div className="w-3 h-3 bg-blue-900 rounded-full mr-2"></div>
-          <div>
-            <p className="text-sm">Salaire net après impôt</p>
-            <p className="text-xs text-gray-500">75,02 %</p>
-          </div>
-        </div>
-        <div className="flex items-center">
-          <div className="w-3 h-3 bg-blue-400 rounded-full mr-2"></div>
-          <div>
-            <p className="text-sm">Prélèvement à la source</p>
-            <p className="text-xs text-gray-500">2,62 %</p>
-          </div>
-        </div>
-        <div className="flex items-center">
-          <div className="w-3 h-3 bg-blue-200 rounded-full mr-2"></div>
-          <div>
-            <p className="text-sm">Santé</p>
-            <p className="text-xs text-gray-500">1,08 %</p>
-          </div>
-        </div>
-        <div className="flex items-center">
-          <div className="w-3 h-3 bg-gray-300 rounded-full mr-2"></div>
-          <div>
-            <p className="text-sm">Autres cotisations</p>
-            <p className="text-xs text-gray-500">21,28 %</p>
-          </div>
-        </div>
-      </div>
+    <div className="border rounded-lg overflow-hidden">
+      <table className="w-full text-sm">
+        <thead className="bg-gray-50">
+          <tr>
+            <th className="px-4 py-2 text-left font-medium">Rubriques</th>
+            <th className="px-4 py-2 text-right font-medium">Base</th>
+            <th className="px-4 py-2 text-right font-medium">Taux</th>
+            <th className="px-4 py-2 text-right font-medium">Montant</th>
+          </tr>
+        </thead>
+        <tbody className="divide-y">
+          {/* Earnings section */}
+          {earnings.map((earning, index) => (
+            <tr key={`earning-${index}`} className="bg-white">
+              <td className="px-4 py-2 text-left">{earning.label}</td>
+              <td className="px-4 py-2 text-right">{earning.base || '-'}</td>
+              <td className="px-4 py-2 text-right">{earning.rate || '-'}</td>
+              <td className="px-4 py-2 text-right font-medium">{earning.amount.toFixed(2)} €</td>
+            </tr>
+          ))}
+          
+          <tr className="bg-gray-50 font-medium">
+            <td className="px-4 py-2 text-left" colSpan={3}>Total brut</td>
+            <td className="px-4 py-2 text-right">{grossSalary.toFixed(2)} €</td>
+          </tr>
+          
+          {/* Deductions section */}
+          <tr className="bg-gray-100">
+            <td className="px-4 py-2 text-left font-medium" colSpan={4}>Cotisations et contributions sociales</td>
+          </tr>
+          
+          {deductions.map((deduction, index) => (
+            <tr key={`deduction-${index}`} className="bg-white">
+              <td className="px-4 py-2 text-left">{deduction.label}</td>
+              <td className="px-4 py-2 text-right">{deduction.base || '-'}</td>
+              <td className="px-4 py-2 text-right">{deduction.rate || '-'}</td>
+              <td className="px-4 py-2 text-right text-gray-600">-{deduction.amount.toFixed(2)} €</td>
+            </tr>
+          ))}
+          
+          <tr className="bg-gray-50 font-medium">
+            <td className="px-4 py-2 text-left" colSpan={3}>Total des cotisations</td>
+            <td className="px-4 py-2 text-right text-gray-600">-{totalDeductions.toFixed(2)} €</td>
+          </tr>
+          
+          <tr className="bg-blue-50 font-bold">
+            <td className="px-4 py-3 text-left" colSpan={3}>Net à payer</td>
+            <td className="px-4 py-3 text-right">{netSalary.toFixed(2)} €</td>
+          </tr>
+        </tbody>
+      </table>
     </div>
   );
 };

@@ -98,7 +98,7 @@ const PaySlipGenerator: React.FC<PaySlipGeneratorProps> = ({ employees, companie
           <div className="space-y-2">
             <Label>Employé</Label>
             {employees && employees.length > 0 ? (
-              <Select onValueChange={(value) => handleEmployeeSelect({target: {value}}, employees)}>
+              <Select onValueChange={(value) => handleEmployeeSelect(value, employees)}>
                 <SelectTrigger>
                   <SelectValue placeholder="Sélectionner un employé" />
                 </SelectTrigger>

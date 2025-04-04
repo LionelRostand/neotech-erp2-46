@@ -1,443 +1,442 @@
 
-import React, { useState } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { 
-  DollarSign, 
-  ListFilter, 
-  Plus,
-  Download,
-  Mail,
-  FileText,
-  CheckCircle
-} from 'lucide-react';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { toast } from 'sonner';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { FileText, Download, Filter, Plus, FileCheck } from 'lucide-react';
 import { useSalarySlipsData } from '@/hooks/useSalarySlipsData';
+import { DataTable } from '@/components/DataTable';
+import { ColumnDef } from '@tanstack/react-table';
+import { SalarySlip } from '@/hooks/useSalarySlipsData';
+import { Badge } from '@/components/ui/badge';
+import { toast } from 'sonner';
+import { Employee } from '@/types/employee';
+import { Company } from '@/components/module/submodules/companies/types';
 import NewPayslipDialog from './components/NewPayslipDialog';
-import PayslipFilterDialog, { PayslipFilters } from './components/PayslipFilterDialog';
+import PayslipFilterDialog from './components/PayslipFilterDialog';
 import PayslipViewer from './components/PayslipViewer';
-import { exportToPdf } from '@/utils/pdfUtils';
-import { PaySlip } from '@/types/payslip';
+import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
+import { getDocumentById } from '@/hooks/firestore/read-operations';
+import { COLLECTIONS } from '@/lib/firebase-collections';
+import { jsPDF } from 'jspdf';
+import 'jspdf-autotable';
 
-const SalarySlips: React.FC = () => {
-  const [activeTab, setActiveTab] = useState('fiches');
-  const { salarySlips, stats, isLoading, error, employees, companies } = useSalarySlipsData();
-  const [isNewPayslipDialogOpen, setIsNewPayslipDialogOpen] = useState(false);
+const SalarySlips = () => {
+  const { salarySlips, stats, isLoading, employees, companies } = useSalarySlipsData();
+  const [selectedTab, setSelectedTab] = useState('all');
   const [isFilterDialogOpen, setIsFilterDialogOpen] = useState(false);
-  const [filters, setFilters] = useState<PayslipFilters>({});
-  const [selectedPayslip, setSelectedPayslip] = useState<PaySlip | null>(null);
-  const [isPayslipViewerOpen, setIsPayslipViewerOpen] = useState(false);
+  const [isNewPayslipDialogOpen, setIsNewPayslipDialogOpen] = useState(false);
+  const [selectedPayslip, setSelectedPayslip] = useState<SalarySlip | null>(null);
+  const [filteredSlips, setFilteredSlips] = useState<SalarySlip[]>([]);
+  const [isViewerOpen, setIsViewerOpen] = useState(false);
+  const [currentFilters, setCurrentFilters] = useState({});
 
-  const handleExportData = () => {
-    const data = filteredSlips.map(slip => ({
-      Employé: slip.employeeName,
-      Période: `${slip.month} ${slip.year}`,
-      Date: slip.date,
-      'Montant Net': `${slip.netAmount.toLocaleString('fr-FR')} ${slip.currency}`,
-      'Montant Brut': `${slip.grossAmount.toLocaleString('fr-FR')} ${slip.currency}`,
-      Statut: slip.status
-    }));
+  useEffect(() => {
+    setFilteredSlips(salarySlips);
+  }, [salarySlips]);
 
-    if (exportToPdf(data, 'Fiches de paie', 'fiches_de_paie')) {
-      toast.success("Export des fiches de paie réussi");
-    } else {
-      toast.error("Échec de l'export des fiches de paie");
-    }
-  };
+  const formattedEmployees = employees?.map(employee => ({
+    id: employee.id,
+    name: `${employee.firstName} ${employee.lastName}`
+  })) || [];
 
-  const handleSendEmail = (id: string, employeeName: string) => {
-    toast.success(`Email envoyé à ${employeeName}`);
-  };
-
-  const handleViewPayslip = (slip: any) => {
-    const foundEmployee = employees.find(emp => emp.id === slip.employeeId);
-    if (foundEmployee) {
-      // Convertir au format nécessaire pour PayslipViewer
-      const viewPayslip: PaySlip = {
-        id: slip.id,
-        employee: {
-          firstName: foundEmployee.firstName,
-          lastName: foundEmployee.lastName,
-          employeeId: foundEmployee.id,
-          role: foundEmployee.position || 'Employé',
-          socialSecurityNumber: foundEmployee.socialSecurityNumber || '1 99 99 99 999 999 99',
-          startDate: foundEmployee.hireDate || '01/01/2023'
-        },
-        period: `${slip.month} ${slip.year}`,
-        details: [
-          { 
-            label: 'Salaire de base',
-            base: '151.67 H', 
-            rate: `${(slip.grossAmount / 151.67).toFixed(2)} €/H`,
-            amount: slip.grossAmount,
-            type: 'earning'
-          },
-          { 
-            label: 'CSG déductible',
-            base: `${slip.grossAmount.toFixed(2)} €`,
-            rate: '6,75 %',
-            amount: slip.grossAmount * 0.0675,
-            type: 'deduction'
-          },
-          { 
-            label: 'CSG/CRDS non déductible',
-            base: `${slip.grossAmount.toFixed(2)} €`,
-            rate: '2,90 %',
-            amount: slip.grossAmount * 0.029,
-            type: 'deduction'
-          },
-          { 
-            label: 'Sécurité sociale - Maladie',
-            base: `${slip.grossAmount.toFixed(2)} €`,
-            rate: '0,75 %',
-            amount: slip.grossAmount * 0.0075,
-            type: 'deduction'
-          },
-          { 
-            label: 'Assurance vieillesse',
-            base: `${slip.grossAmount.toFixed(2)} €`,
-            rate: '4,10 %',
-            amount: slip.grossAmount * 0.0410,
-            type: 'deduction'
-          },
-          { 
-            label: 'Assurance chômage',
-            base: `${slip.grossAmount.toFixed(2)} €`,
-            rate: '2,40 %',
-            amount: slip.grossAmount * 0.024,
-            type: 'deduction'
-          }
-        ],
-        grossSalary: slip.grossAmount,
-        totalDeductions: slip.grossAmount - slip.netAmount,
-        netSalary: slip.netAmount,
-        hoursWorked: 151.67,
-        paymentDate: slip.date,
-        employerName: "Entreprise ACME",
-        employerAddress: "15 rue des Lilas, 75001 Paris",
-        employerSiret: "123 456 789 00012",
-        conges: {
-          acquired: 2.5,
-          taken: 0,
-          balance: 25
-        },
-        rtt: {
-          acquired: 1,
-          taken: 0,
-          balance: 9
-        },
-        annualCumulative: {
-          grossSalary: slip.grossAmount * 9,
-          netSalary: slip.netAmount * 9,
-          taxableIncome: slip.grossAmount * 0.98 - (slip.grossAmount * 0.0725),
-        }
-      };
-
-      setSelectedPayslip(viewPayslip);
-      setIsPayslipViewerOpen(true);
-    }
-  };
-
-  const handleApplyFilters = (newFilters: PayslipFilters) => {
-    const processedFilters = { ...newFilters };
-    
-    // Convertir les valeurs "all" en undefined pour les ignorer lors du filtrage
-    Object.keys(processedFilters).forEach(key => {
-      const typedKey = key as keyof PayslipFilters;
-      if (processedFilters[typedKey] === 'all') {
-        processedFilters[typedKey] = undefined;
+  const columns: ColumnDef<SalarySlip>[] = [
+    {
+      accessorKey: 'employeeName',
+      header: 'Employé',
+      cell: ({ row }) => {
+        const employee = row.original;
+        return (
+          <div className="flex items-center gap-2">
+            {employee.employeePhoto ? (
+              <img 
+                src={employee.employeePhoto} 
+                alt={employee.employeeName} 
+                className="w-8 h-8 rounded-full object-cover"
+              />
+            ) : (
+              <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
+                <span className="text-xs">{employee.employeeName?.charAt(0)}</span>
+              </div>
+            )}
+            <span>{employee.employeeName}</span>
+          </div>
+        );
       }
-    });
+    },
+    {
+      accessorKey: 'month',
+      header: 'Période',
+      cell: ({ row }) => `${row.original.month} ${row.original.year}`
+    },
+    {
+      accessorKey: 'department',
+      header: 'Département',
+      cell: ({ row }) => row.original.department || 'Non spécifié'
+    },
+    {
+      accessorKey: 'netAmount',
+      header: 'Montant net',
+      cell: ({ row }) => `${row.original.netAmount.toLocaleString('fr-FR')} ${row.original.currency}`
+    },
+    {
+      accessorKey: 'status',
+      header: 'Statut',
+      cell: ({ row }) => {
+        const status = row.original.status;
+        let color = '';
+        
+        switch(status) {
+          case 'Généré':
+            color = 'bg-blue-100 text-blue-800';
+            break;
+          case 'Envoyé':
+            color = 'bg-yellow-100 text-yellow-800';
+            break;
+          case 'Validé':
+            color = 'bg-green-100 text-green-800';
+            break;
+          default:
+            color = 'bg-gray-100 text-gray-800';
+        }
+        
+        return <Badge className={`${color}`}>{status}</Badge>;
+      }
+    },
+    {
+      id: 'actions',
+      cell: ({ row }) => {
+        const payslip = row.original;
+        return (
+          <div className="flex items-center gap-2">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={() => handleViewPayslip(payslip)}
+              title="Visualiser"
+            >
+              <FileText className="h-4 w-4" />
+            </Button>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={() => handleDownloadPayslip(payslip)}
+              title="Télécharger"
+            >
+              <Download className="h-4 w-4" />
+            </Button>
+          </div>
+        );
+      }
+    }
+  ];
+
+  const handleViewPayslip = (payslip: SalarySlip) => {
+    setSelectedPayslip(payslip);
+    setIsViewerOpen(true);
+  };
+
+  const handleDownloadPayslip = async (payslip: SalarySlip) => {
+    try {
+      if (payslip.pdfUrl) {
+        window.open(payslip.pdfUrl, '_blank');
+      } else {
+        toast.info("Génération du PDF en cours...");
+        
+        // Get employee details
+        const employeeData = employees?.find(emp => emp.id === payslip.employeeId);
+        
+        if (!employeeData) {
+          toast.error("Impossible de trouver les détails de l'employé");
+          return;
+        }
+        
+        // Convert to necessary format for the PaySlip type
+        const payslipData = {
+          id: payslip.id,
+          employee: {
+            firstName: employeeData.firstName,
+            lastName: employeeData.lastName,
+            employeeId: employeeData.id,
+            role: employeeData.position,
+            socialSecurityNumber: employeeData.socialSecurityNumber || "1 99 99 99 999 999 99",
+            startDate: employeeData.hireDate
+          },
+          period: `${payslip.month} ${payslip.year}`,
+          details: [
+            { 
+              label: 'Salaire de base', 
+              base: '151.67 H', 
+              amount: payslip.grossAmount * 0.85, 
+              type: 'earning' as 'earning'
+            },
+            { 
+              label: 'CSG déductible', 
+              base: `${payslip.grossAmount.toFixed(2)} €`, 
+              rate: '6,75 %', 
+              amount: payslip.grossAmount * 0.0675, 
+              type: 'deduction' as 'deduction'
+            },
+            { 
+              label: 'Sécurité sociale - Maladie', 
+              base: `${payslip.grossAmount.toFixed(2)} €`, 
+              rate: '0,75 %', 
+              amount: payslip.grossAmount * 0.0075, 
+              type: 'deduction' as 'deduction'
+            }
+          ],
+          grossSalary: payslip.grossAmount,
+          totalDeductions: payslip.grossAmount - payslip.netAmount,
+          netSalary: payslip.netAmount,
+          hoursWorked: 151.67,
+          paymentDate: new Date().toLocaleDateString('fr-FR'),
+          employerName: "ACME France SAS",
+          employerAddress: "15 rue de la Paix, 75001 Paris",
+          employerSiret: "123 456 789 00012",
+          conges: {
+            acquired: 2.5,
+            taken: 0,
+            balance: 25
+          },
+          rtt: {
+            acquired: 1,
+            taken: 0,
+            balance: 9
+          },
+          annualCumulative: {
+            grossSalary: payslip.grossAmount * 9,
+            netSalary: payslip.netAmount * 9,
+            taxableIncome: payslip.netAmount * 0.98 * 9
+          }
+        };
+        
+        // Download PDF
+        const doc = new jsPDF();
+        doc.setFontSize(12);
+        doc.text("BULLETIN DE PAIE", 105, 15, { align: 'center' });
+        doc.text(payslipData.employerName, 15, 25);
+        doc.text(payslipData.employerAddress, 15, 30);
+        doc.text(`SIRET: ${payslipData.employerSiret}`, 15, 35);
+        doc.text(`Employé: ${payslipData.employee.firstName} ${payslipData.employee.lastName}`, 15, 45);
+        doc.text(`Période: ${payslipData.period}`, 15, 50);
+        
+        // Save PDF
+        doc.save(`Bulletin_de_paie_${payslipData.employee.lastName}_${payslipData.period.replace(/\s/g, '_')}.pdf`);
+        toast.success("Bulletin de paie téléchargé");
+      }
+    } catch (error) {
+      console.error("Erreur lors du téléchargement:", error);
+      toast.error("Erreur lors du téléchargement du bulletin");
+    }
+  };
+
+  const handleApplyFilters = (filters: any) => {
+    let filtered = [...salarySlips];
     
-    setFilters(processedFilters);
+    if (filters.employeeId && filters.employeeId !== 'all') {
+      filtered = filtered.filter(slip => slip.employeeId === filters.employeeId);
+    }
+    
+    if (filters.month && filters.month !== 'all') {
+      filtered = filtered.filter(slip => slip.month === filters.month);
+    }
+    
+    if (filters.year && filters.year !== 'all') {
+      filtered = filtered.filter(slip => slip.year.toString() === filters.year);
+    }
+    
+    if (filters.status && filters.status !== 'all') {
+      filtered = filtered.filter(slip => slip.status === filters.status);
+    }
+    
+    if (filters.minAmount) {
+      filtered = filtered.filter(slip => slip.netAmount >= filters.minAmount);
+    }
+    
+    if (filters.maxAmount) {
+      filtered = filtered.filter(slip => slip.netAmount <= filters.maxAmount);
+    }
+    
+    setFilteredSlips(filtered);
+    setCurrentFilters(filters);
     toast.success("Filtres appliqués");
   };
 
-  // Appliquer les filtres aux fiches de paie
-  const filteredSlips = salarySlips.filter(slip => {
-    if (filters.employeeId && filters.employeeId !== slip.employeeId) return false;
-    if (filters.month && filters.month !== slip.month) return false;
-    if (filters.year && filters.year.toString() !== slip.year.toString()) return false;
-    if (filters.minAmount && slip.netAmount < filters.minAmount) return false;
-    if (filters.maxAmount && slip.netAmount > filters.maxAmount) return false;
-    if (filters.status && filters.status !== slip.status) return false;
-    return true;
-  });
+  const handleExportAll = () => {
+    try {
+      toast.info("Export des bulletins en cours...");
+      
+      const doc = new jsPDF();
+      doc.setFontSize(16);
+      doc.text("Liste des bulletins de paie", 105, 15, { align: 'center' });
+      
+      const tableData = filteredSlips.map((slip, index) => [
+        index + 1,
+        slip.employeeName || 'N/A',
+        `${slip.month} ${slip.year}`,
+        slip.department || 'N/A',
+        `${slip.netAmount} ${slip.currency}`,
+        slip.status
+      ]);
+      
+      // @ts-ignore - jspdf-autotable types
+      doc.autoTable({
+        startY: 25,
+        head: [['#', 'Employé', 'Période', 'Département', 'Montant Net', 'Statut']],
+        body: tableData,
+        theme: 'grid',
+        headStyles: { fillColor: [66, 139, 202] }
+      });
+      
+      doc.save(`Bulletins_de_paie_${format(new Date(), 'yyyy-MM-dd')}.pdf`);
+      toast.success("Export réalisé avec succès");
+    } catch (error) {
+      console.error("Erreur lors de l'export:", error);
+      toast.error("Erreur lors de l'export des bulletins");
+    }
+  };
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent"></div>
-        <p className="ml-2">Chargement des fiches de paie...</p>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="bg-red-50 text-red-700 p-4 rounded-md">
-        Une erreur est survenue lors du chargement des fiches de paie.
-      </div>
-    );
-  }
+  const getFilteredSlipsByStatus = (status: string) => {
+    if (status === 'all') return filteredSlips;
+    return filteredSlips.filter(slip => slip.status === status);
+  };
 
   return (
     <div className="space-y-6">
-      {/* Header with actions */}
-      <div className="flex flex-col space-y-4 md:flex-row md:justify-between md:items-center">
-        <div>
-          <h2 className="text-2xl font-bold">Fiches de paie</h2>
-          <p className="text-gray-500">Gestion des salaires et fiches de paie</p>
-        </div>
+      <div className="flex justify-between items-center">
+        <h2 className="text-3xl font-bold tracking-tight">Fiches de paie</h2>
         <div className="flex gap-2">
           <Button 
             variant="outline" 
-            size="sm"
             onClick={() => setIsFilterDialogOpen(true)}
           >
-            <ListFilter className="h-4 w-4 mr-2" />
-            Filtres
+            <Filter className="h-4 w-4 mr-2" />
+            Filtrer
           </Button>
           <Button 
             variant="outline" 
-            size="sm" 
-            onClick={handleExportData}
+            onClick={handleExportAll}
           >
             <Download className="h-4 w-4 mr-2" />
             Exporter
           </Button>
-          <Button 
-            size="sm"
-            onClick={() => setIsNewPayslipDialogOpen(true)}
-          >
+          <Button onClick={() => setIsNewPayslipDialogOpen(true)}>
             <Plus className="h-4 w-4 mr-2" />
             Nouvelle fiche
           </Button>
         </div>
       </div>
 
-      {/* Stats cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="bg-blue-50">
-          <CardContent className="p-4 flex items-center justify-between">
-            <div>
-              <h3 className="text-sm font-medium text-blue-900">Générées</h3>
-              <p className="text-2xl font-bold text-blue-700">{stats.generated}</p>
+      <div className="grid grid-cols-4 gap-4">
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex justify-between items-center">
+              <div>
+                <p className="text-sm text-muted-foreground">Total</p>
+                <p className="text-2xl font-bold">{stats.total}</p>
+              </div>
+              <FileText className="h-8 w-8 text-muted-foreground" />
             </div>
-            <FileText className="h-8 w-8 text-blue-500" />
           </CardContent>
         </Card>
-        
-        <Card className="bg-amber-50">
-          <CardContent className="p-4 flex items-center justify-between">
-            <div>
-              <h3 className="text-sm font-medium text-amber-900">Envoyées</h3>
-              <p className="text-2xl font-bold text-amber-700">{stats.sent}</p>
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex justify-between items-center">
+              <div>
+                <p className="text-sm text-muted-foreground">Générés</p>
+                <p className="text-2xl font-bold">{stats.generated}</p>
+              </div>
+              <FileText className="h-8 w-8 text-blue-500" />
             </div>
-            <Mail className="h-8 w-8 text-amber-500" />
           </CardContent>
         </Card>
-        
-        <Card className="bg-green-50">
-          <CardContent className="p-4 flex items-center justify-between">
-            <div>
-              <h3 className="text-sm font-medium text-green-900">Validées</h3>
-              <p className="text-2xl font-bold text-green-700">{stats.validated}</p>
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex justify-between items-center">
+              <div>
+                <p className="text-sm text-muted-foreground">Envoyés</p>
+                <p className="text-2xl font-bold">{stats.sent}</p>
+              </div>
+              <FileText className="h-8 w-8 text-yellow-500" />
             </div>
-            <CheckCircle className="h-8 w-8 text-green-500" />
           </CardContent>
         </Card>
-        
-        <Card className="bg-gray-50">
-          <CardContent className="p-4 flex items-center justify-between">
-            <div>
-              <h3 className="text-sm font-medium text-gray-900">Total</h3>
-              <p className="text-2xl font-bold text-gray-700">{stats.total}</p>
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex justify-between items-center">
+              <div>
+                <p className="text-sm text-muted-foreground">Validés</p>
+                <p className="text-2xl font-bold">{stats.validated}</p>
+              </div>
+              <FileCheck className="h-8 w-8 text-green-500" />
             </div>
-            <DollarSign className="h-8 w-8 text-gray-500" />
           </CardContent>
         </Card>
       </div>
 
-      {/* Tabs for different views */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="w-full max-w-3xl grid grid-cols-3">
-          <TabsTrigger value="fiches" className="flex items-center">
-            <FileText className="h-4 w-4 mr-2" />
-            Fiches de paie
-          </TabsTrigger>
-          <TabsTrigger value="statistiques" className="flex items-center">
-            <DollarSign className="h-4 w-4 mr-2" />
-            Statistiques
-          </TabsTrigger>
-          <TabsTrigger value="parametres" className="flex items-center">
-            <CheckCircle className="h-4 w-4 mr-2" />
-            Paramètres
-          </TabsTrigger>
+      <Tabs defaultValue="all" onValueChange={setSelectedTab}>
+        <TabsList>
+          <TabsTrigger value="all">Tous ({filteredSlips.length})</TabsTrigger>
+          <TabsTrigger value="Généré">Générés ({getFilteredSlipsByStatus('Généré').length})</TabsTrigger>
+          <TabsTrigger value="Envoyé">Envoyés ({getFilteredSlipsByStatus('Envoyé').length})</TabsTrigger>
+          <TabsTrigger value="Validé">Validés ({getFilteredSlipsByStatus('Validé').length})</TabsTrigger>
         </TabsList>
-
-        <TabsContent value="fiches">
-          <Card>
-            <CardContent className="p-6">
-              <div className="overflow-x-auto">
-                {filters.employeeId || filters.month || filters.year || filters.minAmount || filters.maxAmount || filters.status ? (
-                  <div className="mb-4 p-2 bg-blue-50 rounded-md flex justify-between items-center">
-                    <p className="text-sm text-blue-700">
-                      Filtres actifs: {Object.entries(filters).filter(([_, v]) => v !== undefined).length}
-                    </p>
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      onClick={() => setFilters({})}
-                      className="text-blue-700"
-                    >
-                      Effacer les filtres
-                    </Button>
-                  </div>
-                ) : null}
-                
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="w-[250px]">Employé</TableHead>
-                      <TableHead>Période</TableHead>
-                      <TableHead>Date</TableHead>
-                      <TableHead>Montant net</TableHead>
-                      <TableHead>Montant brut</TableHead>
-                      <TableHead>Statut</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredSlips.length > 0 ? (
-                      filteredSlips.map((slip) => (
-                        <TableRow key={slip.id}>
-                          <TableCell className="font-medium">
-                            <div className="flex items-center space-x-3">
-                              <Avatar className="h-8 w-8">
-                                <AvatarImage src={slip.employeePhoto} alt={slip.employeeName} />
-                                <AvatarFallback>{slip.employeeName?.charAt(0) || '?'}</AvatarFallback>
-                              </Avatar>
-                              <div>
-                                <p className="font-medium">{slip.employeeName}</p>
-                                <p className="text-xs text-gray-500">{slip.department}</p>
-                              </div>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            {`${slip.month} ${slip.year}`}
-                          </TableCell>
-                          <TableCell>{slip.date}</TableCell>
-                          <TableCell>
-                            <span className="font-medium">
-                              {slip.netAmount.toLocaleString('fr-FR')} {slip.currency}
-                            </span>
-                          </TableCell>
-                          <TableCell>
-                            <span className="text-gray-500">
-                              {slip.grossAmount.toLocaleString('fr-FR')} {slip.currency}
-                            </span>
-                          </TableCell>
-                          <TableCell>
-                            <Badge
-                              className={
-                                slip.status === 'Validé'
-                                  ? 'bg-green-100 text-green-800'
-                                  : slip.status === 'Envoyé'
-                                  ? 'bg-amber-100 text-amber-800'
-                                  : 'bg-blue-100 text-blue-800'
-                              }
-                            >
-                              {slip.status}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="text-right space-x-2">
-                            <Button 
-                              variant="ghost" 
-                              size="sm"
-                              onClick={() => handleViewPayslip(slip)}
-                            >
-                              Voir
-                            </Button>
-                            {slip.status === 'Généré' && (
-                              <Button 
-                                variant="ghost" 
-                                size="sm"
-                                onClick={() => handleSendEmail(slip.id, slip.employeeName || '')}
-                              >
-                                <Mail className="h-4 w-4 mr-1" /> 
-                                Envoyer
-                              </Button>
-                            )}
-                          </TableCell>
-                        </TableRow>
-                      ))
-                    ) : (
-                      <TableRow>
-                        <TableCell colSpan={7} className="h-24 text-center">
-                          Aucune fiche de paie trouvée
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
-              </div>
-            </CardContent>
-          </Card>
+        
+        <TabsContent value="all" className="mt-6">
+          <DataTable 
+            columns={columns} 
+            data={filteredSlips} 
+            isLoading={isLoading}
+          />
         </TabsContent>
-
-        <TabsContent value="statistiques">
-          <Card>
-            <CardContent className="p-6">
-              <div className="py-8 text-center text-gray-500">
-                Statistiques des salaires (à implémenter)
-              </div>
-            </CardContent>
-          </Card>
+        
+        <TabsContent value="Généré" className="mt-6">
+          <DataTable 
+            columns={columns} 
+            data={getFilteredSlipsByStatus('Généré')} 
+            isLoading={isLoading}
+          />
         </TabsContent>
-
-        <TabsContent value="parametres">
-          <Card>
-            <CardContent className="p-6">
-              <div className="py-8 text-center text-gray-500">
-                Paramètres de paie (à implémenter)
-              </div>
-            </CardContent>
-          </Card>
+        
+        <TabsContent value="Envoyé" className="mt-6">
+          <DataTable 
+            columns={columns} 
+            data={getFilteredSlipsByStatus('Envoyé')} 
+            isLoading={isLoading}
+          />
+        </TabsContent>
+        
+        <TabsContent value="Validé" className="mt-6">
+          <DataTable 
+            columns={columns} 
+            data={getFilteredSlipsByStatus('Validé')} 
+            isLoading={isLoading}
+          />
         </TabsContent>
       </Tabs>
 
-      {/* Dialogs */}
-      {isNewPayslipDialogOpen && (
-        <NewPayslipDialog
-          isOpen={isNewPayslipDialogOpen}
-          onClose={() => setIsNewPayslipDialogOpen(false)}
-          employees={employees || []}
-          companies={companies || []}
-        />
-      )}
+      <PayslipFilterDialog 
+        isOpen={isFilterDialogOpen}
+        onClose={() => setIsFilterDialogOpen(false)}
+        onApplyFilters={handleApplyFilters}
+        employees={formattedEmployees}
+        currentFilters={currentFilters}
+      />
 
-      {isFilterDialogOpen && (
-        <PayslipFilterDialog
-          isOpen={isFilterDialogOpen}
-          onClose={() => setIsFilterDialogOpen(false)}
-          onApplyFilters={handleApplyFilters}
-          employees={employees?.map(e => ({ id: e.id, name: `${e.firstName} ${e.lastName}` })) || []}
-          currentFilters={filters}
-        />
-      )}
+      <NewPayslipDialog 
+        isOpen={isNewPayslipDialogOpen}
+        onClose={() => setIsNewPayslipDialogOpen(false)}
+        employees={employees || []}
+        companies={companies as Company[]}
+      />
 
-      {isPayslipViewerOpen && selectedPayslip && (
-        <Dialog open={isPayslipViewerOpen} onOpenChange={(open) => !open && setIsPayslipViewerOpen(false)}>
-          <DialogContent className="max-w-5xl">
-            <PayslipViewer 
-              payslip={selectedPayslip}
-              onClose={() => setIsPayslipViewerOpen(false)}
-            />
+      {isViewerOpen && selectedPayslip && (
+        <Dialog open={isViewerOpen} onOpenChange={(open) => !open && setIsViewerOpen(false)}>
+          <DialogContent className="max-w-6xl">
+            {/* TODO: Create a PaySlip viewer component */}
+            <Button onClick={() => setIsViewerOpen(false)}>Fermer</Button>
           </DialogContent>
         </Dialog>
       )}

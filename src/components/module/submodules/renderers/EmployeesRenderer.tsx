@@ -1,64 +1,56 @@
 
 import React from 'react';
 import { SubModule } from '@/data/types/modules';
-import EmployeesAttendance from '../EmployeesAttendance';
 import EmployeesDashboard from '../EmployeesDashboard';
-import EmployeesDocuments from '../EmployeesDocuments';
-import EmployeesTimesheet from '../EmployeesTimesheet';
-import EmployeesAlerts from '../EmployeesAlerts';
-import EmployeesContracts from '../EmployeesContracts';
-import EmployeesEvaluations from '../EmployeesEvaluations';
-import EmployeesLeaves from '../employees/EmployeesLeaves';
-import EmployeesReports from '../EmployeesReports';
-import EmployeesBadges from '../EmployeesBadges';
+import EmployeesProfiles from '../EmployeesProfiles';
+import EmployeesDepartments from '../EmployeesDepartments';
+import EmployeesLeaves from '../EmployeesLeaves';
 import EmployeesAbsences from '../EmployeesAbsences';
+import EmployeesAttendance from '../EmployeesAttendance';
+import EmployeesContracts from '../EmployeesContracts';
+import EmployeesDocuments from '../EmployeesDocuments';
 import EmployeesTrainings from '../EmployeesTrainings';
-import EmployeesProfiles from '../employees/EmployeesProfiles';
-import EmployeesCompanies from '../employees/EmployeesCompanies';
-import EmployeesHierarchy from '../employees/EmployeesHierarchy';
-import EmployeesDepartments from '../departments/EmployeesDepartments';
+import EmployeesEvaluations from '../EmployeesEvaluations';
+import EmployeesTimesheet from '../EmployeesTimesheet';
+import EmployeesBadges from '../EmployeesBadges';
 import EmployeesRecruitment from '../EmployeesRecruitment';
-import SalarySlips from '../salaries/SalarySlips';
+import EmployeesAlerts from '../EmployeesAlerts';
+import EmployeesReports from '../EmployeesReports';
 import DefaultSubmoduleContent from '../DefaultSubmoduleContent';
+import SalarySlips from '../salaries/SalarySlips';
 
 export const renderEmployeesSubmodule = (submoduleId: string, submodule: SubModule) => {
-  console.log('Rendering submodule:', submoduleId);
-  
   switch (submoduleId) {
     case 'employees-dashboard':
       return <EmployeesDashboard />;
     case 'employees-profiles':
       return <EmployeesProfiles />;
-    case 'employees-badges':
-      return <EmployeesBadges />;
     case 'employees-departments':
       return <EmployeesDepartments />;
-    case 'employees-hierarchy':
-      return <EmployeesHierarchy />;
-    case 'employees-attendance':
-      return <EmployeesAttendance />;
-    case 'employees-timesheet':
-      return <EmployeesTimesheet />;
     case 'employees-leaves':
       return <EmployeesLeaves />;
     case 'employees-absences':
       return <EmployeesAbsences />;
+    case 'employees-attendance':
+      return <EmployeesAttendance />;
     case 'employees-contracts':
       return <EmployeesContracts />;
     case 'employees-documents':
       return <EmployeesDocuments />;
-    case 'employees-evaluations':
-      return <EmployeesEvaluations />;
     case 'employees-trainings':
       return <EmployeesTrainings />;
+    case 'employees-evaluations':
+      return <EmployeesEvaluations />;
+    case 'employees-timesheet':
+      return <EmployeesTimesheet />;
+    case 'employees-badges':
+      return <EmployeesBadges />;
     case 'employees-recruitment':
       return <EmployeesRecruitment />;
-    case 'employees-reports':
-      return <EmployeesReports />;
     case 'employees-alerts':
       return <EmployeesAlerts />;
-    case 'employees-companies':
-      return <EmployeesCompanies />;
+    case 'employees-reports':
+      return <EmployeesReports />;
     case 'employees-salaries':
       return <SalarySlips />;
     default:

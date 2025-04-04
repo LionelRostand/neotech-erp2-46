@@ -46,7 +46,7 @@ export interface PaySlip {
     netSalary: number;
     taxableIncome: number;
   };
-  status?: "draft" | "published" | "paid";
+  status?: "draft" | "published" | "paid" | "Généré" | "Envoyé" | "Validé";
   date?: string;
   employeeId?: string;
   employeeName?: string;

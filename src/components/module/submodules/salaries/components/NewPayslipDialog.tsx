@@ -140,7 +140,7 @@ const NewPayslipDialog: React.FC<NewPayslipDialogProps> = ({
             <div className="space-y-2">
               <label className="text-sm font-medium">Employé</label>
               <Select 
-                onValueChange={(value) => handleEmployeeSelect({target: {value}}, employees)}
+                onValueChange={(value) => handleEmployeeSelect(value, employees)}
               >
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Sélectionner un employé" />

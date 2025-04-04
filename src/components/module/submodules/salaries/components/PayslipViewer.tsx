@@ -5,9 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Printer, Download } from 'lucide-react';
 import { jsPDF } from 'jspdf';
 import { PaySlip } from '@/types/payslip';
-import PayslipHeader from './PayslipHeader';
-import EmployeeInfoSection from './EmployeeInfoSection';
 import CompanyInfoSection from './CompanyInfoSection';
+import EmployeeInfoSection from './EmployeeInfoSection';
 import SalaryCompositionCard from './SalaryCompositionCard';
 import LeaveBalanceCard from './LeaveBalanceCard';
 import CumulativeInfoCard from './CumulativeInfoCard';
@@ -70,6 +69,7 @@ const PayslipViewer: React.FC<PayslipViewerProps> = ({ payslip, onClose }) => {
       
       // Earnings table
       doc.text("Rubriques de paie", 15, 80);
+      // @ts-ignore - jspdf-autotable types
       doc.autoTable({
         startY: 85,
         head: [['Libellé', 'Base', 'Taux', 'Montant']],
@@ -79,8 +79,11 @@ const PayslipViewer: React.FC<PayslipViewerProps> = ({ payslip, onClose }) => {
       });
       
       // Deductions table
+      // @ts-ignore - jspdf-autotable types
       doc.text("Cotisations et contributions sociales", 15, doc.lastAutoTable.finalY + 10);
+      // @ts-ignore - jspdf-autotable types
       doc.autoTable({
+        // @ts-ignore - jspdf-autotable types
         startY: doc.lastAutoTable.finalY + 15,
         head: [['Libellé', 'Base', 'Taux', 'Montant']],
         body: deductionsRows,
@@ -89,13 +92,18 @@ const PayslipViewer: React.FC<PayslipViewerProps> = ({ payslip, onClose }) => {
       });
       
       // Summary
+      // @ts-ignore - jspdf-autotable types
       doc.text(`Total des cotisations: ${payslip.totalDeductions.toFixed(2)} €`, 15, doc.lastAutoTable.finalY + 10);
+      // @ts-ignore - jspdf-autotable types
       doc.text(`Net à payer: ${payslip.netSalary.toFixed(2)} €`, 15, doc.lastAutoTable.finalY + 15);
       
       // Leave balances
       if (payslip.conges) {
+        // @ts-ignore - jspdf-autotable types
         doc.text("Congés et RTT", 15, doc.lastAutoTable.finalY + 25);
+        // @ts-ignore - jspdf-autotable types
         doc.autoTable({
+          // @ts-ignore - jspdf-autotable types
           startY: doc.lastAutoTable.finalY + 30,
           head: [['Type', 'Acquis', 'Pris', 'Solde']],
           body: [
@@ -109,8 +117,11 @@ const PayslipViewer: React.FC<PayslipViewerProps> = ({ payslip, onClose }) => {
       
       // Annual cumulative info
       if (payslip.annualCumulative) {
+        // @ts-ignore - jspdf-autotable types
         doc.text("Cumul annuel", 15, doc.lastAutoTable.finalY + 10);
+        // @ts-ignore - jspdf-autotable types
         doc.autoTable({
+          // @ts-ignore - jspdf-autotable types
           startY: doc.lastAutoTable.finalY + 15,
           body: [
             ['Brut imposable', `${payslip.annualCumulative.grossSalary.toFixed(2)} €`],

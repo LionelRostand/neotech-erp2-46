@@ -12,7 +12,7 @@ export interface Employee {
   contract: string;
   hireDate: string;
   manager?: string;
-  managerId?: string; // Added managerId property
+  managerId?: string;
   status: string;
   createdAt?: string;
   updatedAt?: string;
@@ -29,6 +29,7 @@ export interface Employee {
   };
   payslips?: string[];
   baseSalary?: number;
+  socialSecurityNumber?: string;
 }
 
 export interface EducationItem {
