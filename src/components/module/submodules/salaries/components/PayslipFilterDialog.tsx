@@ -1,12 +1,6 @@
 
 import React, { useState } from 'react';
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
-  DialogTitle,
-  DialogFooter
-} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
 import { 
   Select, 
   SelectContent, 
@@ -14,25 +8,15 @@ import {
   SelectTrigger, 
   SelectValue 
 } from '@/components/ui/select';
-import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-
-export interface PayslipFilters {
-  employeeId?: string;
-  month?: string;
-  year?: string | number;
-  minAmount?: number;
-  maxAmount?: number;
-  status?: string;
-}
+import { Employee } from '@/types/employee';
 
 interface PayslipFilterDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  onApplyFilters: (filters: PayslipFilters) => void;
-  employees: { id: string; name: string }[];
-  currentFilters?: PayslipFilters;
+  onApplyFilters: (filters: any) => void;
+  employees: Employee[];
+  currentFilters: any;
 }
 
 const PayslipFilterDialog: React.FC<PayslipFilterDialogProps> = ({
@@ -40,133 +24,31 @@ const PayslipFilterDialog: React.FC<PayslipFilterDialogProps> = ({
   onClose,
   onApplyFilters,
   employees,
-  currentFilters = {}
+  currentFilters
 }) => {
-  const [filters, setFilters] = useState<PayslipFilters>(currentFilters);
-  
-  const months = [
-    'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
-    'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'
-  ];
-  
-  const currentYear = new Date().getFullYear();
-  const years = Array.from({length: 5}, (_, i) => currentYear - 2 + i);
-  
-  const handleReset = () => {
-    setFilters({});
+  const [status, setStatus] = useState(currentFilters.status || 'all');
+  const [employee, setEmployee] = useState(currentFilters.employee || 'all');
+  const [startDate, setStartDate] = useState(currentFilters.startDate || '');
+  const [endDate, setEndDate] = useState(currentFilters.endDate || '');
+
+  const handleApplyFilters = () => {
+    onApplyFilters({
+      status: status === 'all' ? null : status,
+      employee: employee === 'all' ? null : employee,
+      startDate: startDate || null,
+      endDate: endDate || null
+    });
   };
-  
-  const handleApply = () => {
-    onApplyFilters(filters);
-    onClose();
-  };
-  
+
   return (
-    <div className="grid gap-4 py-4">
-      <DialogHeader>
-        <DialogTitle>Filtrer les fiches de paie</DialogTitle>
-      </DialogHeader>
+    <div className="space-y-4">
+      <h2 className="text-lg font-semibold">Filtrer les fiches de paie</h2>
       
       <div className="space-y-2">
-        <Label htmlFor="employee">Employé</Label>
-        <Select
-          value={filters.employeeId}
-          onValueChange={(value) => setFilters({...filters, employeeId: value})}
-        >
+        <label className="text-sm font-medium">Statut</label>
+        <Select value={status} onValueChange={setStatus}>
           <SelectTrigger>
-            <SelectValue placeholder="Tous les employés" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Tous les employés</SelectItem>
-            {employees.map((employee) => (
-              <SelectItem key={employee.id} value={employee.id}>
-                {employee.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-      
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="month">Mois</Label>
-          <Select
-            value={filters.month}
-            onValueChange={(value) => setFilters({...filters, month: value})}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Tous les mois" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Tous les mois</SelectItem>
-              {months.map((month) => (
-                <SelectItem key={month} value={month}>
-                  {month}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        
-        <div className="space-y-2">
-          <Label htmlFor="year">Année</Label>
-          <Select
-            value={filters.year?.toString()}
-            onValueChange={(value) => setFilters({...filters, year: value})}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Toutes les années" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Toutes les années</SelectItem>
-              {years.map((year) => (
-                <SelectItem key={year} value={year.toString()}>
-                  {year}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-      
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="minAmount">Montant minimum (€)</Label>
-          <Input
-            id="minAmount"
-            type="number"
-            value={filters.minAmount || ''}
-            onChange={(e) => setFilters({
-              ...filters, 
-              minAmount: e.target.value ? Number(e.target.value) : undefined
-            })}
-            placeholder="Min"
-          />
-        </div>
-        
-        <div className="space-y-2">
-          <Label htmlFor="maxAmount">Montant maximum (€)</Label>
-          <Input
-            id="maxAmount"
-            type="number"
-            value={filters.maxAmount || ''}
-            onChange={(e) => setFilters({
-              ...filters, 
-              maxAmount: e.target.value ? Number(e.target.value) : undefined
-            })}
-            placeholder="Max"
-          />
-        </div>
-      </div>
-      
-      <div className="space-y-2">
-        <Label htmlFor="status">Statut</Label>
-        <Select
-          value={filters.status}
-          onValueChange={(value) => setFilters({...filters, status: value})}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Tous les statuts" />
+            <SelectValue placeholder="Sélectionner un statut" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Tous les statuts</SelectItem>
@@ -177,14 +59,49 @@ const PayslipFilterDialog: React.FC<PayslipFilterDialogProps> = ({
         </Select>
       </div>
       
-      <DialogFooter className="mt-4">
-        <Button variant="outline" onClick={handleReset}>
-          Réinitialiser
+      <div className="space-y-2">
+        <label className="text-sm font-medium">Employé</label>
+        <Select value={employee} onValueChange={setEmployee}>
+          <SelectTrigger>
+            <SelectValue placeholder="Sélectionner un employé" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Tous les employés</SelectItem>
+            {employees.map((emp) => (
+              <SelectItem key={emp.id} value={emp.id}>
+                {emp.firstName} {emp.lastName}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+      
+      <div className="space-y-2">
+        <label className="text-sm font-medium">Période de début</label>
+        <Input 
+          type="date" 
+          value={startDate} 
+          onChange={(e) => setStartDate(e.target.value)} 
+        />
+      </div>
+      
+      <div className="space-y-2">
+        <label className="text-sm font-medium">Période de fin</label>
+        <Input 
+          type="date" 
+          value={endDate} 
+          onChange={(e) => setEndDate(e.target.value)} 
+        />
+      </div>
+      
+      <div className="flex justify-end space-x-2 pt-4">
+        <Button variant="outline" onClick={onClose}>
+          Annuler
         </Button>
-        <Button onClick={handleApply}>
-          Appliquer
+        <Button onClick={handleApplyFilters}>
+          Appliquer les filtres
         </Button>
-      </DialogFooter>
+      </div>
     </div>
   );
 };

@@ -4,25 +4,24 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import DataTable from '@/components/DataTable'; // Changed to default import
 import { Column } from '@/components/DataTable';
-import { useSalarySlipsData } from '@/hooks/useSalarySlipsData';
-import { Download, Filter, Plus, Search, Settings } from 'lucide-react';
+import { useSalarySlipsData, SalarySlip } from '@/hooks/useSalarySlipsData';
+import { Download, Plus, Search, Settings } from 'lucide-react';
 import PaySlipGenerator from './PaySlipGenerator';
 import PayslipViewer from './components/PayslipViewer';
 import { PaySlip } from '@/types/payslip';
-import PayslipFilterDialog from './components/PayslipFilterDialog';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { jsPDF } from 'jspdf';
 import 'jspdf-autotable';
 import { Employee } from '@/types/employee';
 import { Company } from '../companies/types';
-import { SalarySlip } from '@/hooks/useSalarySlipsData';
 import PayslipConfiguration from './components/PayslipConfiguration';
+import PayslipOperations from './components/PayslipOperations';
+import { PayslipFiltersOptions } from './components/PayslipFilters';
 
 interface SalarySlipsProps {
   employees?: Employee[];
@@ -31,8 +30,7 @@ interface SalarySlipsProps {
 
 const SalarySlips: React.FC<SalarySlipsProps> = ({ employees, companies }) => {
   const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string | null>(null);
-  const [isFilterDialogOpen, setIsFilterDialogOpen] = useState(false);
+  const [filters, setFilters] = useState<PayslipFiltersOptions>({});
   const [isGeneratorOpen, setIsGeneratorOpen] = useState(false);
   const [isConfigOpen, setIsConfigOpen] = useState(false);
   const [selectedPayslip, setSelectedPayslip] = useState<PaySlip | null>(null);
@@ -42,6 +40,7 @@ const SalarySlips: React.FC<SalarySlipsProps> = ({ employees, companies }) => {
   const filteredSalarySlips = React.useMemo(() => {
     let filtered = salarySlips || [];
 
+    // Text search
     if (searchQuery) {
       filtered = filtered.filter(slip =>
         slip.employeeName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -51,12 +50,29 @@ const SalarySlips: React.FC<SalarySlipsProps> = ({ employees, companies }) => {
       );
     }
 
-    if (statusFilter && statusFilter !== 'all') {
-      filtered = filtered.filter(slip => slip.status === statusFilter);
+    // Filters from PayslipFilters component
+    if (filters.status) {
+      filtered = filtered.filter(slip => slip.status === filters.status);
+    }
+    
+    if (filters.month) {
+      filtered = filtered.filter(slip => slip.month === filters.month);
+    }
+    
+    if (filters.year) {
+      filtered = filtered.filter(slip => slip.year === filters.year);
+    }
+    
+    if (filters.employeeId) {
+      filtered = filtered.filter(slip => slip.employeeId === filters.employeeId);
+    }
+    
+    if (filters.department) {
+      filtered = filtered.filter(slip => slip.department === filters.department);
     }
 
     return filtered;
-  }, [salarySlips, searchQuery, statusFilter]);
+  }, [salarySlips, searchQuery, filters]);
 
   const salarySlipsColumns: Column[] = React.useMemo(
     () => [
@@ -106,11 +122,6 @@ const SalarySlips: React.FC<SalarySlipsProps> = ({ employees, companies }) => {
     ],
     []
   );
-
-  const handleFilterStatusChange = (status: string | null) => {
-    setStatusFilter(status);
-    setIsFilterDialogOpen(false);
-  };
 
   // Convert SalarySlip to PaySlip for the viewer
   const convertToPaySlip = (slip: SalarySlip): PaySlip => {
@@ -174,6 +185,15 @@ const SalarySlips: React.FC<SalarySlipsProps> = ({ employees, companies }) => {
     doc.save(`fiche-de-paie-${payslip.employeeName}-${payslip.period.replace(' ', '-')}.pdf`);
   };
 
+  const handleApplyFilters = (newFilters: PayslipFiltersOptions) => {
+    setFilters(newFilters);
+  };
+
+  const handleExportData = () => {
+    // Implement export functionality
+    console.log("Exporting data...");
+  };
+
   return (
     <Card className="w-full">
       <CardHeader>
@@ -220,55 +240,29 @@ const SalarySlips: React.FC<SalarySlipsProps> = ({ employees, companies }) => {
             </div>
           </TabsContent>
           <TabsContent value="list" className="space-y-4">
-            <div className="flex justify-between items-center">
-              <Input
-                type="search"
-                placeholder="Rechercher un employé..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-              <div className="space-x-2">
-                <Dialog open={isFilterDialogOpen} onOpenChange={setIsFilterDialogOpen}>
-                  <DialogTrigger asChild>
-                    <Button variant="outline">
-                      <Filter className="w-4 h-4 mr-2" />
-                      Filtrer
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <PayslipFilterDialog
-                      isOpen={isFilterDialogOpen}
-                      onClose={() => setIsFilterDialogOpen(false)}
-                      onApplyFilters={(filters) => {
-                        if (filters.status && filters.status !== 'all') {
-                          setStatusFilter(filters.status);
-                        } else {
-                          setStatusFilter(null);
-                        }
-                        setIsFilterDialogOpen(false);
-                      }}
-                      employees={[]}
-                      currentFilters={{}}
-                    />
-                  </DialogContent>
-                </Dialog>
-                <Button variant="outline" onClick={() => setIsConfigOpen(true)}>
-                  <Settings className="w-4 h-4 mr-2" />
-                  Configurer
-                </Button>
-                <Dialog open={isGeneratorOpen} onOpenChange={setIsGeneratorOpen}>
-                  <DialogTrigger asChild>
-                    <Button>
-                      <Plus className="w-4 h-4 mr-2" />
-                      Générer
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <PaySlipGenerator employees={employees} companies={companies} />
-                  </DialogContent>
-                </Dialog>
+            <div className="space-y-4">
+              <div className="flex items-center relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Input
+                  type="search"
+                  placeholder="Rechercher un employé..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10"
+                />
               </div>
+              
+              <PayslipOperations 
+                employees={employees}
+                companies={companies}
+                onFilter={handleApplyFilters}
+                currentFilters={filters}
+                onOpenGenerator={() => setIsGeneratorOpen(true)}
+                onOpenConfiguration={() => setIsConfigOpen(true)}
+                onExportData={handleExportData}
+              />
             </div>
+            
             <DataTable
               title="Liste des fiches de paie"
               columns={salarySlipsColumns}
@@ -291,6 +285,12 @@ const SalarySlips: React.FC<SalarySlipsProps> = ({ employees, companies }) => {
       <Dialog open={isConfigOpen} onOpenChange={setIsConfigOpen}>
         <DialogContent className="max-w-4xl">
           <PayslipConfiguration />
+        </DialogContent>
+      </Dialog>
+      
+      <Dialog open={isGeneratorOpen} onOpenChange={setIsGeneratorOpen}>
+        <DialogContent>
+          <PaySlipGenerator employees={employees} companies={companies} />
         </DialogContent>
       </Dialog>
     </Card>

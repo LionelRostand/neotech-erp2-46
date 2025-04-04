@@ -1,90 +1,83 @@
 
-import { useMemo } from 'react';
+import { useEffect, useState, useMemo } from 'react';
+import { getCompanies } from '@/components/module/submodules/companies/services/companyService';
+import { Company } from '@/components/module/submodules/companies/types';
 import { useHrModuleData } from './useHrModuleData';
 
-export interface Company {
-  id: string;
-  name: string;
-  logo?: string;
-  address?: string;
-  city?: string;
-  country?: string;
-  phone?: string;
-  email?: string;
-  website?: string;
-  industry?: string;
-  size?: string;
-  status: 'Actif' | 'Inactif';
-  employeesCount?: number;
-  createdDate?: string;
-}
-
-/**
- * Hook pour accéder aux données des entreprises directement depuis Firebase
- */
 export const useCompaniesData = () => {
-  const { companies, employees, isLoading, error } = useHrModuleData();
-  
-  // Enrichir les entreprises avec des informations supplémentaires
-  const formattedCompanies = useMemo(() => {
-    if (!companies || companies.length === 0) {
-      return [];
-    }
-    
-    return companies.map(company => {
-      // Calculer le nombre d'employés pour cette entreprise
-      const companyEmployeesCount = employees 
-        ? employees.filter(emp => emp.company === company.id || emp.company === company.name).length
-        : 0;
+  const [companies, setCompanies] = useState<Company[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+  const { employees } = useHrModuleData();
+
+  useEffect(() => {
+    const fetchCompanies = async () => {
+      setLoading(true);
+      try {
+        const data = await getCompanies();
+        setCompanies(data);
+      } catch (err) {
+        setError(err instanceof Error ? err : new Error('Failed to fetch companies'));
+        console.error('Error fetching companies:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCompanies();
+  }, []);
+
+  // Get company metrics
+  const companyMetrics = useMemo(() => {
+    // Count employees per company
+    const employeesPerCompany = employees.reduce((acc, employee) => {
+      const companyId = typeof employee.company === 'string' 
+        ? employee.company 
+        : employee.company?.id || '';
       
+      if (companyId) {
+        acc[companyId] = (acc[companyId] || 0) + 1;
+      }
+      return acc;
+    }, {} as Record<string, number>);
+
+    return companies.map(company => {
+      const employeeCount = employeesPerCompany[company.id] || 0;
       return {
         id: company.id,
-        name: company.name || 'Entreprise sans nom',
-        logo: company.logo || company.logoUrl,
-        address: company.address,
-        city: company.city,
-        country: company.country,
+        name: company.name,
+        logoUrl: company.logo || company.logoUrl,
+        city: company.address?.city || company.city,
+        country: company.address?.country || company.country,
         phone: company.phone,
         email: company.email,
         website: company.website,
         industry: company.industry,
         size: company.size,
-        status: company.status || 'Actif',
-        employeesCount: companyEmployeesCount || company.employeesCount || 0,
-        createdDate: company.createdDate ? formatDate(company.createdDate) : undefined,
-      } as Company;
+        status: company.status,
+        employeesCount: company.employeesCount || employeeCount,
+        createdAt: company.createdAt,
+        updatedAt: company.updatedAt
+      };
     });
   }, [companies, employees]);
-  
-  // Fonction pour formater les dates
-  const formatDate = (dateStr: string) => {
-    try {
-      return new Date(dateStr).toLocaleDateString('fr-FR');
-    } catch (error) {
-      console.error('Erreur de formatage de date:', dateStr, error);
-      return dateStr;
-    }
-  };
 
-  // Obtenir des statistiques sur les entreprises
-  const companiesStats = useMemo(() => {
-    const active = formattedCompanies.filter(company => company.status === 'Actif').length;
-    const inactive = formattedCompanies.filter(company => company.status === 'Inactif').length;
-    const total = formattedCompanies.length;
-    
-    // Calculer le nombre total d'employés
-    const totalEmployees = formattedCompanies.reduce(
-      (sum, company) => sum + (company.employeesCount || 0), 
-      0
-    );
-    
-    return { active, inactive, total, totalEmployees };
-  }, [formattedCompanies]);
-  
   return {
-    companies: formattedCompanies,
-    stats: companiesStats,
-    isLoading,
-    error
+    companies,
+    companyMetrics,
+    loading,
+    error,
+    refresh: async () => {
+      setLoading(true);
+      try {
+        const data = await getCompanies();
+        setCompanies(data);
+      } catch (err) {
+        setError(err instanceof Error ? err : new Error('Failed to refresh companies'));
+        console.error('Error refreshing companies:', err);
+      } finally {
+        setLoading(false);
+      }
+    }
   };
 };
