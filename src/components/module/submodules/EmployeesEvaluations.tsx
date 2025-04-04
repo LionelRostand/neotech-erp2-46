@@ -44,39 +44,39 @@ const EmployeesEvaluations: React.FC = () => {
       return;
     }
     
-    const filtered = evaluations.filter(eval => {
+    const filtered = evaluations.filter(evaluation => {
       let pass = true;
       
-      if (newFilters.employee && eval.employeeName) {
-        pass = pass && eval.employeeName.toLowerCase().includes(newFilters.employee.toLowerCase());
+      if (newFilters.employee && evaluation.employeeName) {
+        pass = pass && evaluation.employeeName.toLowerCase().includes(newFilters.employee.toLowerCase());
       }
       
-      if (newFilters.department && eval.department) {
-        pass = pass && eval.department === newFilters.department;
+      if (newFilters.department && evaluation.department) {
+        pass = pass && evaluation.department === newFilters.department;
       }
       
       if (newFilters.status) {
-        pass = pass && eval.status === newFilters.status;
+        pass = pass && evaluation.status === newFilters.status;
       }
       
       if (newFilters.dateFrom) {
-        const evalDate = new Date(eval.date.split('/').reverse().join('-'));
+        const evalDate = new Date(evaluation.date.split('/').reverse().join('-'));
         const fromDate = new Date(newFilters.dateFrom);
         pass = pass && evalDate >= fromDate;
       }
       
       if (newFilters.dateTo) {
-        const evalDate = new Date(eval.date.split('/').reverse().join('-'));
+        const evalDate = new Date(evaluation.date.split('/').reverse().join('-'));
         const toDate = new Date(newFilters.dateTo);
         pass = pass && evalDate <= toDate;
       }
       
-      if (newFilters.scoreMin && eval.score !== undefined) {
-        pass = pass && eval.score >= parseInt(newFilters.scoreMin);
+      if (newFilters.scoreMin && evaluation.score !== undefined) {
+        pass = pass && evaluation.score >= parseInt(newFilters.scoreMin);
       }
       
-      if (newFilters.scoreMax && eval.score !== undefined) {
-        pass = pass && eval.score <= parseInt(newFilters.scoreMax);
+      if (newFilters.scoreMax && evaluation.score !== undefined) {
+        pass = pass && evaluation.score <= parseInt(newFilters.scoreMax);
       }
       
       return pass;
