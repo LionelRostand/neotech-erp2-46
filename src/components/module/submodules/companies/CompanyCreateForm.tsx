@@ -1,498 +1,317 @@
-
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
-import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useCompanyService } from './services/companyService';
+import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
+  SelectValue
 } from '@/components/ui/select';
-import { Card } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
-import { Building2, MapPin, Phone, AtSign, Upload, Loader2 } from 'lucide-react';
+import { useCompanyService } from './services/companyService';
 import { Company } from './types';
 
-// Définition du schéma de validation
+// Define the form schema using Zod
 const companyFormSchema = z.object({
-  name: z.string().min(2, "Le nom doit contenir au moins 2 caractères"),
-  siret: z.string().min(9, "Le SIRET doit contenir au moins 9 caractères").optional(),
-  registrationNumber: z.string().optional(),
-  type: z.string().optional(),
-  status: z.enum(['active', 'inactive', 'pending']).default('active'),
-  description: z.string().optional(),
-  website: z.string().url("Veuillez entrer une URL valide").optional().or(z.literal('')),
-  
-  // Contact info
-  contactName: z.string().min(2, "Le nom doit contenir au moins 2 caractères"),
-  contactEmail: z.string().email("Email invalide"),
-  contactPhone: z.string().optional(),
-  
-  // Address
+  name: z.string().min(2, { message: "Le nom de l'entreprise doit comporter au moins 2 caractères." }),
   street: z.string().optional(),
-  city: z.string().optional(),
+  city: z.string().min(2, { message: "La ville doit comporter au moins 2 caractères." }),
   postalCode: z.string().optional(),
-  country: z.string().default('France'),
+  country: z.string().optional(),
+  siret: z.string().optional(),
+  industry: z.string().optional(),
+  size: z.string().optional(),
+  employeesCount: z.string().optional(),
+  email: z.string().email({ message: "Format d'email invalide." }).optional(),
+  phone: z.string().optional(),
+  website: z.string().optional(),
+  status: z.enum(['active', 'inactive', 'pending']).optional(),
+  contactName: z.string().optional(),
+  contactEmail: z.string().email({ message: "Format d'email invalide." }).optional(),
+  createdAt: z.date().optional(),
+  updatedAt: z.date().optional()
 });
 
-type CompanyFormValues = z.infer<typeof companyFormSchema>;
+type CompanyFormData = z.infer<typeof companyFormSchema>;
 
-const CompanyCreateForm: React.FC = () => {
-  const navigate = useNavigate();
+const CompanyCreateForm = () => {
+  const router = useRouter();
+  const [isSubmitting, setSubmitting] = useState(false);
   const { createCompany } = useCompanyService();
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  
-  // Initialiser le formulaire
-  const form = useForm<CompanyFormValues>({
+
+  // Initialize the form with useForm hook
+  const form = useForm<CompanyFormData>({
     resolver: zodResolver(companyFormSchema),
     defaultValues: {
       name: '',
-      siret: '',
-      registrationNumber: '',
-      type: '',
-      status: 'active',
-      description: '',
-      website: '',
-      contactName: '',
-      contactEmail: '',
-      contactPhone: '',
       street: '',
       city: '',
       postalCode: '',
       country: 'France',
+      siret: '',
+      industry: '',
+      size: '',
+      employeesCount: '',
+      email: '',
+      phone: '',
+      website: '',
+      status: 'active',
+      contactName: '',
+      contactEmail: '',
+      createdAt: new Date(),
+      updatedAt: new Date()
     },
   });
-  
-  const onSubmit = async (data: CompanyFormValues) => {
-    if (isSubmitting) return; // Prevent multiple submissions
-    
-    setIsSubmitting(true);
+
+  // When submitting the form
+  const handleSubmit = async (data: CompanyFormData) => {
     try {
-      // Reformater les données pour correspondre à la structure Company
-      const companyData: Partial<Company> = {
+      setSubmitting(true);
+      
+      // Format the data for API
+      const companyData: Omit<Company, 'id' | 'createdAt' | 'updatedAt'> = {
         name: data.name,
-        siret: data.siret,
-        registrationNumber: data.registrationNumber,
-        type: data.type,
-        status: data.status,
-        description: data.description,
-        website: data.website,
-        contactName: data.contactName,
-        contactEmail: data.contactEmail,
-        contactPhone: data.contactPhone,
         address: {
           street: data.street,
           city: data.city,
           postalCode: data.postalCode,
-          country: data.country,
+          country: data.country
         },
-        // Add these missing fields to ensure Firestore stores them
-        createdAt: new Date(),
-        updatedAt: new Date()
+        siret: data.siret,
+        industry: data.industry,
+        size: data.size,
+        employeesCount: parseInt(data.employeesCount, 10) || 0,
+        email: data.email,
+        phone: data.phone,
+        website: data.website,
+        status: data.status,
+        contactName: data.contactName,
+        contactEmail: data.contactEmail,
+        // Convert Date objects to ISO strings for consistent storage
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
       };
       
-      const result = await createCompany(companyData);
+      // Create the company
+      await createCompany(companyData);
       
-      if (result) {
-        toast.success("Entreprise créée avec succès");
-        // Add a small delay before navigation to ensure toast is shown
-        setTimeout(() => {
-          navigate('/modules/companies/list');
-        }, 500);
-      }
-    } catch (error: any) {
+      // Reset form and navigate to list
+      form.reset();
+      router.push('/modules/companies/list');
+    } catch (error) {
       console.error('Error creating company:', error);
-      
-      // Enhanced error message based on the error type
-      let errorMessage = "Échec de la création de l'entreprise";
-      
-      if (error?.message?.includes('429') || error?.message?.includes('too many requests')) {
-        errorMessage = "Trop de requêtes. Veuillez réessayer dans quelques instants.";
-      } else if (error?.message?.includes('network')) {
-        errorMessage = "Problème de connexion réseau. Vérifiez votre connexion internet.";
-      }
-      
-      toast.error(errorMessage);
+      toast.error('Erreur lors de la création de l\'entreprise');
     } finally {
-      setIsSubmitting(false);
+      setSubmitting(false);
     }
   };
-  
+
   return (
-    <div className="space-y-6">
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-          <Tabs defaultValue="general" className="w-full">
-            <TabsList className="grid w-full grid-cols-2 md:grid-cols-4">
-              <TabsTrigger value="general">Informations générales</TabsTrigger>
-              <TabsTrigger value="contact">Contact</TabsTrigger>
-              <TabsTrigger value="address">Adresse</TabsTrigger>
-              <TabsTrigger value="documents">Documents</TabsTrigger>
-            </TabsList>
-            
-            {/* Onglet Informations générales */}
-            <TabsContent value="general">
-              <Card className="p-6">
-                <div className="grid gap-6 md:grid-cols-2">
-                  <div className="space-y-4 md:col-span-2">
-                    <div className="flex items-center space-x-2">
-                      <Building2 className="h-5 w-5 text-gray-500" />
-                      <h3 className="text-lg font-medium">Informations de l'entreprise</h3>
-                    </div>
-                    <Separator />
-                  </div>
-                  
-                  <FormField
-                    control={form.control}
-                    name="name"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Nom de l'entreprise</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Nom de l'entreprise" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="siret"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Numéro SIRET</FormLabel>
-                        <FormControl>
-                          <Input placeholder="123 456 789 00012" {...field} />
-                        </FormControl>
-                        <FormDescription>
-                          Numéro d'identification français (14 chiffres)
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="registrationNumber"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Numéro d'enregistrement</FormLabel>
-                        <FormControl>
-                          <Input placeholder="ABC123456" {...field} />
-                        </FormControl>
-                        <FormDescription>
-                          Numéro d'enregistrement commercial
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="type"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Type d'entreprise</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Sélectionnez un type" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="sarl">SARL</SelectItem>
-                            <SelectItem value="sas">SAS</SelectItem>
-                            <SelectItem value="sa">SA</SelectItem>
-                            <SelectItem value="ei">Entreprise Individuelle</SelectItem>
-                            <SelectItem value="eurl">EURL</SelectItem>
-                            <SelectItem value="sci">SCI</SelectItem>
-                            <SelectItem value="sasu">SASU</SelectItem>
-                            <SelectItem value="other">Autre</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="status"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Statut</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Sélectionnez un statut" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="active">Actif</SelectItem>
-                            <SelectItem value="inactive">Inactif</SelectItem>
-                            <SelectItem value="pending">En attente</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="website"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Site web</FormLabel>
-                        <FormControl>
-                          <Input placeholder="https://www.entreprise.com" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <div className="md:col-span-2">
-                    <FormField
-                      control={form.control}
-                      name="description"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Description</FormLabel>
-                          <FormControl>
-                            <Textarea 
-                              placeholder="Description de l'entreprise" 
-                              className="min-h-32" 
-                              {...field} 
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                </div>
-              </Card>
-            </TabsContent>
-            
-            {/* Onglet Contact */}
-            <TabsContent value="contact">
-              <Card className="p-6">
-                <div className="grid gap-6 md:grid-cols-2">
-                  <div className="space-y-4 md:col-span-2">
-                    <div className="flex items-center space-x-2">
-                      <AtSign className="h-5 w-5 text-gray-500" />
-                      <h3 className="text-lg font-medium">Contact principal</h3>
-                    </div>
-                    <Separator />
-                  </div>
-                  
-                  <FormField
-                    control={form.control}
-                    name="contactName"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Nom du contact</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Jean Dupont" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="contactEmail"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Email du contact</FormLabel>
-                        <FormControl>
-                          <Input placeholder="contact@entreprise.com" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="contactPhone"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Téléphone du contact</FormLabel>
-                        <FormControl>
-                          <Input placeholder="+33 1 23 45 67 89" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              </Card>
-            </TabsContent>
-            
-            {/* Onglet Adresse */}
-            <TabsContent value="address">
-              <Card className="p-6">
-                <div className="grid gap-6 md:grid-cols-2">
-                  <div className="space-y-4 md:col-span-2">
-                    <div className="flex items-center space-x-2">
-                      <MapPin className="h-5 w-5 text-gray-500" />
-                      <h3 className="text-lg font-medium">Adresse</h3>
-                    </div>
-                    <Separator />
-                  </div>
-                  
-                  <FormField
-                    control={form.control}
-                    name="street"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Rue</FormLabel>
-                        <FormControl>
-                          <Input placeholder="123 Rue de Paris" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="city"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Ville</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Paris" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="postalCode"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Code postal</FormLabel>
-                        <FormControl>
-                          <Input placeholder="75001" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="country"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Pays</FormLabel>
-                        <FormControl>
-                          <Input placeholder="France" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              </Card>
-            </TabsContent>
-            
-            {/* Onglet Documents */}
-            <TabsContent value="documents">
-              <Card className="p-6">
-                <div className="grid gap-6">
-                  <div className="space-y-4">
-                    <div className="flex items-center space-x-2">
-                      <Upload className="h-5 w-5 text-gray-500" />
-                      <h3 className="text-lg font-medium">Documents justificatifs</h3>
-                    </div>
-                    <Separator />
-                  </div>
-                  
-                  <div className="border border-dashed rounded-lg p-10 text-center">
-                    <div className="flex flex-col items-center space-y-4">
-                      <Upload className="h-10 w-10 text-gray-400" />
-                      <div>
-                        <p className="text-sm font-medium">
-                          Glissez-déposez des fichiers ici ou
-                        </p>
-                        <p className="text-xs text-gray-500 mt-1">
-                          Formats acceptés: PDF, JPG, PNG (max. 10 Mo)
-                        </p>
-                      </div>
-                      <Button type="button" variant="outline">
-                        Parcourir les fichiers
-                      </Button>
-                    </div>
-                  </div>
-                  
-                  <div className="text-sm text-gray-500">
-                    <p>Documents suggérés :</p>
-                    <ul className="list-disc list-inside mt-2">
-                      <li>Extrait Kbis</li>
-                      <li>Justificatif d'identité du dirigeant</li>
-                      <li>Statuts de l'entreprise</li>
-                      <li>RIB</li>
-                    </ul>
-                  </div>
-                </div>
-              </Card>
-            </TabsContent>
-          </Tabs>
-          
-          <div className="flex justify-end space-x-4">
-            <Button 
-              type="button" 
-              variant="outline" 
-              onClick={() => navigate('/modules/companies/list')}
-              disabled={isSubmitting}
-            >
-              Annuler
-            </Button>
-            <Button 
-              type="submit" 
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Création en cours...
-                </>
-              ) : (
-                "Créer l'entreprise"
-              )}
-            </Button>
-          </div>
-        </form>
-      </Form>
-    </div>
+    <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+      <div>
+        <Label htmlFor="name" className="block text-sm font-medium text-gray-700">
+          Nom de l'entreprise
+        </Label>
+        <Input
+          type="text"
+          id="name"
+          className="mt-1 block w-full"
+          {...form.register('name')}
+        />
+        {form.formState.errors.name && (
+          <p className="text-red-500 text-sm mt-1">{form.formState.errors.name.message}</p>
+        )}
+      </div>
+
+      <div>
+        <Label htmlFor="street" className="block text-sm font-medium text-gray-700">
+          Adresse
+        </Label>
+        <Input
+          type="text"
+          id="street"
+          className="mt-1 block w-full"
+          {...form.register('street')}
+        />
+      </div>
+
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div>
+          <Label htmlFor="city" className="block text-sm font-medium text-gray-700">
+            Ville
+          </Label>
+          <Input
+            type="text"
+            id="city"
+            className="mt-1 block w-full"
+            {...form.register('city')}
+          />
+          {form.formState.errors.city && (
+            <p className="text-red-500 text-sm mt-1">{form.formState.errors.city.message}</p>
+          )}
+        </div>
+
+        <div>
+          <Label htmlFor="postalCode" className="block text-sm font-medium text-gray-700">
+            Code Postal
+          </Label>
+          <Input
+            type="text"
+            id="postalCode"
+            className="mt-1 block w-full"
+            {...form.register('postalCode')}
+          />
+        </div>
+      </div>
+
+      <div>
+        <Label htmlFor="country" className="block text-sm font-medium text-gray-700">
+          Pays
+        </Label>
+        <Select>
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder="Sélectionner un pays" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="France">France</SelectItem>
+            <SelectItem value="Belgique">Belgique</SelectItem>
+            <SelectItem value="Suisse">Suisse</SelectItem>
+            <SelectItem value="Canada">Canada</SelectItem>
+            <SelectItem value="Luxembourg">Luxembourg</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div>
+        <Label htmlFor="siret" className="block text-sm font-medium text-gray-700">
+          SIRET
+        </Label>
+        <Input
+          type="text"
+          id="siret"
+          className="mt-1 block w-full"
+          {...form.register('siret')}
+        />
+      </div>
+
+      <div>
+        <Label htmlFor="industry" className="block text-sm font-medium text-gray-700">
+          Secteur d'activité
+        </Label>
+        <Input
+          type="text"
+          id="industry"
+          className="mt-1 block w-full"
+          {...form.register('industry')}
+        />
+      </div>
+
+      <div>
+        <Label htmlFor="size" className="block text-sm font-medium text-gray-700">
+          Taille de l'entreprise
+        </Label>
+        <Select>
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder="Sélectionner la taille" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="micro">Micro (1-9 employés)</SelectItem>
+            <SelectItem value="small">Petite (10-49 employés)</SelectItem>
+            <SelectItem value="medium">Moyenne (50-249 employés)</SelectItem>
+            <SelectItem value="large">Grande (250+ employés)</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div>
+        <Label htmlFor="employeesCount" className="block text-sm font-medium text-gray-700">
+          Nombre d'employés
+        </Label>
+        <Input
+          type="number"
+          id="employeesCount"
+          className="mt-1 block w-full"
+          {...form.register('employeesCount')}
+        />
+      </div>
+
+      <div>
+        <Label htmlFor="email" className="block text-sm font-medium text-gray-700">
+          Email
+        </Label>
+        <Input
+          type="email"
+          id="email"
+          className="mt-1 block w-full"
+          {...form.register('email')}
+        />
+        {form.formState.errors.email && (
+          <p className="text-red-500 text-sm mt-1">{form.formState.errors.email.message}</p>
+        )}
+      </div>
+
+      <div>
+        <Label htmlFor="phone" className="block text-sm font-medium text-gray-700">
+          Téléphone
+        </Label>
+        <Input
+          type="tel"
+          id="phone"
+          className="mt-1 block w-full"
+          {...form.register('phone')}
+        />
+      </div>
+
+      <div>
+        <Label htmlFor="website" className="block text-sm font-medium text-gray-700">
+          Site web
+        </Label>
+        <Input
+          type="url"
+          id="website"
+          className="mt-1 block w-full"
+          {...form.register('website')}
+        />
+      </div>
+
+      <div>
+        <Label htmlFor="contactName" className="block text-sm font-medium text-gray-700">
+          Nom du contact
+        </Label>
+        <Input
+          type="text"
+          id="contactName"
+          className="mt-1 block w-full"
+          {...form.register('contactName')}
+        />
+      </div>
+
+      <div>
+        <Label htmlFor="contactEmail" className="block text-sm font-medium text-gray-700">
+          Email du contact
+        </Label>
+        <Input
+          type="email"
+          id="contactEmail"
+          className="mt-1 block w-full"
+          {...form.register('contactEmail')}
+        />
+        {form.formState.errors.contactEmail && (
+          <p className="text-red-500 text-sm mt-1">{form.formState.errors.contactEmail.message}</p>
+        )}
+      </div>
+
+      <Button type="submit" disabled={isSubmitting}>
+        {isSubmitting ? 'Création...' : 'Créer l\'entreprise'}
+      </Button>
+    </form>
   );
 };
 

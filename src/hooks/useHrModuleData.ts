@@ -100,8 +100,10 @@ export const useHrModuleData = () => {
                 logoUrl: '',
                 phone: '',
                 email: '',
+                website: '',
                 industry: '',
                 size: '',
+                status: 'active',
                 employeesCount: 0,
                 createdAt: new Date().toISOString(),
                 updatedAt: new Date().toISOString()
@@ -126,8 +128,10 @@ export const useHrModuleData = () => {
                 logoUrl: company.logoUrl || '',
                 phone: company.phone || '',
                 email: company.email || '',
+                website: company.website || '',
                 industry: company.industry || '',
                 size: company.size || '',
+                status: company.status || 'active',
                 employeesCount: company.employeesCount || 0,
                 createdAt: company.createdAt || new Date().toISOString(),
                 updatedAt: company.updatedAt || new Date().toISOString()

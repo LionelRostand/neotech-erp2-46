@@ -29,6 +29,15 @@ const CompaniesTable: React.FC<CompaniesTableProps> = ({
   onEdit,
   onDelete
 }) => {
+  // Helper function to safely format dates
+  const formatDate = (dateString: string) => {
+    try {
+      return format(new Date(dateString), 'dd MMM yyyy', { locale: fr });
+    } catch (error) {
+      return "—";
+    }
+  };
+
   return (
     <Table>
       <TableHeader>
@@ -62,7 +71,7 @@ const CompaniesTable: React.FC<CompaniesTableProps> = ({
                 <span className={`px-2 py-1 rounded-full text-xs ${
                   company.status === 'active' ? 'bg-green-100 text-green-800' :
                   company.status === 'inactive' ? 'bg-gray-100 text-gray-800' :
-                  'bg-yellow-100 text-yellow-800'
+                  company.status === 'pending' ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-800'
                 }`}>
                   {company.status === 'active' ? 'Actif' :
                    company.status === 'inactive' ? 'Inactif' :
@@ -70,11 +79,7 @@ const CompaniesTable: React.FC<CompaniesTableProps> = ({
                 </span>
               </TableCell>
               <TableCell>
-                {company.createdAt ? 
-                  typeof company.createdAt.toDate === 'function' ? 
-                    format(company.createdAt.toDate(), 'dd MMM yyyy', { locale: fr }) : 
-                    format(company.createdAt, 'dd MMM yyyy', { locale: fr })
-                  : "—"}
+                {company.createdAt ? formatDate(company.createdAt) : "—"}
               </TableCell>
               <TableCell className="text-right">
                 <div className="flex justify-end space-x-2" onClick={e => e.stopPropagation()}>

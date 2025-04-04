@@ -8,8 +8,8 @@ interface CompanyPermissionsTableProps {
   users: { id: string; displayName: string; email: string; role?: string; }[];
   userPermissions: CompanyUserPermission[];
   companySubmodules: { id: string; name: string; }[];
-  updatePermission: (userId: string, moduleId: string, permissionType: keyof Omit<CompanyPermission, 'moduleId'>, value: boolean) => void;
-  setAllPermissionsOfType: (userId: string, permissionType: keyof Omit<CompanyPermission, 'moduleId'>, value: boolean) => void;
+  updatePermission: (userId: string, moduleId: string, permissionType: 'canView' | 'canCreate' | 'canEdit' | 'canDelete', value: boolean) => void;
+  setAllPermissionsOfType: (userId: string, permissionType: 'canView' | 'canCreate' | 'canEdit' | 'canDelete', value: boolean) => void;
 }
 
 const CompanyPermissionsTable: React.FC<CompanyPermissionsTableProps> = ({

@@ -61,6 +61,8 @@ export const useCompanyPermissions = (companySubmodules: { id: string; name: str
               // Create a properly typed CompanyUserPermission using id as userId
               typedPermissionsData.push({
                 userId: item.id as string,
+                userName: item.userName as string || 'Unknown User',
+                userEmail: item.userEmail as string || 'unknown@example.com',
                 permissions: validPermissions
               });
             }
@@ -71,6 +73,8 @@ export const useCompanyPermissions = (companySubmodules: { id: string; name: str
         if (typedPermissionsData.length === 0) {
           const defaultPermissions: CompanyUserPermission[] = usersData.map(user => ({
             userId: user.id,
+            userName: user.displayName || user.email,
+            userEmail: user.email,
             permissions: companySubmodules.map(submodule => ({
               moduleId: submodule.id,
               canView: true,
@@ -95,7 +99,7 @@ export const useCompanyPermissions = (companySubmodules: { id: string; name: str
   }, []);
 
   // Update permission state
-  const updatePermission = (userId: string, moduleId: string, permissionType: keyof Omit<CompanyPermission, 'moduleId'>, value: boolean) => {
+  const updatePermission = (userId: string, moduleId: string, permissionType: 'canView' | 'canCreate' | 'canEdit' | 'canDelete', value: boolean) => {
     setUserPermissions(prev => {
       return prev.map(userPerm => {
         if (userPerm.userId === userId) {
@@ -113,7 +117,7 @@ export const useCompanyPermissions = (companySubmodules: { id: string; name: str
   };
 
   // Set all permissions of a type for a user
-  const setAllPermissionsOfType = (userId: string, permissionType: keyof Omit<CompanyPermission, 'moduleId'>, value: boolean) => {
+  const setAllPermissionsOfType = (userId: string, permissionType: 'canView' | 'canCreate' | 'canEdit' | 'canDelete', value: boolean) => {
     setUserPermissions(prev => {
       return prev.map(userPerm => {
         if (userPerm.userId === userId) {
@@ -136,6 +140,8 @@ export const useCompanyPermissions = (companySubmodules: { id: string; name: str
       for (const userPerm of userPermissions) {
         await permissionsFirestore.set(userPerm.userId, {
           permissions: userPerm.permissions,
+          userName: userPerm.userName,
+          userEmail: userPerm.userEmail,
           updatedAt: new Date()
         });
       }

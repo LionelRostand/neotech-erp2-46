@@ -1,6 +1,6 @@
 
 import { toast } from 'sonner';
-import { Company } from '../types';
+import { Company, CompanyContact, CompanyDocument, CompanyFilters } from '../types';
 
 // Mock companies data
 const mockCompanies: Company[] = [
@@ -19,6 +19,8 @@ const mockCompanies: Company[] = [
     employeesCount: 120,
     email: 'contact@techinnovation.com',
     phone: '+33 1 23 45 67 89',
+    status: 'active',
+    website: 'https://techinnovation.com',
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString()
   },
@@ -37,6 +39,8 @@ const mockCompanies: Company[] = [
     employeesCount: 35,
     email: 'info@greenco.fr',
     phone: '+33 4 56 78 90 12',
+    status: 'active',
+    website: 'https://greenco.fr',
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString()
   },
@@ -55,6 +59,8 @@ const mockCompanies: Company[] = [
     employeesCount: 310,
     email: 'contact@enterprise-solutions.com',
     phone: '+33 5 67 89 01 23',
+    status: 'active',
+    website: 'https://enterprise-solutions.com',
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString()
   },
@@ -73,6 +79,8 @@ const mockCompanies: Company[] = [
     employeesCount: 87,
     email: 'contact@biomed-innovations.com',
     phone: '+33 3 45 67 89 01',
+    status: 'inactive',
+    website: 'https://biomed-innovations.com',
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString()
   },
@@ -91,13 +99,15 @@ const mockCompanies: Company[] = [
     employeesCount: 42,
     email: 'info@digitalmediagroup.fr',
     phone: '+33 4 91 23 45 67',
+    status: 'pending',
+    website: 'https://digitalmediagroup.fr',
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString()
   }
 ];
 
 // Filter companies based on criteria
-export const filterCompanies = (companies: Company[], filters: any) => {
+export const filterCompanies = (companies: Company[], filters: CompanyFilters | null) => {
   if (!filters || Object.keys(filters).length === 0) {
     return companies;
   }
@@ -219,4 +229,72 @@ export const deleteCompany = async (id: string): Promise<boolean> => {
       toast.success('Entreprise supprimée avec succès');
     }, 500);
   });
+};
+
+// Custom hook to use the company service
+export const useCompanyService = () => {
+  // Get companies with pagination and filters
+  const getCompanies = async (page: number = 1, limit: number = 10, filters: CompanyFilters = {}, searchTerm: string = '') => {
+    try {
+      // In a real app, we would call an API with pagination, filters, and search
+      // Here we simulate it by filtering and slicing the data
+      
+      // Clone the mock data
+      let filteredCompanies = [...mockCompanies];
+      
+      // Apply search if provided
+      if (searchTerm.trim() !== '') {
+        const term = searchTerm.toLowerCase();
+        filteredCompanies = filteredCompanies.filter(company => 
+          company.name.toLowerCase().includes(term) || 
+          company.siret?.toLowerCase().includes(term) ||
+          company.email?.toLowerCase().includes(term)
+        );
+      }
+      
+      // Apply filters
+      if (Object.keys(filters).length > 0) {
+        filteredCompanies = filterCompanies(filteredCompanies, filters);
+      }
+      
+      // Calculate total pages
+      const totalItems = filteredCompanies.length;
+      const totalPages = Math.ceil(totalItems / limit);
+      
+      // Apply pagination
+      const startIndex = (page - 1) * limit;
+      const endIndex = startIndex + limit;
+      const paginatedCompanies = filteredCompanies.slice(startIndex, endIndex);
+      
+      return {
+        companies: paginatedCompanies,
+        pagination: {
+          page,
+          limit,
+          totalItems,
+          totalPages
+        }
+      };
+    } catch (error) {
+      toast.error('Erreur lors de la récupération des entreprises');
+      console.error('Error fetching companies:', error);
+      return { 
+        companies: [],
+        pagination: {
+          page,
+          limit,
+          totalItems: 0,
+          totalPages: 0
+        }
+      };
+    }
+  };
+
+  return {
+    getCompanies,
+    getCompanyById,
+    createCompany,
+    updateCompany,
+    deleteCompany
+  };
 };

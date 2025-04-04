@@ -1,4 +1,3 @@
-
 import { useEffect, useState, useMemo } from 'react';
 import { getCompanies } from '@/components/module/submodules/companies/services/companyService';
 import { Company } from '@/components/module/submodules/companies/types';
@@ -26,6 +25,37 @@ export const useCompaniesData = () => {
 
     fetchCompanies();
   }, []);
+
+  // Update company objects with proper fields
+  export const processCompanyData = (company: any): Company => {
+    return {
+      id: company.id || '',
+      name: company.name || '',
+      address: company.address || {
+        street: '',
+        city: '',
+        postalCode: '',
+        country: ''
+      },
+      siret: company.siret || '',
+      logo: company.logo || company.logoUrl || '',
+      logoUrl: company.logoUrl || company.logo || '',
+      city: company.city || company.address?.city || '',
+      country: company.country || company.address?.country || '',
+      phone: company.phone || '',
+      email: company.email || '',
+      website: company.website || '',
+      industry: company.industry || '',
+      size: company.size || '',
+      status: company.status || 'active',
+      registrationNumber: company.registrationNumber || company.siret || '',
+      contactName: company.contactName || '',
+      contactEmail: company.contactEmail || '',
+      employeesCount: company.employeesCount || 0,
+      createdAt: company.createdAt || new Date().toISOString(),
+      updatedAt: company.updatedAt || new Date().toISOString()
+    };
+  };
 
   // Get company metrics
   const companyMetrics = useMemo(() => {

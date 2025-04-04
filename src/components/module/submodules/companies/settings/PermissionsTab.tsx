@@ -15,8 +15,8 @@ interface PermissionsTabProps {
   saving: boolean;
   searchTerm: string;
   setSearchTerm: (searchTerm: string) => void;
-  updatePermission: (userId: string, moduleId: string, permissionType: keyof Omit<CompanyPermission, 'moduleId'>, value: boolean) => void;
-  setAllPermissionsOfType: (userId: string, permissionType: keyof Omit<CompanyPermission, 'moduleId'>, value: boolean) => void;
+  updatePermission: (userId: string, moduleId: string, permissionType: 'canView' | 'canCreate' | 'canEdit' | 'canDelete', value: boolean) => void;
+  setAllPermissionsOfType: (userId: string, permissionType: 'canView' | 'canCreate' | 'canEdit' | 'canDelete', value: boolean) => void;
   savePermissions: () => Promise<void>;
 }
 

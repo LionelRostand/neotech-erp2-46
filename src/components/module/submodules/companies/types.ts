@@ -32,15 +32,21 @@ export interface CompanyFilters {
   industry?: string;
   size?: string;
   search?: string;
+  startDate?: string;
+  endDate?: string;
 }
 
 export interface CompanyContact {
   id: string;
   name: string;
+  firstName: string;
+  lastName: string;
   email: string;
   phone?: string;
   role?: string;
+  position?: string;
   companyId: string;
+  isMain?: boolean;
 }
 
 export interface CompanyDocument {
@@ -48,20 +54,24 @@ export interface CompanyDocument {
   name: string;
   type: string;
   size: number;
+  fileSize?: number;
   uploadDate: string;
   url: string;
   companyId: string;
+  createdAt?: string;
 }
 
 export interface CompanyPermission {
-  id: string;
-  name: string;
-  description: string;
+  moduleId: string;
+  canView: boolean;
+  canCreate: boolean;
+  canEdit: boolean;
+  canDelete: boolean;
 }
 
 export interface CompanyUserPermission {
   userId: string;
   userName: string;
   userEmail: string;
-  permissions: string[];
+  permissions: CompanyPermission[];
 }
