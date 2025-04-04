@@ -1,4 +1,5 @@
 
+import React from 'react';
 import { cn } from "@/lib/utils";
 import StatusBadge from "./StatusBadge";
 
@@ -35,14 +36,14 @@ const DataTable = <T extends Record<string, any>>({
   
   // Use provided columns or default Transaction columns
   const tableColumns = columns || [
-    { key: 'id', header: 'ID', cell: (row: Transaction) => `#${row.id}` },
+    { key: 'id', header: 'ID' },
     { key: 'date', header: 'Date' },
     { key: 'client', header: 'Client' },
     { key: 'amount', header: 'Montant' },
     { 
       key: 'status', 
       header: 'Statut',
-      cell: (row: Transaction) => <StatusBadge status={row.status}>{row.statusText}</StatusBadge>
+      cell: ({ row }) => <StatusBadge status={row.original.status}>{row.original.statusText}</StatusBadge>
     }
   ];
 

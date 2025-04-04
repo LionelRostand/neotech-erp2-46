@@ -1,65 +1,125 @@
 
 import React from 'react';
+import { Card, CardContent } from '@/components/ui/card';
+import { PaySlipDetail } from '@/types/payslip';
 
 interface SalaryCalculationCardProps {
+  details: PaySlipDetail[];
   grossSalary: number;
   totalDeductions: number;
   netSalary: number;
 }
 
 const SalaryCalculationCard: React.FC<SalaryCalculationCardProps> = ({ 
+  details, 
   grossSalary, 
   totalDeductions, 
   netSalary 
 }) => {
+  const earnings = details.filter(detail => detail.type === 'earning');
+  const deductions = details.filter(detail => detail.type === 'deduction');
+
   return (
-    <div className="border rounded-lg p-5">
-      <div className="flex items-center mb-4">
-        <div className="bg-gray-100 rounded-full p-2 mr-3">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M2 17a5 5 0 0 1 5-5h10a5 5 0 0 1 5 5v0a5 5 0 0 1-5 5H7a5 5 0 0 1-5-5v0Z"/>
-            <path d="M12 12V2"/>
-            <path d="m8 5 4-3 4 3"/>
-          </svg>
-        </div>
-        <h3 className="font-bold text-lg">Calcul du salaire net</h3>
-      </div>
-      
-      <div className="space-y-3">
-        <div className="flex justify-between">
-          <p>Rémunération brute</p>
-          <p className="font-medium">{grossSalary.toFixed(2)} €</p>
-        </div>
-        <p className="text-xs text-gray-500">Dont 0,00 € de primes</p>
+    <Card className="mt-4">
+      <CardContent className="p-4 space-y-4">
+        <h3 className="font-semibold text-md mb-2">Calcul du salaire</h3>
         
-        <div className="flex justify-between">
-          <p>Cotisations et contributions salariales</p>
-          <p className="font-medium">- {(totalDeductions * 1.82).toFixed(2)} €</p>
+        <div>
+          <h4 className="text-sm font-medium mb-2">Salaire et primes</h4>
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="text-gray-500 border-b">
+                <th className="text-left pb-2">Désignation</th>
+                <th className="text-right pb-2">Base</th>
+                <th className="text-right pb-2">Taux</th>
+                <th className="text-right pb-2">Montant</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {earnings.length > 0 ? (
+                earnings.map((item, index) => (
+                  <tr key={index} className="border-b border-gray-100">
+                    <td className="py-2">{item.label}</td>
+                    <td className="text-right py-2">{item.base || '-'}</td>
+                    <td className="text-right py-2">{item.rate || '-'}</td>
+                    <td className="text-right py-2 font-medium">{item.amount.toLocaleString('fr-FR')} €</td>
+                  </tr>
+                ))
+              ) : (
+                <tr className="border-b border-gray-100">
+                  <td className="py-2">Salaire de base</td>
+                  <td className="text-right py-2">151.67 h</td>
+                  <td className="text-right py-2">16.48 €/h</td>
+                  <td className="text-right py-2 font-medium">{grossSalary.toLocaleString('fr-FR')} €</td>
+                </tr>
+              )}
+              <tr className="font-medium">
+                <td colSpan={3} className="py-2 text-right">Total brut:</td>
+                <td className="text-right py-2">{grossSalary.toLocaleString('fr-FR')} €</td>
+              </tr>
+            </tbody>
+          </table>
         </div>
         
-        <div className="flex justify-between">
-          <p>Indemnités non soumises</p>
-          <p className="font-medium">+ 0,00 €</p>
+        <div>
+          <h4 className="text-sm font-medium mb-2">Cotisations et contributions</h4>
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="text-gray-500 border-b">
+                <th className="text-left pb-2">Désignation</th>
+                <th className="text-right pb-2">Base</th>
+                <th className="text-right pb-2">Taux</th>
+                <th className="text-right pb-2">Montant</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {deductions.length > 0 ? (
+                deductions.map((item, index) => (
+                  <tr key={index} className="border-b border-gray-100">
+                    <td className="py-2">{item.label}</td>
+                    <td className="text-right py-2">{item.base || '-'}</td>
+                    <td className="text-right py-2">{item.rate || '-'}</td>
+                    <td className="text-right py-2 font-medium">-{item.amount.toLocaleString('fr-FR')} €</td>
+                  </tr>
+                ))
+              ) : (
+                <>
+                  <tr className="border-b border-gray-100">
+                    <td className="py-2">Sécurité sociale</td>
+                    <td className="text-right py-2">{grossSalary.toLocaleString('fr-FR')} €</td>
+                    <td className="text-right py-2">7.3%</td>
+                    <td className="text-right py-2 font-medium">-{(grossSalary * 0.073).toLocaleString('fr-FR')} €</td>
+                  </tr>
+                  <tr className="border-b border-gray-100">
+                    <td className="py-2">Retraite complémentaire</td>
+                    <td className="text-right py-2">{grossSalary.toLocaleString('fr-FR')} €</td>
+                    <td className="text-right py-2">3.15%</td>
+                    <td className="text-right py-2 font-medium">-{(grossSalary * 0.0315).toLocaleString('fr-FR')} €</td>
+                  </tr>
+                  <tr className="border-b border-gray-100">
+                    <td className="py-2">Assurance chômage</td>
+                    <td className="text-right py-2">{grossSalary.toLocaleString('fr-FR')} €</td>
+                    <td className="text-right py-2">2.4%</td>
+                    <td className="text-right py-2 font-medium">-{(grossSalary * 0.024).toLocaleString('fr-FR')} €</td>
+                  </tr>
+                </>
+              )}
+              <tr className="font-medium">
+                <td colSpan={3} className="py-2 text-right">Total retenues:</td>
+                <td className="text-right py-2">-{totalDeductions.toLocaleString('fr-FR')} €</td>
+              </tr>
+            </tbody>
+          </table>
         </div>
-        <p className="text-xs text-gray-500">Dont notes de frais (0,00 €)</p>
         
-        <div className="flex justify-between">
-          <p>Autres retenues</p>
-          <p className="font-medium">- 105,00 €</p>
+        <div className="border-t pt-4">
+          <div className="flex justify-between font-bold">
+            <span>Net à payer:</span>
+            <span>{netSalary.toLocaleString('fr-FR')} €</span>
+          </div>
         </div>
-        <p className="text-xs text-gray-500">Dont titres restaurant (105,00 €)</p>
-        
-        <div className="flex justify-between">
-          <p>Prélèvement à la source</p>
-          <p className="font-medium">- {(grossSalary * 0.036).toFixed(2)} €</p>
-        </div>
-        
-        <div className="flex justify-between font-bold mt-2 pt-2 border-t">
-          <p>Net à payer</p>
-          <p>{netSalary.toFixed(2)} €</p>
-        </div>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 };
 

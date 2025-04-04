@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -6,13 +7,13 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import DataTable from '@/components/DataTable'; // Fixed import to use default import
-import { Column } from '@/components/DataTable'; // This should work if Column is exported from DataTable
+import DataTable from '@/components/DataTable'; // Changed to default import
+import { Column } from '@/components/DataTable';
 import { useSalarySlipsData } from '@/hooks/useSalarySlipsData';
 import { Download, Filter, Plus, Search } from 'lucide-react';
 import PaySlipGenerator from './PaySlipGenerator';
 import PayslipViewer from './components/PayslipViewer';
-import { PaySlip } from './types/payslip';
+import { PaySlip } from '@/types/payslip';
 import PayslipFilterDialog from './components/PayslipFilterDialog';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -20,6 +21,7 @@ import { jsPDF } from 'jspdf';
 import 'jspdf-autotable';
 import { Employee } from '@/types/employee';
 import { Company } from '../companies/types';
+import { SalarySlip } from '@/hooks/useSalarySlipsData';
 
 interface SalarySlipsProps {
   employees?: Employee[];
@@ -108,7 +110,37 @@ const SalarySlips: React.FC<SalarySlipsProps> = ({ employees, companies }) => {
     setIsFilterDialogOpen(false);
   };
 
-  const handleRowClick = (payslip: PaySlip) => {
+  // Convert SalarySlip to PaySlip for the viewer
+  const convertToPaySlip = (slip: SalarySlip): PaySlip => {
+    return {
+      id: slip.id,
+      employee: {
+        firstName: slip.employeeName?.split(' ')[0] || '',
+        lastName: slip.employeeName?.split(' ')[1] || '',
+        employeeId: slip.employeeId,
+        role: 'Employé',
+        socialSecurityNumber: '1 99 99 99 999 999 99',
+        startDate: new Date().toISOString(),
+      },
+      period: `${slip.month} ${slip.year}`,
+      details: [],
+      grossSalary: slip.grossAmount,
+      totalDeductions: slip.grossAmount - slip.netAmount,
+      netSalary: slip.netAmount,
+      hoursWorked: 35,
+      paymentDate: slip.date,
+      employerName: 'Entreprise',
+      employerAddress: 'Adresse de l\'entreprise',
+      employerSiret: '123 456 789 00000',
+      status: slip.status,
+      date: slip.date,
+      employeeId: slip.employeeId,
+      employeeName: slip.employeeName,
+    };
+  };
+
+  const handleRowClick = (salarySlip: SalarySlip) => {
+    const payslip = convertToPaySlip(salarySlip);
     setSelectedPayslip(payslip);
     setIsViewerOpen(true);
   };
@@ -123,7 +155,7 @@ const SalarySlips: React.FC<SalarySlipsProps> = ({ employees, companies }) => {
 
     // Informations de l'employé et de l'employeur
     doc.text(`Employé: ${payslip.employeeName}`, 10, 20);
-    doc.text(`Période: ${payslip.month} ${payslip.year}`, 10, 30);
+    doc.text(`Période: ${payslip.period}`, 10, 30);
 
     // Préparation des données pour le tableau
     const tableColumn = ["Description", "Montant"];
@@ -137,7 +169,7 @@ const SalarySlips: React.FC<SalarySlipsProps> = ({ employees, companies }) => {
     });
 
     // Enregistrement du PDF
-    doc.save(`fiche-de-paie-${payslip.employeeName}-${payslip.month}-${payslip.year}.pdf`);
+    doc.save(`fiche-de-paie-${payslip.employeeName}-${payslip.period.replace(' ', '-')}.pdf`);
   };
 
   return (
@@ -202,8 +234,18 @@ const SalarySlips: React.FC<SalarySlipsProps> = ({ employees, companies }) => {
                   </DialogTrigger>
                   <DialogContent>
                     <PayslipFilterDialog
-                      onFilter={handleFilterStatusChange}
+                      isOpen={isFilterDialogOpen}
                       onClose={() => setIsFilterDialogOpen(false)}
+                      onApplyFilters={(filters) => {
+                        if (filters.status && filters.status !== 'all') {
+                          setStatusFilter(filters.status);
+                        } else {
+                          setStatusFilter(null);
+                        }
+                        setIsFilterDialogOpen(false);
+                      }}
+                      employees={[]}
+                      currentFilters={{}}
                     />
                   </DialogContent>
                 </Dialog>

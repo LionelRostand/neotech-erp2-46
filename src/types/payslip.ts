@@ -50,4 +50,6 @@ export interface PaySlip {
   date?: string;
   employeeId?: string;
   employeeName?: string;
+  month?: string;
+  year?: number;
 }
