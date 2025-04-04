@@ -59,4 +59,34 @@ export interface Employee {
   education?: Education[];
   workSchedule?: WorkSchedule;
   payslips?: string[];
+
+  // Helper function to get formatted address as string
+  getFormattedAddress?: () => string;
+  // Helper function to get company name
+  getCompanyName?: () => string;
 }
+
+// Add helper functions to handle address and company properly
+export const getFormattedAddress = (address: string | EmployeeAddress | undefined): string => {
+  if (!address) return 'Non spécifié';
+  
+  if (typeof address === 'string') return address;
+  
+  const { street, city, postalCode, country } = address;
+  const parts = [];
+  
+  if (street) parts.push(street);
+  if (city) parts.push(city);
+  if (postalCode) parts.push(postalCode);
+  if (country) parts.push(country);
+  
+  return parts.length > 0 ? parts.join(', ') : 'Adresse incomplète';
+};
+
+export const getCompanyName = (company: string | Company | undefined): string => {
+  if (!company) return 'Non spécifié';
+  
+  if (typeof company === 'string') return company;
+  
+  return company.name || 'Entreprise sans nom';
+};

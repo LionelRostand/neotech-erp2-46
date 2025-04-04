@@ -9,28 +9,41 @@ import EmployeesLeaves from "@/components/module/submodules/leaves/EmployeesLeav
 import EmployeesProfiles from "@/components/module/submodules/employees/EmployeesProfiles";
 import EmployeesHierarchy from "@/components/module/submodules/employees/EmployeesHierarchy";
 import EmployeesRecruitment from "@/components/module/submodules/EmployeesRecruitment";
+import EmployeesBadges from "@/components/module/submodules/EmployeesBadges";
+import EmployeesAttendance from "@/components/module/submodules/EmployeesAttendance";
+import EmployeesDashboard from "@/components/module/submodules/EmployeesDashboard";
+import EmployeesTimesheet from "@/components/module/submodules/EmployeesTimesheet";
+import EmployeesAbsences from "@/components/module/submodules/absences/EmployeesAbsences";
+import EmployeesContracts from "@/components/module/submodules/contracts/EmployeesContracts";
+import EmployeesDocuments from "@/components/module/submodules/documents/EmployeesDocuments";
+import EmployeesEvaluations from "@/components/module/submodules/evaluations/EmployeesEvaluations";
+import EmployeesTrainings from "@/components/module/submodules/trainings/EmployeesTrainings";
+import EmployeesCompanies from "@/components/module/submodules/companies/CompaniesList";
+import EmployeesReports from "@/components/module/submodules/reports/EmployeesReports";
+import EmployeesAlerts from "@/components/module/submodules/alerts/EmployeesAlerts";
+import EmployeesSettings from "@/components/module/submodules/settings/EmployeesSettings";
 
 export const EmployeesRoutes = (
   <Route key="employees" path="/modules/employees" element={<ModuleLayout moduleId={1} />}>
-    <Route index element={<SubmodulePage moduleId={1} submoduleId="employees-dashboard" />} />
-    <Route path="dashboard" element={<SubmodulePage moduleId={1} submoduleId="employees-dashboard" />} />
+    <Route index element={<EmployeesDashboard />} />
+    <Route path="dashboard" element={<EmployeesDashboard />} />
     <Route path="profiles" element={<EmployeesProfiles />} />
-    <Route path="badges" element={<SubmodulePage moduleId={1} submoduleId="employees-badges" />} />
+    <Route path="badges" element={<EmployeesBadges />} />
     <Route path="departments" element={<EmployeesDepartments />} />
     <Route path="hierarchy" element={<EmployeesHierarchy />} />
-    <Route path="attendance" element={<SubmodulePage moduleId={1} submoduleId="employees-attendance" />} />
-    <Route path="timesheet" element={<SubmodulePage moduleId={1} submoduleId="employees-timesheet" />} />
+    <Route path="attendance" element={<EmployeesAttendance />} />
+    <Route path="timesheet" element={<EmployeesTimesheet />} />
     <Route path="leaves" element={<EmployeesLeaves />} />
-    <Route path="absences" element={<SubmodulePage moduleId={1} submoduleId="employees-absences" />} />
-    <Route path="contracts" element={<SubmodulePage moduleId={1} submoduleId="employees-contracts" />} />
-    <Route path="documents" element={<SubmodulePage moduleId={1} submoduleId="employees-documents" />} />
-    <Route path="evaluations" element={<SubmodulePage moduleId={1} submoduleId="employees-evaluations" />} />
-    <Route path="trainings" element={<SubmodulePage moduleId={1} submoduleId="employees-trainings" />} />
-    <Route path="salaries" element={<SubmodulePage moduleId={1} submoduleId="employees-salaries" />} />
+    <Route path="absences" element={<EmployeesAbsences />} />
+    <Route path="contracts" element={<EmployeesContracts />} />
+    <Route path="documents" element={<EmployeesDocuments />} />
+    <Route path="evaluations" element={<EmployeesEvaluations />} />
+    <Route path="trainings" element={<EmployeesTrainings />} />
+    <Route path="salaries" element={<SalarySlips />} />
     <Route path="recruitment" element={<EmployeesRecruitment />} />
-    <Route path="reports" element={<SubmodulePage moduleId={1} submoduleId="employees-reports" />} />
-    <Route path="alerts" element={<SubmodulePage moduleId={1} submoduleId="employees-alerts" />} />
-    <Route path="settings" element={<SubmodulePage moduleId={1} submoduleId="employees-settings" />} />
-    <Route path="companies" element={<SubmodulePage moduleId={1} submoduleId="employees-companies" />} />
+    <Route path="companies" element={<EmployeesCompanies />} />
+    <Route path="reports" element={<EmployeesReports />} />
+    <Route path="alerts" element={<EmployeesAlerts />} />
+    <Route path="settings" element={<EmployeesSettings />} />
   </Route>
 );

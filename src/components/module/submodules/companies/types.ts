@@ -63,7 +63,7 @@ export interface CompanyFilters {
   size?: string;
   startDate?: string;
   endDate?: string;
-  search?: string; // Adding this property
+  search?: string; // Adding this property for search functionality
 }
 
 // Company user permissions
@@ -86,4 +86,38 @@ export interface CompanyPermission {
   canCreate?: boolean;
   canEdit?: boolean;
   canDelete?: boolean;
+}
+
+// Companies filters props
+export interface CompaniesFiltersProps {
+  filters: CompanyFilters;
+  onFilterChange: (newFilters: CompanyFilters) => void;
+  onResetFilters: () => void;
+}
+
+// Company service interface
+export interface CompanyServiceInterface {
+  getCompanies: (page?: number, limit?: number, filters?: CompanyFilters, searchTerm?: string) => Promise<{
+    companies: Company[];
+    pagination: {
+      page: number;
+      limit: number;
+      totalItems: number;
+      totalPages: number;
+    };
+  }>;
+  getCompanyById: (id: string) => Promise<Company>;
+  createCompany: (companyData: Omit<Company, 'id' | 'createdAt' | 'updatedAt'>) => Promise<Company>;
+  updateCompany: (id: string, companyData: Partial<Company>) => Promise<Company>;
+  deleteCompany: (id: string) => Promise<boolean>;
+  
+  // Additional methods for contacts and documents
+  getCompanyContacts: (companyId: string) => Promise<CompanyContact[]>;
+  createContact: (contact: Omit<CompanyContact, 'id' | 'createdAt' | 'updatedAt'>) => Promise<CompanyContact>;
+  updateContact: (id: string, contact: Partial<CompanyContact>) => Promise<CompanyContact>;
+  deleteContact: (id: string) => Promise<boolean>;
+  
+  getCompanyDocuments: (companyId: string) => Promise<CompanyDocument[]>;
+  uploadDocument: (document: Omit<CompanyDocument, 'id' | 'createdAt' | 'updatedAt'>, file: File) => Promise<CompanyDocument>;
+  deleteDocument: (id: string) => Promise<boolean>;
 }

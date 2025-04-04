@@ -52,6 +52,11 @@ const CompaniesList: React.FC = () => {
     setFilters(newFilters);
   };
   
+  // Reset filters
+  const handleResetFilters = () => {
+    setFilters({});
+  };
+  
   return (
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -88,7 +93,11 @@ const CompaniesList: React.FC = () => {
       
       <div className="grid gap-6 md:grid-cols-4">
         <div className="md:col-span-1">
-          <CompaniesFilters onFilterChange={handleFilterChange} />
+          <CompaniesFilters 
+            filters={filters}
+            onFilterChange={handleFilterChange}
+            onResetFilters={handleResetFilters}
+          />
         </div>
         
         <div className="md:col-span-3">
