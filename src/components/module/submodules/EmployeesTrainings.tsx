@@ -55,15 +55,15 @@ const EmployeesTrainings: React.FC = () => {
         pass = pass && training.title.toLowerCase().includes(newFilters.title.toLowerCase());
       }
       
-      if (newFilters.type && training.type) {
+      if (newFilters.type && newFilters.type !== 'all' && training.type) {
         pass = pass && training.type === newFilters.type;
       }
       
-      if (newFilters.department && training.department) {
+      if (newFilters.department && newFilters.department !== 'all' && training.department) {
         pass = pass && training.department === newFilters.department;
       }
       
-      if (newFilters.status) {
+      if (newFilters.status && newFilters.status !== 'all') {
         pass = pass && training.status === newFilters.status;
       }
       
@@ -83,7 +83,7 @@ const EmployeesTrainings: React.FC = () => {
         pass = pass && trainingDate <= toDate;
       }
       
-      if (newFilters.certificate) {
+      if (newFilters.certificate && newFilters.certificate !== 'all') {
         const certValue = newFilters.certificate === 'true';
         pass = pass && training.certificate === certValue;
       }

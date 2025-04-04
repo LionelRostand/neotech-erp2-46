@@ -121,7 +121,7 @@ const TrainingsFilter: React.FC<TrainingsFilterProps> = ({
                   <SelectValue placeholder="Tous les types" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Tous les types</SelectItem>
+                  <SelectItem value="all">Tous les types</SelectItem>
                   <SelectItem value="Formation professionnelle">Formation professionnelle</SelectItem>
                   <SelectItem value="Formation réglementaire">Formation réglementaire</SelectItem>
                   <SelectItem value="Formation en ligne">Formation en ligne</SelectItem>
@@ -142,7 +142,7 @@ const TrainingsFilter: React.FC<TrainingsFilterProps> = ({
                   <SelectValue placeholder="Tous les départements" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Tous les départements</SelectItem>
+                  <SelectItem value="all">Tous les départements</SelectItem>
                   {departments.map((dept) => (
                     <SelectItem key={dept.id} value={dept.id}>
                       {dept.name}
@@ -188,7 +188,7 @@ const TrainingsFilter: React.FC<TrainingsFilterProps> = ({
                   <SelectValue placeholder="Tous les statuts" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Tous les statuts</SelectItem>
+                  <SelectItem value="all">Tous les statuts</SelectItem>
                   <SelectItem value="Planifiée">Planifiée</SelectItem>
                   <SelectItem value="En cours">En cours</SelectItem>
                   <SelectItem value="Terminée">Terminée</SelectItem>
@@ -219,7 +219,7 @@ const TrainingsFilter: React.FC<TrainingsFilterProps> = ({
                 <SelectValue placeholder="Certification" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Tous</SelectItem>
+                <SelectItem value="all">Tous</SelectItem>
                 <SelectItem value="true">Avec certification</SelectItem>
                 <SelectItem value="false">Sans certification</SelectItem>
               </SelectContent>
