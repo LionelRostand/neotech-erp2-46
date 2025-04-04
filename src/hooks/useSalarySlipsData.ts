@@ -1,6 +1,7 @@
 
 import { useMemo } from 'react';
 import { useHrModuleData } from './useHrModuleData';
+import { Company } from '@/components/module/submodules/companies/types';
 
 export interface SalarySlip {
   id: string;
@@ -22,7 +23,7 @@ export interface SalarySlip {
  * Hook pour accéder aux données des fiches de paie directement depuis Firebase
  */
 export const useSalarySlipsData = () => {
-  const { payslips, employees, isLoading, error } = useHrModuleData();
+  const { payslips, employees, companies, isLoading, error } = useHrModuleData();
   
   // Enrichir les fiches de paie avec les noms des employés
   const formattedSalarySlips = useMemo(() => {
@@ -79,6 +80,8 @@ export const useSalarySlipsData = () => {
     salarySlips: formattedSalarySlips,
     stats: salaryStats,
     isLoading,
-    error
+    error,
+    employees,
+    companies
   };
 };

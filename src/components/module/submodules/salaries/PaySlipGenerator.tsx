@@ -1,57 +1,22 @@
 
-import React, { useEffect, useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import React, { useState } from 'react';
+import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import PaySlipTemplate from './PaySlipTemplate';
-import { PaySlip } from '@/types/payslip';
-import { toast } from 'sonner';
-import { getAllDocuments } from '@/hooks/firestore/read-operations';
-import { COLLECTIONS } from '@/lib/firebase-collections';
-import { Employee } from '@/types/employee';
-import { Company } from '@/components/module/submodules/companies/types';
-import { useCompanyService } from '@/components/module/submodules/companies/services/companyService';
 import { usePayslipGenerator } from './hooks/usePayslipGenerator';
-import CompanyInfoSection from './components/CompanyInfoSection';
-import EmployeeInfoSection from './components/EmployeeInfoSection';
-import OvertimeSection from './components/OvertimeSection';
 import PayslipFormControls from './components/PayslipFormControls';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import PayslipViewer from './components/PayslipViewer';
+import { Employee } from '@/types/employee';
+import { Company } from '../companies/types';
 
-const samplePaySlip: PaySlip = {
-  id: '12345',
-  employee: {
-    firstName: 'Jean',
-    lastName: 'Dupont',
-    employeeId: 'EMP001',
-    role: 'Développeur Web',
-    socialSecurityNumber: '1 85 12 75 108 111 42',
-    startDate: '01/01/2022'
-  },
-  period: 'Juin 2023',
-  details: [
-    { label: 'Salaire de base', base: '151.67 H', rate: '20,00 €/H', amount: 3033.4, type: 'earning' },
-    { label: 'Prime d\'ancienneté', base: '', rate: '', amount: 150, type: 'earning' },
-    { label: 'Heures supplémentaires', base: '10.00 H', rate: '25,00 €/H', amount: 250, type: 'earning' },
-    { label: 'CSG déductible', base: '3433,40 €', rate: '6,80 %', amount: 233.47, type: 'deduction' },
-    { label: 'CSG non déductible', base: '3433,40 €', rate: '2,90 %', amount: 99.57, type: 'deduction' },
-    { label: 'Assurance maladie', base: '3433,40 €', rate: '0,95 %', amount: 32.62, type: 'deduction' },
-    { label: 'Retraite complémentaire', base: '3433,40 €', rate: '3,15 %', amount: 108.15, type: 'deduction' },
-    { label: 'Assurance chômage', base: '3433,40 €', rate: '1,90 %', amount: 65.23, type: 'deduction' }
-  ],
-  grossSalary: 3433.40,
-  totalDeductions: 539.04,
-  netSalary: 2894.36,
-  hoursWorked: 161.67,
-  paymentDate: '30/06/2023',
-  employerName: 'ACME France SAS',
-  employerAddress: '15 Rue de la Paix, 75001 Paris',
-  employerSiret: '123 456 789 00012'
-};
+interface PaySlipGeneratorProps {
+  employees?: Employee[];
+  companies?: Company[];
+}
 
-const PaySlipGenerator: React.FC = () => {
-  const [employees, setEmployees] = useState<Employee[]>([]);
-  const [companies, setCompanies] = useState<Company[]>([]);
-  const { getCompanies } = useCompanyService();
-  
+const PaySlipGenerator: React.FC<PaySlipGeneratorProps> = ({ employees, companies }) => {
   const {
     employeeName,
     setEmployeeName,
@@ -73,116 +38,198 @@ const PaySlipGenerator: React.FC = () => {
     setShowPreview,
     currentPayslip,
     setCurrentPayslip,
-    selectedEmployee,
-    selectedCompany,
-    handleCompanySelect: baseHandleCompanySelect,
-    handleEmployeeSelect: baseHandleEmployeeSelect,
+    handleEmployeeSelect,
+    handleCompanySelect,
     generatePayslip
   } = usePayslipGenerator();
 
-  useEffect(() => {
-    const fetchEmployees = async () => {
-      try {
-        const fetchedEmployees = await getAllDocuments(COLLECTIONS.EMPLOYEES);
-        setEmployees(fetchedEmployees as Employee[]);
-      } catch (error) {
-        console.error('Error fetching employees:', error);
-        toast.error('Erreur lors du chargement des employés');
-      }
-    };
-    
-    fetchEmployees();
-  }, []);
+  const months = [
+    'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
+    'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'
+  ];
+  const currentYear = new Date().getFullYear();
+  const years = Array.from({length: 5}, (_, i) => currentYear - 2 + i);
+  
+  const [selectedMonth, setSelectedMonth] = useState(months[new Date().getMonth()]);
+  const [selectedYear, setSelectedYear] = useState(currentYear.toString());
 
-  useEffect(() => {
-    const fetchCompanies = async () => {
-      try {
-        const { companies: fetchedCompanies } = await getCompanies();
-        setCompanies(fetchedCompanies);
-      } catch (error) {
-        console.error('Error fetching companies:', error);
-        toast.error('Erreur lors du chargement des entreprises');
-      }
-    };
+  React.useEffect(() => {
+    if (selectedMonth && selectedYear) {
+      setPeriod(`${selectedMonth} ${selectedYear}`);
+    }
+  }, [selectedMonth, selectedYear, setPeriod]);
 
-    fetchCompanies();
-  }, [getCompanies]);
-
-  const handleEmployeeSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    baseHandleEmployeeSelect(e, employees);
-  };
-
-  const handleCompanySelect = (companyId: string) => {
-    baseHandleCompanySelect(companyId, companies);
+  const handleViewSample = () => {
+    setEmployeeName("Pierre Dupont");
+    setGrossSalary("2500");
+    setOvertimeHours("10");
+    setOvertimeRate("25");
+    setCompanyName("Entreprise ACME");
+    setCompanyAddress("15 rue des Lilas, 75001 Paris");
+    setCompanySiret("123 456 789 00012");
+    setPeriod(`${selectedMonth} ${selectedYear}`);
   };
 
   const handleGeneratePaySlip = () => {
     generatePayslip();
-  };
-
-  const handleViewSample = () => {
-    setCurrentPayslip(samplePaySlip);
     setShowPreview(true);
   };
 
-  const handleBack = () => {
-    setShowPreview(false);
-  };
+  if (showPreview && currentPayslip) {
+    return (
+      <div className="w-full">
+        <div className="mb-4">
+          <Button variant="outline" onClick={() => setShowPreview(false)}>
+            Retour
+          </Button>
+        </div>
+        <PayslipViewer payslip={currentPayslip} />
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-6 py-6">
-      {!showPreview ? (
-        <div className="grid gap-6 max-w-2xl mx-auto">
-          <Card>
-            <CardHeader>
-              <CardTitle>Générateur de Bulletin de Paie</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <CompanyInfoSection 
-                companyName={companyName}
-                setCompanyName={setCompanyName}
-                companyAddress={companyAddress}
-                setCompanyAddress={setCompanyAddress}
-                companySiret={companySiret}
-                setCompanySiret={setCompanySiret}
-                companies={companies}
-                handleCompanySelect={handleCompanySelect}
+    <Card className="w-full">
+      <CardHeader>
+        <CardTitle>Générer une fiche de paie</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label>Employé</Label>
+            {employees && employees.length > 0 ? (
+              <Select onValueChange={(value) => handleEmployeeSelect({target: {value}}, employees)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Sélectionner un employé" />
+                </SelectTrigger>
+                <SelectContent>
+                  {employees.map(employee => (
+                    <SelectItem key={employee.id} value={employee.id}>
+                      {employee.firstName} {employee.lastName}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            ) : (
+              <Input
+                value={employeeName}
+                onChange={(e) => setEmployeeName(e.target.value)}
+                placeholder="Nom et prénom de l'employé"
               />
-
-              <EmployeeInfoSection 
-                employeeName={employeeName}
-                setEmployeeName={setEmployeeName}
-                period={period}
-                setPeriod={setPeriod}
-                grossSalary={grossSalary}
-                setGrossSalary={setGrossSalary}
-                employees={employees}
-                handleEmployeeSelect={handleEmployeeSelect}
-              />
-
-              <OvertimeSection 
-                overtimeHours={overtimeHours}
-                setOvertimeHours={setOvertimeHours}
-                overtimeRate={overtimeRate}
-                setOvertimeRate={setOvertimeRate}
-              />
-
-              <PayslipFormControls 
-                handleViewSample={handleViewSample}
-                handleGeneratePaySlip={handleGeneratePaySlip}
-              />
-            </CardContent>
-          </Card>
-        </div>
-      ) : (
-        <div className="space-y-6">
-          <div className="flex justify-between items-center">
-            <Button variant="outline" onClick={handleBack}>Retour au formulaire</Button>
+            )}
           </div>
-          {currentPayslip && <PaySlipTemplate payslip={currentPayslip} />}
+
+          <div className="space-y-2">
+            <Label>Entreprise</Label>
+            {companies && companies.length > 0 ? (
+              <Select onValueChange={(value) => handleCompanySelect(value, companies)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Sélectionner une entreprise" />
+                </SelectTrigger>
+                <SelectContent>
+                  {companies.map(company => (
+                    <SelectItem key={company.id} value={company.id}>
+                      {company.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            ) : (
+              <Input
+                value={companyName}
+                onChange={(e) => setCompanyName(e.target.value)}
+                placeholder="Nom de l'entreprise"
+              />
+            )}
+          </div>
         </div>
-      )}
-    </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label>Mois</Label>
+            <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+              <SelectTrigger>
+                <SelectValue placeholder="Sélectionner un mois" />
+              </SelectTrigger>
+              <SelectContent>
+                {months.map(month => (
+                  <SelectItem key={month} value={month}>{month}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Année</Label>
+            <Select value={selectedYear} onValueChange={setSelectedYear}>
+              <SelectTrigger>
+                <SelectValue placeholder="Sélectionner une année" />
+              </SelectTrigger>
+              <SelectContent>
+                {years.map(year => (
+                  <SelectItem key={year} value={year.toString()}>{year}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <Label>Salaire brut (€)</Label>
+          <Input
+            type="number"
+            value={grossSalary}
+            onChange={(e) => setGrossSalary(e.target.value)}
+            placeholder="Ex: 2500"
+          />
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label>Heures supplémentaires</Label>
+            <Input
+              type="number"
+              value={overtimeHours}
+              onChange={(e) => setOvertimeHours(e.target.value)}
+              placeholder="Ex: 10"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label>Majoration (%)</Label>
+            <Input
+              type="number"
+              value={overtimeRate}
+              onChange={(e) => setOvertimeRate(e.target.value)}
+              placeholder="Ex: 25"
+            />
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <Label>Adresse de l'entreprise</Label>
+          <Input
+            value={companyAddress}
+            onChange={(e) => setCompanyAddress(e.target.value)}
+            placeholder="Ex: 15 rue des Lilas, 75001 Paris"
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label>SIRET</Label>
+          <Input
+            value={companySiret}
+            onChange={(e) => setCompanySiret(e.target.value)}
+            placeholder="Ex: 123 456 789 00012"
+          />
+        </div>
+
+        <PayslipFormControls
+          handleViewSample={handleViewSample}
+          handleGeneratePaySlip={handleGeneratePaySlip}
+        />
+      </CardContent>
+    </Card>
   );
 };
 
