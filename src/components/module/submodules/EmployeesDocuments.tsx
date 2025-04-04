@@ -17,19 +17,43 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { toast } from 'sonner';
 import { useDocumentsData } from '@/hooks/useDocumentsData';
+import UploadDocumentDialog from './documents/components/UploadDocumentDialog';
+import { exportToExcel } from '@/utils/exportUtils';
+import { exportToPdf } from '@/utils/pdfUtils';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const EmployeesDocuments: React.FC = () => {
   const [activeTab, setActiveTab] = useState('tous');
   const { documents, stats, isLoading, error } = useDocumentsData();
+  const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
 
-  const handleExportData = () => {
-    toast.success("Export des documents démarré");
-    // Logique d'export à implémenter
+  const handleExportData = (format: 'excel' | 'pdf') => {
+    const filteredDocuments = activeTab === 'tous' 
+      ? documents 
+      : documents.filter(doc => doc.type.toLowerCase() === activeTab);
+      
+    if (filteredDocuments.length === 0) {
+      toast.error("Aucune donnée à exporter");
+      return;
+    }
+    
+    if (format === 'excel') {
+      exportToExcel(filteredDocuments, 'Documents_RH', `Documents_RH_${new Date().toISOString().slice(0,10)}`);
+      toast.success("Export Excel téléchargé");
+    } else {
+      exportToPdf(filteredDocuments, 'Documents RH', `Documents_RH_${new Date().toISOString().slice(0,10)}`);
+      toast.success("Export PDF téléchargé");
+    }
   };
   
-  const handleUploadClick = () => {
-    toast.success("Fonctionnalité d'upload en cours de développement");
-    // Logique d'upload à implémenter
+  const handleUploadSuccess = () => {
+    toast.success("Document ajouté avec succès");
+    // In a real implementation, we would refresh the documents list here
   };
 
   if (isLoading) {
@@ -66,15 +90,25 @@ const EmployeesDocuments: React.FC = () => {
             <Search className="h-4 w-4 mr-2" />
             Rechercher
           </Button>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={handleExportData}
-          >
-            <Download className="h-4 w-4 mr-2" />
-            Exporter
-          </Button>
-          <Button size="sm" onClick={handleUploadClick}>
+          
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm">
+                <Download className="h-4 w-4 mr-2" />
+                Exporter
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuItem onClick={() => handleExportData('excel')}>
+                Exporter en Excel
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleExportData('pdf')}>
+                Exporter en PDF
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          
+          <Button size="sm" onClick={() => setUploadDialogOpen(true)}>
             <Upload className="h-4 w-4 mr-2" />
             Uploader
           </Button>
@@ -177,6 +211,13 @@ const EmployeesDocuments: React.FC = () => {
           </Card>
         </TabsContent>
       </Tabs>
+      
+      {/* Upload Document Dialog */}
+      <UploadDocumentDialog 
+        open={uploadDialogOpen}
+        onOpenChange={setUploadDialogOpen}
+        onSuccess={handleUploadSuccess}
+      />
     </div>
   );
 };
