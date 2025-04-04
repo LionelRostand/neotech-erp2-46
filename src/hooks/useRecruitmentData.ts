@@ -1,90 +1,127 @@
 
-import { useMemo } from 'react';
-import { useHrModuleData } from './useHrModuleData';
+import { useMemo, useState, useEffect } from 'react';
 
-export interface Recruitment {
+export interface RecruitmentPost {
   id: string;
   position: string;
-  department?: string;
-  status: 'Ouvert' | 'En cours' | 'Clôturé' | 'Abandonné';
+  department: string;
   openDate: string;
-  closeDate?: string;
-  applicationCount?: number;
-  hiringManagerId?: string;
-  hiringManagerName?: string;
-  priority?: 'Haute' | 'Moyenne' | 'Basse';
-  description?: string;
+  applicationDeadline?: string;
+  hiringManagerId: string;
+  hiringManagerName: string;
+  status: string;
+  priority: string;
+  location: string;
+  contractType: string;
+  salary: string;
+  description: string;
+  requirements: string;
+  applicationCount: number;
 }
 
-/**
- * Hook pour accéder aux données de recrutement directement depuis Firebase
- */
-export const useRecruitmentData = () => {
-  const { recruitmentPosts, employees, departments, isLoading, error } = useHrModuleData();
-  
-  // Enrichir les postes de recrutement avec des informations supplémentaires
-  const formattedRecruitmentPosts = useMemo(() => {
-    if (!recruitmentPosts || recruitmentPosts.length === 0) {
-      return [];
-    }
-    
-    return recruitmentPosts.map(post => {
-      const hiringManager = post.hiringManagerId && employees
-        ? employees.find(emp => emp.id === post.hiringManagerId)
-        : undefined;
-        
-      const dept = post.departmentId && departments
-        ? departments.find(d => d.id === post.departmentId)
-        : undefined;
-      
-      return {
-        id: post.id,
-        position: post.position || 'Non spécifié',
-        department: dept?.name || post.department || 'Non spécifié',
-        status: post.status || 'Ouvert',
-        openDate: formatDate(post.openDate),
-        closeDate: post.closeDate ? formatDate(post.closeDate) : undefined,
-        applicationCount: post.applicationCount || 0,
-        hiringManagerId: post.hiringManagerId,
-        hiringManagerName: hiringManager 
-          ? `${hiringManager.firstName} ${hiringManager.lastName}`
-          : post.hiringManagerName || 'Non assigné',
-        priority: post.priority || 'Moyenne',
-        description: post.description,
-      } as Recruitment;
-    });
-  }, [recruitmentPosts, employees, departments]);
-  
-  // Fonction pour formater les dates
-  const formatDate = (dateStr: string) => {
-    try {
-      return new Date(dateStr).toLocaleDateString('fr-FR');
-    } catch (error) {
-      console.error('Erreur de formatage de date:', dateStr, error);
-      return dateStr;
-    }
-  };
+const MOCK_RECRUITMENT_POSTS: RecruitmentPost[] = [
+  {
+    id: 'job-1',
+    position: 'Développeur Full-Stack',
+    department: 'IT',
+    openDate: '15/03/2023',
+    applicationDeadline: '15/05/2023',
+    hiringManagerId: 'user-2',
+    hiringManagerName: 'Marie Dubois',
+    status: 'En cours',
+    priority: 'Haute',
+    location: 'Paris',
+    contractType: 'CDI',
+    salary: '45-55K€',
+    description: 'Nous recherchons un développeur Full-Stack expérimenté pour rejoindre notre équipe technique.',
+    requirements: 'Expérience minimale de 3 ans, maîtrise de React, Node.js et MongoDB.',
+    applicationCount: 12
+  },
+  {
+    id: 'job-2',
+    position: 'Chef de projet',
+    department: 'IT',
+    openDate: '01/04/2023',
+    hiringManagerId: 'user-2',
+    hiringManagerName: 'Marie Dubois',
+    status: 'Ouvert',
+    priority: 'Moyenne',
+    location: 'Paris',
+    contractType: 'CDI',
+    salary: '50-60K€',
+    description: 'Rôle de chef de projet pour nos grands comptes.',
+    requirements: 'Expérience en gestion de projet IT, certification PMP appréciée.',
+    applicationCount: 5
+  },
+  {
+    id: 'job-3',
+    position: 'Responsable RH',
+    department: 'RH',
+    openDate: '15/02/2023',
+    applicationDeadline: '15/04/2023',
+    hiringManagerId: 'user-3',
+    hiringManagerName: 'Pierre Martin',
+    status: 'Clôturé',
+    priority: 'Haute',
+    location: 'Lyon',
+    contractType: 'CDI',
+    salary: '45-55K€',
+    description: 'Gestion complète du département RH.',
+    requirements: 'Minimum 5 ans d\'expérience en RH, connaissance du droit du travail français.',
+    applicationCount: 18
+  },
+  {
+    id: 'job-4',
+    position: 'Commercial B2B',
+    department: 'Commercial',
+    openDate: '10/03/2023',
+    hiringManagerId: 'user-4',
+    hiringManagerName: 'Sophie Bernard',
+    status: 'Ouvert',
+    priority: 'Basse',
+    location: 'Toulouse',
+    contractType: 'CDI',
+    salary: '35-45K€ + commission',
+    description: 'Développement du portefeuille clients B2B dans le secteur Sud-Ouest.',
+    requirements: 'Expérience commerciale B2B, connaissance du secteur IT appréciée.',
+    applicationCount: 3
+  }
+];
 
-  // Obtenir des statistiques sur le recrutement
-  const recruitmentStats = useMemo(() => {
-    const open = formattedRecruitmentPosts.filter(post => post.status === 'Ouvert').length;
-    const inProgress = formattedRecruitmentPosts.filter(post => post.status === 'En cours').length;
-    const closed = formattedRecruitmentPosts.filter(post => post.status === 'Clôturé').length;
-    const abandoned = formattedRecruitmentPosts.filter(post => post.status === 'Abandonné').length;
-    const total = formattedRecruitmentPosts.length;
+export const useRecruitmentData = () => {
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+  const [recruitmentPosts, setRecruitmentPosts] = useState<RecruitmentPost[]>([]);
+  
+  useEffect(() => {
+    // Simulate API call
+    const fetchData = async () => {
+      try {
+        // Simulate loading delay
+        await new Promise(resolve => setTimeout(resolve, 500));
+        setRecruitmentPosts(MOCK_RECRUITMENT_POSTS);
+        setIsLoading(false);
+      } catch (err: any) {
+        setError(err);
+        setIsLoading(false);
+      }
+    };
     
-    // Calculer le nombre total de candidatures
-    const totalApplications = formattedRecruitmentPosts.reduce(
-      (sum, post) => sum + (post.applicationCount || 0), 
-      0
-    );
+    fetchData();
+  }, []);
+  
+  const stats = useMemo(() => {
+    const open = recruitmentPosts.filter(post => post.status === 'Ouvert').length;
+    const inProgress = recruitmentPosts.filter(post => post.status === 'En cours').length;
+    const closed = recruitmentPosts.filter(post => post.status === 'Clôturé').length;
+    const totalApplications = recruitmentPosts.reduce((acc, curr) => acc + (curr.applicationCount || 0), 0);
     
-    return { open, inProgress, closed, abandoned, total, totalApplications };
-  }, [formattedRecruitmentPosts]);
+    return { open, inProgress, closed, totalApplications };
+  }, [recruitmentPosts]);
   
   return {
-    recruitmentPosts: formattedRecruitmentPosts,
-    stats: recruitmentStats,
+    recruitmentPosts,
+    stats,
     isLoading,
     error
   };

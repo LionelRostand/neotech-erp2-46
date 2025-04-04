@@ -11,20 +11,134 @@ import {
   FileText,
   Clock,
   CheckCircle2,
-  XCircle
+  XCircle,
+  FileExcel,
+  FilePdf
 } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { useRecruitmentData } from '@/hooks/useRecruitmentData';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { RecruitmentForm, RecruitmentOffer } from './recruitment/RecruitmentForm';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
+import * as XLSX from 'xlsx';
 
 const EmployeesRecruitment: React.FC = () => {
   const [activeTab, setActiveTab] = useState('ouverts');
   const { recruitmentPosts, stats, isLoading, error } = useRecruitmentData();
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isFilterDialogOpen, setIsFilterDialogOpen] = useState(false);
+  const [isExportDialogOpen, setIsExportDialogOpen] = useState(false);
+  const [posts, setPosts] = useState(recruitmentPosts || []);
+  const [filters, setFilters] = useState({
+    department: '',
+    priority: '',
+    status: '',
+  });
 
-  const handleExportData = () => {
-    toast.success("Export des données de recrutement démarré");
-    // Logique d'export à implémenter
+  const handleCreateOffer = (data: any) => {
+    const newOffer = {
+      id: `job-${Date.now()}`,
+      position: data.position,
+      department: data.department,
+      openDate: data.openDate.toLocaleDateString('fr-FR'),
+      applicationDeadline: data.applicationDeadline.toLocaleDateString('fr-FR'),
+      hiringManagerName: data.hiringManagerName,
+      hiringManagerId: data.hiringManagerId || 'user-1',
+      status: data.status,
+      priority: data.priority,
+      location: data.location,
+      contractType: data.contractType,
+      salary: data.salary,
+      description: data.description,
+      requirements: data.requirements,
+      applicationCount: 0,
+    };
+    
+    setPosts([newOffer, ...posts]);
+    setIsFormOpen(false);
+    toast.success('Offre de recrutement créée avec succès');
+  };
+
+  const handleExportData = (format: 'pdf' | 'excel') => {
+    const filteredPosts = posts.filter(post => {
+      if (activeTab === 'ouverts' && post.status !== 'Ouvert') return false;
+      if (activeTab === 'en-cours' && post.status !== 'En cours') return false;
+      if (activeTab === 'clotures' && !['Clôturé', 'Abandonné'].includes(post.status)) return false;
+      
+      if (filters.department && post.department !== filters.department) return false;
+      if (filters.priority && post.priority !== filters.priority) return false;
+      if (filters.status && post.status !== filters.status) return false;
+      
+      return true;
+    });
+    
+    if (format === 'pdf') {
+      // Generate PDF
+      const doc = new jsPDF();
+      
+      // Add title
+      doc.setFontSize(16);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Liste des offres de recrutement', 105, 20, { align: 'center' });
+      
+      // Add date
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'normal');
+      doc.text(`Exporté le ${new Date().toLocaleDateString()}`, 105, 30, { align: 'center' });
+      
+      const tableColumn = ["Poste", "Département", "Date d'ouverture", "Responsable", "Candidatures", "Priorité", "Statut"];
+      const tableRows = filteredPosts.map(post => [
+        post.position,
+        post.department,
+        post.openDate,
+        post.hiringManagerName,
+        post.applicationCount?.toString() || "0",
+        post.priority,
+        post.status
+      ]);
+      
+      doc.autoTable({
+        startY: 40,
+        head: [tableColumn],
+        body: tableRows,
+        theme: 'grid',
+        headStyles: { fillColor: [41, 128, 185], textColor: [255, 255, 255] },
+        alternateRowStyles: { fillColor: [245, 247, 250] },
+      });
+      
+      doc.save('liste_offres_recrutement.pdf');
+    } else {
+      // Generate Excel
+      const data = filteredPosts.map(post => ({
+        'Poste': post.position,
+        'Département': post.department,
+        'Date d\'ouverture': post.openDate,
+        'Date limite': post.applicationDeadline || 'Non spécifiée',
+        'Responsable': post.hiringManagerName,
+        'Candidatures': post.applicationCount || 0,
+        'Lieu': post.location,
+        'Type de contrat': post.contractType,
+        'Salaire': post.salary,
+        'Priorité': post.priority,
+        'Statut': post.status
+      }));
+      
+      const ws = XLSX.utils.json_to_sheet(data);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Offres de recrutement");
+      XLSX.writeFile(wb, "offres_recrutement.xlsx");
+    }
+    
+    setIsExportDialogOpen(false);
+    toast.success(`Données exportées au format ${format === 'pdf' ? 'PDF' : 'Excel'}`);
+  };
+
+  const handleApplyFilters = () => {
+    setIsFilterDialogOpen(false);
+    toast.success('Filtres appliqués');
   };
 
   if (isLoading) {
@@ -44,13 +158,17 @@ const EmployeesRecruitment: React.FC = () => {
     );
   }
 
-  const filteredPosts = activeTab === 'tous' 
-    ? recruitmentPosts 
-    : activeTab === 'ouverts'
-    ? recruitmentPosts.filter(post => post.status === 'Ouvert')
-    : activeTab === 'en-cours'
-    ? recruitmentPosts.filter(post => post.status === 'En cours')
-    : recruitmentPosts.filter(post => ['Clôturé', 'Abandonné'].includes(post.status));
+  const filteredPosts = posts.filter(post => {
+    if (activeTab === 'ouverts' && post.status !== 'Ouvert') return false;
+    if (activeTab === 'en-cours' && post.status !== 'En cours') return false;
+    if (activeTab === 'clotures' && !['Clôturé', 'Abandonné'].includes(post.status)) return false;
+    
+    if (filters.department && post.department !== filters.department) return false;
+    if (filters.priority && post.priority !== filters.priority) return false;
+    if (filters.status && post.status !== filters.status) return false;
+    
+    return true;
+  });
 
   return (
     <div className="space-y-6">
@@ -61,19 +179,26 @@ const EmployeesRecruitment: React.FC = () => {
           <p className="text-gray-500">Gestion des offres d'emploi et candidatures</p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm">
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => setIsFilterDialogOpen(true)}
+          >
             <ListFilter className="h-4 w-4 mr-2" />
             Filtres
           </Button>
           <Button 
             variant="outline" 
             size="sm" 
-            onClick={handleExportData}
+            onClick={() => setIsExportDialogOpen(true)}
           >
             <Download className="h-4 w-4 mr-2" />
             Exporter
           </Button>
-          <Button size="sm">
+          <Button 
+            size="sm"
+            onClick={() => setIsFormOpen(true)}
+          >
             <Plus className="h-4 w-4 mr-2" />
             Nouvelle offre
           </Button>
@@ -219,8 +344,133 @@ const EmployeesRecruitment: React.FC = () => {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Form Dialog */}
+      <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
+        <DialogContent className="max-w-4xl">
+          <DialogHeader>
+            <DialogTitle>Créer une nouvelle offre</DialogTitle>
+          </DialogHeader>
+          <RecruitmentForm 
+            onSubmit={handleCreateOffer} 
+            onCancel={() => setIsFormOpen(false)} 
+          />
+        </DialogContent>
+      </Dialog>
+
+      {/* Filter Dialog */}
+      <Dialog open={isFilterDialogOpen} onOpenChange={setIsFilterDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Filtrer les offres</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 pt-4">
+            <div className="space-y-2">
+              <Label htmlFor="department">Département</Label>
+              <Select
+                value={filters.department}
+                onValueChange={(value) => setFilters({...filters, department: value})}
+              >
+                <SelectTrigger id="department">
+                  <SelectValue placeholder="Tous les départements" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">Tous les départements</SelectItem>
+                  <SelectItem value="IT">IT</SelectItem>
+                  <SelectItem value="RH">Ressources Humaines</SelectItem>
+                  <SelectItem value="Finance">Finance</SelectItem>
+                  <SelectItem value="Marketing">Marketing</SelectItem>
+                  <SelectItem value="Commercial">Commercial</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="priority">Priorité</Label>
+              <Select
+                value={filters.priority}
+                onValueChange={(value) => setFilters({...filters, priority: value})}
+              >
+                <SelectTrigger id="priority">
+                  <SelectValue placeholder="Toutes les priorités" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">Toutes les priorités</SelectItem>
+                  <SelectItem value="Haute">Haute</SelectItem>
+                  <SelectItem value="Moyenne">Moyenne</SelectItem>
+                  <SelectItem value="Basse">Basse</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="status">Statut</Label>
+              <Select
+                value={filters.status}
+                onValueChange={(value) => setFilters({...filters, status: value})}
+              >
+                <SelectTrigger id="status">
+                  <SelectValue placeholder="Tous les statuts" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">Tous les statuts</SelectItem>
+                  <SelectItem value="Ouvert">Ouvert</SelectItem>
+                  <SelectItem value="En cours">En cours</SelectItem>
+                  <SelectItem value="Clôturé">Clôturé</SelectItem>
+                  <SelectItem value="Abandonné">Abandonné</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="flex justify-end space-x-2 pt-4">
+              <Button variant="outline" onClick={() => setIsFilterDialogOpen(false)}>
+                Annuler
+              </Button>
+              <Button onClick={handleApplyFilters}>
+                Appliquer les filtres
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Export Dialog */}
+      <Dialog open={isExportDialogOpen} onOpenChange={setIsExportDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Exporter les données</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 pt-4">
+            <p className="text-sm text-gray-500">Choisissez le format d'export</p>
+            
+            <div className="flex justify-center space-x-4">
+              <Button
+                variant="outline"
+                className="flex-1 flex-col h-auto py-4"
+                onClick={() => handleExportData('pdf')}
+              >
+                <FilePdf className="h-8 w-8 mb-2" />
+                <span>PDF</span>
+              </Button>
+              
+              <Button
+                variant="outline"
+                className="flex-1 flex-col h-auto py-4"
+                onClick={() => handleExportData('excel')}
+              >
+                <FileExcel className="h-8 w-8 mb-2" />
+                <span>Excel</span>
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
 
 export default EmployeesRecruitment;
+
+// Import missing components
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';

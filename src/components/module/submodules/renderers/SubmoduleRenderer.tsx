@@ -38,6 +38,9 @@ export const renderSubmoduleContent = ({ submoduleId, submodule }: SubmoduleRend
       return renderHealthSubmodule(submoduleId, submodule);
     case 'documents':
       return renderDocumentsSubmodule(submoduleId, submodule);
+    case 'companies':
+      // We don't need to handle companies here, they'll be part of employees
+      return <DefaultSubmoduleContent submodule={submodule} />;
     default:
       console.warn(`No renderer found for submodule: ${submoduleId}`);
       return <DefaultSubmoduleContent submodule={submodule} />;
