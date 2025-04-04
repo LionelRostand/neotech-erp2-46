@@ -57,13 +57,101 @@ export const useHrData = () => {
     [orderBy('name')]
   );
 
+  // Fetch attendance
+  const {
+    data: attendance,
+    isLoading: isAttendanceLoading,
+    error: attendanceError
+  } = useCollectionData(
+    COLLECTIONS.HR.ATTENDANCE,
+    [orderBy('date', 'desc')]
+  );
+
+  // Fetch absence requests
+  const {
+    data: absenceRequests,
+    isLoading: isAbsenceRequestsLoading,
+    error: absenceRequestsError
+  } = useCollectionData(
+    COLLECTIONS.HR.ABSENCES,
+    [orderBy('startDate')]
+  );
+
+  // Fetch HR documents
+  const {
+    data: hrDocuments,
+    isLoading: isHrDocumentsLoading,
+    error: hrDocumentsError
+  } = useCollectionData(
+    COLLECTIONS.HR.DOCUMENTS,
+    [orderBy('uploadDate', 'desc')]
+  );
+
+  // Fetch time sheets
+  const {
+    data: timeSheets,
+    isLoading: isTimeSheetsLoading,
+    error: timeSheetsError
+  } = useCollectionData(
+    COLLECTIONS.HR.TIMESHEETS,
+    [orderBy('date', 'desc')]
+  );
+
+  // Fetch evaluations
+  const {
+    data: evaluations,
+    isLoading: isEvaluationsLoading,
+    error: evaluationsError
+  } = useCollectionData(
+    COLLECTIONS.HR.EVALUATIONS,
+    [orderBy('date', 'desc')]
+  );
+
+  // Fetch trainings
+  const {
+    data: trainings,
+    isLoading: isTrainingsLoading,
+    error: trainingsError
+  } = useCollectionData(
+    COLLECTIONS.HR.TRAININGS,
+    [orderBy('date', 'desc')]
+  );
+
+  // Fetch HR reports
+  const {
+    data: hrReports,
+    isLoading: isHrReportsLoading,
+    error: hrReportsError
+  } = useCollectionData(
+    COLLECTIONS.HR.REPORTS,
+    [orderBy('date', 'desc')]
+  );
+
+  // Fetch HR alerts
+  const {
+    data: hrAlerts,
+    isLoading: isHrAlertsLoading,
+    error: hrAlertsError
+  } = useCollectionData(
+    COLLECTIONS.HR.ALERTS,
+    [orderBy('date', 'desc')]
+  );
+
   // Check if any data is still loading
   const isLoading = 
     isEmployeesLoading || 
     isPayslipsLoading || 
     isLeaveRequestsLoading || 
     isContractsLoading || 
-    isDepartmentsLoading;
+    isDepartmentsLoading ||
+    isAttendanceLoading ||
+    isAbsenceRequestsLoading ||
+    isHrDocumentsLoading ||
+    isTimeSheetsLoading ||
+    isEvaluationsLoading ||
+    isTrainingsLoading ||
+    isHrReportsLoading ||
+    isHrAlertsLoading;
 
   // Combine all possible errors
   const error = 
@@ -71,7 +159,15 @@ export const useHrData = () => {
     payslipsError || 
     leaveRequestsError || 
     contractsError || 
-    departmentsError;
+    departmentsError ||
+    attendanceError ||
+    absenceRequestsError ||
+    hrDocumentsError ||
+    timeSheetsError ||
+    evaluationsError ||
+    trainingsError ||
+    hrReportsError ||
+    hrAlertsError;
 
   return {
     employees,
@@ -79,6 +175,14 @@ export const useHrData = () => {
     leaveRequests,
     contracts,
     departments,
+    attendance,
+    absenceRequests,
+    hrDocuments,
+    timeSheets,
+    evaluations,
+    trainings,
+    hrReports,
+    hrAlerts,
     isLoading,
     error
   };

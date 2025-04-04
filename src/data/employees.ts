@@ -1,5 +1,5 @@
 
-import { Employee } from '@/types/employee';
+import { Document, Employee } from '@/types/employee';
 
 // Données simulées d'employés
 export const employees: Employee[] = [
@@ -9,13 +9,20 @@ export const employees: Employee[] = [
     lastName: "Dupont",
     email: "martin.dupont@example.com",
     phone: "+33 6 12 34 56 78",
-    address: "15 Rue des Lilas, 75011 Paris",
+    address: {
+      street: "15 Rue des Lilas",
+      city: "Paris",
+      postalCode: "75011",
+      country: "France"
+    },
     department: "Marketing",
+    departmentId: "MKT",
     position: "Chef de Projet Digital",
     hireDate: "15/03/2021",
-    status: "Actif",
+    status: "active",
     contract: "CDI",
     manager: "Sophie Martin",
+    managerId: "EMP003",
     education: [
       { degree: "Master Marketing Digital", school: "HEC Paris", year: "2018" },
       { degree: "Licence Communication", school: "Université Paris-Sorbonne", year: "2016" }
@@ -25,14 +32,15 @@ export const employees: Employee[] = [
       { name: "Contrat de travail", date: "15/03/2021", type: "Contrat" },
       { name: "Avenant salaire", date: "10/06/2022", type: "Avenant" },
       { name: "Attestation formation", date: "22/09/2022", type: "Formation" }
-    ],
+    ] as Document[],
     workSchedule: {
       monday: "09:00 - 18:00",
       tuesday: "09:00 - 18:00",
       wednesday: "09:00 - 18:00",
       thursday: "09:00 - 18:00",
       friday: "09:00 - 17:00",
-    }
+    },
+    payslips: ["PS001", "PS002"]
   },
   {
     id: "EMP002",
@@ -40,11 +48,17 @@ export const employees: Employee[] = [
     lastName: "Djossa",
     email: "lionel.djossa@example.com",
     phone: "+33 6 98 76 54 32",
-    address: "8 Avenue Victor Hugo, 75016 Paris",
+    address: {
+      street: "8 Avenue Victor Hugo",
+      city: "Paris",
+      postalCode: "75016",
+      country: "France"
+    },
     department: "Direction",
+    departmentId: "DIR",
     position: "PDG",
     hireDate: "27/03/2025",
-    status: "Actif",
+    status: "active",
     contract: "CDI",
     manager: "",
     education: [
@@ -54,14 +68,15 @@ export const employees: Employee[] = [
     skills: ["Leadership", "Stratégie", "Finance", "Management", "Négociation"],
     documents: [
       { name: "Contrat de travail", date: "27/03/2025", type: "Contrat" }
-    ],
+    ] as Document[],
     workSchedule: {
       monday: "08:30 - 19:00",
       tuesday: "08:30 - 19:00",
       wednesday: "08:30 - 19:00",
       thursday: "08:30 - 19:00",
       friday: "08:30 - 18:00",
-    }
+    },
+    payslips: ["PS003"]
   },
   {
     id: "EMP003",
@@ -69,13 +84,20 @@ export const employees: Employee[] = [
     lastName: "Martin",
     email: "sophie.martin@example.com",
     phone: "+33 6 45 67 89 01",
-    address: "25 Rue du Commerce, 75015 Paris",
+    address: {
+      street: "25 Rue du Commerce",
+      city: "Paris",
+      postalCode: "75015",
+      country: "France"
+    },
     department: "Marketing",
+    departmentId: "MKT",
     position: "Directrice Marketing",
     hireDate: "05/01/2020",
-    status: "Actif",
+    status: "active",
     contract: "CDI",
     manager: "Lionel Djossa",
+    managerId: "EMP002",
     education: [
       { degree: "Master Marketing", school: "ESSEC", year: "2012" }
     ],
@@ -83,13 +105,14 @@ export const employees: Employee[] = [
     documents: [
       { name: "Contrat de travail", date: "05/01/2020", type: "Contrat" },
       { name: "Avenant promotion", date: "15/12/2021", type: "Avenant" }
-    ],
+    ] as Document[],
     workSchedule: {
       monday: "09:00 - 18:00",
       tuesday: "09:00 - 18:00",
       wednesday: "09:00 - 18:00",
       thursday: "09:00 - 18:00",
       friday: "09:00 - 17:00",
-    }
+    },
+    payslips: ["PS004", "PS005"]
   }
 ];

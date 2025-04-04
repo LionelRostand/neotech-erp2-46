@@ -13,7 +13,12 @@ export const employeeFormSchema = z.object({
   contract: z.string(),
   hireDate: z.string().optional(),
   manager: z.string().optional(),
-  status: z.string(),
+  status: z.union([
+    z.literal('active'),
+    z.literal('inactive'),
+    z.literal('onLeave'),
+    z.literal('Actif')
+  ]),
   professionalEmail: z.string().email("Format d'email professionnel invalide").or(z.string().length(0)),
   company: z.string().optional(),
 });

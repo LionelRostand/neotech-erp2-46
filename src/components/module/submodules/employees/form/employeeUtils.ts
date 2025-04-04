@@ -10,14 +10,22 @@ export const prepareEmployeeData = (data: EmployeeFormValues): Partial<Employee>
     lastName: data.lastName,
     email: data.email,
     phone: data.phone,
-    address: data.address,
+    address: {
+      street: data.address,
+      city: '',
+      postalCode: '',
+      country: ''
+    },
     department: data.department,
+    departmentId: data.department,
     position: data.position,
     contract: data.contract,
     hireDate: data.hireDate,
     manager: data.manager || '',
-    status: data.status,
+    managerId: '',
+    status: data.status === 'Actif' ? 'active' : data.status as 'active' | 'inactive' | 'onLeave',
     company: data.company,
+    professionalEmail: data.professionalEmail,
     skills: [],
     education: [],
     documents: [],
@@ -27,6 +35,7 @@ export const prepareEmployeeData = (data: EmployeeFormValues): Partial<Employee>
       wednesday: '09:00 - 18:00',
       thursday: '09:00 - 18:00',
       friday: '09:00 - 17:00',
-    }
+    },
+    payslips: []
   };
 };

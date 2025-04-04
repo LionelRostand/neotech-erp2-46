@@ -33,7 +33,7 @@ export const useEmployeeData = () => {
       
       // Calculer le nombre d'employés dans ce département
       const deptEmployeesCount = formattedEmployees.filter(
-        emp => emp.departmentId === department.id
+        emp => emp.department === department.id || emp.departmentId === department.id
       ).length;
       
       return {
