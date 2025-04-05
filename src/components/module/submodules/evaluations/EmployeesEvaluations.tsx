@@ -34,7 +34,7 @@ const EmployeesEvaluations: React.FC = () => {
 
   const filteredEvaluations = activeTab === 'all' 
     ? evaluations 
-    : evaluations?.filter(eval => eval.status.toLowerCase() === activeTab) || [];
+    : evaluations?.filter(evaluation => evaluation.status.toLowerCase() === activeTab) || [];
 
   return (
     <div className="space-y-6">

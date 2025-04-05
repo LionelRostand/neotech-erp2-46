@@ -106,10 +106,10 @@ const EmployeesDocuments: React.FC = () => {
                     <div key={index} className="border rounded-md p-4 hover:bg-gray-50">
                       <div className="flex items-center mb-2">
                         <FileText className="w-5 h-5 mr-2 text-blue-500" />
-                        <span className="font-medium">{doc.title || doc.name}</span>
+                        <span className="font-medium">{doc.title || doc.filename || doc.name}</span>
                       </div>
                       <p className="text-sm text-gray-500 mb-3">
-                        {doc.type} • {doc.uploadDate || doc.date}
+                        {doc.type} • {doc.uploadDate || doc.createdAt || doc.date}
                       </p>
                       <div className="flex justify-end">
                         <Button variant="ghost" size="sm">
