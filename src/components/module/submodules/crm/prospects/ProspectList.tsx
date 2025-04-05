@@ -1,142 +1,172 @@
 
 import React from 'react';
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from "@/components/ui/table";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { 
-  Edit, 
-  Trash2, 
-  BellRing, 
-  ArrowUpRight 
-} from "lucide-react";
+import { MoreHorizontal, Eye, Edit, Trash2, Mail, Phone, Calendar, RotateCw } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Prospect } from '../types/crm-types';
 
 interface ProspectListProps {
-  loading: boolean;
-  filteredProspects: Prospect[];
-  getStatusBadgeClass: (status: string) => string;
-  getStatusText: (status: string) => string;
-  onViewDetails: (prospect: Prospect) => void;
+  prospects: Prospect[];
+  onView: (prospect: Prospect) => void;
   onEdit: (prospect: Prospect) => void;
   onDelete: (prospect: Prospect) => void;
-  onReminder: (prospect: Prospect) => void;
-  onConvert: (prospect: Prospect) => void;
+  onReminder?: (prospect: Prospect) => void;
+  onConvert?: (prospect: Prospect) => void;
 }
 
 const ProspectList: React.FC<ProspectListProps> = ({
-  loading,
-  filteredProspects,
-  getStatusBadgeClass,
-  getStatusText,
-  onViewDetails,
+  prospects,
+  onView,
   onEdit,
   onDelete,
   onReminder,
   onConvert
 }) => {
+  // Helper function to get status badge color
+  const getStatusBadgeColor = (status: string): string => {
+    switch (status) {
+      case 'new':
+        return 'bg-blue-200 text-blue-800';
+      case 'contacted':
+        return 'bg-purple-200 text-purple-800';
+      case 'qualified':
+        return 'bg-green-200 text-green-800';
+      case 'unqualified':
+        return 'bg-red-200 text-red-800';
+      case 'hot':
+        return 'bg-orange-200 text-orange-800';
+      case 'warm':
+        return 'bg-amber-200 text-amber-800';
+      case 'cold':
+        return 'bg-slate-200 text-slate-800';
+      default:
+        return 'bg-gray-200 text-gray-800';
+    }
+  };
+
+  // Helper function to get status label
+  const getStatusLabel = (status: string): string => {
+    switch (status) {
+      case 'new':
+        return 'Nouveau';
+      case 'contacted':
+        return 'Contacté';
+      case 'qualified':
+        return 'Qualifié';
+      case 'unqualified':
+        return 'Non qualifié';
+      case 'hot':
+        return 'Chaud';
+      case 'warm':
+        return 'Tiède';
+      case 'cold':
+        return 'Froid';
+      default:
+        return status;
+    }
+  };
+
+  // Format date for display
+  const formatDate = (dateStr?: string): string => {
+    if (!dateStr) return "-";
+    return new Date(dateStr).toLocaleDateString('fr-FR');
+  };
+
+  // If no prospects, show empty state
+  if (prospects.length === 0) {
+    return (
+      <div className="text-center py-10">
+        <p className="text-gray-500">Aucun prospect trouvé</p>
+      </div>
+    );
+  }
+
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>Nom</TableHead>
-          <TableHead>Entreprise</TableHead>
-          <TableHead>Contact</TableHead>
-          <TableHead>Statut</TableHead>
-          <TableHead>Source</TableHead>
-          <TableHead>Dernier contact</TableHead>
-          <TableHead className="text-right">Actions</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {loading ? (
-          <TableRow>
-            <TableCell colSpan={7} className="text-center py-10 text-muted-foreground">
-              Chargement des prospects...
-            </TableCell>
-          </TableRow>
-        ) : filteredProspects.length > 0 ? (
-          filteredProspects.map(prospect => (
-            <TableRow key={prospect.id} className="cursor-pointer hover:bg-muted/50" onClick={() => onViewDetails(prospect)}>
-              <TableCell className="font-medium">{prospect.name}</TableCell>
-              <TableCell>{prospect.company}</TableCell>
-              <TableCell>
-                <div className="flex flex-col">
-                  <span className="text-xs text-blue-600">{prospect.email}</span>
-                  <span className="text-xs">{prospect.phone}</span>
+    <div className="space-y-4">
+      {prospects.map(prospect => (
+        <Card key={prospect.id} className="cursor-pointer hover:border-primary transition-colors">
+          <CardContent className="p-4">
+            <div className="flex justify-between items-start">
+              <div>
+                <div className="flex items-center gap-2">
+                  <h3 className="font-medium">{prospect.company}</h3>
+                  <Badge className={getStatusBadgeColor(prospect.status)}>
+                    {getStatusLabel(prospect.status)}
+                  </Badge>
                 </div>
-              </TableCell>
-              <TableCell>
-                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusBadgeClass(prospect.status)}`}>
-                  {getStatusText(prospect.status)}
-                </span>
-              </TableCell>
-              <TableCell>{prospect.source}</TableCell>
-              <TableCell>{prospect.lastContact ? new Date(prospect.lastContact).toLocaleDateString('fr-FR') : '-'}</TableCell>
-              <TableCell className="text-right">
-                <div className="flex justify-end space-x-2" onClick={e => e.stopPropagation()}>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onEdit(prospect);
-                    }}
-                    title="Modifier"
-                  >
-                    <Edit className="h-4 w-4" />
-                  </Button>
-                  <Button 
-                    variant="ghost" 
-                    size="sm"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onReminder(prospect);
-                    }}
-                    title="Programmer une relance"
-                  >
-                    <BellRing className="h-4 w-4" />
-                  </Button>
-                  <Button 
-                    variant="ghost" 
-                    size="sm"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onDelete(prospect);
-                    }}
-                    title="Supprimer"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                  <Button 
-                    variant="ghost" 
-                    size="sm"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onConvert(prospect);
-                    }}
-                    title="Convertir en client"
-                  >
-                    <ArrowUpRight className="h-4 w-4" />
-                  </Button>
+                <p className="text-sm text-muted-foreground">{prospect.contactName || prospect.name}</p>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mt-2">
+                  {(prospect.contactEmail || prospect.email) && (
+                    <div className="flex items-center gap-1 text-sm">
+                      <Mail className="h-3 w-3 text-muted-foreground" />
+                      <span>{prospect.contactEmail || prospect.email}</span>
+                    </div>
+                  )}
+                  
+                  {(prospect.contactPhone || prospect.phone) && (
+                    <div className="flex items-center gap-1 text-sm">
+                      <Phone className="h-3 w-3 text-muted-foreground" />
+                      <span>{prospect.contactPhone || prospect.phone}</span>
+                    </div>
+                  )}
+                  
+                  {prospect.lastContact && (
+                    <div className="flex items-center gap-1 text-sm">
+                      <Calendar className="h-3 w-3 text-muted-foreground" />
+                      <span>Dernier contact: {formatDate(prospect.lastContact)}</span>
+                    </div>
+                  )}
+                  
+                  {prospect.source && (
+                    <div className="flex items-center gap-1 text-sm">
+                      <span className="text-muted-foreground">Source: {prospect.source}</span>
+                    </div>
+                  )}
                 </div>
-              </TableCell>
-            </TableRow>
-          ))
-        ) : (
-          <TableRow>
-            <TableCell colSpan={7} className="text-center py-10 text-muted-foreground">
-              Aucun prospect trouvé
-            </TableCell>
-          </TableRow>
-        )}
-      </TableBody>
-    </Table>
+              </div>
+              
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="h-8 w-8 p-0">
+                    <span className="sr-only">Ouvrir le menu</span>
+                    <MoreHorizontal className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => onView(prospect)}>
+                    <Eye className="mr-2 h-4 w-4" />
+                    <span>Voir</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => onEdit(prospect)}>
+                    <Edit className="mr-2 h-4 w-4" />
+                    <span>Modifier</span>
+                  </DropdownMenuItem>
+                  {onReminder && (
+                    <DropdownMenuItem onClick={() => onReminder(prospect)}>
+                      <Calendar className="mr-2 h-4 w-4" />
+                      <span>Ajouter un rappel</span>
+                    </DropdownMenuItem>
+                  )}
+                  {onConvert && (
+                    <DropdownMenuItem onClick={() => onConvert(prospect)}>
+                      <RotateCw className="mr-2 h-4 w-4" />
+                      <span>Convertir en client</span>
+                    </DropdownMenuItem>
+                  )}
+                  <DropdownMenuItem onClick={() => onDelete(prospect)} className="text-red-600">
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    <span>Supprimer</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          </CardContent>
+        </Card>
+      ))}
+    </div>
   );
 };
 

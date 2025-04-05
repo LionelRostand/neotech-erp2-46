@@ -23,22 +23,19 @@ export const useProspectState = () => {
     name: '',
     email: '',
     phone: '',
-    status: 'new', // Changed from 'warm' to 'new' to match allowed values
+    status: 'new',
     source: 'Site web',
     lastContact: new Date().toISOString().split('T')[0],
     notes: ''
   });
 
-  // Fixed ReminderData to match the interface
   const [reminderData, setReminderData] = useState<ReminderData>({
     id: '',
     title: '',
     date: new Date().toISOString().split('T')[0],
     completed: false,
     notes: '',
-    prospectId: '',
-    type: 'email', // For backward compatibility
-    note: '' // For backward compatibility
+    prospectId: ''
   });
 
   // Constants

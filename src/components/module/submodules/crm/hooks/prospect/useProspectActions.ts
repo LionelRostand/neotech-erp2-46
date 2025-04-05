@@ -1,157 +1,219 @@
 
-import { Timestamp } from 'firebase/firestore';
+import { useState } from 'react';
 import { Prospect, ProspectFormData, ReminderData } from '../../types/crm-types';
 import { toast } from 'sonner';
+import { useFirestore } from '@/hooks/useFirestore';
+import { COLLECTIONS } from '@/lib/firebase-collections';
+import { useNavigate } from 'react-router-dom';
 
 export const useProspectActions = (
-  prospectCollection: any,
   prospects: Prospect[],
   setProspects: React.Dispatch<React.SetStateAction<Prospect[]>>,
-  formData: ProspectFormData,
-  reminderData: ReminderData,
-  selectedProspect: Prospect | null,
-  setIsAddDialogOpen: React.Dispatch<React.SetStateAction<boolean>>,
-  setIsEditDialogOpen: React.Dispatch<React.SetStateAction<boolean>>,
-  setIsDeleteDialogOpen: React.Dispatch<React.SetStateAction<boolean>>,
-  setIsConvertDialogOpen: React.Dispatch<React.SetStateAction<boolean>>,
-  setIsReminderDialogOpen: React.Dispatch<React.SetStateAction<boolean>>,
-  setSelectedProspect: React.Dispatch<React.SetStateAction<Prospect | null>>,
-  resetForm: () => void
+  setLoading: React.Dispatch<React.SetStateAction<boolean>>
 ) => {
-  const handleCreateProspect = async () => {
+  const { addDocument, updateDocument, deleteDocument } = useFirestore();
+  const navigate = useNavigate();
+  const [error, setError] = useState<string | null>(null);
+
+  // Add a new prospect
+  const handleAddProspect = async (formData: ProspectFormData) => {
+    setLoading(true);
+    setError(null);
+    
     try {
-      const newProspectData = {
-        ...formData,
-        type: 'prospect',
-        createdAt: Timestamp.now(),
-        lastContact: Timestamp.fromDate(new Date(formData.lastContact))
-      };
-      
-      const { id } = await prospectCollection.add(newProspectData);
-      
-      const newProspect: Prospect = {
-        id,
-        name: formData.name,
+      const newProspect: Omit<Prospect, 'id'> = {
         company: formData.company,
-        email: formData.email,
-        phone: formData.phone,
-        status: formData.status,
+        contactName: formData.contactName,
+        contactEmail: formData.contactEmail,
+        contactPhone: formData.contactPhone,
+        // Backward compatibility fields
+        name: formData.name || formData.contactName,
+        email: formData.email || formData.contactEmail,
+        phone: formData.phone || formData.contactPhone,
         source: formData.source,
-        lastContact: formData.lastContact,
-        createdAt: new Date().toISOString().split('T')[0],
-        notes: formData.notes
+        industry: formData.industry,
+        status: formData.status,
+        lastContact: formData.lastContact || new Date().toISOString().split('T')[0],
+        notes: formData.notes,
+        website: formData.website,
+        address: formData.address,
+        size: formData.size,
+        estimatedValue: formData.estimatedValue,
+        createdAt: new Date().toISOString(),
       };
       
-      setProspects(prev => [newProspect, ...prev]);
-      setIsAddDialogOpen(false);
-      resetForm();
+      const id = await addDocument(COLLECTIONS.CRM.PROSPECTS, newProspect);
+      
+      const newProspectWithId = { id, ...newProspect } as Prospect;
+      setProspects(prev => [newProspectWithId, ...prev]);
       toast.success("Prospect ajouté avec succès");
+      return id;
     } catch (error) {
-      console.error("Erreur lors de la création du prospect:", error);
-      toast.error("Impossible de créer le prospect");
+      console.error('Error adding prospect:', error);
+      setError('Erreur lors de l\'ajout du prospect');
+      toast.error("Erreur lors de l'ajout du prospect");
+      return null;
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleUpdateProspect = async () => {
-    if (!selectedProspect) return;
+  // Update an existing prospect
+  const handleUpdateProspect = async (id: string, formData: ProspectFormData) => {
+    setLoading(true);
+    setError(null);
     
     try {
-      const updateData = {
-        ...formData,
-        lastContact: Timestamp.fromDate(new Date(formData.lastContact))
+      const updatedProspect = {
+        company: formData.company,
+        contactName: formData.contactName,
+        contactEmail: formData.contactEmail,
+        contactPhone: formData.contactPhone,
+        // Backward compatibility fields
+        name: formData.name || formData.contactName,
+        email: formData.email || formData.contactEmail,
+        phone: formData.phone || formData.contactPhone,
+        source: formData.source,
+        status: formData.status,
+        lastContact: formData.lastContact || new Date().toISOString().split('T')[0],
+        notes: formData.notes,
+        industry: formData.industry,
+        website: formData.website,
+        address: formData.address,
+        size: formData.size,
+        estimatedValue: formData.estimatedValue,
       };
       
-      await prospectCollection.update(selectedProspect.id, updateData);
+      await updateDocument(COLLECTIONS.CRM.PROSPECTS, id, updatedProspect);
       
-      setProspects(prev => 
-        prev.map(prospect => 
-          prospect.id === selectedProspect.id 
-            ? { ...prospect, ...formData } 
-            : prospect
-        )
-      );
+      setProspects(prev => prev.map(prospect => 
+        prospect.id === id 
+          ? { ...prospect, ...updatedProspect }
+          : prospect
+      ));
       
-      setIsEditDialogOpen(false);
-      resetForm();
       toast.success("Prospect mis à jour avec succès");
+      return true;
     } catch (error) {
-      console.error("Erreur lors de la mise à jour du prospect:", error);
-      toast.error("Impossible de mettre à jour le prospect");
+      console.error('Error updating prospect:', error);
+      setError('Erreur lors de la mise à jour du prospect');
+      toast.error("Erreur lors de la mise à jour du prospect");
+      return false;
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleDeleteProspect = async () => {
-    if (!selectedProspect) return;
+  // Delete a prospect
+  const handleDeleteProspect = async (id: string) => {
+    setLoading(true);
+    setError(null);
     
     try {
-      await prospectCollection.remove(selectedProspect.id);
-      
-      setProspects(prev => prev.filter(prospect => prospect.id !== selectedProspect.id));
-      setIsDeleteDialogOpen(false);
-      setSelectedProspect(null);
+      await deleteDocument(COLLECTIONS.CRM.PROSPECTS, id);
+      setProspects(prev => prev.filter(prospect => prospect.id !== id));
       toast.success("Prospect supprimé avec succès");
+      return true;
     } catch (error) {
-      console.error("Erreur lors de la suppression du prospect:", error);
-      toast.error("Impossible de supprimer le prospect");
+      console.error('Error deleting prospect:', error);
+      setError('Erreur lors de la suppression du prospect');
+      toast.error("Erreur lors de la suppression du prospect");
+      return false;
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleConvertToClient = async () => {
-    if (!selectedProspect) return;
+  // Add a reminder for a prospect
+  const handleAddReminder = async (prospectId: string, reminderData: ReminderData) => {
+    setLoading(true);
+    setError(null);
     
     try {
-      await prospectCollection.update(selectedProspect.id, {
-        type: 'client',
-        convertedAt: Timestamp.now()
+      const newReminder = {
+        title: reminderData.title,
+        date: reminderData.date,
+        completed: false,
+        notes: reminderData.notes || reminderData.note || '', // For backward compatibility
+        prospectId,
+        createdAt: new Date().toISOString(),
+      };
+      
+      const reminderId = await addDocument(COLLECTIONS.CRM.REMINDERS, newReminder);
+      toast.success("Rappel ajouté avec succès");
+      return reminderId;
+    } catch (error) {
+      console.error('Error adding reminder:', error);
+      setError('Erreur lors de l\'ajout du rappel');
+      toast.error("Erreur lors de l'ajout du rappel");
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Convert a prospect to a client
+  const handleConvertToClient = async (prospect: Prospect) => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      // Create a new client from the prospect
+      const newClient = {
+        name: prospect.company,
+        sector: prospect.industry || 'Non spécifié',
+        revenue: '0',
+        status: 'active',
+        contactName: prospect.contactName,
+        contactEmail: prospect.contactEmail,
+        contactPhone: prospect.contactPhone || '',
+        address: prospect.address || '',
+        website: prospect.website || '',
+        description: '',
+        notes: prospect.notes || '',
+        createdAt: new Date().toISOString(),
+        customerSince: new Date().toISOString().split('T')[0]
+      };
+      
+      // Add the client to Firestore
+      const clientId = await addDocument(COLLECTIONS.CRM.CLIENTS, newClient);
+      
+      // Update the prospect status or mark as converted
+      await updateDocument(COLLECTIONS.CRM.PROSPECTS, prospect.id, {
+        status: 'qualified',
+        convertedToClientId: clientId,
+        convertedAt: new Date().toISOString()
       });
       
-      setProspects(prev => prev.filter(prospect => prospect.id !== selectedProspect.id));
-      setIsConvertDialogOpen(false);
-      setSelectedProspect(null);
+      // Update the local state
+      setProspects(prev => prev.map(p => 
+        p.id === prospect.id 
+          ? { ...p, status: 'qualified', convertedToClientId: clientId, convertedAt: new Date().toISOString() }
+          : p
+      ));
+      
       toast.success("Prospect converti en client avec succès");
+      
+      // Optionally navigate to the client page
+      navigate(`/modules/crm/clients?highlight=${clientId}`);
+      
+      return clientId;
     } catch (error) {
-      console.error("Erreur lors de la conversion du prospect:", error);
-      toast.error("Impossible de convertir le prospect en client");
-    }
-  };
-
-  const handleScheduleReminder = async () => {
-    if (!selectedProspect) return;
-    
-    try {
-      const reminderNote = `Relance prévue (${reminderData.type}): ${reminderData.date} - ${reminderData.note}`;
-      
-      await prospectCollection.update(selectedProspect.id, {
-        notes: selectedProspect.notes + '\n\n' + reminderNote,
-        lastContact: Timestamp.now()
-      });
-      
-      setProspects(prev => 
-        prev.map(prospect => 
-          prospect.id === selectedProspect.id 
-            ? { 
-                ...prospect, 
-                notes: prospect.notes + '\n\n' + reminderNote,
-                lastContact: new Date().toISOString().split('T')[0]
-              } 
-            : prospect
-        )
-      );
-      
-      setIsReminderDialogOpen(false);
-      
-      toast.success("Relance programmée avec succès");
-    } catch (error) {
-      console.error("Erreur lors de la programmation de la relance:", error);
-      toast.error("Impossible de programmer la relance");
+      console.error('Error converting prospect to client:', error);
+      setError('Erreur lors de la conversion du prospect en client');
+      toast.error("Erreur lors de la conversion du prospect en client");
+      return null;
+    } finally {
+      setLoading(false);
     }
   };
 
   return {
-    handleCreateProspect,
+    handleAddProspect,
     handleUpdateProspect,
     handleDeleteProspect,
+    handleAddReminder,
     handleConvertToClient,
-    handleScheduleReminder
+    error
   };
 };

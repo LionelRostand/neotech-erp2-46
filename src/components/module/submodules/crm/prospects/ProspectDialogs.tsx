@@ -1,288 +1,330 @@
 
 import React from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogFooter, 
-  DialogHeader, 
-  DialogTitle 
-} from "@/components/ui/dialog";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { Edit, BellRing, ArrowUpRight } from "lucide-react";
+import { CalendarIcon, Check, Clock, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { format } from "date-fns";
+import { fr } from "date-fns/locale";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Checkbox } from "@/components/ui/checkbox";
+import { cn } from "@/lib/utils";
 import ProspectForm from './ProspectForm';
 import ProspectDetails from './ProspectDetails';
 import { Prospect, ProspectFormData, ReminderData } from '../types/crm-types';
+import { useProspectForm } from '../hooks/prospect/useProspectForm';
 
 interface ProspectDialogsProps {
   isAddDialogOpen: boolean;
-  setIsAddDialogOpen: (isOpen: boolean) => void;
   isEditDialogOpen: boolean;
-  setIsEditDialogOpen: (isOpen: boolean) => void;
   isDeleteDialogOpen: boolean;
-  setIsDeleteDialogOpen: (isOpen: boolean) => void;
   isViewDetailsOpen: boolean;
-  setIsViewDetailsOpen: (isOpen: boolean) => void;
   isConvertDialogOpen: boolean;
-  setIsConvertDialogOpen: (isOpen: boolean) => void;
   isReminderDialogOpen: boolean;
-  setIsReminderDialogOpen: (isOpen: boolean) => void;
-  selectedProspect: Prospect | null;
+  
+  setIsAddDialogOpen: (open: boolean) => void;
+  setIsEditDialogOpen: (open: boolean) => void;
+  setIsDeleteDialogOpen: (open: boolean) => void;
+  setIsViewDetailsOpen: (open: boolean) => void;
+  setIsConvertDialogOpen: (open: boolean) => void;
+  setIsReminderDialogOpen: (open: boolean) => void;
+  
   formData: ProspectFormData;
+  setFormData: React.Dispatch<React.SetStateAction<ProspectFormData>>;
+  
   reminderData: ReminderData;
+  setReminderData: React.Dispatch<React.SetStateAction<ReminderData>>;
+  
+  selectedProspect: Prospect | null;
+  isSubmitting: boolean;
+  
   sourcesOptions: string[];
-  getStatusBadgeClass: (status: string) => string;
-  getStatusText: (status: string) => string;
-  handleInputChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
-  handleSelectChange: (name: string, value: string) => void;
-  handleCreateProspect: () => void;
+  
+  handleAddProspect: () => void;
   handleUpdateProspect: () => void;
   handleDeleteProspect: () => void;
+  handleAddReminder: () => void;
   handleConvertToClient: () => void;
-  handleScheduleReminder: () => void;
-  setReminderData: React.Dispatch<React.SetStateAction<ReminderData>>;
-  openEditDialog: (prospect: Prospect) => void;
-  openReminderDialog: (prospect: Prospect) => void;
-  openConvertDialog: (prospect: Prospect) => void;
 }
 
 const ProspectDialogs: React.FC<ProspectDialogsProps> = ({
   isAddDialogOpen,
-  setIsAddDialogOpen,
   isEditDialogOpen,
-  setIsEditDialogOpen,
   isDeleteDialogOpen,
-  setIsDeleteDialogOpen,
   isViewDetailsOpen,
-  setIsViewDetailsOpen,
   isConvertDialogOpen,
-  setIsConvertDialogOpen,
   isReminderDialogOpen,
+  
+  setIsAddDialogOpen,
+  setIsEditDialogOpen,
+  setIsDeleteDialogOpen,
+  setIsViewDetailsOpen,
+  setIsConvertDialogOpen,
   setIsReminderDialogOpen,
-  selectedProspect,
+  
   formData,
+  setFormData,
+  
   reminderData,
+  setReminderData,
+  
+  selectedProspect,
+  isSubmitting,
+  
   sourcesOptions,
-  getStatusBadgeClass,
-  getStatusText,
-  handleInputChange,
-  handleSelectChange,
-  handleCreateProspect,
+  
+  handleAddProspect,
   handleUpdateProspect,
   handleDeleteProspect,
-  handleConvertToClient,
-  handleScheduleReminder,
-  setReminderData,
-  openEditDialog,
-  openReminderDialog,
-  openConvertDialog
+  handleAddReminder,
+  handleConvertToClient
 }) => {
+  // Reusing the form handlers
+  const { handleInputChange, handleSelectChange } = useProspectForm(setFormData);
+  
+  // Handle changes for the reminder dialog
+  const handleReminderInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setReminderData(prev => ({ ...prev, [name]: value }));
+  };
+  
+  const handleReminderDateChange = (date: Date | undefined) => {
+    if (date) {
+      setReminderData(prev => ({ ...prev, date: date.toISOString().split('T')[0] }));
+    }
+  };
+  
+  const handleReminderCheckboxChange = (checked: boolean) => {
+    setReminderData(prev => ({ ...prev, completed: checked }));
+  };
+
   return (
     <>
-      {/* Dialog d'ajout de prospect */}
+      {/* Add Prospect Dialog */}
       <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
             <DialogTitle>Ajouter un nouveau prospect</DialogTitle>
           </DialogHeader>
           
-          <ProspectForm 
+          <ProspectForm
             formData={formData}
-            sourcesOptions={sourcesOptions}
             handleInputChange={handleInputChange}
             handleSelectChange={handleSelectChange}
+            sourcesOptions={sourcesOptions}
+            onSubmit={handleAddProspect}
+            isSubmitting={isSubmitting}
+            buttonText="Ajouter le prospect"
           />
-          
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
-              Annuler
-            </Button>
-            <Button onClick={handleCreateProspect}>Ajouter</Button>
-          </DialogFooter>
         </DialogContent>
       </Dialog>
-
-      {/* Dialog de modification de prospect */}
+      
+      {/* Edit Prospect Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
             <DialogTitle>Modifier le prospect</DialogTitle>
+            {selectedProspect && (
+              <DialogDescription>
+                Modification de {selectedProspect.company} - {selectedProspect.contactName || selectedProspect.name}
+              </DialogDescription>
+            )}
           </DialogHeader>
           
-          <ProspectForm 
+          <ProspectForm
             formData={formData}
-            sourcesOptions={sourcesOptions}
             handleInputChange={handleInputChange}
             handleSelectChange={handleSelectChange}
+            sourcesOptions={sourcesOptions}
+            onSubmit={handleUpdateProspect}
+            isSubmitting={isSubmitting}
+            buttonText="Enregistrer les modifications"
           />
+        </DialogContent>
+      </Dialog>
+      
+      {/* Delete Prospect Dialog */}
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Supprimer le prospect</DialogTitle>
+            <DialogDescription>
+              Êtes-vous sûr de vouloir supprimer ce prospect ? Cette action est irréversible.
+            </DialogDescription>
+          </DialogHeader>
+          
+          {selectedProspect && (
+            <div className="my-4 p-4 border rounded-md">
+              <p><strong>Entreprise:</strong> {selectedProspect.company}</p>
+              <p><strong>Contact:</strong> {selectedProspect.contactName || selectedProspect.name}</p>
+            </div>
+          )}
           
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+            <Button 
+              variant="outline" 
+              onClick={() => setIsDeleteDialogOpen(false)}
+              disabled={isSubmitting}
+            >
               Annuler
             </Button>
-            <Button onClick={handleUpdateProspect}>Enregistrer</Button>
+            <Button 
+              variant="destructive" 
+              onClick={handleDeleteProspect}
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? "Suppression..." : "Supprimer"}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
-      {/* Dialog de suppression */}
-      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Confirmer la suppression</AlertDialogTitle>
-            <AlertDialogDescription>
-              Êtes-vous sûr de vouloir supprimer le prospect {selectedProspect?.name} ?
-              Cette action est irréversible.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Annuler</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeleteProspect} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-              Supprimer
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      {/* Dialog de conversion en client */}
-      <AlertDialog open={isConvertDialogOpen} onOpenChange={setIsConvertDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Convertir en client</AlertDialogTitle>
-            <AlertDialogDescription>
-              Convertir {selectedProspect?.name} en client ? Cette action transformera ce prospect en client actif dans votre CRM.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Annuler</AlertDialogCancel>
-            <AlertDialogAction onClick={handleConvertToClient} className="bg-green-600 hover:bg-green-700 text-white">
-              Convertir
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      {/* Dialog de détails du prospect */}
+      
+      {/* View Details Dialog */}
       <Dialog open={isViewDetailsOpen} onOpenChange={setIsViewDetailsOpen}>
-        <DialogContent className="sm:max-w-[700px]">
+        <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
             <DialogTitle>Détails du prospect</DialogTitle>
           </DialogHeader>
           
+          {selectedProspect && <ProspectDetails prospect={selectedProspect} />}
+          
+          <DialogFooter>
+            <Button onClick={() => setIsViewDetailsOpen(false)}>Fermer</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Convert to Client Dialog */}
+      <Dialog open={isConvertDialogOpen} onOpenChange={setIsConvertDialogOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Convertir en client</DialogTitle>
+            <DialogDescription>
+              Voulez-vous convertir ce prospect en client ? Les informations seront transférées dans la section clients.
+            </DialogDescription>
+          </DialogHeader>
+          
           {selectedProspect && (
-            <ProspectDetails 
-              prospect={selectedProspect}
-              getStatusBadgeClass={getStatusBadgeClass}
-              getStatusText={getStatusText}
-            />
+            <div className="my-4 p-4 border rounded-md">
+              <p><strong>Entreprise:</strong> {selectedProspect.company}</p>
+              <p><strong>Contact:</strong> {selectedProspect.contactName || selectedProspect.name}</p>
+            </div>
           )}
           
-          <DialogFooter className="flex space-x-2">
-            <Button variant="outline" onClick={() => setIsViewDetailsOpen(false)}>
-              Fermer
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => setIsConvertDialogOpen(false)}
+              disabled={isSubmitting}
+            >
+              Annuler
             </Button>
             <Button 
-              variant="outline"
-              onClick={() => {
-                setIsViewDetailsOpen(false);
-                openReminderDialog(selectedProspect!);
-              }}
+              onClick={handleConvertToClient}
+              disabled={isSubmitting}
             >
-              <BellRing className="mr-2 h-4 w-4" />
-              Programmer une relance
-            </Button>
-            <Button 
-              onClick={() => {
-                setIsViewDetailsOpen(false);
-                openEditDialog(selectedProspect!);
-              }}
-            >
-              <Edit className="mr-2 h-4 w-4" />
-              Modifier
-            </Button>
-            <Button 
-              variant="default"
-              className="bg-green-600 hover:bg-green-700"
-              onClick={() => {
-                setIsViewDetailsOpen(false);
-                openConvertDialog(selectedProspect!);
-              }}
-            >
-              <ArrowUpRight className="mr-2 h-4 w-4" />
-              Convertir en client
+              {isSubmitting ? "Conversion..." : "Convertir en client"}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
-      {/* Dialog de programmation de relance */}
+      
+      {/* Add Reminder Dialog */}
       <Dialog open={isReminderDialogOpen} onOpenChange={setIsReminderDialogOpen}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
-            <DialogTitle>Programmer une relance</DialogTitle>
+            <DialogTitle>Ajouter un rappel</DialogTitle>
+            <DialogDescription>
+              Créez un rappel pour le suivi de ce prospect.
+            </DialogDescription>
           </DialogHeader>
           
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium">Type de relance</label>
-              <Select
-                value={reminderData.type || "email"}
-                onValueChange={(value) => setReminderData({...reminderData, type: value})}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Sélectionner un type de relance" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="email">Email</SelectItem>
-                  <SelectItem value="appel">Appel téléphonique</SelectItem>
-                  <SelectItem value="rendez-vous">Rendez-vous</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Date de la relance</label>
+              <Label htmlFor="title">Titre du rappel</Label>
               <Input
-                type="date"
-                value={reminderData.date}
-                onChange={(e) => setReminderData({...reminderData, date: e.target.value})}
+                id="title"
+                name="title"
+                value={reminderData.title}
+                onChange={handleReminderInputChange}
+                placeholder="Ex: Appeler pour suivre la proposition"
               />
             </div>
             
             <div className="space-y-2">
-              <label className="text-sm font-medium">Note</label>
-              <Input
-                placeholder="Information complémentaire sur la relance"
-                value={reminderData.note}
-                onChange={(e) => setReminderData({...reminderData, note: e.target.value})}
+              <Label htmlFor="date">Date du rappel</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !reminderData.date && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {reminderData.date ? (
+                      format(new Date(reminderData.date), "PPP", { locale: fr })
+                    ) : (
+                      <span>Sélectionner une date</span>
+                    )}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0">
+                  <Calendar
+                    mode="single"
+                    selected={reminderData.date ? new Date(reminderData.date) : undefined}
+                    onSelect={handleReminderDateChange}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="notes">Notes</Label>
+              <Textarea
+                id="notes"
+                name="notes"
+                value={reminderData.notes || ''}
+                onChange={handleReminderInputChange}
+                placeholder="Détails du rappel..."
+                rows={3}
               />
+            </div>
+            
+            <div className="flex items-center space-x-2 pt-2">
+              <Checkbox
+                id="completed"
+                checked={reminderData.completed}
+                onCheckedChange={handleReminderCheckboxChange}
+              />
+              <Label htmlFor="completed">Déjà complété</Label>
             </div>
           </div>
           
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsReminderDialogOpen(false)}>
+            <Button 
+              variant="outline" 
+              onClick={() => setIsReminderDialogOpen(false)}
+              disabled={isSubmitting}
+            >
+              <X className="mr-2 h-4 w-4" />
               Annuler
             </Button>
-            <Button onClick={handleScheduleReminder}>
-              <BellRing className="mr-2 h-4 w-4" />
-              Programmer
+            <Button 
+              onClick={handleAddReminder}
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? (
+                <Clock className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Check className="mr-2 h-4 w-4" />
+              )}
+              {isSubmitting ? "Création..." : "Créer le rappel"}
             </Button>
           </DialogFooter>
         </DialogContent>

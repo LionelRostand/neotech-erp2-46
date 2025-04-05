@@ -9,103 +9,63 @@ import { useCallback } from 'react';
  */
 export const useCrmData = () => {
   // Fetch clients
-  const { 
-    data: clients, 
-    isLoading: isClientsLoading, 
-    error: clientsError,
-    refreshData: refreshClientsData
-  } = useCollectionData(
+  const clientsResult = useCollectionData(
     COLLECTIONS.CRM.CLIENTS,
     [orderBy('createdAt', 'desc')]
   );
-
+  
   // Fetch prospects
-  const { 
-    data: prospects, 
-    isLoading: isProspectsLoading, 
-    error: prospectsError,
-    refreshData: refreshProspectsData
-  } = useCollectionData(
+  const prospectsResult = useCollectionData(
     COLLECTIONS.CRM.PROSPECTS,
     [orderBy('createdAt', 'desc')]
   );
 
   // Fetch opportunities
-  const { 
-    data: opportunities, 
-    isLoading: isOpportunitiesLoading, 
-    error: opportunitiesError,
-    refreshData: refreshOpportunitiesData
-  } = useCollectionData(
+  const opportunitiesResult = useCollectionData(
     COLLECTIONS.CRM.OPPORTUNITIES,
     [orderBy('updatedAt', 'desc')]
   );
 
   // Fetch contacts
-  const { 
-    data: contacts, 
-    isLoading: isContactsLoading, 
-    error: contactsError,
-    refreshData: refreshContactsData
-  } = useCollectionData(
+  const contactsResult = useCollectionData(
     COLLECTIONS.CRM.CONTACTS,
     [orderBy('lastName')]
   );
 
   // Fetch leads
-  const {
-    data: leads,
-    isLoading: isLeadsLoading,
-    error: leadsError,
-    refreshData: refreshLeadsData
-  } = useCollectionData(
+  const leadsResult = useCollectionData(
     COLLECTIONS.CRM.LEADS,
     [orderBy('createdAt', 'desc')]
   );
 
   // Fetch deals
-  const {
-    data: deals,
-    isLoading: isDealsLoading,
-    error: dealsError,
-    refreshData: refreshDealsData
-  } = useCollectionData(
+  const dealsResult = useCollectionData(
     COLLECTIONS.CRM.DEALS,
     [orderBy('updatedAt', 'desc')]
   );
 
   // Check if any data is still loading
-  const isLoading = isClientsLoading || isProspectsLoading || isOpportunitiesLoading || 
-                    isContactsLoading || isLeadsLoading || isDealsLoading;
+  const isLoading = clientsResult.isLoading || prospectsResult.isLoading || opportunitiesResult.isLoading || 
+                    contactsResult.isLoading || leadsResult.isLoading || dealsResult.isLoading;
 
   // Combine all possible errors
-  const error = clientsError || prospectsError || opportunitiesError || 
-                contactsError || leadsError || dealsError;
+  const error = clientsResult.error || prospectsResult.error || opportunitiesResult.error || 
+                contactsResult.error || leadsResult.error || dealsResult.error;
 
   // Function to refresh all data
   const refreshData = useCallback(() => {
-    if (refreshClientsData) refreshClientsData();
-    if (refreshProspectsData) refreshProspectsData();
-    if (refreshOpportunitiesData) refreshOpportunitiesData();
-    if (refreshContactsData) refreshContactsData();
-    if (refreshLeadsData) refreshLeadsData();
-    if (refreshDealsData) refreshDealsData();
-  }, [
-    refreshClientsData, 
-    refreshProspectsData, 
-    refreshOpportunitiesData, 
-    refreshContactsData, 
-    refreshLeadsData, 
-    refreshDealsData
-  ]);
+    // Since useCollectionData doesn't expose a refreshData method,
+    // we would need to implement a refresh mechanism at the higher level
+    console.log('Refreshing CRM data - note: actual refresh not implemented in useCollectionData');
+  }, []);
 
   return {
-    clients,
-    prospects,
-    opportunities,
-    contacts,
-    leads,
-    deals,
+    clients: clientsResult.data || [],
+    prospects: prospectsResult.data || [],
+    opportunities: opportunitiesResult.data || [],
+    contacts: contactsResult.data || [],
+    leads: leadsResult.data || [],
+    deals: dealsResult.data || [],
     isLoading,
     error,
     refreshData

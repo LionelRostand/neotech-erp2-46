@@ -1,106 +1,150 @@
 
 import { Opportunity } from '../../types/crm-types';
-import { DollarSign, Users, FileText, CheckCircle, AlertTriangle, BarChart4, Handshake } from 'lucide-react';
+import { CircleDollarSign, AlertCircle, CheckCircle2, XCircle, Clock, BarChart, FileText, Send, PauseCircle } from 'lucide-react';
 
 export const useOpportunityUtils = () => {
+  // Get label for opportunity stage
   const getStageLabel = (stage: string): string => {
     switch (stage) {
-      case 'lead': return 'Prospect';
-      case 'qualified': return 'Qualifié';
-      case 'needs-analysis': return 'Analyse des besoins';
-      case 'proposal': return 'Proposition';
-      case 'negotiation': return 'Négociation';
-      case 'closed-won': return 'Gagnée';
-      case 'closed-lost': return 'Perdue';
-      case 'new': return 'Nouveau';
-      case 'quote_sent': return 'Devis envoyé';
-      case 'pending': return 'En attente';
-      case 'won': return 'Gagnée';
-      case 'lost': return 'Perdue';
-      default: return 'Inconnu';
+      case 'lead':
+        return 'Lead';
+      case 'qualified':
+        return 'Qualifié';
+      case 'needs-analysis':
+        return 'Analyse';
+      case 'proposal':
+        return 'Proposition';
+      case 'negotiation':
+        return 'Négociation';
+      case 'closed-won':
+        return 'Gagné';
+      case 'closed-lost':
+        return 'Perdu';
+      case 'new':
+        return 'Nouveau';
+      case 'quote_sent':
+        return 'Devis envoyé';
+      case 'pending':
+        return 'En attente';
+      case 'won':
+        return 'Gagné';
+      case 'lost':
+        return 'Perdu';
+      default:
+        return stage;
     }
   };
 
+  // Get color for opportunity stage badge
   const getStageBadgeColor = (stage: string): string => {
     switch (stage) {
-      case 'lead': return 'bg-blue-100 text-blue-800';
-      case 'qualified': return 'bg-indigo-100 text-indigo-800';
-      case 'needs-analysis': return 'bg-purple-100 text-purple-800';
-      case 'proposal': return 'bg-amber-100 text-amber-800';
-      case 'negotiation': return 'bg-orange-100 text-orange-800';
-      case 'closed-won': return 'bg-green-100 text-green-800';
-      case 'closed-lost': return 'bg-red-100 text-red-800';
-      case 'new': return 'bg-blue-100 text-blue-800';
-      case 'quote_sent': return 'bg-amber-100 text-amber-800';
-      case 'pending': return 'bg-purple-100 text-purple-800';
-      case 'won': return 'bg-green-100 text-green-800';
-      case 'lost': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
-  
-  const getStageColor = (stage: string): string => {
-    switch (stage) {
-      case 'lead': return 'bg-blue-500';
-      case 'qualified': return 'bg-indigo-500';
-      case 'needs-analysis': return 'bg-purple-500';
-      case 'proposal': return 'bg-amber-500';
-      case 'negotiation': return 'bg-orange-500';
-      case 'closed-won': return 'bg-green-500';
-      case 'closed-lost': return 'bg-red-500';
-      case 'new': return 'bg-blue-500';
-      case 'quote_sent': return 'bg-amber-500';
-      case 'pending': return 'bg-purple-500';
-      case 'won': return 'bg-green-500';
-      case 'lost': return 'bg-red-500';
-      default: return 'bg-gray-500';
+      case 'lead':
+        return 'bg-blue-200 text-blue-800';
+      case 'qualified':
+        return 'bg-indigo-200 text-indigo-800';
+      case 'needs-analysis':
+        return 'bg-purple-200 text-purple-800';
+      case 'proposal':
+        return 'bg-orange-200 text-orange-800';
+      case 'negotiation':
+        return 'bg-yellow-200 text-yellow-800';
+      case 'closed-won':
+      case 'won':
+        return 'bg-green-200 text-green-800';
+      case 'closed-lost':
+      case 'lost':
+        return 'bg-red-200 text-red-800';
+      case 'new':
+        return 'bg-blue-200 text-blue-800';
+      case 'quote_sent':
+        return 'bg-cyan-200 text-cyan-800';
+      case 'pending':
+        return 'bg-amber-200 text-amber-800';
+      default:
+        return 'bg-gray-200 text-gray-800';
     }
   };
 
-  // Adding the missing getStageIcon function
+  // Get color for opportunity stage (for charts, kanban etc.)
+  const getStageColor = (stage: string): string => {
+    switch (stage) {
+      case 'lead':
+        return '#3b82f6'; // blue-500
+      case 'qualified':
+        return '#6366f1'; // indigo-500
+      case 'needs-analysis':
+        return '#8b5cf6'; // purple-500
+      case 'proposal':
+        return '#f97316'; // orange-500
+      case 'negotiation':
+        return '#eab308'; // yellow-500
+      case 'closed-won':
+      case 'won':
+        return '#22c55e'; // green-500
+      case 'closed-lost':
+      case 'lost':
+        return '#ef4444'; // red-500
+      case 'new':
+        return '#3b82f6'; // blue-500
+      case 'quote_sent':
+        return '#06b6d4'; // cyan-500
+      case 'pending':
+        return '#f59e0b'; // amber-500
+      default:
+        return '#6b7280'; // gray-500
+    }
+  };
+
+  // Get icon for opportunity stage
   const getStageIcon = (stage: string) => {
     switch (stage) {
       case 'lead':
-      case 'new':
-        return Users;
+        return BarChart;
       case 'qualified':
-        return BarChart4;
+        return AlertCircle;
       case 'needs-analysis':
-        return FileText;
+        return BarChart;
       case 'proposal':
-      case 'quote_sent':
-        return DollarSign;
+        return FileText;
       case 'negotiation':
-      case 'pending':
-        return Handshake;
+        return CircleDollarSign;
       case 'closed-won':
       case 'won':
-        return CheckCircle;
+        return CheckCircle2;
       case 'closed-lost':
       case 'lost':
-        return AlertTriangle;
+        return XCircle;
+      case 'new':
+        return Clock;
+      case 'quote_sent':
+        return Send;
+      case 'pending':
+        return PauseCircle;
       default:
-        return FileText;
+        return AlertCircle;
     }
   };
 
-  const filterOpportunities = (
-    opportunities: Opportunity[] | undefined, 
-    searchTerm: string, 
-    stageFilter: string
-  ): Opportunity[] => {
-    if (!opportunities) return [];
-
-    return opportunities.filter((opportunity) => {
-      const matchesSearch = 
-        (opportunity.name?.toLowerCase().includes(searchTerm.toLowerCase()) || '') ||
-        (opportunity.title?.toLowerCase().includes(searchTerm.toLowerCase()) || '') ||
-        (opportunity.contactName && opportunity.contactName.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        (opportunity.clientName && opportunity.clientName.toLowerCase().includes(searchTerm.toLowerCase()));
-
-      const matchesStage = stageFilter === 'all' ? true : opportunity.stage === stageFilter;
-
-      return matchesSearch && matchesStage;
+  // Filter opportunities based on search term and status filter
+  const filterOpportunities = (opportunities: Opportunity[], searchTerm: string, stageFilter: string): Opportunity[] => {
+    return opportunities.filter(opportunity => {
+      // Filter by stage if provided
+      if (stageFilter && opportunity.stage !== stageFilter) {
+        return false;
+      }
+      
+      // Filter by search term if provided
+      if (searchTerm) {
+        const searchTermLower = searchTerm.toLowerCase();
+        return (
+          opportunity.name.toLowerCase().includes(searchTermLower) ||
+          (opportunity.clientName && opportunity.clientName.toLowerCase().includes(searchTermLower)) ||
+          (opportunity.contactName && opportunity.contactName.toLowerCase().includes(searchTermLower)) ||
+          (opportunity.description && opportunity.description.toLowerCase().includes(searchTermLower))
+        );
+      }
+      
+      return true;
     });
   };
 

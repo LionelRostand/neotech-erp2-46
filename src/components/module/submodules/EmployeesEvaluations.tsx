@@ -1,328 +1,387 @@
-
-import React, { useState } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Button } from '@/components/ui/button';
-import { 
-  ChartBar, 
-  ListFilter, 
-  Plus,
-  Download,
-  Clipboard,
-  Calendar,
-  CheckCircle,
-  XCircle
-} from 'lucide-react';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { toast } from 'sonner';
-import { useEvaluationsData } from '@/hooks/useEvaluationsData';
-import CreateEvaluationDialog from './evaluations/CreateEvaluationDialog';
-import EvaluationsFilter from './evaluations/EvaluationsFilter';
-import ExportEvaluationsDialog from './evaluations/ExportEvaluationsDialog';
+import React from 'react';
+import { useState, useEffect } from 'react';
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { CalendarIcon, Check, Clock, X } from "lucide-react";
+import { format } from "date-fns";
+import { fr } from "date-fns/locale";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Checkbox } from "@/components/ui/checkbox";
+import { cn } from "@/lib/utils";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog"
 
 const EmployeesEvaluations: React.FC = () => {
-  const [activeTab, setActiveTab] = useState('evaluations');
-  const { evaluations, stats, isLoading, error } = useEvaluationsData();
-  const [filteredEvaluations, setFilteredEvaluations] = useState(evaluations);
-  const [filters, setFilters] = useState({});
-  const [showCreateDialog, setShowCreateDialog] = useState(false);
-  const [showFilterDialog, setShowFilterDialog] = useState(false);
-  const [showExportDialog, setShowExportDialog] = useState(false);
+  const [evaluations, setEvaluations] = useState([
+    { id: '1', employee: 'John Doe', date: '2024-01-20', status: 'Planifiée', score: 85 },
+    { id: '2', employee: 'Jane Smith', date: '2024-02-15', status: 'Complétée', score: 92 },
+    { id: '3', employee: 'Alice Johnson', date: '2024-03-10', status: 'Planifiée', score: 78 },
+  ]);
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [selectedEvaluation, setSelectedEvaluation] = useState(null);
 
-  React.useEffect(() => {
-    setFilteredEvaluations(evaluations);
-  }, [evaluations]);
-
-  const applyFilters = (newFilters: any) => {
-    setFilters(newFilters);
-    
-    // Appliquer les filtres sur les données
-    if (Object.keys(newFilters).length === 0) {
-      setFilteredEvaluations(evaluations);
-      return;
-    }
-    
-    const filtered = evaluations.filter(evaluation => {
-      let pass = true;
-      
-      if (newFilters.employee && evaluation.employeeName) {
-        pass = pass && evaluation.employeeName.toLowerCase().includes(newFilters.employee.toLowerCase());
-      }
-      
-      if (newFilters.department && evaluation.department) {
-        pass = pass && evaluation.department === newFilters.department;
-      }
-      
-      if (newFilters.status) {
-        pass = pass && evaluation.status === newFilters.status;
-      }
-      
-      if (newFilters.dateFrom) {
-        const evalDate = new Date(evaluation.date.split('/').reverse().join('-'));
-        const fromDate = new Date(newFilters.dateFrom);
-        pass = pass && evalDate >= fromDate;
-      }
-      
-      if (newFilters.dateTo) {
-        const evalDate = new Date(evaluation.date.split('/').reverse().join('-'));
-        const toDate = new Date(newFilters.dateTo);
-        pass = pass && evalDate <= toDate;
-      }
-      
-      if (newFilters.scoreMin && evaluation.score !== undefined) {
-        pass = pass && evaluation.score >= parseInt(newFilters.scoreMin);
-      }
-      
-      if (newFilters.scoreMax && evaluation.score !== undefined) {
-        pass = pass && evaluation.score <= parseInt(newFilters.scoreMax);
-      }
-      
-      return pass;
-    });
-    
-    setFilteredEvaluations(filtered);
+  const openCreateDialog = () => {
+    setIsCreateDialogOpen(true);
   };
 
-  const handleExportData = () => {
-    setShowExportDialog(true);
+  const openEditDialog = (evaluation) => {
+    setSelectedEvaluation(evaluation);
+    setIsEditDialogOpen(true);
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent"></div>
-        <p className="ml-2">Chargement des évaluations...</p>
-      </div>
-    );
-  }
+  const openDeleteDialog = (evaluation) => {
+    setSelectedEvaluation(evaluation);
+    setIsDeleteDialogOpen(true);
+  };
 
-  if (error) {
-    return (
-      <div className="bg-red-50 text-red-700 p-4 rounded-md">
-        Une erreur est survenue lors du chargement des évaluations.
-      </div>
-    );
-  }
+  const closeDialogs = () => {
+    setIsCreateDialogOpen(false);
+    setIsEditDialogOpen(false);
+    setIsDeleteDialogOpen(false);
+    setSelectedEvaluation(null);
+  };
+
+  // Add a mock submit handler for the CreateEvaluationDialog
+  const handleCreateEvaluation = async (data: any) => {
+    console.log('Creating evaluation with data:', data);
+    // Implement actual evaluation creation logic
+    return Promise.resolve();
+  };
 
   return (
-    <div className="space-y-6">
-      {/* Header with actions */}
-      <div className="flex flex-col space-y-4 md:flex-row md:justify-between md:items-center">
-        <div>
-          <h2 className="text-2xl font-bold">Gestion des évaluations</h2>
-          <p className="text-gray-500">Entretiens et évaluations professionnelles</p>
-        </div>
-        <div className="flex gap-2">
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={() => setShowFilterDialog(true)}
-          >
-            <ListFilter className="h-4 w-4 mr-2" />
-            Filtres
-            {Object.keys(filters).length > 0 && (
-              <span className="ml-1 h-5 w-5 rounded-full bg-primary text-[10px] text-primary-foreground flex items-center justify-center">
-                {Object.keys(filters).length}
-              </span>
-            )}
-          </Button>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={handleExportData}
-          >
-            <Download className="h-4 w-4 mr-2" />
-            Exporter
-          </Button>
-          <Button 
-            size="sm"
-            onClick={() => setShowCreateDialog(true)}
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Nouvelle évaluation
-          </Button>
-        </div>
+    <div className="container mx-auto p-6">
+      <h1 className="text-2xl font-bold mb-6">Évaluations des employés</h1>
+      <p className="mb-4">Gérez les évaluations de performance de vos employés.</p>
+
+      <div className="flex justify-end mb-4">
+        <Button onClick={openCreateDialog}>
+          Ajouter une évaluation
+        </Button>
       </div>
 
-      {/* Stats cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="bg-blue-50">
-          <CardContent className="p-4 flex items-center justify-between">
-            <div>
-              <h3 className="text-sm font-medium text-blue-900">Planifiées</h3>
-              <p className="text-2xl font-bold text-blue-700">{stats.planned}</p>
-            </div>
-            <Calendar className="h-8 w-8 text-blue-500" />
-          </CardContent>
-        </Card>
-        
-        <Card className="bg-green-50">
-          <CardContent className="p-4 flex items-center justify-between">
-            <div>
-              <h3 className="text-sm font-medium text-green-900">Complétées</h3>
-              <p className="text-2xl font-bold text-green-700">{stats.completed}</p>
-            </div>
-            <CheckCircle className="h-8 w-8 text-green-500" />
-          </CardContent>
-        </Card>
-        
-        <Card className="bg-red-50">
-          <CardContent className="p-4 flex items-center justify-between">
-            <div>
-              <h3 className="text-sm font-medium text-red-900">Annulées</h3>
-              <p className="text-2xl font-bold text-red-700">{stats.cancelled}</p>
-            </div>
-            <XCircle className="h-8 w-8 text-red-500" />
-          </CardContent>
-        </Card>
-        
-        <Card className="bg-gray-50">
-          <CardContent className="p-4 flex items-center justify-between">
-            <div>
-              <h3 className="text-sm font-medium text-gray-900">Total</h3>
-              <p className="text-2xl font-bold text-gray-700">{stats.total}</p>
-            </div>
-            <ChartBar className="h-8 w-8 text-gray-500" />
-          </CardContent>
-        </Card>
+      <div className="bg-white rounded-lg border p-6 shadow-sm">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Employé</TableHead>
+              <TableHead>Date</TableHead>
+              <TableHead>Statut</TableHead>
+              <TableHead>Score</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {evaluations.map((evaluation) => (
+              <TableRow key={evaluation.id}>
+                <TableCell>{evaluation.employee}</TableCell>
+                <TableCell>{evaluation.date}</TableCell>
+                <TableCell>{evaluation.status}</TableCell>
+                <TableCell>{evaluation.score}</TableCell>
+                <TableCell className="text-right">
+                  <Button variant="outline" size="sm" onClick={() => openEditDialog(evaluation)}>
+                    Modifier
+                  </Button>
+                  <Button variant="destructive" size="sm" onClick={() => openDeleteDialog(evaluation)}>
+                    Supprimer
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
       </div>
 
-      {/* Tabs for different views */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="w-full max-w-3xl grid grid-cols-3">
-          <TabsTrigger value="evaluations" className="flex items-center">
-            <Clipboard className="h-4 w-4 mr-2" />
-            Évaluations
-          </TabsTrigger>
-          <TabsTrigger value="modeles" className="flex items-center">
-            <ChartBar className="h-4 w-4 mr-2" />
-            Modèles
-          </TabsTrigger>
-          <TabsTrigger value="rapports" className="flex items-center">
-            <Calendar className="h-4 w-4 mr-2" />
-            Rapports
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="evaluations">
-          <Card>
-            <CardContent className="p-6">
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="w-[250px]">Employé</TableHead>
-                      <TableHead>Évaluateur</TableHead>
-                      <TableHead>Date</TableHead>
-                      <TableHead>Score</TableHead>
-                      <TableHead>Statut</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredEvaluations.length > 0 ? (
-                      filteredEvaluations.map((evaluation) => (
-                        <TableRow key={evaluation.id}>
-                          <TableCell className="font-medium">
-                            <div className="flex items-center space-x-3">
-                              <Avatar className="h-8 w-8">
-                                <AvatarImage src={evaluation.employeePhoto} alt={evaluation.employeeName} />
-                                <AvatarFallback>{evaluation.employeeName?.charAt(0) || '?'}</AvatarFallback>
-                              </Avatar>
-                              <div>
-                                <p className="font-medium">{evaluation.employeeName}</p>
-                                <p className="text-xs text-gray-500">{evaluation.department}</p>
-                              </div>
-                            </div>
-                          </TableCell>
-                          <TableCell>{evaluation.evaluatorName}</TableCell>
-                          <TableCell>{evaluation.date}</TableCell>
-                          <TableCell>
-                            {evaluation.score !== undefined ? (
-                              <div className="flex items-center">
-                                <span className="font-medium">{evaluation.score}</span>
-                                <span className="text-xs text-gray-500 ml-1">/ {evaluation.maxScore}</span>
-                              </div>
-                            ) : (
-                              '-'
-                            )}
-                          </TableCell>
-                          <TableCell>
-                            <Badge
-                              className={
-                                evaluation.status === 'Complétée'
-                                  ? 'bg-green-100 text-green-800'
-                                  : evaluation.status === 'Annulée'
-                                  ? 'bg-red-100 text-red-800'
-                                  : 'bg-blue-100 text-blue-800'
-                              }
-                            >
-                              {evaluation.status}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <Button variant="ghost" size="sm">
-                              Détails
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      ))
-                    ) : (
-                      <TableRow>
-                        <TableCell colSpan={6} className="h-24 text-center">
-                          Aucune évaluation trouvée
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="modeles">
-          <Card>
-            <CardContent className="p-6">
-              <div className="py-8 text-center text-gray-500">
-                Modèles d'évaluation (à implémenter)
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="rapports">
-          <Card>
-            <CardContent className="p-6">
-              <div className="py-8 text-center text-gray-500">
-                Rapports d'évaluations (à implémenter)
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
-
-      {/* Dialog Modals */}
       <CreateEvaluationDialog
-        open={showCreateDialog}
-        onOpenChange={setShowCreateDialog}
+        open={isCreateDialogOpen}
+        onOpenChange={setIsCreateDialogOpen}
+        onSubmit={handleCreateEvaluation}
       />
-      
-      <EvaluationsFilter
-        open={showFilterDialog}
-        onOpenChange={setShowFilterDialog}
-        onApplyFilters={applyFilters}
+
+      <EditEvaluationDialog
+        open={isEditDialogOpen}
+        onOpenChange={setIsEditDialogOpen}
+        evaluation={selectedEvaluation}
+        onUpdate={(updatedEvaluation) => {
+          // Update the evaluation in the list
+          setEvaluations((prevEvaluations) =>
+            prevEvaluations.map((evaluation) =>
+              evaluation.id === updatedEvaluation.id ? updatedEvaluation : evaluation
+            )
+          );
+          closeDialogs();
+        }}
       />
-      
-      <ExportEvaluationsDialog
-        open={showExportDialog}
-        onOpenChange={setShowExportDialog}
-        data={filteredEvaluations}
+
+      <DeleteEvaluationDialog
+        open={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+        evaluation={selectedEvaluation}
+        onDelete={() => {
+          // Delete the evaluation from the list
+          setEvaluations((prevEvaluations) =>
+            prevEvaluations.filter((evaluation) => evaluation.id !== selectedEvaluation.id)
+          );
+          closeDialogs();
+        }}
       />
     </div>
   );
 };
 
 export default EmployeesEvaluations;
+
+interface CreateEvaluationDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onSubmit: (data: any) => Promise<void>;
+}
+
+const CreateEvaluationDialog: React.FC<CreateEvaluationDialogProps> = ({ open, onOpenChange, onSubmit }) => {
+  const [employee, setEmployee] = useState('');
+  const [date, setDate] = useState<Date | undefined>(undefined);
+  const [status, setStatus] = useState('Planifiée');
+  const [score, setScore] = useState(0);
+
+  const handleSubmit = async () => {
+    const data = { employee, date, status, score };
+    await onSubmit(data);
+    onOpenChange(false);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>Créer une évaluation</DialogTitle>
+          <DialogDescription>
+            Ajouter une nouvelle évaluation pour un employé.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="grid gap-4 py-4">
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="employee" className="text-right">
+              Employé
+            </Label>
+            <Input id="employee" value={employee} onChange={(e) => setEmployee(e.target.value)} className="col-span-3" />
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="date" className="text-right">
+              Date
+            </Label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant={"outline"}
+                  className={cn(
+                    "w-[240px] justify-start text-left font-normal",
+                    !date && "text-muted-foreground"
+                  )}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {date ? (
+                    format(date, "PPP", { locale: fr })
+                  ) : (
+                    <span>Choisir une date</span>
+                  )}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  locale={fr}
+                  selected={date}
+                  onSelect={setDate}
+                  initialFocus
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="status" className="text-right">
+              Statut
+            </Label>
+            <Select value={status} onValueChange={setStatus}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Statut" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Planifiée">Planifiée</SelectItem>
+                <SelectItem value="Complétée">Complétée</SelectItem>
+                <SelectItem value="Annulée">Annulée</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="score" className="text-right">
+              Score
+            </Label>
+            <Input type="number" id="score" value={score} onChange={(e) => setScore(Number(e.target.value))} className="col-span-3" />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button type="button" variant="secondary" onClick={() => onOpenChange(false)}>
+            Annuler
+          </Button>
+          <Button type="submit" onClick={handleSubmit}>Créer</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+interface EditEvaluationDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  evaluation: any;
+  onUpdate: (evaluation: any) => void;
+}
+
+const EditEvaluationDialog: React.FC<EditEvaluationDialogProps> = ({ open, onOpenChange, evaluation, onUpdate }) => {
+  const [employee, setEmployee] = useState(evaluation?.employee || '');
+  const [date, setDate] = useState<Date | undefined>(evaluation?.date ? new Date(evaluation.date) : undefined);
+  const [status, setStatus] = useState(evaluation?.status || 'Planifiée');
+  const [score, setScore] = useState(evaluation?.score || 0);
+
+  useEffect(() => {
+    if (evaluation) {
+      setEmployee(evaluation.employee || '');
+      setDate(evaluation.date ? new Date(evaluation.date) : undefined);
+      setStatus(evaluation.status || 'Planifiée');
+      setScore(evaluation.score || 0);
+    }
+  }, [evaluation]);
+
+  const handleUpdate = () => {
+    const updatedEvaluation = { ...evaluation, employee, date: date?.toISOString().split('T')[0], status, score };
+    onUpdate(updatedEvaluation);
+    onOpenChange(false);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>Modifier une évaluation</DialogTitle>
+          <DialogDescription>
+            Modifier les informations de l'évaluation.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="grid gap-4 py-4">
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="employee" className="text-right">
+              Employé
+            </Label>
+            <Input id="employee" value={employee} onChange={(e) => setEmployee(e.target.value)} className="col-span-3" />
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="date" className="text-right">
+              Date
+            </Label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant={"outline"}
+                  className={cn(
+                    "w-[240px] justify-start text-left font-normal",
+                    !date && "text-muted-foreground"
+                  )}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {date ? (
+                    format(date, "PPP", { locale: fr })
+                  ) : (
+                    <span>Choisir une date</span>
+                  )}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  locale={fr}
+                  selected={date}
+                  onSelect={setDate}
+                  initialFocus
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="status" className="text-right">
+              Statut
+            </Label>
+            <Select value={status} onValueChange={setStatus}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Statut" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Planifiée">Planifiée</SelectItem>
+                <SelectItem value="Complétée">Complétée</SelectItem>
+                <SelectItem value="Annulée">Annulée</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="score" className="text-right">
+              Score
+            </Label>
+            <Input type="number" id="score" value={score} onChange={(e) => setScore(Number(e.target.value))} className="col-span-3" />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button type="button" variant="secondary" onClick={() => onOpenChange(false)}>
+            Annuler
+          </Button>
+          <Button type="submit" onClick={handleUpdate}>Modifier</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+interface DeleteEvaluationDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  evaluation: any;
+  onDelete: () => void;
+}
+
+const DeleteEvaluationDialog: React.FC<DeleteEvaluationDialogProps> = ({ open, onOpenChange, evaluation, onDelete }) => {
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>Supprimer une évaluation</DialogTitle>
+          <DialogDescription>
+            Êtes-vous sûr de vouloir supprimer cette évaluation ?
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter>
+          <Button type="button" variant="secondary" onClick={() => onOpenChange(false)}>
+            Annuler
+          </Button>
+          <Button type="submit" variant="destructive" onClick={onDelete}>Supprimer</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+};

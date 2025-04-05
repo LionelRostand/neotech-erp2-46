@@ -115,27 +115,27 @@ export interface ReminderData {
   completed: boolean;
   notes?: string;
   prospectId: string;
-  // Adding type, note for backward compatibility
+  // For backward compatibility
   type?: string;
   note?: string;
 }
 
 export interface OpportunityFormData {
   name: string;
-  title?: string; // Adding title for backward compatibility
+  title?: string; // For backward compatibility
   clientId?: string;
   clientName?: string;
   contactName?: string;
   contactEmail?: string;
   contactPhone?: string;
   value: number;
-  amount?: number; // Adding amount for backward compatibility
+  amount?: number; // For backward compatibility
   currency?: string;
   probability?: number;
   stage: OpportunityStage;
   startDate: string;
   closeDate?: string;
-  expectedCloseDate?: string; // Adding for backward compatibility
+  expectedCloseDate?: string; // For backward compatibility
   description?: string;
   source?: string;
   assignedTo?: string;
@@ -147,4 +147,65 @@ export interface OpportunityFormData {
     totalPrice: number;
   }> | string[];
   notes?: string;
+}
+
+// New interfaces for CRM Settings
+
+export interface CrmGeneralSettings {
+  companyName: string;
+  companyLogo?: string;
+  defaultCurrency: string;
+  dateFormat: string;
+  leadExpirationDays: number;
+  opportunityExpirationDays: number;
+  defaultLanguage: string;
+  emailNotifications: boolean;
+  smsNotifications: boolean;
+  reminderNotifications: boolean;
+}
+
+export interface CrmIntegrationSettings {
+  apiUrl?: string;
+  apiKey?: string;
+  syncFrequency: 'hourly' | 'daily' | 'weekly' | 'manual';
+  lastSyncedAt?: string;
+  syncContacts: boolean;
+  syncCompanies: boolean;
+  syncDeals: boolean;
+  syncProspects: boolean;
+  syncOpportunities: boolean;
+  syncDirection: 'import' | 'export' | 'bidirectional';
+}
+
+export interface CrmUserPermission {
+  userId: string;
+  userName: string;
+  userEmail: string;
+  userRole: 'admin' | 'manager' | 'user' | 'guest';
+  canCreateProspects: boolean;
+  canEditProspects: boolean;
+  canDeleteProspects: boolean;
+  canCreateOpportunities: boolean;
+  canEditOpportunities: boolean;
+  canDeleteOpportunities: boolean;
+  canCreateClients: boolean;
+  canEditClients: boolean;
+  canDeleteClients: boolean;
+  canExportData: boolean;
+  canAccessReports: boolean;
+  canAccessSettings: boolean;
+}
+
+export interface CrmLeadSource {
+  id: string;
+  name: string;
+  isActive: boolean;
+  description?: string;
+}
+
+export interface CrmPipeline {
+  id: string;
+  name: string;
+  isDefault: boolean;
+  stages: string[];
 }

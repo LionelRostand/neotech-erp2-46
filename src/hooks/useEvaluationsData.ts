@@ -21,10 +21,11 @@ export interface Evaluation {
 }
 
 /**
- * Hook pour accéder aux données des évaluations directement depuis Firebase
+ * Hook to access evaluation data directly from Firebase
  */
 export const useEvaluationsData = () => {
-  const { evaluations, employees, isLoading, error } = useHrModuleData();
+  const hrModuleData = useHrModuleData();
+  const { evaluations, employees } = hrModuleData;
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   
   // Function to force a refresh of the data
@@ -34,15 +35,15 @@ export const useEvaluationsData = () => {
     // This will be handled separately
   }, []);
   
-  // Enrichir les évaluations avec les noms des employés
+  // Enrich evaluations with employee names
   const formattedEvaluations = useMemo(() => {
     if (!evaluations || evaluations.length === 0) return [];
     
     return evaluations.map(evaluation => {
-      // Trouver l'employé évalué
+      // Find the evaluated employee
       const employee = employees?.find(emp => emp.id === evaluation.employeeId);
       
-      // Trouver l'évaluateur
+      // Find the evaluator
       const evaluator = evaluation.evaluatorId && employees
         ? employees.find(emp => emp.id === evaluation.evaluatorId)
         : undefined;
@@ -69,7 +70,7 @@ export const useEvaluationsData = () => {
     });
   }, [evaluations, employees, refreshTrigger]);
   
-  // Fonction pour formater les dates
+  // Function to format dates
   const formatDate = (dateStr: string) => {
     try {
       return new Date(dateStr).toLocaleDateString('fr-FR');
@@ -79,7 +80,7 @@ export const useEvaluationsData = () => {
     }
   };
 
-  // Obtenir des statistiques sur les évaluations
+  // Get statistics about evaluations
   const evaluationStats = useMemo(() => {
     const planned = formattedEvaluations.filter(evaluation => evaluation.status === 'Planifiée').length;
     const completed = formattedEvaluations.filter(evaluation => evaluation.status === 'Complétée').length;
@@ -92,8 +93,8 @@ export const useEvaluationsData = () => {
   return {
     evaluations: formattedEvaluations,
     stats: evaluationStats,
-    isLoading,
-    error,
+    isLoading: hrModuleData.isLoading,
+    error: hrModuleData.error,
     refreshData
   };
 };

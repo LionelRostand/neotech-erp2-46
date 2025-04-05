@@ -1,105 +1,103 @@
 
 import React from 'react';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Eye, Edit2 } from "lucide-react";
+import { MoreHorizontal, Eye, Edit, Trash2 } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Opportunity } from '../types/crm-types';
 import { useOpportunityUtils } from '../hooks/opportunity/useOpportunityUtils';
-import { format } from 'date-fns';
-import { fr } from 'date-fns/locale';
+import { formatCurrency } from '@/lib/utils';
 
 interface OpportunityTableProps {
   opportunities: Opportunity[];
-  onEditClick: (opportunity: Opportunity) => void;
-  onViewClick: (opportunity: Opportunity) => void;
-  loading: boolean;
+  onView: (opportunity: Opportunity) => void;
+  onEdit: (opportunity: Opportunity) => void;
+  onDelete: (opportunity: Opportunity) => void;
 }
 
 const OpportunityTable: React.FC<OpportunityTableProps> = ({
   opportunities,
-  onEditClick,
-  onViewClick,
-  loading
+  onView,
+  onEdit,
+  onDelete
 }) => {
-  const { getStageLabel, getStageIcon } = useOpportunityUtils();
+  const { getStageLabel, getStageBadgeColor, getStageIcon } = useOpportunityUtils();
+  
+  // Format date for display
+  const formatDate = (dateStr?: string): string => {
+    if (!dateStr) return "-";
+    return new Date(dateStr).toLocaleDateString('fr-FR');
+  };
 
-  if (loading) {
-    return (
-      <div className="w-full h-64 flex items-center justify-center">
-        <p className="text-gray-500">Chargement des opportunités...</p>
-      </div>
-    );
-  }
-
+  // If no opportunities, show empty state
   if (opportunities.length === 0) {
     return (
-      <div className="w-full h-64 flex items-center justify-center">
+      <div className="text-center py-10">
         <p className="text-gray-500">Aucune opportunité trouvée</p>
       </div>
     );
   }
 
   return (
-    <div className="rounded-md border">
+    <div className="border rounded-md overflow-hidden">
       <Table>
         <TableHeader>
           <TableRow>
             <TableHead>Nom</TableHead>
             <TableHead>Client</TableHead>
             <TableHead>Montant</TableHead>
-            <TableHead>Date de clôture</TableHead>
             <TableHead>Étape</TableHead>
-            <TableHead>Probabilité</TableHead>
-            <TableHead>Commercial</TableHead>
+            <TableHead>Date de clôture</TableHead>
             <TableHead className="text-right">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {opportunities.map((opportunity) => (
-            <TableRow key={opportunity.id}>
-              <TableCell className="font-medium">{opportunity.title}</TableCell>
-              <TableCell>{opportunity.clientName}</TableCell>
-              <TableCell>{opportunity.amount.toLocaleString('fr-FR')} €</TableCell>
-              <TableCell>
-                {format(new Date(opportunity.expectedCloseDate), 'dd MMM yyyy', { locale: fr })}
-              </TableCell>
-              <TableCell>
-                <div className="flex items-center">
-                  <span className="mr-1">{getStageIcon(opportunity.stage)}</span>
-                  {getStageLabel(opportunity.stage)}
-                </div>
-              </TableCell>
-              <TableCell>
-                <div className="flex items-center">
-                  <div className="w-24 h-2 bg-gray-200 rounded-full mr-2">
-                    <div 
-                      className="h-2 bg-blue-500 rounded-full" 
-                      style={{ width: `${opportunity.probability}%` }}
-                    ></div>
+          {opportunities.map(opportunity => {
+            const StageIcon = getStageIcon(opportunity.stage);
+            return (
+              <TableRow key={opportunity.id}>
+                <TableCell className="font-medium">
+                  {opportunity.name || opportunity.title}
+                </TableCell>
+                <TableCell>{opportunity.clientName || "-"}</TableCell>
+                <TableCell>{formatCurrency(opportunity.value || opportunity.amount || 0)}</TableCell>
+                <TableCell>
+                  <div className="flex items-center gap-1">
+                    {StageIcon && <StageIcon className="h-4 w-4" />}
+                    <Badge className={getStageBadgeColor(opportunity.stage)}>
+                      {getStageLabel(opportunity.stage)}
+                    </Badge>
                   </div>
-                  <span>{opportunity.probability}%</span>
-                </div>
-              </TableCell>
-              <TableCell>{opportunity.assignedTo || '-'}</TableCell>
-              <TableCell className="text-right">
-                <div className="flex justify-end gap-2">
-                  <Button variant="ghost" size="icon" onClick={() => onViewClick(opportunity)}>
-                    <Eye className="h-4 w-4" />
-                  </Button>
-                  <Button variant="ghost" size="icon" onClick={() => onEditClick(opportunity)}>
-                    <Edit2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              </TableCell>
-            </TableRow>
-          ))}
+                </TableCell>
+                <TableCell>{formatDate(opportunity.closeDate || opportunity.expectedCloseDate)}</TableCell>
+                <TableCell className="text-right">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" className="h-8 w-8 p-0">
+                        <span className="sr-only">Ouvrir le menu</span>
+                        <MoreHorizontal className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => onView(opportunity)}>
+                        <Eye className="mr-2 h-4 w-4" />
+                        <span>Voir</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => onEdit(opportunity)}>
+                        <Edit className="mr-2 h-4 w-4" />
+                        <span>Modifier</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => onDelete(opportunity)} className="text-red-600">
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        <span>Supprimer</span>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </TableCell>
+              </TableRow>
+            );
+          })}
         </TableBody>
       </Table>
     </div>

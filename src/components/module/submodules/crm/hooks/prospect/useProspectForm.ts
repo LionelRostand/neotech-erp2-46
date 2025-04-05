@@ -22,7 +22,7 @@ export const useProspectForm = (
       name: '',
       email: '',
       phone: '',
-      status: 'new', // Changed from 'warm' to 'new'
+      status: 'new',
       source: 'Site web',
       lastContact: new Date().toISOString().split('T')[0],
       notes: ''
