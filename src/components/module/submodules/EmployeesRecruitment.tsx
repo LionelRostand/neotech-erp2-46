@@ -37,6 +37,13 @@ const EmployeesRecruitment: React.FC = () => {
   const [scheduleDialogOpen, setScheduleDialogOpen] = useState(false);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [selectedRecruitment, setSelectedRecruitment] = useState<any>(null);
+  const [filterCriteria, setFilterCriteria] = useState({
+    department: null,
+    contractType: null,
+    status: null,
+    priority: null,
+    location: null
+  });
   
   // Use Firebase data with fallback to mock data
   const { recruitmentPosts: firebasePosts, isLoading: isFirebaseLoading, error: firebaseError } = useRecruitmentFirebaseData();
@@ -208,15 +215,10 @@ const EmployeesRecruitment: React.FC = () => {
       )}
       
       <RecruitmentFilterDialog 
-        filterCriteria={{
-          department: null,
-          contractType: null,
-          status: null,
-          priority: null,
-          location: null
-        }}
-        setFilterCriteria={() => {}} // This would be a real state setter in a complete implementation
-        onClose={() => setFilterDialogOpen(false)}
+        open={filterDialogOpen}
+        onOpenChange={setFilterDialogOpen}
+        filterCriteria={filterCriteria}
+        setFilterCriteria={setFilterCriteria}
       />
       
       <CreateRecruitmentDialog 
