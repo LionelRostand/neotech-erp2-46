@@ -61,14 +61,14 @@ const CompaniesFilters: React.FC<CompaniesFiltersProps> = ({
           <div className="space-y-2">
             <Label htmlFor="status">Statut</Label>
             <Select 
-              value={filters.status || ''} 
+              value={filters.status || 'all'} 
               onValueChange={(value) => handleSelectChange('status', value)}
             >
               <SelectTrigger id="status">
                 <SelectValue placeholder="Tous les statuts" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Tous les statuts</SelectItem>
+                <SelectItem value="all">Tous les statuts</SelectItem>
                 <SelectItem value="active">Actif</SelectItem>
                 <SelectItem value="inactive">Inactif</SelectItem>
                 <SelectItem value="pending">En attente</SelectItem>
@@ -80,14 +80,14 @@ const CompaniesFilters: React.FC<CompaniesFiltersProps> = ({
           <div className="space-y-2">
             <Label htmlFor="industry">Secteur d'activité</Label>
             <Select 
-              value={filters.industry || ''} 
+              value={filters.industry || 'all'} 
               onValueChange={(value) => handleSelectChange('industry', value)}
             >
               <SelectTrigger id="industry">
                 <SelectValue placeholder="Tous les secteurs" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Tous les secteurs</SelectItem>
+                <SelectItem value="all">Tous les secteurs</SelectItem>
                 <SelectItem value="technology">Technologie</SelectItem>
                 <SelectItem value="healthcare">Santé</SelectItem>
                 <SelectItem value="education">Éducation</SelectItem>
@@ -104,14 +104,14 @@ const CompaniesFilters: React.FC<CompaniesFiltersProps> = ({
           <div className="space-y-2">
             <Label htmlFor="size">Taille</Label>
             <Select 
-              value={filters.size || ''} 
+              value={filters.size || 'all'} 
               onValueChange={(value) => handleSelectChange('size', value)}
             >
               <SelectTrigger id="size">
                 <SelectValue placeholder="Toutes les tailles" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Toutes les tailles</SelectItem>
+                <SelectItem value="all">Toutes les tailles</SelectItem>
                 <SelectItem value="1-10">1-10 employés</SelectItem>
                 <SelectItem value="11-50">11-50 employés</SelectItem>
                 <SelectItem value="51-200">51-200 employés</SelectItem>

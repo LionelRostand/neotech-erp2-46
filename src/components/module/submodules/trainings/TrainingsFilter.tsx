@@ -114,14 +114,14 @@ const TrainingsFilter: React.FC<TrainingsFilterProps> = ({
             <div className="space-y-2">
               <Label htmlFor="type">Type de formation</Label>
               <Select
-                value={filters.type}
+                value={filters.type || "all_types"}
                 onValueChange={(value) => handleSelectChange('type', value)}
               >
                 <SelectTrigger id="type">
                   <SelectValue placeholder="Tous les types" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Tous les types</SelectItem>
+                  <SelectItem value="all_types">Tous les types</SelectItem>
                   <SelectItem value="Formation professionnelle">Formation professionnelle</SelectItem>
                   <SelectItem value="Formation réglementaire">Formation réglementaire</SelectItem>
                   <SelectItem value="Formation en ligne">Formation en ligne</SelectItem>
@@ -135,15 +135,15 @@ const TrainingsFilter: React.FC<TrainingsFilterProps> = ({
             <div className="space-y-2">
               <Label htmlFor="department">Département</Label>
               <Select
-                value={filters.department}
+                value={filters.department || "all_departments"}
                 onValueChange={(value) => handleSelectChange('department', value)}
               >
                 <SelectTrigger id="department">
                   <SelectValue placeholder="Tous les départements" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Tous les départements</SelectItem>
-                  {departments.map((dept) => (
+                  <SelectItem value="all_departments">Tous les départements</SelectItem>
+                  {departments && departments.map((dept: any) => (
                     <SelectItem key={dept.id} value={dept.id}>
                       {dept.name}
                     </SelectItem>
@@ -164,7 +164,6 @@ const TrainingsFilter: React.FC<TrainingsFilterProps> = ({
                 onChange={handleChange}
               />
             </div>
-            
             <div className="space-y-2">
               <Label htmlFor="dateTo">Date de fin</Label>
               <Input
@@ -177,61 +176,60 @@ const TrainingsFilter: React.FC<TrainingsFilterProps> = ({
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="status">Statut</Label>
-              <Select
-                value={filters.status}
-                onValueChange={(value) => handleSelectChange('status', value)}
-              >
-                <SelectTrigger id="status">
-                  <SelectValue placeholder="Tous les statuts" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Tous les statuts</SelectItem>
-                  <SelectItem value="Planifiée">Planifiée</SelectItem>
-                  <SelectItem value="En cours">En cours</SelectItem>
-                  <SelectItem value="Terminée">Terminée</SelectItem>
-                  <SelectItem value="Annulée">Annulée</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="provider">Prestataire</Label>
-              <Input
-                id="provider"
-                name="provider"
-                placeholder="Nom du prestataire"
-                value={filters.provider}
-                onChange={handleChange}
-              />
-            </div>
+          <div className="space-y-2">
+            <Label htmlFor="status">Statut</Label>
+            <Select
+              value={filters.status || "all_statuses"}
+              onValueChange={(value) => handleSelectChange('status', value)}
+            >
+              <SelectTrigger id="status">
+                <SelectValue placeholder="Tous les statuts" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all_statuses">Tous les statuts</SelectItem>
+                <SelectItem value="completed">Terminée</SelectItem>
+                <SelectItem value="in_progress">En cours</SelectItem>
+                <SelectItem value="scheduled">Planifiée</SelectItem>
+                <SelectItem value="cancelled">Annulée</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="certificate">Certification</Label>
+            <Label htmlFor="provider">Fournisseur de formation</Label>
+            <Input
+              id="provider"
+              name="provider"
+              placeholder="Rechercher par fournisseur"
+              value={filters.provider}
+              onChange={handleChange}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="certificate">Certificat</Label>
             <Select
-              value={filters.certificate}
+              value={filters.certificate || "all_certificates"}
               onValueChange={(value) => handleSelectChange('certificate', value)}
             >
               <SelectTrigger id="certificate">
-                <SelectValue placeholder="Certification" />
+                <SelectValue placeholder="Tous les certificats" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Tous</SelectItem>
-                <SelectItem value="true">Avec certification</SelectItem>
-                <SelectItem value="false">Sans certification</SelectItem>
+                <SelectItem value="all_certificates">Tous les certificats</SelectItem>
+                <SelectItem value="yes">Avec certificat</SelectItem>
+                <SelectItem value="no">Sans certificat</SelectItem>
               </SelectContent>
             </Select>
           </div>
         </div>
+
         <DialogFooter>
           <Button type="button" variant="outline" onClick={handleResetFilters}>
             Réinitialiser
           </Button>
           <Button type="button" onClick={handleApplyFilters}>
-            Appliquer les filtres
+            Appliquer
           </Button>
         </DialogFooter>
       </DialogContent>
