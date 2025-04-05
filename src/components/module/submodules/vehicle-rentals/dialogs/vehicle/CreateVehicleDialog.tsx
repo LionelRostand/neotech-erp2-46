@@ -81,54 +81,96 @@ const CreateVehicleDialog: React.FC<CreateVehicleDialogProps> = ({
       description: ''
     });
   };
-
+  
+  // Make sure all SelectItem values are non-empty strings
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={(isOpen) => !isOpen && onClose()}>
       <DialogContent className="sm:max-w-[550px]">
         <DialogHeader>
-          <DialogTitle>Ajouter un véhicule</DialogTitle>
+          <DialogTitle>Ajouter un nouveau véhicule</DialogTitle>
         </DialogHeader>
         
         <form onSubmit={handleSubmit} className="space-y-4 py-4">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="brand">Marque</Label>
-              <Input id="brand" name="brand" value={formData.brand} onChange={handleInputChange} required />
+              <Input
+                id="brand"
+                name="brand"
+                placeholder="Renault, Peugeot, etc."
+                value={formData.brand}
+                onChange={handleInputChange}
+                required
+              />
             </div>
             
             <div className="space-y-2">
               <Label htmlFor="model">Modèle</Label>
-              <Input id="model" name="model" value={formData.model} onChange={handleInputChange} required />
+              <Input
+                id="model"
+                name="model"
+                placeholder="Clio, 308, etc."
+                value={formData.model}
+                onChange={handleInputChange}
+                required
+              />
             </div>
           </div>
           
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-2">
               <Label htmlFor="year">Année</Label>
-              <Input id="year" name="year" type="number" value={formData.year} onChange={handleInputChange} required />
+              <Input
+                id="year"
+                name="year"
+                type="number"
+                value={formData.year}
+                onChange={handleInputChange}
+                required
+              />
             </div>
             
             <div className="space-y-2">
               <Label htmlFor="licensePlate">Immatriculation</Label>
-              <Input id="licensePlate" name="licensePlate" value={formData.licensePlate} onChange={handleInputChange} required />
+              <Input
+                id="licensePlate"
+                name="licensePlate"
+                placeholder="AB-123-CD"
+                value={formData.licensePlate}
+                onChange={handleInputChange}
+                required
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="dailyRate">Tarif journalier (€)</Label>
+              <Input
+                id="dailyRate"
+                name="dailyRate"
+                type="number"
+                value={formData.dailyRate}
+                onChange={handleInputChange}
+                required
+              />
             </div>
           </div>
           
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-2">
               <Label htmlFor="type">Type de véhicule</Label>
-              <Select defaultValue={formData.type} onValueChange={(value) => handleSelectChange('type', value)}>
-                <SelectTrigger>
+              <Select 
+                value={formData.type}
+                onValueChange={(value) => handleSelectChange('type', value)}
+              >
+                <SelectTrigger id="type">
                   <SelectValue placeholder="Sélectionner un type" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="sedan">Berline</SelectItem>
                   <SelectItem value="suv">SUV</SelectItem>
-                  <SelectItem value="hatchback">Compacte</SelectItem>
+                  <SelectItem value="compact">Compact</SelectItem>
                   <SelectItem value="van">Utilitaire</SelectItem>
-                  <SelectItem value="truck">Camion</SelectItem>
                   <SelectItem value="luxury">Luxe</SelectItem>
-                  <SelectItem value="convertible">Cabriolet</SelectItem>
                   <SelectItem value="electric">Électrique</SelectItem>
                 </SelectContent>
               </Select>
@@ -136,41 +178,52 @@ const CreateVehicleDialog: React.FC<CreateVehicleDialogProps> = ({
             
             <div className="space-y-2">
               <Label htmlFor="status">Statut</Label>
-              <Select defaultValue={formData.status} onValueChange={(value) => handleSelectChange('status', value as VehicleStatus)}>
-                <SelectTrigger>
+              <Select 
+                value={formData.status}
+                onValueChange={(value) => handleSelectChange('status', value as VehicleStatus)}
+              >
+                <SelectTrigger id="status">
                   <SelectValue placeholder="Sélectionner un statut" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="available">Disponible</SelectItem>
                   <SelectItem value="rented">Loué</SelectItem>
-                  <SelectItem value="maintenance">Maintenance</SelectItem>
+                  <SelectItem value="maintenance">En maintenance</SelectItem>
                   <SelectItem value="reserved">Réservé</SelectItem>
-                  <SelectItem value="inactive">Inactif</SelectItem>
                 </SelectContent>
               </Select>
-            </div>
-          </div>
-          
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="dailyRate">Tarif journalier (€)</Label>
-              <Input id="dailyRate" name="dailyRate" type="number" value={formData.dailyRate} onChange={handleInputChange} required />
             </div>
             
             <div className="space-y-2">
               <Label htmlFor="mileage">Kilométrage</Label>
-              <Input id="mileage" name="mileage" type="number" value={formData.mileage} onChange={handleInputChange} required />
+              <Input
+                id="mileage"
+                name="mileage"
+                type="number"
+                value={formData.mileage}
+                onChange={handleInputChange}
+                required
+              />
             </div>
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="description">Description / Notes</Label>
-            <Textarea id="description" name="description" value={formData.description} onChange={handleInputChange} rows={3} />
+            <Label htmlFor="description">Description</Label>
+            <Textarea
+              id="description"
+              name="description"
+              placeholder="Description et observations sur l'état du véhicule"
+              value={formData.description}
+              onChange={handleInputChange}
+              rows={3}
+            />
           </div>
           
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={onClose}>Annuler</Button>
-            <Button type="submit">Ajouter</Button>
+            <Button type="button" variant="outline" onClick={onClose}>
+              Annuler
+            </Button>
+            <Button type="submit">Ajouter le véhicule</Button>
           </DialogFooter>
         </form>
       </DialogContent>

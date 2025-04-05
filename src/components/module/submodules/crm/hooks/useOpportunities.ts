@@ -60,12 +60,12 @@ export const useOpportunities = () => {
     await new Promise(resolve => setTimeout(resolve, 500));
     
     // Create updates object with type-safe properties
-    const updates: Partial<Opportunity> = {};
+    const updates: Record<string, any> = {};
     
     // Copy all properties except for numeric ones that need conversion
     Object.entries(data).forEach(([key, value]) => {
       if (key !== 'value' && key !== 'probability' && key !== 'amount') {
-        updates[key as keyof Opportunity] = value as any;
+        updates[key] = value;
       }
     });
     
