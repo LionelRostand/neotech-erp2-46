@@ -23,7 +23,8 @@ export const COLLECTIONS = {
   PROJECTS: {
     PROJECTS: 'projects/projects',
     TASKS: 'projects/tasks',
-    TEAMS: 'projects/teams'
+    TEAMS: 'projects/teams',
+    NOTIFICATIONS: 'projects/notifications'
   },
 
   HEALTH: {
@@ -42,14 +43,20 @@ export const COLLECTIONS = {
     DEPARTMENTS: 'hr/departments',
     CONTRACTS: 'hr/contracts',
     LEAVES: 'hr/leaves',
+    LEAVE_REQUESTS: 'hr/leave_requests',
     ABSENCES: 'hr/absences',
+    ABSENCE_REQUESTS: 'hr/absence_requests',
     EVALUATIONS: 'hr/evaluations',
     TRAININGS: 'hr/trainings',
     RECRUITMENT: 'hr/recruitment',
     DOCUMENTS: 'hr/documents',
     BADGES: 'hr/badges',
     TIMESHEETS: 'hr/timesheets',
-    SALARIES: 'hr/salaries'
+    SALARIES: 'hr/salaries',
+    PAYSLIPS: 'hr/payslips',
+    ATTENDANCE: 'hr/attendance',
+    REPORTS: 'hr/reports',
+    ALERTS: 'hr/alerts'
   },
 
   ACCOUNTING: {
@@ -60,7 +67,8 @@ export const COLLECTIONS = {
     SUPPLIERS: 'accounting/suppliers',
     REPORTS: 'accounting/reports',
     TAXES: 'accounting/taxes',
-    SETTINGS: 'accounting/settings'
+    SETTINGS: 'accounting/settings',
+    TRANSACTIONS: 'accounting/transactions'
   },
 
   FREIGHT: {
@@ -69,10 +77,14 @@ export const COLLECTIONS = {
     CUSTOMERS: 'freight/customers',
     PACKAGES: 'freight/packages',
     TRACKING: 'freight/tracking',
+    TRACKING_EVENTS: 'freight/tracking_events',
+    PACKAGE_TYPES: 'freight/package_types',
     ROUTES: 'freight/routes',
     QUOTES: 'freight/quotes',
     BILLING: 'freight/billing',
-    SETTINGS: 'freight/settings'
+    SETTINGS: 'freight/settings',
+    VEHICLES: 'freight/vehicles',
+    DRIVERS: 'freight/drivers'
   },
 
   TRANSPORT: {
@@ -95,7 +107,8 @@ export const COLLECTIONS = {
     RESERVATIONS: 'library/reservations',
     INVENTORY: 'library/inventory',
     CATEGORIES: 'library/categories',
-    SETTINGS: 'library/settings'
+    SETTINGS: 'library/settings',
+    STATS: 'library/stats'
   },
 
   MESSAGES: {

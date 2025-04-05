@@ -1,205 +1,105 @@
 
-import { useState } from 'react';
-import { useClientsData } from './useClientsData';
-import { toast } from 'sonner';
+import { useState, useEffect, useCallback } from 'react';
 import { Client, ClientFormData } from '../types/crm-types';
+import { addDocument, getAllDocuments, updateDocument, deleteDocument } from '@/hooks/firestore/firestore-utils';
+import { COLLECTIONS } from '@/lib/firebase-collections';
+import { toast } from 'sonner';
 
-// Define sectors as a constant array that can be imported elsewhere
+// Définition des secteurs d'activité pour les clients
 export const sectors = [
-  'Technology',
-  'Manufacturing',
-  'Healthcare',
-  'Finance',
-  'Retail',
-  'Education',
-  'Construction',
-  'Energy',
-  'Transportation',
-  'Hospitality',
-  'Media',
-  'Agriculture',
-  'Other'
+  { value: 'technology', label: 'Technologie' },
+  { value: 'healthcare', label: 'Santé' },
+  { value: 'finance', label: 'Finance' },
+  { value: 'education', label: 'Éducation' },
+  { value: 'retail', label: 'Commerce de détail' },
+  { value: 'manufacturing', label: 'Fabrication' },
+  { value: 'services', label: 'Services' },
+  { value: 'food', label: 'Alimentation' },
+  { value: 'transport', label: 'Transport' },
+  { value: 'construction', label: 'Construction' },
+  { value: 'energy', label: 'Énergie' },
+  { value: 'other', label: 'Autre' }
 ];
 
 export const useClients = () => {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [sectorFilter, setSectorFilter] = useState('all');
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [selectedClient, setSelectedClient] = useState<Client | null>(null);
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [isViewDetailsOpen, setIsViewDetailsOpen] = useState(false);
-  const [formData, setFormData] = useState<ClientFormData>({
-    name: '',
-    sector: 'Technology',
-    revenue: '',
-    status: 'active',
-    contactName: '',
-    contactEmail: '',
-    contactPhone: '',
-    address: '',
-    notes: '',
-    website: '',
-  });
+  const [clients, setClients] = useState<Client[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const { 
+  // Fetch clients
+  const fetchClients = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      const fetchedClients = await getAllDocuments(COLLECTIONS.CRM.CLIENTS);
+      setClients(fetchedClients as Client[]);
+    } catch (err) {
+      console.error('Error fetching clients:', err);
+      setError('Failed to load clients data');
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchClients();
+  }, [fetchClients]);
+
+  // Add client
+  const addClient = useCallback(async (clientData: ClientFormData): Promise<Client | null> => {
+    try {
+      // Ensure the customerSince field is set
+      const data = {
+        ...clientData,
+        customerSince: clientData.customerSince || new Date().toISOString().split('T')[0],
+        status: clientData.status || 'active'
+      };
+
+      const newClient = await addDocument(COLLECTIONS.CRM.CLIENTS, data);
+      setClients(prev => [newClient as Client, ...prev]);
+      return newClient as Client;
+    } catch (err) {
+      console.error('Error adding client:', err);
+      toast.error('Failed to add client');
+      return null;
+    }
+  }, []);
+
+  // Update client
+  const updateClient = useCallback(async (id: string, clientData: Partial<ClientFormData>): Promise<Client | null> => {
+    try {
+      const updatedClient = await updateDocument(COLLECTIONS.CRM.CLIENTS, id, clientData);
+      setClients(prev => prev.map(client => 
+        client.id === id ? { ...client, ...updatedClient } as Client : client
+      ));
+      return updatedClient as Client;
+    } catch (err) {
+      console.error('Error updating client:', err);
+      toast.error('Failed to update client');
+      return null;
+    }
+  }, []);
+
+  // Delete client
+  const deleteClient = useCallback(async (id: string): Promise<boolean> => {
+    try {
+      await deleteDocument(COLLECTIONS.CRM.CLIENTS, id);
+      setClients(prev => prev.filter(client => client.id !== id));
+      return true;
+    } catch (err) {
+      console.error('Error deleting client:', err);
+      toast.error('Failed to delete client');
+      return false;
+    }
+  }, []);
+
+  return { 
     clients, 
-    isLoading: loading, 
-    error,
-    addClient: addClientData,
-    updateClient: updateClientData,
-    deleteClient: deleteClientData
-  } = useClientsData();
-
-  // Handle form input changes
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
-
-  // Handle select changes
-  const handleSelectChange = (name: string, value: string) => {
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
-
-  // Add a new client
-  const handleCreateClient = async () => {
-    try {
-      await addClientData(formData);
-      setIsAddDialogOpen(false);
-      resetForm();
-      toast.success('Client ajouté avec succès');
-      return true;
-    } catch (error) {
-      console.error('Error adding client:', error);
-      toast.error('Erreur lors de l\'ajout du client');
-      return false;
-    }
-  };
-
-  // Update an existing client
-  const handleUpdateClient = async () => {
-    if (!selectedClient) return false;
-    
-    try {
-      await updateClientData(selectedClient.id, formData);
-      setIsEditDialogOpen(false);
-      toast.success('Client mis à jour avec succès');
-      return true;
-    } catch (error) {
-      console.error('Error updating client:', error);
-      toast.error('Erreur lors de la mise à jour du client');
-      return false;
-    }
-  };
-
-  // Delete a client
-  const handleDeleteClient = async () => {
-    if (!selectedClient) return false;
-
-    try {
-      await deleteClientData(selectedClient.id);
-      setIsDeleteDialogOpen(false);
-      toast.success('Client supprimé avec succès');
-      return true;
-    } catch (error) {
-      console.error('Error deleting client:', error);
-      toast.error('Erreur lors de la suppression du client');
-      return false;
-    }
-  };
-
-  // Open edit dialog with client data
-  const openEditDialog = (client: Client) => {
-    setSelectedClient(client);
-    setFormData({
-      name: client.name,
-      sector: client.sector,
-      revenue: client.revenue,
-      status: client.status,
-      contactName: client.contactName,
-      contactEmail: client.contactEmail,
-      contactPhone: client.contactPhone,
-      address: client.address,
-      notes: client.notes || '',
-      website: client.website || '',
-    });
-    setIsEditDialogOpen(true);
-  };
-
-  // Open delete confirmation dialog
-  const openDeleteDialog = (client: Client) => {
-    setSelectedClient(client);
-    setIsDeleteDialogOpen(true);
-  };
-
-  // View client details
-  const viewClientDetails = (client: Client) => {
-    setSelectedClient(client);
-    setIsViewDetailsOpen(true);
-  };
-
-  // Reset form to default values
-  const resetForm = () => {
-    setFormData({
-      name: '',
-      sector: 'Technology',
-      revenue: '',
-      status: 'active',
-      contactName: '',
-      contactEmail: '',
-      contactPhone: '',
-      address: '',
-      notes: '',
-      website: '',
-    });
-  };
-
-  // Filter clients by search term and filters
-  const filteredClients = clients.filter(client => {
-    const matchesSearch = searchTerm === '' || 
-      client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      client.contactName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      client.contactEmail.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesSector = sectorFilter === 'all' || client.sector === sectorFilter;
-    const matchesStatus = statusFilter === 'all' || client.status === statusFilter;
-    
-    return matchesSearch && matchesSector && matchesStatus;
-  });
-
-  return {
-    clients,
-    filteredClients,
-    isLoading: loading,
-    error,
-    searchTerm,
-    setSearchTerm,
-    sectorFilter,
-    setSectorFilter,
-    statusFilter,
-    setStatusFilter,
-    selectedClient,
-    setSelectedClient,
-    isAddDialogOpen,
-    setIsAddDialogOpen,
-    isEditDialogOpen,
-    setIsEditDialogOpen,
-    isDeleteDialogOpen,
-    setIsDeleteDialogOpen,
-    isViewDetailsOpen,
-    setIsViewDetailsOpen,
-    formData,
-    handleInputChange,
-    handleSelectChange,
-    handleCreateClient,
-    handleUpdateClient,
-    handleDeleteClient,
-    openEditDialog,
-    openDeleteDialog,
-    viewClientDetails,
-    resetForm,
-    loading
+    isLoading, 
+    error, 
+    addClient, 
+    updateClient, 
+    deleteClient,
+    refreshClients: fetchClients
   };
 };

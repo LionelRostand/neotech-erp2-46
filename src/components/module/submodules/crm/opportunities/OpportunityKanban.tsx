@@ -1,63 +1,82 @@
 
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Opportunity, OpportunityStage } from '../types/crm-types';
 import { useOpportunityUtils } from '../hooks/opportunity/useOpportunityUtils';
+import { Opportunity, OpportunityStage } from '../types/crm-types';
 
 interface OpportunityKanbanProps {
   opportunities: Opportunity[];
+  isLoading: boolean;
+  error: string | null;
   onOpportunityClick: (opportunity: Opportunity) => void;
 }
 
-const OpportunityKanban: React.FC<OpportunityKanbanProps> = ({
-  opportunities,
+const OpportunityKanban: React.FC<OpportunityKanbanProps> = ({ 
+  opportunities, 
+  isLoading,
+  error,
   onOpportunityClick
 }) => {
   const opportunityUtils = useOpportunityUtils();
-  const stageGroups = opportunityUtils.groupOpportunitiesByStage(opportunities);
   const stages = opportunityUtils.getAllStages();
+  
+  // Group opportunities by stage
+  const opportunitiesByStage = stages.reduce((acc, stage) => {
+    acc[stage.value] = opportunities.filter(opp => opp.stage === stage.value);
+    return acc;
+  }, {} as Record<string, Opportunity[]>);
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center p-8">
+        <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-8 text-center text-destructive">
+        <p>Une erreur est survenue lors du chargement des opportunités</p>
+      </div>
+    );
+  }
 
   return (
-    <div className="flex gap-4 overflow-x-auto pb-4">
+    <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
       {stages.map(stage => (
-        <div key={stage.value} className="min-w-[300px]">
-          <Card>
-            <CardHeader className="py-3">
-              <CardTitle className="text-sm font-medium flex justify-between items-center">
-                <span>{stage.label}</span>
-                <Badge variant="outline">{stageGroups[stage.value as OpportunityStage]?.length || 0}</Badge>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2 p-2">
-              {stageGroups[stage.value as OpportunityStage]?.length > 0 ? (
-                stageGroups[stage.value as OpportunityStage].map(opportunity => (
-                  <div 
-                    key={opportunity.id}
-                    className="bg-white p-3 rounded-md shadow-sm border border-gray-100 cursor-pointer hover:border-gray-300 transition-colors"
-                    onClick={() => onOpportunityClick(opportunity)}
-                  >
-                    <h3 className="font-medium text-sm">{opportunity.name}</h3>
-                    <p className="text-xs text-muted-foreground">
-                      {opportunity.clientName}
+        <div key={stage.value} className="flex flex-col">
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="text-sm font-medium">{stage.label}</h3>
+            <Badge variant="outline">{opportunitiesByStage[stage.value]?.length || 0}</Badge>
+          </div>
+          
+          <div className="flex-1 space-y-3">
+            {opportunitiesByStage[stage.value]?.length ? (
+              opportunitiesByStage[stage.value].map(opportunity => (
+                <Card 
+                  key={opportunity.id}
+                  className="cursor-pointer hover:shadow-md transition-shadow"
+                  onClick={() => onOpportunityClick(opportunity)}
+                >
+                  <CardContent className="p-3">
+                    <h4 className="font-medium text-sm truncate">{opportunity.title}</h4>
+                    <p className="text-xs text-muted-foreground mt-1 truncate">
+                      {opportunity.clientName || 'Client non défini'}
                     </p>
-                    <div className="flex justify-between items-center mt-2">
-                      <span className="text-xs font-medium">
-                        {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(Number(opportunity.value))}
-                      </span>
-                      <span className="text-xs text-muted-foreground">
-                        {new Date(opportunity.expectedCloseDate).toLocaleDateString('fr-FR')}
-                      </span>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <div className="text-center py-4 text-sm text-muted-foreground">
-                  Aucune opportunité
-                </div>
-              )}
-            </CardContent>
-          </Card>
+                    {opportunity.amount && (
+                      <p className="text-xs font-medium mt-2">{opportunity.amount} €</p>
+                    )}
+                  </CardContent>
+                </Card>
+              ))
+            ) : (
+              <div className="text-center py-8 border border-dashed rounded-md text-muted-foreground text-sm">
+                Aucune opportunité
+              </div>
+            )}
+          </div>
         </div>
       ))}
     </div>

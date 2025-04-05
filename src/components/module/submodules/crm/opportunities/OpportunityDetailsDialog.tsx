@@ -8,6 +8,8 @@ import {
   DialogFooter
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { useOpportunityUtils } from '../hooks/opportunity/useOpportunityUtils';
 import { Opportunity } from '../types/crm-types';
 
 export interface OpportunityDetailsDialogProps {
@@ -23,55 +25,56 @@ const OpportunityDetailsDialog: React.FC<OpportunityDetailsDialogProps> = ({
   opportunity,
   onEdit
 }) => {
-  if (!opportunity) return null;
-
+  const opportunityUtils = useOpportunityUtils();
+  
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
-          <DialogTitle>Détails de l'opportunité</DialogTitle>
+          <DialogTitle>{opportunity.title}</DialogTitle>
         </DialogHeader>
         
-        <div className="space-y-4 py-4">
+        <div className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <h3 className="font-medium text-sm">Nom</h3>
-              <p>{opportunity.name}</p>
+              <p className="text-sm font-medium text-gray-500">Client</p>
+              <p className="text-sm">{opportunity.clientName || 'Non spécifié'}</p>
             </div>
             <div>
-              <h3 className="font-medium text-sm">Valeur</h3>
-              <p>{new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(Number(opportunity.value))}</p>
+              <p className="text-sm font-medium text-gray-500">Stade</p>
+              <Badge className={opportunityUtils.getStageColor(opportunity.stage)}>
+                {opportunityUtils.getStageLabel(opportunity.stage)}
+              </Badge>
             </div>
             <div>
-              <h3 className="font-medium text-sm">Client</h3>
-              <p>{opportunity.clientName}</p>
+              <p className="text-sm font-medium text-gray-500">Montant</p>
+              <p className="text-sm">{opportunity.amount ? `${opportunity.amount} €` : 'Non spécifié'}</p>
             </div>
             <div>
-              <h3 className="font-medium text-sm">Étape</h3>
-              <p>{opportunity.stage}</p>
+              <p className="text-sm font-medium text-gray-500">Responsable</p>
+              <p className="text-sm">{opportunity.assignedTo || 'Non assigné'}</p>
             </div>
-            <div>
-              <h3 className="font-medium text-sm">Date de clôture prévue</h3>
-              <p>{new Date(opportunity.expectedCloseDate).toLocaleDateString('fr-FR')}</p>
-            </div>
-            <div>
-              <h3 className="font-medium text-sm">Responsable</h3>
-              <p>{opportunity.owner}</p>
+            <div className="col-span-2">
+              <p className="text-sm font-medium text-gray-500">Description</p>
+              <p className="text-sm">{opportunity.description || 'Aucune description'}</p>
             </div>
           </div>
           
-          <div>
-            <h3 className="font-medium text-sm">Description</h3>
-            <p className="whitespace-pre-wrap">{opportunity.description}</p>
-          </div>
-          
-          <div>
-            <h3 className="font-medium text-sm">Produits/Services</h3>
-            <p>{opportunity.products}</p>
-          </div>
+          {opportunity.products && opportunity.products.length > 0 && (
+            <div>
+              <p className="text-sm font-medium text-gray-500 mb-2">Produits</p>
+              <ul className="space-y-2">
+                {opportunity.products.map((product, index) => (
+                  <li key={index} className="text-sm">
+                    {product.name} - {product.quantity} x {product.price}€
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
         
-        <DialogFooter>
+        <DialogFooter className="gap-2">
           <Button variant="outline" onClick={onClose}>
             Fermer
           </Button>

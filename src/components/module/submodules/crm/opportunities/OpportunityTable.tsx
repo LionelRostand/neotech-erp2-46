@@ -10,89 +10,92 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Edit, Eye } from "lucide-react";
-import { Opportunity } from '../types/crm-types';
+import { Eye, Edit } from "lucide-react";
 import { useOpportunityUtils } from '../hooks/opportunity/useOpportunityUtils';
+import { Opportunity } from '../types/crm-types';
+import { formatCurrency } from '@/lib/utils';
 
-export interface OpportunityTableProps {
+interface OpportunityTableProps {
   opportunities: Opportunity[];
-  onEditClick: (opportunity: Opportunity) => void;
-  onViewClick: (opportunity: Opportunity) => void;
-  loading?: boolean;
+  isLoading: boolean;
+  error: string | null;
+  onView: (opportunity: Opportunity) => void;
+  onEdit: (opportunity: Opportunity) => void;
 }
 
 const OpportunityTable: React.FC<OpportunityTableProps> = ({ 
   opportunities, 
-  onEditClick,
-  onViewClick,
-  loading = false
+  isLoading,
+  error,
+  onView,
+  onEdit
 }) => {
-  const { getStageBadgeClass } = useOpportunityUtils();
+  const opportunityUtils = useOpportunityUtils();
 
-  if (loading) {
+  if (isLoading) {
     return (
-      <div className="flex justify-center items-center p-8">
+      <div className="flex justify-center p-8">
         <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
       </div>
     );
   }
 
-  if (opportunities.length === 0) {
+  if (error) {
     return (
-      <div className="text-center p-8">
-        <p className="text-muted-foreground">Aucune opportunité trouvée</p>
+      <div className="p-8 text-center text-destructive">
+        <p>Une erreur est survenue lors du chargement des opportunités</p>
       </div>
     );
   }
 
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>Nom</TableHead>
-          <TableHead>Client</TableHead>
-          <TableHead>Étape</TableHead>
-          <TableHead>Valeur</TableHead>
-          <TableHead>Date de clôture</TableHead>
-          <TableHead>Responsable</TableHead>
-          <TableHead className="text-right">Actions</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {opportunities.map(opportunity => (
-          <TableRow key={opportunity.id} className="hover:bg-muted/50">
-            <TableCell className="font-medium">{opportunity.name}</TableCell>
-            <TableCell>{opportunity.clientName}</TableCell>
-            <TableCell>
-              <Badge className={getStageBadgeClass(opportunity.stage)}>
-                {opportunity.stage}
-              </Badge>
-            </TableCell>
-            <TableCell>{new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(Number(opportunity.value))}</TableCell>
-            <TableCell>{new Date(opportunity.expectedCloseDate).toLocaleDateString('fr-FR')}</TableCell>
-            <TableCell>{opportunity.owner}</TableCell>
-            <TableCell className="text-right">
-              <div className="flex justify-end space-x-2">
-                <Button 
-                  variant="ghost" 
-                  size="sm"
-                  onClick={() => onViewClick(opportunity)}
-                >
-                  <Eye className="h-4 w-4" />
-                </Button>
-                <Button 
-                  variant="ghost" 
-                  size="sm"
-                  onClick={() => onEditClick(opportunity)}
-                >
-                  <Edit className="h-4 w-4" />
-                </Button>
-              </div>
-            </TableCell>
+    <div className="border rounded-md">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Opportunité</TableHead>
+            <TableHead>Client</TableHead>
+            <TableHead>Étape</TableHead>
+            <TableHead>Montant</TableHead>
+            <TableHead>Responsable</TableHead>
+            <TableHead className="text-right">Actions</TableHead>
           </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+        </TableHeader>
+        <TableBody>
+          {opportunities.length === 0 ? (
+            <TableRow>
+              <TableCell colSpan={6} className="text-center h-24">
+                Aucune opportunité trouvée
+              </TableCell>
+            </TableRow>
+          ) : (
+            opportunities.map((opportunity) => (
+              <TableRow key={opportunity.id}>
+                <TableCell className="font-medium">{opportunity.title}</TableCell>
+                <TableCell>{opportunity.clientName || 'Non défini'}</TableCell>
+                <TableCell>
+                  <Badge className={opportunityUtils.getStageColor(opportunity.stage)}>
+                    {opportunityUtils.getStageLabel(opportunity.stage)}
+                  </Badge>
+                </TableCell>
+                <TableCell>{opportunity.amount ? formatCurrency(opportunity.amount) : 'Non défini'}</TableCell>
+                <TableCell>{opportunity.assignedTo || 'Non assigné'}</TableCell>
+                <TableCell className="text-right">
+                  <div className="flex justify-end gap-2">
+                    <Button size="icon" variant="ghost" onClick={() => onView(opportunity)}>
+                      <Eye className="h-4 w-4" />
+                    </Button>
+                    <Button size="icon" variant="ghost" onClick={() => onEdit(opportunity)}>
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))
+          )}
+        </TableBody>
+      </Table>
+    </div>
   );
 };
 
