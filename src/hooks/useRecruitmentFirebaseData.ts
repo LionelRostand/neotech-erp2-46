@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { collection, query, onSnapshot } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { RecruitmentPost } from '@/hooks/useRecruitmentData';
+import { COLLECTIONS } from '@/lib/firebase-collections';
 
 export const useRecruitmentFirebaseData = () => {
   const [recruitmentPosts, setRecruitmentPosts] = useState<RecruitmentPost[]>([]);
@@ -12,7 +13,7 @@ export const useRecruitmentFirebaseData = () => {
   useEffect(() => {
     console.log('Fetching recruitment data from Firebase...');
     try {
-      const collectionRef = collection(db, 'hr-recruitment');
+      const collectionRef = collection(db, COLLECTIONS.HR.RECRUITMENT);
       const q = query(collectionRef);
       
       const unsubscribe = onSnapshot(

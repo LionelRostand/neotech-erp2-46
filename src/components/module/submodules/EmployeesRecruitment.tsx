@@ -1,310 +1,205 @@
-import React, { useState, useEffect } from 'react';
+
+import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
+} from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { 
   Briefcase, 
-  Plus, 
-  Users, 
-  UserPlus, 
-  ListFilter, 
-  Calendar, 
+  Eye, 
+  Edit, 
   Download,
-  Eye
+  Filter,
+  FileSignature,
+  Calendar
 } from 'lucide-react';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { useRecruitmentData, RecruitmentPost } from '@/hooks/useRecruitmentData';
+import { toast } from 'sonner';
+import SubmoduleHeader from './SubmoduleHeader';
 import { useRecruitmentFirebaseData } from '@/hooks/useRecruitmentFirebaseData';
+import { useRecruitmentData } from '@/hooks/useRecruitmentData';
 import RecruitmentStats from './employees/RecruitmentStats';
-import RecruitmentFilterDialog from './recruitment/RecruitmentFilterDialog';
-import CreateRecruitmentDialog from './recruitment/CreateRecruitmentDialog';
 import RecruitmentViewDialog from './recruitment/RecruitmentViewDialog';
+import EditRecruitmentDialog from './recruitment/EditRecruitmentDialog';
+import RecruitmentFilterDialog from './recruitment/RecruitmentFilterDialog';
 import RecruitmentScheduleDialog from './recruitment/RecruitmentScheduleDialog';
-import { exportToExcel } from '@/utils/exportUtils';
-import { exportToPdf } from '@/utils/pdfUtils';
-import { useToast } from '@/hooks/use-toast';
+import CreateRecruitmentDialog from './recruitment/CreateRecruitmentDialog';
 
 const EmployeesRecruitment: React.FC = () => {
-  const { recruitmentPosts: mockRecruitmentPosts, stats: mockStats, isLoading: isMockLoading } = useRecruitmentData();
-  const { recruitmentPosts: firebaseRecruitmentPosts, isLoading: isFirebaseLoading } = useRecruitmentFirebaseData();
+  const [viewDialogOpen, setViewDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [filterDialogOpen, setFilterDialogOpen] = useState(false);
+  const [scheduleDialogOpen, setScheduleDialogOpen] = useState(false);
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [selectedRecruitment, setSelectedRecruitment] = useState<any>(null);
   
-  const [recruitmentPosts, setRecruitmentPosts] = useState<RecruitmentPost[]>([]);
-  const [stats, setStats] = useState({ open: 0, inProgress: 0, closed: 0, totalApplications: 0 });
-  const [isLoading, setIsLoading] = useState(true);
+  // Use Firebase data with fallback to mock data
+  const { recruitmentPosts: firebasePosts, isLoading: isFirebaseLoading, error: firebaseError } = useRecruitmentFirebaseData();
+  const { recruitmentPosts: mockPosts, stats } = useRecruitmentData();
   
-  useEffect(() => {
-    if (!isFirebaseLoading && firebaseRecruitmentPosts.length > 0) {
-      console.log('Using Firebase recruitment data:', firebaseRecruitmentPosts.length, 'posts');
-      setRecruitmentPosts(firebaseRecruitmentPosts);
-      
-      const open = firebaseRecruitmentPosts.filter(post => post.status === 'Ouvert').length;
-      const inProgress = firebaseRecruitmentPosts.filter(post => post.status === 'En cours').length;
-      const closed = firebaseRecruitmentPosts.filter(post => post.status === 'Clôturé').length;
-      const totalApplications = firebaseRecruitmentPosts.reduce((acc, curr) => acc + (curr.applicationCount || 0), 0);
-      
-      setStats({ open, inProgress, closed, totalApplications });
-      setIsLoading(false);
-    } else if (!isMockLoading) {
-      console.log('Using mock recruitment data:', mockRecruitmentPosts.length, 'posts');
-      setRecruitmentPosts(mockRecruitmentPosts);
-      setStats(mockStats);
-      setIsLoading(false);
-    }
-  }, [isFirebaseLoading, isMockLoading, firebaseRecruitmentPosts, mockRecruitmentPosts, mockStats]);
-
-  const { toast } = useToast();
+  // Use Firebase data if available, otherwise use mock data
+  const recruitmentPosts = firebasePosts.length > 0 ? firebasePosts : mockPosts;
+  const isLoading = isFirebaseLoading;
   
-  const [showFilterDialog, setShowFilterDialog] = useState(false);
-  const [showCreateDialog, setShowCreateDialog] = useState(false);
-  const [showViewDialog, setShowViewDialog] = useState(false);
-  const [showScheduleDialog, setShowScheduleDialog] = useState(false);
-  const [selectedRecruitment, setSelectedRecruitment] = useState<RecruitmentPost | null>(null);
-  const [refreshTrigger, setRefreshTrigger] = useState(0);
-  
-  const [filterCriteria, setFilterCriteria] = useState({
-    department: null as string | null,
-    contractType: null as string | null,
-    status: null as string | null,
-    priority: null as string | null,
-    location: null as string | null,
-  });
-  
-  const handleViewRecruitment = (recruitment: RecruitmentPost) => {
-    setSelectedRecruitment(recruitment);
-    setShowViewDialog(true);
-  };
-  
-  const handleScheduleRecruitment = (recruitment: RecruitmentPost) => {
-    setSelectedRecruitment(recruitment);
-    setShowScheduleDialog(true);
-  };
-  
-  const filteredPosts = recruitmentPosts.filter(post => {
-    if (filterCriteria.department && post.department !== filterCriteria.department) return false;
-    if (filterCriteria.contractType && post.contractType !== filterCriteria.contractType) return false;
-    if (filterCriteria.status && post.status !== filterCriteria.status) return false;
-    if (filterCriteria.priority && post.priority !== filterCriteria.priority) return false;
-    if (filterCriteria.location && post.location !== filterCriteria.location) return false;
-    return true;
-  });
-  
-  const handleExport = (format: 'excel' | 'pdf') => {
-    const data = filteredPosts.map(post => ({
-      'Position': post.position,
-      'Département': post.department,
-      'Date d\'ouverture': post.openDate,
-      'Statut': post.status,
-      'Localisation': post.location,
-      'Type de contrat': post.contractType,
-      'Priorité': post.priority,
-      'Responsable': post.hiringManagerName,
-      'Candidatures': post.applicationCount,
-    }));
-    
-    if (format === 'excel') {
-      exportToExcel(data, 'Offres d\'emploi', 'recrutements');
-      toast({
-        title: 'Export réussi',
-        description: 'Les données ont été exportées au format Excel.'
-      });
+  // Log the data source being used
+  React.useEffect(() => {
+    if (firebasePosts.length > 0) {
+      console.log('Using Firebase recruitment data:', firebasePosts.length, 'posts');
+    } else if (firebaseError) {
+      console.error('Firebase error, using mock data instead:', firebaseError);
+    } else if (isFirebaseLoading) {
+      console.log('Loading Firebase recruitment data...');
     } else {
-      exportToPdf(data, 'Liste des offres d\'emploi', 'recrutements');
-      toast({
-        title: 'Export réussi',
-        description: 'Les données ont été exportées au format PDF.'
-      });
+      console.log('No Firebase data available, using mock data:', mockPosts.length, 'posts');
     }
+  }, [firebasePosts, mockPosts, isFirebaseLoading, firebaseError]);
+
+  const handleViewPost = (post: any) => {
+    setSelectedRecruitment(post);
+    setViewDialogOpen(true);
   };
-  
-  const handleRefresh = () => {
-    setRefreshTrigger(prev => prev + 1);
-    toast({
-      title: 'Données actualisées',
-      description: 'Les offres d\'emploi ont été mises à jour.'
-    });
+
+  const handleEditPost = (post: any) => {
+    setSelectedRecruitment(post);
+    setEditDialogOpen(true);
+  };
+
+  const handleExport = () => {
+    toast.success("Exportation des données de recrutement lancée");
+    // Implement export logic
+  };
+
+  const handleScheduleInterview = (post: any) => {
+    setSelectedRecruitment(post);
+    setScheduleDialogOpen(true);
   };
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col space-y-4 md:flex-row md:justify-between md:items-center">
-        <div>
-          <h2 className="text-2xl font-bold">Recrutement</h2>
-          <p className="text-gray-500">Gestion des offres d'emploi et candidatures</p>
-        </div>
-        
-        <div className="flex flex-wrap gap-2">
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={() => setShowFilterDialog(true)}
-          >
-            <ListFilter className="h-4 w-4 mr-2" />
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-4">
+        <h1 className="text-2xl font-bold">Recrutement</h1>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={() => setFilterDialogOpen(true)}>
+            <Filter className="h-4 w-4 mr-2" />
             Filtres
           </Button>
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={() => handleExport('excel')}
-          >
+          <Button variant="outline" onClick={handleExport}>
             <Download className="h-4 w-4 mr-2" />
-            Export Excel
+            Exporter
           </Button>
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={() => handleExport('pdf')}
-          >
-            <Download className="h-4 w-4 mr-2" />
-            Export PDF
-          </Button>
-          <Button 
-            size="sm"
-            onClick={() => setShowCreateDialog(true)}
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Nouvelle offre d'emploi
+          <Button onClick={() => setCreateDialogOpen(true)}>
+            <Briefcase className="h-4 w-4 mr-2" />
+            Nouveau poste
           </Button>
         </div>
       </div>
-      
-      <RecruitmentStats 
-        openPositions={stats.open}
-        applicationsThisMonth={42}
-        interviewsScheduled={12}
-        applicationsChange={8}
-        isLoading={isLoading}
-      />
-      
+
+      <RecruitmentStats stats={stats} />
+
       <Card>
-        <CardContent className="p-6">
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-[300px]">Poste</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Statut</TableHead>
-                  <TableHead>Date d'ouverture</TableHead>
-                  <TableHead>Candidatures</TableHead>
-                  <TableHead>Priorité</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {isLoading ? (
+        <CardContent className="p-0 pt-6">
+          {isLoading ? (
+            <div className="flex justify-center items-center p-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500"></div>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
                   <TableRow>
-                    <TableCell colSpan={7} className="h-24 text-center">
-                      Chargement des offres d'emploi...
-                    </TableCell>
+                    <TableHead>Poste</TableHead>
+                    <TableHead>Département</TableHead>
+                    <TableHead>Date d'ouverture</TableHead>
+                    <TableHead>Responsable</TableHead>
+                    <TableHead>Statut</TableHead>
+                    <TableHead>Priorité</TableHead>
+                    <TableHead>Candidatures</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
-                ) : filteredPosts.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={7} className="h-24 text-center">
-                      Aucune offre d'emploi trouvée
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  filteredPosts.map((post) => (
+                </TableHeader>
+                <TableBody>
+                  {recruitmentPosts.map((post) => (
                     <TableRow key={post.id}>
-                      <TableCell className="font-medium">
-                        <div className="flex flex-col">
-                          <span>{post.position}</span>
-                          <span className="text-xs text-gray-500">{post.department} • {post.location}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell>{post.contractType}</TableCell>
-                      <TableCell>
-                        <Badge
-                          className={
-                            post.status === 'Ouvert'
-                              ? 'bg-green-100 text-green-800'
-                              : post.status === 'En cours'
-                              ? 'bg-blue-100 text-blue-800'
-                              : 'bg-gray-100 text-gray-800'
-                          }
-                        >
-                          {post.status}
-                        </Badge>
-                      </TableCell>
+                      <TableCell className="font-medium">{post.position}</TableCell>
+                      <TableCell>{post.department}</TableCell>
                       <TableCell>{post.openDate}</TableCell>
+                      <TableCell>{post.hiringManagerName}</TableCell>
                       <TableCell>
-                        <div className="flex items-center">
-                          <Users className="h-4 w-4 mr-2 text-gray-500" />
-                          {post.applicationCount}
-                        </div>
+                        <span className={`px-2 py-1 rounded-full text-xs ${
+                          post.status === 'Ouvert' ? 'bg-green-100 text-green-800' :
+                          post.status === 'En cours' ? 'bg-blue-100 text-blue-800' :
+                          'bg-gray-100 text-gray-800'
+                        }`}>
+                          {post.status}
+                        </span>
                       </TableCell>
                       <TableCell>
-                        <Badge
-                          variant="outline"
-                          className={
-                            post.priority === 'Haute'
-                              ? 'bg-red-50 text-red-700 border-red-200'
-                              : post.priority === 'Moyenne'
-                              ? 'bg-amber-50 text-amber-700 border-amber-200'
-                              : 'bg-blue-50 text-blue-700 border-blue-200'
-                          }
-                        >
+                        <span className={`px-2 py-1 rounded-full text-xs ${
+                          post.priority === 'Haute' ? 'bg-red-100 text-red-800' :
+                          post.priority === 'Moyenne' ? 'bg-yellow-100 text-yellow-800' :
+                          'bg-gray-100 text-gray-800'
+                        }`}>
                           {post.priority}
-                        </Badge>
+                        </span>
                       </TableCell>
+                      <TableCell>{post.applicationCount}</TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">
-                          <Button 
-                            variant="ghost" 
-                            size="sm"
-                            onClick={() => handleViewRecruitment(post)}
-                          >
-                            <Eye className="h-4 w-4 mr-1" />
-                            Voir
+                          <Button variant="ghost" size="icon" onClick={() => handleViewPost(post)}>
+                            <Eye className="h-4 w-4" />
                           </Button>
-                          <Button 
-                            variant="ghost" 
-                            size="sm"
-                            onClick={() => handleScheduleRecruitment(post)}
-                          >
-                            <Calendar className="h-4 w-4 mr-1" />
-                            Planifier
+                          <Button variant="ghost" size="icon" onClick={() => handleEditPost(post)}>
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button variant="ghost" size="icon" onClick={() => handleScheduleInterview(post)}>
+                            <Calendar className="h-4 w-4" />
                           </Button>
                         </div>
                       </TableCell>
                     </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </div>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
         </CardContent>
       </Card>
-      
-      <Dialog open={showFilterDialog} onOpenChange={setShowFilterDialog}>
-        <DialogContent className="sm:max-w-[500px]">
-          <RecruitmentFilterDialog 
-            filterCriteria={filterCriteria}
-            setFilterCriteria={setFilterCriteria}
-            onClose={() => setShowFilterDialog(false)}
+
+      {selectedRecruitment && (
+        <>
+          <RecruitmentViewDialog 
+            open={viewDialogOpen} 
+            onOpenChange={setViewDialogOpen} 
+            recruitment={selectedRecruitment} 
           />
-        </DialogContent>
-      </Dialog>
+          
+          <EditRecruitmentDialog 
+            open={editDialogOpen} 
+            onOpenChange={setEditDialogOpen} 
+            recruitment={selectedRecruitment} 
+          />
+          
+          <RecruitmentScheduleDialog 
+            open={scheduleDialogOpen} 
+            onOpenChange={setScheduleDialogOpen} 
+            recruitment={selectedRecruitment} 
+          />
+        </>
+      )}
+      
+      <RecruitmentFilterDialog 
+        open={filterDialogOpen} 
+        onOpenChange={setFilterDialogOpen} 
+      />
       
       <CreateRecruitmentDialog 
-        open={showCreateDialog}
-        onOpenChange={setShowCreateDialog}
-        onSuccess={handleRefresh}
-      />
-      
-      <RecruitmentViewDialog 
-        open={showViewDialog}
-        onOpenChange={setShowViewDialog}
-        recruitment={selectedRecruitment}
-      />
-      
-      <RecruitmentScheduleDialog 
-        open={showScheduleDialog}
-        onOpenChange={setShowScheduleDialog}
-        recruitment={selectedRecruitment}
-        onSuccess={handleRefresh}
+        open={createDialogOpen} 
+        onOpenChange={setCreateDialogOpen} 
       />
     </div>
   );

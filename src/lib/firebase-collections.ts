@@ -98,6 +98,6 @@ export const COLLECTIONS = {
     REPORTS: 'hr_reports',
     ALERTS: 'hr_alerts',
     BADGES: 'hr_badges',                     // Added missing BADGES field
-    RECRUITMENT: 'hr-recruitment'            // Add the recruitment collection
+    RECRUITMENT: 'hr-recruitment'            // Using the existing recruitment collection
   }
 };
