@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,6 +6,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogTrigger
 } from '@/components/ui/dialog';
 import {
   AlertDialog,
@@ -36,10 +36,8 @@ const EmployeesCompanies: React.FC = () => {
   const [currentCompany, setCurrentCompany] = useState<Company | null>(null);
   const { isOffline } = useAuth();
   
-  // Utiliser le hook useCompaniesData pour récupérer les données des entreprises
   const { companies, isLoading, error } = useCompaniesData();
 
-  // Filtrer les entreprises en fonction de la recherche
   useEffect(() => {
     if (searchQuery.trim() === '') {
       setFilteredCompanies(companies);
@@ -54,19 +52,15 @@ const EmployeesCompanies: React.FC = () => {
     }
   }, [searchQuery, companies]);
 
-  // Gérer l'affichage des détails d'une entreprise
   const handleViewCompany = (company: Company) => {
     console.log('Affichage des détails de l\'entreprise:', company);
-    // Implémentation future: navigation vers une vue détaillée
   };
 
-  // Gérer la modification d'une entreprise
   const handleEditCompany = (company: Company) => {
     setCurrentCompany(company);
     setIsEditDialogOpen(true);
   };
 
-  // Gérer la mise à jour d'une entreprise
   const handleUpdateCompany = (companyData: Partial<Company>) => {
     if (!currentCompany) return;
 
@@ -76,34 +70,27 @@ const EmployeesCompanies: React.FC = () => {
       updatedAt: new Date().toISOString()
     };
 
-    // Mettre à jour l'entreprise dans la liste
     const updatedCompanies = companies.map(c => 
       c.id === currentCompany.id ? updatedCompany as Company : c
     );
     
-    // Mise à jour simulée (à remplacer par un appel API réel)
     toast.success('Entreprise mise à jour avec succès');
     setIsEditDialogOpen(false);
   };
 
-  // Gérer la suppression d'une entreprise
   const handleDeleteClick = (company: Company) => {
     setCurrentCompany(company);
     setIsDeleteDialogOpen(true);
   };
 
-  // Confirmer la suppression d'une entreprise
   const handleDeleteConfirm = () => {
     if (!currentCompany) return;
 
-    // Suppression simulée (à remplacer par un appel API réel)
     toast.success('Entreprise supprimée avec succès');
     setIsDeleteDialogOpen(false);
   };
 
-  // Gérer l'ajout d'une nouvelle entreprise
   const handleAddCompany = (companyData: Partial<Company>) => {
-    // Création simulée (à remplacer par un appel API réel)
     const newCompany = {
       ...companyData,
       id: `COMP${Date.now().toString().slice(-6)}`,
@@ -192,7 +179,6 @@ const EmployeesCompanies: React.FC = () => {
         </CardContent>
       </Card>
 
-      {/* Boîte de dialogue pour modifier une entreprise */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
@@ -210,7 +196,6 @@ const EmployeesCompanies: React.FC = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Boîte de dialogue pour confirmer la suppression */}
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>

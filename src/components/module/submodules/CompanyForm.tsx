@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,7 +11,7 @@ import {
   SelectValue
 } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { Company } from './employees/EmployeesCompanies';
+import { Company } from './companies/types';
 
 interface CompanyFormProps {
   isOpen: boolean;
