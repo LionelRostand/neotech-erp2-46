@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, orderBy, serverTimestamp, Timestamp } from 'firebase/firestore';
+import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, orderBy, serverTimestamp, Timestamp, where } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Client, ClientFormData } from '../types/crm-types';
 import { toast } from 'sonner';
@@ -142,7 +142,7 @@ export const useClientsData = () => {
       const mockClients: Omit<Client, 'id'>[] = [
         {
           name: 'Acme Corporation',
-          sector: 'Technology',
+          sector: 'technology',
           revenue: '1-10M',
           status: 'active',
           contactName: 'John Doe',
@@ -156,7 +156,7 @@ export const useClientsData = () => {
         },
         {
           name: 'Globex Industries',
-          sector: 'Manufacturing',
+          sector: 'manufacturing',
           revenue: '10-50M',
           status: 'active',
           contactName: 'Jane Smith',
