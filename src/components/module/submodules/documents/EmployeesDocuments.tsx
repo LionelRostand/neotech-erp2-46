@@ -11,7 +11,10 @@ import {
   Upload,
   Search,
   FolderOpen,
-  Filter
+  Filter,
+  FileUp,
+  Calendar,
+  ClipboardList
 } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
@@ -26,24 +29,29 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
+import { Input } from '@/components/ui/input';
+import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
 
 const EmployeesDocuments: React.FC = () => {
   const [activeTab, setActiveTab] = useState('tous');
   const { documents, stats, isLoading, error } = useDocumentsData();
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   const [uploadDocumentType, setUploadDocumentType] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Define document types for upload and for tabs
   const documentTypes = [
-    { id: 'contrat', label: 'Contrats' },
-    { id: 'attestation', label: 'Attestations' },
-    { id: 'formulaire', label: 'Formulaires' },
-    { id: 'identite', label: 'Pièces d\'identité' },
-    { id: 'cv', label: 'CVs' },
-    { id: 'diplome', label: 'Diplômes' },
-    { id: 'salaire', label: 'Bulletins de salaire' },
-    { id: 'autre', label: 'Autres' }
+    { id: 'contrat', label: 'Contrats', icon: <FileText className="h-4 w-4" /> },
+    { id: 'attestation', label: 'Attestations', icon: <ClipboardList className="h-4 w-4" /> },
+    { id: 'formulaire', label: 'Formulaires', icon: <ClipboardList className="h-4 w-4" /> },
+    { id: 'identite', label: 'Pièces d\'identité', icon: <FileText className="h-4 w-4" /> },
+    { id: 'cv', label: 'CVs', icon: <FileText className="h-4 w-4" /> },
+    { id: 'diplome', label: 'Diplômes', icon: <FileText className="h-4 w-4" /> },
+    { id: 'salaire', label: 'Bulletins de salaire', icon: <FileText className="h-4 w-4" /> },
+    { id: 'autre', label: 'Autres', icon: <FileText className="h-4 w-4" /> }
   ];
 
   const handleExportData = (format: 'excel' | 'pdf') => {
@@ -93,9 +101,36 @@ const EmployeesDocuments: React.FC = () => {
     );
   }
 
-  const filteredDocuments = activeTab === 'tous' 
-    ? documents 
-    : documents.filter(doc => doc.type.toLowerCase() === activeTab);
+  // Filter documents by search query and active tab
+  const filteredDocuments = documents
+    .filter(doc => 
+      // Filter by search query
+      (doc.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (doc.employeeName && doc.employeeName.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      doc.type.toLowerCase().includes(searchQuery.toLowerCase())) &&
+      // Filter by active tab
+      (activeTab === 'tous' || doc.type.toLowerCase() === activeTab)
+    );
+
+  // Group documents by month
+  const groupedDocuments = filteredDocuments.reduce((acc, document) => {
+    const date = new Date(document.uploadDate);
+    const month = format(date, 'MMMM yyyy', { locale: fr });
+    
+    if (!acc[month]) {
+      acc[month] = [];
+    }
+    
+    acc[month].push(document);
+    return acc;
+  }, {} as Record<string, typeof filteredDocuments>);
+  
+  // Sort months in descending order (newest first)
+  const sortedMonths = Object.keys(groupedDocuments).sort((a, b) => {
+    const dateA = new Date(a);
+    const dateB = new Date(b);
+    return dateB.getTime() - dateA.getTime();
+  });
 
   return (
     <div className="space-y-6">
@@ -106,10 +141,16 @@ const EmployeesDocuments: React.FC = () => {
           <p className="text-gray-500">Gestion des documents du personnel</p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm">
-            <Search className="h-4 w-4 mr-2" />
-            Rechercher
-          </Button>
+          <div className="relative flex-1 md:w-64">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              type="search"
+              placeholder="Rechercher des documents..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-8"
+            />
+          </div>
           
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -140,9 +181,11 @@ const EmployeesDocuments: React.FC = () => {
               <DropdownMenuItem onClick={() => handleUploadByType('')}>
                 Tout type de document
               </DropdownMenuItem>
+              <DropdownMenuSeparator />
               {documentTypes.map(type => (
                 <DropdownMenuItem key={type.id} onClick={() => handleUploadByType(type.id)}>
-                  {type.label}
+                  {type.icon}
+                  <span className="ml-2">{type.label}</span>
                 </DropdownMenuItem>
               ))}
             </DropdownMenuContent>
@@ -150,19 +193,28 @@ const EmployeesDocuments: React.FC = () => {
         </div>
       </div>
 
-      {/* Document types tabs */}
+      {/* Document types tabs with badges showing counts */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="w-full max-w-4xl grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8">
+        <TabsList className="w-full max-w-4xl grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-9">
           <TabsTrigger value="tous" className="flex items-center">
             <FolderOpen className="h-4 w-4 mr-2" />
             Tous
+            <Badge variant="secondary" className="ml-2 h-5 px-1.5">
+              {documents.length}
+            </Badge>
           </TabsTrigger>
-          {documentTypes.map(type => (
-            <TabsTrigger key={type.id} value={type.id} className="flex items-center">
-              <FileText className="h-4 w-4 mr-2" />
-              {type.label}
-            </TabsTrigger>
-          ))}
+          {documentTypes.map(type => {
+            const count = documents.filter(doc => doc.type.toLowerCase() === type.id).length;
+            return (
+              <TabsTrigger key={type.id} value={type.id} className="flex items-center">
+                {type.icon}
+                <span className="mx-1">{type.label}</span>
+                <Badge variant="secondary" className="h-5 px-1.5">
+                  {count}
+                </Badge>
+              </TabsTrigger>
+            );
+          })}
         </TabsList>
 
         <TabsContent value={activeTab}>
@@ -173,7 +225,7 @@ const EmployeesDocuments: React.FC = () => {
                   <Filter className="h-4 w-4 text-gray-500" />
                   <span className="text-sm text-gray-500">Filtres:</span>
                   <Badge variant="outline" className="font-normal">
-                    Tous
+                    {activeTab === 'tous' ? 'Tous les documents' : documentTypes.find(t => t.id === activeTab)?.label}
                   </Badge>
                 </div>
                 
@@ -190,70 +242,115 @@ const EmployeesDocuments: React.FC = () => {
                 )}
               </div>
               
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Document</TableHead>
-                      <TableHead>Type</TableHead>
-                      <TableHead>Employé</TableHead>
-                      <TableHead>Date d'upload</TableHead>
-                      <TableHead>Taille</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredDocuments.length > 0 ? (
-                      filteredDocuments.map((document) => (
-                        <TableRow key={document.id}>
-                          <TableCell className="font-medium">
-                            {document.title}
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant="outline">{document.type}</Badge>
-                          </TableCell>
-                          <TableCell>
-                            {document.employeeName ? (
-                              <div className="flex items-center space-x-2">
-                                <Avatar className="h-6 w-6">
-                                  <AvatarImage src={document.employeePhoto} alt={document.employeeName} />
-                                  <AvatarFallback>{document.employeeName.charAt(0)}</AvatarFallback>
-                                </Avatar>
-                                <span>{document.employeeName}</span>
-                              </div>
-                            ) : (
-                              'Non assigné'
-                            )}
-                          </TableCell>
-                          <TableCell>{document.uploadDate}</TableCell>
-                          <TableCell>{document.fileSize || '-'}</TableCell>
-                          <TableCell className="text-right">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => {
-                                if (document.url) {
-                                  window.open(document.url, '_blank');
-                                } else {
-                                  toast.error("URL du document non disponible");
-                                }
-                              }}
-                            >
-                              Ouvrir
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      ))
-                    ) : (
-                      <TableRow>
-                        <TableCell colSpan={6} className="h-24 text-center">
-                          Aucun document trouvé
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
-              </div>
+              {filteredDocuments.length === 0 ? (
+                <div className="text-center p-12">
+                  <FileText className="h-12 w-12 mx-auto text-gray-400 mb-3" />
+                  <h3 className="text-lg font-medium mb-2">Aucun document trouvé</h3>
+                  <p className="text-sm text-gray-500 mb-4">
+                    {searchQuery 
+                      ? "Aucun document ne correspond à votre recherche."
+                      : "Commencez par ajouter des documents pour les voir apparaître ici."}
+                  </p>
+                  <Button onClick={() => handleUploadByType(activeTab !== 'tous' ? activeTab : '')}>
+                    <Upload className="h-4 w-4 mr-2" />
+                    Uploader un document
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-8">
+                  {sortedMonths.map(month => (
+                    <div key={month} className="space-y-4">
+                      <h3 className="font-medium text-lg flex items-center">
+                        <Calendar className="h-4 w-4 mr-2 text-gray-500" />
+                        {month.charAt(0).toUpperCase() + month.slice(1)}
+                      </h3>
+                      <div className="overflow-x-auto rounded-md border">
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead>Document</TableHead>
+                              <TableHead>Type</TableHead>
+                              <TableHead>Employé</TableHead>
+                              <TableHead>Date d'upload</TableHead>
+                              <TableHead>Taille</TableHead>
+                              <TableHead className="text-right">Actions</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {groupedDocuments[month].map((document) => (
+                              <TableRow key={document.id} className="hover:bg-gray-50">
+                                <TableCell className="font-medium">
+                                  <div className="flex items-center">
+                                    <div className="bg-primary-50 p-2 rounded mr-3">
+                                      <FileText className="h-5 w-5 text-primary" />
+                                    </div>
+                                    <span>{document.title}</span>
+                                  </div>
+                                </TableCell>
+                                <TableCell>
+                                  <Badge variant="outline" className="bg-primary-50 text-primary border-primary-100">
+                                    {document.type}
+                                  </Badge>
+                                </TableCell>
+                                <TableCell>
+                                  {document.employeeName ? (
+                                    <div className="flex items-center space-x-2">
+                                      <Avatar className="h-6 w-6 border">
+                                        <AvatarImage src={document.employeePhoto} alt={document.employeeName} />
+                                        <AvatarFallback className="bg-primary-100 text-primary">
+                                          {document.employeeName.charAt(0)}
+                                        </AvatarFallback>
+                                      </Avatar>
+                                      <span>{document.employeeName}</span>
+                                    </div>
+                                  ) : (
+                                    <span className="text-gray-500">Non assigné</span>
+                                  )}
+                                </TableCell>
+                                <TableCell>
+                                  <div className="flex items-center">
+                                    <Calendar className="h-3.5 w-3.5 text-gray-500 mr-1.5" />
+                                    {document.uploadDate}
+                                  </div>
+                                </TableCell>
+                                <TableCell>{document.fileSize || '-'}</TableCell>
+                                <TableCell className="text-right">
+                                  <div className="flex justify-end space-x-1">
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-8 w-8 p-0"
+                                      onClick={() => {
+                                        if (document.url) {
+                                          window.open(document.url, '_blank');
+                                        } else {
+                                          toast.error("URL du document non disponible");
+                                        }
+                                      }}
+                                    >
+                                      <FileText className="h-4 w-4" />
+                                    </Button>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-8 w-8 p-0"
+                                      onClick={() => {
+                                        toast.success("Téléchargement démarré");
+                                      }}
+                                    >
+                                      <Download className="h-4 w-4" />
+                                    </Button>
+                                  </div>
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
