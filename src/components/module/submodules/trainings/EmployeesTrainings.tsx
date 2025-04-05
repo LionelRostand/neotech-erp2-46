@@ -7,13 +7,47 @@ import {
   GraduationCap, 
   Plus,
   Calendar,
-  Building
+  Building,
+  Filter,
+  FileText
 } from 'lucide-react';
 import { useTrainingsData } from '@/hooks/useTrainingsData';
+import CreateTrainingDialog from './CreateTrainingDialog';
+import TrainingsFilter from './TrainingsFilter';
+import TrainingViewDialog from './TrainingViewDialog';
+import TrainingEditDialog from './TrainingEditDialog';
 
 const EmployeesTrainings: React.FC = () => {
   const [activeTab, setActiveTab] = useState('all');
-  const { trainings, stats, isLoading, error } = useTrainingsData();
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const { trainings, stats, isLoading, error } = useTrainingsData(refreshTrigger);
+  
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [showFilterDialog, setShowFilterDialog] = useState(false);
+  const [showViewDialog, setShowViewDialog] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [selectedTraining, setSelectedTraining] = useState<any>(null);
+  const [filters, setFilters] = useState<any>({});
+
+  // Handler for refreshing data after operations
+  const handleRefresh = () => {
+    setRefreshTrigger(prev => prev + 1);
+  };
+
+  const handleViewTraining = (training: any) => {
+    setSelectedTraining(training);
+    setShowViewDialog(true);
+  };
+
+  const handleEditTraining = (training: any) => {
+    setSelectedTraining(training);
+    setShowEditDialog(true);
+  };
+
+  const applyFilters = (filterData: any) => {
+    setFilters(filterData);
+    // In a real app, we would filter the data here
+  };
 
   if (isLoading) {
     return (
@@ -32,9 +66,36 @@ const EmployeesTrainings: React.FC = () => {
     );
   }
 
-  const filteredTrainings = activeTab === 'all' 
-    ? trainings 
-    : trainings?.filter(training => training.status.toLowerCase() === activeTab.toLowerCase()) || [];
+  // Apply filters - this is a simplified implementation
+  const filteredTrainings = trainings.filter(training => {
+    if (activeTab !== 'all' && training.status.toLowerCase() !== activeTab.toLowerCase()) {
+      return false;
+    }
+    
+    // Apply custom filters if set
+    if (filters.title && !training.title.toLowerCase().includes(filters.title.toLowerCase())) {
+      return false;
+    }
+    
+    if (filters.employee && !training.employeeName.toLowerCase().includes(filters.employee.toLowerCase())) {
+      return false;
+    }
+    
+    if (filters.provider && filters.provider !== '' && 
+        (!training.provider || !training.provider.toLowerCase().includes(filters.provider.toLowerCase()))) {
+      return false;
+    }
+    
+    if (filters.dateFrom && new Date(training.startDate) < new Date(filters.dateFrom)) {
+      return false;
+    }
+    
+    if (filters.dateTo && training.endDate && new Date(training.endDate) > new Date(filters.dateTo)) {
+      return false;
+    }
+    
+    return true;
+  });
 
   return (
     <div className="space-y-6">
@@ -43,10 +104,16 @@ const EmployeesTrainings: React.FC = () => {
           <h2 className="text-2xl font-bold">Formations</h2>
           <p className="text-gray-500">Gestion des formations du personnel</p>
         </div>
-        <Button>
-          <Plus className="h-4 w-4 mr-2" />
-          Nouvelle formation
-        </Button>
+        <div className="flex space-x-2">
+          <Button variant="outline" onClick={() => setShowFilterDialog(true)}>
+            <Filter className="h-4 w-4 mr-2" />
+            Filtres
+          </Button>
+          <Button onClick={() => setShowCreateDialog(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            Nouvelle formation
+          </Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -118,8 +185,13 @@ const EmployeesTrainings: React.FC = () => {
                       <div className="mt-2 text-sm">
                         Participant: <span className="font-medium">{training.employeeName}</span>
                       </div>
-                      <div className="flex justify-end mt-2">
-                        <Button variant="outline" size="sm">Voir détails</Button>
+                      <div className="flex justify-end mt-2 space-x-2">
+                        <Button variant="outline" size="sm" onClick={() => handleViewTraining(training)}>
+                          Voir
+                        </Button>
+                        <Button variant="outline" size="sm" onClick={() => handleEditTraining(training)}>
+                          Planifier
+                        </Button>
                       </div>
                     </div>
                   ))}
@@ -129,6 +201,32 @@ const EmployeesTrainings: React.FC = () => {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Dialogs */}
+      <CreateTrainingDialog 
+        open={showCreateDialog} 
+        onOpenChange={setShowCreateDialog}
+        onSuccess={handleRefresh}
+      />
+      
+      <TrainingsFilter 
+        open={showFilterDialog} 
+        onOpenChange={setShowFilterDialog}
+        onApplyFilters={applyFilters}
+      />
+      
+      <TrainingViewDialog 
+        open={showViewDialog} 
+        onOpenChange={setShowViewDialog}
+        training={selectedTraining}
+      />
+      
+      <TrainingEditDialog 
+        open={showEditDialog} 
+        onOpenChange={setShowEditDialog}
+        training={selectedTraining}
+        onSuccess={handleRefresh}
+      />
     </div>
   );
 };

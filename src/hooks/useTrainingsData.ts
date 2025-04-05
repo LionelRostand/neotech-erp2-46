@@ -1,5 +1,5 @@
 
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { useHrModuleData } from './useHrModuleData';
 
 export interface Training {
@@ -26,7 +26,7 @@ export interface Training {
 /**
  * Hook pour accéder aux données des formations directement depuis Firebase
  */
-export const useTrainingsData = () => {
+export const useTrainingsData = (refreshTrigger?: number) => {
   const { trainings, employees, isLoading, error } = useHrModuleData();
   
   // Enrichir les formations avec les noms des employés
@@ -58,7 +58,7 @@ export const useTrainingsData = () => {
         certificateURL: training.certificateURL,
       } as Training;
     });
-  }, [trainings, employees]);
+  }, [trainings, employees, refreshTrigger]); // Add refreshTrigger to dependencies
   
   // Fonction pour formater les dates
   const formatDate = (dateStr: string) => {
