@@ -1,24 +1,79 @@
 
 import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Button } from '@/components/ui/button';
 import { 
   FileText, 
-  FolderOpen,
-  Upload,
+  ListFilter, 
+  Plus,
   Download,
-  Search
+  Upload,
+  Search,
+  FolderOpen,
+  Filter
 } from 'lucide-react';
-import { useDocumentsData } from '@/hooks/useDocumentsData';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { toast } from 'sonner';
+import { useDocumentsData } from '@/hooks/useDocumentsData';
+import UploadDocumentDialog from './components/UploadDocumentDialog';
+import { exportToExcel } from '@/utils/exportUtils';
+import { exportToPdf } from '@/utils/pdfUtils';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const EmployeesDocuments: React.FC = () => {
   const [activeTab, setActiveTab] = useState('tous');
-  const { documents, isLoading, error } = useDocumentsData();
+  const { documents, stats, isLoading, error } = useDocumentsData();
+  const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
+  const [uploadDocumentType, setUploadDocumentType] = useState('');
+
+  // Define document types for upload and for tabs
+  const documentTypes = [
+    { id: 'contrat', label: 'Contrats' },
+    { id: 'attestation', label: 'Attestations' },
+    { id: 'formulaire', label: 'Formulaires' },
+    { id: 'identite', label: 'Pièces d\'identité' },
+    { id: 'cv', label: 'CVs' },
+    { id: 'diplome', label: 'Diplômes' },
+    { id: 'salaire', label: 'Bulletins de salaire' },
+    { id: 'autre', label: 'Autres' }
+  ];
 
   const handleExportData = (format: 'excel' | 'pdf') => {
-    toast.success(`Export ${format.toUpperCase()} téléchargé`);
+    const filteredDocuments = activeTab === 'tous' 
+      ? documents 
+      : documents.filter(doc => doc.type.toLowerCase() === activeTab);
+      
+    if (filteredDocuments.length === 0) {
+      toast.error("Aucune donnée à exporter");
+      return;
+    }
+    
+    if (format === 'excel') {
+      exportToExcel(filteredDocuments, 'Documents_RH', `Documents_RH_${new Date().toISOString().slice(0,10)}`);
+      toast.success("Export Excel téléchargé");
+    } else {
+      exportToPdf(filteredDocuments, 'Documents RH', `Documents_RH_${new Date().toISOString().slice(0,10)}`);
+      toast.success("Export PDF téléchargé");
+    }
+  };
+  
+  const handleUploadSuccess = () => {
+    toast.success("Document ajouté avec succès");
+    // In a real implementation, we would refresh the documents list here
+  };
+
+  // Handler for uploading a specific document type
+  const handleUploadByType = (type: string) => {
+    setUploadDocumentType(type);
+    setUploadDialogOpen(true);
   };
 
   if (isLoading) {
@@ -40,10 +95,11 @@ const EmployeesDocuments: React.FC = () => {
 
   const filteredDocuments = activeTab === 'tous' 
     ? documents 
-    : documents?.filter(doc => doc.type?.toLowerCase() === activeTab) || [];
+    : documents.filter(doc => doc.type.toLowerCase() === activeTab);
 
   return (
     <div className="space-y-6">
+      {/* Header with actions */}
       <div className="flex flex-col space-y-4 md:flex-row md:justify-between md:items-center">
         <div>
           <h2 className="text-2xl font-bold">Documents RH</h2>
@@ -54,76 +110,162 @@ const EmployeesDocuments: React.FC = () => {
             <Search className="h-4 w-4 mr-2" />
             Rechercher
           </Button>
-          <Button variant="outline" size="sm" onClick={() => handleExportData('excel')}>
-            <Download className="h-4 w-4 mr-2" />
-            Exporter
-          </Button>
-          <Button size="sm">
-            <Upload className="h-4 w-4 mr-2" />
-            Uploader
-          </Button>
+          
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm">
+                <Download className="h-4 w-4 mr-2" />
+                Exporter
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuItem onClick={() => handleExportData('excel')}>
+                Exporter en Excel
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleExportData('pdf')}>
+                Exporter en PDF
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          
+          {/* Upload dropdown with document type options */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button size="sm">
+                <Upload className="h-4 w-4 mr-2" />
+                Uploader
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuItem onClick={() => handleUploadByType('')}>
+                Tout type de document
+              </DropdownMenuItem>
+              {documentTypes.map(type => (
+                <DropdownMenuItem key={type.id} onClick={() => handleUploadByType(type.id)}>
+                  {type.label}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 
+      {/* Document types tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="w-full max-w-4xl grid grid-cols-2 sm:grid-cols-5">
+        <TabsList className="w-full max-w-4xl grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8">
           <TabsTrigger value="tous" className="flex items-center">
             <FolderOpen className="h-4 w-4 mr-2" />
             Tous
           </TabsTrigger>
-          <TabsTrigger value="contrat" className="flex items-center">
-            <FileText className="h-4 w-4 mr-2" />
-            Contrats
-          </TabsTrigger>
-          <TabsTrigger value="attestation" className="flex items-center">
-            <FileText className="h-4 w-4 mr-2" />
-            Attestations
-          </TabsTrigger>
-          <TabsTrigger value="formulaire" className="flex items-center">
-            <FileText className="h-4 w-4 mr-2" />
-            Formulaires
-          </TabsTrigger>
-          <TabsTrigger value="autre" className="flex items-center">
-            <FileText className="h-4 w-4 mr-2" />
-            Autres
-          </TabsTrigger>
+          {documentTypes.map(type => (
+            <TabsTrigger key={type.id} value={type.id} className="flex items-center">
+              <FileText className="h-4 w-4 mr-2" />
+              {type.label}
+            </TabsTrigger>
+          ))}
         </TabsList>
 
         <TabsContent value={activeTab}>
           <Card>
             <CardContent className="p-6">
-              {filteredDocuments.length === 0 ? (
-                <div className="text-center p-8 border border-dashed rounded-md">
-                  <FileText className="w-12 h-12 mx-auto text-gray-400" />
-                  <p className="mt-2 text-gray-500">Aucun document trouvé</p>
-                  <Button variant="outline" size="sm" className="mt-4">
-                    Importer un document
+              <div className="flex justify-between items-center mb-4">
+                <div className="flex items-center space-x-2">
+                  <Filter className="h-4 w-4 text-gray-500" />
+                  <span className="text-sm text-gray-500">Filtres:</span>
+                  <Badge variant="outline" className="font-normal">
+                    Tous
+                  </Badge>
+                </div>
+                
+                {/* Upload button specific to the current tab */}
+                {activeTab !== 'tous' && (
+                  <Button 
+                    size="sm" 
+                    variant="outline"
+                    onClick={() => handleUploadByType(activeTab)}
+                  >
+                    <Upload className="h-4 w-4 mr-2" />
+                    Uploader un {documentTypes.find(t => t.id === activeTab)?.label.slice(0, -1) || 'document'}
                   </Button>
-                </div>
-              ) : (
-                <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-                  {filteredDocuments.map((doc, index) => (
-                    <div key={index} className="border rounded-md p-4 hover:bg-gray-50">
-                      <div className="flex items-center mb-2">
-                        <FileText className="w-5 h-5 mr-2 text-blue-500" />
-                        <span className="font-medium">{doc.title || doc.filename || doc.name}</span>
-                      </div>
-                      <p className="text-sm text-gray-500 mb-3">
-                        {doc.type} • {doc.uploadDate || doc.createdAt || doc.date}
-                      </p>
-                      <div className="flex justify-end">
-                        <Button variant="ghost" size="sm">
-                          <Download className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
+                )}
+              </div>
+              
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Document</TableHead>
+                      <TableHead>Type</TableHead>
+                      <TableHead>Employé</TableHead>
+                      <TableHead>Date d'upload</TableHead>
+                      <TableHead>Taille</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredDocuments.length > 0 ? (
+                      filteredDocuments.map((document) => (
+                        <TableRow key={document.id}>
+                          <TableCell className="font-medium">
+                            {document.title}
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="outline">{document.type}</Badge>
+                          </TableCell>
+                          <TableCell>
+                            {document.employeeName ? (
+                              <div className="flex items-center space-x-2">
+                                <Avatar className="h-6 w-6">
+                                  <AvatarImage src={document.employeePhoto} alt={document.employeeName} />
+                                  <AvatarFallback>{document.employeeName.charAt(0)}</AvatarFallback>
+                                </Avatar>
+                                <span>{document.employeeName}</span>
+                              </div>
+                            ) : (
+                              'Non assigné'
+                            )}
+                          </TableCell>
+                          <TableCell>{document.uploadDate}</TableCell>
+                          <TableCell>{document.fileSize || '-'}</TableCell>
+                          <TableCell className="text-right">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => {
+                                if (document.url) {
+                                  window.open(document.url, '_blank');
+                                } else {
+                                  toast.error("URL du document non disponible");
+                                }
+                              }}
+                            >
+                              Ouvrir
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    ) : (
+                      <TableRow>
+                        <TableCell colSpan={6} className="h-24 text-center">
+                          Aucun document trouvé
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
       </Tabs>
+      
+      {/* Upload Document Dialog with type preset */}
+      <UploadDocumentDialog 
+        open={uploadDialogOpen}
+        onOpenChange={setUploadDialogOpen}
+        onSuccess={handleUploadSuccess}
+        defaultType={uploadDocumentType}
+      />
     </div>
   );
 };

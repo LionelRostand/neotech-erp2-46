@@ -1,8 +1,9 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Employee } from '@/types/employee';
 import { FileText, Download, Plus } from 'lucide-react';
+import UploadDocumentDialog from '../../documents/components/UploadDocumentDialog';
 
 interface Document {
   name: string;
@@ -18,8 +19,17 @@ interface DocumentsTabProps {
 }
 
 const DocumentsTab: React.FC<DocumentsTabProps> = ({ documents = [], employee }) => {
+  const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
+  const [uploadDocumentType, setUploadDocumentType] = useState('');
+
   const handleUpload = () => {
-    console.log('Upload document');
+    setUploadDocumentType('');
+    setUploadDialogOpen(true);
+  };
+
+  const handleUploadSuccess = () => {
+    console.log('Document uploaded successfully');
+    // In a real implementation, we would refresh the documents list here
   };
 
   const handleDownload = (document: Document | string) => {
@@ -83,6 +93,14 @@ const DocumentsTab: React.FC<DocumentsTabProps> = ({ documents = [], employee })
           ))}
         </div>
       )}
+
+      {/* Upload Document Dialog */}
+      <UploadDocumentDialog 
+        open={uploadDialogOpen}
+        onOpenChange={setUploadDialogOpen}
+        onSuccess={handleUploadSuccess}
+        defaultType={uploadDocumentType}
+      />
     </div>
   );
 };
