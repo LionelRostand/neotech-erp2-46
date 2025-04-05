@@ -1,4 +1,3 @@
-
 export interface Company {
   id: string;
   name: string;
@@ -31,6 +30,7 @@ export interface CompanyContact {
   email: string;
   phone: string;
   isMain: boolean;
+  isMainContact: boolean;
   createdAt: string;
   updatedAt: string;
 }
