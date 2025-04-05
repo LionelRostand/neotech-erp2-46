@@ -1,3 +1,4 @@
+
 // Define types for the CRM module
 
 // Common interfaces
@@ -10,8 +11,8 @@ export interface BaseEntity {
 // Prospect related types
 export interface Prospect extends BaseEntity {
   company: string;
-  contactName: string;
-  contactEmail: string;
+  contactName?: string;
+  contactEmail?: string;
   contactPhone?: string;
   status: 'new' | 'contacted' | 'meeting' | 'proposal' | 'negotiation' | 'converted' | 'lost';
   source?: string;
@@ -24,13 +25,13 @@ export interface Prospect extends BaseEntity {
   estimatedValue?: number;
   email?: string;
   phone?: string;
-  name?: string;
+  name: string;
 }
 
 export interface ProspectFormData {
   company: string;
-  contactName: string;
-  contactEmail: string;
+  contactName?: string;
+  contactEmail?: string;
   contactPhone?: string;
   status: string;
   source?: string;
@@ -41,9 +42,9 @@ export interface ProspectFormData {
   address?: string;
   size?: 'small' | 'medium' | 'large' | 'enterprise';
   estimatedValue?: number;
-  email?: string;
+  email: string;
   phone?: string;
-  name?: string;
+  name: string;
 }
 
 // Client related types

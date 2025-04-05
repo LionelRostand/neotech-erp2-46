@@ -15,41 +15,20 @@ import { ProspectFormData, Prospect } from '../types/crm-types';
 export interface ProspectFormProps {
   initialData?: Prospect;
   onSubmit: (data: ProspectFormData) => void;
+  formData: ProspectFormData;
+  handleInputChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
+  handleSelectChange: (name: string, value: string) => void;
+  buttonText?: string;
 }
 
 const ProspectForm: React.FC<ProspectFormProps> = ({
   initialData,
-  onSubmit
+  onSubmit,
+  formData,
+  handleInputChange,
+  handleSelectChange,
+  buttonText = initialData ? 'Mettre à jour' : 'Ajouter'
 }) => {
-  const [formData, setFormData] = React.useState<ProspectFormData>(
-    initialData ? {
-      name: initialData.name,
-      company: initialData.company,
-      email: initialData.email,
-      phone: initialData.phone,
-      status: initialData.status,
-      source: initialData.source,
-      notes: initialData.notes || '',
-    } : {
-      name: '',
-      company: '',
-      email: '',
-      phone: '',
-      status: 'new',
-      source: 'website',
-      notes: '',
-    }
-  );
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleSelectChange = (name: string, value: string) => {
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSubmit(formData);
@@ -124,7 +103,7 @@ const ProspectForm: React.FC<ProspectFormProps> = ({
         <div className="space-y-2">
           <label htmlFor="source" className="text-sm font-medium">Source</label>
           <Select 
-            value={formData.source} 
+            value={formData.source || 'website'} 
             onValueChange={(value) => handleSelectChange('source', value)}
           >
             <SelectTrigger id="source">
@@ -153,7 +132,7 @@ const ProspectForm: React.FC<ProspectFormProps> = ({
       </div>
       
       <Button type="submit" className="w-full">
-        {initialData ? 'Mettre à jour' : 'Ajouter'}
+        {buttonText}
       </Button>
     </form>
   );

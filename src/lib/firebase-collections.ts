@@ -35,7 +35,10 @@ export const COLLECTIONS = {
     INSURANCE: 'health/insurance',
     BILLING: 'health/billing',
     SETTINGS: 'health/settings',
-    STAFF: 'health/staff'
+    STAFF: 'health/staff',
+    HEALTH_CONSULTATIONS: 'health/consultations',
+    HEALTH_INSURANCE: 'health/insurance',
+    HEALTH_BILLING: 'health/billing'
   },
 
   HR: {
@@ -68,7 +71,8 @@ export const COLLECTIONS = {
     REPORTS: 'accounting/reports',
     TAXES: 'accounting/taxes',
     SETTINGS: 'accounting/settings',
-    TRANSACTIONS: 'accounting/transactions'
+    TRANSACTIONS: 'accounting/transactions',
+    PERMISSIONS: 'accounting/permissions'
   },
 
   FREIGHT: {

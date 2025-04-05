@@ -55,6 +55,9 @@ export const FIREBASE_COLLECTIONS = {
     INSURANCE: 'health/insurance',
     BILLING: 'health/billing',
     SETTINGS: 'health/settings',
+    HEALTH_CONSULTATIONS: 'health/consultations',
+    HEALTH_INSURANCE: 'health/insurance',
+    HEALTH_BILLING: 'health/billing',
   },
   
   USER_PERMISSIONS: 'userPermissions',
