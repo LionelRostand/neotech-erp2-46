@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { CheckCircle2, XCircle } from 'lucide-react';
-import { useLeaveData, Leave } from '@/hooks/useLeaveData';
+import { useLeaveData } from '@/hooks/useLeaveData';
 
 interface LeaveRequestsListProps {
   onApprove: (id: string) => void;
@@ -19,7 +19,7 @@ export const LeaveRequestsList: React.FC<LeaveRequestsListProps> = ({
   const { leaves, isLoading, error } = useLeaveData();
 
   // Filter pending leave requests
-  const pendingLeaves = leaves.filter(leave => leave.status === 'En attente');
+  const pendingLeaves = leaves.filter(leave => leave.status === 'En attente' || leave.status === 'pending');
 
   if (isLoading) {
     return (
@@ -83,12 +83,12 @@ export const LeaveRequestsList: React.FC<LeaveRequestsListProps> = ({
               <TableCell>{leave.days} jour{leave.days > 1 ? 's' : ''}</TableCell>
               <TableCell>
                 <Badge
-                  className={
-                    leave.status === 'En attente'
-                      ? 'bg-blue-100 text-blue-800'
-                      : leave.status === 'Approuvé'
-                      ? 'bg-green-100 text-green-800'
-                      : 'bg-red-100 text-red-800'
+                  variant={
+                    leave.status === 'En attente' || leave.status === 'pending'
+                      ? 'info'
+                      : leave.status === 'Approuvé' || leave.status === 'approved'
+                      ? 'success'
+                      : 'destructive'
                   }
                 >
                   {leave.status}

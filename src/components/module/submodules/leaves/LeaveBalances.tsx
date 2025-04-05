@@ -1,204 +1,185 @@
 
 import React, { useState } from 'react';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import { Progress } from '@/components/ui/progress';
-import { Loader2 } from 'lucide-react';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useLeaveBalances } from '@/hooks/useLeaveBalances';
+import { useHrModuleData } from '@/hooks/useHrModuleData';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Card, CardContent } from '@/components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from '@/components/ui/select';
-
-// Define interface for employee balances to fix TypeScript errors
-interface EmployeeBalance {
-  id: string;
-  name: string;
-  photo: string;
-  department: string;
-  balances: Array<{
-    type: string;
-    total: number;
-    used: number;
-    remaining: number;
-  }>;
-}
+import { Badge } from '@/components/ui/badge';
+import { Loader2, Search } from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 export const LeaveBalances: React.FC = () => {
+  const { leaveBalances, isLoading, error } = useLeaveBalances();
+  const { departments } = useHrModuleData();
   const [departmentFilter, setDepartmentFilter] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
+  const [typeFilter, setTypeFilter] = useState<string>('all');
   
-  const { leaveBalances, isLoading } = useLeaveBalances();
-  
-  // Extract unique departments for filter
-  const departments = Array.from(
-    new Set(leaveBalances.map(balance => balance.department))
-  ).filter(Boolean);
-  
-  // Apply filters
-  const filteredBalances = leaveBalances.filter(balance => {
-    // Department filter
-    const matchesDepartment = departmentFilter === 'all' || balance.department === departmentFilter;
-    
-    // Search filter (case insensitive)
-    const matchesSearch = searchQuery === '' || 
-      balance.employeeName.toLowerCase().includes(searchQuery.toLowerCase());
-    
-    return matchesDepartment && matchesSearch;
-  });
-  
-  // Group balances by employee
-  const employeeBalances = filteredBalances.reduce<Record<string, EmployeeBalance>>((acc, balance) => {
-    if (!acc[balance.employeeId]) {
-      acc[balance.employeeId] = {
-        id: balance.employeeId,
-        name: balance.employeeName,
-        photo: balance.employeePhoto,
-        department: balance.department,
-        balances: []
-      };
-    }
-    
-    acc[balance.employeeId].balances.push({
-      type: balance.type,
-      total: balance.total,
-      used: balance.used,
-      remaining: balance.remaining
-    });
-    
-    return acc;
-  }, {});
-
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-48">
-        <Loader2 className="h-8 w-8 text-gray-400 animate-spin" />
+      <div className="flex justify-center items-center h-48">
+        <Loader2 className="h-6 w-6 animate-spin text-primary" />
         <p className="ml-2 text-gray-500">Chargement des soldes de congés...</p>
       </div>
     );
   }
-
-  return (
-    <div className="space-y-4">
-      <div className="flex flex-col sm:flex-row gap-4">
-        <div className="flex-1">
-          <Input
-            placeholder="Rechercher un employé..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="max-w-sm"
-          />
-        </div>
-        <div className="w-full sm:w-64">
-          <Select
-            value={departmentFilter}
-            onValueChange={setDepartmentFilter}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Filtrer par département" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Tous les départements</SelectItem>
-              {departments.map((dept) => (
-                <SelectItem key={dept} value={dept}>
-                  {dept}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+  
+  if (error) {
+    return (
+      <div className="p-4 bg-red-50 text-red-700 rounded-md">
+        Une erreur est survenue lors du chargement des soldes de congés.
       </div>
+    );
+  }
+  
+  // Get unique leave types
+  const leaveTypes = Array.from(new Set(leaveBalances.map(b => b.type)));
+  
+  // Get unique employee IDs to avoid duplicates in the table
+  const uniqueEmployeeIds = Array.from(new Set(leaveBalances.map(b => b.employeeId)));
+  
+  // Filter balances based on department, type, and search query
+  const filteredBalances = leaveBalances.filter(balance => {
+    const matchesDepartment = departmentFilter === 'all' || balance.department === departmentFilter;
+    const matchesType = typeFilter === 'all' || balance.type === typeFilter;
+    const matchesSearch = searchQuery === '' || 
+      balance.employeeName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      balance.department.toLowerCase().includes(searchQuery.toLowerCase());
     
-      <div className="overflow-x-auto">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-[250px]">Employé</TableHead>
-              <TableHead>Type de congé</TableHead>
-              <TableHead>Acquis</TableHead>
-              <TableHead>Pris</TableHead>
-              <TableHead>Restant</TableHead>
-              <TableHead>Utilisation</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {Object.values(employeeBalances).flatMap(employee => 
-              // If employee has no balances, display an empty row
-              employee.balances.length > 0 ? 
-                employee.balances.map((balance, index) => (
-                  <TableRow key={`${employee.id}-${balance.type}`}>
-                    {/* Only display employee info on the first row for each employee */}
-                    {index === 0 ? (
-                      <TableCell rowSpan={employee.balances.length} className="align-top">
-                        <div className="flex items-center space-x-3">
-                          <Avatar className="h-8 w-8">
-                            <AvatarImage src={employee.photo} alt={employee.name} />
-                            <AvatarFallback>{employee.name?.charAt(0) || '?'}</AvatarFallback>
-                          </Avatar>
-                          <div>
-                            <p className="font-medium">{employee.name}</p>
-                            <p className="text-xs text-gray-500">{employee.department}</p>
-                          </div>
-                        </div>
-                      </TableCell>
-                    ) : null}
-                    <TableCell>{balance.type}</TableCell>
-                    <TableCell>{balance.total} jours</TableCell>
-                    <TableCell>{balance.used} jours</TableCell>
-                    <TableCell className="font-medium">{balance.remaining} jours</TableCell>
-                    <TableCell className="w-[200px]">
-                      <div className="flex items-center gap-2">
-                        <Progress 
-                          value={(balance.used / (balance.total || 1)) * 100} 
-                          className="h-2" 
-                        />
-                        <span className="text-xs text-gray-500">
-                          {balance.total ? Math.round((balance.used / balance.total) * 100) : 0}%
-                        </span>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                )) : 
-                // Default row for an employee with no leave balance
-                <TableRow key={employee.id}>
-                  <TableCell>
-                    <div className="flex items-center space-x-3">
-                      <Avatar className="h-8 w-8">
-                        <AvatarImage src={employee.photo} alt={employee.name} />
-                        <AvatarFallback>{employee.name?.charAt(0) || '?'}</AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <p className="font-medium">{employee.name}</p>
-                        <p className="text-xs text-gray-500">{employee.department}</p>
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell colSpan={5} className="text-center text-gray-500">
-                    Aucun solde de congés défini
-                  </TableCell>
+    return matchesDepartment && matchesType && matchesSearch;
+  });
+  
+  // Group balances by employee
+  const employeeBalances = uniqueEmployeeIds
+    .map(empId => {
+      const empBalances = filteredBalances.filter(b => b.employeeId === empId);
+      // Only include employees that match the filters
+      return empBalances.length > 0 ? empBalances : null;
+    })
+    .filter(Boolean);
+  
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardContent className="p-6">
+          <div className="flex flex-col md:flex-row gap-4 mb-6">
+            <div className="relative flex-1">
+              <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-500" />
+              <Input
+                placeholder="Rechercher par nom ou département"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-8"
+              />
+            </div>
+            
+            <Select value={departmentFilter} onValueChange={setDepartmentFilter}>
+              <SelectTrigger className="w-[200px]">
+                <SelectValue placeholder="Tous les départements" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Tous les départements</SelectItem>
+                {departments?.map(dept => (
+                  <SelectItem key={dept.id} value={dept.name}>{dept.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            
+            <Select value={typeFilter} onValueChange={setTypeFilter}>
+              <SelectTrigger className="w-[200px]">
+                <SelectValue placeholder="Tous les types" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Tous les types</SelectItem>
+                {leaveTypes.map(type => (
+                  <SelectItem key={type} value={type}>{type}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          
+          {employeeBalances.length === 0 ? (
+            <div className="text-center py-8 text-gray-500">
+              Aucun résultat pour les filtres sélectionnés
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Employé</TableHead>
+                  <TableHead>Département</TableHead>
+                  {typeFilter === 'all' && <TableHead>Type de congé</TableHead>}
+                  <TableHead>Total</TableHead>
+                  <TableHead>Utilisé</TableHead>
+                  <TableHead>Restant</TableHead>
+                  <TableHead>Statut</TableHead>
                 </TableRow>
-            )}
-            {Object.keys(employeeBalances).length === 0 && (
-              <TableRow>
-                <TableCell colSpan={6} className="text-center py-8">
-                  Aucun employé trouvé
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </div>
+              </TableHeader>
+              <TableBody>
+                {employeeBalances.flatMap((empBalances: any) => {
+                  // If type filter is applied, only show one row per employee
+                  if (typeFilter !== 'all') {
+                    const balance = empBalances.find(b => b.type === typeFilter) || empBalances[0];
+                    return (
+                      <TableRow key={`${balance.employeeId}-${balance.type}`}>
+                        <TableCell className="font-medium">
+                          <div className="flex items-center space-x-2">
+                            <Avatar className="h-8 w-8">
+                              <AvatarImage src={balance.employeePhoto} alt={balance.employeeName} />
+                              <AvatarFallback>{balance.employeeName.charAt(0)}</AvatarFallback>
+                            </Avatar>
+                            <span>{balance.employeeName}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell>{balance.department}</TableCell>
+                        <TableCell>{balance.total}</TableCell>
+                        <TableCell>{balance.used}</TableCell>
+                        <TableCell className="font-semibold">{balance.remaining}</TableCell>
+                        <TableCell>
+                          <Badge variant={balance.remaining > 5 ? 'success' : balance.remaining > 0 ? 'warning' : 'destructive'}>
+                            {balance.remaining > 5 ? 'Bon' : balance.remaining > 0 ? 'Attention' : 'Épuisé'}
+                          </Badge>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  }
+                  
+                  // If no type filter, show a row for each leave type
+                  return empBalances.map((balance, idx) => (
+                    <TableRow key={`${balance.employeeId}-${balance.type}`}>
+                      {idx === 0 && (
+                        <TableCell className="font-medium" rowSpan={empBalances.length}>
+                          <div className="flex items-center space-x-2">
+                            <Avatar className="h-8 w-8">
+                              <AvatarImage src={balance.employeePhoto} alt={balance.employeeName} />
+                              <AvatarFallback>{balance.employeeName.charAt(0)}</AvatarFallback>
+                            </Avatar>
+                            <span>{balance.employeeName}</span>
+                          </div>
+                        </TableCell>
+                      )}
+                      {idx === 0 && (
+                        <TableCell rowSpan={empBalances.length}>{balance.department}</TableCell>
+                      )}
+                      <TableCell>{balance.type}</TableCell>
+                      <TableCell>{balance.total}</TableCell>
+                      <TableCell>{balance.used}</TableCell>
+                      <TableCell className="font-semibold">{balance.remaining}</TableCell>
+                      <TableCell>
+                        <Badge variant={balance.remaining > 5 ? 'success' : balance.remaining > 0 ? 'warning' : 'destructive'}>
+                          {balance.remaining > 5 ? 'Bon' : balance.remaining > 0 ? 'Attention' : 'Épuisé'}
+                        </Badge>
+                      </TableCell>
+                    </TableRow>
+                  ));
+                })}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 };

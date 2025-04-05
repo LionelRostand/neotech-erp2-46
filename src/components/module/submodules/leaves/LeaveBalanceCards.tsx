@@ -1,51 +1,13 @@
 
-import React, { useMemo } from 'react';
+import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { useHrModuleData } from '@/hooks/useHrModuleData';
 import { Progress } from '@/components/ui/progress';
 import { Loader2 } from 'lucide-react';
+import { useLeaveBalances } from '@/hooks/useLeaveBalances';
 
 const LeaveBalanceCards: React.FC = () => {
-  const { employees, leaveRequests, isLoading } = useHrModuleData();
+  const { leaveBalances, isLoading, error } = useLeaveBalances();
   
-  // Calculate leave balances based on employee data and leave requests
-  const leaveBalances = useMemo(() => {
-    if (!employees || !leaveRequests) return [];
-    
-    // Default leave policies
-    const defaultPolicies = {
-      'Congés payés': 25,
-      'RTT': 12,
-      'Congés maladie': 0,
-      'Congés spéciaux': 3,
-    };
-    
-    // Calculate used days for each leave type
-    const usedDaysByType = leaveRequests.reduce((acc, request) => {
-      if (request.status === 'approved' || request.status === 'Approuvé') {
-        const type = request.type || 'Congés payés';
-        const days = request.durationDays || 1;
-        
-        if (!acc[type]) acc[type] = 0;
-        acc[type] += days;
-      }
-      return acc;
-    }, {});
-    
-    // Prepare the balance data
-    return Object.entries(defaultPolicies).map(([type, total]) => {
-      const used = usedDaysByType[type] || 0;
-      const remaining = type === 'Congés maladie' ? 0 : Math.max(0, total - used);
-      
-      return {
-        type,
-        total,
-        used,
-        remaining
-      };
-    });
-  }, [employees, leaveRequests]);
-
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-48">
@@ -55,9 +17,30 @@ const LeaveBalanceCards: React.FC = () => {
     );
   }
 
+  if (error) {
+    return (
+      <div className="p-4 bg-red-50 text-red-700 rounded-md">
+        Une erreur est survenue lors du chargement des soldes de congés.
+      </div>
+    );
+  }
+
+  // Group balances by type
+  const balancesByType = leaveBalances.reduce((acc, balance) => {
+    if (!acc[balance.type]) {
+      acc[balance.type] = {
+        type: balance.type,
+        total: balance.total,
+        used: balance.used,
+        remaining: balance.remaining
+      };
+    }
+    return acc;
+  }, {});
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-      {leaveBalances.map((balance, index) => (
+      {Object.values(balancesByType).map((balance: any, index) => (
         <Card key={index}>
           <CardContent className="p-6">
             <h3 className="font-medium text-lg mb-3">{balance.type}</h3>

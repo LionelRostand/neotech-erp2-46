@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -16,12 +17,23 @@ import LeaveBalanceCards from './LeaveBalanceCards';
 import { LeaveCalendar } from './LeaveCalendar';
 import { LeavePolicies } from './LeavePolicies';
 import { LeaveBalances } from './LeaveBalances';
+import { CreateLeaveRequestDialog } from './CreateLeaveRequestDialog';
+import { LeaveFilterDialog, LeaveFilters } from './LeaveFilterDialog';
 import { toast } from 'sonner';
 import { useLeaveData } from '@/hooks/useLeaveData';
 
 const EmployeesLeaves: React.FC = () => {
   const [activeTab, setActiveTab] = useState('demandes');
   const { leaves, stats, isLoading, error } = useLeaveData();
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isFilterDialogOpen, setIsFilterDialogOpen] = useState(false);
+  const [filters, setFilters] = useState<LeaveFilters>({
+    status: 'all',
+    type: 'all',
+    department: 'all',
+    startDate: undefined,
+    endDate: undefined
+  });
 
   const handleApproveLeave = (id: string) => {
     // Dans une application réelle, nous mettrions à jour Firebase ici
@@ -36,6 +48,18 @@ const EmployeesLeaves: React.FC = () => {
   const handleExportData = () => {
     toast.success("Export des données de congés démarré");
     // Logique d'export à implémenter
+  };
+  
+  const handleCreateLeaveRequest = (data: any) => {
+    // Dans une application réelle, nous enregistrerions dans Firebase ici
+    console.log('Nouvelle demande de congé:', data);
+    toast.success('Demande de congé créée avec succès');
+    setIsCreateDialogOpen(false);
+  };
+  
+  const handleApplyFilters = (newFilters: LeaveFilters) => {
+    setFilters(newFilters);
+    toast.success('Filtres appliqués');
   };
 
   if (error) {
@@ -55,7 +79,11 @@ const EmployeesLeaves: React.FC = () => {
           <p className="text-gray-500">Suivi et approbation des demandes de congés</p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm">
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => setIsFilterDialogOpen(true)}
+          >
             <ListFilter className="h-4 w-4 mr-2" />
             Filtres
           </Button>
@@ -67,7 +95,10 @@ const EmployeesLeaves: React.FC = () => {
             <Download className="h-4 w-4 mr-2" />
             Exporter
           </Button>
-          <Button size="sm">
+          <Button 
+            size="sm"
+            onClick={() => setIsCreateDialogOpen(true)}
+          >
             <Plus className="h-4 w-4 mr-2" />
             Nouvelle demande
           </Button>
@@ -181,6 +212,20 @@ const EmployeesLeaves: React.FC = () => {
           </Card>
         </TabsContent>
       </Tabs>
+      
+      {/* Dialogs */}
+      <CreateLeaveRequestDialog 
+        isOpen={isCreateDialogOpen}
+        onClose={() => setIsCreateDialogOpen(false)}
+        onSubmit={handleCreateLeaveRequest}
+      />
+      
+      <LeaveFilterDialog 
+        isOpen={isFilterDialogOpen}
+        onClose={() => setIsFilterDialogOpen(false)}
+        onApplyFilters={handleApplyFilters}
+        currentFilters={filters}
+      />
     </div>
   );
 };
