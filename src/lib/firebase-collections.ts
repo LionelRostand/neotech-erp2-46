@@ -11,14 +11,17 @@ export const COLLECTIONS = {
   MESSAGES: {
     INBOX: 'messages/inbox',
     SCHEDULED: 'messages/scheduled',
-    ARCHIVED: 'messages/archived'
+    ARCHIVED: 'messages/archived',
+    METRICS: 'messages/metrics'
   },
   ACCOUNTING: {
     INVOICES: 'accounting/invoices',
     PAYMENTS: 'accounting/payments',
     EXPENSES: 'accounting/expenses',
     CLIENTS: 'accounting/clients',
-    SETTINGS: 'accounting/settings'
+    SETTINGS: 'accounting/settings',
+    TRANSACTIONS: 'accounting/transactions',
+    PERMISSIONS: 'accounting/permissions'
   },
   CRM: {
     LEADS: 'crm/leads',
@@ -26,20 +29,25 @@ export const COLLECTIONS = {
     OPPORTUNITIES: 'crm/opportunities',
     CAMPAIGNS: 'crm/campaigns',
     DEALS: 'crm/deals',
-    PROSPECTS: 'crm/prospects'
+    PROSPECTS: 'crm/prospects',
+    CLIENTS: 'crm/clients'
   },
   PROJECTS: {
     PROJECTS: 'projects/projects',
     TASKS: 'projects/tasks',
     TEAMS: 'projects/teams',
-    NOTES: 'projects/notes'
+    NOTES: 'projects/notes',
+    NOTIFICATIONS: 'projects/notifications'
   },
   HEALTH: {
     PATIENTS: 'health/patients',
     APPOINTMENTS: 'health/appointments',
     PRESCRIPTIONS: 'health/prescriptions',
     STAFF: 'health/staff',
-    BILLING: 'health/billing'
+    BILLING: 'health/billing',
+    DOCTORS: 'health/doctors',
+    CONSULTATIONS: 'health/consultations',
+    INSURANCE: 'health/insurance'
   },
   HEALTH_CONSULTATIONS: 'health_consultations',
   HEALTH_INSURANCE: 'health_insurance',
@@ -56,7 +64,9 @@ export const COLLECTIONS = {
     CARRIERS: 'freight/carriers',
     ROUTES: 'freight/routes',
     PACKAGES: 'freight/packages',
-    TRACKING: 'freight/tracking'
+    TRACKING: 'freight/tracking',
+    TRACKING_EVENTS: 'freight/tracking_events',
+    PACKAGE_TYPES: 'freight/package_types'
   },
   LIBRARY: {
     BOOKS: 'library/books',

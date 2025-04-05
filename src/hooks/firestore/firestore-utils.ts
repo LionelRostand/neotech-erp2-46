@@ -7,6 +7,7 @@ export * from './update-operations';
 export * from './delete-operations';
 export * from './network-operations';
 export * from './network-handler';
+export { COLLECTIONS } from '@/lib/firebase-collections';
 
 import { handleOfflineOperations } from './network-operations';
 
