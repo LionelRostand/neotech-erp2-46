@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { FileText } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -18,10 +18,8 @@ import {
   Search, 
   Upload, 
   File, 
-  FileText, 
-  FileArchive, 
   FileImage, 
-  FilePdf, 
+  Archive, 
   Download, 
   Eye, 
   Trash, 
@@ -112,7 +110,7 @@ const CompaniesDocuments: React.FC = () => {
   const getFileIcon = (type: string) => {
     switch (type.toLowerCase()) {
       case 'pdf':
-        return <FilePdf className="h-4 w-4" />;
+        return <FileText className="h-4 w-4" />;
       case 'image':
       case 'jpg':
       case 'jpeg':
@@ -120,7 +118,7 @@ const CompaniesDocuments: React.FC = () => {
         return <FileImage className="h-4 w-4" />;
       case 'zip':
       case 'rar':
-        return <FileArchive className="h-4 w-4" />;
+        return <Archive className="h-4 w-4" />;
       case 'doc':
       case 'docx':
       case 'txt':

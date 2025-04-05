@@ -20,7 +20,9 @@ const CompaniesList: React.FC = () => {
   const loadCompanies = async () => {
     setIsLoading(true);
     try {
-      const response = await companyService.getCompanies(1, 100, filters, searchTerm);
+      // Update the search term to the filters if it exists
+      const searchFilters = searchTerm ? { ...filters, name: searchTerm } : filters;
+      const response = await companyService.getCompanies(searchFilters);
       setCompanies(response.companies);
     } catch (error) {
       console.error('Error loading companies:', error);

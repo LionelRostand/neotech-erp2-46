@@ -19,7 +19,13 @@ const CreateContractDialog: React.FC<CreateContractDialogProps> = ({
 }) => {
   const handleSubmit = async (data: any) => {
     try {
-      await addDocument(COLLECTIONS.HR.CONTRACTS, data);
+      // Make sure the data doesn't contain createdAt, as it's handled by formatDocumentWithTimestamps
+      const contractData = { ...data };
+      if (contractData.createdAt) {
+        delete contractData.createdAt;
+      }
+      
+      await addDocument(COLLECTIONS.HR.CONTRACTS, contractData);
       toast.success("Contrat créé avec succès");
       onOpenChange(false);
       if (onSuccess) onSuccess();

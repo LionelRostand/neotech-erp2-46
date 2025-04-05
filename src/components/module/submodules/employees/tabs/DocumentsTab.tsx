@@ -1,14 +1,15 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Document } from '@/types/employee';
+import { Document, Employee } from '@/types/employee';
 import { FileText, Download, Plus } from 'lucide-react';
 
 interface DocumentsTabProps {
-  documents: Document[] | string[] | undefined;
+  documents?: Document[] | string[];
+  employee?: Employee; // Added this property to fix the error
 }
 
-const DocumentsTab: React.FC<DocumentsTabProps> = ({ documents = [] }) => {
+const DocumentsTab: React.FC<DocumentsTabProps> = ({ documents = [], employee }) => {
   const handleUpload = () => {
     console.log('Upload document');
   };
