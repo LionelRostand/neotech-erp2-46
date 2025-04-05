@@ -7,85 +7,101 @@ export interface Leave {
   employeeId: string;
   employeeName?: string;
   employeePhoto?: string;
+  department?: string;
   type: string;
+  status: 'En attente' | 'Approuvé' | 'Refusé';
   startDate: string;
   endDate: string;
   days: number;
-  status: 'En attente' | 'Approuvé' | 'Refusé';
   reason?: string;
-  department?: string;
-  approvedBy?: string;
-  approverName?: string;
-  approvalDate?: string;
+  requestDate: string;
+  approver?: string;
+  notes?: string;
 }
 
 /**
- * Hook pour accéder aux données des congés directement depuis Firebase
+ * Hook to access leave requests data from Firebase
  */
-export const useLeaveData = () => {
+export const useLeaveData = (refreshTrigger?: number) => {
   const { leaveRequests, employees, isLoading, error } = useHrModuleData();
   
-  // Enrichir les congés avec les noms des employés
-  const formattedLeaves = useMemo(() => {
+  // Transform leave requests with employee data
+  const leaves = useMemo(() => {
     if (!leaveRequests || leaveRequests.length === 0) return [];
     
-    return leaveRequests.map(leave => {
-      // Trouver l'employé associé à ce congé
-      const employee = employees?.find(emp => emp.id === leave.employeeId);
+    return leaveRequests.map(request => {
+      // Find the associated employee
+      const employee = employees?.find(emp => emp.id === request.employeeId);
       
-      // Trouver l'approbateur si présent
-      const approver = leave.approvedBy && employees
-        ? employees.find(emp => emp.id === leave.approvedBy)
-        : undefined;
+      // Format status
+      const status = 
+        request.status === 'approved' ? 'Approuvé' :
+        request.status === 'rejected' ? 'Refusé' : 
+        'En attente';
       
-      // Calculer le nombre de jours
-      const startDate = new Date(leave.startDate);
-      const endDate = new Date(leave.endDate);
-      const diffTime = Math.abs(endDate.getTime() - startDate.getTime());
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1; // +1 car inclusif
+      // Calculate duration in days
+      const durationDays = request.durationDays || calculateDuration(request.startDate, request.endDate);
       
       return {
-        id: leave.id,
-        employeeId: leave.employeeId,
+        id: request.id,
+        employeeId: request.employeeId,
         employeeName: employee ? `${employee.firstName} ${employee.lastName}` : 'Employé inconnu',
         employeePhoto: employee?.photoURL || employee?.photo || '',
-        type: leave.type || 'Congés payés',
-        startDate: formatDate(leave.startDate),
-        endDate: formatDate(leave.endDate),
-        days: leave.days || diffDays,
-        status: leave.status || 'En attente',
-        reason: leave.reason,
         department: employee?.department || 'Non spécifié',
-        approvedBy: leave.approvedBy,
-        approverName: approver ? `${approver.firstName} ${approver.lastName}` : leave.approverName,
-        approvalDate: leave.approvalDate ? formatDate(leave.approvalDate) : undefined,
+        type: request.type || 'Congés payés',
+        status: status,
+        startDate: formatDate(request.startDate),
+        endDate: formatDate(request.endDate),
+        days: durationDays,
+        reason: request.reason,
+        requestDate: formatDate(request.requestDate || request.createdAt),
+        approver: request.approverName,
+        notes: request.notes
       } as Leave;
     });
-  }, [leaveRequests, employees]);
+  }, [leaveRequests, employees, refreshTrigger]);
   
-  // Fonction pour formater les dates
+  // Calculate leave stats
+  const stats = useMemo(() => {
+    const pending = leaves.filter(leave => leave.status === 'En attente').length;
+    const approved = leaves.filter(leave => leave.status === 'Approuvé').length;
+    const rejected = leaves.filter(leave => leave.status === 'Refusé').length;
+    const total = leaves.length;
+    
+    return {
+      pending,
+      approved,
+      rejected,
+      total
+    };
+  }, [leaves]);
+  
+  // Helper function to calculate duration between two dates
+  const calculateDuration = (startDate: string, endDate: string) => {
+    try {
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      const diffTime = Math.abs(end.getTime() - start.getTime());
+      return Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1; // +1 because it's inclusive
+    } catch (error) {
+      console.error('Error calculating duration:', error);
+      return 1;
+    }
+  };
+  
+  // Helper function to format dates
   const formatDate = (dateStr: string) => {
     try {
       return new Date(dateStr).toLocaleDateString('fr-FR');
     } catch (error) {
-      console.error('Erreur de formatage de date:', dateStr, error);
+      console.error('Error formatting date:', dateStr, error);
       return dateStr;
     }
   };
-
-  // Obtenir des statistiques sur les congés
-  const leaveStats = useMemo(() => {
-    const pending = formattedLeaves.filter(leave => leave.status === 'En attente').length;
-    const approved = formattedLeaves.filter(leave => leave.status === 'Approuvé').length;
-    const rejected = formattedLeaves.filter(leave => leave.status === 'Refusé').length;
-    const total = formattedLeaves.length;
-    
-    return { pending, approved, rejected, total };
-  }, [formattedLeaves]);
   
   return {
-    leaves: formattedLeaves,
-    stats: leaveStats,
+    leaves,
+    stats,
     isLoading,
     error
   };

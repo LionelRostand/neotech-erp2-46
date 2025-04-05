@@ -18,7 +18,7 @@ export const LeaveRequestsList: React.FC<LeaveRequestsListProps> = ({
 }) => {
   const { leaves, isLoading, error } = useLeaveData();
 
-  // Filtrer les congés en attente
+  // Filter pending leave requests
   const pendingLeaves = leaves.filter(leave => leave.status === 'En attente');
 
   if (isLoading) {

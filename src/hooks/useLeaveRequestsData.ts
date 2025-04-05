@@ -5,7 +5,7 @@ import { useHrModuleData } from './useHrModuleData';
 /**
  * Hook pour accéder aux données des demandes de congés
  */
-export const useLeaveRequestsData = () => {
+export const useLeaveRequestsData = (refreshTrigger?: number) => {
   const { leaveRequests, employees, isLoading, error } = useHrModuleData();
   
   // Enrichir les demandes de congés avec les noms des employés
@@ -28,14 +28,19 @@ export const useLeaveRequestsData = () => {
         durationDays: calculateDuration(request.startDate, request.endDate),
       };
     });
-  }, [leaveRequests, employees]);
+  }, [leaveRequests, employees, refreshTrigger]);
   
   // Fonction pour calculer la durée entre deux dates en jours
   const calculateDuration = (startDate: string, endDate: string) => {
-    const start = new Date(startDate);
-    const end = new Date(endDate);
-    const diffTime = end.getTime() - start.getTime();
-    return Math.round(diffTime / (1000 * 60 * 60 * 24)) + 1; // +1 car inclusif
+    try {
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      const diffTime = end.getTime() - start.getTime();
+      return Math.round(diffTime / (1000 * 60 * 60 * 24)) + 1; // +1 car inclusif
+    } catch (error) {
+      console.error('Erreur lors du calcul de la durée:', error);
+      return 1;
+    }
   };
   
   return {
