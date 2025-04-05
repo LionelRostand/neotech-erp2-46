@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { collection, query, onSnapshot } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { RecruitmentPost } from '@/hooks/useRecruitmentData';
@@ -10,8 +10,9 @@ export const useRecruitmentFirebaseData = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
-  useEffect(() => {
+  const fetchData = useCallback(() => {
     console.log('Fetching recruitment data from Firebase...');
+    setIsLoading(true);
     try {
       const collectionRef = collection(db, COLLECTIONS.HR.RECRUITMENT);
       const q = query(collectionRef);
@@ -44,12 +45,25 @@ export const useRecruitmentFirebaseData = () => {
       console.error('Error setting up recruitment listener:', error);
       setError(error);
       setIsLoading(false);
+      return () => {}; // Empty cleanup function if setup fails
     }
   }, []);
+
+  useEffect(() => {
+    const unsubscribe = fetchData();
+    return unsubscribe;
+  }, [fetchData]);
+
+  const refreshData = useCallback(() => {
+    // Re-fetch data
+    const unsubscribe = fetchData();
+    return unsubscribe;
+  }, [fetchData]);
 
   return {
     recruitmentPosts,
     isLoading,
-    error
+    error,
+    refreshData
   };
 };

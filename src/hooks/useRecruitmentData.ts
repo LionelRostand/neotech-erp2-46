@@ -85,6 +85,38 @@ const MOCK_RECRUITMENT_POSTS: RecruitmentPost[] = [
     description: 'Développement du portefeuille clients B2B dans le secteur Sud-Ouest.',
     requirements: 'Expérience commerciale B2B, connaissance du secteur IT appréciée.',
     applicationCount: 3
+  },
+  {
+    id: 'job-5',
+    position: 'Développeur Mobile',
+    department: 'IT',
+    openDate: '05/04/2023',
+    hiringManagerId: 'user-2',
+    hiringManagerName: 'Marie Dubois',
+    status: 'Ouvert',
+    priority: 'Haute',
+    location: 'Paris',
+    contractType: 'CDI',
+    salary: '45-55K€',
+    description: 'Développement d\'applications mobiles natives (iOS et Android).',
+    requirements: 'Expérience en Swift et Kotlin, connaissance de React Native appréciée.',
+    applicationCount: 7
+  },
+  {
+    id: 'job-6',
+    position: 'Gestionnaire de paie',
+    department: 'RH',
+    openDate: '22/03/2023',
+    hiringManagerId: 'user-3',
+    hiringManagerName: 'Pierre Martin',
+    status: 'En cours',
+    priority: 'Moyenne',
+    location: 'Lyon',
+    contractType: 'CDI',
+    salary: '38-42K€',
+    description: 'Gestion complète de la paie et des déclarations sociales.',
+    requirements: 'Minimum 2 ans d\'expérience en gestion de paie, maîtrise de SAGE Paie.',
+    applicationCount: 9
   }
 ];
 
