@@ -48,7 +48,6 @@ const CompanyForm: React.FC<CompanyFormProps> = ({
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     
-    // Handle nested address fields
     if (name === 'street' || name === 'city' || name === 'postalCode' || name === 'country') {
       setFormData(prev => ({
         ...prev,

@@ -7,16 +7,17 @@ export interface Company {
     postalCode: string;
     country: string;
   };
-  siret: string;
+  siret?: string;
   logo?: string;
   logoUrl?: string;
-  phone: string;
-  email: string;
-  website: string;
-  industry: string;
-  size: string;
+  phone?: string;
+  email?: string;
+  website?: string;
+  industry?: string;
+  size?: string;
   status: 'active' | 'inactive' | 'pending';
-  employeesCount: number;
+  employeesCount?: number;
+  notes?: string;
   createdAt: string;
   updatedAt: string;
 }

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -124,7 +123,6 @@ const EmployeesCompanies: React.FC = () => {
                 <DialogTitle>Ajouter une nouvelle entreprise</DialogTitle>
               </DialogHeader>
               <CompanyForm
-                isOpen={isAddDialogOpen}
                 onClose={() => setIsAddDialogOpen(false)}
                 onSave={handleAddCompany}
               />
@@ -187,7 +185,6 @@ const EmployeesCompanies: React.FC = () => {
           </DialogHeader>
           {currentCompany && (
             <CompanyForm
-              isOpen={isEditDialogOpen}
               company={currentCompany}
               isEditing={true}
               onClose={() => setIsEditDialogOpen(false)}

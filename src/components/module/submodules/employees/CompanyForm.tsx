@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -49,7 +48,6 @@ export const CompanyForm: React.FC<CompanyFormProps> = ({
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     
-    // Handle nested address fields
     if (name === 'street' || name === 'city' || name === 'postalCode' || name === 'country') {
       setFormData(prev => ({
         ...prev,
@@ -262,11 +260,11 @@ export const CompanyForm: React.FC<CompanyFormProps> = ({
       </div>
       
       <div className="space-y-2">
-        <Label htmlFor="description">Description</Label>
+        <Label htmlFor="notes">Description</Label>
         <Textarea
-          id="description"
-          name="description"
-          value={formData.description}
+          id="notes"
+          name="notes"
+          value={formData.notes}
           onChange={handleChange}
           placeholder="Description de l'entreprise..."
           rows={3}
@@ -284,3 +282,5 @@ export const CompanyForm: React.FC<CompanyFormProps> = ({
     </form>
   );
 };
+
+export default CompanyForm;
