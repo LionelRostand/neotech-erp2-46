@@ -65,7 +65,6 @@ export const useOpportunities = () => {
     // Copy all properties except for numeric ones that need conversion
     Object.entries(data).forEach(([key, value]) => {
       if (key !== 'value' && key !== 'probability' && key !== 'amount') {
-        // Type assertion for string keys
         updates[key as keyof Opportunity] = value as any;
       }
     });
