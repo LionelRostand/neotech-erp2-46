@@ -32,6 +32,8 @@ interface ProspectDialogsProps {
   handleUpdateProspect: (data: ProspectFormData) => void;
   handleDeleteProspect: () => void;
   handleConvertToClient: () => void;
+  sourceOptions: { value: string; label: string; }[];
+  statusOptions: { value: string; label: string; }[];
 }
 
 const industryOptions = [
@@ -66,7 +68,9 @@ const ProspectDialogs: React.FC<ProspectDialogsProps> = ({
   handleAddProspect,
   handleUpdateProspect,
   handleDeleteProspect,
-  handleConvertToClient
+  handleConvertToClient,
+  sourceOptions,
+  statusOptions
 }) => {
   return (
     <>
@@ -83,6 +87,8 @@ const ProspectDialogs: React.FC<ProspectDialogsProps> = ({
             handleSelectChange={handleSelectChange}
             onSubmit={handleAddProspect}
             buttonText="Ajouter"
+            sourceOptions={sourceOptions}
+            statusOptions={statusOptions}
           />
         </DialogContent>
       </Dialog>
@@ -102,6 +108,8 @@ const ProspectDialogs: React.FC<ProspectDialogsProps> = ({
               handleSelectChange={handleSelectChange}
               onSubmit={handleUpdateProspect}
               buttonText="Mettre à jour"
+              sourceOptions={sourceOptions}
+              statusOptions={statusOptions}
             />
           </DialogContent>
         </Dialog>

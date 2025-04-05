@@ -15,12 +15,16 @@ interface AddProspectDialogProps {
   isOpen: boolean;
   onClose: () => void;
   onAdd: (data: ProspectFormData) => void;
+  sourceOptions: { value: string; label: string; }[];
+  statusOptions: { value: string; label: string; }[];
 }
 
 const AddProspectDialog: React.FC<AddProspectDialogProps> = ({
   isOpen,
   onClose,
-  onAdd
+  onAdd,
+  sourceOptions,
+  statusOptions
 }) => {
   // Local state to manage form data
   const [formData, setFormData] = useState<ProspectFormData>({
@@ -77,6 +81,8 @@ const AddProspectDialog: React.FC<AddProspectDialogProps> = ({
           handleSelectChange={handleSelectChange}
           onSubmit={handleSubmit}
           buttonText="Ajouter"
+          sourceOptions={sourceOptions}
+          statusOptions={statusOptions}
         />
         
         <DialogFooter>

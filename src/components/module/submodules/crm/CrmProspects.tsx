@@ -1,63 +1,82 @@
 
-import React, { useState, useEffect } from 'react';
-import { Plus, Filter, MoreVertical, Search } from 'lucide-react';
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuTrigger 
-} from '@/components/ui/dropdown-menu';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card } from '@/components/ui/card';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import React, { useState, useCallback } from 'react';
+import DashboardLayout from '@/components/DashboardLayout';
+import { Button } from "@/components/ui/button";
+import { Plus, FileText, AlertCircle } from "lucide-react";
 import { useProspects } from './hooks/useProspects';
+import { useProspectState } from './hooks/prospect/useProspectState';
+import { useProspectForm } from './hooks/prospect/useProspectForm';
+import { useProspectDialogs } from './hooks/prospect/useProspectDialogs';
+import { Prospect, ProspectFormData, ReminderData } from './types/crm-types';
+import ProspectSearch from './prospects/ProspectSearch';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import ProspectsTable from './prospects/ProspectsTable';
 import ProspectsGrid from './prospects/ProspectsGrid';
+import ReminderDialog from './reminders/ReminderDialog';
+import { toast } from 'sonner';
 import AddProspectDialog from './prospects/AddProspectDialog';
 import EditProspectDialog from './prospects/EditProspectDialog';
-import DeleteProspectDialog from './prospects/DeleteProspectDialog';
 import ViewProspectDetails from './prospects/ViewProspectDetails';
+import DeleteProspectDialog from './prospects/DeleteProspectDialog';
 import ConvertToClientDialog from './prospects/ConvertToClientDialog';
-import ReminderDialog from './reminders/ReminderDialog';
-import { Prospect, ProspectFormData, ReminderData } from './types/crm-types';
-import { toast } from 'sonner';
-import { useProspectDialogs } from './hooks/prospect/useProspectDialogs';
-import DashboardLayout from '@/components/DashboardLayout';
 
 const CrmProspects: React.FC = () => {
-  const { 
-    prospects, 
-    isLoading, 
-    error, 
+  // State for prospects and filters
+  const {
+    prospects,
+    isLoading,
+    error,
     sourceOptions,
     statusOptions,
-    addProspect, 
-    updateProspect, 
-    deleteProspect, 
-    convertToClient 
+    searchTerm,
+    setSearchTerm,
+    statusFilter,
+    setStatusFilter,
+    selectedProspect,
+    setSelectedProspect,
+    addProspect,
+    updateProspect,
+    deleteProspect,
+    convertToClient,
+    addReminder
   } = useProspects();
 
-  const [view, setView] = useState<'list' | 'grid'>('list');
-  const [filter, setFilter] = useState<string>('all');
-  const [searchTerm, setSearchTerm] = useState<string>('');
-  const [selectedProspect, setSelectedProspect] = useState<Prospect | null>(null);
-  const [formData, setFormData] = useState<ProspectFormData>({} as ProspectFormData);
-  const [reminderData, setReminderData] = useState<ReminderData>({
-    title: '',
-    date: new Date().toISOString().split('T')[0],
-    notes: ''
-  });
-  
-  // Dialog states
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [isViewDetailsOpen, setIsViewDetailsOpen] = useState(false);
-  const [isConvertDialogOpen, setIsConvertDialogOpen] = useState(false);
-  const [isReminderDialogOpen, setIsReminderDialogOpen] = useState(false);
+  // UI states for dialogs and forms
+  const {
+    isAddDialogOpen,
+    setIsAddDialogOpen,
+    isEditDialogOpen,
+    setIsEditDialogOpen,
+    isViewDetailsOpen,
+    setIsViewDetailsOpen,
+    isDeleteDialogOpen,
+    setIsDeleteDialogOpen,
+    isConvertDialogOpen,
+    setIsConvertDialogOpen,
+    isReminderDialogOpen,
+    setIsReminderDialogOpen,
+    formData,
+    setFormData,
+    reminderData,
+    setReminderData,
+    resetForm
+  } = useProspectState();
 
-  const dialogs = useProspectDialogs(
+  // Form handlers
+  const {
+    handleInputChange,
+    handleSelectChange
+  } = useProspectForm(setFormData);
+
+  // Dialog handlers
+  const {
+    openAddDialog,
+    openEditDialog,
+    openDeleteDialog,
+    openViewDetails,
+    openConvertDialog,
+    openReminderDialog
+  } = useProspectDialogs(
     setSelectedProspect,
     setFormData,
     setIsAddDialogOpen,
@@ -68,32 +87,32 @@ const CrmProspects: React.FC = () => {
     setIsReminderDialogOpen
   );
 
-  // Filter prospects based on filter and search term
-  const filteredProspects = prospects.filter(prospect => {
-    const matchesFilter = filter === 'all' || prospect.status === filter;
-    const matchesSearch = searchTerm === '' || 
-      prospect.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      prospect.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      prospect.email.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    return matchesFilter && matchesSearch;
-  });
-  
-  // Handle adding a new prospect
-  const handleAddProspect = async (data: ProspectFormData) => {
+  // View settings
+  const [viewMode, setViewMode] = useState<'table' | 'grid'>('table');
+
+  // Handle reminder data changes
+  const handleReminderChange = (field: string, value: string) => {
+    setReminderData(prev => ({ ...prev, [field]: value }));
+  };
+
+  // Handle adding a prospect
+  const handleAddProspect = async (data: ProspectFormData): Promise<boolean> => {
     try {
       await addProspect(data);
+      resetForm();
       setIsAddDialogOpen(false);
       toast.success('Prospect ajouté avec succès');
       return true;
     } catch (error) {
+      console.error('Error adding prospect:', error);
+      toast.error('Erreur lors de l\'ajout du prospect');
       return false;
     }
   };
-  
+
   // Handle updating a prospect
-  const handleUpdateProspect = async (data: ProspectFormData) => {
-    if (!selectedProspect) return;
+  const handleUpdateProspect = async (data: ProspectFormData): Promise<boolean> => {
+    if (!selectedProspect) return false;
     
     try {
       await updateProspect(selectedProspect.id, data);
@@ -101,154 +120,122 @@ const CrmProspects: React.FC = () => {
       toast.success('Prospect mis à jour avec succès');
       return true;
     } catch (error) {
+      console.error('Error updating prospect:', error);
+      toast.error('Erreur lors de la mise à jour du prospect');
       return false;
     }
   };
-  
+
   // Handle deleting a prospect
-  const handleDeleteProspect = async () => {
+  const handleDeleteProspect = async (): Promise<void> => {
     if (!selectedProspect) return;
     
-    const success = await deleteProspect(selectedProspect.id);
-    if (success) {
+    try {
+      await deleteProspect(selectedProspect.id);
       setIsDeleteDialogOpen(false);
       toast.success('Prospect supprimé avec succès');
+    } catch (error) {
+      console.error('Error deleting prospect:', error);
+      toast.error('Erreur lors de la suppression du prospect');
     }
   };
-  
+
   // Handle converting a prospect to a client
-  const handleConvertToClient = async () => {
+  const handleConvertToClient = async (): Promise<void> => {
     if (!selectedProspect) return;
     
     try {
       const clientId = await convertToClient(selectedProspect);
       setIsConvertDialogOpen(false);
       toast.success('Prospect converti en client avec succès');
-      return clientId;
+      // In a real app, you might want to navigate to the client details page
     } catch (error) {
-      return null;
+      console.error('Error converting prospect to client:', error);
+      toast.error('Erreur lors de la conversion du prospect en client');
     }
   };
 
-  // Handle reminder data changes
-  const handleReminderChange = (field: string, value: string) => {
-    setReminderData(prev => ({ ...prev, [field]: value }));
+  // Handle adding a reminder
+  const handleAddReminder = async (): Promise<void> => {
+    if (!selectedProspect) return;
+    
+    try {
+      await addReminder(selectedProspect.id, reminderData);
+      setIsReminderDialogOpen(false);
+      toast.success('Rappel ajouté avec succès');
+    } catch (error) {
+      console.error('Error adding reminder:', error);
+      toast.error('Erreur lors de l\'ajout du rappel');
+    }
   };
 
-  // Handle saving a reminder
-  const handleSaveReminder = () => {
-    // Implementation would go here
-    toast.success('Rappel enregistré');
-    setIsReminderDialogOpen(false);
-  };
-  
+  // Filter prospects based on search term and status filter
+  const filteredProspects = prospects.filter(prospect => {
+    const matchesStatus = statusFilter === 'all' || prospect.status === statusFilter;
+    const matchesSearch = !searchTerm || 
+      prospect.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      prospect.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      prospect.contactName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      prospect.contactEmail.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    return matchesStatus && matchesSearch;
+  });
+
   return (
     <DashboardLayout>
       <div className="container mx-auto p-6">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
-          <h1 className="text-2xl font-bold mb-4 sm:mb-0">Prospects</h1>
-          
-          <div className="flex gap-2 self-end sm:self-auto">
-            <Button 
-              onClick={() => dialogs.openAddDialog()} 
-              className="flex items-center gap-1"
-            >
-              <Plus className="h-4 w-4" />
-              Nouveau prospect
-            </Button>
-            
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="icon">
-                  <MoreVertical className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem>Exporter</DropdownMenuItem>
-                <DropdownMenuItem>Importer</DropdownMenuItem>
-                <DropdownMenuItem>Paramètres</DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
+        <div className="flex flex-col md:flex-row justify-between items-center mb-6">
+          <h1 className="text-2xl font-bold mb-4 md:mb-0">Prospects</h1>
+          <Button onClick={openAddDialog} className="md:ml-auto">
+            <Plus className="mr-2 h-4 w-4" />
+            Ajouter un prospect
+          </Button>
         </div>
         
-        <div className="flex flex-col sm:flex-row gap-4 mb-6">
-          <div className="relative flex-1">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Rechercher des prospects..."
-              className="pl-8"
-              value={searchTerm}
-              onChange={e => setSearchTerm(e.target.value)}
+        <ProspectSearch 
+          searchTerm={searchTerm}
+          onSearchChange={setSearchTerm}
+          statusFilter={statusFilter}
+          onStatusFilterChange={setStatusFilter}
+          statusOptions={statusOptions}
+        />
+        
+        <Tabs defaultValue="table" value={viewMode} onValueChange={(value) => setViewMode(value as 'table' | 'grid')} className="mt-6">
+          <div className="flex justify-end mb-4">
+            <TabsList>
+              <TabsTrigger value="table">Tableau</TabsTrigger>
+              <TabsTrigger value="grid">Grille</TabsTrigger>
+            </TabsList>
+          </div>
+          
+          <TabsContent value="table">
+            <ProspectsTable 
+              prospects={filteredProspects}
+              isLoading={isLoading}
+              error={error}
+              onView={openViewDetails}
+              onEdit={openEditDialog}
+              onDelete={openDeleteDialog}
+              onConvert={openConvertDialog}
+              onAddReminder={openReminderDialog}
             />
-          </div>
+          </TabsContent>
           
-          <div className="flex gap-2">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="flex items-center gap-1">
-                  <Filter className="h-4 w-4" />
-                  Filtrer
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => setFilter('all')}>Tous</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setFilter('new')}>Nouveaux</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setFilter('contacted')}>Contactés</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setFilter('meeting')}>Rendez-vous</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setFilter('proposal')}>Proposition</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setFilter('negotiation')}>Négociation</DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-            
-            <Tabs defaultValue="list" onValueChange={(value) => setView(value as 'list' | 'grid')}>
-              <TabsList>
-                <TabsTrigger value="list">Liste</TabsTrigger>
-                <TabsTrigger value="grid">Grille</TabsTrigger>
-              </TabsList>
-            </Tabs>
-          </div>
-        </div>
+          <TabsContent value="grid">
+            <ProspectsGrid 
+              prospects={filteredProspects}
+              isLoading={isLoading}
+              error={error}
+              onView={openViewDetails}
+              onEdit={openEditDialog}
+              onDelete={openDeleteDialog}
+              onConvert={openConvertDialog}
+              onAddReminder={openReminderDialog}
+            />
+          </TabsContent>
+        </Tabs>
         
-        <Card>
-          {isLoading ? (
-            <div className="flex justify-center items-center p-8">
-              <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
-            </div>
-          ) : error ? (
-            <div className="p-8 text-center">
-              <p className="text-destructive">Erreur lors du chargement des prospects</p>
-            </div>
-          ) : filteredProspects.length === 0 ? (
-            <div className="p-8 text-center">
-              <p className="text-muted-foreground">Aucun prospect trouvé</p>
-            </div>
-          ) : (
-            <Tabs defaultValue="list" value={view}>
-              <TabsContent value="list" className="m-0">
-                <ProspectsTable 
-                  prospects={filteredProspects} 
-                  onEdit={dialogs.openEditDialog}
-                  onDelete={dialogs.openDeleteDialog}
-                  onViewDetails={dialogs.openViewDetails}
-                  onConvert={dialogs.openConvertDialog}
-                  onReminder={dialogs.openReminderDialog}
-                />
-              </TabsContent>
-              <TabsContent value="grid" className="m-0">
-                <ProspectsGrid 
-                  prospects={filteredProspects}
-                  onEdit={dialogs.openEditDialog}
-                  onDelete={dialogs.openDeleteDialog}
-                  onViewDetails={dialogs.openViewDetails}
-                  onConvert={dialogs.openConvertDialog}
-                />
-              </TabsContent>
-            </Tabs>
-          )}
-        </Card>
-        
-        {/* Dialogs */}
+        {/* Add Prospect Dialog */}
         <AddProspectDialog 
           isOpen={isAddDialogOpen} 
           onClose={() => setIsAddDialogOpen(false)} 
@@ -257,6 +244,7 @@ const CrmProspects: React.FC = () => {
           statusOptions={statusOptions}
         />
         
+        {/* Dialogs that require a selected prospect */}
         {selectedProspect && (
           <>
             <EditProspectDialog 
@@ -268,37 +256,41 @@ const CrmProspects: React.FC = () => {
               statusOptions={statusOptions}
             />
             
-            <DeleteProspectDialog 
-              isOpen={isDeleteDialogOpen} 
-              onClose={() => setIsDeleteDialogOpen(false)} 
-              prospect={selectedProspect}
-              onDelete={handleDeleteProspect} 
-            />
-            
             <ViewProspectDetails 
               isOpen={isViewDetailsOpen} 
               onClose={() => setIsViewDetailsOpen(false)} 
               prospect={selectedProspect} 
+              onEdit={() => {
+                setIsViewDetailsOpen(false);
+                openEditDialog(selectedProspect);
+              }}
+            />
+            
+            <DeleteProspectDialog 
+              isOpen={isDeleteDialogOpen} 
+              onClose={() => setIsDeleteDialogOpen(false)} 
+              prospect={selectedProspect} 
+              onDelete={handleDeleteProspect} 
             />
             
             <ConvertToClientDialog 
               isOpen={isConvertDialogOpen} 
               onClose={() => setIsConvertDialogOpen(false)} 
-              prospect={selectedProspect}
+              prospect={selectedProspect} 
               onConvert={handleConvertToClient} 
             />
             
             <ReminderDialog 
-              isOpen={isReminderDialogOpen} 
-              onClose={() => setIsReminderDialogOpen(false)} 
+              isOpen={isReminderDialogOpen}
+              onClose={() => setIsReminderDialogOpen(false)}
               reminderData={reminderData}
               onChange={handleReminderChange}
-              onSave={handleSaveReminder}
+              onSave={handleAddReminder}
               relatedTo={{
                 type: 'prospect',
                 id: selectedProspect.id,
-                name: selectedProspect.name
-              }} 
+                name: selectedProspect.company
+              }}
             />
           </>
         )}

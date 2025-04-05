@@ -60,8 +60,16 @@ export const useOpportunities = () => {
     await new Promise(resolve => setTimeout(resolve, 500));
     
     // Ensure numeric values
-    const updates: Partial<Opportunity> = { ...data };
+    const updates: Partial<Opportunity> = {};
     
+    // Copy all properties except for numeric ones that need conversion
+    Object.keys(data).forEach(key => {
+      if (key !== 'value' && key !== 'probability' && key !== 'amount') {
+        updates[key as keyof Opportunity] = data[key as keyof OpportunityFormData];
+      }
+    });
+    
+    // Handle numeric properties separately
     if (data.value !== undefined) {
       updates.value = typeof data.value === 'string' ? parseFloat(data.value) : data.value;
     }

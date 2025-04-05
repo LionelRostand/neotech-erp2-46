@@ -16,13 +16,17 @@ interface EditProspectDialogProps {
   onClose: () => void;
   prospect: Prospect;
   onUpdate: (data: ProspectFormData) => void;
+  sourceOptions: { value: string; label: string; }[];
+  statusOptions: { value: string; label: string; }[];
 }
 
 const EditProspectDialog: React.FC<EditProspectDialogProps> = ({
   isOpen,
   onClose,
   prospect,
-  onUpdate
+  onUpdate,
+  sourceOptions,
+  statusOptions
 }) => {
   // Convert Prospect to ProspectFormData
   const [formData, setFormData] = useState<ProspectFormData>({
@@ -93,6 +97,8 @@ const EditProspectDialog: React.FC<EditProspectDialogProps> = ({
           handleSelectChange={handleSelectChange}
           onSubmit={handleSubmit}
           buttonText="Mettre à jour"
+          sourceOptions={sourceOptions}
+          statusOptions={statusOptions}
         />
         
         <DialogFooter>
