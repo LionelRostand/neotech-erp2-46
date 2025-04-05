@@ -1,76 +1,59 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Prospect, ProspectFormData } from '../types/crm-types';
 
 export interface ProspectFormProps {
   initialData?: Prospect;
+  onSubmit: (data: ProspectFormData) => void;
   formData: ProspectFormData;
   handleInputChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
   handleSelectChange: (name: string, value: string) => void;
-  onSubmit: (data: ProspectFormData) => void;
+  sourceOptions: { value: string; label: string; }[];
+  statusOptions: { value: string; label: string; }[];
   buttonText: string;
 }
 
 const ProspectForm: React.FC<ProspectFormProps> = ({
-  initialData,
+  onSubmit,
   formData,
   handleInputChange,
   handleSelectChange,
-  onSubmit,
-  buttonText = "Enregistrer"
+  sourceOptions,
+  statusOptions,
+  buttonText
 }) => {
-  // Set initial state from props or use defaults
-  const [localFormData, setLocalFormData] = useState<ProspectFormData>(
-    formData || {
-      name: '',
-      company: '',
-      email: '',
-      phone: '',
-      status: 'new',
-      source: 'Site web',
-      notes: '',
-      contactName: '',
-      contactEmail: '',
-      contactPhone: '',
-    }
-  );
-
-  // If we're using local form data, we need our own handlers
-  const handleLocalInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setLocalFormData(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleLocalSelectChange = (name: string, value: string) => {
-    setLocalFormData(prev => ({ ...prev, [name]: value }));
-  };
-
-  // Use the right handlers based on whether formData was provided
-  const inputChangeHandler = handleInputChange || handleLocalInputChange;
-  const selectChangeHandler = handleSelectChange || handleLocalSelectChange;
-  
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit(formData || localFormData);
+    onSubmit(formData);
   };
-
-  const dataSource = formData || localFormData;
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
+          <Label htmlFor="name">Nom</Label>
+          <Input
+            id="name"
+            name="name"
+            value={formData.name}
+            onChange={handleInputChange}
+            placeholder="Nom du prospect"
+          />
+        </div>
+        
+        <div className="space-y-2">
           <Label htmlFor="company">Entreprise</Label>
           <Input
             id="company"
             name="company"
-            value={dataSource.company}
-            onChange={inputChangeHandler}
+            value={formData.company}
+            onChange={handleInputChange}
+            placeholder="Nom de l'entreprise"
             required
           />
         </div>
@@ -80,119 +63,160 @@ const ProspectForm: React.FC<ProspectFormProps> = ({
           <Input
             id="contactName"
             name="contactName"
-            value={dataSource.contactName}
-            onChange={inputChangeHandler}
+            value={formData.contactName}
+            onChange={handleInputChange}
+            placeholder="Nom du contact principal"
             required
           />
         </div>
-
+        
         <div className="space-y-2">
           <Label htmlFor="contactEmail">Email du contact</Label>
           <Input
             id="contactEmail"
             name="contactEmail"
             type="email"
-            value={dataSource.contactEmail}
-            onChange={inputChangeHandler}
+            value={formData.contactEmail}
+            onChange={handleInputChange}
+            placeholder="email@exemple.com"
             required
           />
         </div>
-
+        
         <div className="space-y-2">
           <Label htmlFor="contactPhone">Téléphone du contact</Label>
           <Input
             id="contactPhone"
             name="contactPhone"
-            value={dataSource.contactPhone}
-            onChange={inputChangeHandler}
+            value={formData.contactPhone}
+            onChange={handleInputChange}
+            placeholder="01 23 45 67 89"
             required
           />
         </div>
-
+        
+        <div className="space-y-2">
+          <Label htmlFor="email">Email de l'entreprise</Label>
+          <Input
+            id="email"
+            name="email"
+            type="email"
+            value={formData.email}
+            onChange={handleInputChange}
+            placeholder="contact@entreprise.com"
+          />
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="phone">Téléphone de l'entreprise</Label>
+          <Input
+            id="phone"
+            name="phone"
+            value={formData.phone}
+            onChange={handleInputChange}
+            placeholder="01 98 76 54 32"
+          />
+        </div>
+        
         <div className="space-y-2">
           <Label htmlFor="status">Statut</Label>
-          <Select
-            value={dataSource.status}
-            onValueChange={(value) => selectChangeHandler('status', value)}
+          <Select 
+            value={formData.status} 
+            onValueChange={(value) => handleSelectChange('status', value)}
           >
-            <SelectTrigger id="status">
+            <SelectTrigger>
               <SelectValue placeholder="Sélectionner un statut" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="new">Nouveau</SelectItem>
-              <SelectItem value="contacted">Contacté</SelectItem>
-              <SelectItem value="meeting">Rendez-vous</SelectItem>
-              <SelectItem value="proposal">Proposition</SelectItem>
-              <SelectItem value="negotiation">Négociation</SelectItem>
-              <SelectItem value="converted">Converti</SelectItem>
-              <SelectItem value="lost">Perdu</SelectItem>
+              {statusOptions.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
-
+        
         <div className="space-y-2">
           <Label htmlFor="source">Source</Label>
-          <Select
-            value={dataSource.source}
-            onValueChange={(value) => selectChangeHandler('source', value)}
+          <Select 
+            value={formData.source} 
+            onValueChange={(value) => handleSelectChange('source', value)}
           >
-            <SelectTrigger id="source">
+            <SelectTrigger>
               <SelectValue placeholder="Sélectionner une source" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="Site web">Site web</SelectItem>
-              <SelectItem value="Réseaux sociaux">Réseaux sociaux</SelectItem>
-              <SelectItem value="Référence">Référence</SelectItem>
-              <SelectItem value="Salon professionnel">Salon professionnel</SelectItem>
-              <SelectItem value="Publicité">Publicité</SelectItem>
-              <SelectItem value="Autre">Autre</SelectItem>
+              {sourceOptions.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
-
+        
         <div className="space-y-2">
-          <Label htmlFor="industry">Industrie</Label>
+          <Label htmlFor="industry">Secteur d'activité</Label>
           <Input
             id="industry"
             name="industry"
-            value={dataSource.industry || ''}
-            onChange={inputChangeHandler}
+            value={formData.industry}
+            onChange={handleInputChange}
+            placeholder="Secteur d'activité"
           />
         </div>
-
+        
         <div className="space-y-2">
           <Label htmlFor="website">Site web</Label>
           <Input
             id="website"
             name="website"
-            value={dataSource.website || ''}
-            onChange={inputChangeHandler}
+            value={formData.website}
+            onChange={handleInputChange}
+            placeholder="www.exemple.com"
+          />
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="address">Adresse</Label>
+          <Input
+            id="address"
+            name="address"
+            value={formData.address}
+            onChange={handleInputChange}
+            placeholder="Adresse complète"
+          />
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="estimatedValue">Valeur estimée (€)</Label>
+          <Input
+            id="estimatedValue"
+            name="estimatedValue"
+            type="number"
+            value={formData.estimatedValue || ''}
+            onChange={handleInputChange}
+            placeholder="0"
           />
         </div>
       </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="address">Adresse</Label>
-        <Input
-          id="address"
-          name="address"
-          value={dataSource.address || ''}
-          onChange={inputChangeHandler}
-        />
-      </div>
-
+      
       <div className="space-y-2">
         <Label htmlFor="notes">Notes</Label>
         <Textarea
           id="notes"
           name="notes"
+          value={formData.notes}
+          onChange={handleInputChange}
+          placeholder="Notes additionnelles sur ce prospect..."
           rows={4}
-          value={dataSource.notes || ''}
-          onChange={inputChangeHandler}
         />
       </div>
-
-      <Button type="submit" className="w-full">{buttonText}</Button>
+      
+      <Button type="submit" className="w-full">
+        {buttonText}
+      </Button>
     </form>
   );
 };

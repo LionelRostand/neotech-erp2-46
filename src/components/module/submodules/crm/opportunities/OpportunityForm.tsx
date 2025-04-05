@@ -27,19 +27,17 @@ const OpportunityForm: React.FC<OpportunityFormProps> = ({
   const stageOptions = getAllStages();
 
   const [formData, setFormData] = useState<OpportunityFormData>({
-    title: '',
+    name: '',
     description: '',
     stage: OpportunityStage.LEAD,
     probability: 10,
-    amount: 0,
+    value: 0,
     clientName: '',
     contactName: '',
     contactEmail: '',
     contactPhone: '',
     assignedTo: '',
-    value: 0,
-    startDate: new Date().toISOString().split('T')[0],
-    closeDate: '',
+    expectedCloseDate: new Date().toISOString().split('T')[0],
     notes: ''
   });
 
@@ -47,20 +45,18 @@ const OpportunityForm: React.FC<OpportunityFormProps> = ({
   useEffect(() => {
     if (initialData) {
       setFormData({
-        title: initialData.title || '',
+        name: initialData.name || '',
         description: initialData.description || '',
         stage: initialData.stage || OpportunityStage.LEAD,
         clientId: initialData.clientId,
         probability: initialData.probability || 10,
-        amount: initialData.amount || 0,
         value: initialData.value || 0,
         clientName: initialData.clientName || '',
         contactName: initialData.contactName || '',
         contactEmail: initialData.contactEmail || '',
         contactPhone: initialData.contactPhone || '',
         assignedTo: initialData.assignedTo || '',
-        startDate: new Date().toISOString().split('T')[0],
-        closeDate: initialData.expectedCloseDate || '',
+        expectedCloseDate: initialData.expectedCloseDate || new Date().toISOString().split('T')[0],
         notes: initialData.notes || ''
       });
     }
@@ -91,11 +87,11 @@ const OpportunityForm: React.FC<OpportunityFormProps> = ({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Basic Information */}
         <div className="space-y-2">
-          <Label htmlFor="title">Titre</Label>
+          <Label htmlFor="name">Titre</Label>
           <Input
-            id="title"
-            name="title"
-            value={formData.title}
+            id="name"
+            name="name"
+            value={formData.name}
             onChange={handleInputChange}
             required
           />
@@ -201,30 +197,16 @@ const OpportunityForm: React.FC<OpportunityFormProps> = ({
         
         {/* Dates */}
         <div className="space-y-2">
-          <Label htmlFor="startDate">Date de début</Label>
+          <Label htmlFor="expectedCloseDate">Date de clôture prévue</Label>
           <Input
-            id="startDate"
-            name="startDate"
+            id="expectedCloseDate"
+            name="expectedCloseDate"
             type="date"
-            value={formData.startDate}
+            value={formData.expectedCloseDate}
             onChange={handleInputChange}
           />
           <p className="text-xs text-muted-foreground">
-            {formData.startDate ? new Date(formData.startDate).toLocaleDateString() : 'Non spécifié'}
-          </p>
-        </div>
-        
-        <div className="space-y-2">
-          <Label htmlFor="closeDate">Date de clôture prévue</Label>
-          <Input
-            id="closeDate"
-            name="closeDate"
-            type="date"
-            value={formData.closeDate}
-            onChange={handleInputChange}
-          />
-          <p className="text-xs text-muted-foreground">
-            {formData.closeDate ? new Date(formData.closeDate).toLocaleDateString() : 'Non spécifié'}
+            {formData.expectedCloseDate ? new Date(formData.expectedCloseDate).toLocaleDateString() : 'Non spécifié'}
           </p>
         </div>
       </div>

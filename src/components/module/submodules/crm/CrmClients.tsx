@@ -1,101 +1,97 @@
 
 import React from 'react';
-import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
-import { useClients, sectors } from './hooks/useClients';
+import DashboardLayout from '@/components/DashboardLayout';
 import ClientSearch from './clients/ClientSearch';
 import ClientsTable from './clients/ClientsTable';
+import { useClients, sectors, statusOptions } from './hooks/useClients';
 import ClientDialogs from './clients/ClientDialogs';
 
 const CrmClients: React.FC = () => {
-  const {
-    filteredClients,
-    searchTerm,
-    setSearchTerm,
-    sectorFilter,
+  const clientsHook = useClients();
+  const { 
+    filteredClients, 
+    searchTerm, 
+    setSearchTerm, 
+    sectorFilter, 
     setSectorFilter,
-    isAddDialogOpen,
+    isAddDialogOpen, 
     setIsAddDialogOpen,
-    isEditDialogOpen,
+    isEditDialogOpen, 
     setIsEditDialogOpen,
-    isDeleteDialogOpen,
+    isDeleteDialogOpen, 
     setIsDeleteDialogOpen,
-    isViewDetailsOpen,
+    isViewDetailsOpen, 
     setIsViewDetailsOpen,
     selectedClient,
-    formData,
-    handleInputChange,
+    formData, 
+    handleInputChange, 
     handleSelectChange,
-    handleCreateClient,
-    handleUpdateClient,
+    handleCreateClient, 
+    handleUpdateClient, 
     handleDeleteClient,
-    openEditDialog,
-    openDeleteDialog,
+    openEditDialog, 
+    openDeleteDialog, 
     viewClientDetails,
     resetForm,
-    loading
-  } = useClients();
+    loading,
+    error
+  } = clientsHook;
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold">Clients</h2>
-        <Button onClick={() => {
-          resetForm();
-          setIsAddDialogOpen(true);
-        }}>
-          <Plus className="mr-2 h-4 w-4" />
-          Ajouter un client
-        </Button>
-      </div>
+    <DashboardLayout>
+      <div className="container mx-auto p-6">
+        <div className="flex flex-col md:flex-row justify-between items-center mb-6">
+          <h1 className="text-2xl font-bold mb-4 md:mb-0">Clients</h1>
+          <Button onClick={() => {
+            resetForm();
+            setIsAddDialogOpen(true);
+          }}>
+            Ajouter un client
+          </Button>
+        </div>
 
-      <Card className="p-4">
         <ClientSearch 
           searchTerm={searchTerm}
           onSearchChange={setSearchTerm}
           sectorFilter={sectorFilter}
           onSectorFilterChange={setSectorFilter}
-          sectors={sectors}
+          sectorOptions={sectors}
         />
 
-        {loading ? (
-          <div className="flex items-center justify-center py-8">
-            <div className="flex flex-col items-center">
-              <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-primary"></div>
-              <p className="mt-4 text-sm text-muted-foreground">Chargement des clients...</p>
-            </div>
-          </div>
-        ) : (
+        <div className="mt-6">
           <ClientsTable 
             clients={filteredClients}
-            onViewDetails={viewClientDetails}
+            onView={viewClientDetails}
             onEdit={openEditDialog}
             onDelete={openDeleteDialog}
+            isLoading={loading}
+            error={error}
           />
-        )}
-      </Card>
+        </div>
 
-      <ClientDialogs 
-        isAddDialogOpen={isAddDialogOpen}
-        setIsAddDialogOpen={setIsAddDialogOpen}
-        isEditDialogOpen={isEditDialogOpen}
-        setIsEditDialogOpen={setIsEditDialogOpen}
-        isDeleteDialogOpen={isDeleteDialogOpen}
-        setIsDeleteDialogOpen={setIsDeleteDialogOpen}
-        isViewDetailsOpen={isViewDetailsOpen}
-        setIsViewDetailsOpen={setIsViewDetailsOpen}
-        selectedClient={selectedClient}
-        formData={formData}
-        sectors={sectors}
-        handleInputChange={handleInputChange}
-        handleSelectChange={handleSelectChange}
-        handleCreateClient={handleCreateClient}
-        handleUpdateClient={handleUpdateClient}
-        handleDeleteClient={handleDeleteClient}
-        openEditDialog={openEditDialog}
-      />
-    </div>
+        <ClientDialogs
+          isAddDialogOpen={isAddDialogOpen}
+          setIsAddDialogOpen={setIsAddDialogOpen}
+          isEditDialogOpen={isEditDialogOpen}
+          setIsEditDialogOpen={setIsEditDialogOpen}
+          isDeleteDialogOpen={isDeleteDialogOpen}
+          setIsDeleteDialogOpen={setIsDeleteDialogOpen}
+          isViewDetailsOpen={isViewDetailsOpen}
+          setIsViewDetailsOpen={setIsViewDetailsOpen}
+          selectedClient={selectedClient}
+          formData={formData}
+          handleInputChange={handleInputChange}
+          handleSelectChange={handleSelectChange}
+          handleCreateClient={handleCreateClient}
+          handleUpdateClient={handleUpdateClient}
+          handleDeleteClient={handleDeleteClient}
+          resetForm={resetForm}
+          sectorOptions={sectors}
+          statusOptions={statusOptions}
+        />
+      </div>
+    </DashboardLayout>
   );
 };
 

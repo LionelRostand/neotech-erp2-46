@@ -71,14 +71,14 @@ const OpportunityTable: React.FC<OpportunityTableProps> = ({
           ) : (
             opportunities.map((opportunity) => (
               <TableRow key={opportunity.id}>
-                <TableCell className="font-medium">{opportunity.title}</TableCell>
+                <TableCell className="font-medium">{opportunity.name}</TableCell>
                 <TableCell>{opportunity.clientName || 'Non défini'}</TableCell>
                 <TableCell>
                   <Badge className={opportunityUtils.getStageColor(opportunity.stage)}>
                     {opportunityUtils.getStageLabel(opportunity.stage)}
                   </Badge>
                 </TableCell>
-                <TableCell>{opportunity.amount ? formatCurrency(opportunity.amount) : 'Non défini'}</TableCell>
+                <TableCell>{opportunity.value ? formatCurrency(opportunity.value) : 'Non défini'}</TableCell>
                 <TableCell>{opportunity.assignedTo || 'Non assigné'}</TableCell>
                 <TableCell className="text-right">
                   <div className="flex justify-end gap-2">

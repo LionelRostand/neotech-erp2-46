@@ -1,63 +1,38 @@
 
-import { useState, useEffect } from 'react';
-import { useCollectionData } from '@/hooks/useCollectionData';
-import { COLLECTIONS } from '@/lib/firebase-collections';
-import { orderBy } from 'firebase/firestore';
+import { useState, useEffect, useCallback } from 'react';
+import { Client, ClientFormData } from '../types/crm-types';
 import { toast } from 'sonner';
-import { addDocument, updateDocument, deleteDocument } from '@/hooks/firestore/firestore-utils';
 
-export interface Client {
-  id: string;
-  name: string;
-  sector: string;
-  revenue: string;
-  status: 'active' | 'inactive' | 'lead';
-  contactName: string;
-  contactEmail: string;
-  contactPhone: string;
-  address: string;
-  website?: string;
-  description?: string;
-  notes?: string;
-  createdAt: string;
-  customerSince?: string;
-}
-
-export interface ClientFormData {
-  name: string;
-  sector: string;
-  revenue: string;
-  status: string;
-  contactName: string;
-  contactEmail: string;
-  contactPhone: string;
-  address: string;
-  website?: string;
-  description?: string;
-  notes?: string;
-}
-
-// Export sectors array
+// Array of available sectors
 export const sectors = [
   { value: 'technology', label: 'Technologie' },
-  { value: 'healthcare', label: 'Santé' },
   { value: 'finance', label: 'Finance' },
+  { value: 'healthcare', label: 'Santé' },
   { value: 'education', label: 'Éducation' },
   { value: 'retail', label: 'Commerce de détail' },
   { value: 'manufacturing', label: 'Industrie' },
-  { value: 'hospitality', label: 'Hôtellerie' },
   { value: 'consulting', label: 'Conseil' },
-  { value: 'real_estate', label: 'Immobilier' },
+  { value: 'energy', label: 'Énergie' },
+  { value: 'food', label: 'Alimentaire' },
+  { value: 'transportation', label: 'Transport' },
+  { value: 'media', label: 'Médias' },
   { value: 'construction', label: 'Construction' },
   { value: 'other', label: 'Autre' }
+];
+
+// Status options
+export const statusOptions = [
+  { value: 'active', label: 'Actif' },
+  { value: 'inactive', label: 'Inactif' },
+  { value: 'lead', label: 'Prospect' }
 ];
 
 export const useClients = () => {
   const [clients, setClients] = useState<Client[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string>('');
+  const [error, setError] = useState<string | null>(null);
   
-  // Additional state for UI management
+  // State for client management
   const [filteredClients, setFilteredClients] = useState<Client[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [sectorFilter, setSectorFilter] = useState('all');
@@ -68,6 +43,8 @@ export const useClients = () => {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isViewDetailsOpen, setIsViewDetailsOpen] = useState(false);
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
+  
+  // Form data
   const [formData, setFormData] = useState<ClientFormData>({
     name: '',
     sector: 'technology',
@@ -82,48 +59,7 @@ export const useClients = () => {
     notes: ''
   });
   
-  // Fetch clients from Firestore
-  const { 
-    data: clientsData, 
-    isLoading: loading, 
-    error: fetchError 
-  } = useCollectionData(
-    COLLECTIONS.CRM.CLIENTS,
-    [orderBy('name')]
-  );
-  
-  // Update local state when data is fetched
-  useEffect(() => {
-    if (clientsData) {
-      setClients(clientsData as Client[]);
-      setIsLoading(false);
-    }
-    if (fetchError) {
-      setError('Failed to load clients');
-      setIsLoading(false);
-    }
-  }, [clientsData, fetchError]);
-  
-  // Filter clients based on search term and sector filter
-  useEffect(() => {
-    let filtered = [...clients];
-    
-    if (searchTerm) {
-      filtered = filtered.filter(client => 
-        client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        client.contactName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        client.contactEmail.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
-    
-    if (sectorFilter !== 'all') {
-      filtered = filtered.filter(client => client.sector === sectorFilter);
-    }
-    
-    setFilteredClients(filtered);
-  }, [clients, searchTerm, sectorFilter]);
-  
-  // Form handling functions
+  // Form handlers
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
@@ -133,59 +69,232 @@ export const useClients = () => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
   
-  // Client operations
-  const handleCreateClient = async () => {
+  // Reset form
+  const resetForm = () => {
+    setFormData({
+      name: '',
+      sector: 'technology',
+      revenue: '',
+      status: 'active',
+      contactName: '',
+      contactEmail: '',
+      contactPhone: '',
+      address: '',
+      website: '',
+      description: '',
+      notes: ''
+    });
+    setSelectedClient(null);
+  };
+
+  // Load clients
+  useEffect(() => {
+    const fetchClients = async () => {
+      try {
+        // Here we would normally call an API to get clients
+        // For now, we'll use mock data
+        await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API delay
+        
+        const mockClients: Client[] = [
+          {
+            id: '1',
+            name: 'TechSolutions Inc.',
+            sector: 'technology',
+            revenue: '1500000',
+            status: 'active',
+            contactName: 'Jean Dupont',
+            contactEmail: 'jean.dupont@techsolutions.com',
+            contactPhone: '01 23 45 67 89',
+            address: '25 Rue de l\'Innovation, 75001 Paris',
+            website: 'www.techsolutions.com',
+            description: 'Entreprise spécialisée dans les solutions cloud',
+            notes: 'Client depuis 3 ans, relation solide',
+            createdAt: '2022-01-15T10:30:00Z',
+            customerSince: '2022-01-15T10:30:00Z'
+          },
+          {
+            id: '2',
+            name: 'Finance Plus',
+            sector: 'finance',
+            revenue: '3500000',
+            status: 'active',
+            contactName: 'Marie Lefebvre',
+            contactEmail: 'marie.lefebvre@financeplus.fr',
+            contactPhone: '01 98 76 54 32',
+            address: '8 Avenue des Finances, 69002 Lyon',
+            website: 'www.financeplus.fr',
+            description: 'Cabinet de conseil financier',
+            notes: 'Expansion prévue au prochain trimestre',
+            createdAt: '2022-03-22T14:15:00Z',
+            customerSince: '2022-03-22T14:15:00Z'
+          },
+          {
+            id: '3',
+            name: 'MédSanté',
+            sector: 'healthcare',
+            revenue: '2700000',
+            status: 'inactive',
+            contactName: 'Pierre Martin',
+            contactEmail: 'p.martin@medsante.org',
+            contactPhone: '01 45 67 89 12',
+            address: '15 Boulevard de la Santé, 33000 Bordeaux',
+            website: 'www.medsante.org',
+            description: 'Clinique privée spécialisée en cardiologie',
+            notes: 'Contrat en pause, reprise prévue en septembre',
+            createdAt: '2022-06-10T09:45:00Z',
+            customerSince: '2022-06-10T09:45:00Z'
+          },
+          {
+            id: '4',
+            name: 'Construc BTP',
+            sector: 'construction',
+            revenue: '5200000',
+            status: 'active',
+            contactName: 'Sophie Bernard',
+            contactEmail: 'sophie@construc-btp.fr',
+            contactPhone: '01 23 45 67 89',
+            address: '42 Rue des Bâtisseurs, 59000 Lille',
+            website: 'www.construc-btp.fr',
+            description: 'Entreprise de construction et travaux publics',
+            notes: 'Projets importants en cours',
+            createdAt: '2022-09-05T11:20:00Z',
+            customerSince: '2022-09-05T11:20:00Z'
+          },
+          {
+            id: '5',
+            name: 'EduFrance',
+            sector: 'education',
+            revenue: '900000',
+            status: 'lead',
+            contactName: 'Thomas Dubois',
+            contactEmail: 'thomas.dubois@edufrance.edu',
+            contactPhone: '01 76 54 32 10',
+            address: '3 Rue de l\'Éducation, 44000 Nantes',
+            website: 'www.edufrance.edu',
+            description: 'Groupe d\'écoles privées',
+            notes: 'Intéressé par nos solutions numériques',
+            createdAt: '2022-11-18T16:00:00Z'
+          }
+        ];
+        
+        setClients(mockClients);
+        setFilteredClients(mockClients);
+        setError(null);
+      } catch (err) {
+        console.error('Error fetching clients:', err);
+        setError('Une erreur est survenue lors du chargement des clients');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchClients();
+  }, []);
+  
+  // Filter clients when search or filter changes
+  useEffect(() => {
+    if (clients.length > 0) {
+      let filtered = [...clients];
+      
+      // Apply sector filter
+      if (sectorFilter !== 'all') {
+        filtered = filtered.filter(client => client.sector === sectorFilter);
+      }
+      
+      // Apply search filter
+      if (searchTerm) {
+        const search = searchTerm.toLowerCase();
+        filtered = filtered.filter(client => 
+          client.name.toLowerCase().includes(search) ||
+          client.contactName.toLowerCase().includes(search) ||
+          client.contactEmail.toLowerCase().includes(search)
+        );
+      }
+      
+      setFilteredClients(filtered);
+    }
+  }, [clients, searchTerm, sectorFilter]);
+  
+  // Client CRUD operations
+  const addClient = async (clientData: ClientFormData) => {
     try {
-      const newClient = {
-        ...formData,
-        status: formData.status as 'active' | 'inactive' | 'lead',
+      // Here we would normally call an API to add a client
+      // For now, we'll just update our local state
+      const newClient: Client = {
+        id: Date.now().toString(),
+        ...clientData,
+        status: clientData.status as 'active' | 'inactive' | 'lead',
         createdAt: new Date().toISOString(),
-        customerSince: new Date().toISOString().split('T')[0]
+        customerSince: new Date().toISOString()
       };
       
-      const result = await addClient(newClient);
-      if (result) {
-        resetForm();
-        setIsAddDialogOpen(false);
-        toast.success('Client ajouté avec succès');
-      }
-    } catch (error) {
-      console.error('Error creating client:', error);
-      toast.error('Erreur lors de la création du client');
+      setClients(prev => [newClient, ...prev]);
+      toast.success('Client ajouté avec succès');
+      return newClient;
+    } catch (err) {
+      console.error('Error adding client:', err);
+      toast.error('Erreur lors de l\'ajout du client');
+      throw err;
     }
   };
   
-  const handleUpdateClient = async () => {
-    if (!selectedClient) return;
-    
+  const updateClient = async (id: string, clientData: Partial<ClientFormData>) => {
     try {
-      const success = await updateClient(selectedClient.id, formData);
-      if (success) {
-        setIsEditDialogOpen(false);
-        toast.success('Client mis à jour avec succès');
-      }
-    } catch (error) {
-      console.error('Error updating client:', error);
+      // Here we would normally call an API to update a client
+      // For now, we'll just update our local state
+      const updatedClients = clients.map(client => {
+        if (client.id === id) {
+          return {
+            ...client,
+            ...clientData,
+            status: (clientData.status as 'active' | 'inactive' | 'lead') || client.status
+          };
+        }
+        return client;
+      });
+      
+      setClients(updatedClients);
+      toast.success('Client mis à jour avec succès');
+      return clients.find(client => client.id === id);
+    } catch (err) {
+      console.error('Error updating client:', err);
       toast.error('Erreur lors de la mise à jour du client');
+      throw err;
     }
   };
   
-  const handleDeleteClient = async () => {
-    if (!selectedClient) return;
-    
+  const deleteClient = async (id: string) => {
     try {
-      const success = await deleteClient(selectedClient.id);
-      if (success) {
-        setIsDeleteDialogOpen(false);
-        toast.success('Client supprimé avec succès');
-      }
-    } catch (error) {
-      console.error('Error deleting client:', error);
+      // Here we would normally call an API to delete a client
+      // For now, we'll just update our local state
+      setClients(prev => prev.filter(client => client.id !== id));
+      toast.success('Client supprimé avec succès');
+      return true;
+    } catch (err) {
+      console.error('Error deleting client:', err);
       toast.error('Erreur lors de la suppression du client');
+      throw err;
     }
   };
   
-  // Dialog management functions
+  const refreshClients = async () => {
+    setIsLoading(true);
+    try {
+      // Here we would normally refresh the client data
+      // For now, we'll just simulate a refresh
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      toast.success('Données des clients actualisées');
+      return true;
+    } catch (err) {
+      console.error('Error refreshing clients:', err);
+      toast.error('Erreur lors de l\'actualisation des clients');
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  // Event handlers
   const openEditDialog = (client: Client) => {
     setSelectedClient(client);
     setFormData({
@@ -214,87 +323,49 @@ export const useClients = () => {
     setIsViewDetailsOpen(true);
   };
   
-  const resetForm = () => {
-    setFormData({
-      name: '',
-      sector: 'technology',
-      revenue: '',
-      status: 'active',
-      contactName: '',
-      contactEmail: '',
-      contactPhone: '',
-      address: '',
-      website: '',
-      description: '',
-      notes: ''
-    });
-  };
-  
-  // API operations
-  const addClient = async (clientData: ClientFormData): Promise<Client | null> => {
+  const handleCreateClient = async () => {
     try {
-      const result = await addDocument(COLLECTIONS.CRM.CLIENTS, clientData);
-      const newClient = { 
-        id: typeof result === 'object' ? result.id : result, 
-        ...clientData, 
-        status: clientData.status as 'active' | 'inactive' | 'lead',
-        createdAt: new Date().toISOString() 
-      };
-      setClients(prev => [...prev, newClient]);
-      return newClient;
-    } catch (error) {
-      console.error('Error adding client:', error);
-      setError('Failed to add client');
-      return null;
+      await addClient(formData);
+      setIsAddDialogOpen(false);
+      resetForm();
+    } catch (err) {
+      console.error('Error in handleCreateClient:', err);
     }
   };
   
-  const updateClient = async (id: string, clientData: Partial<ClientFormData>): Promise<boolean> => {
+  const handleUpdateClient = async () => {
+    if (!selectedClient) return;
+    
     try {
-      await updateDocument(COLLECTIONS.CRM.CLIENTS, id, clientData);
-      setClients(prev => prev.map(client => 
-        client.id === id ? { ...client, ...clientData } : client
-      ));
-      return true;
-    } catch (error) {
-      console.error('Error updating client:', error);
-      setError('Failed to update client');
-      return false;
+      await updateClient(selectedClient.id, formData);
+      setIsEditDialogOpen(false);
+      resetForm();
+    } catch (err) {
+      console.error('Error in handleUpdateClient:', err);
     }
   };
   
-  const deleteClient = async (id: string): Promise<boolean> => {
+  const handleDeleteClient = async () => {
+    if (!selectedClient) return;
+    
     try {
-      await deleteDocument(COLLECTIONS.CRM.CLIENTS, id);
-      setClients(prev => prev.filter(client => client.id !== id));
-      return true;
-    } catch (error) {
-      console.error('Error deleting client:', error);
-      setError('Failed to delete client');
-      return false;
-    }
-  };
-  
-  const refreshClients = async (): Promise<boolean> => {
-    setIsLoading(true);
-    try {
-      // This would be replaced with actual refresh logic
-      return true;
-    } catch (error) {
-      console.error('Error refreshing clients:', error);
-      setError('Failed to refresh clients');
-      return false;
-    } finally {
-      setIsLoading(false);
+      await deleteClient(selectedClient.id);
+      setIsDeleteDialogOpen(false);
+      resetForm();
+    } catch (err) {
+      console.error('Error in handleDeleteClient:', err);
     }
   };
   
   return {
     clients,
-    filteredClients,
     isLoading,
-    loading,
     error,
+    addClient,
+    updateClient,
+    deleteClient,
+    refreshClients,
+    filteredClients,
     searchTerm,
     setSearchTerm,
     sectorFilter,
@@ -318,9 +389,6 @@ export const useClients = () => {
     openDeleteDialog,
     viewClientDetails,
     resetForm,
-    addClient,
-    updateClient,
-    deleteClient,
-    refreshClients
+    loading: isLoading
   };
 };

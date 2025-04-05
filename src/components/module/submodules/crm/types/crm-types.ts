@@ -43,6 +43,7 @@ export interface ProspectFormData {
 }
 
 export interface ReminderData {
+  id?: string;
   title: string;
   date: string;
   notes?: string;
@@ -79,19 +80,34 @@ export interface ClientFormData {
   notes?: string;
 }
 
+export enum OpportunityStage {
+  LEAD = 'lead',
+  DISCOVERY = 'discovery',
+  PROPOSAL = 'proposal',
+  NEGOTIATION = 'negotiation',
+  CLOSING = 'closing',
+  CLOSED_WON = 'won',
+  CLOSED_LOST = 'lost'
+}
+
+export type RelatedEntity = 'client' | 'prospect' | 'opportunity';
+
 export interface Opportunity {
   id: string;
   name: string;
+  title?: string;
   clientId?: string;
   clientName: string;
   prospectId?: string;
   contactName: string;
   contactEmail: string;
   contactPhone: string;
-  stage: 'lead' | 'discovery' | 'proposal' | 'negotiation' | 'closing' | 'won' | 'lost';
+  stage: OpportunityStage;
   value: number;
+  amount?: number;
   probability: number;
   expectedCloseDate: string;
+  description?: string;
   notes?: string;
   assignedTo?: string;
   createdAt: string;
@@ -108,14 +124,17 @@ export interface Opportunity {
 
 export interface OpportunityFormData {
   name: string;
+  title?: string;
+  description?: string;
   clientId?: string;
   clientName: string;
   prospectId?: string;
   contactName: string;
   contactEmail: string;
   contactPhone: string;
-  stage: string;
+  stage: OpportunityStage;
   value: number | string;
+  amount?: number | string;
   probability: number | string;
   expectedCloseDate: string;
   notes?: string;
@@ -124,4 +143,6 @@ export interface OpportunityFormData {
   tags?: string[];
   source?: string;
   currency?: string;
+  startDate?: string;
+  closeDate?: string;
 }

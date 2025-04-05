@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import {
   Dialog,
   DialogContent,
@@ -9,96 +9,83 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { RelatedEntity } from '../types/crm-types';
+import { Textarea } from "@/components/ui/textarea";
+import { CalendarIcon } from "lucide-react";
+import { ReminderData } from "../types/crm-types";
 
 interface ReminderDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  relatedTo: RelatedEntity;
+  reminderData: ReminderData;
+  onChange: (field: string, value: string) => void;
+  onSave: () => void;
+  entityName: string;
 }
 
 const ReminderDialog: React.FC<ReminderDialogProps> = ({
   isOpen,
   onClose,
-  relatedTo
+  reminderData,
+  onChange,
+  onSave,
+  entityName
 }) => {
-  const [title, setTitle] = useState('');
-  const [date, setDate] = useState<string>(
-    new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split('T')[0]
-  );
-  const [notes, setNotes] = useState('');
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Here you would normally save the reminder to your backend
-    console.log('Reminder created:', { title, date, notes, relatedTo });
-    
-    // Reset form fields and close the dialog
-    setTitle('');
-    setNotes('');
-    onClose();
+    onSave();
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Ajouter un rappel</DialogTitle>
         </DialogHeader>
         
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="title">Titre</Label>
-            <Input 
-              id="title" 
-              value={title} 
-              onChange={(e) => setTitle(e.target.value)} 
-              placeholder="Titre du rappel" 
-              required 
+            <Label htmlFor="title">Titre du rappel</Label>
+            <Input
+              id="title"
+              value={reminderData.title}
+              onChange={(e) => onChange('title', e.target.value)}
+              placeholder="Ex: Appel de suivi"
+              required
             />
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="date">Date</Label>
-            <Input 
-              id="date" 
-              type="date" 
-              value={date} 
-              onChange={(e) => setDate(e.target.value)} 
-              required 
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="related">En lien avec</Label>
-            <Input 
-              id="related" 
-              value={`${relatedTo.type}: ${relatedTo.name}`} 
-              readOnly 
-              disabled 
-            />
+            <Label htmlFor="date">Date du rappel</Label>
+            <div className="relative">
+              <Input
+                id="date"
+                type="date"
+                value={reminderData.date}
+                onChange={(e) => onChange('date', e.target.value)}
+                required
+              />
+              <CalendarIcon className="absolute right-3 top-2.5 h-4 w-4 text-gray-500" />
+            </div>
           </div>
           
           <div className="space-y-2">
             <Label htmlFor="notes">Notes</Label>
-            <Textarea 
-              id="notes" 
-              value={notes} 
-              onChange={(e) => setNotes(e.target.value)} 
-              placeholder="Notes supplémentaires..." 
-              rows={3} 
+            <Textarea
+              id="notes"
+              value={reminderData.notes || ''}
+              onChange={(e) => onChange('notes', e.target.value)}
+              placeholder={`Notes concernant le rappel pour ${entityName}...`}
+              rows={3}
             />
           </div>
           
           <DialogFooter>
-            <Button variant="outline" type="button" onClick={onClose}>
+            <Button type="button" variant="outline" onClick={onClose}>
               Annuler
             </Button>
             <Button type="submit">
-              Créer le rappel
+              Enregistrer
             </Button>
           </DialogFooter>
         </form>

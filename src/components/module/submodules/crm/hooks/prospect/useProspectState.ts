@@ -1,54 +1,66 @@
 
-import { useState } from 'react';
-import { Prospect, ProspectFormData, ReminderData } from '../../types/crm-types';
+import { useState, useEffect } from 'react';
+import { ProspectFormData, ReminderData } from '../../types/crm-types';
 
 export const useProspectState = () => {
-  const [prospects, setProspects] = useState<Prospect[]>([]);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
+  // Dialog states
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isViewDetailsOpen, setIsViewDetailsOpen] = useState(false);
   const [isConvertDialogOpen, setIsConvertDialogOpen] = useState(false);
   const [isReminderDialogOpen, setIsReminderDialogOpen] = useState(false);
-  const [selectedProspect, setSelectedProspect] = useState<Prospect | null>(null);
-  const [loading, setLoading] = useState(true);
   
+  // Forms data
   const [formData, setFormData] = useState<ProspectFormData>({
+    name: '',
     company: '',
     contactName: '',
     contactEmail: '',
     contactPhone: '',
-    name: '',
     email: '',
     phone: '',
     status: 'new',
-    source: 'Site web',
-    lastContact: new Date().toISOString().split('T')[0],
+    source: '',
+    industry: '',
+    website: '',
+    address: '',
     notes: ''
   });
-
+  
   const [reminderData, setReminderData] = useState<ReminderData>({
-    id: '',
     title: '',
     date: new Date().toISOString().split('T')[0],
-    completed: false,
-    notes: '',
-    prospectId: ''
+    notes: ''
   });
-
-  // Constants
-  const sourcesOptions = ['Site web', 'LinkedIn', 'Salon', 'Recommandation', 'Appel entrant', 'Email', 'Autre'];
-
+  
+  // Reset forms
+  const resetForm = () => {
+    setFormData({
+      name: '',
+      company: '',
+      contactName: '',
+      contactEmail: '',
+      contactPhone: '',
+      email: '',
+      phone: '',
+      status: 'new',
+      source: '',
+      industry: '',
+      website: '',
+      address: '',
+      notes: ''
+    });
+    
+    setReminderData({
+      title: '',
+      date: new Date().toISOString().split('T')[0],
+      notes: ''
+    });
+  };
+  
   return {
-    // State
-    prospects,
-    setProspects,
-    searchTerm,
-    setSearchTerm,
-    statusFilter,
-    setStatusFilter,
+    // Dialog states
     isAddDialogOpen,
     setIsAddDialogOpen,
     isEditDialogOpen,
@@ -57,19 +69,18 @@ export const useProspectState = () => {
     setIsDeleteDialogOpen,
     isViewDetailsOpen,
     setIsViewDetailsOpen,
-    isConvertDialogOpen, 
+    isConvertDialogOpen,
     setIsConvertDialogOpen,
     isReminderDialogOpen,
     setIsReminderDialogOpen,
-    selectedProspect,
-    setSelectedProspect,
-    loading,
-    setLoading,
+    
+    // Form data
     formData,
     setFormData,
     reminderData,
     setReminderData,
-    // Constants
-    sourcesOptions
+    
+    // Form reset
+    resetForm
   };
 };

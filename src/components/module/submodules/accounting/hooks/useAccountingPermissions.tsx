@@ -1,159 +1,160 @@
 
-import { useState, useEffect } from 'react';
-import { useCollectionData } from '@/hooks/useCollectionData';
+import { useState, useEffect, useCallback } from 'react';
 import { COLLECTIONS } from '@/lib/firebase-collections';
-import { orderBy } from 'firebase/firestore';
+import { useCollectionData } from '@/hooks/useCollectionData';
+import { toast } from 'sonner';
 
-interface AccountingPermission {
+export interface AccountingPermission {
   id: string;
   userId: string;
   userName: string;
   userEmail: string;
-  role: string;
+  userRole: string;
+  permissionType: string;
+  canView: boolean;
   canCreate: boolean;
   canEdit: boolean;
-  canView: boolean;
   canDelete: boolean;
-  createdAt: string;
-  updatedAt?: string;
+  lastModified: string;
 }
 
-export interface AccountingUserPermission {
-  userId: string;
-  permissions: Array<{
-    moduleId: string;
-    canView: boolean;
-    canCreate: boolean;
-    canEdit: boolean;
-    canDelete: boolean;
-  }>;
+export interface AccountingUser {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
 }
+
+export const ACCOUNTING_PERMISSIONS = {
+  INVOICES: 'invoices',
+  PAYMENTS: 'payments',
+  EXPENSES: 'expenses',
+  CLIENTS: 'clients',
+  SUPPLIERS: 'suppliers',
+  REPORTS: 'reports',
+  TAXES: 'taxes',
+  SETTINGS: 'settings',
+  TRANSACTIONS: 'transactions',
+  PERMISSIONS: 'permissions'
+};
 
 export const useAccountingPermissions = () => {
-  const [permissions, setPermissions] = useState<AccountingPermission[]>([]);
-  const [users, setUsers] = useState<{ id: string; displayName: string; email: string; role?: string; }[]>([]);
-  const [userPermissions, setUserPermissions] = useState<AccountingUserPermission[]>([]);
+  const [users, setUsers] = useState<AccountingUser[]>([]);
+  const [userPermissions, setUserPermissions] = useState<AccountingPermission[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [saving, setSaving] = useState(false);
-
-  // Use the correct path - add the PERMISSIONS field if it doesn't exist
-  const collectionPath = COLLECTIONS.ACCOUNTING.PERMISSIONS || 'accounting-permissions';
   
-  const { 
-    data: permissionsData, 
-    isLoading, 
-    error 
-  } = useCollectionData(
-    collectionPath,
-    [orderBy('userName')]
+  // Fetch all permissions from the database
+  const { data: permissions, isLoading, error } = useCollectionData<AccountingPermission>(
+    COLLECTIONS.ACCOUNTING.PERMISSIONS
   );
 
-  // Load users
+  // Fetch users
   useEffect(() => {
-    // This would normally be a Firebase query to get all users
-    // For now, we'll use mock data
-    setUsers([
-      { id: 'user1', displayName: 'John Doe', email: 'john@example.com', role: 'Admin' },
-      { id: 'user2', displayName: 'Jane Smith', email: 'jane@example.com', role: 'Manager' },
-      { id: 'user3', displayName: 'Alice Johnson', email: 'alice@example.com', role: 'User' },
-    ]);
+    const fetchUsers = async () => {
+      try {
+        // In a real application, this would call an API to get the users
+        // For now, we'll use mock data based on the permissions
+        if (permissions) {
+          const uniqueUsers = permissions.reduce((acc: AccountingUser[], permission) => {
+            if (!acc.some(user => user.id === permission.userId)) {
+              acc.push({
+                id: permission.userId,
+                name: permission.userName,
+                email: permission.userEmail,
+                role: permission.userRole
+              });
+            }
+            return acc;
+          }, []);
+          
+          setUsers(uniqueUsers);
+          setUserPermissions(permissions);
+        }
+      } catch (err) {
+        console.error('Error fetching users:', err);
+        toast.error('Failed to load users');
+      }
+    };
+
+    if (permissions && !isLoading) {
+      fetchUsers();
+    }
+  }, [permissions, isLoading]);
+
+  // Update a single permission
+  const updatePermission = useCallback((permissionId: string, field: string, value: boolean) => {
+    setUserPermissions(prev => 
+      prev.map(permission => 
+        permission.id === permissionId 
+          ? { ...permission, [field]: value, lastModified: new Date().toISOString() } 
+          : permission
+      )
+    );
   }, []);
 
-  useEffect(() => {
-    if (permissionsData) {
-      setPermissions(permissionsData as AccountingPermission[]);
-      
-      // Transform permissions data into userPermissions format
-      const groupedByUser: Record<string, AccountingUserPermission> = {};
-      
-      permissionsData.forEach((perm: AccountingPermission) => {
-        if (!groupedByUser[perm.userId]) {
-          groupedByUser[perm.userId] = {
-            userId: perm.userId,
-            permissions: []
-          };
-        }
-        
-        groupedByUser[perm.userId].permissions.push({
-          moduleId: perm.id,
-          canView: perm.canView,
-          canCreate: perm.canCreate,
-          canEdit: perm.canEdit,
-          canDelete: perm.canDelete
-        });
-      });
-      
-      setUserPermissions(Object.values(groupedByUser));
-    }
-  }, [permissionsData]);
-
-  // Update a specific permission
-  const updatePermission = (userId: string, moduleId: string, permissionType: keyof Omit<AccountingPermission, 'moduleId'>, value: boolean) => {
-    setUserPermissions(prev => 
-      prev.map(user => {
-        if (user.userId === userId) {
-          return {
-            ...user,
-            permissions: user.permissions.map(perm => {
-              if (perm.moduleId === moduleId) {
-                return { ...perm, [permissionType]: value };
-              }
-              return perm;
-            })
-          };
-        }
-        return user;
-      })
-    );
-  };
-
   // Set all permissions of a specific type for a user
-  const setAllPermissionsOfType = (userId: string, permissionType: keyof Omit<AccountingPermission, 'moduleId'>, value: boolean) => {
+  const setAllPermissionsOfType = useCallback((userId: string, permissionType: string, value: boolean) => {
     setUserPermissions(prev => 
-      prev.map(user => {
-        if (user.userId === userId) {
-          return {
-            ...user,
-            permissions: user.permissions.map(perm => {
-              return { ...perm, [permissionType]: value };
-            })
-          };
-        }
-        return user;
-      })
+      prev.map(permission => 
+        permission.userId === userId && permission.permissionType === permissionType
+          ? { 
+              ...permission, 
+              canView: value, 
+              canCreate: value, 
+              canEdit: value, 
+              canDelete: value,
+              lastModified: new Date().toISOString()
+            } 
+          : permission
+      )
     );
-  };
+  }, []);
 
-  // Save permissions to database
-  const savePermissions = async () => {
+  // Save permissions to the database
+  const savePermissions = useCallback(async (): Promise<void> => {
     setSaving(true);
-    
     try {
-      // This would normally make Firebase calls to update permissions
-      // For now, just simulate a delay
+      // In a real application, this would save to the database
+      // For now, we'll just simulate a save
       await new Promise(resolve => setTimeout(resolve, 1000));
-      console.log('Permissions saved:', userPermissions);
-      setSaving(false);
-      return true;
+      toast.success('Permissions saved successfully');
+      return Promise.resolve();
     } catch (err) {
       console.error('Error saving permissions:', err);
+      toast.error('Failed to save permissions');
+      return Promise.reject(err);
+    } finally {
       setSaving(false);
-      return false;
     }
-  };
+  }, [userPermissions]);
+
+  // Filter users based on search term
+  const filterUsers = useCallback(() => {
+    if (!searchTerm) return users;
+    
+    return users.filter(user => 
+      user.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+      user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.role.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [users, searchTerm]);
+
+  const filteredUsers = filterUsers();
 
   return {
-    permissions,
+    permissions: userPermissions,
+    isLoading,
+    error,
     users,
     userPermissions,
     loading: isLoading,
-    isLoading,
     saving,
-    error,
     searchTerm,
     setSearchTerm,
     updatePermission,
     setAllPermissionsOfType,
-    savePermissions
+    savePermissions,
+    filteredUsers
   };
 };

@@ -3,7 +3,7 @@ import React, { useMemo } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useOpportunityUtils } from '../hooks/opportunity/useOpportunityUtils';
-import { Opportunity, OpportunityStage } from '../types/crm-types';
+import { Opportunity } from '../types/crm-types';
 
 interface OpportunityKanbanProps {
   opportunities: Opportunity[];
@@ -63,12 +63,12 @@ const OpportunityKanban: React.FC<OpportunityKanbanProps> = ({
                   onClick={() => onOpportunityClick(opportunity)}
                 >
                   <CardContent className="p-3">
-                    <h4 className="font-medium text-sm truncate">{opportunity.title}</h4>
+                    <h4 className="font-medium text-sm truncate">{opportunity.name}</h4>
                     <p className="text-xs text-muted-foreground mt-1 truncate">
                       {opportunity.clientName || 'Client non défini'}
                     </p>
-                    {opportunity.amount && (
-                      <p className="text-xs font-medium mt-2">{opportunity.amount} €</p>
+                    {opportunity.value && (
+                      <p className="text-xs font-medium mt-2">{opportunity.value} €</p>
                     )}
                   </CardContent>
                 </Card>

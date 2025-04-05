@@ -32,7 +32,7 @@ const CrmOpportunities: React.FC = () => {
   const filteredOpportunities = opportunities.filter(opportunity => {
     const matchesStage = stageFilter === 'all' || opportunity.stage === stageFilter;
     const matchesSearch = !searchTerm || 
-      (opportunity.title && opportunity.title.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (opportunity.name && opportunity.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
       (opportunity.clientName && opportunity.clientName.toLowerCase().includes(searchTerm.toLowerCase()));
     
     return matchesStage && matchesSearch;

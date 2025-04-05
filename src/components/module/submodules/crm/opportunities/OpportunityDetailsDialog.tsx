@@ -31,7 +31,7 @@ const OpportunityDetailsDialog: React.FC<OpportunityDetailsDialogProps> = ({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
-          <DialogTitle>{opportunity.title}</DialogTitle>
+          <DialogTitle>{opportunity.name}</DialogTitle>
         </DialogHeader>
         
         <div className="space-y-4">
@@ -48,7 +48,7 @@ const OpportunityDetailsDialog: React.FC<OpportunityDetailsDialogProps> = ({
             </div>
             <div>
               <p className="text-sm font-medium text-gray-500">Montant</p>
-              <p className="text-sm">{opportunity.amount ? `${opportunity.amount} €` : 'Non spécifié'}</p>
+              <p className="text-sm">{opportunity.value ? `${opportunity.value} €` : 'Non spécifié'}</p>
             </div>
             <div>
               <p className="text-sm font-medium text-gray-500">Responsable</p>
@@ -66,7 +66,7 @@ const OpportunityDetailsDialog: React.FC<OpportunityDetailsDialogProps> = ({
               <ul className="space-y-2">
                 {opportunity.products.map((product, index) => (
                   <li key={index} className="text-sm">
-                    {product.name} - {product.quantity} x {product.price}€
+                    {product}
                   </li>
                 ))}
               </ul>
