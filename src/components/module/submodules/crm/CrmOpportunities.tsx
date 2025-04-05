@@ -12,7 +12,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useOpportunities } from './hooks/useOpportunities';
 import { Opportunity, OpportunityFormData } from './types/crm-types';
 import { toast } from 'sonner';
-import DashboardLayout from '@/components/DashboardLayout';
 
 const CrmOpportunities: React.FC = () => {
   const { opportunities, isLoading, error, addOpportunity, updateOpportunity } = useOpportunities();
@@ -79,8 +78,8 @@ const CrmOpportunities: React.FC = () => {
   };
 
   return (
-    <DashboardLayout>
-      <div className="container mx-auto p-6">
+    <div className="min-h-screen w-full bg-neotech-background">
+      <div className="p-6">
         <div className="flex flex-col md:flex-row justify-between items-center mb-6">
           <h1 className="text-2xl font-bold mb-4 md:mb-0">Opportunités</h1>
           <Button onClick={() => setIsAddDialogOpen(true)}>
@@ -149,7 +148,7 @@ const CrmOpportunities: React.FC = () => {
           </>
         )}
       </div>
-    </DashboardLayout>
+    </div>
   );
 };
 

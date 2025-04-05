@@ -1,7 +1,6 @@
 
 import React from 'react';
 import { Button } from "@/components/ui/button";
-import DashboardLayout from '@/components/DashboardLayout';
 import ClientSearch from './clients/ClientSearch';
 import ClientsTable from './clients/ClientsTable';
 import { useClients, sectors, statusOptions } from './hooks/useClients';
@@ -39,8 +38,8 @@ const CrmClients: React.FC = () => {
   } = clientsHook;
 
   return (
-    <DashboardLayout>
-      <div className="container mx-auto pt-2 px-4">
+    <div className="min-h-screen w-full bg-neotech-background">
+      <div className="p-6">
         <div className="flex flex-col md:flex-row justify-between items-center mb-4">
           <h1 className="text-2xl font-bold mb-3 md:mb-0">Clients</h1>
           <Button onClick={() => {
@@ -91,7 +90,7 @@ const CrmClients: React.FC = () => {
           statusOptions={statusOptions}
         />
       </div>
-    </DashboardLayout>
+    </div>
   );
 };
 

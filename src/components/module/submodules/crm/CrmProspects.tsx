@@ -1,5 +1,5 @@
+
 import React, { useState, useCallback } from 'react';
-import DashboardLayout from '@/components/DashboardLayout';
 import { Button } from "@/components/ui/button";
 import { Plus, FileText, AlertCircle } from "lucide-react";
 import { useProspects } from './hooks/useProspects';
@@ -168,8 +168,8 @@ const CrmProspects: React.FC = () => {
   });
 
   return (
-    <DashboardLayout>
-      <div className="container mx-auto p-6">
+    <div className="min-h-screen w-full bg-neotech-background">
+      <div className="p-6">
         <div className="flex flex-col md:flex-row justify-between items-center mb-6">
           <h1 className="text-2xl font-bold mb-4 md:mb-0">Prospects</h1>
           <Button onClick={openAddDialog} className="md:ml-auto">
@@ -279,7 +279,7 @@ const CrmProspects: React.FC = () => {
           </>
         )}
       </div>
-    </DashboardLayout>
+    </div>
   );
 };
 
