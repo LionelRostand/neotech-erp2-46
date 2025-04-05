@@ -1,9 +1,10 @@
 
 import { useState, useEffect } from 'react';
-import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, orderBy, serverTimestamp } from 'firebase/firestore';
+import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, orderBy, serverTimestamp, Timestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import { Client, ClientFormData } from '../types/crm-types';
+import { toast } from 'sonner';
 
 export const useClientsData = () => {
   const [clients, setClients] = useState<Client[]>([]);
@@ -20,10 +21,44 @@ export const useClientsData = () => {
       const q = query(clientsRef, orderBy('createdAt', 'desc'));
       const snapshot = await getDocs(q);
       
-      const fetchedClients = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-      } as Client));
+      // Si la collection est vide, ajouter des données de démonstration
+      if (snapshot.empty) {
+        console.log('Aucun client trouvé, ajout de données de démonstration');
+        await seedMockClients();
+        fetchClients(); // Récupérer à nouveau après l'ajout des données de démo
+        return;
+      }
+      
+      const fetchedClients = snapshot.docs.map(doc => {
+        const data = doc.data();
+        
+        // Gérer les données de dates qui peuvent être des Timestamp Firestore
+        let createdAtStr = '';
+        let customerSinceStr = '';
+        
+        if (data.createdAt instanceof Timestamp) {
+          createdAtStr = data.createdAt.toDate().toISOString();
+        } else if (data.createdAt) {
+          createdAtStr = new Date(data.createdAt).toISOString();
+        } else {
+          createdAtStr = new Date().toISOString();
+        }
+        
+        if (data.customerSince instanceof Timestamp) {
+          customerSinceStr = data.customerSince.toDate().toISOString().split('T')[0];
+        } else if (data.customerSince) {
+          customerSinceStr = new Date(data.customerSince).toISOString().split('T')[0];
+        } else {
+          customerSinceStr = new Date().toISOString().split('T')[0];
+        }
+        
+        return {
+          id: doc.id,
+          ...data,
+          createdAt: createdAtStr,
+          customerSince: customerSinceStr
+        } as Client;
+      });
       
       setClients(fetchedClients);
       setError(null);
@@ -88,17 +123,11 @@ export const useClientsData = () => {
     }
   };
 
-  // Load clients on component mount
-  useEffect(() => {
-    fetchClients();
-  }, []);
-
-  // For demo purposes, let's add mock data if no clients exist
-  useEffect(() => {
-    if (!isLoading && clients.length === 0 && !error) {
-      const mockClients: Client[] = [
+  // Seed mock data if collection is empty
+  const seedMockClients = async () => {
+    try {
+      const mockClients: Omit<Client, 'id'>[] = [
         {
-          id: '1',
           name: 'Acme Corporation',
           sector: 'Technology',
           revenue: '1-10M',
@@ -113,7 +142,6 @@ export const useClientsData = () => {
           customerSince: new Date().toISOString().split('T')[0]
         },
         {
-          id: '2',
           name: 'Globex Industries',
           sector: 'Manufacturing',
           revenue: '10-50M',
@@ -128,9 +156,25 @@ export const useClientsData = () => {
           customerSince: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
         },
       ];
-      setClients(mockClients);
+      
+      const promises = mockClients.map(client => 
+        addDoc(clientsRef, {
+          ...client,
+          createdAt: serverTimestamp(),
+        })
+      );
+      
+      await Promise.all(promises);
+      console.log('Données de démonstration ajoutées avec succès');
+    } catch (error) {
+      console.error('Erreur lors de l\'ajout des données de démonstration:', error);
     }
-  }, [isLoading, clients, error]);
+  };
+
+  // Load clients on component mount
+  useEffect(() => {
+    fetchClients();
+  }, []);
 
   return {
     clients,

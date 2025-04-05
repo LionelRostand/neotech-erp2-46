@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,37 +9,51 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useForm } from "react-hook-form";
 import { Save } from "lucide-react";
-import { toast } from "sonner";
+import { useCrmSettings } from '../hooks/useCrmSettings';
 
 const GeneralTab: React.FC = () => {
-  const [saving, setSaving] = useState(false);
+  const { settings, loading, saving, saveSettings } = useCrmSettings();
   
   const form = useForm({
-    defaultValues: {
-      companyName: "Ma Société",
-      emailNotifications: true,
-      defaultCurrency: "EUR",
-      language: "fr",
-      termsAndConditions: "",
-      automaticBackup: true,
-      dataRetentionPeriod: "12",
-    }
+    defaultValues: settings
   });
 
+  // Mettre à jour le formulaire lorsque les paramètres sont chargés
+  React.useEffect(() => {
+    if (!loading) {
+      form.reset(settings);
+    }
+  }, [loading, settings, form]);
+
   const onSubmit = async (data: any) => {
-    setSaving(true);
     try {
-      // Simulation d'une requête API
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      console.log("Paramètres généraux sauvegardés:", data);
-      toast.success("Paramètres généraux sauvegardés avec succès");
+      await saveSettings(data);
     } catch (error) {
       console.error("Erreur lors de la sauvegarde:", error);
-      toast.error("Erreur lors de la sauvegarde des paramètres");
-    } finally {
-      setSaving(false);
     }
   };
+
+  if (loading) {
+    return (
+      <Card>
+        <CardContent className="p-6">
+          <div className="space-y-4">
+            <div className="h-6 w-48 bg-gray-200 animate-pulse rounded"></div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <div className="h-4 w-24 bg-gray-200 animate-pulse rounded"></div>
+                <div className="h-10 w-full bg-gray-200 animate-pulse rounded"></div>
+              </div>
+              <div className="space-y-2">
+                <div className="h-4 w-24 bg-gray-200 animate-pulse rounded"></div>
+                <div className="h-10 w-full bg-gray-200 animate-pulse rounded"></div>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card>
