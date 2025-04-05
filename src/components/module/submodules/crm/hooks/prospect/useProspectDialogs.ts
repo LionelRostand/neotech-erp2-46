@@ -24,15 +24,19 @@ export const useProspectDialogs = (
       company: prospect.company,
       contactName: prospect.contactName,
       contactEmail: prospect.contactEmail,
-      contactPhone: prospect.contactPhone,
+      contactPhone: prospect.contactPhone || '',
       source: prospect.source || 'Site web',
       status: prospect.status || 'new',
       notes: prospect.notes || '',
       industry: prospect.industry || '',
       website: prospect.website || '',
       address: prospect.address || '',
-      size: prospect.size || '',
-      estimatedValue: prospect.estimatedValue || ''
+      size: prospect.size as 'small' | 'medium' | 'large' | 'enterprise' || 'small',
+      estimatedValue: prospect.estimatedValue || 0,
+      name: prospect.name || '',
+      email: prospect.email || '',
+      phone: prospect.phone || '',
+      lastContact: prospect.lastContact || new Date().toISOString().split('T')[0]
     });
     setIsEditDialogOpen(true);
   };

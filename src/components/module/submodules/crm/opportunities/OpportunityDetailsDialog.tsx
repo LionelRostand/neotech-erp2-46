@@ -37,18 +37,18 @@ const OpportunityDetailsDialog: React.FC<OpportunityDetailsDialogProps> = ({
 
         <div className="grid md:grid-cols-2 gap-6 mt-4">
           <div>
-            <h3 className="text-lg font-semibold mb-4">{opportunity.title || opportunity.company}</h3>
+            <h3 className="text-lg font-semibold mb-4">{opportunity.title || opportunity.name}</h3>
 
             <div className="space-y-3">
               <div>
                 <span className="text-sm text-muted-foreground">Client</span>
-                <p className="font-medium">{opportunity.clientName || opportunity.company}</p>
+                <p className="font-medium">{opportunity.clientName || 'Non défini'}</p>
               </div>
 
               <div>
                 <span className="text-sm text-muted-foreground">Montant</span>
                 <p className="font-medium text-lg">
-                  {formatCurrency(opportunity.amount || 0)}
+                  {formatCurrency(opportunity.amount || opportunity.value || 0)}
                 </p>
               </div>
 

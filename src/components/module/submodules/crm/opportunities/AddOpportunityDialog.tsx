@@ -38,7 +38,7 @@ const AddOpportunityDialog: React.FC<AddOpportunityDialogProps> = ({
         </DialogHeader>
         <OpportunityForm
           onSubmit={handleSubmit}
-          onCancel={onClose}
+          buttonText="Créer l'opportunité"
         />
       </DialogContent>
     </Dialog>

@@ -40,7 +40,7 @@ const EditOpportunityDialog: React.FC<EditOpportunityDialogProps> = ({
         <OpportunityForm
           initialData={opportunity}
           onSubmit={handleSubmit}
-          onCancel={onClose}
+          buttonText="Mettre à jour"
         />
       </DialogContent>
     </Dialog>

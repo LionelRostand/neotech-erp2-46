@@ -7,9 +7,10 @@ export const COLLECTIONS = {
   EMPLOYEES: 'employees',
   DOCUMENTS: 'documents',
   SETTINGS: 'settings',
+  CONTACTS: 'contacts', // Added for messages module
   // CRM Collections
   CRM: {
-    CLIENTS: 'crm_clients', // Mise à jour du chemin selon la demande
+    CLIENTS: 'crm_clients',
     PROSPECTS: 'crm/prospects',
     REMINDERS: 'crm/reminders',
     OPPORTUNITIES: 'crm/opportunities',
@@ -34,7 +35,9 @@ export const COLLECTIONS = {
     ROUTES: 'freight/routes',
     TRACKING_EVENTS: 'freight/tracking_events',
     PACKAGE_TYPES: 'freight/package_types',
-    TRACKING: 'freight/tracking'
+    TRACKING: 'freight/tracking',
+    VEHICLES: 'freight/vehicles', // Added
+    DRIVERS: 'freight/drivers' // Added
   },
   // HR Collections
   HR: {
@@ -49,7 +52,13 @@ export const COLLECTIONS = {
     LEAVES: 'hr/leaves',
     ABSENCES: 'hr/absences',
     TIMESHEETS: 'hr/timesheets',
-    SALARIES: 'hr/salaries'
+    SALARIES: 'hr/salaries',
+    PAYSLIPS: 'hr/payslips', // Added
+    LEAVE_REQUESTS: 'hr/leave_requests', // Added
+    ATTENDANCE: 'hr/attendance', // Added
+    ABSENCE_REQUESTS: 'hr/absence_requests', // Added
+    REPORTS: 'hr/reports', // Added
+    ALERTS: 'hr/alerts' // Added
   },
   // Messages Collections
   MESSAGES: {
@@ -58,7 +67,8 @@ export const COLLECTIONS = {
     DRAFTS: 'messages/drafts',
     ARCHIVED: 'messages/archived',
     SCHEDULED: 'messages/scheduled',
-    CONTACTS: 'messages/contacts'
+    CONTACTS: 'messages/contacts',
+    METRICS: 'messages/metrics' // Added
   },
   // Projects Collections
   PROJECTS: {
@@ -76,7 +86,10 @@ export const COLLECTIONS = {
     CONSULTATIONS: 'health/consultations',
     INSURANCE: 'health/insurance',
     BILLING: 'health/billing',
-    STAFF: 'health/staff'
+    STAFF: 'health/staff',
+    HEALTH_CONSULTATIONS: 'health/consultations', // Added
+    HEALTH_INSURANCE: 'health/insurance', // Added
+    HEALTH_BILLING: 'health/billing' // Added
   },
   // Library Collections
   LIBRARY: {
@@ -84,14 +97,16 @@ export const COLLECTIONS = {
     MEMBERS: 'library/members',
     LOANS: 'library/loans',
     CATEGORIES: 'library/categories',
-    ACCESS_POINTS: 'library/access_points'
+    ACCESS_POINTS: 'library/access_points',
+    STATS: 'library/stats' // Added
   },
   // Transport Collections
   TRANSPORT: {
     VEHICLES: 'transport/vehicles',
     DRIVERS: 'transport/drivers',
     RESERVATIONS: 'transport/reservations',
-    MAINTENANCE: 'transport/maintenance'
+    MAINTENANCE: 'transport/maintenance',
+    CLIENTS: 'transport/clients' // Added
   },
   // User permissions
   USER_PERMISSIONS: 'user_permissions'

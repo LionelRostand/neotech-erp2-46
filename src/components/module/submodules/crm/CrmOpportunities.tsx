@@ -25,7 +25,7 @@ const CrmOpportunities: React.FC = () => {
   const filteredOpportunities = opportunities.filter(opportunity => {
     const matchesSearch = searchTerm === '' || 
       (opportunity.title && opportunity.title.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (opportunity.company && opportunity.company.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (opportunity.name && opportunity.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
       (opportunity.clientName && opportunity.clientName.toLowerCase().includes(searchTerm.toLowerCase()));
 
     const matchesStage = stageFilter === '' || opportunity.stage === stageFilter;
@@ -89,18 +89,18 @@ const CrmOpportunities: React.FC = () => {
 
       {/* Add Opportunity Dialog */}
       <AddOpportunityDialog
-        open={isAddDialogOpen}
-        onOpenChange={setIsAddDialogOpen}
-        onSubmit={handleAddOpportunity}
+        isOpen={isAddDialogOpen}
+        onClose={() => setIsAddDialogOpen(false)}
+        onAdd={handleAddOpportunity}
       />
 
       {/* Edit Opportunity Dialog */}
       {selectedOpportunity && (
         <EditOpportunityDialog
-          open={isEditDialogOpen}
-          onOpenChange={setIsEditDialogOpen}
+          isOpen={isEditDialogOpen}
+          onClose={() => setIsEditDialogOpen(false)}
           opportunity={selectedOpportunity}
-          onSubmit={handleUpdateOpportunity}
+          onUpdate={handleUpdateOpportunity}
         />
       )}
 
