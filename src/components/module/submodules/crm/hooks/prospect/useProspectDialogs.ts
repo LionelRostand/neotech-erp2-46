@@ -31,7 +31,7 @@ export const useProspectDialogs = (
       industry: prospect.industry || '',
       website: prospect.website || '',
       address: prospect.address || '',
-      size: prospect.size as 'small' | 'medium' | 'large' | 'enterprise' || 'small',
+      size: prospect.size || 'small',
       estimatedValue: prospect.estimatedValue || 0,
       name: prospect.name || '',
       email: prospect.email || '',

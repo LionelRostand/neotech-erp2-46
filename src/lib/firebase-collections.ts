@@ -1,5 +1,5 @@
 
-// Define the structure of all available collections in Firestore
+// Collection paths for Firebase
 export const COLLECTIONS = {
   USERS: 'users',
   COMPANIES: 'companies',
@@ -7,107 +7,108 @@ export const COLLECTIONS = {
   EMPLOYEES: 'employees',
   DOCUMENTS: 'documents',
   SETTINGS: 'settings',
-  CONTACTS: 'contacts', // Added for messages module
+  CONTACTS: 'contacts',
+  
   // CRM Collections
   CRM: {
     CLIENTS: 'crm_clients',
-    PROSPECTS: 'crm/prospects',
-    REMINDERS: 'crm/reminders',
-    OPPORTUNITIES: 'crm/opportunities',
-    LEADS: 'crm/leads',
-    CONTACTS: 'crm/contacts',
-    DEALS: 'crm/deals',
-    SETTINGS: 'crm/settings'
+    PROSPECTS: 'crm_prospects',
+    REMINDERS: 'crm_reminders',
+    OPPORTUNITIES: 'crm_opportunities',
+    LEADS: 'crm_leads',
+    CONTACTS: 'crm_contacts',
+    DEALS: 'crm_deals',
+    SETTINGS: 'crm_settings'
   },
-  // Accounting Collections
-  ACCOUNTING: {
-    INVOICES: 'accounting/invoices',
-    EXPENSES: 'accounting/expenses',
-    PAYMENTS: 'accounting/payments',
-    TRANSACTIONS: 'accounting/transactions',
-    PERMISSIONS: 'accounting/permissions'
-  },
-  // Freight Collections
-  FREIGHT: {
-    SHIPMENTS: 'freight/shipments',
-    CARRIERS: 'freight/carriers',
-    PACKAGES: 'freight/packages',
-    ROUTES: 'freight/routes',
-    TRACKING_EVENTS: 'freight/tracking_events',
-    PACKAGE_TYPES: 'freight/package_types',
-    TRACKING: 'freight/tracking',
-    VEHICLES: 'freight/vehicles', // Added
-    DRIVERS: 'freight/drivers' // Added
-  },
+  
   // HR Collections
   HR: {
-    BADGES: 'hr/badges',
-    EVALUATIONS: 'hr/evaluations',
-    DOCUMENTS: 'hr/documents',
-    CONTRACTS: 'hr/contracts',
-    RECRUITMENT: 'hr/recruitment',
-    DEPARTMENTS: 'hr/departments',
-    EMPLOYEES: 'hr/employees',
-    TRAININGS: 'hr/trainings',
-    LEAVES: 'hr/leaves',
-    ABSENCES: 'hr/absences',
-    TIMESHEETS: 'hr/timesheets',
-    SALARIES: 'hr/salaries',
-    PAYSLIPS: 'hr/payslips', // Added
-    LEAVE_REQUESTS: 'hr/leave_requests', // Added
-    ATTENDANCE: 'hr/attendance', // Added
-    ABSENCE_REQUESTS: 'hr/absence_requests', // Added
-    REPORTS: 'hr/reports', // Added
-    ALERTS: 'hr/alerts' // Added
+    BADGES: 'hr_badges',
+    EVALUATIONS: 'hr_evaluations',
+    DOCUMENTS: 'hr_documents',
+    CONTRACTS: 'hr_contracts',
+    RECRUITMENT: 'hr_recruitment',
+    DEPARTMENTS: 'hr_departments',
+    EMPLOYEES: 'hr_employees',
+    TRAININGS: 'hr_trainings',
+    LEAVES: 'hr_leaves',
+    ABSENCES: 'hr_absences',
+    TIMESHEETS: 'hr_timesheets',
+    SALARIES: 'hr_salaries',
+    PAYSLIPS: 'hr_payslips',
+    LEAVE_REQUESTS: 'hr_leave_requests',
+    ATTENDANCE: 'hr_attendance',
+    ABSENCE_REQUESTS: 'hr_absence_requests',
+    REPORTS: 'hr_reports',
+    ALERTS: 'hr_alerts'
   },
-  // Messages Collections
+  
+  // Message Collections
   MESSAGES: {
-    INBOX: 'messages/inbox',
-    SENT: 'messages/sent',
-    DRAFTS: 'messages/drafts',
-    ARCHIVED: 'messages/archived',
-    SCHEDULED: 'messages/scheduled',
-    CONTACTS: 'messages/contacts',
-    METRICS: 'messages/metrics' // Added
+    INBOX: 'messages_inbox',
+    SENT: 'messages_sent',
+    DRAFTS: 'messages_drafts',
+    ARCHIVED: 'messages_archived',
+    SCHEDULED: 'messages_scheduled',
+    CONTACTS: 'messages_contacts',
+    METRICS: 'messages_metrics'
   },
-  // Projects Collections
-  PROJECTS: {
-    PROJECTS: 'projects/projects',
-    TASKS: 'projects/tasks',
-    TEAMS: 'projects/teams',
-    COMMENTS: 'projects/comments',
-    NOTIFICATIONS: 'projects/notifications'
-  },
-  // Health Collections
-  HEALTH: {
-    PATIENTS: 'health/patients',
-    DOCTORS: 'health/doctors',
-    APPOINTMENTS: 'health/appointments',
-    CONSULTATIONS: 'health/consultations',
-    INSURANCE: 'health/insurance',
-    BILLING: 'health/billing',
-    STAFF: 'health/staff',
-    HEALTH_CONSULTATIONS: 'health/consultations', // Added
-    HEALTH_INSURANCE: 'health/insurance', // Added
-    HEALTH_BILLING: 'health/billing' // Added
-  },
-  // Library Collections
-  LIBRARY: {
-    BOOKS: 'library/books',
-    MEMBERS: 'library/members',
-    LOANS: 'library/loans',
-    CATEGORIES: 'library/categories',
-    ACCESS_POINTS: 'library/access_points',
-    STATS: 'library/stats' // Added
-  },
+  
   // Transport Collections
   TRANSPORT: {
-    VEHICLES: 'transport/vehicles',
-    DRIVERS: 'transport/drivers',
-    RESERVATIONS: 'transport/reservations',
-    MAINTENANCE: 'transport/maintenance',
-    CLIENTS: 'transport/clients' // Added
+    VEHICLES: 'transport_vehicles',
+    DRIVERS: 'transport_drivers',
+    RESERVATIONS: 'transport_reservations',
+    MAINTENANCE: 'transport_maintenance',
+    CLIENTS: 'transport_clients'
   },
-  // User permissions
+  
+  // Freight Collections
+  FREIGHT: {
+    SHIPMENTS: 'freight_shipments',
+    CARRIERS: 'freight_carriers',
+    PACKAGES: 'freight_packages',
+    ROUTES: 'freight_routes',
+    TRACKING_EVENTS: 'freight_tracking_events',
+    PACKAGE_TYPES: 'freight_package_types',
+    TRACKING: 'freight_tracking',
+    VEHICLES: 'freight_vehicles',
+    DRIVERS: 'freight_drivers'
+  },
+  
+  // Library Collections
+  LIBRARY: {
+    BOOKS: 'library_books',
+    MEMBERS: 'library_members',
+    LOANS: 'library_loans',
+    CATEGORIES: 'library_categories',
+    ACCESS_POINTS: 'library_access_points',
+    STATS: 'library_stats'
+  },
+  
+  // Health Collections
+  HEALTH: {
+    PATIENTS: 'health_patients',
+    DOCTORS: 'health_doctors',
+    APPOINTMENTS: 'health_appointments',
+    PRESCRIPTIONS: 'health_prescriptions',
+    MEDICAL_RECORDS: 'health_records',
+    HEALTH_INSURANCE: 'health_insurance',
+    HEALTH_BILLING: 'health_billing',
+    HEALTH_CONSULTATIONS: 'health_consultations'
+  },
+  
+  // Accounting Collections
+  ACCOUNTING: {
+    TRANSACTIONS: 'accounting_transactions',
+    INVOICES: 'accounting_invoices',
+    EXPENSES: 'accounting_expenses',
+    CLIENTS: 'accounting_clients',
+    SUPPLIERS: 'accounting_suppliers',
+    BANK_ACCOUNTS: 'accounting_bank_accounts',
+    PERMISSIONS: 'accounting_permissions'
+  },
+  
+  // User permissions collection
   USER_PERMISSIONS: 'user_permissions'
 };

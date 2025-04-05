@@ -1,106 +1,71 @@
 
-export type OpportunityStage = 
-  'lead' | 
-  'qualified' | 
-  'needs-analysis' | 
-  'proposal' | 
-  'negotiation' | 
-  'closed-won' | 
-  'closed-lost' |
-  'new' |
-  'quote_sent' |
-  'pending' |
-  'won' |
-  'lost';
-
-export interface Opportunity {
-  id: string;
-  name: string;
-  title?: string; // Adding title for backward compatibility
-  clientId?: string;
-  clientName?: string;
-  contactName?: string;
-  contactEmail?: string;
-  contactPhone?: string;
-  value: number;
-  amount?: number; // Adding amount for backward compatibility
-  currency?: string;
-  probability?: number;
-  stage: OpportunityStage;
-  startDate: string;
-  closeDate?: string;
-  expectedCloseDate?: string; // Adding expectedCloseDate for backward compatibility
-  description?: string;
-  source?: string;
-  assignedTo?: string;
-  createdAt: string;
-  updatedAt: string;
-  products?: Array<{
-    id: string;
-    name: string;
-    quantity: number;
-    unitPrice: number;
-    totalPrice: number;
-  }> | string[];
-  notes?: string;
-  status?: 'active' | 'closed' | 'lost';
-}
-
-export interface Prospect {
-  id: string;
-  company: string;
-  contactName: string;
-  contactEmail: string;
-  contactPhone?: string;
-  // Adding name, email, phone for backward compatibility
-  name?: string;
-  email?: string;
-  phone?: string;
-  source: string;
-  industry?: string;
-  status: 'new' | 'contacted' | 'qualified' | 'unqualified' | 'hot' | 'warm' | 'cold';
-  notes?: string;
-  assignedTo?: string;
-  createdAt: string;
-  lastContact?: string;
-  website?: string;
-  address?: string;
-  size?: 'small' | 'medium' | 'large' | 'enterprise';
-  estimatedValue?: number;
-}
-
+// CRM types file
 export interface Client {
   id: string;
   name: string;
   sector: string;
   revenue: string;
   status: 'active' | 'inactive' | 'paused';
+  customerSince: string;
+  createdAt: string;
+  updatedAt?: string;
   contactName: string;
   contactEmail: string;
   contactPhone: string;
-  address: string;
+  address?: string;
+  notes?: string;
   website?: string;
-  logo?: string;
-  description?: string;
+  assignedTo?: string;
+}
+
+export interface Lead {
+  id: string;
+  name: string;
+  company: string;
+  email: string;
+  phone: string;
+  status: 'new' | 'contacted' | 'qualified' | 'unqualified' | 'converted';
+  source: string;
   notes?: string;
   createdAt: string;
-  updatedBy?: string;
-  customerSince?: string;
+  updatedAt?: string;
+  assignedTo?: string;
+}
+
+export interface Prospect {
+  id: string;
+  name: string;
+  company: string;
+  email: string;
+  phone: string;
+  status: 'new' | 'contacted' | 'meeting' | 'proposal' | 'negotiation' | 'converted' | 'lost';
+  source: string;
+  contactName: string;
+  contactEmail: string;
+  contactPhone: string;
+  notes?: string;
+  industry?: string;
+  website?: string;
+  address?: string;
+  size?: 'small' | 'medium' | 'large' | 'enterprise';
+  estimatedValue?: number;
+  lastContact?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface ProspectFormData {
+  name: string;
   company: string;
+  email: string;
+  phone: string;
+  status: string;
+  source: string;
   contactName: string;
   contactEmail: string;
   contactPhone: string;
-  // Adding name, email, phone for backward compatibility
-  name?: string;
-  email?: string;
-  phone?: string;
-  source: string;
-  industry?: string;
-  status: 'new' | 'contacted' | 'qualified' | 'unqualified' | 'hot' | 'warm' | 'cold';
   notes?: string;
+  industry?: string;
   website?: string;
   address?: string;
   size?: 'small' | 'medium' | 'large' | 'enterprise';
@@ -108,104 +73,76 @@ export interface ProspectFormData {
   lastContact?: string;
 }
 
-export interface ReminderData {
+export interface Opportunity {
   id: string;
   title: string;
-  date: string;
-  completed: boolean;
-  notes?: string;
-  prospectId: string;
-  // For backward compatibility
-  type?: string;
-  note?: string;
+  company: string;
+  amount: number;
+  stage: 'lead' | 'proposal' | 'negotiation' | 'won' | 'lost';
+  priority: 'low' | 'medium' | 'high';
+  probability: number;
+  expectedCloseDate: string;
+  description?: string;
+  assignedTo?: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface OpportunityFormData {
-  name: string;
-  title?: string; // For backward compatibility
-  clientId?: string;
-  clientName?: string;
-  contactName?: string;
-  contactEmail?: string;
-  contactPhone?: string;
-  value: number;
-  amount?: number; // For backward compatibility
-  currency?: string;
-  probability?: number;
-  stage: OpportunityStage;
-  startDate: string;
-  closeDate?: string;
-  expectedCloseDate?: string; // For backward compatibility
+  title: string;
+  company: string;
+  amount: number;
+  stage: 'lead' | 'proposal' | 'negotiation' | 'won' | 'lost';
+  priority: 'low' | 'medium' | 'high';
+  probability: number;
+  expectedCloseDate: string;
   description?: string;
-  source?: string;
   assignedTo?: string;
-  products?: Array<{
+}
+
+export interface Reminder {
+  id: string;
+  title: string;
+  description?: string;
+  date: string;
+  time: string;
+  type: 'call' | 'meeting' | 'email' | 'task' | 'other';
+  status: 'pending' | 'completed' | 'cancelled';
+  relatedTo?: {
+    type: 'prospect' | 'opportunity' | 'client' | 'lead';
     id: string;
     name: string;
-    quantity: number;
-    unitPrice: number;
-    totalPrice: number;
-  }> | string[];
+  };
   notes?: string;
+  assignedTo?: string;
+  createdAt: string;
+  updatedAt?: string;
 }
 
-// New interfaces for CRM Settings
-
-export interface CrmGeneralSettings {
-  companyName: string;
-  companyLogo?: string;
-  defaultCurrency: string;
-  dateFormat: string;
-  leadExpirationDays: number;
-  opportunityExpirationDays: number;
-  defaultLanguage: string;
-  emailNotifications: boolean;
-  smsNotifications: boolean;
-  reminderNotifications: boolean;
-}
-
-export interface CrmIntegrationSettings {
-  apiUrl?: string;
-  apiKey?: string;
-  syncFrequency: 'hourly' | 'daily' | 'weekly' | 'manual';
-  lastSyncedAt?: string;
-  syncContacts: boolean;
-  syncCompanies: boolean;
-  syncDeals: boolean;
-  syncProspects: boolean;
-  syncOpportunities: boolean;
-  syncDirection: 'import' | 'export' | 'bidirectional';
-}
-
-export interface CrmUserPermission {
-  userId: string;
-  userName: string;
-  userEmail: string;
-  userRole: 'admin' | 'manager' | 'user' | 'guest';
-  canCreateProspects: boolean;
-  canEditProspects: boolean;
-  canDeleteProspects: boolean;
-  canCreateOpportunities: boolean;
-  canEditOpportunities: boolean;
-  canDeleteOpportunities: boolean;
-  canCreateClients: boolean;
-  canEditClients: boolean;
-  canDeleteClients: boolean;
-  canExportData: boolean;
-  canAccessReports: boolean;
-  canAccessSettings: boolean;
-}
-
-export interface CrmLeadSource {
+export interface Contact {
   id: string;
   name: string;
-  isActive: boolean;
+  email: string;
+  phone: string;
+  company?: string;
+  position?: string;
+  notes?: string;
+  tags?: string[];
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface Deal {
+  id: string;
+  name: string;
+  client: string | { id: string; name: string };
+  amount: number;
+  stage: 'initial' | 'qualified' | 'proposal' | 'negotiation' | 'closed-won' | 'closed-lost';
+  closeDate: string;
+  probability: number;
   description?: string;
-}
-
-export interface CrmPipeline {
-  id: string;
-  name: string;
-  isDefault: boolean;
-  stages: string[];
+  products?: Array<{ id: string; name: string; quantity: number; price: number }>;
+  assignedTo?: string;
+  createdAt: string;
+  updatedAt?: string;
 }
