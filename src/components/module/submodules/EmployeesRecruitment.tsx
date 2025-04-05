@@ -1,292 +1,295 @@
 
-import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import React, { useState } from 'react';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from '@/components/ui/table';
-import { 
+  Briefcase, 
   Plus, 
-  Search, 
-  FileCheck, 
   Users, 
+  UserPlus, 
+  ListFilter, 
   Calendar, 
-  Filter 
+  Download,
+  Eye
 } from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { useRecruitmentData, RecruitmentPost } from '@/hooks/useRecruitmentData';
 import RecruitmentStats from './employees/RecruitmentStats';
+import RecruitmentFilterDialog from './recruitment/RecruitmentFilterDialog';
+import CreateRecruitmentDialog from './recruitment/CreateRecruitmentDialog';
+import RecruitmentViewDialog from './recruitment/RecruitmentViewDialog';
+import RecruitmentScheduleDialog from './recruitment/RecruitmentScheduleDialog';
+import { exportToExcel } from '@/utils/exportUtils';
+import { exportToPdf } from '@/utils/pdfUtils';
+import { useToast } from '@/hooks/use-toast';
 
 const EmployeesRecruitment: React.FC = () => {
+  const { recruitmentPosts, stats, isLoading } = useRecruitmentData();
+  const { toast } = useToast();
+  
+  // Dialog states
+  const [showFilterDialog, setShowFilterDialog] = useState(false);
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [showViewDialog, setShowViewDialog] = useState(false);
+  const [showScheduleDialog, setShowScheduleDialog] = useState(false);
+  const [selectedRecruitment, setSelectedRecruitment] = useState<RecruitmentPost | null>(null);
+  
+  // Filter state
+  const [filterCriteria, setFilterCriteria] = useState({
+    department: null as string | null,
+    contractType: null as string | null,
+    status: null as string | null,
+    priority: null as string | null,
+    location: null as string | null,
+  });
+  
+  // Handle viewing a recruitment post
+  const handleViewRecruitment = (recruitment: RecruitmentPost) => {
+    setSelectedRecruitment(recruitment);
+    setShowViewDialog(true);
+  };
+  
+  // Handle scheduling for a recruitment post
+  const handleScheduleRecruitment = (recruitment: RecruitmentPost) => {
+    setSelectedRecruitment(recruitment);
+    setShowScheduleDialog(true);
+  };
+  
+  // Function to apply filters
+  const filteredPosts = recruitmentPosts.filter(post => {
+    if (filterCriteria.department && post.department !== filterCriteria.department) return false;
+    if (filterCriteria.contractType && post.contractType !== filterCriteria.contractType) return false;
+    if (filterCriteria.status && post.status !== filterCriteria.status) return false;
+    if (filterCriteria.priority && post.priority !== filterCriteria.priority) return false;
+    if (filterCriteria.location && post.location !== filterCriteria.location) return false;
+    return true;
+  });
+  
+  // Handle export
+  const handleExport = (format: 'excel' | 'pdf') => {
+    const data = filteredPosts.map(post => ({
+      'Position': post.position,
+      'Département': post.department,
+      'Date d\'ouverture': post.openDate,
+      'Statut': post.status,
+      'Localisation': post.location,
+      'Type de contrat': post.contractType,
+      'Priorité': post.priority,
+      'Responsable': post.hiringManagerName,
+      'Candidatures': post.applicationCount,
+    }));
+    
+    if (format === 'excel') {
+      exportToExcel(data, 'Offres d\'emploi', 'recrutements');
+      toast({
+        title: 'Export réussi',
+        description: 'Les données ont été exportées au format Excel.'
+      });
+    } else {
+      exportToPdf(data, 'Liste des offres d\'emploi', 'recrutements');
+      toast({
+        title: 'Export réussi',
+        description: 'Les données ont été exportées au format PDF.'
+      });
+    }
+  };
+  
+  // Handle refresh after creation
+  const handleRefresh = () => {
+    // In a real app with an API, you would fetch the data again here
+    toast({
+      title: 'Données actualisées',
+      description: 'Les offres d\'emploi ont été mises à jour.'
+    });
+  };
+
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col space-y-4 md:flex-row md:justify-between md:items-center">
         <div>
           <h2 className="text-2xl font-bold">Recrutement</h2>
-          <p className="text-gray-500">Gérez vos offres d'emploi et candidatures</p>
+          <p className="text-gray-500">Gestion des offres d'emploi et candidatures</p>
         </div>
-        <Button className="flex items-center gap-2">
-          <Plus className="h-4 w-4" /> Nouvelle offre d'emploi
-        </Button>
+        
+        <div className="flex flex-wrap gap-2">
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => setShowFilterDialog(true)}
+          >
+            <ListFilter className="h-4 w-4 mr-2" />
+            Filtres
+          </Button>
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => handleExport('excel')}
+          >
+            <Download className="h-4 w-4 mr-2" />
+            Export Excel
+          </Button>
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => handleExport('pdf')}
+          >
+            <Download className="h-4 w-4 mr-2" />
+            Export PDF
+          </Button>
+          <Button 
+            size="sm"
+            onClick={() => setShowCreateDialog(true)}
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Nouvelle offre d'emploi
+          </Button>
+        </div>
       </div>
       
       <RecruitmentStats 
-        openPositions={4} 
-        applicationsThisMonth={32} 
-        interviewsScheduled={8}
-        applicationsChange={12}
+        openPositions={stats.open}
+        applicationsThisMonth={42}
+        interviewsScheduled={12}
+        applicationsChange={8}
+        isLoading={isLoading}
       />
       
-      <Tabs defaultValue="positions" className="w-full">
-        <TabsList className="grid grid-cols-4 mb-4">
-          <TabsTrigger value="positions">Offres d'emploi</TabsTrigger>
-          <TabsTrigger value="applications">Candidatures</TabsTrigger>
-          <TabsTrigger value="interviews">Entretiens</TabsTrigger>
-          <TabsTrigger value="archive">Archives</TabsTrigger>
-        </TabsList>
-        
-        <Card>
-          <CardHeader className="pb-0">
-            <div className="flex flex-wrap items-center justify-between gap-4">
-              <div className="relative w-full md:w-auto flex-1 md:max-w-sm">
-                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
-                <input
-                  type="search"
-                  placeholder="Rechercher..."
-                  className="pl-8 h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
-                />
-              </div>
-              
-              <Button variant="outline" size="sm" className="gap-1">
-                <Filter className="h-3.5 w-3.5" />
-                <span>Filtres</span>
-              </Button>
-            </div>
-          </CardHeader>
-          
-          <TabsContent value="positions">
-            <CardContent>
-              <Table>
-                <TableHeader>
+      <Card>
+        <CardContent className="p-6">
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-[300px]">Poste</TableHead>
+                  <TableHead>Type</TableHead>
+                  <TableHead>Statut</TableHead>
+                  <TableHead>Date d'ouverture</TableHead>
+                  <TableHead>Candidatures</TableHead>
+                  <TableHead>Priorité</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {isLoading ? (
                   <TableRow>
-                    <TableHead>Intitulé</TableHead>
-                    <TableHead>Département</TableHead>
-                    <TableHead>Type</TableHead>
-                    <TableHead>Date publication</TableHead>
-                    <TableHead>Candidats</TableHead>
-                    <TableHead>Statut</TableHead>
-                    <TableHead></TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  <TableRow>
-                    <TableCell className="font-medium">Développeur Frontend</TableCell>
-                    <TableCell>Tech</TableCell>
-                    <TableCell>CDI</TableCell>
-                    <TableCell>10/03/2023</TableCell>
-                    <TableCell>12</TableCell>
-                    <TableCell>
-                      <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                        Active
-                      </span>
-                    </TableCell>
-                    <TableCell><Button variant="ghost" size="sm">Voir</Button></TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell className="font-medium">Chef de projet</TableCell>
-                    <TableCell>Management</TableCell>
-                    <TableCell>CDI</TableCell>
-                    <TableCell>15/02/2023</TableCell>
-                    <TableCell>8</TableCell>
-                    <TableCell>
-                      <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                        Active
-                      </span>
-                    </TableCell>
-                    <TableCell><Button variant="ghost" size="sm">Voir</Button></TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell className="font-medium">Assistant administratif</TableCell>
-                    <TableCell>Administration</TableCell>
-                    <TableCell>CDD</TableCell>
-                    <TableCell>01/04/2023</TableCell>
-                    <TableCell>5</TableCell>
-                    <TableCell>
-                      <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                        Active
-                      </span>
-                    </TableCell>
-                    <TableCell><Button variant="ghost" size="sm">Voir</Button></TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell className="font-medium">Commercial</TableCell>
-                    <TableCell>Ventes</TableCell>
-                    <TableCell>CDI</TableCell>
-                    <TableCell>23/01/2023</TableCell>
-                    <TableCell>7</TableCell>
-                    <TableCell>
-                      <span className="px-2 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
-                        En pause
-                      </span>
-                    </TableCell>
-                    <TableCell><Button variant="ghost" size="sm">Voir</Button></TableCell>
-                  </TableRow>
-                </TableBody>
-              </Table>
-            </CardContent>
-          </TabsContent>
-          
-          <TabsContent value="applications">
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Nom</TableHead>
-                    <TableHead>Poste</TableHead>
-                    <TableHead>Date</TableHead>
-                    <TableHead>CV</TableHead>
-                    <TableHead>Statut</TableHead>
-                    <TableHead></TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  <TableRow>
-                    <TableCell className="font-medium">Sophie Martin</TableCell>
-                    <TableCell>Développeur Frontend</TableCell>
-                    <TableCell>01/04/2023</TableCell>
-                    <TableCell>
-                      <Button variant="outline" size="sm" className="gap-1">
-                        <FileCheck className="h-3.5 w-3.5" /> Voir
-                      </Button>
-                    </TableCell>
-                    <TableCell>
-                      <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                        À évaluer
-                      </span>
-                    </TableCell>
-                    <TableCell><Button variant="ghost" size="sm">Voir</Button></TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell className="font-medium">Thomas Dubois</TableCell>
-                    <TableCell>Développeur Frontend</TableCell>
-                    <TableCell>28/03/2023</TableCell>
-                    <TableCell>
-                      <Button variant="outline" size="sm" className="gap-1">
-                        <FileCheck className="h-3.5 w-3.5" /> Voir
-                      </Button>
-                    </TableCell>
-                    <TableCell>
-                      <span className="px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                        Présélectionné
-                      </span>
-                    </TableCell>
-                    <TableCell><Button variant="ghost" size="sm">Voir</Button></TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell className="font-medium">Julie Leroy</TableCell>
-                    <TableCell>Chef de projet</TableCell>
-                    <TableCell>15/03/2023</TableCell>
-                    <TableCell>
-                      <Button variant="outline" size="sm" className="gap-1">
-                        <FileCheck className="h-3.5 w-3.5" /> Voir
-                      </Button>
-                    </TableCell>
-                    <TableCell>
-                      <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                        Entretien planifié
-                      </span>
-                    </TableCell>
-                    <TableCell><Button variant="ghost" size="sm">Voir</Button></TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell className="font-medium">Pierre Moreau</TableCell>
-                    <TableCell>Commercial</TableCell>
-                    <TableCell>10/03/2023</TableCell>
-                    <TableCell>
-                      <Button variant="outline" size="sm" className="gap-1">
-                        <FileCheck className="h-3.5 w-3.5" /> Voir
-                      </Button>
-                    </TableCell>
-                    <TableCell>
-                      <span className="px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                        Refusé
-                      </span>
-                    </TableCell>
-                    <TableCell><Button variant="ghost" size="sm">Voir</Button></TableCell>
-                  </TableRow>
-                </TableBody>
-              </Table>
-            </CardContent>
-          </TabsContent>
-          
-          <TabsContent value="interviews">
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Candidat</TableHead>
-                    <TableHead>Poste</TableHead>
-                    <TableHead>Date entretien</TableHead>
-                    <TableHead>Lieu / Moyen</TableHead>
-                    <TableHead>Interlocuteurs</TableHead>
-                    <TableHead></TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  <TableRow>
-                    <TableCell className="font-medium">Julie Leroy</TableCell>
-                    <TableCell>Chef de projet</TableCell>
-                    <TableCell>12/04/2023 14:30</TableCell>
-                    <TableCell>Visioconférence</TableCell>
-                    <TableCell>Marc Dupont, Sarah Legrand</TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Button size="sm" variant="outline" className="gap-1">
-                          <Calendar className="h-3.5 w-3.5" /> Planifier
-                        </Button>
-                        <Button size="sm" variant="ghost">Voir</Button>
-                      </div>
+                    <TableCell colSpan={7} className="h-24 text-center">
+                      Chargement des offres d'emploi...
                     </TableCell>
                   </TableRow>
+                ) : filteredPosts.length === 0 ? (
                   <TableRow>
-                    <TableCell className="font-medium">Thomas Dubois</TableCell>
-                    <TableCell>Développeur Frontend</TableCell>
-                    <TableCell>15/04/2023 10:00</TableCell>
-                    <TableCell>Bureau - Salle Everest</TableCell>
-                    <TableCell>Céline Martin, Jean Petit</TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Button size="sm" variant="outline" className="gap-1">
-                          <Calendar className="h-3.5 w-3.5" /> Planifier
-                        </Button>
-                        <Button size="sm" variant="ghost">Voir</Button>
-                      </div>
+                    <TableCell colSpan={7} className="h-24 text-center">
+                      Aucune offre d'emploi trouvée
                     </TableCell>
                   </TableRow>
-                </TableBody>
-              </Table>
-            </CardContent>
-          </TabsContent>
-          
-          <TabsContent value="archive">
-            <CardContent>
-              <div className="flex flex-col items-center justify-center py-12">
-                <div className="rounded-full bg-gray-100 p-6">
-                  <Users className="h-10 w-10 text-gray-400" />
-                </div>
-                <h3 className="mt-4 text-lg font-medium">Aucune candidature archivée</h3>
-                <p className="text-sm text-gray-500 mt-2 text-center max-w-md">
-                  Les candidatures refusées ou pour des postes pourvus sont archivées ici pour référence future.
-                </p>
-              </div>
-            </CardContent>
-          </TabsContent>
-        </Card>
-      </Tabs>
+                ) : (
+                  filteredPosts.map((post) => (
+                    <TableRow key={post.id}>
+                      <TableCell className="font-medium">
+                        <div className="flex flex-col">
+                          <span>{post.position}</span>
+                          <span className="text-xs text-gray-500">{post.department} • {post.location}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell>{post.contractType}</TableCell>
+                      <TableCell>
+                        <Badge
+                          className={
+                            post.status === 'Ouvert'
+                              ? 'bg-green-100 text-green-800'
+                              : post.status === 'En cours'
+                              ? 'bg-blue-100 text-blue-800'
+                              : 'bg-gray-100 text-gray-800'
+                          }
+                        >
+                          {post.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>{post.openDate}</TableCell>
+                      <TableCell>
+                        <div className="flex items-center">
+                          <Users className="h-4 w-4 mr-2 text-gray-500" />
+                          {post.applicationCount}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge
+                          variant="outline"
+                          className={
+                            post.priority === 'Haute'
+                              ? 'bg-red-50 text-red-700 border-red-200'
+                              : post.priority === 'Moyenne'
+                              ? 'bg-amber-50 text-amber-700 border-amber-200'
+                              : 'bg-blue-50 text-blue-700 border-blue-200'
+                          }
+                        >
+                          {post.priority}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end gap-2">
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => handleViewRecruitment(post)}
+                          >
+                            <Eye className="h-4 w-4 mr-1" />
+                            Voir
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => handleScheduleRecruitment(post)}
+                          >
+                            <Calendar className="h-4 w-4 mr-1" />
+                            Planifier
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </CardContent>
+      </Card>
+      
+      {/* Filter Dialog */}
+      <Dialog open={showFilterDialog} onOpenChange={setShowFilterDialog}>
+        <DialogContent className="sm:max-w-[500px]">
+          <RecruitmentFilterDialog 
+            filterCriteria={filterCriteria}
+            setFilterCriteria={setFilterCriteria}
+            onClose={() => setShowFilterDialog(false)}
+          />
+        </DialogContent>
+      </Dialog>
+      
+      {/* Create Recruitment Dialog */}
+      <CreateRecruitmentDialog 
+        open={showCreateDialog}
+        onOpenChange={setShowCreateDialog}
+        onSuccess={handleRefresh}
+      />
+      
+      {/* View Recruitment Dialog */}
+      <RecruitmentViewDialog 
+        open={showViewDialog}
+        onOpenChange={setShowViewDialog}
+        recruitment={selectedRecruitment}
+      />
+      
+      {/* Schedule Dialog */}
+      <RecruitmentScheduleDialog 
+        open={showScheduleDialog}
+        onOpenChange={setShowScheduleDialog}
+        recruitment={selectedRecruitment}
+        onSuccess={handleRefresh}
+      />
     </div>
   );
 };
