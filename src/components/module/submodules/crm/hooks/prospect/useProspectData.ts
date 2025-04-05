@@ -2,7 +2,6 @@
 import { useEffect } from 'react';
 import { Timestamp, DocumentData, serverTimestamp, collection, query, orderBy, getDocs, addDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { COLLECTIONS } from '@/lib/firebase-collections';
 import { Prospect } from '../../types/crm-types';
 import { toast } from 'sonner';
 
@@ -17,7 +16,7 @@ export const useProspectData = (
   const loadProspects = async () => {
     try {
       setLoading(true);
-      const prospectCollection = collection(db, COLLECTIONS.CRM.PROSPECTS);
+      const prospectCollection = collection(db, 'crm/prospects');
       const q = query(prospectCollection, orderBy('createdAt', 'desc'));
       
       const querySnapshot = await getDocs(q);
@@ -81,7 +80,7 @@ export const useProspectData = (
   // Seed mock data if collection is empty
   const seedMockProspects = async () => {
     try {
-      const prospectCollection = collection(db, COLLECTIONS.CRM.PROSPECTS);
+      const prospectCollection = collection(db, 'crm/prospects');
       
       const mockProspects = [
         {

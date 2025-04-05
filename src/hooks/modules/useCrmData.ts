@@ -1,6 +1,7 @@
 
 import { useCollectionData } from '../useCollectionData';
-import { COLLECTIONS } from '@/lib/firebase-collections';
+import { doc, collection, getDoc, setDoc, getDocs, query, serverTimestamp } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 import { orderBy, limit, where } from 'firebase/firestore';
 import { useCallback } from 'react';
 
@@ -8,51 +9,61 @@ import { useCallback } from 'react';
  * Hook to fetch data for the CRM module
  */
 export const useCrmData = () => {
+  // Créer les références aux collections appropriées
+  const clientsCollection = 'crm/clients';
+  const prospectsCollection = 'crm/prospects';
+  const opportunitiesCollection = 'crm/opportunities';
+  const contactsCollection = 'crm/contacts';
+  const leadsCollection = 'crm/leads';
+  const dealsCollection = 'crm/deals';
+  const settingsCollection = 'crm/settings';
+  const remindersCollection = 'crm/reminders';
+
   // Fetch clients
   const clientsResult = useCollectionData(
-    COLLECTIONS.CRM.CLIENTS,
+    clientsCollection,
     [orderBy('createdAt', 'desc'), limit(100)]
   );
   
   // Fetch prospects
   const prospectsResult = useCollectionData(
-    COLLECTIONS.CRM.PROSPECTS,
+    prospectsCollection,
     [orderBy('createdAt', 'desc'), limit(100)]
   );
 
   // Fetch opportunities
   const opportunitiesResult = useCollectionData(
-    COLLECTIONS.CRM.OPPORTUNITIES,
+    opportunitiesCollection,
     [orderBy('updatedAt', 'desc'), limit(100)]
   );
 
   // Fetch contacts
   const contactsResult = useCollectionData(
-    COLLECTIONS.CRM.CONTACTS,
+    contactsCollection,
     [orderBy('lastName', 'asc'), limit(100)]
   );
 
   // Fetch leads
   const leadsResult = useCollectionData(
-    COLLECTIONS.CRM.LEADS,
+    leadsCollection,
     [orderBy('createdAt', 'desc'), limit(100)]
   );
 
   // Fetch deals
   const dealsResult = useCollectionData(
-    COLLECTIONS.CRM.DEALS,
+    dealsCollection,
     [orderBy('updatedAt', 'desc'), limit(100)]
   );
 
   // Fetch settings
   const settingsResult = useCollectionData(
-    COLLECTIONS.CRM.SETTINGS,
+    settingsCollection,
     []
   );
 
   // Fetch reminders
   const remindersResult = useCollectionData(
-    COLLECTIONS.CRM.REMINDERS,
+    remindersCollection,
     [orderBy('dueDate', 'asc'), where('completed', '==', false), limit(20)]
   );
 

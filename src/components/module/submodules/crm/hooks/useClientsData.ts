@@ -2,7 +2,6 @@
 import { useState, useEffect } from 'react';
 import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, orderBy, serverTimestamp, Timestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { COLLECTIONS } from '@/lib/firebase-collections';
 import { Client, ClientFormData } from '../types/crm-types';
 import { toast } from 'sonner';
 
@@ -12,7 +11,7 @@ export const useClientsData = () => {
   const [error, setError] = useState<Error | null>(null);
 
   // Reference to the clients collection
-  const clientsRef = collection(db, COLLECTIONS.CRM.CLIENTS);
+  const clientsRef = collection(db, 'crm/clients');
 
   // Fetch all clients
   const fetchClients = async () => {
@@ -91,7 +90,7 @@ export const useClientsData = () => {
   // Update an existing client
   const updateClient = async (id: string, clientData: Partial<ClientFormData>) => {
     try {
-      const clientRef = doc(db, COLLECTIONS.CRM.CLIENTS, id);
+      const clientRef = doc(db, 'crm/clients', id);
       await updateDoc(clientRef, {
         ...clientData,
         updatedAt: serverTimestamp(),
@@ -110,7 +109,7 @@ export const useClientsData = () => {
   // Delete a client
   const deleteClient = async (id: string) => {
     try {
-      const clientRef = doc(db, COLLECTIONS.CRM.CLIENTS, id);
+      const clientRef = doc(db, 'crm/clients', id);
       await deleteDoc(clientRef);
       
       // Refresh clients list

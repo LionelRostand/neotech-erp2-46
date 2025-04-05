@@ -2,7 +2,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { collection, doc, getDoc, setDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { COLLECTIONS } from '@/lib/firebase-collections';
 import { toast } from 'sonner';
 
 // Type pour les paramètres CRM
@@ -37,7 +36,7 @@ export const useCrmSettings = () => {
   const [error, setError] = useState<string | null>(null);
 
   // Reference to the settings document
-  const settingsDoc = doc(collection(db, COLLECTIONS.CRM.SETTINGS), 'general');
+  const settingsDoc = doc(collection(db, 'crm/settings'), 'general');
 
   // Fetch settings
   const fetchSettings = useCallback(async () => {
