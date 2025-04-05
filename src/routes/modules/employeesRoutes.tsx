@@ -2,7 +2,6 @@
 import React from 'react';
 import { Route } from "react-router-dom";
 import ModuleLayout from "@/components/module/ModuleLayout";
-import SubmodulePage from "@/components/module/SubmodulePage";
 import SalarySlips from "@/components/module/submodules/salaries/SalarySlips";
 import EmployeesDepartments from "@/components/module/submodules/departments/EmployeesDepartments";
 import EmployeesLeaves from "@/components/module/submodules/leaves/EmployeesLeaves";

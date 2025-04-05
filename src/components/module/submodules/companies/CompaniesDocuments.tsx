@@ -1,5 +1,5 @@
-
-import React, { useState, useEffect } from 'react';
+import React from 'react';
+import { FileText } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -53,12 +53,9 @@ const CompaniesDocuments: React.FC = () => {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedDocument, setSelectedDocument] = useState<CompanyDocument | null>(null);
   
-  // Function to load documents
   const loadDocuments = async () => {
     setIsLoading(true);
     try {
-      // This is a mock implementation since companyService.getCompanyDocuments doesn't exist
-      // In a real implementation, you would call the actual service method
       const mockDocuments: CompanyDocument[] = [
         {
           id: '1',
@@ -85,25 +82,18 @@ const CompaniesDocuments: React.FC = () => {
     }
   };
   
-  // Load documents on component mount
   useEffect(() => {
     loadDocuments();
   }, []);
   
-  // Filter documents based on search term
   const filteredDocuments = documents.filter(doc => 
     doc.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
   
-  // Handle document deletion
   const handleDeleteDocument = async () => {
     if (!selectedDocument) return;
     
     try {
-      // In a real implementation, you would call the actual service method
-      // await companyService.deleteDocument(selectedDocument.id);
-      
-      // Update local state
       setDocuments(prev => prev.filter(doc => doc.id !== selectedDocument.id));
       toast.success('Document deleted successfully');
       setIsDeleteDialogOpen(false);
@@ -113,15 +103,12 @@ const CompaniesDocuments: React.FC = () => {
     }
   };
   
-  // Handle document upload
   const handleUploadDocument = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Implementation would go here
     setIsUploadDialogOpen(false);
     toast.success('Document uploaded successfully');
   };
   
-  // Function to get appropriate icon based on file type
   const getFileIcon = (type: string) => {
     switch (type.toLowerCase()) {
       case 'pdf':
@@ -143,14 +130,12 @@ const CompaniesDocuments: React.FC = () => {
     }
   };
   
-  // Function to format file size
   const formatFileSize = (bytes: number) => {
     if (bytes < 1024) return bytes + ' B';
     else if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
     else return (bytes / 1048576).toFixed(1) + ' MB';
   };
   
-  // Function to format date
   const formatDate = (dateString: string) => {
     try {
       return new Date(dateString).toLocaleDateString();
@@ -279,7 +264,6 @@ const CompaniesDocuments: React.FC = () => {
         </CardContent>
       </Card>
       
-      {/* Upload Dialog */}
       <Dialog open={isUploadDialogOpen} onOpenChange={setIsUploadDialogOpen}>
         <DialogContent>
           <DialogHeader>
@@ -290,7 +274,6 @@ const CompaniesDocuments: React.FC = () => {
           </DialogHeader>
           
           <form onSubmit={handleUploadDocument}>
-            {/* Form fields would go here */}
             <DialogFooter className="mt-4">
               <Button type="button" variant="outline" onClick={() => setIsUploadDialogOpen(false)}>
                 Annuler
@@ -304,7 +287,6 @@ const CompaniesDocuments: React.FC = () => {
         </DialogContent>
       </Dialog>
       
-      {/* Delete Confirmation Dialog */}
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <DialogContent>
           <DialogHeader>
