@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import {
   Dialog,
@@ -26,11 +25,13 @@ import { format } from 'date-fns';
 interface CreateTrainingDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onSuccess?: () => void;
 }
 
 const CreateTrainingDialog: React.FC<CreateTrainingDialogProps> = ({
   open,
   onOpenChange,
+  onSuccess,
 }) => {
   const { employees } = useHrModuleData();
   const [formData, setFormData] = useState({
@@ -77,6 +78,11 @@ const CreateTrainingDialog: React.FC<CreateTrainingDialogProps> = ({
     
     toast.success('Formation créée avec succès');
     onOpenChange(false);
+    
+    // Call the onSuccess callback if provided
+    if (onSuccess) {
+      onSuccess();
+    }
     
     // Réinitialisation du formulaire
     setFormData({
