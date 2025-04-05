@@ -4,19 +4,29 @@ import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, orderBy,
 import { db } from '@/lib/firebase';
 import { Client, ClientFormData } from '../types/crm-types';
 import { toast } from 'sonner';
+import { COLLECTIONS } from '@/lib/firebase-collections';
 
 export const useClientsData = () => {
   const [clients, setClients] = useState<Client[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
-  // Reference to the clients collection
-  const clientsRef = collection(db, 'crm/clients');
+  // Use the correct path from collections
+  const crmClientsPath = COLLECTIONS.CRM.CLIENTS; // 'crm/clients'
+  
+  // Create a function to get the correct collection reference
+  const getClientsCollection = () => {
+    // For 'crm/clients' path, we need to use a different approach
+    // We'll use a static document ID for the parent document
+    const crmDocId = 'crm'; // Static document ID for the crm document
+    return collection(db, 'crm', crmDocId, 'clients');
+  };
 
   // Fetch all clients
   const fetchClients = async () => {
     setIsLoading(true);
     try {
+      const clientsRef = getClientsCollection();
       const q = query(clientsRef, orderBy('createdAt', 'desc'));
       const snapshot = await getDocs(q);
       
@@ -72,6 +82,7 @@ export const useClientsData = () => {
   // Add a new client
   const addClient = async (clientData: Omit<Client, 'id' | 'createdAt'>) => {
     try {
+      const clientsRef = getClientsCollection();
       const newClientRef = await addDoc(clientsRef, {
         ...clientData,
         createdAt: serverTimestamp(),
@@ -90,7 +101,8 @@ export const useClientsData = () => {
   // Update an existing client
   const updateClient = async (id: string, clientData: Partial<ClientFormData>) => {
     try {
-      const clientRef = doc(db, 'crm/clients', id);
+      const crmDocId = 'crm';
+      const clientRef = doc(db, 'crm', crmDocId, 'clients', id);
       await updateDoc(clientRef, {
         ...clientData,
         updatedAt: serverTimestamp(),
@@ -109,7 +121,8 @@ export const useClientsData = () => {
   // Delete a client
   const deleteClient = async (id: string) => {
     try {
-      const clientRef = doc(db, 'crm/clients', id);
+      const crmDocId = 'crm';
+      const clientRef = doc(db, 'crm', crmDocId, 'clients', id);
       await deleteDoc(clientRef);
       
       // Refresh clients list
@@ -125,6 +138,7 @@ export const useClientsData = () => {
   // Seed mock data if collection is empty
   const seedMockClients = async () => {
     try {
+      const clientsRef = getClientsCollection();
       const mockClients: Omit<Client, 'id'>[] = [
         {
           name: 'Acme Corporation',

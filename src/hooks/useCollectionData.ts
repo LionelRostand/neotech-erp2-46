@@ -23,8 +23,30 @@ export const useCollectionData = (
       try {
         console.log(`Fetching data from collection: ${collectionPath}`);
         
+        // Handle collection paths with slashes by splitting and using the correct method
+        const createCollectionRef = (path: string) => {
+          // Check if the path contains a slash
+          if (path.includes('/')) {
+            // Split the path into segments
+            const segments = path.split('/');
+            let collRef = collection(db, segments[0]);
+            
+            // For paths like 'crm/clients', use the document then collection pattern
+            if (segments.length === 2) {
+              // We need a static document ID to represent the parent document
+              const parentDocId = segments[0]; // Use first segment as doc ID
+              return collection(db, segments[0], parentDocId, segments[1]);
+            }
+            
+            return collRef;
+          } else {
+            // Simple collection path
+            return collection(db, path);
+          }
+        };
+        
         // Create a reference to the collection
-        const collectionRef = collection(db, collectionPath);
+        const collectionRef = createCollectionRef(collectionPath);
         
         // Create a query with the provided constraints
         const q = query(collectionRef, ...queryConstraints);
