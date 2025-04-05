@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -31,27 +32,39 @@ const CompanyForm: React.FC<CompanyFormProps> = ({
   const [formData, setFormData] = useState<Partial<Company>>(
     company || {
       name: '',
-      address: '',
-      city: '',
-      postalCode: '',
-      country: 'France',
+      address: {
+        street: '',
+        city: '',
+        postalCode: '',
+        country: 'France'
+      },
       phone: '',
       email: '',
       website: '',
-      contactPerson: '',
-      sector: '',
+      industry: '',
       size: 'small',
       status: 'active',
-      description: ''
     }
   );
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    
+    // Handle nested address fields
+    if (name === 'street' || name === 'city' || name === 'postalCode' || name === 'country') {
+      setFormData(prev => ({
+        ...prev,
+        address: {
+          ...prev.address,
+          [name]: value
+        }
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [name]: value
+      }));
+    }
   };
 
   const handleSelectChange = (name: string, value: string) => {
@@ -64,7 +77,7 @@ const CompanyForm: React.FC<CompanyFormProps> = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.name || !formData.address || !formData.city) {
+    if (!formData.name || !formData.address?.street || !formData.address?.city) {
       toast.error("Veuillez remplir tous les champs obligatoires");
       return;
     }
@@ -88,11 +101,11 @@ const CompanyForm: React.FC<CompanyFormProps> = ({
         </div>
         
         <div className="space-y-2">
-          <Label htmlFor="sector">Secteur d'activité</Label>
+          <Label htmlFor="industry">Secteur d'activité</Label>
           <Input
-            id="sector"
-            name="sector"
-            value={formData.sector}
+            id="industry"
+            name="industry"
+            value={formData.industry}
             onChange={handleChange}
             placeholder="Secteur d'activité"
           />
@@ -100,11 +113,11 @@ const CompanyForm: React.FC<CompanyFormProps> = ({
       </div>
       
       <div className="space-y-2">
-        <Label htmlFor="address">Adresse *</Label>
+        <Label htmlFor="street">Adresse *</Label>
         <Input
-          id="address"
-          name="address"
-          value={formData.address}
+          id="street"
+          name="street"
+          value={formData.address?.street}
           onChange={handleChange}
           placeholder="Adresse"
           required
@@ -117,7 +130,7 @@ const CompanyForm: React.FC<CompanyFormProps> = ({
           <Input
             id="city"
             name="city"
-            value={formData.city}
+            value={formData.address?.city}
             onChange={handleChange}
             placeholder="Ville"
             required
@@ -129,7 +142,7 @@ const CompanyForm: React.FC<CompanyFormProps> = ({
           <Input
             id="postalCode"
             name="postalCode"
-            value={formData.postalCode}
+            value={formData.address?.postalCode}
             onChange={handleChange}
             placeholder="Code postal"
           />
@@ -138,8 +151,16 @@ const CompanyForm: React.FC<CompanyFormProps> = ({
         <div className="space-y-2">
           <Label htmlFor="country">Pays</Label>
           <Select
-            value={formData.country}
-            onValueChange={(value) => handleSelectChange('country', value)}
+            value={formData.address?.country}
+            onValueChange={(value) => {
+              setFormData(prev => ({
+                ...prev,
+                address: {
+                  ...prev.address,
+                  country: value
+                }
+              }));
+            }}
           >
             <SelectTrigger id="country">
               <SelectValue placeholder="Sélectionner un pays" />
@@ -193,13 +214,13 @@ const CompanyForm: React.FC<CompanyFormProps> = ({
         </div>
         
         <div className="space-y-2">
-          <Label htmlFor="contactPerson">Personne de contact</Label>
+          <Label htmlFor="siret">SIRET</Label>
           <Input
-            id="contactPerson"
-            name="contactPerson"
-            value={formData.contactPerson}
+            id="siret"
+            name="siret"
+            value={formData.siret}
             onChange={handleChange}
-            placeholder="Nom et prénom"
+            placeholder="Numéro SIRET"
           />
         </div>
       </div>
@@ -227,7 +248,7 @@ const CompanyForm: React.FC<CompanyFormProps> = ({
           <Label htmlFor="status">Statut</Label>
           <Select
             value={formData.status as string}
-            onValueChange={(value) => handleSelectChange('status', value)}
+            onValueChange={(value) => handleSelectChange('status', value as 'active' | 'inactive' | 'pending')}
           >
             <SelectTrigger id="status">
               <SelectValue placeholder="Sélectionner un statut" />
@@ -235,6 +256,7 @@ const CompanyForm: React.FC<CompanyFormProps> = ({
             <SelectContent>
               <SelectItem value="active">Actif</SelectItem>
               <SelectItem value="inactive">Inactif</SelectItem>
+              <SelectItem value="pending">En attente</SelectItem>
             </SelectContent>
           </Select>
         </div>
