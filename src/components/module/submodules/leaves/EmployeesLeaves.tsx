@@ -14,6 +14,9 @@ import {
 } from 'lucide-react';
 import { LeaveRequestsList } from './LeaveRequestsList';
 import LeaveBalanceCards from './LeaveBalanceCards';
+import { LeaveCalendar } from './LeaveCalendar';
+import { LeavePolicies } from './LeavePolicies';
+import { LeaveBalances } from './LeaveBalances';
 import { toast } from 'sonner';
 import { useLeaveData } from '@/hooks/useLeaveData';
 
@@ -22,18 +25,18 @@ const EmployeesLeaves: React.FC = () => {
   const { leaves, stats, isLoading, error } = useLeaveData();
 
   const handleApproveLeave = (id: string) => {
-    // In a real app, we would update Firebase here
+    // Dans une application réelle, nous mettrions à jour Firebase ici
     toast.success(`Demande de congé #${id} approuvée`);
   };
 
   const handleRejectLeave = (id: string) => {
-    // In a real app, we would update Firebase here
+    // Dans une application réelle, nous mettrions à jour Firebase ici
     toast.success(`Demande de congé #${id} refusée`);
   };
 
   const handleExportData = () => {
     toast.success("Export des données de congés démarré");
-    // Export logic to implement
+    // Logique d'export à implémenter
   };
 
   return (
@@ -130,7 +133,7 @@ const EmployeesLeaves: React.FC = () => {
             <SunMedium className="h-4 w-4 mr-2" />
             Soldes
           </TabsTrigger>
-          <TabsTrigger value="parametres" className="flex items-center">
+          <TabsTrigger value="politiques" className="flex items-center">
             <Clock className="h-4 w-4 mr-2" />
             Politiques
           </TabsTrigger>
@@ -150,9 +153,7 @@ const EmployeesLeaves: React.FC = () => {
         <TabsContent value="calendrier">
           <Card>
             <CardContent className="p-6">
-              <div className="py-8 text-center text-gray-500">
-                Calendrier des congés (à implémenter)
-              </div>
+              <LeaveCalendar />
             </CardContent>
           </Card>
         </TabsContent>
@@ -160,17 +161,15 @@ const EmployeesLeaves: React.FC = () => {
         <TabsContent value="soldes">
           <Card>
             <CardContent className="p-6">
-              <LeaveBalanceCards />
+              <LeaveBalances />
             </CardContent>
           </Card>
         </TabsContent>
 
-        <TabsContent value="parametres">
+        <TabsContent value="politiques">
           <Card>
             <CardContent className="p-6">
-              <div className="py-8 text-center text-gray-500">
-                Politiques de congés (à implémenter)
-              </div>
+              <LeavePolicies />
             </CardContent>
           </Card>
         </TabsContent>

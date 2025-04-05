@@ -21,6 +21,20 @@ import {
   SelectValue 
 } from '@/components/ui/select';
 
+// Define interface for employee balances to fix TypeScript errors
+interface EmployeeBalance {
+  id: string;
+  name: string;
+  photo: string;
+  department: string;
+  balances: Array<{
+    type: string;
+    total: number;
+    used: number;
+    remaining: number;
+  }>;
+}
+
 export const LeaveBalances: React.FC = () => {
   const [departmentFilter, setDepartmentFilter] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -45,7 +59,7 @@ export const LeaveBalances: React.FC = () => {
   });
   
   // Group balances by employee
-  const employeeBalances = filteredBalances.reduce((acc, balance) => {
+  const employeeBalances = filteredBalances.reduce<Record<string, EmployeeBalance>>((acc, balance) => {
     if (!acc[balance.employeeId]) {
       acc[balance.employeeId] = {
         id: balance.employeeId,
@@ -56,7 +70,13 @@ export const LeaveBalances: React.FC = () => {
       };
     }
     
-    acc[balance.employeeId].balances.push(balance);
+    acc[balance.employeeId].balances.push({
+      type: balance.type,
+      total: balance.total,
+      used: balance.used,
+      remaining: balance.remaining
+    });
+    
     return acc;
   }, {});
 
@@ -114,11 +134,11 @@ export const LeaveBalances: React.FC = () => {
           </TableHeader>
           <TableBody>
             {Object.values(employeeBalances).flatMap(employee => 
-              // Si l'employé n'a pas de soldes, afficher une ligne vide
+              // If employee has no balances, display an empty row
               employee.balances.length > 0 ? 
                 employee.balances.map((balance, index) => (
                   <TableRow key={`${employee.id}-${balance.type}`}>
-                    {/* N'affichez les informations employé que sur la première ligne de chaque employé */}
+                    {/* Only display employee info on the first row for each employee */}
                     {index === 0 ? (
                       <TableCell rowSpan={employee.balances.length} className="align-top">
                         <div className="flex items-center space-x-3">
@@ -150,7 +170,7 @@ export const LeaveBalances: React.FC = () => {
                     </TableCell>
                   </TableRow>
                 )) : 
-                // Ligne par défaut pour un employé sans solde de congés
+                // Default row for an employee with no leave balance
                 <TableRow key={employee.id}>
                   <TableCell>
                     <div className="flex items-center space-x-3">
