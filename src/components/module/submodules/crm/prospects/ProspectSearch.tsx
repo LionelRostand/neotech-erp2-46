@@ -15,13 +15,15 @@ interface ProspectSearchProps {
   statusFilter: string;
   setSearchTerm: (value: string) => void;
   setStatusFilter: (value: string) => void;
+  statusOptions?: { value: string; label: string }[];
 }
 
 const ProspectSearch: React.FC<ProspectSearchProps> = ({
   searchTerm,
   statusFilter,
+  setSearchTerm,
   setStatusFilter,
-  setSearchTerm
+  statusOptions = []
 }) => {
   return (
     <div className="flex flex-col md:flex-row gap-4 mb-4">
@@ -45,9 +47,11 @@ const ProspectSearch: React.FC<ProspectSearchProps> = ({
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="all">Tous les statuts</SelectItem>
-          <SelectItem value="hot">Chaud</SelectItem>
-          <SelectItem value="warm">Tiède</SelectItem>
-          <SelectItem value="cold">Froid</SelectItem>
+          {statusOptions.map(option => (
+            <SelectItem key={option.value} value={option.value}>
+              {option.label}
+            </SelectItem>
+          ))}
         </SelectContent>
       </Select>
     </div>

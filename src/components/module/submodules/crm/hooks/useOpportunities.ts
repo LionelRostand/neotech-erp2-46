@@ -59,17 +59,18 @@ export const useOpportunities = () => {
     // Simulate API call to update an opportunity
     await new Promise(resolve => setTimeout(resolve, 500));
     
-    // Ensure numeric values
+    // Create updates object with type-safe properties
     const updates: Partial<Opportunity> = {};
     
     // Copy all properties except for numeric ones that need conversion
-    Object.keys(data).forEach(key => {
+    Object.entries(data).forEach(([key, value]) => {
       if (key !== 'value' && key !== 'probability' && key !== 'amount') {
-        updates[key as keyof Opportunity] = data[key as keyof OpportunityFormData];
+        // Type assertion for string keys
+        updates[key as keyof Opportunity] = value as any;
       }
     });
     
-    // Handle numeric properties separately
+    // Handle numeric properties separately with proper type conversion
     if (data.value !== undefined) {
       updates.value = typeof data.value === 'string' ? parseFloat(data.value) : data.value;
     }

@@ -3,7 +3,7 @@ import React from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Edit, Eye, Trash2, UserCheck, Bell } from "lucide-react";
+import { Edit, Eye, Trash2, UserCheck, Bell, Loader2 } from "lucide-react";
 import { Prospect } from '../types/crm-types';
 
 interface ProspectsTableProps {
@@ -13,6 +13,8 @@ interface ProspectsTableProps {
   onViewDetails: (prospect: Prospect) => void;
   onConvert: (prospect: Prospect) => void;
   onReminder: (prospect: Prospect) => void;
+  isLoading?: boolean;
+  error?: string | null;
 }
 
 const ProspectsTable: React.FC<ProspectsTableProps> = ({
@@ -21,7 +23,9 @@ const ProspectsTable: React.FC<ProspectsTableProps> = ({
   onDelete,
   onViewDetails,
   onConvert,
-  onReminder
+  onReminder,
+  isLoading = false,
+  error = null
 }) => {
   // Helper function to get the badge class based on status
   const getStatusBadgeClass = (status: string): string => {
@@ -66,6 +70,23 @@ const ProspectsTable: React.FC<ProspectsTableProps> = ({
         return 'Inconnu';
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <span className="ml-2">Chargement des prospects...</span>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-8 text-red-500">
+        Erreur: {error}
+      </div>
+    );
+  }
 
   return (
     <div className="overflow-x-auto">

@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback } from 'react';
 import DashboardLayout from '@/components/DashboardLayout';
 import { Button } from "@/components/ui/button";
@@ -21,7 +20,6 @@ import DeleteProspectDialog from './prospects/DeleteProspectDialog';
 import ConvertToClientDialog from './prospects/ConvertToClientDialog';
 
 const CrmProspects: React.FC = () => {
-  // State for prospects and filters
   const {
     prospects,
     isLoading,
@@ -41,7 +39,6 @@ const CrmProspects: React.FC = () => {
     addReminder
   } = useProspects();
 
-  // UI states for dialogs and forms
   const {
     isAddDialogOpen,
     setIsAddDialogOpen,
@@ -62,13 +59,11 @@ const CrmProspects: React.FC = () => {
     resetForm
   } = useProspectState();
 
-  // Form handlers
   const {
     handleInputChange,
     handleSelectChange
   } = useProspectForm(setFormData);
 
-  // Dialog handlers
   const {
     openAddDialog,
     openEditDialog,
@@ -87,15 +82,12 @@ const CrmProspects: React.FC = () => {
     setIsReminderDialogOpen
   );
 
-  // View settings
   const [viewMode, setViewMode] = useState<'table' | 'grid'>('table');
 
-  // Handle reminder data changes
   const handleReminderChange = (field: string, value: string) => {
     setReminderData(prev => ({ ...prev, [field]: value }));
   };
 
-  // Handle adding a prospect
   const handleAddProspect = async (data: ProspectFormData): Promise<boolean> => {
     try {
       await addProspect(data);
@@ -110,7 +102,6 @@ const CrmProspects: React.FC = () => {
     }
   };
 
-  // Handle updating a prospect
   const handleUpdateProspect = async (data: ProspectFormData): Promise<boolean> => {
     if (!selectedProspect) return false;
     
@@ -126,7 +117,6 @@ const CrmProspects: React.FC = () => {
     }
   };
 
-  // Handle deleting a prospect
   const handleDeleteProspect = async (): Promise<void> => {
     if (!selectedProspect) return;
     
@@ -140,7 +130,6 @@ const CrmProspects: React.FC = () => {
     }
   };
 
-  // Handle converting a prospect to a client
   const handleConvertToClient = async (): Promise<void> => {
     if (!selectedProspect) return;
     
@@ -148,14 +137,12 @@ const CrmProspects: React.FC = () => {
       const clientId = await convertToClient(selectedProspect);
       setIsConvertDialogOpen(false);
       toast.success('Prospect converti en client avec succès');
-      // In a real app, you might want to navigate to the client details page
     } catch (error) {
       console.error('Error converting prospect to client:', error);
       toast.error('Erreur lors de la conversion du prospect en client');
     }
   };
 
-  // Handle adding a reminder
   const handleAddReminder = async (): Promise<void> => {
     if (!selectedProspect) return;
     
@@ -169,7 +156,6 @@ const CrmProspects: React.FC = () => {
     }
   };
 
-  // Filter prospects based on search term and status filter
   const filteredProspects = prospects.filter(prospect => {
     const matchesStatus = statusFilter === 'all' || prospect.status === statusFilter;
     const matchesSearch = !searchTerm || 
@@ -194,9 +180,9 @@ const CrmProspects: React.FC = () => {
         
         <ProspectSearch 
           searchTerm={searchTerm}
-          onSearchChange={setSearchTerm}
+          setSearchTerm={setSearchTerm}
           statusFilter={statusFilter}
-          onStatusFilterChange={setStatusFilter}
+          setStatusFilter={setStatusFilter}
           statusOptions={statusOptions}
         />
         
@@ -213,11 +199,11 @@ const CrmProspects: React.FC = () => {
               prospects={filteredProspects}
               isLoading={isLoading}
               error={error}
-              onView={openViewDetails}
+              onViewDetails={openViewDetails}
               onEdit={openEditDialog}
               onDelete={openDeleteDialog}
               onConvert={openConvertDialog}
-              onAddReminder={openReminderDialog}
+              onReminder={openReminderDialog}
             />
           </TabsContent>
           
@@ -226,7 +212,7 @@ const CrmProspects: React.FC = () => {
               prospects={filteredProspects}
               isLoading={isLoading}
               error={error}
-              onView={openViewDetails}
+              onViewDetails={openViewDetails}
               onEdit={openEditDialog}
               onDelete={openDeleteDialog}
               onConvert={openConvertDialog}
@@ -235,7 +221,6 @@ const CrmProspects: React.FC = () => {
           </TabsContent>
         </Tabs>
         
-        {/* Add Prospect Dialog */}
         <AddProspectDialog 
           isOpen={isAddDialogOpen} 
           onClose={() => setIsAddDialogOpen(false)} 
@@ -244,7 +229,6 @@ const CrmProspects: React.FC = () => {
           statusOptions={statusOptions}
         />
         
-        {/* Dialogs that require a selected prospect */}
         {selectedProspect && (
           <>
             <EditProspectDialog 

@@ -3,7 +3,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Edit, Eye, Trash2, UserCheck, Building, Mail, Phone } from "lucide-react";
+import { Edit, Eye, Trash2, UserCheck, Building, Mail, Phone, Bell, Loader2 } from "lucide-react";
 import { Prospect } from '../types/crm-types';
 
 interface ProspectsGridProps {
@@ -12,6 +12,9 @@ interface ProspectsGridProps {
   onDelete: (prospect: Prospect) => void;
   onViewDetails: (prospect: Prospect) => void;
   onConvert: (prospect: Prospect) => void;
+  onAddReminder?: (prospect: Prospect) => void;
+  isLoading?: boolean;
+  error?: string | null;
 }
 
 const ProspectsGrid: React.FC<ProspectsGridProps> = ({
@@ -19,7 +22,10 @@ const ProspectsGrid: React.FC<ProspectsGridProps> = ({
   onEdit,
   onDelete,
   onViewDetails,
-  onConvert
+  onConvert,
+  onAddReminder,
+  isLoading = false,
+  error = null
 }) => {
   // Helper function to get the badge class based on status
   const getStatusBadgeClass = (status: string): string => {
@@ -64,6 +70,23 @@ const ProspectsGrid: React.FC<ProspectsGridProps> = ({
         return 'Inconnu';
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <span className="ml-2">Chargement des prospects...</span>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-8 text-red-500">
+        Erreur: {error}
+      </div>
+    );
+  }
 
   if (prospects.length === 0) {
     return (
@@ -114,6 +137,11 @@ const ProspectsGrid: React.FC<ProspectsGridProps> = ({
               <Button variant="ghost" size="icon" onClick={() => onEdit(prospect)}>
                 <Edit className="h-4 w-4" />
               </Button>
+              {onAddReminder && (
+                <Button variant="ghost" size="icon" onClick={() => onAddReminder(prospect)}>
+                  <Bell className="h-4 w-4" />
+                </Button>
+              )}
               <Button variant="ghost" size="icon" onClick={() => onConvert(prospect)}>
                 <UserCheck className="h-4 w-4" />
               </Button>

@@ -15,12 +15,14 @@ interface ViewProspectDetailsProps {
   isOpen: boolean;
   onClose: () => void;
   prospect: Prospect;
+  onEdit?: () => void;
 }
 
 const ViewProspectDetails: React.FC<ViewProspectDetailsProps> = ({
   isOpen,
   onClose,
-  prospect
+  prospect,
+  onEdit
 }) => {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -31,7 +33,12 @@ const ViewProspectDetails: React.FC<ViewProspectDetailsProps> = ({
         
         <ProspectDetails prospect={prospect} />
         
-        <DialogFooter>
+        <DialogFooter className="space-x-2">
+          {onEdit && (
+            <Button onClick={onEdit} variant="outline">
+              Modifier
+            </Button>
+          )}
           <Button onClick={onClose}>Fermer</Button>
         </DialogFooter>
       </DialogContent>
