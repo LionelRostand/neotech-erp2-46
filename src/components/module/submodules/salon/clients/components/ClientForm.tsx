@@ -92,14 +92,14 @@ const ClientForm: React.FC<ClientFormProps> = ({
         <div className="space-y-2">
           <Label htmlFor="preferredStylist">Coiffeur préféré</Label>
           <Select 
-            value={formData.preferredStylist || "none"} 
-            onValueChange={(value) => onChange('preferredStylist', value === "none" ? "" : value)}
+            value={formData.preferredStylist || "no-preference"} 
+            onValueChange={(value) => onChange('preferredStylist', value === "no-preference" ? "" : value)}
           >
             <SelectTrigger>
               <SelectValue placeholder="Choisir un coiffeur" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="none">Aucune préférence</SelectItem>
+              <SelectItem value="no-preference">Aucune préférence</SelectItem>
               <SelectItem value="alexandra">Alexandra</SelectItem>
               <SelectItem value="nicolas">Nicolas</SelectItem>
               <SelectItem value="sophie">Sophie</SelectItem>

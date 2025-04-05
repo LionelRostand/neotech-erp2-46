@@ -91,11 +91,12 @@ const CustomerContactForm: React.FC<CustomerContactFormProps> = ({ isEditable })
             className="bg-gray-100"
           />
         ) : (
-          <Select value={formData.subject} onValueChange={(value) => handleChange('subject', value)}>
+          <Select value={formData.subject || "default"} onValueChange={(value) => handleChange('subject', value)}>
             <SelectTrigger id="subject">
               <SelectValue placeholder="Sélectionnez un sujet" />
             </SelectTrigger>
             <SelectContent>
+              <SelectItem value="default">Sélectionnez un sujet</SelectItem>
               <SelectItem value="reservation">Question sur une réservation</SelectItem>
               <SelectItem value="vehicule">Information sur les véhicules</SelectItem>
               <SelectItem value="tarifs">Demande de tarifs</SelectItem>

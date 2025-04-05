@@ -22,7 +22,7 @@ const FilterDropdown = () => {
         
         <div className="space-y-2">
           <Label htmlFor="status">Statut</Label>
-          <Select>
+          <Select defaultValue="all">
             <SelectTrigger id="status">
               <SelectValue placeholder="Tous les statuts" />
             </SelectTrigger>
@@ -48,7 +48,7 @@ const FilterDropdown = () => {
         
         <div className="space-y-2">
           <Label htmlFor="payment">Paiement</Label>
-          <Select>
+          <Select defaultValue="all">
             <SelectTrigger id="payment">
               <SelectValue placeholder="Tous les paiements" />
             </SelectTrigger>

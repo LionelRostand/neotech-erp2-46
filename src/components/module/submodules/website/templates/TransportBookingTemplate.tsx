@@ -60,7 +60,7 @@ const TransportBookingTemplate: React.FC<TransportBookingTemplateProps> = ({ isE
               
               <div className="space-y-2">
                 <Label htmlFor="vehicle-type">Type de véhicule</Label>
-                <Select>
+                <Select defaultValue="standard">
                   <SelectTrigger id="vehicle-type">
                     <SelectValue placeholder="Sélectionnez un type de véhicule" />
                   </SelectTrigger>
@@ -74,7 +74,7 @@ const TransportBookingTemplate: React.FC<TransportBookingTemplateProps> = ({ isE
               
               <div className="space-y-2">
                 <Label htmlFor="passengers">Nombre de passagers</Label>
-                <Select>
+                <Select defaultValue="1">
                   <SelectTrigger id="passengers">
                     <SelectValue placeholder="Sélectionnez le nombre" />
                   </SelectTrigger>
@@ -100,51 +100,25 @@ const TransportBookingTemplate: React.FC<TransportBookingTemplateProps> = ({ isE
                   <Input id="contact-phone" type="tel" placeholder="Votre numéro de téléphone" />
                 </div>
               )}
+              
+              <div className="pt-4">
+                <Button className="w-full bg-blue-600 hover:bg-blue-700">
+                  Réserver maintenant
+                </Button>
+              </div>
             </div>
-            
-            <Button className="w-full">Réserver maintenant</Button>
           </div>
         </div>
         
-        <div className="bg-muted/30 p-6 rounded-lg">
-          <h2 className="text-2xl font-semibold mb-6">Nos services</h2>
-          
-          <div className="space-y-4">
-            <div className="flex items-start space-x-3">
-              <div className="bg-primary/10 p-2 rounded">
-                <Car className="h-5 w-5 text-primary" />
-              </div>
-              <div>
-                <h3 className="font-medium">Transport personnalisé</h3>
-                <p className="text-sm text-muted-foreground">Service sur mesure pour répondre à vos besoins spécifiques</p>
-              </div>
+        <div className="hidden md:block">
+          <div className="bg-blue-50 p-8 rounded-lg h-full flex items-center justify-center">
+            <div className="text-center">
+              <Car className="w-24 h-24 text-blue-500 mx-auto mb-4" />
+              <h3 className="text-xl font-semibold mb-2">Service de qualité</h3>
+              <p className="text-gray-600">
+                Notre flotte de véhicules est maintenue aux normes les plus élevées pour vous garantir un trajet sûr et confortable.
+              </p>
             </div>
-            
-            <div className="flex items-start space-x-3">
-              <div className="bg-primary/10 p-2 rounded">
-                <Clock className="h-5 w-5 text-primary" />
-              </div>
-              <div>
-                <h3 className="font-medium">Ponctualité garantie</h3>
-                <p className="text-sm text-muted-foreground">Nous respectons les horaires pour votre confort</p>
-              </div>
-            </div>
-            
-            <div className="flex items-start space-x-3">
-              <div className="bg-primary/10 p-2 rounded">
-                <Calendar className="h-5 w-5 text-primary" />
-              </div>
-              <div>
-                <h3 className="font-medium">Réservation flexible</h3>
-                <p className="text-sm text-muted-foreground">Modifiez ou annulez jusqu'à 24h avant le départ</p>
-              </div>
-            </div>
-          </div>
-          
-          <div className="mt-8 p-4 bg-background rounded-lg border">
-            <h3 className="font-medium mb-2">Offre spéciale</h3>
-            <p className="text-sm text-muted-foreground mb-4">-15% sur votre première réservation avec le code WELCOME15</p>
-            <Button variant="outline" className="w-full">Obtenir l'offre</Button>
           </div>
         </div>
       </div>
