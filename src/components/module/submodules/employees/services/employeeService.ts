@@ -13,9 +13,8 @@ export const getEmployeesData = async (): Promise<Employee[]> => {
   try {
     console.log('Récupération des données employés depuis Firestore...');
     
-    // Utilisation de executeWithNetworkRetry pour gérer automatiquement les erreurs réseau
+    // Use HR.EMPLOYEES instead of EMPLOYEES collection
     const firestoreData = await executeWithNetworkRetry(async () => {
-      // Utilisation de la collection définie dans COLLECTIONS pour garantir la cohérence
       return await getAllDocuments(COLLECTIONS.HR.EMPLOYEES);
     });
     
@@ -39,7 +38,7 @@ export const getEmployeeById = async (id: string): Promise<Employee | null> => {
   try {
     console.log(`Récupération de l'employé ${id} depuis Firestore`);
     const employeeData = await executeWithNetworkRetry(async () => {
-      return await getDocumentById(COLLECTIONS.EMPLOYEES, id);
+      return await getDocumentById(COLLECTIONS.HR.EMPLOYEES, id);
     });
     
     if (employeeData) {
@@ -62,7 +61,7 @@ export const addEmployee = async (employeeData: Omit<Employee, 'id'>): Promise<E
   try {
     console.log('Ajout d\'un nouvel employé dans Firestore...');
     const newEmployee = await executeWithNetworkRetry(async () => {
-      return await addDocument(COLLECTIONS.EMPLOYEES, employeeData);
+      return await addDocument(COLLECTIONS.HR.EMPLOYEES, employeeData);
     });
     
     console.log('Employé ajouté avec succès:', newEmployee);
@@ -79,7 +78,7 @@ export const updateEmployee = async (id: string, employeeData: Partial<Employee>
   try {
     console.log(`Mise à jour de l'employé ${id} dans Firestore...`);
     const updatedEmployee = await executeWithNetworkRetry(async () => {
-      return await updateDocument(COLLECTIONS.EMPLOYEES, id, employeeData);
+      return await updateDocument(COLLECTIONS.HR.EMPLOYEES, id, employeeData);
     });
     
     console.log('Employé mis à jour avec succès:', updatedEmployee);
@@ -115,7 +114,7 @@ export const refreshEmployeesData = async (): Promise<Employee[]> => {
     
     // Récupérer directement depuis Firestore avec executeWithNetworkRetry
     const firestoreData = await executeWithNetworkRetry(async () => {
-      return await getAllDocuments(COLLECTIONS.EMPLOYEES);
+      return await getAllDocuments(COLLECTIONS.HR.EMPLOYEES);
     });
     
     if (firestoreData && Array.isArray(firestoreData) && firestoreData.length > 0) {
@@ -139,7 +138,7 @@ export const getEmployeesByDepartment = async (department: string): Promise<Empl
     console.log(`Récupération des employés du département ${department} depuis Firestore...`);
     
     const employees = await executeWithNetworkRetry(async () => {
-      const allEmployees = await getAllDocuments(COLLECTIONS.EMPLOYEES);
+      const allEmployees = await getAllDocuments(COLLECTIONS.HR.EMPLOYEES);
       return allEmployees.filter((emp: any) => emp.department === department);
     });
     
@@ -158,7 +157,7 @@ export const getEmployeesByStatus = async (status: string): Promise<Employee[]> 
     console.log(`Récupération des employés avec le statut ${status} depuis Firestore...`);
     
     const employees = await executeWithNetworkRetry(async () => {
-      const allEmployees = await getAllDocuments(COLLECTIONS.EMPLOYEES);
+      const allEmployees = await getAllDocuments(COLLECTIONS.HR.EMPLOYEES);
       return allEmployees.filter((emp: any) => emp.status === status);
     });
     

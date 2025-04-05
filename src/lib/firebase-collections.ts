@@ -6,6 +6,7 @@ export const COLLECTIONS = {
   USER_PERMISSIONS: 'user_permissions',
   DOCUMENTS: 'documents',
   CONTACTS: 'contacts',
+  EMPLOYEES: 'employees', // Add direct employees collection
   MESSAGES: {
     INBOX: 'messages/inbox',
     SCHEDULED: 'messages/scheduled',
@@ -15,26 +16,73 @@ export const COLLECTIONS = {
   PROJECTS: {
     MAIN: 'projects',
     TASKS: 'projects/tasks',
-    COMMENTS: 'projects/comments'
+    COMMENTS: 'projects/comments',
+    TEAMS: 'project_teams', // Add this collection for projects team
+    PROJECTS: 'projects_data', // This for project data specifically
+    NOTIFICATIONS: 'project_notifications' // For project notifications
   },
   ORDERS: 'orders',
   PRODUCTS: 'products',
   CATEGORIES: 'categories',
   CUSTOMERS: 'customers',
-  EMPLOYEES: 'employees', // Added this missing collection
+  // Add missing collections required by other modules
+  BADGES: 'badges',
+  ACCOUNTING: {
+    INVOICES: 'accounting_invoices',
+    PAYMENTS: 'accounting_payments',
+    EXPENSES: 'accounting_expenses'
+  },
+  CRM: {
+    LEADS: 'crm_leads',
+    OPPORTUNITIES: 'crm_opportunities',
+    CONTACTS: 'crm_contacts',
+    DEALS: 'crm_deals'
+  },
+  FREIGHT: {
+    SHIPMENTS: 'freight_shipments',
+    VEHICLES: 'freight_vehicles',
+    ROUTES: 'freight_routes',
+    DRIVERS: 'freight_drivers',
+    PACKAGES: 'freight_packages',
+    TRACKING: 'freight_tracking'
+  },
+  HEALTH: {
+    PATIENTS: 'health_patients',
+    APPOINTMENTS: 'health_appointments',
+    STAFF: 'health_staff',
+    BILLING: 'health_billing',
+    PRESCRIPTIONS: 'health_prescriptions',
+    MEDICAL_RECORDS: 'health_records'
+  },
+  HEALTH_CONSULTATIONS: 'health_consultations',
+  HEALTH_INSURANCE: 'health_insurance',
+  HEALTH_BILLING: 'health_billing',
+  TRANSPORT: {
+    VEHICLES: 'transport_vehicles',
+    DRIVERS: 'transport_drivers',
+    ROUTES: 'transport_routes',
+    SCHEDULES: 'transport_schedules'
+  },
+  LIBRARY: {
+    BOOKS: 'library_books',
+    MEMBERS: 'library_members',
+    LOANS: 'library_loans',
+    RESERVATIONS: 'library_reservations'
+  },
   HR: {
-    EMPLOYEES: 'hr/employees',
-    CONTRACTS: 'hr/contracts',
-    DEPARTMENTS: 'hr/departments',
-    LEAVE_REQUESTS: 'hr/leave-requests',
-    PAYSLIPS: 'hr/payslips',
-    ATTENDANCE: 'hr/attendance',
-    ABSENCE_REQUESTS: 'hr/absence-requests',
-    DOCUMENTS: 'hr/documents',
-    TIMESHEETS: 'hr/timesheets',
-    EVALUATIONS: 'hr/evaluations',
-    TRAININGS: 'hr/trainings',
-    REPORTS: 'hr/reports',
-    ALERTS: 'hr/alerts'
+    // Replace slash notation with underscores for all HR collections
+    EMPLOYEES: 'hr_employees',
+    CONTRACTS: 'hr_contracts',
+    DEPARTMENTS: 'hr_departments',
+    LEAVE_REQUESTS: 'hr_leave_requests',
+    PAYSLIPS: 'hr_payslips',
+    ATTENDANCE: 'hr_attendance',
+    ABSENCE_REQUESTS: 'hr_absence_requests',
+    DOCUMENTS: 'hr_documents',
+    TIMESHEETS: 'hr_timesheets',
+    EVALUATIONS: 'hr_evaluations',
+    TRAININGS: 'hr_trainings',
+    REPORTS: 'hr_reports',
+    ALERTS: 'hr_alerts'
   }
 };

@@ -25,6 +25,7 @@ const CreateContractDialog: React.FC<CreateContractDialogProps> = ({
         delete contractData.createdAt;
       }
       
+      // Using the new collection path format for contracts
       await addDocument(COLLECTIONS.HR.CONTRACTS, contractData);
       toast.success("Contrat créé avec succès");
       onOpenChange(false);

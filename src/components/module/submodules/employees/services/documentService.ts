@@ -21,7 +21,7 @@ export const getEmployeeDocuments = async (employeeId: string): Promise<Employee
     console.log(`Récupération des documents pour l'employé ${employeeId}...`);
     
     const employeeData = await executeWithNetworkRetry(async () => {
-      return await getDocumentById(COLLECTIONS.EMPLOYEES, employeeId);
+      return await getDocumentById(COLLECTIONS.HR.EMPLOYEES, employeeId);
     });
     
     if (!employeeData) {
@@ -46,7 +46,7 @@ export const addEmployeeDocument = async (employeeId: string, document: Employee
     console.log(`Ajout d'un document pour l'employé ${employeeId}...`);
     
     const employeeData = await executeWithNetworkRetry(async () => {
-      return await getDocumentById(COLLECTIONS.EMPLOYEES, employeeId);
+      return await getDocumentById(COLLECTIONS.HR.EMPLOYEES, employeeId);
     });
     
     if (!employeeData) {
@@ -65,7 +65,7 @@ export const addEmployeeDocument = async (employeeId: string, document: Employee
     
     // Update the employee record with the new document
     const success = await executeWithNetworkRetry(async () => {
-      return await updateDocument(COLLECTIONS.EMPLOYEES, employeeId, {
+      return await updateDocument(COLLECTIONS.HR.EMPLOYEES, employeeId, {
         documents: [...documents, document]
       });
     });
@@ -90,7 +90,7 @@ export const removeEmployeeDocument = async (employeeId: string, documentId: str
     console.log(`Suppression du document ${documentId} pour l'employé ${employeeId}...`);
     
     const employeeData = await executeWithNetworkRetry(async () => {
-      return await getDocumentById(COLLECTIONS.EMPLOYEES, employeeId);
+      return await getDocumentById(COLLECTIONS.HR.EMPLOYEES, employeeId);
     });
     
     if (!employeeData) {
@@ -107,7 +107,7 @@ export const removeEmployeeDocument = async (employeeId: string, documentId: str
     
     // Update the employee record without the removed document
     const success = await executeWithNetworkRetry(async () => {
-      return await updateDocument(COLLECTIONS.EMPLOYEES, employeeId, {
+      return await updateDocument(COLLECTIONS.HR.EMPLOYEES, employeeId, {
         documents: updatedDocuments
       });
     });
@@ -132,7 +132,7 @@ export const getDocumentTypes = async (): Promise<string[]> => {
     console.log("Récupération des types de documents...");
     
     const settingsDoc = await executeWithNetworkRetry(async () => {
-      return await getDocumentById(COLLECTIONS.DOCUMENTS, "settings");
+      return await getDocumentById(COLLECTIONS.HR.DOCUMENTS, "settings");
     });
     
     if (!settingsDoc) {

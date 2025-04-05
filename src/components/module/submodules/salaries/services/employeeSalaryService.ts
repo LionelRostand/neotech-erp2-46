@@ -13,7 +13,7 @@ export const addPayslipToEmployee = async (employeeId: string, payslipId: string
     
     // Récupérer d'abord l'employé pour obtenir ses fiches de paie existantes
     const employeeData = await executeWithNetworkRetry(async () => {
-      return await getDocumentById(COLLECTIONS.EMPLOYEES, employeeId);
+      return await getDocumentById(COLLECTIONS.HR.EMPLOYEES, employeeId);
     }) as Employee | null;
     
     if (!employeeData) {
@@ -32,7 +32,7 @@ export const addPayslipToEmployee = async (employeeId: string, payslipId: string
     
     // Mettre à jour l'employé
     await executeWithNetworkRetry(async () => {
-      return await updateDocument(COLLECTIONS.EMPLOYEES, employeeId, { payslips });
+      return await updateDocument(COLLECTIONS.HR.EMPLOYEES, employeeId, { payslips });
     });
     
     console.log(`Fiche de paie ${payslipId} associée avec succès à l'employé ${employeeId}`);
@@ -51,7 +51,7 @@ export const updateEmployeeBaseSalary = async (employeeId: string, baseSalary: n
     console.log(`Mise à jour du salaire de base de l'employé ${employeeId} à ${baseSalary}€...`);
     
     await executeWithNetworkRetry(async () => {
-      return await updateDocument(COLLECTIONS.EMPLOYEES, employeeId, { baseSalary });
+      return await updateDocument(COLLECTIONS.HR.EMPLOYEES, employeeId, { baseSalary });
     });
     
     console.log(`Salaire de base de l'employé ${employeeId} mis à jour avec succès`);
@@ -71,7 +71,7 @@ export const getEmployeeSalaryHistory = async (employeeId: string): Promise<any[
     
     // D'abord récupérer l'employé pour obtenir ses références de fiches de paie
     const employeeData = await executeWithNetworkRetry(async () => {
-      return await getDocumentById(COLLECTIONS.EMPLOYEES, employeeId);
+      return await getDocumentById(COLLECTIONS.HR.EMPLOYEES, employeeId);
     }) as Employee | null;
     
     if (!employeeData || !employeeData.payslips || employeeData.payslips.length === 0) {
@@ -108,7 +108,7 @@ export const getPayslipsByCompany = async (companyId: string): Promise<any[]> =>
     
     // Récupérer les employés de cette entreprise
     const companyEmployees = await executeWithNetworkRetry(async () => {
-      const allEmployees = await getAllDocuments(COLLECTIONS.EMPLOYEES);
+      const allEmployees = await getAllDocuments(COLLECTIONS.HR.EMPLOYEES);
       return allEmployees.filter(emp => (emp as any).company === companyId);
     }) as Employee[];
     

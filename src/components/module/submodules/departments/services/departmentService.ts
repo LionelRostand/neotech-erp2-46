@@ -5,7 +5,7 @@ import { COLLECTIONS } from '@/lib/firebase-collections';
 import { toast } from 'sonner';
 
 export const useDepartmentService = () => {
-  // Collection de départements dans Firestore - use the hr_departments collection
+  // Updated collection path for departments
   const DEPARTMENTS_COLLECTION = COLLECTIONS.HR.DEPARTMENTS;
   
   const getAll = async (): Promise<Department[]> => {
