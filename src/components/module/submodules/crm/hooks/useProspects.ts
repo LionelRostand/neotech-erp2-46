@@ -46,41 +46,34 @@ export const useProspects = () => {
 
   // CRUD operations and other actions
   const {
-    handleCreateProspect,
+    handleAddProspect,
     handleUpdateProspect,
     handleDeleteProspect,
+    handleAddReminder,
     handleConvertToClient,
-    handleScheduleReminder
   } = useProspectActions(
-    prospectCollection,
     prospects,
     setProspects,
-    formData,
-    reminderData,
-    selectedProspect,
-    setIsAddDialogOpen,
-    setIsEditDialogOpen,
-    setIsDeleteDialogOpen,
-    setIsConvertDialogOpen,
-    setIsReminderDialogOpen,
-    setSelectedProspect,
-    resetForm
+    setLoading
   );
 
   // Dialog management
   const {
+    openAddDialog,
     openEditDialog,
     openDeleteDialog,
+    openViewDetails,
     openConvertDialog,
-    viewProspectDetails,
-    openReminderDialog
+    openReminderDialog,
+    closeAllDialogs
   } = useProspectDialogs(
     setSelectedProspect,
     setFormData,
+    setIsAddDialogOpen,
     setIsEditDialogOpen,
     setIsDeleteDialogOpen,
-    setIsConvertDialogOpen,
     setIsViewDetailsOpen,
+    setIsConvertDialogOpen,
     setIsReminderDialogOpen
   );
 
@@ -89,6 +82,17 @@ export const useProspects = () => {
 
   // Filter prospects based on search term and status filter
   const filteredProspects = filterProspects(prospects, searchTerm, statusFilter);
+
+  // Wrap action handlers for components
+  const handleCreateProspect = (data) => {
+    handleAddProspect(data);
+    setIsAddDialogOpen(false);
+  };
+
+  const handleScheduleReminder = (prospectId, data) => {
+    handleAddReminder(prospectId, data);
+    setIsReminderDialogOpen(false);
+  };
 
   return {
     prospects,
@@ -123,10 +127,11 @@ export const useProspects = () => {
     handleDeleteProspect,
     handleConvertToClient,
     handleScheduleReminder,
+    openAddDialog,
     openEditDialog,
     openDeleteDialog,
+    openViewDetails,
     openConvertDialog,
-    viewProspectDetails,
     openReminderDialog,
     getStatusBadgeClass,
     getStatusText

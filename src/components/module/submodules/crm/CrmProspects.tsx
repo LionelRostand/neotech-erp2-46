@@ -43,8 +43,8 @@ const CrmProspects: React.FC = () => {
     handleScheduleReminder,
     openEditDialog,
     openDeleteDialog,
+    openViewDetails,
     openConvertDialog,
-    viewProspectDetails,
     openReminderDialog,
     getStatusBadgeClass,
     getStatusText
@@ -72,11 +72,11 @@ const CrmProspects: React.FC = () => {
         />
 
         <ProspectList 
-          loading={loading}
-          filteredProspects={filteredProspects}
+          isLoading={loading}
+          prospects={filteredProspects}
           getStatusBadgeClass={getStatusBadgeClass}
           getStatusText={getStatusText}
-          onViewDetails={viewProspectDetails}
+          onViewDetails={openViewDetails}
           onEdit={openEditDialog}
           onDelete={openDeleteDialog}
           onReminder={openReminderDialog}
@@ -111,9 +111,6 @@ const CrmProspects: React.FC = () => {
         handleConvertToClient={handleConvertToClient}
         handleScheduleReminder={handleScheduleReminder}
         setReminderData={setReminderData}
-        openEditDialog={openEditDialog}
-        openReminderDialog={openReminderDialog}
-        openConvertDialog={openConvertDialog}
       />
     </div>
   );

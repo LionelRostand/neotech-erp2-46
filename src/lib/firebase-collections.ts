@@ -38,8 +38,9 @@ export const COLLECTIONS = {
     OPPORTUNITIES: 'crm_opportunities',
     CONTACTS: 'crm_contacts',
     DEALS: 'crm_deals',
-    CLIENTS: 'crm_clients',         // Added missing CLIENTS field
-    PROSPECTS: 'crm_prospects'      // Added missing PROSPECTS field
+    CLIENTS: 'crm_clients',        
+    PROSPECTS: 'crm_prospects',
+    REMINDERS: 'crm_reminders'    // Added missing REMINDERS field
   },
   FREIGHT: {
     SHIPMENTS: 'freight_shipments',

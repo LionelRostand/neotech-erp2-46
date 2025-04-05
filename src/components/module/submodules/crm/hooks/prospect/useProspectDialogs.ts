@@ -2,77 +2,74 @@
 import { Prospect, ProspectFormData } from '../../types/crm-types';
 
 export const useProspectDialogs = (
-  setFormData: React.Dispatch<React.SetStateAction<ProspectFormData>>,
-  selectedProspect: Prospect | null,
   setSelectedProspect: React.Dispatch<React.SetStateAction<Prospect | null>>,
+  setFormData: React.Dispatch<React.SetStateAction<ProspectFormData>>,
   setIsAddDialogOpen: React.Dispatch<React.SetStateAction<boolean>>,
   setIsEditDialogOpen: React.Dispatch<React.SetStateAction<boolean>>,
   setIsDeleteDialogOpen: React.Dispatch<React.SetStateAction<boolean>>,
   setIsViewDetailsOpen: React.Dispatch<React.SetStateAction<boolean>>,
-  setIsConvertDialogOpen: React.Dispatch<React.SetStateAction<boolean>>
+  setIsConvertDialogOpen: React.Dispatch<React.SetStateAction<boolean>>,
+  setIsReminderDialogOpen: React.Dispatch<React.SetStateAction<boolean>>
 ) => {
+  // Open the add dialog
   const openAddDialog = () => {
-    setFormData({
-      company: '',
-      contactName: '',
-      contactEmail: '',
-      contactPhone: '',
-      name: '',
-      email: '',
-      phone: '',
-      source: 'Site web',
-      status: 'new',
-      lastContact: new Date().toISOString().split('T')[0],
-      notes: ''
-    });
     setSelectedProspect(null);
     setIsAddDialogOpen(true);
   };
 
+  // Open the edit dialog for a prospect
   const openEditDialog = (prospect: Prospect) => {
+    setSelectedProspect(prospect);
     setFormData({
       company: prospect.company,
       contactName: prospect.contactName,
       contactEmail: prospect.contactEmail,
-      contactPhone: prospect.contactPhone || '',
-      name: prospect.name || prospect.contactName,
-      email: prospect.email || prospect.contactEmail,
-      phone: prospect.phone || prospect.contactPhone || '',
-      source: prospect.source,
-      status: prospect.status,
-      lastContact: prospect.lastContact || new Date().toISOString().split('T')[0],
+      contactPhone: prospect.contactPhone,
+      source: prospect.source || 'Site web',
+      status: prospect.status || 'new',
       notes: prospect.notes || '',
-      industry: prospect.industry,
-      website: prospect.website,
-      address: prospect.address,
-      size: prospect.size,
-      estimatedValue: prospect.estimatedValue
+      industry: prospect.industry || '',
+      website: prospect.website || '',
+      address: prospect.address || '',
+      size: prospect.size || '',
+      estimatedValue: prospect.estimatedValue || ''
     });
-    setSelectedProspect(prospect);
     setIsEditDialogOpen(true);
   };
 
+  // Open the delete dialog for a prospect
   const openDeleteDialog = (prospect: Prospect) => {
     setSelectedProspect(prospect);
     setIsDeleteDialogOpen(true);
   };
 
+  // View details of a prospect
   const openViewDetails = (prospect: Prospect) => {
     setSelectedProspect(prospect);
     setIsViewDetailsOpen(true);
   };
 
+  // Open the convert to client dialog
   const openConvertDialog = (prospect: Prospect) => {
     setSelectedProspect(prospect);
     setIsConvertDialogOpen(true);
   };
 
+  // Open the reminder dialog
+  const openReminderDialog = (prospect: Prospect) => {
+    setSelectedProspect(prospect);
+    setIsReminderDialogOpen(true);
+  };
+
+  // Close all dialogs
   const closeAllDialogs = () => {
     setIsAddDialogOpen(false);
     setIsEditDialogOpen(false);
     setIsDeleteDialogOpen(false);
     setIsViewDetailsOpen(false);
     setIsConvertDialogOpen(false);
+    setIsReminderDialogOpen(false);
+    setSelectedProspect(null);
   };
 
   return {
@@ -81,6 +78,7 @@ export const useProspectDialogs = (
     openDeleteDialog,
     openViewDetails,
     openConvertDialog,
+    openReminderDialog,
     closeAllDialogs
   };
 };

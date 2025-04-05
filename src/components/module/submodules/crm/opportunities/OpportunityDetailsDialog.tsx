@@ -1,213 +1,126 @@
 
 import React from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Calendar, Phone, Mail, Building, User, Clock, DollarSign, FileText, Target, Tag } from "lucide-react";
+import { formatCurrency } from "@/lib/utils";
+import { Edit } from "lucide-react";
 import { Opportunity } from '../types/crm-types';
-import { useOpportunityUtils } from '../hooks/opportunity/useOpportunityUtils';
-import { formatCurrency } from '@/lib/utils';
 
-interface OpportunityDetailsDialogProps {
-  opportunity: Opportunity;
+export interface OpportunityDetailsDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onEdit?: () => void;
-  onDelete?: () => void;
+  opportunity: Opportunity | null;
+  onEdit: () => void;
 }
 
 const OpportunityDetailsDialog: React.FC<OpportunityDetailsDialogProps> = ({
-  opportunity,
   open,
   onOpenChange,
-  onEdit,
-  onDelete
+  opportunity,
+  onEdit
 }) => {
-  const { getStageBadgeColor, getStageLabel } = useOpportunityUtils();
-
-  // Format date function
-  const formatDate = (dateString?: string) => {
-    if (!dateString) return 'Non défini';
-    const date = new Date(dateString);
-    return date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
-  };
-
-  // Format probability function
-  const formatProbability = (probability?: number) => {
-    if (probability === undefined || probability === null) return 'Non défini';
-    return `${probability}%`;
-  };
+  if (!opportunity) return null;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[700px]">
+      <DialogContent className="max-w-3xl">
         <DialogHeader>
-          <div className="flex items-start justify-between">
-            <DialogTitle className="text-xl">
-              {opportunity.name || opportunity.title}
-            </DialogTitle>
-            <Badge className={getStageBadgeColor(opportunity.stage)}>
-              {getStageLabel(opportunity.stage)}
-            </Badge>
-          </div>
+          <DialogTitle className="text-xl flex justify-between items-center">
+            <span>Détails de l'opportunité</span>
+            <Button variant="outline" size="sm" onClick={onEdit}>
+              <Edit className="mr-2 h-4 w-4" />
+              Modifier
+            </Button>
+          </DialogTitle>
         </DialogHeader>
 
-        <Tabs defaultValue="details" className="w-full">
-          <TabsList className="mb-4">
-            <TabsTrigger value="details">Détails</TabsTrigger>
-            <TabsTrigger value="contacts">Contacts</TabsTrigger>
-            <TabsTrigger value="products">Produits</TabsTrigger>
-            <TabsTrigger value="notes">Notes</TabsTrigger>
-          </TabsList>
+        <div className="grid md:grid-cols-2 gap-6 mt-4">
+          <div>
+            <h3 className="text-lg font-semibold mb-4">{opportunity.title || opportunity.company}</h3>
 
-          <TabsContent value="details" className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="flex items-center gap-2">
-                <DollarSign className="h-4 w-4 text-gray-500" />
-                <span className="text-sm font-medium">Montant:</span>
-                <span className="text-sm">{formatCurrency(opportunity.value || opportunity.amount || 0)}</span>
+            <div className="space-y-3">
+              <div>
+                <span className="text-sm text-muted-foreground">Client</span>
+                <p className="font-medium">{opportunity.clientName || opportunity.company}</p>
               </div>
-              
-              <div className="flex items-center gap-2">
-                <Target className="h-4 w-4 text-gray-500" />
-                <span className="text-sm font-medium">Probabilité:</span>
-                <span className="text-sm">{formatProbability(opportunity.probability)}</span>
+
+              <div>
+                <span className="text-sm text-muted-foreground">Montant</span>
+                <p className="font-medium text-lg">
+                  {formatCurrency(opportunity.amount || 0)}
+                </p>
               </div>
-              
-              <div className="flex items-center gap-2">
-                <Calendar className="h-4 w-4 text-gray-500" />
-                <span className="text-sm font-medium">Date de début:</span>
-                <span className="text-sm">{formatDate(opportunity.startDate)}</span>
+
+              <div>
+                <span className="text-sm text-muted-foreground">Probabilité</span>
+                <p className="font-medium">{opportunity.probability || 0}%</p>
               </div>
-              
-              <div className="flex items-center gap-2">
-                <Clock className="h-4 w-4 text-gray-500" />
-                <span className="text-sm font-medium">Date de clôture prévue:</span>
-                <span className="text-sm">{formatDate(opportunity.closeDate || opportunity.expectedCloseDate)}</span>
+
+              <div>
+                <span className="text-sm text-muted-foreground">Étape</span>
+                <div className="mt-1">
+                  <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-100">
+                    {opportunity.stage || 'Nouvelle'}
+                  </Badge>
+                </div>
               </div>
-              
-              <div className="flex items-center gap-2">
-                <Tag className="h-4 w-4 text-gray-500" />
-                <span className="text-sm font-medium">Source:</span>
-                <span className="text-sm">{opportunity.source || 'Non définie'}</span>
+
+              <div>
+                <span className="text-sm text-muted-foreground">Date de clôture prévue</span>
+                <p className="font-medium">
+                  {opportunity.expectedCloseDate ? new Date(opportunity.expectedCloseDate).toLocaleDateString('fr-FR') : 'Non définie'}
+                </p>
               </div>
-              
-              <div className="flex items-center gap-2">
-                <User className="h-4 w-4 text-gray-500" />
-                <span className="text-sm font-medium">Assigné à:</span>
-                <span className="text-sm">{opportunity.assignedTo || 'Non assigné'}</span>
+
+              <div>
+                <span className="text-sm text-muted-foreground">Responsable</span>
+                <p className="font-medium">{opportunity.assignedTo || 'Non assigné'}</p>
               </div>
             </div>
-            
-            {opportunity.description && (
-              <div className="mt-4">
-                <FileText className="h-4 w-4 text-gray-500 inline mr-2" />
-                <span className="text-sm font-medium">Description:</span>
-                <p className="text-sm mt-1 p-2 bg-gray-50 rounded-md">{opportunity.description}</p>
-              </div>
-            )}
-          </TabsContent>
+          </div>
 
-          <TabsContent value="contacts" className="space-y-4">
-            <div className="border rounded-md p-4">
-              <h3 className="text-base font-medium mb-2">{opportunity.clientName || 'Client'}</h3>
-              
-              {opportunity.contactName && (
-                <div className="flex items-center gap-2 mt-2">
-                  <User className="h-4 w-4 text-gray-500" />
-                  <span className="text-sm">{opportunity.contactName}</span>
-                </div>
-              )}
-              
-              {opportunity.contactEmail && (
-                <div className="flex items-center gap-2 mt-2">
-                  <Mail className="h-4 w-4 text-gray-500" />
-                  <span className="text-sm">{opportunity.contactEmail}</span>
-                </div>
-              )}
-              
-              {opportunity.contactPhone && (
-                <div className="flex items-center gap-2 mt-2">
-                  <Phone className="h-4 w-4 text-gray-500" />
-                  <span className="text-sm">{opportunity.contactPhone}</span>
-                </div>
-              )}
-            </div>
-          </TabsContent>
+          <div>
+            <h3 className="text-lg font-semibold mb-4">Produits / Services</h3>
 
-          <TabsContent value="products" className="space-y-4">
-            {opportunity.products && opportunity.products.length > 0 ? (
-              <div className="border rounded-md overflow-hidden">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Produit</th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantité</th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Prix unitaire</th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
+            <div className="border rounded-md overflow-hidden">
+              <table className="min-w-full">
+                <thead className="bg-muted/50">
+                  <tr>
+                    <th className="py-2 px-3 text-left text-sm font-medium text-muted-foreground">Produit</th>
+                    <th className="py-2 px-3 text-right text-sm font-medium text-muted-foreground">Qté</th>
+                    <th className="py-2 px-3 text-right text-sm font-medium text-muted-foreground">Prix</th>
+                    <th className="py-2 px-3 text-right text-sm font-medium text-muted-foreground">Total</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y">
+                  {(opportunity.products || []).map((product: any) => (
+                    <tr key={product.id}>
+                      <td className="py-2 px-3 text-sm">{product.name}</td>
+                      <td className="py-2 px-3 text-sm text-right">{product.quantity}</td>
+                      <td className="py-2 px-3 text-sm text-right">{formatCurrency(product.unitPrice)}</td>
+                      <td className="py-2 px-3 text-sm text-right">{formatCurrency(product.totalPrice)}</td>
                     </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {opportunity.products.map((product, index) => {
-                      if (typeof product === 'string') {
-                        return (
-                          <tr key={index}>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm" colSpan={4}>{product}</td>
-                          </tr>
-                        );
-                      } else {
-                        return (
-                          <tr key={product.id || index}>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm">{product.name}</td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm">{product.quantity}</td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm">{formatCurrency(product.unitPrice)}</td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm">{formatCurrency(product.totalPrice)}</td>
-                          </tr>
-                        );
-                      }
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            ) : (
-              <div className="text-center py-6 text-gray-500">
-                Aucun produit associé à cette opportunité
-              </div>
-            )}
-          </TabsContent>
+                  ))}
+                  {(opportunity.products || []).length === 0 && (
+                    <tr>
+                      <td colSpan={4} className="py-3 px-3 text-center text-sm text-muted-foreground">
+                        Aucun produit ou service associé
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
 
-          <TabsContent value="notes" className="space-y-4">
-            {opportunity.notes ? (
-              <div className="p-4 bg-gray-50 rounded-md">
-                <p className="text-sm whitespace-pre-line">{opportunity.notes}</p>
-              </div>
-            ) : (
-              <div className="text-center py-6 text-gray-500">
-                Aucune note pour cette opportunité
-              </div>
-            )}
-          </TabsContent>
-        </Tabs>
-
-        <DialogFooter className="flex justify-between items-center mt-6">
-          <div>
-            {onDelete && (
-              <Button variant="destructive" onClick={onDelete} className="mr-2">
-                Supprimer
-              </Button>
-            )}
+            <div className="mt-4">
+              <h4 className="font-medium mb-2">Notes</h4>
+              <p className="text-sm text-muted-foreground whitespace-pre-line">
+                {opportunity.notes || 'Aucune note'}
+              </p>
+            </div>
           </div>
-          
-          <div>
-            {onEdit && (
-              <Button variant="outline" onClick={onEdit} className="mr-2">
-                Modifier
-              </Button>
-            )}
-            <Button onClick={() => onOpenChange(false)}>Fermer</Button>
-          </div>
-        </DialogFooter>
+        </div>
       </DialogContent>
     </Dialog>
   );

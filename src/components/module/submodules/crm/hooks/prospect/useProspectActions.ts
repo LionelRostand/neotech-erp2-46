@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { Prospect, ProspectFormData, ReminderData } from '../../types/crm-types';
 import { toast } from 'sonner';
-import { useFirestore } from '@/hooks/useFirestore';
+import { useFirestore } from '@/hooks/firestore/firestore-utils';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import { useNavigate } from 'react-router-dom';
 
@@ -26,14 +26,9 @@ export const useProspectActions = (
         contactName: formData.contactName,
         contactEmail: formData.contactEmail,
         contactPhone: formData.contactPhone,
-        // Backward compatibility fields
-        name: formData.name || formData.contactName,
-        email: formData.email || formData.contactEmail,
-        phone: formData.phone || formData.contactPhone,
         source: formData.source,
         industry: formData.industry,
         status: formData.status,
-        lastContact: formData.lastContact || new Date().toISOString().split('T')[0],
         notes: formData.notes,
         website: formData.website,
         address: formData.address,
@@ -42,7 +37,8 @@ export const useProspectActions = (
         createdAt: new Date().toISOString(),
       };
       
-      const id = await addDocument(COLLECTIONS.CRM.PROSPECTS, newProspect);
+      const result = await addDocument(COLLECTIONS.CRM.PROSPECTS, newProspect);
+      const id = typeof result === 'object' ? result.id : result;
       
       const newProspectWithId = { id, ...newProspect } as Prospect;
       setProspects(prev => [newProspectWithId, ...prev]);
@@ -69,13 +65,8 @@ export const useProspectActions = (
         contactName: formData.contactName,
         contactEmail: formData.contactEmail,
         contactPhone: formData.contactPhone,
-        // Backward compatibility fields
-        name: formData.name || formData.contactName,
-        email: formData.email || formData.contactEmail,
-        phone: formData.phone || formData.contactPhone,
         source: formData.source,
         status: formData.status,
-        lastContact: formData.lastContact || new Date().toISOString().split('T')[0],
         notes: formData.notes,
         industry: formData.industry,
         website: formData.website,
@@ -134,12 +125,13 @@ export const useProspectActions = (
         title: reminderData.title,
         date: reminderData.date,
         completed: false,
-        notes: reminderData.notes || reminderData.note || '', // For backward compatibility
+        notes: reminderData.notes || '',
         prospectId,
         createdAt: new Date().toISOString(),
       };
       
-      const reminderId = await addDocument(COLLECTIONS.CRM.REMINDERS, newReminder);
+      // Update COLLECTIONS to include REMINDERS
+      const reminderId = await addDocument(`${COLLECTIONS.CRM.PROSPECTS}/${prospectId}/reminders`, newReminder);
       toast.success("Rappel ajouté avec succès");
       return reminderId;
     } catch (error) {
@@ -176,7 +168,8 @@ export const useProspectActions = (
       };
       
       // Add the client to Firestore
-      const clientId = await addDocument(COLLECTIONS.CRM.CLIENTS, newClient);
+      const result = await addDocument(COLLECTIONS.CRM.CLIENTS, newClient);
+      const clientId = typeof result === 'object' ? result.id : result;
       
       // Update the prospect status or mark as converted
       await updateDocument(COLLECTIONS.CRM.PROSPECTS, prospect.id, {
