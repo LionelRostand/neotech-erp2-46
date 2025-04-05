@@ -4,20 +4,21 @@ import { doc, collection, getDoc, setDoc, getDocs, query, serverTimestamp } from
 import { db } from '@/lib/firebase';
 import { orderBy, limit, where } from 'firebase/firestore';
 import { useCallback } from 'react';
+import { COLLECTIONS } from '@/lib/firebase-collections';
 
 /**
  * Hook to fetch data for the CRM module
  */
 export const useCrmData = () => {
-  // Créer les références aux collections appropriées
-  const clientsCollection = 'crm/clients';
-  const prospectsCollection = 'crm/prospects';
-  const opportunitiesCollection = 'crm/opportunities';
-  const contactsCollection = 'crm/contacts';
-  const leadsCollection = 'crm/leads';
-  const dealsCollection = 'crm/deals';
-  const settingsCollection = 'crm/settings';
-  const remindersCollection = 'crm/reminders';
+  // Use the collection constants
+  const clientsCollection = COLLECTIONS.CRM.CLIENTS;
+  const prospectsCollection = COLLECTIONS.CRM.PROSPECTS;
+  const opportunitiesCollection = COLLECTIONS.CRM.OPPORTUNITIES;
+  const contactsCollection = COLLECTIONS.CRM.CONTACTS;
+  const leadsCollection = COLLECTIONS.CRM.LEADS;
+  const dealsCollection = COLLECTIONS.CRM.DEALS;
+  const settingsCollection = COLLECTIONS.CRM.SETTINGS;
+  const remindersCollection = COLLECTIONS.CRM.REMINDERS;
 
   // Fetch clients
   const clientsResult = useCollectionData(

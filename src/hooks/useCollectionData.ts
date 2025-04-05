@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { collection, query, onSnapshot, QueryConstraint, DocumentData, QuerySnapshot, collectionGroup } from 'firebase/firestore';
+import { collection, query, onSnapshot, QueryConstraint, DocumentData, QuerySnapshot } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 
 /**
@@ -23,32 +23,13 @@ export const useCollectionData = (
       try {
         console.log(`Fetching data from collection: ${collectionPath}`);
         
-        // Check if the collection path contains a slash to determine if we should use collectionGroup
-        const useCollectionGroup = collectionPath.includes('/');
+        // Create a reference to the collection
+        const collectionRef = collection(db, collectionPath);
         
-        let q;
+        // Create a query with the provided constraints
+        const q = query(collectionRef, ...queryConstraints);
         
-        if (useCollectionGroup) {
-          // Parse the path and create a document reference
-          const pathSegments = collectionPath.split('/');
-          if (pathSegments.length === 2) {
-            // This is a subcollection path like 'crm/clients'
-            // We need to create a collection reference
-            const parentCollection = collection(db, pathSegments[0]);
-            const subCollection = collection(parentCollection, pathSegments[1]);
-            q = query(subCollection, ...queryConstraints);
-          } else {
-            // Invalid path or more complex path structure, fallback to direct collection
-            console.warn(`Complex path detected: ${collectionPath}, using direct collection reference.`);
-            const collectionRef = collection(db, collectionPath);
-            q = query(collectionRef, ...queryConstraints);
-          }
-        } else {
-          // Simple collection path
-          const collectionRef = collection(db, collectionPath);
-          q = query(collectionRef, ...queryConstraints);
-        }
-        
+        // Set up a real-time listener
         const unsubscribe = onSnapshot(
           q,
           (snapshot: QuerySnapshot<DocumentData>) => {
