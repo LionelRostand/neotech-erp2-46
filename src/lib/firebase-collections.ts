@@ -33,6 +33,66 @@ export const COLLECTIONS = {
     PACKAGES: 'freight/packages',
     ROUTES: 'freight/routes',
     TRACKING_EVENTS: 'freight/tracking_events',
-    PACKAGE_TYPES: 'freight/package_types'
-  }
+    PACKAGE_TYPES: 'freight/package_types',
+    TRACKING: 'freight/tracking'
+  },
+  // HR Collections
+  HR: {
+    BADGES: 'hr/badges',
+    EVALUATIONS: 'hr/evaluations',
+    DOCUMENTS: 'hr/documents',
+    CONTRACTS: 'hr/contracts',
+    RECRUITMENT: 'hr/recruitment',
+    DEPARTMENTS: 'hr/departments',
+    EMPLOYEES: 'hr/employees',
+    TRAININGS: 'hr/trainings',
+    LEAVES: 'hr/leaves',
+    ABSENCES: 'hr/absences',
+    TIMESHEETS: 'hr/timesheets',
+    SALARIES: 'hr/salaries'
+  },
+  // Messages Collections
+  MESSAGES: {
+    INBOX: 'messages/inbox',
+    SENT: 'messages/sent',
+    DRAFTS: 'messages/drafts',
+    ARCHIVED: 'messages/archived',
+    SCHEDULED: 'messages/scheduled',
+    CONTACTS: 'messages/contacts'
+  },
+  // Projects Collections
+  PROJECTS: {
+    PROJECTS: 'projects/projects',
+    TASKS: 'projects/tasks',
+    TEAMS: 'projects/teams',
+    COMMENTS: 'projects/comments',
+    NOTIFICATIONS: 'projects/notifications'
+  },
+  // Health Collections
+  HEALTH: {
+    PATIENTS: 'health/patients',
+    DOCTORS: 'health/doctors',
+    APPOINTMENTS: 'health/appointments',
+    CONSULTATIONS: 'health/consultations',
+    INSURANCE: 'health/insurance',
+    BILLING: 'health/billing',
+    STAFF: 'health/staff'
+  },
+  // Library Collections
+  LIBRARY: {
+    BOOKS: 'library/books',
+    MEMBERS: 'library/members',
+    LOANS: 'library/loans',
+    CATEGORIES: 'library/categories',
+    ACCESS_POINTS: 'library/access_points'
+  },
+  // Transport Collections
+  TRANSPORT: {
+    VEHICLES: 'transport/vehicles',
+    DRIVERS: 'transport/drivers',
+    RESERVATIONS: 'transport/reservations',
+    MAINTENANCE: 'transport/maintenance'
+  },
+  // User permissions
+  USER_PERMISSIONS: 'user_permissions'
 };
