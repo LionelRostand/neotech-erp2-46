@@ -5,11 +5,8 @@ import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
-  DialogDescription
 } from '@/components/ui/dialog';
 import {
   AlertDialog,
@@ -22,61 +19,27 @@ import {
   AlertDialogTitle
 } from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger
-} from '@/components/ui/dropdown-menu';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow
-} from '@/components/ui/table';
-import { MoreHorizontal, Plus, Search, RefreshCw } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
-import { Skeleton } from '@/components/ui/skeleton';
+import { Search, RefreshCw, Plus, Building } from 'lucide-react';
 import { toast } from 'sonner';
+import CompaniesTable from '../companies/CompaniesTable';
+import { Company } from '../companies/types';
 import CompanyForm from '../CompanyForm';
 import { useAuth } from '@/hooks/useAuth';
-
-// Define Company type
-export interface Company {
-  id: string;
-  name: string;
-  address: string;
-  city: string;
-  postalCode: string;
-  country: string;
-  phone: string;
-  email: string;
-  website: string;
-  contactPerson: string;
-  sector: string;
-  size: string;
-  status: 'active' | 'inactive';
-  description: string;
-  createdAt: string;
-}
+import { useCompaniesData } from '@/hooks/useCompaniesData';
 
 const EmployeesCompanies: React.FC = () => {
-  const [companies, setCompanies] = useState<Company[]>([]);
-  const [filteredCompanies, setFilteredCompanies] = useState<Company[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [filteredCompanies, setFilteredCompanies] = useState<Company[]>([]);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [currentCompany, setCurrentCompany] = useState<Company | null>(null);
-  const [loading, setLoading] = useState(true);
   const { isOffline } = useAuth();
+  
+  // Utiliser le hook useCompaniesData pour récupérer les données des entreprises
+  const { companies, isLoading, error } = useCompaniesData();
 
-  useEffect(() => {
-    fetchCompanies();
-  }, []);
-
+  // Filtrer les entreprises en fonction de la recherche
   useEffect(() => {
     if (searchQuery.trim() === '') {
       setFilteredCompanies(companies);
@@ -84,118 +47,73 @@ const EmployeesCompanies: React.FC = () => {
       const query = searchQuery.toLowerCase();
       const filtered = companies.filter(company =>
         company.name.toLowerCase().includes(query) ||
-        company.sector.toLowerCase().includes(query) ||
-        company.contactPerson.toLowerCase().includes(query) ||
-        company.city.toLowerCase().includes(query)
+        company.industry?.toLowerCase().includes(query) ||
+        company.address?.city?.toLowerCase().includes(query)
       );
       setFilteredCompanies(filtered);
     }
   }, [searchQuery, companies]);
 
-  const fetchCompanies = async () => {
-    setLoading(true);
-    try {
-      // Mock data for now
-      const mockCompanies: Company[] = [
-        {
-          id: '1',
-          name: 'TechInnovation',
-          address: '123 Tech Avenue',
-          city: 'Paris',
-          postalCode: '75001',
-          country: 'France',
-          phone: '+33 1 23 45 67 89',
-          email: 'contact@techinnovation.fr',
-          website: 'www.techinnovation.fr',
-          contactPerson: 'Jean Dupont',
-          sector: 'IT',
-          size: 'medium',
-          status: 'active',
-          description: 'Société spécialisée en développement de logiciels',
-          createdAt: '2023-01-15T10:30:00Z'
-        },
-        {
-          id: '2',
-          name: 'GreenCo',
-          address: '45 Rue Verte',
-          city: 'Lyon',
-          postalCode: '69002',
-          country: 'France',
-          phone: '+33 4 56 78 90 12',
-          email: 'info@greenco.fr',
-          website: 'www.greenco.fr',
-          contactPerson: 'Marie Laurent',
-          sector: 'Environnement',
-          size: 'small',
-          status: 'active',
-          description: 'Solutions écologiques pour entreprises',
-          createdAt: '2023-03-22T14:15:00Z'
-        }
-      ];
-      
-      setCompanies(mockCompanies);
-      setFilteredCompanies(mockCompanies);
-      
-      // In a real application, you would fetch from your API
-      // const response = await fetch('/api/companies');
-      // const data = await response.json();
-      // setCompanies(data);
-      // setFilteredCompanies(data);
-    } catch (error) {
-      console.error('Erreur lors du chargement des entreprises:', error);
-      toast.error('Impossible de charger les entreprises');
-    } finally {
-      setLoading(false);
-    }
+  // Gérer l'affichage des détails d'une entreprise
+  const handleViewCompany = (company: Company) => {
+    console.log('Affichage des détails de l\'entreprise:', company);
+    // Implémentation future: navigation vers une vue détaillée
   };
 
-  const handleAddCompany = (companyData: Partial<Company>) => {
-    const newCompany = {
-      ...companyData,
-      id: `COMP${Date.now().toString().slice(-6)}`,
-      createdAt: new Date().toISOString()
-    } as Company;
-
-    setCompanies(prev => [newCompany, ...prev]);
-    toast.success('Entreprise ajoutée avec succès');
-    setIsAddDialogOpen(false);
+  // Gérer la modification d'une entreprise
+  const handleEditCompany = (company: Company) => {
+    setCurrentCompany(company);
+    setIsEditDialogOpen(true);
   };
 
-  const handleEditCompany = (companyId: string) => {
-    const company = companies.find(c => c.id === companyId);
-    if (company) {
-      setCurrentCompany(company);
-      setIsEditDialogOpen(true);
-    }
-  };
-
+  // Gérer la mise à jour d'une entreprise
   const handleUpdateCompany = (companyData: Partial<Company>) => {
     if (!currentCompany) return;
 
     const updatedCompany = {
       ...currentCompany,
-      ...companyData
+      ...companyData,
+      updatedAt: new Date().toISOString()
     };
 
-    setCompanies(prev => prev.map(c => c.id === currentCompany.id ? updatedCompany as Company : c));
+    // Mettre à jour l'entreprise dans la liste
+    const updatedCompanies = companies.map(c => 
+      c.id === currentCompany.id ? updatedCompany as Company : c
+    );
+    
+    // Mise à jour simulée (à remplacer par un appel API réel)
     toast.success('Entreprise mise à jour avec succès');
     setIsEditDialogOpen(false);
   };
 
-  const handleDeleteClick = (companyId: string) => {
-    const company = companies.find(c => c.id === companyId);
-    if (company) {
-      setCurrentCompany(company);
-      setIsDeleteDialogOpen(true);
-    }
+  // Gérer la suppression d'une entreprise
+  const handleDeleteClick = (company: Company) => {
+    setCurrentCompany(company);
+    setIsDeleteDialogOpen(true);
   };
 
+  // Confirmer la suppression d'une entreprise
   const handleDeleteConfirm = () => {
     if (!currentCompany) return;
 
-    setCompanies(prev => prev.filter(c => c.id !== currentCompany.id));
+    // Suppression simulée (à remplacer par un appel API réel)
     toast.success('Entreprise supprimée avec succès');
     setIsDeleteDialogOpen(false);
+  };
+
+  // Gérer l'ajout d'une nouvelle entreprise
+  const handleAddCompany = (companyData: Partial<Company>) => {
+    // Création simulée (à remplacer par un appel API réel)
+    const newCompany = {
+      ...companyData,
+      id: `COMP${Date.now().toString().slice(-6)}`,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      status: 'active' as const
+    } as Company;
+
+    toast.success('Entreprise ajoutée avec succès');
+    setIsAddDialogOpen(false);
   };
 
   return (
@@ -203,13 +121,9 @@ const EmployeesCompanies: React.FC = () => {
       <div className="flex justify-between items-center">
         <div>
           <h2 className="text-2xl font-bold">Entreprises</h2>
-          <p className="text-gray-500">Gérez les entreprises et leurs informations</p>
+          <p className="text-gray-500">Gérez les entreprises associées à vos employés</p>
         </div>
         <div className="flex space-x-2">
-          <Button variant="outline" onClick={fetchCompanies} className="flex items-center gap-2">
-            <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-            Actualiser
-          </Button>
           <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
             <DialogTrigger asChild>
               <Button className="flex items-center gap-2">
@@ -243,85 +157,42 @@ const EmployeesCompanies: React.FC = () => {
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
+            <Button 
+              variant="outline" 
+              onClick={() => setSearchQuery('')}
+              className="flex items-center gap-2"
+            >
+              <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+              Actualiser
+            </Button>
           </div>
 
-          {loading ? (
-            <div className="space-y-2">
-              {[1, 2, 3, 4].map(i => (
-                <div key={i} className="flex items-center space-x-4 py-4">
-                  <Skeleton className="h-12 w-12 rounded-full" />
-                  <div className="space-y-2">
-                    <Skeleton className="h-4 w-[250px]" />
-                    <Skeleton className="h-4 w-[200px]" />
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Nom</TableHead>
-                    <TableHead>Secteur</TableHead>
-                    <TableHead>Contact</TableHead>
-                    <TableHead>Ville</TableHead>
-                    <TableHead>Statut</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredCompanies.length > 0 ? (
-                    filteredCompanies.map((company) => (
-                      <TableRow key={company.id}>
-                        <TableCell className="font-medium">{company.name}</TableCell>
-                        <TableCell>{company.sector}</TableCell>
-                        <TableCell>{company.contactPerson}</TableCell>
-                        <TableCell>{company.city}</TableCell>
-                        <TableCell>
-                          <Badge variant={company.status === 'active' ? 'default' : 'secondary'}>
-                            {company.status === 'active' ? 'Actif' : 'Inactif'}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" className="h-8 w-8 p-0">
-                                <MoreHorizontal className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem
-                                onClick={() => handleEditCompany(company.id)}
-                              >
-                                Modifier
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                onClick={() => handleDeleteClick(company.id)}
-                                className="text-red-600"
-                              >
-                                Supprimer
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  ) : (
-                    <TableRow>
-                      <TableCell colSpan={6} className="text-center py-6 text-gray-500">
-                        Aucune entreprise trouvée
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-800 rounded-md p-4">
+              Une erreur est survenue lors du chargement des entreprises
             </div>
           )}
+
+          {isOffline && (
+            <div className="bg-amber-50 border border-amber-200 rounded-md p-3">
+              <p className="text-amber-800 text-sm flex items-center">
+                <Building className="h-4 w-4 mr-2" />
+                Mode hors-ligne actif. Les données affichées peuvent ne pas être à jour.
+              </p>
+            </div>
+          )}
+
+          <CompaniesTable 
+            companies={filteredCompanies} 
+            isLoading={isLoading} 
+            onView={handleViewCompany}
+            onEdit={handleEditCompany}
+            onDelete={handleDeleteClick}
+          />
         </CardContent>
       </Card>
 
-      {/* Edit Company Dialog */}
+      {/* Boîte de dialogue pour modifier une entreprise */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
@@ -339,7 +210,7 @@ const EmployeesCompanies: React.FC = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Delete Confirmation Dialog */}
+      {/* Boîte de dialogue pour confirmer la suppression */}
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
