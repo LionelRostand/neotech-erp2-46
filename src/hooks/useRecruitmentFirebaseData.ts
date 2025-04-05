@@ -20,10 +20,41 @@ export const useRecruitmentFirebaseData = () => {
       const unsubscribe = onSnapshot(
         q,
         (snapshot) => {
-          const posts = snapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data()
-          })) as RecruitmentPost[];
+          const posts = snapshot.docs.map(doc => {
+            const data = doc.data();
+            // Format dates if they exist in timestamp format
+            const formattedData: any = { ...data };
+            if (data.openDate instanceof Date) {
+              formattedData.openDate = data.openDate.toLocaleDateString('fr-FR');
+            } else if (data.openDate && typeof data.openDate === 'string') {
+              try {
+                const date = new Date(data.openDate);
+                formattedData.openDate = isNaN(date.getTime()) 
+                  ? data.openDate 
+                  : date.toLocaleDateString('fr-FR');
+              } catch (e) {
+                formattedData.openDate = data.openDate;
+              }
+            }
+            
+            if (data.applicationDeadline instanceof Date) {
+              formattedData.applicationDeadline = data.applicationDeadline.toLocaleDateString('fr-FR');
+            } else if (data.applicationDeadline && typeof data.applicationDeadline === 'string') {
+              try {
+                const date = new Date(data.applicationDeadline);
+                formattedData.applicationDeadline = isNaN(date.getTime()) 
+                  ? data.applicationDeadline 
+                  : date.toLocaleDateString('fr-FR');
+              } catch (e) {
+                formattedData.applicationDeadline = data.applicationDeadline;
+              }
+            }
+            
+            return {
+              id: doc.id,
+              ...formattedData
+            };
+          }) as RecruitmentPost[];
           
           console.log(`Retrieved ${posts.length} recruitment posts from Firebase`);
           setRecruitmentPosts(posts);

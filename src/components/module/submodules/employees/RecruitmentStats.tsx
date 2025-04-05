@@ -122,7 +122,7 @@ const RecruitmentStats: React.FC<RecruitmentStatsProps> = ({
             {isLoading ? (
               <div className="h-8 w-16 bg-gray-200 animate-pulse rounded mt-1"></div>
             ) : (
-              <p className="text-2xl font-bold">124</p>
+              <p className="text-2xl font-bold">{applicationsThisMonth + (closedPositions * 12)}</p>
             )}
           </div>
         </CardContent>
