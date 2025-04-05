@@ -41,7 +41,7 @@ const EmployeesRecruitment = () => {
     return total;
   }, 0);
   
-  // Entretiens programmés (simulé)
+  // Entretiens programmés - compte le nombre d'entretiens programmés ou utilise 0 si undefined
   const interviewsScheduled = recruitmentPosts.reduce((total, post) => {
     return total + (post.interviewsScheduled || 0);
   }, 0);

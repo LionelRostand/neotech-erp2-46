@@ -17,6 +17,7 @@ export interface RecruitmentPost {
   description: string;
   requirements: string;
   applicationCount: number;
+  interviewsScheduled?: number; // Added this property
 }
 
 const MOCK_RECRUITMENT_POSTS: RecruitmentPost[] = [
