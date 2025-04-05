@@ -15,6 +15,10 @@ export interface HrDocument {
   employeePhoto?: string;
   department?: string;
   description?: string;
+  filename?: string; // Added to support alternative title
+  name?: string;     // Added to support alternative title
+  createdAt?: string; // Added to support alternative date
+  date?: string;      // Added to support alternative date
 }
 
 /**
@@ -44,9 +48,9 @@ export const useDocumentsData = () => {
       
       return {
         id: document.id,
-        title: document.title || 'Document sans titre',
+        title: document.title || document.filename || document.name || 'Document sans titre',
         type: document.type || 'Autre',
-        uploadDate: formatDate(document.uploadDate || document.date),
+        uploadDate: formatDate(document.uploadDate || document.createdAt || document.date),
         fileSize: document.fileSize,
         fileType: document.fileType,
         url: document.url,
@@ -55,6 +59,10 @@ export const useDocumentsData = () => {
         employeePhoto,
         department,
         description: document.description,
+        filename: document.filename,
+        name: document.name,
+        createdAt: document.createdAt,
+        date: document.date
       } as HrDocument;
     });
   }, [hrDocuments, employees]);
