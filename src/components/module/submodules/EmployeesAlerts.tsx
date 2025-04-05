@@ -10,8 +10,8 @@ import {
   Plus, 
   Filter, 
   Download,
-  FileSpreadsheet,  // Using FileSpreadsheet instead of FileExcel
-  FileText          // Using FileText instead of FilePdf
+  FileSpreadsheet,
+  FileText
 } from 'lucide-react';
 import CreateAlertDialog from './alerts/CreateAlertDialog';
 import AlertsList from './alerts/AlertsList';

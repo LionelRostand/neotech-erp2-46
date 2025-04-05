@@ -16,6 +16,7 @@ import {
 } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { exportToExcel } from '@/utils/exportUtils';
+import { exportToPdf } from '@/utils/pdfUtils';
 import { FileSpreadsheet, FileText } from 'lucide-react';
 import { Alert } from '@/hooks/useAlertsData';
 
@@ -44,11 +45,12 @@ const ExportAlertsDialog: React.FC<ExportAlertsDialogProps> = ({
         toast.success("Export Excel généré avec succès");
       }
     } else if (exportFormat === 'pdf') {
-      // Implement PDF export functionality here
-      // This would normally use jsPDF or another PDF library
-      console.log('PDF export requested', data);
-      toast.error("Export PDF non disponible pour le moment");
-      success = false;
+      success = exportToPdf(data, 'Alertes', 'alertes_export');
+      if (success) {
+        toast.success("Export PDF généré avec succès");
+      } else {
+        toast.error("Une erreur est survenue lors de l'export PDF");
+      }
     }
     
     if (!success) {

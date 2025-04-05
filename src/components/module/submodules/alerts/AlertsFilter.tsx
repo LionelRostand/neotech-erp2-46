@@ -44,14 +44,14 @@ const AlertsFilter: React.FC<AlertsFilterProps> = ({ filterCriteria, setFilterCr
         <div className="space-y-1">
           <Label htmlFor="filter-type">Type d'alerte</Label>
           <Select
-            value={filterCriteria.type || ""}
-            onValueChange={(value) => setFilterCriteria({...filterCriteria, type: value || null})}
+            value={filterCriteria.type || "all"}
+            onValueChange={(value) => setFilterCriteria({...filterCriteria, type: value === "all" ? null : value})}
           >
             <SelectTrigger id="filter-type">
               <SelectValue placeholder="Tous les types" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Tous les types</SelectItem>
+              <SelectItem value="all">Tous les types</SelectItem>
               {alertTypes.map(type => (
                 <SelectItem key={type} value={type}>{type}</SelectItem>
               ))}
@@ -62,14 +62,14 @@ const AlertsFilter: React.FC<AlertsFilterProps> = ({ filterCriteria, setFilterCr
         <div className="space-y-1">
           <Label htmlFor="filter-severity">Priorité</Label>
           <Select
-            value={filterCriteria.severity || ""}
-            onValueChange={(value) => setFilterCriteria({...filterCriteria, severity: value || null})}
+            value={filterCriteria.severity || "all"}
+            onValueChange={(value) => setFilterCriteria({...filterCriteria, severity: value === "all" ? null : value})}
           >
             <SelectTrigger id="filter-severity">
               <SelectValue placeholder="Toutes les priorités" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Toutes les priorités</SelectItem>
+              <SelectItem value="all">Toutes les priorités</SelectItem>
               {severityLevels.map(level => (
                 <SelectItem key={level} value={level}>{level}</SelectItem>
               ))}
@@ -80,14 +80,14 @@ const AlertsFilter: React.FC<AlertsFilterProps> = ({ filterCriteria, setFilterCr
         <div className="space-y-1">
           <Label htmlFor="filter-status">Statut</Label>
           <Select
-            value={filterCriteria.status || ""}
-            onValueChange={(value) => setFilterCriteria({...filterCriteria, status: value || null})}
+            value={filterCriteria.status || "all"}
+            onValueChange={(value) => setFilterCriteria({...filterCriteria, status: value === "all" ? null : value})}
           >
             <SelectTrigger id="filter-status">
               <SelectValue placeholder="Tous les statuts" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Tous les statuts</SelectItem>
+              <SelectItem value="all">Tous les statuts</SelectItem>
               {statusOptions.map(status => (
                 <SelectItem key={status} value={status}>{status}</SelectItem>
               ))}
@@ -98,14 +98,14 @@ const AlertsFilter: React.FC<AlertsFilterProps> = ({ filterCriteria, setFilterCr
         <div className="space-y-1">
           <Label htmlFor="filter-employee">Employé</Label>
           <Select
-            value={filterCriteria.employee || ""}
-            onValueChange={(value) => setFilterCriteria({...filterCriteria, employee: value || null})}
+            value={filterCriteria.employee || "all"}
+            onValueChange={(value) => setFilterCriteria({...filterCriteria, employee: value === "all" ? null : value})}
           >
             <SelectTrigger id="filter-employee">
               <SelectValue placeholder="Tous les employés" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Tous les employés</SelectItem>
+              <SelectItem value="all">Tous les employés</SelectItem>
               {employees.map(employee => (
                 <SelectItem key={employee.id} value={employee.id}>
                   {employee.firstName} {employee.lastName}
