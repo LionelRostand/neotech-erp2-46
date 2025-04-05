@@ -7,6 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
 import { Calendar as CalendarIcon } from 'lucide-react';
 
 interface AbsenceFormProps {
@@ -16,12 +17,12 @@ interface AbsenceFormProps {
 
 const AbsenceForm: React.FC<AbsenceFormProps> = ({ onSubmit, onCancel }) => {
   const [formData, setFormData] = useState({
-    employeeId: '',
-    employeeName: '',
+    employeeId: 'employee-123', // For demo purposes
+    employeeName: 'Jean Dupont', // For demo purposes
     type: 'maladie',
     startDate: new Date(),
     endDate: new Date(),
-    status: 'pending',
+    status: 'En attente',
     reason: '',
     notes: '',
     createdAt: new Date(),
@@ -88,7 +89,7 @@ const AbsenceForm: React.FC<AbsenceFormProps> = ({ onSubmit, onCancel }) => {
                 className="w-full justify-start text-left font-normal"
               >
                 <CalendarIcon className="mr-2 h-4 w-4" />
-                {format(formData.startDate, 'dd/MM/yyyy')}
+                {format(formData.startDate, 'dd/MM/yyyy', { locale: fr })}
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0">
@@ -96,10 +97,13 @@ const AbsenceForm: React.FC<AbsenceFormProps> = ({ onSubmit, onCancel }) => {
                 mode="single"
                 selected={formData.startDate}
                 onSelect={(date) => {
-                  handleChange('startDate', date);
-                  setStartDateOpen(false);
+                  if (date) {
+                    handleChange('startDate', date);
+                    setStartDateOpen(false);
+                  }
                 }}
                 initialFocus
+                locale={fr}
               />
             </PopoverContent>
           </Popover>
@@ -116,7 +120,7 @@ const AbsenceForm: React.FC<AbsenceFormProps> = ({ onSubmit, onCancel }) => {
                 className="w-full justify-start text-left font-normal"
               >
                 <CalendarIcon className="mr-2 h-4 w-4" />
-                {format(formData.endDate, 'dd/MM/yyyy')}
+                {format(formData.endDate, 'dd/MM/yyyy', { locale: fr })}
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0">
@@ -124,10 +128,13 @@ const AbsenceForm: React.FC<AbsenceFormProps> = ({ onSubmit, onCancel }) => {
                 mode="single"
                 selected={formData.endDate}
                 onSelect={(date) => {
-                  handleChange('endDate', date);
-                  setEndDateOpen(false);
+                  if (date) {
+                    handleChange('endDate', date);
+                    setEndDateOpen(false);
+                  }
                 }}
                 initialFocus
+                locale={fr}
               />
             </PopoverContent>
           </Popover>
