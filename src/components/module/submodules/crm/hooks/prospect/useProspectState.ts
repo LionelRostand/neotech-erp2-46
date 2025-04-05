@@ -16,20 +16,29 @@ export const useProspectState = () => {
   const [loading, setLoading] = useState(true);
   
   const [formData, setFormData] = useState<ProspectFormData>({
-    name: '',
     company: '',
+    contactName: '',
+    contactEmail: '',
+    contactPhone: '',
+    name: '',
     email: '',
     phone: '',
-    status: 'warm',
+    status: 'new', // Changed from 'warm' to 'new' to match allowed values
     source: 'Site web',
     lastContact: new Date().toISOString().split('T')[0],
     notes: ''
   });
 
+  // Fixed ReminderData to match the interface
   const [reminderData, setReminderData] = useState<ReminderData>({
-    type: 'email',
+    id: '',
+    title: '',
     date: new Date().toISOString().split('T')[0],
-    note: ''
+    completed: false,
+    notes: '',
+    prospectId: '',
+    type: 'email', // For backward compatibility
+    note: '' // For backward compatibility
   });
 
   // Constants

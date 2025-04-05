@@ -2,6 +2,7 @@
 import { useCollectionData } from '../useCollectionData';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import { orderBy } from 'firebase/firestore';
+import { useCallback } from 'react';
 
 /**
  * Hook to fetch data for the CRM module
@@ -12,7 +13,7 @@ export const useCrmData = () => {
     data: clients, 
     isLoading: isClientsLoading, 
     error: clientsError,
-    refreshData: refreshClients
+    refreshData: refreshClientsData
   } = useCollectionData(
     COLLECTIONS.CRM.CLIENTS,
     [orderBy('createdAt', 'desc')]
@@ -23,7 +24,7 @@ export const useCrmData = () => {
     data: prospects, 
     isLoading: isProspectsLoading, 
     error: prospectsError,
-    refreshData: refreshProspects
+    refreshData: refreshProspectsData
   } = useCollectionData(
     COLLECTIONS.CRM.PROSPECTS,
     [orderBy('createdAt', 'desc')]
@@ -34,7 +35,7 @@ export const useCrmData = () => {
     data: opportunities, 
     isLoading: isOpportunitiesLoading, 
     error: opportunitiesError,
-    refreshData: refreshOpportunities
+    refreshData: refreshOpportunitiesData
   } = useCollectionData(
     COLLECTIONS.CRM.OPPORTUNITIES,
     [orderBy('updatedAt', 'desc')]
@@ -45,7 +46,7 @@ export const useCrmData = () => {
     data: contacts, 
     isLoading: isContactsLoading, 
     error: contactsError,
-    refreshData: refreshContacts
+    refreshData: refreshContactsData
   } = useCollectionData(
     COLLECTIONS.CRM.CONTACTS,
     [orderBy('lastName')]
@@ -56,7 +57,7 @@ export const useCrmData = () => {
     data: leads,
     isLoading: isLeadsLoading,
     error: leadsError,
-    refreshData: refreshLeads
+    refreshData: refreshLeadsData
   } = useCollectionData(
     COLLECTIONS.CRM.LEADS,
     [orderBy('createdAt', 'desc')]
@@ -67,7 +68,7 @@ export const useCrmData = () => {
     data: deals,
     isLoading: isDealsLoading,
     error: dealsError,
-    refreshData: refreshDeals
+    refreshData: refreshDealsData
   } = useCollectionData(
     COLLECTIONS.CRM.DEALS,
     [orderBy('updatedAt', 'desc')]
@@ -82,14 +83,21 @@ export const useCrmData = () => {
                 contactsError || leadsError || dealsError;
 
   // Function to refresh all data
-  const refreshData = () => {
-    refreshClients?.();
-    refreshProspects?.();
-    refreshOpportunities?.();
-    refreshContacts?.();
-    refreshLeads?.();
-    refreshDeals?.();
-  };
+  const refreshData = useCallback(() => {
+    if (refreshClientsData) refreshClientsData();
+    if (refreshProspectsData) refreshProspectsData();
+    if (refreshOpportunitiesData) refreshOpportunitiesData();
+    if (refreshContactsData) refreshContactsData();
+    if (refreshLeadsData) refreshLeadsData();
+    if (refreshDealsData) refreshDealsData();
+  }, [
+    refreshClientsData, 
+    refreshProspectsData, 
+    refreshOpportunitiesData, 
+    refreshContactsData, 
+    refreshLeadsData, 
+    refreshDealsData
+  ]);
 
   return {
     clients,

@@ -24,16 +24,15 @@ export interface Evaluation {
  * Hook pour accéder aux données des évaluations directement depuis Firebase
  */
 export const useEvaluationsData = () => {
-  const { evaluations, employees, isLoading, error, refreshData: refreshHrData } = useHrModuleData();
+  const { evaluations, employees, isLoading, error } = useHrModuleData();
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   
   // Function to force a refresh of the data
   const refreshData = useCallback(() => {
     setRefreshTrigger(prev => prev + 1);
-    if (refreshHrData) {
-      refreshHrData();
-    }
-  }, [refreshHrData]);
+    // Note: refreshHrData doesn't exist in useHrModuleData
+    // This will be handled separately
+  }, []);
   
   // Enrichir les évaluations avec les noms des employés
   const formattedEvaluations = useMemo(() => {

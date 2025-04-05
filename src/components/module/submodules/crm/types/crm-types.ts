@@ -6,28 +6,42 @@ export type OpportunityStage =
   'proposal' | 
   'negotiation' | 
   'closed-won' | 
-  'closed-lost';
+  'closed-lost' |
+  'new' |
+  'quote_sent' |
+  'pending' |
+  'won' |
+  'lost';
 
 export interface Opportunity {
   id: string;
   name: string;
+  title?: string; // Adding title for backward compatibility
   clientId?: string;
   clientName?: string;
   contactName?: string;
   contactEmail?: string;
   contactPhone?: string;
   value: number;
+  amount?: number; // Adding amount for backward compatibility
   currency?: string;
   probability?: number;
   stage: OpportunityStage;
   startDate: string;
   closeDate?: string;
+  expectedCloseDate?: string; // Adding expectedCloseDate for backward compatibility
   description?: string;
   source?: string;
   assignedTo?: string;
   createdAt: string;
   updatedAt: string;
-  products?: string[];
+  products?: Array<{
+    id: string;
+    name: string;
+    quantity: number;
+    unitPrice: number;
+    totalPrice: number;
+  }> | string[];
   notes?: string;
   status?: 'active' | 'closed' | 'lost';
 }
@@ -38,9 +52,13 @@ export interface Prospect {
   contactName: string;
   contactEmail: string;
   contactPhone?: string;
+  // Adding name, email, phone for backward compatibility
+  name?: string;
+  email?: string;
+  phone?: string;
   source: string;
   industry?: string;
-  status: 'new' | 'contacted' | 'qualified' | 'unqualified';
+  status: 'new' | 'contacted' | 'qualified' | 'unqualified' | 'hot' | 'warm' | 'cold';
   notes?: string;
   assignedTo?: string;
   createdAt: string;
@@ -70,20 +88,24 @@ export interface Client {
   customerSince?: string;
 }
 
-// Add missing types to fix the build errors
 export interface ProspectFormData {
   company: string;
   contactName: string;
   contactEmail: string;
   contactPhone: string;
+  // Adding name, email, phone for backward compatibility
+  name?: string;
+  email?: string;
+  phone?: string;
   source: string;
   industry?: string;
-  status: 'new' | 'contacted' | 'qualified' | 'unqualified';
+  status: 'new' | 'contacted' | 'qualified' | 'unqualified' | 'hot' | 'warm' | 'cold';
   notes?: string;
   website?: string;
   address?: string;
   size?: 'small' | 'medium' | 'large' | 'enterprise';
   estimatedValue?: number;
+  lastContact?: string;
 }
 
 export interface ReminderData {
@@ -93,24 +115,36 @@ export interface ReminderData {
   completed: boolean;
   notes?: string;
   prospectId: string;
+  // Adding type, note for backward compatibility
+  type?: string;
+  note?: string;
 }
 
 export interface OpportunityFormData {
   name: string;
+  title?: string; // Adding title for backward compatibility
   clientId?: string;
   clientName?: string;
   contactName?: string;
   contactEmail?: string;
   contactPhone?: string;
   value: number;
+  amount?: number; // Adding amount for backward compatibility
   currency?: string;
   probability?: number;
   stage: OpportunityStage;
   startDate: string;
   closeDate?: string;
+  expectedCloseDate?: string; // Adding for backward compatibility
   description?: string;
   source?: string;
   assignedTo?: string;
-  products?: string[];
+  products?: Array<{
+    id: string;
+    name: string;
+    quantity: number;
+    unitPrice: number;
+    totalPrice: number;
+  }> | string[];
   notes?: string;
 }

@@ -15,11 +15,14 @@ export const useProspectForm = (
 
   const resetForm = () => {
     setFormData({
-      name: '',
       company: '',
+      contactName: '',
+      contactEmail: '',
+      contactPhone: '',
+      name: '',
       email: '',
       phone: '',
-      status: 'warm',
+      status: 'new', // Changed from 'warm' to 'new'
       source: 'Site web',
       lastContact: new Date().toISOString().split('T')[0],
       notes: ''
