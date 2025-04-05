@@ -2,7 +2,7 @@
 import React from 'react';
 import { Checkbox } from "@/components/ui/checkbox";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { CompanyPermission, CompanyUserPermission } from '@/components/module/submodules/companies/types';
+import { CompanyPermission, CompanyUserPermission } from '../types/company-settings-types';
 
 interface CompanyPermissionsTableProps {
   users: { id: string; displayName: string; email: string; role?: string; }[];

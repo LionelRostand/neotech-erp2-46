@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
-import { CompanyUserPermission, CompanyPermission } from '@/components/module/submodules/companies/types';
+import { CompanyUserPermission, CompanyPermission } from '../types/company-settings-types';
 
 const useCompanyPermissions = () => {
   const [permissions, setPermissions] = useState<CompanyUserPermission[]>([]);

@@ -6,6 +6,7 @@ import DefaultSubmoduleContent from './DefaultSubmoduleContent';
 
 // Import all renderer functions from the renderers/index.ts
 import * as Renderers from './renderers';
+import { renderCompaniesSubmodule } from './renderers/CompaniesRenderer';
 
 interface SubmoduleRenderProps {
   submoduleId: string;
@@ -30,10 +31,8 @@ export const renderSubmoduleContent = ({ submoduleId, submodule }: SubmoduleRend
       return Renderers.renderProjectsSubmodule(submoduleId, submodule);
     case 'health':
       return Renderers.renderHealthSubmodule(submoduleId, submodule);
-    case 'hr':
-      return Renderers.renderHrSubmodule(submoduleId, submodule);
     case 'companies':
-      return Renderers.renderCompaniesSubmodule(submoduleId, submodule);
+      return renderCompaniesSubmodule(submoduleId, submodule);
     default:
       console.warn(`No renderer found for submodule: ${submoduleId}`);
       return <DefaultSubmoduleContent submodule={submodule} />;
