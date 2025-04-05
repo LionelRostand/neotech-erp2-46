@@ -12,8 +12,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/components/ui/use-toast";
 import { addDocument } from "@/hooks/firestore/create-operations";
+import { COLLECTIONS } from "@/lib/firebase-collections";
 
 interface CreateRecruitmentDialogProps {
   open: boolean;
@@ -72,23 +73,32 @@ const CreateRecruitmentDialog: React.FC<CreateRecruitmentDialogProps> = ({
       // Prepare data for saving
       const jobData = {
         ...formData,
-        openDate: new Date().toLocaleDateString("fr-FR"),
+        openDate: new Date().toISOString(), // Store as ISO string for proper date handling
         status: "Ouvert",
         hiringManagerId: "user-1", // Default or current user
         hiringManagerName: "Utilisateur actuel", // Should be replaced with actual user name
         applicationCount: 0,
+        interviewsScheduled: 0,
       };
 
-      // Save to Firestore (or mock data)
-      // In a real app, you would save to Firestore collection
-      console.log("Saving job post:", jobData);
-      
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 800));
+      // Save to Firestore
+      await addDocument(COLLECTIONS.HR.RECRUITMENT, jobData);
       
       toast({
         title: "Offre créée",
         description: "L'offre d'emploi a été créée avec succès.",
+      });
+      
+      // Reset form
+      setFormData({
+        position: "",
+        department: "IT",
+        priority: "Moyenne",
+        location: "",
+        contractType: "CDI",
+        salary: "",
+        description: "",
+        requirements: "",
       });
       
       onSuccess();

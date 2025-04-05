@@ -5,12 +5,14 @@ import { RecruitmentPost } from '@/hooks/useRecruitmentData';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import RecruitmentStats from './employees/RecruitmentStats';
-import { RefreshCw, Filter, Eye, Edit, Calendar } from 'lucide-react';
+import { RefreshCw, Filter, Eye, Edit, Calendar, Plus } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
+import CreateRecruitmentDialog from './recruitment/CreateRecruitmentDialog';
 
 const EmployeesRecruitment = () => {
   const { recruitmentPosts, isLoading, error, refreshData } = useRecruitmentFirebaseData();
   const [filterOpen, setFilterOpen] = useState(false);
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const { toast } = useToast();
 
   const handleRefresh = () => {
@@ -18,6 +20,14 @@ const EmployeesRecruitment = () => {
     toast({
       title: "Données actualisées",
       description: "Les offres de recrutement ont été actualisées avec succès.",
+    });
+  };
+
+  const handleCreateSuccess = () => {
+    refreshData();
+    toast({
+      title: "Offre créée",
+      description: "La nouvelle offre de recrutement a été créée avec succès.",
     });
   };
 
@@ -68,6 +78,14 @@ const EmployeesRecruitment = () => {
           >
             <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
             Actualiser
+          </Button>
+          <Button
+            variant="default"
+            size="sm"
+            onClick={() => setCreateDialogOpen(true)}
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Nouvelle offre
           </Button>
         </div>
       </div>
@@ -214,6 +232,12 @@ const EmployeesRecruitment = () => {
           </Card>
         </>
       )}
+
+      <CreateRecruitmentDialog 
+        open={createDialogOpen} 
+        onOpenChange={setCreateDialogOpen}
+        onSuccess={handleCreateSuccess}
+      />
     </div>
   );
 };
