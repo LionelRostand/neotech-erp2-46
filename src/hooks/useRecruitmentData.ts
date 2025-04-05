@@ -88,7 +88,7 @@ const MOCK_RECRUITMENT_POSTS: RecruitmentPost[] = [
   }
 ];
 
-export const useRecruitmentData = () => {
+export const useRecruitmentData = (refreshTrigger?: number) => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
   const [recruitmentPosts, setRecruitmentPosts] = useState<RecruitmentPost[]>([]);
@@ -108,7 +108,7 @@ export const useRecruitmentData = () => {
     };
     
     fetchData();
-  }, []);
+  }, [refreshTrigger]); // Re-fetch when refreshTrigger changes
   
   const stats = useMemo(() => {
     const open = recruitmentPosts.filter(post => post.status === 'Ouvert').length;

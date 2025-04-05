@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -36,6 +35,7 @@ const EmployeesRecruitment: React.FC = () => {
   const [showViewDialog, setShowViewDialog] = useState(false);
   const [showScheduleDialog, setShowScheduleDialog] = useState(false);
   const [selectedRecruitment, setSelectedRecruitment] = useState<RecruitmentPost | null>(null);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
   
   // Filter state
   const [filterCriteria, setFilterCriteria] = useState({
@@ -97,9 +97,9 @@ const EmployeesRecruitment: React.FC = () => {
     }
   };
   
-  // Handle refresh after creation
+  // Handle refresh after creation or update
   const handleRefresh = () => {
-    // In a real app with an API, you would fetch the data again here
+    setRefreshTrigger(prev => prev + 1);
     toast({
       title: 'Données actualisées',
       description: 'Les offres d\'emploi ont été mises à jour.'
