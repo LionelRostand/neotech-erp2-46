@@ -1,7 +1,9 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { 
   BarChart, 
   ListFilter, 
@@ -16,19 +18,40 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { useReportsData } from '@/hooks/useReportsData';
+import CreateReportDialog from './reports/CreateReportDialog';
+import ReportsFilterDialog from './reports/ReportsFilterDialog';
+import ExportReportsDialog from './reports/ExportReportsDialog';
 
 const EmployeesReports: React.FC = () => {
   const [activeTab, setActiveTab] = useState('liste');
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [filterDialogOpen, setFilterDialogOpen] = useState(false);
+  const [exportDialogOpen, setExportDialogOpen] = useState(false);
   const { reports, stats, isLoading, error } = useReportsData();
+  
+  const [filterCriteria, setFilterCriteria] = useState({
+    type: null,
+    format: null,
+    status: null,
+    period: null,
+    createdBy: null
+  });
+  
+  const filteredReports = reports.filter(report => {
+    if (filterCriteria.type && report.type !== filterCriteria.type) return false;
+    if (filterCriteria.format && report.format !== filterCriteria.format) return false;
+    if (filterCriteria.status && report.status !== filterCriteria.status) return false;
+    if (filterCriteria.period && report.period !== filterCriteria.period) return false;
+    if (filterCriteria.createdBy === "me" && report.createdBy !== "current-user") return false;
+    return true;
+  });
 
   const handleGenerateReport = () => {
-    toast.success("Génération du rapport démarrée");
-    // Logique de génération à implémenter
+    setCreateDialogOpen(true);
   };
 
   const handleExportData = () => {
-    toast.success("Export des données des rapports démarré");
-    // Logique d'export à implémenter
+    setExportDialogOpen(true);
   };
 
   if (isLoading) {
@@ -57,22 +80,46 @@ const EmployeesReports: React.FC = () => {
           <p className="text-gray-500">Analyses et statistiques des ressources humaines</p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm">
-            <ListFilter className="h-4 w-4 mr-2" />
-            Filtres
-          </Button>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={handleExportData}
-          >
-            <Download className="h-4 w-4 mr-2" />
-            Exporter
-          </Button>
-          <Button size="sm" onClick={handleGenerateReport}>
-            <Plus className="h-4 w-4 mr-2" />
-            Nouveau rapport
-          </Button>
+          <Dialog open={filterDialogOpen} onOpenChange={setFilterDialogOpen}>
+            <Button variant="outline" size="sm" onClick={() => setFilterDialogOpen(true)}>
+              <ListFilter className="h-4 w-4 mr-2" />
+              Filtres
+            </Button>
+            <DialogContent className="sm:max-w-[425px]">
+              <ReportsFilterDialog 
+                filterCriteria={filterCriteria}
+                setFilterCriteria={setFilterCriteria}
+                onClose={() => setFilterDialogOpen(false)}
+              />
+            </DialogContent>
+          </Dialog>
+          
+          <Dialog open={exportDialogOpen} onOpenChange={setExportDialogOpen}>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleExportData}
+            >
+              <Download className="h-4 w-4 mr-2" />
+              Exporter
+            </Button>
+            <DialogContent className="sm:max-w-[500px]">
+              <ExportReportsDialog 
+                data={filteredReports}
+                onOpenChange={setExportDialogOpen}
+              />
+            </DialogContent>
+          </Dialog>
+          
+          <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
+            <Button size="sm" onClick={handleGenerateReport}>
+              <Plus className="h-4 w-4 mr-2" />
+              Nouveau rapport
+            </Button>
+            <DialogContent className="sm:max-w-[600px]">
+              <CreateReportDialog onClose={() => setCreateDialogOpen(false)} />
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
 
@@ -154,8 +201,8 @@ const EmployeesReports: React.FC = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {reports.length > 0 ? (
-                      reports.map((report) => (
+                    {filteredReports.length > 0 ? (
+                      filteredReports.map((report) => (
                         <TableRow key={report.id}>
                           <TableCell className="font-medium">{report.title}</TableCell>
                           <TableCell>{report.type}</TableCell>
