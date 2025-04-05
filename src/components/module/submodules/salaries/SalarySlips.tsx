@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -6,7 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import DataTable from '@/components/DataTable'; // Changed to default import
+import DataTable from '@/components/DataTable';
 import { Column } from '@/components/DataTable';
 import { useSalarySlipsData, SalarySlip } from '@/hooks/useSalarySlipsData';
 import { Download, Plus, Search, Settings } from 'lucide-react';
@@ -28,7 +27,7 @@ interface SalarySlipsProps {
   companies?: Company[];
 }
 
-const SalarySlips: React.FC<SalarySlipsProps> = ({ employees, companies }) => {
+const SalarySlips: React.FC<SalarySlipsProps> = ({ employees = [], companies = [] }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [filters, setFilters] = useState<PayslipFiltersOptions>({});
   const [isGeneratorOpen, setIsGeneratorOpen] = useState(false);
@@ -40,7 +39,6 @@ const SalarySlips: React.FC<SalarySlipsProps> = ({ employees, companies }) => {
   const filteredSalarySlips = React.useMemo(() => {
     let filtered = salarySlips || [];
 
-    // Text search
     if (searchQuery) {
       filtered = filtered.filter(slip =>
         slip.employeeName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -50,7 +48,6 @@ const SalarySlips: React.FC<SalarySlipsProps> = ({ employees, companies }) => {
       );
     }
 
-    // Filters from PayslipFilters component
     if (filters.status) {
       filtered = filtered.filter(slip => slip.status === filters.status);
     }
@@ -123,7 +120,6 @@ const SalarySlips: React.FC<SalarySlipsProps> = ({ employees, companies }) => {
     []
   );
 
-  // Convert SalarySlip to PaySlip for the viewer
   const convertToPaySlip = (slip: SalarySlip): PaySlip => {
     return {
       id: slip.id,
@@ -163,25 +159,20 @@ const SalarySlips: React.FC<SalarySlipsProps> = ({ employees, companies }) => {
 
     const doc = new jsPDF();
 
-    // Titre du document
     doc.text(`Fiche de paie - ${payslip.employeeName}`, 10, 10);
 
-    // Informations de l'employé et de l'employeur
     doc.text(`Employé: ${payslip.employeeName}`, 10, 20);
     doc.text(`Période: ${payslip.period}`, 10, 30);
 
-    // Préparation des données pour le tableau
     const tableColumn = ["Description", "Montant"];
     const tableRows = payslip.details.map(detail => [detail.label, detail.amount.toString()]);
 
-    // Ajout du tableau au document
     (doc as any).autoTable({
       head: [tableColumn],
       body: tableRows,
       startY: 40,
     });
 
-    // Enregistrement du PDF
     doc.save(`fiche-de-paie-${payslip.employeeName}-${payslip.period.replace(' ', '-')}.pdf`);
   };
 
@@ -190,7 +181,6 @@ const SalarySlips: React.FC<SalarySlipsProps> = ({ employees, companies }) => {
   };
 
   const handleExportData = () => {
-    // Implement export functionality
     console.log("Exporting data...");
   };
 

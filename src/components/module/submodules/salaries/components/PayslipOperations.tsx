@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { 
   Download, 
@@ -7,17 +7,10 @@ import {
   Plus, 
   Settings 
 } from 'lucide-react';
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogTrigger 
-} from '@/components/ui/dialog';
-import PayslipFilterDialog from './PayslipFilterDialog';
-import PaySlipGenerator from '../PaySlipGenerator';
-import PayslipConfiguration from '../components/PayslipConfiguration';
+import PayslipFilters, { PayslipFiltersOptions } from './PayslipFilters';
+import PayslipFilterDrawer from './PayslipFilterDrawer';
 import { Employee } from '@/types/employee';
 import { Company } from '@/components/module/submodules/companies/types';
-import PayslipFilters, { PayslipFiltersOptions } from './PayslipFilters';
 
 interface PayslipOperationsProps {
   employees?: Employee[];
@@ -38,13 +31,26 @@ const PayslipOperations: React.FC<PayslipOperationsProps> = ({
   onOpenConfiguration,
   onExportData
 }) => {
+  const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false);
+
   return (
     <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-      <PayslipFilters 
-        employees={employees}
-        onApplyFilters={onFilter}
-        currentFilters={currentFilters}
-      />
+      <div className="flex items-center gap-2">
+        <Button 
+          variant="outline" 
+          className="flex items-center gap-2"
+          onClick={() => setIsFilterDrawerOpen(true)}
+        >
+          <Filter className="h-4 w-4" />
+          Filtres
+        </Button>
+        
+        <PayslipFilters 
+          employees={employees}
+          onApplyFilters={onFilter}
+          currentFilters={currentFilters}
+        />
+      </div>
       
       <div className="flex items-center space-x-2">
         <Button variant="outline" onClick={onExportData}>
@@ -62,6 +68,14 @@ const PayslipOperations: React.FC<PayslipOperationsProps> = ({
           Générer
         </Button>
       </div>
+
+      <PayslipFilterDrawer
+        isOpen={isFilterDrawerOpen}
+        onClose={() => setIsFilterDrawerOpen(false)}
+        onApplyFilters={onFilter}
+        employees={employees}
+        currentFilters={currentFilters}
+      />
     </div>
   );
 };
