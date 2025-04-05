@@ -9,7 +9,7 @@ export const COLLECTIONS = {
   SETTINGS: 'settings',
   // CRM Collections
   CRM: {
-    CLIENTS: 'crm/clients',
+    CLIENTS: 'crm_clients', // Mise à jour du chemin selon la demande
     PROSPECTS: 'crm/prospects',
     REMINDERS: 'crm/reminders',
     OPPORTUNITIES: 'crm/opportunities',

@@ -33,7 +33,8 @@ const CrmClients: React.FC = () => {
     openEditDialog,
     openDeleteDialog,
     viewClientDetails,
-    resetForm
+    resetForm,
+    loading
   } = useClients();
 
   return (
@@ -58,12 +59,21 @@ const CrmClients: React.FC = () => {
           sectors={sectors}
         />
 
-        <ClientsTable 
-          clients={filteredClients}
-          onViewDetails={viewClientDetails}
-          onEdit={openEditDialog}
-          onDelete={openDeleteDialog}
-        />
+        {loading ? (
+          <div className="flex items-center justify-center py-8">
+            <div className="flex flex-col items-center">
+              <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-primary"></div>
+              <p className="mt-4 text-sm text-muted-foreground">Chargement des clients...</p>
+            </div>
+          </div>
+        ) : (
+          <ClientsTable 
+            clients={filteredClients}
+            onViewDetails={viewClientDetails}
+            onEdit={openEditDialog}
+            onDelete={openDeleteDialog}
+          />
+        )}
       </Card>
 
       <ClientDialogs 

@@ -1,65 +1,31 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { toast } from "sonner";
-
-// Sample client data
-const mockClients = [
-  { 
-    id: '1', 
-    name: 'Acme Corporation', 
-    sector: 'Technologie', 
-    revenue: '850000', 
-    status: 'active',
-    contactName: 'John Doe',
-    contactEmail: 'john@acme.com',
-    contactPhone: '+33612345678',
-    address: '12 Rue de Paris, 75001 Paris'
-  },
-  { 
-    id: '2', 
-    name: 'Global Industries', 
-    sector: 'Industrie', 
-    revenue: '2500000', 
-    status: 'active',
-    contactName: 'Marie Martin',
-    contactEmail: 'marie@global-ind.com',
-    contactPhone: '+33698765432',
-    address: '45 Avenue Victor Hugo, 69002 Lyon'
-  },
-  { 
-    id: '3', 
-    name: 'Tech Innovations', 
-    sector: 'Technologie', 
-    revenue: '375000', 
-    status: 'inactive',
-    contactName: 'Pierre Dubois',
-    contactEmail: 'pierre@tech-innov.com',
-    contactPhone: '+33601122334',
-    address: '8 Rue Nationale, 44000 Nantes'
-  },
-];
+import { useClientsData, Client } from './useClientsData';
 
 export const sectors = ['Technologie', 'Industrie', 'Santé', 'Finance', 'Commerce', 'Services', 'Autres'];
 
 export const useClients = () => {
-  const [clients, setClients] = useState(mockClients);
+  const { clients, loading, addClient, updateClient, deleteClient, refresh } = useClientsData();
   const [searchTerm, setSearchTerm] = useState('');
   const [sectorFilter, setSectorFilter] = useState('all');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isViewDetailsOpen, setIsViewDetailsOpen] = useState(false);
-  const [selectedClient, setSelectedClient] = useState<any>(null);
+  const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   
   const [formData, setFormData] = useState({
     name: '',
     sector: '',
     revenue: '',
-    status: 'active',
+    status: 'active' as 'active' | 'inactive',
     contactName: '',
     contactEmail: '',
     contactPhone: '',
-    address: ''
+    address: '',
+    notes: '',
+    website: ''
   });
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -71,44 +37,35 @@ export const useClients = () => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleCreateClient = () => {
-    const newClient = {
-      id: Date.now().toString(),
-      ...formData
-    };
-    
-    setClients(prev => [newClient, ...prev]);
-    setIsAddDialogOpen(false);
-    resetForm();
-    toast.success("Client ajouté avec succès");
+  const handleCreateClient = async () => {
+    const success = await addClient(formData);
+    if (success) {
+      setIsAddDialogOpen(false);
+      resetForm();
+    }
   };
 
-  const handleUpdateClient = () => {
+  const handleUpdateClient = async () => {
     if (!selectedClient) return;
     
-    setClients(prev => 
-      prev.map(client => 
-        client.id === selectedClient.id 
-          ? { ...client, ...formData } 
-          : client
-      )
-    );
-    
-    setIsEditDialogOpen(false);
-    resetForm();
-    toast.success("Client mis à jour avec succès");
+    const success = await updateClient(selectedClient.id, formData);
+    if (success) {
+      setIsEditDialogOpen(false);
+      resetForm();
+    }
   };
 
-  const handleDeleteClient = () => {
+  const handleDeleteClient = async () => {
     if (!selectedClient) return;
     
-    setClients(prev => prev.filter(client => client.id !== selectedClient.id));
-    setIsDeleteDialogOpen(false);
-    setSelectedClient(null);
-    toast.success("Client supprimé avec succès");
+    const success = await deleteClient(selectedClient.id);
+    if (success) {
+      setIsDeleteDialogOpen(false);
+      setSelectedClient(null);
+    }
   };
 
-  const openEditDialog = (client: any) => {
+  const openEditDialog = (client: Client) => {
     setSelectedClient(client);
     setFormData({
       name: client.name,
@@ -118,17 +75,19 @@ export const useClients = () => {
       contactName: client.contactName,
       contactEmail: client.contactEmail,
       contactPhone: client.contactPhone,
-      address: client.address
+      address: client.address,
+      notes: client.notes || '',
+      website: client.website || ''
     });
     setIsEditDialogOpen(true);
   };
 
-  const openDeleteDialog = (client: any) => {
+  const openDeleteDialog = (client: Client) => {
     setSelectedClient(client);
     setIsDeleteDialogOpen(true);
   };
 
-  const viewClientDetails = (client: any) => {
+  const viewClientDetails = (client: Client) => {
     setSelectedClient(client);
     setIsViewDetailsOpen(true);
   };
@@ -142,14 +101,16 @@ export const useClients = () => {
       contactName: '',
       contactEmail: '',
       contactPhone: '',
-      address: ''
+      address: '',
+      notes: '',
+      website: ''
     });
   };
 
   // Filter clients based on search term and sector filter
   const filteredClients = clients.filter(client => {
     const matchesSearch = client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         client.contactName.toLowerCase().includes(searchTerm.toLowerCase());
+                         (client.contactName?.toLowerCase().includes(searchTerm.toLowerCase()) || false);
     const matchesSector = sectorFilter === 'all' ? true : client.sector === sectorFilter;
     
     return matchesSearch && matchesSector;
@@ -180,6 +141,7 @@ export const useClients = () => {
     openEditDialog,
     openDeleteDialog,
     viewClientDetails,
-    resetForm
+    resetForm,
+    loading
   };
 };
