@@ -1,4 +1,5 @@
 
+import { useState } from 'react';
 import { Prospect, ProspectFormData } from '../../types/crm-types';
 
 export const useProspectDialogs = (

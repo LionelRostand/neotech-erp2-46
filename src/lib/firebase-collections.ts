@@ -95,7 +95,11 @@ export const COLLECTIONS = {
     MEDICAL_RECORDS: 'health_records',
     HEALTH_INSURANCE: 'health_insurance',
     HEALTH_BILLING: 'health_billing',
-    HEALTH_CONSULTATIONS: 'health_consultations'
+    HEALTH_CONSULTATIONS: 'health_consultations',
+    STAFF: 'health_staff',
+    CONSULTATIONS: 'health_consultations',
+    INSURANCE: 'health_insurance',
+    BILLING: 'health_billing'
   },
   
   // Accounting Collections
@@ -106,7 +110,19 @@ export const COLLECTIONS = {
     CLIENTS: 'accounting_clients',
     SUPPLIERS: 'accounting_suppliers',
     BANK_ACCOUNTS: 'accounting_bank_accounts',
-    PERMISSIONS: 'accounting_permissions'
+    PERMISSIONS: 'accounting_permissions',
+    PAYMENTS: 'accounting_payments'
+  },
+
+  // Project Collections
+  PROJECTS: {
+    PROJECTS: 'projects_projects',
+    TASKS: 'projects_tasks',
+    TEAMS: 'projects_teams',
+    MILESTONES: 'projects_milestones',
+    COMMENTS: 'projects_comments',
+    NOTIFICATIONS: 'projects_notifications',
+    USERS: 'projects_users'
   },
   
   // User permissions collection

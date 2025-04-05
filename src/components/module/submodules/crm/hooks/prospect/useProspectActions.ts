@@ -26,13 +26,13 @@ export const useProspectActions = (
         contactEmail: formData.contactEmail,
         contactPhone: formData.contactPhone,
         source: formData.source,
-        industry: formData.industry,
-        status: formData.status,
-        notes: formData.notes,
-        website: formData.website,
-        address: formData.address,
-        size: formData.size,
-        estimatedValue: formData.estimatedValue,
+        industry: formData.industry || '',
+        status: formData.status as Prospect['status'],
+        notes: formData.notes || '',
+        website: formData.website || '',
+        address: formData.address || '',
+        size: formData.size || 'small',
+        estimatedValue: formData.estimatedValue || 0,
         createdAt: new Date().toISOString(),
       };
       
@@ -65,7 +65,7 @@ export const useProspectActions = (
         contactEmail: formData.contactEmail,
         contactPhone: formData.contactPhone,
         source: formData.source,
-        status: formData.status,
+        status: formData.status as Prospect['status'],
         notes: formData.notes,
         industry: formData.industry,
         website: formData.website,
@@ -154,7 +154,7 @@ export const useProspectActions = (
         name: prospect.company,
         sector: prospect.industry || 'Non spécifié',
         revenue: '0',
-        status: 'active',
+        status: 'active' as const,
         contactName: prospect.contactName,
         contactEmail: prospect.contactEmail,
         contactPhone: prospect.contactPhone || '',
@@ -172,7 +172,7 @@ export const useProspectActions = (
       
       // Update the prospect status or mark as converted
       await updateDocument(COLLECTIONS.CRM.PROSPECTS, prospect.id, {
-        status: 'qualified',
+        status: 'converted' as Prospect['status'],
         convertedToClientId: clientId,
         convertedAt: new Date().toISOString()
       });
@@ -180,7 +180,7 @@ export const useProspectActions = (
       // Update the local state
       setProspects(prev => prev.map(p => 
         p.id === prospect.id 
-          ? { ...p, status: 'qualified', convertedToClientId: clientId, convertedAt: new Date().toISOString() }
+          ? { ...p, status: 'converted' as Prospect['status'], convertedToClientId: clientId, convertedAt: new Date().toISOString() }
           : p
       ));
       

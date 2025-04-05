@@ -1,148 +1,163 @@
 
-// CRM types file
+// Define types for the CRM module
+
+// Prospect type definition
+export interface Prospect {
+  id: string;
+  company: string;
+  contactName: string;
+  contactEmail: string;
+  contactPhone: string;
+  name?: string;
+  email?: string;
+  phone?: string;
+  status: "new" | "contacted" | "converted" | "meeting" | "proposal" | "negotiation" | "lost";
+  source: string;
+  createdAt: string;
+  updatedAt?: string;
+  notes?: string;
+  industry?: string;
+  website?: string;
+  address?: string;
+  size?: "small" | "medium" | "large" | "enterprise";
+  estimatedValue?: number;
+  lastContact?: string;
+  convertedToClientId?: string;
+  convertedAt?: string;
+}
+
+// Form data for creating/editing a prospect
+export interface ProspectFormData {
+  company: string;
+  contactName: string;
+  contactEmail: string;
+  contactPhone: string;
+  name?: string;
+  email?: string;
+  phone?: string;
+  status: string;
+  source: string;
+  notes?: string;
+  industry?: string;
+  website?: string;
+  address?: string;
+  size?: "small" | "medium" | "large" | "enterprise";
+  estimatedValue?: number;
+  lastContact?: string;
+}
+
+// Client type definition
 export interface Client {
   id: string;
   name: string;
   sector: string;
   revenue: string;
-  status: 'active' | 'inactive' | 'paused';
+  status: "active" | "inactive";
+  contactName: string;
+  contactEmail: string;
+  contactPhone: string;
+  address: string;
+  website?: string;
+  notes?: string;
+  createdAt: string;
+  updatedAt?: string;
   customerSince: string;
-  createdAt: string;
-  updatedAt?: string;
+  convertedFromProspectId?: string;
+}
+
+// Form data for creating/editing a client
+export interface ClientFormData {
+  name: string;
+  sector: string;
+  revenue: string;
+  status: "active" | "inactive";
   contactName: string;
   contactEmail: string;
   contactPhone: string;
-  address?: string;
-  notes?: string;
+  address: string;
   website?: string;
-  assignedTo?: string;
-}
-
-export interface Lead {
-  id: string;
-  name: string;
-  company: string;
-  email: string;
-  phone: string;
-  status: 'new' | 'contacted' | 'qualified' | 'unqualified' | 'converted';
-  source: string;
   notes?: string;
-  createdAt: string;
-  updatedAt?: string;
-  assignedTo?: string;
+  customerSince: string;
 }
 
-export interface Prospect {
-  id: string;
-  name: string;
-  company: string;
-  email: string;
-  phone: string;
-  status: 'new' | 'contacted' | 'meeting' | 'proposal' | 'negotiation' | 'converted' | 'lost';
-  source: string;
-  contactName: string;
-  contactEmail: string;
-  contactPhone: string;
-  notes?: string;
-  industry?: string;
-  website?: string;
-  address?: string;
-  size?: 'small' | 'medium' | 'large' | 'enterprise';
-  estimatedValue?: number;
-  lastContact?: string;
-  createdAt?: string;
-  updatedAt?: string;
-}
-
-export interface ProspectFormData {
-  name: string;
-  company: string;
-  email: string;
-  phone: string;
-  status: string;
-  source: string;
-  contactName: string;
-  contactEmail: string;
-  contactPhone: string;
-  notes?: string;
-  industry?: string;
-  website?: string;
-  address?: string;
-  size?: 'small' | 'medium' | 'large' | 'enterprise';
-  estimatedValue?: number;
-  lastContact?: string;
-}
-
+// Opportunity type definition
 export interface Opportunity {
   id: string;
   title: string;
-  company: string;
+  description: string;
+  status: "new" | "qualified" | "proposal" | "negotiation" | "won" | "lost";
+  stage: string;
+  clientId?: string;
+  prospectId?: string;
   amount: number;
-  stage: 'lead' | 'proposal' | 'negotiation' | 'won' | 'lost';
-  priority: 'low' | 'medium' | 'high';
   probability: number;
-  expectedCloseDate: string;
-  description?: string;
-  assignedTo?: string;
   createdAt: string;
-  updatedAt: string;
+  updatedAt?: string;
+  expectedCloseDate?: string;
 }
 
+// Form data for creating/editing an opportunity
 export interface OpportunityFormData {
   title: string;
-  company: string;
+  description: string;
+  status: "new" | "qualified" | "proposal" | "negotiation" | "won" | "lost";
+  stage: string;
+  clientId?: string;
+  prospectId?: string;
   amount: number;
-  stage: 'lead' | 'proposal' | 'negotiation' | 'won' | 'lost';
-  priority: 'low' | 'medium' | 'high';
   probability: number;
-  expectedCloseDate: string;
-  description?: string;
-  assignedTo?: string;
+  expectedCloseDate?: string;
 }
 
+// Reminder type
 export interface Reminder {
   id: string;
   title: string;
-  description?: string;
   date: string;
-  time: string;
-  type: 'call' | 'meeting' | 'email' | 'task' | 'other';
-  status: 'pending' | 'completed' | 'cancelled';
-  relatedTo?: {
-    type: 'prospect' | 'opportunity' | 'client' | 'lead';
-    id: string;
-    name: string;
-  };
+  completed: boolean;
   notes?: string;
-  assignedTo?: string;
+  prospectId?: string;
+  clientId?: string;
+  opportunityId?: string;
   createdAt: string;
-  updatedAt?: string;
+  createdBy?: string;
 }
 
-export interface Contact {
+// Reminder data for creating/editing a reminder
+export interface ReminderData {
+  id?: string;
+  title: string;
+  date: string;
+  completed: boolean;
+  notes?: string;
+  prospectId?: string;
+  clientId?: string;
+  opportunityId?: string;
+}
+
+// Permission type
+export interface CrmPermission {
+  view: boolean;
+  create: boolean;
+  edit: boolean;
+  delete: boolean;
+}
+
+// User with CRM permissions
+export interface UserWithCrmPermissions {
   id: string;
   name: string;
   email: string;
-  phone: string;
-  company?: string;
-  position?: string;
-  notes?: string;
-  tags?: string[];
-  createdAt: string;
-  updatedAt?: string;
-}
-
-export interface Deal {
-  id: string;
-  name: string;
-  client: string | { id: string; name: string };
-  amount: number;
-  stage: 'initial' | 'qualified' | 'proposal' | 'negotiation' | 'closed-won' | 'closed-lost';
-  closeDate: string;
-  probability: number;
-  description?: string;
-  products?: Array<{ id: string; name: string; quantity: number; price: number }>;
-  assignedTo?: string;
-  createdAt: string;
-  updatedAt?: string;
+  role: string;
+  permissions: {
+    crm?: {
+      view: boolean;
+      create: boolean;
+      edit: boolean;
+      delete: boolean;
+      clients?: CrmPermission;
+      prospects?: CrmPermission;
+      opportunities?: CrmPermission;
+    }
+  }
 }

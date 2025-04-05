@@ -5,6 +5,7 @@ import { useProspectForm } from './prospect/useProspectForm';
 import { useProspectActions } from './prospect/useProspectActions';
 import { useProspectDialogs } from './prospect/useProspectDialogs';
 import { useProspectUtils } from './prospect/useProspectUtils';
+import { ProspectFormData, ReminderData } from '../types/crm-types';
 
 export const useProspects = () => {
   // Get all state variables
@@ -39,7 +40,7 @@ export const useProspects = () => {
   } = useProspectState();
 
   // Load prospect data from Firestore
-  const { prospectCollection } = useProspectData(setProspects, setLoading);
+  const { prospectCollection, loadProspects } = useProspectData(setProspects, setLoading);
 
   // Form handling
   const { handleInputChange, handleSelectChange, resetForm } = useProspectForm(setFormData);
@@ -51,6 +52,7 @@ export const useProspects = () => {
     handleDeleteProspect,
     handleAddReminder,
     handleConvertToClient,
+    error
   } = useProspectActions(
     prospects,
     setProspects,
@@ -83,21 +85,36 @@ export const useProspects = () => {
   // Filter prospects based on search term and status filter
   const filteredProspects = filterProspects(prospects, searchTerm, statusFilter);
 
-  // Wrap action handlers for components
-  const handleCreateProspect = (data) => {
-    handleAddProspect(data);
-    setIsAddDialogOpen(false);
+  // Add a new prospect wrapper function
+  const addProspect = async (data: ProspectFormData) => {
+    return await handleAddProspect(data);
   };
 
-  const handleScheduleReminder = (prospectId, data) => {
-    handleAddReminder(prospectId, data);
-    setIsReminderDialogOpen(false);
+  // Update a prospect wrapper function
+  const updateProspect = async (id: string, data: ProspectFormData) => {
+    return await handleUpdateProspect(id, data);
+  };
+
+  // Delete a prospect wrapper function
+  const deleteProspect = async (id: string) => {
+    return await handleDeleteProspect(id);
+  };
+
+  // Convert a prospect to client wrapper function
+  const convertToClient = async (prospect) => {
+    return await handleConvertToClient(prospect);
+  };
+
+  // Add a reminder wrapper function
+  const addReminder = async (prospectId: string, data: ReminderData) => {
+    return await handleAddReminder(prospectId, data);
   };
 
   return {
     prospects,
     filteredProspects,
-    loading,
+    isLoading: loading,
+    error,
     searchTerm,
     setSearchTerm,
     statusFilter,
@@ -122,11 +139,11 @@ export const useProspects = () => {
     handleInputChange,
     handleSelectChange,
     resetForm,
-    handleCreateProspect,
-    handleUpdateProspect,
-    handleDeleteProspect,
-    handleConvertToClient,
-    handleScheduleReminder,
+    addProspect,
+    updateProspect,
+    deleteProspect,
+    convertToClient,
+    addReminder,
     openAddDialog,
     openEditDialog,
     openDeleteDialog,
