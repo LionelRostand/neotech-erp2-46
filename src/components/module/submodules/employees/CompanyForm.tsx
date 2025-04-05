@@ -42,6 +42,7 @@ export const CompanyForm: React.FC<CompanyFormProps> = ({
       industry: '',
       size: 'small',
       status: 'active',
+      notes: '',
     }
   );
 

@@ -43,15 +43,6 @@ const CompaniesFilters: React.FC<CompaniesFiltersProps> = ({
       onFilterChange(rest);
     }
   };
-  
-  const handleEndDateChange = (date: Date | undefined) => {
-    if (date) {
-      onFilterChange({ ...filters, endDate: date.toString() });
-    } else {
-      const { endDate, ...rest } = filters;
-      onFilterChange(rest);
-    }
-  };
 
   return (
     <Card className="mb-6">
@@ -124,7 +115,7 @@ const CompaniesFilters: React.FC<CompaniesFiltersProps> = ({
 
           {/* CreatedAt date range filter - Start date */}
           <div className="space-y-2">
-            <Label>Date de création (début)</Label>
+            <Label>Date de création</Label>
             <Popover>
               <PopoverTrigger asChild>
                 <Button
@@ -148,37 +139,7 @@ const CompaniesFilters: React.FC<CompaniesFiltersProps> = ({
                   selected={filters.startDate ? new Date(filters.startDate) : undefined}
                   onSelect={handleStartDateChange}
                   initialFocus
-                />
-              </PopoverContent>
-            </Popover>
-          </div>
-
-          {/* CreatedAt date range filter - End date */}
-          <div className="space-y-2">
-            <Label>Date de création (fin)</Label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant={"outline"}
-                  className={cn(
-                    "w-full justify-start text-left font-normal",
-                    !filters.endDate && "text-muted-foreground"
-                  )}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {filters.endDate ? (
-                    format(new Date(filters.endDate), "PPP")
-                  ) : (
-                    <span>Sélectionner une date</span>
-                  )}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0">
-                <Calendar
-                  mode="single"
-                  selected={filters.endDate ? new Date(filters.endDate) : undefined}
-                  onSelect={handleEndDateChange}
-                  initialFocus
+                  className="p-3 pointer-events-auto"
                 />
               </PopoverContent>
             </Popover>

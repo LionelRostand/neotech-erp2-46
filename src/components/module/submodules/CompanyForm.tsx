@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,19 +14,17 @@ import { toast } from 'sonner';
 import { Company } from './companies/types';
 
 interface CompanyFormProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onSave: (company: Partial<Company>) => void;
   company?: Company;
   isEditing?: boolean;
+  onClose: () => void;
+  onSave: (company: Partial<Company>) => void;
 }
 
 const CompanyForm: React.FC<CompanyFormProps> = ({
-  isOpen,
-  onClose,
-  onSave,
   company,
-  isEditing = false
+  isEditing = false,
+  onClose,
+  onSave
 }) => {
   const [formData, setFormData] = useState<Partial<Company>>(
     company || {
@@ -44,6 +41,7 @@ const CompanyForm: React.FC<CompanyFormProps> = ({
       industry: '',
       size: 'small',
       status: 'active',
+      notes: '',
     }
   );
 
@@ -263,11 +261,11 @@ const CompanyForm: React.FC<CompanyFormProps> = ({
       </div>
       
       <div className="space-y-2">
-        <Label htmlFor="description">Description</Label>
+        <Label htmlFor="notes">Description</Label>
         <Textarea
-          id="description"
-          name="description"
-          value={formData.description}
+          id="notes"
+          name="notes"
+          value={formData.notes}
           onChange={handleChange}
           placeholder="Description de l'entreprise..."
           rows={3}
