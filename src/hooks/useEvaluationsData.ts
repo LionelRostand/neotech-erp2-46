@@ -1,5 +1,5 @@
 
-import { useMemo } from 'react';
+import { useMemo, useState, useCallback } from 'react';
 import { useHrModuleData } from './useHrModuleData';
 
 export interface Evaluation {
@@ -24,7 +24,14 @@ export interface Evaluation {
  * Hook pour accéder aux données des évaluations directement depuis Firebase
  */
 export const useEvaluationsData = () => {
-  const { evaluations, employees, isLoading, error } = useHrModuleData();
+  const { evaluations, employees, isLoading, error, refreshData: refreshHrData } = useHrModuleData();
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+  
+  // Function to force a refresh of the data
+  const refreshData = useCallback(() => {
+    setRefreshTrigger(prev => prev + 1);
+    refreshHrData();
+  }, [refreshHrData]);
   
   // Enrichir les évaluations avec les noms des employés
   const formattedEvaluations = useMemo(() => {
@@ -59,7 +66,7 @@ export const useEvaluationsData = () => {
         improvements: evaluation.improvements,
       } as Evaluation;
     });
-  }, [evaluations, employees]);
+  }, [evaluations, employees, refreshTrigger]);
   
   // Fonction pour formater les dates
   const formatDate = (dateStr: string) => {
@@ -85,6 +92,7 @@ export const useEvaluationsData = () => {
     evaluations: formattedEvaluations,
     stats: evaluationStats,
     isLoading,
-    error
+    error,
+    refreshData
   };
 };

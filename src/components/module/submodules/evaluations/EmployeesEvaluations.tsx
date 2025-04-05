@@ -7,13 +7,77 @@ import {
   ClipboardCheck, 
   Plus,
   Calendar,
-  User
+  User,
+  Edit,
+  Trash2
 } from 'lucide-react';
 import { useEvaluationsData } from '@/hooks/useEvaluationsData';
+import CreateEvaluationDialog from './CreateEvaluationDialog';
+import EditEvaluationDialog from './EditEvaluationDialog';
+import DeleteEvaluationDialog from './DeleteEvaluationDialog';
+import { Evaluation } from '@/hooks/useEvaluationsData';
+import { toast } from 'sonner';
+import { addDocument, updateDocument, deleteDocument } from '@/hooks/firestore/firestore-utils';
+import { COLLECTIONS } from '@/lib/firebase-collections';
 
 const EmployeesEvaluations: React.FC = () => {
   const [activeTab, setActiveTab] = useState('all');
-  const { evaluations, stats, isLoading, error } = useEvaluationsData();
+  const { evaluations, stats, isLoading, error, refreshData } = useEvaluationsData();
+  
+  // Dialog states
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [selectedEvaluation, setSelectedEvaluation] = useState<Evaluation | null>(null);
+
+  const handleCreateEvaluation = async (evaluationData: any) => {
+    try {
+      await addDocument(COLLECTIONS.HR.EVALUATIONS, evaluationData);
+      toast.success("Évaluation créée avec succès");
+      refreshData();
+    } catch (error) {
+      console.error("Erreur lors de la création de l'évaluation:", error);
+      toast.error("Erreur lors de la création de l'évaluation");
+    }
+  };
+
+  const handleUpdateEvaluation = async (evaluationData: any) => {
+    if (!selectedEvaluation) return;
+    
+    try {
+      await updateDocument(COLLECTIONS.HR.EVALUATIONS, selectedEvaluation.id, evaluationData);
+      toast.success("Évaluation mise à jour avec succès");
+      refreshData();
+      setEditDialogOpen(false);
+    } catch (error) {
+      console.error("Erreur lors de la mise à jour de l'évaluation:", error);
+      toast.error("Erreur lors de la mise à jour de l'évaluation");
+    }
+  };
+
+  const handleDeleteEvaluation = async () => {
+    if (!selectedEvaluation) return;
+    
+    try {
+      await deleteDocument(COLLECTIONS.HR.EVALUATIONS, selectedEvaluation.id);
+      toast.success("Évaluation supprimée avec succès");
+      refreshData();
+      setDeleteDialogOpen(false);
+    } catch (error) {
+      console.error("Erreur lors de la suppression de l'évaluation:", error);
+      toast.error("Erreur lors de la suppression de l'évaluation");
+    }
+  };
+
+  const handleEditClick = (evaluation: Evaluation) => {
+    setSelectedEvaluation(evaluation);
+    setEditDialogOpen(true);
+  };
+
+  const handleDeleteClick = (evaluation: Evaluation) => {
+    setSelectedEvaluation(evaluation);
+    setDeleteDialogOpen(true);
+  };
 
   if (isLoading) {
     return (
@@ -43,7 +107,7 @@ const EmployeesEvaluations: React.FC = () => {
           <h2 className="text-2xl font-bold">Évaluations</h2>
           <p className="text-gray-500">Gestion des évaluations du personnel</p>
         </div>
-        <Button>
+        <Button onClick={() => setCreateDialogOpen(true)}>
           <Plus className="h-4 w-4 mr-2" />
           Nouvelle évaluation
         </Button>
@@ -107,8 +171,24 @@ const EmployeesEvaluations: React.FC = () => {
                         <Calendar className="w-4 h-4 mr-1" />
                         Date: {evaluation.date}
                       </div>
-                      <div className="flex justify-end">
-                        <Button variant="outline" size="sm">Voir détails</Button>
+                      <div className="flex justify-end space-x-2">
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={() => handleEditClick(evaluation)}
+                        >
+                          <Edit className="h-4 w-4 mr-1" />
+                          Modifier
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => handleDeleteClick(evaluation)}
+                          className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                        >
+                          <Trash2 className="h-4 w-4 mr-1" />
+                          Supprimer
+                        </Button>
                       </div>
                     </div>
                   ))}
@@ -118,6 +198,31 @@ const EmployeesEvaluations: React.FC = () => {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Dialogues pour créer, modifier et supprimer */}
+      <CreateEvaluationDialog
+        open={createDialogOpen}
+        onOpenChange={setCreateDialogOpen}
+        onSubmit={handleCreateEvaluation}
+      />
+      
+      {selectedEvaluation && (
+        <>
+          <EditEvaluationDialog
+            open={editDialogOpen}
+            onOpenChange={setEditDialogOpen}
+            evaluation={selectedEvaluation}
+            onSubmit={handleUpdateEvaluation}
+          />
+          
+          <DeleteEvaluationDialog
+            open={deleteDialogOpen}
+            onOpenChange={setDeleteDialogOpen}
+            evaluation={selectedEvaluation}
+            onDelete={handleDeleteEvaluation}
+          />
+        </>
+      )}
     </div>
   );
 };

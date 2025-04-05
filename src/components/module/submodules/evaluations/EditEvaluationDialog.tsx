@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -21,29 +21,58 @@ import {
 import { toast } from 'sonner';
 import { useHrModuleData } from '@/hooks/useHrModuleData';
 import { Calendar } from 'lucide-react';
-import { format } from 'date-fns';
+import { format, parseISO } from 'date-fns';
+import { Evaluation } from '@/hooks/useEvaluationsData';
 
-interface CreateEvaluationDialogProps {
+interface EditEvaluationDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  evaluation: Evaluation;
   onSubmit: (data: any) => void;
 }
 
-const CreateEvaluationDialog: React.FC<CreateEvaluationDialogProps> = ({
+const EditEvaluationDialog: React.FC<EditEvaluationDialogProps> = ({
   open,
   onOpenChange,
+  evaluation,
   onSubmit,
 }) => {
   const { employees } = useHrModuleData();
   const [formData, setFormData] = useState({
     employeeId: '',
     evaluatorId: '',
-    date: format(new Date(), 'yyyy-MM-dd'),
+    date: '',
     status: 'Planifiée',
     maxScore: 100,
+    score: 0,
     comments: '',
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Initialiser le formulaire avec les données de l'évaluation existante
+  useEffect(() => {
+    if (evaluation) {
+      try {
+        // Formatage de la date pour l'input type=date
+        const dateObj = new Date(evaluation.date);
+        const formattedDate = isNaN(dateObj.getTime()) 
+          ? format(new Date(), 'yyyy-MM-dd')
+          : format(dateObj, 'yyyy-MM-dd');
+
+        setFormData({
+          employeeId: evaluation.employeeId || '',
+          evaluatorId: evaluation.evaluatorId || '',
+          date: formattedDate,
+          status: evaluation.status,
+          maxScore: evaluation.maxScore || 100,
+          score: evaluation.score || 0,
+          comments: evaluation.comments || '',
+        });
+      } catch (error) {
+        console.error('Erreur lors de l\'initialisation du formulaire:', error);
+      }
+    }
+  }, [evaluation]);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -77,25 +106,14 @@ const CreateEvaluationDialog: React.FC<CreateEvaluationDialogProps> = ({
         ...formData,
         date: new Date(formData.date).toISOString(),
         maxScore: Number(formData.maxScore),
-        createdAt: new Date().toISOString(),
+        score: Number(formData.score),
+        updatedAt: new Date().toISOString(),
       };
       
       await onSubmit(evaluationData);
-      
-      // Réinitialisation du formulaire
-      setFormData({
-        employeeId: '',
-        evaluatorId: '',
-        date: format(new Date(), 'yyyy-MM-dd'),
-        status: 'Planifiée',
-        maxScore: 100,
-        comments: '',
-      });
-      
-      onOpenChange(false);
     } catch (error) {
-      console.error('Erreur lors de la création de l\'évaluation:', error);
-      toast.error('Une erreur est survenue lors de la création de l\'évaluation');
+      console.error('Erreur lors de la mise à jour de l\'évaluation:', error);
+      toast.error('Une erreur est survenue lors de la mise à jour de l\'évaluation');
     } finally {
       setIsSubmitting(false);
     }
@@ -105,7 +123,7 @@ const CreateEvaluationDialog: React.FC<CreateEvaluationDialogProps> = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[525px]">
         <DialogHeader>
-          <DialogTitle>Créer une nouvelle évaluation</DialogTitle>
+          <DialogTitle>Modifier l'évaluation</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
@@ -180,16 +198,31 @@ const CreateEvaluationDialog: React.FC<CreateEvaluationDialogProps> = ({
             </Select>
           </div>
           
-          <div className="space-y-2">
-            <Label htmlFor="maxScore">Score maximum</Label>
-            <Input
-              id="maxScore"
-              name="maxScore"
-              type="number"
-              value={formData.maxScore}
-              onChange={handleChange}
-              min={1}
-            />
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="maxScore">Score maximum</Label>
+              <Input
+                id="maxScore"
+                name="maxScore"
+                type="number"
+                value={formData.maxScore}
+                onChange={handleChange}
+                min={1}
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="score">Score obtenu</Label>
+              <Input
+                id="score"
+                name="score"
+                type="number"
+                value={formData.score}
+                onChange={handleChange}
+                min={0}
+                max={formData.maxScore}
+              />
+            </div>
           </div>
           
           <div className="space-y-2">
@@ -209,7 +242,7 @@ const CreateEvaluationDialog: React.FC<CreateEvaluationDialogProps> = ({
               Annuler
             </Button>
             <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? "Création en cours..." : "Créer l'évaluation"}
+              {isSubmitting ? "Mise à jour en cours..." : "Mettre à jour"}
             </Button>
           </DialogFooter>
         </form>
@@ -218,4 +251,4 @@ const CreateEvaluationDialog: React.FC<CreateEvaluationDialogProps> = ({
   );
 };
 
-export default CreateEvaluationDialog;
+export default EditEvaluationDialog;
