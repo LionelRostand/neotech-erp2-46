@@ -66,7 +66,7 @@ export const useClients = () => {
             name: 'TechCorp',
             sector: 'technology',
             revenue: '1000000',
-            status: 'active',
+            status: 'active' as const,
             contactName: 'John Doe',
             contactEmail: 'john@techcorp.com',
             contactPhone: '01 23 45 67 89',
@@ -82,7 +82,7 @@ export const useClients = () => {
             name: 'HealthCare Plus',
             sector: 'healthcare',
             revenue: '750000',
-            status: 'active',
+            status: 'active' as const,
             contactName: 'Jane Smith',
             contactEmail: 'jane@healthcareplus.com',
             contactPhone: '01 98 76 54 32',
@@ -98,7 +98,7 @@ export const useClients = () => {
             name: 'Finance Group',
             sector: 'finance',
             revenue: '2000000',
-            status: 'inactive',
+            status: 'inactive' as const,
             contactName: 'Robert Johnson',
             contactEmail: 'robert@financegroup.com',
             contactPhone: '01 45 67 89 12',
@@ -172,9 +172,15 @@ export const useClients = () => {
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 500));
       
+      // Ensure status is a valid Client status type
+      const clientStatus = (data.status === 'active' || data.status === 'inactive' || data.status === 'lead') 
+        ? data.status 
+        : 'active';
+      
       const newClient: Client = {
         id: Date.now().toString(),
         ...data,
+        status: clientStatus,
         createdAt: new Date().toISOString(),
         customerSince: new Date().toISOString().split('T')[0]
       };
@@ -196,10 +202,15 @@ export const useClients = () => {
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 500));
       
+      // Ensure status is a valid Client status type
+      const clientStatus = (data.status === 'active' || data.status === 'inactive' || data.status === 'lead') 
+        ? data.status 
+        : 'active';
+      
       setClients(prev => 
         prev.map(client => 
           client.id === selectedClient.id 
-            ? { ...client, ...data } 
+            ? { ...client, ...data, status: clientStatus } 
             : client
         )
       );

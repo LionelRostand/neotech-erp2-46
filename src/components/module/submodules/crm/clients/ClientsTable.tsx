@@ -1,28 +1,39 @@
 
 import React from 'react';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
+import { 
+  Table, 
+  TableBody, 
+  TableCell, 
+  TableHead, 
+  TableHeader, 
+  TableRow 
+} from "@/components/ui/table";
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuTrigger 
+} from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { MoreHorizontal, Edit, Trash } from "lucide-react";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Edit, Trash, Eye, MoreHorizontal } from "lucide-react";
 import { Client } from '../types/crm-types';
 
 export interface ClientTableProps {
   clients: Client[];
-  onEdit: (client: Client) => void;
-  onDelete: (client: Client) => void;
-  onView?: (client: Client) => void;
   isLoading: boolean;
   error: string | null;
+  onView: (client: Client) => void;
+  onEdit: (client: Client) => void;
+  onDelete: (client: Client) => void;
 }
 
 const ClientsTable: React.FC<ClientTableProps> = ({
   clients,
-  onEdit,
-  onDelete,
-  onView,
   isLoading,
-  error
+  error,
+  onView,
+  onEdit,
+  onDelete
 }) => {
   if (isLoading) {
     return (
@@ -53,47 +64,53 @@ const ClientsTable: React.FC<ClientTableProps> = ({
       <TableHeader>
         <TableRow>
           <TableHead>Nom</TableHead>
-          <TableHead>Secteur</TableHead>
           <TableHead>Contact</TableHead>
+          <TableHead>Secteur</TableHead>
           <TableHead>Statut</TableHead>
           <TableHead className="text-right">Actions</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
         {clients.map((client) => (
-          <TableRow key={client.id} className="cursor-pointer hover:bg-muted/50" onClick={() => onView && onView(client)}>
+          <TableRow key={client.id}>
             <TableCell className="font-medium">{client.name}</TableCell>
+            <TableCell>
+              <div>{client.contactName}</div>
+              <div className="text-muted-foreground text-sm">{client.contactEmail}</div>
+            </TableCell>
             <TableCell>{client.sector}</TableCell>
             <TableCell>
-              <div className="flex flex-col">
-                <span>{client.contactName}</span>
-                <span className="text-sm text-muted-foreground">{client.contactEmail}</span>
+              <div className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+                client.status === 'active' ? 'bg-green-100 text-green-800' :
+                client.status === 'inactive' ? 'bg-gray-100 text-gray-800' :
+                'bg-blue-100 text-blue-800'
+              }`}>
+                {client.status === 'active' ? 'Actif' :
+                 client.status === 'inactive' ? 'Inactif' :
+                 'Prospect'}
               </div>
-            </TableCell>
-            <TableCell>
-              <Badge variant={client.status === 'active' ? 'default' : client.status === 'inactive' ? 'outline' : 'secondary'}>
-                {client.status === 'active' ? 'Actif' : client.status === 'inactive' ? 'Inactif' : 'Prospect'}
-              </Badge>
             </TableCell>
             <TableCell className="text-right">
               <DropdownMenu>
-                <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="icon">
                     <MoreHorizontal className="h-4 w-4" />
+                    <span className="sr-only">Ouvrir le menu</span>
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={(e) => {
-                    e.stopPropagation();
-                    onEdit(client);
-                  }}>
+                  <DropdownMenuItem onClick={() => onView(client)}>
+                    <Eye className="mr-2 h-4 w-4" />
+                    Détails
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => onEdit(client)}>
                     <Edit className="mr-2 h-4 w-4" />
                     Modifier
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={(e) => {
-                    e.stopPropagation();
-                    onDelete(client);
-                  }} className="text-destructive">
+                  <DropdownMenuItem 
+                    onClick={() => onDelete(client)}
+                    className="text-destructive"
+                  >
                     <Trash className="mr-2 h-4 w-4" />
                     Supprimer
                   </DropdownMenuItem>

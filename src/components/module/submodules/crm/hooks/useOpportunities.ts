@@ -70,17 +70,19 @@ export const useOpportunities = () => {
       updates.probability = typeof data.probability === 'string' ? parseFloat(data.probability) : data.probability;
     }
     
-    if (data.amount !== undefined) {
+    if (data.amount !== undefined && data.amount !== null) {
       updates.amount = typeof data.amount === 'string' ? parseFloat(data.amount) : data.amount;
     }
     
+    // Create a new array of opportunities with the updated one
     const updatedOpportunities = opportunities.map(opp => {
       if (opp.id === id) {
+        // Type cast to ensure we're returning an Opportunity
         return {
           ...opp,
           ...updates,
           updatedAt: new Date().toISOString(),
-        };
+        } as Opportunity;
       }
       return opp;
     });

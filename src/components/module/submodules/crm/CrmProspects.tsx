@@ -20,7 +20,7 @@ import DeleteProspectDialog from './prospects/DeleteProspectDialog';
 import ViewProspectDetails from './prospects/ViewProspectDetails';
 import ConvertToClientDialog from './prospects/ConvertToClientDialog';
 import ReminderDialog from './reminders/ReminderDialog';
-import { Prospect, ProspectFormData } from './types/crm-types';
+import { Prospect, ProspectFormData, ReminderData } from './types/crm-types';
 import { toast } from 'sonner';
 import { useProspectDialogs } from './hooks/prospect/useProspectDialogs';
 import DashboardLayout from '@/components/DashboardLayout';
@@ -30,6 +30,8 @@ const CrmProspects: React.FC = () => {
     prospects, 
     isLoading, 
     error, 
+    sourceOptions,
+    statusOptions,
     addProspect, 
     updateProspect, 
     deleteProspect, 
@@ -41,6 +43,11 @@ const CrmProspects: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [selectedProspect, setSelectedProspect] = useState<Prospect | null>(null);
   const [formData, setFormData] = useState<ProspectFormData>({} as ProspectFormData);
+  const [reminderData, setReminderData] = useState<ReminderData>({
+    title: '',
+    date: new Date().toISOString().split('T')[0],
+    notes: ''
+  });
   
   // Dialog states
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -74,10 +81,13 @@ const CrmProspects: React.FC = () => {
   
   // Handle adding a new prospect
   const handleAddProspect = async (data: ProspectFormData) => {
-    const success = await addProspect(data);
-    if (success) {
+    try {
+      await addProspect(data);
       setIsAddDialogOpen(false);
       toast.success('Prospect ajouté avec succès');
+      return true;
+    } catch (error) {
+      return false;
     }
   };
   
@@ -85,10 +95,13 @@ const CrmProspects: React.FC = () => {
   const handleUpdateProspect = async (data: ProspectFormData) => {
     if (!selectedProspect) return;
     
-    const success = await updateProspect(selectedProspect.id, data);
-    if (success) {
+    try {
+      await updateProspect(selectedProspect.id, data);
       setIsEditDialogOpen(false);
       toast.success('Prospect mis à jour avec succès');
+      return true;
+    } catch (error) {
+      return false;
     }
   };
   
@@ -107,11 +120,26 @@ const CrmProspects: React.FC = () => {
   const handleConvertToClient = async () => {
     if (!selectedProspect) return;
     
-    const clientId = await convertToClient(selectedProspect);
-    if (clientId) {
+    try {
+      const clientId = await convertToClient(selectedProspect);
       setIsConvertDialogOpen(false);
       toast.success('Prospect converti en client avec succès');
+      return clientId;
+    } catch (error) {
+      return null;
     }
+  };
+
+  // Handle reminder data changes
+  const handleReminderChange = (field: string, value: string) => {
+    setReminderData(prev => ({ ...prev, [field]: value }));
+  };
+
+  // Handle saving a reminder
+  const handleSaveReminder = () => {
+    // Implementation would go here
+    toast.success('Rappel enregistré');
+    setIsReminderDialogOpen(false);
   };
   
   return (
@@ -224,7 +252,9 @@ const CrmProspects: React.FC = () => {
         <AddProspectDialog 
           isOpen={isAddDialogOpen} 
           onClose={() => setIsAddDialogOpen(false)} 
-          onAdd={handleAddProspect} 
+          onAdd={handleAddProspect}
+          sourceOptions={sourceOptions}
+          statusOptions={statusOptions}
         />
         
         {selectedProspect && (
@@ -233,7 +263,9 @@ const CrmProspects: React.FC = () => {
               isOpen={isEditDialogOpen} 
               onClose={() => setIsEditDialogOpen(false)} 
               prospect={selectedProspect}
-              onUpdate={handleUpdateProspect} 
+              onUpdate={handleUpdateProspect}
+              sourceOptions={sourceOptions}
+              statusOptions={statusOptions}
             />
             
             <DeleteProspectDialog 
@@ -259,6 +291,9 @@ const CrmProspects: React.FC = () => {
             <ReminderDialog 
               isOpen={isReminderDialogOpen} 
               onClose={() => setIsReminderDialogOpen(false)} 
+              reminderData={reminderData}
+              onChange={handleReminderChange}
+              onSave={handleSaveReminder}
               relatedTo={{
                 type: 'prospect',
                 id: selectedProspect.id,

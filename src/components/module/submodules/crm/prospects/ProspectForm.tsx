@@ -1,47 +1,38 @@
 
 import React from 'react';
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from "@/components/ui/select";
 import { Prospect, ProspectFormData } from '../types/crm-types';
 
 export interface ProspectFormProps {
   initialData?: Prospect;
-  onSubmit: (data: ProspectFormData) => void;
   formData: ProspectFormData;
   handleInputChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
   handleSelectChange: (name: string, value: string) => void;
+  onSubmit: (data: ProspectFormData) => void;
   buttonText: string;
-  sourceOptions?: { value: string; label: string; }[];
-  statusOptions?: { value: string; label: string; }[];
+  sourceOptions: { value: string; label: string; }[];
+  statusOptions: { value: string; label: string; }[];
 }
 
 const ProspectForm: React.FC<ProspectFormProps> = ({
-  onSubmit,
+  initialData,
   formData,
   handleInputChange,
   handleSelectChange,
+  onSubmit,
   buttonText,
-  sourceOptions = [
-    { value: 'Site web', label: 'Site web' },
-    { value: 'Référence', label: 'Référence' },
-    { value: 'Réseaux sociaux', label: 'Réseaux sociaux' },
-    { value: 'Email', label: 'Email' },
-    { value: 'Événement', label: 'Événement' },
-    { value: 'Publicité', label: 'Publicité' },
-    { value: 'Autre', label: 'Autre' }
-  ],
-  statusOptions = [
-    { value: 'new', label: 'Nouveau' },
-    { value: 'contacted', label: 'Contacté' },
-    { value: 'meeting', label: 'Rendez-vous' },
-    { value: 'proposal', label: 'Proposition' },
-    { value: 'negotiation', label: 'Négociation' },
-    { value: 'converted', label: 'Converti' },
-    { value: 'lost', label: 'Perdu' }
-  ]
+  sourceOptions,
+  statusOptions
 }) => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -52,24 +43,12 @@ const ProspectForm: React.FC<ProspectFormProps> = ({
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label htmlFor="name">Nom</Label>
-          <Input
-            id="name"
-            name="name"
-            value={formData.name}
-            onChange={handleInputChange}
-            placeholder="Nom du prospect"
-          />
-        </div>
-        
-        <div className="space-y-2">
           <Label htmlFor="company">Entreprise</Label>
           <Input
             id="company"
             name="company"
             value={formData.company}
             onChange={handleInputChange}
-            placeholder="Nom de l'entreprise"
             required
           />
         </div>
@@ -81,11 +60,10 @@ const ProspectForm: React.FC<ProspectFormProps> = ({
             name="contactName"
             value={formData.contactName}
             onChange={handleInputChange}
-            placeholder="Nom du contact principal"
             required
           />
         </div>
-        
+
         <div className="space-y-2">
           <Label htmlFor="contactEmail">Email du contact</Label>
           <Input
@@ -94,11 +72,10 @@ const ProspectForm: React.FC<ProspectFormProps> = ({
             type="email"
             value={formData.contactEmail}
             onChange={handleInputChange}
-            placeholder="email@exemple.com"
             required
           />
         </div>
-        
+
         <div className="space-y-2">
           <Label htmlFor="contactPhone">Téléphone du contact</Label>
           <Input
@@ -106,31 +83,6 @@ const ProspectForm: React.FC<ProspectFormProps> = ({
             name="contactPhone"
             value={formData.contactPhone}
             onChange={handleInputChange}
-            placeholder="01 23 45 67 89"
-            required
-          />
-        </div>
-        
-        <div className="space-y-2">
-          <Label htmlFor="email">Email de l'entreprise</Label>
-          <Input
-            id="email"
-            name="email"
-            type="email"
-            value={formData.email}
-            onChange={handleInputChange}
-            placeholder="contact@entreprise.com"
-          />
-        </div>
-        
-        <div className="space-y-2">
-          <Label htmlFor="phone">Téléphone de l'entreprise</Label>
-          <Input
-            id="phone"
-            name="phone"
-            value={formData.phone}
-            onChange={handleInputChange}
-            placeholder="01 98 76 54 32"
           />
         </div>
         
@@ -152,7 +104,7 @@ const ProspectForm: React.FC<ProspectFormProps> = ({
             </SelectContent>
           </Select>
         </div>
-        
+
         <div className="space-y-2">
           <Label htmlFor="source">Source</Label>
           <Select 
@@ -171,40 +123,27 @@ const ProspectForm: React.FC<ProspectFormProps> = ({
             </SelectContent>
           </Select>
         </div>
-        
+
         <div className="space-y-2">
-          <Label htmlFor="industry">Secteur d'activité</Label>
+          <Label htmlFor="industry">Industrie</Label>
           <Input
             id="industry"
             name="industry"
-            value={formData.industry}
+            value={formData.industry || ''}
             onChange={handleInputChange}
-            placeholder="Secteur d'activité"
           />
         </div>
-        
+
         <div className="space-y-2">
           <Label htmlFor="website">Site web</Label>
           <Input
             id="website"
             name="website"
-            value={formData.website}
+            value={formData.website || ''}
             onChange={handleInputChange}
-            placeholder="www.exemple.com"
           />
         </div>
-        
-        <div className="space-y-2">
-          <Label htmlFor="address">Adresse</Label>
-          <Input
-            id="address"
-            name="address"
-            value={formData.address}
-            onChange={handleInputChange}
-            placeholder="Adresse complète"
-          />
-        </div>
-        
+
         <div className="space-y-2">
           <Label htmlFor="estimatedValue">Valeur estimée (€)</Label>
           <Input
@@ -213,23 +152,49 @@ const ProspectForm: React.FC<ProspectFormProps> = ({
             type="number"
             value={formData.estimatedValue || ''}
             onChange={handleInputChange}
-            placeholder="0"
           />
         </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="size">Taille de l'entreprise</Label>
+          <Select 
+            value={formData.size || ''} 
+            onValueChange={(value) => handleSelectChange('size', value)}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Sélectionner une taille" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="small">Petite</SelectItem>
+              <SelectItem value="medium">Moyenne</SelectItem>
+              <SelectItem value="large">Grande</SelectItem>
+              <SelectItem value="enterprise">Entreprise</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
-      
+
+      <div className="space-y-2">
+        <Label htmlFor="address">Adresse</Label>
+        <Input
+          id="address"
+          name="address"
+          value={formData.address || ''}
+          onChange={handleInputChange}
+        />
+      </div>
+
       <div className="space-y-2">
         <Label htmlFor="notes">Notes</Label>
         <Textarea
           id="notes"
           name="notes"
-          value={formData.notes}
+          value={formData.notes || ''}
           onChange={handleInputChange}
-          placeholder="Notes additionnelles sur ce prospect..."
-          rows={4}
+          rows={3}
         />
       </div>
-      
+
       <Button type="submit" className="w-full">
         {buttonText}
       </Button>

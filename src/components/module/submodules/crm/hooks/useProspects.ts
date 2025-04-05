@@ -1,61 +1,27 @@
 
-import { useState, useEffect } from 'react';
-import { ProspectFormData, ReminderData, Prospect } from '../types/crm-types';
+import { useState, useEffect, useCallback } from 'react';
+import { Prospect, ProspectFormData, ReminderData } from '../types/crm-types';
 import { toast } from 'sonner';
-import { useProspectDialogs } from './prospect/useProspectDialogs';
 
 export const useProspects = () => {
-  // State variables
   const [prospects, setProspects] = useState<Prospect[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
-  const [selectedProspect, setSelectedProspect] = useState<Prospect | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  
-  // Dialog states
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [isViewDetailsOpen, setIsViewDetailsOpen] = useState(false);
-  const [isConvertDialogOpen, setIsConvertDialogOpen] = useState(false);
-  const [isReminderDialogOpen, setIsReminderDialogOpen] = useState(false);
-  
-  // Form data
-  const [formData, setFormData] = useState<ProspectFormData>({
-    name: '',
-    company: '',
-    contactName: '',
-    contactEmail: '',
-    contactPhone: '',
-    email: '',
-    phone: '',
-    status: 'new',
-    source: '',
-    industry: '',
-    website: '',
-    address: '',
-    notes: ''
-  });
-  
-  const [reminderData, setReminderData] = useState<ReminderData>({
-    title: '',
-    date: new Date().toISOString().split('T')[0],
-    notes: ''
-  });
+  const [selectedProspect, setSelectedProspect] = useState<Prospect | null>(null);
 
-  // Mock source options
-  const sourcesOptions = [
-    { value: 'Site web', label: 'Site web' },
-    { value: 'Référence', label: 'Référence' },
-    { value: 'Réseaux sociaux', label: 'Réseaux sociaux' },
-    { value: 'Email', label: 'Email' },
-    { value: 'Événement', label: 'Événement' },
-    { value: 'Publicité', label: 'Publicité' },
-    { value: 'Autre', label: 'Autre' }
+  // List of source options for dropdown
+  const sourceOptions = [
+    { value: 'website', label: 'Site web' },
+    { value: 'referral', label: 'Parrainage' },
+    { value: 'linkedin', label: 'LinkedIn' },
+    { value: 'email', label: 'Email' },
+    { value: 'event', label: 'Événement' },
+    { value: 'other', label: 'Autre' }
   ];
 
-  // Mock status options
+  // List of status options for dropdown
   const statusOptions = [
     { value: 'new', label: 'Nouveau' },
     { value: 'contacted', label: 'Contacté' },
@@ -65,76 +31,76 @@ export const useProspects = () => {
     { value: 'converted', label: 'Converti' },
     { value: 'lost', label: 'Perdu' }
   ];
-  
-  // Reset form
-  const resetForm = () => {
-    setFormData({
-      name: '',
-      company: '',
-      contactName: '',
-      contactEmail: '',
-      contactPhone: '',
-      email: '',
-      phone: '',
-      status: 'new',
-      source: 'Site web',
-      industry: '',
-      website: '',
-      address: '',
-      notes: ''
-    });
-    
-    setReminderData({
-      title: '',
-      date: new Date().toISOString().split('T')[0],
-      notes: ''
-    });
-  };
 
-  // Load prospects
   useEffect(() => {
     const fetchProspects = async () => {
       try {
-        // Simulate API call with mock data
+        // Simulate API call
         await new Promise(resolve => setTimeout(resolve, 1000));
         
         // Mock data
         const mockProspects: Prospect[] = [
           {
             id: '1',
-            name: 'Société A',
-            company: 'Société A',
-            contactName: 'Jean Dupont',
-            contactEmail: 'jean@societeA.fr',
+            name: 'John Doe',
+            company: 'Acme Inc',
+            contactName: 'John Doe',
+            contactEmail: 'john@acme.com',
             contactPhone: '01 23 45 67 89',
-            email: 'contact@societeA.fr',
-            phone: '01 98 76 54 32',
-            status: 'new',
-            source: 'Site web',
-            industry: 'Technologie',
-            website: 'www.societeA.fr',
-            address: '123 Rue de Paris, 75001 Paris',
-            notes: 'Premier contact effectué par email',
-            createdAt: new Date().toISOString(),
-            lastContact: new Date().toISOString().split('T')[0]
+            email: 'john@acme.com',
+            phone: '01 23 45 67 89',
+            status: 'contacted' as const,
+            source: 'website',
+            industry: 'technology',
+            website: 'www.acme.com',
+            address: '123 Business St, Paris',
+            estimatedValue: 15000,
+            notes: 'Promising lead from website contact form',
+            lastContact: '2023-09-15',
+            nextContact: '2023-09-30',
+            createdAt: '2023-09-01',
           },
           {
             id: '2',
-            name: 'Entreprise B',
-            company: 'Entreprise B',
-            contactName: 'Marie Martin',
-            contactEmail: 'marie@entrepriseB.fr',
-            contactPhone: '01 23 45 67 88',
-            email: 'contact@entrepriseB.fr',
-            phone: '01 98 76 54 33',
-            status: 'contacted',
-            source: 'Référence',
-            industry: 'Finance',
-            website: 'www.entrepriseB.fr',
-            address: '456 Avenue des Champs-Élysées, 75008 Paris',
-            notes: 'Intéressé par notre solution de gestion',
-            createdAt: new Date().toISOString(),
-            lastContact: new Date().toISOString().split('T')[0]
+            name: 'Marie Johnson',
+            company: 'Tech Solutions',
+            contactName: 'Marie Johnson',
+            contactEmail: 'marie@techsolutions.com',
+            contactPhone: '01 98 76 54 32',
+            email: 'marie@techsolutions.com',
+            phone: '01 98 76 54 32',
+            status: 'meeting' as const,
+            source: 'linkedin',
+            industry: 'technology',
+            website: 'www.techsolutions.com',
+            address: '456 Tech Ave, Lyon',
+            size: 'medium',
+            estimatedValue: 25000,
+            notes: 'Meeting scheduled for next week to discuss project requirements',
+            lastContact: '2023-09-20',
+            nextContact: '2023-10-05',
+            createdAt: '2023-09-10',
+          },
+          {
+            id: '3',
+            name: 'Pierre Dupont',
+            company: 'Health Services',
+            contactName: 'Pierre Dupont',
+            contactEmail: 'pierre@healthservices.fr',
+            contactPhone: '01 45 67 89 12',
+            email: 'pierre@healthservices.fr',
+            phone: '01 45 67 89 12',
+            status: 'new' as const,
+            source: 'email',
+            industry: 'healthcare',
+            website: 'www.healthservices.fr',
+            address: '789 Health Blvd, Marseille',
+            size: 'large',
+            estimatedValue: 50000,
+            notes: 'Initial contact made via email campaign',
+            lastContact: '2023-09-18',
+            nextContact: '2023-09-25',
+            createdAt: '2023-09-18',
           }
         ];
         
@@ -147,106 +113,99 @@ export const useProspects = () => {
         setLoading(false);
       }
     };
-    
+
     fetchProspects();
   }, []);
 
-  // Dialog management
-  const dialogs = useProspectDialogs(
-    setSelectedProspect,
-    setFormData,
-    setIsAddDialogOpen,
-    setIsEditDialogOpen,
-    setIsDeleteDialogOpen,
-    setIsViewDetailsOpen,
-    setIsConvertDialogOpen,
-    setIsReminderDialogOpen
-  );
-
-  // Filter prospects based on search term and status filter
-  const filterProspects = (prospects: Prospect[], searchTerm: string, statusFilter: string) => {
-    return prospects.filter(prospect => {
-      const matchesFilter = statusFilter === 'all' || prospect.status === statusFilter;
-      const matchesSearch = searchTerm === '' || 
-        prospect.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        prospect.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        prospect.email?.toLowerCase().includes(searchTerm.toLowerCase());
-      
-      return matchesFilter && matchesSearch;
-    });
-  };
-
-  // Handle form input changes
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
-
-  // Handle select changes
-  const handleSelectChange = (name: string, value: string) => {
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
-
-  // CRUD operations
-  const addProspect = async (data: ProspectFormData): Promise<boolean> => {
+  // Add a new prospect
+  const addProspect = useCallback(async (data: ProspectFormData): Promise<Prospect> => {
     try {
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 500));
       
+      // Ensure status is valid Prospect status type
+      let prospectStatus: Prospect['status'];
+      if (['new', 'contacted', 'meeting', 'proposal', 'negotiation', 'converted', 'lost'].includes(data.status)) {
+        prospectStatus = data.status as Prospect['status'];
+      } else {
+        prospectStatus = 'new';
+      }
+      
       const newProspect: Prospect = {
         id: Date.now().toString(),
-        name: data.name || '',
+        name: data.name || data.contactName,
         company: data.company,
         contactName: data.contactName,
         contactEmail: data.contactEmail,
         contactPhone: data.contactPhone,
-        email: data.email || '',
-        phone: data.phone || '',
-        status: data.status as Prospect['status'],
+        email: data.email || data.contactEmail,
+        phone: data.phone || data.contactPhone,
+        status: prospectStatus,
         source: data.source,
         industry: data.industry,
         website: data.website,
         address: data.address,
+        size: data.size,
+        estimatedValue: data.estimatedValue,
         notes: data.notes,
+        lastContact: data.lastContact || new Date().toISOString().split('T')[0],
         createdAt: new Date().toISOString(),
-        lastContact: data.lastContact || new Date().toISOString().split('T')[0]
       };
       
       setProspects(prev => [newProspect, ...prev]);
-      return true;
+      return newProspect;
     } catch (err) {
       console.error('Error adding prospect:', err);
       toast.error('Erreur lors de l\'ajout du prospect');
-      return false;
+      throw err;
     }
-  };
+  }, []);
 
-  const updateProspect = async (id: string, data: ProspectFormData): Promise<boolean> => {
+  // Update an existing prospect
+  const updateProspect = useCallback(async (id: string, data: Partial<ProspectFormData>): Promise<Prospect> => {
     try {
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 500));
       
-      setProspects(prev => 
-        prev.map(prospect => 
-          prospect.id === id 
-            ? { 
-                ...prospect, 
-                ...data,
-                lastContact: data.lastContact || prospect.lastContact
-              } 
-            : prospect
-        )
-      );
+      // Ensure status is valid Prospect status type if it's being updated
+      let prospectStatus: Prospect['status'] | undefined;
+      if (data.status) {
+        if (['new', 'contacted', 'meeting', 'proposal', 'negotiation', 'converted', 'lost'].includes(data.status)) {
+          prospectStatus = data.status as Prospect['status'];
+        } else {
+          prospectStatus = 'new';
+        }
+      }
       
-      return true;
+      const updatedProspects = prospects.map(prospect => {
+        if (prospect.id === id) {
+          return {
+            ...prospect,
+            ...data,
+            // Override with corrected status if provided
+            ...(prospectStatus ? { status: prospectStatus } : {})
+          } as Prospect;
+        }
+        return prospect;
+      });
+      
+      setProspects(updatedProspects);
+      
+      const updatedProspect = updatedProspects.find(p => p.id === id);
+      if (!updatedProspect) {
+        throw new Error('Prospect not found');
+      }
+      
+      return updatedProspect;
     } catch (err) {
       console.error('Error updating prospect:', err);
       toast.error('Erreur lors de la mise à jour du prospect');
-      return false;
+      throw err;
     }
-  };
+  }, [prospects]);
 
-  const deleteProspect = async (id: string): Promise<boolean> => {
+  // Delete a prospect
+  const deleteProspect = useCallback(async (id: string): Promise<boolean> => {
     try {
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 500));
@@ -258,38 +217,49 @@ export const useProspects = () => {
       toast.error('Erreur lors de la suppression du prospect');
       return false;
     }
-  };
+  }, []);
 
-  const convertToClient = async (prospect: Prospect): Promise<string | null> => {
+  // Convert a prospect to a client
+  const convertToClient = useCallback(async (prospect: Prospect): Promise<string> => {
     try {
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 500));
       
-      // Update the prospect status to converted
-      setProspects(prev => 
-        prev.map(p => 
-          p.id === prospect.id 
-            ? { ...p, status: 'converted', convertedAt: new Date().toISOString() } 
-            : p
-        )
-      );
+      // Update prospect status to 'converted'
+      const updatedProspects = prospects.map(p => {
+        if (p.id === prospect.id) {
+          return {
+            ...p,
+            status: 'converted' as const,
+            convertedAt: new Date().toISOString(),
+            convertedToClientId: Date.now().toString()
+          } as Prospect;
+        }
+        return p;
+      });
       
-      // In a real scenario, this would create a client and return the client ID
-      const clientId = `client-${Date.now()}`;
+      setProspects(updatedProspects);
+      
+      // In a real app, you would create a new client record here
+      const clientId = Date.now().toString();
+      
       return clientId;
     } catch (err) {
       console.error('Error converting prospect to client:', err);
       toast.error('Erreur lors de la conversion du prospect en client');
-      return null;
+      throw err;
     }
-  };
+  }, [prospects]);
 
-  const addReminder = async (prospectId: string, data: ReminderData): Promise<boolean> => {
+  // Add a reminder for a prospect
+  const addReminder = useCallback(async (prospectId: string, reminderData: ReminderData): Promise<boolean> => {
     try {
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 500));
       
-      // In a real scenario, this would add a reminder to the database
+      // In a real app, you would save the reminder to the database
+      console.log(`Adding reminder for prospect ${prospectId}:`, reminderData);
+      
       toast.success('Rappel ajouté avec succès');
       return true;
     } catch (err) {
@@ -297,96 +267,24 @@ export const useProspects = () => {
       toast.error('Erreur lors de l\'ajout du rappel');
       return false;
     }
-  };
-
-  // Utility functions
-  const getStatusBadgeClass = (status: string) => {
-    switch (status) {
-      case 'new':
-        return 'bg-blue-100 text-blue-800';
-      case 'contacted':
-        return 'bg-purple-100 text-purple-800';
-      case 'meeting':
-        return 'bg-amber-100 text-amber-800';
-      case 'proposal':
-        return 'bg-green-100 text-green-800';
-      case 'negotiation':
-        return 'bg-teal-100 text-teal-800';
-      case 'converted':
-        return 'bg-indigo-100 text-indigo-800';
-      case 'lost':
-        return 'bg-red-100 text-red-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case 'new':
-        return 'Nouveau';
-      case 'contacted':
-        return 'Contacté';
-      case 'meeting':
-        return 'Rendez-vous';
-      case 'proposal':
-        return 'Proposition';
-      case 'negotiation':
-        return 'Négociation';
-      case 'converted':
-        return 'Converti';
-      case 'lost':
-        return 'Perdu';
-      default:
-        return status;
-    }
-  };
-
-  // Filter prospects
-  const filteredProspects = filterProspects(prospects, searchTerm, statusFilter);
+  }, []);
 
   return {
     prospects,
-    filteredProspects,
     isLoading: loading,
     error,
+    sourceOptions,
+    statusOptions,
     searchTerm,
     setSearchTerm,
     statusFilter,
     setStatusFilter,
-    isAddDialogOpen,
-    setIsAddDialogOpen,
-    isEditDialogOpen,
-    setIsEditDialogOpen,
-    isDeleteDialogOpen,
-    setIsDeleteDialogOpen,
-    isViewDetailsOpen,
-    setIsViewDetailsOpen,
-    isConvertDialogOpen,
-    setIsConvertDialogOpen,
-    isReminderDialogOpen,
-    setIsReminderDialogOpen,
     selectedProspect,
-    formData,
-    reminderData,
-    setReminderData,
-    sourcesOptions,
-    statusOptions,
-    handleInputChange,
-    handleSelectChange,
-    resetForm,
+    setSelectedProspect,
     addProspect,
     updateProspect,
     deleteProspect,
     convertToClient,
-    addReminder,
-    openAddDialog: dialogs.openAddDialog,
-    openEditDialog: dialogs.openEditDialog,
-    openDeleteDialog: dialogs.openDeleteDialog,
-    openViewDetails: dialogs.openViewDetails,
-    openConvertDialog: dialogs.openConvertDialog,
-    openReminderDialog: dialogs.openReminderDialog,
-    getStatusBadgeClass,
-    getStatusText
+    addReminder
   };
 };

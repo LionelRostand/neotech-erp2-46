@@ -23,11 +23,14 @@ export interface AccountingUser {
   name: string;
   email: string;
   role: string;
-  displayName: string; // Added to match expected type
+  displayName: string;
 }
 
 export interface AccountingUserPermission {
   userId: string;
+  userName: string;
+  userEmail: string;
+  userRole: string;
   moduleId: string;
   permissions: {
     canView: boolean;
@@ -51,7 +54,7 @@ export const ACCOUNTING_PERMISSIONS = {
 };
 
 export const useAccountingPermissions = () => {
-  const [users, setUsers] = useState<AccountingUser[]>([]);
+  const [users, setUsers] = useState<{ id: string; displayName: string; email: string; role?: string; }[]>([]);
   const [userPermissions, setUserPermissions] = useState<AccountingUserPermission[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [saving, setSaving] = useState(false);
@@ -68,11 +71,10 @@ export const useAccountingPermissions = () => {
         // In a real application, this would call an API to get the users
         // For now, we'll use mock data based on the permissions
         if (permissions) {
-          const uniqueUsers = permissions.reduce((acc: AccountingUser[], permission) => {
+          const uniqueUsers = permissions.reduce((acc: { id: string; displayName: string; email: string; role?: string; }[], permission) => {
             if (!acc.some(user => user.id === permission.userId)) {
               acc.push({
                 id: permission.userId,
-                name: permission.userName,
                 displayName: permission.userName,
                 email: permission.userEmail,
                 role: permission.userRole
@@ -86,6 +88,9 @@ export const useAccountingPermissions = () => {
           // Convert AccountingPermission[] to AccountingUserPermission[]
           const formattedPermissions = permissions.map(perm => ({
             userId: perm.userId,
+            userName: perm.userName,
+            userEmail: perm.userEmail,
+            userRole: perm.userRole,
             moduleId: perm.permissionType,
             permissions: {
               canView: perm.canView,
@@ -109,7 +114,7 @@ export const useAccountingPermissions = () => {
   }, [permissions, isLoading]);
 
   // Update a single permission
-  const updatePermission = useCallback((userId: string, moduleId: string, permissionType: keyof typeof ACCOUNTING_PERMISSIONS, value: boolean) => {
+  const updatePermission = useCallback((userId: string, moduleId: string, permissionType: "canView" | "canCreate" | "canEdit" | "canDelete", value: boolean) => {
     setUserPermissions(prev => 
       prev.map(permission => 
         permission.userId === userId && permission.moduleId === moduleId
@@ -126,17 +131,15 @@ export const useAccountingPermissions = () => {
   }, []);
 
   // Set all permissions of a specific type for a user
-  const setAllPermissionsOfType = useCallback((userId: string, permissionType: string, value: boolean) => {
+  const setAllPermissionsOfType = useCallback((userId: string, permissionType: "canView" | "canCreate" | "canEdit" | "canDelete", value: boolean) => {
     setUserPermissions(prev => 
       prev.map(permission => 
-        permission.userId === userId && permission.moduleId === permissionType
+        permission.userId === userId
           ? { 
               ...permission,
               permissions: {
-                canView: value,
-                canCreate: value,
-                canEdit: value,
-                canDelete: value
+                ...permission.permissions,
+                [permissionType]: value
               }
             } 
           : permission
@@ -167,9 +170,9 @@ export const useAccountingPermissions = () => {
     if (!searchTerm) return users;
     
     return users.filter(user => 
-      user.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+      user.displayName.toLowerCase().includes(searchTerm.toLowerCase()) || 
       user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.role.toLowerCase().includes(searchTerm.toLowerCase())
+      (user.role && user.role.toLowerCase().includes(searchTerm.toLowerCase()))
     );
   }, [users, searchTerm]);
 

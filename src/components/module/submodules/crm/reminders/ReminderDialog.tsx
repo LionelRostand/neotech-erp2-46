@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -17,7 +17,7 @@ import { ReminderData } from "../types/crm-types";
 interface ReminderDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  reminderData: ReminderData;
+  reminderData?: ReminderData;
   onChange?: (field: string, value: string) => void;
   onSave?: () => void;
   entityName?: string;
@@ -31,7 +31,11 @@ interface ReminderDialogProps {
 const ReminderDialog: React.FC<ReminderDialogProps> = ({
   isOpen,
   onClose,
-  reminderData,
+  reminderData = {
+    title: '',
+    date: new Date().toISOString().split('T')[0],
+    notes: ''
+  },
   onChange = () => {},
   onSave = () => {},
   entityName = '',
