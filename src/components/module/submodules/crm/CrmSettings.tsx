@@ -1,6 +1,5 @@
 
 import React, { useState } from 'react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { Settings, Users, Building, Database } from "lucide-react";
 import PermissionsTab from './settings/PermissionsTab';
