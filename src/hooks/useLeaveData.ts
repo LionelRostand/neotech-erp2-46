@@ -1,9 +1,27 @@
 
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useHrModuleData } from './useHrModuleData';
+
+// Define the Leave type to be exported
+export interface Leave {
+  id: string;
+  employeeName: string;
+  department: string;
+  type: string;
+  startDate: string;
+  endDate: string;
+  days: number;
+  status: string;
+  reason: string;
+  employeeId: string;
+  requestDate: string;
+  approvedBy: string;
+  employeePhoto: string;
+}
 
 export const useLeaveData = () => {
   const { leaveRequests, employees, isLoading } = useHrModuleData();
+  const [error, setError] = useState<Error | null>(null);
   
   // Calculate stats based on leave requests
   const stats = useMemo(() => {
@@ -80,5 +98,5 @@ export const useLeaveData = () => {
     });
   }, [leaveRequests, employees]);
   
-  return { leaves, stats, isLoading };
+  return { leaves, stats, isLoading, error };
 };

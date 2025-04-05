@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -38,6 +37,14 @@ const EmployeesLeaves: React.FC = () => {
     toast.success("Export des données de congés démarré");
     // Logique d'export à implémenter
   };
+
+  if (error) {
+    return (
+      <div className="p-4 bg-red-50 text-red-700 rounded-md">
+        Une erreur est survenue lors du chargement des données de congés.
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

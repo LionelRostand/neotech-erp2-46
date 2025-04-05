@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -34,7 +33,7 @@ const MaintenanceTable: React.FC<MaintenanceTableProps> = ({
     const scheduledDate = new Date(schedule.scheduledDate);
     
     if (schedule.status === 'completed' || schedule.completed) {
-      return <Badge variant="success">Terminé</Badge>;
+      return <Badge className="bg-green-100 text-green-800">Terminé</Badge>;
     } else if (scheduledDate < today) {
       return <Badge variant="destructive">En retard</Badge>;
     } else {
@@ -42,9 +41,9 @@ const MaintenanceTable: React.FC<MaintenanceTableProps> = ({
       const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
       
       if (diffDays <= 7) {
-        return <Badge variant="warning">Bientôt</Badge>;
+        return <Badge className="bg-yellow-100 text-yellow-800">Bientôt</Badge>;
       } else {
-        return <Badge variant="info">Planifié</Badge>;
+        return <Badge className="bg-blue-100 text-blue-800">Planifié</Badge>;
       }
     }
   };

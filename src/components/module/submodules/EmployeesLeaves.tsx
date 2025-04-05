@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -12,8 +11,11 @@ import {
   Download,
   FileText
 } from 'lucide-react';
-import { LeaveRequestsList } from './leaves/LeaveRequestsList';
-import LeaveBalanceCards from './leaves/LeaveBalanceCards';
+import { LeaveRequestsList } from './LeaveRequestsList';
+import LeaveBalanceCards from './LeaveBalanceCards';
+import { LeaveCalendar } from './LeaveCalendar';
+import { LeavePolicies } from './LeavePolicies';
+import { LeaveBalances } from './LeaveBalances';
 import { toast } from 'sonner';
 import { useLeaveData } from '@/hooks/useLeaveData';
 
@@ -35,6 +37,14 @@ const EmployeesLeaves: React.FC = () => {
     toast.success("Export des données de congés démarré");
     // Logique d'export à implémenter
   };
+
+  if (error) {
+    return (
+      <div className="p-4 bg-red-50 text-red-700 rounded-md">
+        Une erreur est survenue lors du chargement des données de congés.
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -130,7 +140,7 @@ const EmployeesLeaves: React.FC = () => {
             <SunMedium className="h-4 w-4 mr-2" />
             Soldes
           </TabsTrigger>
-          <TabsTrigger value="parametres" className="flex items-center">
+          <TabsTrigger value="politiques" className="flex items-center">
             <Clock className="h-4 w-4 mr-2" />
             Politiques
           </TabsTrigger>
@@ -150,9 +160,7 @@ const EmployeesLeaves: React.FC = () => {
         <TabsContent value="calendrier">
           <Card>
             <CardContent className="p-6">
-              <div className="py-8 text-center text-gray-500">
-                Calendrier des congés (à implémenter)
-              </div>
+              <LeaveCalendar />
             </CardContent>
           </Card>
         </TabsContent>
@@ -160,17 +168,15 @@ const EmployeesLeaves: React.FC = () => {
         <TabsContent value="soldes">
           <Card>
             <CardContent className="p-6">
-              <LeaveBalanceCards />
+              <LeaveBalances />
             </CardContent>
           </Card>
         </TabsContent>
 
-        <TabsContent value="parametres">
+        <TabsContent value="politiques">
           <Card>
             <CardContent className="p-6">
-              <div className="py-8 text-center text-gray-500">
-                Politiques de congés (à implémenter)
-              </div>
+              <LeavePolicies />
             </CardContent>
           </Card>
         </TabsContent>
