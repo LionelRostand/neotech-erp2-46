@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Document, Employee } from '@/types/employee';
+import { Employee, Document } from '@/types/employee';
 import { FileText, Download, Plus } from 'lucide-react';
 
 interface DocumentsTabProps {

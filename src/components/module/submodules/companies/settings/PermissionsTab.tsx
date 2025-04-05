@@ -4,7 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search, Shield, Save, RefreshCw } from "lucide-react";
-import { CompanyPermission, CompanyUserPermission } from '../types';
+import { CompanyPermission, CompanyUserPermission } from '@/components/module/submodules/companies/types';
 import CompanyPermissionsTable from './CompanyPermissionsTable';
 
 interface PermissionsTabProps {

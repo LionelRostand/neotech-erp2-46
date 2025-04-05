@@ -9,6 +9,20 @@ export interface EmployeeAddress {
   state?: string;
 }
 
+export interface Education {
+  degree: string;
+  school: string;
+  year: string;
+}
+
+export interface Document {
+  name: string;
+  date: string;
+  type: string;
+  fileUrl?: string;
+  id?: string;
+}
+
 export interface Employee {
   id: string;
   firstName: string;
@@ -22,12 +36,12 @@ export interface Employee {
   photoURL: string;
   hireDate: string;
   startDate: string;
-  status: string;
+  status: 'active' | 'inactive' | 'onLeave' | 'Actif';
   address: string | EmployeeAddress;
   contract: string;
   socialSecurityNumber: string;
   birthDate: string;
-  documents: any[];
+  documents: Document[] | any[];
   company: string | Company;
   role: string;
   title: string;
@@ -35,7 +49,7 @@ export interface Employee {
   managerId: string;
   professionalEmail: string;
   skills: string[];
-  education: any[];
+  education: Education[] | any[];
   workSchedule?: {
     monday: string;
     tuesday: string;

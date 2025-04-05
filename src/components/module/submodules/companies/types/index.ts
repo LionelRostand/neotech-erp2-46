@@ -35,6 +35,7 @@ export interface CompanyContact {
   email: string;
   phone: string;
   isMain: boolean;
+  isMainContact?: boolean; // Added this field to fix type errors
   createdAt: string;
   updatedAt: string;
   notes?: string;
@@ -61,4 +62,32 @@ export interface CompanyUserPermission {
   userEmail: string;
   userRole: string;
   permissions: CompanyPermission[];
+}
+
+// Define CompanyDocument types - moved from companies.ts to here
+export interface CompanyDocument {
+  id: string;
+  companyId: string;
+  name: string;
+  type: string;
+  url: string;
+  size?: number;
+  fileSize?: number;
+  contentType: string;
+  createdBy?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Define CompanyFilters types - moved from companies.ts to here
+export interface CompanyFilters {
+  status?: string;
+  industry?: string;
+  size?: string;
+  name?: string;
+  location?: string;
+  startDate?: string;
+  endDate?: string;
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
 }

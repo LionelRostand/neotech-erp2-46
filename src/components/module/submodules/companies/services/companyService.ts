@@ -1,4 +1,3 @@
-
 import { collection, getDocs, doc, getDoc, addDoc, updateDoc, deleteDoc, query, where, orderBy } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Company, CompanyFilters } from '../types';
@@ -10,38 +9,32 @@ class CompanyService {
     try {
       let q = collection(db, COMPANIES_COLLECTION);
       
-      // We'll build the query without using multiple query instances
-      let conditions = [];
-      
       if (filters) {
-        // Building the query parameters
+        // Build query with filters
+        let queryRef = query(q);
+        
+        // Apply filters one by one
         if (filters.status) {
-          conditions.push(where('status', '==', filters.status));
+          queryRef = query(queryRef, where('status', '==', filters.status));
         }
         if (filters.industry) {
-          conditions.push(where('industry', '==', filters.industry));
+          queryRef = query(queryRef, where('industry', '==', filters.industry));
         }
         if (filters.name) {
-          conditions.push(where('name', '==', filters.name));
+          queryRef = query(queryRef, where('name', '==', filters.name));
         }
         if (filters.location) {
-          conditions.push(where('address.city', '==', filters.location));
+          queryRef = query(queryRef, where('address.city', '==', filters.location));
         }
         
-        // Apply all conditions to the query
-        let finalQuery = q;
-        if (conditions.length > 0) {
-          finalQuery = query(q, ...conditions);
-        }
-        
-        // Add sorting if specified
+        // Apply sorting if specified
         if (filters.sortBy) {
           const sortOrder = filters.sortOrder === 'desc' ? 'desc' : 'asc';
-          finalQuery = query(finalQuery, orderBy(filters.sortBy, sortOrder));
+          queryRef = query(queryRef, orderBy(filters.sortBy, sortOrder));
         }
         
         // Execute the query
-        const querySnapshot = await getDocs(finalQuery);
+        const querySnapshot = await getDocs(queryRef);
         const companies: Company[] = [];
         querySnapshot.forEach((doc) => {
           companies.push({ id: doc.id, ...doc.data() } as Company);

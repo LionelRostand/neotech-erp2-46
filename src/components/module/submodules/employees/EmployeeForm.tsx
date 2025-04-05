@@ -1,10 +1,9 @@
-
 import React, { useEffect, useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Form } from '@/components/ui/form';
-import { Employee } from '@/types/employee';
+import { Employee, EmployeeAddress } from '@/types/employee';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -16,6 +15,7 @@ import { employeeFormSchema, EmployeeFormValues } from './form/employeeFormSchem
 import { prepareEmployeeData } from './form/employeeUtils';
 import { createEmployeeWithAccount } from '@/services/userService';
 import { toast } from 'sonner';
+import { Company } from '@/components/module/submodules/companies/types';
 
 interface EmployeeFormProps {
   open: boolean;
@@ -48,29 +48,36 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
       contract: 'CDI',
       hireDate: '',
       manager: '',
-      status: 'Actif',
+      status: 'Actif' as 'active' | 'inactive' | 'onLeave' | 'Actif',
       professionalEmail: '',
       company: '',
     },
   });
 
-  // Si mode édition, charger les valeurs de l'employé
   useEffect(() => {
     if (isEditing && employee) {
+      const addressString = typeof employee.address === 'object' 
+        ? `${(employee.address as EmployeeAddress).street}, ${(employee.address as EmployeeAddress).city}` 
+        : employee.address as string;
+      
+      const companyString = typeof employee.company === 'object'
+        ? (employee.company as Company).id
+        : employee.company as string;
+        
       form.reset({
         firstName: employee.firstName,
         lastName: employee.lastName,
         email: employee.email,
         phone: employee.phone,
-        address: employee.address,
+        address: addressString,
         department: employee.department,
         position: employee.position,
         contract: employee.contract,
         hireDate: employee.hireDate,
         manager: employee.manager,
-        status: employee.status,
+        status: employee.status as 'active' | 'inactive' | 'onLeave' | 'Actif',
         professionalEmail: employee.professionalEmail || '',
-        company: employee.company || '',
+        company: companyString,
       });
     } else {
       form.reset({
@@ -84,7 +91,7 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
         contract: 'CDI',
         hireDate: '',
         manager: '',
-        status: 'Actif',
+        status: 'Actif' as 'active' | 'inactive' | 'onLeave' | 'Actif',
         professionalEmail: '',
         company: '',
       });
@@ -96,14 +103,12 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
     
     try {
       if (createAccount && !isEditing) {
-        // Vérifier que l'email professionnel est fourni
         if (!data.professionalEmail) {
           toast.error("L'email professionnel est requis pour créer un compte utilisateur");
           setIsSubmitting(false);
           return;
         }
         
-        // Créer l'employé avec un compte utilisateur
         const employeeData = prepareEmployeeData(data);
         const result = await createEmployeeWithAccount(employeeData, data.professionalEmail);
         
@@ -116,7 +121,6 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
           toast.error("Erreur lors de la création du compte utilisateur");
         }
       } else {
-        // Créer ou mettre à jour l'employé sans compte utilisateur
         const employeeData = isEditing 
           ? data
           : prepareEmployeeData(data);
@@ -135,7 +139,6 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
     }
   };
 
-  // Générer un email professionnel basé sur le nom et prénom
   const generateProfessionalEmail = () => {
     const firstName = form.getValues('firstName').toLowerCase();
     const lastName = form.getValues('lastName').toLowerCase();

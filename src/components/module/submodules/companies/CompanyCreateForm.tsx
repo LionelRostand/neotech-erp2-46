@@ -1,272 +1,358 @@
+
 import React, { useState } from 'react';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
 import { useNavigate } from 'react-router-dom';
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useCompanyService } from './services/companyService';
-import { Company } from './types';
 import { toast } from 'sonner';
+import { companyService } from './services/companyService'; // Fixed import
+import { Loader2 } from 'lucide-react';
 
-interface FormState {
-  name: string;
-  street: string;
-  city: string;
-  postalCode: string;
-  country: string;
-  siret: string;
-  phone: string;
-  email: string;
-  website: string;
-  industry: string;
-  size: string;
-  status: 'active' | 'inactive' | 'pending';
-}
+// Form schema
+const formSchema = z.object({
+  name: z.string().min(2, { message: "Le nom doit contenir au moins 2 caractères" }),
+  street: z.string().min(2, { message: "L'adresse doit contenir au moins 2 caractères" }),
+  city: z.string().min(2, { message: "La ville doit contenir au moins 2 caractères" }),
+  postalCode: z.string().min(2, { message: "Le code postal doit contenir au moins 2 caractères" }),
+  country: z.string().min(2, { message: "Le pays doit contenir au moins 2 caractères" }),
+  email: z.string().email({ message: "L'email doit être valide" }),
+  phone: z.string().min(10, { message: "Le téléphone doit contenir au moins 10 caractères" }),
+  website: z.string().url({ message: "Le site web doit être une URL valide" }).optional().or(z.literal('')),
+  siret: z.string().optional().or(z.literal('')),
+  industry: z.string().optional().or(z.literal('')),
+  size: z.string().optional().or(z.literal('')),
+  status: z.enum(['active', 'inactive', 'pending']),
+  description: z.string().optional().or(z.literal(''))
+});
 
-const initialFormState: FormState = {
-  name: '',
-  street: '',
-  city: '',
-  postalCode: '',
-  country: '',
-  siret: '',
-  phone: '',
-  email: '',
-  website: '',
-  industry: '',
-  size: '',
-  status: 'active'
-};
+type FormValues = z.infer<typeof formSchema>;
 
 const CompanyCreateForm: React.FC = () => {
-  const navigate = useNavigate();
-  const companyService = useCompanyService();
-  const [activeTab, setActiveTab] = useState("general");
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const [formData, setFormData] = useState<FormState>(initialFormState);
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
-  };
-
-  const handleSelectChange = (name: string, value: string) => {
-    setFormData({ ...formData, [name]: value });
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!formData.name) {
-      toast.error("Le nom de l'entreprise est requis");
-      return;
+  const navigate = useNavigate();
+  
+  const form = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      name: '',
+      street: '',
+      city: '',
+      postalCode: '',
+      country: 'France',
+      email: '',
+      phone: '',
+      website: '',
+      siret: '',
+      industry: '',
+      size: '',
+      status: 'active',
+      description: ''
     }
-    
+  });
+  
+  const onSubmit = async (data: FormValues) => {
+    setIsSubmitting(true);
     try {
-      setIsSubmitting(true);
-      
-      // Prepare company data omitting id, createdAt, and updatedAt
-      const companyData: Omit<Company, "id" | "createdAt" | "updatedAt"> = {
-        name: formData.name,
+      // Transform data to match Company interface
+      const companyData = {
+        name: data.name,
         address: {
-          street: formData.street || '',
-          city: formData.city || '',
-          postalCode: formData.postalCode || '',
-          country: formData.country || ''
+          street: data.street,
+          city: data.city,
+          postalCode: data.postalCode,
+          country: data.country
         },
-        siret: formData.siret || '',
-        logo: '',
-        logoUrl: '',
-        phone: formData.phone || '',
-        email: formData.email || '',
-        website: formData.website || '',
-        industry: formData.industry || '',
-        size: formData.size || '',
-        status: 'active',
-        employeesCount: 0
+        siret: data.siret || '',
+        phone: data.phone,
+        email: data.email,
+        website: data.website || '',
+        industry: data.industry || '',
+        size: data.size || '',
+        status: data.status as 'active' | 'inactive' | 'pending',
+        employeesCount: 0,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        description: data.description || ''
       };
       
-      const savedCompany = await companyService.createCompany(companyData);
+      // Create company
+      await companyService.createCompany(companyData);
       
-      if (savedCompany) {
-        toast.success("Entreprise créée avec succès");
-        navigate('/modules/employees/companies');
-      } else {
-        toast.error("Erreur lors de la création de l'entreprise");
-      }
+      toast.success('Entreprise créée avec succès');
+      navigate('/modules/companies/list');
     } catch (error) {
-      console.error("Error saving company:", error);
-      toast.error("Erreur lors de la création de l'entreprise");
+      console.error('Erreur lors de la création:', error);
+      toast.error('Erreur lors de la création de l\'entreprise');
     } finally {
       setIsSubmitting(false);
     }
   };
-
+  
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Créer une entreprise</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="mb-4">
-            <TabsTrigger value="general">Général</TabsTrigger>
-            <TabsTrigger value="address">Adresse</TabsTrigger>
-            <TabsTrigger value="contact">Contact</TabsTrigger>
-          </TabsList>
-          <form onSubmit={handleSubmit}>
-            <TabsContent value="general">
-              <div className="grid gap-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="name">Nom de l'entreprise</Label>
-                  <Input 
-                    type="text" 
-                    id="name" 
-                    name="name"
-                    value={formData.name}
-                    onChange={handleInputChange}
-                    placeholder="Nom de l'entreprise" 
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="siret">SIRET</Label>
-                  <Input 
-                    type="text" 
-                    id="siret" 
-                    name="siret"
-                    value={formData.siret}
-                    onChange={handleInputChange}
-                    placeholder="Numéro SIRET" 
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="industry">Secteur d'activité</Label>
-                  <Input 
-                    type="text" 
-                    id="industry" 
-                    name="industry"
-                    value={formData.industry}
-                    onChange={handleInputChange}
-                    placeholder="Secteur d'activité" 
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="size">Taille de l'entreprise</Label>
-                  <Input 
-                    type="text" 
-                    id="size" 
-                    name="size"
-                    value={formData.size}
-                    onChange={handleInputChange}
-                    placeholder="Taille de l'entreprise" 
-                  />
-                </div>
+    <div className="space-y-6">
+      <h1 className="text-2xl font-bold">Créer une entreprise</h1>
+      
+      <Card>
+        <CardHeader>
+          <CardTitle>Informations générales</CardTitle>
+          <CardDescription>Renseignez les informations de l'entreprise</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <FormField
+                  control={form.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Nom de l'entreprise*</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Nom de l'entreprise" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="siret"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>SIRET</FormLabel>
+                      <FormControl>
+                        <Input placeholder="12345678901234" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email*</FormLabel>
+                      <FormControl>
+                        <Input placeholder="contact@entreprise.com" type="email" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="phone"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Téléphone*</FormLabel>
+                      <FormControl>
+                        <Input placeholder="+33 1 23 45 67 89" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="website"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Site web</FormLabel>
+                      <FormControl>
+                        <Input placeholder="https://www.entreprise.com" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="industry"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Secteur d'activité</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Sélectionnez un secteur" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="technology">Technologie</SelectItem>
+                          <SelectItem value="healthcare">Santé</SelectItem>
+                          <SelectItem value="finance">Finance</SelectItem>
+                          <SelectItem value="education">Éducation</SelectItem>
+                          <SelectItem value="retail">Commerce</SelectItem>
+                          <SelectItem value="manufacturing">Industrie</SelectItem>
+                          <SelectItem value="services">Services</SelectItem>
+                          <SelectItem value="other">Autre</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="size"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Taille de l'entreprise</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Sélectionnez une taille" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="1-10">1-10 employés</SelectItem>
+                          <SelectItem value="11-50">11-50 employés</SelectItem>
+                          <SelectItem value="51-200">51-200 employés</SelectItem>
+                          <SelectItem value="201-500">201-500 employés</SelectItem>
+                          <SelectItem value="501-1000">501-1000 employés</SelectItem>
+                          <SelectItem value="1000+">1000+ employés</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="status"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Statut</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Sélectionnez un statut" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="active">Actif</SelectItem>
+                          <SelectItem value="inactive">Inactif</SelectItem>
+                          <SelectItem value="pending">En attente</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               </div>
-            </TabsContent>
-            <TabsContent value="address">
-              <div className="grid gap-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="street">Rue</Label>
-                  <Input 
-                    type="text" 
-                    id="street" 
+              
+              <div className="space-y-4">
+                <h3 className="text-lg font-medium">Adresse</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <FormField
+                    control={form.control}
                     name="street"
-                    value={formData.street}
-                    onChange={handleInputChange}
-                    placeholder="Rue" 
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Rue*</FormLabel>
+                        <FormControl>
+                          <Input placeholder="123 Rue du Commerce" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
                   />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="city">Ville</Label>
-                  <Input 
-                    type="text" 
-                    id="city" 
+                  
+                  <FormField
+                    control={form.control}
                     name="city"
-                    value={formData.city}
-                    onChange={handleInputChange}
-                    placeholder="Ville" 
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Ville*</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Paris" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
                   />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="postalCode">Code postal</Label>
-                  <Input 
-                    type="text" 
-                    id="postalCode" 
+                  
+                  <FormField
+                    control={form.control}
                     name="postalCode"
-                    value={formData.postalCode}
-                    onChange={handleInputChange}
-                    placeholder="Code postal" 
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Code postal*</FormLabel>
+                        <FormControl>
+                          <Input placeholder="75001" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
                   />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="country">Pays</Label>
-                  <Input 
-                    type="text" 
-                    id="country"
+                  
+                  <FormField
+                    control={form.control}
                     name="country"
-                    value={formData.country}
-                    onChange={handleInputChange}
-                    placeholder="Pays" 
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Pays*</FormLabel>
+                        <FormControl>
+                          <Input placeholder="France" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
                   />
                 </div>
               </div>
-            </TabsContent>
-            <TabsContent value="contact">
-              <div className="grid gap-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="phone">Téléphone</Label>
-                  <Input 
-                    type="tel" 
-                    id="phone" 
-                    name="phone"
-                    value={formData.phone}
-                    onChange={handleInputChange}
-                    placeholder="Téléphone" 
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input 
-                    type="email" 
-                    id="email" 
-                    name="email"
-                    value={formData.email}
-                    onChange={handleInputChange}
-                    placeholder="Email" 
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="website">Site web</Label>
-                  <Input 
-                    type="url" 
-                    id="website" 
-                    name="website"
-                    value={formData.website}
-                    onChange={handleInputChange}
-                    placeholder="Site web" 
-                  />
-                </div>
+              
+              <FormField
+                control={form.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Description</FormLabel>
+                    <FormControl>
+                      <Textarea 
+                        placeholder="Description de l'entreprise" 
+                        className="min-h-32" 
+                        {...field} 
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <div className="flex justify-end space-x-2">
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={() => navigate('/modules/companies/list')}
+                  disabled={isSubmitting}
+                >
+                  Annuler
+                </Button>
+                <Button type="submit" disabled={isSubmitting}>
+                  {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  Créer l'entreprise
+                </Button>
               </div>
-            </TabsContent>
-            <CardFooter className="justify-between">
-              <Button variant="ghost" onClick={() => navigate('/modules/employees/companies')}>Annuler</Button>
-              <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? 'Création...' : 'Créer'}
-              </Button>
-            </CardFooter>
-          </form>
-        </Tabs>
-      </CardContent>
-    </Card>
+            </form>
+          </Form>
+        </CardContent>
+      </Card>
+    </div>
   );
 };
 

@@ -1,105 +1,145 @@
-
-import { useCollectionData } from '../useCollectionData';
+import { useState, useEffect } from 'react';
+import { collection, getDocs, onSnapshot } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 import { COLLECTIONS } from '@/lib/firebase-collections';
-import { orderBy } from 'firebase/firestore';
-import { 
-  Shipment, 
-  Carrier, 
-  Package,
-  Route,
-  TrackingEvent,
-  PackageType 
-} from '@/types/freight';
 
-/**
- * Hook to fetch data for the Freight module
- */
 export const useFreightData = () => {
-  // Fetch shipments
-  const { 
-    data: shipments, 
-    isLoading: isShipmentsLoading, 
-    error: shipmentsError 
-  } = useCollectionData<Shipment>(
-    COLLECTIONS.FREIGHT.SHIPMENTS,
-    [orderBy('createdAt', 'desc')]
-  );
+  const [shipments, setShipments] = useState([]);
+  const [vehicles, setVehicles] = useState([]);
+  const [routes, setRoutes] = useState([]);
+  const [drivers, setDrivers] = useState([]);
+  const [packages, setPackages] = useState([]);
+  const [trackingEvents, setTrackingEvents] = useState([]);
+  const [packageTypes, setPackageTypes] = useState([]);
+  const [carriers, setCarriers] = useState([]);
+  
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // Fetch carriers
-  const { 
-    data: carriers, 
-    isLoading: isCarriersLoading, 
-    error: carriersError 
-  } = useCollectionData<Carrier>(
-    COLLECTIONS.FREIGHT.CARRIERS,
-    [orderBy('name')]
-  );
-
-  // Fetch packages
-  const { 
-    data: packages, 
-    isLoading: isPackagesLoading, 
-    error: packagesError 
-  } = useCollectionData<Package>(
-    COLLECTIONS.FREIGHT.PACKAGES,
-    [orderBy('createdAt', 'desc')]
-  );
-
-  // Fetch routes
-  const { 
-    data: routes, 
-    isLoading: isRoutesLoading, 
-    error: routesError 
-  } = useCollectionData<Route>(
-    COLLECTIONS.FREIGHT.ROUTES,
-    []
-  );
-
-  // Fetch tracking events
-  const { 
-    data: trackingEvents, 
-    isLoading: isEventsLoading, 
-    error: eventsError 
-  } = useCollectionData<TrackingEvent>(
-    COLLECTIONS.FREIGHT.TRACKING_EVENTS,
-    [orderBy('timestamp', 'desc')]
-  );
-
-  // Fetch package types
-  const { 
-    data: packageTypes, 
-    isLoading: isTypesLoading, 
-    error: typesError 
-  } = useCollectionData<PackageType>(
-    COLLECTIONS.FREIGHT.PACKAGE_TYPES,
-    []
-  );
-
-  // Check if any data is still loading
-  const isLoading = 
-    isShipmentsLoading || 
-    isCarriersLoading || 
-    isPackagesLoading || 
-    isRoutesLoading || 
-    isEventsLoading || 
-    isTypesLoading;
-
-  // Combine all possible errors
-  const error = 
-    shipmentsError || 
-    carriersError || 
-    packagesError || 
-    routesError || 
-    eventsError || 
-    typesError;
+  useEffect(() => {
+    setIsLoading(true);
+    
+    try {
+      // Shipments collection
+      const shipmentsRef = collection(db, COLLECTIONS.FREIGHT.SHIPMENTS);
+      const unsubShipments = onSnapshot(shipmentsRef, (snapshot) => {
+        const shipmentsData = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+        setShipments(shipmentsData);
+      });
+      
+      // Vehicles collection 
+      const vehiclesRef = collection(db, COLLECTIONS.FREIGHT.VEHICLES);
+      const unsubVehicles = onSnapshot(vehiclesRef, (snapshot) => {
+        const vehiclesData = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+        setVehicles(vehiclesData);
+      });
+      
+      // Routes collection
+      const routesRef = collection(db, COLLECTIONS.FREIGHT.ROUTES);
+      const unsubRoutes = onSnapshot(routesRef, (snapshot) => {
+        const routesData = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+        setRoutes(routesData);
+      });
+      
+      // Drivers collection
+      const driversRef = collection(db, COLLECTIONS.FREIGHT.DRIVERS);
+      const unsubDrivers = onSnapshot(driversRef, (snapshot) => {
+        const driversData = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+        setDrivers(driversData);
+      });
+      
+      // Packages collection
+      const packagesRef = collection(db, COLLECTIONS.FREIGHT.PACKAGES);
+      const unsubPackages = onSnapshot(packagesRef, (snapshot) => {
+        const packagesData = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+        setPackages(packagesData);
+      });
+      
+      // Other collections if they exist
+      if (COLLECTIONS.FREIGHT.TRACKING_EVENTS) {
+        const trackingEventsRef = collection(db, COLLECTIONS.FREIGHT.TRACKING_EVENTS);
+        const unsubTrackingEvents = onSnapshot(trackingEventsRef, (snapshot) => {
+          const trackingEventsData = snapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+          }));
+          setTrackingEvents(trackingEventsData);
+        });
+      }
+      
+      if (COLLECTIONS.FREIGHT.PACKAGE_TYPES) {
+        const packageTypesRef = collection(db, COLLECTIONS.FREIGHT.PACKAGE_TYPES);
+        const unsubPackageTypes = onSnapshot(packageTypesRef, (snapshot) => {
+          const packageTypesData = snapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+          }));
+          setPackageTypes(packageTypesData);
+        });
+      }
+      
+      if (COLLECTIONS.FREIGHT.CARRIERS) {
+        const carriersRef = collection(db, COLLECTIONS.FREIGHT.CARRIERS);
+        const unsubCarriers = onSnapshot(carriersRef, (snapshot) => {
+          const carriersData = snapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+          }));
+          setCarriers(carriersData);
+        });
+      }
+      
+      setIsLoading(false);
+      
+      // Cleanup
+      return () => {
+        unsubShipments();
+        unsubVehicles();
+        unsubRoutes();
+        unsubDrivers();
+        unsubPackages();
+        // Only unsubscribe if they exist
+        if (COLLECTIONS.FREIGHT.TRACKING_EVENTS) {
+          //unsubTrackingEvents();
+        }
+        if (COLLECTIONS.FREIGHT.PACKAGE_TYPES) {
+          //unsubPackageTypes();
+        }
+        if (COLLECTIONS.FREIGHT.CARRIERS) {
+          //unsubCarriers();
+        }
+      };
+    } catch (err) {
+      console.error('Error fetching freight data:', err);
+      setError(err);
+      setIsLoading(false);
+    }
+  }, []);
 
   return {
     shipments,
-    carriers,
-    packages,
+    vehicles,
     routes,
+    drivers,
+    packages,
     trackingEvents,
     packageTypes,
+    carriers,
     isLoading,
     error
   };
