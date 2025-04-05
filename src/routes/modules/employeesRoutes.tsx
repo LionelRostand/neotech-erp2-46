@@ -17,7 +17,7 @@ import EmployeesContracts from "@/components/module/submodules/contracts/Employe
 import EmployeesDocuments from "@/components/module/submodules/documents/EmployeesDocuments";
 import EmployeesEvaluations from "@/components/module/submodules/evaluations/EmployeesEvaluations";
 import EmployeesTrainings from "@/components/module/submodules/trainings/EmployeesTrainings";
-import EmployeesCompanies from "@/components/module/submodules/companies/CompaniesList";
+import EmployeesCompanies from "@/components/module/submodules/employees/EmployeesCompanies";
 import EmployeesReports from "@/components/module/submodules/reports/EmployeesReports";
 import EmployeesAlerts from "@/components/module/submodules/alerts/EmployeesAlerts";
 import EmployeesSettings from "@/components/module/submodules/settings/EmployeesSettings";

@@ -14,7 +14,7 @@ import EmployeesDocuments from '../documents/EmployeesDocuments';
 import EmployeesEvaluations from '../evaluations/EmployeesEvaluations';
 import EmployeesTrainings from '../trainings/EmployeesTrainings';
 import EmployeesRecruitment from '../EmployeesRecruitment';
-import EmployeesCompanies from '../companies/CompaniesList';
+import EmployeesCompanies from '../employees/EmployeesCompanies';
 import EmployeesReports from '../reports/EmployeesReports';
 import EmployeesAlerts from '../alerts/EmployeesAlerts';
 import EmployeesSettings from '../settings/EmployeesSettings';
