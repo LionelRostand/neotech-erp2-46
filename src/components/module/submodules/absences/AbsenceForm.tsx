@@ -104,6 +104,7 @@ const AbsenceForm: React.FC<AbsenceFormProps> = ({ onSubmit, onCancel }) => {
                 }}
                 initialFocus
                 locale={fr}
+                className="p-3 pointer-events-auto"
               />
             </PopoverContent>
           </Popover>
@@ -135,6 +136,7 @@ const AbsenceForm: React.FC<AbsenceFormProps> = ({ onSubmit, onCancel }) => {
                 }}
                 initialFocus
                 locale={fr}
+                className="p-3 pointer-events-auto"
               />
             </PopoverContent>
           </Popover>

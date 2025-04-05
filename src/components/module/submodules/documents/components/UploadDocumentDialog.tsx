@@ -74,11 +74,11 @@ const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
           <DialogTitle>Téléverser un document</DialogTitle>
         </DialogHeader>
         
-        <form onSubmit={handleSubmit} className="space-y-4 py-4">
+        <form onSubmit={handleSubmit} className="space-y-4 py-2">
           <div className="space-y-2">
-            <Label htmlFor="title">Titre du document *</Label>
-            <Input
-              id="title"
+            <Label htmlFor="document-title">Titre du document</Label>
+            <Input 
+              id="document-title"
               value={documentTitle}
               onChange={(e) => setDocumentTitle(e.target.value)}
               placeholder="Ex: Contrat de travail"
@@ -87,79 +87,84 @@ const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="type">Type de document *</Label>
-            <Select value={documentType} onValueChange={setDocumentType} required>
-              <SelectTrigger>
+            <Label htmlFor="document-type">Type de document</Label>
+            <Select value={documentType || "default"} onValueChange={setDocumentType}>
+              <SelectTrigger id="document-type">
                 <SelectValue placeholder="Sélectionner un type" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="contrat">Contrat</SelectItem>
-                <SelectItem value="attestation">Attestation</SelectItem>
-                <SelectItem value="formulaire">Formulaire</SelectItem>
-                <SelectItem value="autre">Autre</SelectItem>
+                <SelectItem value="default" disabled>Sélectionner un type</SelectItem>
+                <SelectItem value="contract">Contrat</SelectItem>
+                <SelectItem value="payslip">Fiche de paie</SelectItem>
+                <SelectItem value="ID">Pièce d'identité</SelectItem>
+                <SelectItem value="certificate">Certificat</SelectItem>
+                <SelectItem value="form">Formulaire</SelectItem>
+                <SelectItem value="other">Autre</SelectItem>
               </SelectContent>
             </Select>
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="employee">Employé (optionnel)</Label>
-            <Select value={employeeId} onValueChange={setEmployeeId}>
-              <SelectTrigger>
-                <SelectValue placeholder="Associer à un employé" />
+            <Label htmlFor="employee-id">Associer à un employé (optionnel)</Label>
+            <Select value={employeeId || "none"} onValueChange={setEmployeeId}>
+              <SelectTrigger id="employee-id">
+                <SelectValue placeholder="Sélectionner un employé" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="none">Non assigné</SelectItem>
-                <SelectItem value="emp1">Jean Dupont</SelectItem>
-                <SelectItem value="emp2">Marie Martin</SelectItem>
-                <SelectItem value="emp3">Lucas Bernard</SelectItem>
+                <SelectItem value="none">Aucun employé</SelectItem>
+                <SelectItem value="emp-1">Jean Dupont</SelectItem>
+                <SelectItem value="emp-2">Marie Martin</SelectItem>
+                <SelectItem value="emp-3">Pierre Durand</SelectItem>
               </SelectContent>
             </Select>
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="file">Fichier *</Label>
-            <div className="border-2 border-dashed rounded-md p-6 text-center">
-              <FileUp className="h-8 w-8 mx-auto mb-2 text-gray-400" />
-              <div className="text-sm mb-2">
-                {file ? (
-                  <span className="text-green-500 font-medium">{file.name}</span>
-                ) : (
-                  "Glissez-déposez ou cliquez pour sélectionner"
-                )}
-              </div>
-              <Input 
-                id="file" 
-                type="file" 
+            <Label htmlFor="document-file">Fichier</Label>
+            <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+              <FileUp className="mx-auto h-12 w-12 text-gray-400" />
+              <p className="mt-2 text-sm text-gray-600">
+                Cliquez pour sélectionner ou glissez un fichier ici
+              </p>
+              <p className="mt-1 text-xs text-gray-500">
+                PDF, DOC, DOCX, XLS, XLSX, JPG, PNG (max 10MB)
+              </p>
+              <Input
+                id="document-file"
+                type="file"
                 className="hidden"
                 onChange={handleFileChange}
+                accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png"
               />
               <Button 
                 type="button"
                 variant="outline" 
-                size="sm" 
-                onClick={() => document.getElementById('file')?.click()}
+                className="mt-4"
+                onClick={() => document.getElementById('document-file')?.click()}
               >
-                Parcourir
+                Sélectionner un fichier
               </Button>
+              {file && (
+                <p className="mt-2 text-sm font-medium">
+                  Fichier sélectionné: {file.name}
+                </p>
+              )}
             </div>
           </div>
           
-          <DialogFooter className="pt-4">
+          <DialogFooter>
             <Button 
-              type="button"
+              type="button" 
               variant="outline" 
-              onClick={() => {
-                resetForm();
-                onOpenChange(false);
-              }}
+              onClick={() => onOpenChange(false)}
             >
               Annuler
             </Button>
             <Button 
-              type="submit" 
-              disabled={isUploading}
+              type="submit"
+              disabled={isUploading || !documentTitle || !documentType || !file}
             >
-              {isUploading ? 'Téléversement...' : 'Téléverser'}
+              {isUploading ? "Téléversement..." : "Téléverser"}
             </Button>
           </DialogFooter>
         </form>

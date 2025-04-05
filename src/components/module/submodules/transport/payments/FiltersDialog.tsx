@@ -110,7 +110,7 @@ const FiltersDialog: React.FC<FiltersDialogProps> = ({ open, onOpenChange, onApp
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="status">Statut</Label>
-              <Select value={paymentStatus} onValueChange={setPaymentStatus}>
+              <Select value={paymentStatus || "all"} onValueChange={setPaymentStatus}>
                 <SelectTrigger id="status">
                   <SelectValue placeholder="Tous les statuts" />
                 </SelectTrigger>
@@ -127,7 +127,7 @@ const FiltersDialog: React.FC<FiltersDialogProps> = ({ open, onOpenChange, onApp
             
             <div className="space-y-2">
               <Label htmlFor="method">Méthode de paiement</Label>
-              <Select value={paymentMethod} onValueChange={setPaymentMethod}>
+              <Select value={paymentMethod || "all"} onValueChange={setPaymentMethod}>
                 <SelectTrigger id="method">
                   <SelectValue placeholder="Toutes les méthodes" />
                 </SelectTrigger>
