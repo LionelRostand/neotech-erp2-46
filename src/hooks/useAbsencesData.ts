@@ -1,5 +1,6 @@
 
-import { useState, useEffect } from 'react';
+import { useMemo } from 'react';
+import { useHrModuleData } from './useHrModuleData';
 
 export interface Absence {
   id: string;
@@ -13,97 +14,68 @@ export interface Absence {
   status: 'En attente' | 'Validé' | 'Refusé';
   reason?: string;
   department?: string;
-  approvedBy?: string;
-  approverName?: string;
-  approvalDate?: string;
 }
 
-// Mock data for absences
-const mockAbsences: Absence[] = [
-  {
-    id: '1',
-    employeeId: 'emp-001',
-    employeeName: 'Jean Dupont',
-    employeePhoto: '',
-    type: 'Maladie',
-    startDate: '10/04/2025',
-    endDate: '15/04/2025',
-    days: 6,
-    status: 'En attente',
-    reason: 'Grippe saisonnière',
-    department: 'Marketing'
-  },
-  {
-    id: '2',
-    employeeId: 'emp-002',
-    employeeName: 'Marie Martin',
-    employeePhoto: '',
-    type: 'Congé sans solde',
-    startDate: '20/05/2025',
-    endDate: '25/05/2025',
-    days: 6,
-    status: 'Validé',
-    reason: 'Voyage personnel',
-    department: 'Finance',
-    approvedBy: 'manager-001',
-    approverName: 'Pierre Legrand',
-    approvalDate: '15/04/2025'
-  },
-  {
-    id: '3',
-    employeeId: 'emp-003',
-    employeeName: 'Sophie Petit',
-    employeePhoto: '',
-    type: 'Familial',
-    startDate: '05/06/2025',
-    endDate: '07/06/2025',
-    days: 3,
-    status: 'Refusé',
-    reason: 'Mariage',
-    department: 'RH',
-    approvedBy: 'manager-002',
-    approverName: 'Jacques Moreau',
-    approvalDate: '28/05/2025'
-  }
-];
-
 /**
- * Hook to access absence data
+ * Hook pour accéder aux données des absences
  */
 export const useAbsencesData = () => {
-  const [absences, setAbsences] = useState<Absence[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
+  const { absenceRequests, employees, isLoading, error } = useHrModuleData();
   
-  useEffect(() => {
-    // Simulate API call
-    const fetchData = async () => {
-      try {
-        setIsLoading(true);
-        // Simulate network delay
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        setAbsences(mockAbsences);
-        setIsLoading(false);
-      } catch (err) {
-        setError(err instanceof Error ? err : new Error('Unknown error occurred'));
-        setIsLoading(false);
-      }
-    };
+  // Enrichir les absences avec les noms des employés
+  const formattedAbsences = useMemo(() => {
+    if (!absenceRequests || absenceRequests.length === 0) return [];
     
-    fetchData();
-  }, []);
-
-  // Calculate absence statistics
-  const stats = {
-    pending: absences.filter(absence => absence.status === 'En attente').length,
-    validated: absences.filter(absence => absence.status === 'Validé').length,
-    rejected: absences.filter(absence => absence.status === 'Refusé').length,
-    total: absences.length
+    return absenceRequests.map(absence => {
+      // Trouver l'employé associé à cette absence
+      const employee = employees?.find(emp => emp.id === absence.employeeId);
+      
+      // Calculer le nombre de jours
+      const startDate = new Date(absence.startDate);
+      const endDate = new Date(absence.endDate);
+      const diffTime = Math.abs(endDate.getTime() - startDate.getTime());
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1; // +1 car inclusif
+      
+      return {
+        id: absence.id,
+        employeeId: absence.employeeId,
+        employeeName: employee ? `${employee.firstName} ${employee.lastName}` : 'Employé inconnu',
+        employeePhoto: employee?.photoURL || employee?.photo || '',
+        type: absence.type || 'Absence non justifiée',
+        startDate: formatDate(absence.startDate),
+        endDate: formatDate(absence.endDate),
+        days: absence.days || diffDays,
+        status: absence.status === 'approved' ? 'Validé' : 
+                absence.status === 'rejected' ? 'Refusé' : 'En attente',
+        reason: absence.reason,
+        department: employee?.department || 'Non spécifié',
+      } as Absence;
+    });
+  }, [absenceRequests, employees]);
+  
+  // Fonction pour formater les dates
+  const formatDate = (dateStr: string) => {
+    try {
+      return new Date(dateStr).toLocaleDateString('fr-FR');
+    } catch (error) {
+      console.error('Erreur de formatage de date:', dateStr, error);
+      return dateStr;
+    }
   };
+
+  // Obtenir des statistiques sur les absences
+  const absenceStats = useMemo(() => {
+    const pending = formattedAbsences.filter(absence => absence.status === 'En attente').length;
+    const validated = formattedAbsences.filter(absence => absence.status === 'Validé').length;
+    const rejected = formattedAbsences.filter(absence => absence.status === 'Refusé').length;
+    const total = formattedAbsences.length;
+    
+    return { pending, validated, rejected, total };
+  }, [formattedAbsences]);
   
   return {
-    absences,
-    stats,
+    absences: formattedAbsences,
+    stats: absenceStats,
     isLoading,
     error
   };

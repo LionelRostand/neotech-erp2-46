@@ -1,5 +1,6 @@
+
 import { useState, useEffect, useCallback } from 'react';
-import { CompanyUserPermission, CompanyPermission } from '../../companies/types';
+import { CompanyUserPermission, CompanyPermission } from '../types';
 import { toast } from 'sonner';
 
 const useCompanyPermissions = () => {
