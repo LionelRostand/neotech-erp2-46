@@ -1,12 +1,20 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Employee, Document } from '@/types/employee';
+import { Employee } from '@/types/employee';
 import { FileText, Download, Plus } from 'lucide-react';
+
+interface Document {
+  name: string;
+  date: string;
+  type: string;
+  fileUrl?: string;
+  id?: string;
+}
 
 interface DocumentsTabProps {
   documents?: Document[] | string[];
-  employee?: Employee; // Added this property to fix the error
+  employee?: Employee;
 }
 
 const DocumentsTab: React.FC<DocumentsTabProps> = ({ documents = [], employee }) => {
