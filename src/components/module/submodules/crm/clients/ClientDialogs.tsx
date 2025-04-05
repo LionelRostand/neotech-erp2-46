@@ -33,6 +33,7 @@ interface ClientDialogsProps {
   resetForm: () => void;
   sectorOptions: { value: string, label: string }[];
   statusOptions: { value: string, label: string }[];
+  openEditDialog: (client: Client) => void;
 }
 
 const ClientDialogs: React.FC<ClientDialogsProps> = ({
@@ -53,7 +54,8 @@ const ClientDialogs: React.FC<ClientDialogsProps> = ({
   handleDeleteClient,
   resetForm,
   sectorOptions,
-  statusOptions
+  statusOptions,
+  openEditDialog
 }) => {
   // Helper function to extract sectors array for the form
   const sectors = sectorOptions

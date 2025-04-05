@@ -115,8 +115,10 @@ export const useClients = () => {
   // CRUD operations
   const handleCreateClient = useCallback(async (data: ClientFormData) => {
     try {
+      // Cast the status to the proper type
       await addClient({
         ...data,
+        status: data.status as 'active' | 'inactive' | 'lead',
         customerSince: new Date().toISOString().split('T')[0]
       });
       
@@ -133,7 +135,11 @@ export const useClients = () => {
     if (!selectedClient) return;
     
     try {
-      await updateClient(selectedClient.id, data);
+      // We need to cast the status here as well
+      await updateClient(selectedClient.id, {
+        ...data,
+        status: data.status as 'active' | 'inactive' | 'lead'
+      });
       
       resetForm();
       setIsEditDialogOpen(false);
