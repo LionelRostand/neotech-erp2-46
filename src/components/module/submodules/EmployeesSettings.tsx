@@ -3,17 +3,48 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Shield, Users, Settings as SettingsIcon } from 'lucide-react';
+import { Shield, Users, Settings as SettingsIcon, UserPlus, Search } from 'lucide-react';
 import { useHrModuleData } from '@/hooks/useHrModuleData';
 import { Employee } from '@/types/employee';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Switch } from '@/components/ui/switch';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { getAllUsers } from '@/services/userService';
+import { toast } from 'sonner';
+import { User } from '@/types/user';
 
 const EmployeesSettings: React.FC = () => {
   const { employees, isLoading } = useHrModuleData();
   const [activeTab, setActiveTab] = useState("permissions");
+  const [users, setUsers] = useState<User[]>([]);
+  const [isLoadingUsers, setIsLoadingUsers] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  useEffect(() => {
+    const fetchUsers = async () => {
+      setIsLoadingUsers(true);
+      try {
+        const allUsers = await getAllUsers();
+        setUsers(allUsers);
+      } catch (error) {
+        console.error("Erreur lors de la récupération des utilisateurs:", error);
+        toast.error("Impossible de charger les utilisateurs");
+      } finally {
+        setIsLoadingUsers(false);
+      }
+    };
+
+    if (activeTab === "users") {
+      fetchUsers();
+    }
+  }, [activeTab]);
+
+  const filteredUsers = users.filter(user => 
+    user.firstName.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    user.lastName.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    user.email.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   return (
     <div className="container mx-auto py-6 space-y-6">
@@ -94,9 +125,100 @@ const EmployeesSettings: React.FC = () => {
               <CardTitle>Gestion des utilisateurs</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-muted-foreground">
-                Configuration des utilisateurs et de leurs accès.
-              </p>
+              <div className="space-y-6">
+                <div className="flex items-center justify-between">
+                  <div className="relative w-full max-w-sm">
+                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      type="search"
+                      placeholder="Rechercher un utilisateur..."
+                      className="pl-8"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                    />
+                  </div>
+                  <Button className="flex items-center">
+                    <UserPlus className="mr-2 h-4 w-4" />
+                    Nouvel utilisateur
+                  </Button>
+                </div>
+
+                {isLoadingUsers ? (
+                  <div className="space-y-2">
+                    <Skeleton className="h-10 w-full" />
+                    <Skeleton className="h-10 w-full" />
+                    <Skeleton className="h-10 w-full" />
+                  </div>
+                ) : (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Nom</TableHead>
+                        <TableHead>Email</TableHead>
+                        <TableHead>Rôle</TableHead>
+                        <TableHead>Service</TableHead>
+                        <TableHead>Statut</TableHead>
+                        <TableHead>Dernière connexion</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredUsers.map((user) => (
+                        <TableRow key={user.id}>
+                          <TableCell className="font-medium">{user.firstName} {user.lastName}</TableCell>
+                          <TableCell>{user.email}</TableCell>
+                          <TableCell>
+                            <span className={`px-2 py-1 rounded-full text-xs ${
+                              user.role === 'admin' 
+                                ? 'bg-red-100 text-red-800' 
+                                : user.role === 'manager' 
+                                  ? 'bg-blue-100 text-blue-800' 
+                                  : 'bg-gray-100 text-gray-800'
+                            }`}>
+                              {user.role === 'admin' 
+                                ? 'Administrateur' 
+                                : user.role === 'manager' 
+                                  ? 'Manager' 
+                                  : 'Utilisateur'}
+                            </span>
+                          </TableCell>
+                          <TableCell>{user.department || '-'}</TableCell>
+                          <TableCell>
+                            <span className={`px-2 py-1 rounded-full text-xs ${
+                              user.status === 'active' 
+                                ? 'bg-green-100 text-green-800' 
+                                : user.status === 'inactive' 
+                                  ? 'bg-gray-100 text-gray-800' 
+                                  : 'bg-yellow-100 text-yellow-800'
+                            }`}>
+                              {user.status === 'active' 
+                                ? 'Actif' 
+                                : user.status === 'inactive' 
+                                  ? 'Inactif' 
+                                  : 'En attente'}
+                            </span>
+                          </TableCell>
+                          <TableCell>
+                            {user.lastLogin 
+                              ? new Date(user.lastLogin).toLocaleDateString('fr-FR') 
+                              : 'Jamais connecté'}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <Button variant="ghost" size="sm">Éditer</Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                      {filteredUsers.length === 0 && (
+                        <TableRow>
+                          <TableCell colSpan={7} className="text-center py-4 text-muted-foreground">
+                            {searchQuery ? 'Aucun utilisateur trouvé pour cette recherche' : 'Aucun utilisateur trouvé'}
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+                )}
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
