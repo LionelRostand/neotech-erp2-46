@@ -54,23 +54,48 @@ export const SidebarProvider: React.FC<SidebarProviderProps> = ({ children, inst
   // Initialize expanded state for active module on route change
   useEffect(() => {
     if (activeModule) {
-      setExpandedModules(prev => ({
-        ...prev,
-        [activeModule.id]: true
-      }));
+      // Only update if the active module isn't already expanded
+      setExpandedModules(prev => {
+        if (prev[activeModule.id]) {
+          return prev; // No change needed, already expanded
+        }
+        return {
+          ...prev,
+          [activeModule.id]: true
+        };
+      });
       
       // Expand the category containing the active module
-      if (CategoryService.isModuleInCategory(activeModule, businessModules)) {
-        setExpandedCategories(prev => ({ ...prev, business: true }));
-      } else if (CategoryService.isModuleInCategory(activeModule, serviceModules)) {
-        setExpandedCategories(prev => ({ ...prev, services: true }));
-      } else if (CategoryService.isModuleInCategory(activeModule, digitalModules)) {
-        setExpandedCategories(prev => ({ ...prev, digital: true }));
-      } else if (CategoryService.isModuleInCategory(activeModule, communicationModules)) {
-        setExpandedCategories(prev => ({ ...prev, communication: true }));
-      }
+      setExpandedCategories(prev => {
+        const updates = { ...prev };
+        let categoryChanged = false;
+        
+        if (CategoryService.isModuleInCategory(activeModule, businessModules) && !prev.business) {
+          updates.business = true;
+          categoryChanged = true;
+        } else if (CategoryService.isModuleInCategory(activeModule, serviceModules) && !prev.services) {
+          updates.services = true;
+          categoryChanged = true;
+        } else if (CategoryService.isModuleInCategory(activeModule, digitalModules) && !prev.digital) {
+          updates.digital = true;
+          categoryChanged = true;
+        } else if (CategoryService.isModuleInCategory(activeModule, communicationModules) && !prev.communication) {
+          updates.communication = true;
+          categoryChanged = true;
+        }
+
+        // Only return a new object if something changed, to prevent unnecessary rerenders
+        return categoryChanged ? updates : prev;
+      });
     }
-  }, [location.pathname, activeModule, businessModules, serviceModules, digitalModules, communicationModules]);
+  }, [
+    location.pathname, 
+    activeModule, 
+    businessModules, 
+    serviceModules, 
+    digitalModules, 
+    communicationModules
+  ]);
 
   // Function to toggle submenu expansion
   const toggleModuleSubmenus = (moduleId: number) => {

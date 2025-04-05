@@ -42,6 +42,7 @@ export const useOpportunities = () => {
     };
     
     setOpportunities(prev => [newOpportunity, ...prev]);
+    toast.success('Opportunité ajoutée avec succès');
     return newOpportunity;
   };
 
@@ -68,6 +69,7 @@ export const useOpportunities = () => {
       throw new Error('Opportunity not found');
     }
     
+    toast.success('Opportunité mise à jour avec succès');
     return updatedOpportunity;
   };
 
@@ -76,6 +78,7 @@ export const useOpportunities = () => {
     // Simulate API call to delete an opportunity
     await new Promise(resolve => setTimeout(resolve, 500));
     setOpportunities(prev => prev.filter(opp => opp.id !== id));
+    toast.success('Opportunité supprimée avec succès');
   };
 
   return {
