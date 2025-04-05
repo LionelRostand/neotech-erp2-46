@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Prospect, ProspectFormData, ReminderData } from '../../types/crm-types';
 import { toast } from 'sonner';
@@ -21,10 +20,13 @@ export const useProspectActions = (
     
     try {
       const newProspect: Omit<Prospect, 'id'> = {
+        name: formData.name || formData.contactName, // Use contactName as fallback for name
         company: formData.company,
         contactName: formData.contactName,
         contactEmail: formData.contactEmail,
         contactPhone: formData.contactPhone,
+        email: formData.email || formData.contactEmail, // Use contactEmail as fallback for email
+        phone: formData.phone || formData.contactPhone, // Use contactPhone as fallback for phone
         source: formData.source,
         industry: formData.industry || '',
         status: formData.status as Prospect['status'],
@@ -60,10 +62,13 @@ export const useProspectActions = (
     
     try {
       const updatedProspect = {
+        name: formData.name || formData.contactName, // Ensure name is always set
         company: formData.company,
         contactName: formData.contactName,
         contactEmail: formData.contactEmail,
         contactPhone: formData.contactPhone,
+        email: formData.email || formData.contactEmail,
+        phone: formData.phone || formData.contactPhone,
         source: formData.source,
         status: formData.status as Prospect['status'],
         notes: formData.notes,

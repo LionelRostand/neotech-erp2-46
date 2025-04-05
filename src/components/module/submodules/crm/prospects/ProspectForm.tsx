@@ -1,188 +1,172 @@
 
-import React, { ChangeEvent } from 'react';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import { ProspectFormData } from '../types/crm-types';
+import React, { useState } from 'react';
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Prospect, ProspectFormData } from '../types/crm-types';
 
 export interface ProspectFormProps {
+  initialData?: Prospect;
   formData: ProspectFormData;
-  handleInputChange: (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
-  handleSelectChange: (field: string, value: string) => void;
+  handleInputChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
+  handleSelectChange: (name: string, value: string) => void;
   onSubmit: (data: ProspectFormData) => void;
-  isSubmitting?: boolean;
   buttonText: string;
-  sourcesOptions?: {value: string, label: string}[];
 }
 
 const ProspectForm: React.FC<ProspectFormProps> = ({
+  initialData,
   formData,
   handleInputChange,
   handleSelectChange,
   onSubmit,
-  isSubmitting = false,
-  buttonText,
-  sourcesOptions = []
+  buttonText = "Enregistrer"
 }) => {
+  // Set initial state from props or use defaults
+  const [localFormData, setLocalFormData] = useState<ProspectFormData>(
+    formData || {
+      name: '',
+      company: '',
+      email: '',
+      phone: '',
+      status: 'new',
+      source: 'Site web',
+      notes: '',
+      contactName: '',
+      contactEmail: '',
+      contactPhone: '',
+    }
+  );
+
+  // If we're using local form data, we need our own handlers
+  const handleLocalInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setLocalFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleLocalSelectChange = (name: string, value: string) => {
+    setLocalFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  // Use the right handlers based on whether formData was provided
+  const inputChangeHandler = handleInputChange || handleLocalInputChange;
+  const selectChangeHandler = handleSelectChange || handleLocalSelectChange;
   
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit(formData);
+    onSubmit(formData || localFormData);
   };
 
-  const statusOptions = [
-    { value: 'new', label: 'Nouveau' },
-    { value: 'contacted', label: 'Contacté' },
-    { value: 'meeting', label: 'Rendez-vous' },
-    { value: 'proposal', label: 'Proposition' },
-    { value: 'negotiation', label: 'Négociation' },
-    { value: 'converted', label: 'Converti' },
-    { value: 'lost', label: 'Perdu' }
-  ];
-
-  const sizeOptions = [
-    { value: 'small', label: 'Petite' },
-    { value: 'medium', label: 'Moyenne' },
-    { value: 'large', label: 'Grande' },
-    { value: 'enterprise', label: 'Entreprise' }
-  ];
+  const dataSource = formData || localFormData;
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label htmlFor="name">Nom du contact</Label>
-          <Input
-            id="name"
-            name="name"
-            value={formData.name || ''}
-            onChange={handleInputChange}
-            required
-          />
-        </div>
-        <div className="space-y-2">
           <Label htmlFor="company">Entreprise</Label>
           <Input
             id="company"
             name="company"
-            value={formData.company || ''}
-            onChange={handleInputChange}
+            value={dataSource.company}
+            onChange={inputChangeHandler}
             required
           />
         </div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        
         <div className="space-y-2">
-          <Label htmlFor="email">Email</Label>
+          <Label htmlFor="contactName">Nom du contact</Label>
           <Input
-            id="email"
-            name="email"
+            id="contactName"
+            name="contactName"
+            value={dataSource.contactName}
+            onChange={inputChangeHandler}
+            required
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="contactEmail">Email du contact</Label>
+          <Input
+            id="contactEmail"
+            name="contactEmail"
             type="email"
-            value={formData.email || ''}
-            onChange={handleInputChange}
+            value={dataSource.contactEmail}
+            onChange={inputChangeHandler}
+            required
           />
         </div>
-        <div className="space-y-2">
-          <Label htmlFor="phone">Téléphone</Label>
-          <Input
-            id="phone"
-            name="phone"
-            value={formData.phone || ''}
-            onChange={handleInputChange}
-          />
-        </div>
-      </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="contactPhone">Téléphone du contact</Label>
+          <Input
+            id="contactPhone"
+            name="contactPhone"
+            value={dataSource.contactPhone}
+            onChange={inputChangeHandler}
+            required
+          />
+        </div>
+
         <div className="space-y-2">
           <Label htmlFor="status">Statut</Label>
-          <Select 
-            value={formData.status || 'new'} 
-            onValueChange={(value) => handleSelectChange('status', value)}
+          <Select
+            value={dataSource.status}
+            onValueChange={(value) => selectChangeHandler('status', value)}
           >
-            <SelectTrigger>
+            <SelectTrigger id="status">
               <SelectValue placeholder="Sélectionner un statut" />
             </SelectTrigger>
             <SelectContent>
-              {statusOptions.map(option => (
-                <SelectItem key={option.value} value={option.value}>
-                  {option.label}
-                </SelectItem>
-              ))}
+              <SelectItem value="new">Nouveau</SelectItem>
+              <SelectItem value="contacted">Contacté</SelectItem>
+              <SelectItem value="meeting">Rendez-vous</SelectItem>
+              <SelectItem value="proposal">Proposition</SelectItem>
+              <SelectItem value="negotiation">Négociation</SelectItem>
+              <SelectItem value="converted">Converti</SelectItem>
+              <SelectItem value="lost">Perdu</SelectItem>
             </SelectContent>
           </Select>
         </div>
+
         <div className="space-y-2">
           <Label htmlFor="source">Source</Label>
-          <Select 
-            value={formData.source || ''} 
-            onValueChange={(value) => handleSelectChange('source', value)}
+          <Select
+            value={dataSource.source}
+            onValueChange={(value) => selectChangeHandler('source', value)}
           >
-            <SelectTrigger>
+            <SelectTrigger id="source">
               <SelectValue placeholder="Sélectionner une source" />
             </SelectTrigger>
             <SelectContent>
-              {sourcesOptions.map(option => (
-                <SelectItem key={option.value} value={option.value}>
-                  {option.label}
-                </SelectItem>
-              ))}
+              <SelectItem value="Site web">Site web</SelectItem>
+              <SelectItem value="Réseaux sociaux">Réseaux sociaux</SelectItem>
+              <SelectItem value="Référence">Référence</SelectItem>
+              <SelectItem value="Salon professionnel">Salon professionnel</SelectItem>
+              <SelectItem value="Publicité">Publicité</SelectItem>
+              <SelectItem value="Autre">Autre</SelectItem>
             </SelectContent>
           </Select>
         </div>
-      </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label htmlFor="industry">Secteur d'activité</Label>
+          <Label htmlFor="industry">Industrie</Label>
           <Input
             id="industry"
             name="industry"
-            value={formData.industry || ''}
-            onChange={handleInputChange}
+            value={dataSource.industry || ''}
+            onChange={inputChangeHandler}
           />
         </div>
+
         <div className="space-y-2">
           <Label htmlFor="website">Site web</Label>
           <Input
             id="website"
             name="website"
-            value={formData.website || ''}
-            onChange={handleInputChange}
-          />
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="size">Taille de l'entreprise</Label>
-          <Select 
-            value={formData.size || ''} 
-            onValueChange={(value) => handleSelectChange('size', value as any)}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Sélectionner une taille" />
-            </SelectTrigger>
-            <SelectContent>
-              {sizeOptions.map(option => (
-                <SelectItem key={option.value} value={option.value}>
-                  {option.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="estimatedValue">Valeur estimée</Label>
-          <Input
-            id="estimatedValue"
-            name="estimatedValue"
-            type="number"
-            value={formData.estimatedValue || ''}
-            onChange={handleInputChange}
+            value={dataSource.website || ''}
+            onChange={inputChangeHandler}
           />
         </div>
       </div>
@@ -192,8 +176,8 @@ const ProspectForm: React.FC<ProspectFormProps> = ({
         <Input
           id="address"
           name="address"
-          value={formData.address || ''}
-          onChange={handleInputChange}
+          value={dataSource.address || ''}
+          onChange={inputChangeHandler}
         />
       </div>
 
@@ -202,15 +186,13 @@ const ProspectForm: React.FC<ProspectFormProps> = ({
         <Textarea
           id="notes"
           name="notes"
-          value={formData.notes || ''}
-          onChange={handleInputChange}
           rows={4}
+          value={dataSource.notes || ''}
+          onChange={inputChangeHandler}
         />
       </div>
 
-      <Button type="submit" disabled={isSubmitting} className="w-full">
-        {isSubmitting ? 'Chargement...' : buttonText}
-      </Button>
+      <Button type="submit" className="w-full">{buttonText}</Button>
     </form>
   );
 };

@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -22,8 +22,46 @@ const AddProspectDialog: React.FC<AddProspectDialogProps> = ({
   onClose,
   onAdd
 }) => {
+  // Local state to manage form data
+  const [formData, setFormData] = useState<ProspectFormData>({
+    name: '',
+    company: '',
+    contactName: '',
+    contactEmail: '',
+    contactPhone: '',
+    email: '',
+    phone: '',
+    status: 'new',
+    source: 'Site web',
+    lastContact: new Date().toISOString().split('T')[0],
+    notes: ''
+  });
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleSelectChange = (name: string, value: string) => {
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
   const handleSubmit = (data: ProspectFormData) => {
     onAdd(data);
+    // Reset form
+    setFormData({
+      name: '',
+      company: '',
+      contactName: '',
+      contactEmail: '',
+      contactPhone: '',
+      email: '',
+      phone: '',
+      status: 'new',
+      source: 'Site web',
+      lastContact: new Date().toISOString().split('T')[0],
+      notes: ''
+    });
   };
 
   return (
@@ -33,7 +71,13 @@ const AddProspectDialog: React.FC<AddProspectDialogProps> = ({
           <DialogTitle>Ajouter un prospect</DialogTitle>
         </DialogHeader>
         
-        <ProspectForm onSubmit={handleSubmit} />
+        <ProspectForm 
+          formData={formData}
+          handleInputChange={handleInputChange}
+          handleSelectChange={handleSelectChange}
+          onSubmit={handleSubmit}
+          buttonText="Ajouter"
+        />
         
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>

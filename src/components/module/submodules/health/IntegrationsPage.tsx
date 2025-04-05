@@ -1,264 +1,160 @@
+
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Plus, Link2, Check, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Link, ArrowRight, Gift, Database, DollarSign, Zap, Globe, Upload, User, Lock, LucideIcon } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import DashboardLayout from '@/components/DashboardLayout';
 import { useCollectionData } from '@/hooks/useCollectionData';
 import { COLLECTIONS } from '@/lib/firebase-collections';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
-import { toast } from 'sonner';
 import IntegrationEmptyState from './components/integrations/IntegrationEmptyState';
 
 interface Integration {
   id: string;
   name: string;
+  type: string;
+  status: 'active' | 'inactive' | 'pending';
+  lastSync?: string;
   description: string;
-  logo: string;
-  link: string;
-  type: 'billing' | 'ehr' | 'communication';
-  enabled: boolean;
-  apiKey?: string;
-  apiSecret?: string;
+  icon?: string;
 }
 
-const integrationLogos: { [key: string]: LucideIcon } = {
-  Gift: Gift,
-  Database: Database,
-  DollarSign: DollarSign,
-  Zap: Zap,
-  Globe: Globe,
-  Upload: Upload,
-  User: User,
-  Lock: Lock,
-  ArrowRight: ArrowRight
-};
-
-const integrationTypes = [
-  { value: 'billing', label: 'Facturation' },
-  { value: 'ehr', label: 'Dossier médical électronique (DME)' },
-  { value: 'communication', label: 'Communication' }
-];
-
 const IntegrationsPage: React.FC = () => {
-  const [activeTab, setActiveTab] = useState('installed');
-  const [integrationModalOpen, setIntegrationModalOpen] = useState(false);
-  const [selectedIntegration, setSelectedIntegration] = useState<Integration | null>(null);
-  
-  // Get billing integrations data
-  const { 
-    data: billingIntegrations, 
-    isLoading: billingIntegrationsLoading, 
-    error: billingIntegrationsError 
-  } = useCollectionData(
-    COLLECTIONS.HEALTH.BILLING, // Use the correct path
+  const [integrations, setIntegrations] = useState<Integration[]>([]);
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+
+  // Fetch integrations from Firestore
+  const { data, isLoading, error } = useCollectionData(
+    COLLECTIONS.HEALTH.BILLING,
     []
   );
 
-  const handleIntegrationToggle = async (integration: Integration, enabled: boolean) => {
-    try {
-      const integrationRef = doc(db, COLLECTIONS.HEALTH.BILLING, integration.id);
-      await setDoc(integrationRef, { ...integration, enabled: enabled }, { merge: true });
-      toast.success(`L'intégration ${integration.name} a été ${enabled ? 'activée' : 'désactivée'}.`);
-    } catch (error) {
-      console.error("Erreur lors de la mise à jour de l'intégration :", error);
-      toast.error("Erreur lors de la mise à jour de l'intégration.");
-    }
+  useEffect(() => {
+    // Mock data for display
+    setIntegrations([
+      {
+        id: '1',
+        name: 'Système de Gestion d\'Assurance',
+        type: 'insurance',
+        status: 'active',
+        lastSync: '2023-05-01T14:30:00',
+        description: 'Synchronisation avec le système d\'assurance pour la vérification et le traitement des remboursements.',
+        icon: '🔄'
+      },
+      {
+        id: '2',
+        name: 'Laboratoire Central',
+        type: 'laboratory',
+        status: 'active',
+        lastSync: '2023-05-05T09:15:00',
+        description: 'Échange de données avec le laboratoire pour les analyses et résultats.',
+        icon: '🧪'
+      },
+      {
+        id: '3',
+        name: 'Pharmacie Connectée',
+        type: 'pharmacy',
+        status: 'inactive',
+        lastSync: '2023-04-20T11:45:00',
+        description: 'Envoi des ordonnances et vérification des disponibilités de médicaments.',
+        icon: '💊'
+      }
+    ]);
+  }, []);
+
+  const toggleIntegrationStatus = (id: string) => {
+    setIntegrations(prev => 
+      prev.map(integration => 
+        integration.id === id ? { 
+          ...integration, 
+          status: integration.status === 'active' ? 'inactive' : 'active' 
+        } : integration
+      )
+    );
   };
 
-  const handleIntegrationSettings = (integration: Integration) => {
-    setSelectedIntegration(integration);
-    setIntegrationModalOpen(true);
+  const handleAddIntegration = () => {
+    setIsAddDialogOpen(true);
+    // Will be implemented later
   };
 
-  const handleCloseIntegrationModal = () => {
-    setSelectedIntegration(null);
-    setIntegrationModalOpen(false);
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return 'Jamais';
+    const date = new Date(dateString);
+    return new Intl.DateTimeFormat('fr-FR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    }).format(date);
   };
-
-  const handleSaveIntegrationSettings = async (integration: Integration) => {
-    try {
-      const integrationRef = doc(db, COLLECTIONS.HEALTH.BILLING, integration.id);
-      await setDoc(integrationRef, { ...integration }, { merge: true });
-      toast.success(`Les paramètres de l'intégration ${integration.name} ont été enregistrés.`);
-    } catch (error) {
-      console.error("Erreur lors de l'enregistrement des paramètres de l'intégration :", error);
-      toast.error("Erreur lors de l'enregistrement des paramètres de l'intégration.");
-    } finally {
-      handleCloseIntegrationModal();
-    }
-  };
-
-  const installedIntegrations = billingIntegrations ? billingIntegrations.filter(integration => integration.enabled) : [];
-  const availableIntegrations = billingIntegrations ? billingIntegrations.filter(integration => !integration.enabled) : [];
 
   return (
-    <div className="space-y-4">
-      <Card>
-        <CardHeader>
-          <CardTitle>Intégrations</CardTitle>
-          <CardDescription>
-            Connectez votre système de santé à d'autres services pour automatiser les tâches et améliorer l'efficacité.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList>
-              <TabsTrigger value="installed">Installées</TabsTrigger>
-              <TabsTrigger value="available">Disponibles</TabsTrigger>
-            </TabsList>
-            <TabsContent value="installed">
-              {installedIntegrations.length > 0 ? (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Nom</TableHead>
-                      <TableHead>Type</TableHead>
-                      <TableHead>Statut</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {installedIntegrations.map((integration) => (
-                      <TableRow key={integration.id}>
-                        <TableCell className="font-medium">
-                          <div className="flex items-center space-x-2">
-                            {integration.logo && integrationLogos[integration.logo] && (
-                              React.createElement(integrationLogos[integration.logo], { className: "w-4 h-4" })
-                            )}
-                            <span>{integration.name}</span>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          {integrationTypes.find(type => type.value === integration.type)?.label || 'Inconnu'}
-                        </TableCell>
-                        <TableCell>
-                          <Label htmlFor={`integration-toggle-${integration.id}`} className="cursor-pointer">
-                            <Switch
-                              id={`integration-toggle-${integration.id}`}
-                              checked={integration.enabled}
-                              onCheckedChange={(checked) => handleIntegrationToggle(integration, checked)}
-                            />
-                          </Label>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <Button variant="ghost" size="sm" onClick={() => handleIntegrationSettings(integration)}>
-                            Paramètres
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              ) : (
-                <IntegrationEmptyState message="Aucune intégration installée." />
-              )}
-            </TabsContent>
-            <TabsContent value="available">
-              {availableIntegrations.length > 0 ? (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Nom</TableHead>
-                      <TableHead>Type</TableHead>
-                      <TableHead>Description</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {availableIntegrations.map((integration) => (
-                      <TableRow key={integration.id}>
-                        <TableCell className="font-medium">
-                          <div className="flex items-center space-x-2">
-                            {integration.logo && integrationLogos[integration.logo] && (
-                              React.createElement(integrationLogos[integration.logo], { className: "w-4 h-4" })
-                            )}
-                            <span>{integration.name}</span>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          {integrationTypes.find(type => type.value === integration.type)?.label || 'Inconnu'}
-                        </TableCell>
-                        <TableCell>{integration.description}</TableCell>
-                        <TableCell className="text-right">
-                          <Button variant="ghost" size="sm" asChild>
-                            <Link href={integration.link} target="_blank">
-                              En savoir plus <ArrowRight className="w-4 h-4 ml-2" />
-                            </Link>
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              ) : (
-                <IntegrationEmptyState message="Aucune intégration disponible." />
-              )}
-            </TabsContent>
-          </Tabs>
-        </CardContent>
-      </Card>
-
-      {/* Integration Settings Modal */}
-      {integrationModalOpen && selectedIntegration && (
-        <div className="fixed inset-0 z-50 overflow-auto bg-black bg-opacity-50">
-          <div className="relative w-full max-w-md mx-auto mt-20">
-            <Card>
-              <CardHeader>
-                <CardTitle>Paramètres de l'intégration {selectedIntegration.name}</CardTitle>
-                <CardDescription>
-                  Configurez les paramètres de l'intégration pour l'adapter à vos besoins.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="api-key">Clé API</Label>
-                  <Input
-                    id="api-key"
-                    type="text"
-                    value={selectedIntegration.apiKey || ''}
-                    onChange={(e) => setSelectedIntegration({ ...selectedIntegration, apiKey: e.target.value })}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="api-secret">Secret API</Label>
-                  <Input
-                    id="api-secret"
-                    type="password"
-                    value={selectedIntegration.apiSecret || ''}
-                    onChange={(e) => setSelectedIntegration({ ...selectedIntegration, apiSecret: e.target.value })}
-                  />
-                </div>
-                <div className="flex justify-end space-x-2">
-                  <Button variant="secondary" onClick={handleCloseIntegrationModal}>
-                    Annuler
-                  </Button>
-                  <Button onClick={() => handleSaveIntegrationSettings(selectedIntegration)}>
-                    Enregistrer
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+    <DashboardLayout>
+      <div className="container mx-auto py-6">
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-3xl font-bold">Intégrations</h1>
+          <Button onClick={handleAddIntegration}>
+            <Plus className="mr-2 h-4 w-4" />
+            Nouvelle Intégration
+          </Button>
         </div>
-      )}
-    </div>
+
+        {isLoading ? (
+          <div className="flex justify-center p-8">Chargement des intégrations...</div>
+        ) : error ? (
+          <div className="text-red-500 p-4">Erreur de chargement : {error.toString()}</div>
+        ) : integrations.length === 0 ? (
+          <IntegrationEmptyState onAdd={handleAddIntegration} />
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {integrations.map(integration => (
+              <Card key={integration.id}>
+                <CardHeader className="pb-2">
+                  <div className="flex justify-between items-start">
+                    <div className="flex items-center gap-2">
+                      <div className="text-2xl">{integration.icon}</div>
+                      <CardTitle>{integration.name}</CardTitle>
+                    </div>
+                    <Badge className={integration.status === 'active' ? 'bg-green-500' : 'bg-red-500'}>
+                      {integration.status === 'active' ? 'Actif' : 'Inactif'}
+                    </Badge>
+                  </div>
+                  <CardDescription>{integration.description}</CardDescription>
+                </CardHeader>
+                <CardContent className="pb-2">
+                  <div className="text-sm">
+                    <p className="flex justify-between text-muted-foreground">
+                      <span>Dernière synchronisation:</span>
+                      <span>{formatDate(integration.lastSync)}</span>
+                    </p>
+                    <p className="flex justify-between text-muted-foreground mt-1">
+                      <span>Type:</span>
+                      <span className="capitalize">{integration.type}</span>
+                    </p>
+                  </div>
+                </CardContent>
+                <CardFooter className="flex justify-between">
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      id={`status-${integration.id}`}
+                      checked={integration.status === 'active'}
+                      onCheckedChange={() => toggleIntegrationStatus(integration.id)}
+                    />
+                    <Label htmlFor={`status-${integration.id}`}>Activer</Label>
+                  </div>
+                  <Button variant="outline" size="sm">Configurer</Button>
+                </CardFooter>
+              </Card>
+            ))}
+          </div>
+        )}
+      </div>
+    </DashboardLayout>
   );
 };
 
 export default IntegrationsPage;
-
-// Input component
-interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {}
-
-const Input: React.FC<InputProps> = ({ ...props }) => {
-  return (
-    <input
-      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-      {...props}
-    />
-  );
-};
