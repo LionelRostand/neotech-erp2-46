@@ -1,20 +1,55 @@
 
 import React, { useState } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
-import { Settings, Users, Building, Database } from "lucide-react";
-import PermissionsTab from './settings/PermissionsTab';
-import { useNavigate, useLocation } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { Settings, Users, Building, Database, UserPlus } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { toast } from 'sonner';
+import { useNavigate, useLocation } from "react-router-dom";
 import { usePermissions } from '@/hooks/usePermissions';
+import GeneralTab from './settings/GeneralTab';
+import PermissionsTab from './settings/PermissionsTab';
+import CompaniesTab from './settings/CompaniesTab';
+import DataTab from './settings/DataTab';
+import UserManagementDialog from './settings/users/UserManagementDialog';
+import { User } from '@/types/user';
 
 const CrmSettings: React.FC = () => {
   const [activeTab, setActiveTab] = useState("general");
+  const [isAddUserDialogOpen, setIsAddUserDialogOpen] = useState(false);
+  const [isEditUserDialogOpen, setIsEditUserDialogOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  
   const navigate = useNavigate();
   const location = useLocation();
   const { isAdmin } = usePermissions();
 
   const handleBackToList = () => {
     navigate('/modules/crm');
+  };
+  
+  const handleAddUser = async (userData: any) => {
+    try {
+      // Simulation d'appel API pour ajouter un utilisateur
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      console.log('Nouvel utilisateur:', userData);
+      toast.success('Utilisateur ajouté avec succès');
+    } catch (error) {
+      console.error('Erreur lors de l\'ajout de l\'utilisateur:', error);
+      throw error;
+    }
+  };
+  
+  const handleUpdateUser = async (userData: any) => {
+    try {
+      // Simulation d'appel API pour mettre à jour un utilisateur
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      console.log('Mise à jour utilisateur:', userData);
+      toast.success('Utilisateur mis à jour avec succès');
+    } catch (error) {
+      console.error('Erreur lors de la mise à jour de l\'utilisateur:', error);
+      throw error;
+    }
   };
 
   return (
@@ -114,49 +149,41 @@ const CrmSettings: React.FC = () => {
           <div className="p-6">
             <div className="flex items-center justify-between mb-6">
               <h1 className="text-2xl font-bold">Paramètres CRM</h1>
+              {activeTab === "permissions" && (
+                <Button onClick={() => setIsAddUserDialogOpen(true)}>
+                  <UserPlus className="mr-2 h-4 w-4" />
+                  Ajouter un utilisateur
+                </Button>
+              )}
             </div>
 
             <div className="space-y-4">
-              {activeTab === "general" && (
-                <Card>
-                  <CardContent className="p-6">
-                    <h2 className="text-lg font-medium mb-4">Paramètres généraux</h2>
-                    <p className="text-muted-foreground">
-                      Configurez les paramètres généraux du module CRM.
-                    </p>
-                  </CardContent>
-                </Card>
-              )}
-
-              {activeTab === "permissions" && (
-                <PermissionsTab />
-              )}
-
-              {activeTab === "companies" && (
-                <Card>
-                  <CardContent className="p-6">
-                    <h2 className="text-lg font-medium mb-4">Configuration des entreprises</h2>
-                    <p className="text-muted-foreground">
-                      Gérez les paramètres des entreprises dans le CRM.
-                    </p>
-                  </CardContent>
-                </Card>
-              )}
-
-              {activeTab === "data" && (
-                <Card>
-                  <CardContent className="p-6">
-                    <h2 className="text-lg font-medium mb-4">Gestion des données</h2>
-                    <p className="text-muted-foreground">
-                      Importez, exportez et gérez les données du CRM.
-                    </p>
-                  </CardContent>
-                </Card>
-              )}
+              {activeTab === "general" && <GeneralTab />}
+              {activeTab === "permissions" && <PermissionsTab />}
+              {activeTab === "companies" && <CompaniesTab />}
+              {activeTab === "data" && <DataTab />}
             </div>
           </div>
         </main>
       </div>
+      
+      {/* Dialogs de gestion des utilisateurs */}
+      <UserManagementDialog 
+        isOpen={isAddUserDialogOpen}
+        onClose={() => setIsAddUserDialogOpen(false)}
+        onSave={handleAddUser}
+        title="Ajouter un utilisateur"
+        description="Ajoutez un nouvel utilisateur au CRM et définissez ses droits d'accès."
+      />
+      
+      <UserManagementDialog 
+        isOpen={isEditUserDialogOpen}
+        onClose={() => setIsEditUserDialogOpen(false)}
+        user={selectedUser}
+        onSave={handleUpdateUser}
+        title="Modifier un utilisateur"
+        description="Modifiez les informations et les droits d'accès de l'utilisateur."
+      />
     </div>
   );
 };
