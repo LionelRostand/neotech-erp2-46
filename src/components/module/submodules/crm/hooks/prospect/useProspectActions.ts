@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { Prospect, ProspectFormData, ReminderData } from '../../types/crm-types';
 import { toast } from 'sonner';
-import { useFirestore } from '@/hooks/firestore/firestore-utils';
+import { addDocument, updateDocument, deleteDocument } from '@/hooks/firestore/firestore-utils';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import { useNavigate } from 'react-router-dom';
 
@@ -11,7 +11,6 @@ export const useProspectActions = (
   setProspects: React.Dispatch<React.SetStateAction<Prospect[]>>,
   setLoading: React.Dispatch<React.SetStateAction<boolean>>
 ) => {
-  const { addDocument, updateDocument, deleteDocument } = useFirestore();
   const navigate = useNavigate();
   const [error, setError] = useState<string | null>(null);
 

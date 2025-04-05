@@ -2,7 +2,7 @@
 import { useEffect } from 'react';
 import { Timestamp, DocumentData } from 'firebase/firestore';
 import { where, orderBy } from 'firebase/firestore';
-import { useFirestore } from '@/hooks/use-firestore';
+import { useFirestore } from '@/hooks/useFirestore';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import { Prospect } from '../../types/crm-types';
 import { toast } from 'sonner';
@@ -21,18 +21,15 @@ export const useProspectData = (
     try {
       setLoading(true);
       const constraints = [
-        where('type', '==', 'prospect'),
-        orderBy('lastContact', 'desc')
+        orderBy('createdAt', 'desc')
       ];
       
       const data = await prospectCollection.getAll(constraints);
       
       const formattedData = data.map((doc: DocumentData) => {
         const createdAtTimestamp = doc.createdAt as Timestamp | undefined;
-        const lastContactTimestamp = doc.lastContact as Timestamp | undefined;
         
         let createdAtDate = '';
-        let lastContactDate = '';
         
         // Gestion sécurisée de la date createdAt
         if (createdAtTimestamp) {
@@ -45,28 +42,21 @@ export const useProspectData = (
           }
         }
         
-        // Gestion sécurisée de la date lastContact
-        if (lastContactTimestamp) {
-          if (typeof lastContactTimestamp === 'object' && 'toDate' in lastContactTimestamp && typeof lastContactTimestamp.toDate === 'function') {
-            lastContactDate = lastContactTimestamp.toDate().toISOString().split('T')[0];
-          } else if (lastContactTimestamp instanceof Date) {
-            lastContactDate = lastContactTimestamp.toISOString().split('T')[0];
-          } else if (typeof lastContactTimestamp === 'string') {
-            lastContactDate = new Date(lastContactTimestamp).toISOString().split('T')[0];
-          }
-        }
-        
         return {
           id: doc.id,
-          name: doc.name || '',
           company: doc.company || '',
-          email: doc.email || '',
-          phone: doc.phone || '',
-          status: doc.status || 'warm',
+          contactName: doc.contactName || '',
+          contactEmail: doc.contactEmail || '',
+          contactPhone: doc.contactPhone || '',
+          status: doc.status || 'new',
           source: doc.source || '',
           createdAt: createdAtDate,
-          lastContact: lastContactDate,
-          notes: doc.notes || ''
+          notes: doc.notes || '',
+          industry: doc.industry || '',
+          website: doc.website || '',
+          address: doc.address || '',
+          size: doc.size || '',
+          estimatedValue: doc.estimatedValue || '',
         } as Prospect;
       });
       
