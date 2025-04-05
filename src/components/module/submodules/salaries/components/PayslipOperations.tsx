@@ -11,7 +11,7 @@ import PayslipFilters, { PayslipFiltersOptions } from './PayslipFilters';
 import PayslipFilterDrawer from './PayslipFilterDrawer';
 import { Employee } from '@/types/employee';
 import { Company } from '@/components/module/submodules/companies/types';
-import { useEmployeeData } from '@/hooks/useEmployeeData';
+import { useHrModuleData } from '@/hooks/useHrModuleData';
 
 interface PayslipOperationsProps {
   employees?: Employee[];
@@ -33,9 +33,9 @@ const PayslipOperations: React.FC<PayslipOperationsProps> = ({
   onExportData
 }) => {
   const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false);
-  const { employees: employeeData } = useEmployeeData();
+  const { employees: employeeData } = useHrModuleData();
   
-  // Utilisez les données d'employés de useEmployeeData si aucun employé n'est passé en props
+  // Utilisez les données d'employés de useHrModuleData si aucun employé n'est passé en props
   const employeesToUse = employees.length > 0 ? employees : employeeData;
 
   // Convert Employee[] to format required by PayslipFilters

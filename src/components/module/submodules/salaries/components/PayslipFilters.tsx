@@ -81,11 +81,15 @@ const PayslipFilters: React.FC<PayslipFiltersProps> = ({
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="all">Tous les employés</SelectItem>
-          {employees.map(employee => (
-            <SelectItem key={employee.id} value={employee.id}>
-              {employee.name}
-            </SelectItem>
-          ))}
+          {employees && employees.length > 0 ? (
+            employees.map(employee => (
+              <SelectItem key={employee.id} value={employee.id}>
+                {employee.name}
+              </SelectItem>
+            ))
+          ) : (
+            <SelectItem value="no-employees">Aucun employé disponible</SelectItem>
+          )}
         </SelectContent>
       </Select>
 

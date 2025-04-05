@@ -21,6 +21,7 @@ import { Company } from '../companies/types';
 import PayslipConfiguration from './components/PayslipConfiguration';
 import PayslipOperations from './components/PayslipOperations';
 import { PayslipFiltersOptions } from './components/PayslipFilters';
+import { useHrModuleData } from '@/hooks/useHrModuleData';
 
 interface SalarySlipsProps {
   employees?: Employee[];
@@ -35,6 +36,10 @@ const SalarySlips: React.FC<SalarySlipsProps> = ({ employees = [], companies = [
   const [selectedPayslip, setSelectedPayslip] = useState<PaySlip | null>(null);
   const [isViewerOpen, setIsViewerOpen] = useState(false);
   const { salarySlips, stats, isLoading, error } = useSalarySlipsData();
+  const { employees: hrEmployees, companies: hrCompanies } = useHrModuleData();
+  
+  const employeesToUse = employees.length > 0 ? employees : hrEmployees;
+  const companiesToUse = companies.length > 0 ? companies : hrCompanies;
 
   const filteredSalarySlips = React.useMemo(() => {
     let filtered = salarySlips || [];
@@ -243,8 +248,8 @@ const SalarySlips: React.FC<SalarySlipsProps> = ({ employees = [], companies = [
               </div>
               
               <PayslipOperations 
-                employees={employees}
-                companies={companies}
+                employees={employeesToUse}
+                companies={companiesToUse}
                 onFilter={handleApplyFilters}
                 currentFilters={filters}
                 onOpenGenerator={() => setIsGeneratorOpen(true)}
@@ -280,7 +285,7 @@ const SalarySlips: React.FC<SalarySlipsProps> = ({ employees = [], companies = [
       
       <Dialog open={isGeneratorOpen} onOpenChange={setIsGeneratorOpen}>
         <DialogContent>
-          <PaySlipGenerator employees={employees} companies={companies} />
+          <PaySlipGenerator employees={employeesToUse} companies={companiesToUse} />
         </DialogContent>
       </Dialog>
     </Card>
