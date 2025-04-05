@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Table,
   TableBody,
@@ -11,49 +11,54 @@ import {
 import { Progress } from '@/components/ui/progress';
 import { Loader2 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { useHrModuleData } from '@/hooks/useHrModuleData';
+import { useLeaveBalances } from '@/hooks/useLeaveBalances';
+import { Input } from '@/components/ui/input';
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from '@/components/ui/select';
 
 export const LeaveBalances: React.FC = () => {
-  const { employees, isLoading } = useHrModuleData();
-
-  // Dans une application réelle, ces données viendraient de Firebase
-  const leaveBalances = [
-    { 
-      employeeId: '1',
-      type: 'Congés payés',
-      total: 25,
-      used: 10,
-      remaining: 15
-    },
-    { 
-      employeeId: '1',
-      type: 'RTT',
-      total: 12,
-      used: 4,
-      remaining: 8
-    },
-    { 
-      employeeId: '2',
-      type: 'Congés payés',
-      total: 25,
-      used: 18,
-      remaining: 7
-    },
-    { 
-      employeeId: '2',
-      type: 'RTT',
-      total: 12,
-      used: 8,
-      remaining: 4
-    },
-    { 
-      employeeId: '3',
-      type: 'Congés payés',
-      total: 25,
-      used: 5,
-      remaining: 20
+  const [departmentFilter, setDepartmentFilter] = useState<string>('all');
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  
+  const { leaveBalances, isLoading } = useLeaveBalances();
+  
+  // Extract unique departments for filter
+  const departments = Array.from(
+    new Set(leaveBalances.map(balance => balance.department))
+  ).filter(Boolean);
+  
+  // Apply filters
+  const filteredBalances = leaveBalances.filter(balance => {
+    // Department filter
+    const matchesDepartment = departmentFilter === 'all' || balance.department === departmentFilter;
+    
+    // Search filter (case insensitive)
+    const matchesSearch = searchQuery === '' || 
+      balance.employeeName.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    return matchesDepartment && matchesSearch;
+  });
+  
+  // Group balances by employee
+  const employeeBalances = filteredBalances.reduce((acc, balance) => {
+    if (!acc[balance.employeeId]) {
+      acc[balance.employeeId] = {
+        id: balance.employeeId,
+        name: balance.employeeName,
+        photo: balance.employeePhoto,
+        department: balance.department,
+        balances: []
+      };
     }
-  ];
+    
+    acc[balance.employeeId].balances.push(balance);
+    return acc;
+  }, {});
 
   if (isLoading) {
     return (
@@ -64,102 +69,116 @@ export const LeaveBalances: React.FC = () => {
     );
   }
 
-  // Grouper les balances par employé
-  const employeeBalances = employees?.map(employee => {
-    // Trouver les soldes pour cet employé
-    const balances = leaveBalances.filter(balance => balance.employeeId === employee.id);
-    
-    return {
-      id: employee.id,
-      name: `${employee.firstName} ${employee.lastName}`,
-      photo: employee.photoURL || employee.photo,
-      department: employee.department || 'Non spécifié',
-      position: employee.position || employee.title || 'Non spécifié',
-      balances
-    };
-  }) || [];
-
   return (
-    <div className="overflow-x-auto">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead className="w-[250px]">Employé</TableHead>
-            <TableHead>Type de congé</TableHead>
-            <TableHead>Acquis</TableHead>
-            <TableHead>Pris</TableHead>
-            <TableHead>Restant</TableHead>
-            <TableHead>Utilisation</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {employeeBalances.flatMap(employee => 
-            // Si l'employé n'a pas de soldes, afficher une ligne vide
-            employee.balances.length > 0 ? 
-              employee.balances.map((balance, index) => (
-                <TableRow key={`${employee.id}-${balance.type}`}>
-                  {/* N'affichez les informations employé que sur la première ligne de chaque employé */}
-                  {index === 0 ? (
-                    <TableCell rowSpan={employee.balances.length} className="align-top">
-                      <div className="flex items-center space-x-3">
-                        <Avatar className="h-8 w-8">
-                          <AvatarImage src={employee.photo} alt={employee.name} />
-                          <AvatarFallback>{employee.name?.charAt(0) || '?'}</AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <p className="font-medium">{employee.name}</p>
-                          <p className="text-xs text-gray-500">{employee.position}</p>
-                          <p className="text-xs text-gray-500">{employee.department}</p>
+    <div className="space-y-4">
+      <div className="flex flex-col sm:flex-row gap-4">
+        <div className="flex-1">
+          <Input
+            placeholder="Rechercher un employé..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="max-w-sm"
+          />
+        </div>
+        <div className="w-full sm:w-64">
+          <Select
+            value={departmentFilter}
+            onValueChange={setDepartmentFilter}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Filtrer par département" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Tous les départements</SelectItem>
+              {departments.map((dept) => (
+                <SelectItem key={dept} value={dept}>
+                  {dept}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+    
+      <div className="overflow-x-auto">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-[250px]">Employé</TableHead>
+              <TableHead>Type de congé</TableHead>
+              <TableHead>Acquis</TableHead>
+              <TableHead>Pris</TableHead>
+              <TableHead>Restant</TableHead>
+              <TableHead>Utilisation</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {Object.values(employeeBalances).flatMap(employee => 
+              // Si l'employé n'a pas de soldes, afficher une ligne vide
+              employee.balances.length > 0 ? 
+                employee.balances.map((balance, index) => (
+                  <TableRow key={`${employee.id}-${balance.type}`}>
+                    {/* N'affichez les informations employé que sur la première ligne de chaque employé */}
+                    {index === 0 ? (
+                      <TableCell rowSpan={employee.balances.length} className="align-top">
+                        <div className="flex items-center space-x-3">
+                          <Avatar className="h-8 w-8">
+                            <AvatarImage src={employee.photo} alt={employee.name} />
+                            <AvatarFallback>{employee.name?.charAt(0) || '?'}</AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <p className="font-medium">{employee.name}</p>
+                            <p className="text-xs text-gray-500">{employee.department}</p>
+                          </div>
                         </div>
+                      </TableCell>
+                    ) : null}
+                    <TableCell>{balance.type}</TableCell>
+                    <TableCell>{balance.total} jours</TableCell>
+                    <TableCell>{balance.used} jours</TableCell>
+                    <TableCell className="font-medium">{balance.remaining} jours</TableCell>
+                    <TableCell className="w-[200px]">
+                      <div className="flex items-center gap-2">
+                        <Progress 
+                          value={(balance.used / (balance.total || 1)) * 100} 
+                          className="h-2" 
+                        />
+                        <span className="text-xs text-gray-500">
+                          {balance.total ? Math.round((balance.used / balance.total) * 100) : 0}%
+                        </span>
                       </div>
                     </TableCell>
-                  ) : null}
-                  <TableCell>{balance.type}</TableCell>
-                  <TableCell>{balance.total} jours</TableCell>
-                  <TableCell>{balance.used} jours</TableCell>
-                  <TableCell className="font-medium">{balance.remaining} jours</TableCell>
-                  <TableCell className="w-[200px]">
-                    <div className="flex items-center gap-2">
-                      <Progress 
-                        value={(balance.used / balance.total) * 100} 
-                        className="h-2" 
-                      />
-                      <span className="text-xs text-gray-500">
-                        {Math.round((balance.used / balance.total) * 100)}%
-                      </span>
+                  </TableRow>
+                )) : 
+                // Ligne par défaut pour un employé sans solde de congés
+                <TableRow key={employee.id}>
+                  <TableCell>
+                    <div className="flex items-center space-x-3">
+                      <Avatar className="h-8 w-8">
+                        <AvatarImage src={employee.photo} alt={employee.name} />
+                        <AvatarFallback>{employee.name?.charAt(0) || '?'}</AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <p className="font-medium">{employee.name}</p>
+                        <p className="text-xs text-gray-500">{employee.department}</p>
+                      </div>
                     </div>
                   </TableCell>
+                  <TableCell colSpan={5} className="text-center text-gray-500">
+                    Aucun solde de congés défini
+                  </TableCell>
                 </TableRow>
-              )) : 
-              // Ligne par défaut pour un employé sans solde de congés
-              <TableRow key={employee.id}>
-                <TableCell>
-                  <div className="flex items-center space-x-3">
-                    <Avatar className="h-8 w-8">
-                      <AvatarImage src={employee.photo} alt={employee.name} />
-                      <AvatarFallback>{employee.name?.charAt(0) || '?'}</AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <p className="font-medium">{employee.name}</p>
-                      <p className="text-xs text-gray-500">{employee.position}</p>
-                      <p className="text-xs text-gray-500">{employee.department}</p>
-                    </div>
-                  </div>
-                </TableCell>
-                <TableCell colSpan={5} className="text-center text-gray-500">
-                  Aucun solde de congés défini
+            )}
+            {Object.keys(employeeBalances).length === 0 && (
+              <TableRow>
+                <TableCell colSpan={6} className="text-center py-8">
+                  Aucun employé trouvé
                 </TableCell>
               </TableRow>
-          )}
-          {employeeBalances.length === 0 && (
-            <TableRow>
-              <TableCell colSpan={6} className="text-center py-8">
-                Aucun employé trouvé
-              </TableCell>
-            </TableRow>
-          )}
-        </TableBody>
-      </Table>
+            )}
+          </TableBody>
+        </Table>
+      </div>
     </div>
   );
 };
