@@ -3,33 +3,38 @@ import { db } from '@/lib/firebase';
 import { doc, DocumentReference, collection, CollectionReference, Timestamp, DocumentData } from 'firebase/firestore';
 
 /**
- * Obtient une référence à un document dans Firestore
- * @param collectionName Nom de la collection
- * @param docId ID du document
- * @returns Référence DocumentReference
+ * Get a reference to a document in Firestore
+ * @param collectionName Collection path
+ * @param docId Document ID
+ * @returns DocumentReference
  */
 export const getDocRef = (collectionName: string, docId: string): DocumentReference => {
+  console.log(`Getting document reference for ${collectionName}/${docId}`);
   return doc(db, collectionName, docId);
 };
 
 /**
- * Obtient une référence à une collection dans Firestore
- * @param collectionName Nom de la collection
- * @returns Référence CollectionReference
+ * Get a reference to a collection in Firestore
+ * @param collectionName Collection path
+ * @returns CollectionReference
  */
 export const getCollectionRef = (collectionName: string): CollectionReference => {
+  console.log(`Getting collection reference for ${collectionName}`);
   return collection(db, collectionName);
 };
 
-// Fonction pour générer un ID unique pour les documents
+/**
+ * Generate a unique ID for documents
+ * @returns Unique ID string
+ */
 export const generateDocId = (): string => {
   return `id_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 };
 
 /**
- * Ajoute des horodatages (createdAt, updatedAt) aux documents
- * @param data Données du document
- * @returns Données avec les horodatages ajoutés
+ * Add timestamps (createdAt, updatedAt) to documents
+ * @param data Document data
+ * @returns Document data with timestamps
  */
 export const formatDocumentWithTimestamps = (data: DocumentData): DocumentData => {
   const now = Timestamp.now();
@@ -37,7 +42,7 @@ export const formatDocumentWithTimestamps = (data: DocumentData): DocumentData =
   return {
     ...data,
     updatedAt: now,
-    // Ajouter createdAt seulement s'il n'existe pas déjà
+    // Add createdAt only if it doesn't already exist
     ...(data.createdAt ? {} : { createdAt: now })
   };
 };

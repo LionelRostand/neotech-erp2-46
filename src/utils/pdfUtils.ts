@@ -1,70 +1,76 @@
 
 import { jsPDF } from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 
-export const exportToPdf = (data: any[], title = 'Export Data', fileName = 'export') => {
+/**
+ * Export data to PDF file
+ * @param data Array of objects to export
+ * @param title Document title
+ * @param fileName File name without extension
+ */
+export const exportToPdf = (
+  data: any[],
+  title: string = 'Export de données',
+  fileName: string = 'export'
+) => {
   try {
-    // Create PDF document
+    // Create new PDF document
     const doc = new jsPDF();
     
     // Add title
     doc.setFontSize(16);
-    doc.text(title, 14, 15);
+    doc.text(title, 14, 22);
+    doc.setFontSize(10);
     
-    // Prepare data for table
-    const tableData = data.map(item => {
-      const cleanItem = { ...item };
-      
-      // Remove id if present
-      if ('id' in cleanItem) {
-        delete cleanItem.id;
-      }
-      
-      // Process values for PDF export
-      Object.keys(cleanItem).forEach(key => {
-        // Format dates
-        if (cleanItem[key] instanceof Date) {
-          cleanItem[key] = cleanItem[key].toLocaleDateString();
+    // Add date
+    const today = new Date();
+    const formattedDate = today.toLocaleDateString('fr-FR');
+    doc.text(`Exporté le: ${formattedDate}`, 14, 30);
+    
+    // Extract column headers from first data object
+    if (data.length === 0) {
+      doc.text('Aucune donnée à exporter', 14, 40);
+      doc.save(`${fileName}.pdf`);
+      return true;
+    }
+    
+    const firstItem = data[0];
+    const columns = Object.keys(firstItem)
+      .filter(key => typeof firstItem[key] !== 'object' || firstItem[key] === null)
+      .map(key => ({
+        header: key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, ' $1'),
+        dataKey: key
+      }));
+    
+    // Prepare rows
+    const rows = data.map(item => {
+      const row: any = {};
+      columns.forEach(column => {
+        let value = item[column.dataKey];
+        if (typeof value === 'boolean') {
+          value = value ? 'Oui' : 'Non';
+        } else if (value === null || value === undefined) {
+          value = '';
         }
-        
-        // Convert timestamps (firestore format)
-        if (cleanItem[key] && 
-            typeof cleanItem[key] === 'object' && 
-            'seconds' in cleanItem[key]) {
-          cleanItem[key] = new Date(cleanItem[key].seconds * 1000).toLocaleDateString();
-        }
-        
-        // Convert objects to strings
-        if (typeof cleanItem[key] === 'object' && cleanItem[key] !== null) {
-          cleanItem[key] = JSON.stringify(cleanItem[key]);
-        }
+        row[column.dataKey] = value;
       });
-      
-      return Object.values(cleanItem);
+      return row;
     });
     
-    // Get table headers (column names)
-    const headers = data.length > 0 ? Object.keys(data[0]).filter(key => key !== 'id') : [];
-    
     // Create table
-    doc.autoTable({
-      head: [headers],
-      body: tableData,
-      startY: 25,
-      theme: 'grid',
-      styles: {
-        fontSize: 8,
-        cellPadding: 2,
-        overflow: 'linebreak',
-      },
+    autoTable(doc, {
+      startY: 40,
+      head: [columns.map(col => col.header)],
+      body: rows.map(row => columns.map(col => row[col.dataKey])),
+      theme: 'striped',
       headStyles: {
-        fillColor: [41, 128, 185],
+        fillColor: [66, 139, 202],
         textColor: 255,
-        fontStyle: 'bold',
+        fontStyle: 'bold'
       },
       alternateRowStyles: {
-        fillColor: [240, 240, 240],
-      },
+        fillColor: [240, 240, 240]
+      }
     });
     
     // Save PDF

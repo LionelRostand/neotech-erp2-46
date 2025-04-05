@@ -1,54 +1,63 @@
 
 import { useState, useEffect } from 'react';
-import { collection, getDocs, query, QueryConstraint, DocumentData } from 'firebase/firestore';
+import { collection, query, onSnapshot, QueryConstraint, DocumentData, QuerySnapshot } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { toast } from 'sonner';
 
 /**
- * Custom hook to fetch data from a Firestore collection with proper typing
- * @param collectionPath The path to the Firestore collection
- * @param constraints Any query constraints to apply
- * @param transform Optional function to transform the raw data
+ * Custom hook to fetch data from a Firestore collection with real-time updates
+ * @param collectionPath Path to the Firestore collection
+ * @param queryConstraints Optional query constraints (where, orderBy, limit, etc.)
+ * @returns Object containing data, loading state, and error if any
  */
-export function useCollectionData<T = DocumentData>(
+export const useCollectionData = (
   collectionPath: string,
-  constraints: QueryConstraint[] = [],
-  transform?: (data: DocumentData) => T
-) {
-  const [data, setData] = useState<T[]>([]);
+  queryConstraints: QueryConstraint[] = []
+) => {
+  const [data, setData] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
-    const fetchData = async () => {
+    // For development/testing, you can use a timeout to simulate network latency
+    const timeoutId = setTimeout(() => {
       try {
-        setIsLoading(true);
-        
+        console.log(`Fetching data from collection: ${collectionPath}`);
         const collectionRef = collection(db, collectionPath);
-        const q = constraints.length > 0 ? query(collectionRef, ...constraints) : query(collectionRef);
-        const querySnapshot = await getDocs(q);
+        const q = query(collectionRef, ...queryConstraints);
         
-        let fetchedData: T[] = [];
+        const unsubscribe = onSnapshot(
+          q,
+          (snapshot: QuerySnapshot<DocumentData>) => {
+            const documents = snapshot.docs.map(doc => ({
+              id: doc.id,
+              ...doc.data()
+            }));
+            setData(documents);
+            setIsLoading(false);
+            console.log(`Received ${documents.length} documents from ${collectionPath}`);
+          },
+          (err: Error) => {
+            console.error(`Error fetching from ${collectionPath}:`, err);
+            setError(err);
+            setIsLoading(false);
+          }
+        );
         
-        if (transform) {
-          fetchedData = querySnapshot.docs.map(doc => transform({ id: doc.id, ...doc.data() }));
-        } else {
-          fetchedData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }) as T);
-        }
-        
-        setData(fetchedData);
-        setError(null);
-      } catch (err: any) {
-        console.error(`Error fetching data from ${collectionPath}:`, err);
-        setError(err);
-        toast.error(`Erreur lors du chargement des données: ${err.message}`);
-      } finally {
+        // Clean up subscription on unmount
+        return () => {
+          console.log(`Unsubscribing from collection: ${collectionPath}`);
+          unsubscribe();
+        };
+      } catch (err) {
+        const error = err instanceof Error ? err : new Error('Unknown error occurred');
+        console.error(`Error setting up listener for ${collectionPath}:`, error);
+        setError(error);
         setIsLoading(false);
       }
-    };
-
-    fetchData();
-  }, [collectionPath, JSON.stringify(constraints)]);
+    }, 500); // Simulate a small delay for loading states to be visible
+    
+    return () => clearTimeout(timeoutId);
+  }, [collectionPath, JSON.stringify(queryConstraints)]);
 
   return { data, isLoading, error };
-}
+};

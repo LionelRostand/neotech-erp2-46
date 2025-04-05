@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import ContractForm from './ContractForm';
 import { addDocument } from '@/hooks/firestore/create-operations';
 import { COLLECTIONS } from '@/lib/firebase-collections';
@@ -34,6 +34,9 @@ const CreateContractDialog: React.FC<CreateContractDialogProps> = ({
       <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
           <DialogTitle>Nouveau contrat</DialogTitle>
+          <DialogDescription>
+            Remplissez les informations pour créer un nouveau contrat
+          </DialogDescription>
         </DialogHeader>
         <ContractForm 
           onSubmit={handleSubmit}
