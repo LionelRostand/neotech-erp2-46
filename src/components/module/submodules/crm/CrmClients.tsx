@@ -88,7 +88,6 @@ const CrmClients: React.FC = () => {
           resetForm={resetForm}
           sectorOptions={sectors}
           statusOptions={statusOptions}
-          openEditDialog={openEditDialog}
         />
       </div>
     </div>

@@ -1,4 +1,3 @@
-
 export const FIREBASE_COLLECTIONS = {
   USERS: 'users',
   COMPANIES: 'companies',
@@ -9,14 +8,14 @@ export const FIREBASE_COLLECTIONS = {
   CONTACTS: 'contacts',
   
   CRM: {
-    CLIENTS: 'crm_clients',
-    PROSPECTS: 'crm_prospects',
-    REMINDERS: 'crm_reminders',
-    OPPORTUNITIES: 'crm_opportunities',
-    LEADS: 'crm_leads',
-    CONTACTS: 'crm_contacts',
-    DEALS: 'crm_deals',
-    SETTINGS: 'crm_settings',
+    CLIENTS: 'crm/clients',
+    PROSPECTS: 'crm/prospects',
+    REMINDERS: 'crm/reminders',
+    OPPORTUNITIES: 'crm/opportunities',
+    LEADS: 'crm/leads',
+    CONTACTS: 'crm/contacts',
+    DEALS: 'crm/deals',
+    SETTINGS: 'crm/settings',
   },
   
   ACCOUNTING: {
