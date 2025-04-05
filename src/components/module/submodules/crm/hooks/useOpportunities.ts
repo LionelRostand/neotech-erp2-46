@@ -34,9 +34,17 @@ export const useOpportunities = () => {
     // Simulate API call to add an opportunity
     await new Promise(resolve => setTimeout(resolve, 500));
     
+    // Convert string values to numbers where needed
+    const valueAsNumber = typeof data.value === 'string' ? parseFloat(data.value) : data.value;
+    const probabilityAsNumber = typeof data.probability === 'string' ? parseFloat(data.probability) : data.probability;
+    const amountAsNumber = data.amount ? (typeof data.amount === 'string' ? parseFloat(data.amount) : data.amount) : undefined;
+    
     const newOpportunity: Opportunity = {
       id: Date.now().toString(),
       ...data,
+      value: valueAsNumber,
+      probability: probabilityAsNumber,
+      amount: amountAsNumber,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
@@ -51,11 +59,26 @@ export const useOpportunities = () => {
     // Simulate API call to update an opportunity
     await new Promise(resolve => setTimeout(resolve, 500));
     
+    // Ensure numeric values
+    const updates: Partial<Opportunity> = { ...data };
+    
+    if (data.value !== undefined) {
+      updates.value = typeof data.value === 'string' ? parseFloat(data.value) : data.value;
+    }
+    
+    if (data.probability !== undefined) {
+      updates.probability = typeof data.probability === 'string' ? parseFloat(data.probability) : data.probability;
+    }
+    
+    if (data.amount !== undefined) {
+      updates.amount = typeof data.amount === 'string' ? parseFloat(data.amount) : data.amount;
+    }
+    
     const updatedOpportunities = opportunities.map(opp => {
       if (opp.id === id) {
         return {
           ...opp,
-          ...data,
+          ...updates,
           updatedAt: new Date().toISOString(),
         };
       }

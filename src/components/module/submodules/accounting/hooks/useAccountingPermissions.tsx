@@ -23,6 +23,18 @@ export interface AccountingUser {
   name: string;
   email: string;
   role: string;
+  displayName: string; // Added to match expected type
+}
+
+export interface AccountingUserPermission {
+  userId: string;
+  moduleId: string;
+  permissions: {
+    canView: boolean;
+    canCreate: boolean;
+    canEdit: boolean;
+    canDelete: boolean;
+  };
 }
 
 export const ACCOUNTING_PERMISSIONS = {
@@ -40,12 +52,12 @@ export const ACCOUNTING_PERMISSIONS = {
 
 export const useAccountingPermissions = () => {
   const [users, setUsers] = useState<AccountingUser[]>([]);
-  const [userPermissions, setUserPermissions] = useState<AccountingPermission[]>([]);
+  const [userPermissions, setUserPermissions] = useState<AccountingUserPermission[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [saving, setSaving] = useState(false);
   
   // Fetch all permissions from the database
-  const { data: permissions, isLoading, error } = useCollectionData<AccountingPermission>(
+  const { data: permissions, isLoading, error } = useCollectionData(
     COLLECTIONS.ACCOUNTING.PERMISSIONS
   );
 
@@ -61,6 +73,7 @@ export const useAccountingPermissions = () => {
               acc.push({
                 id: permission.userId,
                 name: permission.userName,
+                displayName: permission.userName,
                 email: permission.userEmail,
                 role: permission.userRole
               });
@@ -69,7 +82,20 @@ export const useAccountingPermissions = () => {
           }, []);
           
           setUsers(uniqueUsers);
-          setUserPermissions(permissions);
+          
+          // Convert AccountingPermission[] to AccountingUserPermission[]
+          const formattedPermissions = permissions.map(perm => ({
+            userId: perm.userId,
+            moduleId: perm.permissionType,
+            permissions: {
+              canView: perm.canView,
+              canCreate: perm.canCreate,
+              canEdit: perm.canEdit,
+              canDelete: perm.canDelete
+            }
+          }));
+          
+          setUserPermissions(formattedPermissions);
         }
       } catch (err) {
         console.error('Error fetching users:', err);
@@ -83,11 +109,17 @@ export const useAccountingPermissions = () => {
   }, [permissions, isLoading]);
 
   // Update a single permission
-  const updatePermission = useCallback((permissionId: string, field: string, value: boolean) => {
+  const updatePermission = useCallback((userId: string, moduleId: string, permissionType: keyof typeof ACCOUNTING_PERMISSIONS, value: boolean) => {
     setUserPermissions(prev => 
       prev.map(permission => 
-        permission.id === permissionId 
-          ? { ...permission, [field]: value, lastModified: new Date().toISOString() } 
+        permission.userId === userId && permission.moduleId === moduleId
+          ? { 
+              ...permission,
+              permissions: {
+                ...permission.permissions,
+                [permissionType]: value
+              }
+            } 
           : permission
       )
     );
@@ -97,14 +129,15 @@ export const useAccountingPermissions = () => {
   const setAllPermissionsOfType = useCallback((userId: string, permissionType: string, value: boolean) => {
     setUserPermissions(prev => 
       prev.map(permission => 
-        permission.userId === userId && permission.permissionType === permissionType
+        permission.userId === userId && permission.moduleId === permissionType
           ? { 
-              ...permission, 
-              canView: value, 
-              canCreate: value, 
-              canEdit: value, 
-              canDelete: value,
-              lastModified: new Date().toISOString()
+              ...permission,
+              permissions: {
+                canView: value,
+                canCreate: value,
+                canEdit: value,
+                canDelete: value
+              }
             } 
           : permission
       )
@@ -144,8 +177,6 @@ export const useAccountingPermissions = () => {
 
   return {
     permissions: userPermissions,
-    isLoading,
-    error,
     users,
     userPermissions,
     loading: isLoading,
@@ -155,6 +186,8 @@ export const useAccountingPermissions = () => {
     updatePermission,
     setAllPermissionsOfType,
     savePermissions,
-    filteredUsers
+    filteredUsers,
+    isLoading,
+    error
   };
 };

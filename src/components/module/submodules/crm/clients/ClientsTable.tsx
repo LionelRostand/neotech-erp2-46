@@ -1,89 +1,107 @@
 
 import React from 'react';
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Edit, Trash2 } from "lucide-react";
+import { MoreHorizontal, Edit, Trash } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Client } from '../types/crm-types';
 
-interface ClientTableProps {
-  clients: any[];
-  onViewDetails: (client: any) => void;
-  onEdit: (client: any) => void;
-  onDelete: (client: any) => void;
+export interface ClientTableProps {
+  clients: Client[];
+  onEdit: (client: Client) => void;
+  onDelete: (client: Client) => void;
+  onView?: (client: Client) => void;
+  isLoading: boolean;
+  error: string | null;
 }
 
-const ClientsTable: React.FC<ClientTableProps> = ({ 
-  clients, 
-  onViewDetails, 
-  onEdit, 
-  onDelete 
+const ClientsTable: React.FC<ClientTableProps> = ({
+  clients,
+  onEdit,
+  onDelete,
+  onView,
+  isLoading,
+  error
 }) => {
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center p-8">
+        <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-8 text-center">
+        <p className="text-destructive">{error}</p>
+      </div>
+    );
+  }
+
+  if (clients.length === 0) {
+    return (
+      <div className="p-8 text-center">
+        <p className="text-muted-foreground">Aucun client trouvé</p>
+      </div>
+    );
+  }
+
   return (
     <Table>
       <TableHeader>
         <TableRow>
           <TableHead>Nom</TableHead>
           <TableHead>Secteur</TableHead>
-          <TableHead>CA (€)</TableHead>
           <TableHead>Contact</TableHead>
           <TableHead>Statut</TableHead>
           <TableHead className="text-right">Actions</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
-        {clients.length > 0 ? (
-          clients.map(client => (
-            <TableRow key={client.id} className="cursor-pointer hover:bg-muted/50" onClick={() => onViewDetails(client)}>
-              <TableCell className="font-medium">{client.name}</TableCell>
-              <TableCell>{client.sector}</TableCell>
-              <TableCell>{parseInt(client.revenue).toLocaleString('fr-FR')} €</TableCell>
-              <TableCell>{client.contactName}</TableCell>
-              <TableCell>
-                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                  client.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
-                }`}>
-                  {client.status === 'active' ? 'Actif' : 'Inactif'}
-                </span>
-              </TableCell>
-              <TableCell className="text-right">
-                <div className="flex justify-end space-x-2" onClick={e => e.stopPropagation()}>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onEdit(client);
-                    }}
-                  >
-                    <Edit className="h-4 w-4" />
+        {clients.map((client) => (
+          <TableRow key={client.id} className="cursor-pointer hover:bg-muted/50" onClick={() => onView && onView(client)}>
+            <TableCell className="font-medium">{client.name}</TableCell>
+            <TableCell>{client.sector}</TableCell>
+            <TableCell>
+              <div className="flex flex-col">
+                <span>{client.contactName}</span>
+                <span className="text-sm text-muted-foreground">{client.contactEmail}</span>
+              </div>
+            </TableCell>
+            <TableCell>
+              <Badge variant={client.status === 'active' ? 'default' : client.status === 'inactive' ? 'outline' : 'secondary'}>
+                {client.status === 'active' ? 'Actif' : client.status === 'inactive' ? 'Inactif' : 'Prospect'}
+              </Badge>
+            </TableCell>
+            <TableCell className="text-right">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                  <Button variant="ghost" size="icon">
+                    <MoreHorizontal className="h-4 w-4" />
                   </Button>
-                  <Button 
-                    variant="ghost" 
-                    size="sm"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onDelete(client);
-                    }}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              </TableCell>
-            </TableRow>
-          ))
-        ) : (
-          <TableRow>
-            <TableCell colSpan={6} className="text-center py-10 text-muted-foreground">
-              Aucun client trouvé
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={(e) => {
+                    e.stopPropagation();
+                    onEdit(client);
+                  }}>
+                    <Edit className="mr-2 h-4 w-4" />
+                    Modifier
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={(e) => {
+                    e.stopPropagation();
+                    onDelete(client);
+                  }} className="text-destructive">
+                    <Trash className="mr-2 h-4 w-4" />
+                    Supprimer
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </TableCell>
           </TableRow>
-        )}
+        ))}
       </TableBody>
     </Table>
   );

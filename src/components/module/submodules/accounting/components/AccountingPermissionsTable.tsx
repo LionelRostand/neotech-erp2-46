@@ -1,15 +1,15 @@
 
 import React from 'react';
-import { Checkbox } from "@/components/ui/checkbox";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { AccountingPermission, AccountingUserPermission } from '@/components/module/projects/types/project-types';
+import { Checkbox } from "@/components/ui/checkbox";
+import { AccountingUserPermission } from '../hooks/useAccountingPermissions';
 
 interface AccountingPermissionsTableProps {
-  users: { id: string; displayName: string; email: string; role?: string; }[];
+  users: { id: string; displayName: string; email: string; role?: string }[];
   userPermissions: AccountingUserPermission[];
-  accountingSubmodules: { id: string; name: string; }[];
-  updatePermission: (userId: string, moduleId: string, permissionType: keyof Omit<AccountingPermission, 'moduleId'>, value: boolean) => void;
-  setAllPermissionsOfType: (userId: string, permissionType: keyof Omit<AccountingPermission, 'moduleId'>, value: boolean) => void;
+  accountingSubmodules: { id: string; name: string }[];
+  updatePermission: (userId: string, moduleId: string, permissionType: "canView" | "canCreate" | "canEdit" | "canDelete", value: boolean) => void;
+  setAllPermissionsOfType: (userId: string, permissionType: string, value: boolean) => void;
 }
 
 const AccountingPermissionsTable: React.FC<AccountingPermissionsTableProps> = ({
@@ -19,100 +19,112 @@ const AccountingPermissionsTable: React.FC<AccountingPermissionsTableProps> = ({
   updatePermission,
   setAllPermissionsOfType
 }) => {
-  // Obtenir la permission d'un utilisateur pour un module
-  const getUserPermissionForModule = (userId: string, moduleId: string): AccountingPermission | undefined => {
-    const userPerm = userPermissions.find(p => p.userId === userId);
-    if (!userPerm) return undefined;
+  // Get permissions for a specific user and module
+  const getUserModulePermissions = (userId: string, moduleId: string) => {
+    const permission = userPermissions.find(
+      p => p.userId === userId && p.moduleId === moduleId
+    );
     
-    return userPerm.permissions.find(p => p.moduleId === moduleId);
+    return permission?.permissions || {
+      canView: false,
+      canCreate: false,
+      canEdit: false,
+      canDelete: false
+    };
+  };
+
+  // Check if all permissions are enabled for a user and module
+  const areAllPermissionsEnabled = (userId: string, moduleId: string) => {
+    const permissions = getUserModulePermissions(userId, moduleId);
+    return permissions.canView && permissions.canCreate && permissions.canEdit && permissions.canDelete;
+  };
+
+  // Handle toggle for the "All" checkbox
+  const handleToggleAll = (userId: string, moduleId: string) => {
+    const newValue = !areAllPermissionsEnabled(userId, moduleId);
+    setAllPermissionsOfType(userId, moduleId, newValue);
   };
 
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead className="w-[250px]">Utilisateur</TableHead>
-          <TableHead>Module</TableHead>
-          <TableHead className="text-center">Visualisation</TableHead>
-          <TableHead className="text-center">Création</TableHead>
-          <TableHead className="text-center">Modification</TableHead>
-          <TableHead className="text-center">Suppression</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {users.map(user => (
-          <React.Fragment key={user.id}>
-            {/* Ligne utilisateur avec options "tout sélectionner" */}
-            <TableRow className="bg-muted/30">
-              <TableCell className="font-medium">
-                {user.displayName || user.email}
-                <div className="text-xs text-muted-foreground">{user.role || "Utilisateur"}</div>
-              </TableCell>
-              <TableCell className="font-medium">Tous les modules</TableCell>
-              <TableCell className="text-center">
-                <Checkbox 
-                  checked={userPermissions.find(p => p.userId === user.id)?.permissions.every(p => p.canView)}
-                  onCheckedChange={(checked) => setAllPermissionsOfType(user.id, 'canView', !!checked)}
-                />
-              </TableCell>
-              <TableCell className="text-center">
-                <Checkbox 
-                  checked={userPermissions.find(p => p.userId === user.id)?.permissions.every(p => p.canCreate)}
-                  onCheckedChange={(checked) => setAllPermissionsOfType(user.id, 'canCreate', !!checked)}
-                />
-              </TableCell>
-              <TableCell className="text-center">
-                <Checkbox 
-                  checked={userPermissions.find(p => p.userId === user.id)?.permissions.every(p => p.canEdit)}
-                  onCheckedChange={(checked) => setAllPermissionsOfType(user.id, 'canEdit', !!checked)}
-                />
-              </TableCell>
-              <TableCell className="text-center">
-                <Checkbox 
-                  checked={userPermissions.find(p => p.userId === user.id)?.permissions.every(p => p.canDelete)}
-                  onCheckedChange={(checked) => setAllPermissionsOfType(user.id, 'canDelete', !!checked)}
-                />
+    <div className="overflow-x-auto">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Utilisateur</TableHead>
+            <TableHead>Module</TableHead>
+            <TableHead className="text-center">Voir</TableHead>
+            <TableHead className="text-center">Créer</TableHead>
+            <TableHead className="text-center">Modifier</TableHead>
+            <TableHead className="text-center">Supprimer</TableHead>
+            <TableHead className="text-center">Tous</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {users.length === 0 ? (
+            <TableRow>
+              <TableCell colSpan={7} className="text-center py-6">
+                Aucun utilisateur trouvé
               </TableCell>
             </TableRow>
-
-            {/* Permissions individuelles des modules */}
-            {accountingSubmodules.map(module => {
-              const perm = getUserPermissionForModule(user.id, module.id);
-              return (
+          ) : (
+            users.flatMap(user => 
+              accountingSubmodules.map(module => (
                 <TableRow key={`${user.id}-${module.id}`}>
-                  <TableCell></TableCell>
+                  {accountingSubmodules.indexOf(module) === 0 ? (
+                    <TableCell className="font-medium" rowSpan={accountingSubmodules.length}>
+                      <div>
+                        <div className="font-semibold">{user.displayName}</div>
+                        <div className="text-sm text-muted-foreground">{user.email}</div>
+                        {user.role && <div className="text-xs text-muted-foreground mt-1">{user.role}</div>}
+                      </div>
+                    </TableCell>
+                  ) : null}
                   <TableCell>{module.name}</TableCell>
                   <TableCell className="text-center">
                     <Checkbox 
-                      checked={perm?.canView}
-                      onCheckedChange={(checked) => updatePermission(user.id, module.id, 'canView', !!checked)}
+                      checked={getUserModulePermissions(user.id, module.id).canView}
+                      onCheckedChange={(checked) => 
+                        updatePermission(user.id, module.id, "canView", !!checked)
+                      }
                     />
                   </TableCell>
                   <TableCell className="text-center">
                     <Checkbox 
-                      checked={perm?.canCreate}
-                      onCheckedChange={(checked) => updatePermission(user.id, module.id, 'canCreate', !!checked)}
+                      checked={getUserModulePermissions(user.id, module.id).canCreate}
+                      onCheckedChange={(checked) => 
+                        updatePermission(user.id, module.id, "canCreate", !!checked)
+                      }
                     />
                   </TableCell>
                   <TableCell className="text-center">
                     <Checkbox 
-                      checked={perm?.canEdit}
-                      onCheckedChange={(checked) => updatePermission(user.id, module.id, 'canEdit', !!checked)}
+                      checked={getUserModulePermissions(user.id, module.id).canEdit}
+                      onCheckedChange={(checked) => 
+                        updatePermission(user.id, module.id, "canEdit", !!checked)
+                      }
                     />
                   </TableCell>
                   <TableCell className="text-center">
                     <Checkbox 
-                      checked={perm?.canDelete}
-                      onCheckedChange={(checked) => updatePermission(user.id, module.id, 'canDelete', !!checked)}
+                      checked={getUserModulePermissions(user.id, module.id).canDelete}
+                      onCheckedChange={(checked) => 
+                        updatePermission(user.id, module.id, "canDelete", !!checked)
+                      }
+                    />
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <Checkbox 
+                      checked={areAllPermissionsEnabled(user.id, module.id)}
+                      onCheckedChange={() => handleToggleAll(user.id, module.id)}
                     />
                   </TableCell>
                 </TableRow>
-              );
-            })}
-          </React.Fragment>
-        ))}
-      </TableBody>
-    </Table>
+              ))
+            )
+          )}
+        </TableBody>
+      </Table>
+    </div>
   );
 };
 

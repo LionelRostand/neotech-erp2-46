@@ -4,7 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search, Shield, Save, RefreshCw } from "lucide-react";
-import { AccountingPermission, AccountingUserPermission } from '@/components/module/projects/types/project-types';
+import { AccountingUserPermission } from '../hooks/useAccountingPermissions';
 import AccountingPermissionsTable from './AccountingPermissionsTable';
 
 interface PermissionsTabProps {
@@ -15,8 +15,8 @@ interface PermissionsTabProps {
   saving: boolean;
   searchTerm: string;
   setSearchTerm: (searchTerm: string) => void;
-  updatePermission: (userId: string, moduleId: string, permissionType: keyof Omit<AccountingPermission, 'moduleId'>, value: boolean) => void;
-  setAllPermissionsOfType: (userId: string, permissionType: keyof Omit<AccountingPermission, 'moduleId'>, value: boolean) => void;
+  updatePermission: (userId: string, moduleId: string, permissionType: "canView" | "canCreate" | "canEdit" | "canDelete", value: boolean) => void;
+  setAllPermissionsOfType: (userId: string, permissionType: string, value: boolean) => void;
   savePermissions: () => Promise<void>;
 }
 

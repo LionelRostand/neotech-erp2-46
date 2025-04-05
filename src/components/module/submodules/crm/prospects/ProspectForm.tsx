@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -13,9 +13,9 @@ export interface ProspectFormProps {
   formData: ProspectFormData;
   handleInputChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
   handleSelectChange: (name: string, value: string) => void;
-  sourceOptions: { value: string; label: string; }[];
-  statusOptions: { value: string; label: string; }[];
   buttonText: string;
+  sourceOptions?: { value: string; label: string; }[];
+  statusOptions?: { value: string; label: string; }[];
 }
 
 const ProspectForm: React.FC<ProspectFormProps> = ({
@@ -23,9 +23,25 @@ const ProspectForm: React.FC<ProspectFormProps> = ({
   formData,
   handleInputChange,
   handleSelectChange,
-  sourceOptions,
-  statusOptions,
-  buttonText
+  buttonText,
+  sourceOptions = [
+    { value: 'Site web', label: 'Site web' },
+    { value: 'Référence', label: 'Référence' },
+    { value: 'Réseaux sociaux', label: 'Réseaux sociaux' },
+    { value: 'Email', label: 'Email' },
+    { value: 'Événement', label: 'Événement' },
+    { value: 'Publicité', label: 'Publicité' },
+    { value: 'Autre', label: 'Autre' }
+  ],
+  statusOptions = [
+    { value: 'new', label: 'Nouveau' },
+    { value: 'contacted', label: 'Contacté' },
+    { value: 'meeting', label: 'Rendez-vous' },
+    { value: 'proposal', label: 'Proposition' },
+    { value: 'negotiation', label: 'Négociation' },
+    { value: 'converted', label: 'Converti' },
+    { value: 'lost', label: 'Perdu' }
+  ]
 }) => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

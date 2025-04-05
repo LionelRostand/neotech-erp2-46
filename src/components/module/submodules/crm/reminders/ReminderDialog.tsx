@@ -18,23 +18,32 @@ interface ReminderDialogProps {
   isOpen: boolean;
   onClose: () => void;
   reminderData: ReminderData;
-  onChange: (field: string, value: string) => void;
-  onSave: () => void;
-  entityName: string;
+  onChange?: (field: string, value: string) => void;
+  onSave?: () => void;
+  entityName?: string;
+  relatedTo?: {
+    type: string;
+    id: string;
+    name: string;
+  };
 }
 
 const ReminderDialog: React.FC<ReminderDialogProps> = ({
   isOpen,
   onClose,
   reminderData,
-  onChange,
-  onSave,
-  entityName
+  onChange = () => {},
+  onSave = () => {},
+  entityName = '',
+  relatedTo
 }) => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSave();
   };
+
+  // Get entity name from either prop or relatedTo
+  const displayName = entityName || (relatedTo ? relatedTo.name : '');
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -75,7 +84,7 @@ const ReminderDialog: React.FC<ReminderDialogProps> = ({
               id="notes"
               value={reminderData.notes || ''}
               onChange={(e) => onChange('notes', e.target.value)}
-              placeholder={`Notes concernant le rappel pour ${entityName}...`}
+              placeholder={`Notes concernant le rappel pour ${displayName}...`}
               rows={3}
             />
           </div>

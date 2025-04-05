@@ -1,36 +1,30 @@
 
-import { useCallback } from 'react';
 import { OpportunityStage } from '../../types/crm-types';
 
 export const useOpportunityUtils = () => {
-  const getStageLabel = useCallback((stage: OpportunityStage) => {
-    switch (stage) {
-      case OpportunityStage.LEAD:
-        return 'Prospection';
-      case OpportunityStage.DISCOVERY:
-        return 'Qualification';
-      case OpportunityStage.PROPOSAL:
-        return 'Proposition';
-      case OpportunityStage.NEGOTIATION:
-        return 'Négociation';
-      case OpportunityStage.CLOSED_WON:
-        return 'Clôturée (gagnée)';
-      case OpportunityStage.CLOSED_LOST:
-        return 'Perdue';
-      default:
-        return 'Inconnu';
-    }
-  }, []);
+  // Get all opportunity stages with labels
+  const getAllStages = () => [
+    { value: OpportunityStage.LEAD, label: 'Prospect' },
+    { value: OpportunityStage.DISCOVERY, label: 'Découverte' },
+    { value: OpportunityStage.PROPOSAL, label: 'Proposition' },
+    { value: OpportunityStage.NEGOTIATION, label: 'Négociation' },
+    { value: OpportunityStage.CLOSING, label: 'Clôture' },
+    { value: OpportunityStage.CLOSED_WON, label: 'Gagné' },
+    { value: OpportunityStage.CLOSED_LOST, label: 'Perdu' }
+  ];
 
-  const getStageColor = useCallback((stage: OpportunityStage) => {
+  // Get stage color based on the stage
+  const getStageColor = (stage: OpportunityStage) => {
     switch (stage) {
       case OpportunityStage.LEAD:
-        return 'bg-blue-100 text-blue-800';
+        return 'bg-slate-100 text-slate-800';
       case OpportunityStage.DISCOVERY:
-        return 'bg-purple-100 text-purple-800';
+        return 'bg-blue-100 text-blue-800';
       case OpportunityStage.PROPOSAL:
-        return 'bg-amber-100 text-amber-800';
+        return 'bg-purple-100 text-purple-800';
       case OpportunityStage.NEGOTIATION:
+        return 'bg-amber-100 text-amber-800';
+      case OpportunityStage.CLOSING:
         return 'bg-orange-100 text-orange-800';
       case OpportunityStage.CLOSED_WON:
         return 'bg-green-100 text-green-800';
@@ -39,22 +33,17 @@ export const useOpportunityUtils = () => {
       default:
         return 'bg-gray-100 text-gray-800';
     }
-  }, []);
+  };
 
-  const getAllStages = useCallback(() => {
-    return [
-      { value: OpportunityStage.LEAD, label: 'Prospection' },
-      { value: OpportunityStage.DISCOVERY, label: 'Qualification' },
-      { value: OpportunityStage.PROPOSAL, label: 'Proposition' },
-      { value: OpportunityStage.NEGOTIATION, label: 'Négociation' },
-      { value: OpportunityStage.CLOSED_WON, label: 'Clôturée (gagnée)' },
-      { value: OpportunityStage.CLOSED_LOST, label: 'Perdue' },
-    ];
-  }, []);
+  // Get stage label based on the stage
+  const getStageLabel = (stage: OpportunityStage) => {
+    const stageOption = getAllStages().find(option => option.value === stage);
+    return stageOption ? stageOption.label : stage;
+  };
 
   return {
-    getStageLabel,
-    getStageColor,
     getAllStages,
+    getStageColor,
+    getStageLabel
   };
 };
