@@ -19,22 +19,23 @@ import EmployeesReports from '../EmployeesReports';
 import EmployeesAlerts from '../EmployeesAlerts';
 import EmployeesSettings from '../EmployeesSettings';
 import { SubModule } from '@/data/types/modules';
-import { useHrModuleData } from '@/hooks/useHrModuleData';
+import { useEmployeeData } from '@/hooks/useEmployeeData';
 
 export const renderEmployeesSubmodule = (submoduleId: string, submodule: SubModule) => {
-  const { employees, companies } = useHrModuleData();
+  const { employees, companies, departments } = useEmployeeData();
   
   console.log(`Rendering employee submodule: ${submoduleId}`);
+  console.log(`Loaded ${employees.length} employees from collection`);
   
   switch (submoduleId) {
     case 'employees-dashboard':
       return <EmployeesDashboard />;
     case 'employees-profiles':
-      return <EmployeesProfiles />;
+      return <EmployeesProfiles employees={employees} />;
     case 'employees-badges':
       return <EmployeesBadges />;
     case 'employees-departments':
-      return <EmployeesProfiles />;
+      return <EmployeesProfiles employees={employees} />;
     case 'employees-hierarchy':
       return <EmployeesHierarchy />;
     case 'employees-attendance':

@@ -1,14 +1,15 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Employee } from '@/types/employee';
-import { employees as initialEmployees } from '@/data/employees';
 import EmployeesList from './employees/EmployeesList';
 import EmployeeDetails from './employees/EmployeeDetails';
 import EmployeeForm from './employees/EmployeeForm';
 import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useEmployeeData } from '@/hooks/useEmployeeData';
+import { RefreshCw } from 'lucide-react';
 
 interface EmployeesProfilesProps {
   employees?: Employee[];
@@ -21,14 +22,24 @@ interface EmployeesProfilesProps {
 }
 
 const EmployeesProfiles: React.FC<EmployeesProfilesProps> = (props) => {
+  const { employees: fetchedEmployees, isLoading } = useEmployeeData();
   const [searchQuery, setSearchQuery] = useState(props.searchQuery || '');
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
-  const [employees, setEmployees] = useState<Employee[]>(props.employees || initialEmployees);
+  const [employees, setEmployees] = useState<Employee[]>([]);
   const [isAddEmployeeOpen, setIsAddEmployeeOpen] = useState(false);
   const [isEditEmployeeOpen, setIsEditEmployeeOpen] = useState(false);
   const [employeeToEdit, setEmployeeToEdit] = useState<Employee | null>(null);
   const [isPdfExportOpen, setIsPdfExportOpen] = useState(false);
   const [selectedCompany, setSelectedCompany] = useState<string>('all');
+
+  useEffect(() => {
+    // Utiliser les employés provenant des props ou de useEmployeeData
+    const employeesToUse = props.employees && props.employees.length > 0 
+      ? props.employees 
+      : fetchedEmployees;
+      
+    setEmployees(employeesToUse);
+  }, [props.employees, fetchedEmployees]);
 
   const companies = [
     { id: 'all', name: 'Toutes les entreprises' },
@@ -139,13 +150,24 @@ const EmployeesProfiles: React.FC<EmployeesProfilesProps> = (props) => {
                 </SelectContent>
               </Select>
             </div>
-            <Button 
-              variant="default" 
-              className="bg-green-500 hover:bg-green-600"
-              onClick={() => setIsAddEmployeeOpen(true)}
-            >
-              Nouvel employé
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                className="flex items-center gap-2"
+                onClick={() => setEmployees(fetchedEmployees)}
+                disabled={isLoading}
+              >
+                <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+                Actualiser
+              </Button>
+              <Button 
+                variant="default" 
+                className="bg-green-500 hover:bg-green-600"
+                onClick={() => setIsAddEmployeeOpen(true)}
+              >
+                Nouvel employé
+              </Button>
+            </div>
           </div>
           
           <EmployeesList
@@ -155,6 +177,7 @@ const EmployeesProfiles: React.FC<EmployeesProfilesProps> = (props) => {
             onViewEmployee={handleViewEmployee}
             onEditEmployee={handleEditEmployee}
             onDeleteEmployee={handleDeleteEmployee}
+            loading={isLoading}
           />
         </div>
       )}
