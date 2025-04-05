@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useOpportunityUtils } from '../hooks/opportunity/useOpportunityUtils';
@@ -21,11 +21,13 @@ const OpportunityKanban: React.FC<OpportunityKanbanProps> = ({
   const opportunityUtils = useOpportunityUtils();
   const stages = opportunityUtils.getAllStages();
   
-  // Group opportunities by stage
-  const opportunitiesByStage = stages.reduce((acc, stage) => {
-    acc[stage.value] = opportunities.filter(opp => opp.stage === stage.value);
-    return acc;
-  }, {} as Record<string, Opportunity[]>);
+  // Group opportunities by stage - using useMemo for performance
+  const opportunitiesByStage = useMemo(() => {
+    return stages.reduce((acc, stage) => {
+      acc[stage.value] = opportunities.filter(opp => opp.stage === stage.value);
+      return acc;
+    }, {} as Record<string, Opportunity[]>);
+  }, [opportunities, stages]);
 
   if (isLoading) {
     return (
