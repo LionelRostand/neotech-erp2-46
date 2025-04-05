@@ -2,12 +2,6 @@
 import React from 'react';
 import { modules } from '@/data/modules';
 import { SubModule } from '@/data/types/modules';
-import { renderEmployeesSubmodule } from './renderers/EmployeesRenderer';
-import { renderAccountingSubmodule } from './renderers/AccountingRenderer';
-import { renderFreightSubmodule } from './renderers/FreightRenderer';
-import { renderProjectsSubmodule } from './renderers/ProjectsRenderer';
-import { renderHealthSubmodule } from './renderers/HealthRenderer';
-import { renderHrSubmodule } from './renderers/HrRenderer';
 import DefaultSubmoduleContent from './DefaultSubmoduleContent';
 
 // Import all renderer functions from the renderers/index.ts
@@ -27,17 +21,19 @@ export const renderSubmoduleContent = ({ submoduleId, submodule }: SubmoduleRend
   // Sélectionner le bon renderer en fonction du module
   switch (modulePrefix) {
     case 'employees':
-      return renderEmployeesSubmodule(submoduleId, submodule);
+      return Renderers.renderEmployeesSubmodule(submoduleId, submodule);
     case 'accounting':
-      return renderAccountingSubmodule(submoduleId, submodule);
+      return Renderers.renderAccountingSubmodule(submoduleId, submodule);
     case 'freight':
-      return renderFreightSubmodule(submoduleId, submodule);
+      return Renderers.renderFreightSubmodule(submoduleId, submodule);
     case 'projects':
-      return renderProjectsSubmodule(submoduleId, submodule);
+      return Renderers.renderProjectsSubmodule(submoduleId, submodule);
     case 'health':
-      return renderHealthSubmodule(submoduleId, submodule);
+      return Renderers.renderHealthSubmodule(submoduleId, submodule);
     case 'hr':
-      return renderHrSubmodule(submoduleId, submodule);
+      return Renderers.renderHrSubmodule(submoduleId, submodule);
+    case 'companies':
+      return Renderers.renderCompaniesSubmodule(submoduleId, submodule);
     default:
       console.warn(`No renderer found for submodule: ${submoduleId}`);
       return <DefaultSubmoduleContent submodule={submodule} />;

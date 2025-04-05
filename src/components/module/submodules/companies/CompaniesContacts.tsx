@@ -1,666 +1,526 @@
 
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from '@/components/ui/table';
-import { Input } from '@/components/ui/input';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle
+} from '@/components/ui/alert-dialog';
+import { Input } from '@/components/ui/input';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
+} from '@/components/ui/table';
+import { Label } from '@/components/ui/label';
 import { 
   MoreHorizontal, 
   Plus, 
   Search, 
-  Mail, 
-  Phone, 
-  Star, 
-  Pencil, 
-  Trash, 
-  X 
+  X,
+  RefreshCw
 } from 'lucide-react';
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuTrigger 
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogDescription, 
-  DialogFooter, 
-  DialogHeader, 
-  DialogTitle 
-} from '@/components/ui/dialog';
-import { CompanyContact } from './types';
 import { toast } from 'sonner';
-// Import the service - for mock purposes we're not calling real methods
-import { companyService } from './services/companyService';
+import { CompanyContact } from './types';
+import { useCompaniesData } from '@/hooks/useCompaniesData';
+import { Switch } from '@/components/ui/switch';
 
 const CompaniesContacts: React.FC = () => {
   const [contacts, setContacts] = useState<CompanyContact[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [selectedContact, setSelectedContact] = useState<CompanyContact | null>(null);
-  const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
-    position: '',
-    email: '',
-    phone: '',
-    isMainContact: false
-  });
-  
-  // Mock implementations of service methods since they don't exist
-  const getCompanyContacts = async () => {
-    // Return mock data
-    return [
-      {
-        id: '1',
-        companyId: '1',
-        firstName: 'John',
-        lastName: 'Doe',
-        position: 'CEO',
-        email: 'john.doe@example.com',
-        phone: '+33123456789',
-        isMainContact: true,
-        isMain: true,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      },
-      {
-        id: '2',
-        companyId: '1',
-        firstName: 'Jane',
-        lastName: 'Smith',
-        position: 'CTO',
-        email: 'jane.smith@example.com',
-        phone: '+33987654321',
-        isMainContact: false,
-        isMain: false,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      }
-    ] as CompanyContact[];
-  };
-  
-  const createContact = async (contact: Omit<CompanyContact, 'id' | 'createdAt' | 'updatedAt'>) => {
-    // Mock implementation - in a real app this would call an API
-    return {
-      ...contact,
-      id: Math.random().toString(36).substring(7),
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    } as CompanyContact;
-  };
-  
-  const updateContact = async (id: string, contact: Partial<CompanyContact>) => {
-    // Mock implementation
-    return true;
-  };
-  
-  const deleteContact = async (id: string) => {
-    // Mock implementation
-    return true;
-  };
-  
-  // Function to load contacts
-  const loadContacts = async () => {
-    setIsLoading(true);
-    try {
-      const contactsList = await getCompanyContacts();
-      setContacts(contactsList);
-    } catch (error) {
-      console.error('Error loading contacts:', error);
-      toast.error('Failed to load contacts');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-  
-  // Load contacts on component mount
+  const [currentContact, setCurrentContact] = useState<CompanyContact | null>(null);
+  const [filteredContacts, setFilteredContacts] = useState<CompanyContact[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { companies, isLoading } = useCompaniesData();
+
   useEffect(() => {
     loadContacts();
   }, []);
-  
-  // Filter contacts based on search term
-  const filteredContacts = contacts.filter(contact => 
-    contact.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    contact.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    contact.position?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    contact.email?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-  
-  // Handle form input changes
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value, type, checked } = e.target;
-    setFormData({
-      ...formData,
-      [name]: type === 'checkbox' ? checked : value
-    });
+
+  useEffect(() => {
+    if (searchTerm.trim() === '') {
+      setFilteredContacts(contacts);
+    } else {
+      const lowerCaseSearch = searchTerm.toLowerCase();
+      const filtered = contacts.filter(
+        contact =>
+          contact.firstName.toLowerCase().includes(lowerCaseSearch) ||
+          contact.lastName.toLowerCase().includes(lowerCaseSearch) ||
+          contact.email.toLowerCase().includes(lowerCaseSearch) ||
+          contact.position.toLowerCase().includes(lowerCaseSearch)
+      );
+      setFilteredContacts(filtered);
+    }
+  }, [contacts, searchTerm]);
+
+  const loadContacts = async () => {
+    setLoading(true);
+    try {
+      // Mock data for now - in a real app, you would fetch from an API
+      const mockContacts: CompanyContact[] = [
+        {
+          id: '1',
+          companyId: 'enterprise1',
+          firstName: 'Pierre',
+          lastName: 'Dupont',
+          position: 'Directeur Commercial',
+          email: 'pierre.dupont@enterprise.fr',
+          phone: '+33 1 23 45 67 89',
+          isMain: true,
+          isMainContact: true,
+          createdAt: '2023-05-12T08:30:00Z',
+          updatedAt: '2023-05-12T08:30:00Z'
+        },
+        {
+          id: '2',
+          companyId: 'techinno',
+          firstName: 'Marie',
+          lastName: 'Laurent',
+          position: 'Responsable RH',
+          email: 'm.laurent@techinnovation.fr',
+          phone: '+33 6 12 34 56 78',
+          isMain: false,
+          isMainContact: false,
+          createdAt: '2023-06-05T10:15:00Z',
+          updatedAt: '2023-06-05T10:15:00Z'
+        }
+      ];
+      
+      setContacts(mockContacts);
+      setFilteredContacts(mockContacts);
+    } catch (error) {
+      console.error('Erreur lors du chargement des contacts:', error);
+      toast.error('Impossible de charger les contacts');
+    } finally {
+      setLoading(false);
+    }
   };
-  
-  // Reset form data
-  const resetForm = () => {
-    setFormData({
-      firstName: '',
-      lastName: '',
-      position: '',
-      email: '',
-      phone: '',
-      isMainContact: false
-    });
-  };
-  
-  // Handle adding a new contact
-  const handleAddContact = async (e: React.FormEvent) => {
+
+  const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    
-    try {
-      const newContact = await createContact({
-        companyId: '1', // In a real app, you'd get the actual company ID
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        position: formData.position,
-        email: formData.email,
-        phone: formData.phone,
-        isMainContact: formData.isMainContact,
-        isMain: formData.isMainContact,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      });
-      
-      setContacts([...contacts, newContact]);
-      setIsAddDialogOpen(false);
-      resetForm();
-      toast.success('Contact ajouté avec succès');
-    } catch (error) {
-      console.error('Error adding contact:', error);
-      toast.error('Failed to add contact');
-    }
+    // Handle search - already implemented through the useEffect above
   };
-  
-  // Handle editing a contact
-  const handleEditContact = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!selectedContact) return;
-    
-    try {
-      const success = await updateContact(selectedContact.id, {
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        position: formData.position,
-        email: formData.email,
-        phone: formData.phone,
-        isMainContact: formData.isMainContact,
-        isMain: formData.isMainContact,
-        updatedAt: new Date().toISOString()
-      });
-      
-      if (success) {
-        setContacts(prevContacts => 
-          prevContacts.map(contact => 
-            contact.id === selectedContact.id
-              ? {
-                  ...contact,
-                  firstName: formData.firstName,
-                  lastName: formData.lastName,
-                  position: formData.position,
-                  email: formData.email,
-                  phone: formData.phone,
-                  isMainContact: formData.isMainContact,
-                  isMain: formData.isMainContact,
-                  updatedAt: new Date().toISOString()
-                }
-              : contact
-          )
-        );
-        
-        setIsEditDialogOpen(false);
-        resetForm();
-        setSelectedContact(null);
-        toast.success('Contact mis à jour avec succès');
-      }
-    } catch (error) {
-      console.error('Error updating contact:', error);
-      toast.error('Failed to update contact');
-    }
+
+  const handleAddContact = () => {
+    setIsAddDialogOpen(true);
   };
-  
-  // Handle deleting a contact
-  const handleDeleteContact = async () => {
-    if (!selectedContact) return;
-    
-    try {
-      const success = await deleteContact(selectedContact.id);
-      
-      if (success) {
-        setContacts(prevContacts => 
-          prevContacts.filter(contact => contact.id !== selectedContact.id)
-        );
-        
-        setIsDeleteDialogOpen(false);
-        setSelectedContact(null);
-        toast.success('Contact supprimé avec succès');
-      }
-    } catch (error) {
-      console.error('Error deleting contact:', error);
-      toast.error('Failed to delete contact');
-    }
-  };
-  
-  // Open edit dialog with contact data
-  const openEditDialog = (contact: CompanyContact) => {
-    setSelectedContact(contact);
-    setFormData({
-      firstName: contact.firstName,
-      lastName: contact.lastName,
-      position: contact.position || '',
-      email: contact.email || '',
-      phone: contact.phone || '',
-      isMainContact: contact.isMainContact || contact.isMain || false
-    });
+
+  const handleEditContact = (contact: CompanyContact) => {
+    setCurrentContact(contact);
     setIsEditDialogOpen(true);
   };
-  
+
+  const handleDeleteClick = (contact: CompanyContact) => {
+    setCurrentContact(contact);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleSubmitNewContact = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    
+    const newContact: Omit<CompanyContact, 'id' | 'createdAt' | 'updatedAt'> = {
+      companyId: formData.get('companyId') as string,
+      firstName: formData.get('firstName') as string,
+      lastName: formData.get('lastName') as string,
+      position: formData.get('position') as string,
+      email: formData.get('email') as string,
+      phone: formData.get('phone') as string,
+      isMain: formData.get('isMain') === 'on',
+      isMainContact: formData.get('isMain') === 'on'
+    };
+    
+    // In a real app, would call an API here
+    const contactWithId: CompanyContact = {
+      ...newContact,
+      id: `contact-${Date.now()}`,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    } as CompanyContact;
+    
+    setContacts([...contacts, contactWithId]);
+    toast.success('Contact ajouté avec succès');
+    setIsAddDialogOpen(false);
+  };
+
+  const handleUpdateContact = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!currentContact) return;
+    
+    const formData = new FormData(e.currentTarget);
+    
+    const updatedContact: Partial<CompanyContact> = {
+      companyId: formData.get('companyId') as string,
+      firstName: formData.get('firstName') as string,
+      lastName: formData.get('lastName') as string,
+      position: formData.get('position') as string,
+      email: formData.get('email') as string,
+      phone: formData.get('phone') as string,
+      isMain: formData.get('isMain') === 'on',
+      isMainContact: formData.get('isMain') === 'on',
+      updatedAt: new Date().toISOString()
+    };
+    
+    // In a real app, would call an API here
+    setContacts(contacts.map(c => 
+      c.id === currentContact.id ? { ...currentContact, ...updatedContact } : c
+    ));
+    
+    toast.success('Contact mis à jour avec succès');
+    setIsEditDialogOpen(false);
+  };
+
+  const handleDeleteConfirm = () => {
+    if (!currentContact) return;
+    
+    // In a real app, would call an API here
+    setContacts(contacts.filter(c => c.id !== currentContact.id));
+    
+    toast.success('Contact supprimé avec succès');
+    setIsDeleteDialogOpen(false);
+  };
+
   return (
     <div className="space-y-6">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <h1 className="text-2xl font-bold">Contacts d'entreprise</h1>
-        
-        <div className="flex gap-2 w-full md:w-auto">
-          <div className="relative w-full md:w-auto">
-            <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Rechercher un contact..."
-              className="pl-8 w-full md:w-[250px]"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-            {searchTerm && (
-              <Button
-                variant="ghost"
-                size="sm"
-                className="absolute right-0 top-0 h-full"
-                onClick={() => setSearchTerm('')}
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            )}
-          </div>
-          
-          <Button onClick={() => setIsAddDialogOpen(true)}>
-            <Plus className="mr-2 h-4 w-4" />
-            Ajouter
+      <div className="flex flex-col space-y-4 md:flex-row md:justify-between md:items-center">
+        <div>
+          <h2 className="text-2xl font-bold">Contacts</h2>
+          <p className="text-gray-500">Gérez les contacts de vos entreprises</p>
+        </div>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={loadContacts} className="flex items-center gap-2">
+            <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+            Actualiser
+          </Button>
+          <Button onClick={handleAddContact}>
+            <Plus className="h-4 w-4 mr-2" />
+            Nouveau contact
           </Button>
         </div>
       </div>
-      
+
       <Card>
-        <CardHeader className="pb-3">
-          <CardTitle>Contacts</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <div className="flex justify-center items-center h-32">
-              <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
-            </div>
-          ) : filteredContacts.length === 0 ? (
-            <div className="text-center py-10">
-              <Mail className="mx-auto h-12 w-12 text-muted-foreground opacity-30" />
-              <h3 className="mt-4 text-lg font-semibold">Aucun contact trouvé</h3>
-              <p className="text-muted-foreground">
-                {searchTerm ? 'Essayez une autre recherche.' : 'Commencez par ajouter un contact.'}
-              </p>
+        <CardContent className="p-6">
+          <form onSubmit={handleSearch} className="flex gap-2 mb-6">
+            <div className="relative flex-1">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
+              <Input
+                placeholder="Rechercher un contact..."
+                className="pl-8"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
               {searchTerm && (
-                <Button variant="outline" className="mt-4" onClick={() => setSearchTerm('')}>
-                  Effacer la recherche
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="absolute right-0 top-0 h-full"
+                  onClick={() => setSearchTerm('')}
+                >
+                  <X className="h-4 w-4" />
                 </Button>
               )}
             </div>
+            <Button type="submit">Rechercher</Button>
+          </form>
+
+          {loading ? (
+            <div className="flex justify-center items-center h-40">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+            </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Contact principal</TableHead>
-                  <TableHead>Nom</TableHead>
-                  <TableHead>Poste</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Téléphone</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredContacts.map((contact) => (
-                  <TableRow key={contact.id}>
-                    <TableCell>
-                      {(contact.isMainContact || contact.isMain) && (
-                        <Badge className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100">
-                          <Star className="mr-1 h-3 w-3" />
-                          Principal
-                        </Badge>
-                      )}
-                    </TableCell>
-                    <TableCell className="font-medium">
-                      {contact.firstName} {contact.lastName}
-                    </TableCell>
-                    <TableCell>{contact.position || '-'}</TableCell>
-                    <TableCell>
-                      {contact.email ? (
-                        <a 
-                          href={`mailto:${contact.email}`} 
-                          className="flex items-center text-blue-600 hover:underline"
-                        >
-                          <Mail className="mr-1 h-3 w-3" />
-                          {contact.email}
-                        </a>
-                      ) : (
-                        '-'
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      {contact.phone ? (
-                        <a 
-                          href={`tel:${contact.phone}`} 
-                          className="flex items-center text-blue-600 hover:underline"
-                        >
-                          <Phone className="mr-1 h-3 w-3" />
-                          {contact.phone}
-                        </a>
-                      ) : (
-                        '-'
-                      )}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="sm">
-                            <MoreHorizontal className="h-4 w-4" />
-                            <span className="sr-only">Actions</span>
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => openEditDialog(contact)}>
-                            <Pencil className="mr-2 h-4 w-4" />
-                            Modifier
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() => {
-                              setSelectedContact(contact);
-                              setIsDeleteDialogOpen(true);
-                            }}
-                            className="text-destructive"
-                          >
-                            <Trash className="mr-2 h-4 w-4" />
-                            Supprimer
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
+            <div className="rounded-md border">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Nom</TableHead>
+                    <TableHead>Fonction</TableHead>
+                    <TableHead>Email</TableHead>
+                    <TableHead>Téléphone</TableHead>
+                    <TableHead>Principal</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {filteredContacts.length > 0 ? (
+                    filteredContacts.map((contact) => (
+                      <TableRow key={contact.id}>
+                        <TableCell className="font-medium">
+                          {contact.firstName} {contact.lastName}
+                        </TableCell>
+                        <TableCell>{contact.position}</TableCell>
+                        <TableCell>{contact.email}</TableCell>
+                        <TableCell>{contact.phone}</TableCell>
+                        <TableCell>
+                          {contact.isMainContact && (
+                            <Badge variant="secondary">Principal</Badge>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" className="h-8 w-8 p-0">
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem onClick={() => handleEditContact(contact)}>
+                                Modifier
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => handleDeleteClick(contact)}
+                                className="text-red-600"
+                              >
+                                Supprimer
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={6} className="text-center py-6 text-gray-500">
+                        {searchTerm 
+                          ? 'Aucun contact trouvé avec ces critères' 
+                          : 'Aucun contact disponible'}
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
           )}
         </CardContent>
       </Card>
-      
+
       {/* Add Contact Dialog */}
       <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Ajouter un contact</DialogTitle>
-            <DialogDescription>
-              Ajoutez un nouveau contact pour cette entreprise.
-            </DialogDescription>
+            <DialogTitle>Ajouter un nouveau contact</DialogTitle>
           </DialogHeader>
-          
-          <form onSubmit={handleAddContact} className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label htmlFor="firstName" className="text-sm font-medium">
-                  Prénom <span className="text-red-500">*</span>
-                </label>
-                <Input
-                  id="firstName"
-                  name="firstName"
-                  value={formData.firstName}
-                  onChange={handleInputChange}
-                  required
-                />
+          <form onSubmit={handleSubmitNewContact}>
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="companyId" className="text-right">
+                  Entreprise
+                </Label>
+                <div className="col-span-3">
+                  <select
+                    id="companyId"
+                    name="companyId"
+                    className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm"
+                    required
+                  >
+                    {isLoading ? (
+                      <option value="">Chargement...</option>
+                    ) : (
+                      companies?.map((company) => (
+                        <option key={company.id} value={company.id}>
+                          {company.name}
+                        </option>
+                      ))
+                    )}
+                  </select>
+                </div>
               </div>
-              
-              <div className="space-y-2">
-                <label htmlFor="lastName" className="text-sm font-medium">
-                  Nom <span className="text-red-500">*</span>
-                </label>
-                <Input
-                  id="lastName"
-                  name="lastName"
-                  value={formData.lastName}
-                  onChange={handleInputChange}
-                  required
-                />
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="firstName" className="text-right">
+                  Prénom
+                </Label>
+                <div className="col-span-3">
+                  <Input id="firstName" name="firstName" required />
+                </div>
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="lastName" className="text-right">
+                  Nom
+                </Label>
+                <div className="col-span-3">
+                  <Input id="lastName" name="lastName" required />
+                </div>
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="position" className="text-right">
+                  Fonction
+                </Label>
+                <div className="col-span-3">
+                  <Input id="position" name="position" />
+                </div>
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="email" className="text-right">
+                  Email
+                </Label>
+                <div className="col-span-3">
+                  <Input id="email" name="email" type="email" required />
+                </div>
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="phone" className="text-right">
+                  Téléphone
+                </Label>
+                <div className="col-span-3">
+                  <Input id="phone" name="phone" />
+                </div>
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="isMain" className="text-right">
+                  Contact principal
+                </Label>
+                <div className="col-span-3 flex items-center">
+                  <Switch id="isMain" name="isMain" />
+                </div>
               </div>
             </div>
-            
-            <div className="space-y-2">
-              <label htmlFor="position" className="text-sm font-medium">
-                Poste
-              </label>
-              <Input
-                id="position"
-                name="position"
-                value={formData.position}
-                onChange={handleInputChange}
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <label htmlFor="email" className="text-sm font-medium">
-                Email
-              </label>
-              <Input
-                id="email"
-                name="email"
-                type="email"
-                value={formData.email}
-                onChange={handleInputChange}
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <label htmlFor="phone" className="text-sm font-medium">
-                Téléphone
-              </label>
-              <Input
-                id="phone"
-                name="phone"
-                value={formData.phone}
-                onChange={handleInputChange}
-              />
-            </div>
-            
-            <div className="flex items-center space-x-2">
-              <input
-                id="isMainContact"
-                name="isMainContact"
-                type="checkbox"
-                checked={formData.isMainContact}
-                onChange={handleInputChange}
-                className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
-              />
-              <label htmlFor="isMainContact" className="text-sm font-medium">
-                Contact principal
-              </label>
-            </div>
-            
-            <DialogFooter>
-              <Button 
-                type="button" 
-                variant="outline" 
-                onClick={() => {
-                  setIsAddDialogOpen(false);
-                  resetForm();
-                }}
-              >
+            <div className="flex justify-end space-x-2">
+              <Button variant="outline" type="button" onClick={() => setIsAddDialogOpen(false)}>
                 Annuler
               </Button>
               <Button type="submit">Ajouter</Button>
-            </DialogFooter>
+            </div>
           </form>
         </DialogContent>
       </Dialog>
-      
+
       {/* Edit Contact Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Modifier le contact</DialogTitle>
-            <DialogDescription>
-              Modifiez les informations du contact.
-            </DialogDescription>
           </DialogHeader>
-          
-          <form onSubmit={handleEditContact} className="space-y-4">
-            {/* Same form fields as add dialog */}
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label htmlFor="edit-firstName" className="text-sm font-medium">
-                  Prénom <span className="text-red-500">*</span>
-                </label>
-                <Input
-                  id="edit-firstName"
-                  name="firstName"
-                  value={formData.firstName}
-                  onChange={handleInputChange}
-                  required
-                />
+          {currentContact && (
+            <form onSubmit={handleUpdateContact}>
+              <div className="grid gap-4 py-4">
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="companyId" className="text-right">
+                    Entreprise
+                  </Label>
+                  <div className="col-span-3">
+                    <select
+                      id="companyId"
+                      name="companyId"
+                      className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm"
+                      defaultValue={currentContact.companyId}
+                      required
+                    >
+                      {isLoading ? (
+                        <option value="">Chargement...</option>
+                      ) : (
+                        companies?.map((company) => (
+                          <option key={company.id} value={company.id}>
+                            {company.name}
+                          </option>
+                        ))
+                      )}
+                    </select>
+                  </div>
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="firstName" className="text-right">
+                    Prénom
+                  </Label>
+                  <div className="col-span-3">
+                    <Input id="firstName" name="firstName" defaultValue={currentContact.firstName} required />
+                  </div>
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="lastName" className="text-right">
+                    Nom
+                  </Label>
+                  <div className="col-span-3">
+                    <Input id="lastName" name="lastName" defaultValue={currentContact.lastName} required />
+                  </div>
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="position" className="text-right">
+                    Fonction
+                  </Label>
+                  <div className="col-span-3">
+                    <Input id="position" name="position" defaultValue={currentContact.position} />
+                  </div>
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="email" className="text-right">
+                    Email
+                  </Label>
+                  <div className="col-span-3">
+                    <Input id="email" name="email" type="email" defaultValue={currentContact.email} required />
+                  </div>
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="phone" className="text-right">
+                    Téléphone
+                  </Label>
+                  <div className="col-span-3">
+                    <Input id="phone" name="phone" defaultValue={currentContact.phone} />
+                  </div>
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="isMain" className="text-right">
+                    Contact principal
+                  </Label>
+                  <div className="col-span-3 flex items-center">
+                    <Switch id="isMain" name="isMain" defaultChecked={currentContact.isMainContact} />
+                  </div>
+                </div>
               </div>
-              
-              <div className="space-y-2">
-                <label htmlFor="edit-lastName" className="text-sm font-medium">
-                  Nom <span className="text-red-500">*</span>
-                </label>
-                <Input
-                  id="edit-lastName"
-                  name="lastName"
-                  value={formData.lastName}
-                  onChange={handleInputChange}
-                  required
-                />
+              <div className="flex justify-end space-x-2">
+                <Button variant="outline" type="button" onClick={() => setIsEditDialogOpen(false)}>
+                  Annuler
+                </Button>
+                <Button type="submit">Enregistrer</Button>
               </div>
-            </div>
-            
-            <div className="space-y-2">
-              <label htmlFor="edit-position" className="text-sm font-medium">
-                Poste
-              </label>
-              <Input
-                id="edit-position"
-                name="position"
-                value={formData.position}
-                onChange={handleInputChange}
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <label htmlFor="edit-email" className="text-sm font-medium">
-                Email
-              </label>
-              <Input
-                id="edit-email"
-                name="email"
-                type="email"
-                value={formData.email}
-                onChange={handleInputChange}
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <label htmlFor="edit-phone" className="text-sm font-medium">
-                Téléphone
-              </label>
-              <Input
-                id="edit-phone"
-                name="phone"
-                value={formData.phone}
-                onChange={handleInputChange}
-              />
-            </div>
-            
-            <div className="flex items-center space-x-2">
-              <input
-                id="edit-isMainContact"
-                name="isMainContact"
-                type="checkbox"
-                checked={formData.isMainContact}
-                onChange={handleInputChange}
-                className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
-              />
-              <label htmlFor="edit-isMainContact" className="text-sm font-medium">
-                Contact principal
-              </label>
-            </div>
-            
-            <DialogFooter>
-              <Button 
-                type="button" 
-                variant="outline" 
-                onClick={() => {
-                  setIsEditDialogOpen(false);
-                  resetForm();
-                  setSelectedContact(null);
-                }}
-              >
-                Annuler
-              </Button>
-              <Button type="submit">Enregistrer</Button>
-            </DialogFooter>
-          </form>
+            </form>
+          )}
         </DialogContent>
       </Dialog>
-      
+
       {/* Delete Confirmation Dialog */}
-      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Confirmer la suppression</DialogTitle>
-            <DialogDescription>
-              Êtes-vous sûr de vouloir supprimer ce contact ? Cette action est irréversible.
-            </DialogDescription>
-          </DialogHeader>
-          
-          <DialogFooter>
-            <Button 
-              type="button" 
-              variant="outline" 
-              onClick={() => {
-                setIsDeleteDialogOpen(false);
-                setSelectedContact(null);
-              }}
-            >
-              Annuler
-            </Button>
-            <Button 
-              type="button" 
-              variant="destructive" 
-              onClick={handleDeleteContact}
-            >
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Êtes-vous sûr ?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Cette action supprimera définitivement le contact {currentContact?.firstName} {currentContact?.lastName}.
+              Cette action est irréversible.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteConfirm} className="bg-red-600 hover:bg-red-700">
               Supprimer
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
