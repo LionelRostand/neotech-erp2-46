@@ -20,7 +20,7 @@ const CrmSettings: React.FC = () => {
   return (
     <div className="flex min-h-screen w-full bg-neotech-background">
       {/* Sidebar for settings */}
-      <aside className="fixed top-0 left-0 z-10 h-screen w-64 bg-white border-r border-gray-100 shadow-sm">
+      <aside className="h-screen w-64 bg-white border-r border-gray-100 shadow-sm">
         <div className="flex flex-col h-full">
           {/* Header */}
           <div className="flex items-center h-16 px-4 border-b">
@@ -109,8 +109,8 @@ const CrmSettings: React.FC = () => {
       </aside>
 
       {/* Main content */}
-      <main className="ml-64 flex-1 p-6">
-        <div className="container mx-auto">
+      <main className="flex-1">
+        <div className="p-6">
           <div className="flex items-center justify-between mb-6">
             <h1 className="text-2xl font-bold">Paramètres CRM</h1>
           </div>
