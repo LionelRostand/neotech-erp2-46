@@ -40,9 +40,9 @@ const CrmClients: React.FC = () => {
 
   return (
     <DashboardLayout>
-      <div className="container mx-auto p-6">
-        <div className="flex flex-col md:flex-row justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold mb-4 md:mb-0">Clients</h1>
+      <div className="container mx-auto pt-2 px-4">
+        <div className="flex flex-col md:flex-row justify-between items-center mb-4">
+          <h1 className="text-2xl font-bold mb-3 md:mb-0">Clients</h1>
           <Button onClick={() => {
             resetForm();
             setIsAddDialogOpen(true);
@@ -59,7 +59,7 @@ const CrmClients: React.FC = () => {
           sectorOptions={sectors}
         />
 
-        <div className="mt-6">
+        <div className="mt-4">
           <ClientsTable 
             clients={filteredClients}
             onView={viewClientDetails}

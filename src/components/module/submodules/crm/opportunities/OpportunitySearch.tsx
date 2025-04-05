@@ -31,14 +31,14 @@ const OpportunitySearch: React.FC<OpportunitySearchProps> = ({
   const stages = opportunityUtils.getAllStages();
 
   return (
-    <div className="flex flex-col md:flex-row gap-4 mb-4">
+    <div className="flex flex-col md:flex-row gap-3 mb-3">
       <div className="relative flex-1">
-        <Search className="absolute left-3 top-3 h-4 w-4 text-gray-500" />
+        <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-500" />
         <Input
           placeholder="Rechercher une opportunité..."
           value={searchTerm}
           onChange={(e) => onSearchChange(e.target.value)}
-          className="pl-9"
+          className="pl-9 h-9"
         />
       </div>
       
@@ -46,7 +46,7 @@ const OpportunitySearch: React.FC<OpportunitySearchProps> = ({
         value={stageFilter}
         onValueChange={onStageFilterChange}
       >
-        <SelectTrigger className="w-[180px]">
+        <SelectTrigger className="w-[180px] h-9">
           <Filter className="mr-2 h-4 w-4" />
           <SelectValue placeholder="Étape" />
         </SelectTrigger>
@@ -59,7 +59,7 @@ const OpportunitySearch: React.FC<OpportunitySearchProps> = ({
       </Select>
       
       {onFilterButtonClick && (
-        <Button variant="outline" onClick={onFilterButtonClick}>
+        <Button variant="outline" onClick={onFilterButtonClick} className="h-9">
           <Filter className="mr-2 h-4 w-4" />
           Plus de filtres
         </Button>

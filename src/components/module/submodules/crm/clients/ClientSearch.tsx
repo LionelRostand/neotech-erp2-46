@@ -27,7 +27,7 @@ const ClientSearch: React.FC<ClientSearchProps> = ({
   ]
 }) => {
   return (
-    <div className="flex flex-col md:flex-row gap-4">
+    <div className="flex flex-col md:flex-row gap-3">
       <div className="flex-1">
         <Label htmlFor="search" className="sr-only">Rechercher</Label>
         <Input
@@ -35,13 +35,14 @@ const ClientSearch: React.FC<ClientSearchProps> = ({
           placeholder="Rechercher un client..."
           value={searchTerm}
           onChange={(e) => onSearchChange(e.target.value)}
+          className="h-9"
         />
       </div>
       
       <div className="w-full md:w-64">
         <Label htmlFor="sector-filter" className="sr-only">Filtrer par secteur</Label>
         <Select value={sectorFilter} onValueChange={onSectorFilterChange}>
-          <SelectTrigger id="sector-filter">
+          <SelectTrigger id="sector-filter" className="h-9">
             <SelectValue placeholder="Filtrer par secteur" />
           </SelectTrigger>
           <SelectContent>

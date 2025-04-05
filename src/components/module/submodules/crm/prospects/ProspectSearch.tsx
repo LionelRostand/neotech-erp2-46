@@ -26,14 +26,14 @@ const ProspectSearch: React.FC<ProspectSearchProps> = ({
   statusOptions = []
 }) => {
   return (
-    <div className="flex flex-col md:flex-row gap-4 mb-4">
+    <div className="flex flex-col md:flex-row gap-3 mb-3">
       <div className="relative flex-1">
-        <Search className="absolute left-3 top-3 h-4 w-4 text-gray-500" />
+        <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-500" />
         <Input
           placeholder="Rechercher un prospect..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="pl-9"
+          className="pl-9 h-9"
         />
       </div>
       
@@ -41,7 +41,7 @@ const ProspectSearch: React.FC<ProspectSearchProps> = ({
         value={statusFilter}
         onValueChange={setStatusFilter}
       >
-        <SelectTrigger className="w-[180px]">
+        <SelectTrigger className="w-[180px] h-9">
           <Thermometer className="mr-2 h-4 w-4" />
           <SelectValue placeholder="Statut" />
         </SelectTrigger>
