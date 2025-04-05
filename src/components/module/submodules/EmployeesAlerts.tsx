@@ -63,6 +63,7 @@ const EmployeesAlerts: React.FC = () => {
               <AlertsFilter 
                 filterCriteria={filterCriteria}
                 setFilterCriteria={setFilterCriteria}
+                onClose={() => setFilterDialogOpen(false)}
               />
             </DialogContent>
           </Dialog>
