@@ -97,6 +97,7 @@ export const COLLECTIONS = {
     TRAININGS: 'hr_trainings',
     REPORTS: 'hr_reports',
     ALERTS: 'hr_alerts',
-    BADGES: 'hr_badges'                     // Added missing BADGES field
+    BADGES: 'hr_badges',                     // Added missing BADGES field
+    RECRUITMENT: 'hr-recruitment'            // Add the recruitment collection
   }
 };

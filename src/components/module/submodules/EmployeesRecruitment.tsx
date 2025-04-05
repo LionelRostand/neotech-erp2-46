@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useRecruitmentData, RecruitmentPost } from '@/hooks/useRecruitmentData';
+import { useRecruitmentFirebaseData } from '@/hooks/useRecruitmentFirebaseData';
 import RecruitmentStats from './employees/RecruitmentStats';
 import RecruitmentFilterDialog from './recruitment/RecruitmentFilterDialog';
 import CreateRecruitmentDialog from './recruitment/CreateRecruitmentDialog';
@@ -26,10 +27,35 @@ import { exportToPdf } from '@/utils/pdfUtils';
 import { useToast } from '@/hooks/use-toast';
 
 const EmployeesRecruitment: React.FC = () => {
-  const { recruitmentPosts, stats, isLoading } = useRecruitmentData();
+  const { recruitmentPosts: mockRecruitmentPosts, stats: mockStats, isLoading: isMockLoading } = useRecruitmentData();
+  const { recruitmentPosts: firebaseRecruitmentPosts, isLoading: isFirebaseLoading } = useRecruitmentFirebaseData();
+  
+  const [recruitmentPosts, setRecruitmentPosts] = useState<RecruitmentPost[]>([]);
+  const [stats, setStats] = useState({ open: 0, inProgress: 0, closed: 0, totalApplications: 0 });
+  const [isLoading, setIsLoading] = useState(true);
+  
+  useEffect(() => {
+    if (!isFirebaseLoading && firebaseRecruitmentPosts.length > 0) {
+      console.log('Using Firebase recruitment data:', firebaseRecruitmentPosts.length, 'posts');
+      setRecruitmentPosts(firebaseRecruitmentPosts);
+      
+      const open = firebaseRecruitmentPosts.filter(post => post.status === 'Ouvert').length;
+      const inProgress = firebaseRecruitmentPosts.filter(post => post.status === 'En cours').length;
+      const closed = firebaseRecruitmentPosts.filter(post => post.status === 'Clôturé').length;
+      const totalApplications = firebaseRecruitmentPosts.reduce((acc, curr) => acc + (curr.applicationCount || 0), 0);
+      
+      setStats({ open, inProgress, closed, totalApplications });
+      setIsLoading(false);
+    } else if (!isMockLoading) {
+      console.log('Using mock recruitment data:', mockRecruitmentPosts.length, 'posts');
+      setRecruitmentPosts(mockRecruitmentPosts);
+      setStats(mockStats);
+      setIsLoading(false);
+    }
+  }, [isFirebaseLoading, isMockLoading, firebaseRecruitmentPosts, mockRecruitmentPosts, mockStats]);
+
   const { toast } = useToast();
   
-  // Dialog states
   const [showFilterDialog, setShowFilterDialog] = useState(false);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showViewDialog, setShowViewDialog] = useState(false);
@@ -37,7 +63,6 @@ const EmployeesRecruitment: React.FC = () => {
   const [selectedRecruitment, setSelectedRecruitment] = useState<RecruitmentPost | null>(null);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   
-  // Filter state
   const [filterCriteria, setFilterCriteria] = useState({
     department: null as string | null,
     contractType: null as string | null,
@@ -46,19 +71,16 @@ const EmployeesRecruitment: React.FC = () => {
     location: null as string | null,
   });
   
-  // Handle viewing a recruitment post
   const handleViewRecruitment = (recruitment: RecruitmentPost) => {
     setSelectedRecruitment(recruitment);
     setShowViewDialog(true);
   };
   
-  // Handle scheduling for a recruitment post
   const handleScheduleRecruitment = (recruitment: RecruitmentPost) => {
     setSelectedRecruitment(recruitment);
     setShowScheduleDialog(true);
   };
   
-  // Function to apply filters
   const filteredPosts = recruitmentPosts.filter(post => {
     if (filterCriteria.department && post.department !== filterCriteria.department) return false;
     if (filterCriteria.contractType && post.contractType !== filterCriteria.contractType) return false;
@@ -68,7 +90,6 @@ const EmployeesRecruitment: React.FC = () => {
     return true;
   });
   
-  // Handle export
   const handleExport = (format: 'excel' | 'pdf') => {
     const data = filteredPosts.map(post => ({
       'Position': post.position,
@@ -97,7 +118,6 @@ const EmployeesRecruitment: React.FC = () => {
     }
   };
   
-  // Handle refresh after creation or update
   const handleRefresh = () => {
     setRefreshTrigger(prev => prev + 1);
     toast({
@@ -258,7 +278,6 @@ const EmployeesRecruitment: React.FC = () => {
         </CardContent>
       </Card>
       
-      {/* Filter Dialog */}
       <Dialog open={showFilterDialog} onOpenChange={setShowFilterDialog}>
         <DialogContent className="sm:max-w-[500px]">
           <RecruitmentFilterDialog 
@@ -269,21 +288,18 @@ const EmployeesRecruitment: React.FC = () => {
         </DialogContent>
       </Dialog>
       
-      {/* Create Recruitment Dialog */}
       <CreateRecruitmentDialog 
         open={showCreateDialog}
         onOpenChange={setShowCreateDialog}
         onSuccess={handleRefresh}
       />
       
-      {/* View Recruitment Dialog */}
       <RecruitmentViewDialog 
         open={showViewDialog}
         onOpenChange={setShowViewDialog}
         recruitment={selectedRecruitment}
       />
       
-      {/* Schedule Dialog */}
       <RecruitmentScheduleDialog 
         open={showScheduleDialog}
         onOpenChange={setShowScheduleDialog}
