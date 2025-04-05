@@ -30,7 +30,9 @@ export const useEvaluationsData = () => {
   // Function to force a refresh of the data
   const refreshData = useCallback(() => {
     setRefreshTrigger(prev => prev + 1);
-    refreshHrData();
+    if (refreshHrData) {
+      refreshHrData();
+    }
   }, [refreshHrData]);
   
   // Enrichir les évaluations avec les noms des employés
