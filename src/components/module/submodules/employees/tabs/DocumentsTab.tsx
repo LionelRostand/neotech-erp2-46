@@ -66,6 +66,10 @@ const DocumentsTab: React.FC<DocumentsTabProps> = ({ documents = [], employee })
   const groupedDocuments = processedDocuments.reduce((acc, doc) => {
     try {
       const date = new Date(doc.date);
+      if (isNaN(date.getTime())) {
+        throw new Error("Invalid date");
+      }
+      
       const month = format(date, 'MMMM yyyy', { locale: fr });
       
       if (!acc[month]) {
@@ -88,8 +92,21 @@ const DocumentsTab: React.FC<DocumentsTabProps> = ({ documents = [], employee })
     if (a === "Non daté") return 1;
     if (b === "Non daté") return -1;
     
-    const dateA = new Date(a);
-    const dateB = new Date(b);
+    const dateA = new Date(a.replace('janvier', 'January').replace('février', 'February')
+      .replace('mars', 'March').replace('avril', 'April').replace('mai', 'May')
+      .replace('juin', 'June').replace('juillet', 'July').replace('août', 'August')
+      .replace('septembre', 'September').replace('octobre', 'October')
+      .replace('novembre', 'November').replace('décembre', 'December'));
+    const dateB = new Date(b.replace('janvier', 'January').replace('février', 'February')
+      .replace('mars', 'March').replace('avril', 'April').replace('mai', 'May')
+      .replace('juin', 'June').replace('juillet', 'July').replace('août', 'August')
+      .replace('septembre', 'September').replace('octobre', 'October')
+      .replace('novembre', 'November').replace('décembre', 'December'));
+    
+    if (isNaN(dateA.getTime()) || isNaN(dateB.getTime())) {
+      return 0;
+    }
+    
     return dateB.getTime() - dateA.getTime();
   });
 
@@ -105,6 +122,19 @@ const DocumentsTab: React.FC<DocumentsTabProps> = ({ documents = [], employee })
     };
     
     return documentTypes[type.toLowerCase() as keyof typeof documentTypes] || <FileText className="w-5 h-5 text-primary" />;
+  };
+
+  // Format date properly to avoid displaying zeros
+  const formatDocumentDate = (dateString: string) => {
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) {
+        return '';
+      }
+      return format(date, 'P', { locale: fr });
+    } catch (error) {
+      return '';
+    }
   };
 
   return (
@@ -151,9 +181,9 @@ const DocumentsTab: React.FC<DocumentsTabProps> = ({ documents = [], employee })
                           <Badge variant="outline" className="mr-2 text-xs">
                             {doc.type}
                           </Badge>
-                          {doc.date && (
+                          {doc.date && formatDocumentDate(doc.date) && (
                             <span>
-                              {format(new Date(doc.date), 'P', { locale: fr })}
+                              {formatDocumentDate(doc.date)}
                             </span>
                           )}
                         </div>
