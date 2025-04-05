@@ -24,6 +24,8 @@ import { useHrModuleData } from '@/hooks/useHrModuleData';
 export const renderEmployeesSubmodule = (submoduleId: string, submodule: SubModule) => {
   const { employees, companies } = useHrModuleData();
   
+  console.log(`Rendering employee submodule: ${submoduleId}`);
+  
   switch (submoduleId) {
     case 'employees-dashboard':
       return <EmployeesDashboard />;
@@ -44,8 +46,10 @@ export const renderEmployeesSubmodule = (submoduleId: string, submodule: SubModu
     case 'employees-absences':
       return <EmployeesAbsences />;
     case 'employees-contracts':
+      console.log('Rendering contracts component');
       return <EmployeesContracts />;
     case 'employees-documents':
+      console.log('Rendering documents component');
       return <EmployeesDocuments />;
     case 'employees-evaluations':
       return <EmployeesEvaluations />;

@@ -1,5 +1,4 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { 
   Table, 
   TableBody, 
@@ -7,206 +6,146 @@ import {
   TableHead, 
   TableHeader, 
   TableRow 
-} from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import { 
-  Edit, 
-  Eye, 
-  FileText, 
-  MoreHorizontal,
-  Trash2 
-} from "lucide-react";
+} from '@/components/ui/table';
+import { Button } from '@/components/ui/button';
+import { Pencil, Trash2, Eye, MoreHorizontal } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger
-} from "@/components/ui/dropdown-menu";
-import { Insurance } from '../../types/health-types';
-import { useFirestore } from '@/hooks/use-firestore';
-import { COLLECTIONS } from '@/lib/firebase-collections';
+} from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
+import { useCollectionData } from '@/hooks/useCollectionData';
+import { COLLECTIONS } from '@/lib/firebase-collections';
+import { deleteDoc, doc } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { toast } from 'sonner';
+import { formatCurrency, formatDate } from '@/lib/formatters';
+import ViewInsuranceDialog from './ViewInsuranceDialog';
+import EditInsuranceDialog from './EditInsuranceDialog';
+import DeleteInsuranceDialog from './DeleteInsuranceDialog';
 
 interface InsuranceListProps {
-  searchQuery: string;
-  onViewInsurance: (insurance: Insurance) => void;
-  onEditInsurance: (insurance: Insurance) => void;
+  data: any[];
+  isLoading: boolean;
+  error: any;
+  filters: {
+    type: string;
+    status: string;
+    provider: string;
+  };
 }
 
-const InsuranceList: React.FC<InsuranceListProps> = ({ 
-  searchQuery, 
-  onViewInsurance, 
-  onEditInsurance 
-}) => {
-  const [insurances, setInsurances] = useState<Insurance[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  const insuranceCollection = useFirestore(COLLECTIONS.HEALTH_INSURANCE);
-
-  useEffect(() => {
-    const fetchInsurances = async () => {
-      try {
-        // This is a mock implementation - in a real app, we would fetch from Firebase
-        setLoading(true);
-        const mockInsurances: Insurance[] = [
-          {
-            id: '1',
-            name: 'Assurance Maladie',
-            type: 'public',
-            coverageLevel: 'basic',
-            contact: {
-              address: '50 Avenue du Professeur André Lemierre, 75020 Paris',
-              phone: '3646',
-              email: 'contact@ameli.fr'
-            },
-            coverageDetails: {
-              consultations: 70,
-              medications: 65,
-              hospitalization: 80,
-              specialistVisits: 70
-            },
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
-          },
-          {
-            id: '2',
-            name: 'MGEN',
-            type: 'mutual',
-            coverageLevel: 'premium',
-            contact: {
-              address: '3 Square Max Hymans, 75015 Paris',
-              phone: '3676',
-              email: 'contact@mgen.fr'
-            },
-            coverageDetails: {
-              consultations: 100,
-              medications: 90,
-              hospitalization: 100,
-              specialistVisits: 100
-            },
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
-          },
-          {
-            id: '3',
-            name: 'AXA Santé',
-            type: 'private',
-            coverageLevel: 'advanced',
-            contact: {
-              address: '25 Avenue Matignon, 75008 Paris',
-              phone: '01 40 75 48 00',
-              email: 'contact@axa.fr'
-            },
-            coverageDetails: {
-              consultations: 95,
-              medications: 80,
-              hospitalization: 95,
-              specialistVisits: 90
-            },
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
-          }
-        ];
-        
-        // Normally we would do this:
-        // const data = await insuranceCollection.getAll();
-        
-        setInsurances(mockInsurances);
-        setLoading(false);
-      } catch (error) {
-        console.error('Error fetching insurances:', error);
-        setLoading(false);
-      }
-    };
-
-    fetchInsurances();
-  }, []);
-
-  // Filter insurances based on searchQuery
-  const filteredInsurances = insurances.filter(insurance => 
-    insurance.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-    insurance.type.toLowerCase().includes(searchQuery.toLowerCase())
+const InsuranceList: React.FC<InsuranceListProps> = ({ data, isLoading, error, filters }) => {
+  const [viewDialogOpen, setViewDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [selectedInsurance, setSelectedInsurance] = useState<any>(null);
+  
+  // Get insurance providers
+  const { 
+    data: providers 
+  } = useCollectionData(
+    COLLECTIONS.HEALTH.INSURANCE, // Use the correct path
+    []
   );
 
-  const getTypeColor = (type: string) => {
-    switch (type) {
-      case 'public':
-        return 'bg-blue-100 text-blue-800';
-      case 'mutual':
-        return 'bg-green-100 text-green-800';
-      case 'private':
-        return 'bg-purple-100 text-purple-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
+  const filteredData = data.filter(item => {
+    const typeMatch = filters.type === 'all' || item.type === filters.type;
+    const statusMatch = filters.status === 'all' || item.status === filters.status;
+    const providerMatch = filters.provider === 'all' || item.provider === filters.provider;
+    return typeMatch && statusMatch && providerMatch;
+  });
+
+  const handleView = (insurance: any) => {
+    setSelectedInsurance(insurance);
+    setViewDialogOpen(true);
+  };
+
+  const handleEdit = (insurance: any) => {
+    setSelectedInsurance(insurance);
+    setEditDialogOpen(true);
+  };
+
+  const handleDelete = (insurance: any) => {
+    setSelectedInsurance(insurance);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!selectedInsurance) return;
+
+    try {
+      const insuranceRef = doc(db, COLLECTIONS.HEALTH.INSURANCE, selectedInsurance.id);
+      await deleteDoc(insuranceRef);
+      toast.success('Insurance deleted successfully!');
+    } catch (error: any) {
+      toast.error(`Failed to delete insurance: ${error.message}`);
+    } finally {
+      setDeleteDialogOpen(false);
+      setSelectedInsurance(null);
     }
   };
 
-  if (loading) {
-    return <div className="p-4 text-center">Chargement des assurances...</div>;
+  if (isLoading) {
+    return <p>Loading...</p>;
   }
 
-  if (filteredInsurances.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center p-8 text-center">
-        <FileText className="h-16 w-16 text-gray-400 mb-4" />
-        <h3 className="text-xl font-medium mb-2">Aucune assurance trouvée</h3>
-        <p className="text-gray-500 max-w-md mb-4">
-          {searchQuery 
-            ? `Aucune assurance ne correspond à "${searchQuery}"`
-            : "Il n'y a actuellement aucune assurance enregistrée. Ajoutez-en une pour commencer."}
-        </p>
-      </div>
-    );
+  if (error) {
+    return <p>Error: {error.message}</p>;
+  }
+
+  if (!data || data.length === 0) {
+    return <p>No insurance policies found.</p>;
   }
 
   return (
-    <div>
+    <>
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Nom</TableHead>
             <TableHead>Type</TableHead>
-            <TableHead>Niveau de couverture</TableHead>
-            <TableHead>Contact</TableHead>
+            <TableHead>Provider</TableHead>
+            <TableHead>Policy Number</TableHead>
+            <TableHead>Patient Name</TableHead>
+            <TableHead>Coverage Amount</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead>Start Date</TableHead>
             <TableHead className="text-right">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {filteredInsurances.map((insurance) => (
+          {filteredData.map((insurance) => (
             <TableRow key={insurance.id}>
-              <TableCell className="font-medium">{insurance.name}</TableCell>
+              <TableCell>{insurance.type}</TableCell>
+              <TableCell>{insurance.provider}</TableCell>
+              <TableCell>{insurance.policyNumber}</TableCell>
+              <TableCell>{insurance.patientName}</TableCell>
+              <TableCell>{formatCurrency(insurance.coverageAmount)}</TableCell>
               <TableCell>
-                <Badge className={getTypeColor(insurance.type)}>
-                  {insurance.type === 'public' ? 'Publique' : 
-                   insurance.type === 'mutual' ? 'Mutuelle' : 
-                   insurance.type === 'private' ? 'Privée' : insurance.type}
+                <Badge variant={insurance.status === 'active' ? 'default' : 'secondary'}>
+                  {insurance.status}
                 </Badge>
               </TableCell>
-              <TableCell>
-                {insurance.coverageLevel === 'basic' ? 'Basique' : 
-                 insurance.coverageLevel === 'advanced' ? 'Avancé' : 
-                 insurance.coverageLevel === 'premium' ? 'Premium' : insurance.coverageLevel}
-              </TableCell>
-              <TableCell>
-                <div className="text-sm">{insurance.contact.phone}</div>
-                <div className="text-xs text-gray-500">{insurance.contact.email}</div>
-              </TableCell>
+              <TableCell>{formatDate(insurance.startDate)}</TableCell>
               <TableCell className="text-right">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="sm">
+                    <Button variant="ghost" className="h-8 w-8 p-0">
+                      <span className="sr-only">Open menu</span>
                       <MoreHorizontal className="h-4 w-4" />
-                      <span className="sr-only">Actions</span>
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={() => onViewInsurance(insurance)}>
-                      <Eye className="mr-2 h-4 w-4" />
-                      Voir
+                    <DropdownMenuItem onClick={() => handleView(insurance)}>
+                      <Eye className="mr-2 h-4 w-4" /> View
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => onEditInsurance(insurance)}>
-                      <Edit className="mr-2 h-4 w-4" />
-                      Modifier
+                    <DropdownMenuItem onClick={() => handleEdit(insurance)}>
+                      <Pencil className="mr-2 h-4 w-4" /> Edit
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleDelete(insurance)}>
+                      <Trash2 className="mr-2 h-4 w-4" /> Delete
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
@@ -215,7 +154,24 @@ const InsuranceList: React.FC<InsuranceListProps> = ({
           ))}
         </TableBody>
       </Table>
-    </div>
+
+      <ViewInsuranceDialog
+        open={viewDialogOpen}
+        onOpenChange={setViewDialogOpen}
+        insurance={selectedInsurance}
+      />
+      <EditInsuranceDialog
+        open={editDialogOpen}
+        onOpenChange={setEditDialogOpen}
+        insurance={selectedInsurance}
+      />
+      <DeleteInsuranceDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        insurance={selectedInsurance}
+        onConfirm={confirmDelete}
+      />
+    </>
   );
 };
 

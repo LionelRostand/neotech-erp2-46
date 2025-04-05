@@ -1,5 +1,4 @@
 
-// Add the HEALTH collection paths
 export const COLLECTIONS = {
   USERS: 'users',
   COMPANIES: 'companies',
@@ -28,38 +27,38 @@ export const COLLECTIONS = {
   },
 
   HEALTH: {
-    PATIENTS: 'health/patients',
-    DOCTORS: 'health/doctors',
-    APPOINTMENTS: 'health/appointments',
-    CONSULTATIONS: 'health/consultations',
-    INSURANCE: 'health/insurance',
-    BILLING: 'health/billing',
-    SETTINGS: 'health/settings',
-    STAFF: 'health/staff',
-    HEALTH_CONSULTATIONS: 'health/consultations',
-    HEALTH_INSURANCE: 'health/insurance',
-    HEALTH_BILLING: 'health/billing'
+    PATIENTS: 'health-patients',
+    DOCTORS: 'health-doctors',
+    APPOINTMENTS: 'health-appointments',
+    CONSULTATIONS: 'health-consultations',
+    INSURANCE: 'health-insurance',
+    BILLING: 'health-billing',
+    SETTINGS: 'health-settings',
+    STAFF: 'health-staff',
+    HEALTH_CONSULTATIONS: 'health-consultations',
+    HEALTH_INSURANCE: 'health-insurance',
+    HEALTH_BILLING: 'health-billing'
   },
 
   HR: {
-    EMPLOYEES: 'hr/employees',
-    DEPARTMENTS: 'hr/departments',
-    CONTRACTS: 'hr/contracts',
-    LEAVES: 'hr/leaves',
-    LEAVE_REQUESTS: 'hr/leave_requests',
-    ABSENCES: 'hr/absences',
-    ABSENCE_REQUESTS: 'hr/absence_requests',
-    EVALUATIONS: 'hr/evaluations',
-    TRAININGS: 'hr/trainings',
-    RECRUITMENT: 'hr/recruitment',
-    DOCUMENTS: 'hr/documents',
-    BADGES: 'hr/badges',
-    TIMESHEETS: 'hr/timesheets',
-    SALARIES: 'hr/salaries',
-    PAYSLIPS: 'hr/payslips',
-    ATTENDANCE: 'hr/attendance',
-    REPORTS: 'hr/reports',
-    ALERTS: 'hr/alerts'
+    EMPLOYEES: 'hr-employees',
+    DEPARTMENTS: 'hr-departments',
+    CONTRACTS: 'hr-contracts',
+    LEAVES: 'hr-leaves',
+    LEAVE_REQUESTS: 'hr-leave_requests',
+    ABSENCES: 'hr-absences',
+    ABSENCE_REQUESTS: 'hr-absence_requests',
+    EVALUATIONS: 'hr-evaluations',
+    TRAININGS: 'hr-trainings',
+    RECRUITMENT: 'hr-recruitment',
+    DOCUMENTS: 'hr-documents',
+    BADGES: 'hr-badges',
+    TIMESHEETS: 'hr-timesheets',
+    SALARIES: 'hr-salaries',
+    PAYSLIPS: 'hr-payslips',
+    ATTENDANCE: 'hr-attendance',
+    REPORTS: 'hr-reports',
+    ALERTS: 'hr-alerts'
   },
 
   ACCOUNTING: {

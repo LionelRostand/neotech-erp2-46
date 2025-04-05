@@ -1,172 +1,153 @@
-
-import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { 
-  Search, 
-  Plus, 
-  Filter, 
-  ShieldCheck, 
-  FileText, 
-  BadgePercent, 
-  ArrowUpDown
-} from "lucide-react";
-import InsuranceList from './components/insurance/InsuranceList';
-import InsuranceVerification from './components/insurance/InsuranceVerification';
-import ReimbursementProcess from './components/insurance/ReimbursementProcess';
-import InsuranceCompanyDetail from './components/insurance/InsuranceCompanyDetail';
-import { Insurance } from './types/health-types';
-import { toast } from "@/hooks/use-toast";
-import { useFirestore } from '@/hooks/use-firestore';
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { PlusCircle, Filter, SlidersHorizontal } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useCollectionData } from '@/hooks/useCollectionData';
 import { COLLECTIONS } from '@/lib/firebase-collections';
+import { orderBy } from 'firebase/firestore';
+import InsuranceList from './components/insurance/InsuranceList';
+import InsuranceGrid from './components/insurance/InsuranceGrid';
+import AddInsuranceDialog from './components/insurance/AddInsuranceDialog';
+import InsuranceFilters from './components/insurance/InsuranceFilters';
+import InsuranceEmptyState from './components/insurance/InsuranceEmptyState';
+import InsuranceStatistics from './components/insurance/InsuranceStatistics';
+import { toast } from 'sonner';
 
 const InsurancePage: React.FC = () => {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [activeTab, setActiveTab] = useState('list');
-  const [selectedInsurance, setSelectedInsurance] = useState<Insurance | null>(null);
-  const [isEditing, setIsEditing] = useState(false);
-  const [isCreating, setIsCreating] = useState(false);
+  // State for UI controls
+  const [activeView, setActiveView] = useState('list');
+  const [openAddDialog, setOpenAddDialog] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
+  const [filterParams, setFilterParams] = useState({
+    type: 'all',
+    status: 'all',
+    provider: 'all'
+  });
   
-  const insuranceCollection = useFirestore(COLLECTIONS.HEALTH_INSURANCE);
-  
-  const handleViewInsurance = (insurance: Insurance) => {
-    setSelectedInsurance(insurance);
-    setIsEditing(false);
-  };
+  // Get insurance data
+  const { 
+    data: insuranceData, 
+    isLoading, 
+    error 
+  } = useCollectionData(
+    COLLECTIONS.HEALTH.INSURANCE, // Use the correct path
+    [orderBy('createdAt', 'desc')]
+  );
 
-  const handleEditInsurance = (insurance: Insurance) => {
-    setSelectedInsurance(insurance);
-    setIsEditing(true);
-  };
-
+  // Handle adding a new insurance
   const handleAddInsurance = () => {
-    setSelectedInsurance(null);
-    setIsCreating(true);
+    setOpenAddDialog(true);
   };
 
-  const handleBackToList = () => {
-    setSelectedInsurance(null);
-    setIsEditing(false);
-    setIsCreating(false);
+  // Handle closing the add dialog
+  const handleCloseAddDialog = () => {
+    setOpenAddDialog(false);
   };
 
-  const handleSaveInsurance = async (data: Insurance) => {
-    try {
-      if (data.id && !isCreating) {
-        await insuranceCollection.update(data.id, data);
-        toast({ 
-          title: "Assurance mise à jour", 
-          description: `Les informations de ${data.name} ont été mises à jour.`
-        });
-      } else {
-        await insuranceCollection.add(data);
-        toast({ 
-          title: "Assurance ajoutée", 
-          description: `${data.name} a été ajoutée à la liste.`
-        });
-      }
+  // Handle filter changes
+  const handleFilterChange = (newFilters: any) => {
+    setFilterParams(newFilters);
+  };
+
+  // Filter insurance data based on filter parameters
+  const filteredInsuranceData = React.useMemo(() => {
+    if (!insuranceData) return [];
+    
+    return insuranceData.filter(insurance => {
+      const typeMatch = filterParams.type === 'all' || insurance.type === filterParams.type;
+      const statusMatch = filterParams.status === 'all' || insurance.status === filterParams.status;
+      const providerMatch = filterParams.provider === 'all' || insurance.provider === filterParams.provider;
       
-      handleBackToList();
-    } catch (error) {
-      console.error("Error saving insurance:", error);
-      toast({ 
-        title: "Erreur", 
-        description: "Une erreur s'est produite lors de l'enregistrement.",
-        variant: "destructive"
-      });
-    }
+      return typeMatch && statusMatch && providerMatch;
+    });
+  }, [insuranceData, filterParams]);
+
+  // Handle successful insurance creation
+  const handleInsuranceCreated = () => {
+    toast.success('Assurance créée avec succès!');
   };
-  
-  // Show insurance detail view when an insurance is selected or when creating a new one
-  if (selectedInsurance || isCreating) {
-    return (
-      <InsuranceCompanyDetail 
-        insurance={selectedInsurance}
-        onBack={handleBackToList}
-        onSave={handleSaveInsurance}
-      />
-    );
-  }
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col space-y-4 sm:flex-row sm:justify-between sm:items-center">
+      {/* Header with actions */}
+      <div className="flex flex-col space-y-4 md:flex-row md:justify-between md:items-center">
         <div>
-          <h2 className="text-2xl font-bold">Gestion des Assurances</h2>
-          <p className="text-gray-500">Gérez les assurances et mutuelles des patients</p>
+          <h2 className="text-2xl font-bold">Gestion des assurances</h2>
+          <p className="text-gray-500">Suivi des polices d'assurance</p>
         </div>
-        <div className="flex flex-col space-y-2 sm:flex-row sm:space-y-0 sm:space-x-2">
-          <Button variant="outline" size="sm">
-            <Filter className="h-4 w-4 mr-2" />
+        <div className="flex flex-wrap gap-2">
+          <Button variant="outline" size="sm" onClick={() => setShowFilters(!showFilters)}>
+            <SlidersHorizontal className="h-4 w-4 mr-2" />
             Filtrer
           </Button>
           <Button size="sm" onClick={handleAddInsurance}>
-            <Plus className="h-4 w-4 mr-2" />
+            <PlusCircle className="h-4 w-4 mr-2" />
             Ajouter une assurance
           </Button>
         </div>
       </div>
 
-      <div className="relative w-full max-w-sm">
-        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
-        <Input
-          type="search"
-          placeholder="Rechercher une assurance..."
-          className="pl-8 w-full"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-        />
-      </div>
+      {/* Filters */}
+      {showFilters && (
+        <Card>
+          <CardContent className="p-4">
+            <InsuranceFilters onChange={handleFilterChange} />
+          </CardContent>
+        </Card>
+      )}
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="list">Assurances</TabsTrigger>
-          <TabsTrigger value="verification">Vérification</TabsTrigger>
-          <TabsTrigger value="reimbursement">Remboursements</TabsTrigger>
+      {/* Statistics */}
+      <InsuranceStatistics data={insuranceData || []} />
+
+      {/* Tabs for list and grid views */}
+      <Tabs value={activeView} onValueChange={setActiveView} className="w-full">
+        <TabsList className="w-full max-w-md grid grid-cols-2">
+          <TabsTrigger value="list" className="flex items-center">
+            Liste
+          </TabsTrigger>
+          <TabsTrigger value="grid" className="flex items-center">
+            Grille
+          </TabsTrigger>
         </TabsList>
-
-        <TabsContent value="list">
+        <TabsContent value="list" className="space-y-4">
           <Card>
-            <CardContent className="p-6">
-              <InsuranceList 
-                searchQuery={searchQuery} 
-                onViewInsurance={handleViewInsurance}
-                onEditInsurance={handleEditInsurance}
-              />
+            <CardHeader>
+              <CardTitle>Liste des assurances</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {isLoading && <p>Chargement des assurances...</p>}
+              {error && <p className="text-red-500">Erreur: {error}</p>}
+              {!isLoading && !error && (!insuranceData || insuranceData.length === 0) && (
+                <InsuranceEmptyState />
+              )}
+              {!isLoading && !error && insuranceData && insuranceData.length > 0 && (
+                <InsuranceList data={filteredInsuranceData} isLoading={isLoading} error={error} filters={filterParams} />
+              )}
             </CardContent>
           </Card>
         </TabsContent>
-
-        <TabsContent value="verification">
+        <TabsContent value="grid" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center">
-                <ShieldCheck className="h-5 w-5 mr-2 text-blue-500" />
-                Vérification de couverture
-              </CardTitle>
+              <CardTitle>Grille des assurances</CardTitle>
             </CardHeader>
             <CardContent>
-              <InsuranceVerification />
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="reimbursement">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <BadgePercent className="h-5 w-5 mr-2 text-green-500" />
-                Traitement des remboursements
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ReimbursementProcess />
+              {isLoading && <p>Chargement des assurances...</p>}
+              {error && <p className="text-red-500">Erreur: {error}</p>}
+              {!isLoading && !error && (!insuranceData || insuranceData.length === 0) && (
+                <InsuranceEmptyState />
+              )}
+              {!isLoading && !error && insuranceData && insuranceData.length > 0 && (
+                <InsuranceGrid data={filteredInsuranceData} isLoading={isLoading} error={error} filters={filterParams} />
+              )}
             </CardContent>
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Add Insurance Dialog */}
+      <AddInsuranceDialog open={openAddDialog} onOpenChange={setOpenAddDialog} onSuccess={handleInsuranceCreated} />
     </div>
   );
 };

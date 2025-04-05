@@ -30,8 +30,8 @@ export interface Prospect extends BaseEntity {
 
 export interface ProspectFormData {
   company: string;
-  contactName?: string;
-  contactEmail?: string;
+  contactName: string;
+  contactEmail: string;
   contactPhone?: string;
   status: string;
   source?: string;
@@ -42,7 +42,7 @@ export interface ProspectFormData {
   address?: string;
   size?: 'small' | 'medium' | 'large' | 'enterprise';
   estimatedValue?: number;
-  email: string;
+  email?: string;
   phone?: string;
   name: string;
 }
@@ -59,7 +59,7 @@ export interface Client extends BaseEntity {
   website?: string;
   address?: string;
   notes?: string;
-  customerSince: string;
+  customerSince?: string; // Made optional to fix type error
 }
 
 export interface ClientFormData {
