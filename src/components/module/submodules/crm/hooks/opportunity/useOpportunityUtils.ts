@@ -1,86 +1,55 @@
 
-import { Opportunity } from "../../types/crm-types";
+import { Opportunity } from '../../types/crm-types';
 
 export const useOpportunityUtils = () => {
-  const getStageLabel = (stage: string) => {
+  const getStageLabel = (stage: string): string => {
     switch (stage) {
-      case 'new':
-        return 'Nouveau';
-      case 'negotiation':
-        return 'En négociation';
-      case 'quote_sent':
-        return 'Devis envoyé';
-      case 'pending':
-        return 'En attente';
-      case 'won':
-        return 'Gagné';
-      case 'lost':
-        return 'Perdu';
-      default:
-        return 'Inconnu';
+      case 'lead': return 'Prospect';
+      case 'qualified': return 'Qualifié';
+      case 'needs-analysis': return 'Analyse des besoins';
+      case 'proposal': return 'Proposition';
+      case 'negotiation': return 'Négociation';
+      case 'closed-won': return 'Gagnée';
+      case 'closed-lost': return 'Perdue';
+      default: return 'Inconnu';
     }
   };
 
-  const getStageColor = (stage: string) => {
+  const getStageBadgeColor = (stage: string): string => {
     switch (stage) {
-      case 'new':
-        return 'bg-green-600';
-      case 'negotiation':
-        return 'bg-blue-600';
-      case 'quote_sent':
-        return 'bg-purple-600';
-      case 'pending':
-        return 'bg-orange-600';
-      case 'won':
-        return 'bg-emerald-600';
-      case 'lost':
-        return 'bg-red-600';
-      default:
-        return 'bg-gray-600';
-    }
-  };
-
-  const getStageIcon = (stage: string) => {
-    switch (stage) {
-      case 'new':
-        return '🟢';
-      case 'negotiation':
-        return '🔵';
-      case 'quote_sent':
-        return '🟣';
-      case 'pending':
-        return '🟠';
-      case 'won':
-        return '✅';
-      case 'lost':
-        return '❌';
-      default:
-        return '⚪';
+      case 'lead': return 'bg-blue-100 text-blue-800';
+      case 'qualified': return 'bg-indigo-100 text-indigo-800';
+      case 'needs-analysis': return 'bg-purple-100 text-purple-800';
+      case 'proposal': return 'bg-amber-100 text-amber-800';
+      case 'negotiation': return 'bg-orange-100 text-orange-800';
+      case 'closed-won': return 'bg-green-100 text-green-800';
+      case 'closed-lost': return 'bg-red-100 text-red-800';
+      default: return 'bg-gray-100 text-gray-800';
     }
   };
 
   const filterOpportunities = (
-    opportunities: Opportunity[],
-    searchTerm: string,
+    opportunities: Opportunity[] | undefined, 
+    searchTerm: string, 
     stageFilter: string
-  ) => {
-    return opportunities.filter(opportunity => {
-      // Filter by search term
+  ): Opportunity[] => {
+    if (!opportunities) return [];
+
+    return opportunities.filter((opportunity) => {
       const matchesSearch = 
-        opportunity.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        opportunity.clientName.toLowerCase().includes(searchTerm.toLowerCase());
-      
-      // Filter by stage
-      const matchesStage = stageFilter === 'all' || opportunity.stage === stageFilter;
-      
+        opportunity.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (opportunity.contactName && opportunity.contactName.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (opportunity.clientName && opportunity.clientName.toLowerCase().includes(searchTerm.toLowerCase()));
+
+      const matchesStage = stageFilter === 'all' ? true : opportunity.stage === stageFilter;
+
       return matchesSearch && matchesStage;
     });
   };
 
   return {
     getStageLabel,
-    getStageColor,
-    getStageIcon,
+    getStageBadgeColor,
     filterOpportunities
   };
 };

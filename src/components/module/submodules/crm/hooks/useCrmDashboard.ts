@@ -1,107 +1,112 @@
 
-import { useState, useEffect } from 'react';
-
-export interface DashboardStats {
-  clients: number;
-  prospects: number;
-  opportunities: number;
-  conversionRate: number;
-  revenueGenerated: number;
-  averageDealSize: number;
-}
-
-export interface ChartDataItem {
-  name: string;
-  value: number;
-}
-
-export interface ActivityItem {
-  id: string;
-  type: 'call' | 'email' | 'meeting';
-  title: string;
-  description: string;
-  date: string;
-  timeAgo: string;
-}
+import { useMemo } from 'react';
+import { useCrmData } from '@/hooks/modules/useCrmData';
 
 export const useCrmDashboard = () => {
-  // Sample colors for charts
-  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'];
-  
-  // Sample data - in a real application, these would come from API calls or real-time database
-  const [stats, setStats] = useState<DashboardStats>({
-    clients: 42,
-    prospects: 78,
-    opportunities: 23,
-    conversionRate: 28,
-    revenueGenerated: 520000,
-    averageDealSize: 45000
-  });
-  
-  const [salesData, setSalesData] = useState<ChartDataItem[]>([
-    { name: 'Jan', value: 24000 },
-    { name: 'Fév', value: 32000 },
-    { name: 'Mar', value: 28000 },
-    { name: 'Avr', value: 39000 },
-    { name: 'Mai', value: 42000 },
-    { name: 'Juin', value: 55000 },
-  ]);
-  
-  const [opportunitiesData, setOpportunitiesData] = useState<ChartDataItem[]>([
-    { name: 'Nouveau', value: 12 },
-    { name: 'En négociation', value: 8 },
-    { name: 'Devis envoyé', value: 15 },
-    { name: 'En attente', value: 9 },
-    { name: 'Gagné', value: 4 },
-  ]);
-  
-  const [recentActivities, setRecentActivities] = useState<ActivityItem[]>([
+  const { clients, prospects, opportunities, isLoading } = useCrmData();
+
+  // Colors for charts
+  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
+
+  // Calculate statistics
+  const stats = useMemo(() => {
+    // Number of clients and prospects
+    const clientsCount = clients?.length || 0;
+    const prospectsCount = prospects?.length || 0;
+    const opportunitiesCount = opportunities?.length || 0;
+
+    // Calculate conversion rate: clients / (clients + prospects) * 100
+    const totalContacts = clientsCount + prospectsCount;
+    const conversionRate = totalContacts > 0 
+      ? Math.round((clientsCount / totalContacts) * 100) 
+      : 0;
+
+    // Calculate revenue generated from opportunities
+    const revenueGenerated = opportunities
+      ? opportunities.reduce((sum, opp) => sum + (Number(opp.value) || 0), 0)
+      : 0;
+
+    // Average deal size
+    const averageDealSize = opportunitiesCount > 0
+      ? Math.round(revenueGenerated / opportunitiesCount)
+      : 0;
+
+    return {
+      clients: clientsCount,
+      prospects: prospectsCount,
+      opportunities: opportunitiesCount,
+      conversionRate,
+      revenueGenerated,
+      averageDealSize
+    };
+  }, [clients, prospects, opportunities]);
+
+  // Create sales data for charts
+  const salesData = useMemo(() => [
+    { name: 'Jan', value: 4000 },
+    { name: 'Fév', value: 3000 },
+    { name: 'Mar', value: 2000 },
+    { name: 'Avr', value: 2780 },
+    { name: 'Mai', value: 1890 },
+    { name: 'Jun', value: 2390 },
+  ], []);
+
+  // Create opportunities data by stage
+  const opportunitiesData = useMemo(() => {
+    if (!opportunities) return [];
+
+    const stages: Record<string, number> = {};
+    
+    opportunities.forEach(opp => {
+      const stage = opp.stage || 'unknown';
+      stages[stage] = (stages[stage] || 0) + 1;
+    });
+
+    return Object.entries(stages).map(([name, value]) => ({ name, value }));
+  }, [opportunities]);
+
+  // Recent activities data
+  const recentActivities = useMemo(() => [
     {
-      id: '1',
+      id: 1,
       type: 'call',
-      title: 'Appel avec Tech Innovations',
-      description: 'Discussion pour finaliser l\'offre de logiciel CRM',
-      date: '2023-06-02T14:30:00',
-      timeAgo: 'Il y a 2 heures'
+      title: 'Appel avec Tech Solutions',
+      description: 'Discussion sur le renouvellement du contrat',
+      date: '2023-10-15T10:30:00',
+      timeAgo: 'il y a 2 jours',
     },
     {
-      id: '2',
+      id: 2,
       type: 'email',
       title: 'Email à Global Industries',
-      description: 'Envoi du devis révisé avec les nouvelles conditions',
-      date: '2023-06-02T10:15:00',
-      timeAgo: 'Il y a 6 heures'
+      description: 'Envoi de la proposition commerciale',
+      date: '2023-10-14T15:45:00',
+      timeAgo: 'il y a 3 jours',
     },
     {
-      id: '3',
+      id: 3,
       type: 'meeting',
       title: 'Rendez-vous avec Acme Corp',
-      description: 'Présentation des nouveaux services cloud',
-      date: '2023-06-01T16:00:00',
-      timeAgo: 'Il y a 1 jour'
+      description: 'Présentation des nouveaux services',
+      date: '2023-10-13T09:00:00',
+      timeAgo: 'il y a 4 jours',
     },
     {
-      id: '4',
+      id: 4,
       type: 'email',
-      title: 'Relance Nexus Systems',
-      description: 'Suivi après 7 jours sans réponse',
-      date: '2023-05-31T09:45:00',
-      timeAgo: 'Il y a 3 jours'
-    }
-  ]);
-
-  // In a real app, you would fetch this data from your backend
-  useEffect(() => {
-    // Here you would fetch real data
-    // Example: const fetchData = async () => {...}
-    // fetchData();
-  }, []);
+      title: 'Email à SmartRetail',
+      description: 'Suivi de la démonstration',
+      date: '2023-10-12T11:20:00',
+      timeAgo: 'il y a 5 jours',
+    },
+  ], []);
 
   return {
     stats,
     salesData,
     opportunitiesData,
     recentActivities,
+    isLoading,
     COLORS
   };
 };
