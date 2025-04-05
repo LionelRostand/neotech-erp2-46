@@ -10,7 +10,8 @@ import {
   Download,
   Upload,
   Search,
-  FolderOpen
+  FolderOpen,
+  Filter
 } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
@@ -31,6 +32,15 @@ const EmployeesDocuments: React.FC = () => {
   const [activeTab, setActiveTab] = useState('tous');
   const { documents, stats, isLoading, error } = useDocumentsData();
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
+  const [uploadDocumentType, setUploadDocumentType] = useState('');
+
+  // Define document types for upload and for tabs
+  const documentTypes = [
+    { id: 'contrat', label: 'Contrats' },
+    { id: 'attestation', label: 'Attestations' },
+    { id: 'formulaire', label: 'Formulaires' },
+    { id: 'autre', label: 'Autres' }
+  ];
 
   const handleExportData = (format: 'excel' | 'pdf') => {
     const filteredDocuments = activeTab === 'tous' 
@@ -54,6 +64,12 @@ const EmployeesDocuments: React.FC = () => {
   const handleUploadSuccess = () => {
     toast.success("Document ajouté avec succès");
     // In a real implementation, we would refresh the documents list here
+  };
+
+  // Handler for uploading a specific document type
+  const handleUploadByType = (type: string) => {
+    setUploadDocumentType(type);
+    setUploadDialogOpen(true);
   };
 
   if (isLoading) {
@@ -108,10 +124,44 @@ const EmployeesDocuments: React.FC = () => {
             </DropdownMenuContent>
           </DropdownMenu>
           
-          <Button size="sm" onClick={() => setUploadDialogOpen(true)}>
-            <Upload className="h-4 w-4 mr-2" />
-            Uploader
-          </Button>
+          {/* Upload dropdown with document type options */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button size="sm">
+                <Upload className="h-4 w-4 mr-2" />
+                Uploader
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuItem onClick={() => handleUploadByType('')}>
+                Tout type de document
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleUploadByType('contrat')}>
+                Contrat
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleUploadByType('attestation')}>
+                Attestation
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleUploadByType('formulaire')}>
+                Formulaire
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleUploadByType('identite')}>
+                Pièce d'identité
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleUploadByType('cv')}>
+                CV
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleUploadByType('diplome')}>
+                Diplôme
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleUploadByType('salaire')}>
+                Bulletin de salaire
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleUploadByType('autre')}>
+                Autre
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 
@@ -122,27 +172,39 @@ const EmployeesDocuments: React.FC = () => {
             <FolderOpen className="h-4 w-4 mr-2" />
             Tous
           </TabsTrigger>
-          <TabsTrigger value="contrat" className="flex items-center">
-            <FileText className="h-4 w-4 mr-2" />
-            Contrats
-          </TabsTrigger>
-          <TabsTrigger value="attestation" className="flex items-center">
-            <FileText className="h-4 w-4 mr-2" />
-            Attestations
-          </TabsTrigger>
-          <TabsTrigger value="formulaire" className="flex items-center">
-            <FileText className="h-4 w-4 mr-2" />
-            Formulaires
-          </TabsTrigger>
-          <TabsTrigger value="autre" className="flex items-center">
-            <FileText className="h-4 w-4 mr-2" />
-            Autres
-          </TabsTrigger>
+          {documentTypes.map(type => (
+            <TabsTrigger key={type.id} value={type.id} className="flex items-center">
+              <FileText className="h-4 w-4 mr-2" />
+              {type.label}
+            </TabsTrigger>
+          ))}
         </TabsList>
 
         <TabsContent value={activeTab}>
           <Card>
             <CardContent className="p-6">
+              <div className="flex justify-between items-center mb-4">
+                <div className="flex items-center space-x-2">
+                  <Filter className="h-4 w-4 text-gray-500" />
+                  <span className="text-sm text-gray-500">Filtres:</span>
+                  <Badge variant="outline" className="font-normal">
+                    Tous
+                  </Badge>
+                </div>
+                
+                {/* Upload button specific to the current tab */}
+                {activeTab !== 'tous' && (
+                  <Button 
+                    size="sm" 
+                    variant="outline"
+                    onClick={() => handleUploadByType(activeTab)}
+                  >
+                    <Upload className="h-4 w-4 mr-2" />
+                    Uploader un {activeTab}
+                  </Button>
+                )}
+              </div>
+              
               <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
@@ -212,11 +274,12 @@ const EmployeesDocuments: React.FC = () => {
         </TabsContent>
       </Tabs>
       
-      {/* Upload Document Dialog */}
+      {/* Upload Document Dialog with type preset */}
       <UploadDocumentDialog 
         open={uploadDialogOpen}
         onOpenChange={setUploadDialogOpen}
         onSuccess={handleUploadSuccess}
+        defaultType={uploadDocumentType}
       />
     </div>
   );

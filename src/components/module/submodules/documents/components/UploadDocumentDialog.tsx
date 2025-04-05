@@ -7,27 +7,51 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FileUp } from 'lucide-react';
 import { toast } from 'sonner';
+import { useFileService } from '../../documents/services/fileService';
 
 interface UploadDocumentDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess?: () => void;
+  defaultType?: string;
 }
 
 const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
   open,
   onOpenChange,
-  onSuccess
+  onSuccess,
+  defaultType = ''
 }) => {
+  const { uploadDocument } = useFileService();
   const [documentTitle, setDocumentTitle] = useState('');
-  const [documentType, setDocumentType] = useState('');
+  const [documentType, setDocumentType] = useState(defaultType);
   const [employeeId, setEmployeeId] = useState('');
   const [file, setFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  
+  const documentTypes = [
+    { value: 'contrat', label: 'Contrat' },
+    { value: 'attestation', label: 'Attestation' },
+    { value: 'formulaire', label: 'Formulaire' },
+    { value: 'identite', label: 'Pièce d\'identité' },
+    { value: 'cv', label: 'CV' },
+    { value: 'diplome', label: 'Diplôme' },
+    { value: 'salaire', label: 'Bulletin de salaire' },
+    { value: 'autre', label: 'Autre' }
+  ];
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      setFile(e.target.files[0]);
+      const selectedFile = e.target.files[0];
+      setFile(selectedFile);
+      
+      // Auto-fill title from filename if empty
+      if (!documentTitle) {
+        // Remove extension from filename
+        const fileName = selectedFile.name.replace(/\.[^/.]+$/, "");
+        setDocumentTitle(fileName);
+      }
     }
   };
 
@@ -42,16 +66,42 @@ const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
     setIsUploading(true);
     
     try {
-      // In a real implementation, we would upload the file to storage
-      // and create a document record in the database
+      // Simulate upload progress
+      const progressInterval = setInterval(() => {
+        setUploadProgress(prev => {
+          if (prev >= 90) {
+            clearInterval(progressInterval);
+            return prev;
+          }
+          return prev + 10;
+        });
+      }, 300);
       
-      // Simulate upload delay
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // Prepare document metadata
+      const metadata = {
+        title: documentTitle,
+        type: documentType,
+        employeeId: employeeId || undefined,
+        uploadDate: new Date().toISOString(),
+        fileSize: `${(file.size / 1024).toFixed(1)} KB`,
+        fileType: file.type,
+      };
+      
+      // Upload document
+      await uploadDocument(file, metadata);
+      
+      // Complete progress
+      clearInterval(progressInterval);
+      setUploadProgress(100);
       
       toast.success("Document téléversé avec succès");
       if (onSuccess) onSuccess();
-      onOpenChange(false);
-      resetForm();
+      
+      // Close dialog after short delay
+      setTimeout(() => {
+        onOpenChange(false);
+        resetForm();
+      }, 1000);
     } catch (error) {
       console.error("Erreur lors du téléversement:", error);
       toast.error("Erreur lors du téléversement du document");
@@ -62,10 +112,20 @@ const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
 
   const resetForm = () => {
     setDocumentTitle('');
-    setDocumentType('');
+    setDocumentType(defaultType);
     setEmployeeId('');
     setFile(null);
+    setUploadProgress(0);
   };
+
+  // Reset form when dialog opens/closes
+  React.useEffect(() => {
+    if (!open) {
+      resetForm();
+    } else if (defaultType) {
+      setDocumentType(defaultType);
+    }
+  }, [open, defaultType]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -94,12 +154,9 @@ const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="default" disabled>Sélectionner un type</SelectItem>
-                <SelectItem value="contract">Contrat</SelectItem>
-                <SelectItem value="payslip">Fiche de paie</SelectItem>
-                <SelectItem value="ID">Pièce d'identité</SelectItem>
-                <SelectItem value="certificate">Certificat</SelectItem>
-                <SelectItem value="form">Formulaire</SelectItem>
-                <SelectItem value="other">Autre</SelectItem>
+                {documentTypes.map(type => (
+                  <SelectItem key={type.value} value={type.value}>{type.label}</SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
@@ -127,14 +184,31 @@ const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
                 Cliquez pour sélectionner ou glissez un fichier ici
               </p>
               <p className="mt-1 text-xs text-gray-500">
-                PDF, DOC, DOCX, XLS, XLSX, JPG, PNG (max 10MB)
+                {documentType === 'contrat' && "PDF, DOC, DOCX (max 10MB)"}
+                {documentType === 'attestation' && "PDF, DOC, DOCX, JPG, PNG (max 5MB)"}
+                {documentType === 'formulaire' && "PDF, DOC, DOCX, XLS, XLSX (max 5MB)"}
+                {documentType === 'identite' && "JPG, PNG, PDF (max 2MB)"}
+                {documentType === 'cv' && "PDF, DOC, DOCX (max 5MB)"}
+                {documentType === 'diplome' && "PDF, JPG, PNG (max 5MB)"}
+                {documentType === 'salaire' && "PDF (max 3MB)"}
+                {(!documentType || documentType === 'autre' || documentType === 'default') && 
+                  "PDF, DOC, DOCX, XLS, XLSX, JPG, PNG (max 10MB)"}
               </p>
               <Input
                 id="document-file"
                 type="file"
                 className="hidden"
                 onChange={handleFileChange}
-                accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png"
+                accept={
+                  documentType === 'contrat' ? ".pdf,.doc,.docx" :
+                  documentType === 'attestation' ? ".pdf,.doc,.docx,.jpg,.jpeg,.png" :
+                  documentType === 'formulaire' ? ".pdf,.doc,.docx,.xls,.xlsx" :
+                  documentType === 'identite' ? ".jpg,.jpeg,.png,.pdf" :
+                  documentType === 'cv' ? ".pdf,.doc,.docx" :
+                  documentType === 'diplome' ? ".pdf,.jpg,.jpeg,.png" :
+                  documentType === 'salaire' ? ".pdf" :
+                  ".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png"
+                }
               />
               <Button 
                 type="button"
@@ -152,11 +226,27 @@ const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
             </div>
           </div>
           
+          {isUploading && (
+            <div className="space-y-2">
+              <div className="flex justify-between text-xs">
+                <span>Téléversement en cours...</span>
+                <span>{uploadProgress}%</span>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-2.5">
+                <div 
+                  className="bg-primary h-2.5 rounded-full" 
+                  style={{ width: `${uploadProgress}%` }}
+                ></div>
+              </div>
+            </div>
+          )}
+          
           <DialogFooter>
             <Button 
               type="button" 
               variant="outline" 
               onClick={() => onOpenChange(false)}
+              disabled={isUploading}
             >
               Annuler
             </Button>
