@@ -1,147 +1,106 @@
 
-import { useState, useEffect } from 'react';
-import { toast } from "sonner";
-import { useClientsData, Client } from './useClientsData';
-
-export const sectors = ['Technologie', 'Industrie', 'Santé', 'Finance', 'Commerce', 'Services', 'Autres'];
+import { useState } from 'react';
+import { useClientsData } from './useClientsData';
+import { toast } from 'sonner';
+import { Client, ClientFormData } from '../types/crm-types';
 
 export const useClients = () => {
-  const { clients, loading, addClient, updateClient, deleteClient, refresh } = useClientsData();
   const [searchTerm, setSearchTerm] = useState('');
-  const [sectorFilter, setSectorFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [isViewDetailsOpen, setIsViewDetailsOpen] = useState(false);
-  const [selectedClient, setSelectedClient] = useState<Client | null>(null);
-  
-  const [formData, setFormData] = useState({
-    name: '',
-    sector: '',
-    revenue: '',
-    status: 'active' as 'active' | 'inactive',
-    contactName: '',
-    contactEmail: '',
-    contactPhone: '',
-    address: '',
-    notes: '',
-    website: ''
-  });
+  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
+  const { 
+    clients, 
+    isLoading, 
+    error,
+    addClient: addClientData,
+    updateClient: updateClientData,
+    deleteClient: deleteClientData
+  } = useClientsData();
 
-  const handleSelectChange = (name: string, value: string) => {
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleCreateClient = async () => {
-    const success = await addClient(formData);
-    if (success) {
+  // Add a new client
+  const addClient = async (data: ClientFormData) => {
+    try {
+      const newClient = {
+        ...data,
+        customerSince: data.customerSince || new Date().toISOString().split('T')[0]
+      };
+      
+      await addClientData(newClient);
+      toast.success('Client ajouté avec succès');
       setIsAddDialogOpen(false);
-      resetForm();
+      return true;
+    } catch (error) {
+      console.error('Error adding client:', error);
+      toast.error('Erreur lors de l\'ajout du client');
+      return false;
     }
   };
 
-  const handleUpdateClient = async () => {
-    if (!selectedClient) return;
-    
-    const success = await updateClient(selectedClient.id, formData);
-    if (success) {
+  // Update an existing client
+  const updateClient = async (id: string, data: ClientFormData) => {
+    try {
+      await updateClientData(id, data);
+      toast.success('Client mis à jour avec succès');
       setIsEditDialogOpen(false);
-      resetForm();
+      return true;
+    } catch (error) {
+      console.error('Error updating client:', error);
+      toast.error('Erreur lors de la mise à jour du client');
+      return false;
     }
   };
 
-  const handleDeleteClient = async () => {
-    if (!selectedClient) return;
-    
-    const success = await deleteClient(selectedClient.id);
-    if (success) {
+  // Delete a client
+  const deleteClient = async (id: string) => {
+    try {
+      await deleteClientData(id);
+      toast.success('Client supprimé avec succès');
       setIsDeleteDialogOpen(false);
-      setSelectedClient(null);
+      return true;
+    } catch (error) {
+      console.error('Error deleting client:', error);
+      toast.error('Erreur lors de la suppression du client');
+      return false;
     }
   };
 
-  const openEditDialog = (client: Client) => {
-    setSelectedClient(client);
-    setFormData({
-      name: client.name,
-      sector: client.sector,
-      revenue: client.revenue,
-      status: client.status,
-      contactName: client.contactName,
-      contactEmail: client.contactEmail,
-      contactPhone: client.contactPhone,
-      address: client.address,
-      notes: client.notes || '',
-      website: client.website || ''
-    });
-    setIsEditDialogOpen(true);
-  };
-
-  const openDeleteDialog = (client: Client) => {
-    setSelectedClient(client);
-    setIsDeleteDialogOpen(true);
-  };
-
-  const viewClientDetails = (client: Client) => {
-    setSelectedClient(client);
-    setIsViewDetailsOpen(true);
-  };
-
-  const resetForm = () => {
-    setFormData({
-      name: '',
-      sector: '',
-      revenue: '',
-      status: 'active',
-      contactName: '',
-      contactEmail: '',
-      contactPhone: '',
-      address: '',
-      notes: '',
-      website: ''
-    });
-  };
-
-  // Filter clients based on search term and sector filter
+  // Filter clients by search term and status
   const filteredClients = clients.filter(client => {
-    const matchesSearch = client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         (client.contactName?.toLowerCase().includes(searchTerm.toLowerCase()) || false);
-    const matchesSector = sectorFilter === 'all' ? true : client.sector === sectorFilter;
+    const matchesStatus = statusFilter === 'all' || client.status === statusFilter;
+    const matchesSearch = searchTerm === '' || 
+      client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      client.contactName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      client.contactEmail.toLowerCase().includes(searchTerm.toLowerCase());
     
-    return matchesSearch && matchesSector;
+    return matchesStatus && matchesSearch;
   });
 
   return {
     clients,
     filteredClients,
+    isLoading,
+    error,
     searchTerm,
     setSearchTerm,
-    sectorFilter,
-    setSectorFilter,
+    statusFilter,
+    setStatusFilter,
+    selectedClient,
+    setSelectedClient,
     isAddDialogOpen,
     setIsAddDialogOpen,
     isEditDialogOpen,
     setIsEditDialogOpen,
     isDeleteDialogOpen,
     setIsDeleteDialogOpen,
-    isViewDetailsOpen,
-    setIsViewDetailsOpen,
-    selectedClient,
-    formData,
-    handleInputChange,
-    handleSelectChange,
-    handleCreateClient,
-    handleUpdateClient,
-    handleDeleteClient,
-    openEditDialog,
-    openDeleteDialog,
-    viewClientDetails,
-    resetForm,
-    loading
+    isViewDialogOpen,
+    setIsViewDialogOpen,
+    addClient,
+    updateClient,
+    deleteClient
   };
 };

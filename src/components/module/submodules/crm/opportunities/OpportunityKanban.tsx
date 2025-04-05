@@ -1,135 +1,120 @@
 
 import React from 'react';
-import { Card } from "@/components/ui/card";
+import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Opportunity, OpportunityStage } from '../types/crm-types';
-import { DollarSign, Calendar, User } from 'lucide-react';
 import { useOpportunityUtils } from '../hooks/opportunity/useOpportunityUtils';
+import { Button } from '@/components/ui/button';
+import { Eye, Edit, Trash2 } from 'lucide-react';
 
 interface OpportunityKanbanProps {
   opportunities: Opportunity[];
-  onOpportunityClick: (opportunity: Opportunity) => void;
-  onStageChange: (opportunityId: string, newStage: OpportunityStage) => void;
-  loading: boolean;
+  onViewDetails: (opportunity: Opportunity) => void;
+  onEdit: (opportunity: Opportunity) => void;
+  onDelete: (opportunity: Opportunity) => void;
+  onStageChange?: (opportunityId: string, newStage: OpportunityStage) => void;
 }
 
 const OpportunityKanban: React.FC<OpportunityKanbanProps> = ({
   opportunities,
-  onOpportunityClick,
-  onStageChange,
-  loading
+  onViewDetails,
+  onEdit,
+  onDelete,
+  onStageChange
 }) => {
-  const { getStageLabel, getStageColor } = useOpportunityUtils();
-
-  // Define all possible stages in order - using the correct values from OpportunityStage type
-  const stages: OpportunityStage[] = [
-    'lead', 
-    'qualified', 
-    'needs-analysis', 
-    'proposal', 
-    'negotiation', 
-    'closed-won', 
-    'closed-lost'
-  ];
-
-  // Group opportunities by stage
-  const opportunitiesByStage = stages.reduce((acc, stage) => {
-    acc[stage] = opportunities.filter(opp => opp.stage === stage);
-    return acc;
-  }, {} as Record<OpportunityStage, Opportunity[]>);
-
-  const handleDragStart = (e: React.DragEvent, opportunity: Opportunity) => {
-    e.dataTransfer.setData('opportunityId', opportunity.id);
-  };
-
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-  };
-
-  const handleDrop = (e: React.DragEvent, dropStage: OpportunityStage) => {
-    e.preventDefault();
-    const opportunityId = e.dataTransfer.getData('opportunityId');
-    const opportunity = opportunities.find(opp => opp.id === opportunityId);
+  const { groupOpportunitiesByStage, getStageText, formatAmount } = useOpportunityUtils();
+  const groupedOpportunities = groupOpportunitiesByStage(opportunities);
+  
+  // Handle drag end
+  const handleDragEnd = (result: any) => {
+    if (!result.destination || !onStageChange) return;
     
-    if (opportunity && opportunity.stage !== dropStage) {
-      onStageChange(opportunityId, dropStage);
-    }
+    const { draggableId, destination } = result;
+    const newStage = destination.droppableId as OpportunityStage;
+    
+    onStageChange(draggableId, newStage);
   };
-
-  if (loading) {
-    return (
-      <div className="w-full h-64 flex items-center justify-center">
-        <p className="text-gray-500">Chargement des opportunités...</p>
-      </div>
-    );
-  }
 
   return (
-    <div className="grid grid-cols-7 gap-4 overflow-x-auto pb-4" style={{ minHeight: '70vh' }}>
-      {stages.map(stage => (
-        <div
-          key={stage}
-          className="flex flex-col min-w-[250px]"
-          onDragOver={handleDragOver}
-          onDrop={(e) => handleDrop(e, stage)}
-        >
+    <div className="overflow-x-auto">
+      <div className="flex w-full space-x-4 p-4 min-w-[1024px]">
+        {Object.entries(groupedOpportunities).map(([stage, stageOpportunities]) => (
           <div 
-            className={`p-3 rounded-t-md mb-2 flex justify-between items-center ${getStageColor(stage)}`}
+            key={stage} 
+            className="flex-1 min-w-[250px] bg-gray-50 rounded-md p-2"
           >
-            <h3 className="font-medium text-white">{getStageLabel(stage)}</h3>
-            <span className="bg-white bg-opacity-25 text-white px-2 py-0.5 rounded-full text-xs">
-              {opportunitiesByStage[stage]?.length || 0}
-            </span>
-          </div>
-
-          <div className="space-y-3 flex-1">
-            {opportunitiesByStage[stage]?.length === 0 ? (
-              <div className="border border-dashed border-gray-200 rounded-md h-24 flex items-center justify-center text-gray-400 text-sm p-4">
-                Aucune opportunité
-              </div>
-            ) : (
-              opportunitiesByStage[stage]?.map(opportunity => (
-                <Card
+            <h3 className="text-sm font-medium p-2 flex justify-between items-center">
+              <span>{getStageText(stage as OpportunityStage)}</span>
+              <Badge variant="outline">{stageOpportunities.length}</Badge>
+            </h3>
+            
+            <div className="space-y-2 mt-2">
+              {stageOpportunities.map((opportunity) => (
+                <Card 
                   key={opportunity.id}
-                  className="p-3 cursor-pointer hover:shadow-md transition-all bg-white"
-                  onClick={() => onOpportunityClick(opportunity)}
-                  draggable
-                  onDragStart={(e) => handleDragStart(e, opportunity)}
+                  className="bg-white cursor-pointer hover:shadow-md transition-shadow"
                 >
-                  <h4 className="font-medium mb-2 truncate">{opportunity.name}</h4>
-                  <p className="text-sm text-gray-500 mb-1 truncate">{opportunity.clientName}</p>
-                  <div className="flex justify-between items-center mt-2 text-xs text-gray-500">
-                    <div className="flex items-center">
-                      <DollarSign className="h-3 w-3 mr-1" />
-                      <span>{opportunity.value.toLocaleString('fr-FR')} €</span>
+                  <CardHeader className="p-3 pb-0">
+                    <div className="flex justify-between items-start">
+                      <h4 className="text-sm font-medium line-clamp-2">{opportunity.title}</h4>
+                      <div className="flex space-x-1">
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="h-6 w-6" 
+                          onClick={() => onViewDetails(opportunity)}
+                        >
+                          <Eye className="h-3 w-3" />
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="h-6 w-6" 
+                          onClick={() => onEdit(opportunity)}
+                        >
+                          <Edit className="h-3 w-3" />
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="h-6 w-6" 
+                          onClick={() => onDelete(opportunity)}
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
+                      </div>
                     </div>
-                    <div className="flex items-center">
-                      <Calendar className="h-3 w-3 mr-1" />
-                      <span>{new Date(opportunity.closeDate || opportunity.startDate).toLocaleDateString('fr-FR')}</span>
+                  </CardHeader>
+                  <CardContent className="p-3 pt-2">
+                    <div className="text-xs space-y-1">
+                      {opportunity.clientName && (
+                        <p className="text-muted-foreground">Client: {opportunity.clientName}</p>
+                      )}
+                      {opportunity.value !== undefined && (
+                        <p>
+                          <span className="font-medium">Valeur:</span> {formatAmount(opportunity.value)}
+                        </p>
+                      )}
+                      {opportunity.probability !== undefined && (
+                        <p>
+                          <span className="font-medium">Prob.:</span> {opportunity.probability}%
+                        </p>
+                      )}
                     </div>
-                  </div>
-                  {opportunity.assignedTo && (
-                    <div className="flex items-center mt-2 text-xs text-gray-500">
-                      <User className="h-3 w-3 mr-1" />
-                      <span>{opportunity.assignedTo}</span>
-                    </div>
-                  )}
-                  <div className="mt-2 flex items-center">
-                    <div 
-                      className="h-2 w-full bg-gray-200 rounded-full overflow-hidden"
-                    >
-                      <div 
-                        className="h-2 bg-blue-500" 
-                        style={{ width: `${opportunity.probability || 0}%` }}
-                      ></div>
-                    </div>
-                    <span className="ml-2 text-xs">{opportunity.probability || 0}%</span>
-                  </div>
+                  </CardContent>
                 </Card>
-              ))
-            )}
+              ))}
+              
+              {stageOpportunities.length === 0 && (
+                <div className="p-3 text-center text-xs text-muted-foreground italic">
+                  Aucune opportunité
+                </div>
+              )}
+            </div>
           </div>
-        </div>
-      ))}
+        ))}
+      </div>
     </div>
   );
 };

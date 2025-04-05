@@ -1,172 +1,144 @@
 
 import { useState, useEffect } from 'react';
-import { useFirestore } from '@/hooks/use-firestore';
+import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, orderBy, serverTimestamp } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 import { COLLECTIONS } from '@/lib/firebase-collections';
-import { toast } from 'sonner';
-import { Client } from '../types/crm-types';
-
-export interface Client {
-  id: string;
-  name: string;
-  sector: string;
-  revenue: string;
-  status: 'active' | 'inactive' | 'paused';
-  contactName: string;
-  contactEmail: string;
-  contactPhone: string;
-  address: string;
-  website?: string;
-  logo?: string;
-  description?: string;
-  notes?: string;
-  createdAt: string;
-  updatedBy?: string;
-  customerSince?: string;
-}
+import { Client, ClientFormData } from '../types/crm-types';
 
 export const useClientsData = () => {
   const [clients, setClients] = useState<Client[]>([]);
-  const [loading, setLoading] = useState(true);
-  const clientsCollection = useFirestore(COLLECTIONS.CRM.CLIENTS);
-  
-  const loadClients = async () => {
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+
+  // Reference to the clients collection
+  const clientsRef = collection(db, COLLECTIONS.CRM.CLIENTS);
+
+  // Fetch all clients
+  const fetchClients = async () => {
+    setIsLoading(true);
     try {
-      setLoading(true);
-      const data = await clientsCollection.getAll();
+      const q = query(clientsRef, orderBy('createdAt', 'desc'));
+      const snapshot = await getDocs(q);
       
-      if (data.length > 0) {
-        const formattedClients = data.map((doc: any) => {
-          // Ensure we have a string ID
-          const clientId = typeof doc.id === 'object' ? doc.id.id : doc.id;
-          
-          return {
-            id: clientId,
-            name: doc.name || '',
-            sector: doc.sector || '',
-            revenue: doc.revenue || '',
-            status: doc.status || 'active',
-            contactName: doc.contactName || '',
-            contactEmail: doc.contactEmail || '',
-            contactPhone: doc.contactPhone || '',
-            address: doc.address || '',
-            website: doc.website || '',
-            logo: doc.logo || '',
-            description: doc.description || '',
-            notes: doc.notes || '',
-            createdAt: doc.createdAt || new Date().toISOString(),
-            updatedBy: doc.updatedBy || '',
-            customerSince: doc.customerSince || ''
-          } as Client;
-        });
-        
-        setClients(formattedClients);
-      } else {
-        // If no data, add mock data
-        const mockClients = generateMockClients();
-        setClients(mockClients);
-      }
-    } catch (error) {
-      console.error("Error loading clients:", error);
-      toast.error("Erreur lors du chargement des clients");
+      const fetchedClients = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+      } as Client));
       
-      // Generate mock data on error
-      const mockClients = generateMockClients();
-      setClients(mockClients);
+      setClients(fetchedClients);
+      setError(null);
+    } catch (err) {
+      console.error('Error fetching clients:', err);
+      setError(err as Error);
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
-  
-  const addClient = async (client: Omit<Client, 'id' | 'createdAt'>) => {
+
+  // Add a new client
+  const addClient = async (clientData: Omit<Client, 'id' | 'createdAt'>) => {
     try {
-      setLoading(true);
-      const newClient = {
-        ...client,
-        createdAt: new Date().toISOString(),
-        customerSince: new Date().toISOString().split('T')[0]
-      };
+      const newClientRef = await addDoc(clientsRef, {
+        ...clientData,
+        createdAt: serverTimestamp(),
+      });
       
-      const result = await clientsCollection.add(newClient);
+      // Refresh clients list
+      fetchClients();
       
-      const createdClient: Client = {
-        ...newClient,
-        id: result.id,
-      };
+      return newClientRef.id;
+    } catch (err) {
+      console.error('Error adding client:', err);
+      throw err;
+    }
+  };
+
+  // Update an existing client
+  const updateClient = async (id: string, clientData: Partial<ClientFormData>) => {
+    try {
+      const clientRef = doc(db, COLLECTIONS.CRM.CLIENTS, id);
+      await updateDoc(clientRef, {
+        ...clientData,
+        updatedAt: serverTimestamp(),
+      });
       
-      setClients(prev => [...prev, createdClient]);
-      toast.success("Client ajouté avec succès");
+      // Refresh clients list
+      fetchClients();
+      
       return true;
-    } catch (error) {
-      console.error("Error adding client:", error);
-      toast.error("Erreur lors de l'ajout du client");
-      return false;
-    } finally {
-      setLoading(false);
+    } catch (err) {
+      console.error('Error updating client:', err);
+      throw err;
     }
   };
-  
-  const updateClient = async (id: string, client: Partial<Client>) => {
-    try {
-      setLoading(true);
-      await clientsCollection.update(id, { ...client, updatedAt: new Date().toISOString() });
-      
-      setClients(prev => prev.map(c => c.id === id ? { ...c, ...client } : c));
-      toast.success("Client mis à jour avec succès");
-      return true;
-    } catch (error) {
-      console.error("Error updating client:", error);
-      toast.error("Erreur lors de la mise à jour du client");
-      return false;
-    } finally {
-      setLoading(false);
-    }
-  };
-  
+
+  // Delete a client
   const deleteClient = async (id: string) => {
     try {
-      setLoading(true);
-      await clientsCollection.remove(id);
+      const clientRef = doc(db, COLLECTIONS.CRM.CLIENTS, id);
+      await deleteDoc(clientRef);
       
-      setClients(prev => prev.filter(c => c.id !== id));
-      toast.success("Client supprimé avec succès");
+      // Refresh clients list
+      fetchClients();
+      
       return true;
-    } catch (error) {
-      console.error("Error deleting client:", error);
-      toast.error("Erreur lors de la suppression du client");
-      return false;
-    } finally {
-      setLoading(false);
+    } catch (err) {
+      console.error('Error deleting client:', err);
+      throw err;
     }
   };
-  
-  const generateMockClients = (): Client[] => {
-    return Array.from({ length: 10 }, (_, i) => ({
-      id: `mock-${i}`,
-      name: `Client ${i + 1}`,
-      sector: ['Technologie', 'Finance', 'Santé', 'Éducation', 'Commerce'][i % 5],
-      revenue: `${Math.floor(Math.random() * 1000000) + 10000}€`,
-      status: ['active', 'inactive', 'paused'][i % 3] as 'active' | 'inactive' | 'paused',
-      contactName: `Contact ${i + 1}`,
-      contactEmail: `contact${i + 1}@example.com`,
-      contactPhone: `+33 1 23 45 67 ${i + 10}`,
-      address: `${i + 1} Rue de la Paix, Paris`,
-      website: `https://client${i + 1}.example.com`,
-      createdAt: new Date(Date.now() - i * 86400000).toISOString(),
-      customerSince: new Date(Date.now() - i * 86400000).toISOString().split('T')[0]
-    }));
-  };
-  
+
   // Load clients on component mount
   useEffect(() => {
-    loadClients();
+    fetchClients();
   }, []);
-  
+
+  // For demo purposes, let's add mock data if no clients exist
+  useEffect(() => {
+    if (!isLoading && clients.length === 0 && !error) {
+      const mockClients: Client[] = [
+        {
+          id: '1',
+          name: 'Acme Corporation',
+          sector: 'Technology',
+          revenue: '1-10M',
+          status: 'active',
+          contactName: 'John Doe',
+          contactEmail: 'john.doe@acme.com',
+          contactPhone: '+33123456789',
+          address: '123 Main St, Paris',
+          notes: 'Key account with long history',
+          website: 'https://acme.com',
+          createdAt: new Date().toISOString(),
+          customerSince: new Date().toISOString().split('T')[0]
+        },
+        {
+          id: '2',
+          name: 'Globex Industries',
+          sector: 'Manufacturing',
+          revenue: '10-50M',
+          status: 'active',
+          contactName: 'Jane Smith',
+          contactEmail: 'j.smith@globex.com',
+          contactPhone: '+33987654321',
+          address: '456 Avenue de la République, Lyon',
+          notes: 'Recent client with expansion plans',
+          website: 'https://globex.com',
+          createdAt: new Date().toISOString(),
+          customerSince: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+        },
+      ];
+      setClients(mockClients);
+    }
+  }, [isLoading, clients, error]);
+
   return {
     clients,
-    loading,
+    isLoading,
+    error,
+    fetchClients,
     addClient,
     updateClient,
-    deleteClient,
-    refresh: loadClients
+    deleteClient
   };
 };

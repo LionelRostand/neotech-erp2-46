@@ -1,138 +1,149 @@
-
 // Define types for the CRM module
 
-// Prospect type definition
-export interface Prospect {
+// Common interfaces
+export interface BaseEntity {
   id: string;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+// Prospect related types
+export interface Prospect extends BaseEntity {
   company: string;
   contactName: string;
   contactEmail: string;
-  contactPhone: string;
-  name?: string;
-  email?: string;
-  phone?: string;
-  status: "new" | "contacted" | "converted" | "meeting" | "proposal" | "negotiation" | "lost";
-  source: string;
-  createdAt: string;
-  updatedAt?: string;
+  contactPhone?: string;
+  status: 'new' | 'contacted' | 'meeting' | 'proposal' | 'negotiation' | 'converted' | 'lost';
+  source?: string;
   notes?: string;
+  lastContact?: string;
   industry?: string;
   website?: string;
   address?: string;
-  size?: "small" | "medium" | "large" | "enterprise";
+  size?: 'small' | 'medium' | 'large' | 'enterprise';
   estimatedValue?: number;
-  lastContact?: string;
-  convertedToClientId?: string;
-  convertedAt?: string;
+  email?: string;
+  phone?: string;
+  name?: string;
 }
 
-// Form data for creating/editing a prospect
 export interface ProspectFormData {
   company: string;
   contactName: string;
   contactEmail: string;
-  contactPhone: string;
-  name?: string;
-  email?: string;
-  phone?: string;
+  contactPhone?: string;
   status: string;
-  source: string;
+  source?: string;
   notes?: string;
+  lastContact?: string;
   industry?: string;
   website?: string;
   address?: string;
-  size?: "small" | "medium" | "large" | "enterprise";
+  size?: 'small' | 'medium' | 'large' | 'enterprise';
   estimatedValue?: number;
-  lastContact?: string;
+  email?: string;
+  phone?: string;
+  name?: string;
 }
 
-// Client type definition
-export interface Client {
-  id: string;
+// Client related types
+export interface Client extends BaseEntity {
   name: string;
-  sector: string;
-  revenue: string;
-  status: "active" | "inactive";
   contactName: string;
   contactEmail: string;
-  contactPhone: string;
-  address: string;
+  contactPhone?: string;
+  status: 'active' | 'inactive';
+  sector?: string;
+  revenue?: string;
   website?: string;
+  address?: string;
   notes?: string;
-  createdAt: string;
-  updatedAt?: string;
   customerSince: string;
-  convertedFromProspectId?: string;
 }
 
-// Form data for creating/editing a client
 export interface ClientFormData {
   name: string;
-  sector: string;
-  revenue: string;
-  status: "active" | "inactive";
   contactName: string;
   contactEmail: string;
-  contactPhone: string;
-  address: string;
+  contactPhone?: string;
+  status: 'active' | 'inactive';
+  sector?: string;
+  revenue?: string;
   website?: string;
+  address?: string;
   notes?: string;
-  customerSince: string;
+  customerSince?: string;
 }
 
-// Opportunity type definition
-export interface Opportunity {
-  id: string;
+// Opportunity related types
+export enum OpportunityStage {
+  LEAD = 'lead',
+  DISCOVERY = 'discovery',
+  PROPOSAL = 'proposal',
+  NEGOTIATION = 'negotiation',
+  CLOSED_WON = 'closed_won',
+  CLOSED_LOST = 'closed_lost'
+}
+
+export interface Opportunity extends BaseEntity {
   title: string;
-  description: string;
-  status: "new" | "qualified" | "proposal" | "negotiation" | "won" | "lost";
-  stage: string;
+  description?: string;
+  stage: OpportunityStage;
   clientId?: string;
-  prospectId?: string;
-  amount: number;
-  probability: number;
-  createdAt: string;
-  updatedAt?: string;
+  probability?: number;
+  amount?: number;
   expectedCloseDate?: string;
+  clientName?: string;
+  contactName?: string;
+  contactEmail?: string;
+  contactPhone?: string;
+  assignedTo?: string;
+  value?: number;
+  notes?: string;
+  products?: OpportunityProduct[];
 }
 
-// Form data for creating/editing an opportunity
+export interface OpportunityProduct {
+  id: string;
+  name: string;
+  price: number;
+  quantity: number;
+}
+
 export interface OpportunityFormData {
   title: string;
-  description: string;
-  status: "new" | "qualified" | "proposal" | "negotiation" | "won" | "lost";
-  stage: string;
+  description?: string;
+  stage: OpportunityStage;
   clientId?: string;
-  prospectId?: string;
-  amount: number;
-  probability: number;
+  probability?: number;
+  amount?: number;
   expectedCloseDate?: string;
+  clientName?: string;
+  contactName?: string;
+  contactEmail?: string;
+  contactPhone?: string;
+  assignedTo?: string;
+  value?: number;
+  notes?: string;
+  startDate?: string;
+  closeDate?: string;
+  products?: OpportunityProduct[];
 }
 
-// Reminder type
-export interface Reminder {
+// Reminder related types
+export interface ReminderData {
   id: string;
   title: string;
   date: string;
   completed: boolean;
   notes?: string;
-  prospectId?: string;
-  clientId?: string;
-  opportunityId?: string;
-  createdAt: string;
-  createdBy?: string;
+  prospectId: string;
 }
 
-// Reminder data for creating/editing a reminder
-export interface ReminderData {
-  id?: string;
-  title: string;
-  date: string;
-  completed: boolean;
-  notes?: string;
-  prospectId?: string;
-  clientId?: string;
-  opportunityId?: string;
+export interface RelatedEntity {
+  type: 'prospect' | 'client' | 'opportunity';
+  id: string;
+  name: string;
 }
 
 // Permission type

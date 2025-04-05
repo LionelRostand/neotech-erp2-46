@@ -1,126 +1,138 @@
 
 import React from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { formatCurrency } from "@/lib/utils";
-import { Edit } from "lucide-react";
-import { Opportunity } from '../types/crm-types';
+import { Opportunity, OpportunityStage } from '../types/crm-types';
+import { formatDate } from '@/lib/utils';
+import { useOpportunityUtils } from '../hooks/opportunity/useOpportunityUtils';
 
-export interface OpportunityDetailsDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  opportunity: Opportunity | null;
-  onEdit: () => void;
+interface OpportunityDetailsDialogProps {
+  isOpen: boolean;
+  onClose: () => void;
+  opportunity: Opportunity;
 }
 
 const OpportunityDetailsDialog: React.FC<OpportunityDetailsDialogProps> = ({
-  open,
-  onOpenChange,
-  opportunity,
-  onEdit
+  isOpen,
+  onClose,
+  opportunity
 }) => {
-  if (!opportunity) return null;
+  const { getStageBadgeClass, getStageText, formatAmount } = useOpportunityUtils();
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl">
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-[700px]">
         <DialogHeader>
-          <DialogTitle className="text-xl flex justify-between items-center">
-            <span>Détails de l'opportunité</span>
-            <Button variant="outline" size="sm" onClick={onEdit}>
-              <Edit className="mr-2 h-4 w-4" />
-              Modifier
-            </Button>
-          </DialogTitle>
+          <DialogTitle>Détails de l'opportunité</DialogTitle>
         </DialogHeader>
-
-        <div className="grid md:grid-cols-2 gap-6 mt-4">
-          <div>
-            <h3 className="text-lg font-semibold mb-4">{opportunity.title || opportunity.name}</h3>
-
-            <div className="space-y-3">
-              <div>
-                <span className="text-sm text-muted-foreground">Client</span>
-                <p className="font-medium">{opportunity.clientName || 'Non défini'}</p>
+        
+        <div className="space-y-6">
+          <div className="flex justify-between items-start">
+            <div>
+              <h2 className="text-2xl font-semibold">{opportunity.title}</h2>
+              {opportunity.clientName && <p className="text-muted-foreground">Client: {opportunity.clientName}</p>}
+            </div>
+            <Badge className={getStageBadgeClass(opportunity.stage)}>
+              {getStageText(opportunity.stage)}
+            </Badge>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <h3 className="font-medium mb-2">Informations de contact</h3>
+              <div className="space-y-1 text-sm">
+                {opportunity.clientName && <p><strong>Client:</strong> {opportunity.clientName}</p>}
+                {opportunity.contactName && <p><strong>Contact:</strong> {opportunity.contactName}</p>}
+                {opportunity.contactEmail && (
+                  <p>
+                    <strong>Email:</strong>{' '}
+                    <a href={`mailto:${opportunity.contactEmail}`} className="text-blue-600 hover:underline">
+                      {opportunity.contactEmail}
+                    </a>
+                  </p>
+                )}
+                {opportunity.contactPhone && (
+                  <p>
+                    <strong>Téléphone:</strong>{' '}
+                    <a href={`tel:${opportunity.contactPhone}`} className="text-blue-600 hover:underline">
+                      {opportunity.contactPhone}
+                    </a>
+                  </p>
+                )}
+                {opportunity.assignedTo && <p><strong>Assigné à:</strong> {opportunity.assignedTo}</p>}
               </div>
-
-              <div>
-                <span className="text-sm text-muted-foreground">Montant</span>
-                <p className="font-medium text-lg">
-                  {formatCurrency(opportunity.amount || opportunity.value || 0)}
-                </p>
-              </div>
-
-              <div>
-                <span className="text-sm text-muted-foreground">Probabilité</span>
-                <p className="font-medium">{opportunity.probability || 0}%</p>
-              </div>
-
-              <div>
-                <span className="text-sm text-muted-foreground">Étape</span>
-                <div className="mt-1">
-                  <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-100">
-                    {opportunity.stage || 'Nouvelle'}
-                  </Badge>
-                </div>
-              </div>
-
-              <div>
-                <span className="text-sm text-muted-foreground">Date de clôture prévue</span>
-                <p className="font-medium">
-                  {opportunity.expectedCloseDate ? new Date(opportunity.expectedCloseDate).toLocaleDateString('fr-FR') : 'Non définie'}
-                </p>
-              </div>
-
-              <div>
-                <span className="text-sm text-muted-foreground">Responsable</span>
-                <p className="font-medium">{opportunity.assignedTo || 'Non assigné'}</p>
+            </div>
+            
+            <div>
+              <h3 className="font-medium mb-2">Détails commerciaux</h3>
+              <div className="space-y-1 text-sm">
+                {opportunity.value !== undefined && (
+                  <p><strong>Valeur:</strong> {formatAmount(opportunity.value)}</p>
+                )}
+                {opportunity.probability !== undefined && (
+                  <p><strong>Probabilité:</strong> {opportunity.probability}%</p>
+                )}
+                {opportunity.expectedCloseDate && (
+                  <p><strong>Date de clôture prévue:</strong> {formatDate(opportunity.expectedCloseDate)}</p>
+                )}
+                <p><strong>Créée le:</strong> {formatDate(opportunity.createdAt)}</p>
               </div>
             </div>
           </div>
-
-          <div>
-            <h3 className="text-lg font-semibold mb-4">Produits / Services</h3>
-
-            <div className="border rounded-md overflow-hidden">
-              <table className="min-w-full">
-                <thead className="bg-muted/50">
-                  <tr>
-                    <th className="py-2 px-3 text-left text-sm font-medium text-muted-foreground">Produit</th>
-                    <th className="py-2 px-3 text-right text-sm font-medium text-muted-foreground">Qté</th>
-                    <th className="py-2 px-3 text-right text-sm font-medium text-muted-foreground">Prix</th>
-                    <th className="py-2 px-3 text-right text-sm font-medium text-muted-foreground">Total</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y">
-                  {(opportunity.products || []).map((product: any) => (
-                    <tr key={product.id}>
-                      <td className="py-2 px-3 text-sm">{product.name}</td>
-                      <td className="py-2 px-3 text-sm text-right">{product.quantity}</td>
-                      <td className="py-2 px-3 text-sm text-right">{formatCurrency(product.unitPrice)}</td>
-                      <td className="py-2 px-3 text-sm text-right">{formatCurrency(product.totalPrice)}</td>
-                    </tr>
-                  ))}
-                  {(opportunity.products || []).length === 0 && (
+          
+          {opportunity.products && opportunity.products.length > 0 && (
+            <div>
+              <h3 className="font-medium mb-2">Produits</h3>
+              <div className="border rounded-md">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
                     <tr>
-                      <td colSpan={4} className="py-3 px-3 text-center text-sm text-muted-foreground">
-                        Aucun produit ou service associé
-                      </td>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nom</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Prix unitaire</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantité</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
                     </tr>
-                  )}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {opportunity.products.map((product, index) => (
+                      <tr key={product.id || index}>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{product.name}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{formatAmount(product.price)}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{product.quantity}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{formatAmount(product.price * product.quantity)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
-
-            <div className="mt-4">
-              <h4 className="font-medium mb-2">Notes</h4>
-              <p className="text-sm text-muted-foreground whitespace-pre-line">
-                {opportunity.notes || 'Aucune note'}
-              </p>
+          )}
+          
+          {opportunity.description && (
+            <div>
+              <h3 className="font-medium mb-2">Description</h3>
+              <p className="text-sm whitespace-pre-line">{opportunity.description}</p>
             </div>
-          </div>
+          )}
+          
+          {opportunity.notes && (
+            <div>
+              <h3 className="font-medium mb-2">Notes</h3>
+              <p className="text-sm whitespace-pre-line">{opportunity.notes}</p>
+            </div>
+          )}
         </div>
+        
+        <DialogFooter>
+          <Button onClick={onClose}>Fermer</Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

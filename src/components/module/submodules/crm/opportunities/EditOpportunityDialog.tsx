@@ -5,7 +5,9 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogFooter
 } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 import { Opportunity, OpportunityFormData } from '../types/crm-types';
 import OpportunityForm from './OpportunityForm';
 
@@ -13,22 +15,17 @@ interface EditOpportunityDialogProps {
   isOpen: boolean;
   onClose: () => void;
   opportunity: Opportunity;
-  onUpdate: (opportunity: Opportunity) => void;
+  onEdit: (data: OpportunityFormData) => void;
 }
 
 const EditOpportunityDialog: React.FC<EditOpportunityDialogProps> = ({
   isOpen,
   onClose,
   opportunity,
-  onUpdate
+  onEdit
 }) => {
-  const handleSubmit = (formData: OpportunityFormData) => {
-    const updatedOpportunity: Opportunity = {
-      ...opportunity,
-      ...formData,
-      updatedAt: new Date().toISOString()
-    };
-    onUpdate(updatedOpportunity);
+  const handleSubmit = (data: OpportunityFormData) => {
+    onEdit(data);
   };
 
   return (
@@ -37,11 +34,17 @@ const EditOpportunityDialog: React.FC<EditOpportunityDialogProps> = ({
         <DialogHeader>
           <DialogTitle>Modifier l'opportunité</DialogTitle>
         </DialogHeader>
-        <OpportunityForm
-          initialData={opportunity}
-          onSubmit={handleSubmit}
-          buttonText="Mettre à jour"
+        
+        <OpportunityForm 
+          initialData={opportunity} 
+          onSubmit={handleSubmit} 
         />
+        
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>
+            Annuler
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

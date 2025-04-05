@@ -5,14 +5,16 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogFooter
 } from "@/components/ui/dialog";
-import { Opportunity, OpportunityFormData } from '../types/crm-types';
+import { Button } from "@/components/ui/button";
+import { OpportunityFormData } from '../types/crm-types';
 import OpportunityForm from './OpportunityForm';
 
 interface AddOpportunityDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  onAdd: (opportunity: Opportunity) => void;
+  onAdd: (data: OpportunityFormData) => void;
 }
 
 const AddOpportunityDialog: React.FC<AddOpportunityDialogProps> = ({
@@ -20,26 +22,24 @@ const AddOpportunityDialog: React.FC<AddOpportunityDialogProps> = ({
   onClose,
   onAdd
 }) => {
-  const handleSubmit = (formData: OpportunityFormData) => {
-    const newOpportunity: Opportunity = {
-      ...formData,
-      id: Date.now().toString(),
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    };
-    onAdd(newOpportunity);
+  const handleSubmit = (data: OpportunityFormData) => {
+    onAdd(data);
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
-          <DialogTitle>Ajouter une nouvelle opportunité</DialogTitle>
+          <DialogTitle>Ajouter une opportunité</DialogTitle>
         </DialogHeader>
-        <OpportunityForm
-          onSubmit={handleSubmit}
-          buttonText="Créer l'opportunité"
-        />
+        
+        <OpportunityForm onSubmit={handleSubmit} />
+        
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>
+            Annuler
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
