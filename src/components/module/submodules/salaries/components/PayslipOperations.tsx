@@ -33,6 +33,12 @@ const PayslipOperations: React.FC<PayslipOperationsProps> = ({
 }) => {
   const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false);
 
+  // Convert Employee[] to format required by PayslipFilters
+  const formattedEmployees = employees.map(emp => ({
+    id: emp.id,
+    name: `${emp.firstName} ${emp.lastName}`
+  }));
+
   return (
     <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
       <div className="flex items-center gap-2">
@@ -46,7 +52,7 @@ const PayslipOperations: React.FC<PayslipOperationsProps> = ({
         </Button>
         
         <PayslipFilters 
-          employees={employees}
+          employees={formattedEmployees}
           onApplyFilters={onFilter}
           currentFilters={currentFilters}
         />

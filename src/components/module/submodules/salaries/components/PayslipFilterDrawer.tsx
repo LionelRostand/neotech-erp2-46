@@ -86,14 +86,14 @@ const PayslipFilterDrawer: React.FC<PayslipFilterDrawerProps> = ({
             <div className="space-y-2">
               <label className="text-sm font-medium">Statut</label>
               <Select 
-                value={filters.status || ''} 
-                onValueChange={(value) => handleFilterChange('status', value || undefined)}
+                value={filters.status || 'all'} 
+                onValueChange={(value) => handleFilterChange('status', value === 'all' ? undefined : value)}
               >
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Tous les statuts" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Tous les statuts</SelectItem>
+                  <SelectItem value="all">Tous les statuts</SelectItem>
                   <SelectItem value="Généré">Généré</SelectItem>
                   <SelectItem value="Envoyé">Envoyé</SelectItem>
                   <SelectItem value="Validé">Validé</SelectItem>
@@ -104,14 +104,14 @@ const PayslipFilterDrawer: React.FC<PayslipFilterDrawerProps> = ({
             <div className="space-y-2">
               <label className="text-sm font-medium">Mois</label>
               <Select 
-                value={filters.month || ''} 
-                onValueChange={(value) => handleFilterChange('month', value || undefined)}
+                value={filters.month || 'all'} 
+                onValueChange={(value) => handleFilterChange('month', value === 'all' ? undefined : value)}
               >
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Tous les mois" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Tous les mois</SelectItem>
+                  <SelectItem value="all">Tous les mois</SelectItem>
                   {months.map((month) => (
                     <SelectItem key={month} value={month}>
                       {month}
@@ -124,14 +124,14 @@ const PayslipFilterDrawer: React.FC<PayslipFilterDrawerProps> = ({
             <div className="space-y-2">
               <label className="text-sm font-medium">Année</label>
               <Select 
-                value={filters.year?.toString() || ''} 
-                onValueChange={(value) => handleFilterChange('year', value ? parseInt(value) : undefined)}
+                value={(filters.year?.toString()) || 'all'} 
+                onValueChange={(value) => handleFilterChange('year', value === 'all' ? undefined : parseInt(value))}
               >
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Toutes les années" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Toutes les années</SelectItem>
+                  <SelectItem value="all">Toutes les années</SelectItem>
                   {years.map((year) => (
                     <SelectItem key={year} value={year.toString()}>
                       {year}
@@ -144,14 +144,14 @@ const PayslipFilterDrawer: React.FC<PayslipFilterDrawerProps> = ({
             <div className="space-y-2">
               <label className="text-sm font-medium">Employé</label>
               <Select 
-                value={filters.employeeId || ''} 
-                onValueChange={(value) => handleFilterChange('employeeId', value || undefined)}
+                value={filters.employeeId || 'all'} 
+                onValueChange={(value) => handleFilterChange('employeeId', value === 'all' ? undefined : value)}
               >
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Tous les employés" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Tous les employés</SelectItem>
+                  <SelectItem value="all">Tous les employés</SelectItem>
                   {employees.map((employee) => (
                     <SelectItem key={employee.id} value={employee.id}>
                       {employee.firstName} {employee.lastName}
@@ -164,17 +164,17 @@ const PayslipFilterDrawer: React.FC<PayslipFilterDrawerProps> = ({
             <div className="space-y-2">
               <label className="text-sm font-medium">Département</label>
               <Select 
-                value={filters.department || ''} 
-                onValueChange={(value) => handleFilterChange('department', value || undefined)}
+                value={filters.department || 'all'} 
+                onValueChange={(value) => handleFilterChange('department', value === 'all' ? undefined : value)}
               >
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Tous les départements" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Tous les départements</SelectItem>
+                  <SelectItem value="all">Tous les départements</SelectItem>
                   {departments.map((department) => (
-                    <SelectItem key={department} value={department || ''}>
-                      {department}
+                    <SelectItem key={department || 'default'} value={department || 'default'}>
+                      {department || 'Non spécifié'}
                     </SelectItem>
                   ))}
                 </SelectContent>

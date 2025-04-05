@@ -82,7 +82,6 @@ const CreateVehicleDialog: React.FC<CreateVehicleDialogProps> = ({
     });
   };
   
-  // Make sure all SelectItem values are non-empty strings
   return (
     <Dialog open={isOpen} onOpenChange={(isOpen) => !isOpen && onClose()}>
       <DialogContent className="sm:max-w-[550px]">

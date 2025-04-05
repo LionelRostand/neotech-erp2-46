@@ -9,46 +9,49 @@ import { CalendarIcon, Filter } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
+export interface PayslipFiltersOptions {
+  employeeId?: string;
+  month?: string;
+  year?: number;
+  status?: string;
+  department?: string;
+}
+
 interface PayslipFiltersProps {
   employees: { id: string; name: string }[];
-  onFilterChange: (filters: any) => void;
-  filters: {
-    employee: string | null;
-    month: Date | null;
-    status: string | null;
-  };
-  setFilters: React.Dispatch<React.SetStateAction<{
-    employee: string | null;
-    month: Date | null;
-    status: string | null;
-  }>>;
+  onApplyFilters: (filters: PayslipFiltersOptions) => void;
+  currentFilters?: PayslipFiltersOptions;
 }
 
 const PayslipFilters: React.FC<PayslipFiltersProps> = ({
   employees,
-  onFilterChange,
-  filters,
-  setFilters
+  onApplyFilters,
+  currentFilters = {}
 }) => {
   const [calendarOpen, setCalendarOpen] = React.useState(false);
+  const [filters, setFilters] = React.useState<PayslipFiltersOptions>(currentFilters);
 
   const handleEmployeeChange = (value: string) => {
     const newFilters = {
       ...filters,
-      employee: value === 'all' ? null : value
+      employeeId: value === 'all' ? undefined : value
     };
     setFilters(newFilters);
-    onFilterChange(newFilters);
+    onApplyFilters(newFilters);
   };
 
   const handleMonthChange = (date: Date | undefined) => {
     if (date) {
+      const monthName = format(date, 'MMMM', { locale: fr });
+      const year = date.getFullYear();
+      
       const newFilters = {
         ...filters,
-        month: date
+        month: monthName,
+        year: year
       };
       setFilters(newFilters);
-      onFilterChange(newFilters);
+      onApplyFilters(newFilters);
       setCalendarOpen(false);
     }
   };
@@ -56,26 +59,22 @@ const PayslipFilters: React.FC<PayslipFiltersProps> = ({
   const handleStatusChange = (value: string) => {
     const newFilters = {
       ...filters,
-      status: value === 'all' ? null : value
+      status: value === 'all' ? undefined : value
     };
     setFilters(newFilters);
-    onFilterChange(newFilters);
+    onApplyFilters(newFilters);
   };
 
   const handleReset = () => {
-    const resetFilters = {
-      employee: null,
-      month: null,
-      status: null
-    };
+    const resetFilters = {};
     setFilters(resetFilters);
-    onFilterChange(resetFilters);
+    onApplyFilters(resetFilters);
   };
 
   return (
     <div className="flex flex-col md:flex-row gap-4 items-start md:items-center">
       <Select
-        value={filters.employee || 'all'}
+        value={filters.employeeId || 'all'}
         onValueChange={handleEmployeeChange}
       >
         <SelectTrigger className="w-full md:w-48">
@@ -100,7 +99,7 @@ const PayslipFilters: React.FC<PayslipFiltersProps> = ({
           >
             <CalendarIcon className="mr-2 h-4 w-4" />
             {filters.month ? (
-              format(filters.month, 'MMMM yyyy', { locale: fr })
+              `${filters.month} ${filters.year}`
             ) : (
               "Tous les mois"
             )}
@@ -108,8 +107,8 @@ const PayslipFilters: React.FC<PayslipFiltersProps> = ({
         </PopoverTrigger>
         <PopoverContent className="w-auto p-0" align="start">
           <Calendar
-            mode="month"
-            selected={filters.month || undefined}
+            mode="single"
+            selected={filters.month && filters.year ? new Date(filters.year, new Date(Date.parse(`1 ${filters.month} ${filters.year}`)).getMonth(), 1) : undefined}
             onSelect={handleMonthChange}
             initialFocus
             locale={fr}
@@ -126,9 +125,9 @@ const PayslipFilters: React.FC<PayslipFiltersProps> = ({
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="all">Tous</SelectItem>
-          <SelectItem value="paid">Payée</SelectItem>
-          <SelectItem value="pending">En attente</SelectItem>
-          <SelectItem value="draft">Brouillon</SelectItem>
+          <SelectItem value="Généré">Généré</SelectItem>
+          <SelectItem value="Envoyé">Envoyé</SelectItem>
+          <SelectItem value="Validé">Validé</SelectItem>
         </SelectContent>
       </Select>
 
