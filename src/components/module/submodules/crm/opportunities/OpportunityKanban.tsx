@@ -1,120 +1,65 @@
 
 import React from 'react';
-import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Opportunity, OpportunityStage } from '../types/crm-types';
 import { useOpportunityUtils } from '../hooks/opportunity/useOpportunityUtils';
-import { Button } from '@/components/ui/button';
-import { Eye, Edit, Trash2 } from 'lucide-react';
 
 interface OpportunityKanbanProps {
   opportunities: Opportunity[];
-  onViewDetails: (opportunity: Opportunity) => void;
-  onEdit: (opportunity: Opportunity) => void;
-  onDelete: (opportunity: Opportunity) => void;
-  onStageChange?: (opportunityId: string, newStage: OpportunityStage) => void;
+  onOpportunityClick: (opportunity: Opportunity) => void;
 }
 
 const OpportunityKanban: React.FC<OpportunityKanbanProps> = ({
   opportunities,
-  onViewDetails,
-  onEdit,
-  onDelete,
-  onStageChange
+  onOpportunityClick
 }) => {
-  const { groupOpportunitiesByStage, getStageText, formatAmount } = useOpportunityUtils();
-  const groupedOpportunities = groupOpportunitiesByStage(opportunities);
-  
-  // Handle drag end
-  const handleDragEnd = (result: any) => {
-    if (!result.destination || !onStageChange) return;
-    
-    const { draggableId, destination } = result;
-    const newStage = destination.droppableId as OpportunityStage;
-    
-    onStageChange(draggableId, newStage);
-  };
+  const opportunityUtils = useOpportunityUtils();
+  const stageGroups = opportunityUtils.groupOpportunitiesByStage(opportunities);
+  const stages = opportunityUtils.getAllStages();
 
   return (
-    <div className="overflow-x-auto">
-      <div className="flex w-full space-x-4 p-4 min-w-[1024px]">
-        {Object.entries(groupedOpportunities).map(([stage, stageOpportunities]) => (
-          <div 
-            key={stage} 
-            className="flex-1 min-w-[250px] bg-gray-50 rounded-md p-2"
-          >
-            <h3 className="text-sm font-medium p-2 flex justify-between items-center">
-              <span>{getStageText(stage as OpportunityStage)}</span>
-              <Badge variant="outline">{stageOpportunities.length}</Badge>
-            </h3>
-            
-            <div className="space-y-2 mt-2">
-              {stageOpportunities.map((opportunity) => (
-                <Card 
-                  key={opportunity.id}
-                  className="bg-white cursor-pointer hover:shadow-md transition-shadow"
-                >
-                  <CardHeader className="p-3 pb-0">
-                    <div className="flex justify-between items-start">
-                      <h4 className="text-sm font-medium line-clamp-2">{opportunity.title}</h4>
-                      <div className="flex space-x-1">
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          className="h-6 w-6" 
-                          onClick={() => onViewDetails(opportunity)}
-                        >
-                          <Eye className="h-3 w-3" />
-                        </Button>
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          className="h-6 w-6" 
-                          onClick={() => onEdit(opportunity)}
-                        >
-                          <Edit className="h-3 w-3" />
-                        </Button>
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          className="h-6 w-6" 
-                          onClick={() => onDelete(opportunity)}
-                        >
-                          <Trash2 className="h-3 w-3" />
-                        </Button>
-                      </div>
+    <div className="flex gap-4 overflow-x-auto pb-4">
+      {stages.map(stage => (
+        <div key={stage.value} className="min-w-[300px]">
+          <Card>
+            <CardHeader className="py-3">
+              <CardTitle className="text-sm font-medium flex justify-between items-center">
+                <span>{stage.label}</span>
+                <Badge variant="outline">{stageGroups[stage.value as OpportunityStage]?.length || 0}</Badge>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2 p-2">
+              {stageGroups[stage.value as OpportunityStage]?.length > 0 ? (
+                stageGroups[stage.value as OpportunityStage].map(opportunity => (
+                  <div 
+                    key={opportunity.id}
+                    className="bg-white p-3 rounded-md shadow-sm border border-gray-100 cursor-pointer hover:border-gray-300 transition-colors"
+                    onClick={() => onOpportunityClick(opportunity)}
+                  >
+                    <h3 className="font-medium text-sm">{opportunity.name}</h3>
+                    <p className="text-xs text-muted-foreground">
+                      {opportunity.clientName}
+                    </p>
+                    <div className="flex justify-between items-center mt-2">
+                      <span className="text-xs font-medium">
+                        {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(Number(opportunity.value))}
+                      </span>
+                      <span className="text-xs text-muted-foreground">
+                        {new Date(opportunity.expectedCloseDate).toLocaleDateString('fr-FR')}
+                      </span>
                     </div>
-                  </CardHeader>
-                  <CardContent className="p-3 pt-2">
-                    <div className="text-xs space-y-1">
-                      {opportunity.clientName && (
-                        <p className="text-muted-foreground">Client: {opportunity.clientName}</p>
-                      )}
-                      {opportunity.value !== undefined && (
-                        <p>
-                          <span className="font-medium">Valeur:</span> {formatAmount(opportunity.value)}
-                        </p>
-                      )}
-                      {opportunity.probability !== undefined && (
-                        <p>
-                          <span className="font-medium">Prob.:</span> {opportunity.probability}%
-                        </p>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-              
-              {stageOpportunities.length === 0 && (
-                <div className="p-3 text-center text-xs text-muted-foreground italic">
+                  </div>
+                ))
+              ) : (
+                <div className="text-center py-4 text-sm text-muted-foreground">
                   Aucune opportunité
                 </div>
               )}
-            </div>
-          </div>
-        ))}
-      </div>
+            </CardContent>
+          </Card>
+        </div>
+      ))}
     </div>
   );
 };

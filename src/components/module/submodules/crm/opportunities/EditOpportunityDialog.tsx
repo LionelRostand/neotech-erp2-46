@@ -11,21 +11,21 @@ import { Button } from "@/components/ui/button";
 import { Opportunity, OpportunityFormData } from '../types/crm-types';
 import OpportunityForm from './OpportunityForm';
 
-interface EditOpportunityDialogProps {
+export interface EditOpportunityDialogProps {
   isOpen: boolean;
   onClose: () => void;
   opportunity: Opportunity;
-  onEdit: (data: OpportunityFormData) => void;
+  onUpdate: (data: OpportunityFormData) => void;
 }
 
 const EditOpportunityDialog: React.FC<EditOpportunityDialogProps> = ({
   isOpen,
   onClose,
   opportunity,
-  onEdit
+  onUpdate
 }) => {
   const handleSubmit = (data: OpportunityFormData) => {
-    onEdit(data);
+    onUpdate(data);
   };
 
   return (

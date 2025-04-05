@@ -1,126 +1,94 @@
 
-import { Opportunity, OpportunityStage } from '../../types/crm-types';
+import { OpportunityStage, Opportunity } from '../../types/crm-types';
 
 export const useOpportunityUtils = () => {
-  /**
-   * Gets the badge class for an opportunity stage
-   */
-  const getStageBadgeClass = (stage: OpportunityStage): string => {
+  // Get CSS class for stage badge
+  const getStageBadgeClass = (stage: OpportunityStage) => {
     switch (stage) {
-      case OpportunityStage.LEAD:
-        return 'bg-blue-100 text-blue-800';
-      case OpportunityStage.DISCOVERY:
-        return 'bg-purple-100 text-purple-800';
-      case OpportunityStage.PROPOSAL:
-        return 'bg-amber-100 text-amber-800';
-      case OpportunityStage.NEGOTIATION:
-        return 'bg-orange-100 text-orange-800';
-      case OpportunityStage.CLOSED_WON:
-        return 'bg-green-100 text-green-800';
-      case OpportunityStage.CLOSED_LOST:
-        return 'bg-red-100 text-red-800';
+      case 'prospection':
+        return 'bg-blue-100 text-blue-800 hover:bg-blue-100';
+      case 'qualification':
+        return 'bg-purple-100 text-purple-800 hover:bg-purple-100';
+      case 'proposition':
+        return 'bg-orange-100 text-orange-800 hover:bg-orange-100';
+      case 'négociation':
+        return 'bg-amber-100 text-amber-800 hover:bg-amber-100';
+      case 'clôturée':
+        return 'bg-green-100 text-green-800 hover:bg-green-100';
+      case 'perdue':
+        return 'bg-red-100 text-red-800 hover:bg-red-100';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-gray-100 text-gray-800 hover:bg-gray-100';
     }
   };
 
-  /**
-   * Gets the display text for an opportunity stage
-   */
-  const getStageText = (stage: OpportunityStage): string => {
+  // Get readable text for stage
+  const getStageText = (stage: OpportunityStage) => {
     switch (stage) {
-      case OpportunityStage.LEAD:
-        return 'Prospect';
-      case OpportunityStage.DISCOVERY:
-        return 'Découverte';
-      case OpportunityStage.PROPOSAL:
+      case 'prospection':
+        return 'Prospection';
+      case 'qualification':
+        return 'Qualification';
+      case 'proposition':
         return 'Proposition';
-      case OpportunityStage.NEGOTIATION:
+      case 'négociation':
         return 'Négociation';
-      case OpportunityStage.CLOSED_WON:
-        return 'Gagné';
-      case OpportunityStage.CLOSED_LOST:
-        return 'Perdu';
+      case 'clôturée':
+        return 'Clôturée';
+      case 'perdue':
+        return 'Perdue';
       default:
-        return 'Inconnu';
+        return stage;
     }
   };
 
-  /**
-   * Get all available stages
-   */
-  const getAllStages = (): { value: OpportunityStage; label: string }[] => {
+  // Get human-readable label for stage
+  const getStageLabel = (stage: OpportunityStage) => {
+    return getStageText(stage);
+  };
+
+  // Get all available stages with labels
+  const getAllStages = () => {
     return [
-      { value: OpportunityStage.LEAD, label: 'Prospect' },
-      { value: OpportunityStage.DISCOVERY, label: 'Découverte' },
-      { value: OpportunityStage.PROPOSAL, label: 'Proposition' },
-      { value: OpportunityStage.NEGOTIATION, label: 'Négociation' },
-      { value: OpportunityStage.CLOSED_WON, label: 'Gagné' },
-      { value: OpportunityStage.CLOSED_LOST, label: 'Perdu' }
+      { value: 'prospection', label: 'Prospection' },
+      { value: 'qualification', label: 'Qualification' },
+      { value: 'proposition', label: 'Proposition' },
+      { value: 'négociation', label: 'Négociation' },
+      { value: 'clôturée', label: 'Clôturée' },
+      { value: 'perdue', label: 'Perdue' }
     ];
   };
 
-  /**
-   * Format amount with currency
-   */
-  const formatAmount = (amount: number | undefined): string => {
-    if (amount === undefined) return 'Non défini';
-    return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(amount);
-  };
-
-  /**
-   * Format probability as percentage
-   */
-  const formatProbability = (probability: number | undefined): string => {
-    if (probability === undefined) return 'Non défini';
-    return `${probability}%`;
-  };
-
-  /**
-   * Format date
-   */
-  const formatDate = (date: string | undefined): string => {
-    if (!date) return 'Non défini';
-    return new Date(date).toLocaleDateString('fr-FR');
-  };
-
-  /**
-   * Filter opportunities by search term
-   */
-  const filterOpportunities = (opportunities: Opportunity[], searchTerm: string, stageFilter: string): Opportunity[] => {
-    return opportunities.filter(opportunity => {
-      // Apply stage filter
-      const matchesStage = stageFilter === 'all' || opportunity.stage === stageFilter;
-      
-      // Apply search term
-      const matchesSearch = searchTerm === '' || 
-        opportunity.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (opportunity.clientName && opportunity.clientName.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        (opportunity.contactName && opportunity.contactName.toLowerCase().includes(searchTerm.toLowerCase()));
-      
-      return matchesStage && matchesSearch;
-    });
-  };
-
-  /**
-   * Group opportunities by stage for Kanban view
-   */
-  const groupOpportunitiesByStage = (opportunities: Opportunity[]) => {
-    const grouped: Record<OpportunityStage, Opportunity[]> = {
-      [OpportunityStage.LEAD]: [],
-      [OpportunityStage.DISCOVERY]: [],
-      [OpportunityStage.PROPOSAL]: [],
-      [OpportunityStage.NEGOTIATION]: [],
-      [OpportunityStage.CLOSED_WON]: [],
-      [OpportunityStage.CLOSED_LOST]: []
+  // Get stage order for sorting
+  const getStageOrder = (stage: OpportunityStage) => {
+    const stageOrder = {
+      'prospection': 1,
+      'qualification': 2,
+      'proposition': 3,
+      'négociation': 4,
+      'clôturée': 5,
+      'perdue': 6
     };
+    return stageOrder[stage] || 99;
+  };
 
+  // Group opportunities by stage for kanban view
+  const groupOpportunitiesByStage = (opportunities: Opportunity[]) => {
+    const stages = getAllStages().map(s => s.value as OpportunityStage);
+    const grouped: Record<OpportunityStage, Opportunity[]> = {} as Record<OpportunityStage, Opportunity[]>;
+    
+    // Initialize with empty arrays for each stage
+    stages.forEach(stage => {
+      grouped[stage] = [];
+    });
+    
+    // Group opportunities by stage
     opportunities.forEach(opportunity => {
       if (grouped[opportunity.stage]) {
         grouped[opportunity.stage].push(opportunity);
       }
     });
-
+    
     return grouped;
   };
 
@@ -128,10 +96,8 @@ export const useOpportunityUtils = () => {
     getStageBadgeClass,
     getStageText,
     getAllStages,
-    formatAmount,
-    formatProbability,
-    formatDate,
-    filterOpportunities,
+    getStageOrder,
+    getStageLabel,
     groupOpportunitiesByStage
   };
 };

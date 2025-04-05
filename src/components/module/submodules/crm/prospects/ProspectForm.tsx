@@ -1,19 +1,18 @@
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { 
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
 } from "@/components/ui/select";
-import { Prospect, ProspectFormData } from '../types/crm-types';
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
+import { ProspectFormData, Prospect } from '../types/crm-types';
 
-interface ProspectFormProps {
+export interface ProspectFormProps {
   initialData?: Prospect;
   onSubmit: (data: ProspectFormData) => void;
 }
@@ -22,48 +21,25 @@ const ProspectForm: React.FC<ProspectFormProps> = ({
   initialData,
   onSubmit
 }) => {
-  const [formData, setFormData] = useState<ProspectFormData>({
-    company: '',
-    contactName: '',
-    contactEmail: '',
-    contactPhone: '',
-    source: 'Site web',
-    status: 'new',
-    notes: '',
-    industry: '',
-    website: '',
-    address: '',
-    size: 'small',
-    estimatedValue: 0,
-    name: '',
-    email: '',
-    phone: '',
-    lastContact: new Date().toISOString().split('T')[0]
-  });
-
-  // Load initial data if editing
-  useEffect(() => {
-    if (initialData) {
-      setFormData({
-        company: initialData.company || '',
-        contactName: initialData.contactName || '',
-        contactEmail: initialData.contactEmail || '',
-        contactPhone: initialData.contactPhone || '',
-        source: initialData.source || 'Site web',
-        status: initialData.status || 'new',
-        notes: initialData.notes || '',
-        industry: initialData.industry || '',
-        website: initialData.website || '',
-        address: initialData.address || '',
-        size: initialData.size || 'small',
-        estimatedValue: initialData.estimatedValue || 0,
-        name: initialData.name || '',
-        email: initialData.email || '',
-        phone: initialData.phone || '',
-        lastContact: initialData.lastContact || new Date().toISOString().split('T')[0]
-      });
+  const [formData, setFormData] = React.useState<ProspectFormData>(
+    initialData ? {
+      name: initialData.name,
+      company: initialData.company,
+      email: initialData.email,
+      phone: initialData.phone,
+      status: initialData.status,
+      source: initialData.source,
+      notes: initialData.notes || '',
+    } : {
+      name: '',
+      company: '',
+      email: '',
+      phone: '',
+      status: 'new',
+      source: 'website',
+      notes: '',
     }
-  }, [initialData]);
+  );
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -80,11 +56,21 @@ const ProspectForm: React.FC<ProspectFormProps> = ({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-4 py-4">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* Company Information */}
         <div className="space-y-2">
-          <Label htmlFor="company">Entreprise</Label>
+          <label htmlFor="name" className="text-sm font-medium">Nom complet</label>
+          <Input
+            id="name"
+            name="name"
+            value={formData.name}
+            onChange={handleInputChange}
+            required
+          />
+        </div>
+        
+        <div className="space-y-2">
+          <label htmlFor="company" className="text-sm font-medium">Entreprise</label>
           <Input
             id="company"
             name="company"
@@ -95,118 +81,34 @@ const ProspectForm: React.FC<ProspectFormProps> = ({
         </div>
         
         <div className="space-y-2">
-          <Label htmlFor="industry">Secteur d'activité</Label>
+          <label htmlFor="email" className="text-sm font-medium">Email</label>
           <Input
-            id="industry"
-            name="industry"
-            value={formData.industry}
-            onChange={handleInputChange}
-          />
-        </div>
-        
-        <div className="space-y-2">
-          <Label htmlFor="website">Site web</Label>
-          <Input
-            id="website"
-            name="website"
-            value={formData.website}
-            onChange={handleInputChange}
-            type="url"
-            placeholder="https://"
-          />
-        </div>
-        
-        <div className="space-y-2">
-          <Label htmlFor="size">Taille de l'entreprise</Label>
-          <Select
-            value={formData.size}
-            onValueChange={(value) => handleSelectChange('size', value)}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Sélectionner une taille" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="small">Petite (1-50)</SelectItem>
-              <SelectItem value="medium">Moyenne (51-250)</SelectItem>
-              <SelectItem value="large">Grande (251-1000)</SelectItem>
-              <SelectItem value="enterprise">Très grande (1000+)</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        
-        {/* Contact Information */}
-        <div className="space-y-2">
-          <Label htmlFor="contactName">Nom du contact</Label>
-          <Input
-            id="contactName"
-            name="contactName"
-            value={formData.contactName}
-            onChange={handleInputChange}
-            required
-          />
-        </div>
-        
-        <div className="space-y-2">
-          <Label htmlFor="contactEmail">Email du contact</Label>
-          <Input
-            id="contactEmail"
-            name="contactEmail"
-            value={formData.contactEmail}
-            onChange={handleInputChange}
+            id="email"
+            name="email"
             type="email"
+            value={formData.email}
+            onChange={handleInputChange}
             required
           />
         </div>
         
         <div className="space-y-2">
-          <Label htmlFor="contactPhone">Téléphone du contact</Label>
+          <label htmlFor="phone" className="text-sm font-medium">Téléphone</label>
           <Input
-            id="contactPhone"
-            name="contactPhone"
-            value={formData.contactPhone}
+            id="phone"
+            name="phone"
+            value={formData.phone}
             onChange={handleInputChange}
           />
         </div>
         
         <div className="space-y-2">
-          <Label htmlFor="address">Adresse</Label>
-          <Input
-            id="address"
-            name="address"
-            value={formData.address}
-            onChange={handleInputChange}
-          />
-        </div>
-        
-        {/* Prospect Details */}
-        <div className="space-y-2">
-          <Label htmlFor="source">Source</Label>
-          <Select
-            value={formData.source}
-            onValueChange={(value) => handleSelectChange('source', value)}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Sélectionner une source" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="Site web">Site web</SelectItem>
-              <SelectItem value="LinkedIn">LinkedIn</SelectItem>
-              <SelectItem value="Salon">Salon professionnel</SelectItem>
-              <SelectItem value="Recommandation">Recommandation</SelectItem>
-              <SelectItem value="Appel entrant">Appel entrant</SelectItem>
-              <SelectItem value="Email">Email</SelectItem>
-              <SelectItem value="Autre">Autre</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        
-        <div className="space-y-2">
-          <Label htmlFor="status">Statut</Label>
-          <Select
-            value={formData.status}
+          <label htmlFor="status" className="text-sm font-medium">Statut</label>
+          <Select 
+            value={formData.status} 
             onValueChange={(value) => handleSelectChange('status', value)}
           >
-            <SelectTrigger>
+            <SelectTrigger id="status">
               <SelectValue placeholder="Sélectionner un statut" />
             </SelectTrigger>
             <SelectContent>
@@ -215,39 +117,32 @@ const ProspectForm: React.FC<ProspectFormProps> = ({
               <SelectItem value="meeting">Rendez-vous</SelectItem>
               <SelectItem value="proposal">Proposition</SelectItem>
               <SelectItem value="negotiation">Négociation</SelectItem>
-              <SelectItem value="converted">Converti</SelectItem>
-              <SelectItem value="lost">Perdu</SelectItem>
             </SelectContent>
           </Select>
         </div>
         
         <div className="space-y-2">
-          <Label htmlFor="lastContact">Dernier contact</Label>
-          <Input
-            id="lastContact"
-            name="lastContact"
-            value={formData.lastContact}
-            onChange={handleInputChange}
-            type="date"
-          />
-        </div>
-        
-        <div className="space-y-2">
-          <Label htmlFor="estimatedValue">Valeur estimée (€)</Label>
-          <Input
-            id="estimatedValue"
-            name="estimatedValue"
-            value={formData.estimatedValue.toString()}
-            onChange={handleInputChange}
-            type="number"
-            min="0"
-          />
+          <label htmlFor="source" className="text-sm font-medium">Source</label>
+          <Select 
+            value={formData.source} 
+            onValueChange={(value) => handleSelectChange('source', value)}
+          >
+            <SelectTrigger id="source">
+              <SelectValue placeholder="Sélectionner une source" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="website">Site web</SelectItem>
+              <SelectItem value="referral">Référencement</SelectItem>
+              <SelectItem value="social">Réseaux sociaux</SelectItem>
+              <SelectItem value="event">Évènement</SelectItem>
+              <SelectItem value="other">Autre</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </div>
       
-      {/* Notes */}
       <div className="space-y-2">
-        <Label htmlFor="notes">Notes</Label>
+        <label htmlFor="notes" className="text-sm font-medium">Notes</label>
         <Textarea
           id="notes"
           name="notes"
