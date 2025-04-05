@@ -27,6 +27,20 @@ export const useOpportunityUtils = () => {
       default: return 'bg-gray-100 text-gray-800';
     }
   };
+  
+  // Add the missing getStageColor function used by the Kanban component
+  const getStageColor = (stage: string): string => {
+    switch (stage) {
+      case 'lead': return 'bg-blue-500';
+      case 'qualified': return 'bg-indigo-500';
+      case 'needs-analysis': return 'bg-purple-500';
+      case 'proposal': return 'bg-amber-500';
+      case 'negotiation': return 'bg-orange-500';
+      case 'closed-won': return 'bg-green-500';
+      case 'closed-lost': return 'bg-red-500';
+      default: return 'bg-gray-500';
+    }
+  };
 
   const filterOpportunities = (
     opportunities: Opportunity[] | undefined, 
@@ -50,6 +64,7 @@ export const useOpportunityUtils = () => {
   return {
     getStageLabel,
     getStageBadgeColor,
+    getStageColor,  // Export the new function
     filterOpportunities
   };
 };

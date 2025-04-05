@@ -20,8 +20,16 @@ const OpportunityKanban: React.FC<OpportunityKanbanProps> = ({
 }) => {
   const { getStageLabel, getStageColor } = useOpportunityUtils();
 
-  // Define all possible stages in order
-  const stages: OpportunityStage[] = ['new', 'negotiation', 'quote_sent', 'pending', 'won', 'lost'];
+  // Define all possible stages in order - using the correct values from OpportunityStage type
+  const stages: OpportunityStage[] = [
+    'lead', 
+    'qualified', 
+    'needs-analysis', 
+    'proposal', 
+    'negotiation', 
+    'closed-won', 
+    'closed-lost'
+  ];
 
   // Group opportunities by stage
   const opportunitiesByStage = stages.reduce((acc, stage) => {
@@ -56,11 +64,11 @@ const OpportunityKanban: React.FC<OpportunityKanbanProps> = ({
   }
 
   return (
-    <div className="grid grid-cols-6 gap-4 overflow-x-auto pb-4" style={{ minHeight: '70vh' }}>
+    <div className="grid grid-cols-7 gap-4 overflow-x-auto pb-4" style={{ minHeight: '70vh' }}>
       {stages.map(stage => (
         <div
           key={stage}
-          className="flex flex-col min-w-[280px]"
+          className="flex flex-col min-w-[250px]"
           onDragOver={handleDragOver}
           onDrop={(e) => handleDrop(e, stage)}
         >
@@ -87,16 +95,16 @@ const OpportunityKanban: React.FC<OpportunityKanbanProps> = ({
                   draggable
                   onDragStart={(e) => handleDragStart(e, opportunity)}
                 >
-                  <h4 className="font-medium mb-2 truncate">{opportunity.title}</h4>
+                  <h4 className="font-medium mb-2 truncate">{opportunity.name}</h4>
                   <p className="text-sm text-gray-500 mb-1 truncate">{opportunity.clientName}</p>
                   <div className="flex justify-between items-center mt-2 text-xs text-gray-500">
                     <div className="flex items-center">
                       <DollarSign className="h-3 w-3 mr-1" />
-                      <span>{opportunity.amount.toLocaleString('fr-FR')} €</span>
+                      <span>{opportunity.value.toLocaleString('fr-FR')} €</span>
                     </div>
                     <div className="flex items-center">
                       <Calendar className="h-3 w-3 mr-1" />
-                      <span>{new Date(opportunity.expectedCloseDate).toLocaleDateString('fr-FR')}</span>
+                      <span>{new Date(opportunity.closeDate || opportunity.startDate).toLocaleDateString('fr-FR')}</span>
                     </div>
                   </div>
                   {opportunity.assignedTo && (
@@ -111,10 +119,10 @@ const OpportunityKanban: React.FC<OpportunityKanbanProps> = ({
                     >
                       <div 
                         className="h-2 bg-blue-500" 
-                        style={{ width: `${opportunity.probability}%` }}
+                        style={{ width: `${opportunity.probability || 0}%` }}
                       ></div>
                     </div>
-                    <span className="ml-2 text-xs">{opportunity.probability}%</span>
+                    <span className="ml-2 text-xs">{opportunity.probability || 0}%</span>
                   </div>
                 </Card>
               ))

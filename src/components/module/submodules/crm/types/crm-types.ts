@@ -69,3 +69,48 @@ export interface Client {
   updatedBy?: string;
   customerSince?: string;
 }
+
+// Add missing types to fix the build errors
+export interface ProspectFormData {
+  company: string;
+  contactName: string;
+  contactEmail: string;
+  contactPhone: string;
+  source: string;
+  industry?: string;
+  status: 'new' | 'contacted' | 'qualified' | 'unqualified';
+  notes?: string;
+  website?: string;
+  address?: string;
+  size?: 'small' | 'medium' | 'large' | 'enterprise';
+  estimatedValue?: number;
+}
+
+export interface ReminderData {
+  id: string;
+  title: string;
+  date: string;
+  completed: boolean;
+  notes?: string;
+  prospectId: string;
+}
+
+export interface OpportunityFormData {
+  name: string;
+  clientId?: string;
+  clientName?: string;
+  contactName?: string;
+  contactEmail?: string;
+  contactPhone?: string;
+  value: number;
+  currency?: string;
+  probability?: number;
+  stage: OpportunityStage;
+  startDate: string;
+  closeDate?: string;
+  description?: string;
+  source?: string;
+  assignedTo?: string;
+  products?: string[];
+  notes?: string;
+}
