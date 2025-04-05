@@ -11,52 +11,129 @@ import {
   FileText,
   Clock,
   CheckCircle2, 
-  AlertTriangle
+  AlertTriangle,
+  FileExcel,
+  FilePdf
 } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { toast } from 'sonner';
+import { toast } from '@/hooks/use-toast';
 import { useAlertsData } from '@/hooks/useAlertsData';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import CreateAlertDialog from './alerts/CreateAlertDialog';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import AlertsFilter from './alerts/AlertsFilter';
+import { exportToExcel } from '@/utils/exportUtils';
+import { exportToPdf } from '@/utils/pdfUtils';
+import { Alert } from '@/hooks/useAlertsData';
 
 const EmployeesAlerts: React.FC = () => {
   const [activeTab, setActiveTab] = useState('actives');
   const { alerts, stats, isLoading, error } = useAlertsData();
+  const [isCreateAlertOpen, setIsCreateAlertOpen] = useState(false);
+  const [filterCriteria, setFilterCriteria] = useState<{
+    type: string | null;
+    severity: string | null;
+    status: string | null;
+    employee: string | null;
+  }>({
+    type: null,
+    severity: null,
+    status: null,
+    employee: null,
+  });
 
   const handleResolveAlert = (id: string) => {
     // Dans une application réelle, nous mettrions à jour Firebase ici
-    toast.success(`Alerte #${id} marquée comme résolue`);
+    toast({
+      title: "Alerte résolue",
+      description: `Alerte #${id} marquée comme résolue`
+    });
   };
 
-  const handleExportData = () => {
-    toast.success("Export des données d'alertes démarré");
-    // Logique d'export à implémenter
+  const handleExportData = (format: 'excel' | 'pdf') => {
+    const dataToExport = filteredAlerts.map(alert => ({
+      ID: alert.id,
+      Titre: alert.title,
+      Type: alert.type,
+      Priorité: alert.severity,
+      'Date création': alert.createdDate,
+      Statut: alert.status,
+      Employé: alert.employeeName || 'Non assigné',
+      'Assigné à': alert.assignedToName || 'Non assigné',
+      Description: alert.description || ''
+    }));
+
+    if (format === 'excel') {
+      const success = exportToExcel(dataToExport, 'Alertes', 'alertes_rh');
+      if (success) {
+        toast({
+          title: "Export réussi",
+          description: "Les données ont été exportées avec succès au format Excel"
+        });
+      } else {
+        toast({
+          title: "Erreur d'export",
+          description: "Une erreur est survenue lors de l'export",
+          variant: "destructive"
+        });
+      }
+    } else {
+      const success = exportToPdf(dataToExport, 'Alertes RH', 'alertes_rh');
+      if (success) {
+        toast({
+          title: "Export réussi",
+          description: "Les données ont été exportées avec succès au format PDF"
+        });
+      } else {
+        toast({
+          title: "Erreur d'export",
+          description: "Une erreur est survenue lors de l'export",
+          variant: "destructive"
+        });
+      }
+    }
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent"></div>
-        <p className="ml-2">Chargement des alertes...</p>
-      </div>
-    );
-  }
+  // Apply filters to alerts
+  const applyFilters = (alerts: Alert[]) => {
+    return alerts.filter(alert => {
+      // Type filter
+      if (filterCriteria.type && alert.type !== filterCriteria.type) {
+        return false;
+      }
+      
+      // Severity filter
+      if (filterCriteria.severity && alert.severity !== filterCriteria.severity) {
+        return false;
+      }
+      
+      // Status filter
+      if (filterCriteria.status && alert.status !== filterCriteria.status) {
+        return false;
+      }
+      
+      // Employee filter
+      if (filterCriteria.employee && alert.employeeId !== filterCriteria.employee) {
+        return false;
+      }
+      
+      return true;
+    });
+  };
 
-  if (error) {
-    return (
-      <div className="bg-red-50 text-red-700 p-4 rounded-md">
-        Une erreur est survenue lors du chargement des alertes.
-      </div>
-    );
-  }
-
-  const filteredAlerts = activeTab === 'toutes' 
+  // First filter by tab
+  const tabFilteredAlerts = activeTab === 'toutes' 
     ? alerts 
     : activeTab === 'actives'
     ? alerts.filter(alert => alert.status === 'Active')
     : activeTab === 'attente'
     ? alerts.filter(alert => alert.status === 'En attente')
     : alerts.filter(alert => alert.status === 'Résolue');
+  
+  // Then apply additional filters
+  const filteredAlerts = applyFilters(tabFilteredAlerts);
 
   const getSeverityStyle = (severity: string) => {
     switch (severity) {
@@ -88,6 +165,23 @@ const EmployeesAlerts: React.FC = () => {
     }
   };
 
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent"></div>
+        <p className="ml-2">Chargement des alertes...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-red-50 text-red-700 p-4 rounded-md">
+        Une erreur est survenue lors du chargement des alertes.
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Header with actions */}
@@ -97,22 +191,69 @@ const EmployeesAlerts: React.FC = () => {
           <p className="text-gray-500">Suivi des alertes et notifications RH</p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm">
-            <ListFilter className="h-4 w-4 mr-2" />
-            Filtres
-          </Button>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={handleExportData}
-          >
-            <Download className="h-4 w-4 mr-2" />
-            Exporter
-          </Button>
-          <Button size="sm">
-            <Plus className="h-4 w-4 mr-2" />
-            Nouvelle alerte
-          </Button>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" size="sm">
+                <ListFilter className="h-4 w-4 mr-2" />
+                Filtres
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-80">
+              <AlertsFilter 
+                filterCriteria={filterCriteria} 
+                setFilterCriteria={setFilterCriteria} 
+              />
+            </PopoverContent>
+          </Popover>
+          
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" size="sm">
+                <Download className="h-4 w-4 mr-2" />
+                Exporter
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-56">
+              <div className="space-y-2">
+                <h4 className="font-medium">Format d'export</h4>
+                <div className="flex flex-col gap-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => handleExportData('excel')}
+                    className="justify-start"
+                  >
+                    <FileExcel className="h-4 w-4 mr-2" />
+                    Excel (.xlsx)
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => handleExportData('pdf')}
+                    className="justify-start"
+                  >
+                    <FilePdf className="h-4 w-4 mr-2" />
+                    PDF (.pdf)
+                  </Button>
+                </div>
+              </div>
+            </PopoverContent>
+          </Popover>
+          
+          <Dialog open={isCreateAlertOpen} onOpenChange={setIsCreateAlertOpen}>
+            <DialogTrigger asChild>
+              <Button size="sm">
+                <Plus className="h-4 w-4 mr-2" />
+                Nouvelle alerte
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[600px]">
+              <DialogHeader>
+                <DialogTitle>Créer une nouvelle alerte</DialogTitle>
+              </DialogHeader>
+              <CreateAlertDialog onClose={() => setIsCreateAlertOpen(false)} />
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
 
