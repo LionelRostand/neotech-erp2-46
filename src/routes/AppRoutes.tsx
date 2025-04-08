@@ -2,15 +2,15 @@
 import React from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import Login from "@/pages/Login";
-import Dashboard from "@/pages/Dashboard";
-import WelcomePage from "@/pages/WelcomePage";
-import ApplicationsPage from "@/pages/ApplicationsPage";
-import NotFoundPage from "@/pages/NotFoundPage";
+import NotFound from "@/pages/NotFound";
 import InvoicePage from "@/pages/billing/InvoicePage";
 import { useAuth } from "@/hooks/useAuth";
 
 const AppRoutes = () => {
-  const { isAuthenticated } = useAuth();
+  const { currentUser } = useAuth();
+  
+  // Check if user is authenticated
+  const isAuthenticated = !!currentUser;
 
   // If user is not authenticated, redirect to login page for protected routes
   const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -29,7 +29,7 @@ const AppRoutes = () => {
         path="/"
         element={
           <ProtectedRoute>
-            <Dashboard />
+            <div>Dashboard Page</div>
           </ProtectedRoute>
         }
       />
@@ -37,7 +37,7 @@ const AppRoutes = () => {
         path="/welcome"
         element={
           <ProtectedRoute>
-            <WelcomePage />
+            <div>Welcome Page</div>
           </ProtectedRoute>
         }
       />
@@ -45,7 +45,7 @@ const AppRoutes = () => {
         path="/applications"
         element={
           <ProtectedRoute>
-            <ApplicationsPage />
+            <div>Applications Page</div>
           </ProtectedRoute>
         }
       />
@@ -59,7 +59,7 @@ const AppRoutes = () => {
       />
       
       {/* 404 Not found page */}
-      <Route path="*" element={<NotFoundPage />} />
+      <Route path="*" element={<NotFound />} />
     </Routes>
   );
 };
