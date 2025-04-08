@@ -85,7 +85,7 @@ export const updateShipment = async (id: string, shipmentData: Partial<Shipment>
 export const deleteShipment = async (id: string) => {
   try {
     const shipmentFirestore = useFirestore(COLLECTIONS.FREIGHT.SHIPMENTS);
-    await shipmentFirestore.remove(id);  // Utilisez remove au lieu de delete
+    await shipmentFirestore.remove(id);
     
     // Supprimer également les données de suivi associées
     const trackingFirestore = useFirestore(COLLECTIONS.FREIGHT.TRACKING);
@@ -95,7 +95,7 @@ export const deleteShipment = async (id: string) => {
     
     // Supprimer les documents de suivi
     for (const doc of trackingData) {
-      await trackingFirestore.remove(doc.id);  // Utilisez remove au lieu de delete
+      await trackingFirestore.remove(doc.id);
     }
     
     // Supprimer les événements de suivi
@@ -105,7 +105,7 @@ export const deleteShipment = async (id: string) => {
     const eventsData = eventsAll.filter(event => event.shipmentId === id);
     
     for (const event of eventsData) {
-      await eventsFirestore.remove(event.id);  // Utilisez remove au lieu de delete
+      await eventsFirestore.remove(event.id);
     }
     
     toast({

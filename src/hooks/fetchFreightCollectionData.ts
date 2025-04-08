@@ -25,7 +25,7 @@ export async function fetchFreightCollectionData<T>(
       ...doc.data() 
     })) as T[];
   } catch (err: any) {
-    console.error(`Error fetching data from freight/${collectionName}:`, err);
+    console.error(`Error fetching data from ${collectionName}:`, err);
     toast.error(`Erreur lors du chargement des données: ${err.message}`);
     throw err;
   }
@@ -47,7 +47,7 @@ export async function checkFreightCollectionExists(
     
     return !querySnapshot.empty;
   } catch (err: any) {
-    console.error(`Error checking if collection freight/${collectionName} exists:`, err);
+    console.error(`Error checking if collection ${collectionName} exists:`, err);
     return false;
   }
 }
