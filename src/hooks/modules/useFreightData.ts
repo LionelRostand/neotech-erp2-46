@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { collection, getDocs, onSnapshot } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
@@ -12,6 +13,11 @@ export const useFreightData = () => {
   const [trackingEvents, setTrackingEvents] = useState([]);
   const [packageTypes, setPackageTypes] = useState([]);
   const [carriers, setCarriers] = useState([]);
+  const [containers, setContainers] = useState([]);
+  const [documents, setDocuments] = useState([]);
+  const [pricing, setPricing] = useState([]);
+  const [billing, setBilling] = useState([]);
+  const [quotes, setQuotes] = useState([]);
   
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -70,39 +76,85 @@ export const useFreightData = () => {
         setPackages(packagesData);
       });
       
-      // Other collections if they exist
-      if (COLLECTIONS.FREIGHT.TRACKING_EVENTS) {
-        const trackingEventsRef = collection(db, COLLECTIONS.FREIGHT.TRACKING_EVENTS);
-        const unsubTrackingEvents = onSnapshot(trackingEventsRef, (snapshot) => {
-          const trackingEventsData = snapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data()
-          }));
-          setTrackingEvents(trackingEventsData);
-        });
-      }
+      // Carriers collection
+      const carriersRef = collection(db, COLLECTIONS.FREIGHT.CARRIERS);
+      const unsubCarriers = onSnapshot(carriersRef, (snapshot) => {
+        const carriersData = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+        setCarriers(carriersData);
+      });
       
-      if (COLLECTIONS.FREIGHT.PACKAGE_TYPES) {
-        const packageTypesRef = collection(db, COLLECTIONS.FREIGHT.PACKAGE_TYPES);
-        const unsubPackageTypes = onSnapshot(packageTypesRef, (snapshot) => {
-          const packageTypesData = snapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data()
-          }));
-          setPackageTypes(packageTypesData);
-        });
-      }
+      // Tracking Events collection
+      const trackingEventsRef = collection(db, COLLECTIONS.FREIGHT.TRACKING_EVENTS);
+      const unsubTrackingEvents = onSnapshot(trackingEventsRef, (snapshot) => {
+        const trackingEventsData = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+        setTrackingEvents(trackingEventsData);
+      });
       
-      if (COLLECTIONS.FREIGHT.CARRIERS) {
-        const carriersRef = collection(db, COLLECTIONS.FREIGHT.CARRIERS);
-        const unsubCarriers = onSnapshot(carriersRef, (snapshot) => {
-          const carriersData = snapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data()
-          }));
-          setCarriers(carriersData);
-        });
-      }
+      // Package Types collection
+      const packageTypesRef = collection(db, COLLECTIONS.FREIGHT.PACKAGE_TYPES);
+      const unsubPackageTypes = onSnapshot(packageTypesRef, (snapshot) => {
+        const packageTypesData = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+        setPackageTypes(packageTypesData);
+      });
+      
+      // Containers collection
+      const containersRef = collection(db, COLLECTIONS.FREIGHT.CONTAINERS);
+      const unsubContainers = onSnapshot(containersRef, (snapshot) => {
+        const containersData = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+        setContainers(containersData);
+      });
+      
+      // Documents collection
+      const documentsRef = collection(db, COLLECTIONS.FREIGHT.DOCUMENTS);
+      const unsubDocuments = onSnapshot(documentsRef, (snapshot) => {
+        const documentsData = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+        setDocuments(documentsData);
+      });
+      
+      // Pricing collection
+      const pricingRef = collection(db, COLLECTIONS.FREIGHT.PRICING);
+      const unsubPricing = onSnapshot(pricingRef, (snapshot) => {
+        const pricingData = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+        setPricing(pricingData);
+      });
+      
+      // Billing collection
+      const billingRef = collection(db, COLLECTIONS.FREIGHT.BILLING);
+      const unsubBilling = onSnapshot(billingRef, (snapshot) => {
+        const billingData = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+        setBilling(billingData);
+      });
+      
+      // Quotes collection
+      const quotesRef = collection(db, COLLECTIONS.FREIGHT.QUOTES);
+      const unsubQuotes = onSnapshot(quotesRef, (snapshot) => {
+        const quotesData = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+        setQuotes(quotesData);
+      });
       
       setIsLoading(false);
       
@@ -113,16 +165,14 @@ export const useFreightData = () => {
         unsubRoutes();
         unsubDrivers();
         unsubPackages();
-        // Only unsubscribe if they exist
-        if (COLLECTIONS.FREIGHT.TRACKING_EVENTS) {
-          //unsubTrackingEvents();
-        }
-        if (COLLECTIONS.FREIGHT.PACKAGE_TYPES) {
-          //unsubPackageTypes();
-        }
-        if (COLLECTIONS.FREIGHT.CARRIERS) {
-          //unsubCarriers();
-        }
+        unsubCarriers();
+        unsubTrackingEvents();
+        unsubPackageTypes();
+        unsubContainers();
+        unsubDocuments();
+        unsubPricing();
+        unsubBilling();
+        unsubQuotes();
       };
     } catch (err) {
       console.error('Error fetching freight data:', err);
@@ -137,9 +187,14 @@ export const useFreightData = () => {
     routes,
     drivers,
     packages,
+    carriers,
     trackingEvents,
     packageTypes,
-    carriers,
+    containers,
+    documents,
+    pricing,
+    billing,
+    quotes,
     isLoading,
     error
   };

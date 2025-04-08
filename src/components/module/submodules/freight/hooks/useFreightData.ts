@@ -216,3 +216,168 @@ export const usePackageTypes = () => {
 
   return { packageTypes, loading, error };
 };
+
+// Hook pour récupérer les conteneurs
+export const useContainers = () => {
+  const [containers, setContainers] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+  
+  const containersCollection = useFirestore(COLLECTIONS.FREIGHT.CONTAINERS);
+  
+  useEffect(() => {
+    const fetchContainers = async () => {
+      try {
+        setLoading(true);
+        const data = await containersCollection.getAll();
+        setContainers(data);
+      } catch (err) {
+        console.error('Erreur lors de la récupération des conteneurs:', err);
+        setError(err as Error);
+        toast({
+          title: "Erreur",
+          description: "Impossible de charger les conteneurs.",
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchContainers();
+  }, [containersCollection]);
+
+  return { containers, loading, error };
+};
+
+// Hook pour récupérer les documents
+export const useFreightDocuments = () => {
+  const [documents, setDocuments] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+  
+  const documentsCollection = useFirestore(COLLECTIONS.FREIGHT.DOCUMENTS);
+  
+  useEffect(() => {
+    const fetchDocuments = async () => {
+      try {
+        setLoading(true);
+        const data = await documentsCollection.getAll();
+        setDocuments(data);
+      } catch (err) {
+        console.error('Erreur lors de la récupération des documents:', err);
+        setError(err as Error);
+        toast({
+          title: "Erreur",
+          description: "Impossible de charger les documents.",
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDocuments();
+  }, [documentsCollection]);
+
+  return { documents, loading, error };
+};
+
+// Hook pour récupérer les tarifs
+export const usePricing = () => {
+  const [pricing, setPricing] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+  
+  const pricingCollection = useFirestore(COLLECTIONS.FREIGHT.PRICING);
+  
+  useEffect(() => {
+    const fetchPricing = async () => {
+      try {
+        setLoading(true);
+        const data = await pricingCollection.getAll();
+        setPricing(data);
+      } catch (err) {
+        console.error('Erreur lors de la récupération des tarifs:', err);
+        setError(err as Error);
+        toast({
+          title: "Erreur",
+          description: "Impossible de charger les tarifs.",
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPricing();
+  }, [pricingCollection]);
+
+  return { pricing, loading, error };
+};
+
+// Hook pour récupérer la facturation
+export const useBilling = () => {
+  const [billing, setBilling] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+  
+  const billingCollection = useFirestore(COLLECTIONS.FREIGHT.BILLING);
+  
+  useEffect(() => {
+    const fetchBilling = async () => {
+      try {
+        setLoading(true);
+        const data = await billingCollection.getAll();
+        setBilling(data);
+      } catch (err) {
+        console.error('Erreur lors de la récupération de la facturation:', err);
+        setError(err as Error);
+        toast({
+          title: "Erreur",
+          description: "Impossible de charger la facturation.",
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBilling();
+  }, [billingCollection]);
+
+  return { billing, loading, error };
+};
+
+// Hook pour récupérer les devis
+export const useQuotes = () => {
+  const [quotes, setQuotes] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+  
+  const quotesCollection = useFirestore(COLLECTIONS.FREIGHT.QUOTES);
+  
+  useEffect(() => {
+    const fetchQuotes = async () => {
+      try {
+        setLoading(true);
+        const data = await quotesCollection.getAll();
+        setQuotes(data);
+      } catch (err) {
+        console.error('Erreur lors de la récupération des devis:', err);
+        setError(err as Error);
+        toast({
+          title: "Erreur",
+          description: "Impossible de charger les devis.",
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchQuotes();
+  }, [quotesCollection]);
+
+  return { quotes, loading, error };
+};
