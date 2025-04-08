@@ -1,9 +1,42 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { User, Settings, Package, FileText, Ship, Truck } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { User, Settings, Package, FileText, Ship, Truck, Search, MapPin } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import ClientShipmentTracking from './client-portal/ClientShipmentTracking';
+import ClientDocumentsList from './client-portal/ClientDocumentsList';
 
 const FreightClientPortal: React.FC = () => {
+  const [activeTab, setActiveTab] = useState('tracking');
+  const [trackingNumber, setTrackingNumber] = useState('');
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchInitiated, setSearchInitiated] = useState(false);
+  const { toast } = useToast();
+
+  const handleTrackingSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!trackingNumber.trim()) {
+      toast({
+        title: "Numéro manquant",
+        description: "Veuillez entrer un numéro de suivi ou une référence.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    setIsSearching(true);
+    setSearchInitiated(true);
+    
+    // Simulate search delay
+    setTimeout(() => {
+      setIsSearching(false);
+    }, 1000);
+  };
+
   return (
     <div className="space-y-6">
       <Card>
@@ -17,17 +50,62 @@ const FreightClientPortal: React.FC = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex justify-center p-12 text-center">
-            <div className="max-w-md">
-              <Settings className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-              <h3 className="text-lg font-medium mb-2">Portail en développement</h3>
-              <p className="text-muted-foreground">
-                Le portail client pour la gestion des expéditions est en cours de développement. 
-                Cette fonctionnalité permettra à vos clients de suivre leurs expéditions, 
-                consulter leurs factures et gérer leurs préférences.
-              </p>
-            </div>
-          </div>
+          <Tabs 
+            defaultValue="tracking" 
+            value={activeTab}
+            onValueChange={setActiveTab}
+            className="space-y-4"
+          >
+            <TabsList className="grid w-full grid-cols-2 lg:w-[400px]">
+              <TabsTrigger value="tracking">
+                <MapPin className="mr-2 h-4 w-4" />
+                Suivi d'Expédition
+              </TabsTrigger>
+              <TabsTrigger value="documents">
+                <FileText className="mr-2 h-4 w-4" />
+                Documents
+              </TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="tracking" className="space-y-4">
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle>Suivi de votre expédition</CardTitle>
+                  <CardDescription>
+                    Entrez le numéro de suivi ou la référence de votre expédition
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <form onSubmit={handleTrackingSearch} className="flex flex-col space-y-4 md:flex-row md:space-y-0 md:space-x-4">
+                    <div className="relative flex-1">
+                      <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-400" />
+                      <Input
+                        type="search"
+                        placeholder="Numéro de suivi ou référence..."
+                        className="pl-8"
+                        value={trackingNumber}
+                        onChange={(e) => setTrackingNumber(e.target.value)}
+                      />
+                    </div>
+                    <Button type="submit" disabled={isSearching || !trackingNumber.trim()}>
+                      {isSearching ? 'Recherche...' : 'Rechercher'}
+                    </Button>
+                  </form>
+                </CardContent>
+              </Card>
+              
+              {searchInitiated && (
+                <ClientShipmentTracking 
+                  trackingNumber={trackingNumber} 
+                  isLoading={isSearching}
+                />
+              )}
+            </TabsContent>
+            
+            <TabsContent value="documents">
+              <ClientDocumentsList />
+            </TabsContent>
+          </Tabs>
         </CardContent>
       </Card>
 
@@ -41,7 +119,7 @@ const FreightClientPortal: React.FC = () => {
           </CardHeader>
           <CardContent>
             <p className="text-muted-foreground">
-              Permettez à vos clients de suivre leurs expéditions en temps réel avec des mises à jour automatiques.
+              Suivez vos expéditions en temps réel avec des mises à jour automatiques sur la carte.
             </p>
           </CardContent>
         </Card>
