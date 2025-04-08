@@ -72,3 +72,32 @@ export const mockOpportunities: Opportunity[] = [
     title: 'Analyse des besoins'
   }
 ];
+
+// This data can be used to seed the Firestore collection
+// Example code to seed Firestore (to be run once):
+/*
+import { collection, addDoc } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { COLLECTIONS } from '@/lib/firebase-collections';
+
+export const seedOpportunitiesToFirestore = async () => {
+  try {
+    const opportunitiesCollection = collection(db, COLLECTIONS.CRM.OPPORTUNITIES);
+    
+    for (const opportunity of mockOpportunities) {
+      const { id, ...opportunityData } = opportunity;
+      await addDoc(opportunitiesCollection, {
+        ...opportunityData,
+        createdAt: new Date(opportunityData.createdAt),
+        updatedAt: new Date(opportunityData.updatedAt),
+        expectedCloseDate: new Date(opportunityData.expectedCloseDate),
+        nextContact: new Date(opportunityData.nextContact)
+      });
+    }
+    
+    console.log('Seeded opportunities to Firestore successfully');
+  } catch (error) {
+    console.error('Error seeding opportunities to Firestore:', error);
+  }
+};
+*/

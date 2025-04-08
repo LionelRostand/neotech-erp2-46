@@ -1,7 +1,10 @@
+
 import { useCallback, useState } from 'react';
 import { Prospect } from '../../types/crm-types';
-import { mockProspects } from '../../data/mockProspects';
 import { toast } from 'sonner';
+import { COLLECTIONS } from '@/lib/firebase-collections';
+import { fetchCollectionData } from '@/hooks/fetchCollectionData';
+import { where, orderBy, limit, QueryConstraint } from 'firebase/firestore';
 
 export const useProspectData = () => {
   // Status options for prospects
@@ -27,14 +30,22 @@ export const useProspectData = () => {
     { label: 'Autre', value: 'other' }
   ];
 
-  // Fetch prospects from API or use mock data
+  // Fetch prospects from Firestore
   const fetchProspects = useCallback(async (): Promise<Prospect[]> => {
     try {
-      // In a real app, this would be a fetch call to your API
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const constraints: QueryConstraint[] = [
+        orderBy('createdAt', 'desc'),
+        limit(100)
+      ];
       
-      // Return mock data
-      return mockProspects;
+      // Use fetchCollectionData to get data from Firestore
+      const prospects = await fetchCollectionData<Prospect>(
+        COLLECTIONS.CRM.PROSPECTS, 
+        constraints
+      );
+      
+      console.log('Fetched prospects from Firestore:', prospects);
+      return prospects;
     } catch (error) {
       console.error('Error fetching prospects:', error);
       toast.error('Erreur lors du chargement des prospects');
@@ -45,8 +56,6 @@ export const useProspectData = () => {
   // Load prospects function (for compatibility with the old implementation)
   const loadProspects = useCallback(async () => {
     try {
-      // This function is kept for compatibility with the old implementation
-      // that expected a setProspects and setLoading parameters
       return await fetchProspects();
     } catch (error) {
       console.error('Error loading prospects:', error);
@@ -54,9 +63,36 @@ export const useProspectData = () => {
     }
   }, [fetchProspects]);
 
+  // Function to fetch prospects by status
+  const fetchProspectsByStatus = useCallback(async (status: string): Promise<Prospect[]> => {
+    if (status === 'all') {
+      return fetchProspects();
+    }
+    
+    try {
+      const constraints: QueryConstraint[] = [
+        where('status', '==', status),
+        orderBy('createdAt', 'desc'),
+        limit(100)
+      ];
+      
+      const prospects = await fetchCollectionData<Prospect>(
+        COLLECTIONS.CRM.PROSPECTS, 
+        constraints
+      );
+      
+      return prospects;
+    } catch (error) {
+      console.error(`Error fetching prospects with status ${status}:`, error);
+      toast.error('Erreur lors du filtrage des prospects');
+      throw error;
+    }
+  }, [fetchProspects]);
+
   return {
     fetchProspects,
     loadProspects,
+    fetchProspectsByStatus,
     sourceOptions,
     statusOptions
   };

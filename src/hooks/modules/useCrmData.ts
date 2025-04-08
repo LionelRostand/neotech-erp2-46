@@ -1,9 +1,10 @@
 
 import { useEffect, useState, useCallback } from 'react';
-import { collection, query, getDocs, orderBy, limit, where, QueryConstraint } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { where, orderBy, limit, QueryConstraint } from 'firebase/firestore';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import { toast } from 'sonner';
+import { fetchCollectionData } from '@/hooks/fetchCollectionData';
+import { useFirestore } from '@/hooks/useFirestore';
 
 /**
  * Hook to fetch data for the CRM module directly from Firebase
@@ -23,17 +24,7 @@ export const useCrmData = () => {
   // Function to fetch data from a collection
   const fetchCollection = async (collectionPath, constraints = []) => {
     try {
-      const collectionRef = collection(db, collectionPath);
-      const q = constraints.length > 0
-        ? query(collectionRef, ...constraints)
-        : query(collectionRef);
-      
-      const querySnapshot = await getDocs(q);
-      
-      return querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }));
+      return await fetchCollectionData(collectionPath, constraints);
     } catch (err) {
       console.error(`Error fetching ${collectionPath}:`, err);
       throw err;

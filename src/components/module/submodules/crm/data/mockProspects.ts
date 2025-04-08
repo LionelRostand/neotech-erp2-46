@@ -60,3 +60,30 @@ export const mockProspects: Prospect[] = [
     createdAt: '2023-03-10'
   }
 ];
+
+// This data can be used to seed the Firestore collection
+// Example code to seed Firestore (to be run once):
+/*
+import { collection, addDoc } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { COLLECTIONS } from '@/lib/firebase-collections';
+
+export const seedProspectsToFirestore = async () => {
+  try {
+    const prospectsCollection = collection(db, COLLECTIONS.CRM.PROSPECTS);
+    
+    for (const prospect of mockProspects) {
+      const { id, ...prospectData } = prospect;
+      await addDoc(prospectsCollection, {
+        ...prospectData,
+        createdAt: new Date(prospectData.createdAt),
+        updatedAt: new Date()
+      });
+    }
+    
+    console.log('Seeded prospects to Firestore successfully');
+  } catch (error) {
+    console.error('Error seeding prospects to Firestore:', error);
+  }
+};
+*/

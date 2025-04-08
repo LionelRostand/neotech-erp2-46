@@ -1,6 +1,6 @@
 
 import { useState, useEffect, useCallback } from 'react';
-import { doc, getDoc, setDoc, updateDoc, serverTimestamp, collection } from 'firebase/firestore';
+import { doc, getDoc, setDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { toast } from 'sonner';
 import { COLLECTIONS } from '@/lib/firebase-collections';
@@ -35,19 +35,15 @@ export const useCrmSettings = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  // For 'crm/settings' path, we need to use a different approach
-  // We'll use a static document ID for the parent document
-  const crmDocId = 'crm'; // Static document ID for the crm document
   
   // Reference to the settings document
-  const settingsDoc = doc(collection(db, 'crm', crmDocId, 'settings'), 'general');
+  const settingsDocRef = doc(db, COLLECTIONS.CRM.SETTINGS, 'general');
 
   // Fetch settings
   const fetchSettings = useCallback(async () => {
     setLoading(true);
     try {
-      const docSnap = await getDoc(settingsDoc);
+      const docSnap = await getDoc(settingsDocRef);
       
       if (docSnap.exists()) {
         const settingsData = docSnap.data() as CrmSettings;
@@ -56,8 +52,8 @@ export const useCrmSettings = () => {
           ...settingsData
         });
       } else {
-        // Aucun document de paramètres trouvé, créer le document par défaut
-        await setDoc(settingsDoc, {
+        // No settings document found, create default document
+        await setDoc(settingsDocRef, {
           ...defaultSettings,
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp()
@@ -82,7 +78,7 @@ export const useCrmSettings = () => {
   const saveSettings = async (updatedSettings: Partial<CrmSettings>) => {
     setSaving(true);
     try {
-      await updateDoc(settingsDoc, {
+      await updateDoc(settingsDocRef, {
         ...updatedSettings,
         updatedAt: serverTimestamp()
       });
