@@ -1,6 +1,50 @@
 
 import { TrackingEvent, GeoLocation } from '@/types/freight';
 
+// Mock locations data for testing and development
+export const mockLocations: GeoLocation[] = [
+  {
+    latitude: 48.856614,
+    longitude: 2.3522219,
+    address: "12 Rue de Rivoli",
+    city: "Paris",
+    country: "France",
+    postalCode: "75001"
+  },
+  {
+    latitude: 51.5074,
+    longitude: -0.1278,
+    address: "10 Downing Street",
+    city: "London",
+    country: "United Kingdom",
+    postalCode: "SW1A 2AA"
+  },
+  {
+    latitude: 40.7128,
+    longitude: -74.0060,
+    address: "350 Fifth Avenue",
+    city: "New York",
+    country: "United States",
+    postalCode: "10118"
+  },
+  {
+    latitude: 35.6762,
+    longitude: 139.6503,
+    address: "1-1 Chiyoda",
+    city: "Tokyo",
+    country: "Japan",
+    postalCode: "100-8111"
+  },
+  {
+    latitude: 52.5200,
+    longitude: 13.4050,
+    address: "Unter den Linden 77",
+    city: "Berlin",
+    country: "Germany",
+    postalCode: "10117"
+  }
+];
+
 export function getLatestLocationFromEvents(events: TrackingEvent[]): GeoLocation | undefined {
   if (!events || events.length === 0) return undefined;
   

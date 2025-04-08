@@ -1,5 +1,5 @@
 
-import { TrackingEvent, PackageStatus } from '@/types/freight';
+import { TrackingEvent, PackageStatus, Package } from '@/types/freight';
 
 export function formatPackageStatus(status: string): string {
   const statusLabels: Record<string, string> = {
@@ -77,4 +77,101 @@ export function getTrackingEventsByTrackingNumber(trackingNumber: string): Track
   // Dans une vraie application, cette fonction rechercherait dans la base de données
   // les événements de suivi associés à un numéro de suivi
   return getPackageTrackingEvents("mock-package-id");
+}
+
+// Mock packages data for demonstration
+const mockPackages: Package[] = [
+  {
+    id: "pkg1",
+    reference: "TRK123456789",
+    description: "Colis express international",
+    weight: 2.5,
+    weightUnit: "kg",
+    dimensions: {
+      length: 30,
+      width: 20,
+      height: 15,
+      unit: "cm"
+    },
+    declaredValue: 150,
+    currency: "EUR",
+    contents: "Documents et échantillons",
+    packageType: "box",
+    carrierId: "carrier1",
+    carrierName: "DHL",
+    trackingNumber: "TRK123456789",
+    status: "in_transit",
+    labelGenerated: true,
+    labelUrl: "https://example.com/label/TRK123456789",
+    createdAt: new Date(Date.now() - 345600000).toISOString(), // 4 days ago
+    documents: []
+  },
+  {
+    id: "pkg2",
+    reference: "PKG987654321",
+    description: "Colis standard",
+    weight: 5,
+    weightUnit: "kg",
+    dimensions: {
+      length: 40,
+      width: 30,
+      height: 25,
+      unit: "cm"
+    },
+    packageType: "box",
+    carrierId: "carrier2",
+    carrierName: "FedEx",
+    trackingNumber: "PKG987654321",
+    status: "delivered",
+    labelGenerated: true,
+    createdAt: new Date(Date.now() - 604800000).toISOString(), // 7 days ago
+    documents: []
+  },
+  {
+    id: "pkg3",
+    reference: "TRK202301001",
+    description: "Documents urgents",
+    weight: 0.5,
+    weightUnit: "kg",
+    packageType: "envelope",
+    carrierId: "carrier3",
+    carrierName: "UPS",
+    trackingNumber: "TRK202301001",
+    status: "processing",
+    labelGenerated: false,
+    createdAt: new Date(Date.now() - 86400000).toISOString(), // 1 day ago
+    documents: []
+  },
+  {
+    id: "pkg4",
+    reference: "PKG202302002",
+    description: "Colis fragile",
+    weight: 3.5,
+    weightUnit: "kg",
+    dimensions: {
+      length: 50,
+      width: 40,
+      height: 20,
+      unit: "cm"
+    },
+    declaredValue: 350,
+    currency: "EUR",
+    contents: "Équipement électronique",
+    packageType: "fragile",
+    shipmentId: "ship123",
+    carrierId: "carrier4",
+    carrierName: "La Poste",
+    trackingNumber: "PKG202302002",
+    status: "ready",
+    labelGenerated: true,
+    createdAt: new Date(Date.now() - 172800000).toISOString(), // 2 days ago
+    documents: []
+  }
+];
+
+// Function to get a package by its tracking number
+export function getPackageByTrackingNumber(trackingNumber: string): Package | undefined {
+  return mockPackages.find(
+    pkg => pkg.trackingNumber === trackingNumber || pkg.reference === trackingNumber
+  );
 }
