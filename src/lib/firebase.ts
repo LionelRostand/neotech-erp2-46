@@ -2,7 +2,7 @@
 // Firebase lite implementation for development
 import { initializeApp } from 'firebase/app';
 import { getFirestore } from 'firebase/firestore';
-import { getAuth, Auth } from 'firebase/auth';
+import { getAuth, Auth, UserCredential, AuthError } from 'firebase/auth';
 
 // Firebase configuration - updated with new credentials
 const firebaseConfig = {
@@ -21,6 +21,39 @@ const app = initializeApp(firebaseConfig);
 const firestore = getFirestore(app);
 const firebaseAuth = getAuth(app);
 
+// Custom implementation for signInWithEmailAndPassword
+const mockSignInWithEmailAndPassword = async (auth: Auth, email: string, password: string): Promise<UserCredential> => {
+  // For development, check the hardcoded credentials
+  if (email === 'admin@neotech-consulting.com' && password === 'AaronEnzo2511@') {
+    return {
+      user: {
+        uid: 'admin-user-id',
+        email: 'admin@neotech-consulting.com',
+        displayName: 'Admin User',
+        emailVerified: true,
+        isAnonymous: false,
+        metadata: {},
+        providerData: [],
+        refreshToken: '',
+        tenantId: null,
+        delete: async () => Promise.resolve(),
+        getIdToken: async () => 'mock-token',
+        getIdTokenResult: async () => ({ token: 'mock-token', claims: {}, expirationTime: '', issuedAtTime: '', authTime: '', signInProvider: null, signInSecondFactor: null }),
+        reload: async () => Promise.resolve(),
+        toJSON: () => ({}),
+        phoneNumber: null,
+        photoURL: null,
+        providerId: 'password',
+      }
+    } as UserCredential;
+  }
+  
+  // Simulate wrong password error
+  const error = new Error('auth/wrong-password') as AuthError;
+  error.code = 'auth/wrong-password';
+  throw error;
+};
+
 // Mock authentication for development
 const auth: Auth = {
   ...firebaseAuth,
@@ -35,19 +68,7 @@ const auth: Auth = {
     callback(mockUser);
     return () => {};
   },
-  signInWithEmailAndPassword: async (email: string, password: string) => {
-    // For development, check the hardcoded credentials
-    if (email === 'admin@neotech-consulting.com' && password === 'AaronEnzo2511@') {
-      return {
-        user: {
-          uid: 'admin-user-id',
-          email: 'admin@neotech-consulting.com',
-          displayName: 'Admin User'
-        }
-      };
-    }
-    throw new Error('auth/wrong-password');
-  },
+  signInWithEmailAndPassword: mockSignInWithEmailAndPassword,
   createUserWithEmailAndPassword: async () => ({ user: null } as any),
   signOut: async () => {},
 } as Auth;
