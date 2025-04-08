@@ -10,6 +10,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { Loader2 } from 'lucide-react';
 import { Shipment } from '@/types/freight';
 
 interface ShipmentDeleteDialogProps {
@@ -17,13 +18,15 @@ interface ShipmentDeleteDialogProps {
   onClose: () => void;
   shipment: Shipment;
   onConfirm: () => void;
+  isDeleting?: boolean;
 }
 
 const ShipmentDeleteDialog: React.FC<ShipmentDeleteDialogProps> = ({ 
   isOpen, 
   onClose, 
   shipment, 
-  onConfirm 
+  onConfirm,
+  isDeleting = false
 }) => {
   return (
     <AlertDialog open={isOpen} onOpenChange={onClose}>
@@ -36,11 +39,13 @@ const ShipmentDeleteDialog: React.FC<ShipmentDeleteDialogProps> = ({
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>Annuler</AlertDialogCancel>
+          <AlertDialogCancel disabled={isDeleting}>Annuler</AlertDialogCancel>
           <AlertDialogAction
             className="bg-red-600 hover:bg-red-700"
             onClick={onConfirm}
+            disabled={isDeleting}
           >
+            {isDeleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Supprimer
           </AlertDialogAction>
         </AlertDialogFooter>

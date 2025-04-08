@@ -10,15 +10,16 @@ import {
 } from '@/components/ui/table';
 import StatusBadge from '@/components/StatusBadge';
 import { Shipment } from '@/types/freight';
-import { mockShipments } from './mockData';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { Button } from '@/components/ui/button';
-import { Eye, FileEdit, Trash2 } from 'lucide-react';
+import { Eye, FileEdit, Trash2, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import ShipmentViewDialog from './ShipmentViewDialog';
 import ShipmentEditDialog from './ShipmentEditDialog';
 import ShipmentDeleteDialog from './ShipmentDeleteDialog';
+import { useShipments } from './hooks/useShipments';
+import { deleteShipment } from './services/shipmentService';
 
 interface ShipmentListProps {
   filter: 'all' | 'ongoing' | 'delivered' | 'delayed';
@@ -26,13 +27,14 @@ interface ShipmentListProps {
 
 const ShipmentList: React.FC<ShipmentListProps> = ({ filter }) => {
   const { toast } = useToast();
-  const [shipments, setShipments] = useState<Shipment[]>(mockShipments);
+  const { shipments, isLoading, error } = useShipments(filter);
   
   // États pour les dialogues
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedShipment, setSelectedShipment] = useState<Shipment | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   
   const getStatusColor = (status: string): "success" | "warning" | "danger" => {
     switch (status) {
@@ -60,15 +62,6 @@ const ShipmentList: React.FC<ShipmentListProps> = ({ filter }) => {
       default: return status || 'Inconnu';
     }
   };
-
-  // Filtrer les expéditions en fonction du filtre sélectionné
-  const filteredShipments = shipments.filter(shipment => {
-    if (filter === 'all') return true;
-    if (filter === 'ongoing') return ['confirmed', 'in_transit'].includes(shipment.status);
-    if (filter === 'delivered') return shipment.status === 'delivered';
-    if (filter === 'delayed') return shipment.status === 'delayed';
-    return true;
-  });
   
   const handleViewShipment = (shipment: Shipment) => {
     setSelectedShipment(shipment);
@@ -85,26 +78,48 @@ const ShipmentList: React.FC<ShipmentListProps> = ({ filter }) => {
     setDeleteDialogOpen(true);
   };
   
-  const confirmDeleteShipment = () => {
+  const confirmDeleteShipment = async () => {
     if (selectedShipment) {
-      const updatedShipments = shipments.filter(s => s.id !== selectedShipment.id);
-      setShipments(updatedShipments);
-      
-      toast({
-        title: "Expédition supprimée",
-        description: `L'expédition ${selectedShipment.reference} a été supprimée avec succès.`,
-      });
-      
-      setDeleteDialogOpen(false);
+      setIsDeleting(true);
+      try {
+        await deleteShipment(selectedShipment.id);
+        
+        toast({
+          title: "Expédition supprimée",
+          description: `L'expédition ${selectedShipment.reference} a été supprimée avec succès.`,
+        });
+        
+        setDeleteDialogOpen(false);
+      } catch (error) {
+        console.error("Erreur lors de la suppression:", error);
+        toast({
+          title: "Erreur",
+          description: "Une erreur est survenue lors de la suppression de l'expédition.",
+          variant: "destructive",
+        });
+      } finally {
+        setIsDeleting(false);
+      }
     }
   };
   
-  const handleSaveShipment = (updatedShipment: Shipment) => {
-    const updatedShipments = shipments.map(s => 
-      s.id === updatedShipment.id ? updatedShipment : s
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <span className="ml-2 text-gray-500">Chargement des expéditions...</span>
+      </div>
     );
-    setShipments(updatedShipments);
-  };
+  }
+
+  if (error) {
+    return (
+      <div className="rounded-md bg-red-50 p-6 text-center">
+        <p className="text-red-600">Une erreur est survenue lors du chargement des expéditions.</p>
+        <p className="text-sm text-red-500 mt-1">{error.message}</p>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -123,8 +138,8 @@ const ShipmentList: React.FC<ShipmentListProps> = ({ filter }) => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredShipments.length > 0 ? (
-              filteredShipments.map((shipment) => (
+            {shipments.length > 0 ? (
+              shipments.map((shipment) => (
                 <TableRow key={shipment.id}>
                   <TableCell className="font-medium">{shipment.reference}</TableCell>
                   <TableCell>{shipment.customer}</TableCell>
@@ -132,7 +147,9 @@ const ShipmentList: React.FC<ShipmentListProps> = ({ filter }) => {
                   <TableCell>{shipment.destination}</TableCell>
                   <TableCell>{shipment.carrierName}</TableCell>
                   <TableCell>
-                    {format(new Date(shipment.scheduledDate), 'dd MMM yyyy', { locale: fr })}
+                    {shipment.scheduledDate ? 
+                      format(new Date(shipment.scheduledDate), 'dd MMM yyyy', { locale: fr }) : 
+                      'Non planifiée'}
                   </TableCell>
                   <TableCell>
                     <StatusBadge status={getStatusColor(shipment.status)}>
@@ -192,7 +209,6 @@ const ShipmentList: React.FC<ShipmentListProps> = ({ filter }) => {
           isOpen={editDialogOpen}
           onClose={() => setEditDialogOpen(false)}
           shipment={selectedShipment}
-          onSave={handleSaveShipment}
         />
       )}
       
@@ -203,6 +219,7 @@ const ShipmentList: React.FC<ShipmentListProps> = ({ filter }) => {
           onClose={() => setDeleteDialogOpen(false)}
           shipment={selectedShipment}
           onConfirm={confirmDeleteShipment}
+          isDeleting={isDeleting}
         />
       )}
     </>
