@@ -29,7 +29,9 @@ export const useProspectActions = (
         website: data.website,
         address: data.address,
         size: data.size,
-        estimatedValue: data.estimatedValue,
+        estimatedValue: typeof data.estimatedValue === 'string' ? 
+          parseFloat(data.estimatedValue) || 0 : 
+          (data.estimatedValue || 0),
         notes: data.notes,
         createdAt: new Date().toISOString()
       };
@@ -62,6 +64,10 @@ export const useProspectActions = (
             updatedProspect = {
               ...prospect,
               ...data,
+              // Handle estimatedValue conversion
+              estimatedValue: typeof data.estimatedValue === 'string' ? 
+                parseFloat(data.estimatedValue) || 0 : 
+                (data.estimatedValue !== undefined ? data.estimatedValue : prospect.estimatedValue),
               status: (data.status as Prospect['status']) || prospect.status
             };
             return updatedProspect;

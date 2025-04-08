@@ -48,6 +48,7 @@ export interface Prospect {
   createdAt: string;
   updatedAt?: string;
   convertedAt?: string;
+  convertedToClientId?: string;
 }
 
 export interface Opportunity {
@@ -72,6 +73,7 @@ export interface Opportunity {
   assignedTo?: string;
   ownerName?: string; // Allow owner data to be stored
   nextContact?: string;
+  title?: string;
 }
 
 export interface ProspectFormData {
@@ -125,6 +127,7 @@ export interface OpportunityFormData {
   assignedTo?: string;
   ownerName?: string;
   nextContact?: string;
+  title?: string;
 }
 
 export interface ReminderData {
