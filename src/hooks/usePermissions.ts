@@ -76,6 +76,7 @@ export const usePermissions = (moduleId?: string) => {
     isAdmin,
     loading,
     checkPermission,
-    hasPermission
+    hasPermission,
+    isOffline // Add isOffline to the return object
   };
 };
