@@ -17,6 +17,7 @@ export const useFreightData = () => {
   const [pricing, setPricing] = useState([]);
   const [billing, setBilling] = useState([]);
   const [quotes, setQuotes] = useState<Quote[]>([]);
+  const [invoices, setInvoices] = useState<Invoice[]>([]);
   
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
@@ -78,6 +79,10 @@ export const useFreightData = () => {
         // Quotes collection
         const quotesData = await fetchFreightCollectionData<Quote>('QUOTES');
         setQuotes(quotesData);
+
+        // Invoices collection
+        const invoicesData = await fetchFreightCollectionData<Invoice>('BILLING');
+        setInvoices(invoicesData);
         
         setIsLoading(false);
       } catch (err) {
@@ -104,6 +109,7 @@ export const useFreightData = () => {
     pricing,
     billing,
     quotes,
+    invoices,
     isLoading,
     error
   };
