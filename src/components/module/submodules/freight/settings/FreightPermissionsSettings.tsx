@@ -1,85 +1,214 @@
 
-import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Shield, Search, UserPlus, Save, AlertTriangle, RefreshCw } from "lucide-react";
-import { toast } from 'sonner';
-import { useEmployeesPermissions } from '@/hooks/useEmployeesPermissions';
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Search } from "lucide-react";
+import { toast } from "sonner";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useEmployeeData } from "@/hooks/useEmployeeData";
+import { useCollectionData } from "@/hooks/useCollectionData";
+import { COLLECTIONS } from "@/lib/firebase-collections";
+import { collection, doc, setDoc, updateDoc } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 
-// List of Freight submodules for permissions
-const freightModules = [
-  { id: 'freight-shipments', name: 'Expéditions' },
-  { id: 'freight-packages', name: 'Colis' },
-  { id: 'freight-tracking', name: 'Suivi' },
-  { id: 'freight-documents', name: 'Documents' },
-  { id: 'freight-carriers', name: 'Transporteurs' },
-  { id: 'freight-pricing', name: 'Tarification' },
-  { id: 'freight-client-portal', name: 'Portail Client' },
-  { id: 'freight-settings', name: 'Paramètres' },
-];
+// Define the permission structure
+interface Permission {
+  view: boolean;
+  create: boolean;
+  edit: boolean;
+  delete: boolean;
+}
+
+// Define the employee with permissions structure
+interface EmployeeWithPermissions {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  role?: string;
+  department?: string;
+  permissions?: {
+    [key: string]: Permission;
+  };
+}
 
 const FreightPermissionsSettings: React.FC = () => {
-  const { employees, isLoading, error, updateEmployeePermissions } = useEmployeesPermissions();
-  const [searchTerm, setSearchTerm] = useState('');
+  const { employees, isLoading: isEmployeesLoading } = useEmployeeData();
+  const [filteredEmployees, setFilteredEmployees] = useState<EmployeeWithPermissions[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
   const [saving, setSaving] = useState(false);
-
-  // Filter employees by search term
-  const filteredEmployees = employees.filter(emp => 
-    `${emp.firstName} ${emp.lastName}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    emp.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (emp.role && emp.role.toLowerCase().includes(searchTerm.toLowerCase()))
+  
+  // Fetch existing freight permissions if available
+  const { data: freightPermissions, isLoading: isPermissionsLoading } = useCollectionData(
+    COLLECTIONS.USER_PERMISSIONS
   );
+  
+  // Define freight submodules for permissions
+  const freightSubmodules = [
+    { id: "freight-shipments", name: "Expéditions" },
+    { id: "freight-containers", name: "Conteneurs" },
+    { id: "freight-carriers", name: "Transporteurs" },
+    { id: "freight-tracking", name: "Suivi" },
+    { id: "freight-pricing", name: "Tarification" },
+    { id: "freight-documents", name: "Documents" },
+    { id: "freight-client-portal", name: "Portail client" }
+  ];
 
-  // Handle permission change
-  const handlePermissionChange = (employeeId: string, moduleId: string, action: 'view' | 'create' | 'edit' | 'delete', checked: boolean) => {
-    const employee = employees.find(emp => emp.id === employeeId);
-    if (!employee) return;
+  // Combine employees and permissions data
+  useEffect(() => {
+    if (!employees || isEmployeesLoading) return;
 
-    const currentPermissions = employee.permissions?.[moduleId] || { view: false, create: false, edit: false, delete: false };
-    updateEmployeePermissions(employeeId, moduleId, {
-      ...currentPermissions,
-      [action]: checked
+    const employeesWithPermissions = employees.map(employee => {
+      const userPermission = freightPermissions?.find(
+        (p: any) => p.userId === employee.id
+      );
+      
+      return {
+        ...employee,
+        permissions: userPermission?.permissions || {}
+      };
     });
+
+    if (searchTerm) {
+      const lowerSearchTerm = searchTerm.toLowerCase();
+      setFilteredEmployees(
+        employeesWithPermissions.filter(
+          emp => 
+            emp.firstName?.toLowerCase().includes(lowerSearchTerm) ||
+            emp.lastName?.toLowerCase().includes(lowerSearchTerm) ||
+            emp.email?.toLowerCase().includes(lowerSearchTerm) ||
+            emp.role?.toLowerCase().includes(lowerSearchTerm) ||
+            emp.department?.toLowerCase().includes(lowerSearchTerm)
+        )
+      );
+    } else {
+      setFilteredEmployees(employeesWithPermissions);
+    }
+  }, [employees, freightPermissions, searchTerm, isEmployeesLoading]);
+
+  // Toggle individual permission
+  const togglePermission = (
+    employeeId: string, 
+    moduleId: string, 
+    permission: keyof Permission
+  ) => {
+    setFilteredEmployees(prevEmployees => 
+      prevEmployees.map(emp => {
+        if (emp.id === employeeId) {
+          const currentPermissions = emp.permissions || {};
+          const modulePermissions = currentPermissions[moduleId] || { 
+            view: false, 
+            create: false, 
+            edit: false, 
+            delete: false 
+          };
+          
+          return {
+            ...emp,
+            permissions: {
+              ...currentPermissions,
+              [moduleId]: {
+                ...modulePermissions,
+                [permission]: !modulePermissions[permission]
+              }
+            }
+          };
+        }
+        return emp;
+      })
+    );
   };
 
-  // Handle save all permissions
-  const handleSaveAll = async () => {
+  // Set all permissions for a module
+  const setAllPermissions = (employeeId: string, moduleId: string, value: boolean) => {
+    setFilteredEmployees(prevEmployees => 
+      prevEmployees.map(emp => {
+        if (emp.id === employeeId) {
+          const currentPermissions = emp.permissions || {};
+          
+          return {
+            ...emp,
+            permissions: {
+              ...currentPermissions,
+              [moduleId]: {
+                view: value,
+                create: value,
+                edit: value,
+                delete: value
+              }
+            }
+          };
+        }
+        return emp;
+      })
+    );
+  };
+
+  // Save permissions to Firestore
+  const savePermissions = async () => {
     setSaving(true);
+    let successCount = 0;
+    let errorCount = 0;
+    
     try {
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      toast.success('Toutes les permissions ont été enregistrées');
-    } catch (err) {
-      toast.error('Erreur lors de l\'enregistrement des permissions');
+      for (const employee of filteredEmployees) {
+        if (!employee.permissions) continue;
+        
+        const permissionRef = doc(db, COLLECTIONS.USER_PERMISSIONS, employee.id);
+        
+        try {
+          // Check if permissions document exists for this user
+          const existingPermission = freightPermissions?.find((p: any) => p.userId === employee.id);
+          
+          if (existingPermission) {
+            // Update existing permissions
+            await updateDoc(permissionRef, {
+              permissions: employee.permissions
+            });
+          } else {
+            // Create new permissions document
+            await setDoc(permissionRef, {
+              userId: employee.id,
+              permissions: employee.permissions
+            });
+          }
+          
+          successCount++;
+        } catch (error) {
+          console.error(`Error saving permissions for ${employee.firstName} ${employee.lastName}:`, error);
+          errorCount++;
+        }
+      }
+      
+      if (errorCount === 0) {
+        toast.success(`Permissions enregistrées avec succès pour ${successCount} employés`);
+      } else {
+        toast.error(`Erreur lors de l'enregistrement des permissions pour ${errorCount} employés. ${successCount} employés mis à jour avec succès.`);
+      }
+    } catch (error) {
+      console.error("Error saving permissions:", error);
+      toast.error("Une erreur est survenue lors de l'enregistrement des permissions");
     } finally {
       setSaving(false);
     }
   };
 
-  if (isLoading) {
+  // Render loading state
+  if (isEmployeesLoading || isPermissionsLoading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin mr-2 h-6 w-6 border-2 border-primary border-t-transparent rounded-full"></div>
-        <span>Chargement des données employés...</span>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <Card className="border-destructive">
+      <Card>
         <CardContent className="p-6">
-          <div className="flex flex-col items-center justify-center text-center">
-            <AlertTriangle className="h-12 w-12 text-destructive mb-4" />
-            <h3 className="text-lg font-medium mb-2">Erreur de chargement</h3>
-            <p className="text-sm text-muted-foreground mb-4">{error}</p>
-            <Button variant="outline" onClick={() => window.location.reload()}>
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Réessayer
-            </Button>
+          <div className="space-y-4">
+            <Skeleton className="h-8 w-full" />
+            <Skeleton className="h-8 w-3/4" />
+            <div className="space-y-2">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <Skeleton key={i} className="h-10 w-full" />
+              ))}
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -87,157 +216,144 @@ const FreightPermissionsSettings: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <div className="flex items-center gap-2">
-            <Shield className="h-5 w-5 text-blue-600" />
-            <CardTitle>Gestion des droits d'accès</CardTitle>
+    <Card>
+      <CardContent className="p-6">
+        <div className="space-y-4">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-medium">Droits d'accès au Module Fret</h3>
+            <Button onClick={savePermissions} disabled={saving}>
+              {saving ? "Enregistrement..." : "Enregistrer les modifications"}
+            </Button>
           </div>
-          <CardDescription>
-            Configurez les permissions des utilisateurs pour le module de gestion de fret
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {employees.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-8">
-              <AlertTriangle className="h-12 w-12 text-yellow-500 mb-4" />
-              <h3 className="text-lg font-medium mb-2">Aucun employé trouvé</h3>
-              <p className="text-center text-muted-foreground mb-4">
-                Aucun employé n'a été trouvé dans la base de données.
-                Ajoutez des employés pour commencer à configurer les accès.
-              </p>
-              <Button>
-                <UserPlus className="h-4 w-4 mr-2" />
-                Ajouter un employé
-              </Button>
-            </div>
-          ) : (
-            <>
-              <div className="flex items-center mb-6">
-                <div className="relative flex-1">
-                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Rechercher un employé..."
-                    className="pl-8"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                  />
-                </div>
-                <Button variant="outline" className="ml-4">
-                  <UserPlus className="h-4 w-4 mr-2" />
-                  Ajouter un utilisateur
-                </Button>
-              </div>
-
-              <div className="border rounded-md">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="w-[250px]">Employé</TableHead>
-                      <TableHead>Module</TableHead>
-                      <TableHead className="text-center">Visualisation</TableHead>
-                      <TableHead className="text-center">Création</TableHead>
-                      <TableHead className="text-center">Modification</TableHead>
-                      <TableHead className="text-center">Suppression</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredEmployees.length === 0 ? (
-                      <TableRow>
-                        <TableCell colSpan={6} className="text-center py-6">
-                          Aucun employé trouvé avec ces critères de recherche
-                        </TableCell>
-                      </TableRow>
-                    ) : (
-                      filteredEmployees.map((employee) => (
-                        <React.Fragment key={employee.id}>
-                          {/* Employee row */}
-                          <TableRow className="bg-muted/30">
-                            <TableCell className="font-medium">
-                              {employee.firstName} {employee.lastName}
-                              <div className="text-xs text-muted-foreground">
-                                {employee.email} • {employee.role || "Utilisateur"}
+          
+          <div className="relative mb-4">
+            <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Rechercher un employé..."
+              className="pl-8"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+          
+          <div className="rounded-md border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-[250px]">Employé</TableHead>
+                  {freightSubmodules.map((module) => (
+                    <TableHead key={module.id}>{module.name}</TableHead>
+                  ))}
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredEmployees.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={freightSubmodules.length + 1} className="text-center py-4">
+                      Aucun employé trouvé
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  filteredEmployees.map((employee) => (
+                    <TableRow key={employee.id}>
+                      <TableCell className="font-medium">
+                        <div>
+                          {employee.firstName} {employee.lastName}
+                        </div>
+                        <div className="text-xs text-muted-foreground">{employee.email}</div>
+                      </TableCell>
+                      
+                      {freightSubmodules.map((module) => {
+                        const modulePermissions = employee.permissions?.[module.id] || {
+                          view: false,
+                          create: false,
+                          edit: false,
+                          delete: false
+                        };
+                        
+                        return (
+                          <TableCell key={`${employee.id}-${module.id}`}>
+                            <div className="space-y-1">
+                              <div className="flex justify-between items-center mb-2">
+                                <span className="text-xs font-medium">{module.name}</span>
+                                <div className="space-x-1">
+                                  <Button 
+                                    variant="outline" 
+                                    size="sm" 
+                                    className="h-6 text-xs"
+                                    onClick={() => setAllPermissions(employee.id, module.id, true)}
+                                  >
+                                    Tous
+                                  </Button>
+                                  <Button 
+                                    variant="outline" 
+                                    size="sm" 
+                                    className="h-6 text-xs"
+                                    onClick={() => setAllPermissions(employee.id, module.id, false)}
+                                  >
+                                    Aucun
+                                  </Button>
+                                </div>
                               </div>
-                            </TableCell>
-                            <TableCell colSpan={5}></TableCell>
-                          </TableRow>
-
-                          {/* Module rows */}
-                          {freightModules.map(module => {
-                            const permissions = employee.permissions?.[module.id] || { 
-                              view: false, 
-                              create: false, 
-                              edit: false, 
-                              delete: false 
-                            };
-                            
-                            return (
-                              <TableRow key={`${employee.id}-${module.id}`}>
-                                <TableCell></TableCell>
-                                <TableCell>{module.name}</TableCell>
-                                <TableCell className="text-center">
+                              
+                              <div className="grid grid-cols-2 gap-1">
+                                <div className="flex items-center space-x-2">
                                   <Checkbox 
-                                    checked={permissions.view}
-                                    onCheckedChange={(checked) => 
-                                      handlePermissionChange(employee.id, module.id, 'view', !!checked)
-                                    }
+                                    id={`${employee.id}-${module.id}-view`}
+                                    checked={modulePermissions.view}
+                                    onCheckedChange={() => togglePermission(employee.id, module.id, "view")}
                                   />
-                                </TableCell>
-                                <TableCell className="text-center">
+                                  <label htmlFor={`${employee.id}-${module.id}-view`} className="text-xs">
+                                    Lecture
+                                  </label>
+                                </div>
+                                
+                                <div className="flex items-center space-x-2">
                                   <Checkbox 
-                                    checked={permissions.create}
-                                    onCheckedChange={(checked) => 
-                                      handlePermissionChange(employee.id, module.id, 'create', !!checked)
-                                    }
+                                    id={`${employee.id}-${module.id}-create`}
+                                    checked={modulePermissions.create}
+                                    onCheckedChange={() => togglePermission(employee.id, module.id, "create")}
                                   />
-                                </TableCell>
-                                <TableCell className="text-center">
+                                  <label htmlFor={`${employee.id}-${module.id}-create`} className="text-xs">
+                                    Création
+                                  </label>
+                                </div>
+                                
+                                <div className="flex items-center space-x-2">
                                   <Checkbox 
-                                    checked={permissions.edit}
-                                    onCheckedChange={(checked) => 
-                                      handlePermissionChange(employee.id, module.id, 'edit', !!checked)
-                                    }
+                                    id={`${employee.id}-${module.id}-edit`}
+                                    checked={modulePermissions.edit}
+                                    onCheckedChange={() => togglePermission(employee.id, module.id, "edit")}
                                   />
-                                </TableCell>
-                                <TableCell className="text-center">
+                                  <label htmlFor={`${employee.id}-${module.id}-edit`} className="text-xs">
+                                    Modification
+                                  </label>
+                                </div>
+                                
+                                <div className="flex items-center space-x-2">
                                   <Checkbox 
-                                    checked={permissions.delete}
-                                    onCheckedChange={(checked) => 
-                                      handlePermissionChange(employee.id, module.id, 'delete', !!checked)
-                                    }
+                                    id={`${employee.id}-${module.id}-delete`}
+                                    checked={modulePermissions.delete}
+                                    onCheckedChange={() => togglePermission(employee.id, module.id, "delete")}
                                   />
-                                </TableCell>
-                              </TableRow>
-                            );
-                          })}
-                        </React.Fragment>
-                      ))
-                    )}
-                  </TableBody>
-                </Table>
-              </div>
-
-              <div className="flex justify-end mt-6">
-                <Button onClick={handleSaveAll} disabled={saving}>
-                  {saving ? (
-                    <>
-                      <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-                      Enregistrement...
-                    </>
-                  ) : (
-                    <>
-                      <Save className="mr-2 h-4 w-4" />
-                      Enregistrer les modifications
-                    </>
-                  )}
-                </Button>
-              </div>
-            </>
-          )}
-        </CardContent>
-      </Card>
-    </div>
+                                  <label htmlFor={`${employee.id}-${module.id}-delete`} className="text-xs">
+                                    Suppression
+                                  </label>
+                                </div>
+                              </div>
+                            </div>
+                          </TableCell>
+                        );
+                      })}
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 };
 

@@ -1,197 +1,276 @@
 
-import React, { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
-import { Save, Settings, RefreshCw, Globe, Truck } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { Separator } from "@/components/ui/separator";
+import { toast } from "sonner";
+import { doc, getDoc, setDoc } from "firebase/firestore";
+import { db } from "@/lib/firebase";
+import { COLLECTIONS } from "@/lib/firebase-collections";
+
+interface FreightSettings {
+  id?: string;
+  defaultTrackingEmail: string;
+  defaultCarrier: string;
+  enableAutomaticNotifications: boolean;
+  clientPortalAccess: boolean;
+  defaultShippingMethod: string;
+  weightUnit: 'kg' | 'lb';
+  distanceUnit: 'km' | 'mi';
+  requireShippingInsurance: boolean;
+  requireSignatureOnDelivery: boolean;
+  updatedAt?: Date;
+}
 
 const FreightGeneralSettings: React.FC = () => {
-  const { toast } = useToast();
-  const [saving, setSaving] = useState(false);
+  const [settings, setSettings] = useState<FreightSettings>({
+    defaultTrackingEmail: '',
+    defaultCarrier: '',
+    enableAutomaticNotifications: true,
+    clientPortalAccess: true,
+    defaultShippingMethod: 'standard',
+    weightUnit: 'kg',
+    distanceUnit: 'km',
+    requireShippingInsurance: false,
+    requireSignatureOnDelivery: true
+  });
   
-  // State for form fields
-  const [companyName, setCompanyName] = useState("NeoTech Freight");
-  const [emailContact, setEmailContact] = useState("freight@neotech.com");
-  const [phoneNumber, setPhoneNumber] = useState("01 23 45 67 89");
-  const [defaultLanguage, setDefaultLanguage] = useState("fr");
-  const [defaultCurrency, setDefaultCurrency] = useState("EUR");
-  const [defaultUnit, setDefaultUnit] = useState("metric");
-  const [enableTracking, setEnableTracking] = useState(true);
-  const [autoSendNotifications, setAutoSendNotifications] = useState(true);
-  const [requireApproval, setRequireApproval] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
   
+  // Fetch current settings
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        setIsLoading(true);
+        const settingsDoc = await getDoc(doc(db, COLLECTIONS.FREIGHT.SETTINGS, 'general'));
+        
+        if (settingsDoc.exists()) {
+          setSettings(settingsDoc.data() as FreightSettings);
+        }
+      } catch (error) {
+        console.error('Error fetching freight settings:', error);
+        toast.error('Erreur lors du chargement des paramètres');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchSettings();
+  }, []);
+  
+  // Handle input changes
+  const handleChange = (field: keyof FreightSettings, value: any) => {
+    setSettings(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+  
+  // Save settings
   const saveSettings = async () => {
     try {
-      setSaving(true);
+      setIsSaving(true);
       
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      toast({
-        title: "Paramètres enregistrés avec succès",
-        description: "Les paramètres généraux ont été mis à jour."
+      await setDoc(doc(db, COLLECTIONS.FREIGHT.SETTINGS, 'general'), {
+        ...settings,
+        updatedAt: new Date()
       });
+      
+      toast.success('Paramètres enregistrés avec succès');
     } catch (error) {
-      toast({
-        title: "Erreur lors de l'enregistrement",
-        description: "Une erreur s'est produite lors de l'enregistrement des paramètres.",
-        variant: "destructive"
-      });
-      console.error(error);
+      console.error('Error saving freight settings:', error);
+      toast.error('Erreur lors de l\'enregistrement des paramètres');
     } finally {
-      setSaving(false);
+      setIsSaving(false);
     }
   };
-
+  
+  if (isLoading) {
+    return (
+      <Card>
+        <CardContent className="p-6">
+          <div className="space-y-4">
+            <div className="h-4 w-48 bg-gray-200 rounded animate-pulse" />
+            <div className="h-10 w-full bg-gray-200 rounded animate-pulse" />
+            <div className="h-10 w-full bg-gray-200 rounded animate-pulse" />
+            <div className="h-4 w-36 bg-gray-200 rounded animate-pulse" />
+            <div className="h-5 w-full bg-gray-200 rounded animate-pulse" />
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+  
   return (
     <Card>
-      <CardHeader>
-        <div className="flex items-center gap-2">
-          <Settings className="h-5 w-5 text-blue-600" />
-          <CardTitle>Paramètres généraux</CardTitle>
-        </div>
-        <CardDescription>
-          Configurez les options générales du module de gestion de fret
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <CardContent className="p-6">
+        <form onSubmit={e => { e.preventDefault(); saveSettings(); }} className="space-y-6">
+          {/* Email and Carrier Settings */}
           <div className="space-y-4">
-            <h3 className="text-lg font-medium">Informations de l'entreprise</h3>
+            <h3 className="text-lg font-medium">Paramètres généraux</h3>
             
-            <div className="space-y-2">
-              <Label htmlFor="company-name">Nom de l'entreprise</Label>
-              <Input 
-                id="company-name" 
-                value={companyName} 
-                onChange={(e) => setCompanyName(e.target.value)} 
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="email-contact">Email de contact</Label>
-              <Input 
-                id="email-contact" 
-                type="email"
-                value={emailContact} 
-                onChange={(e) => setEmailContact(e.target.value)} 
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="phone-number">Numéro de téléphone</Label>
-              <Input 
-                id="phone-number" 
-                value={phoneNumber} 
-                onChange={(e) => setPhoneNumber(e.target.value)} 
-              />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="defaultTrackingEmail">Email par défaut pour le suivi</Label>
+                <Input
+                  id="defaultTrackingEmail"
+                  type="email"
+                  value={settings.defaultTrackingEmail}
+                  onChange={e => handleChange('defaultTrackingEmail', e.target.value)}
+                  placeholder="suivi@example.com"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="defaultCarrier">Transporteur par défaut</Label>
+                <Input
+                  id="defaultCarrier"
+                  value={settings.defaultCarrier}
+                  onChange={e => handleChange('defaultCarrier', e.target.value)}
+                  placeholder="Nom du transporteur"
+                />
+              </div>
             </div>
           </div>
           
+          <Separator />
+          
+          {/* Shipping Methods */}
           <div className="space-y-4">
-            <h3 className="text-lg font-medium">Paramètres système</h3>
+            <h3 className="text-lg font-medium">Méthode d'expédition</h3>
             
-            <div className="space-y-2">
-              <Label htmlFor="default-language">Langue par défaut</Label>
-              <Select value={defaultLanguage} onValueChange={setDefaultLanguage}>
-                <SelectTrigger id="default-language">
-                  <SelectValue placeholder="Choisir une langue" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="fr">Français</SelectItem>
-                  <SelectItem value="en">Anglais</SelectItem>
-                  <SelectItem value="es">Espagnol</SelectItem>
-                  <SelectItem value="de">Allemand</SelectItem>
-                </SelectContent>
-              </Select>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="defaultShippingMethod">Méthode d'expédition par défaut</Label>
+                <Select
+                  value={settings.defaultShippingMethod}
+                  onValueChange={value => handleChange('defaultShippingMethod', value)}
+                >
+                  <SelectTrigger id="defaultShippingMethod">
+                    <SelectValue placeholder="Sélectionner une méthode" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="standard">Standard</SelectItem>
+                    <SelectItem value="express">Express</SelectItem>
+                    <SelectItem value="priority">Prioritaire</SelectItem>
+                    <SelectItem value="economy">Économique</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="weightUnit">Unité de poids</Label>
+                  <Select
+                    value={settings.weightUnit}
+                    onValueChange={value => handleChange('weightUnit', value)}
+                  >
+                    <SelectTrigger id="weightUnit">
+                      <SelectValue placeholder="Sélectionner une unité" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="kg">Kilogrammes (kg)</SelectItem>
+                      <SelectItem value="lb">Livres (lb)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
             </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="default-currency">Devise par défaut</Label>
-              <Select value={defaultCurrency} onValueChange={setDefaultCurrency}>
-                <SelectTrigger id="default-currency">
-                  <SelectValue placeholder="Choisir une devise" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="EUR">Euro (€)</SelectItem>
-                  <SelectItem value="USD">Dollar US ($)</SelectItem>
-                  <SelectItem value="GBP">Livre Sterling (£)</SelectItem>
-                  <SelectItem value="CAD">Dollar Canadien (C$)</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="default-unit">Système d'unités</Label>
-              <Select value={defaultUnit} onValueChange={setDefaultUnit}>
-                <SelectTrigger id="default-unit">
-                  <SelectValue placeholder="Choisir un système" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="metric">Métrique (kg, cm)</SelectItem>
-                  <SelectItem value="imperial">Impérial (lb, in)</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-        </div>
-        
-        <div className="space-y-4 pt-4">
-          <h3 className="text-lg font-medium">Options</h3>
-          
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <Label htmlFor="enable-tracking">Suivi des expéditions</Label>
-              <p className="text-sm text-muted-foreground">
-                Activer le suivi GPS en temps réel des expéditions
-              </p>
-            </div>
-            <Switch 
-              id="enable-tracking"
-              checked={enableTracking}
-              onCheckedChange={setEnableTracking}
-            />
           </div>
           
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <Label htmlFor="auto-notifications">Notifications automatiques</Label>
-              <p className="text-sm text-muted-foreground">
-                Envoyer des notifications automatiques aux clients lors des mises à jour d'expédition
-              </p>
+          <Separator />
+          
+          {/* Notifications and Portal */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-medium">Notifications et portail client</h3>
+            
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label htmlFor="enableAutomaticNotifications" className="text-base">
+                    Activer les notifications automatiques
+                  </Label>
+                  <p className="text-sm text-muted-foreground">
+                    Envoyer des notifications automatiques aux clients lors des changements de statut
+                  </p>
+                </div>
+                <Switch
+                  id="enableAutomaticNotifications"
+                  checked={settings.enableAutomaticNotifications}
+                  onCheckedChange={value => handleChange('enableAutomaticNotifications', value)}
+                />
+              </div>
+              
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label htmlFor="clientPortalAccess" className="text-base">
+                    Accès au portail client
+                  </Label>
+                  <p className="text-sm text-muted-foreground">
+                    Permettre aux clients d'accéder au portail de suivi des expéditions
+                  </p>
+                </div>
+                <Switch
+                  id="clientPortalAccess"
+                  checked={settings.clientPortalAccess}
+                  onCheckedChange={value => handleChange('clientPortalAccess', value)}
+                />
+              </div>
             </div>
-            <Switch 
-              id="auto-notifications"
-              checked={autoSendNotifications}
-              onCheckedChange={setAutoSendNotifications}
-            />
           </div>
           
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <Label htmlFor="require-approval">Approbation des expéditions</Label>
-              <p className="text-sm text-muted-foreground">
-                Exiger une approbation avant de finaliser les nouvelles expéditions
-              </p>
+          <Separator />
+          
+          {/* Shipping Requirements */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-medium">Exigences d'expédition</h3>
+            
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label htmlFor="requireShippingInsurance" className="text-base">
+                    Assurance obligatoire
+                  </Label>
+                  <p className="text-sm text-muted-foreground">
+                    Exiger une assurance pour toutes les expéditions
+                  </p>
+                </div>
+                <Switch
+                  id="requireShippingInsurance"
+                  checked={settings.requireShippingInsurance}
+                  onCheckedChange={value => handleChange('requireShippingInsurance', value)}
+                />
+              </div>
+              
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label htmlFor="requireSignatureOnDelivery" className="text-base">
+                    Signature à la livraison
+                  </Label>
+                  <p className="text-sm text-muted-foreground">
+                    Exiger une signature à la livraison pour toutes les expéditions
+                  </p>
+                </div>
+                <Switch
+                  id="requireSignatureOnDelivery"
+                  checked={settings.requireSignatureOnDelivery}
+                  onCheckedChange={value => handleChange('requireSignatureOnDelivery', value)}
+                />
+              </div>
             </div>
-            <Switch 
-              id="require-approval"
-              checked={requireApproval}
-              onCheckedChange={setRequireApproval}
-            />
           </div>
-        </div>
-        
-        <div className="pt-4 flex justify-end">
-          <Button onClick={saveSettings} disabled={saving}>
-            {saving ? <RefreshCw className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-            Enregistrer les modifications
-          </Button>
-        </div>
+          
+          <div className="flex justify-end">
+            <Button type="submit" disabled={isSaving}>
+              {isSaving ? "Enregistrement..." : "Enregistrer les modifications"}
+            </Button>
+          </div>
+        </form>
       </CardContent>
     </Card>
   );
