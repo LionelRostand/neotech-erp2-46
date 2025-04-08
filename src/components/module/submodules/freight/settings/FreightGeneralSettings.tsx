@@ -1,18 +1,38 @@
 
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Save, Settings as SettingsIcon, Wifi, WifiOff } from "lucide-react";
-import { toast } from "@/hooks/use-toast";
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { COLLECTIONS } from '@/lib/firebase-collections';
-import { useFirestore } from '@/hooks/useFirestore';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { FormItem, FormLabel, FormControl, FormDescription, Form } from '@/components/ui/form';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import { toast } from '@/hooks/use-toast';
+import { Loader2, AlertTriangle, CheckCircle } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { isNetworkError } from '@/hooks/firestore/network-handler';
+
+// Schéma de validation des paramètres généraux
+const generalSettingsSchema = z.object({
+  companyName: z.string().min(2, "Le nom de l'entreprise est requis").max(100),
+  defaultCurrency: z.string().min(1, "La devise par défaut est requise"),
+  contactEmail: z.string().email("Email invalide"),
+  supportPhone: z.string().optional(),
+  enableNotifications: z.boolean().default(true),
+  weightUnit: z.string().min(1, "L'unité de poids est requise"),
+  distanceUnit: z.string().min(1, "L'unité de distance est requise"),
+  defaultLanguage: z.string().min(1, "La langue par défaut est requise"),
+  systemMessage: z.string().optional(),
+  autoSaveEnabled: z.boolean().default(true),
+});
+
+type GeneralSettingsFormValues = z.infer<typeof generalSettingsSchema>;
 
 interface FreightGeneralSettingsProps {
   isAdmin: boolean;
@@ -20,402 +40,360 @@ interface FreightGeneralSettingsProps {
 }
 
 const FreightGeneralSettings: React.FC<FreightGeneralSettingsProps> = ({ isAdmin, canEdit }) => {
-  const firestore = useFirestore(COLLECTIONS.FREIGHT.SETTINGS);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [isOffline, setIsOffline] = useState(!navigator.onLine);
-  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
-  
-  const [settings, setSettings] = useState({
-    companyName: "",
-    contactEmail: "",
-    phoneNumber: "",
-    defaultCurrency: "EUR",
-    address: "",
-    enableCustomerPortal: true,
-    enableTrackingNotifications: true,
-    defaultPackageType: "standard",
-    enableContainerTracking: true,
-    trackingEmailTemplate: "",
-    maxRecordsPerPage: 50,
-    autoArchiveDelivered: true,
-    archiveDaysThreshold: 30,
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isOffline, setIsOffline] = useState(false);
+  const [settingsId, setSettingsId] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+  // Formulaire avec React Hook Form et validation Zod
+  const form = useForm<GeneralSettingsFormValues>({
+    resolver: zodResolver(generalSettingsSchema),
+    defaultValues: {
+      companyName: '',
+      defaultCurrency: 'EUR',
+      contactEmail: '',
+      supportPhone: '',
+      enableNotifications: true,
+      weightUnit: 'kg',
+      distanceUnit: 'km',
+      defaultLanguage: 'fr',
+      systemMessage: '',
+      autoSaveEnabled: true,
+    },
   });
-  
-  // Surveiller l'état de connexion
+
+  // Charger les paramètres au montage du composant
   useEffect(() => {
-    const handleOnline = () => setIsOffline(false);
-    const handleOffline = () => setIsOffline(true);
-    
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
-    
-    return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
-    };
-  }, []);
-  
-  // Charger les paramètres depuis Firestore
-  useEffect(() => {
-    const loadSettings = async () => {
-      setLoading(true);
-      
+    const fetchSettings = async () => {
       try {
-        // Essayer de récupérer les paramètres depuis Firestore
-        const settingsRef = doc(db, COLLECTIONS.FREIGHT.SETTINGS, 'general');
+        setIsLoading(true);
+        setError(null);
+        setIsOffline(false);
+
+        // Essayer de récupérer le document des paramètres
+        const settingsRef = doc(db, COLLECTIONS.FREIGHT.SETTINGS);
         const settingsDoc = await getDoc(settingsRef);
-        
+
         if (settingsDoc.exists()) {
-          const settingsData = settingsDoc.data();
-          setSettings({
-            ...settings,
-            ...settingsData
+          const data = settingsDoc.data();
+          setSettingsId(settingsDoc.id);
+          
+          // Mettre à jour le formulaire avec les données existantes
+          form.reset({
+            companyName: data.companyName || '',
+            defaultCurrency: data.defaultCurrency || 'EUR',
+            contactEmail: data.contactEmail || '',
+            supportPhone: data.supportPhone || '',
+            enableNotifications: data.enableNotifications !== undefined ? data.enableNotifications : true,
+            weightUnit: data.weightUnit || 'kg',
+            distanceUnit: data.distanceUnit || 'km',
+            defaultLanguage: data.defaultLanguage || 'fr',
+            systemMessage: data.systemMessage || '',
+            autoSaveEnabled: data.autoSaveEnabled !== undefined ? data.autoSaveEnabled : true,
           });
         } else {
-          // Si le document n'existe pas encore, on garde les valeurs par défaut
-          console.log("Aucun paramètre trouvé, utilisation des valeurs par défaut");
+          // Si le document n'existe pas encore, on utilise les valeurs par défaut
+          console.log("Aucun paramètre existant, utilisation des valeurs par défaut");
         }
-      } catch (error) {
-        console.error("Erreur lors du chargement des paramètres:", error);
+      } catch (err: any) {
+        console.error("Erreur lors du chargement des paramètres:", err);
         
-        if (isOffline) {
+        if (isNetworkError(err)) {
+          setIsOffline(true);
+          // En mode hors ligne, on continue avec les valeurs par défaut ou celles dans le formulaire
           toast({
             title: "Mode hors ligne",
-            description: "Vous êtes en mode hors ligne. Les modifications ne seront pas enregistrées.",
-            variant: "warning"
+            description: "Vous êtes en mode hors ligne. Les modifications seront enregistrées localement.",
+            variant: "default",
           });
         } else {
-          toast({
-            title: "Erreur",
-            description: "Impossible de charger les paramètres. Veuillez réessayer.",
-            variant: "destructive"
-          });
+          setError(`Erreur lors du chargement des paramètres: ${err.message}`);
         }
       } finally {
-        setLoading(false);
+        setIsLoading(false);
       }
     };
-    
-    loadSettings();
-  }, [isOffline]);
-  
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setSettings({
-      ...settings,
-      [name]: value
-    });
-    setHasUnsavedChanges(true);
-  };
-  
-  const handleSelectChange = (name: string, value: string) => {
-    setSettings({
-      ...settings,
-      [name]: value
-    });
-    setHasUnsavedChanges(true);
-  };
-  
-  const handleSwitchChange = (name: string, checked: boolean) => {
-    setSettings({
-      ...settings,
-      [name]: checked
-    });
-    setHasUnsavedChanges(true);
-  };
-  
-  const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    const numValue = parseInt(value, 10);
-    
-    // Vérifier que la valeur est un nombre valide
-    if (!isNaN(numValue)) {
-      setSettings({
-        ...settings,
-        [name]: numValue
-      });
-      setHasUnsavedChanges(true);
-    }
-  };
-  
-  const saveSettings = async () => {
-    if (isOffline) {
+
+    fetchSettings();
+  }, [form]);
+
+  const onSubmit = async (data: GeneralSettingsFormValues) => {
+    if (!canEdit && !isAdmin) {
       toast({
-        title: "Mode hors ligne",
-        description: "Vous êtes en mode hors ligne. Les modifications ne seront pas enregistrées.",
-        variant: "warning"
+        title: "Accès refusé",
+        description: "Vous n'avez pas les droits nécessaires pour modifier ces paramètres.",
+        variant: "destructive",
       });
       return;
     }
-    
-    setSaving(true);
-    
+
     try {
-      // Enregistrer les paramètres dans Firestore
-      const settingsRef = doc(db, COLLECTIONS.FREIGHT.SETTINGS, 'general');
-      await setDoc(settingsRef, settings, { merge: true });
+      setIsSaving(true);
+      setError(null);
+      setSuccessMessage(null);
+
+      const settingsRef = doc(db, COLLECTIONS.FREIGHT.SETTINGS);
       
+      if (settingsId) {
+        // Mise à jour d'un document existant
+        await updateDoc(settingsRef, {
+          ...data,
+          updatedAt: new Date(),
+          updatedBy: 'current-user', // Idéalement, utiliser l'ID de l'utilisateur actuel
+        });
+      } else {
+        // Création d'un nouveau document
+        await setDoc(settingsRef, {
+          ...data,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          createdBy: 'current-user', // Idéalement, utiliser l'ID de l'utilisateur actuel
+        });
+        setSettingsId(settingsRef.id);
+      }
+
+      setSuccessMessage("Paramètres enregistrés avec succès");
       toast({
-        title: "Paramètres enregistrés",
-        description: "Les paramètres ont été mis à jour avec succès.",
-        variant: "success"
+        title: "Succès",
+        description: "Les paramètres ont été enregistrés.",
+        variant: "default",
       });
+    } catch (err: any) {
+      console.error("Erreur lors de l'enregistrement des paramètres:", err);
       
-      setHasUnsavedChanges(false);
-    } catch (error) {
-      console.error("Erreur lors de l'enregistrement des paramètres:", error);
-      
-      toast({
-        title: "Erreur",
-        description: "Impossible d'enregistrer les paramètres. Veuillez réessayer.",
-        variant: "destructive"
-      });
+      if (isNetworkError(err)) {
+        setIsOffline(true);
+        toast({
+          title: "Mode hors ligne",
+          description: "Vous êtes en mode hors ligne. Les modifications seront enregistrées localement.",
+          variant: "default",
+        });
+      } else {
+        setError(`Erreur lors de l'enregistrement: ${err.message}`);
+        toast({
+          title: "Erreur",
+          description: `Impossible d'enregistrer les paramètres: ${err.message}`,
+          variant: "destructive",
+        });
+      }
     } finally {
-      setSaving(false);
+      setIsSaving(false);
     }
   };
-  
-  const isEditable = (isAdmin || canEdit) && !loading;
-  
+
+  if (isLoading) {
+    return (
+      <div className="p-6 text-center">
+        <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-primary" />
+        <p>Chargement des paramètres du module...</p>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
-      {isOffline && (
-        <div className="p-4 bg-amber-50 border border-amber-200 rounded-md flex items-start gap-3">
-          <WifiOff className="h-5 w-5 text-amber-600 mt-0.5" />
-          <div>
-            <h3 className="font-medium text-amber-800">Mode hors ligne</h3>
-            <p className="text-sm text-amber-700">
-              Vous êtes actuellement hors ligne. Les modifications ne seront pas enregistrées.
-            </p>
-          </div>
-        </div>
+      {error && (
+        <Alert variant="destructive">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
       )}
       
+      {isOffline && (
+        <Alert variant="default">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertDescription>
+            Vous êtes actuellement en mode hors ligne. Les modifications seront enregistrées localement
+            jusqu'à ce que la connexion soit rétablie.
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {!canEdit && !isAdmin && (
+        <Alert variant="default">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertDescription>
+            Vous êtes en mode lecture seule. Vous pouvez consulter les paramètres mais ne pouvez pas les modifier.
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {successMessage && (
+        <Alert variant="default">
+          <CheckCircle className="h-4 w-4 text-green-500" />
+          <AlertDescription className="text-green-600">{successMessage}</AlertDescription>
+        </Alert>
+      )}
+
       <Card>
         <CardHeader>
-          <div className="flex items-center gap-2">
-            <SettingsIcon className="h-5 w-5 text-blue-600" />
-            <CardTitle>Paramètres généraux</CardTitle>
-          </div>
+          <CardTitle>Paramètres généraux du module Fret</CardTitle>
           <CardDescription>
-            Configurez les paramètres généraux du module Fret
+            Configuration des paramètres de base pour les opérations de fret et d'expédition
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-6">
-          {loading ? (
-            <div className="flex justify-center items-center py-8">
-              <Loader2 className="h-8 w-8 text-blue-600 animate-spin" />
-              <span className="ml-2 text-gray-600">Chargement des paramètres...</span>
-            </div>
-          ) : (
-            <>
-              <div className="grid gap-6 md:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="companyName">Nom de l'entreprise</Label>
-                  <Input 
-                    id="companyName" 
-                    name="companyName" 
-                    value={settings.companyName} 
-                    onChange={handleInputChange} 
-                    disabled={!isEditable}
-                  />
-                </div>
+        <CardContent>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormItem>
+                  <FormLabel>Nom de l'entreprise</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="Nom de l'entreprise"
+                      {...form.register("companyName")}
+                      disabled={!canEdit && !isAdmin}
+                    />
+                  </FormControl>
+                </FormItem>
+
+                <FormItem>
+                  <FormLabel>Email de contact</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="email"
+                      placeholder="contact@example.com"
+                      {...form.register("contactEmail")}
+                      disabled={!canEdit && !isAdmin}
+                    />
+                  </FormControl>
+                </FormItem>
+
+                <FormItem>
+                  <FormLabel>Téléphone de support</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="+33 1 23 45 67 89"
+                      {...form.register("supportPhone")}
+                      disabled={!canEdit && !isAdmin}
+                    />
+                  </FormControl>
+                </FormItem>
+
+                <FormItem>
+                  <FormLabel>Devise par défaut</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="EUR"
+                      {...form.register("defaultCurrency")}
+                      disabled={!canEdit && !isAdmin}
+                    />
+                  </FormControl>
+                  <FormDescription>Utilisée pour tous les prix et factures</FormDescription>
+                </FormItem>
+
+                <FormItem>
+                  <FormLabel>Unité de poids</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="kg"
+                      {...form.register("weightUnit")}
+                      disabled={!canEdit && !isAdmin}
+                    />
+                  </FormControl>
+                </FormItem>
+
+                <FormItem>
+                  <FormLabel>Unité de distance</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="km"
+                      {...form.register("distanceUnit")}
+                      disabled={!canEdit && !isAdmin}
+                    />
+                  </FormControl>
+                </FormItem>
+
+                <FormItem>
+                  <FormLabel>Langue par défaut</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="fr"
+                      {...form.register("defaultLanguage")}
+                      disabled={!canEdit && !isAdmin}
+                    />
+                  </FormControl>
+                </FormItem>
                 
-                <div className="space-y-2">
-                  <Label htmlFor="contactEmail">Email de contact</Label>
-                  <Input 
-                    id="contactEmail" 
-                    name="contactEmail" 
-                    type="email" 
-                    value={settings.contactEmail} 
-                    onChange={handleInputChange} 
-                    disabled={!isEditable}
-                  />
-                </div>
+                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+                  <div className="space-y-0.5">
+                    <FormLabel>Notifications automatiques</FormLabel>
+                    <FormDescription>
+                      Activer les notifications pour les changements de statut
+                    </FormDescription>
+                  </div>
+                  <FormControl>
+                    <Switch
+                      checked={form.watch("enableNotifications")}
+                      onCheckedChange={(checked) => form.setValue("enableNotifications", checked)}
+                      disabled={!canEdit && !isAdmin}
+                    />
+                  </FormControl>
+                </FormItem>
                 
-                <div className="space-y-2">
-                  <Label htmlFor="phoneNumber">Numéro de téléphone</Label>
-                  <Input 
-                    id="phoneNumber" 
-                    name="phoneNumber" 
-                    value={settings.phoneNumber} 
-                    onChange={handleInputChange} 
-                    disabled={!isEditable}
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="defaultCurrency">Devise par défaut</Label>
-                  <Select 
-                    value={settings.defaultCurrency} 
-                    onValueChange={(value) => handleSelectChange("defaultCurrency", value)}
-                    disabled={!isEditable}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Sélectionner une devise" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="EUR">Euro (€)</SelectItem>
-                      <SelectItem value="USD">Dollar américain ($)</SelectItem>
-                      <SelectItem value="GBP">Livre sterling (£)</SelectItem>
-                      <SelectItem value="CAD">Dollar canadien</SelectItem>
-                      <SelectItem value="CHF">Franc suisse</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+                  <div className="space-y-0.5">
+                    <FormLabel>Sauvegarde automatique</FormLabel>
+                    <FormDescription>
+                      Sauvegarde automatique des brouillons d'expédition
+                    </FormDescription>
+                  </div>
+                  <FormControl>
+                    <Switch
+                      checked={form.watch("autoSaveEnabled")}
+                      onCheckedChange={(checked) => form.setValue("autoSaveEnabled", checked)}
+                      disabled={!canEdit && !isAdmin}
+                    />
+                  </FormControl>
+                </FormItem>
               </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="address">Adresse</Label>
-                <Textarea 
-                  id="address" 
-                  name="address" 
-                  value={settings.address} 
-                  onChange={handleInputChange} 
-                  disabled={!isEditable}
-                  rows={3}
-                />
-              </div>
-              
-              <div className="space-y-6 border-t pt-6">
-                <h3 className="text-lg font-medium">Fonctionnalités</h3>
-                
-                <div className="grid gap-6 md:grid-cols-2">
-                  <div className="flex items-center justify-between space-x-2">
-                    <Label htmlFor="enableCustomerPortal" className="flex-1">Activer le portail client</Label>
-                    <Switch 
-                      id="enableCustomerPortal" 
-                      checked={settings.enableCustomerPortal} 
-                      onCheckedChange={(checked) => handleSwitchChange("enableCustomerPortal", checked)}
-                      disabled={!isEditable}
-                    />
-                  </div>
-                  
-                  <div className="flex items-center justify-between space-x-2">
-                    <Label htmlFor="enableTrackingNotifications" className="flex-1">Activer les notifications de suivi</Label>
-                    <Switch 
-                      id="enableTrackingNotifications" 
-                      checked={settings.enableTrackingNotifications} 
-                      onCheckedChange={(checked) => handleSwitchChange("enableTrackingNotifications", checked)}
-                      disabled={!isEditable}
-                    />
-                  </div>
-                  
-                  <div className="flex items-center justify-between space-x-2">
-                    <Label htmlFor="enableContainerTracking" className="flex-1">Activer le suivi des conteneurs</Label>
-                    <Switch 
-                      id="enableContainerTracking" 
-                      checked={settings.enableContainerTracking} 
-                      onCheckedChange={(checked) => handleSwitchChange("enableContainerTracking", checked)}
-                      disabled={!isEditable}
-                    />
-                  </div>
-                  
-                  <div className="flex items-center justify-between space-x-2">
-                    <Label htmlFor="autoArchiveDelivered" className="flex-1">Archivage automatique des livraisons</Label>
-                    <Switch 
-                      id="autoArchiveDelivered" 
-                      checked={settings.autoArchiveDelivered} 
-                      onCheckedChange={(checked) => handleSwitchChange("autoArchiveDelivered", checked)}
-                      disabled={!isEditable}
-                    />
-                  </div>
-                </div>
-                
-                <div className="grid gap-6 md:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label htmlFor="defaultPackageType">Type de colis par défaut</Label>
-                    <Select 
-                      value={settings.defaultPackageType} 
-                      onValueChange={(value) => handleSelectChange("defaultPackageType", value)}
-                      disabled={!isEditable}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Sélectionner un type" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="standard">Standard</SelectItem>
-                        <SelectItem value="express">Express</SelectItem>
-                        <SelectItem value="priority">Prioritaire</SelectItem>
-                        <SelectItem value="economy">Économique</SelectItem>
-                        <SelectItem value="heavy">Poids lourd</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="maxRecordsPerPage">Nombre d'enregistrements par page</Label>
-                    <Input 
-                      id="maxRecordsPerPage" 
-                      name="maxRecordsPerPage" 
-                      type="number" 
-                      min="10" 
-                      max="100" 
-                      value={settings.maxRecordsPerPage} 
-                      onChange={handleNumberChange} 
-                      disabled={!isEditable}
-                    />
-                  </div>
-                  
-                  {settings.autoArchiveDelivered && (
-                    <div className="space-y-2">
-                      <Label htmlFor="archiveDaysThreshold">Délai d'archivage (jours)</Label>
-                      <Input 
-                        id="archiveDaysThreshold" 
-                        name="archiveDaysThreshold" 
-                        type="number" 
-                        min="1" 
-                        max="365" 
-                        value={settings.archiveDaysThreshold} 
-                        onChange={handleNumberChange} 
-                        disabled={!isEditable}
-                      />
-                    </div>
+
+              <FormItem>
+                <FormLabel>Message système</FormLabel>
+                <FormControl>
+                  <Textarea
+                    placeholder="Message affiché aux utilisateurs du module fret..."
+                    {...form.register("systemMessage")}
+                    rows={3}
+                    disabled={!canEdit && !isAdmin}
+                  />
+                </FormControl>
+                <FormDescription>Ce message sera affiché à tous les utilisateurs du module</FormDescription>
+              </FormItem>
+
+              {(canEdit || isAdmin) && (
+                <Button 
+                  type="submit" 
+                  className="w-full mt-4"
+                  disabled={isSaving}
+                >
+                  {isSaving ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Enregistrement...
+                    </>
+                  ) : (
+                    'Enregistrer les paramètres'
                   )}
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="trackingEmailTemplate">Modèle d'email de suivi</Label>
-                  <Textarea 
-                    id="trackingEmailTemplate" 
-                    name="trackingEmailTemplate" 
-                    value={settings.trackingEmailTemplate} 
-                    onChange={handleInputChange} 
-                    disabled={!isEditable}
-                    placeholder="Exemple: Bonjour {client}, votre colis {tracking_code} est maintenant {status}."
-                    rows={4}
-                  />
-                  <p className="text-sm text-gray-500">
-                    Vous pouvez utiliser les variables suivantes : {'{client}'}, {'{tracking_code}'}, {'{status}'}, {'{date}'}, {'{heure}'}
-                  </p>
-                </div>
-              </div>
-              
-              {isEditable && (
-                <div className="flex justify-end mt-6">
-                  <Button
-                    onClick={saveSettings}
-                    disabled={saving || isOffline || !hasUnsavedChanges}
-                    className="flex items-center gap-2"
-                  >
-                    {saving ? (
-                      <>
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                        Enregistrement...
-                      </>
-                    ) : (
-                      <>
-                        <Save className="h-4 w-4" />
-                        Enregistrer les modifications
-                      </>
-                    )}
-                  </Button>
-                </div>
+                </Button>
               )}
-            </>
-          )}
+            </form>
+          </Form>
         </CardContent>
+        <CardFooter className="flex justify-between">
+          <div>
+            <Badge variant="outline" className="mr-2">
+              {isOffline ? 'Mode hors ligne' : 'Connecté'}
+            </Badge>
+            {settingsId && (
+              <Badge variant="outline">
+                ID: {settingsId.substring(0, 8)}...
+              </Badge>
+            )}
+          </div>
+        </CardFooter>
       </Card>
     </div>
   );

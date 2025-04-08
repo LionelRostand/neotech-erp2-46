@@ -1,143 +1,218 @@
 
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
-import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { toast } from '@/hooks/use-toast';
-import { CheckCircle, ShieldCheck, AlertCircle, Loader2, Save, Wifi, WifiOff } from 'lucide-react';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { COLLECTIONS } from '@/lib/firebase-collections';
-import { useEmployeesPermissions } from '@/hooks/useEmployeesPermissions';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { toast } from '@/hooks/use-toast';
+import { Loader2, AlertTriangle, CheckCircle, Shield } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { isNetworkError } from '@/hooks/firestore/network-handler';
 
 interface FreightPermissionsSettingsProps {
   isAdmin: boolean;
 }
 
+// Define the permissions structure type
+interface PermissionsSettings {
+  expeditions: {
+    admin: string;
+    manager: string;
+    user: string;
+    viewer: string;
+  };
+  conteneurs: {
+    admin: string;
+    manager: string;
+    user: string;
+    viewer: string;
+  };
+  tarification: {
+    admin: string;
+    manager: string;
+    user: string;
+    viewer: string;
+  };
+  documents: {
+    admin: string;
+    manager: string;
+    user: string;
+    viewer: string;
+  };
+  clientPortal: {
+    admin: string;
+    manager: string;
+    user: string;
+    viewer: string;
+  };
+  parametres: {
+    admin: string;
+    manager: string;
+    user: string;
+    viewer: string;
+  };
+}
+
+// Liste des niveaux d'accès disponibles
+const ACCESS_LEVELS = [
+  { value: "all", label: "Contrôle total" },
+  { value: "edit", label: "Modification" },
+  { value: "create", label: "Création" },
+  { value: "view", label: "Lecture seule" },
+  { value: "none", label: "Aucun accès" },
+];
+
+// Default permissions structure
+const DEFAULT_PERMISSIONS: PermissionsSettings = {
+  expeditions: {
+    admin: "all",
+    manager: "edit",
+    user: "create",
+    viewer: "view"
+  },
+  conteneurs: {
+    admin: "all",
+    manager: "edit",
+    user: "view",
+    viewer: "view"
+  },
+  tarification: {
+    admin: "all",
+    manager: "edit",
+    user: "view",
+    viewer: "none"
+  },
+  documents: {
+    admin: "all",
+    manager: "edit",
+    user: "view",
+    viewer: "view"
+  },
+  clientPortal: {
+    admin: "all",
+    manager: "edit",
+    user: "view",
+    viewer: "view"
+  },
+  parametres: {
+    admin: "all",
+    manager: "view",
+    user: "none",
+    viewer: "none"
+  }
+};
+
 const FreightPermissionsSettings: React.FC<FreightPermissionsSettingsProps> = ({ isAdmin }) => {
-  const { employees, isLoading: loadingEmployees } = useEmployeesPermissions();
-  const [isOffline, setIsOffline] = useState(!navigator.onLine);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
-  
-  // État pour les permissions
-  const [permissions, setPermissions] = useState({
-    expeditions: {
-      admin: 'write',
-      manager: 'write',
-      user: 'read',
-      viewer: 'read'
-    },
-    conteneurs: {
-      admin: 'write',
-      manager: 'write',
-      user: 'read',
-      viewer: 'none'
-    },
-    tarification: {
-      admin: 'write',
-      manager: 'write',
-      user: 'read',
-      viewer: 'none'
-    },
-    documents: {
-      admin: 'write',
-      manager: 'write',
-      user: 'read',
-      viewer: 'read'
-    },
-    clientPortal: {
-      admin: 'write',
-      manager: 'write',
-      user: 'none',
-      viewer: 'none'
-    },
-    parametres: {
-      admin: 'write',
-      manager: 'read',
-      user: 'none',
-      viewer: 'none'
-    }
-  });
-  
-  // Surveiller l'état de connexion
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isOffline, setIsOffline] = useState(false);
+  const [permissionsId, setPermissionsId] = useState<string | null>(null);
+  const [permissions, setPermissions] = useState<PermissionsSettings>(DEFAULT_PERMISSIONS);
+  const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState("roles");
+
+  // Charger les paramètres de permission au montage du composant
   useEffect(() => {
-    const handleOnline = () => setIsOffline(false);
-    const handleOffline = () => setIsOffline(true);
-    
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
-    
-    return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
-    };
-  }, []);
-  
-  // Charger les permissions depuis Firestore
-  useEffect(() => {
-    const loadPermissions = async () => {
-      setLoading(true);
-      
+    const fetchPermissions = async () => {
       try {
-        // Essayer de récupérer les permissions depuis Firestore
-        const permissionsRef = doc(db, COLLECTIONS.FREIGHT.PERMISSIONS, 'roles');
+        setIsLoading(true);
+        setError(null);
+        setIsOffline(false);
+
+        // Essayer de récupérer le document des permissions
+        const permissionsRef = doc(db, COLLECTIONS.FREIGHT.PERMISSIONS);
         const permissionsDoc = await getDoc(permissionsRef);
-        
+
         if (permissionsDoc.exists()) {
-          const permissionsData = permissionsDoc.data();
-          setPermissions(permissionsData);
+          const data = permissionsDoc.data();
+          setPermissionsId(permissionsDoc.id);
+          
+          // Create a properly typed permissions object
+          const loadedPermissions: PermissionsSettings = {
+            expeditions: {
+              admin: data.expeditions?.admin || "all",
+              manager: data.expeditions?.manager || "edit",
+              user: data.expeditions?.user || "create",
+              viewer: data.expeditions?.viewer || "view"
+            },
+            conteneurs: {
+              admin: data.conteneurs?.admin || "all",
+              manager: data.conteneurs?.manager || "edit",
+              user: data.conteneurs?.user || "view",
+              viewer: data.conteneurs?.viewer || "view"
+            },
+            tarification: {
+              admin: data.tarification?.admin || "all",
+              manager: data.tarification?.manager || "edit",
+              user: data.tarification?.user || "view",
+              viewer: data.tarification?.viewer || "none"
+            },
+            documents: {
+              admin: data.documents?.admin || "all",
+              manager: data.documents?.manager || "edit",
+              user: data.documents?.user || "view",
+              viewer: data.documents?.viewer || "view"
+            },
+            clientPortal: {
+              admin: data.clientPortal?.admin || "all",
+              manager: data.clientPortal?.manager || "edit",
+              user: data.clientPortal?.user || "view",
+              viewer: data.clientPortal?.viewer || "view"
+            },
+            parametres: {
+              admin: data.parametres?.admin || "all",
+              manager: data.parametres?.manager || "view",
+              user: data.parametres?.user || "none",
+              viewer: data.parametres?.viewer || "none"
+            }
+          };
+          
+          setPermissions(loadedPermissions);
         } else {
-          // Si le document n'existe pas encore, on garde les valeurs par défaut
-          console.log("Aucune permission trouvée, utilisation des valeurs par défaut");
+          // Si le document n'existe pas encore, on utilise les valeurs par défaut
+          console.log("Aucune permission existante, utilisation des valeurs par défaut");
         }
-      } catch (error) {
-        console.error("Erreur lors du chargement des permissions:", error);
+      } catch (err: any) {
+        console.error("Erreur lors du chargement des permissions:", err);
         
-        if (isOffline) {
+        if (isNetworkError(err)) {
+          setIsOffline(true);
+          // En mode hors ligne, on continue avec les valeurs par défaut
           toast({
             title: "Mode hors ligne",
-            description: "Vous êtes en mode hors ligne. Les modifications ne seront pas enregistrées.",
-            variant: "warning"
+            description: "Vous êtes en mode hors ligne. Les modifications seront enregistrées localement.",
+            variant: "default"
           });
         } else {
-          toast({
-            title: "Erreur",
-            description: "Impossible de charger les permissions. Veuillez réessayer.",
-            variant: "destructive"
-          });
+          setError(`Erreur lors du chargement des permissions: ${err.message}`);
         }
       } finally {
-        setLoading(false);
+        setIsLoading(false);
       }
     };
-    
-    loadPermissions();
-  }, [isOffline]);
-  
-  const handlePermissionChange = (module: string, role: string, value: string) => {
+
+    fetchPermissions();
+  }, []);
+
+  // Fonction pour mettre à jour une permission spécifique
+  const updatePermission = (section: keyof PermissionsSettings, role: keyof PermissionsSettings['expeditions'], value: string) => {
     setPermissions(prev => ({
       ...prev,
-      [module]: {
-        ...prev[module as keyof typeof prev],
+      [section]: {
+        ...prev[section],
         [role]: value
       }
     }));
-    setHasUnsavedChanges(true);
   };
-  
-  const handleSavePermissions = async () => {
-    if (isOffline) {
-      toast({
-        title: "Mode hors ligne",
-        description: "Vous êtes en mode hors ligne. Les modifications ne seront pas enregistrées.",
-        variant: "warning"
-      });
-      return;
-    }
-    
+
+  // Enregistrer les modifications
+  const savePermissions = async () => {
     if (!isAdmin) {
       toast({
         title: "Accès refusé",
@@ -146,246 +221,322 @@ const FreightPermissionsSettings: React.FC<FreightPermissionsSettingsProps> = ({
       });
       return;
     }
-    
-    setSaving(true);
-    
+
     try {
-      // Enregistrer les permissions dans Firestore
-      const permissionsRef = doc(db, COLLECTIONS.FREIGHT.PERMISSIONS, 'roles');
-      await setDoc(permissionsRef, permissions);
+      setIsSaving(true);
+      setError(null);
+      setSuccessMessage(null);
+
+      const permissionsRef = doc(db, COLLECTIONS.FREIGHT.PERMISSIONS);
       
+      if (permissionsId) {
+        // Mise à jour d'un document existant
+        await updateDoc(permissionsRef, {
+          ...permissions,
+          updatedAt: new Date(),
+          updatedBy: 'current-user', // Idéalement, utiliser l'ID de l'utilisateur actuel
+        });
+      } else {
+        // Création d'un nouveau document
+        await setDoc(permissionsRef, {
+          ...permissions,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          createdBy: 'current-user', // Idéalement, utiliser l'ID de l'utilisateur actuel
+        });
+        setPermissionsId(permissionsRef.id);
+      }
+
+      setSuccessMessage("Permissions enregistrées avec succès");
       toast({
-        title: "Permissions enregistrées",
-        description: "Les droits d'accès ont été modifiés avec succès.",
-        variant: "success"
+        title: "Succès",
+        description: "Les permissions ont été mises à jour.",
+        variant: "default"
       });
+    } catch (err: any) {
+      console.error("Erreur lors de l'enregistrement des permissions:", err);
       
-      setHasUnsavedChanges(false);
-    } catch (error) {
-      console.error("Erreur lors de l'enregistrement des permissions:", error);
-      
-      toast({
-        title: "Erreur",
-        description: "Impossible d'enregistrer les permissions. Veuillez réessayer.",
-        variant: "destructive"
-      });
+      if (isNetworkError(err)) {
+        setIsOffline(true);
+        toast({
+          title: "Mode hors ligne",
+          description: "Vous êtes en mode hors ligne. Les modifications seront enregistrées localement.",
+          variant: "default"
+        });
+      } else {
+        setError(`Erreur lors de l'enregistrement: ${err.message}`);
+        toast({
+          title: "Erreur",
+          description: `Impossible d'enregistrer les permissions: ${err.message}`,
+          variant: "destructive"
+        });
+      }
     } finally {
-      setSaving(false);
+      setIsSaving(false);
     }
   };
-  
-  const modules = [
-    { id: 'expeditions', name: 'Expéditions' },
-    { id: 'conteneurs', name: 'Conteneurs' },
-    { id: 'tarification', name: 'Tarification' },
-    { id: 'documents', name: 'Documents' },
-    { id: 'clientPortal', name: 'Portail Client' },
-    { id: 'parametres', name: 'Paramètres' }
-  ];
-  
-  const roles = [
-    { id: 'admin', name: 'Administrateur' },
-    { id: 'manager', name: 'Gestionnaire' },
-    { id: 'user', name: 'Utilisateur' },
-    { id: 'viewer', name: 'Lecteur' }
-  ];
+
+  if (isLoading) {
+    return (
+      <div className="p-6 text-center">
+        <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-primary" />
+        <p>Chargement des permissions...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
-      {isOffline && (
-        <div className="p-4 bg-amber-50 border border-amber-200 rounded-md flex items-start gap-3">
-          <WifiOff className="h-5 w-5 text-amber-600 mt-0.5" />
-          <div>
-            <h3 className="font-medium text-amber-800">Mode hors ligne</h3>
-            <p className="text-sm text-amber-700">
-              Vous êtes actuellement hors ligne. Les modifications ne seront pas enregistrées.
-            </p>
-          </div>
-        </div>
+      {error && (
+        <Alert variant="destructive">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
       )}
       
+      {isOffline && (
+        <Alert variant="default">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertDescription>
+            Vous êtes actuellement en mode hors ligne. Les modifications seront enregistrées localement
+            jusqu'à ce que la connexion soit rétablie.
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {!isAdmin && (
+        <Alert variant="default">
+          <Shield className="h-4 w-4" />
+          <AlertDescription>
+            Seuls les administrateurs peuvent modifier les permissions du module.
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {successMessage && (
+        <Alert variant="default">
+          <CheckCircle className="h-4 w-4 text-green-500" />
+          <AlertDescription className="text-green-600">{successMessage}</AlertDescription>
+        </Alert>
+      )}
+
       <Card>
         <CardHeader>
-          <div className="flex items-center gap-2">
-            <ShieldCheck className="h-5 w-5 text-green-600" />
-            <CardTitle>Paramètres de sécurité</CardTitle>
-          </div>
+          <CardTitle>Gestion des permissions</CardTitle>
           <CardDescription>
-            Configurez les droits d'accès des utilisateurs aux différentes fonctionnalités
+            Définir les niveaux d'accès pour chaque rôle au sein du module Fret
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {loading ? (
-            <div className="flex justify-center items-center py-8">
-              <Loader2 className="h-8 w-8 text-green-600 animate-spin" />
-              <span className="ml-2 text-gray-600">Chargement des permissions...</span>
-            </div>
-          ) : (
-            <div className="space-y-6">
-              <div className="overflow-x-auto">
-                <table className="w-full border-collapse">
-                  <thead>
-                    <tr>
-                      <th className="text-left p-2 bg-slate-100 border">Module</th>
-                      {roles.map(role => (
-                        <th key={role.id} className="text-left p-2 bg-slate-100 border">
-                          {role.name}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {modules.map(module => (
-                      <tr key={module.id}>
-                        <td className="p-2 border font-medium">{module.name}</td>
-                        {roles.map(role => (
-                          <td key={`${module.id}-${role.id}`} className="p-2 border">
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <TabsList className="mb-4">
+              <TabsTrigger value="roles">Par rôle</TabsTrigger>
+              <TabsTrigger value="modules">Par fonction</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="roles">
+              <div className="space-y-4">
+                <div className="rounded-md border">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="w-[180px]">Fonction</TableHead>
+                        <TableHead>Administrateur</TableHead>
+                        <TableHead>Responsable</TableHead>
+                        <TableHead>Utilisateur</TableHead>
+                        <TableHead>Observateur</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {Object.entries(permissions).map(([section, roles]) => (
+                        <TableRow key={section}>
+                          <TableCell className="font-medium">
+                            {getModuleLabel(section as keyof PermissionsSettings)}
+                          </TableCell>
+                          <TableCell>
                             <Select
-                              value={permissions[module.id as keyof typeof permissions][role.id as keyof typeof permissions.expeditions]}
-                              onValueChange={(value) => handlePermissionChange(module.id, role.id, value)}
-                              disabled={!isAdmin || saving}
+                              value={roles.admin}
+                              onValueChange={(value) => updatePermission(section as keyof PermissionsSettings, 'admin', value)}
+                              disabled={!isAdmin}
                             >
-                              <SelectTrigger className="w-[120px]">
-                                <SelectValue placeholder="Sélectionner..." />
+                              <SelectTrigger className="w-full">
+                                <SelectValue placeholder="Sélectionner un niveau" />
                               </SelectTrigger>
                               <SelectContent>
-                                <SelectItem value="write">Lecture/Écriture</SelectItem>
-                                <SelectItem value="read">Lecture seule</SelectItem>
-                                <SelectItem value="none">Aucun accès</SelectItem>
+                                {ACCESS_LEVELS.map((level) => (
+                                  <SelectItem key={level.value} value={level.value}>
+                                    {level.label}
+                                  </SelectItem>
+                                ))}
                               </SelectContent>
                             </Select>
-                          </td>
-                        ))}
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-              
-              <div className="bg-amber-50 border border-amber-200 rounded-md p-4 flex items-start gap-3">
-                <AlertCircle className="h-5 w-5 text-amber-600 mt-0.5" />
-                <div>
-                  <h4 className="font-medium text-amber-900">Important</h4>
-                  <p className="text-sm text-amber-700">
-                    Les modifications des droits d'accès seront appliquées immédiatement pour tous les utilisateurs.
-                    Assurez-vous que ces changements n'impacteront pas les opérations en cours.
-                  </p>
+                          </TableCell>
+                          <TableCell>
+                            <Select
+                              value={roles.manager}
+                              onValueChange={(value) => updatePermission(section as keyof PermissionsSettings, 'manager', value)}
+                              disabled={!isAdmin}
+                            >
+                              <SelectTrigger className="w-full">
+                                <SelectValue placeholder="Sélectionner un niveau" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {ACCESS_LEVELS.map((level) => (
+                                  <SelectItem key={level.value} value={level.value}>
+                                    {level.label}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </TableCell>
+                          <TableCell>
+                            <Select
+                              value={roles.user}
+                              onValueChange={(value) => updatePermission(section as keyof PermissionsSettings, 'user', value)}
+                              disabled={!isAdmin}
+                            >
+                              <SelectTrigger className="w-full">
+                                <SelectValue placeholder="Sélectionner un niveau" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {ACCESS_LEVELS.map((level) => (
+                                  <SelectItem key={level.value} value={level.value}>
+                                    {level.label}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </TableCell>
+                          <TableCell>
+                            <Select
+                              value={roles.viewer}
+                              onValueChange={(value) => updatePermission(section as keyof PermissionsSettings, 'viewer', value)}
+                              disabled={!isAdmin}
+                            >
+                              <SelectTrigger className="w-full">
+                                <SelectValue placeholder="Sélectionner un niveau" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {ACCESS_LEVELS.map((level) => (
+                                  <SelectItem key={level.value} value={level.value}>
+                                    {level.label}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
                 </div>
               </div>
-              
-              {loadingEmployees ? (
-                <div className="flex justify-center items-center py-4">
-                  <Loader2 className="h-6 w-6 text-blue-600 animate-spin" />
-                  <span className="ml-2 text-gray-600">Chargement des employés...</span>
-                </div>
-              ) : isAdmin && (
-                <div className="rounded-md border">
-                  <div className="p-4 bg-slate-50 font-medium">
-                    Employés ({employees.length})
-                  </div>
-                  <div className="p-2 max-h-[300px] overflow-y-auto">
-                    {employees.length > 0 ? (
-                      <table className="w-full text-sm">
-                        <thead className="text-xs text-gray-500">
-                          <tr>
-                            <th className="text-left p-2">Nom</th>
-                            <th className="text-left p-2">Email</th>
-                            <th className="text-left p-2">Rôle</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {employees.map(employee => (
-                            <tr key={employee.id} className="border-t hover:bg-gray-50">
-                              <td className="p-2">{employee.firstName} {employee.lastName}</td>
-                              <td className="p-2">{employee.email}</td>
-                              <td className="p-2">{employee.role || 'Non défini'}</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    ) : (
-                      <div className="text-center p-4 text-gray-500">
-                        Aucun employé trouvé
+            </TabsContent>
+            
+            <TabsContent value="modules">
+              <div className="space-y-4">
+                {Object.entries(permissions).map(([section, roles]) => (
+                  <Card key={section} className="overflow-hidden">
+                    <CardHeader className="bg-muted/50 py-3">
+                      <CardTitle className="text-lg">{getModuleLabel(section as keyof PermissionsSettings)}</CardTitle>
+                    </CardHeader>
+                    <CardContent className="pt-4">
+                      <div className="rounded-md border">
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead>Rôle</TableHead>
+                              <TableHead>Niveau d'accès</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {Object.entries(roles).map(([role, access]) => (
+                              <TableRow key={role}>
+                                <TableCell className="font-medium">{getRoleLabel(role)}</TableCell>
+                                <TableCell>
+                                  <Select
+                                    value={access}
+                                    onValueChange={(value) => updatePermission(section as keyof PermissionsSettings, role as keyof PermissionsSettings['expeditions'], value)}
+                                    disabled={!isAdmin}
+                                  >
+                                    <SelectTrigger className="w-[200px]">
+                                      <SelectValue placeholder="Sélectionner un niveau" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      {ACCESS_LEVELS.map((level) => (
+                                        <SelectItem key={level.value} value={level.value}>
+                                          {level.label}
+                                        </SelectItem>
+                                      ))}
+                                    </SelectContent>
+                                  </Select>
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
                       </div>
-                    )}
-                  </div>
-                </div>
-              )}
-              
-              <div className="flex justify-end">
-                <Button
-                  variant="outline"
-                  className="mr-2"
-                  disabled={!isAdmin || saving}
-                  onClick={() => {
-                    // Réinitialiser les permissions aux valeurs par défaut
-                    setPermissions({
-                      expeditions: {
-                        admin: 'write',
-                        manager: 'write',
-                        user: 'read',
-                        viewer: 'read'
-                      },
-                      conteneurs: {
-                        admin: 'write',
-                        manager: 'write',
-                        user: 'read',
-                        viewer: 'none'
-                      },
-                      tarification: {
-                        admin: 'write',
-                        manager: 'write',
-                        user: 'read',
-                        viewer: 'none'
-                      },
-                      documents: {
-                        admin: 'write',
-                        manager: 'write',
-                        user: 'read',
-                        viewer: 'read'
-                      },
-                      clientPortal: {
-                        admin: 'write',
-                        manager: 'write',
-                        user: 'none',
-                        viewer: 'none'
-                      },
-                      parametres: {
-                        admin: 'write',
-                        manager: 'read',
-                        user: 'none',
-                        viewer: 'none'
-                      }
-                    });
-                    setHasUnsavedChanges(true);
-                  }}
-                >
-                  Réinitialiser
-                </Button>
-                <Button
-                  onClick={handleSavePermissions}
-                  disabled={!isAdmin || saving || isOffline || !hasUnsavedChanges}
-                  className="flex items-center gap-2"
-                >
-                  {saving ? (
-                    <>
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      Enregistrement...
-                    </>
-                  ) : (
-                    <>
-                      <Save className="h-4 w-4" />
-                      Enregistrer les modifications
-                    </>
-                  )}
-                </Button>
+                    </CardContent>
+                  </Card>
+                ))}
               </div>
-            </div>
-          )}
+            </TabsContent>
+          </Tabs>
         </CardContent>
+        <CardFooter className="flex justify-between">
+          <div>
+            <Badge variant="outline" className="mr-2">
+              {isOffline ? 'Mode hors ligne' : 'Connecté'}
+            </Badge>
+            {permissionsId && (
+              <Badge variant="outline">
+                ID: {permissionsId.substring(0, 8)}...
+              </Badge>
+            )}
+          </div>
+          
+          {isAdmin && (
+            <Button 
+              onClick={savePermissions} 
+              disabled={isSaving}
+            >
+              {isSaving ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Enregistrement...
+                </>
+              ) : (
+                'Enregistrer les permissions'
+              )}
+            </Button>
+          )}
+        </CardFooter>
       </Card>
     </div>
   );
 };
+
+// Utilitaires pour l'affichage des libellés
+function getModuleLabel(key: keyof PermissionsSettings): string {
+  const labels: Record<keyof PermissionsSettings, string> = {
+    expeditions: "Expéditions",
+    conteneurs: "Conteneurs",
+    tarification: "Tarification",
+    documents: "Documents",
+    clientPortal: "Portail client",
+    parametres: "Paramètres"
+  };
+  return labels[key];
+}
+
+function getRoleLabel(role: string): string {
+  const labels: Record<string, string> = {
+    admin: "Administrateur",
+    manager: "Responsable",
+    user: "Utilisateur",
+    viewer: "Observateur"
+  };
+  return labels[role] || role;
+}
 
 export default FreightPermissionsSettings;
