@@ -92,6 +92,8 @@ export const createUser = async (userData: User, password: string): Promise<User
 // Connexion utilisateur
 export const loginUser = async (email: string, password: string) => {
   try {
+    // Use the mock authentication in development environment
+    // This will use the custom signInWithEmailAndPassword implementation in firebase.ts
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
     
     // Mettre à jour lastLogin dans Firestore
