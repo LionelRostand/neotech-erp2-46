@@ -1,183 +1,161 @@
 
 import React, { useState, useEffect } from 'react';
-import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
-import { COLLECTIONS } from '@/lib/firebase-collections';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Switch } from '@/components/ui/switch';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { FormItem, FormLabel, FormControl, FormDescription, Form } from '@/components/ui/form';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from '@/hooks/use-toast';
-import { Loader2, AlertTriangle, CheckCircle } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
-import { isNetworkError } from '@/hooks/firestore/network-handler';
-
-// Schéma de validation des paramètres généraux
-const generalSettingsSchema = z.object({
-  companyName: z.string().min(2, "Le nom de l'entreprise est requis").max(100),
-  defaultCurrency: z.string().min(1, "La devise par défaut est requise"),
-  contactEmail: z.string().email("Email invalide"),
-  supportPhone: z.string().optional(),
-  enableNotifications: z.boolean().default(true),
-  weightUnit: z.string().min(1, "L'unité de poids est requise"),
-  distanceUnit: z.string().min(1, "L'unité de distance est requise"),
-  defaultLanguage: z.string().min(1, "La langue par défaut est requise"),
-  systemMessage: z.string().optional(),
-  autoSaveEnabled: z.boolean().default(true),
-});
-
-type GeneralSettingsFormValues = z.infer<typeof generalSettingsSchema>;
+import { Button } from '@/components/ui/button';
+import { db } from '@/lib/firebase';
+import { useAuth } from '@/hooks/useAuth';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { COLLECTIONS } from '@/lib/firebase-collections';
+import { FreightAlert } from '../components/FreightAlert';
 
 interface FreightGeneralSettingsProps {
   isAdmin: boolean;
   canEdit: boolean;
 }
 
+interface GeneralSettings {
+  companyName: string;
+  emailContact: string;
+  phoneContact: string;
+  trackingSettings: {
+    enableMap: boolean;
+    enableNotifications: boolean;
+    updateFrequency: string;
+  };
+  defaultCurrency: string;
+  weightUnit: string;
+  volumeUnit: string;
+}
+
+const DEFAULT_SETTINGS: GeneralSettings = {
+  companyName: '',
+  emailContact: '',
+  phoneContact: '',
+  trackingSettings: {
+    enableMap: true,
+    enableNotifications: true,
+    updateFrequency: '1h',
+  },
+  defaultCurrency: 'EUR',
+  weightUnit: 'kg',
+  volumeUnit: 'm³',
+};
+
 const FreightGeneralSettings: React.FC<FreightGeneralSettingsProps> = ({ isAdmin, canEdit }) => {
+  const [settings, setSettings] = useState<GeneralSettings>(DEFAULT_SETTINGS);
+  const [activeTab, setActiveTab] = useState("general");
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
-  const [isOffline, setIsOffline] = useState(false);
-  const [settingsId, setSettingsId] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const { currentUser } = useAuth();
 
-  // Formulaire avec React Hook Form et validation Zod
-  const form = useForm<GeneralSettingsFormValues>({
-    resolver: zodResolver(generalSettingsSchema),
-    defaultValues: {
-      companyName: '',
-      defaultCurrency: 'EUR',
-      contactEmail: '',
-      supportPhone: '',
-      enableNotifications: true,
-      weightUnit: 'kg',
-      distanceUnit: 'km',
-      defaultLanguage: 'fr',
-      systemMessage: '',
-      autoSaveEnabled: true,
-    },
-  });
-
-  // Charger les paramètres au montage du composant
   useEffect(() => {
     const fetchSettings = async () => {
       try {
         setIsLoading(true);
-        setError(null);
-        setIsOffline(false);
+        // Attempt to get settings from Firestore
+        const docRef = doc(db, COLLECTIONS.FREIGHT.SETTINGS, 'general');
+        const docSnap = await getDoc(docRef);
 
-        // Essayer de récupérer le document des paramètres
-        const settingsRef = doc(db, COLLECTIONS.FREIGHT.SETTINGS);
-        const settingsDoc = await getDoc(settingsRef);
-
-        if (settingsDoc.exists()) {
-          const data = settingsDoc.data();
-          setSettingsId(settingsDoc.id);
-          
-          // Mettre à jour le formulaire avec les données existantes
-          form.reset({
-            companyName: data.companyName || '',
-            defaultCurrency: data.defaultCurrency || 'EUR',
-            contactEmail: data.contactEmail || '',
-            supportPhone: data.supportPhone || '',
-            enableNotifications: data.enableNotifications !== undefined ? data.enableNotifications : true,
-            weightUnit: data.weightUnit || 'kg',
-            distanceUnit: data.distanceUnit || 'km',
-            defaultLanguage: data.defaultLanguage || 'fr',
-            systemMessage: data.systemMessage || '',
-            autoSaveEnabled: data.autoSaveEnabled !== undefined ? data.autoSaveEnabled : true,
+        if (docSnap.exists()) {
+          const data = docSnap.data() as Partial<GeneralSettings>;
+          // Merge with defaults for any missing fields
+          setSettings({
+            ...DEFAULT_SETTINGS,
+            ...data,
+            trackingSettings: {
+              ...DEFAULT_SETTINGS.trackingSettings,
+              ...data.trackingSettings
+            }
           });
-        } else {
-          // Si le document n'existe pas encore, on utilise les valeurs par défaut
-          console.log("Aucun paramètre existant, utilisation des valeurs par défaut");
         }
-      } catch (err: any) {
-        console.error("Erreur lors du chargement des paramètres:", err);
-        
-        if (isNetworkError(err)) {
-          setIsOffline(true);
-          // En mode hors ligne, on continue avec les valeurs par défaut ou celles dans le formulaire
-          toast({
-            title: "Mode hors ligne",
-            description: "Vous êtes en mode hors ligne. Les modifications seront enregistrées localement.",
-            variant: "default",
-          });
-        } else {
-          setError(`Erreur lors du chargement des paramètres: ${err.message}`);
-        }
+      } catch (error) {
+        console.error("Erreur lors du chargement des paramètres du fret:", error);
+        toast({
+          title: "Erreur de chargement",
+          description: "Impossible de charger les paramètres du module fret",
+          variant: "destructive"
+        });
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchSettings();
-  }, [form]);
+  }, []);
 
-  const onSubmit = async (data: GeneralSettingsFormValues) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value, type } = e.target as HTMLInputElement;
+    
+    // Handle checkbox inputs
+    if (type === 'checkbox') {
+      const checked = (e.target as HTMLInputElement).checked;
+      if (name.startsWith('tracking.')) {
+        const trackingField = name.split('.')[1];
+        setSettings(prev => ({
+          ...prev,
+          trackingSettings: {
+            ...prev.trackingSettings,
+            [trackingField]: checked
+          }
+        }));
+      }
+      return;
+    }
+    
+    // Handle tracking settings
+    if (name.startsWith('tracking.')) {
+      const trackingField = name.split('.')[1];
+      setSettings(prev => ({
+        ...prev,
+        trackingSettings: {
+          ...prev.trackingSettings,
+          [trackingField]: value
+        }
+      }));
+      return;
+    }
+    
+    // Handle regular inputs
+    setSettings(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const saveSettings = async () => {
+    if (!currentUser) {
+      toast({
+        title: "Erreur d'authentification",
+        description: "Vous devez être connecté pour effectuer cette action",
+        variant: "destructive"
+      });
+      return;
+    }
+
     if (!canEdit && !isAdmin) {
       toast({
-        title: "Accès refusé",
-        description: "Vous n'avez pas les droits nécessaires pour modifier ces paramètres.",
-        variant: "destructive",
+        title: "Permission refusée",
+        description: "Vous n'avez pas les droits nécessaires pour modifier les paramètres",
+        variant: "destructive"
       });
       return;
     }
 
     try {
       setIsSaving(true);
-      setError(null);
-      setSuccessMessage(null);
-
-      const settingsRef = doc(db, COLLECTIONS.FREIGHT.SETTINGS);
-      
-      if (settingsId) {
-        // Mise à jour d'un document existant
-        await updateDoc(settingsRef, {
-          ...data,
-          updatedAt: new Date(),
-          updatedBy: 'current-user', // Idéalement, utiliser l'ID de l'utilisateur actuel
-        });
-      } else {
-        // Création d'un nouveau document
-        await setDoc(settingsRef, {
-          ...data,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-          createdBy: 'current-user', // Idéalement, utiliser l'ID de l'utilisateur actuel
-        });
-        setSettingsId(settingsRef.id);
-      }
-
-      setSuccessMessage("Paramètres enregistrés avec succès");
+      await setDoc(doc(db, COLLECTIONS.FREIGHT.SETTINGS, 'general'), settings);
       toast({
-        title: "Succès",
-        description: "Les paramètres ont été enregistrés.",
-        variant: "default",
+        title: "Paramètres enregistrés",
+        description: "Les modifications ont été enregistrées avec succès",
       });
-    } catch (err: any) {
-      console.error("Erreur lors de l'enregistrement des paramètres:", err);
-      
-      if (isNetworkError(err)) {
-        setIsOffline(true);
-        toast({
-          title: "Mode hors ligne",
-          description: "Vous êtes en mode hors ligne. Les modifications seront enregistrées localement.",
-          variant: "default",
-        });
-      } else {
-        setError(`Erreur lors de l'enregistrement: ${err.message}`);
-        toast({
-          title: "Erreur",
-          description: `Impossible d'enregistrer les paramètres: ${err.message}`,
-          variant: "destructive",
-        });
-      }
+    } catch (error) {
+      console.error("Erreur lors de l'enregistrement des paramètres:", error);
+      toast({
+        title: "Erreur",
+        description: "Impossible d'enregistrer les paramètres",
+        variant: "destructive"
+      });
     } finally {
       setIsSaving(false);
     }
@@ -185,216 +163,219 @@ const FreightGeneralSettings: React.FC<FreightGeneralSettingsProps> = ({ isAdmin
 
   if (isLoading) {
     return (
-      <div className="p-6 text-center">
-        <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-primary" />
-        <p>Chargement des paramètres du module...</p>
-      </div>
+      <FreightAlert variant="default">
+        Chargement des paramètres...
+      </FreightAlert>
     );
   }
 
   return (
     <div className="space-y-6">
-      {error && (
-        <Alert variant="destructive">
-          <AlertTriangle className="h-4 w-4" />
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
+      {!canEdit && !isAdmin && (
+        <FreightAlert variant="warning">
+          Vous consultez les paramètres en mode lecture seule. Contactez un administrateur
+          pour effectuer des modifications.
+        </FreightAlert>
       )}
       
-      {isOffline && (
-        <Alert variant="default">
-          <AlertTriangle className="h-4 w-4" />
-          <AlertDescription>
-            Vous êtes actuellement en mode hors ligne. Les modifications seront enregistrées localement
-            jusqu'à ce que la connexion soit rétablie.
-          </AlertDescription>
-        </Alert>
-      )}
-
-      {!canEdit && !isAdmin && (
-        <Alert variant="default">
-          <AlertTriangle className="h-4 w-4" />
-          <AlertDescription>
-            Vous êtes en mode lecture seule. Vous pouvez consulter les paramètres mais ne pouvez pas les modifier.
-          </AlertDescription>
-        </Alert>
-      )}
-
-      {successMessage && (
-        <Alert variant="default">
-          <CheckCircle className="h-4 w-4 text-green-500" />
-          <AlertDescription className="text-green-600">{successMessage}</AlertDescription>
-        </Alert>
-      )}
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Paramètres généraux du module Fret</CardTitle>
-          <CardDescription>
-            Configuration des paramètres de base pour les opérations de fret et d'expédition
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FormItem>
-                  <FormLabel>Nom de l'entreprise</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="Nom de l'entreprise"
-                      {...form.register("companyName")}
-                      disabled={!canEdit && !isAdmin}
-                    />
-                  </FormControl>
-                </FormItem>
-
-                <FormItem>
-                  <FormLabel>Email de contact</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="email"
-                      placeholder="contact@example.com"
-                      {...form.register("contactEmail")}
-                      disabled={!canEdit && !isAdmin}
-                    />
-                  </FormControl>
-                </FormItem>
-
-                <FormItem>
-                  <FormLabel>Téléphone de support</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="+33 1 23 45 67 89"
-                      {...form.register("supportPhone")}
-                      disabled={!canEdit && !isAdmin}
-                    />
-                  </FormControl>
-                </FormItem>
-
-                <FormItem>
-                  <FormLabel>Devise par défaut</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="EUR"
-                      {...form.register("defaultCurrency")}
-                      disabled={!canEdit && !isAdmin}
-                    />
-                  </FormControl>
-                  <FormDescription>Utilisée pour tous les prix et factures</FormDescription>
-                </FormItem>
-
-                <FormItem>
-                  <FormLabel>Unité de poids</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="kg"
-                      {...form.register("weightUnit")}
-                      disabled={!canEdit && !isAdmin}
-                    />
-                  </FormControl>
-                </FormItem>
-
-                <FormItem>
-                  <FormLabel>Unité de distance</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="km"
-                      {...form.register("distanceUnit")}
-                      disabled={!canEdit && !isAdmin}
-                    />
-                  </FormControl>
-                </FormItem>
-
-                <FormItem>
-                  <FormLabel>Langue par défaut</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="fr"
-                      {...form.register("defaultLanguage")}
-                      disabled={!canEdit && !isAdmin}
-                    />
-                  </FormControl>
-                </FormItem>
-                
-                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
-                  <div className="space-y-0.5">
-                    <FormLabel>Notifications automatiques</FormLabel>
-                    <FormDescription>
-                      Activer les notifications pour les changements de statut
-                    </FormDescription>
-                  </div>
-                  <FormControl>
-                    <Switch
-                      checked={form.watch("enableNotifications")}
-                      onCheckedChange={(checked) => form.setValue("enableNotifications", checked)}
-                      disabled={!canEdit && !isAdmin}
-                    />
-                  </FormControl>
-                </FormItem>
-                
-                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
-                  <div className="space-y-0.5">
-                    <FormLabel>Sauvegarde automatique</FormLabel>
-                    <FormDescription>
-                      Sauvegarde automatique des brouillons d'expédition
-                    </FormDescription>
-                  </div>
-                  <FormControl>
-                    <Switch
-                      checked={form.watch("autoSaveEnabled")}
-                      onCheckedChange={(checked) => form.setValue("autoSaveEnabled", checked)}
-                      disabled={!canEdit && !isAdmin}
-                    />
-                  </FormControl>
-                </FormItem>
-              </div>
-
-              <FormItem>
-                <FormLabel>Message système</FormLabel>
-                <FormControl>
-                  <Textarea
-                    placeholder="Message affiché aux utilisateurs du module fret..."
-                    {...form.register("systemMessage")}
-                    rows={3}
-                    disabled={!canEdit && !isAdmin}
-                  />
-                </FormControl>
-                <FormDescription>Ce message sera affiché à tous les utilisateurs du module</FormDescription>
-              </FormItem>
-
-              {(canEdit || isAdmin) && (
-                <Button 
-                  type="submit" 
-                  className="w-full mt-4"
-                  disabled={isSaving}
-                >
-                  {isSaving ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Enregistrement...
-                    </>
-                  ) : (
-                    'Enregistrer les paramètres'
-                  )}
-                </Button>
-              )}
-            </form>
-          </Form>
-        </CardContent>
-        <CardFooter className="flex justify-between">
-          <div>
-            <Badge variant="outline" className="mr-2">
-              {isOffline ? 'Mode hors ligne' : 'Connecté'}
-            </Badge>
-            {settingsId && (
-              <Badge variant="outline">
-                ID: {settingsId.substring(0, 8)}...
-              </Badge>
-            )}
+      <div className="space-y-6">
+        <div className="grid gap-4 md:grid-cols-2">
+          <div className="space-y-4">
+            <h3 className="text-lg font-medium">Informations de l'entreprise</h3>
+            
+            <div className="space-y-2">
+              <label className="block text-sm font-medium">
+                Nom de l'entreprise
+                <input
+                  type="text"
+                  name="companyName"
+                  value={settings.companyName}
+                  onChange={handleInputChange}
+                  disabled={!canEdit && !isAdmin}
+                  className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-black focus:border-blue-500 focus:ring-blue-500 disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-500"
+                />
+              </label>
+            </div>
+            
+            <div className="space-y-2">
+              <label className="block text-sm font-medium">
+                Email de contact
+                <input
+                  type="email"
+                  name="emailContact"
+                  value={settings.emailContact}
+                  onChange={handleInputChange}
+                  disabled={!canEdit && !isAdmin}
+                  className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-black focus:border-blue-500 focus:ring-blue-500 disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-500"
+                />
+              </label>
+            </div>
+            
+            <div className="space-y-2">
+              <label className="block text-sm font-medium">
+                Téléphone de contact
+                <input
+                  type="tel"
+                  name="phoneContact"
+                  value={settings.phoneContact}
+                  onChange={handleInputChange}
+                  disabled={!canEdit && !isAdmin}
+                  className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-black focus:border-blue-500 focus:ring-blue-500 disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-500"
+                />
+              </label>
+            </div>
           </div>
-        </CardFooter>
-      </Card>
+          
+          <div className="space-y-4">
+            <h3 className="text-lg font-medium">Paramètres par défaut</h3>
+            
+            <div className="space-y-2">
+              <label className="block text-sm font-medium">
+                Devise par défaut
+                <select
+                  name="defaultCurrency"
+                  value={settings.defaultCurrency}
+                  onChange={handleInputChange}
+                  disabled={!canEdit && !isAdmin}
+                  className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-black focus:border-blue-500 focus:ring-blue-500 disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-500"
+                >
+                  <option value="EUR">Euro (€)</option>
+                  <option value="USD">Dollar US ($)</option>
+                  <option value="GBP">Livre Sterling (£)</option>
+                  <option value="CAD">Dollar Canadien (C$)</option>
+                  <option value="CHF">Franc Suisse (Fr)</option>
+                </select>
+              </label>
+            </div>
+            
+            <div className="space-y-2">
+              <label className="block text-sm font-medium">
+                Unité de poids
+                <select
+                  name="weightUnit"
+                  value={settings.weightUnit}
+                  onChange={handleInputChange}
+                  disabled={!canEdit && !isAdmin}
+                  className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-black focus:border-blue-500 focus:ring-blue-500 disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-500"
+                >
+                  <option value="kg">Kilogrammes (kg)</option>
+                  <option value="lb">Livres (lb)</option>
+                  <option value="t">Tonnes (t)</option>
+                </select>
+              </label>
+            </div>
+            
+            <div className="space-y-2">
+              <label className="block text-sm font-medium">
+                Unité de volume
+                <select
+                  name="volumeUnit"
+                  value={settings.volumeUnit}
+                  onChange={handleInputChange}
+                  disabled={!canEdit && !isAdmin}
+                  className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-black focus:border-blue-500 focus:ring-blue-500 disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-500"
+                >
+                  <option value="m³">Mètres cubes (m³)</option>
+                  <option value="ft³">Pieds cubes (ft³)</option>
+                  <option value="L">Litres (L)</option>
+                </select>
+              </label>
+            </div>
+          </div>
+        </div>
+        
+        <div className="mt-4 space-y-4">
+          <h3 className="text-lg font-medium">Paramètres de suivi</h3>
+          
+          <div className="flex flex-wrap gap-6">
+            <label className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                name="tracking.enableMap"
+                checked={settings.trackingSettings.enableMap}
+                onChange={(e) => {
+                  setSettings(prev => ({
+                    ...prev,
+                    trackingSettings: {
+                      ...prev.trackingSettings,
+                      enableMap: e.target.checked
+                    }
+                  }));
+                }}
+                disabled={!canEdit && !isAdmin}
+                className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 disabled:cursor-not-allowed"
+              />
+              <span>Activer la carte de suivi</span>
+            </label>
+            
+            <label className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                name="tracking.enableNotifications"
+                checked={settings.trackingSettings.enableNotifications}
+                onChange={(e) => {
+                  setSettings(prev => ({
+                    ...prev,
+                    trackingSettings: {
+                      ...prev.trackingSettings,
+                      enableNotifications: e.target.checked
+                    }
+                  }));
+                }}
+                disabled={!canEdit && !isAdmin}
+                className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 disabled:cursor-not-allowed"
+              />
+              <span>Activer les notifications automatiques</span>
+            </label>
+          </div>
+          
+          <div className="space-y-2 max-w-md">
+            <label className="block text-sm font-medium">
+              Fréquence des mises à jour
+              <select
+                name="tracking.updateFrequency"
+                value={settings.trackingSettings.updateFrequency}
+                onChange={(e) => {
+                  setSettings(prev => ({
+                    ...prev,
+                    trackingSettings: {
+                      ...prev.trackingSettings,
+                      updateFrequency: e.target.value
+                    }
+                  }));
+                }}
+                disabled={!canEdit && !isAdmin}
+                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-black focus:border-blue-500 focus:ring-blue-500 disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-500"
+              >
+                <option value="15m">Toutes les 15 minutes</option>
+                <option value="30m">Toutes les 30 minutes</option>
+                <option value="1h">Toutes les heures</option>
+                <option value="2h">Toutes les 2 heures</option>
+                <option value="6h">Toutes les 6 heures</option>
+                <option value="12h">Toutes les 12 heures</option>
+                <option value="24h">Une fois par jour</option>
+              </select>
+            </label>
+          </div>
+        </div>
+        
+        <FreightAlert variant="success">
+          Les paramètres du module fret sont utilisés par l'ensemble des fonctionnalités 
+          du module et peuvent influencer le comportement de l'application sur les différents
+          postes clients.
+        </FreightAlert>
+                
+        {(canEdit || isAdmin) && (
+          <div className="flex justify-end pt-4">
+            <Button 
+              onClick={saveSettings} 
+              disabled={isSaving || (!canEdit && !isAdmin)}
+            >
+              {isSaving ? 'Enregistrement...' : 'Enregistrer les paramètres'}
+            </Button>
+          </div>
+        )}
+      </div>
     </div>
   );
 };
