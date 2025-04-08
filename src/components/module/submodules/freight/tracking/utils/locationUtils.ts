@@ -1,90 +1,53 @@
 
-/**
- * Utilities for handling tracking locations
- */
-import { GeoLocation, TrackingEvent } from '@/types/freight';
+import { TrackingEvent, GeoLocation } from '@/types/freight';
 
-// Mock locations for package tracking
-export const mockLocations: GeoLocation[] = [
-  {
-    latitude: 48.856614,
-    longitude: 2.3522219,
-    address: "3 Rue de Rivoli",
-    city: "Paris",
-    country: "France",
-    postalCode: "75001",
-  },
-  {
-    latitude: 45.764043,
-    longitude: 4.835659,
-    address: "20 Place Bellecour",
-    city: "Lyon",
-    country: "France",
-    postalCode: "69002",
-  },
-  {
-    latitude: 43.296482,
-    longitude: 5.36978,
-    address: "56 La Canebière",
-    city: "Marseille",
-    country: "France",
-    postalCode: "13001",
-  },
-  {
-    latitude: 50.6311634,
-    longitude: 3.0599573,
-    address: "15 Rue de Paris",
-    city: "Lille",
-    country: "France",
-    postalCode: "59000",
-  },
-  {
-    latitude: 51.507351,
-    longitude: -0.127758,
-    address: "10 Downing Street",
-    city: "London",
-    country: "United Kingdom",
-    postalCode: "SW1A 2AA",
-  },
-  {
-    latitude: 40.416775,
-    longitude: -3.70379,
-    address: "Puerta del Sol",
-    city: "Madrid",
-    country: "Spain",
-    postalCode: "28013",
-  },
-  {
-    latitude: 52.520008,
-    longitude: 13.404954,
-    address: "Unter den Linden 77",
-    city: "Berlin",
-    country: "Germany",
-    postalCode: "10117",
-  },
-  {
-    latitude: 41.902783,
-    longitude: 12.496366,
-    address: "Via dei Fori Imperiali 1",
-    city: "Rome",
-    country: "Italy",
-    postalCode: "00186",
-  },
-];
-
-// Helper function to get the latest location from a list of tracking events
-export const getLatestLocationFromEvents = (events: TrackingEvent[]): GeoLocation | undefined => {
-  // Get events with location data
-  const eventsWithLocation = events.filter(event => event.location);
+export function getLatestLocationFromEvents(events: TrackingEvent[]): GeoLocation | undefined {
+  if (!events || events.length === 0) return undefined;
   
-  if (eventsWithLocation.length === 0) {
-    return undefined;
-  }
-  
-  // Sort by timestamp (newest first) and get the first one
-  const sortedEvents = [...eventsWithLocation].sort(
-    (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+  // Sort events by timestamp (newest first)
+  const sortedEvents = [...events].sort((a, b) => 
+    new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
   );
   
-  return sortedEvents[0].location;
-};
+  // Find the first event with location data
+  for (const event of sortedEvents) {
+    if (event.location) {
+      return event.location;
+    }
+  }
+  
+  return undefined;
+}
+
+export function calculateDistance(location1: GeoLocation, location2: GeoLocation): number {
+  const R = 6371; // Radius of the earth in km
+  const dLat = deg2rad(location2.latitude - location1.latitude);
+  const dLon = deg2rad(location2.longitude - location1.longitude);
+  
+  const a = 
+    Math.sin(dLat/2) * Math.sin(dLat/2) +
+    Math.cos(deg2rad(location1.latitude)) * Math.cos(deg2rad(location2.latitude)) * 
+    Math.sin(dLon/2) * Math.sin(dLon/2);
+  
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
+  const distance = R * c; // Distance in km
+  
+  return distance;
+}
+
+function deg2rad(deg: number): number {
+  return deg * (Math.PI/180);
+}
+
+export function formatAddress(location: GeoLocation): string {
+  if (!location) return '';
+  
+  const parts = [
+    location.address,
+    location.city,
+    location.postalCode,
+    location.country
+  ].filter(Boolean);
+  
+  return parts.join(', ');
+}

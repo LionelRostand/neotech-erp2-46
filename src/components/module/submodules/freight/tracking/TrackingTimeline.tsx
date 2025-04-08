@@ -1,90 +1,89 @@
 
 import React from 'react';
+import { Card, CardContent } from '@/components/ui/card';
 import { TrackingEvent } from '@/types/freight';
-import { formatPackageStatus, getStatusColor } from './utils/statusUtils';
-import { format, parseISO } from 'date-fns';
-import { fr } from 'date-fns/locale';
-import StatusBadge from '@/components/StatusBadge';
-import MapPreview from './MapPreview';
-import { Check, Bell, BellOff, MapPin } from 'lucide-react';
+import { formatPackageStatus } from './utils/statusUtils';
+import { Package, MapPin, ArrowDown } from 'lucide-react';
 
 interface TrackingTimelineProps {
   events: TrackingEvent[];
-  showMaps?: boolean;
 }
 
-const TrackingTimeline: React.FC<TrackingTimelineProps> = ({ events, showMaps = true }) => {
-  if (!events.length) {
+const TrackingTimeline: React.FC<TrackingTimelineProps> = ({ events }) => {
+  // Trier les événements du plus récent au plus ancien
+  const sortedEvents = [...events].sort((a, b) => 
+    new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+  );
+
+  const formatDate = (dateString: string) => {
+    const options: Intl.DateTimeFormatOptions = { 
+      day: 'numeric',
+      month: 'long', 
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    };
+    return new Date(dateString).toLocaleDateString('fr-FR', options);
+  };
+
+  // Si aucun événement, afficher un message
+  if (events.length === 0) {
     return (
-      <div className="text-center py-8 text-gray-500">
-        Aucun événement de suivi disponible pour ce colis.
-      </div>
+      <Card>
+        <CardContent className="flex flex-col items-center justify-center py-12 text-center">
+          <Package className="h-12 w-12 text-muted-foreground mb-4" />
+          <h3 className="text-lg font-medium">Aucun événement de suivi</h3>
+          <p className="text-muted-foreground">
+            Aucun événement de suivi n'a encore été enregistré pour ce colis.
+          </p>
+        </CardContent>
+      </Card>
     );
   }
 
-  // Convert status to appropriate StatusBadge type
-  const getStatusBadgeType = (status: string): "success" | "warning" | "danger" => {
-    if (status === 'delivered') return "success";
-    if (status === 'exception' || status === 'lost') return "danger";
-    return "warning";
-  };
-
   return (
-    <div className="space-y-1">
-      {events.map((event, index) => (
-        <div key={event.id} className="relative pb-8">
-          {/* Timeline connector */}
-          {index < events.length - 1 && (
-            <div className="absolute left-5 top-5 -ml-px h-full w-0.5 bg-gray-200" aria-hidden="true" />
-          )}
-          
-          <div className="relative flex items-start">
-            {/* Timeline icon */}
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white shadow ring-1 ring-gray-200">
-              <span className={`flex h-6 w-6 items-center justify-center rounded-full ${
-                event.status === 'delivered' ? 'bg-green-100 text-green-600' : 
-                event.status === 'exception' || event.status === 'lost' ? 'bg-red-100 text-red-600' :
-                'bg-blue-100 text-blue-600'
-              }`}>
-                {event.status === 'delivered' ? (
-                  <Check className="h-4 w-4" />
-                ) : (
-                  <MapPin className="h-4 w-4" />
-                )}
-              </span>
-            </div>
-            
-            {/* Timeline content */}
-            <div className="ml-4 w-full">
-              <div className="flex justify-between">
-                <div>
-                  <h3 className="font-medium text-gray-900">
-                    {formatPackageStatus(event.status)}
-                  </h3>
-                  <p className="text-sm text-gray-500">
-                    {format(parseISO(event.timestamp), "d MMMM yyyy 'à' HH:mm", { locale: fr })}
-                  </p>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <StatusBadge status={getStatusBadgeType(event.status)}>
-                    {formatPackageStatus(event.status)}
-                  </StatusBadge>
-                  {event.isNotified ? (
-                    <Bell className="h-4 w-4 text-green-500" aria-label="Notification envoyée" />
-                  ) : (
-                    <BellOff className="h-4 w-4 text-gray-400" aria-label="Pas de notification" />
-                  )}
-                </div>
+    <div className="space-y-4">
+      {sortedEvents.map((event, index) => (
+        <div key={event.id} className="relative">
+          <div className="flex items-start gap-4">
+            <div className="flex flex-col items-center">
+              <div className={`p-2 rounded-full ${getStatusColor(event.status)}`}>
+                <Package className="h-4 w-4 text-white" />
               </div>
-              
-              <p className="mt-2 text-sm text-gray-600">{event.description}</p>
-              
-              {/* Location map if available and maps are enabled */}
-              {showMaps && event.location && (
-                <div className="mt-2">
-                  <MapPreview location={event.location} className="border" />
+              {index < sortedEvents.length - 1 && (
+                <div className="h-16 w-px bg-border mx-auto my-1">
+                  <ArrowDown className="h-4 w-4 text-muted-foreground absolute left-5 top-12 -translate-x-1/2" />
                 </div>
               )}
+            </div>
+            
+            <div className="flex-1">
+              <Card>
+                <CardContent className="p-4">
+                  <div className="mb-2">
+                    <span className="font-medium">{formatPackageStatus(event.status)}</span>
+                    <span className="text-sm text-muted-foreground ml-2">
+                      {formatDate(event.timestamp)}
+                    </span>
+                  </div>
+                  
+                  <p className="text-sm">{event.description}</p>
+                  
+                  {event.location && (
+                    <div className="flex items-center mt-2 text-sm text-muted-foreground">
+                      <MapPin className="h-3.5 w-3.5 mr-1" />
+                      <span>
+                        {[
+                          event.location.address,
+                          event.location.city,
+                          event.location.postalCode,
+                          event.location.country
+                        ].filter(Boolean).join(', ')}
+                      </span>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
             </div>
           </div>
         </div>
@@ -92,5 +91,21 @@ const TrackingTimeline: React.FC<TrackingTimelineProps> = ({ events, showMaps = 
     </div>
   );
 };
+
+function getStatusColor(status: string): string {
+  const statusColors: Record<string, string> = {
+    delivered: "bg-green-500",
+    in_transit: "bg-blue-500",
+    processing: "bg-violet-500",
+    registered: "bg-slate-500",
+    out_for_delivery: "bg-teal-500",
+    delayed: "bg-amber-500",
+    exception: "bg-red-500",
+    returned: "bg-red-500",
+    lost: "bg-gray-500"
+  };
+
+  return statusColors[status] || "bg-slate-500";
+}
 
 export default TrackingTimeline;

@@ -1,290 +1,224 @@
 
-import React, { useRef, useEffect } from 'react';
-import { Package, MapPin, CheckCircle } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Card } from '@/components/ui/card';
-import { mockLocations } from './utils/locationUtils';
-import { configureLeafletIcons } from '@/components/module/submodules/transport/utils/leaflet-icon-setup';
+import React, { useEffect, useRef, useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Shipment, GeoLocation, TrackingEvent } from '@/types/freight';
+import { MapPin, AlertTriangle } from 'lucide-react';
+import { fetchFreightCollectionData } from '@/hooks/fetchFreightCollectionData';
+import { useToast } from '@/hooks/use-toast';
 import 'leaflet/dist/leaflet.css';
 
 interface ShipmentMapProps {
-  events: any[];
-  trackingCode: string;
+  shipmentId?: string;
+  height?: string;
 }
 
-const ShipmentMap: React.FC<ShipmentMapProps> = ({ events, trackingCode }) => {
+// Coordonnées de secours si nous n'avons pas de données
+const DEFAULT_COORDS = {
+  latitude: 48.856614,
+  longitude: 2.3522219,
+};
+
+const ShipmentMap: React.FC<ShipmentMapProps> = ({ shipmentId, height = '400px' }) => {
   const mapRef = useRef<HTMLDivElement>(null);
-  const mapInstanceRef = useRef<any>(null);
-  const markersRef = useRef<any[]>([]);
-  const [mapType, setMapType] = React.useState<string>('roadmap');
-  const [mapError, setMapError] = React.useState<boolean>(false);
+  const [mapToken, setMapToken] = useState<string>('');
+  const [shipment, setShipment] = useState<Shipment | null>(null);
+  const [events, setEvents] = useState<TrackingEvent[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const { toast } = useToast();
 
-  // Filtrer les événements qui ont des coordonnées de localisation
-  const locatedEvents = events.filter(event => event.location && event.location.latitude && event.location.longitude);
-  
-  // Si aucun événement n'a de coordonnées, utiliser des coordonnées par défaut
-  if (locatedEvents.length === 0 && events.length > 0) {
-    // Ajouter des coordonnées fictives aux événements existants
-    events.forEach((event, index) => {
-      if (index < mockLocations.length) {
-        event.location = mockLocations[index];
-      }
-    });
-  }
-
-  // Initialiser et dessiner la carte
+  // Vérifier le token de carte
   useEffect(() => {
-    if (!mapRef.current || events.length === 0) return;
+    const storedToken = localStorage.getItem('mapbox_token');
+    if (storedToken) {
+      setMapToken(storedToken);
+    } else {
+      setError("Configuration de carte manquante");
+    }
+  }, []);
+
+  // Charger les données d'expédition si un ID est fourni
+  useEffect(() => {
+    if (!shipmentId) {
+      setIsLoading(false);
+      return;
+    }
+
+    const loadShipmentData = async () => {
+      try {
+        setIsLoading(true);
+        
+        // Charger l'expédition
+        const shipments = await fetchFreightCollectionData<Shipment>('SHIPMENTS');
+        const foundShipment = shipments.find(s => s.id === shipmentId);
+        
+        if (foundShipment) {
+          setShipment(foundShipment);
+          
+          // Si l'expédition a un numéro de suivi, charger les événements de suivi
+          if (foundShipment.trackingNumber) {
+            const trackingEvents = await fetchFreightCollectionData<TrackingEvent>('TRACKING_EVENTS');
+            const relatedEvents = trackingEvents.filter(e => 
+              e.packageId === foundShipment.trackingNumber || 
+              e.packageId === foundShipment.id
+            );
+            
+            setEvents(relatedEvents);
+          }
+        } else {
+          setError("Expédition non trouvée");
+        }
+        
+        setIsLoading(false);
+      } catch (err) {
+        console.error('Erreur lors du chargement des données de l\'expédition:', err);
+        setError("Erreur lors du chargement des données");
+        setIsLoading(false);
+      }
+    };
+    
+    loadShipmentData();
+  }, [shipmentId]);
+
+  // Initialiser la carte une fois que nous avons les données
+  useEffect(() => {
+    if (!mapRef.current || !mapToken || isLoading) return;
     
     const initMap = async () => {
       try {
-        // Clean up previous map if it exists
-        if (mapInstanceRef.current) {
-          mapInstanceRef.current.remove();
-          mapInstanceRef.current = null;
-          markersRef.current = [];
-        }
+        // Import dynamique de Leaflet
+        const L = await import('leaflet');
         
-        // Load Leaflet with configured icons
-        const L = await configureLeafletIcons();
+        // Créer la carte
+        const map = L.map(mapRef.current).setView([DEFAULT_COORDS.latitude, DEFAULT_COORDS.longitude], 5);
         
-        // Default center (Paris)
-        let center: [number, number] = [48.856614, 2.3522219];
-        let zoom = 5;
+        // Ajouter les tuiles
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+          maxZoom: 19
+        }).addTo(map);
         
-        // If we have events with location, use the most recent one for center
-        if (locatedEvents.length > 0) {
-          const latestEvent = locatedEvents[0];
-          center = [latestEvent.location.latitude, latestEvent.location.longitude];
-          zoom = 10;
-        }
+        const markers: L.Marker[] = [];
         
-        // Create map with the selected style
-        const map = L.map(mapRef.current).setView(center, zoom);
-        mapInstanceRef.current = map;
-        
-        // Add appropriate tile layer based on mapType
-        if (mapType === 'satellite') {
-          L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-            attribution: 'Imagery &copy; Esri',
-            maxZoom: 19
-          }).addTo(map);
-        } else {
-          L.tileLayer('https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png', {
-            attribution: 'données © <a href="//osm.org/copyright">OpenStreetMap</a>/ODbL - rendu <a href="//openstreetmap.fr">OSM France</a>',
-            maxZoom: 19
-          }).addTo(map);
-        }
-        
-        // Add markers for events with location
-        const markers: any[] = [];
-        
-        events.forEach((event, index) => {
-          if (!event.location) return;
+        // Si nous avons des événements avec des localisations, les afficher sur la carte
+        if (events.length > 0) {
+          const eventsWithLocation = events.filter(event => event.location);
           
-          const { latitude, longitude } = event.location;
+          eventsWithLocation.forEach(event => {
+            if (event.location) {
+              const { latitude, longitude } = event.location;
+              
+              const marker = L.marker([latitude, longitude]).addTo(map);
+              
+              // Créer un contenu de popup
+              const popupContent = `
+                <div class="p-2">
+                  <h3 class="font-bold">${formatEventStatus(event.status)}</h3>
+                  <p class="text-sm">${event.description}</p>
+                  <p class="text-xs text-gray-500">${new Date(event.timestamp).toLocaleString('fr-FR')}</p>
+                </div>
+              `;
+              
+              marker.bindPopup(popupContent);
+              markers.push(marker);
+            }
+          });
           
-          // Create custom icon based on event type
-          const iconOptions: any = {
-            className: `event-marker-${event.type}`,
-            iconSize: [32, 32],
-            iconAnchor: [16, 16],
-            popupAnchor: [0, -16]
-          };
-          
-          let iconHtml = '';
-          const colorClass = getEventColor(event.type);
-          
-          iconHtml = `<div class="w-8 h-8 rounded-full bg-white p-1 shadow-md flex items-center justify-center">
-            <div class="w-6 h-6 rounded-full ${colorClass}"></div>
-          </div>`;
-          
-          iconOptions.html = iconHtml;
-          
-          const icon = L.divIcon(iconOptions);
-          
-          // Create marker
-          const marker = L.marker([latitude, longitude], { 
-            icon: icon, 
-            zIndexOffset: events.length - index // Latest events above older ones
-          }).addTo(map);
-          
-          // Create popup content
-          const popupContent = `
-            <div class="p-3">
-              <h3 class="font-bold">${getEventTypeLabel(event.type)}</h3>
-              <p class="text-sm">${event.description}</p>
-              <p class="text-sm text-muted-foreground">
-                ${event.location.city}, ${event.location.country}
-              </p>
-              <p class="text-sm text-muted-foreground">
-                ${new Date(event.timestamp).toLocaleString('fr-FR')}
-              </p>
-            </div>
-          `;
-          
-          marker.bindPopup(popupContent);
-          markers.push(marker);
-        });
-        
-        markersRef.current = markers;
-        
-        // Draw path between markers if we have more than one
-        if (markers.length > 1) {
-          const points = events
-            .filter(event => event.location)
-            .map(event => [event.location.latitude, event.location.longitude] as [number, number]);
-          
-          L.polyline(points, { 
-            color: '#3b82f6', 
-            weight: 3,
-            opacity: 0.7,
-            dashArray: '5, 5' 
-          }).addTo(map);
-        }
-        
-        // Fit map to show all markers
-        if (markers.length > 0) {
-          try {
+          // Si nous avons des marqueurs, ajuster la vue pour les montrer tous
+          if (markers.length > 0) {
             const group = L.featureGroup(markers);
-            map.fitBounds(group.getBounds().pad(0.2));
-          } catch (error) {
-            console.error("Error fitting bounds", error);
+            map.fitBounds(group.getBounds().pad(0.1));
           }
+        } 
+        // Sinon, si nous avons un expédition avec origine et destination, afficher ces points
+        else if (shipment) {
+          // Nous utiliserions normalement un service de géocodage pour obtenir les coordonnées
+          // Pour cette démo, nous utilisons des coordonnées factices
+          const originCoords = { lat: 48.856614, lng: 2.3522219 }; // Paris
+          const destCoords = { lat: 40.712776, lng: -74.005974 }; // New York
+          
+          // Marqueur d'origine
+          const originMarker = L.marker(originCoords).addTo(map);
+          originMarker.bindPopup(`<b>Origine</b><br>${shipment.origin}`);
+          markers.push(originMarker);
+          
+          // Marqueur de destination
+          const destMarker = L.marker(destCoords).addTo(map);
+          destMarker.bindPopup(`<b>Destination</b><br>${shipment.destination}`);
+          markers.push(destMarker);
+          
+          // Tracer une ligne entre les deux
+          L.polyline([originCoords, destCoords], { color: 'blue', dashArray: '5, 5' }).addTo(map);
+          
+          // Ajuster la vue
+          const group = L.featureGroup(markers);
+          map.fitBounds(group.getBounds().pad(0.1));
         }
-        
-        // Add package info card
-        const infoCardControl = L.Control.extend({
-          options: { position: 'bottomleft' },
-          onAdd: function(map: any) {
-            const div = L.DomUtil.create('div', 'info-card');
-            div.innerHTML = `
-              <div class="bg-white p-2 rounded shadow-md text-xs">
-                <div class="font-bold">Colis: ${trackingCode}</div>
-                <div>Mise à jour: ${new Date(events[0].timestamp).toLocaleDateString('fr-FR', { 
-                  day: 'numeric', 
-                  month: 'short',
-                  hour: '2-digit', 
-                  minute: '2-digit'
-                })}</div>
-              </div>
-            `;
-            return div;
-          }
-        });
-        
-        new infoCardControl().addTo(map);
         
       } catch (error) {
-        console.error("Erreur lors de l'initialisation de la carte", error);
-        setMapError(true);
+        console.error('Erreur lors de l\'initialisation de la carte', error);
+        setError("Erreur lors de l'initialisation de la carte");
       }
     };
     
     initMap();
-    
-    return () => {
-      if (mapInstanceRef.current) {
-        mapInstanceRef.current.remove();
-        mapInstanceRef.current = null;
-        markersRef.current = [];
-      }
-    };
-  }, [events, mapType, trackingCode, locatedEvents]);
-  
-  // Helper functions
-  const getEventTypeLabel = (type: string): string => {
-    const labels: Record<string, string> = {
-      'pickup': 'Pris en charge',
-      'transit': 'En transit',
-      'customs': 'Contrôle douanier',
-      'delivery': 'Livré',
-      'delay': 'Retardé',
-      'location': 'Mise à jour de position'
-    };
-    
-    return labels[type] || 'Mise à jour';
-  };
-  
-  const getEventColor = (type: string): string => {
-    const colors: Record<string, string> = {
-      'pickup': 'bg-purple-500',
-      'transit': 'bg-blue-500',
-      'customs': 'bg-amber-500',
-      'delivery': 'bg-green-500',
-      'delay': 'bg-orange-500',
-      'location': 'bg-gray-500'
-    };
-    
-    return colors[type] || 'bg-gray-400';
-  };
-  
-  // Gérer le changement de type de carte
-  const handleMapTypeChange = (value: string) => {
-    setMapType(value);
-  };
+  }, [mapToken, isLoading, events, shipment]);
 
-  if (mapError) {
+  if (isLoading) {
     return (
-      <div className="flex flex-col items-center justify-center h-full p-6">
-        <MapPin className="h-16 w-16 text-muted-foreground mb-4" />
-        <h3 className="text-xl font-medium mb-2">Impossible d'afficher la carte</h3>
-        <p className="text-muted-foreground text-center mb-4">
-          Une erreur s'est produite lors du chargement de la carte. Veuillez réessayer plus tard.
-        </p>
-        <Button onClick={() => setMapError(false)}>Réessayer</Button>
-      </div>
+      <Card>
+        <CardContent className="p-6 flex justify-center items-center" style={{ height }}>
+          <p className="text-muted-foreground">Chargement de la carte...</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (error) {
+    return (
+      <Card>
+        <CardContent className="p-6 flex flex-col justify-center items-center" style={{ height }}>
+          <AlertTriangle className="h-8 w-8 text-amber-500 mb-2" />
+          <p className="text-amber-800">{error}</p>
+        </CardContent>
+      </Card>
     );
   }
 
   return (
-    <div className="relative h-full">
-      <div className="absolute top-2 right-2 z-10">
-        <Tabs value={mapType} onValueChange={handleMapTypeChange}>
-          <TabsList className="bg-white bg-opacity-90">
-            <TabsTrigger value="roadmap">Carte</TabsTrigger>
-            <TabsTrigger value="satellite">Satellite</TabsTrigger>
-          </TabsList>
-        </Tabs>
-      </div>
-      
-      <div className="absolute top-2 left-2 z-10">
-        <Card className="bg-white bg-opacity-90 p-2 text-xs">
-          <div className="flex items-center gap-1 mb-1">
-            <Package className="h-3 w-3" />
-            <span className="font-medium">Suivi du colis: {trackingCode}</span>
-          </div>
-          <div className="text-muted-foreground">
-            {events.length} points de suivi
-          </div>
-        </Card>
-      </div>
-      
-      <div 
-        ref={mapRef} 
-        className="relative w-full h-full bg-gray-100 overflow-hidden"
-      >
-        {events.length === 0 && (
-          <div className="flex flex-col items-center justify-center h-full">
-            <MapPin className="h-12 w-12 text-muted-foreground mb-4" />
-            <p className="text-muted-foreground">Chargement de la carte...</p>
-          </div>
+    <Card>
+      <CardHeader className="pb-2">
+        <CardTitle className="flex items-center gap-2">
+          <MapPin className="h-5 w-5" />
+          {shipment ? `Suivi de l'expédition ${shipment.reference}` : 'Carte de suivi'}
+        </CardTitle>
+        {shipment && (
+          <CardDescription>
+            {shipment.origin} → {shipment.destination}
+          </CardDescription>
         )}
-      </div>
-      
-      {events.length > 0 && (
-        <div className="absolute bottom-2 right-2 z-10">
-          <div className="flex flex-col gap-1">
-            <Button size="sm" className="flex items-center gap-1">
-              <CheckCircle className="h-3 w-3" />
-              <span className="text-xs">Confirmer réception</span>
-            </Button>
-          </div>
-        </div>
-      )}
-    </div>
+      </CardHeader>
+      <CardContent className="pt-2">
+        <div ref={mapRef} style={{ height, width: '100%' }} className="rounded-md overflow-hidden"></div>
+      </CardContent>
+    </Card>
   );
 };
+
+// Utilitaire pour formater le statut d'un événement
+function formatEventStatus(status: string): string {
+  const statusLabels: Record<string, string> = {
+    'delivered': 'Livré',
+    'in_transit': 'En transit',
+    'processing': 'En traitement',
+    'registered': 'Enregistré',
+    'out_for_delivery': 'En cours de livraison',
+    'delayed': 'Retardé',
+    'exception': 'Problème',
+    'returned': 'Retourné'
+  };
+  
+  return statusLabels[status] || status;
+}
 
 export default ShipmentMap;

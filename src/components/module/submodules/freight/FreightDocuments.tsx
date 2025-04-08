@@ -21,7 +21,6 @@ interface FreightDocument {
   creator: string;
   size: string;
   format: string;
-  url?: string;
   tags?: string[];
 }
 

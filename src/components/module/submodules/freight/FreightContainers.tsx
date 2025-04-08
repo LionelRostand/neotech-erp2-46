@@ -1,331 +1,279 @@
 
-import React, { useState } from 'react';
-import { Search, Filter, Plus, ArrowUpDown, Eye, Truck, MoreHorizontal } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import React, { useState, useEffect } from 'react';
+import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from '@/components/ui/select';
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from '@/components/ui/table';
-import StatusBadge from '@/components/StatusBadge';
-import { useToast } from '@/hooks/use-toast';
-import ContainerFormDialog from './ContainerFormDialog';
-import ContainerDetailsDialog from './ContainerDetailsDialog';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Container, Search, Plus, Filter, Download, Ship } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Card } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { fetchFreightCollectionData } from '@/hooks/fetchFreightCollectionData';
+import StatCard from '@/components/StatCard';
+
+interface FreightContainer {
+  id: string;
+  number: string;
+  type: string;
+  size: string;
+  status: 'empty' | 'loading' | 'loaded' | 'in_transit' | 'delivered' | 'returned';
+  carrier?: string;
+  carrierName?: string;
+  shipmentId?: string;
+  origin?: string;
+  destination?: string;
+  departureDate?: string;
+  arrivalDate?: string;
+  lastUpdated: string;
+}
 
 const FreightContainers: React.FC = () => {
+  const [containers, setContainers] = useState<FreightContainer[]>([]);
+  const [filteredContainers, setFilteredContainers] = useState<FreightContainer[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [sortField, setSortField] = useState<string | null>(null);
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
-  const [filterStatus, setFilterStatus] = useState<string>('all');
-  const [showNewContainerDialog, setShowNewContainerDialog] = useState(false);
-  const [showContainerDetailsDialog, setShowContainerDetailsDialog] = useState(false);
-  const [selectedContainer, setSelectedContainer] = useState<any>(null);
+  const [statusFilter, setStatusFilter] = useState('all');
   const { toast } = useToast();
-  
-  // État pour les conteneurs
-  const [containers, setContainers] = useState([
-    { 
-      id: 'CONT001', 
-      number: 'CON12345678', 
-      type: '40ft High Cube', 
-      status: 'in_transit', 
-      location: 'Marseille, FR', 
-      destination: 'Lyon, FR',
-      client: 'MariTrans SAS',
-      departure: '2023-10-15',
-      arrival: '2023-10-18'
-    },
-    { 
-      id: 'CONT002', 
-      number: 'CON23456789', 
-      type: '20ft Standard', 
-      status: 'delivered', 
-      location: 'Paris, FR', 
-      destination: 'Paris, FR',
-      client: 'Logistique Express',
-      departure: '2023-10-10',
-      arrival: '2023-10-12'
-    },
-    { 
-      id: 'CONT003', 
-      number: 'CON34567890', 
-      type: '40ft Refrigerated', 
-      status: 'loading', 
-      location: 'Le Havre, FR', 
-      destination: 'Bordeaux, FR',
-      client: 'FruitFresh SA',
-      departure: '2023-10-18',
-      arrival: '2023-10-20'
-    },
-    { 
-      id: 'CONT004', 
-      number: 'CON45678901', 
-      type: '20ft Open Top', 
-      status: 'customs', 
-      location: 'Calais, FR', 
-      destination: 'Lille, FR',
-      client: 'BuildAll Construction',
-      departure: '2023-10-14',
-      arrival: '2023-10-16'
-    },
-    { 
-      id: 'CONT005', 
-      number: 'CON56789012', 
-      type: '40ft Flat Rack', 
-      status: 'ready', 
-      location: 'Toulouse, FR', 
-      destination: 'Montpellier, FR',
-      client: 'MachineWorks Inc',
-      departure: '2023-10-19',
-      arrival: '2023-10-21'
-    },
-  ]);
-  
-  const getStatusColor = (status: string): "success" | "warning" | "danger" => {
-    switch (status) {
-      case 'delivered':
-        return 'success';
-      case 'in_transit':
-      case 'loading':
-      case 'ready':
-        return 'warning';
-      case 'customs':
-      default:
-        return 'danger';
+
+  // Fetch containers data
+  useEffect(() => {
+    const loadContainers = async () => {
+      try {
+        setIsLoading(true);
+        const data = await fetchFreightCollectionData<FreightContainer>('CONTAINERS');
+        setContainers(data);
+        setFilteredContainers(data);
+        setIsLoading(false);
+      } catch (error) {
+        console.error("Error loading containers:", error);
+        toast({
+          title: "Erreur de chargement",
+          description: "Impossible de charger les conteneurs. Veuillez réessayer.",
+          variant: "destructive"
+        });
+        setIsLoading(false);
+      }
+    };
+    
+    loadContainers();
+  }, [toast]);
+
+  // Filter containers based on search term and status filter
+  useEffect(() => {
+    if (!containers) return;
+    
+    let filtered = [...containers];
+    
+    // Apply search filter
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase();
+      filtered = filtered.filter(container => 
+        container.number.toLowerCase().includes(term) || 
+        container.type.toLowerCase().includes(term) ||
+        (container.carrierName && container.carrierName.toLowerCase().includes(term))
+      );
     }
+    
+    // Apply status filter
+    if (statusFilter !== 'all') {
+      filtered = filtered.filter(container => container.status === statusFilter);
+    }
+    
+    setFilteredContainers(filtered);
+  }, [containers, searchTerm, statusFilter]);
+
+  const handleAddContainer = () => {
+    toast({
+      title: "Fonction en développement",
+      description: "L'ajout de conteneurs sera disponible prochainement.",
+    });
   };
 
-  const getStatusText = (status: string): string => {
-    switch (status) {
-      case 'in_transit': return 'En transit';
-      case 'delivered': return 'Livré';
-      case 'loading': return 'En chargement';
-      case 'customs': return 'En douane';
-      case 'ready': return 'Prêt';
-      default: return status;
-    }
-  };
-  
-  // Filter and sort containers
-  const filteredContainers = containers
-    .filter(container => {
-      const matchesSearch = 
-        container.number.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        container.client.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        container.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        container.destination.toLowerCase().includes(searchTerm.toLowerCase());
-        
-      const matchesStatus = filterStatus === 'all' || container.status === filterStatus;
-      
-      return matchesSearch && matchesStatus;
-    })
-    .sort((a, b) => {
-      if (!sortField) return 0;
-      
-      const fieldA = a[sortField as keyof typeof a];
-      const fieldB = b[sortField as keyof typeof b];
-      
-      if (typeof fieldA === 'string' && typeof fieldB === 'string') {
-        return sortOrder === 'asc' 
-          ? fieldA.localeCompare(fieldB) 
-          : fieldB.localeCompare(fieldA);
-      }
-      
-      return 0;
-    });
-  
-  const handleSort = (field: string) => {
-    if (sortField === field) {
-      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortField(field);
-      setSortOrder('asc');
-    }
-  };
-  
-  const handleViewTracking = (containerId: string) => {
-    // Fix: Changed toast.info to toast with appropriate variant
+  const handleExportData = () => {
     toast({
-      title: "Suivi du conteneur",
-      description: `Suivi du conteneur ${containerId} en cours de chargement...`,
-      variant: "default"
+      title: "Export en cours",
+      description: "L'export des données sera disponible prochainement.",
     });
-    // Navigation vers la page de suivi avec le conteneur sélectionné
-    window.location.href = `/modules/freight/tracking?container=${containerId}`;
   };
-  
-  const handleViewDetails = (container: any) => {
-    setSelectedContainer(container);
-    setShowContainerDetailsDialog(true);
+
+  const getContainerStatusBadge = (status: string) => {
+    const statusStyles = {
+      empty: "bg-gray-100 text-gray-800",
+      loading: "bg-blue-100 text-blue-800",
+      loaded: "bg-purple-100 text-purple-800",
+      in_transit: "bg-amber-100 text-amber-800",
+      delivered: "bg-green-100 text-green-800",
+      returned: "bg-red-100 text-red-800"
+    };
+    
+    const statusLabels = {
+      empty: "Vide",
+      loading: "En chargement",
+      loaded: "Chargé",
+      in_transit: "En transit",
+      delivered: "Livré",
+      returned: "Retourné"
+    };
+
+    const style = statusStyles[status as keyof typeof statusStyles] || "bg-gray-100 text-gray-800";
+    const label = statusLabels[status as keyof typeof statusLabels] || status;
+
+    return (
+      <Badge variant="outline" className={`${style} border-none px-2 py-1`}>
+        {label}
+      </Badge>
+    );
   };
-  
-  const handleSaveContainer = (newContainer: any) => {
-    setContainers(prev => [...prev, newContainer]);
+
+  const getContainerTypeIcon = (type: string) => {
+    return <Container className="h-4 w-4 mr-2" />;
   };
+
+  // Prepare counts for stats cards
+  const getContainerCountByStatus = (status: string) => {
+    if (!containers) return 0;
+    return containers.filter(container => container.status === status).length;
+  };
+
+  const statsData = [
+    {
+      title: "Total",
+      value: containers?.length.toString() || "0",
+      icon: <Container className="h-8 w-8 text-primary" />,
+      description: "Conteneurs enregistrés"
+    },
+    {
+      title: "En Transit",
+      value: getContainerCountByStatus('in_transit').toString(),
+      icon: <Ship className="h-8 w-8 text-amber-500" />,
+      description: "Conteneurs en cours de transport"
+    },
+    {
+      title: "Livrés",
+      value: getContainerCountByStatus('delivered').toString(),
+      icon: <Container className="h-8 w-8 text-green-500" />,
+      description: "Conteneurs livrés"
+    },
+    {
+      title: "Vides",
+      value: getContainerCountByStatus('empty').toString(),
+      icon: <Container className="h-8 w-8 text-gray-500" />,
+      description: "Conteneurs vides disponibles"
+    }
+  ];
+
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return '-';
+    return new Date(dateString).toLocaleDateString('fr-FR');
+  };
+
+  if (isLoading) {
+    return <div className="flex justify-center p-12">Chargement des conteneurs...</div>;
+  }
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">Gestion des Conteneurs</h1>
-        <Button onClick={() => setShowNewContainerDialog(true)}>
-          <Plus className="mr-2 h-4 w-4" />
-          <span>Nouveau Conteneur</span>
-        </Button>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {statsData.map((stat, index) => (
+          <StatCard
+            key={index}
+            title={stat.title}
+            value={stat.value}
+            icon={stat.icon}
+            description={stat.description}
+          />
+        ))}
       </div>
-      
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle>Conteneurs</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-col md:flex-row justify-between mb-4 space-y-2 md:space-y-0">
-            <div className="flex flex-col md:flex-row space-y-2 md:space-y-0 md:space-x-2 w-full md:w-auto">
-              <div className="relative flex-1 md:w-64">
-                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
-                <Input
-                  placeholder="Rechercher..."
-                  className="pl-8"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-              </div>
-              
-              <div className="flex-initial">
-                <Select value={filterStatus} onValueChange={setFilterStatus}>
-                  <SelectTrigger className="w-full md:w-[180px]">
-                    <Filter className="mr-2 h-4 w-4" />
-                    <SelectValue placeholder="Tous les statuts" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Tous les statuts</SelectItem>
-                    <SelectItem value="in_transit">En transit</SelectItem>
-                    <SelectItem value="delivered">Livrés</SelectItem>
-                    <SelectItem value="loading">En chargement</SelectItem>
-                    <SelectItem value="customs">En douane</SelectItem>
-                    <SelectItem value="ready">Prêts</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
+
+      <Card className="p-6">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-xl font-bold">Gestion des Conteneurs</h2>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={handleExportData}>
+              <Download className="mr-2 h-4 w-4" />
+              Exporter
+            </Button>
+            <Button onClick={handleAddContainer}>
+              <Plus className="mr-2 h-4 w-4" />
+              Nouveau Conteneur
+            </Button>
           </div>
-          
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="cursor-pointer" onClick={() => handleSort('number')}>
-                    <div className="flex items-center">
-                      Numéro
-                      {sortField === 'number' && (
-                        <ArrowUpDown className={`ml-1 h-4 w-4 ${sortOrder === 'desc' ? 'rotate-180' : ''}`} />
-                      )}
-                    </div>
-                  </TableHead>
-                  <TableHead className="cursor-pointer" onClick={() => handleSort('type')}>
-                    <div className="flex items-center">
-                      Type
-                      {sortField === 'type' && (
-                        <ArrowUpDown className={`ml-1 h-4 w-4 ${sortOrder === 'desc' ? 'rotate-180' : ''}`} />
-                      )}
-                    </div>
-                  </TableHead>
-                  <TableHead>Client</TableHead>
-                  <TableHead className="cursor-pointer" onClick={() => handleSort('location')}>
-                    <div className="flex items-center">
-                      Localisation
-                      {sortField === 'location' && (
-                        <ArrowUpDown className={`ml-1 h-4 w-4 ${sortOrder === 'desc' ? 'rotate-180' : ''}`} />
-                      )}
-                    </div>
-                  </TableHead>
-                  <TableHead>Destination</TableHead>
-                  <TableHead className="cursor-pointer" onClick={() => handleSort('status')}>
-                    <div className="flex items-center">
-                      Statut
-                      {sortField === 'status' && (
-                        <ArrowUpDown className={`ml-1 h-4 w-4 ${sortOrder === 'desc' ? 'rotate-180' : ''}`} />
-                      )}
-                    </div>
-                  </TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredContainers.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={7} className="text-center py-6 text-gray-500">
-                      Aucun conteneur trouvé
+        </div>
+
+        <div className="flex flex-col lg:flex-row justify-between gap-4 mb-6">
+          <div className="relative">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-400" />
+            <Input
+              type="search"
+              placeholder="Rechercher un conteneur..."
+              className="pl-8 w-full lg:w-[350px]"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+
+          <Tabs 
+            value={statusFilter} 
+            onValueChange={setStatusFilter}
+            className="w-full lg:w-auto"
+          >
+            <TabsList>
+              <TabsTrigger value="all">Tous</TabsTrigger>
+              <TabsTrigger value="in_transit">En transit</TabsTrigger>
+              <TabsTrigger value="loading">En chargement</TabsTrigger>
+              <TabsTrigger value="loaded">Chargés</TabsTrigger>
+              <TabsTrigger value="delivered">Livrés</TabsTrigger>
+              <TabsTrigger value="empty">Vides</TabsTrigger>
+            </TabsList>
+          </Tabs>
+        </div>
+
+        <div className="rounded-md border">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Numéro</TableHead>
+                <TableHead>Type</TableHead>
+                <TableHead>Taille</TableHead>
+                <TableHead>Statut</TableHead>
+                <TableHead>Transporteur</TableHead>
+                <TableHead>Origine</TableHead>
+                <TableHead>Destination</TableHead>
+                <TableHead>Départ</TableHead>
+                <TableHead>Arrivée</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredContainers.length > 0 ? (
+                filteredContainers.map((container) => (
+                  <TableRow key={container.id} className="cursor-pointer hover:bg-muted/50">
+                    <TableCell className="font-medium">{container.number}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center">
+                        {getContainerTypeIcon(container.type)}
+                        {container.type}
+                      </div>
                     </TableCell>
+                    <TableCell>{container.size}</TableCell>
+                    <TableCell>{getContainerStatusBadge(container.status)}</TableCell>
+                    <TableCell>{container.carrierName || '-'}</TableCell>
+                    <TableCell>{container.origin || '-'}</TableCell>
+                    <TableCell>{container.destination || '-'}</TableCell>
+                    <TableCell>{formatDate(container.departureDate)}</TableCell>
+                    <TableCell>{formatDate(container.arrivalDate)}</TableCell>
                   </TableRow>
-                ) : (
-                  filteredContainers.map((container) => (
-                    <TableRow key={container.id}>
-                      <TableCell className="font-medium">{container.number}</TableCell>
-                      <TableCell>{container.type}</TableCell>
-                      <TableCell>{container.client}</TableCell>
-                      <TableCell>{container.location}</TableCell>
-                      <TableCell>{container.destination}</TableCell>
-                      <TableCell>
-                        <StatusBadge status={getStatusColor(container.status)}>
-                          {getStatusText(container.status)}
-                        </StatusBadge>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
-                          <Button 
-                            variant="ghost" 
-                            size="sm"
-                            onClick={() => handleViewTracking(container.id)}
-                            title="Suivi du conteneur"
-                          >
-                            <Truck className="h-4 w-4" />
-                          </Button>
-                          <Button 
-                            variant="ghost" 
-                            size="sm"
-                            onClick={() => handleViewDetails(container)}
-                            title="Détails du conteneur"
-                          >
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </div>
-        </CardContent>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={9} className="text-center h-24 text-muted-foreground">
+                    Aucun conteneur trouvé
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </div>
       </Card>
-      
-      {/* Dialogue de création de conteneur */}
-      <ContainerFormDialog 
-        isOpen={showNewContainerDialog}
-        onClose={() => setShowNewContainerDialog(false)}
-        onSave={handleSaveContainer}
-      />
-      
-      {/* Dialogue de détails du conteneur */}
-      {selectedContainer && (
-        <ContainerDetailsDialog 
-          isOpen={showContainerDetailsDialog}
-          onClose={() => setShowContainerDetailsDialog(false)}
-          container={selectedContainer}
-        />
-      )}
     </div>
   );
 };
