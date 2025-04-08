@@ -5,6 +5,16 @@ export interface User {
   firstName: string;
   lastName: string;
   role: string;
+  // Add permissions property
+  permissions?: {
+    [key: string]: {
+      read: boolean;
+      create: boolean;
+      update: boolean;
+      delete: boolean;
+      admin?: boolean;
+    }
+  };
   // Additional properties being used across the application
   department?: string;
   position?: string;
