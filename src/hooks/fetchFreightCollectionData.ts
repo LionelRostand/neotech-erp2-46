@@ -1,5 +1,5 @@
 
-import { collection, getDocs, query, QueryConstraint } from 'firebase/firestore';
+import { collection, getDocs, query, QueryConstraint, doc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import { toast } from 'sonner';
@@ -25,7 +25,9 @@ export async function fetchFreightCollectionData<T>(
     if (parts.length === 2) {
       // For paths like "freight/shipments", we need to use the pattern:
       // collection(db, 'freight', 'freight', 'shipments')
-      collectionRef = collection(db, parts[0], parts[0], parts[1]);
+      // This creates a reference to a subcollection 'shipments' within document 'freight' in collection 'freight'
+      const docRef = doc(db, parts[0], parts[0]);
+      collectionRef = collection(docRef, parts[1]);
       console.log(`Using subcollection reference: ${parts[0]}/${parts[0]}/${parts[1]}`);
     } else {
       // Regular collection path
@@ -70,7 +72,8 @@ export async function checkFreightCollectionExists(
     if (parts.length === 2) {
       // For paths like "freight/shipments", we need to use the pattern:
       // collection(db, 'freight', 'freight', 'shipments')
-      collectionRef = collection(db, parts[0], parts[0], parts[1]);
+      const docRef = doc(db, parts[0], parts[0]);
+      collectionRef = collection(docRef, parts[1]);
     } else {
       // Regular collection path
       collectionRef = collection(db, collectionPath);

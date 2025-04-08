@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { collection, query, getDocs, orderBy, Timestamp } from 'firebase/firestore';
+import { collection, query, getDocs, orderBy, Timestamp, doc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import { Shipment } from '@/types/freight';
@@ -16,7 +16,10 @@ export const useShipments = (filter: 'all' | 'ongoing' | 'delivered' | 'delayed'
     const fetchShipments = async () => {
       setIsLoading(true);
       try {
-        const shipmentsRef = collection(db, COLLECTIONS.FREIGHT.SHIPMENTS);
+        // Properly reference a subcollection in Firestore
+        // For 'freight/shipments', we use: collection(db, 'freight', 'freight', 'shipments')
+        const freightDocRef = doc(db, 'freight', 'freight');
+        const shipmentsRef = collection(freightDocRef, 'shipments');
         const q = query(shipmentsRef, orderBy('createdAt', 'desc'));
         const querySnapshot = await getDocs(q);
         

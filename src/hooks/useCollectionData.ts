@@ -35,10 +35,14 @@ export const useCollectionData = (
             if (segments.length === 2) {
               const parentCollection = segments[0];
               const subcollection = segments[1];
-              const parentDocId = parentCollection; // Use the collection name as the document ID
               
-              console.log(`Creating reference for ${parentCollection}/${parentDocId}/${subcollection}`);
-              return collection(db, parentCollection, parentDocId, subcollection);
+              // Create a reference to the document in the parent collection
+              const docRef = doc(db, parentCollection, parentCollection);
+              // Then create a reference to the subcollection in that document
+              const collRef = collection(docRef, subcollection);
+              
+              console.log(`Creating reference for ${parentCollection}/${parentCollection}/${subcollection}`);
+              return collRef;
             }
             
             return collection(db, path);

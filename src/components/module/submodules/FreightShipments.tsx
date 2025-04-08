@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import ShipmentList from './freight/ShipmentList';
 import NewShipmentForm from './freight/NewShipmentForm';
 import { useToast } from '@/hooks/use-toast';
-import { collection, query, where, getDocs, Timestamp } from 'firebase/firestore';
+import { collection, query, where, getDocs, Timestamp, doc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 
@@ -30,8 +30,10 @@ const FreightShipments: React.FC = () => {
     const fetchStats = async () => {
       setIsLoading(true);
       try {
-        // Récupérer toutes les expéditions
-        const shipmentsRef = collection(db, COLLECTIONS.FREIGHT.SHIPMENTS);
+        // Properly reference a subcollection in Firestore
+        // For 'freight/shipments', we use: collection(db, 'freight', 'freight', 'shipments')
+        const freightDocRef = doc(db, 'freight', 'freight');
+        const shipmentsRef = collection(freightDocRef, 'shipments');
         const shipmentsSnapshot = await getDocs(shipmentsRef);
         
         // Calculer les statistiques

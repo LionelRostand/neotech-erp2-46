@@ -23,6 +23,18 @@ const toFirebaseTimestamp = (dateString?: string) => {
   return Timestamp.fromDate(new Date(dateString));
 };
 
+// Helper function to get the proper collection reference for subcollections
+const getCollectionRef = (collectionPath: string) => {
+  const parts = collectionPath.split('/');
+  if (parts.length === 2) {
+    // For paths like "freight/shipments", we need to use the pattern:
+    // collection(db, 'freight', 'freight', 'shipments')
+    const docRef = doc(db, parts[0], parts[0]);
+    return collection(docRef, parts[1]);
+  }
+  return collection(db, collectionPath);
+};
+
 // Créer une nouvelle expédition
 export const createShipment = async (shipmentData: Omit<Shipment, 'id' | 'createdAt'>) => {
   try {
@@ -37,12 +49,12 @@ export const createShipment = async (shipmentData: Omit<Shipment, 'id' | 'create
     };
     
     // Ajouter un document d'expédition
-    const shipmentsCollectionRef = collection(db, COLLECTIONS.FREIGHT.SHIPMENTS);
+    const shipmentsCollectionRef = getCollectionRef(COLLECTIONS.FREIGHT.SHIPMENTS);
     const docRef = await addDoc(shipmentsCollectionRef, shipmentForFirebase);
     
     // Créer un événement de suivi initial
     if (shipmentData.trackingNumber) {
-      const trackingCollectionRef = collection(db, COLLECTIONS.FREIGHT.TRACKING);
+      const trackingCollectionRef = getCollectionRef(COLLECTIONS.FREIGHT.TRACKING);
       await addDoc(trackingCollectionRef, {
         shipmentId: docRef.id,
         trackingNumber: shipmentData.trackingNumber,
@@ -53,7 +65,7 @@ export const createShipment = async (shipmentData: Omit<Shipment, 'id' | 'create
       });
       
       // Créer le premier événement de suivi
-      const eventsCollectionRef = collection(db, COLLECTIONS.FREIGHT.TRACKING_EVENTS);
+      const eventsCollectionRef = getCollectionRef(COLLECTIONS.FREIGHT.TRACKING_EVENTS);
       await addDoc(eventsCollectionRef, {
         shipmentId: docRef.id,
         packageId: shipmentData.trackingNumber,
@@ -87,7 +99,8 @@ export const createShipment = async (shipmentData: Omit<Shipment, 'id' | 'create
 // Mettre à jour une expédition existante
 export const updateShipment = async (id: string, shipmentData: Partial<Shipment>) => {
   try {
-    const shipmentDocRef = doc(db, COLLECTIONS.FREIGHT.SHIPMENTS, id);
+    const shipmentsCollectionRef = getCollectionRef(COLLECTIONS.FREIGHT.SHIPMENTS);
+    const shipmentDocRef = doc(shipmentsCollectionRef, id);
     
     // Préparer les données pour Firebase
     const updateData: any = {
