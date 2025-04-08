@@ -1,16 +1,16 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import StatusBadge from '@/components/StatusBadge';
-import { Search, Plus } from 'lucide-react';
+import { Search, Plus, Package, Truck, CheckCircle } from 'lucide-react';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import ContainerFormDialog from './ContainerFormDialog';
 import ContainerDetailsDialog from './ContainerDetailsDialog';
 import { fetchFreightCollectionData } from '@/hooks/fetchFreightCollectionData';
 import { FirebaseErrorAlert } from './components/FirebaseErrorAlert';
+import StatCard from '@/components/StatCard';
 
 interface Container {
   id: string;
@@ -164,17 +164,20 @@ const FreightContainers: React.FC = () => {
         <StatCard 
           title="Total Conteneurs" 
           value={containers.length.toString()} 
-          icon="container" 
+          icon={<Package className="h-5 w-5 text-gray-500" />} 
+          description="Nombre total de conteneurs" 
         />
         <StatCard 
           title="En Transit" 
           value={containers.filter(c => c.status === 'in_transit').length.toString()} 
-          icon="truck" 
+          icon={<Truck className="h-5 w-5 text-gray-500" />} 
+          description="Conteneurs actuellement en transit" 
         />
         <StatCard 
           title="Livrés ce mois" 
           value={containers.filter(c => c.status === 'delivered').length.toString()} 
-          icon="check" 
+          icon={<CheckCircle className="h-5 w-5 text-gray-500" />} 
+          description="Conteneurs livrés ce mois-ci" 
         />
       </div>
       
