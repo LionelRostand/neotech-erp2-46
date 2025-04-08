@@ -5,6 +5,7 @@ import ClientSearch from './clients/ClientSearch';
 import ClientsTable from './clients/ClientsTable';
 import { useClients } from './hooks/useClients';
 import ClientDialogs from './clients/ClientDialogs';
+import SeedDataButton from './clients/SeedDataButton';
 
 const CrmClients: React.FC = () => {
   const { 
@@ -47,12 +48,15 @@ const CrmClients: React.FC = () => {
       <div className="p-6">
         <div className="flex flex-col md:flex-row justify-between items-center mb-4">
           <h1 className="text-2xl font-bold mb-3 md:mb-0">Clients</h1>
-          <Button onClick={() => {
-            resetForm();
-            setIsAddDialogOpen(true);
-          }}>
-            Ajouter un client
-          </Button>
+          <div className="flex space-x-2">
+            <SeedDataButton />
+            <Button onClick={() => {
+              resetForm();
+              setIsAddDialogOpen(true);
+            }}>
+              Ajouter un client
+            </Button>
+          </div>
         </div>
 
         <ClientSearch 

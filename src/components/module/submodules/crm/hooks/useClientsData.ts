@@ -1,99 +1,90 @@
 
-import { useState, useEffect } from 'react';
-import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, orderBy, serverTimestamp, Timestamp, where } from 'firebase/firestore';
+import { useState, useEffect, useCallback } from 'react';
+import { collection, query, orderBy, where, serverTimestamp, Timestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Client, ClientFormData } from '../types/crm-types';
 import { toast } from 'sonner';
 import { COLLECTIONS } from '@/lib/firebase-collections';
+import { useFirestore } from '@/hooks/useFirestore';
 
 export const useClientsData = () => {
   const [clients, setClients] = useState<Client[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
-  // Use the correct path from collections
-  const crmClientsPath = COLLECTIONS.CRM.CLIENTS; // 'crm_clients'
+  // Use the Firestore hook with the clients collection
+  const firestore = useFirestore(COLLECTIONS.CRM.CLIENTS);
   
   // Fetch all clients
-  const fetchClients = async () => {
+  const fetchClients = useCallback(async () => {
     setIsLoading(true);
     try {
-      const clientsRef = collection(db, crmClientsPath);
-      const q = query(clientsRef, orderBy('createdAt', 'desc'));
-      const snapshot = await getDocs(q);
+      const fetchedClients = await firestore.getAll([orderBy('createdAt', 'desc')]);
       
-      // Si la collection est vide, ajouter des données de démonstration
-      if (snapshot.empty) {
-        console.log('Aucun client trouvé, ajout de données de démonstration');
-        await seedMockClients();
-        fetchClients(); // Récupérer à nouveau après l'ajout des données de démo
-        return;
-      }
-      
-      const fetchedClients = snapshot.docs.map(doc => {
-        const data = doc.data();
-        
-        // Gérer les données de dates qui peuvent être des Timestamp Firestore
+      // Format the client data
+      const formattedClients = fetchedClients.map(client => {
+        // Handle Firestore Timestamp conversion
         let createdAtStr = '';
         let customerSinceStr = '';
         
-        if (data.createdAt instanceof Timestamp) {
-          createdAtStr = data.createdAt.toDate().toISOString();
-        } else if (data.createdAt) {
-          createdAtStr = new Date(data.createdAt).toISOString();
+        if (client.createdAt instanceof Timestamp) {
+          createdAtStr = client.createdAt.toDate().toISOString();
+        } else if (client.createdAt) {
+          createdAtStr = new Date(client.createdAt).toISOString();
         } else {
           createdAtStr = new Date().toISOString();
         }
         
-        if (data.customerSince instanceof Timestamp) {
-          customerSinceStr = data.customerSince.toDate().toISOString().split('T')[0];
-        } else if (data.customerSince) {
-          customerSinceStr = new Date(data.customerSince).toISOString().split('T')[0];
+        if (client.customerSince instanceof Timestamp) {
+          customerSinceStr = client.customerSince.toDate().toISOString().split('T')[0];
+        } else if (client.customerSince) {
+          customerSinceStr = new Date(client.customerSince).toISOString().split('T')[0];
         } else {
           customerSinceStr = new Date().toISOString().split('T')[0];
         }
         
         return {
-          id: doc.id,
-          ...data,
+          id: client.id,
+          ...client,
           createdAt: createdAtStr,
           customerSince: customerSinceStr,
           // Ensure all required fields are present
-          name: data.name || '',
-          contactName: data.contactName || '',
-          contactEmail: data.contactEmail || '',
-          contactPhone: data.contactPhone || '',
-          sector: data.sector || '',
-          revenue: data.revenue || '',
-          status: data.status || 'active'
+          name: client.name || '',
+          contactName: client.contactName || '',
+          contactEmail: client.contactEmail || '',
+          contactPhone: client.contactPhone || '',
+          sector: client.sector || '',
+          revenue: client.revenue || '',
+          status: client.status || 'active'
         } as Client;
       });
       
-      setClients(fetchedClients);
+      setClients(formattedClients);
       setError(null);
     } catch (err) {
       console.error('Error fetching clients:', err);
       setError(err as Error);
+      toast.error('Erreur lors du chargement des clients');
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [firestore]);
 
   // Add a new client
   const addClient = async (clientData: Omit<Client, 'id' | 'createdAt'>) => {
     try {
-      const clientsRef = collection(db, crmClientsPath);
-      const newClientRef = await addDoc(clientsRef, {
+      await firestore.add({
         ...clientData,
         createdAt: serverTimestamp(),
       });
       
       // Refresh clients list
-      fetchClients();
+      await fetchClients();
       
-      return newClientRef.id;
+      toast.success('Client ajouté avec succès');
     } catch (err) {
       console.error('Error adding client:', err);
+      toast.error('Erreur lors de l\'ajout du client');
       throw err;
     }
   };
@@ -101,18 +92,19 @@ export const useClientsData = () => {
   // Update an existing client
   const updateClient = async (id: string, clientData: Partial<ClientFormData>) => {
     try {
-      const clientRef = doc(db, crmClientsPath, id);
-      await updateDoc(clientRef, {
+      await firestore.update(id, {
         ...clientData,
         updatedAt: serverTimestamp(),
       });
       
       // Refresh clients list
-      fetchClients();
+      await fetchClients();
       
+      toast.success('Client mis à jour avec succès');
       return true;
     } catch (err) {
       console.error('Error updating client:', err);
+      toast.error('Erreur lors de la mise à jour du client');
       throw err;
     }
   };
@@ -120,23 +112,23 @@ export const useClientsData = () => {
   // Delete a client
   const deleteClient = async (id: string) => {
     try {
-      const clientRef = doc(db, crmClientsPath, id);
-      await deleteDoc(clientRef);
+      await firestore.remove(id);
       
       // Refresh clients list
-      fetchClients();
+      await fetchClients();
       
+      toast.success('Client supprimé avec succès');
       return true;
     } catch (err) {
       console.error('Error deleting client:', err);
+      toast.error('Erreur lors de la suppression du client');
       throw err;
     }
   };
 
-  // Seed mock data if collection is empty
+  // Seed mock data if collection is empty - useful for initialization
   const seedMockClients = async () => {
     try {
-      const clientsRef = collection(db, crmClientsPath);
       const mockClients: Omit<Client, 'id'>[] = [
         {
           name: 'Acme Corporation',
@@ -169,7 +161,7 @@ export const useClientsData = () => {
       ];
       
       const promises = mockClients.map(client => 
-        addDoc(clientsRef, {
+        firestore.add({
           ...client,
           createdAt: serverTimestamp(),
         })
@@ -177,15 +169,20 @@ export const useClientsData = () => {
       
       await Promise.all(promises);
       console.log('Données de démonstration ajoutées avec succès');
+      toast.success('Données de démonstration ajoutées avec succès');
+      
+      // Refresh clients list
+      await fetchClients();
     } catch (error) {
       console.error('Erreur lors de l\'ajout des données de démonstration:', error);
+      toast.error('Erreur lors de l\'ajout des données de démonstration');
     }
   };
 
   // Load clients on component mount
   useEffect(() => {
     fetchClients();
-  }, []);
+  }, [fetchClients]);
 
   return {
     clients,
@@ -194,6 +191,7 @@ export const useClientsData = () => {
     fetchClients,
     addClient,
     updateClient,
-    deleteClient
+    deleteClient,
+    seedMockClients
   };
 };

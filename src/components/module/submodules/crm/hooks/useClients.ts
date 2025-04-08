@@ -1,166 +1,109 @@
 
 import { useState, useEffect, useCallback } from 'react';
-import { db } from '@/lib/firebase';
-import { COLLECTIONS } from '@/lib/firebase-collections';
-import { Client, ClientFormData } from '../types/crm-types';
 import { useClientsData } from './useClientsData';
-import { toast } from 'sonner';
-
-// Define sectors and status options with proper types
-export const sectors = [
-  { value: 'technology', label: 'Technologie' },
-  { value: 'healthcare', label: 'Santé' },
-  { value: 'finance', label: 'Finance' },
-  { value: 'education', label: 'Éducation' },
-  { value: 'retail', label: 'Commerce' },
-  { value: 'manufacturing', label: 'Industrie' },
-  { value: 'consulting', label: 'Conseil' },
-  { value: 'real-estate', label: 'Immobilier' },
-  { value: 'hospitality', label: 'Hôtellerie' },
-  { value: 'other', label: 'Autre' }
-];
-
-export const statusOptions = [
-  { value: 'active', label: 'Actif' },
-  { value: 'inactive', label: 'Inactif' },
-  { value: 'lead', label: 'Prospect' }
-];
+import { Client, ClientFormData } from '../types/crm-types';
 
 export const useClients = () => {
-  // Client data
-  const { clients, isLoading, error, fetchClients, addClient, updateClient, deleteClient } = useClientsData();
-  
-  // State for filtered clients
+  // Get clients data from Firestore
+  const { 
+    clients, 
+    isLoading: loading, 
+    error, 
+    fetchClients,
+    addClient: addClientToFirestore,
+    updateClient: updateClientInFirestore,
+    deleteClient: deleteClientFromFirestore
+  } = useClientsData();
+
+  // Local state
   const [filteredClients, setFilteredClients] = useState<Client[]>([]);
-  
-  // Search and filter states
   const [searchTerm, setSearchTerm] = useState('');
-  const [sectorFilter, setSectorFilter] = useState('');
-  
-  // Dialog states
+  const [sectorFilter, setSectorFilter] = useState('all');
+  const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isViewDetailsOpen, setIsViewDetailsOpen] = useState(false);
-  
-  // Selected client and form data
-  const [selectedClient, setSelectedClient] = useState<Client | null>(null);
+
+  // Form data for adding/editing client
   const [formData, setFormData] = useState<ClientFormData>({
     name: '',
     contactName: '',
     contactEmail: '',
     contactPhone: '',
-    sector: 'technology',
+    sector: '',
     status: 'active',
-    revenue: '1-10M',
+    revenue: '',
     address: '',
     website: '',
-    notes: ''
+    notes: '',
   });
-  
-  // Apply filters to clients
-  useEffect(() => {
-    if (!clients) {
-      setFilteredClients([]);
-      return;
-    }
-    
-    let result = [...clients];
-    
-    // Apply search filter
-    if (searchTerm) {
-      const lowercasedFilter = searchTerm.toLowerCase();
-      result = result.filter(client => 
-        client.name.toLowerCase().includes(lowercasedFilter) ||
-        client.contactName.toLowerCase().includes(lowercasedFilter) ||
-        client.contactEmail.toLowerCase().includes(lowercasedFilter) ||
-        (client.sector && client.sector.toLowerCase().includes(lowercasedFilter))
-      );
-    }
-    
-    // Apply sector filter
-    if (sectorFilter) {
-      result = result.filter(client => client.sector === sectorFilter);
-    }
-    
-    setFilteredClients(result);
-  }, [clients, searchTerm, sectorFilter]);
-  
-  // Form handlers
+
+  // Reset form data
+  const resetForm = () => {
+    setFormData({
+      name: '',
+      contactName: '',
+      contactEmail: '',
+      contactPhone: '',
+      sector: '',
+      status: 'active',
+      revenue: '',
+      address: '',
+      website: '',
+      notes: '',
+    });
+  };
+
+  // Handle input change
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
-  
+
+  // Handle select change
   const handleSelectChange = (name: string, value: string) => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
-  
-  // Client CRUD operations
-  const handleCreateClient = async () => {
+
+  // Create client
+  const handleCreateClient = async (e: React.FormEvent) => {
+    e.preventDefault();
     try {
-      await addClient({
-        name: formData.name,
-        contactName: formData.contactName,
-        contactEmail: formData.contactEmail,
-        contactPhone: formData.contactPhone,
-        sector: formData.sector,
-        status: formData.status as 'active' | 'inactive' | 'lead',
-        revenue: formData.revenue,
-        address: formData.address || '',
-        website: formData.website || '',
-        notes: formData.notes || '',
-      });
-      
-      toast.success('Client ajouté avec succès');
+      await addClientToFirestore(formData);
       setIsAddDialogOpen(false);
       resetForm();
-    } catch (err) {
-      console.error('Error creating client:', err);
-      toast.error('Erreur lors de l\'ajout du client');
+    } catch (error) {
+      console.error('Error creating client:', error);
     }
   };
-  
-  const handleUpdateClient = async () => {
+
+  // Update client
+  const handleUpdateClient = async (e: React.FormEvent) => {
+    e.preventDefault();
     if (!selectedClient) return;
-    
+
     try {
-      await updateClient(selectedClient.id, {
-        name: formData.name,
-        contactName: formData.contactName,
-        contactEmail: formData.contactEmail,
-        contactPhone: formData.contactPhone,
-        sector: formData.sector,
-        status: formData.status,
-        revenue: formData.revenue,
-        address: formData.address,
-        website: formData.website,
-        notes: formData.notes
-      });
-      
-      toast.success('Client mis à jour avec succès');
+      await updateClientInFirestore(selectedClient.id, formData);
       setIsEditDialogOpen(false);
-    } catch (err) {
-      console.error('Error updating client:', err);
-      toast.error('Erreur lors de la mise à jour du client');
+    } catch (error) {
+      console.error('Error updating client:', error);
     }
   };
-  
+
+  // Delete client
   const handleDeleteClient = async () => {
     if (!selectedClient) return;
-    
+
     try {
-      await deleteClient(selectedClient.id);
-      
-      toast.success('Client supprimé avec succès');
+      await deleteClientFromFirestore(selectedClient.id);
       setIsDeleteDialogOpen(false);
-    } catch (err) {
-      console.error('Error deleting client:', err);
-      toast.error('Erreur lors de la suppression du client');
+    } catch (error) {
+      console.error('Error deleting client:', error);
     }
   };
-  
-  // Dialog control functions
+
+  // Open edit dialog
   const openEditDialog = (client: Client) => {
     setSelectedClient(client);
     setFormData({
@@ -173,48 +116,79 @@ export const useClients = () => {
       revenue: client.revenue,
       address: client.address || '',
       website: client.website || '',
-      notes: client.notes || ''
+      notes: client.notes || '',
     });
     setIsEditDialogOpen(true);
   };
-  
+
+  // Open delete dialog
   const openDeleteDialog = (client: Client) => {
     setSelectedClient(client);
     setIsDeleteDialogOpen(true);
   };
-  
+
+  // View client details
   const viewClientDetails = (client: Client) => {
     setSelectedClient(client);
     setIsViewDetailsOpen(true);
   };
-  
-  // Reset form to initial state
-  const resetForm = () => {
-    setFormData({
-      name: '',
-      contactName: '',
-      contactEmail: '',
-      contactPhone: '',
-      sector: 'technology',
-      status: 'active',
-      revenue: '1-10M',
-      address: '',
-      website: '',
-      notes: ''
-    });
-  };
-  
+
+  // Filter clients whenever searchTerm or sectorFilter changes
+  useEffect(() => {
+    if (!clients) {
+      setFilteredClients([]);
+      return;
+    }
+
+    let result = [...clients];
+
+    // Apply sector filter
+    if (sectorFilter !== 'all') {
+      result = result.filter(client => client.sector === sectorFilter);
+    }
+
+    // Apply search term filter
+    if (searchTerm) {
+      const lowercasedSearchTerm = searchTerm.toLowerCase();
+      result = result.filter(client => 
+        client.name.toLowerCase().includes(lowercasedSearchTerm) ||
+        client.contactName.toLowerCase().includes(lowercasedSearchTerm) ||
+        client.contactEmail.toLowerCase().includes(lowercasedSearchTerm) ||
+        (client.notes && client.notes.toLowerCase().includes(lowercasedSearchTerm))
+      );
+    }
+
+    setFilteredClients(result);
+  }, [clients, searchTerm, sectorFilter]);
+
+  // Predefined sectors
+  const sectors = [
+    { label: 'Tous les secteurs', value: 'all' },
+    { label: 'Technologie', value: 'technology' },
+    { label: 'Finance', value: 'finance' },
+    { label: 'Santé', value: 'healthcare' },
+    { label: 'Éducation', value: 'education' },
+    { label: 'Commerce de détail', value: 'retail' },
+    { label: 'Fabrication', value: 'manufacturing' },
+    { label: 'Services', value: 'services' },
+    { label: 'Autre', value: 'other' }
+  ];
+
+  // Status options
+  const statusOptions = [
+    { label: 'Actif', value: 'active' },
+    { label: 'Inactif', value: 'inactive' },
+    { label: 'Lead', value: 'lead' }
+  ];
+
   return {
     clients,
     filteredClients,
-    isLoading: isLoading,
-    loading: isLoading,
-    error: error ? error.message : null,
-    selectedClient,
     searchTerm,
     setSearchTerm,
     sectorFilter,
     setSectorFilter,
+    selectedClient,
     isAddDialogOpen,
     setIsAddDialogOpen,
     isEditDialogOpen,
@@ -233,8 +207,9 @@ export const useClients = () => {
     openDeleteDialog,
     viewClientDetails,
     resetForm,
+    loading,
+    error,
     sectors,
-    statusOptions,
-    fetchClients
+    statusOptions
   };
 };
