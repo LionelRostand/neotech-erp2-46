@@ -77,6 +77,9 @@ const CrmOpportunities: React.FC = () => {
     setIsEditDialogOpen(true);
   };
 
+  // Convert Error object to string for the components expecting string errors
+  const errorMessage = error ? error.message || 'Une erreur est survenue' : '';
+
   return (
     <div className="min-h-screen w-full bg-neotech-background">
       <div className="p-6">
@@ -107,7 +110,7 @@ const CrmOpportunities: React.FC = () => {
             <OpportunityTable 
               opportunities={filteredOpportunities}
               isLoading={isLoading}
-              error={error}
+              error={errorMessage}
               onView={handleViewOpportunity}
               onEdit={handleEditOpportunity}
             />
@@ -117,7 +120,7 @@ const CrmOpportunities: React.FC = () => {
             <OpportunityKanban 
               opportunities={filteredOpportunities}
               isLoading={isLoading}
-              error={error}
+              error={errorMessage}
               onOpportunityClick={handleViewOpportunity}
             />
           </TabsContent>
