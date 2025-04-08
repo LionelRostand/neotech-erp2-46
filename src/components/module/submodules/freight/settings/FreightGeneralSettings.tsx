@@ -1,311 +1,300 @@
 
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Button } from '@/components/ui/button';
-import { Switch } from '@/components/ui/switch';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { doc, getDoc, setDoc, Timestamp } from 'firebase/firestore';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/patched-select";
+import { useFirebaseCompanies } from '@/hooks/useFirebaseCompanies';
+import { Loader2, Settings, Save, Building, WifiOff } from "lucide-react";
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { Loader2, Save, WifiOff } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 
-interface FreightGeneralSettingsProps {
+interface SettingsProps {
   isOffline?: boolean;
 }
 
-interface SettingsData {
-  companyName: string;
-  contactEmail: string;
-  contactPhone: string;
-  defaultCurrency: string;
-  enableNotifications: boolean;
-  weightUnit: string;
-  distanceUnit: string;
-  defaultShippingTerms: string;
-  lastUpdated?: Timestamp | null;
+interface FreightSettings {
+  defaultCompanyId: string;
+  defaultCarrier: string;
+  trackingEnabled: boolean;
+  notificationsEnabled: boolean;
+  autoArchiveShipments: boolean;
+  archiveDays: number;
+  weightUnit: 'kg' | 'lb';
+  dimensionUnit: 'cm' | 'in';
 }
 
-const defaultSettings: SettingsData = {
-  companyName: 'Votre Entreprise',
-  contactEmail: 'contact@example.com',
-  contactPhone: '',
-  defaultCurrency: 'EUR',
-  enableNotifications: true,
+const defaultSettings: FreightSettings = {
+  defaultCompanyId: '',
+  defaultCarrier: '',
+  trackingEnabled: true,
+  notificationsEnabled: true,
+  autoArchiveShipments: false,
+  archiveDays: 30,
   weightUnit: 'kg',
-  distanceUnit: 'km',
-  defaultShippingTerms: '',
-  lastUpdated: null
+  dimensionUnit: 'cm'
 };
 
-const FreightGeneralSettings: React.FC<FreightGeneralSettingsProps> = ({ isOffline = false }) => {
-  const [settings, setSettings] = useState<SettingsData>(defaultSettings);
+const FreightGeneralSettings: React.FC<SettingsProps> = ({ isOffline = false }) => {
+  const [settings, setSettings] = useState<FreightSettings>(defaultSettings);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
-  const { toast } = useToast();
+  const { companies, isLoading: isLoadingCompanies } = useFirebaseCompanies();
 
   useEffect(() => {
     const fetchSettings = async () => {
-      if (isOffline) {
-        // If offline, use defaults or cached data
-        const cachedSettings = localStorage.getItem('freight_settings');
-        if (cachedSettings) {
-          try {
-            setSettings(JSON.parse(cachedSettings));
-          } catch (err) {
-            console.error('Error parsing cached settings:', err);
-            setSettings(defaultSettings);
-          }
-        } else {
-          setSettings(defaultSettings);
-        }
-        setIsLoading(false);
-        return;
-      }
-
       try {
         setIsLoading(true);
-        const settingsDocRef = doc(db, 'freight', 'settings');
-        const settingsDoc = await getDoc(settingsDocRef);
         
+        // Check if we have cached settings in localStorage
+        const cachedSettings = localStorage.getItem('freight_settings');
+        if (isOffline && cachedSettings) {
+          setSettings(JSON.parse(cachedSettings));
+          setIsLoading(false);
+          return;
+        }
+        
+        const settingsDoc = await getDoc(doc(db, 'freight_settings', 'general'));
         if (settingsDoc.exists()) {
-          const data = settingsDoc.data() as SettingsData;
-          setSettings(data);
-          // Cache the settings
-          localStorage.setItem('freight_settings', JSON.stringify(data));
-        } else {
-          setSettings(defaultSettings);
+          const settingsData = settingsDoc.data() as FreightSettings;
+          setSettings(settingsData);
+          // Cache settings in localStorage
+          localStorage.setItem('freight_settings', JSON.stringify(settingsData));
         }
       } catch (err: any) {
         console.error('Erreur lors du chargement des paramètres du fret:', err);
-        
-        // If error occurs, try to use cached settings
+        // If offline, try to use cached settings
         const cachedSettings = localStorage.getItem('freight_settings');
         if (cachedSettings) {
-          try {
-            setSettings(JSON.parse(cachedSettings));
-            toast({
-              title: "Utilisation des paramètres en cache",
-              description: "Les paramètres les plus récents sont affichés à partir du cache local.",
-              variant: "default"
-            });
-          } catch (parseErr) {
-            console.error('Error parsing cached settings:', parseErr);
-            setSettings(defaultSettings);
-          }
-        } else {
-          setSettings(defaultSettings);
+          setSettings(JSON.parse(cachedSettings));
         }
       } finally {
         setIsLoading(false);
       }
     };
-
+    
     fetchSettings();
-  }, [isOffline, toast]);
-
-  const handleChange = (field: keyof SettingsData, value: string | boolean) => {
-    setSettings(prev => ({
-      ...prev,
-      [field]: value
-    }));
-  };
-
-  const handleSave = async () => {
+  }, [isOffline]);
+  
+  const handleSaveSettings = async () => {
     if (isOffline) {
-      // If offline, just save to localStorage
-      localStorage.setItem('freight_settings', JSON.stringify(settings));
-      toast({
-        title: "Paramètres enregistrés localement",
-        description: "Les modifications seront synchronisées lorsque vous serez à nouveau en ligne.",
-        variant: "default"
-      });
+      toast.error("Impossible d'enregistrer les paramètres en mode hors ligne");
       return;
     }
-
+    
     try {
       setIsSaving(true);
-      const settingsDocRef = doc(db, 'freight', 'settings');
-      await setDoc(settingsDocRef, {
-        ...settings,
-        lastUpdated: Timestamp.now()
-      });
-      
-      // Cache the settings
+      await setDoc(doc(db, 'freight_settings', 'general'), settings);
+      // Update cache
       localStorage.setItem('freight_settings', JSON.stringify(settings));
-      
-      toast({
-        title: "Paramètres enregistrés",
-        description: "Les modifications ont été appliquées avec succès.",
-        variant: "default"
-      });
+      toast.success("Paramètres enregistrés avec succès");
     } catch (err: any) {
-      console.error('Erreur lors de la sauvegarde des paramètres:', err);
-      toast({
-        title: "Erreur de sauvegarde",
-        description: err.message || "Une erreur est survenue lors de l'enregistrement des paramètres.",
-        variant: "destructive"
-      });
+      console.error('Erreur lors de l\'enregistrement des paramètres:', err);
+      toast.error(`Erreur: ${err.message}`);
     } finally {
       setIsSaving(false);
     }
   };
-
+  
+  const handleChange = (field: keyof FreightSettings, value: any) => {
+    setSettings(prev => ({ ...prev, [field]: value }));
+  };
+  
   if (isLoading) {
     return (
-      <Card className="w-full">
-        <CardContent className="flex flex-col items-center justify-center p-8">
-          <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
-          <p className="text-muted-foreground">Chargement des paramètres...</p>
-        </CardContent>
-      </Card>
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
     );
   }
 
   return (
-    <Card className="w-full">
+    <Card>
       <CardHeader>
-        <CardTitle>Paramètres généraux</CardTitle>
+        <CardTitle className="flex items-center gap-2">
+          <Settings className="w-5 h-5" />
+          Paramètres généraux
+        </CardTitle>
         <CardDescription>
-          Configurez les paramètres de base pour le module de gestion du fret
+          Configurez les paramètres généraux du module Fret
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         {isOffline && (
-          <div className="bg-yellow-50 border border-yellow-200 rounded-md p-4 mb-6 flex items-center">
-            <WifiOff className="h-5 w-5 text-yellow-500 mr-2" />
-            <p className="text-sm text-yellow-700">
-              Vous êtes en mode hors ligne. Les modifications seront enregistrées localement.
-            </p>
+          <div className="bg-yellow-50 dark:bg-yellow-950 border border-yellow-200 dark:border-yellow-800 rounded-md p-4 mb-4">
+            <div className="flex items-start">
+              <WifiOff className="w-5 h-5 text-yellow-600 dark:text-yellow-400 mr-3 mt-0.5" />
+              <div>
+                <h3 className="text-sm font-medium text-yellow-800 dark:text-yellow-300">Mode hors ligne</h3>
+                <p className="text-sm text-yellow-700 dark:text-yellow-400 mt-1">
+                  Vous êtes en mode hors ligne. Les paramètres ne peuvent pas être sauvegardés.
+                </p>
+              </div>
+            </div>
           </div>
         )}
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        
+        <div className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="companyName">Nom de l'entreprise</Label>
+            <Label htmlFor="defaultCompany">Entreprise par défaut</Label>
+            {isLoadingCompanies ? (
+              <div className="flex items-center h-9 space-x-2 text-sm text-muted-foreground">
+                <Loader2 className="w-4 h-4 animate-spin" />
+                <span>Chargement des entreprises...</span>
+              </div>
+            ) : (
+              <Select 
+                value={settings.defaultCompanyId}
+                onValueChange={(value) => handleChange('defaultCompanyId', value)}
+                disabled={isOffline}
+              >
+                <SelectTrigger>
+                  <div className="flex items-center gap-2">
+                    <Building className="w-4 h-4 text-muted-foreground" />
+                    <SelectValue placeholder="Sélectionnez une entreprise" />
+                  </div>
+                </SelectTrigger>
+                <SelectContent>
+                  {companies.length === 0 ? (
+                    <SelectItem value="no-companies" disabled>
+                      Aucune entreprise trouvée
+                    </SelectItem>
+                  ) : (
+                    companies.map(company => (
+                      <SelectItem key={company.id} value={company.id}>
+                        {company.name}
+                      </SelectItem>
+                    ))
+                  )}
+                </SelectContent>
+              </Select>
+            )}
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="defaultCarrier">Transporteur par défaut</Label>
             <Input 
-              id="companyName" 
-              value={settings.companyName}
-              onChange={(e) => handleChange('companyName', e.target.value)}
+              id="defaultCarrier" 
+              value={settings.defaultCarrier} 
+              onChange={(e) => handleChange('defaultCarrier', e.target.value)}
+              placeholder="Nom du transporteur par défaut"
+              disabled={isOffline}
             />
           </div>
           
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="weightUnit">Unité de poids</Label>
+              <Select 
+                value={settings.weightUnit}
+                onValueChange={(value) => handleChange('weightUnit', value)}
+                disabled={isOffline}
+              >
+                <SelectTrigger id="weightUnit">
+                  <SelectValue placeholder="Sélectionnez une unité" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="kg">Kilogrammes (kg)</SelectItem>
+                  <SelectItem value="lb">Livres (lb)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="dimensionUnit">Unité de dimension</Label>
+              <Select 
+                value={settings.dimensionUnit}
+                onValueChange={(value) => handleChange('dimensionUnit', value)}
+                disabled={isOffline}
+              >
+                <SelectTrigger id="dimensionUnit">
+                  <SelectValue placeholder="Sélectionnez une unité" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="cm">Centimètres (cm)</SelectItem>
+                  <SelectItem value="in">Pouces (in)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          
           <div className="space-y-2">
-            <Label htmlFor="contactEmail">Email de contact</Label>
+            <Label htmlFor="archiveDays">Jours avant archivage automatique</Label>
             <Input 
-              id="contactEmail" 
-              type="email"
-              value={settings.contactEmail}
-              onChange={(e) => handleChange('contactEmail', e.target.value)}
+              type="number" 
+              id="archiveDays" 
+              value={settings.archiveDays} 
+              onChange={(e) => handleChange('archiveDays', Number(e.target.value))}
+              min={1}
+              max={365}
+              disabled={!settings.autoArchiveShipments || isOffline}
             />
           </div>
           
-          <div className="space-y-2">
-            <Label htmlFor="contactPhone">Téléphone de contact</Label>
-            <Input 
-              id="contactPhone" 
-              value={settings.contactPhone}
-              onChange={(e) => handleChange('contactPhone', e.target.value)}
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="defaultCurrency">Devise par défaut</Label>
-            <Select 
-              value={settings.defaultCurrency}
-              onValueChange={(value) => handleChange('defaultCurrency', value)}
-            >
-              <SelectTrigger id="defaultCurrency">
-                <SelectValue placeholder="Choisir une devise" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="EUR">Euro (€)</SelectItem>
-                <SelectItem value="USD">Dollar US ($)</SelectItem>
-                <SelectItem value="GBP">Livre Sterling (£)</SelectItem>
-                <SelectItem value="CAD">Dollar Canadien (C$)</SelectItem>
-                <SelectItem value="CHF">Franc Suisse (CHF)</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="weightUnit">Unité de poids</Label>
-            <Select 
-              value={settings.weightUnit}
-              onValueChange={(value) => handleChange('weightUnit', value)}
-            >
-              <SelectTrigger id="weightUnit">
-                <SelectValue placeholder="Choisir une unité" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="kg">Kilogrammes (kg)</SelectItem>
-                <SelectItem value="g">Grammes (g)</SelectItem>
-                <SelectItem value="lb">Livres (lb)</SelectItem>
-                <SelectItem value="oz">Onces (oz)</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="distanceUnit">Unité de distance</Label>
-            <Select 
-              value={settings.distanceUnit}
-              onValueChange={(value) => handleChange('distanceUnit', value)}
-            >
-              <SelectTrigger id="distanceUnit">
-                <SelectValue placeholder="Choisir une unité" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="km">Kilomètres (km)</SelectItem>
-                <SelectItem value="mi">Miles (mi)</SelectItem>
-                <SelectItem value="nm">Milles Nautiques (nm)</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          <Tabs defaultValue="features" className="pt-2">
+            <TabsList>
+              <TabsTrigger value="features">Fonctionnalités</TabsTrigger>
+              <TabsTrigger value="automation">Automatisation</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="features" className="space-y-4 pt-4">
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label htmlFor="trackingEnabled">Suivi des expéditions</Label>
+                  <p className="text-sm text-muted-foreground">Activer le suivi en temps réel des expéditions</p>
+                </div>
+                <Switch 
+                  id="trackingEnabled" 
+                  checked={settings.trackingEnabled}
+                  onCheckedChange={(checked) => handleChange('trackingEnabled', checked)}
+                  disabled={isOffline}
+                />
+              </div>
+              
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label htmlFor="notificationsEnabled">Notifications</Label>
+                  <p className="text-sm text-muted-foreground">Envoyer des notifications sur les mises à jour d'expédition</p>
+                </div>
+                <Switch 
+                  id="notificationsEnabled" 
+                  checked={settings.notificationsEnabled}
+                  onCheckedChange={(checked) => handleChange('notificationsEnabled', checked)}
+                  disabled={isOffline}
+                />
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="automation" className="space-y-4 pt-4">
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label htmlFor="autoArchiveShipments">Archivage automatique</Label>
+                  <p className="text-sm text-muted-foreground">Archiver automatiquement les expéditions terminées</p>
+                </div>
+                <Switch 
+                  id="autoArchiveShipments" 
+                  checked={settings.autoArchiveShipments}
+                  onCheckedChange={(checked) => handleChange('autoArchiveShipments', checked)}
+                  disabled={isOffline}
+                />
+              </div>
+            </TabsContent>
+          </Tabs>
         </div>
         
-        <div className="space-y-2">
-          <div className="flex items-center space-x-2">
-            <Switch 
-              id="enableNotifications" 
-              checked={settings.enableNotifications}
-              onCheckedChange={(checked) => handleChange('enableNotifications', checked)}
-            />
-            <Label htmlFor="enableNotifications">Activer les notifications</Label>
-          </div>
-          <p className="text-sm text-muted-foreground">
-            Envoyez des notifications automatiques pour les mises à jour d'expédition
-          </p>
-        </div>
-        
-        <div className="space-y-2">
-          <Label htmlFor="defaultShippingTerms">Conditions de livraison par défaut</Label>
-          <Textarea 
-            id="defaultShippingTerms" 
-            value={settings.defaultShippingTerms}
-            onChange={(e) => handleChange('defaultShippingTerms', e.target.value)}
-            placeholder="Saisissez les conditions de livraison par défaut qui apparaîtront sur vos documents"
-            rows={4}
-          />
-        </div>
-      </CardContent>
-      <CardFooter className="flex justify-end space-x-4">
-        <Button onClick={handleSave} disabled={isSaving || isLoading}>
-          {isSaving ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Enregistrement...
-            </>
-          ) : (
-            <>
-              <Save className="mr-2 h-4 w-4" />
-              Enregistrer
-            </>
-          )}
+        <Button 
+          className="w-full mt-6 flex items-center gap-2"
+          onClick={handleSaveSettings}
+          disabled={isOffline || isSaving}
+        >
+          {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+          Enregistrer les paramètres
         </Button>
-      </CardFooter>
+      </CardContent>
     </Card>
   );
 };
