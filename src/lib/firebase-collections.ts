@@ -86,11 +86,11 @@ export const COLLECTIONS = {
     ROUTES: 'freight/routes',
     QUOTES: 'freight/quotes',
     BILLING: 'freight/billing',
-    SETTINGS: 'freight/settings',
+    // Changed from 'freight/settings' to 'freight_settings'
+    SETTINGS: 'freight_settings',
     VEHICLES: 'freight/vehicles',
     DRIVERS: 'freight/drivers',
-    PERMISSIONS: 'freight/permissions',
-    // Adding the missing properties
+    PERMISSIONS: 'freight_permissions',
     CONTAINERS: 'freight/containers',
     DOCUMENTS: 'freight/documents',
     PRICING: 'freight/pricing',

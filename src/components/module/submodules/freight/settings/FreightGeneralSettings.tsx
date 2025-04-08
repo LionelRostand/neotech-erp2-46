@@ -33,8 +33,9 @@ const FreightGeneralSettings: React.FC = () => {
   const [isOffline, setIsOffline] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
   
-  // Use the appropriate collection/document pattern
-  const settingsCollectionPath = COLLECTIONS.FREIGHT.SETTINGS;
+  // Use a proper document reference structure - Firestore needs even number of segments
+  // Instead of 'freight/settings/general', use 'freight_settings/general'
+  const settingsCollectionPath = 'freight_settings';
   const settingsDocumentId = 'general';
   const firestore = useFirestore(settingsCollectionPath);
 
