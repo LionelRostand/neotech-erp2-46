@@ -1,99 +1,201 @@
 
-import { useCollectionData } from '../useCollectionData';
-import { doc, collection, getDoc, setDoc, getDocs, query, serverTimestamp } from 'firebase/firestore';
+import { useEffect, useState, useCallback } from 'react';
+import { collection, query, getDocs, orderBy, limit, where, QueryConstraint } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { orderBy, limit, where } from 'firebase/firestore';
-import { useCallback } from 'react';
 import { COLLECTIONS } from '@/lib/firebase-collections';
+import { toast } from 'sonner';
 
 /**
- * Hook to fetch data for the CRM module
+ * Hook to fetch data for the CRM module directly from Firebase
  */
 export const useCrmData = () => {
-  // Use the collection constants
-  const clientsCollection = COLLECTIONS.CRM.CLIENTS;
-  const prospectsCollection = COLLECTIONS.CRM.PROSPECTS;
-  const opportunitiesCollection = COLLECTIONS.CRM.OPPORTUNITIES;
-  const contactsCollection = COLLECTIONS.CRM.CONTACTS;
-  const leadsCollection = COLLECTIONS.CRM.LEADS;
-  const dealsCollection = COLLECTIONS.CRM.DEALS;
-  const settingsCollection = COLLECTIONS.CRM.SETTINGS;
-  const remindersCollection = COLLECTIONS.CRM.REMINDERS;
+  const [clients, setClients] = useState([]);
+  const [prospects, setProspects] = useState([]);
+  const [opportunities, setOpportunities] = useState([]);
+  const [contacts, setContacts] = useState([]);
+  const [leads, setLeads] = useState([]);
+  const [deals, setDeals] = useState([]);
+  const [settings, setSettings] = useState([]);
+  const [reminders, setReminders] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // Fetch clients
-  const clientsResult = useCollectionData(
-    clientsCollection,
-    [orderBy('createdAt', 'desc'), limit(100)]
-  );
-  
-  // Fetch prospects
-  const prospectsResult = useCollectionData(
-    prospectsCollection,
-    [orderBy('createdAt', 'desc'), limit(100)]
-  );
+  // Function to fetch data from a collection
+  const fetchCollection = async (collectionPath, constraints = []) => {
+    try {
+      const collectionRef = collection(db, collectionPath);
+      const q = constraints.length > 0
+        ? query(collectionRef, ...constraints)
+        : query(collectionRef);
+      
+      const querySnapshot = await getDocs(q);
+      
+      return querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+    } catch (err) {
+      console.error(`Error fetching ${collectionPath}:`, err);
+      throw err;
+    }
+  };
 
-  // Fetch opportunities
-  const opportunitiesResult = useCollectionData(
-    opportunitiesCollection,
-    [orderBy('updatedAt', 'desc'), limit(100)]
-  );
+  // Load all CRM data
+  useEffect(() => {
+    const loadAllData = async () => {
+      setIsLoading(true);
+      try {
+        // Define all collections to fetch with their constraints
+        const collectionsToFetch = [
+          {
+            name: COLLECTIONS.CRM.CLIENTS,
+            setter: setClients,
+            constraints: [orderBy('createdAt', 'desc'), limit(100)]
+          },
+          {
+            name: COLLECTIONS.CRM.PROSPECTS,
+            setter: setProspects,
+            constraints: [orderBy('createdAt', 'desc'), limit(100)]
+          },
+          {
+            name: COLLECTIONS.CRM.OPPORTUNITIES,
+            setter: setOpportunities,
+            constraints: [orderBy('updatedAt', 'desc'), limit(100)]
+          },
+          {
+            name: COLLECTIONS.CRM.CONTACTS,
+            setter: setContacts,
+            constraints: [limit(100)]
+          },
+          {
+            name: COLLECTIONS.CRM.LEADS,
+            setter: setLeads,
+            constraints: [orderBy('createdAt', 'desc'), limit(100)]
+          },
+          {
+            name: COLLECTIONS.CRM.DEALS,
+            setter: setDeals,
+            constraints: [orderBy('updatedAt', 'desc'), limit(100)]
+          },
+          {
+            name: COLLECTIONS.CRM.SETTINGS,
+            setter: setSettings,
+            constraints: []
+          },
+          {
+            name: COLLECTIONS.CRM.REMINDERS,
+            setter: setReminders,
+            constraints: [orderBy('dueDate', 'asc'), where('completed', '==', false), limit(20)]
+          }
+        ];
 
-  // Fetch contacts
-  const contactsResult = useCollectionData(
-    contactsCollection,
-    [orderBy('lastName', 'asc'), limit(100)]
-  );
+        // Fetch all collections in parallel
+        const promises = collectionsToFetch.map(async ({ name, setter, constraints }) => {
+          try {
+            const data = await fetchCollection(name, constraints);
+            setter(data);
+          } catch (err) {
+            console.error(`Error fetching ${name}:`, err);
+            // Don't fail completely if one collection fails
+            setter([]);
+          }
+        });
 
-  // Fetch leads
-  const leadsResult = useCollectionData(
-    leadsCollection,
-    [orderBy('createdAt', 'desc'), limit(100)]
-  );
+        await Promise.all(promises);
+        setError(null);
+      } catch (err) {
+        console.error('Error loading CRM data:', err);
+        setError(err);
+        toast.error('Erreur lors du chargement des données CRM');
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-  // Fetch deals
-  const dealsResult = useCollectionData(
-    dealsCollection,
-    [orderBy('updatedAt', 'desc'), limit(100)]
-  );
-
-  // Fetch settings
-  const settingsResult = useCollectionData(
-    settingsCollection,
-    []
-  );
-
-  // Fetch reminders
-  const remindersResult = useCollectionData(
-    remindersCollection,
-    [orderBy('dueDate', 'asc'), where('completed', '==', false), limit(20)]
-  );
-
-  // Check if any data is still loading
-  const isLoading = clientsResult.isLoading || prospectsResult.isLoading || opportunitiesResult.isLoading || 
-                    contactsResult.isLoading || leadsResult.isLoading || dealsResult.isLoading ||
-                    settingsResult.isLoading || remindersResult.isLoading;
-
-  // Combine all possible errors
-  const error = clientsResult.error || prospectsResult.error || opportunitiesResult.error || 
-                contactsResult.error || leadsResult.error || dealsResult.error ||
-                settingsResult.error || remindersResult.error;
+    loadAllData();
+  }, []);
 
   // Function to refresh all data
-  const refreshData = useCallback(() => {
-    // Since useCollectionData uses onSnapshot, the data is automatically refreshed
-    // This function is kept for API consistency
-    console.log('Refreshing CRM data');
+  const refreshData = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      // Same collection definitions as above
+      const collectionsToFetch = [
+        {
+          name: COLLECTIONS.CRM.CLIENTS,
+          setter: setClients,
+          constraints: [orderBy('createdAt', 'desc'), limit(100)]
+        },
+        {
+          name: COLLECTIONS.CRM.PROSPECTS,
+          setter: setProspects,
+          constraints: [orderBy('createdAt', 'desc'), limit(100)]
+        },
+        {
+          name: COLLECTIONS.CRM.OPPORTUNITIES,
+          setter: setOpportunities,
+          constraints: [orderBy('updatedAt', 'desc'), limit(100)]
+        },
+        {
+          name: COLLECTIONS.CRM.CONTACTS,
+          setter: setContacts,
+          constraints: [limit(100)]
+        },
+        {
+          name: COLLECTIONS.CRM.LEADS,
+          setter: setLeads,
+          constraints: [orderBy('createdAt', 'desc'), limit(100)]
+        },
+        {
+          name: COLLECTIONS.CRM.DEALS,
+          setter: setDeals,
+          constraints: [orderBy('updatedAt', 'desc'), limit(100)]
+        },
+        {
+          name: COLLECTIONS.CRM.SETTINGS,
+          setter: setSettings,
+          constraints: []
+        },
+        {
+          name: COLLECTIONS.CRM.REMINDERS,
+          setter: setReminders,
+          constraints: [orderBy('dueDate', 'asc'), where('completed', '==', false), limit(20)]
+        }
+      ];
+
+      // Fetch all collections
+      const promises = collectionsToFetch.map(async ({ name, setter, constraints }) => {
+        try {
+          const data = await fetchCollection(name, constraints);
+          setter(data);
+        } catch (err) {
+          console.error(`Error fetching ${name}:`, err);
+          // Don't fail completely if one collection fails
+          setter([]);
+        }
+      });
+
+      await Promise.all(promises);
+      setError(null);
+      toast.success('Données CRM mises à jour');
+    } catch (err) {
+      console.error('Error refreshing CRM data:', err);
+      setError(err);
+      toast.error('Erreur lors de la mise à jour des données CRM');
+    } finally {
+      setIsLoading(false);
+    }
   }, []);
 
   return {
-    clients: clientsResult.data || [],
-    prospects: prospectsResult.data || [],
-    opportunities: opportunitiesResult.data || [],
-    contacts: contactsResult.data || [],
-    leads: leadsResult.data || [],
-    deals: dealsResult.data || [],
-    settings: settingsResult.data || [],
-    reminders: remindersResult.data || [],
+    clients,
+    prospects,
+    opportunities,
+    contacts,
+    leads,
+    deals,
+    settings,
+    reminders,
     isLoading,
     error,
     refreshData

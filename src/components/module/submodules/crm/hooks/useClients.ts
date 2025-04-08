@@ -1,201 +1,329 @@
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
+import { collection, addDoc, updateDoc, deleteDoc, doc, getDocs, query, orderBy, serverTimestamp } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 import { Client, ClientFormData } from '../types/crm-types';
-import { toast } from 'sonner';
-import { useClientsData } from './useClientsData';
+import { COLLECTIONS } from '@/lib/firebase-collections';
 
-// Export the options directly from the hook file for easier imports
+// Sector options for clients
 export const sectors = [
-  { value: 'all', label: 'Tous les secteurs' },
   { value: 'technology', label: 'Technologie' },
   { value: 'healthcare', label: 'Santé' },
   { value: 'finance', label: 'Finance' },
   { value: 'education', label: 'Éducation' },
-  { value: 'retail', label: 'Commerce de détail' },
   { value: 'manufacturing', label: 'Fabrication' },
-  { value: 'consulting', label: 'Consultation' },
+  { value: 'retail', label: 'Commerce de détail' },
+  { value: 'services', label: 'Services' },
   { value: 'other', label: 'Autre' }
 ];
 
+// Status options for clients
 export const statusOptions = [
   { value: 'active', label: 'Actif' },
   { value: 'inactive', label: 'Inactif' },
-  { value: 'lead', label: 'Prospect' }
+  { value: 'prospect', label: 'Prospect' },
+  { value: 'lead', label: 'Lead' }
 ];
 
 export const useClients = () => {
-  // Use the real Firebase data from useClientsData
-  const { 
-    clients, 
-    isLoading: loading, 
-    error: fetchError,
-    addClient,
-    updateClient,
-    deleteClient
-  } = useClientsData();
-
-  const [filteredClients, setFilteredClients] = useState<Client[]>([]);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [sectorFilter, setSectorFilter] = useState('all');
-  const [selectedClient, setSelectedClient] = useState<Client | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [clients, setClients] = useState<Client[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   
   // Dialog states
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isViewDetailsOpen, setIsViewDetailsOpen] = useState(false);
+  const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   
-  // Form data
+  // Search and filter
+  const [searchTerm, setSearchTerm] = useState('');
+  const [sectorFilter, setSectorFilter] = useState('all');
+  
+  // Form data for adding/editing clients
   const [formData, setFormData] = useState<ClientFormData>({
     name: '',
-    sector: '',
-    revenue: '',
-    status: 'active',
     contactName: '',
-    contactEmail: '',
-    contactPhone: '',
+    email: '',
+    phone: '',
     address: '',
+    sector: '',
+    status: 'active',
     website: '',
-    description: '',
     notes: ''
   });
   
-  // Set error from fetch if any
+  // Load clients from Firestore
   useEffect(() => {
-    if (fetchError) {
-      setError(fetchError.message);
-    } else {
-      setError(null);
-    }
-  }, [fetchError]);
-  
+    const fetchClients = async () => {
+      try {
+        setLoading(true);
+        const clientsRef = collection(db, COLLECTIONS.CRM.CLIENTS);
+        const q = query(clientsRef, orderBy('createdAt', 'desc'));
+        
+        const querySnapshot = await getDocs(q);
+        
+        // If collection is empty, add mock data
+        if (querySnapshot.empty) {
+          await seedMockClients();
+          fetchClients(); // Recall this function to get the seeded data
+          return;
+        }
+        
+        const loadedClients = querySnapshot.docs.map(doc => {
+          const data = doc.data();
+          return {
+            id: doc.id,
+            name: data.name || '',
+            contactName: data.contactName || '',
+            email: data.email || '',
+            phone: data.phone || '',
+            address: data.address || '',
+            sector: data.sector || '',
+            status: data.status || 'active',
+            createdAt: data.createdAt?.toDate?.() || new Date(),
+            updatedAt: data.updatedAt?.toDate?.() || new Date(),
+            website: data.website || '',
+            notes: data.notes || ''
+          } as Client;
+        });
+        
+        setClients(loadedClients);
+        setError('');
+      } catch (err) {
+        console.error('Error fetching clients:', err);
+        setError('Erreur lors du chargement des clients');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchClients();
+  }, []);
+
   // Filter clients based on search term and sector filter
-  useEffect(() => {
-    const filtered = clients.filter(client => {
-      const matchesSearch = searchTerm === '' || 
-        client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (client.contactName && client.contactName.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        (client.contactEmail && client.contactEmail.toLowerCase().includes(searchTerm.toLowerCase()));
-      
-      const matchesSector = sectorFilter === 'all' || client.sector === sectorFilter;
-      
-      return matchesSearch && matchesSector;
-    });
+  const filteredClients = clients.filter(client => {
+    const matchesSector = sectorFilter === 'all' || client.sector === sectorFilter;
+    const matchesSearch = searchTerm === '' || 
+      client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      client.contactName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      client.email.toLowerCase().includes(searchTerm.toLowerCase());
     
-    setFilteredClients(filtered);
-  }, [clients, searchTerm, sectorFilter]);
-  
-  // Form handling
-  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    return matchesSector && matchesSearch;
+  });
+
+  // Form handlers
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
-  }, []);
-  
-  const handleSelectChange = useCallback((name: string, value: string) => {
+  };
+
+  const handleSelectChange = (name: string, value: string) => {
     setFormData(prev => ({ ...prev, [name]: value }));
-  }, []);
-  
-  const resetForm = useCallback(() => {
-    setFormData({
-      name: '',
-      sector: '',
-      revenue: '',
-      status: 'active',
-      contactName: '',
-      contactEmail: '',
-      contactPhone: '',
-      address: '',
-      website: '',
-      description: '',
-      notes: ''
-    });
-  }, []);
-  
+  };
+
   // CRUD operations
-  const handleCreateClient = useCallback(async (data: ClientFormData) => {
+  const handleCreateClient = async () => {
     try {
-      // Cast the status to the proper type
-      await addClient({
-        ...data,
-        status: data.status as 'active' | 'inactive' | 'lead',
-        customerSince: new Date().toISOString().split('T')[0]
-      });
+      setLoading(true);
+      const clientsRef = collection(db, COLLECTIONS.CRM.CLIENTS);
+      
+      const newClient = {
+        ...formData,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      };
+      
+      const docRef = await addDoc(clientsRef, newClient);
+      
+      // Add to local state
+      setClients(prev => [
+        {
+          id: docRef.id,
+          ...formData,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        } as Client,
+        ...prev
+      ]);
       
       resetForm();
       setIsAddDialogOpen(false);
-      toast.success('Client créé avec succès');
+      return true;
     } catch (err) {
       console.error('Error creating client:', err);
-      toast.error('Erreur lors de la création du client');
+      setError('Erreur lors de la création du client');
+      return false;
+    } finally {
+      setLoading(false);
     }
-  }, [addClient, resetForm]);
-  
-  const handleUpdateClient = useCallback(async (data: ClientFormData) => {
-    if (!selectedClient) return;
+  };
+
+  const handleUpdateClient = async () => {
+    if (!selectedClient) return false;
     
     try {
-      // We need to cast the status here as well
-      await updateClient(selectedClient.id, {
-        ...data,
-        status: data.status as 'active' | 'inactive' | 'lead'
-      });
+      setLoading(true);
+      const clientRef = doc(db, COLLECTIONS.CRM.CLIENTS, selectedClient.id);
       
-      resetForm();
+      const updatedData = {
+        ...formData,
+        updatedAt: serverTimestamp()
+      };
+      
+      await updateDoc(clientRef, updatedData);
+      
+      // Update in local state
+      setClients(prev => 
+        prev.map(client => 
+          client.id === selectedClient.id 
+            ? { ...client, ...formData, updatedAt: new Date() } 
+            : client
+        )
+      );
+      
       setIsEditDialogOpen(false);
-      toast.success('Client mis à jour avec succès');
+      return true;
     } catch (err) {
       console.error('Error updating client:', err);
-      toast.error('Erreur lors de la mise à jour du client');
+      setError('Erreur lors de la mise à jour du client');
+      return false;
+    } finally {
+      setLoading(false);
     }
-  }, [selectedClient, updateClient, resetForm]);
-  
-  const handleDeleteClient = useCallback(async () => {
-    if (!selectedClient) return;
+  };
+
+  const handleDeleteClient = async () => {
+    if (!selectedClient) return false;
     
     try {
-      await deleteClient(selectedClient.id);
+      setLoading(true);
+      const clientRef = doc(db, COLLECTIONS.CRM.CLIENTS, selectedClient.id);
+      
+      await deleteDoc(clientRef);
+      
+      // Remove from local state
+      setClients(prev => prev.filter(client => client.id !== selectedClient.id));
       
       setIsDeleteDialogOpen(false);
-      toast.success('Client supprimé avec succès');
+      return true;
     } catch (err) {
       console.error('Error deleting client:', err);
-      toast.error('Erreur lors de la suppression du client');
+      setError('Erreur lors de la suppression du client');
+      return false;
+    } finally {
+      setLoading(false);
     }
-  }, [selectedClient, deleteClient]);
-  
-  // Dialog handling
-  const openEditDialog = useCallback((client: Client) => {
+  };
+
+  // Dialog handlers
+  const resetForm = () => {
+    setFormData({
+      name: '',
+      contactName: '',
+      email: '',
+      phone: '',
+      address: '',
+      sector: '',
+      status: 'active',
+      website: '',
+      notes: ''
+    });
+  };
+
+  const openEditDialog = (client: Client) => {
     setSelectedClient(client);
     setFormData({
       name: client.name,
+      contactName: client.contactName,
+      email: client.email,
+      phone: client.phone,
+      address: client.address,
       sector: client.sector,
-      revenue: client.revenue,
       status: client.status,
-      contactName: client.contactName || '',
-      contactEmail: client.contactEmail || '',
-      contactPhone: client.contactPhone || '',
-      address: client.address || '',
       website: client.website || '',
-      description: client.description || '',
       notes: client.notes || ''
     });
     setIsEditDialogOpen(true);
-  }, []);
-  
-  const openDeleteDialog = useCallback((client: Client) => {
+  };
+
+  const openDeleteDialog = (client: Client) => {
     setSelectedClient(client);
     setIsDeleteDialogOpen(true);
-  }, []);
-  
-  const viewClientDetails = useCallback((client: Client) => {
+  };
+
+  const viewClientDetails = (client: Client) => {
     setSelectedClient(client);
     setIsViewDetailsOpen(true);
-  }, []);
-  
+  };
+
+  // Seed mock data if the collection is empty
+  const seedMockClients = async () => {
+    try {
+      const clientsRef = collection(db, COLLECTIONS.CRM.CLIENTS);
+      
+      const mockClients = [
+        {
+          name: 'TechCorp',
+          contactName: 'Marc Dupont',
+          email: 'marc.dupont@techcorp.fr',
+          phone: '+33 1 23 45 67 89',
+          address: '123 Avenue de la Tech, 75001 Paris',
+          sector: 'technology',
+          status: 'active',
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+          website: 'www.techcorp.fr',
+          notes: 'Client depuis 2019, très satisfait de nos services.'
+        },
+        {
+          name: 'MédiSanté',
+          contactName: 'Claire Dubois',
+          email: 'claire.dubois@medisante.fr',
+          phone: '+33 1 34 56 78 90',
+          address: '456 Boulevard Médical, 69002 Lyon',
+          sector: 'healthcare',
+          status: 'active',
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+          website: 'www.medisante.fr',
+          notes: 'Gros potentiel de croissance sur 2023.'
+        },
+        {
+          name: 'FinaSmart',
+          contactName: 'Pierre Martin',
+          email: 'pierre.martin@finasmart.fr',
+          phone: '+33 1 45 67 89 01',
+          address: '789 Rue de la Finance, 33000 Bordeaux',
+          sector: 'finance',
+          status: 'inactive',
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+          website: 'www.finasmart.fr',
+          notes: 'Contrat en pause depuis janvier 2023.'
+        }
+      ];
+      
+      // Add mock data to Firestore
+      const promises = mockClients.map(client => 
+        addDoc(clientsRef, client)
+      );
+      
+      await Promise.all(promises);
+      console.log('Mock clients seeded successfully');
+      
+    } catch (err) {
+      console.error('Error seeding mock clients:', err);
+    }
+  };
+
   return {
+    // State
     clients,
     filteredClients,
+    loading,
+    error,
     searchTerm,
     setSearchTerm,
     sectorFilter,
@@ -210,6 +338,8 @@ export const useClients = () => {
     setIsViewDetailsOpen,
     selectedClient,
     formData,
+    
+    // Handlers
     handleInputChange,
     handleSelectChange,
     handleCreateClient,
@@ -218,8 +348,6 @@ export const useClients = () => {
     openEditDialog,
     openDeleteDialog,
     viewClientDetails,
-    resetForm,
-    loading,
-    error
+    resetForm
   };
 };

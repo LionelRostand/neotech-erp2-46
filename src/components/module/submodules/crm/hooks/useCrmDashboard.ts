@@ -65,7 +65,7 @@ export const useCrmDashboard = () => {
     return Object.entries(stages).map(([name, value]) => ({ name, value }));
   }, [opportunities]);
 
-  // Recent activities data
+  // Recent activities data - In a real app, this would come from Firebase
   const recentActivities = useMemo(() => [
     {
       id: 1,

@@ -1,277 +1,285 @@
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
+import { collection, addDoc, updateDoc, deleteDoc, doc, getDocs, query, orderBy, serverTimestamp } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 import { Prospect, ProspectFormData, ReminderData } from '../types/crm-types';
-import { toast } from 'sonner';
+import { COLLECTIONS } from '@/lib/firebase-collections';
 
 export const useProspects = () => {
   const [prospects, setProspects] = useState<Prospect[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState('');
+  
+  // Search and filters
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [selectedProspect, setSelectedProspect] = useState<Prospect | null>(null);
-
-  // List of source options for dropdown
+  
+  // Options for select fields
   const sourceOptions = [
     { value: 'website', label: 'Site web' },
-    { value: 'referral', label: 'Parrainage' },
+    { value: 'referral', label: 'Référence' },
     { value: 'linkedin', label: 'LinkedIn' },
-    { value: 'email', label: 'Email' },
     { value: 'event', label: 'Événement' },
+    { value: 'cold_call', label: 'Appel à froid' },
+    { value: 'email', label: 'Email marketing' },
     { value: 'other', label: 'Autre' }
   ];
-
-  // List of status options for dropdown
+  
   const statusOptions = [
     { value: 'new', label: 'Nouveau' },
     { value: 'contacted', label: 'Contacté' },
     { value: 'meeting', label: 'Rendez-vous' },
     { value: 'proposal', label: 'Proposition' },
-    { value: 'negotiation', label: 'Négociation' },
-    { value: 'converted', label: 'Converti' },
-    { value: 'lost', label: 'Perdu' }
+    { value: 'qualified', label: 'Qualifié' },
+    { value: 'unqualified', label: 'Non qualifié' }
   ];
 
+  // Load prospects from Firestore
   useEffect(() => {
     const fetchProspects = async () => {
       try {
-        // Simulate API call
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        setIsLoading(true);
+        const prospectsRef = collection(db, COLLECTIONS.CRM.PROSPECTS);
+        const q = query(prospectsRef, orderBy('createdAt', 'desc'));
         
-        // Mock data
-        const mockProspects: Prospect[] = [
-          {
-            id: '1',
-            name: 'John Doe',
-            company: 'Acme Inc',
-            contactName: 'John Doe',
-            contactEmail: 'john@acme.com',
-            contactPhone: '01 23 45 67 89',
-            email: 'john@acme.com',
-            phone: '01 23 45 67 89',
-            status: 'contacted' as const,
-            source: 'website',
-            industry: 'technology',
-            website: 'www.acme.com',
-            address: '123 Business St, Paris',
-            estimatedValue: 15000,
-            notes: 'Promising lead from website contact form',
-            lastContact: '2023-09-15',
-            nextContact: '2023-09-30',
-            createdAt: '2023-09-01',
-          },
-          {
-            id: '2',
-            name: 'Marie Johnson',
-            company: 'Tech Solutions',
-            contactName: 'Marie Johnson',
-            contactEmail: 'marie@techsolutions.com',
-            contactPhone: '01 98 76 54 32',
-            email: 'marie@techsolutions.com',
-            phone: '01 98 76 54 32',
-            status: 'meeting' as const,
-            source: 'linkedin',
-            industry: 'technology',
-            website: 'www.techsolutions.com',
-            address: '456 Tech Ave, Lyon',
-            size: 'medium',
-            estimatedValue: 25000,
-            notes: 'Meeting scheduled for next week to discuss project requirements',
-            lastContact: '2023-09-20',
-            nextContact: '2023-10-05',
-            createdAt: '2023-09-10',
-          },
-          {
-            id: '3',
-            name: 'Pierre Dupont',
-            company: 'Health Services',
-            contactName: 'Pierre Dupont',
-            contactEmail: 'pierre@healthservices.fr',
-            contactPhone: '01 45 67 89 12',
-            email: 'pierre@healthservices.fr',
-            phone: '01 45 67 89 12',
-            status: 'new' as const,
-            source: 'email',
-            industry: 'healthcare',
-            website: 'www.healthservices.fr',
-            address: '789 Health Blvd, Marseille',
-            size: 'large',
-            estimatedValue: 50000,
-            notes: 'Initial contact made via email campaign',
-            lastContact: '2023-09-18',
-            nextContact: '2023-09-25',
-            createdAt: '2023-09-18',
-          }
-        ];
+        const querySnapshot = await getDocs(q);
         
-        setProspects(mockProspects);
-        setError(null);
+        // If collection is empty, add mock data
+        if (querySnapshot.empty) {
+          await seedMockProspects();
+          fetchProspects(); // Recall this function to get the seeded data
+          return;
+        }
+        
+        const loadedProspects = querySnapshot.docs.map(doc => {
+          const data = doc.data();
+          const createdAtDate = data.createdAt instanceof Date 
+            ? data.createdAt.toISOString().split('T')[0]
+            : data.createdAt && data.createdAt.toDate 
+              ? data.createdAt.toDate().toISOString().split('T')[0]
+              : new Date().toISOString().split('T')[0];
+              
+          return {
+            id: doc.id,
+            company: data.company || '',
+            contactName: data.contactName || '',
+            contactEmail: data.contactEmail || '',
+            contactPhone: data.contactPhone || '',
+            status: data.status || 'new',
+            source: data.source || '',
+            createdAt: createdAtDate,
+            notes: data.notes || '',
+            industry: data.industry || '',
+            website: data.website || '',
+            address: data.address || '',
+            size: data.size || '',
+            estimatedValue: data.estimatedValue || 0,
+            name: data.company || '' // For compatibility with CRM components
+          } as Prospect;
+        });
+        
+        setProspects(loadedProspects);
+        setError('');
       } catch (err) {
         console.error('Error fetching prospects:', err);
-        setError('Une erreur est survenue lors du chargement des prospects');
+        setError('Erreur lors du chargement des prospects');
       } finally {
-        setLoading(false);
+        setIsLoading(false);
       }
     };
 
     fetchProspects();
   }, []);
 
-  // Add a new prospect
-  const addProspect = useCallback(async (data: ProspectFormData): Promise<Prospect> => {
+  // CRUD operations
+  const addProspect = async (data: ProspectFormData): Promise<void> => {
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 500));
+      const prospectsRef = collection(db, COLLECTIONS.CRM.PROSPECTS);
       
-      // Ensure status is valid Prospect status type
-      let prospectStatus: Prospect['status'];
-      if (['new', 'contacted', 'meeting', 'proposal', 'negotiation', 'converted', 'lost'].includes(data.status)) {
-        prospectStatus = data.status as Prospect['status'];
-      } else {
-        prospectStatus = 'new';
-      }
-      
-      const newProspect: Prospect = {
-        id: Date.now().toString(),
-        name: data.name || data.contactName,
-        company: data.company,
-        contactName: data.contactName,
-        contactEmail: data.contactEmail,
-        contactPhone: data.contactPhone,
-        email: data.email || data.contactEmail,
-        phone: data.phone || data.contactPhone,
-        status: prospectStatus,
-        source: data.source,
-        industry: data.industry,
-        website: data.website,
-        address: data.address,
-        size: data.size,
-        estimatedValue: data.estimatedValue,
-        notes: data.notes,
-        lastContact: data.lastContact || new Date().toISOString().split('T')[0],
-        createdAt: new Date().toISOString(),
+      const newProspect = {
+        ...data,
+        createdAt: serverTimestamp()
       };
       
-      setProspects(prev => [newProspect, ...prev]);
-      return newProspect;
+      const docRef = await addDoc(prospectsRef, newProspect);
+      
+      // Add to local state
+      const createdAtDate = new Date().toISOString().split('T')[0];
+      
+      setProspects(prev => [
+        {
+          id: docRef.id,
+          ...data,
+          createdAt: createdAtDate,
+          name: data.company // For compatibility with CRM components
+        } as Prospect,
+        ...prev
+      ]);
+      
     } catch (err) {
       console.error('Error adding prospect:', err);
-      toast.error('Erreur lors de l\'ajout du prospect');
-      throw err;
+      throw new Error('Failed to add prospect');
     }
-  }, []);
+  };
 
-  // Update an existing prospect
-  const updateProspect = useCallback(async (id: string, data: Partial<ProspectFormData>): Promise<Prospect> => {
+  const updateProspect = async (id: string, data: ProspectFormData): Promise<void> => {
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 500));
+      const prospectRef = doc(db, COLLECTIONS.CRM.PROSPECTS, id);
       
-      // Ensure status is valid Prospect status type if it's being updated
-      let prospectStatus: Prospect['status'] | undefined;
-      if (data.status) {
-        if (['new', 'contacted', 'meeting', 'proposal', 'negotiation', 'converted', 'lost'].includes(data.status)) {
-          prospectStatus = data.status as Prospect['status'];
-        } else {
-          prospectStatus = 'new';
-        }
-      }
+      await updateDoc(prospectRef, data);
       
-      const updatedProspects = prospects.map(prospect => {
-        if (prospect.id === id) {
-          return {
-            ...prospect,
-            ...data,
-            // Override with corrected status if provided
-            ...(prospectStatus ? { status: prospectStatus } : {})
-          } as Prospect;
-        }
-        return prospect;
-      });
+      // Update in local state
+      setProspects(prev => 
+        prev.map(prospect => 
+          prospect.id === id 
+            ? { 
+                ...prospect, 
+                ...data,
+                name: data.company // For compatibility with CRM components
+              } 
+            : prospect
+        )
+      );
       
-      setProspects(updatedProspects);
-      
-      const updatedProspect = updatedProspects.find(p => p.id === id);
-      if (!updatedProspect) {
-        throw new Error('Prospect not found');
-      }
-      
-      return updatedProspect;
     } catch (err) {
       console.error('Error updating prospect:', err);
-      toast.error('Erreur lors de la mise à jour du prospect');
-      throw err;
+      throw new Error('Failed to update prospect');
     }
-  }, [prospects]);
+  };
 
-  // Delete a prospect
-  const deleteProspect = useCallback(async (id: string): Promise<boolean> => {
+  const deleteProspect = async (id: string): Promise<void> => {
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 500));
+      const prospectRef = doc(db, COLLECTIONS.CRM.PROSPECTS, id);
       
+      await deleteDoc(prospectRef);
+      
+      // Remove from local state
       setProspects(prev => prev.filter(prospect => prospect.id !== id));
-      return true;
+      
     } catch (err) {
       console.error('Error deleting prospect:', err);
-      toast.error('Erreur lors de la suppression du prospect');
-      return false;
+      throw new Error('Failed to delete prospect');
     }
-  }, []);
+  };
 
-  // Convert a prospect to a client
-  const convertToClient = useCallback(async (prospect: Prospect): Promise<string> => {
+  const convertToClient = async (prospect: Prospect): Promise<string> => {
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 500));
+      // Convert prospect to client in Firestore
+      const clientsRef = collection(db, COLLECTIONS.CRM.CLIENTS);
       
-      // Update prospect status to 'converted'
-      const updatedProspects = prospects.map(p => {
-        if (p.id === prospect.id) {
-          return {
-            ...p,
-            status: 'converted' as const,
-            convertedAt: new Date().toISOString(),
-            convertedToClientId: Date.now().toString()
-          } as Prospect;
-        }
-        return p;
-      });
+      const clientData = {
+        name: prospect.company,
+        contactName: prospect.contactName,
+        email: prospect.contactEmail,
+        phone: prospect.contactPhone,
+        address: prospect.address,
+        sector: prospect.industry,
+        status: 'active',
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+        website: prospect.website,
+        notes: `Converti depuis prospect le ${new Date().toLocaleDateString('fr-FR')}. ${prospect.notes}`
+      };
       
-      setProspects(updatedProspects);
+      const clientDocRef = await addDoc(clientsRef, clientData);
       
-      // In a real app, you would create a new client record here
-      const clientId = Date.now().toString();
+      // Delete the prospect
+      await deleteProspect(prospect.id);
       
-      return clientId;
+      return clientDocRef.id;
     } catch (err) {
       console.error('Error converting prospect to client:', err);
-      toast.error('Erreur lors de la conversion du prospect en client');
-      throw err;
+      throw new Error('Failed to convert prospect to client');
     }
-  }, [prospects]);
+  };
 
-  // Add a reminder for a prospect
-  const addReminder = useCallback(async (prospectId: string, reminderData: ReminderData): Promise<boolean> => {
+  const addReminder = async (prospectId: string, reminderData: ReminderData): Promise<void> => {
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 500));
+      const remindersRef = collection(db, COLLECTIONS.CRM.REMINDERS);
       
-      // In a real app, you would save the reminder to the database
-      console.log(`Adding reminder for prospect ${prospectId}:`, reminderData);
+      const reminder = {
+        ...reminderData,
+        prospectId,
+        completed: false,
+        createdAt: serverTimestamp()
+      };
       
-      toast.success('Rappel ajouté avec succès');
-      return true;
+      await addDoc(remindersRef, reminder);
+      
     } catch (err) {
       console.error('Error adding reminder:', err);
-      toast.error('Erreur lors de l\'ajout du rappel');
-      return false;
+      throw new Error('Failed to add reminder');
     }
-  }, []);
+  };
+
+  // Seed mock data if the collection is empty
+  const seedMockProspects = async () => {
+    try {
+      const prospectCollection = collection(db, COLLECTIONS.CRM.PROSPECTS);
+      
+      const mockProspects = [
+        {
+          company: 'Tech Innovations',
+          contactName: 'Pierre Dupont',
+          contactEmail: 'pierre@techinnovations.fr',
+          contactPhone: '01 23 45 67 89',
+          status: 'new',
+          source: 'website',
+          industry: 'technology',
+          website: 'www.techinnovations.fr',
+          address: '123 Boulevard de l\'Innovation, Paris',
+          size: 'medium',
+          estimatedValue: 25000,
+          notes: 'Prospect intéressé par notre solution CRM',
+          createdAt: serverTimestamp()
+        },
+        {
+          company: 'Green Solutions',
+          contactName: 'Marie Lambert',
+          contactEmail: 'marie@greensolutions.fr',
+          contactPhone: '01 98 76 54 32',
+          status: 'contacted',
+          source: 'linkedin',
+          industry: 'environmental',
+          website: 'www.greensolutions.fr',
+          address: '456 Rue de l\'Écologie, Lyon',
+          size: 'small',
+          estimatedValue: 15000,
+          notes: 'Premier contact effectué, en attente de retour',
+          createdAt: serverTimestamp()
+        },
+        {
+          company: 'Global Finance',
+          contactName: 'Julien Martin',
+          contactEmail: 'julien@globalfinance.fr',
+          contactPhone: '01 45 67 89 01',
+          status: 'meeting',
+          source: 'referral',
+          industry: 'finance',
+          website: 'www.globalfinance.fr',
+          address: '789 Avenue des Finances, Bordeaux',
+          size: 'large',
+          estimatedValue: 50000,
+          notes: 'Rendez-vous programmé pour la semaine prochaine',
+          createdAt: serverTimestamp()
+        }
+      ];
+      
+      const promises = mockProspects.map(prospect => 
+        addDoc(prospectCollection, prospect)
+      );
+      
+      await Promise.all(promises);
+      console.log('Données de démonstration des prospects ajoutées avec succès');
+    } catch (error) {
+      console.error('Erreur lors de l\'ajout des données de démonstration:', error);
+    }
+  };
 
   return {
     prospects,
-    isLoading: loading,
+    isLoading,
     error,
     sourceOptions,
     statusOptions,

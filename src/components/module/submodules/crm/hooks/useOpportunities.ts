@@ -1,189 +1,190 @@
 
-import { useState, useEffect, useCallback } from 'react';
-import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, orderBy, serverTimestamp, Timestamp, where } from 'firebase/firestore';
+import { useState, useEffect } from 'react';
+import { collection, query, orderBy, addDoc, updateDoc, doc, serverTimestamp, getDocs } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { Opportunity, OpportunityFormData, OpportunityStage } from '../types/crm-types';
-import { toast } from 'sonner';
+import { Opportunity, OpportunityFormData } from '../types/crm-types';
 import { COLLECTIONS } from '@/lib/firebase-collections';
+import { toast } from 'sonner';
 
 export const useOpportunities = () => {
   const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
-  const fetchOpportunities = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      const opportunitiesRef = collection(db, COLLECTIONS.CRM.OPPORTUNITIES);
-      const q = query(opportunitiesRef, orderBy('createdAt', 'desc'));
-      const snapshot = await getDocs(q);
-      
-      // Si la collection est vide, ajouter des données de démonstration
-      if (snapshot.empty) {
-        console.log('Aucune opportunité trouvée, ajout de données de démonstration');
-        await seedMockOpportunities();
-        fetchOpportunities(); // Récupérer à nouveau après l'ajout des données de démo
-        return;
+  // Fetch opportunities from Firebase
+  useEffect(() => {
+    const fetchOpportunities = async () => {
+      try {
+        setIsLoading(true);
+        const opportunitiesRef = collection(db, COLLECTIONS.CRM.OPPORTUNITIES);
+        const q = query(opportunitiesRef, orderBy('updatedAt', 'desc'));
+        
+        const querySnapshot = await getDocs(q);
+        
+        // Check if collection is empty and add mock data if needed
+        if (querySnapshot.empty) {
+          await seedMockOpportunities();
+          fetchOpportunities(); // Recall this function to get the seeded data
+          return;
+        }
+        
+        const loadedOpportunities = querySnapshot.docs.map(doc => {
+          const data = doc.data();
+          return {
+            id: doc.id,
+            name: data.name || '',
+            clientName: data.clientName || '',
+            value: data.value || 0,
+            stage: data.stage || 'lead',
+            probability: data.probability || 0,
+            expectedCloseDate: data.expectedCloseDate || '',
+            createdAt: data.createdAt?.toDate?.() || new Date(),
+            updatedAt: data.updatedAt?.toDate?.() || new Date(),
+            owner: data.owner || '',
+            description: data.description || '',
+            products: data.products || [],
+            source: data.source || '',
+            notes: data.notes || '',
+            contacts: data.contacts || []
+          } as Opportunity;
+        });
+        
+        setOpportunities(loadedOpportunities);
+        setError(null);
+      } catch (err) {
+        console.error('Error fetching opportunities:', err);
+        setError(err instanceof Error ? err : new Error('Failed to fetch opportunities'));
+      } finally {
+        setIsLoading(false);
       }
-      
-      const fetchedOpportunities = snapshot.docs.map(doc => {
-        const data = doc.data();
-        
-        // Gérer les données de dates qui peuvent être des Timestamp Firestore
-        let createdAtStr = '';
-        let updatedAtStr = '';
-        let expectedCloseDateStr = '';
-        
-        if (data.createdAt instanceof Timestamp) {
-          createdAtStr = data.createdAt.toDate().toISOString();
-        } else if (data.createdAt) {
-          createdAtStr = new Date(data.createdAt).toISOString();
-        } else {
-          createdAtStr = new Date().toISOString();
-        }
-        
-        if (data.updatedAt instanceof Timestamp) {
-          updatedAtStr = data.updatedAt.toDate().toISOString();
-        } else if (data.updatedAt) {
-          updatedAtStr = new Date(data.updatedAt).toISOString();
-        }
-        
-        if (data.expectedCloseDate instanceof Timestamp) {
-          expectedCloseDateStr = data.expectedCloseDate.toDate().toISOString().split('T')[0];
-        } else if (data.expectedCloseDate) {
-          expectedCloseDateStr = new Date(data.expectedCloseDate).toISOString().split('T')[0];
-        } else {
-          expectedCloseDateStr = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-        }
-        
-        return {
-          id: doc.id,
-          ...data,
-          createdAt: createdAtStr,
-          updatedAt: updatedAtStr || createdAtStr,
-          expectedCloseDate: expectedCloseDateStr,
-          value: Number(data.value) || 0,
-          probability: Number(data.probability) || 0
-        } as Opportunity;
-      });
-      
-      setOpportunities(fetchedOpportunities);
-      setError(null);
-    } catch (err) {
-      console.error('Error fetching opportunities:', err);
-      setError(err as Error);
-    } finally {
-      setIsLoading(false);
-    }
+    };
+
+    fetchOpportunities();
   }, []);
 
-  useEffect(() => {
-    fetchOpportunities();
-  }, [fetchOpportunities]);
-
-  const addOpportunity = async (data: OpportunityFormData) => {
+  // Add a new opportunity to Firebase
+  const addOpportunity = async (opportunityData: OpportunityFormData): Promise<void> => {
     try {
       const opportunitiesRef = collection(db, COLLECTIONS.CRM.OPPORTUNITIES);
       
-      const opportunityData = {
-        ...data,
+      const newOpportunity = {
+        ...opportunityData,
         createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-        value: Number(data.value) || 0,
-        probability: Number(data.probability) || 0
+        updatedAt: serverTimestamp()
       };
       
-      const newOpportunityRef = await addDoc(opportunitiesRef, opportunityData);
+      const docRef = await addDoc(opportunitiesRef, newOpportunity);
       
-      await fetchOpportunities();
+      // Add to local state with the new ID
+      setOpportunities(prevOpportunities => [
+        {
+          id: docRef.id,
+          ...opportunityData,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        } as Opportunity,
+        ...prevOpportunities
+      ]);
       
-      return newOpportunityRef.id;
     } catch (err) {
       console.error('Error adding opportunity:', err);
-      throw err;
+      throw err instanceof Error ? err : new Error('Failed to add opportunity');
     }
   };
 
-  const updateOpportunity = async (id: string, data: Partial<OpportunityFormData>) => {
+  // Update an opportunity in Firebase
+  const updateOpportunity = async (id: string, opportunityData: OpportunityFormData): Promise<void> => {
     try {
       const opportunityRef = doc(db, COLLECTIONS.CRM.OPPORTUNITIES, id);
       
-      const updateData = {
-        ...data,
-        updatedAt: serverTimestamp(),
-        value: data.value ? Number(data.value) : undefined,
-        probability: data.probability ? Number(data.probability) : undefined
+      const updatedData = {
+        ...opportunityData,
+        updatedAt: serverTimestamp()
       };
       
-      await updateDoc(opportunityRef, updateData);
+      await updateDoc(opportunityRef, updatedData);
       
-      await fetchOpportunities();
+      // Update in local state
+      setOpportunities(prevOpportunities => 
+        prevOpportunities.map(opp => 
+          opp.id === id 
+            ? { ...opp, ...opportunityData, updatedAt: new Date() } 
+            : opp
+        )
+      );
       
-      return true;
     } catch (err) {
       console.error('Error updating opportunity:', err);
-      throw err;
+      throw err instanceof Error ? err : new Error('Failed to update opportunity');
     }
   };
 
-  // Seed mock data if collection is empty
+  // Seed mock data if the collection is empty
   const seedMockOpportunities = async () => {
     try {
       const opportunitiesRef = collection(db, COLLECTIONS.CRM.OPPORTUNITIES);
       
       const mockOpportunities = [
         {
-          name: 'Projet CRM Tech Solutions',
-          clientName: 'Tech Solutions',
-          contactName: 'Jean Dupont',
-          contactEmail: 'jean@techsolutions.fr',
-          contactPhone: '01 23 45 67 89',
-          stage: OpportunityStage.PROPOSAL,
-          value: 25000,
-          probability: 70,
-          expectedCloseDate: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000),
-          description: 'Implémentation d\'une solution CRM pour Tech Solutions',
+          name: 'Déploiement Réseau',
+          clientName: 'TechCorp',
+          value: 75000,
+          stage: 'proposal',
+          probability: 65,
+          expectedCloseDate: '2023-12-20',
           createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp()
+          updatedAt: serverTimestamp(),
+          owner: 'Julie Martin',
+          description: 'Déploiement d\'un réseau sécurisé pour les 5 sites de TechCorp',
+          products: ['Réseau sécurisé', 'VPN', 'Support technique'],
+          source: 'Salon professionnel',
+          notes: 'Client intéressé par une extension future',
+          contacts: ['Marc Dupont (CTO)', 'Sophie Leroy (IT Manager)']
         },
         {
-          name: 'Renouvellement licence Global Industries',
-          clientName: 'Global Industries',
-          contactName: 'Marie Lambert',
-          contactEmail: 'marie@global-industries.fr',
-          contactPhone: '01 98 76 54 32',
-          stage: OpportunityStage.NEGOTIATION,
-          value: 12000,
-          probability: 90,
-          expectedCloseDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-          description: 'Renouvellement des licences logicielles pour 50 utilisateurs',
+          name: 'Migration Cloud',
+          clientName: 'InnovSolutions',
+          value: 120000,
+          stage: 'negotiation',
+          probability: 80,
+          expectedCloseDate: '2023-11-30',
           createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp()
+          updatedAt: serverTimestamp(),
+          owner: 'Thomas Bernard',
+          description: 'Migration de l\'infrastructure vers le cloud Azure',
+          products: ['Azure Migration', 'Training', 'Support 24/7'],
+          source: 'Référence client',
+          notes: 'Budget confirmé pour Q4',
+          contacts: ['Julien Petit (CEO)', 'Claire Dubois (COO)']
         },
         {
-          name: 'Formation Smart Digital',
-          clientName: 'Smart Digital',
-          contactName: 'Pierre Legrand',
-          contactEmail: 'pierre@smartdigital.fr',
-          contactPhone: '01 45 67 89 01',
-          stage: OpportunityStage.DISCOVERY,
-          value: 8500,
-          probability: 40,
-          expectedCloseDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-          description: 'Formation sur nos outils pour l\'équipe marketing',
+          name: 'Équipement Bureau',
+          clientName: 'MediaGroup',
+          value: 45000,
+          stage: 'lead',
+          probability: 30,
+          expectedCloseDate: '2024-01-15',
           createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp()
+          updatedAt: serverTimestamp(),
+          owner: 'Sophie Mercier',
+          description: 'Renouvellement de l\'équipement informatique',
+          products: ['Ordinateurs portables', 'Écrans', 'Périphériques'],
+          source: 'Site web',
+          notes: 'Premier contact positif',
+          contacts: ['Paul Martin (Procurement)']
         }
       ];
       
+      // Add mock data to Firestore
       const promises = mockOpportunities.map(opportunity => 
         addDoc(opportunitiesRef, opportunity)
       );
       
       await Promise.all(promises);
-      console.log('Données de démonstration des opportunités ajoutées avec succès');
-    } catch (error) {
-      console.error('Erreur lors de l\'ajout des données de démonstration:', error);
+      console.log('Mock opportunities seeded successfully');
+      
+    } catch (err) {
+      console.error('Error seeding mock opportunities:', err);
     }
   };
 
@@ -192,7 +193,6 @@ export const useOpportunities = () => {
     isLoading,
     error,
     addOpportunity,
-    updateOpportunity,
-    fetchOpportunities
+    updateOpportunity
   };
 };
