@@ -12,9 +12,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useOpportunities } from './hooks/useOpportunities';
 import { Opportunity, OpportunityFormData } from './types/crm-types';
 import { toast } from 'sonner';
+import DeleteOpportunityDialog from './opportunities/DeleteOpportunityDialog';
 
 const CrmOpportunities: React.FC = () => {
-  const { opportunities, isLoading, error, addOpportunity, updateOpportunity } = useOpportunities();
+  const { opportunities, isLoading, error, addOpportunity, updateOpportunity, deleteOpportunity } = useOpportunities();
   
   // Filter and view state
   const [view, setView] = useState<'table' | 'kanban'>('table');
@@ -25,6 +26,7 @@ const CrmOpportunities: React.FC = () => {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedOpportunity, setSelectedOpportunity] = useState<Opportunity | null>(null);
 
   // Filter opportunities based on search term and stage
@@ -62,6 +64,19 @@ const CrmOpportunities: React.FC = () => {
     }
   };
 
+  const handleDeleteOpportunity = async () => {
+    if (!selectedOpportunity) return;
+    
+    try {
+      await deleteOpportunity(selectedOpportunity.id);
+      setIsDeleteDialogOpen(false);
+      toast.success('Opportunité supprimée avec succès');
+    } catch (error) {
+      console.error('Erreur lors de la suppression de l\'opportunité:', error);
+      toast.error('Erreur lors de la suppression de l\'opportunité');
+    }
+  };
+
   const handleViewOpportunity = (opportunity: Opportunity) => {
     setSelectedOpportunity(opportunity);
     setIsDetailsDialogOpen(true);
@@ -70,6 +85,11 @@ const CrmOpportunities: React.FC = () => {
   const handleEditOpportunity = (opportunity: Opportunity) => {
     setSelectedOpportunity(opportunity);
     setIsEditDialogOpen(true);
+  };
+
+  const handleDeleteClick = (opportunity: Opportunity) => {
+    setSelectedOpportunity(opportunity);
+    setIsDeleteDialogOpen(true);
   };
 
   const handleEditFromDetails = () => {
@@ -113,6 +133,7 @@ const CrmOpportunities: React.FC = () => {
               error={errorMessage}
               onView={handleViewOpportunity}
               onEdit={handleEditOpportunity}
+              onDelete={handleDeleteClick}
             />
           </TabsContent>
 
@@ -140,6 +161,10 @@ const CrmOpportunities: React.FC = () => {
               onClose={() => setIsDetailsDialogOpen(false)}
               opportunity={selectedOpportunity}
               onEdit={handleEditFromDetails}
+              onDelete={() => {
+                setIsDetailsDialogOpen(false);
+                setIsDeleteDialogOpen(true);
+              }}
             />
 
             <EditOpportunityDialog 
@@ -147,6 +172,13 @@ const CrmOpportunities: React.FC = () => {
               onClose={() => setIsEditDialogOpen(false)}
               opportunity={selectedOpportunity}
               onUpdate={handleUpdateOpportunity}
+            />
+
+            <DeleteOpportunityDialog
+              isOpen={isDeleteDialogOpen}
+              onClose={() => setIsDeleteDialogOpen(false)}
+              opportunity={selectedOpportunity}
+              onDelete={handleDeleteOpportunity}
             />
           </>
         )}

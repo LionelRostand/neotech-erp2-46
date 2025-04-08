@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Pencil, Trash2 } from "lucide-react";
 import { useOpportunityUtils } from '../hooks/opportunity/useOpportunityUtils';
 import { Opportunity } from '../types/crm-types';
 
@@ -17,13 +18,15 @@ export interface OpportunityDetailsDialogProps {
   onClose: () => void;
   opportunity: Opportunity;
   onEdit: () => void;
+  onDelete: () => void;
 }
 
 const OpportunityDetailsDialog: React.FC<OpportunityDetailsDialogProps> = ({
   isOpen,
   onClose,
   opportunity,
-  onEdit
+  onEdit,
+  onDelete
 }) => {
   const opportunityUtils = useOpportunityUtils();
   
@@ -78,8 +81,13 @@ const OpportunityDetailsDialog: React.FC<OpportunityDetailsDialogProps> = ({
           <Button variant="outline" onClick={onClose}>
             Fermer
           </Button>
-          <Button onClick={onEdit}>
+          <Button onClick={onEdit} className="gap-1">
+            <Pencil className="h-4 w-4" />
             Modifier
+          </Button>
+          <Button variant="destructive" onClick={onDelete} className="gap-1">
+            <Trash2 className="h-4 w-4" />
+            Supprimer
           </Button>
         </DialogFooter>
       </DialogContent>

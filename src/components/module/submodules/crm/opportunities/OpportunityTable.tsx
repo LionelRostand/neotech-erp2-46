@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Eye, Edit } from "lucide-react";
+import { Eye, Edit, Trash2 } from "lucide-react";
 import { useOpportunityUtils } from '../hooks/opportunity/useOpportunityUtils';
 import { Opportunity } from '../types/crm-types';
 import { formatCurrency } from '@/lib/utils';
@@ -21,6 +21,7 @@ interface OpportunityTableProps {
   error: string | null;
   onView: (opportunity: Opportunity) => void;
   onEdit: (opportunity: Opportunity) => void;
+  onDelete: (opportunity: Opportunity) => void;
 }
 
 const OpportunityTable: React.FC<OpportunityTableProps> = ({ 
@@ -28,7 +29,8 @@ const OpportunityTable: React.FC<OpportunityTableProps> = ({
   isLoading,
   error,
   onView,
-  onEdit
+  onEdit,
+  onDelete
 }) => {
   const opportunityUtils = useOpportunityUtils();
 
@@ -87,6 +89,9 @@ const OpportunityTable: React.FC<OpportunityTableProps> = ({
                     </Button>
                     <Button size="icon" variant="ghost" onClick={() => onEdit(opportunity)}>
                       <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button size="icon" variant="ghost" className="text-destructive hover:text-destructive" onClick={() => onDelete(opportunity)}>
+                      <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
                 </TableCell>
