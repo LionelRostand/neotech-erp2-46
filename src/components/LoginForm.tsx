@@ -2,13 +2,14 @@
 import React, { useState } from 'react';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { toast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
-import { loginUser } from '@/services/userService';
 import { Loader2 } from "lucide-react";
+import { useAuth } from '@/hooks/useAuth';
 
 const LoginForm = () => {
   const navigate = useNavigate();
+  const { login } = useAuth();
   const [email, setEmail] = useState('admin@neotech-consulting.com');
   const [password, setPassword] = useState('admin123');
   const [isLoading, setIsLoading] = useState(false);
@@ -18,36 +19,18 @@ const LoginForm = () => {
     setIsLoading(true);
     
     try {
-      const user = await loginUser(email, password);
+      const user = await login(email, password);
       
       if (user) {
-        toast({
-          title: "Connexion réussie",
-          description: `Bienvenue, ${user.firstName} ${user.lastName}`,
-          variant: "default",
-        });
-        navigate('/');
-      } else {
-        toast({
-          title: "Erreur",
-          description: "Impossible de récupérer les données utilisateur",
-          variant: "destructive",
-        });
+        toast.success(`Bienvenue, ${user.firstName} ${user.lastName}`);
+        navigate('/welcome');
       }
     } catch (error: any) {
       console.error("Erreur de connexion:", error);
       let errorMessage = "Identifiants incorrects";
       
-      if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
-        errorMessage = "Email ou mot de passe incorrect";
-      } else if (error.code === 'auth/too-many-requests') {
-        errorMessage = "Trop de tentatives. Veuillez réessayer plus tard";
-      }
-      
-      toast({
-        title: "Erreur de connexion",
-        description: errorMessage,
-        variant: "destructive",
+      toast.error("Erreur de connexion", {
+        description: errorMessage
       });
     } finally {
       setIsLoading(false);
