@@ -1,54 +1,52 @@
 
-import { useState, useEffect } from 'react';
-import { ProspectFormData, ReminderData } from '../../types/crm-types';
+import { useState } from 'react';
+import { Prospect, ProspectFormData, ReminderData } from '../../types/crm-types';
 
 export const useProspectState = () => {
   // Dialog states
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isViewDetailsOpen, setIsViewDetailsOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isConvertDialogOpen, setIsConvertDialogOpen] = useState(false);
   const [isReminderDialogOpen, setIsReminderDialogOpen] = useState(false);
   
-  // Forms data
+  // Selected prospect and form data
+  const [selectedProspect, setSelectedProspect] = useState<Prospect | null>(null);
   const [formData, setFormData] = useState<ProspectFormData>({
-    name: '',
     company: '',
     contactName: '',
     contactEmail: '',
     contactPhone: '',
+    name: '',
     email: '',
     phone: '',
     status: 'new',
-    source: '',
-    industry: '',
-    website: '',
-    address: '',
+    source: 'website',
+    lastContact: new Date().toISOString().split('T')[0],
     notes: ''
   });
   
+  // Reminder data
   const [reminderData, setReminderData] = useState<ReminderData>({
     title: '',
     date: new Date().toISOString().split('T')[0],
     notes: ''
   });
   
-  // Reset forms
+  // Reset form data
   const resetForm = () => {
     setFormData({
-      name: '',
       company: '',
       contactName: '',
       contactEmail: '',
       contactPhone: '',
+      name: '',
       email: '',
       phone: '',
       status: 'new',
-      source: '',
-      industry: '',
-      website: '',
-      address: '',
+      source: 'website',
+      lastContact: new Date().toISOString().split('T')[0],
       notes: ''
     });
     
@@ -60,27 +58,24 @@ export const useProspectState = () => {
   };
   
   return {
-    // Dialog states
     isAddDialogOpen,
     setIsAddDialogOpen,
     isEditDialogOpen,
     setIsEditDialogOpen,
-    isDeleteDialogOpen,
-    setIsDeleteDialogOpen,
     isViewDetailsOpen,
     setIsViewDetailsOpen,
+    isDeleteDialogOpen,
+    setIsDeleteDialogOpen,
     isConvertDialogOpen,
     setIsConvertDialogOpen,
     isReminderDialogOpen,
     setIsReminderDialogOpen,
-    
-    // Form data
     formData,
     setFormData,
     reminderData,
     setReminderData,
-    
-    // Form reset
+    selectedProspect,
+    setSelectedProspect,
     resetForm
   };
 };

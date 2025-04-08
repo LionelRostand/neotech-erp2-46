@@ -31,6 +31,9 @@ export const useProspects = () => {
     { value: 'contacted', label: 'Contacté' },
     { value: 'meeting', label: 'Rendez-vous' },
     { value: 'proposal', label: 'Proposition' },
+    { value: 'negotiation', label: 'Négociation' },
+    { value: 'converted', label: 'Converti' },
+    { value: 'lost', label: 'Perdu' },
     { value: 'qualified', label: 'Qualifié' },
     { value: 'unqualified', label: 'Non qualifié' }
   ];
@@ -60,13 +63,19 @@ export const useProspects = () => {
               ? data.createdAt.toDate().toISOString().split('T')[0]
               : new Date().toISOString().split('T')[0];
               
+          // Cast status to ensure it's a valid enum value
+          const status = data.status || 'new';
+          const validStatus = ['new', 'contacted', 'meeting', 'proposal', 'negotiation', 'converted', 'lost'].includes(status) 
+            ? status as Prospect['status'] 
+            : 'new' as Prospect['status'];
+          
           return {
             id: doc.id,
             company: data.company || '',
             contactName: data.contactName || '',
             contactEmail: data.contactEmail || '',
             contactPhone: data.contactPhone || '',
-            status: data.status || 'new',
+            status: validStatus,
             source: data.source || '',
             createdAt: createdAtDate,
             notes: data.notes || '',
@@ -75,7 +84,9 @@ export const useProspects = () => {
             address: data.address || '',
             size: data.size || '',
             estimatedValue: data.estimatedValue || 0,
-            name: data.company || '' // For compatibility with CRM components
+            name: data.company || '', // For compatibility with CRM components
+            email: data.contactEmail || '', // For compatibility
+            phone: data.contactPhone || ''  // For compatibility
           } as Prospect;
         });
         
@@ -97,8 +108,14 @@ export const useProspects = () => {
     try {
       const prospectsRef = collection(db, COLLECTIONS.CRM.PROSPECTS);
       
+      // Ensure status is a valid type
+      const validStatus = ['new', 'contacted', 'meeting', 'proposal', 'negotiation', 'converted', 'lost'].includes(data.status) 
+        ? data.status 
+        : 'new';
+      
       const newProspect = {
         ...data,
+        status: validStatus,
         createdAt: serverTimestamp()
       };
       
@@ -107,15 +124,26 @@ export const useProspects = () => {
       // Add to local state
       const createdAtDate = new Date().toISOString().split('T')[0];
       
-      setProspects(prev => [
-        {
-          id: docRef.id,
-          ...data,
-          createdAt: createdAtDate,
-          name: data.company // For compatibility with CRM components
-        } as Prospect,
-        ...prev
-      ]);
+      const newProspectWithId: Prospect = {
+        id: docRef.id,
+        company: data.company,
+        contactName: data.contactName,
+        contactEmail: data.contactEmail,
+        contactPhone: data.contactPhone,
+        status: validStatus as Prospect['status'],
+        source: data.source,
+        createdAt: createdAtDate,
+        name: data.company,
+        email: data.contactEmail || '',
+        phone: data.contactPhone || '',
+        industry: data.industry,
+        website: data.website,
+        address: data.address,
+        size: data.size,
+        estimatedValue: data.estimatedValue
+      };
+      
+      setProspects(prev => [newProspectWithId, ...prev]);
       
     } catch (err) {
       console.error('Error adding prospect:', err);
@@ -127,7 +155,17 @@ export const useProspects = () => {
     try {
       const prospectRef = doc(db, COLLECTIONS.CRM.PROSPECTS, id);
       
-      await updateDoc(prospectRef, data);
+      // Ensure status is a valid type
+      const validStatus = ['new', 'contacted', 'meeting', 'proposal', 'negotiation', 'converted', 'lost'].includes(data.status) 
+        ? data.status 
+        : 'new';
+        
+      const updatedData = {
+        ...data,
+        status: validStatus
+      };
+      
+      await updateDoc(prospectRef, updatedData);
       
       // Update in local state
       setProspects(prev => 
@@ -136,7 +174,10 @@ export const useProspects = () => {
             ? { 
                 ...prospect, 
                 ...data,
-                name: data.company // For compatibility with CRM components
+                status: validStatus as Prospect['status'],
+                name: data.company, // For compatibility with CRM components
+                email: data.contactEmail || prospect.email,
+                phone: data.contactPhone || prospect.phone
               } 
             : prospect
         )

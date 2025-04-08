@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { collection, query, orderBy, addDoc, updateDoc, doc, serverTimestamp, getDocs } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { Opportunity, OpportunityFormData } from '../types/crm-types';
+import { Opportunity, OpportunityFormData, OpportunityStage } from '../types/crm-types';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import { toast } from 'sonner';
 
@@ -30,22 +30,57 @@ export const useOpportunities = () => {
         
         const loadedOpportunities = querySnapshot.docs.map(doc => {
           const data = doc.data();
+          
+          // Format the dates properly
+          let createdAtDate = '';
+          let updatedAtDate = '';
+          
+          if (data.createdAt) {
+            createdAtDate = data.createdAt.toDate ? 
+              data.createdAt.toDate().toISOString() : 
+              new Date(data.createdAt).toISOString();
+          } else {
+            createdAtDate = new Date().toISOString();
+          }
+          
+          if (data.updatedAt) {
+            updatedAtDate = data.updatedAt.toDate ? 
+              data.updatedAt.toDate().toISOString() : 
+              new Date(data.updatedAt).toISOString();
+          } else {
+            updatedAtDate = createdAtDate;
+          }
+          
+          // Ensure valid stage value
+          const stage = data.stage || 'lead';
+          const validStage = Object.values(OpportunityStage).includes(stage as OpportunityStage) 
+            ? stage as OpportunityStage 
+            : OpportunityStage.LEAD;
+            
+          // Convert value to number
+          const value = typeof data.value === 'number' ? 
+            data.value : 
+            parseFloat(data.value) || 0;
+          
           return {
             id: doc.id,
             name: data.name || '',
             clientName: data.clientName || '',
-            value: data.value || 0,
-            stage: data.stage || 'lead',
-            probability: data.probability || 0,
+            value: value,
+            stage: validStage,
+            probability: typeof data.probability === 'number' ? data.probability : parseInt(data.probability) || 0,
             expectedCloseDate: data.expectedCloseDate || '',
-            createdAt: data.createdAt?.toDate?.() || new Date(),
-            updatedAt: data.updatedAt?.toDate?.() || new Date(),
+            createdAt: createdAtDate,
+            updatedAt: updatedAtDate,
             owner: data.owner || '',
             description: data.description || '',
             products: data.products || [],
             source: data.source || '',
             notes: data.notes || '',
-            contacts: data.contacts || []
+            contacts: data.contacts || [],
+            contactName: data.contactName || '',
+            contactEmail: data.contactEmail || '',
+            contactPhone: data.contactPhone || ''
           } as Opportunity;
         });
         
@@ -67,8 +102,24 @@ export const useOpportunities = () => {
     try {
       const opportunitiesRef = collection(db, COLLECTIONS.CRM.OPPORTUNITIES);
       
+      // Ensure valid stage and numeric values
+      const validStage = Object.values(OpportunityStage).includes(opportunityData.stage as OpportunityStage) 
+        ? opportunityData.stage 
+        : OpportunityStage.LEAD;
+      
+      const value = typeof opportunityData.value === 'number' 
+        ? opportunityData.value 
+        : parseFloat(opportunityData.value as string) || 0;
+        
+      const probability = typeof opportunityData.probability === 'number' 
+        ? opportunityData.probability 
+        : parseInt(opportunityData.probability as string) || 0;
+      
       const newOpportunity = {
         ...opportunityData,
+        stage: validStage,
+        value: value,
+        probability: probability,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp()
       };
@@ -76,15 +127,30 @@ export const useOpportunities = () => {
       const docRef = await addDoc(opportunitiesRef, newOpportunity);
       
       // Add to local state with the new ID
-      setOpportunities(prevOpportunities => [
-        {
-          id: docRef.id,
-          ...opportunityData,
-          createdAt: new Date(),
-          updatedAt: new Date()
-        } as Opportunity,
-        ...prevOpportunities
-      ]);
+      const now = new Date().toISOString();
+      
+      const newOppWithId: Opportunity = {
+        id: docRef.id,
+        name: opportunityData.name,
+        clientName: opportunityData.clientName,
+        value: value,
+        stage: validStage as OpportunityStage,
+        probability: probability,
+        expectedCloseDate: opportunityData.expectedCloseDate,
+        createdAt: now,
+        updatedAt: now,
+        owner: opportunityData.assignedTo || '',
+        description: opportunityData.description || '',
+        products: opportunityData.products || [],
+        source: opportunityData.source || '',
+        notes: opportunityData.notes || '',
+        contacts: [],
+        contactName: opportunityData.contactName || '',
+        contactEmail: opportunityData.contactEmail || '',
+        contactPhone: opportunityData.contactPhone || ''
+      };
+      
+      setOpportunities(prevOpportunities => [newOppWithId, ...prevOpportunities]);
       
     } catch (err) {
       console.error('Error adding opportunity:', err);
@@ -97,8 +163,24 @@ export const useOpportunities = () => {
     try {
       const opportunityRef = doc(db, COLLECTIONS.CRM.OPPORTUNITIES, id);
       
+      // Ensure valid stage and numeric values
+      const validStage = Object.values(OpportunityStage).includes(opportunityData.stage as OpportunityStage) 
+        ? opportunityData.stage 
+        : OpportunityStage.LEAD;
+      
+      const value = typeof opportunityData.value === 'number' 
+        ? opportunityData.value 
+        : parseFloat(opportunityData.value as string) || 0;
+        
+      const probability = typeof opportunityData.probability === 'number' 
+        ? opportunityData.probability 
+        : parseInt(opportunityData.probability as string) || 0;
+      
       const updatedData = {
         ...opportunityData,
+        stage: validStage,
+        value: value,
+        probability: probability,
         updatedAt: serverTimestamp()
       };
       
@@ -108,7 +190,14 @@ export const useOpportunities = () => {
       setOpportunities(prevOpportunities => 
         prevOpportunities.map(opp => 
           opp.id === id 
-            ? { ...opp, ...opportunityData, updatedAt: new Date() } 
+            ? { 
+                ...opp, 
+                ...opportunityData, 
+                stage: validStage as OpportunityStage,
+                value: value,
+                probability: probability,
+                updatedAt: new Date().toISOString() 
+              } as Opportunity 
             : opp
         )
       );
@@ -139,7 +228,10 @@ export const useOpportunities = () => {
           products: ['Réseau sécurisé', 'VPN', 'Support technique'],
           source: 'Salon professionnel',
           notes: 'Client intéressé par une extension future',
-          contacts: ['Marc Dupont (CTO)', 'Sophie Leroy (IT Manager)']
+          contacts: ['Marc Dupont (CTO)', 'Sophie Leroy (IT Manager)'],
+          contactName: 'Marc Dupont',
+          contactEmail: 'marc@techcorp.fr',
+          contactPhone: '0123456789'
         },
         {
           name: 'Migration Cloud',
@@ -155,7 +247,10 @@ export const useOpportunities = () => {
           products: ['Azure Migration', 'Training', 'Support 24/7'],
           source: 'Référence client',
           notes: 'Budget confirmé pour Q4',
-          contacts: ['Julien Petit (CEO)', 'Claire Dubois (COO)']
+          contacts: ['Julien Petit (CEO)', 'Claire Dubois (COO)'],
+          contactName: 'Julien Petit',
+          contactEmail: 'julien@innovsolutions.fr',
+          contactPhone: '0187654321'
         },
         {
           name: 'Équipement Bureau',
@@ -171,7 +266,10 @@ export const useOpportunities = () => {
           products: ['Ordinateurs portables', 'Écrans', 'Périphériques'],
           source: 'Site web',
           notes: 'Premier contact positif',
-          contacts: ['Paul Martin (Procurement)']
+          contacts: ['Paul Martin (Procurement)'],
+          contactName: 'Paul Martin',
+          contactEmail: 'paul@mediagroup.fr',
+          contactPhone: '0145678901'
         }
       ];
       

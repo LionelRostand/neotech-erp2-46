@@ -67,6 +67,8 @@ export const useProspectData = (
           size: doc.data().size || '',
           estimatedValue: doc.data().estimatedValue || '',
           name: doc.data().company || '', // Pour compatibilité avec les composants CRM
+          email: doc.data().contactEmail || '', // Compatibility field
+          phone: doc.data().contactPhone || '', // Compatibility field
         } as Prospect;
       });
       
