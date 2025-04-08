@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,7 +9,7 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { Plus, Pencil, Trash, Search, RefreshCw, AlertTriangle } from "lucide-react";
 import { User } from '@/types/user';
-import { getAllUsers } from '@/services/userService';
+import { getAllUsers, createUser } from '@/services/userService';
 import DashboardLayout from "@/components/DashboardLayout";
 import {
   Table,
@@ -20,6 +21,14 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Card, CardContent } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 const UserManagement = () => {
   const [users, setUsers] = useState<User[]>([]);
@@ -29,6 +38,15 @@ const UserManagement = () => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [formData, setFormData] = useState({
+    email: '',
+    firstName: '',
+    lastName: '',
+    role: 'user' as 'user' | 'admin' | 'manager',
+    department: '',
+    position: '',
+    password: ''
+  });
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -71,21 +89,61 @@ const UserManagement = () => {
     setSearchTerm(e.target.value);
   };
 
-  const createNewUser = () => {
-    // Generate a temporary ID for the new user (this will be replaced by Firebase later)
-    const tempId = `temp-${Date.now()}`;
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData({
+      ...formData,
+      [name]: value
+    });
+  };
+
+  const handleRoleChange = (value: string) => {
+    setFormData({
+      ...formData,
+      role: value as 'user' | 'admin' | 'manager'
+    });
+  };
+
+  const handleSubmitUser = async (e: React.FormEvent) => {
+    e.preventDefault();
     
-    const newUser: User = {
-      id: tempId, // Add the required id property
-      email: '',
-      firstName: '',
-      lastName: '',
-      role: 'user',
-      department: '',
-      position: '',
-      status: 'active'
-      // Include other required properties as needed
-    };
+    try {
+      // Generate a temporary ID for the new user (this will be replaced by Firebase later)
+      const tempId = `temp-${Date.now()}`;
+      
+      const newUser: User = {
+        id: tempId,
+        email: formData.email,
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        role: formData.role,
+        department: formData.department,
+        position: formData.position,
+        status: 'active'
+      };
+      
+      const createdUser = await createUser(newUser, formData.password);
+      
+      if (createdUser) {
+        setUsers([...users, createdUser]);
+        toast.success("User created successfully");
+        setIsCreateModalOpen(false);
+        
+        // Reset form
+        setFormData({
+          email: '',
+          firstName: '',
+          lastName: '',
+          role: 'user',
+          department: '',
+          position: '',
+          password: ''
+        });
+      }
+    } catch (error: any) {
+      console.error("Error creating user:", error);
+      toast.error(error.message || "Failed to create user");
+    }
   };
 
   if (loading) {
@@ -181,7 +239,113 @@ const UserManagement = () => {
           </Table>
         </div>
 
-        {/* Implement modals for create and edit user */}
+        {/* Modal de création d'utilisateur */}
+        <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Ajouter un nouvel utilisateur</DialogTitle>
+              <DialogDescription>
+                Remplissez le formulaire ci-dessous pour créer un nouvel utilisateur.
+              </DialogDescription>
+            </DialogHeader>
+            
+            <form onSubmit={handleSubmitUser} className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="firstName">Prénom</Label>
+                  <Input 
+                    id="firstName" 
+                    name="firstName" 
+                    value={formData.firstName}
+                    onChange={handleInputChange}
+                    required
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="lastName">Nom</Label>
+                  <Input 
+                    id="lastName" 
+                    name="lastName" 
+                    value={formData.lastName}
+                    onChange={handleInputChange}
+                    required
+                  />
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input 
+                  id="email" 
+                  name="email" 
+                  type="email" 
+                  value={formData.email}
+                  onChange={handleInputChange}
+                  required
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="password">Mot de passe</Label>
+                <Input 
+                  id="password" 
+                  name="password" 
+                  type="password" 
+                  value={formData.password}
+                  onChange={handleInputChange}
+                  required
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="role">Rôle</Label>
+                <Select 
+                  value={formData.role} 
+                  onValueChange={handleRoleChange}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Sélectionnez un rôle" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="user">Utilisateur</SelectItem>
+                    <SelectItem value="manager">Manager</SelectItem>
+                    <SelectItem value="admin">Administrateur</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="department">Département</Label>
+                  <Input 
+                    id="department" 
+                    name="department" 
+                    value={formData.department}
+                    onChange={handleInputChange}
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="position">Poste</Label>
+                  <Input 
+                    id="position" 
+                    name="position" 
+                    value={formData.position}
+                    onChange={handleInputChange}
+                  />
+                </div>
+              </div>
+              
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={() => setIsCreateModalOpen(false)}>
+                  Annuler
+                </Button>
+                <Button type="submit">Créer l'utilisateur</Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
       </div>
     </DashboardLayout>
   );
