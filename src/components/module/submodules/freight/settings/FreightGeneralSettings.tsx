@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -9,7 +9,7 @@ import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import { useFirestore } from '@/hooks/useFirestore';
-import { AlertCircle, RefreshCw } from "lucide-react";
+import { AlertCircle, RefreshCw, Wifi, WifiOff } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 // Define an interface for our settings to ensure type safety
@@ -23,26 +23,95 @@ interface FreightSettings {
   updatedAt?: Date;
 }
 
+// Default settings to use when offline or when settings haven't been loaded yet
+const DEFAULT_SETTINGS: FreightSettings = {
+  autoTrackingUpdates: true,
+  clientPortalEnabled: true,
+  defaultCurrency: "EUR",
+  weightUnit: "kg",
+  dimensionUnit: "cm",
+};
+
 const FreightGeneralSettings: React.FC = () => {
-  const [autoTrackingUpdates, setAutoTrackingUpdates] = useState(true);
-  const [clientPortalEnabled, setClientPortalEnabled] = useState(true);
-  const [defaultCurrency, setDefaultCurrency] = useState("EUR");
-  const [weightUnit, setWeightUnit] = useState("kg");
-  const [dimensionUnit, setDimensionUnit] = useState("cm");
+  // State for form fields
+  const [autoTrackingUpdates, setAutoTrackingUpdates] = useState(DEFAULT_SETTINGS.autoTrackingUpdates);
+  const [clientPortalEnabled, setClientPortalEnabled] = useState(DEFAULT_SETTINGS.clientPortalEnabled);
+  const [defaultCurrency, setDefaultCurrency] = useState(DEFAULT_SETTINGS.defaultCurrency);
+  const [weightUnit, setWeightUnit] = useState(DEFAULT_SETTINGS.weightUnit);
+  const [dimensionUnit, setDimensionUnit] = useState(DEFAULT_SETTINGS.dimensionUnit);
+  
+  // UI state
   const [isLoading, setIsLoading] = useState(true);
   const [isOffline, setIsOffline] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
+  const [settingsLoaded, setSettingsLoaded] = useState(false);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   
   // Use a proper document reference structure - Firestore needs even number of segments
-  // Instead of 'freight/settings/general', use 'freight_settings/general'
   const settingsCollectionPath = 'freight_settings';
   const settingsDocumentId = 'general';
   const firestore = useFirestore(settingsCollectionPath);
 
-  const loadSettings = async () => {
+  // Check for changes to enable/disable the save button
+  useEffect(() => {
+    if (!settingsLoaded) return;
+    
+    // Check if any settings have been changed from what was loaded
+    const currentSettings = {
+      autoTrackingUpdates,
+      clientPortalEnabled,
+      defaultCurrency,
+      weightUnit,
+      dimensionUnit
+    };
+
+    // Compare with defaults or previous loaded settings
+    setHasUnsavedChanges(true);
+    
+  }, [autoTrackingUpdates, clientPortalEnabled, defaultCurrency, weightUnit, dimensionUnit, settingsLoaded]);
+
+  // Monitor online/offline status
+  useEffect(() => {
+    const handleOnline = () => {
+      if (isOffline) {
+        setIsOffline(false);
+        toast.success("Connexion internet rétablie");
+        // Reload settings when we get back online
+        loadSettings();
+      }
+    };
+
+    const handleOffline = () => {
+      setIsOffline(true);
+      toast.warning("Mode hors ligne actif. Les modifications ne seront pas enregistrées.");
+    };
+
+    // Set initial state
+    setIsOffline(!navigator.onLine);
+    
+    // Add listeners
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    
+    // Remove listeners on cleanup
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, [isOffline]);
+
+  const loadSettings = useCallback(async () => {
     try {
       setIsLoading(true);
-      setIsOffline(false);
+      console.log('Getting document reference for freight_settings/general');
+      
+      if (!navigator.onLine) {
+        setIsOffline(true);
+        setIsLoading(false);
+        toast.warning("Mode hors ligne. Utilisation des paramètres par défaut.");
+        return;
+      }
+
       const settingsData = await firestore.getById(settingsDocumentId);
       
       if (settingsData) {
@@ -50,37 +119,67 @@ const FreightGeneralSettings: React.FC = () => {
         const settings = settingsData as FreightSettings;
         
         // Use optional chaining and nullish coalescing to safely access potentially undefined properties
-        setAutoTrackingUpdates(settings.autoTrackingUpdates ?? true);
-        setClientPortalEnabled(settings.clientPortalEnabled ?? true);
-        setDefaultCurrency(settings.defaultCurrency || "EUR");
-        setWeightUnit(settings.weightUnit || "kg");
-        setDimensionUnit(settings.dimensionUnit || "cm");
+        setAutoTrackingUpdates(settings.autoTrackingUpdates ?? DEFAULT_SETTINGS.autoTrackingUpdates);
+        setClientPortalEnabled(settings.clientPortalEnabled ?? DEFAULT_SETTINGS.clientPortalEnabled);
+        setDefaultCurrency(settings.defaultCurrency || DEFAULT_SETTINGS.defaultCurrency);
+        setWeightUnit(settings.weightUnit || DEFAULT_SETTINGS.weightUnit);
+        setDimensionUnit(settings.dimensionUnit || DEFAULT_SETTINGS.dimensionUnit);
+        
+        setSettingsLoaded(true);
+        setHasUnsavedChanges(false);
+      } else {
+        // No settings found, use defaults
+        resetToDefaults();
+        
+        if (navigator.onLine) {
+          // Create default settings if we're online
+          await saveSettings(true);
+        }
       }
+      
+      setIsOffline(false);
     } catch (error: any) {
       console.error("Error loading freight settings:", error);
       
       // Check if error is related to offline status
       if (error.code === 'unavailable' || error.message?.includes('offline')) {
         setIsOffline(true);
-        toast.error("Vous êtes hors ligne. Les paramètres par défaut sont affichés.");
+        toast.warning("Vous êtes hors ligne. Les paramètres par défaut sont affichés.");
       } else {
         toast.error("Erreur lors du chargement des paramètres");
       }
+      
+      // Use default values in case of error
+      resetToDefaults();
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [firestore, settingsDocumentId]);
 
   useEffect(() => {
     loadSettings();
-  }, [firestore]);
+  }, [loadSettings]);
+
+  const resetToDefaults = () => {
+    setAutoTrackingUpdates(DEFAULT_SETTINGS.autoTrackingUpdates);
+    setClientPortalEnabled(DEFAULT_SETTINGS.clientPortalEnabled);
+    setDefaultCurrency(DEFAULT_SETTINGS.defaultCurrency);
+    setWeightUnit(DEFAULT_SETTINGS.weightUnit);
+    setDimensionUnit(DEFAULT_SETTINGS.dimensionUnit);
+    setSettingsLoaded(true);
+  };
 
   const handleRetry = () => {
     setRetryCount(prev => prev + 1);
     loadSettings();
   };
 
-  const saveSettings = async () => {
+  const saveSettings = async (isInitialSave = false) => {
+    if (isOffline) {
+      toast.error("Impossible d'enregistrer les paramètres en mode hors ligne");
+      return;
+    }
+    
     try {
       setIsLoading(true);
       
@@ -95,7 +194,11 @@ const FreightGeneralSettings: React.FC = () => {
       
       await firestore.set(settingsDocumentId, settingsData);
       
-      toast.success("Paramètres enregistrés avec succès");
+      if (!isInitialSave) {
+        toast.success("Paramètres enregistrés avec succès");
+      }
+      
+      setHasUnsavedChanges(false);
       setIsOffline(false);
     } catch (error: any) {
       console.error("Error saving freight settings:", error);
@@ -115,10 +218,27 @@ const FreightGeneralSettings: React.FC = () => {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Paramètres généraux</CardTitle>
-        <CardDescription>
-          Configurez les paramètres généraux du module Fret
-        </CardDescription>
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle>Paramètres généraux</CardTitle>
+            <CardDescription>
+              Configurez les paramètres généraux du module Fret
+            </CardDescription>
+          </div>
+          <div className="flex items-center text-sm text-muted-foreground">
+            {isOffline ? (
+              <div className="flex items-center gap-1 text-amber-500">
+                <WifiOff className="h-4 w-4" />
+                <span>Hors ligne</span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-1 text-green-500">
+                <Wifi className="h-4 w-4" />
+                <span>En ligne</span>
+              </div>
+            )}
+          </div>
+        </div>
       </CardHeader>
       <CardContent className="space-y-6">
         {isOffline && (
@@ -211,8 +331,8 @@ const FreightGeneralSettings: React.FC = () => {
         
         <div className="flex justify-end">
           <Button 
-            onClick={saveSettings} 
-            disabled={isLoading || isOffline}
+            onClick={() => saveSettings()}
+            disabled={isLoading || isOffline || !hasUnsavedChanges}
           >
             {isLoading ? "Enregistrement..." : "Enregistrer les paramètres"}
           </Button>
