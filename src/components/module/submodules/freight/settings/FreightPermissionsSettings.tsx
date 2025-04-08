@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -29,11 +29,14 @@ interface FreightPermissions {
 }
 
 const FreightPermissionsSettings: React.FC = () => {
+  // Optimisation: Cache local des permissions pour éviter les requêtes répétées
   const [permissions, setPermissions] = useState<{[userId: string]: ModulePermission}>({});
+  const [initialPermissions, setInitialPermissions] = useState<{[userId: string]: ModulePermission}>({});
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isOffline, setIsOffline] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
+  const [hasChanges, setHasChanges] = useState(false);
   
   const { employees, isLoading: isLoadingEmployees } = useEmployeesPermissions();
   
@@ -42,17 +45,28 @@ const FreightPermissionsSettings: React.FC = () => {
   const permissionsDocumentId = 'permissions';
   const firestore = useFirestore(permissionsCollectionPath);
 
-  const loadPermissions = async () => {
+  // Optimisation: Utilisation de useCallback pour éviter les re-rendus inutiles
+  const loadPermissions = useCallback(async () => {
     try {
       setIsLoading(true);
       setIsOffline(false);
+      
+      // Optimisation: Utiliser une seule requête pour récupérer toutes les permissions
       const permissionsData = await firestore.getById(permissionsDocumentId);
       
       if (permissionsData) {
         // Cast to our interface
         const data = permissionsData as FreightPermissions;
-        setPermissions(data.permissions || {});
+        const permissionsObj = data.permissions || {};
+        setPermissions(permissionsObj);
+        setInitialPermissions(JSON.parse(JSON.stringify(permissionsObj))); // Copie profonde pour comparaison ultérieure
+      } else {
+        // Initialiser avec un objet vide si aucune donnée n'existe
+        setPermissions({});
+        setInitialPermissions({});
       }
+      
+      setHasChanges(false);
     } catch (error: any) {
       console.error("Error loading freight permissions:", error);
       
@@ -66,49 +80,73 @@ const FreightPermissionsSettings: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [firestore, permissionsDocumentId]);
   
   useEffect(() => {
     loadPermissions();
-  }, [firestore, retryCount]);
+  }, [loadPermissions, retryCount]);
+
+  // Optimisation: Vérifier s'il y a des changements à sauvegarder
+  useEffect(() => {
+    // Comparer les permissions actuelles avec les permissions initiales
+    const currentJSON = JSON.stringify(permissions);
+    const initialJSON = JSON.stringify(initialPermissions);
+    setHasChanges(currentJSON !== initialJSON);
+  }, [permissions, initialPermissions]);
 
   const handleRetry = () => {
     setRetryCount(prev => prev + 1);
   };
 
+  // Optimisation: Mise à jour optimisée des permissions
   const togglePermission = (userId: string, action: keyof ModulePermission) => {
     setPermissions(prev => {
-      // Create a copy of the previous state
+      // Créer une copie des permissions précédentes
       const newPermissions = { ...prev };
       
-      // Ensure the user exists in the permissions object
+      // S'assurer que l'utilisateur existe dans l'objet des permissions
       if (!newPermissions[userId]) {
         newPermissions[userId] = { view: false, create: false, edit: false, delete: false };
       }
       
-      // Toggle the specific permission
-      newPermissions[userId] = {
-        ...newPermissions[userId],
-        [action]: !newPermissions[userId][action]
-      };
+      // Cloner les permissions actuelles de l'utilisateur
+      const userPermissions = { ...newPermissions[userId] };
       
-      // If view permission is turned off, turn off all other permissions as well
-      if (action === "view" && !newPermissions[userId].view) {
-        newPermissions[userId].create = false;
-        newPermissions[userId].edit = false;
-        newPermissions[userId].delete = false;
+      // Inverser la permission spécifique
+      userPermissions[action] = !userPermissions[action];
+      
+      // Si la permission de visualisation est désactivée, désactiver toutes les autres permissions
+      if (action === 'view' && !userPermissions.view) {
+        userPermissions.create = false;
+        userPermissions.edit = false;
+        userPermissions.delete = false;
       }
       
-      // If any other permission is turned on, ensure view is also turned on
-      if (action !== "view" && newPermissions[userId][action]) {
-        newPermissions[userId].view = true;
+      // Si une autre permission est activée, s'assurer que la visualisation est également activée
+      if (action !== 'view' && userPermissions[action]) {
+        userPermissions.view = true;
       }
+      
+      // Mettre à jour les permissions de l'utilisateur
+      newPermissions[userId] = userPermissions;
       
       return newPermissions;
     });
   };
 
+  // Optimisation: Réinitialiser les modifications non sauvegardées
+  const handleCancel = () => {
+    setPermissions(JSON.parse(JSON.stringify(initialPermissions)));
+    setHasChanges(false);
+    toast.info("Modifications annulées");
+  };
+
   const savePermissions = async () => {
+    if (!hasChanges) {
+      toast.info("Aucune modification à enregistrer");
+      return;
+    }
+    
     try {
       setIsSaving(true);
       
@@ -117,7 +155,12 @@ const FreightPermissionsSettings: React.FC = () => {
         updatedAt: new Date()
       };
       
+      // Optimisation: Écrire les données uniquement si des modifications ont été apportées
       await firestore.set(permissionsDocumentId, permissionsData);
+      
+      // Mettre à jour les permissions initiales après la sauvegarde
+      setInitialPermissions(JSON.parse(JSON.stringify(permissions)));
+      setHasChanges(false);
       
       toast.success("Permissions enregistrées avec succès");
       setIsOffline(false);
@@ -191,7 +234,8 @@ const FreightPermissionsSettings: React.FC = () => {
                         <Checkbox 
                           checked={!!permissions[employee.id]?.[action]}
                           onCheckedChange={() => togglePermission(employee.id, action)}
-                          disabled={isOffline}
+                          disabled={isOffline || isSaving}
+                          aria-label={`Permission ${action} pour ${employee.firstName} ${employee.lastName}`}
                         />
                       </TableCell>
                     ))}
@@ -203,12 +247,16 @@ const FreightPermissionsSettings: React.FC = () => {
             <Separator className="my-6" />
             
             <div className="flex justify-end space-x-4">
-              <Button variant="outline" disabled={isSaving || isOffline}>
+              <Button 
+                variant="outline" 
+                onClick={handleCancel}
+                disabled={isSaving || isOffline || !hasChanges}
+              >
                 Annuler
               </Button>
               <Button 
                 onClick={savePermissions} 
-                disabled={isSaving || isOffline}
+                disabled={isSaving || isOffline || !hasChanges}
               >
                 {isSaving ? "Enregistrement..." : "Enregistrer les permissions"}
               </Button>
