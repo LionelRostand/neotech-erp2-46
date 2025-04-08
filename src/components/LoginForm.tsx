@@ -18,6 +18,7 @@ const LoginForm = () => {
     setIsLoading(true);
     
     try {
+      console.log("Tentative de connexion...");
       const user = await loginUser(email, password);
       
       if (user) {

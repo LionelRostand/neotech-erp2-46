@@ -1,16 +1,11 @@
-
 import { 
   createUserWithEmailAndPassword,
-  signInWithEmailAndPassword,
-  signOut,
   updateProfile,
   sendPasswordResetEmail,
-  getAuth
 } from "firebase/auth";
 import { doc, setDoc, getDoc, collection, getDocs, query, where } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase";
 import { User, UserPermission } from "@/types/user";
-import { useToast } from "@/hooks/use-toast";
 import { COLLECTIONS } from "@/lib/firebase-collections";
 
 // Créer un nouvel utilisateur dans Firebase Authentication et Firestore
@@ -92,9 +87,10 @@ export const createUser = async (userData: User, password: string): Promise<User
 // Connexion utilisateur
 export const loginUser = async (email: string, password: string) => {
   try {
-    // Use the mock authentication in development environment
-    // This will use the custom signInWithEmailAndPassword implementation in firebase.ts
-    const userCredential = await signInWithEmailAndPassword(auth, email, password);
+    console.log("Tentative de connexion avec:", email);
+    
+    // Utiliser directement la fonction mock de auth
+    const userCredential = await auth.signInWithEmailAndPassword(email, password);
     
     // Mettre à jour lastLogin dans Firestore
     const userRef = doc(db, COLLECTIONS.USERS, userCredential.user.uid);

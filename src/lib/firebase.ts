@@ -2,7 +2,7 @@
 // Firebase lite implementation for development
 import { initializeApp } from 'firebase/app';
 import { getFirestore } from 'firebase/firestore';
-import { getAuth, Auth, UserCredential, AuthError } from 'firebase/auth';
+import { getAuth, Auth, UserCredential } from 'firebase/auth';
 
 // Firebase configuration - updated with new credentials
 const firebaseConfig = {
@@ -21,44 +21,46 @@ const app = initializeApp(firebaseConfig);
 const firestore = getFirestore(app);
 const firebaseAuth = getAuth(app);
 
-// Custom implementation for signInWithEmailAndPassword
-const mockSignInWithEmailAndPassword = async (auth: Auth, email: string, password: string): Promise<UserCredential> => {
-  // For development, check the hardcoded credentials
-  if (email === 'admin@neotech-consulting.com' && password === 'AaronEnzo2511@') {
-    return {
-      user: {
-        uid: 'admin-user-id',
-        email: 'admin@neotech-consulting.com',
-        displayName: 'Admin User',
-        emailVerified: true,
-        isAnonymous: false,
-        metadata: {},
-        providerData: [],
-        refreshToken: '',
-        tenantId: null,
-        delete: async () => Promise.resolve(),
-        getIdToken: async () => 'mock-token',
-        getIdTokenResult: async () => ({ token: 'mock-token', claims: {}, expirationTime: '', issuedAtTime: '', authTime: '', signInProvider: null, signInSecondFactor: null }),
-        reload: async () => Promise.resolve(),
-        toJSON: () => ({}),
-        phoneNumber: null,
-        photoURL: null,
-        providerId: 'password',
-      }
-    } as UserCredential;
-  }
-  
-  // Create a custom error object that properly simulates a Firebase Auth error
-  // Instead of modifying the error.code property directly (which is read-only)
-  const errorWithCode = new Error('Wrong password') as any;
-  errorWithCode.code = 'auth/wrong-password';
-  throw errorWithCode;
-};
+// Completely override the signInWithEmailAndPassword function
+const originalAuth = { ...firebaseAuth };
 
 // Mock authentication for development
-const auth: Auth = {
-  ...firebaseAuth,
+const auth = {
+  ...originalAuth,
   currentUser: null,
+  signInWithEmailAndPassword: async (email: string, password: string): Promise<UserCredential> => {
+    console.log('Using mock signInWithEmailAndPassword');
+    
+    // For development, check the hardcoded credentials
+    if (email === 'admin@neotech-consulting.com' && password === 'AaronEnzo2511@') {
+      return {
+        user: {
+          uid: 'admin-user-id',
+          email: 'admin@neotech-consulting.com',
+          displayName: 'Admin User',
+          emailVerified: true,
+          isAnonymous: false,
+          metadata: {},
+          providerData: [],
+          refreshToken: '',
+          tenantId: null,
+          delete: async () => Promise.resolve(),
+          getIdToken: async () => 'mock-token',
+          getIdTokenResult: async () => ({ token: 'mock-token', claims: {}, expirationTime: '', issuedAtTime: '', authTime: '', signInProvider: null, signInSecondFactor: null }),
+          reload: async () => Promise.resolve(),
+          toJSON: () => ({}),
+          phoneNumber: null,
+          photoURL: null,
+          providerId: 'password',
+        }
+      } as UserCredential;
+    }
+    
+    // Create a custom error object that properly simulates a Firebase Auth error
+    const errorWithCode = new Error('Wrong password') as any;
+    errorWithCode.code = 'auth/wrong-password';
+    throw errorWithCode;
+  },
   onAuthStateChanged: (callback: any) => {
     // Default to admin user for development
     const mockUser = {
@@ -69,10 +71,9 @@ const auth: Auth = {
     callback(mockUser);
     return () => {};
   },
-  signInWithEmailAndPassword: mockSignInWithEmailAndPassword,
   createUserWithEmailAndPassword: async () => ({ user: null } as any),
   signOut: async () => {},
-} as Auth;
+};
 
 // Export the initialized services
 export { auth, firestore as db };
