@@ -117,7 +117,6 @@ const FreightDocuments: React.FC = () => {
       tags: doc.tags || [],
       versions: [],
       permissions: [],
-      url: doc.url || '',
       type: doc.type || 'document',
       path: `/documents/${doc.id}`,
       createdBy: doc.creator || 'System',
@@ -216,4 +215,3 @@ const FreightDocuments: React.FC = () => {
 };
 
 export default FreightDocuments;
-
