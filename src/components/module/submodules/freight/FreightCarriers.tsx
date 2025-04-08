@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
@@ -8,16 +7,39 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Edit, Plus, Trash2, Search, Globe, Truck, Route } from 'lucide-react';
 import { Carrier } from '@/types/freight';
-import { useCollectionData } from '@/hooks/useCollectionData';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import StatCard from '@/components/StatCard';
+import { fetchCollectionData } from '@/hooks/fetchCollectionData';
 
 const FreightCarriers: React.FC = () => {
-  const { data: carriers, isLoading } = useCollectionData<Carrier>(COLLECTIONS.FREIGHT.CARRIERS);
+  const [carriers, setCarriers] = useState<Carrier[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [filteredCarriers, setFilteredCarriers] = useState<Carrier[]>([]);
   const [carrierTypeFilter, setCarrierTypeFilter] = useState('all');
   const { toast } = useToast();
+
+  // Fetch carriers data
+  useEffect(() => {
+    const loadCarriers = async () => {
+      try {
+        setIsLoading(true);
+        const data = await fetchCollectionData<Carrier>(COLLECTIONS.FREIGHT.CARRIERS);
+        setCarriers(data);
+        setIsLoading(false);
+      } catch (error) {
+        console.error("Error loading carriers:", error);
+        toast({
+          title: "Erreur de chargement",
+          description: "Impossible de charger les transporteurs. Veuillez réessayer.",
+          variant: "destructive"
+        });
+        setIsLoading(false);
+      }
+    };
+    
+    loadCarriers();
+  }, [toast]);
 
   // Filter carriers based on search term and type filter
   useEffect(() => {
