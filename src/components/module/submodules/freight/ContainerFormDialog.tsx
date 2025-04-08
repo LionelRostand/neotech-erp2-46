@@ -13,7 +13,8 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { addDocument } from '@/hooks/firestore/firestore-utils';
+import { collection, addDoc } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 
 interface ContainerFormDialogProps {
@@ -67,8 +68,14 @@ const ContainerFormDialog: React.FC<ContainerFormDialogProps> = ({ isOpen, onClo
         lastUpdated: new Date().toISOString()
       };
       
+      // Get the correct collection reference for freight/containers
+      const parts = COLLECTIONS.FREIGHT.CONTAINERS.split('/');
+      const collectionRef = parts.length === 2 
+        ? collection(db, parts[0], parts[0], parts[1])
+        : collection(db, COLLECTIONS.FREIGHT.CONTAINERS);
+      
       // Ajouter le conteneur à Firebase
-      await addDocument(COLLECTIONS.FREIGHT.CONTAINERS, containerData);
+      await addDoc(collectionRef, containerData);
       
       toast({
         title: "Conteneur créé",
