@@ -1,4 +1,3 @@
-
 import { 
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
@@ -168,11 +167,15 @@ export const sendPasswordEmail = async (email: string): Promise<boolean> => {
 // Créer un employé avec compte utilisateur
 export const createEmployeeWithAccount = async (employeeData: any, professionalEmail: string): Promise<{success: boolean, employee?: any, user?: User}> => {
   try {
-    // Générer un mot de passe temporaire aléatoire
+    // Generate a temporary password
     const tempPassword = Math.random().toString(36).slice(-8);
 
-    // Créer l'utilisateur dans Firebase Auth
+    // Create user in Firebase Auth - ensure we include the id property
+    // We'll use a temporary ID here, which will be replaced by Firebase UID after creation
+    const tempId = `temp-${Date.now()}`;
+    
     const userData: User = {
+      id: tempId, // Add the required id property
       email: professionalEmail,
       firstName: employeeData.firstName,
       lastName: employeeData.lastName,

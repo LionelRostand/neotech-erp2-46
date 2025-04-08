@@ -40,11 +40,12 @@ const UserManagementDialog: React.FC<UserManagementDialogProps> = ({
 }) => {
   const [saving, setSaving] = useState(false);
   
+  // Ensure the role is strictly typed to one of the allowed values
   const defaultValues: UserFormData = {
     email: user?.email || '',
     firstName: user?.firstName || '',
     lastName: user?.lastName || '',
-    role: user?.role || 'user',
+    role: (user?.role as 'admin' | 'user' | 'manager') || 'user',
     department: user?.department || '',
     position: user?.position || '',
     status: user?.status || 'active',
