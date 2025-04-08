@@ -3,6 +3,7 @@ import { collection, getDocs, query, QueryConstraint, doc } from 'firebase/fires
 import { db } from '@/lib/firebase';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import { toast } from 'sonner';
+import { isNetworkError, reconnectToFirestore } from './firestore/network-handler';
 
 /**
  * Utility function to fetch data from any Freight Firestore collection
@@ -49,6 +50,24 @@ export async function fetchFreightCollectionData<T>(
     });
   } catch (err: any) {
     console.error(`Error fetching data from ${collectionName}:`, err);
+    
+    // Check if this is a network error and handle accordingly
+    if (isNetworkError(err)) {
+      console.log('Network error detected, attempting to recover...');
+      toast.error(`Erreur de connexion: L'application est hors ligne. Tentative de reconnexion...`);
+      
+      // Try to reconnect
+      const reconnected = await reconnectToFirestore();
+      if (reconnected) {
+        toast.success('Connexion rétablie. Veuillez réessayer.');
+      } else {
+        toast.error('Impossible de se reconnecter. Vérifiez votre connexion internet.');
+      }
+      
+      // Return empty array for offline mode
+      return [] as T[];
+    }
+    
     toast.error(`Erreur lors du chargement des données: ${err.message}`);
     throw err;
   }
@@ -85,6 +104,12 @@ export async function checkFreightCollectionExists(
     return !querySnapshot.empty;
   } catch (err: any) {
     console.error(`Error checking if collection ${collectionName} exists:`, err);
+    
+    // For network errors, assume the collection exists (to prevent false negatives)
+    if (isNetworkError(err)) {
+      return true; 
+    }
+    
     return false;
   }
 }

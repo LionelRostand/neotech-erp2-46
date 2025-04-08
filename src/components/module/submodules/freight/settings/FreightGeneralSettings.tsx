@@ -1,159 +1,151 @@
 
 import React, { useState, useEffect } from 'react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { toast } from '@/hooks/use-toast';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
+import { Switch } from '@/components/ui/switch';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { doc, getDoc, setDoc, Timestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { useAuth } from '@/hooks/useAuth';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
-import { COLLECTIONS } from '@/lib/firebase-collections';
-import { FreightAlert } from '../components/FreightAlert';
+import { Loader2, Save, WifiOff } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 interface FreightGeneralSettingsProps {
-  isAdmin: boolean;
-  canEdit: boolean;
+  isOffline?: boolean;
 }
 
-interface GeneralSettings {
+interface SettingsData {
   companyName: string;
-  emailContact: string;
-  phoneContact: string;
-  trackingSettings: {
-    enableMap: boolean;
-    enableNotifications: boolean;
-    updateFrequency: string;
-  };
+  contactEmail: string;
+  contactPhone: string;
   defaultCurrency: string;
+  enableNotifications: boolean;
   weightUnit: string;
-  volumeUnit: string;
+  distanceUnit: string;
+  defaultShippingTerms: string;
+  lastUpdated?: Timestamp | null;
 }
 
-const DEFAULT_SETTINGS: GeneralSettings = {
-  companyName: '',
-  emailContact: '',
-  phoneContact: '',
-  trackingSettings: {
-    enableMap: true,
-    enableNotifications: true,
-    updateFrequency: '1h',
-  },
+const defaultSettings: SettingsData = {
+  companyName: 'Votre Entreprise',
+  contactEmail: 'contact@example.com',
+  contactPhone: '',
   defaultCurrency: 'EUR',
+  enableNotifications: true,
   weightUnit: 'kg',
-  volumeUnit: 'm³',
+  distanceUnit: 'km',
+  defaultShippingTerms: '',
+  lastUpdated: null
 };
 
-const FreightGeneralSettings: React.FC<FreightGeneralSettingsProps> = ({ isAdmin, canEdit }) => {
-  const [settings, setSettings] = useState<GeneralSettings>(DEFAULT_SETTINGS);
-  const [activeTab, setActiveTab] = useState("general");
+const FreightGeneralSettings: React.FC<FreightGeneralSettingsProps> = ({ isOffline = false }) => {
+  const [settings, setSettings] = useState<SettingsData>(defaultSettings);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
-  const { currentUser } = useAuth();
+  const { toast } = useToast();
 
   useEffect(() => {
     const fetchSettings = async () => {
+      if (isOffline) {
+        // If offline, use defaults or cached data
+        const cachedSettings = localStorage.getItem('freight_settings');
+        if (cachedSettings) {
+          try {
+            setSettings(JSON.parse(cachedSettings));
+          } catch (err) {
+            console.error('Error parsing cached settings:', err);
+            setSettings(defaultSettings);
+          }
+        } else {
+          setSettings(defaultSettings);
+        }
+        setIsLoading(false);
+        return;
+      }
+
       try {
         setIsLoading(true);
-        // Attempt to get settings from Firestore
-        const docRef = doc(db, COLLECTIONS.FREIGHT.SETTINGS, 'general');
-        const docSnap = await getDoc(docRef);
-
-        if (docSnap.exists()) {
-          const data = docSnap.data() as Partial<GeneralSettings>;
-          // Merge with defaults for any missing fields
-          setSettings({
-            ...DEFAULT_SETTINGS,
-            ...data,
-            trackingSettings: {
-              ...DEFAULT_SETTINGS.trackingSettings,
-              ...data.trackingSettings
-            }
-          });
+        const settingsDocRef = doc(db, 'freight', 'settings');
+        const settingsDoc = await getDoc(settingsDocRef);
+        
+        if (settingsDoc.exists()) {
+          const data = settingsDoc.data() as SettingsData;
+          setSettings(data);
+          // Cache the settings
+          localStorage.setItem('freight_settings', JSON.stringify(data));
+        } else {
+          setSettings(defaultSettings);
         }
-      } catch (error) {
-        console.error("Erreur lors du chargement des paramètres du fret:", error);
-        toast({
-          title: "Erreur de chargement",
-          description: "Impossible de charger les paramètres du module fret",
-          variant: "destructive"
-        });
+      } catch (err: any) {
+        console.error('Erreur lors du chargement des paramètres du fret:', err);
+        
+        // If error occurs, try to use cached settings
+        const cachedSettings = localStorage.getItem('freight_settings');
+        if (cachedSettings) {
+          try {
+            setSettings(JSON.parse(cachedSettings));
+            toast({
+              title: "Utilisation des paramètres en cache",
+              description: "Les paramètres les plus récents sont affichés à partir du cache local.",
+              variant: "default"
+            });
+          } catch (parseErr) {
+            console.error('Error parsing cached settings:', parseErr);
+            setSettings(defaultSettings);
+          }
+        } else {
+          setSettings(defaultSettings);
+        }
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchSettings();
-  }, []);
+  }, [isOffline, toast]);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value, type } = e.target as HTMLInputElement;
-    
-    // Handle checkbox inputs
-    if (type === 'checkbox') {
-      const checked = (e.target as HTMLInputElement).checked;
-      if (name.startsWith('tracking.')) {
-        const trackingField = name.split('.')[1];
-        setSettings(prev => ({
-          ...prev,
-          trackingSettings: {
-            ...prev.trackingSettings,
-            [trackingField]: checked
-          }
-        }));
-      }
-      return;
-    }
-    
-    // Handle tracking settings
-    if (name.startsWith('tracking.')) {
-      const trackingField = name.split('.')[1];
-      setSettings(prev => ({
-        ...prev,
-        trackingSettings: {
-          ...prev.trackingSettings,
-          [trackingField]: value
-        }
-      }));
-      return;
-    }
-    
-    // Handle regular inputs
+  const handleChange = (field: keyof SettingsData, value: string | boolean) => {
     setSettings(prev => ({
       ...prev,
-      [name]: value
+      [field]: value
     }));
   };
 
-  const saveSettings = async () => {
-    if (!currentUser) {
+  const handleSave = async () => {
+    if (isOffline) {
+      // If offline, just save to localStorage
+      localStorage.setItem('freight_settings', JSON.stringify(settings));
       toast({
-        title: "Erreur d'authentification",
-        description: "Vous devez être connecté pour effectuer cette action",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    if (!canEdit && !isAdmin) {
-      toast({
-        title: "Permission refusée",
-        description: "Vous n'avez pas les droits nécessaires pour modifier les paramètres",
-        variant: "destructive"
+        title: "Paramètres enregistrés localement",
+        description: "Les modifications seront synchronisées lorsque vous serez à nouveau en ligne.",
+        variant: "default"
       });
       return;
     }
 
     try {
       setIsSaving(true);
-      await setDoc(doc(db, COLLECTIONS.FREIGHT.SETTINGS, 'general'), settings);
+      const settingsDocRef = doc(db, 'freight', 'settings');
+      await setDoc(settingsDocRef, {
+        ...settings,
+        lastUpdated: Timestamp.now()
+      });
+      
+      // Cache the settings
+      localStorage.setItem('freight_settings', JSON.stringify(settings));
+      
       toast({
         title: "Paramètres enregistrés",
-        description: "Les modifications ont été enregistrées avec succès",
+        description: "Les modifications ont été appliquées avec succès.",
+        variant: "default"
       });
-    } catch (error) {
-      console.error("Erreur lors de l'enregistrement des paramètres:", error);
+    } catch (err: any) {
+      console.error('Erreur lors de la sauvegarde des paramètres:', err);
       toast({
-        title: "Erreur",
-        description: "Impossible d'enregistrer les paramètres",
+        title: "Erreur de sauvegarde",
+        description: err.message || "Une erreur est survenue lors de l'enregistrement des paramètres.",
         variant: "destructive"
       });
     } finally {
@@ -163,220 +155,158 @@ const FreightGeneralSettings: React.FC<FreightGeneralSettingsProps> = ({ isAdmin
 
   if (isLoading) {
     return (
-      <FreightAlert variant="default">
-        Chargement des paramètres...
-      </FreightAlert>
+      <Card className="w-full">
+        <CardContent className="flex flex-col items-center justify-center p-8">
+          <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
+          <p className="text-muted-foreground">Chargement des paramètres...</p>
+        </CardContent>
+      </Card>
     );
   }
 
   return (
-    <div className="space-y-6">
-      {!canEdit && !isAdmin && (
-        <FreightAlert variant="warning">
-          Vous consultez les paramètres en mode lecture seule. Contactez un administrateur
-          pour effectuer des modifications.
-        </FreightAlert>
-      )}
-      
-      <div className="space-y-6">
-        <div className="grid gap-4 md:grid-cols-2">
-          <div className="space-y-4">
-            <h3 className="text-lg font-medium">Informations de l'entreprise</h3>
-            
-            <div className="space-y-2">
-              <label className="block text-sm font-medium">
-                Nom de l'entreprise
-                <input
-                  type="text"
-                  name="companyName"
-                  value={settings.companyName}
-                  onChange={handleInputChange}
-                  disabled={!canEdit && !isAdmin}
-                  className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-black focus:border-blue-500 focus:ring-blue-500 disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-500"
-                />
-              </label>
-            </div>
-            
-            <div className="space-y-2">
-              <label className="block text-sm font-medium">
-                Email de contact
-                <input
-                  type="email"
-                  name="emailContact"
-                  value={settings.emailContact}
-                  onChange={handleInputChange}
-                  disabled={!canEdit && !isAdmin}
-                  className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-black focus:border-blue-500 focus:ring-blue-500 disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-500"
-                />
-              </label>
-            </div>
-            
-            <div className="space-y-2">
-              <label className="block text-sm font-medium">
-                Téléphone de contact
-                <input
-                  type="tel"
-                  name="phoneContact"
-                  value={settings.phoneContact}
-                  onChange={handleInputChange}
-                  disabled={!canEdit && !isAdmin}
-                  className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-black focus:border-blue-500 focus:ring-blue-500 disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-500"
-                />
-              </label>
-            </div>
-          </div>
-          
-          <div className="space-y-4">
-            <h3 className="text-lg font-medium">Paramètres par défaut</h3>
-            
-            <div className="space-y-2">
-              <label className="block text-sm font-medium">
-                Devise par défaut
-                <select
-                  name="defaultCurrency"
-                  value={settings.defaultCurrency}
-                  onChange={handleInputChange}
-                  disabled={!canEdit && !isAdmin}
-                  className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-black focus:border-blue-500 focus:ring-blue-500 disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-500"
-                >
-                  <option value="EUR">Euro (€)</option>
-                  <option value="USD">Dollar US ($)</option>
-                  <option value="GBP">Livre Sterling (£)</option>
-                  <option value="CAD">Dollar Canadien (C$)</option>
-                  <option value="CHF">Franc Suisse (Fr)</option>
-                </select>
-              </label>
-            </div>
-            
-            <div className="space-y-2">
-              <label className="block text-sm font-medium">
-                Unité de poids
-                <select
-                  name="weightUnit"
-                  value={settings.weightUnit}
-                  onChange={handleInputChange}
-                  disabled={!canEdit && !isAdmin}
-                  className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-black focus:border-blue-500 focus:ring-blue-500 disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-500"
-                >
-                  <option value="kg">Kilogrammes (kg)</option>
-                  <option value="lb">Livres (lb)</option>
-                  <option value="t">Tonnes (t)</option>
-                </select>
-              </label>
-            </div>
-            
-            <div className="space-y-2">
-              <label className="block text-sm font-medium">
-                Unité de volume
-                <select
-                  name="volumeUnit"
-                  value={settings.volumeUnit}
-                  onChange={handleInputChange}
-                  disabled={!canEdit && !isAdmin}
-                  className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-black focus:border-blue-500 focus:ring-blue-500 disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-500"
-                >
-                  <option value="m³">Mètres cubes (m³)</option>
-                  <option value="ft³">Pieds cubes (ft³)</option>
-                  <option value="L">Litres (L)</option>
-                </select>
-              </label>
-            </div>
-          </div>
-        </div>
-        
-        <div className="mt-4 space-y-4">
-          <h3 className="text-lg font-medium">Paramètres de suivi</h3>
-          
-          <div className="flex flex-wrap gap-6">
-            <label className="flex items-center space-x-2">
-              <input
-                type="checkbox"
-                name="tracking.enableMap"
-                checked={settings.trackingSettings.enableMap}
-                onChange={(e) => {
-                  setSettings(prev => ({
-                    ...prev,
-                    trackingSettings: {
-                      ...prev.trackingSettings,
-                      enableMap: e.target.checked
-                    }
-                  }));
-                }}
-                disabled={!canEdit && !isAdmin}
-                className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 disabled:cursor-not-allowed"
-              />
-              <span>Activer la carte de suivi</span>
-            </label>
-            
-            <label className="flex items-center space-x-2">
-              <input
-                type="checkbox"
-                name="tracking.enableNotifications"
-                checked={settings.trackingSettings.enableNotifications}
-                onChange={(e) => {
-                  setSettings(prev => ({
-                    ...prev,
-                    trackingSettings: {
-                      ...prev.trackingSettings,
-                      enableNotifications: e.target.checked
-                    }
-                  }));
-                }}
-                disabled={!canEdit && !isAdmin}
-                className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 disabled:cursor-not-allowed"
-              />
-              <span>Activer les notifications automatiques</span>
-            </label>
-          </div>
-          
-          <div className="space-y-2 max-w-md">
-            <label className="block text-sm font-medium">
-              Fréquence des mises à jour
-              <select
-                name="tracking.updateFrequency"
-                value={settings.trackingSettings.updateFrequency}
-                onChange={(e) => {
-                  setSettings(prev => ({
-                    ...prev,
-                    trackingSettings: {
-                      ...prev.trackingSettings,
-                      updateFrequency: e.target.value
-                    }
-                  }));
-                }}
-                disabled={!canEdit && !isAdmin}
-                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-black focus:border-blue-500 focus:ring-blue-500 disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-500"
-              >
-                <option value="15m">Toutes les 15 minutes</option>
-                <option value="30m">Toutes les 30 minutes</option>
-                <option value="1h">Toutes les heures</option>
-                <option value="2h">Toutes les 2 heures</option>
-                <option value="6h">Toutes les 6 heures</option>
-                <option value="12h">Toutes les 12 heures</option>
-                <option value="24h">Une fois par jour</option>
-              </select>
-            </label>
-          </div>
-        </div>
-        
-        <FreightAlert variant="success">
-          Les paramètres du module fret sont utilisés par l'ensemble des fonctionnalités 
-          du module et peuvent influencer le comportement de l'application sur les différents
-          postes clients.
-        </FreightAlert>
-                
-        {(canEdit || isAdmin) && (
-          <div className="flex justify-end pt-4">
-            <Button 
-              onClick={saveSettings} 
-              disabled={isSaving || (!canEdit && !isAdmin)}
-            >
-              {isSaving ? 'Enregistrement...' : 'Enregistrer les paramètres'}
-            </Button>
+    <Card className="w-full">
+      <CardHeader>
+        <CardTitle>Paramètres généraux</CardTitle>
+        <CardDescription>
+          Configurez les paramètres de base pour le module de gestion du fret
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        {isOffline && (
+          <div className="bg-yellow-50 border border-yellow-200 rounded-md p-4 mb-6 flex items-center">
+            <WifiOff className="h-5 w-5 text-yellow-500 mr-2" />
+            <p className="text-sm text-yellow-700">
+              Vous êtes en mode hors ligne. Les modifications seront enregistrées localement.
+            </p>
           </div>
         )}
-      </div>
-    </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="space-y-2">
+            <Label htmlFor="companyName">Nom de l'entreprise</Label>
+            <Input 
+              id="companyName" 
+              value={settings.companyName}
+              onChange={(e) => handleChange('companyName', e.target.value)}
+            />
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="contactEmail">Email de contact</Label>
+            <Input 
+              id="contactEmail" 
+              type="email"
+              value={settings.contactEmail}
+              onChange={(e) => handleChange('contactEmail', e.target.value)}
+            />
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="contactPhone">Téléphone de contact</Label>
+            <Input 
+              id="contactPhone" 
+              value={settings.contactPhone}
+              onChange={(e) => handleChange('contactPhone', e.target.value)}
+            />
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="defaultCurrency">Devise par défaut</Label>
+            <Select 
+              value={settings.defaultCurrency}
+              onValueChange={(value) => handleChange('defaultCurrency', value)}
+            >
+              <SelectTrigger id="defaultCurrency">
+                <SelectValue placeholder="Choisir une devise" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="EUR">Euro (€)</SelectItem>
+                <SelectItem value="USD">Dollar US ($)</SelectItem>
+                <SelectItem value="GBP">Livre Sterling (£)</SelectItem>
+                <SelectItem value="CAD">Dollar Canadien (C$)</SelectItem>
+                <SelectItem value="CHF">Franc Suisse (CHF)</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="weightUnit">Unité de poids</Label>
+            <Select 
+              value={settings.weightUnit}
+              onValueChange={(value) => handleChange('weightUnit', value)}
+            >
+              <SelectTrigger id="weightUnit">
+                <SelectValue placeholder="Choisir une unité" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="kg">Kilogrammes (kg)</SelectItem>
+                <SelectItem value="g">Grammes (g)</SelectItem>
+                <SelectItem value="lb">Livres (lb)</SelectItem>
+                <SelectItem value="oz">Onces (oz)</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="distanceUnit">Unité de distance</Label>
+            <Select 
+              value={settings.distanceUnit}
+              onValueChange={(value) => handleChange('distanceUnit', value)}
+            >
+              <SelectTrigger id="distanceUnit">
+                <SelectValue placeholder="Choisir une unité" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="km">Kilomètres (km)</SelectItem>
+                <SelectItem value="mi">Miles (mi)</SelectItem>
+                <SelectItem value="nm">Milles Nautiques (nm)</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+        
+        <div className="space-y-2">
+          <div className="flex items-center space-x-2">
+            <Switch 
+              id="enableNotifications" 
+              checked={settings.enableNotifications}
+              onCheckedChange={(checked) => handleChange('enableNotifications', checked)}
+            />
+            <Label htmlFor="enableNotifications">Activer les notifications</Label>
+          </div>
+          <p className="text-sm text-muted-foreground">
+            Envoyez des notifications automatiques pour les mises à jour d'expédition
+          </p>
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="defaultShippingTerms">Conditions de livraison par défaut</Label>
+          <Textarea 
+            id="defaultShippingTerms" 
+            value={settings.defaultShippingTerms}
+            onChange={(e) => handleChange('defaultShippingTerms', e.target.value)}
+            placeholder="Saisissez les conditions de livraison par défaut qui apparaîtront sur vos documents"
+            rows={4}
+          />
+        </div>
+      </CardContent>
+      <CardFooter className="flex justify-end space-x-4">
+        <Button onClick={handleSave} disabled={isSaving || isLoading}>
+          {isSaving ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Enregistrement...
+            </>
+          ) : (
+            <>
+              <Save className="mr-2 h-4 w-4" />
+              Enregistrer
+            </>
+          )}
+        </Button>
+      </CardFooter>
+    </Card>
   );
 };
 

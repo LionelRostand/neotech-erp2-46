@@ -1,279 +1,139 @@
 
 import React, { useState, useEffect } from 'react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Settings as SettingsIcon, Shield, AlertCircle, WifiOff } from "lucide-react";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+import { Loader2, WifiOff, Settings, Shield, TruckIcon, UserCog } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 import FreightGeneralSettings from './settings/FreightGeneralSettings';
-import FreightPermissionsSettings from './settings/FreightPermissionsSettings';
-import { usePermissions } from '@/hooks/usePermissions';
-import { toast } from '@/hooks/use-toast';
-import { FreightAlert } from './components/FreightAlert';
-import { doc, getDoc, updateDoc } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
-import { COLLECTIONS } from '@/lib/firebase-collections';
-import { Button } from '@/components/ui/button';
-import { restoreFirestoreConnectivity } from '@/hooks/firestore/network-operations';
+import FreightSecuritySettings from './FreightSecuritySettings';
+import { checkFreightCollectionExists } from '@/hooks/fetchFreightCollectionData';
 
-const FreightSettings: React.FC = () => {
-  const [activeTab, setActiveTab] = useState("general");
-  const { isAdmin, checkPermission, loading, isOffline } = usePermissions('freight');
-  const [canEditSettings, setCanEditSettings] = useState(false);
-  const [isCheckingPermissions, setIsCheckingPermissions] = useState(true);
-  const [isGrantingAdminRights, setIsGrantingAdminRights] = useState(false);
-  const [isReconnecting, setIsReconnecting] = useState(false);
-  
-  // Vérifier les permissions d'édition des paramètres uniquement une fois lors du chargement initial
+const FreightSettings = () => {
+  const [activeTab, setActiveTab] = useState('general');
+  const [isLoading, setIsLoading] = useState(true);
+  const [isOffline, setIsOffline] = useState(false);
+  const { toast } = useToast();
+
   useEffect(() => {
-    if (!loading) {
-      const checkEditAccess = async () => {
-        try {
-          setIsCheckingPermissions(true);
-          // Les administrateurs ont toujours accès
-          if (isAdmin) {
-            setCanEditSettings(true);
-            return;
-          }
-          
-          // Vérifier la permission d'édition pour les autres utilisateurs
-          const hasAccess = await checkPermission('freight', 'modify');
-          setCanEditSettings(hasAccess);
-        } catch (error) {
-          console.error("Erreur lors de la vérification des permissions:", error);
+    const checkConnection = async () => {
+      try {
+        setIsLoading(true);
+        // Try to fetch data to check if we're online
+        const exists = await checkFreightCollectionExists('SETTINGS');
+        setIsOffline(false);
+        setIsLoading(false);
+      } catch (err: any) {
+        console.error('Error checking connection status:', err);
+        if (err.code === 'unavailable' || err.message?.includes('offline')) {
+          setIsOffline(true);
           toast({
-            title: "Erreur",
-            description: "Impossible de vérifier vos permissions. Veuillez réessayer.",
+            title: "Mode hors ligne",
+            description: "Certaines fonctionnalités peuvent être limitées en raison de problèmes de connexion.",
             variant: "destructive"
           });
-        } finally {
-          setIsCheckingPermissions(false);
         }
-      };
-      
-      checkEditAccess();
-    }
-  }, [loading, isAdmin, checkPermission]);
+        setIsLoading(false);
+      }
+    };
 
-  // Fonction pour accorder les droits d'administrateur à admin@neotech-consulting.com
-  const grantAdminRightsToSpecificUser = async () => {
+    checkConnection();
+  }, [toast]);
+
+  // Retry connection
+  const handleRetryConnection = async () => {
+    setIsLoading(true);
     try {
-      setIsGrantingAdminRights(true);
-      
-      // 1. Trouver l'utilisateur par son email
-      const usersCollection = await getDoc(doc(db, COLLECTIONS.USERS, 'admin-permissions-config'));
-      const adminEmail = 'admin@neotech-consulting.com';
-      let adminUserId = '';
-      
-      if (usersCollection.exists()) {
-        const config = usersCollection.data();
-        adminUserId = config.adminUserId || '';
-      } else {
-        // Créer le document de configuration s'il n'existe pas
-        await updateDoc(doc(db, COLLECTIONS.USERS, 'admin-permissions-config'), {
-          adminEmail: adminEmail,
-          adminUserId: adminUserId,
-          updatedAt: new Date()
-        });
-      }
-      
-      // 2. Vérifier si l'utilisateur existe
-      if (!adminUserId) {
-        toast({
-          title: "Information",
-          description: "Configuration pour admin@neotech-consulting.com prête. Veuillez vous assurer que cet utilisateur existe dans le système.",
-          variant: "default"
-        });
-        return;
-      }
-      
-      // 3. Mettre à jour les permissions pour le module Freight
-      const userPermissionsRef = doc(db, COLLECTIONS.USER_PERMISSIONS, adminUserId);
-      const userPermissionsDoc = await getDoc(userPermissionsRef);
-      
-      if (userPermissionsDoc.exists()) {
-        const currentPermissions = userPermissionsDoc.data();
-        
-        // Mettre à jour les permissions spécifiques du module Freight
-        await updateDoc(userPermissionsRef, {
-          permissions: {
-            ...currentPermissions.permissions,
-            freight: {
-              view: true,
-              create: true,
-              edit: true,
-              delete: true,
-              export: true,
-              modify: true
-            }
-          }
-        });
-        
-        toast({
-          title: "Succès",
-          description: "Les droits d'administration pour le module Freight ont été accordés à admin@neotech-consulting.com",
-          variant: "default"
-        });
-      } else {
-        // Créer des permissions complètes pour cet utilisateur
-        await updateDoc(userPermissionsRef, {
-          userId: adminUserId,
-          permissions: {
-            freight: {
-              view: true,
-              create: true,
-              edit: true,
-              delete: true,
-              export: true,
-              modify: true
-            }
-          },
-          updatedAt: new Date()
-        });
-        
-        toast({
-          title: "Succès",
-          description: "Nouvelles permissions créées pour admin@neotech-consulting.com avec droits complets sur le module Freight",
-          variant: "default"
-        });
-      }
-    } catch (error) {
-      console.error("Erreur lors de l'attribution des droits d'administrateur:", error);
+      const exists = await checkFreightCollectionExists('SETTINGS');
+      setIsOffline(false);
       toast({
-        title: "Erreur",
-        description: "Une erreur est survenue lors de l'attribution des droits d'administrateur.",
+        title: "Connexion rétablie",
+        description: "Vous êtes à nouveau connecté au serveur.",
+      });
+    } catch (err) {
+      setIsOffline(true);
+      toast({
+        title: "Toujours hors ligne",
+        description: "Vérifiez votre connexion internet et réessayez.",
         variant: "destructive"
       });
-    } finally {
-      setIsGrantingAdminRights(false);
     }
+    setIsLoading(false);
   };
 
-  // Tentative de reconnexion à Firebase
-  const handleReconnect = async () => {
-    setIsReconnecting(true);
-    try {
-      const success = await restoreFirestoreConnectivity();
-      if (success) {
-        toast({
-          title: "Connexion rétablie",
-          description: "La connexion à la base de données a été rétablie avec succès.",
-          variant: "default"
-        });
-        // Rafraîchir la page pour recharger les données
-        window.location.reload();
-      } else {
-        toast({
-          title: "Échec de la reconnexion",
-          description: "Impossible de se reconnecter à la base de données. Veuillez vérifier votre connexion internet.",
-          variant: "destructive"
-        });
-      }
-    } catch (error) {
-      console.error("Erreur lors de la tentative de reconnexion:", error);
-      toast({
-        title: "Erreur",
-        description: "Une erreur est survenue lors de la tentative de reconnexion.",
-        variant: "destructive"
-      });
-    } finally {
-      setIsReconnecting(false);
-    }
-  };
-
-  // Si l'utilisateur est hors ligne, afficher un message d'erreur
-  if (isOffline) {
+  if (isLoading) {
     return (
-      <div className="space-y-6">
-        <h2 className="text-3xl font-bold">Paramètres du Module Fret</h2>
-        
-        <FreightAlert 
-          variant="warning" 
-          title="Connexion perdue"
-          className="mb-4"
-        >
-          <div className="flex flex-col gap-4">
-            <div className="flex items-center gap-2">
-              <WifiOff className="h-5 w-5 text-amber-600" />
-              <p>
-                Vous êtes actuellement hors ligne. Les paramètres du module Fret ne peuvent pas être chargés ou modifiés
-                sans connexion à Internet.
-              </p>
-            </div>
-            <Button 
-              onClick={handleReconnect}
-              disabled={isReconnecting}
-              variant="outline"
-              className="w-fit"
-            >
-              {isReconnecting ? "Reconnexion en cours..." : "Tenter une reconnexion"}
-            </Button>
-          </div>
-        </FreightAlert>
+      <div className="flex flex-col items-center justify-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
+        <p className="text-muted-foreground">Chargement des paramètres...</p>
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      <h2 className="text-3xl font-bold">Paramètres du Module Fret</h2>
-      
-      {isAdmin && (
-        <div className="mb-6 p-4 bg-blue-50 border border-blue-100 rounded-md">
-          <h3 className="text-lg font-medium text-blue-800 mb-2">Administration spéciale</h3>
-          <p className="text-blue-700 mb-4">En tant qu'administrateur système, vous pouvez accorder des droits d'administrateur complets sur ce module à admin@neotech-consulting.com.</p>
-          <Button 
-            onClick={grantAdminRightsToSpecificUser}
-            disabled={isGrantingAdminRights}
-            className="bg-blue-600 hover:bg-blue-700"
-          >
-            {isGrantingAdminRights ? "Attribution en cours..." : "Accorder les pleins droits"}
-          </Button>
-        </div>
+      {isOffline && (
+        <Alert variant="destructive" className="mb-6">
+          <WifiOff className="h-4 w-4 mr-2" />
+          <AlertTitle>Mode hors ligne</AlertTitle>
+          <AlertDescription className="flex justify-between items-center">
+            <span>Vous êtes actuellement en mode hors ligne. Certaines fonctionnalités peuvent être limitées.</span>
+            <button 
+              onClick={handleRetryConnection}
+              className="bg-primary text-white px-3 py-1 rounded-md text-sm hover:bg-primary/90 transition-colors"
+            >
+              Réessayer
+            </button>
+          </AlertDescription>
+        </Alert>
       )}
-      
-      {isCheckingPermissions ? (
-        <div className="p-4 border rounded-md bg-slate-50 animate-pulse">
-          Vérification des permissions...
-        </div>
-      ) : !canEditSettings && !isAdmin ? (
-        <FreightAlert 
-          variant="warning" 
-          title="Accès limité"
-          className="mb-4"
-        >
-          <p>
-            Vous n'avez pas les droits suffisants pour modifier les paramètres du module Fret. 
-            Vous pouvez consulter les informations, mais ne pourrez pas les modifier.
-          </p>
-        </FreightAlert>
-      ) : null}
-      
-      <Tabs defaultValue="general" className="w-full" onValueChange={setActiveTab}>
-        <TabsList className="mb-4">
-          <TabsTrigger value="general" className="flex items-center gap-2">
-            <SettingsIcon className="h-4 w-4" />
+
+      <Tabs defaultValue="general" value={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="grid grid-cols-3 mb-8">
+          <TabsTrigger value="general" className="flex items-center">
+            <Settings className="h-4 w-4 mr-2" />
             Général
           </TabsTrigger>
-          <TabsTrigger value="permissions" className="flex items-center gap-2" disabled={!canEditSettings && !isAdmin}>
-            <Shield className="h-4 w-4" />
-            Droits d'accès
+          <TabsTrigger value="security" className="flex items-center">
+            <Shield className="h-4 w-4 mr-2" />
+            Sécurité
+          </TabsTrigger>
+          <TabsTrigger value="permissions" className="flex items-center">
+            <UserCog className="h-4 w-4 mr-2" />
+            Permissions
           </TabsTrigger>
         </TabsList>
-        
+
         <TabsContent value="general">
-          <FreightGeneralSettings isAdmin={isAdmin} canEdit={canEditSettings} />
+          <FreightGeneralSettings isOffline={isOffline} />
+        </TabsContent>
+        
+        <TabsContent value="security">
+          <FreightSecuritySettings />
         </TabsContent>
         
         <TabsContent value="permissions">
-          {canEditSettings || isAdmin ? (
-            <FreightPermissionsSettings isAdmin={isAdmin} />
-          ) : (
-            <div className="p-6 text-center bg-gray-50 rounded-lg border border-gray-200">
-              <Shield className="h-12 w-12 text-gray-400 mx-auto mb-2" />
-              <h3 className="text-lg font-medium text-gray-900">Accès restreint</h3>
-              <p className="text-gray-500">
-                Vous n'avez pas les droits nécessaires pour gérer les permissions des utilisateurs.
-              </p>
-            </div>
-          )}
+          <Card>
+            <CardHeader>
+              <CardTitle>Permissions utilisateurs</CardTitle>
+              <CardDescription>
+                Gérez les droits d'accès au module Fret pour les différents utilisateurs
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {isOffline ? (
+                <div className="p-6 text-center">
+                  <WifiOff className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="text-lg font-medium mb-2">Fonctionnalité non disponible hors ligne</h3>
+                  <p className="text-muted-foreground">
+                    Vous devez être connecté à internet pour gérer les permissions utilisateurs.
+                  </p>
+                </div>
+              ) : (
+                <p>Contenu des permissions</p>
+              )}
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
     </div>

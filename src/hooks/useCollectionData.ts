@@ -2,6 +2,8 @@
 import { useState, useEffect } from 'react';
 import { collection, query, onSnapshot, QueryConstraint, DocumentData, QuerySnapshot, doc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { toast } from 'sonner';
+import { isNetworkError, reconnectToFirestore } from './firestore/network-handler';
 
 /**
  * Custom hook to fetch data from a Firestore collection with real-time updates
@@ -16,6 +18,7 @@ export const useCollectionData = (
   const [data, setData] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
+  const [isOffline, setIsOffline] = useState(false);
 
   useEffect(() => {
     // For development/testing, you can use a timeout to simulate network latency
@@ -68,10 +71,24 @@ export const useCollectionData = (
             }));
             setData(documents);
             setIsLoading(false);
+            setIsOffline(false);
             console.log(`Received ${documents.length} documents from ${collectionPath}`);
           },
-          (err: Error) => {
+          async (err: Error) => {
             console.error(`Error fetching from ${collectionPath}:`, err);
+            
+            if (isNetworkError(err)) {
+              console.log('Network error detected in useCollectionData, app is offline');
+              setIsOffline(true);
+              toast.error('Votre appareil semble être hors ligne. Certaines fonctionnalités peuvent être limitées.');
+              
+              // Try to reconnect
+              const reconnected = await reconnectToFirestore();
+              if (reconnected) {
+                toast.success('Connexion rétablie. Les données vont se recharger automatiquement.');
+              }
+            }
+            
             setError(err);
             setIsLoading(false);
           }
@@ -93,5 +110,5 @@ export const useCollectionData = (
     return () => clearTimeout(timeoutId);
   }, [collectionPath, JSON.stringify(queryConstraints)]);
 
-  return { data, isLoading, error };
+  return { data, isLoading, error, isOffline };
 };
