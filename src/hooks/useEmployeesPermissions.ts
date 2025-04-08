@@ -1,9 +1,10 @@
 
 import { useState, useEffect } from 'react';
-import { collection, getDocs, query, where } from 'firebase/firestore';
+import { collection, getDocs, query, where, doc, updateDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import { toast } from 'sonner';
+import { isNetworkError, reconnectToFirestore } from './firestore/network-handler';
 
 // Basic user type for permissions
 export interface EmployeeUser {
@@ -59,10 +60,20 @@ export const useEmployeesPermissions = () => {
         
         setEmployees(employeesData);
         console.log('Employees loaded:', employeesData.length);
-      } catch (err) {
+      } catch (err: any) {
         console.error('Error fetching employees:', err);
-        setError('Failed to load employees data');
-        toast.error('Erreur lors du chargement des données employés');
+        
+        // Check if it's a network error
+        if (isNetworkError(err)) {
+          console.log('Network error detected when fetching employees, app is offline');
+          toast.error('Erreur de connexion: L\'application est hors ligne.');
+          
+          // Try to reconnect
+          await reconnectToFirestore();
+        } else {
+          setError('Failed to load employees data');
+          toast.error('Erreur lors du chargement des données employés');
+        }
       } finally {
         setIsLoading(false);
       }
@@ -71,30 +82,54 @@ export const useEmployeesPermissions = () => {
     fetchEmployees();
   }, []);
 
-  const updateEmployeePermissions = async (employeeId: string, moduleId: string, permissions: {
-    view: boolean;
-    create: boolean;
-    edit: boolean;
-    delete: boolean;
-  }) => {
-    // This would be implemented to update permissions in Firebase
-    // For now we're just updating the local state
-    setEmployees(prevEmployees => 
-      prevEmployees.map(emp => 
-        emp.id === employeeId 
-          ? {
-              ...emp,
-              permissions: {
-                ...emp.permissions,
-                [moduleId]: permissions
+  const updateEmployeePermissions = async (
+    employeeId: string, 
+    moduleId: string, 
+    permissions: {
+      view: boolean;
+      create: boolean;
+      edit: boolean;
+      delete: boolean;
+    }
+  ) => {
+    try {
+      // First update local state for immediate UI feedback
+      setEmployees(prevEmployees => 
+        prevEmployees.map(emp => 
+          emp.id === employeeId 
+            ? {
+                ...emp,
+                permissions: {
+                  ...emp.permissions,
+                  [moduleId]: permissions
+                }
               }
-            }
-          : emp
-      )
-    );
-    
-    toast.success('Permissions mises à jour');
-    return true;
+            : emp
+        )
+      );
+      
+      // Then try to update in Firestore
+      const employeeDocRef = doc(db, COLLECTIONS.EMPLOYEES, employeeId);
+      
+      // We need to update just the specific module permissions
+      await updateDoc(employeeDocRef, {
+        [`permissions.${moduleId}`]: permissions
+      });
+      
+      toast.success('Permissions mises à jour');
+      return true;
+    } catch (err: any) {
+      console.error('Error updating employee permissions:', err);
+      
+      // Check if it's a network error
+      if (isNetworkError(err)) {
+        toast.error('Impossible de mettre à jour les permissions: Mode hors ligne');
+      } else {
+        toast.error(`Erreur lors de la mise à jour des permissions: ${err.message}`);
+      }
+      
+      return false;
+    }
   };
 
   return {

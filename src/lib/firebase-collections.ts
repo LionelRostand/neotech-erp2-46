@@ -7,7 +7,18 @@ export const COLLECTIONS = {
   DOCUMENTS: 'documents',
   SETTINGS: 'settings',
   CONTACTS: 'contacts',
-
+  
+  // Add FREIGHT collections
+  FREIGHT: {
+    SHIPMENTS: 'freight/shipments',
+    CONTAINERS: 'freight/containers',
+    TRACKING: 'freight/tracking',
+    CARRIERS: 'freight/carriers',
+    SETTINGS: 'freight/settings',
+    PRICING: 'freight/pricing',
+    DOCUMENTS: 'freight/documents'
+  },
+  
   CRM: {
     CLIENTS: 'crm_clients',
     PROSPECTS: 'crm_prospects',
@@ -16,121 +27,59 @@ export const COLLECTIONS = {
     LEADS: 'crm_leads',
     CONTACTS: 'crm_contacts',
     DEALS: 'crm_deals',
-    SETTINGS: 'crm_settings'
+    SETTINGS: 'crm_settings',
   },
-
-  PROJECTS: {
-    PROJECTS: 'projects/projects',
-    TASKS: 'projects/tasks',
-    TEAMS: 'projects/teams',
-    NOTIFICATIONS: 'projects/notifications'
+  
+  ACCOUNTING: {
+    INVOICES: 'accounting_invoices',
+    PAYMENTS: 'accounting_payments',
+    EXPENSES: 'accounting_expenses',
+    CLIENTS: 'accounting_clients',
+    SUPPLIERS: 'accounting_suppliers',
+    REPORTS: 'accounting_reports',
+    TAXES: 'accounting_taxes',
+    SETTINGS: 'accounting_settings',
+    TRANSACTIONS: 'accounting_transactions',
+    PERMISSIONS: 'accounting_permissions',
   },
-
+  
+  HR: {
+    EMPLOYEES: 'hr-employees',
+    LEAVES: 'hr-leaves',
+    CONTRACTS: 'hr-contracts',
+    POSITIONS: 'hr-positions',
+    DEPARTMENTS: 'hr-departments',
+    EVALUATIONS: 'hr-evaluations',
+    PAYSLIPS: 'hr-payslips',
+    RECRUITMENT: 'hr-recruitment',
+    TRAININGS: 'hr-trainings',
+    BADGES: 'hr-badges',
+    ATTENDANCE: 'hr-attendance',
+    ABSENCE_REQUESTS: 'hr-absence_requests',
+    DOCUMENTS: 'hr-documents',
+    TIMESHEETS: 'hr-timesheets',
+    REPORTS: 'hr-reports',
+    ALERTS: 'hr-alerts',
+    LEAVE_REQUESTS: 'hr-leave_requests',
+    ABSENCES: 'hr-absences',
+    SALARIES: 'hr-salaries',
+  },
+  
   HEALTH: {
     PATIENTS: 'health-patients',
     DOCTORS: 'health-doctors',
     APPOINTMENTS: 'health-appointments',
     CONSULTATIONS: 'health-consultations',
+    MEDICAL_RECORDS: 'health-medical_records',
+    PRESCRIPTIONS: 'health-prescriptions',
     INSURANCE: 'health-insurance',
     BILLING: 'health-billing',
     SETTINGS: 'health-settings',
-    STAFF: 'health-staff',
     HEALTH_CONSULTATIONS: 'health-consultations',
     HEALTH_INSURANCE: 'health-insurance',
-    HEALTH_BILLING: 'health-billing'
+    HEALTH_BILLING: 'health-billing',
+    STAFF: 'health-staff',
   },
-
-  HR: {
-    EMPLOYEES: 'hr-employees',
-    DEPARTMENTS: 'hr-departments',
-    CONTRACTS: 'hr-contracts',
-    LEAVES: 'hr-leaves',
-    LEAVE_REQUESTS: 'hr-leave_requests',
-    ABSENCES: 'hr-absences',
-    ABSENCE_REQUESTS: 'hr-absence_requests',
-    EVALUATIONS: 'hr-evaluations',
-    TRAININGS: 'hr-trainings',
-    RECRUITMENT: 'hr-recruitment',
-    DOCUMENTS: 'hr-documents',
-    BADGES: 'hr-badges',
-    TIMESHEETS: 'hr-timesheets',
-    SALARIES: 'hr-salaries',
-    PAYSLIPS: 'hr-payslips',
-    ATTENDANCE: 'hr-attendance',
-    REPORTS: 'hr-reports',
-    ALERTS: 'hr-alerts',
-    PERMISSIONS: 'hr-permissions'
-  },
-
-  ACCOUNTING: {
-    INVOICES: 'accounting/invoices',
-    PAYMENTS: 'accounting/payments',
-    EXPENSES: 'accounting/expenses',
-    CLIENTS: 'accounting/clients',
-    SUPPLIERS: 'accounting/suppliers',
-    REPORTS: 'accounting/reports',
-    TAXES: 'accounting/taxes',
-    SETTINGS: 'accounting/settings',
-    TRANSACTIONS: 'accounting/transactions',
-    PERMISSIONS: 'accounting/permissions'
-  },
-
-  FREIGHT: {
-    SHIPMENTS: 'freight/shipments',
-    CARRIERS: 'freight/carriers',
-    CUSTOMERS: 'freight/customers',
-    PACKAGES: 'freight/packages',
-    TRACKING: 'freight/tracking',
-    TRACKING_EVENTS: 'freight/tracking_events',
-    PACKAGE_TYPES: 'freight/package_types',
-    ROUTES: 'freight/routes',
-    QUOTES: 'freight/quotes',
-    BILLING: 'freight/billing',
-    // Utiliser 'freight_settings' au lieu de 'freight/settings' pour éviter les erreurs de référence
-    SETTINGS: 'freight_settings',
-    VEHICLES: 'freight/vehicles',
-    DRIVERS: 'freight/drivers',
-    PERMISSIONS: 'freight_permissions',
-    CONTAINERS: 'freight/containers',
-    DOCUMENTS: 'freight/documents',
-    PRICING: 'freight/pricing',
-    CONTAINERS_TRACKING: 'freight/containers_tracking'
-  },
-
-  TRANSPORT: {
-    VEHICLES: 'transport/vehicles',
-    DRIVERS: 'transport/drivers',
-    ROUTES: 'transport/routes',
-    RESERVATIONS: 'transport/reservations',
-    SCHEDULES: 'transport/schedules',
-    MAINTENANCE: 'transport/maintenance',
-    CLIENTS: 'transport/clients',
-    BILLING: 'transport/billing',
-    SETTINGS: 'transport/settings'
-  },
-
-  LIBRARY: {
-    BOOKS: 'library/books',
-    MEMBERS: 'library/members',
-    LOANS: 'library/loans',
-    RETURNS: 'library/returns',
-    RESERVATIONS: 'library/reservations',
-    INVENTORY: 'library/inventory',
-    CATEGORIES: 'library/categories',
-    SETTINGS: 'library/settings',
-    STATS: 'library/stats'
-  },
-
-  MESSAGES: {
-    INBOX: 'messages/inbox',
-    SENT: 'messages/sent',
-    DRAFTS: 'messages/drafts',
-    SCHEDULED: 'messages/scheduled',
-    ARCHIVED: 'messages/archived',
-    TEMPLATES: 'messages/templates',
-    CONTACTS: 'messages/contacts',
-    METRICS: 'messages/metrics'
-  },
-
-  USER_PERMISSIONS: 'user_permissions'
+  
+  USER_PERMISSIONS: 'userPermissions',
 };

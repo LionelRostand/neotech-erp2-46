@@ -7,6 +7,7 @@ import { Loader2, WifiOff, Settings, Shield, TruckIcon, UserCog } from 'lucide-r
 import { useToast } from '@/hooks/use-toast';
 import FreightGeneralSettings from './settings/FreightGeneralSettings';
 import FreightSecuritySettings from './FreightSecuritySettings';
+import FreightPermissionsTab from './settings/FreightPermissionsTab';
 import { checkFreightCollectionExists } from '@/hooks/fetchFreightCollectionData';
 
 const FreightSettings = () => {
@@ -113,27 +114,7 @@ const FreightSettings = () => {
         </TabsContent>
         
         <TabsContent value="permissions">
-          <Card>
-            <CardHeader>
-              <CardTitle>Permissions utilisateurs</CardTitle>
-              <CardDescription>
-                Gérez les droits d'accès au module Fret pour les différents utilisateurs
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {isOffline ? (
-                <div className="p-6 text-center">
-                  <WifiOff className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                  <h3 className="text-lg font-medium mb-2">Fonctionnalité non disponible hors ligne</h3>
-                  <p className="text-muted-foreground">
-                    Vous devez être connecté à internet pour gérer les permissions utilisateurs.
-                  </p>
-                </div>
-              ) : (
-                <p>Contenu des permissions</p>
-              )}
-            </CardContent>
-          </Card>
+          <FreightPermissionsTab isOffline={isOffline} />
         </TabsContent>
       </Tabs>
     </div>
