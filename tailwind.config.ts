@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -53,11 +54,11 @@ export default {
 					foreground: 'hsl(var(--card-foreground))'
 				},
 				neotech: {
-					primary: '#357dfa',
-					primaryDark: '#2766d9',
-					secondary: '#05d8e6',
+					primary: '#00FA9A',
+					primaryDark: '#00b36b',
+					secondary: '#343a40',
 					light: '#f8f9fa',
-					background: '#f5f8ff',
+					background: '#f5f5f5',
 				}
 			},
 			borderRadius: {
