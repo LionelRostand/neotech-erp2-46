@@ -5,8 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { DocumentsList } from '@/components/module/documents/components/DocumentsList';
 import { FileSearch, FileText, Plus, Filter, Upload, LayoutGrid, List } from 'lucide-react';
-import { COLLECTIONS } from '@/lib/firebase-collections';
-import { fetchCollectionData } from '@/hooks/fetchCollectionData';
+import { fetchFreightCollectionData } from '@/hooks/fetchFreightCollectionData';
 import DocumentViewDialog from './DocumentViewDialog';
 import { DocumentsEmptyState } from '@/components/module/documents/components/DocumentsEmptyState';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -42,7 +41,7 @@ const FreightDocuments: React.FC = () => {
     const loadDocuments = async () => {
       try {
         setIsLoading(true);
-        const data = await fetchCollectionData<FreightDocument>(COLLECTIONS.FREIGHT.DOCUMENTS);
+        const data = await fetchFreightCollectionData<FreightDocument>('DOCUMENTS');
         setDocuments(data);
         setFilteredDocuments(data);
         setIsLoading(false);

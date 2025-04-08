@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
@@ -7,7 +8,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Edit, Plus, Trash2, Search, Globe, Truck, Route } from 'lucide-react';
 import { Carrier } from '@/types/freight';
-import { COLLECTIONS } from '@/lib/firebase-collections';
 import StatCard from '@/components/StatCard';
 import { fetchFreightCollectionData } from '@/hooks/fetchFreightCollectionData';
 
