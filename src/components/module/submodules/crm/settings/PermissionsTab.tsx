@@ -1,83 +1,101 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Shield, Search, UserPlus, Save, AlertTriangle, RefreshCw } from "lucide-react";
-import { useEmployeesPermissions } from '@/hooks/useEmployeesPermissions';
+import { Edit, Trash, Loader2 } from "lucide-react";
+import { collection, getDocs, doc, updateDoc } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { COLLECTIONS } from '@/lib/firebase-collections';
 import { toast } from 'sonner';
 
-// List of CRM modules for permissions
-const crmModules = [
-  { id: 'crm-clients', name: 'Clients' },
-  { id: 'crm-prospects', name: 'Prospects' },
-  { id: 'crm-opportunities', name: 'Opportunités' },
-  { id: 'crm-leads', name: 'Leads' },
-  { id: 'crm-contacts', name: 'Contacts' },
-  { id: 'crm-deals', name: 'Affaires' },
-  { id: 'crm-reminders', name: 'Rappels' },
-  { id: 'crm-settings', name: 'Paramètres' },
-];
+interface UserPermission {
+  id: string;
+  userId: string;
+  userName: string;
+  email: string;
+  role: string;
+  canView: boolean;
+  canEdit: boolean;
+  canDelete: boolean;
+  canExport: boolean;
+}
 
 const PermissionsTab: React.FC = () => {
-  const { employees, isLoading, error, updateEmployeePermissions } = useEmployeesPermissions();
-  const [searchTerm, setSearchTerm] = useState('');
-  const [saving, setSaving] = useState(false);
+  const [permissions, setPermissions] = useState<UserPermission[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Filter employees by search term
-  const filteredEmployees = employees.filter(emp => 
-    `${emp.firstName} ${emp.lastName}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    emp.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (emp.role && emp.role.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
+  // Load permissions
+  useEffect(() => {
+    const fetchPermissions = async () => {
+      setLoading(true);
+      try {
+        const permissionsCollection = collection(db, COLLECTIONS.USER_PERMISSIONS);
+        const snapshot = await getDocs(permissionsCollection);
+        
+        const permissionsData: UserPermission[] = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data() as Omit<UserPermission, 'id'>
+        }));
+        
+        setPermissions(permissionsData);
+        setError(null);
+      } catch (err) {
+        console.error('Error fetching user permissions:', err);
+        setError('Erreur lors du chargement des permissions');
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  // Handle permission change
-  const handlePermissionChange = (employeeId: string, moduleId: string, action: 'view' | 'create' | 'edit' | 'delete', checked: boolean) => {
-    const employee = employees.find(emp => emp.id === employeeId);
-    if (!employee) return;
+    fetchPermissions();
+  }, []);
 
-    const currentPermissions = employee.permissions?.[moduleId] || { view: false, create: false, edit: false, delete: false };
-    updateEmployeePermissions(employeeId, moduleId, {
-      ...currentPermissions,
-      [action]: checked
-    });
-  };
-
-  // Handle save all permissions
-  const handleSaveAll = async () => {
-    setSaving(true);
+  // Toggle permission
+  const togglePermission = async (userId: string, field: keyof UserPermission, value: boolean) => {
     try {
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      toast.success('Toutes les permissions ont été enregistrées');
+      const userPermission = permissions.find(p => p.userId === userId);
+      if (!userPermission) return;
+
+      // Update in Firestore
+      const permissionDoc = doc(db, COLLECTIONS.USER_PERMISSIONS, userPermission.id);
+      await updateDoc(permissionDoc, { [field]: value });
+
+      // Update local state
+      setPermissions(permissions.map(p => 
+        p.userId === userId ? { ...p, [field]: value } : p
+      ));
+
+      toast.success('Permission mise à jour');
     } catch (err) {
-      toast.error('Erreur lors de l\'enregistrement des permissions');
-    } finally {
-      setSaving(false);
+      console.error('Error updating permission:', err);
+      toast.error('Erreur lors de la mise à jour de la permission');
     }
   };
 
-  if (isLoading) {
+  if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin mr-2 h-6 w-6 border-2 border-primary border-t-transparent rounded-full"></div>
-        <span>Chargement des données employés...</span>
-      </div>
+      <Card>
+        <CardContent className="pt-6">
+          <div className="flex justify-center items-center py-20">
+            <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+            <span className="ml-2 text-gray-500">Chargement des permissions...</span>
+          </div>
+        </CardContent>
+      </Card>
     );
   }
 
   if (error) {
     return (
-      <Card className="border-destructive">
-        <CardContent className="p-6">
-          <div className="flex flex-col items-center justify-center text-center">
-            <AlertTriangle className="h-12 w-12 text-destructive mb-4" />
-            <h3 className="text-lg font-medium mb-2">Erreur de chargement</h3>
-            <p className="text-sm text-muted-foreground mb-4">{error}</p>
-            <Button variant="outline" onClick={() => window.location.reload()}>
-              <RefreshCw className="h-4 w-4 mr-2" />
+      <Card>
+        <CardContent className="pt-6">
+          <div className="bg-red-50 border border-red-200 rounded-md p-4 text-red-800">
+            <p>Une erreur est survenue lors du chargement des permissions.</p>
+            <p className="text-sm text-red-600 mt-1">{error}</p>
+            <Button variant="outline" className="mt-2" onClick={() => window.location.reload()}>
               Réessayer
             </Button>
           </div>
@@ -86,154 +104,84 @@ const PermissionsTab: React.FC = () => {
     );
   }
 
+  if (permissions.length === 0) {
+    return (
+      <Card>
+        <CardContent className="pt-6">
+          <div className="text-center py-12">
+            <p className="text-gray-500 mb-4">Aucune permission utilisateur configurée</p>
+            <Button>Ajouter un utilisateur</Button>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-2">
-          <Shield className="h-5 w-5 text-blue-600" />
-          <h3 className="text-lg font-medium">Gestion des permissions CRM</h3>
-        </div>
-        <Button variant="outline" size="sm">
-          <UserPlus className="h-4 w-4 mr-2" />
-          Ajouter un utilisateur
-        </Button>
-      </div>
-
-      {employees.length === 0 ? (
-        <Card className="p-8">
-          <div className="flex flex-col items-center justify-center">
-            <AlertTriangle className="h-12 w-12 text-yellow-500 mb-4" />
-            <h3 className="text-lg font-medium mb-2">Aucun employé trouvé</h3>
-            <p className="text-center text-muted-foreground mb-4">
-              Aucun employé n'a été trouvé dans la base de données.
-              Ajoutez des employés pour commencer à configurer les accès.
-            </p>
-            <Button>
-              <UserPlus className="h-4 w-4 mr-2" />
-              Ajouter un employé
-            </Button>
-          </div>
-        </Card>
-      ) : (
-        <>
-          <div className="flex items-center">
-            <div className="relative flex-1">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Rechercher un employé..."
-                className="pl-8"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
-          </div>
-
-          <div className="border rounded-md">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-[250px]">Employé</TableHead>
-                  <TableHead>Module</TableHead>
-                  <TableHead className="text-center">Visualisation</TableHead>
-                  <TableHead className="text-center">Création</TableHead>
-                  <TableHead className="text-center">Modification</TableHead>
-                  <TableHead className="text-center">Suppression</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredEmployees.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={6} className="text-center py-6">
-                      Aucun employé trouvé avec ces critères de recherche
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  filteredEmployees.map((employee) => (
-                    <React.Fragment key={employee.id}>
-                      {/* Employee row */}
-                      <TableRow className="bg-muted/30">
-                        <TableCell className="font-medium">
-                          {employee.firstName} {employee.lastName}
-                          <div className="text-xs text-muted-foreground">
-                            {employee.email} • {employee.role || "Utilisateur"}
-                          </div>
-                        </TableCell>
-                        <TableCell colSpan={5}></TableCell>
-                      </TableRow>
-
-                      {/* Module rows */}
-                      {crmModules.map(module => {
-                        const permissions = employee.permissions?.[module.id] || { 
-                          view: false, 
-                          create: false, 
-                          edit: false, 
-                          delete: false 
-                        };
-                        
-                        return (
-                          <TableRow key={`${employee.id}-${module.id}`}>
-                            <TableCell></TableCell>
-                            <TableCell>{module.name}</TableCell>
-                            <TableCell className="text-center">
-                              <Checkbox 
-                                checked={permissions.view}
-                                onCheckedChange={(checked) => 
-                                  handlePermissionChange(employee.id, module.id, 'view', !!checked)
-                                }
-                              />
-                            </TableCell>
-                            <TableCell className="text-center">
-                              <Checkbox 
-                                checked={permissions.create}
-                                onCheckedChange={(checked) => 
-                                  handlePermissionChange(employee.id, module.id, 'create', !!checked)
-                                }
-                              />
-                            </TableCell>
-                            <TableCell className="text-center">
-                              <Checkbox 
-                                checked={permissions.edit}
-                                onCheckedChange={(checked) => 
-                                  handlePermissionChange(employee.id, module.id, 'edit', !!checked)
-                                }
-                              />
-                            </TableCell>
-                            <TableCell className="text-center">
-                              <Checkbox 
-                                checked={permissions.delete}
-                                onCheckedChange={(checked) => 
-                                  handlePermissionChange(employee.id, module.id, 'delete', !!checked)
-                                }
-                              />
-                            </TableCell>
-                          </TableRow>
-                        );
-                      })}
-                    </React.Fragment>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </div>
-
-          <div className="flex justify-end">
-            <Button onClick={handleSaveAll} disabled={saving}>
-              {saving ? (
-                <>
-                  <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-                  Enregistrement...
-                </>
-              ) : (
-                <>
-                  <Save className="mr-2 h-4 w-4" />
-                  Enregistrer les modifications
-                </>
-              )}
-            </Button>
-          </div>
-        </>
-      )}
-    </div>
+    <Card>
+      <CardContent className="pt-6">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Utilisateur</TableHead>
+              <TableHead>Rôle</TableHead>
+              <TableHead className="text-center">Voir</TableHead>
+              <TableHead className="text-center">Éditer</TableHead>
+              <TableHead className="text-center">Supprimer</TableHead>
+              <TableHead className="text-center">Exporter</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {permissions.map((permission) => (
+              <TableRow key={permission.userId}>
+                <TableCell>
+                  <div>
+                    <p className="font-medium">{permission.userName}</p>
+                    <p className="text-sm text-gray-500">{permission.email}</p>
+                  </div>
+                </TableCell>
+                <TableCell>{permission.role}</TableCell>
+                <TableCell className="text-center">
+                  <Checkbox 
+                    checked={permission.canView} 
+                    onCheckedChange={(checked) => togglePermission(permission.userId, 'canView', checked as boolean)}
+                  />
+                </TableCell>
+                <TableCell className="text-center">
+                  <Checkbox 
+                    checked={permission.canEdit} 
+                    onCheckedChange={(checked) => togglePermission(permission.userId, 'canEdit', checked as boolean)}
+                  />
+                </TableCell>
+                <TableCell className="text-center">
+                  <Checkbox 
+                    checked={permission.canDelete} 
+                    onCheckedChange={(checked) => togglePermission(permission.userId, 'canDelete', checked as boolean)}
+                  />
+                </TableCell>
+                <TableCell className="text-center">
+                  <Checkbox 
+                    checked={permission.canExport} 
+                    onCheckedChange={(checked) => togglePermission(permission.userId, 'canExport', checked as boolean)}
+                  />
+                </TableCell>
+                <TableCell className="text-right">
+                  <div className="flex justify-end space-x-2">
+                    <Button variant="ghost" size="icon">
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button variant="ghost" size="icon">
+                      <Trash className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </CardContent>
+    </Card>
   );
 };
 

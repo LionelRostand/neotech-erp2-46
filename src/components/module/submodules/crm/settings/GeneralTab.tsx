@@ -1,54 +1,54 @@
 
 import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { useForm } from "react-hook-form";
-import { Save } from "lucide-react";
+import { Label } from "@/components/ui/label";
+import { Loader2 } from "lucide-react";
 import { useCrmSettings } from '../hooks/useCrmSettings';
 
 const GeneralTab: React.FC = () => {
-  const { settings, loading, saving, saveSettings } = useCrmSettings();
-  
-  const form = useForm({
-    defaultValues: settings
-  });
+  const { settings, loading, saving, error, saveSettings } = useCrmSettings();
 
-  // Mettre à jour le formulaire lorsque les paramètres sont chargés
-  React.useEffect(() => {
-    if (!loading) {
-      form.reset(settings);
-    }
-  }, [loading, settings, form]);
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    saveSettings({ [name]: value });
+  };
 
-  const onSubmit = async (data: any) => {
-    try {
-      await saveSettings(data);
-    } catch (error) {
-      console.error("Erreur lors de la sauvegarde:", error);
-    }
+  const handleSwitchChange = (name: string, checked: boolean) => {
+    saveSettings({ [name]: checked });
+  };
+
+  const handleSelectChange = (name: string, value: string) => {
+    saveSettings({ [name]: value });
   };
 
   if (loading) {
     return (
-      <Card>
-        <CardContent className="p-6">
-          <div className="space-y-4">
-            <div className="h-6 w-48 bg-gray-200 animate-pulse rounded"></div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <div className="h-4 w-24 bg-gray-200 animate-pulse rounded"></div>
-                <div className="h-10 w-full bg-gray-200 animate-pulse rounded"></div>
-              </div>
-              <div className="space-y-2">
-                <div className="h-4 w-24 bg-gray-200 animate-pulse rounded"></div>
-                <div className="h-10 w-full bg-gray-200 animate-pulse rounded"></div>
-              </div>
-            </div>
+      <Card className="w-full">
+        <CardContent className="pt-6">
+          <div className="flex justify-center items-center py-20">
+            <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+            <span className="ml-2 text-gray-500">Chargement des paramètres...</span>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (error) {
+    return (
+      <Card className="w-full">
+        <CardContent className="pt-6">
+          <div className="bg-red-50 border border-red-200 rounded-md p-4 text-red-800">
+            <p>Une erreur est survenue lors du chargement des paramètres.</p>
+            <p className="text-sm text-red-600 mt-1">{error}</p>
+            <Button variant="outline" className="mt-2" onClick={() => window.location.reload()}>
+              Réessayer
+            </Button>
           </div>
         </CardContent>
       </Card>
@@ -56,191 +56,114 @@ const GeneralTab: React.FC = () => {
   }
 
   return (
-    <Card>
-      <CardContent className="p-6">
-        <h2 className="text-lg font-medium mb-6">Paramètres généraux</h2>
-        
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <FormField
-                control={form.control}
-                name="companyName"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Nom de l'entreprise</FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
-                    <FormDescription>
-                      Ce nom apparaîtra sur tous les documents CRM.
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="defaultCurrency"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Devise par défaut</FormLabel>
-                    <Select 
-                      onValueChange={field.onChange} 
-                      defaultValue={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Sélectionner une devise" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="EUR">Euro (€)</SelectItem>
-                        <SelectItem value="USD">Dollar US ($)</SelectItem>
-                        <SelectItem value="GBP">Livre Sterling (£)</SelectItem>
-                        <SelectItem value="CHF">Franc Suisse (CHF)</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormDescription>
-                      Devise utilisée pour toutes les opportunités.
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="language"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Langue</FormLabel>
-                    <Select 
-                      onValueChange={field.onChange} 
-                      defaultValue={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Sélectionner une langue" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="fr">Français</SelectItem>
-                        <SelectItem value="en">Anglais</SelectItem>
-                        <SelectItem value="de">Allemand</SelectItem>
-                        <SelectItem value="es">Espagnol</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormDescription>
-                      Langue principale du module CRM.
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="dataRetentionPeriod"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Période de rétention des données (mois)</FormLabel>
-                    <FormControl>
-                      <Input {...field} type="number" min="1" max="60" />
-                    </FormControl>
-                    <FormDescription>
-                      Durée de conservation des données clients inactifs.
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="emailNotifications"
-                render={({ field }) => (
-                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                    <div className="space-y-0.5">
-                      <FormLabel className="text-base">Notifications par email</FormLabel>
-                      <FormDescription>
-                        Recevoir des notifications pour les nouveaux prospects et opportunités.
-                      </FormDescription>
-                    </div>
-                    <FormControl>
-                      <Switch
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="automaticBackup"
-                render={({ field }) => (
-                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                    <div className="space-y-0.5">
-                      <FormLabel className="text-base">Sauvegarde automatique</FormLabel>
-                      <FormDescription>
-                        Sauvegarder automatiquement les données CRM chaque semaine.
-                      </FormDescription>
-                    </div>
-                    <FormControl>
-                      <Switch
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
-                    </FormControl>
-                  </FormItem>
-                )}
+    <Card className="w-full">
+      <CardContent className="pt-6">
+        <form className="space-y-6">
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="companyName">Nom de l'entreprise</Label>
+              <Input 
+                id="companyName" 
+                name="companyName" 
+                value={settings.companyName}
+                onChange={handleInputChange}
               />
             </div>
-            
-            <FormField
-              control={form.control}
-              name="termsAndConditions"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Conditions générales</FormLabel>
-                  <FormControl>
-                    <textarea
-                      {...field}
-                      className="flex min-h-[120px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                      placeholder="Saisissez vos conditions générales par défaut..."
-                    />
-                  </FormControl>
-                  <FormDescription>
-                    Ces conditions seront incluses par défaut dans les devis et contrats.
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <div className="flex justify-end">
-              <Button type="submit" disabled={saving}>
-                {saving ? (
-                  <>
-                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    Enregistrement...
-                  </>
-                ) : (
-                  <>
-                    <Save className="mr-2 h-4 w-4" />
-                    Enregistrer
-                  </>
-                )}
-              </Button>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="defaultCurrency">Devise par défaut</Label>
+                <Select 
+                  value={settings.defaultCurrency}
+                  onValueChange={(value) => handleSelectChange("defaultCurrency", value)}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Sélectionner une devise" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="EUR">Euro (€)</SelectItem>
+                    <SelectItem value="USD">Dollar US ($)</SelectItem>
+                    <SelectItem value="GBP">Livre sterling (£)</SelectItem>
+                    <SelectItem value="CAD">Dollar canadien ($)</SelectItem>
+                    <SelectItem value="CHF">Franc suisse (CHF)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label htmlFor="language">Langue</Label>
+                <Select 
+                  value={settings.language}
+                  onValueChange={(value) => handleSelectChange("language", value)}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Sélectionner une langue" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="fr">Français</SelectItem>
+                    <SelectItem value="en">Anglais</SelectItem>
+                    <SelectItem value="es">Espagnol</SelectItem>
+                    <SelectItem value="de">Allemand</SelectItem>
+                    <SelectItem value="it">Italien</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
-          </form>
-        </Form>
+
+            <div>
+              <Label htmlFor="termsAndConditions">Conditions générales</Label>
+              <Textarea 
+                id="termsAndConditions" 
+                name="termsAndConditions"
+                value={settings.termsAndConditions} 
+                onChange={handleInputChange}
+                rows={5}
+                placeholder="Conditions générales à inclure dans les documents commerciaux..."
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="dataRetentionPeriod">Période de conservation des données (mois)</Label>
+              <Select 
+                value={settings.dataRetentionPeriod}
+                onValueChange={(value) => handleSelectChange("dataRetentionPeriod", value)}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Sélectionner une période" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="6">6 mois</SelectItem>
+                  <SelectItem value="12">12 mois</SelectItem>
+                  <SelectItem value="24">24 mois</SelectItem>
+                  <SelectItem value="36">36 mois</SelectItem>
+                  <SelectItem value="60">60 mois</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="flex items-center justify-between p-4 border rounded-md">
+              <div>
+                <h3 className="font-medium">Notifications par email</h3>
+                <p className="text-sm text-gray-500">Recevoir les notifications par email</p>
+              </div>
+              <Switch 
+                checked={settings.emailNotifications}
+                onCheckedChange={(checked) => handleSwitchChange("emailNotifications", checked)}
+              />
+            </div>
+
+            <div className="flex items-center justify-between p-4 border rounded-md">
+              <div>
+                <h3 className="font-medium">Sauvegarde automatique</h3>
+                <p className="text-sm text-gray-500">Effectuer des sauvegardes automatiques des données</p>
+              </div>
+              <Switch 
+                checked={settings.automaticBackup}
+                onCheckedChange={(checked) => handleSwitchChange("automaticBackup", checked)}
+              />
+            </div>
+          </div>
+        </form>
       </CardContent>
     </Card>
   );

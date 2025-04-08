@@ -1,278 +1,346 @@
 
-import React, { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
+import React, { useState, useEffect } from 'react';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { useForm } from "react-hook-form";
-import { toast } from "sonner";
-import { Check, Save, UserPlus, X } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Loader2 } from "lucide-react";
 import { User } from '@/types/user';
-
-interface UserFormData {
-  email: string;
-  firstName: string;
-  lastName: string;
-  role: 'admin' | 'user' | 'manager';
-  department?: string;
-  position?: string;
-  status: 'active' | 'inactive' | 'pending';
-}
 
 interface UserManagementDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  user?: User | null;
-  onSave: (userData: UserFormData) => Promise<void>;
+  onSave: (userData: any) => Promise<void>;
   title: string;
   description: string;
+  user?: User | null;
 }
 
 const UserManagementDialog: React.FC<UserManagementDialogProps> = ({
   isOpen,
   onClose,
-  user,
   onSave,
   title,
-  description
+  description,
+  user
 }) => {
-  const [saving, setSaving] = useState(false);
-  
-  // Ensure the role is strictly typed to one of the allowed values
-  const defaultValues: UserFormData = {
-    email: user?.email || '',
-    firstName: user?.firstName || '',
-    lastName: user?.lastName || '',
-    role: (user?.role as 'admin' | 'user' | 'manager') || 'user',
-    department: user?.department || '',
-    position: user?.position || '',
-    status: user?.status || 'active',
-  };
-  
-  const form = useForm<UserFormData>({
-    defaultValues
+  const [formData, setFormData] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    role: 'user',
+    permissions: {
+      canViewClients: true,
+      canEditClients: false,
+      canDeleteClients: false,
+      canViewProspects: true,
+      canEditProspects: false,
+      canDeleteProspects: false,
+      canViewOpportunities: true,
+      canEditOpportunities: false,
+      canDeleteOpportunities: false,
+    }
   });
-  
-  const handleSubmit = async (data: UserFormData) => {
-    setSaving(true);
-    try {
-      await onSave(data);
-      onClose();
-      form.reset();
-    } catch (error) {
-      console.error('Erreur lors de la sauvegarde de l\'utilisateur:', error);
-      toast.error('Erreur lors de la sauvegarde de l\'utilisateur');
-    } finally {
-      setSaving(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // Set form data when user is provided (for edit mode)
+  useEffect(() => {
+    if (user) {
+      setFormData({
+        firstName: user.firstName || '',
+        lastName: user.lastName || '',
+        email: user.email || '',
+        role: user.role || 'user',
+        permissions: user.permissions || {
+          canViewClients: true,
+          canEditClients: false,
+          canDeleteClients: false,
+          canViewProspects: true,
+          canEditProspects: false,
+          canDeleteProspects: false,
+          canViewOpportunities: true,
+          canEditOpportunities: false,
+          canDeleteOpportunities: false,
+        }
+      });
+    } else {
+      // Reset form for new user
+      setFormData({
+        firstName: '',
+        lastName: '',
+        email: '',
+        role: 'user',
+        permissions: {
+          canViewClients: true,
+          canEditClients: false,
+          canDeleteClients: false,
+          canViewProspects: true,
+          canEditProspects: false,
+          canDeleteProspects: false,
+          canViewOpportunities: true,
+          canEditOpportunities: false,
+          canDeleteOpportunities: false,
+        }
+      });
+    }
+    setErrors({});
+  }, [user, isOpen]);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+    
+    // Clear error for this field if exists
+    if (errors[name]) {
+      setErrors({ ...errors, [name]: '' });
     }
   };
-  
+
+  const handleRoleChange = (value: string) => {
+    setFormData({ ...formData, role: value });
+  };
+
+  const handlePermissionChange = (permission: string, checked: boolean) => {
+    setFormData({
+      ...formData,
+      permissions: {
+        ...formData.permissions,
+        [permission]: checked
+      }
+    });
+  };
+
+  const validateForm = () => {
+    const newErrors: Record<string, string> = {};
+    
+    if (!formData.firstName.trim()) {
+      newErrors.firstName = 'Le prénom est requis';
+    }
+    
+    if (!formData.lastName.trim()) {
+      newErrors.lastName = 'Le nom est requis';
+    }
+    
+    if (!formData.email.trim()) {
+      newErrors.email = 'L\'email est requis';
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      newErrors.email = 'L\'email est invalide';
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!validateForm()) return;
+    
+    setIsSaving(true);
+    try {
+      await onSave(formData);
+      onClose();
+    } catch (err) {
+      console.error('Error saving user:', err);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
-        
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4 py-4">
-            <div className="grid grid-cols-1 gap-4">
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
+
+        <form onSubmit={handleSubmit}>
+          <div className="space-y-4 py-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="firstName" className="text-right">
+                  Prénom
+                </Label>
+                <Input
+                  id="firstName"
                   name="firstName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Prénom</FormLabel>
-                      <FormControl>
-                        <Input 
-                          placeholder="Prénom" 
-                          {...field} 
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
+                  value={formData.firstName}
+                  onChange={handleInputChange}
+                  className={errors.firstName ? "border-red-500" : ""}
                 />
-                
-                <FormField
-                  control={form.control}
+                {errors.firstName && (
+                  <p className="text-red-500 text-sm">{errors.firstName}</p>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="lastName" className="text-right">
+                  Nom
+                </Label>
+                <Input
+                  id="lastName"
                   name="lastName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Nom</FormLabel>
-                      <FormControl>
-                        <Input 
-                          placeholder="Nom" 
-                          {...field} 
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
+                  value={formData.lastName}
+                  onChange={handleInputChange}
+                  className={errors.lastName ? "border-red-500" : ""}
                 />
+                {errors.lastName && (
+                  <p className="text-red-500 text-sm">{errors.lastName}</p>
+                )}
               </div>
-              
-              <FormField
-                control={form.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Email</FormLabel>
-                    <FormControl>
-                      <Input 
-                        type="email" 
-                        placeholder="Email" 
-                        {...field} 
-                      />
-                    </FormControl>
-                    <FormDescription>
-                      L'adresse email servira d'identifiant de connexion.
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="role"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Rôle</FormLabel>
-                    <Select 
-                      onValueChange={field.onChange} 
-                      defaultValue={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Sélectionner un rôle" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="admin">Administrateur</SelectItem>
-                        <SelectItem value="manager">Manager</SelectItem>
-                        <SelectItem value="user">Utilisateur</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormDescription>
-                      Le rôle détermine les droits d'accès globaux.
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="department"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Département</FormLabel>
-                      <FormControl>
-                        <Input 
-                          placeholder="Département" 
-                          {...field} 
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="position"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Poste</FormLabel>
-                      <FormControl>
-                        <Input 
-                          placeholder="Poste" 
-                          {...field} 
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-              
-              <FormField
-                control={form.control}
-                name="status"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Statut</FormLabel>
-                    <Select 
-                      onValueChange={field.onChange} 
-                      defaultValue={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Sélectionner un statut" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="active">Actif</SelectItem>
-                        <SelectItem value="inactive">Inactif</SelectItem>
-                        <SelectItem value="pending">En attente</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormDescription>
-                      Le statut détermine si l'utilisateur peut se connecter.
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
             </div>
-            
-            <DialogFooter>
-              <Button 
-                type="button" 
-                variant="outline" 
-                onClick={onClose}
-                disabled={saving}
-              >
-                <X className="mr-2 h-4 w-4" />
-                Annuler
-              </Button>
-              <Button 
-                type="submit" 
-                disabled={saving}
-              >
-                {saving ? (
-                  <>
-                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    Enregistrement...
-                  </>
-                ) : (
-                  <>
-                    {user ? (
-                      <>
-                        <Check className="mr-2 h-4 w-4" />
-                        Mettre à jour
-                      </>
-                    ) : (
-                      <>
-                        <UserPlus className="mr-2 h-4 w-4" />
-                        Ajouter
-                      </>
-                    )}
-                  </>
-                )}
-              </Button>
-            </DialogFooter>
-          </form>
-        </Form>
+
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                name="email"
+                type="email"
+                value={formData.email}
+                onChange={handleInputChange}
+                className={errors.email ? "border-red-500" : ""}
+              />
+              {errors.email && (
+                <p className="text-red-500 text-sm">{errors.email}</p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="role">Rôle</Label>
+              <Select value={formData.role} onValueChange={handleRoleChange}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Sélectionner un rôle" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="admin">Administrateur</SelectItem>
+                  <SelectItem value="manager">Gestionnaire</SelectItem>
+                  <SelectItem value="user">Utilisateur</SelectItem>
+                  <SelectItem value="readonly">Lecture seule</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-3">
+              <Label>Permissions</Label>
+              
+              <div className="border rounded-md p-4 space-y-4">
+                <h3 className="font-medium mb-2">Clients</h3>
+                <div className="grid grid-cols-3 gap-2">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="canViewClients"
+                      checked={formData.permissions.canViewClients}
+                      onCheckedChange={(checked) => handlePermissionChange('canViewClients', checked as boolean)}
+                    />
+                    <label htmlFor="canViewClients" className="text-sm">Voir</label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="canEditClients"
+                      checked={formData.permissions.canEditClients}
+                      onCheckedChange={(checked) => handlePermissionChange('canEditClients', checked as boolean)}
+                    />
+                    <label htmlFor="canEditClients" className="text-sm">Modifier</label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="canDeleteClients"
+                      checked={formData.permissions.canDeleteClients}
+                      onCheckedChange={(checked) => handlePermissionChange('canDeleteClients', checked as boolean)}
+                    />
+                    <label htmlFor="canDeleteClients" className="text-sm">Supprimer</label>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="border rounded-md p-4 space-y-4">
+                <h3 className="font-medium mb-2">Prospects</h3>
+                <div className="grid grid-cols-3 gap-2">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="canViewProspects"
+                      checked={formData.permissions.canViewProspects}
+                      onCheckedChange={(checked) => handlePermissionChange('canViewProspects', checked as boolean)}
+                    />
+                    <label htmlFor="canViewProspects" className="text-sm">Voir</label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="canEditProspects"
+                      checked={formData.permissions.canEditProspects}
+                      onCheckedChange={(checked) => handlePermissionChange('canEditProspects', checked as boolean)}
+                    />
+                    <label htmlFor="canEditProspects" className="text-sm">Modifier</label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="canDeleteProspects"
+                      checked={formData.permissions.canDeleteProspects}
+                      onCheckedChange={(checked) => handlePermissionChange('canDeleteProspects', checked as boolean)}
+                    />
+                    <label htmlFor="canDeleteProspects" className="text-sm">Supprimer</label>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="border rounded-md p-4 space-y-4">
+                <h3 className="font-medium mb-2">Opportunités</h3>
+                <div className="grid grid-cols-3 gap-2">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="canViewOpportunities"
+                      checked={formData.permissions.canViewOpportunities}
+                      onCheckedChange={(checked) => handlePermissionChange('canViewOpportunities', checked as boolean)}
+                    />
+                    <label htmlFor="canViewOpportunities" className="text-sm">Voir</label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="canEditOpportunities"
+                      checked={formData.permissions.canEditOpportunities}
+                      onCheckedChange={(checked) => handlePermissionChange('canEditOpportunities', checked as boolean)}
+                    />
+                    <label htmlFor="canEditOpportunities" className="text-sm">Modifier</label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="canDeleteOpportunities"
+                      checked={formData.permissions.canDeleteOpportunities}
+                      onCheckedChange={(checked) => handlePermissionChange('canDeleteOpportunities', checked as boolean)}
+                    />
+                    <label htmlFor="canDeleteOpportunities" className="text-sm">Supprimer</label>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={onClose}>
+              Annuler
+            </Button>
+            <Button type="submit" disabled={isSaving}>
+              {isSaving ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Enregistrement...
+                </>
+              ) : (
+                'Enregistrer'
+              )}
+            </Button>
+          </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   );

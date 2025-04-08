@@ -1,11 +1,11 @@
 
 import React, { useState } from 'react';
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Settings, Users, Building, Database, UserPlus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from 'sonner';
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { usePermissions } from '@/hooks/usePermissions';
 import GeneralTab from './settings/GeneralTab';
 import PermissionsTab from './settings/PermissionsTab';
@@ -21,7 +21,6 @@ const CrmSettings: React.FC = () => {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   
   const navigate = useNavigate();
-  const location = useLocation();
   const { isAdmin } = usePermissions();
 
   const handleBackToList = () => {
