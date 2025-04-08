@@ -11,6 +11,7 @@ import DocumentViewDialog from './DocumentViewDialog';
 import { DocumentsEmptyState } from '@/components/module/documents/components/DocumentsEmptyState';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { DocumentFile } from '@/components/module/documents/types/document-types';
 
 interface FreightDocument {
   id: string;
@@ -23,26 +24,6 @@ interface FreightDocument {
   format: string;
   url?: string;
   tags?: string[];
-}
-
-// Adding this interface to match the DocumentFile type expected by DocumentsList
-interface DocumentFile {
-  id: string;
-  name: string;
-  format: string;
-  size: number;
-  createdAt: string;
-  updatedAt: string;
-  isEncrypted: boolean;
-  description: string;
-  tags: string[];
-  versions: any[];
-  permissions: any[];
-  url: string;
-  type: string;
-  path: string;
-  createdBy: string;
-  status: string;
 }
 
 const FreightDocuments: React.FC = () => {
@@ -129,8 +110,8 @@ const FreightDocuments: React.FC = () => {
       name: doc.name,
       format: doc.format,
       size: doc.format === 'pdf' ? 1024 * 1024 : 500 * 1024, // Fake size for demo
-      createdAt: doc.date,
-      updatedAt: doc.date,
+      createdAt: new Date(doc.date), // Convert string to Date object
+      updatedAt: new Date(doc.date), // Convert string to Date object
       isEncrypted: false,
       description: `Document lié à l'expédition ${doc.shipment}`,
       tags: doc.tags || [],
@@ -235,3 +216,4 @@ const FreightDocuments: React.FC = () => {
 };
 
 export default FreightDocuments;
+
