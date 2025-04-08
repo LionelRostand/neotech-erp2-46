@@ -1,34 +1,18 @@
 
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Separator } from "@/components/ui/separator";
-import { toast } from "@/components/ui/use-toast";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import * as z from "zod";
-import { collection, doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Loader2, Save, Settings as SettingsIcon, Wifi, WifiOff } from "lucide-react";
+import { toast } from "@/hooks/use-toast";
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { COLLECTIONS } from '@/lib/firebase-collections';
-import { AlertCircle, Save } from 'lucide-react';
-
-// Schema de validation des paramètres
-const generalSettingsSchema = z.object({
-  enableTracking: z.boolean().default(true),
-  enableNotifications: z.boolean().default(true),
-  alertThreshold: z.number().min(1).max(100).default(15),
-  defaultCarrierId: z.string().optional(),
-  companyName: z.string().min(2, "Le nom de l'entreprise doit comporter au moins 2 caractères"),
-  contactEmail: z.string().email("Adresse email invalide"),
-  contactPhone: z.string().optional(),
-  defaultCurrency: z.string().default("EUR"),
-  enableClientPortal: z.boolean().default(false),
-});
-
-type GeneralSettingsFormValues = z.infer<typeof generalSettingsSchema>;
+import { useFirestore } from '@/hooks/useFirestore';
 
 interface FreightGeneralSettingsProps {
   isAdmin: boolean;
@@ -36,358 +20,403 @@ interface FreightGeneralSettingsProps {
 }
 
 const FreightGeneralSettings: React.FC<FreightGeneralSettingsProps> = ({ isAdmin, canEdit }) => {
-  const [isLoading, setIsLoading] = useState(true);
-  const [hasChanged, setHasChanged] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [isSaving, setIsSaving] = useState(false);
-  const [isOnline, setIsOnline] = useState(navigator.onLine);
-
-  // Valeurs par défaut au cas où les paramètres n'existent pas encore
-  const defaultValues: GeneralSettingsFormValues = {
-    enableTracking: true,
-    enableNotifications: true,
-    alertThreshold: 15,
-    defaultCarrierId: "",
-    companyName: "Mon Entreprise de Fret",
-    contactEmail: "contact@entreprise.com",
-    contactPhone: "",
+  const firestore = useFirestore(COLLECTIONS.FREIGHT.SETTINGS);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [isOffline, setIsOffline] = useState(!navigator.onLine);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  
+  const [settings, setSettings] = useState({
+    companyName: "",
+    contactEmail: "",
+    phoneNumber: "",
     defaultCurrency: "EUR",
-    enableClientPortal: false
-  };
-
-  const form = useForm<GeneralSettingsFormValues>({
-    resolver: zodResolver(generalSettingsSchema),
-    defaultValues
+    address: "",
+    enableCustomerPortal: true,
+    enableTrackingNotifications: true,
+    defaultPackageType: "standard",
+    enableContainerTracking: true,
+    trackingEmailTemplate: "",
+    maxRecordsPerPage: 50,
+    autoArchiveDelivered: true,
+    archiveDaysThreshold: 30,
   });
-
-  // Gérer l'événement en ligne/hors ligne
+  
+  // Surveiller l'état de connexion
   useEffect(() => {
-    const handleOnlineStatusChange = () => {
-      setIsOnline(navigator.onLine);
-    };
-
-    window.addEventListener('online', handleOnlineStatusChange);
-    window.addEventListener('offline', handleOnlineStatusChange);
-
+    const handleOnline = () => setIsOffline(false);
+    const handleOffline = () => setIsOffline(true);
+    
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    
     return () => {
-      window.removeEventListener('online', handleOnlineStatusChange);
-      window.removeEventListener('offline', handleOnlineStatusChange);
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
     };
   }, []);
-
+  
   // Charger les paramètres depuis Firestore
   useEffect(() => {
-    const fetchSettings = async () => {
+    const loadSettings = async () => {
+      setLoading(true);
+      
       try {
-        setIsLoading(true);
-        setError(null);
-        
+        // Essayer de récupérer les paramètres depuis Firestore
         const settingsRef = doc(db, COLLECTIONS.FREIGHT.SETTINGS, 'general');
         const settingsDoc = await getDoc(settingsRef);
         
         if (settingsDoc.exists()) {
           const settingsData = settingsDoc.data();
-          // Mettre à jour le formulaire avec les données existantes
-          form.reset({
-            ...defaultValues,
+          setSettings({
+            ...settings,
             ...settingsData
           });
         } else {
-          // Si les paramètres n'existent pas encore, utiliser les valeurs par défaut
-          form.reset(defaultValues);
+          // Si le document n'existe pas encore, on garde les valeurs par défaut
+          console.log("Aucun paramètre trouvé, utilisation des valeurs par défaut");
         }
-      } catch (err) {
-        console.error("Erreur lors du chargement des paramètres:", err);
-        setError("Impossible de charger les paramètres. Veuillez réessayer.");
+      } catch (error) {
+        console.error("Erreur lors du chargement des paramètres:", error);
+        
+        if (isOffline) {
+          toast({
+            title: "Mode hors ligne",
+            description: "Vous êtes en mode hors ligne. Les modifications ne seront pas enregistrées.",
+            variant: "warning"
+          });
+        } else {
+          toast({
+            title: "Erreur",
+            description: "Impossible de charger les paramètres. Veuillez réessayer.",
+            variant: "destructive"
+          });
+        }
       } finally {
-        setIsLoading(false);
+        setLoading(false);
       }
     };
-
-    fetchSettings();
-  }, []);
-
-  // Détecter les changements dans le formulaire
-  useEffect(() => {
-    const subscription = form.watch(() => {
-      setHasChanged(true);
-    });
     
-    return () => subscription.unsubscribe();
-  }, [form.watch]);
-
-  // Fonction pour sauvegarder les paramètres
-  const onSubmit = async (data: GeneralSettingsFormValues) => {
-    if (!canEdit && !isAdmin) {
+    loadSettings();
+  }, [isOffline]);
+  
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setSettings({
+      ...settings,
+      [name]: value
+    });
+    setHasUnsavedChanges(true);
+  };
+  
+  const handleSelectChange = (name: string, value: string) => {
+    setSettings({
+      ...settings,
+      [name]: value
+    });
+    setHasUnsavedChanges(true);
+  };
+  
+  const handleSwitchChange = (name: string, checked: boolean) => {
+    setSettings({
+      ...settings,
+      [name]: checked
+    });
+    setHasUnsavedChanges(true);
+  };
+  
+  const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    const numValue = parseInt(value, 10);
+    
+    // Vérifier que la valeur est un nombre valide
+    if (!isNaN(numValue)) {
+      setSettings({
+        ...settings,
+        [name]: numValue
+      });
+      setHasUnsavedChanges(true);
+    }
+  };
+  
+  const saveSettings = async () => {
+    if (isOffline) {
       toast({
-        title: "Permission refusée",
-        description: "Vous n'avez pas les droits nécessaires pour modifier ces paramètres.",
-        variant: "destructive"
+        title: "Mode hors ligne",
+        description: "Vous êtes en mode hors ligne. Les modifications ne seront pas enregistrées.",
+        variant: "warning"
       });
       return;
     }
-
-    if (!isOnline) {
-      toast({
-        title: "Hors ligne",
-        description: "Impossible de sauvegarder les paramètres en mode hors ligne.",
-        variant: "destructive"
-      });
-      return;
-    }
-
+    
+    setSaving(true);
+    
     try {
-      setIsSaving(true);
-      
-      // Référence au document des paramètres généraux
+      // Enregistrer les paramètres dans Firestore
       const settingsRef = doc(db, COLLECTIONS.FREIGHT.SETTINGS, 'general');
+      await setDoc(settingsRef, settings, { merge: true });
       
-      // Ajouter un timestamp de mise à jour
-      const dataToSave = {
-        ...data,
-        updatedAt: serverTimestamp(),
-        updatedBy: "currentUserId" // Idéalement, vous utiliseriez l'ID de l'utilisateur actuel
-      };
-      
-      await setDoc(settingsRef, dataToSave, { merge: true });
-      
-      setHasChanged(false);
       toast({
-        title: "Paramètres sauvegardés",
+        title: "Paramètres enregistrés",
         description: "Les paramètres ont été mis à jour avec succès.",
+        variant: "success"
       });
-    } catch (err) {
-      console.error("Erreur lors de la sauvegarde des paramètres:", err);
+      
+      setHasUnsavedChanges(false);
+    } catch (error) {
+      console.error("Erreur lors de l'enregistrement des paramètres:", error);
+      
       toast({
         title: "Erreur",
-        description: "Impossible de sauvegarder les paramètres. Veuillez réessayer.",
+        description: "Impossible d'enregistrer les paramètres. Veuillez réessayer.",
         variant: "destructive"
       });
     } finally {
-      setIsSaving(false);
+      setSaving(false);
     }
   };
-
+  
+  const isEditable = (isAdmin || canEdit) && !loading;
+  
   return (
     <div className="space-y-6">
-      {!isOnline && (
-        <div className="p-4 bg-amber-50 border border-amber-200 rounded-md flex items-start gap-3 text-amber-800 mb-4">
-          <AlertCircle className="h-5 w-5 mt-0.5 flex-shrink-0" />
+      {isOffline && (
+        <div className="p-4 bg-amber-50 border border-amber-200 rounded-md flex items-start gap-3">
+          <WifiOff className="h-5 w-5 text-amber-600 mt-0.5" />
           <div>
-            <h3 className="font-medium">Mode hors ligne</h3>
-            <p className="text-sm mt-1">
-              Vous êtes actuellement hors ligne. Les modifications des paramètres ne seront pas sauvegardées.
+            <h3 className="font-medium text-amber-800">Mode hors ligne</h3>
+            <p className="text-sm text-amber-700">
+              Vous êtes actuellement hors ligne. Les modifications ne seront pas enregistrées.
             </p>
           </div>
         </div>
       )}
-
-      {error && (
-        <div className="p-4 bg-red-50 border border-red-200 rounded-md flex items-start gap-3 text-red-800 mb-4">
-          <AlertCircle className="h-5 w-5 mt-0.5 flex-shrink-0" />
-          <div>
-            <h3 className="font-medium">Erreur</h3>
-            <p className="text-sm mt-1">{error}</p>
+      
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <SettingsIcon className="h-5 w-5 text-blue-600" />
+            <CardTitle>Paramètres généraux</CardTitle>
           </div>
-        </div>
-      )}
-
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Paramètres Généraux</CardTitle>
-              <CardDescription>
-                Configurez les paramètres généraux du module de gestion de fret.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <FormField
-                  control={form.control}
-                  name="companyName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Nom de l'entreprise</FormLabel>
-                      <FormControl>
-                        <Input {...field} disabled={isLoading || (!canEdit && !isAdmin)} />
-                      </FormControl>
-                      <FormDescription>
-                        Ce nom apparaîtra sur les documents générés.
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+          <CardDescription>
+            Configurez les paramètres généraux du module Fret
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {loading ? (
+            <div className="flex justify-center items-center py-8">
+              <Loader2 className="h-8 w-8 text-blue-600 animate-spin" />
+              <span className="ml-2 text-gray-600">Chargement des paramètres...</span>
+            </div>
+          ) : (
+            <>
+              <div className="grid gap-6 md:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="companyName">Nom de l'entreprise</Label>
+                  <Input 
+                    id="companyName" 
+                    name="companyName" 
+                    value={settings.companyName} 
+                    onChange={handleInputChange} 
+                    disabled={!isEditable}
+                  />
+                </div>
                 
-                <FormField
-                  control={form.control}
-                  name="contactEmail"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Email de contact</FormLabel>
-                      <FormControl>
-                        <Input type="email" {...field} disabled={isLoading || (!canEdit && !isAdmin)} />
-                      </FormControl>
-                      <FormDescription>
-                        Email utilisé pour les notifications et le contact client.
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                <div className="space-y-2">
+                  <Label htmlFor="contactEmail">Email de contact</Label>
+                  <Input 
+                    id="contactEmail" 
+                    name="contactEmail" 
+                    type="email" 
+                    value={settings.contactEmail} 
+                    onChange={handleInputChange} 
+                    disabled={!isEditable}
+                  />
+                </div>
                 
-                <FormField
-                  control={form.control}
-                  name="contactPhone"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Téléphone de contact</FormLabel>
-                      <FormControl>
-                        <Input {...field} disabled={isLoading || (!canEdit && !isAdmin)} />
-                      </FormControl>
-                      <FormDescription>
-                        Numéro de téléphone pour le service client (optionnel).
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="defaultCurrency"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Devise par défaut</FormLabel>
-                      <FormControl>
-                        <Input {...field} disabled={isLoading || (!canEdit && !isAdmin)} />
-                      </FormControl>
-                      <FormDescription>
-                        Devise utilisée pour les tarifs et factures (ex: EUR, USD).
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
+                <div className="space-y-2">
+                  <Label htmlFor="phoneNumber">Numéro de téléphone</Label>
+                  <Input 
+                    id="phoneNumber" 
+                    name="phoneNumber" 
+                    value={settings.phoneNumber} 
+                    onChange={handleInputChange} 
+                    disabled={!isEditable}
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="defaultCurrency">Devise par défaut</Label>
+                  <Select 
+                    value={settings.defaultCurrency} 
+                    onValueChange={(value) => handleSelectChange("defaultCurrency", value)}
+                    disabled={!isEditable}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Sélectionner une devise" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="EUR">Euro (€)</SelectItem>
+                      <SelectItem value="USD">Dollar américain ($)</SelectItem>
+                      <SelectItem value="GBP">Livre sterling (£)</SelectItem>
+                      <SelectItem value="CAD">Dollar canadien</SelectItem>
+                      <SelectItem value="CHF">Franc suisse</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="address">Adresse</Label>
+                <Textarea 
+                  id="address" 
+                  name="address" 
+                  value={settings.address} 
+                  onChange={handleInputChange} 
+                  disabled={!isEditable}
+                  rows={3}
                 />
               </div>
-
-              <Separator className="my-4" />
-
-              <div className="space-y-4">
-                <h3 className="text-lg font-medium">Options du système</h3>
+              
+              <div className="space-y-6 border-t pt-6">
+                <h3 className="text-lg font-medium">Fonctionnalités</h3>
                 
-                <FormField
-                  control={form.control}
-                  name="enableTracking"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                      <div className="space-y-0.5">
-                        <FormLabel className="text-base">
-                          Activer le suivi en temps réel
-                        </FormLabel>
-                        <FormDescription>
-                          Permet le suivi des expéditions et conteneurs en temps réel.
-                        </FormDescription>
-                      </div>
-                      <FormControl>
-                        <Switch
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                          disabled={isLoading || (!canEdit && !isAdmin)}
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
+                <div className="grid gap-6 md:grid-cols-2">
+                  <div className="flex items-center justify-between space-x-2">
+                    <Label htmlFor="enableCustomerPortal" className="flex-1">Activer le portail client</Label>
+                    <Switch 
+                      id="enableCustomerPortal" 
+                      checked={settings.enableCustomerPortal} 
+                      onCheckedChange={(checked) => handleSwitchChange("enableCustomerPortal", checked)}
+                      disabled={!isEditable}
+                    />
+                  </div>
+                  
+                  <div className="flex items-center justify-between space-x-2">
+                    <Label htmlFor="enableTrackingNotifications" className="flex-1">Activer les notifications de suivi</Label>
+                    <Switch 
+                      id="enableTrackingNotifications" 
+                      checked={settings.enableTrackingNotifications} 
+                      onCheckedChange={(checked) => handleSwitchChange("enableTrackingNotifications", checked)}
+                      disabled={!isEditable}
+                    />
+                  </div>
+                  
+                  <div className="flex items-center justify-between space-x-2">
+                    <Label htmlFor="enableContainerTracking" className="flex-1">Activer le suivi des conteneurs</Label>
+                    <Switch 
+                      id="enableContainerTracking" 
+                      checked={settings.enableContainerTracking} 
+                      onCheckedChange={(checked) => handleSwitchChange("enableContainerTracking", checked)}
+                      disabled={!isEditable}
+                    />
+                  </div>
+                  
+                  <div className="flex items-center justify-between space-x-2">
+                    <Label htmlFor="autoArchiveDelivered" className="flex-1">Archivage automatique des livraisons</Label>
+                    <Switch 
+                      id="autoArchiveDelivered" 
+                      checked={settings.autoArchiveDelivered} 
+                      onCheckedChange={(checked) => handleSwitchChange("autoArchiveDelivered", checked)}
+                      disabled={!isEditable}
+                    />
+                  </div>
+                </div>
                 
-                <FormField
-                  control={form.control}
-                  name="enableNotifications"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                      <div className="space-y-0.5">
-                        <FormLabel className="text-base">
-                          Activer les notifications
-                        </FormLabel>
-                        <FormDescription>
-                          Envoie des notifications par email lors des changements de statut.
-                        </FormDescription>
-                      </div>
-                      <FormControl>
-                        <Switch
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                          disabled={isLoading || (!canEdit && !isAdmin)}
-                        />
-                      </FormControl>
-                    </FormItem>
+                <div className="grid gap-6 md:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="defaultPackageType">Type de colis par défaut</Label>
+                    <Select 
+                      value={settings.defaultPackageType} 
+                      onValueChange={(value) => handleSelectChange("defaultPackageType", value)}
+                      disabled={!isEditable}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Sélectionner un type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="standard">Standard</SelectItem>
+                        <SelectItem value="express">Express</SelectItem>
+                        <SelectItem value="priority">Prioritaire</SelectItem>
+                        <SelectItem value="economy">Économique</SelectItem>
+                        <SelectItem value="heavy">Poids lourd</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="maxRecordsPerPage">Nombre d'enregistrements par page</Label>
+                    <Input 
+                      id="maxRecordsPerPage" 
+                      name="maxRecordsPerPage" 
+                      type="number" 
+                      min="10" 
+                      max="100" 
+                      value={settings.maxRecordsPerPage} 
+                      onChange={handleNumberChange} 
+                      disabled={!isEditable}
+                    />
+                  </div>
+                  
+                  {settings.autoArchiveDelivered && (
+                    <div className="space-y-2">
+                      <Label htmlFor="archiveDaysThreshold">Délai d'archivage (jours)</Label>
+                      <Input 
+                        id="archiveDaysThreshold" 
+                        name="archiveDaysThreshold" 
+                        type="number" 
+                        min="1" 
+                        max="365" 
+                        value={settings.archiveDaysThreshold} 
+                        onChange={handleNumberChange} 
+                        disabled={!isEditable}
+                      />
+                    </div>
                   )}
-                />
+                </div>
                 
-                <FormField
-                  control={form.control}
-                  name="enableClientPortal"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                      <div className="space-y-0.5">
-                        <FormLabel className="text-base">
-                          Activer le portail client
-                        </FormLabel>
-                        <FormDescription>
-                          Permet aux clients d'accéder à leurs expéditions et documents.
-                        </FormDescription>
-                      </div>
-                      <FormControl>
-                        <Switch
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                          disabled={isLoading || (!canEdit && !isAdmin)}
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="alertThreshold"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Seuil d'alerte (jours)</FormLabel>
-                      <FormControl>
-                        <Input 
-                          type="number" 
-                          {...field} 
-                          onChange={e => field.onChange(parseInt(e.target.value))}
-                          disabled={isLoading || (!canEdit && !isAdmin)} 
-                        />
-                      </FormControl>
-                      <FormDescription>
-                        Nombre de jours avant expédition pour déclencher les alertes.
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                <div className="space-y-2">
+                  <Label htmlFor="trackingEmailTemplate">Modèle d'email de suivi</Label>
+                  <Textarea 
+                    id="trackingEmailTemplate" 
+                    name="trackingEmailTemplate" 
+                    value={settings.trackingEmailTemplate} 
+                    onChange={handleInputChange} 
+                    disabled={!isEditable}
+                    placeholder="Exemple: Bonjour {client}, votre colis {tracking_code} est maintenant {status}."
+                    rows={4}
+                  />
+                  <p className="text-sm text-gray-500">
+                    Vous pouvez utiliser les variables suivantes : {'{client}'}, {'{tracking_code}'}, {'{status}'}, {'{date}'}, {'{heure}'}
+                  </p>
+                </div>
               </div>
-            </CardContent>
-            <CardFooter className="justify-between border-t p-4">
-              <div className="text-sm text-gray-500">
-                {hasChanged ? "Modifications non sauvegardées" : ""}
-              </div>
-              <Button 
-                type="submit" 
-                disabled={!hasChanged || isLoading || isSaving || !isOnline || (!canEdit && !isAdmin)}
-                className="flex items-center gap-2"
-              >
-                <Save className="h-4 w-4" />
-                {isSaving ? "Sauvegarde en cours..." : "Sauvegarder"}
-              </Button>
-            </CardFooter>
-          </Card>
-        </form>
-      </Form>
+              
+              {isEditable && (
+                <div className="flex justify-end mt-6">
+                  <Button
+                    onClick={saveSettings}
+                    disabled={saving || isOffline || !hasUnsavedChanges}
+                    className="flex items-center gap-2"
+                  >
+                    {saving ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Enregistrement...
+                      </>
+                    ) : (
+                      <>
+                        <Save className="h-4 w-4" />
+                        Enregistrer les modifications
+                      </>
+                    )}
+                  </Button>
+                </div>
+              )}
+            </>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 };

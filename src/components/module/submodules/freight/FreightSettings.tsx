@@ -5,7 +5,7 @@ import { Settings as SettingsIcon, Shield, AlertCircle } from "lucide-react";
 import FreightGeneralSettings from './settings/FreightGeneralSettings';
 import FreightPermissionsSettings from './settings/FreightPermissionsSettings';
 import { usePermissions } from '@/hooks/usePermissions';
-import { toast } from '@/components/ui/use-toast';
+import { toast } from '@/hooks/use-toast';
 
 const FreightSettings: React.FC = () => {
   const [activeTab, setActiveTab] = useState("general");
@@ -83,7 +83,7 @@ const FreightSettings: React.FC = () => {
         
         <TabsContent value="permissions">
           {canEditSettings || isAdmin ? (
-            <FreightPermissionsSettings />
+            <FreightPermissionsSettings isAdmin={isAdmin} />
           ) : (
             <div className="p-6 text-center bg-gray-50 rounded-lg border border-gray-200">
               <Shield className="h-12 w-12 text-gray-400 mx-auto mb-2" />

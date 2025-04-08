@@ -1,270 +1,390 @@
 
-import React, { useState, useEffect, useCallback } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
-import { toast } from "sonner";
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { toast } from '@/hooks/use-toast';
+import { CheckCircle, ShieldCheck, AlertCircle, Loader2, Save, Wifi, WifiOff } from 'lucide-react';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 import { COLLECTIONS } from '@/lib/firebase-collections';
-import { useFirestore } from '@/hooks/useFirestore';
-import { useEmployeesPermissions, EmployeeUser } from '@/hooks/useEmployeesPermissions';
-import { AlertCircle, RefreshCw } from "lucide-react";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useEmployeesPermissions } from '@/hooks/useEmployeesPermissions';
 
-// Define the permissions interface
-interface ModulePermission {
-  view: boolean;
-  create: boolean;
-  edit: boolean;
-  delete: boolean;
+interface FreightPermissionsSettingsProps {
+  isAdmin: boolean;
 }
 
-interface FreightPermissions {
-  id?: string;
-  permissions: {
-    [userId: string]: ModulePermission;
-  };
-  updatedAt?: Date;
-}
-
-const FreightPermissionsSettings: React.FC = () => {
-  // Optimisation: Cache local des permissions pour éviter les requêtes répétées
-  const [permissions, setPermissions] = useState<{[userId: string]: ModulePermission}>({});
-  const [initialPermissions, setInitialPermissions] = useState<{[userId: string]: ModulePermission}>({});
-  const [isLoading, setIsLoading] = useState(true);
-  const [isSaving, setIsSaving] = useState(false);
-  const [isOffline, setIsOffline] = useState(false);
-  const [retryCount, setRetryCount] = useState(0);
-  const [hasChanges, setHasChanges] = useState(false);
+const FreightPermissionsSettings: React.FC<FreightPermissionsSettingsProps> = ({ isAdmin }) => {
+  const { employees, isLoading: loadingEmployees } = useEmployeesPermissions();
+  const [isOffline, setIsOffline] = useState(!navigator.onLine);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   
-  const { employees, isLoading: isLoadingEmployees } = useEmployeesPermissions();
-  
-  // Use the appropriate collection path
-  const permissionsCollectionPath = COLLECTIONS.FREIGHT.PERMISSIONS;
-  const permissionsDocumentId = 'permissions';
-  const firestore = useFirestore(permissionsCollectionPath);
-
-  // Optimisation: Utilisation de useCallback pour éviter les re-rendus inutiles
-  const loadPermissions = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      setIsOffline(false);
-      
-      // Optimisation: Utiliser une seule requête pour récupérer toutes les permissions
-      const permissionsData = await firestore.getById(permissionsDocumentId);
-      
-      if (permissionsData) {
-        // Cast to our interface
-        const data = permissionsData as FreightPermissions;
-        const permissionsObj = data.permissions || {};
-        setPermissions(permissionsObj);
-        setInitialPermissions(JSON.parse(JSON.stringify(permissionsObj))); // Copie profonde pour comparaison ultérieure
-      } else {
-        // Initialiser avec un objet vide si aucune donnée n'existe
-        setPermissions({});
-        setInitialPermissions({});
-      }
-      
-      setHasChanges(false);
-    } catch (error: any) {
-      console.error("Error loading freight permissions:", error);
-      
-      // Check if error is related to offline status
-      if (error.code === 'unavailable' || error.message?.includes('offline')) {
-        setIsOffline(true);
-        toast.error("Vous êtes hors ligne. Les permissions ne peuvent pas être chargées.");
-      } else {
-        toast.error("Erreur lors du chargement des permissions");
-      }
-    } finally {
-      setIsLoading(false);
+  // État pour les permissions
+  const [permissions, setPermissions] = useState({
+    expeditions: {
+      admin: 'write',
+      manager: 'write',
+      user: 'read',
+      viewer: 'read'
+    },
+    conteneurs: {
+      admin: 'write',
+      manager: 'write',
+      user: 'read',
+      viewer: 'none'
+    },
+    tarification: {
+      admin: 'write',
+      manager: 'write',
+      user: 'read',
+      viewer: 'none'
+    },
+    documents: {
+      admin: 'write',
+      manager: 'write',
+      user: 'read',
+      viewer: 'read'
+    },
+    clientPortal: {
+      admin: 'write',
+      manager: 'write',
+      user: 'none',
+      viewer: 'none'
+    },
+    parametres: {
+      admin: 'write',
+      manager: 'read',
+      user: 'none',
+      viewer: 'none'
     }
-  }, [firestore, permissionsDocumentId]);
+  });
   
+  // Surveiller l'état de connexion
   useEffect(() => {
+    const handleOnline = () => setIsOffline(false);
+    const handleOffline = () => setIsOffline(true);
+    
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+  
+  // Charger les permissions depuis Firestore
+  useEffect(() => {
+    const loadPermissions = async () => {
+      setLoading(true);
+      
+      try {
+        // Essayer de récupérer les permissions depuis Firestore
+        const permissionsRef = doc(db, COLLECTIONS.FREIGHT.PERMISSIONS, 'roles');
+        const permissionsDoc = await getDoc(permissionsRef);
+        
+        if (permissionsDoc.exists()) {
+          const permissionsData = permissionsDoc.data();
+          setPermissions(permissionsData);
+        } else {
+          // Si le document n'existe pas encore, on garde les valeurs par défaut
+          console.log("Aucune permission trouvée, utilisation des valeurs par défaut");
+        }
+      } catch (error) {
+        console.error("Erreur lors du chargement des permissions:", error);
+        
+        if (isOffline) {
+          toast({
+            title: "Mode hors ligne",
+            description: "Vous êtes en mode hors ligne. Les modifications ne seront pas enregistrées.",
+            variant: "warning"
+          });
+        } else {
+          toast({
+            title: "Erreur",
+            description: "Impossible de charger les permissions. Veuillez réessayer.",
+            variant: "destructive"
+          });
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+    
     loadPermissions();
-  }, [loadPermissions, retryCount]);
-
-  // Optimisation: Vérifier s'il y a des changements à sauvegarder
-  useEffect(() => {
-    // Comparer les permissions actuelles avec les permissions initiales
-    const currentJSON = JSON.stringify(permissions);
-    const initialJSON = JSON.stringify(initialPermissions);
-    setHasChanges(currentJSON !== initialJSON);
-  }, [permissions, initialPermissions]);
-
-  const handleRetry = () => {
-    setRetryCount(prev => prev + 1);
-  };
-
-  // Optimisation: Mise à jour optimisée des permissions
-  const togglePermission = (userId: string, action: keyof ModulePermission) => {
-    setPermissions(prev => {
-      // Créer une copie des permissions précédentes
-      const newPermissions = { ...prev };
-      
-      // S'assurer que l'utilisateur existe dans l'objet des permissions
-      if (!newPermissions[userId]) {
-        newPermissions[userId] = { view: false, create: false, edit: false, delete: false };
+  }, [isOffline]);
+  
+  const handlePermissionChange = (module: string, role: string, value: string) => {
+    setPermissions(prev => ({
+      ...prev,
+      [module]: {
+        ...prev[module as keyof typeof prev],
+        [role]: value
       }
-      
-      // Cloner les permissions actuelles de l'utilisateur
-      const userPermissions = { ...newPermissions[userId] };
-      
-      // Inverser la permission spécifique
-      userPermissions[action] = !userPermissions[action];
-      
-      // Si la permission de visualisation est désactivée, désactiver toutes les autres permissions
-      if (action === 'view' && !userPermissions.view) {
-        userPermissions.create = false;
-        userPermissions.edit = false;
-        userPermissions.delete = false;
-      }
-      
-      // Si une autre permission est activée, s'assurer que la visualisation est également activée
-      if (action !== 'view' && userPermissions[action]) {
-        userPermissions.view = true;
-      }
-      
-      // Mettre à jour les permissions de l'utilisateur
-      newPermissions[userId] = userPermissions;
-      
-      return newPermissions;
-    });
+    }));
+    setHasUnsavedChanges(true);
   };
-
-  // Optimisation: Réinitialiser les modifications non sauvegardées
-  const handleCancel = () => {
-    setPermissions(JSON.parse(JSON.stringify(initialPermissions)));
-    setHasChanges(false);
-    toast.info("Modifications annulées");
-  };
-
-  const savePermissions = async () => {
-    if (!hasChanges) {
-      toast.info("Aucune modification à enregistrer");
+  
+  const handleSavePermissions = async () => {
+    if (isOffline) {
+      toast({
+        title: "Mode hors ligne",
+        description: "Vous êtes en mode hors ligne. Les modifications ne seront pas enregistrées.",
+        variant: "warning"
+      });
       return;
     }
     
+    if (!isAdmin) {
+      toast({
+        title: "Accès refusé",
+        description: "Seuls les administrateurs peuvent modifier les permissions.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    setSaving(true);
+    
     try {
-      setIsSaving(true);
+      // Enregistrer les permissions dans Firestore
+      const permissionsRef = doc(db, COLLECTIONS.FREIGHT.PERMISSIONS, 'roles');
+      await setDoc(permissionsRef, permissions);
       
-      const permissionsData: FreightPermissions = {
-        permissions,
-        updatedAt: new Date()
-      };
+      toast({
+        title: "Permissions enregistrées",
+        description: "Les droits d'accès ont été modifiés avec succès.",
+        variant: "success"
+      });
       
-      // Optimisation: Écrire les données uniquement si des modifications ont été apportées
-      await firestore.set(permissionsDocumentId, permissionsData);
+      setHasUnsavedChanges(false);
+    } catch (error) {
+      console.error("Erreur lors de l'enregistrement des permissions:", error);
       
-      // Mettre à jour les permissions initiales après la sauvegarde
-      setInitialPermissions(JSON.parse(JSON.stringify(permissions)));
-      setHasChanges(false);
-      
-      toast.success("Permissions enregistrées avec succès");
-      setIsOffline(false);
-    } catch (error: any) {
-      console.error("Error saving freight permissions:", error);
-      
-      // Check if error is related to offline status
-      if (error.code === 'unavailable' || error.message?.includes('offline')) {
-        setIsOffline(true);
-        toast.error("Impossible d'enregistrer les permissions en mode hors ligne");
-      } else {
-        toast.error(`Erreur lors de l'enregistrement des permissions: ${(error as Error).message}`);
-      }
+      toast({
+        title: "Erreur",
+        description: "Impossible d'enregistrer les permissions. Veuillez réessayer.",
+        variant: "destructive"
+      });
     } finally {
-      setIsSaving(false);
+      setSaving(false);
     }
   };
+  
+  const modules = [
+    { id: 'expeditions', name: 'Expéditions' },
+    { id: 'conteneurs', name: 'Conteneurs' },
+    { id: 'tarification', name: 'Tarification' },
+    { id: 'documents', name: 'Documents' },
+    { id: 'clientPortal', name: 'Portail Client' },
+    { id: 'parametres', name: 'Paramètres' }
+  ];
+  
+  const roles = [
+    { id: 'admin', name: 'Administrateur' },
+    { id: 'manager', name: 'Gestionnaire' },
+    { id: 'user', name: 'Utilisateur' },
+    { id: 'viewer', name: 'Lecteur' }
+  ];
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Droits d'accès au Module Fret</CardTitle>
-        <CardDescription>
-          Gérez les permissions d'accès des utilisateurs au module Fret
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        {isOffline && (
-          <Alert variant="destructive" className="mb-4">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription className="flex items-center justify-between">
-              <span>Vous êtes actuellement hors ligne. Les modifications ne seront pas enregistrées.</span>
-              <Button variant="outline" size="sm" onClick={handleRetry} className="ml-2 flex items-center gap-1">
-                <RefreshCw className="h-3 w-3" /> Réessayer
-              </Button>
-            </AlertDescription>
-          </Alert>
-        )}
-        
-        {isLoading || isLoadingEmployees ? (
-          <div className="text-center py-4">Chargement des données...</div>
-        ) : isOffline && Object.keys(permissions).length === 0 ? (
-          <div className="text-center py-8">
-            <p className="text-muted-foreground mb-4">Impossible de charger les permissions en mode hors ligne</p>
-            <Button onClick={handleRetry} className="flex items-center gap-2 mx-auto">
-              <RefreshCw className="h-4 w-4" /> Réessayer
-            </Button>
+    <div className="space-y-6">
+      {isOffline && (
+        <div className="p-4 bg-amber-50 border border-amber-200 rounded-md flex items-start gap-3">
+          <WifiOff className="h-5 w-5 text-amber-600 mt-0.5" />
+          <div>
+            <h3 className="font-medium text-amber-800">Mode hors ligne</h3>
+            <p className="text-sm text-amber-700">
+              Vous êtes actuellement hors ligne. Les modifications ne seront pas enregistrées.
+            </p>
           </div>
-        ) : (
-          <>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-1/3">Utilisateur</TableHead>
-                  <TableHead className="text-center">Voir</TableHead>
-                  <TableHead className="text-center">Créer</TableHead>
-                  <TableHead className="text-center">Modifier</TableHead>
-                  <TableHead className="text-center">Supprimer</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {employees.map((employee: EmployeeUser) => (
-                  <TableRow key={employee.id}>
-                    <TableCell>
-                      <div className="font-medium">{employee.firstName} {employee.lastName}</div>
-                      <div className="text-sm text-muted-foreground">{employee.email}</div>
-                    </TableCell>
-                    
-                    {(['view', 'create', 'edit', 'delete'] as const).map((action) => (
-                      <TableCell key={action} className="text-center">
-                        <Checkbox 
-                          checked={!!permissions[employee.id]?.[action]}
-                          onCheckedChange={() => togglePermission(employee.id, action)}
-                          disabled={isOffline || isSaving}
-                          aria-label={`Permission ${action} pour ${employee.firstName} ${employee.lastName}`}
-                        />
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-            
-            <Separator className="my-6" />
-            
-            <div className="flex justify-end space-x-4">
-              <Button 
-                variant="outline" 
-                onClick={handleCancel}
-                disabled={isSaving || isOffline || !hasChanges}
-              >
-                Annuler
-              </Button>
-              <Button 
-                onClick={savePermissions} 
-                disabled={isSaving || isOffline || !hasChanges}
-              >
-                {isSaving ? "Enregistrement..." : "Enregistrer les permissions"}
-              </Button>
+        </div>
+      )}
+      
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <ShieldCheck className="h-5 w-5 text-green-600" />
+            <CardTitle>Paramètres de sécurité</CardTitle>
+          </div>
+          <CardDescription>
+            Configurez les droits d'accès des utilisateurs aux différentes fonctionnalités
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {loading ? (
+            <div className="flex justify-center items-center py-8">
+              <Loader2 className="h-8 w-8 text-green-600 animate-spin" />
+              <span className="ml-2 text-gray-600">Chargement des permissions...</span>
             </div>
-          </>
-        )}
-      </CardContent>
-    </Card>
+          ) : (
+            <div className="space-y-6">
+              <div className="overflow-x-auto">
+                <table className="w-full border-collapse">
+                  <thead>
+                    <tr>
+                      <th className="text-left p-2 bg-slate-100 border">Module</th>
+                      {roles.map(role => (
+                        <th key={role.id} className="text-left p-2 bg-slate-100 border">
+                          {role.name}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {modules.map(module => (
+                      <tr key={module.id}>
+                        <td className="p-2 border font-medium">{module.name}</td>
+                        {roles.map(role => (
+                          <td key={`${module.id}-${role.id}`} className="p-2 border">
+                            <Select
+                              value={permissions[module.id as keyof typeof permissions][role.id as keyof typeof permissions.expeditions]}
+                              onValueChange={(value) => handlePermissionChange(module.id, role.id, value)}
+                              disabled={!isAdmin || saving}
+                            >
+                              <SelectTrigger className="w-[120px]">
+                                <SelectValue placeholder="Sélectionner..." />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="write">Lecture/Écriture</SelectItem>
+                                <SelectItem value="read">Lecture seule</SelectItem>
+                                <SelectItem value="none">Aucun accès</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              
+              <div className="bg-amber-50 border border-amber-200 rounded-md p-4 flex items-start gap-3">
+                <AlertCircle className="h-5 w-5 text-amber-600 mt-0.5" />
+                <div>
+                  <h4 className="font-medium text-amber-900">Important</h4>
+                  <p className="text-sm text-amber-700">
+                    Les modifications des droits d'accès seront appliquées immédiatement pour tous les utilisateurs.
+                    Assurez-vous que ces changements n'impacteront pas les opérations en cours.
+                  </p>
+                </div>
+              </div>
+              
+              {loadingEmployees ? (
+                <div className="flex justify-center items-center py-4">
+                  <Loader2 className="h-6 w-6 text-blue-600 animate-spin" />
+                  <span className="ml-2 text-gray-600">Chargement des employés...</span>
+                </div>
+              ) : isAdmin && (
+                <div className="rounded-md border">
+                  <div className="p-4 bg-slate-50 font-medium">
+                    Employés ({employees.length})
+                  </div>
+                  <div className="p-2 max-h-[300px] overflow-y-auto">
+                    {employees.length > 0 ? (
+                      <table className="w-full text-sm">
+                        <thead className="text-xs text-gray-500">
+                          <tr>
+                            <th className="text-left p-2">Nom</th>
+                            <th className="text-left p-2">Email</th>
+                            <th className="text-left p-2">Rôle</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {employees.map(employee => (
+                            <tr key={employee.id} className="border-t hover:bg-gray-50">
+                              <td className="p-2">{employee.firstName} {employee.lastName}</td>
+                              <td className="p-2">{employee.email}</td>
+                              <td className="p-2">{employee.role || 'Non défini'}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    ) : (
+                      <div className="text-center p-4 text-gray-500">
+                        Aucun employé trouvé
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+              
+              <div className="flex justify-end">
+                <Button
+                  variant="outline"
+                  className="mr-2"
+                  disabled={!isAdmin || saving}
+                  onClick={() => {
+                    // Réinitialiser les permissions aux valeurs par défaut
+                    setPermissions({
+                      expeditions: {
+                        admin: 'write',
+                        manager: 'write',
+                        user: 'read',
+                        viewer: 'read'
+                      },
+                      conteneurs: {
+                        admin: 'write',
+                        manager: 'write',
+                        user: 'read',
+                        viewer: 'none'
+                      },
+                      tarification: {
+                        admin: 'write',
+                        manager: 'write',
+                        user: 'read',
+                        viewer: 'none'
+                      },
+                      documents: {
+                        admin: 'write',
+                        manager: 'write',
+                        user: 'read',
+                        viewer: 'read'
+                      },
+                      clientPortal: {
+                        admin: 'write',
+                        manager: 'write',
+                        user: 'none',
+                        viewer: 'none'
+                      },
+                      parametres: {
+                        admin: 'write',
+                        manager: 'read',
+                        user: 'none',
+                        viewer: 'none'
+                      }
+                    });
+                    setHasUnsavedChanges(true);
+                  }}
+                >
+                  Réinitialiser
+                </Button>
+                <Button
+                  onClick={handleSavePermissions}
+                  disabled={!isAdmin || saving || isOffline || !hasUnsavedChanges}
+                  className="flex items-center gap-2"
+                >
+                  {saving ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Enregistrement...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="h-4 w-4" />
+                      Enregistrer les modifications
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
   );
 };
 
