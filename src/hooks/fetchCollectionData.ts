@@ -35,10 +35,14 @@ export async function fetchCollectionData<T>(
     
     console.log(`Fetched ${querySnapshot.docs.length} documents from ${collectionPath}`);
     
-    return querySnapshot.docs.map(doc => ({ 
-      id: doc.id, 
-      ...doc.data() 
-    })) as T[];
+    return querySnapshot.docs.map(doc => {
+      const data = doc.data();
+      // Ensure data is an object before spreading
+      return {
+        id: doc.id,
+        ...(typeof data === 'object' && data !== null ? data : {})
+      } as T;
+    });
   } catch (err: any) {
     console.error(`Error fetching data from ${collectionPath}:`, err);
     toast.error(`Erreur lors du chargement des données: ${err.message}`);
