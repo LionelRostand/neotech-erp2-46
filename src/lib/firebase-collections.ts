@@ -16,7 +16,17 @@ export const COLLECTIONS = {
     CARRIERS: 'freight/carriers',
     SETTINGS: 'freight/settings',
     PRICING: 'freight/pricing',
-    DOCUMENTS: 'freight/documents'
+    DOCUMENTS: 'freight/documents',
+    PACKAGES: 'freight/packages',
+    TRACKING_EVENTS: 'freight/tracking_events',
+    PACKAGE_TYPES: 'freight/package_types',
+    ROUTES: 'freight/routes',
+    QUOTES: 'freight/quotes',
+    BILLING: 'freight/billing',
+    VEHICLES: 'freight/vehicles',
+    DRIVERS: 'freight/drivers',
+    CUSTOMERS: 'freight/customers',
+    PERMISSIONS: 'freight/permissions'
   },
   
   CRM: {
@@ -79,6 +89,52 @@ export const COLLECTIONS = {
     HEALTH_INSURANCE: 'health-insurance',
     HEALTH_BILLING: 'health-billing',
     STAFF: 'health-staff',
+  },
+  
+  // Add MESSAGES collections
+  MESSAGES: {
+    INBOX: 'messages/inbox',
+    SENT: 'messages/sent',
+    DRAFTS: 'messages/drafts',
+    SCHEDULED: 'messages/scheduled',
+    ARCHIVED: 'messages/archived',
+    TEMPLATES: 'messages/templates',
+    CONTACTS: 'messages/contacts',
+    METRICS: 'messages/metrics'
+  },
+  
+  // Add PROJECTS collections
+  PROJECTS: {
+    PROJECTS: 'projects/projects',
+    TASKS: 'projects/tasks',
+    TEAMS: 'projects/teams',
+    NOTIFICATIONS: 'projects/notifications'
+  },
+  
+  // Add LIBRARY collections
+  LIBRARY: {
+    BOOKS: 'library/books',
+    MEMBERS: 'library/members',
+    LOANS: 'library/loans',
+    RETURNS: 'library/returns',
+    RESERVATIONS: 'library/reservations',
+    INVENTORY: 'library/inventory',
+    CATEGORIES: 'library/categories',
+    SETTINGS: 'library/settings',
+    STATS: 'library/stats'
+  },
+  
+  // Add TRANSPORT collections
+  TRANSPORT: {
+    VEHICLES: 'transport/vehicles',
+    DRIVERS: 'transport/drivers',
+    ROUTES: 'transport/routes',
+    RESERVATIONS: 'transport/reservations',
+    SCHEDULES: 'transport/schedules',
+    MAINTENANCE: 'transport/maintenance',
+    CLIENTS: 'transport/clients',
+    BILLING: 'transport/billing',
+    SETTINGS: 'transport/settings'
   },
   
   USER_PERMISSIONS: 'userPermissions',
