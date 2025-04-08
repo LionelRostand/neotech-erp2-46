@@ -1,10 +1,12 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import DashboardLayout from '@/components/DashboardLayout';
 import StatCard from '@/components/StatCard';
 import DataTable from '@/components/DataTable';
 import { LineChart, ShoppingBag, Users, Package, ArrowUp, ShoppingCart } from 'lucide-react';
 import { Transaction } from '@/components/DataTable';
+import { useNavigate } from 'react-router-dom';
+import { auth } from '@/lib/firebase';
 
 const dummyTransactions: Transaction[] = [
   { 
@@ -50,6 +52,23 @@ const dummyTransactions: Transaction[] = [
 ];
 
 const Index = () => {
+  const navigate = useNavigate();
+
+  // Vérifier l'authentification et rediriger si non connecté
+  useEffect(() => {
+    const checkAuth = () => {
+      const user = auth.currentUser;
+      if (!user) {
+        console.log("Utilisateur non connecté, redirection vers login");
+        navigate('/login');
+      } else {
+        console.log("Utilisateur connecté:", user.email);
+      }
+    };
+    
+    checkAuth();
+  }, [navigate]);
+
   return (
     <DashboardLayout>
       <div className="mb-6">

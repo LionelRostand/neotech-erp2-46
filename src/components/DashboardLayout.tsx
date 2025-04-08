@@ -23,7 +23,16 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
     const loadInstalledModules = () => {
       const savedModules = localStorage.getItem('installedModules');
       if (savedModules) {
-        setInstalledModules(JSON.parse(savedModules));
+        try {
+          setInstalledModules(JSON.parse(savedModules));
+        } catch (err) {
+          console.error("Erreur lors du chargement des modules:", err);
+          // Initialiser avec des modules par défaut si nécessaire
+          setInstalledModules([1, 2, 3]); // Exemples de modules par défaut
+        }
+      } else {
+        // Initialiser avec des modules par défaut si rien n'est sauvegardé
+        setInstalledModules([1, 2, 3]); // Exemples de modules par défaut
       }
     };
     

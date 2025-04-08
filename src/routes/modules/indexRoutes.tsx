@@ -8,6 +8,7 @@ import Applications from "@/pages/Applications";
 import ModuleInfo from "@/pages/ModuleInfo";
 import Performance from "@/pages/Performance";
 import Analytics from "@/pages/Analytics";
+import Login from "@/pages/Login";
 
 export const IndexRoutes = [
   <Route key="index" path="/" element={<Index />} />,
@@ -15,6 +16,7 @@ export const IndexRoutes = [
   <Route key="module-info" path="/module-info" element={<ModuleInfo />} />,
   <Route key="applications" path="/applications" element={<Applications />} />,
   <Route key="profile" path="/profile" element={<UserProfile />} />,
+  <Route key="login" path="/login" element={<Login />} />,
   
   // Dashboard routes
   <Route key="dashboard-performance" path="/dashboard/performance" element={<Performance />} />,
