@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { 
@@ -10,15 +9,11 @@ import {
   TableRow 
 } from '@/components/ui/table';
 import { 
-  Badge,
   Eye,
   Edit,
   Trash2,
-  Calendar,
-  Truck,
-  Package,
-  ArrowRight,
-  Loader2
+  Loader2,
+  Package
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -32,6 +27,7 @@ import { deleteDoc, doc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import { updateDocument } from '@/hooks/firestore/firestore-utils';
+import { Badge } from '@/components/ui/badge';
 
 interface ShipmentListProps {
   filter: 'all' | 'ongoing' | 'delivered' | 'delayed';
@@ -48,19 +44,19 @@ const ShipmentList: React.FC<ShipmentListProps> = ({ filter }) => {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'draft':
-        return <Badge variant="outline" className="bg-slate-100 text-slate-800 border-none">Brouillon</Badge>;
+        return <Badge className="bg-slate-100 text-slate-800 border-none">Brouillon</Badge>;
       case 'confirmed':
-        return <Badge variant="outline" className="bg-blue-100 text-blue-800 border-none">Confirmée</Badge>;
+        return <Badge className="bg-blue-100 text-blue-800 border-none">Confirmée</Badge>;
       case 'in_transit':
-        return <Badge variant="outline" className="bg-amber-100 text-amber-800 border-none">En transit</Badge>;
+        return <Badge className="bg-amber-100 text-amber-800 border-none">En transit</Badge>;
       case 'delivered':
-        return <Badge variant="outline" className="bg-green-100 text-green-800 border-none">Livrée</Badge>;
+        return <Badge className="bg-green-100 text-green-800 border-none">Livrée</Badge>;
       case 'cancelled':
-        return <Badge variant="outline" className="bg-red-100 text-red-800 border-none">Annulée</Badge>;
+        return <Badge className="bg-red-100 text-red-800 border-none">Annulée</Badge>;
       case 'delayed':
-        return <Badge variant="outline" className="bg-purple-100 text-purple-800 border-none">Retardée</Badge>;
+        return <Badge className="bg-purple-100 text-purple-800 border-none">Retardée</Badge>;
       default:
-        return <Badge variant="outline">{status}</Badge>;
+        return <Badge>{status}</Badge>;
     }
   };
 

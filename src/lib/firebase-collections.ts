@@ -89,5 +89,51 @@ export const COLLECTIONS = {
     STAFF: 'health-staff',
   },
   
+  // Add the missing MESSAGES property
+  MESSAGES: {
+    INBOX: 'messages/inbox',
+    SENT: 'messages/sent',
+    DRAFTS: 'messages/drafts',
+    SCHEDULED: 'messages/scheduled',
+    ARCHIVED: 'messages/archived',
+    TEMPLATES: 'messages/templates',
+    CONTACTS: 'messages/contacts',
+    METRICS: 'messages/metrics'
+  },
+  
+  // Add the missing LIBRARY property
+  LIBRARY: {
+    BOOKS: 'library/books',
+    MEMBERS: 'library/members',
+    LOANS: 'library/loans',
+    RETURNS: 'library/returns',
+    RESERVATIONS: 'library/reservations',
+    INVENTORY: 'library/inventory',
+    CATEGORIES: 'library/categories',
+    SETTINGS: 'library/settings',
+    STATS: 'library/stats'
+  },
+  
+  // Add the missing PROJECTS property
+  PROJECTS: {
+    PROJECTS: 'projects/projects',
+    TASKS: 'projects/tasks',
+    TEAMS: 'projects/teams',
+    NOTIFICATIONS: 'projects/notifications'
+  },
+  
+  // Add the missing TRANSPORT property
+  TRANSPORT: {
+    VEHICLES: 'transport/vehicles',
+    DRIVERS: 'transport/drivers',
+    ROUTES: 'transport/routes',
+    RESERVATIONS: 'transport/reservations',
+    SCHEDULES: 'transport/schedules',
+    MAINTENANCE: 'transport/maintenance',
+    CLIENTS: 'transport/clients',
+    BILLING: 'transport/billing',
+    SETTINGS: 'transport/settings'
+  },
+  
   USER_PERMISSIONS: 'userPermissions',
 };
