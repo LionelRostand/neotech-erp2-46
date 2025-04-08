@@ -89,7 +89,7 @@ export const COLLECTIONS = {
     SETTINGS: 'freight_settings', // Changed from 'freight/settings' to fix the document reference issue
     VEHICLES: 'freight/vehicles',
     DRIVERS: 'freight/drivers',
-    PERMISSIONS: 'freight/permissions',
+    PERMISSIONS: 'freight_permissions', // Changed from 'freight/permissions' to fix the document reference issue
     // Adding the missing properties
     CONTAINERS: 'freight/containers',
     DOCUMENTS: 'freight/documents',

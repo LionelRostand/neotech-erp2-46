@@ -10,6 +10,17 @@ import { toast } from "sonner";
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import { useFirestore } from '@/hooks/useFirestore';
 
+// Define an interface for our settings to ensure type safety
+interface FreightSettings {
+  id?: string;
+  autoTrackingUpdates: boolean;
+  clientPortalEnabled: boolean;
+  defaultCurrency: string;
+  weightUnit: string;
+  dimensionUnit: string;
+  updatedAt?: Date;
+}
+
 const FreightGeneralSettings: React.FC = () => {
   const [autoTrackingUpdates, setAutoTrackingUpdates] = useState(true);
   const [clientPortalEnabled, setClientPortalEnabled] = useState(true);
@@ -19,8 +30,7 @@ const FreightGeneralSettings: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   
   // Use the appropriate collection/document pattern
-  // Instead of 'freight/settings/general', we'll use 'freight_settings' collection with 'general' document
-  const settingsCollectionPath = 'freight_settings';
+  const settingsCollectionPath = COLLECTIONS.FREIGHT.SETTINGS.replace('freight/settings', 'freight_settings');
   const settingsDocumentId = 'general';
   const firestore = useFirestore(settingsCollectionPath);
 
@@ -31,6 +41,7 @@ const FreightGeneralSettings: React.FC = () => {
         const settings = await firestore.getById(settingsDocumentId);
         
         if (settings) {
+          // Use optional chaining and nullish coalescing to safely access potentially undefined properties
           setAutoTrackingUpdates(settings.autoTrackingUpdates ?? true);
           setClientPortalEnabled(settings.clientPortalEnabled ?? true);
           setDefaultCurrency(settings.defaultCurrency || "EUR");
@@ -52,14 +63,16 @@ const FreightGeneralSettings: React.FC = () => {
     try {
       setIsLoading(true);
       
-      await firestore.set(settingsDocumentId, {
+      const settingsData: FreightSettings = {
         autoTrackingUpdates,
         clientPortalEnabled,
         defaultCurrency,
         weightUnit,
         dimensionUnit,
         updatedAt: new Date()
-      });
+      };
+      
+      await firestore.set(settingsDocumentId, settingsData);
       
       toast.success("Paramètres enregistrés avec succès");
     } catch (error) {
