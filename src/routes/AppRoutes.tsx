@@ -6,6 +6,7 @@ import WelcomePage from '@/pages/WelcomePage';
 import ApplicationsPage from '@/pages/ApplicationsPage';
 import ProtectedRoute from './ProtectedRoute';
 import { useAuth } from '@/hooks/useAuth';
+import { EmployeesRoutes } from './modules/employeesRoutes';
 
 const AppRoutes = () => {
   const { isAuthenticated, isLoading } = useAuth();
@@ -37,6 +38,9 @@ const AppRoutes = () => {
           <ApplicationsPage />
         </ProtectedRoute>
       } />
+      
+      {/* Modules routes */}
+      {EmployeesRoutes}
       
       {/* Redirection par défaut */}
       <Route path="*" element={<Navigate to="/" />} />

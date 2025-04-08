@@ -5,6 +5,7 @@ import { Routes, Route, Navigate } from "react-router-dom";
 // Import route groups
 import { TransportRoutes } from "./modules/transportRoutes";
 import { GarageRoutes } from "./modules/garageRoutes";
+import { EmployeesRoutes } from "./routes/modules/employeesRoutes";
 
 // Placeholder components for missing pages
 const Dashboard = () => <div>Dashboard Page</div>;
@@ -26,6 +27,7 @@ const AppRoutes = () => {
       <Route path="/contact" element={<AppLayout><Contact /></AppLayout>} />
       
       {/* Module routes */}
+      {EmployeesRoutes}
       {TransportRoutes}
       {GarageRoutes}
     </Routes>

@@ -20,6 +20,7 @@ import EmployeesAlerts from '../EmployeesAlerts';
 import EmployeesSettings from '../EmployeesSettings';
 import { SubModule } from '@/data/types/modules';
 import { useHrModuleData } from '@/hooks/useHrModuleData';
+import EmployeesDepartments from '../departments/EmployeesDepartments';
 
 export const renderEmployeesSubmodule = (submoduleId: string, submodule: SubModule) => {
   const { employees, departments, companies, isLoading } = useHrModuleData();
@@ -35,7 +36,7 @@ export const renderEmployeesSubmodule = (submoduleId: string, submodule: SubModu
     case 'employees-badges':
       return <EmployeesBadges />;
     case 'employees-departments':
-      return <EmployeesProfiles />;
+      return <EmployeesDepartments />;
     case 'employees-hierarchy':
       return <EmployeesHierarchy />;
     case 'employees-attendance':
