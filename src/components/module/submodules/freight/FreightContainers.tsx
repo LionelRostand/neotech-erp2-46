@@ -23,6 +23,11 @@ interface Container {
   destination: string;
   departureDate: string;
   arrivalDate: string;
+  
+  location?: string;
+  client?: string;
+  departure?: string;
+  arrival?: string;
 }
 
 const FreightContainers: React.FC = () => {
@@ -41,8 +46,16 @@ const FreightContainers: React.FC = () => {
       
       const containersData = await fetchFreightCollectionData<Container>('CONTAINERS');
       
-      setContainers(containersData);
-      setFilteredContainers(containersData);
+      const mappedContainers = containersData.map(container => ({
+        ...container,
+        location: container.origin || 'Non spécifié',
+        client: 'Non spécifié',
+        departure: container.departureDate,
+        arrival: container.arrivalDate
+      }));
+      
+      setContainers(mappedContainers);
+      setFilteredContainers(mappedContainers);
       setIsLoading(false);
     } catch (err) {
       console.error("Error loading containers:", err);
