@@ -2,7 +2,7 @@
 import React from 'react';
 import { Badge } from "@/components/ui/badge";
 import { Prospect } from '../types/crm-types';
-import { formatDate } from '@/lib/formatters';
+import { formatDate } from '@/lib/utils';
 import { Building, Globe, Phone, Mail, MapPin, Calendar, CreditCard, Info } from 'lucide-react';
 
 interface ProspectDetailsProps {

@@ -10,7 +10,7 @@ import { Loader2 } from "lucide-react";
 const LoginForm = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState('admin@neotech-consulting.com');
-  const [password, setPassword] = useState('AaronEnzo2511@');
+  const [password, setPassword] = useState('admin123');
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -18,7 +18,6 @@ const LoginForm = () => {
     setIsLoading(true);
     
     try {
-      console.log("Tentative de connexion...");
       const user = await loginUser(email, password);
       
       if (user) {
@@ -101,7 +100,7 @@ const LoginForm = () => {
           
           <Button
             type="submit"
-            className="w-full bg-neotech-primary hover:bg-neotech-primaryDark text-white transition-colors"
+            className="w-full bg-neotech-primary hover:bg-neotech-primaryDark transition-colors"
             disabled={isLoading}
           >
             {isLoading ? (

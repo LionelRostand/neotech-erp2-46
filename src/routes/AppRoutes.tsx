@@ -1,67 +1,57 @@
 
-import React from "react";
+import React from 'react';
 import { Routes, Route, Navigate } from "react-router-dom";
-import Login from "@/pages/Login";
-import NotFound from "@/pages/NotFound";
-import InvoicePage from "@/pages/billing/InvoicePage";
-import { useAuth } from "@/hooks/useAuth";
 
-const AppRoutes = () => {
-  const { currentUser } = useAuth();
-  
-  // Check if user is authenticated
-  const isAuthenticated = !!currentUser;
+// Import route modules
+import { IndexRoutes } from './modules/indexRoutes';
+import { AuthRoutes } from './modules/authRoutes';
+import { SettingsRoutes } from './modules/settingsRoutes';
+import { EmployeesRoutes } from './modules/employeesRoutes';
+import { FreightRoutes } from './modules/freightRoutes';
+import { ProjectsRoutes } from './modules/projectsRoutes';
+import { AccountingRoutes } from './modules/accountingRoutes';
+import { MessagesRoutes } from './modules/messagesRoutes';
+import { DocumentsRoutes } from './modules/documentsRoutes';
+import { CrmRoutes } from './modules/crmRoutes';
+import { CompaniesRoutes } from './modules/companiesRoutes';
+import { HealthRoutes } from './modules/healthRoutes';
+import { RentalRoutes } from './modules/rentalRoutes';
+import { TransportRoutes } from './modules/transportRoutes';
+import { OtherModulesRoutes } from './modules/otherModulesRoutes';
+import { WebsiteRoutes } from './modules/websiteRoutes';
+import NotFound from '@/pages/NotFound';
 
-  // If user is not authenticated, redirect to login page for protected routes
-  const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-    if (!isAuthenticated) {
-      return <Navigate to="/login" replace />;
-    }
-    return <>{children}</>;
-  };
-
-  return (
-    <Routes>
-      <Route path="/login" element={<Login />} />
-      
-      {/* Protected routes */}
-      <Route
-        path="/"
-        element={
-          <ProtectedRoute>
-            <div>Dashboard Page</div>
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/welcome"
-        element={
-          <ProtectedRoute>
-            <div>Welcome Page</div>
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/applications"
-        element={
-          <ProtectedRoute>
-            <div>Applications Page</div>
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/billing/invoice"
-        element={
-          <ProtectedRoute>
-            <InvoicePage />
-          </ProtectedRoute>
-        }
-      />
-      
-      {/* 404 Not found page */}
-      <Route path="*" element={<NotFound />} />
-    </Routes>
-  );
-};
+const AppRoutes = () => (
+  <Routes>
+    {/* Auth routes */}
+    {AuthRoutes}
+    
+    {/* Main application routes */}
+    {IndexRoutes}
+    
+    {/* Settings routes */}
+    {SettingsRoutes}
+    
+    {/* Module routes */}
+    {EmployeesRoutes}
+    {FreightRoutes}
+    {ProjectsRoutes}
+    {AccountingRoutes}
+    {MessagesRoutes}
+    {DocumentsRoutes}
+    {CrmRoutes}
+    {CompaniesRoutes}
+    {HealthRoutes}
+    {RentalRoutes}
+    {TransportRoutes}
+    {WebsiteRoutes}
+    
+    {/* Other module routes */}
+    {OtherModulesRoutes}
+    
+    {/* Catch-all route for 404s */}
+    <Route path="*" element={<NotFound />} />
+  </Routes>
+);
 
 export default AppRoutes;
