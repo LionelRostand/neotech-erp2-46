@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
@@ -26,6 +27,7 @@ const FreightCarriers: React.FC = () => {
         setIsLoading(true);
         const data = await fetchCollectionData<Carrier>(COLLECTIONS.FREIGHT.CARRIERS);
         setCarriers(data);
+        setFilteredCarriers(data);
         setIsLoading(false);
       } catch (error) {
         console.error("Error loading carriers:", error);

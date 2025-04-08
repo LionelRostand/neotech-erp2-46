@@ -1,7 +1,8 @@
 
 import { useState, useEffect } from 'react';
-import { fetchFreightCollectionData } from '@/hooks/fetchFreightCollectionData';
 import { Shipment, Carrier, Route, Package, TrackingEvent, PackageType, Quote, Invoice } from '@/types/freight';
+import { fetchCollectionData } from '@/hooks/fetchCollectionData';
+import { COLLECTIONS } from '@/lib/firebase-collections';
 
 export const useFreightData = () => {
   const [shipments, setShipments] = useState<Shipment[]>([]);
@@ -29,59 +30,59 @@ export const useFreightData = () => {
     const fetchAllFreightData = async () => {
       try {
         // Shipments collection
-        const shipmentsData = await fetchFreightCollectionData<Shipment>('SHIPMENTS');
+        const shipmentsData = await fetchCollectionData<Shipment>(COLLECTIONS.FREIGHT.SHIPMENTS);
         setShipments(shipmentsData);
         
         // Vehicles collection
-        const vehiclesData = await fetchFreightCollectionData('VEHICLES');
+        const vehiclesData = await fetchCollectionData(COLLECTIONS.FREIGHT.VEHICLES);
         setVehicles(vehiclesData);
         
         // Routes collection
-        const routesData = await fetchFreightCollectionData<Route>('ROUTES');
+        const routesData = await fetchCollectionData<Route>(COLLECTIONS.FREIGHT.ROUTES);
         setRoutes(routesData);
         
         // Drivers collection
-        const driversData = await fetchFreightCollectionData('DRIVERS');
+        const driversData = await fetchCollectionData(COLLECTIONS.FREIGHT.DRIVERS);
         setDrivers(driversData);
         
         // Packages collection
-        const packagesData = await fetchFreightCollectionData<Package>('PACKAGES');
+        const packagesData = await fetchCollectionData<Package>(COLLECTIONS.FREIGHT.PACKAGES);
         setPackages(packagesData);
         
         // Carriers collection
-        const carriersData = await fetchFreightCollectionData<Carrier>('CARRIERS');
+        const carriersData = await fetchCollectionData<Carrier>(COLLECTIONS.FREIGHT.CARRIERS);
         setCarriers(carriersData);
         
         // Tracking Events collection
-        const trackingEventsData = await fetchFreightCollectionData<TrackingEvent>('TRACKING_EVENTS');
+        const trackingEventsData = await fetchCollectionData<TrackingEvent>(COLLECTIONS.FREIGHT.TRACKING_EVENTS);
         setTrackingEvents(trackingEventsData);
         
         // Package Types collection
-        const packageTypesData = await fetchFreightCollectionData<PackageType>('PACKAGE_TYPES');
+        const packageTypesData = await fetchCollectionData<PackageType>(COLLECTIONS.FREIGHT.PACKAGE_TYPES);
         setPackageTypes(packageTypesData);
         
         // Containers collection
-        const containersData = await fetchFreightCollectionData('CONTAINERS');
+        const containersData = await fetchCollectionData(COLLECTIONS.FREIGHT.CONTAINERS);
         setContainers(containersData);
         
         // Documents collection
-        const documentsData = await fetchFreightCollectionData('DOCUMENTS');
+        const documentsData = await fetchCollectionData(COLLECTIONS.FREIGHT.DOCUMENTS);
         setDocuments(documentsData);
         
         // Pricing collection
-        const pricingData = await fetchFreightCollectionData('PRICING');
+        const pricingData = await fetchCollectionData(COLLECTIONS.FREIGHT.PRICING);
         setPricing(pricingData);
         
         // Billing collection
-        const billingData = await fetchFreightCollectionData('BILLING');
+        const billingData = await fetchCollectionData(COLLECTIONS.FREIGHT.BILLING);
         setBilling(billingData);
         
         // Quotes collection
-        const quotesData = await fetchFreightCollectionData<Quote>('QUOTES');
+        const quotesData = await fetchCollectionData<Quote>(COLLECTIONS.FREIGHT.QUOTES);
         setQuotes(quotesData);
 
         // Invoices collection
-        const invoicesData = await fetchFreightCollectionData<Invoice>('BILLING');
+        const invoicesData = await fetchCollectionData<Invoice>(COLLECTIONS.FREIGHT.BILLING);
         setInvoices(invoicesData);
         
         setIsLoading(false);

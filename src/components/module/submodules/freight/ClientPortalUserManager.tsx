@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Table,
@@ -16,6 +16,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Settings } from 'lucide-react';
+import { fetchCollectionData } from '@/hooks/fetchCollectionData';
+import { COLLECTIONS } from '@/lib/firebase-collections';
 
 // Type pour les utilisateurs du portail
 interface PortalUser {
@@ -32,45 +34,69 @@ const ClientPortalUserManager: React.FC = () => {
   const { toast } = useToast();
   const [manageDialogOpen, setManageDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<PortalUser | null>(null);
+  const [users, setUsers] = useState<PortalUser[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   
-  // Données utilisateurs du portail
-  const users: PortalUser[] = [
-    {
-      id: '1',
-      name: 'Jean Dupont',
-      email: 'jean.dupont@entreprise.fr',
-      company: 'Entreprise SA',
-      role: 'Admin',
-      status: 'active',
-      lastLogin: '2023-10-15 14:23'
-    },
-    {
-      id: '2',
-      name: 'Marie Martin',
-      email: 'marie.martin@logistique.com',
-      company: 'Logistique Express',
-      role: 'Utilisateur',
-      status: 'active',
-      lastLogin: '2023-10-14 09:45'
-    },
-    {
-      id: '3',
-      name: 'Pierre Dubois',
-      email: 'p.dubois@transport.fr',
-      company: 'Transport International',
-      role: 'Utilisateur',
-      status: 'pending'
-    },
-    {
-      id: '4',
-      name: 'Sophie Legrand',
-      email: 'sophie@fruittransport.com',
-      company: 'FruitFresh SA',
-      role: 'Viewer',
-      status: 'disabled',
-      lastLogin: '2023-09-28 16:10'
-    }
-  ];
+  useEffect(() => {
+    const loadUsers = async () => {
+      try {
+        setIsLoading(true);
+        // Nous utilisons la collection "customers" pour récupérer les utilisateurs du portail
+        const data = await fetchCollectionData<PortalUser>(COLLECTIONS.FREIGHT.CUSTOMERS);
+        setUsers(data);
+        setIsLoading(false);
+      } catch (error) {
+        console.error("Erreur lors du chargement des utilisateurs:", error);
+        toast({
+          title: "Erreur de chargement",
+          description: "Impossible de charger les utilisateurs du portail. Veuillez réessayer.",
+          variant: "destructive"
+        });
+        setIsLoading(false);
+        
+        // Utilisez des données de démonstration en cas d'erreur
+        setUsers([
+          {
+            id: '1',
+            name: 'Jean Dupont',
+            email: 'jean.dupont@entreprise.fr',
+            company: 'Entreprise SA',
+            role: 'Admin',
+            status: 'active',
+            lastLogin: '2023-10-15 14:23'
+          },
+          {
+            id: '2',
+            name: 'Marie Martin',
+            email: 'marie.martin@logistique.com',
+            company: 'Logistique Express',
+            role: 'Utilisateur',
+            status: 'active',
+            lastLogin: '2023-10-14 09:45'
+          },
+          {
+            id: '3',
+            name: 'Pierre Dubois',
+            email: 'p.dubois@transport.fr',
+            company: 'Transport International',
+            role: 'Utilisateur',
+            status: 'pending'
+          },
+          {
+            id: '4',
+            name: 'Sophie Legrand',
+            email: 'sophie@fruittransport.com',
+            company: 'FruitFresh SA',
+            role: 'Viewer',
+            status: 'disabled',
+            lastLogin: '2023-09-28 16:10'
+          }
+        ]);
+      }
+    };
+    
+    loadUsers();
+  }, [toast]);
   
   const handleManageUser = (user: PortalUser) => {
     setSelectedUser(user);
@@ -98,6 +124,22 @@ const ClientPortalUserManager: React.FC = () => {
     }
   };
 
+  if (isLoading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Utilisateurs du portail client</CardTitle>
+          <CardDescription>Chargement des données...</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex justify-center p-12">
+            <p>Chargement des utilisateurs...</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card>
       <CardHeader>
@@ -120,26 +162,34 @@ const ClientPortalUserManager: React.FC = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {users.map((user) => (
-              <TableRow key={user.id}>
-                <TableCell className="font-medium">{user.name}</TableCell>
-                <TableCell>{user.email}</TableCell>
-                <TableCell>{user.company}</TableCell>
-                <TableCell>{user.role}</TableCell>
-                <TableCell>{getStatusBadge(user.status)}</TableCell>
-                <TableCell>{user.lastLogin || 'Jamais connecté'}</TableCell>
-                <TableCell className="text-right">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleManageUser(user)}
-                  >
-                    <Settings className="h-4 w-4 mr-2" />
-                    Gérer
-                  </Button>
+            {users.length > 0 ? (
+              users.map((user) => (
+                <TableRow key={user.id}>
+                  <TableCell className="font-medium">{user.name}</TableCell>
+                  <TableCell>{user.email}</TableCell>
+                  <TableCell>{user.company}</TableCell>
+                  <TableCell>{user.role}</TableCell>
+                  <TableCell>{getStatusBadge(user.status)}</TableCell>
+                  <TableCell>{user.lastLogin || 'Jamais connecté'}</TableCell>
+                  <TableCell className="text-right">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleManageUser(user)}
+                    >
+                      <Settings className="h-4 w-4 mr-2" />
+                      Gérer
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={7} className="text-center py-8">
+                  Aucun utilisateur trouvé
                 </TableCell>
               </TableRow>
-            ))}
+            )}
           </TableBody>
         </Table>
         
