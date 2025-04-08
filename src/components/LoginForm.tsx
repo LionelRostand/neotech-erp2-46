@@ -101,7 +101,7 @@ const LoginForm = () => {
           
           <Button
             type="submit"
-            className="w-full bg-neotech-primary hover:bg-neotech-primaryDark transition-colors"
+            className="w-full bg-neotech-primary hover:bg-neotech-primaryDark text-white transition-colors"
             disabled={isLoading}
           >
             {isLoading ? (
