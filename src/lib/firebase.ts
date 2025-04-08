@@ -56,10 +56,11 @@ const auth = {
       } as UserCredential;
     }
     
-    // Create a custom error object that properly simulates a Firebase Auth error
-    const errorWithCode = new Error('Wrong password') as any;
-    errorWithCode.code = 'auth/wrong-password';
-    throw errorWithCode;
+    // Create a custom error object with the properties we need
+    const errorObject = new Error('Wrong password') as any;
+    // Use Object.defineProperty instead of direct assignment for read-only properties
+    Object.defineProperty(errorObject, 'code', { value: 'auth/wrong-password' });
+    throw errorObject;
   },
   onAuthStateChanged: (callback: any) => {
     // Default to admin user for development
