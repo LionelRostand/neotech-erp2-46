@@ -11,24 +11,7 @@ import ContainerDetailsDialog from './ContainerDetailsDialog';
 import { fetchFreightCollectionData } from '@/hooks/fetchFreightCollectionData';
 import { FirebaseErrorAlert } from './components/FirebaseErrorAlert';
 import StatCard from '@/components/StatCard';
-
-interface Container {
-  id: string;
-  number: string;
-  type: string;
-  size: string;
-  status: string;
-  carrierName: string;
-  origin: string;
-  destination: string;
-  departureDate: string;
-  arrivalDate: string;
-  
-  location?: string;
-  client?: string;
-  departure?: string;
-  arrival?: string;
-}
+import { Container } from '@/types/freight';
 
 const FreightContainers: React.FC = () => {
   const [containers, setContainers] = useState<Container[]>([]);
@@ -44,7 +27,7 @@ const FreightContainers: React.FC = () => {
       setIsLoading(true);
       setError(null);
       
-      const containersData = await fetchFreightCollectionData<Container>('CONTAINERS');
+      const containersData = await fetchFreightCollectionData<Omit<Container, 'location' | 'client' | 'departure' | 'arrival'>>('CONTAINERS');
       
       const mappedContainers = containersData.map(container => ({
         ...container,
@@ -54,8 +37,8 @@ const FreightContainers: React.FC = () => {
         arrival: container.arrivalDate
       }));
       
-      setContainers(mappedContainers);
-      setFilteredContainers(mappedContainers);
+      setContainers(mappedContainers as Container[]);
+      setFilteredContainers(mappedContainers as Container[]);
       setIsLoading(false);
     } catch (err) {
       console.error("Error loading containers:", err);

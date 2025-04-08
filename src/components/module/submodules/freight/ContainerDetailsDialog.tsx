@@ -9,18 +9,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import StatusBadge from '@/components/StatusBadge';
-
-interface Container {
-  id: string;
-  number: string;
-  type: string;
-  status: string;
-  location: string;
-  destination: string;
-  client: string;
-  departure: string;
-  arrival: string;
-}
+import { Container } from '@/types/freight';
 
 interface ContainerDetailsDialogProps {
   isOpen: boolean;

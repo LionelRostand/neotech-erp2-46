@@ -213,3 +213,22 @@ export interface InvoiceItem {
   unitPrice: number;
   total: number;
 }
+
+// Adding Container interface that will be shared across components
+export interface Container {
+  id: string;
+  number: string;
+  type: string;
+  size: string;
+  status: string;
+  carrierName: string;
+  origin: string;
+  destination: string;
+  departureDate: string;
+  arrivalDate: string;
+  // These properties are used in ContainerDetailsDialog
+  location: string;
+  client: string;
+  departure: string;
+  arrival: string;
+}
