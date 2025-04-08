@@ -48,10 +48,11 @@ const mockSignInWithEmailAndPassword = async (auth: Auth, email: string, passwor
     } as UserCredential;
   }
   
-  // Simulate wrong password error
-  const error = new Error('auth/wrong-password') as AuthError;
-  error.code = 'auth/wrong-password';
-  throw error;
+  // Create a custom error object that properly simulates a Firebase Auth error
+  // Instead of modifying the error.code property directly (which is read-only)
+  const errorWithCode = new Error('Wrong password') as any;
+  errorWithCode.code = 'auth/wrong-password';
+  throw errorWithCode;
 };
 
 // Mock authentication for development
