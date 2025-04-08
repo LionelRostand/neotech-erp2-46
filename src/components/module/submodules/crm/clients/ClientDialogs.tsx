@@ -3,34 +3,26 @@ import React from 'react';
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
-  DialogTitle,
+  DialogDescription,
   DialogFooter,
-  DialogDescription
+  DialogHeader,
+  DialogTitle
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from "@/components/ui/select";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import ClientForm from './ClientForm';
+import ClientDetails from './ClientDetails';
 import { Client, ClientFormData } from '../types/crm-types';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 
 interface ClientDialogsProps {
   isAddDialogOpen: boolean;
-  setIsAddDialogOpen: (isOpen: boolean) => void;
+  setIsAddDialogOpen: (open: boolean) => void;
   isEditDialogOpen: boolean;
-  setIsEditDialogOpen: (isOpen: boolean) => void;
+  setIsEditDialogOpen: (open: boolean) => void;
   isDeleteDialogOpen: boolean;
-  setIsDeleteDialogOpen: (isOpen: boolean) => void;
+  setIsDeleteDialogOpen: (open: boolean) => void;
   isViewDetailsOpen: boolean;
-  setIsViewDetailsOpen: (isOpen: boolean) => void;
+  setIsViewDetailsOpen: (open: boolean) => void;
   selectedClient: Client | null;
   formData: ClientFormData;
   handleInputChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
@@ -39,8 +31,9 @@ interface ClientDialogsProps {
   handleUpdateClient: (data: ClientFormData) => void;
   handleDeleteClient: () => void;
   resetForm: () => void;
-  sectorOptions: { value: string; label: string; }[];
-  statusOptions: { value: string; label: string; }[];
+  sectorOptions: { value: string, label: string }[];
+  statusOptions: { value: string, label: string }[];
+  openEditDialog: (client: Client) => void;
 }
 
 const ClientDialogs: React.FC<ClientDialogsProps> = ({
@@ -61,451 +54,124 @@ const ClientDialogs: React.FC<ClientDialogsProps> = ({
   handleDeleteClient,
   resetForm,
   sectorOptions,
-  statusOptions
+  statusOptions,
+  openEditDialog
 }) => {
-  const handleAddSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    handleCreateClient(formData);
-  };
-
-  const handleEditSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    handleUpdateClient(formData);
-  };
+  // Helper function to extract sectors array for the form
+  const sectors = sectorOptions
+    .filter(option => option.value !== 'all')
+    .map(option => option.value);
 
   return (
     <>
       {/* Add Client Dialog */}
       <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-        <DialogContent className="sm:max-w-[600px]">
+        <DialogContent className="sm:max-w-[725px]">
           <DialogHeader>
             <DialogTitle>Ajouter un client</DialogTitle>
+            <DialogDescription>
+              Remplissez les détails du nouveau client.
+            </DialogDescription>
           </DialogHeader>
           
-          <form onSubmit={handleAddSubmit} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">Nom de l'entreprise</Label>
-                <Input
-                  id="name"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleInputChange}
-                  required
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="sector">Secteur d'activité</Label>
-                <Select 
-                  value={formData.sector} 
-                  onValueChange={(value) => handleSelectChange('sector', value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Sélectionner un secteur" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {sectorOptions.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
-                        {option.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="status">Statut</Label>
-                <Select 
-                  value={formData.status} 
-                  onValueChange={(value) => handleSelectChange('status', value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Sélectionner un statut" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {statusOptions.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
-                        {option.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="revenue">Chiffre d'affaires annuel (€)</Label>
-                <Input
-                  id="revenue"
-                  name="revenue"
-                  type="text"
-                  value={formData.revenue}
-                  onChange={handleInputChange}
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="contactName">Nom du contact</Label>
-                <Input
-                  id="contactName"
-                  name="contactName"
-                  value={formData.contactName}
-                  onChange={handleInputChange}
-                  required
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="contactEmail">Email du contact</Label>
-                <Input
-                  id="contactEmail"
-                  name="contactEmail"
-                  type="email"
-                  value={formData.contactEmail}
-                  onChange={handleInputChange}
-                  required
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="contactPhone">Téléphone du contact</Label>
-                <Input
-                  id="contactPhone"
-                  name="contactPhone"
-                  value={formData.contactPhone}
-                  onChange={handleInputChange}
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="website">Site web</Label>
-                <Input
-                  id="website"
-                  name="website"
-                  value={formData.website || ''}
-                  onChange={handleInputChange}
-                />
-              </div>
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="address">Adresse</Label>
-              <Input
-                id="address"
-                name="address"
-                value={formData.address}
-                onChange={handleInputChange}
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="description">Description</Label>
-              <Textarea
-                id="description"
-                name="description"
-                value={formData.description || ''}
-                onChange={handleInputChange}
-                rows={3}
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="notes">Notes</Label>
-              <Textarea
-                id="notes"
-                name="notes"
-                value={formData.notes || ''}
-                onChange={handleInputChange}
-                rows={3}
-              />
-            </div>
-            
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => {
-                resetForm();
-                setIsAddDialogOpen(false);
-              }}>
-                Annuler
-              </Button>
-              <Button type="submit">
-                Ajouter
-              </Button>
-            </DialogFooter>
-          </form>
+          <ClientForm
+            formData={formData}
+            sectors={sectors}
+            handleInputChange={handleInputChange}
+            handleSelectChange={handleSelectChange}
+          />
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => {
+              resetForm();
+              setIsAddDialogOpen(false);
+            }}>
+              Annuler
+            </Button>
+            <Button onClick={() => handleCreateClient(formData)}>
+              Ajouter
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
-
+      
       {/* Edit Client Dialog */}
-      {selectedClient && (
-        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-          <DialogContent className="sm:max-w-[600px]">
-            <DialogHeader>
-              <DialogTitle>Modifier le client</DialogTitle>
-            </DialogHeader>
-            
-            <form onSubmit={handleEditSubmit} className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="name">Nom de l'entreprise</Label>
-                  <Input
-                    id="name"
-                    name="name"
-                    value={formData.name}
-                    onChange={handleInputChange}
-                    required
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="sector">Secteur d'activité</Label>
-                  <Select 
-                    value={formData.sector} 
-                    onValueChange={(value) => handleSelectChange('sector', value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Sélectionner un secteur" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {sectorOptions.map((option) => (
-                        <SelectItem key={option.value} value={option.value}>
-                          {option.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="status">Statut</Label>
-                  <Select 
-                    value={formData.status} 
-                    onValueChange={(value) => handleSelectChange('status', value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Sélectionner un statut" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {statusOptions.map((option) => (
-                        <SelectItem key={option.value} value={option.value}>
-                          {option.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="revenue">Chiffre d'affaires annuel (€)</Label>
-                  <Input
-                    id="revenue"
-                    name="revenue"
-                    type="text"
-                    value={formData.revenue}
-                    onChange={handleInputChange}
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="contactName">Nom du contact</Label>
-                  <Input
-                    id="contactName"
-                    name="contactName"
-                    value={formData.contactName}
-                    onChange={handleInputChange}
-                    required
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="contactEmail">Email du contact</Label>
-                  <Input
-                    id="contactEmail"
-                    name="contactEmail"
-                    type="email"
-                    value={formData.contactEmail}
-                    onChange={handleInputChange}
-                    required
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="contactPhone">Téléphone du contact</Label>
-                  <Input
-                    id="contactPhone"
-                    name="contactPhone"
-                    value={formData.contactPhone}
-                    onChange={handleInputChange}
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="website">Site web</Label>
-                  <Input
-                    id="website"
-                    name="website"
-                    value={formData.website || ''}
-                    onChange={handleInputChange}
-                  />
-                </div>
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="address">Adresse</Label>
-                <Input
-                  id="address"
-                  name="address"
-                  value={formData.address}
-                  onChange={handleInputChange}
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="description">Description</Label>
-                <Textarea
-                  id="description"
-                  name="description"
-                  value={formData.description || ''}
-                  onChange={handleInputChange}
-                  rows={3}
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="notes">Notes</Label>
-                <Textarea
-                  id="notes"
-                  name="notes"
-                  value={formData.notes || ''}
-                  onChange={handleInputChange}
-                  rows={3}
-                />
-              </div>
-              
-              <DialogFooter>
-                <Button type="button" variant="outline" onClick={() => setIsEditDialogOpen(false)}>
-                  Annuler
-                </Button>
-                <Button type="submit">
-                  Mettre à jour
-                </Button>
-              </DialogFooter>
-            </form>
-          </DialogContent>
-        </Dialog>
-      )}
-
-      {/* View Client Details Dialog */}
-      {selectedClient && (
-        <Dialog open={isViewDetailsOpen} onOpenChange={setIsViewDetailsOpen}>
-          <DialogContent className="sm:max-w-[700px]">
-            <DialogHeader>
-              <DialogTitle>{selectedClient.name}</DialogTitle>
-            </DialogHeader>
-            
-            <Tabs defaultValue="details">
-              <TabsList>
-                <TabsTrigger value="details">Détails</TabsTrigger>
-                <TabsTrigger value="contact">Contact</TabsTrigger>
-                <TabsTrigger value="notes">Notes</TabsTrigger>
-              </TabsList>
-              
-              <TabsContent value="details" className="space-y-4 pt-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <h4 className="text-sm font-medium text-muted-foreground">Secteur</h4>
-                    <p>{selectedClient.sector}</p>
-                  </div>
-                  <div>
-                    <h4 className="text-sm font-medium text-muted-foreground">Statut</h4>
-                    <p>{selectedClient.status}</p>
-                  </div>
-                  <div>
-                    <h4 className="text-sm font-medium text-muted-foreground">Chiffre d'affaires</h4>
-                    <p>{selectedClient.revenue} €</p>
-                  </div>
-                  <div>
-                    <h4 className="text-sm font-medium text-muted-foreground">Client depuis</h4>
-                    <p>{selectedClient.customerSince || 'Non spécifié'}</p>
-                  </div>
-                  <div className="col-span-2">
-                    <h4 className="text-sm font-medium text-muted-foreground">Description</h4>
-                    <p>{selectedClient.description || 'Aucune description'}</p>
-                  </div>
-                </div>
-              </TabsContent>
-              
-              <TabsContent value="contact" className="space-y-4 pt-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <h4 className="text-sm font-medium text-muted-foreground">Nom du contact</h4>
-                    <p>{selectedClient.contactName}</p>
-                  </div>
-                  <div>
-                    <h4 className="text-sm font-medium text-muted-foreground">Email</h4>
-                    <p>{selectedClient.contactEmail}</p>
-                  </div>
-                  <div>
-                    <h4 className="text-sm font-medium text-muted-foreground">Téléphone</h4>
-                    <p>{selectedClient.contactPhone}</p>
-                  </div>
-                  <div>
-                    <h4 className="text-sm font-medium text-muted-foreground">Site web</h4>
-                    <p>{selectedClient.website || 'Non spécifié'}</p>
-                  </div>
-                  <div className="col-span-2">
-                    <h4 className="text-sm font-medium text-muted-foreground">Adresse</h4>
-                    <p>{selectedClient.address}</p>
-                  </div>
-                </div>
-              </TabsContent>
-              
-              <TabsContent value="notes" className="space-y-4 pt-4">
-                <div>
-                  <h4 className="text-sm font-medium text-muted-foreground">Notes</h4>
-                  <div className="mt-2 p-4 border rounded-md min-h-[100px]">
-                    {selectedClient.notes || 'Aucune note'}
-                  </div>
-                </div>
-              </TabsContent>
-            </Tabs>
-            
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setIsViewDetailsOpen(false)}>
-                Fermer
-              </Button>
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="sm:max-w-[725px]">
+          <DialogHeader>
+            <DialogTitle>Modifier le client</DialogTitle>
+            <DialogDescription>
+              Modifiez les détails du client.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <ClientForm
+            formData={formData}
+            sectors={sectors}
+            handleInputChange={handleInputChange}
+            handleSelectChange={handleSelectChange}
+          />
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => {
+              resetForm();
+              setIsEditDialogOpen(false);
+            }}>
+              Annuler
+            </Button>
+            <Button onClick={() => handleUpdateClient(formData)}>
+              Enregistrer
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Delete Client Confirmation */}
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Êtes-vous sûr ?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Cette action ne peut pas être annulée. Cela supprimera définitivement le client
+              {selectedClient && ` ${selectedClient.name}`} et toutes ses données associées.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogAction className="bg-destructive hover:bg-destructive/90" onClick={handleDeleteClient}>
+              Supprimer
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+      
+      {/* View Client Details */}
+      <Dialog open={isViewDetailsOpen} onOpenChange={setIsViewDetailsOpen}>
+        <DialogContent className="sm:max-w-[725px]">
+          <DialogHeader>
+            <DialogTitle>Détails du client</DialogTitle>
+            <DialogDescription>
+              Informations complètes sur le client.
+            </DialogDescription>
+          </DialogHeader>
+          
+          {selectedClient && <ClientDetails client={selectedClient} />}
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsViewDetailsOpen(false)}>
+              Fermer
+            </Button>
+            {selectedClient && (
               <Button onClick={() => {
                 setIsViewDetailsOpen(false);
-                setIsEditDialogOpen(true);
+                openEditDialog(selectedClient);
               }}>
                 Modifier
               </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      )}
-
-      {/* Delete Client Dialog */}
-      {selectedClient && (
-        <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Supprimer le client</DialogTitle>
-              <DialogDescription>
-                Êtes-vous sûr de vouloir supprimer le client {selectedClient.name} ? Cette action ne peut pas être annulée.
-              </DialogDescription>
-            </DialogHeader>
-            
-            <DialogFooter className="mt-4">
-              <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
-                Annuler
-              </Button>
-              <Button variant="destructive" onClick={handleDeleteClient}>
-                Supprimer
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      )}
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 };

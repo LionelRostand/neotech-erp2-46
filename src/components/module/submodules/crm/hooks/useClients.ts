@@ -2,6 +2,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Client, ClientFormData } from '../types/crm-types';
 import { toast } from 'sonner';
+import { useClientsData } from './useClientsData';
 
 // Export the options directly from the hook file for easier imports
 export const sectors = [
@@ -23,12 +24,20 @@ export const statusOptions = [
 ];
 
 export const useClients = () => {
-  const [clients, setClients] = useState<Client[]>([]);
+  // Use the real Firebase data from useClientsData
+  const { 
+    clients, 
+    isLoading: loading, 
+    error: fetchError,
+    addClient,
+    updateClient,
+    deleteClient
+  } = useClientsData();
+
   const [filteredClients, setFilteredClients] = useState<Client[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [sectorFilter, setSectorFilter] = useState('all');
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
   // Dialog states
@@ -52,85 +61,22 @@ export const useClients = () => {
     notes: ''
   });
   
-  // Fetch clients
+  // Set error from fetch if any
   useEffect(() => {
-    const fetchClients = async () => {
-      try {
-        // Simulate API call
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        // Mock client data
-        const mockClients: Client[] = [
-          {
-            id: '1',
-            name: 'TechCorp',
-            sector: 'technology',
-            revenue: '1000000',
-            status: 'active' as const,
-            contactName: 'John Doe',
-            contactEmail: 'john@techcorp.com',
-            contactPhone: '01 23 45 67 89',
-            address: '123 Tech Street, Paris',
-            website: 'www.techcorp.com',
-            description: 'Leading tech company',
-            notes: 'VIP client',
-            createdAt: new Date().toISOString(),
-            customerSince: '2020-01-01'
-          },
-          {
-            id: '2',
-            name: 'HealthCare Plus',
-            sector: 'healthcare',
-            revenue: '750000',
-            status: 'active' as const,
-            contactName: 'Jane Smith',
-            contactEmail: 'jane@healthcareplus.com',
-            contactPhone: '01 98 76 54 32',
-            address: '456 Health Avenue, Lyon',
-            website: 'www.healthcareplus.com',
-            description: 'Healthcare provider',
-            notes: 'Regular customer',
-            createdAt: new Date().toISOString(),
-            customerSince: '2021-03-15'
-          },
-          {
-            id: '3',
-            name: 'Finance Group',
-            sector: 'finance',
-            revenue: '2000000',
-            status: 'inactive' as const,
-            contactName: 'Robert Johnson',
-            contactEmail: 'robert@financegroup.com',
-            contactPhone: '01 45 67 89 12',
-            address: '789 Finance Street, Paris',
-            website: 'www.financegroup.com',
-            description: 'Financial services',
-            notes: 'Inactive as of last month',
-            createdAt: new Date().toISOString(),
-            customerSince: '2019-06-10'
-          }
-        ];
-        
-        setClients(mockClients);
-        setError(null);
-      } catch (err) {
-        console.error('Error fetching clients:', err);
-        setError('Une erreur est survenue lors du chargement des clients');
-      } finally {
-        setLoading(false);
-      }
-    };
-    
-    fetchClients();
-  }, []);
+    if (fetchError) {
+      setError(fetchError.message);
+    } else {
+      setError(null);
+    }
+  }, [fetchError]);
   
   // Filter clients based on search term and sector filter
   useEffect(() => {
     const filtered = clients.filter(client => {
       const matchesSearch = searchTerm === '' || 
         client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        client.contactName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        client.contactEmail.toLowerCase().includes(searchTerm.toLowerCase());
+        (client.contactName && client.contactName.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (client.contactEmail && client.contactEmail.toLowerCase().includes(searchTerm.toLowerCase()));
       
       const matchesSector = sectorFilter === 'all' || client.sector === sectorFilter;
       
@@ -169,23 +115,13 @@ export const useClients = () => {
   // CRUD operations
   const handleCreateClient = useCallback(async (data: ClientFormData) => {
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      // Ensure status is a valid Client status type
-      const clientStatus = (data.status === 'active' || data.status === 'inactive' || data.status === 'lead') 
-        ? data.status 
-        : 'active';
-      
-      const newClient: Client = {
-        id: Date.now().toString(),
+      // Cast the status to the proper type
+      await addClient({
         ...data,
-        status: clientStatus,
-        createdAt: new Date().toISOString(),
+        status: data.status as 'active' | 'inactive' | 'lead',
         customerSince: new Date().toISOString().split('T')[0]
-      };
+      });
       
-      setClients(prev => [newClient, ...prev]);
       resetForm();
       setIsAddDialogOpen(false);
       toast.success('Client créé avec succès');
@@ -193,27 +129,17 @@ export const useClients = () => {
       console.error('Error creating client:', err);
       toast.error('Erreur lors de la création du client');
     }
-  }, [resetForm]);
+  }, [addClient, resetForm]);
   
   const handleUpdateClient = useCallback(async (data: ClientFormData) => {
     if (!selectedClient) return;
     
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      // Ensure status is a valid Client status type
-      const clientStatus = (data.status === 'active' || data.status === 'inactive' || data.status === 'lead') 
-        ? data.status 
-        : 'active';
-      
-      setClients(prev => 
-        prev.map(client => 
-          client.id === selectedClient.id 
-            ? { ...client, ...data, status: clientStatus } 
-            : client
-        )
-      );
+      // We need to cast the status here as well
+      await updateClient(selectedClient.id, {
+        ...data,
+        status: data.status as 'active' | 'inactive' | 'lead'
+      });
       
       resetForm();
       setIsEditDialogOpen(false);
@@ -222,23 +148,21 @@ export const useClients = () => {
       console.error('Error updating client:', err);
       toast.error('Erreur lors de la mise à jour du client');
     }
-  }, [selectedClient, resetForm]);
+  }, [selectedClient, updateClient, resetForm]);
   
   const handleDeleteClient = useCallback(async () => {
     if (!selectedClient) return;
     
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await deleteClient(selectedClient.id);
       
-      setClients(prev => prev.filter(client => client.id !== selectedClient.id));
       setIsDeleteDialogOpen(false);
       toast.success('Client supprimé avec succès');
     } catch (err) {
       console.error('Error deleting client:', err);
       toast.error('Erreur lors de la suppression du client');
     }
-  }, [selectedClient]);
+  }, [selectedClient, deleteClient]);
   
   // Dialog handling
   const openEditDialog = useCallback((client: Client) => {
@@ -248,10 +172,10 @@ export const useClients = () => {
       sector: client.sector,
       revenue: client.revenue,
       status: client.status,
-      contactName: client.contactName,
-      contactEmail: client.contactEmail,
-      contactPhone: client.contactPhone,
-      address: client.address,
+      contactName: client.contactName || '',
+      contactEmail: client.contactEmail || '',
+      contactPhone: client.contactPhone || '',
+      address: client.address || '',
       website: client.website || '',
       description: client.description || '',
       notes: client.notes || ''
