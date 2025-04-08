@@ -29,9 +29,9 @@ export const useCollectionData = (
             // Split the path into segments
             const segments = path.split('/');
             
-            // For paths like 'crm/clients', use the pattern:
-            // collection(db, 'crm', 'crm', 'clients')
-            // where first 'crm' is the collection and second 'crm' is a document ID
+            // For paths like 'freight/shipments', use the pattern:
+            // collection(db, 'freight', 'freight', 'shipments')
+            // where first 'freight' is the collection and second 'freight' is a document ID
             if (segments.length === 2) {
               const parentCollection = segments[0];
               const subcollection = segments[1];
