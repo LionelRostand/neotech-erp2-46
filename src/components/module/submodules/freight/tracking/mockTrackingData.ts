@@ -100,7 +100,7 @@ const mockPackages: Package[] = [
     carrierId: "carrier1",
     carrierName: "DHL",
     trackingNumber: "TRK123456789",
-    status: "in_transit",
+    status: "shipped",  // Changed from "in_transit" to "shipped"
     labelGenerated: true,
     labelUrl: "https://example.com/label/TRK123456789",
     createdAt: new Date(Date.now() - 345600000).toISOString(), // 4 days ago
@@ -137,7 +137,7 @@ const mockPackages: Package[] = [
     carrierId: "carrier3",
     carrierName: "UPS",
     trackingNumber: "TRK202301001",
-    status: "processing",
+    status: "ready",  // Changed from "processing" to "ready"
     labelGenerated: false,
     createdAt: new Date(Date.now() - 86400000).toISOString(), // 1 day ago
     documents: []
