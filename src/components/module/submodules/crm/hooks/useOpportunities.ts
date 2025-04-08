@@ -3,7 +3,6 @@ import { useState, useEffect, useCallback } from 'react';
 import { Opportunity, OpportunityFormData, OpportunityStage } from '../types/crm-types';
 import { mockOpportunities } from '../data/mockOpportunities';
 import { toast } from 'sonner';
-import { useOpportunityUtils } from './opportunity/useOpportunityUtils';
 
 export const useOpportunities = () => {
   const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
