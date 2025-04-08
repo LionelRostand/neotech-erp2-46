@@ -28,6 +28,7 @@ export async function fetchCollectionData<T>(
     } else {
       // Regular collection path
       collectionRef = collection(db, collectionPath);
+      console.log(`Getting collection reference for ${collectionPath}`);
     }
     
     const q = constraints.length > 0 ? query(collectionRef, ...constraints) : query(collectionRef);
@@ -38,10 +39,15 @@ export async function fetchCollectionData<T>(
     return querySnapshot.docs.map(doc => {
       const data = doc.data();
       // Ensure data is an object before spreading
-      return {
+      const result = {
         id: doc.id,
         ...(typeof data === 'object' && data !== null ? data : {})
-      } as T;
+      };
+      
+      // Log the document data for debugging
+      console.log(`Document ${doc.id} data:`, result);
+      
+      return result as T;
     });
   } catch (err: any) {
     console.error(`Error fetching data from ${collectionPath}:`, err);

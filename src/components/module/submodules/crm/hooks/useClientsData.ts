@@ -75,8 +75,23 @@ export const useClientsData = () => {
   // Add a new client
   const addClient = async (clientData: Omit<Client, 'id' | 'createdAt'>) => {
     try {
+      // Ensure all required fields are present before adding to Firestore
+      const sanitizedData = {
+        name: clientData.name || '',
+        contactName: clientData.contactName || '',
+        contactEmail: clientData.contactEmail || '',
+        contactPhone: clientData.contactPhone || '',
+        sector: clientData.sector || '',
+        revenue: clientData.revenue || '',
+        status: clientData.status || 'active',
+        address: clientData.address || '',
+        website: clientData.website || '',
+        notes: clientData.notes || '',
+        customerSince: clientData.customerSince || new Date().toISOString().split('T')[0]
+      };
+
       await firestore.add({
-        ...clientData,
+        ...sanitizedData,
         createdAt: serverTimestamp(),
       });
       
@@ -94,8 +109,18 @@ export const useClientsData = () => {
   // Update an existing client
   const updateClient = async (id: string, clientData: Partial<Client>) => {
     try {
+      // Create a clean object with only valid Firestore fields
+      const updateData: Record<string, any> = {};
+      
+      // Add only defined properties to update data
+      Object.entries(clientData).forEach(([key, value]) => {
+        if (value !== undefined && key !== 'id' && key !== 'createdAt') {
+          updateData[key] = value;
+        }
+      });
+
       await firestore.update(id, {
-        ...clientData,
+        ...updateData,
         updatedAt: serverTimestamp(),
       });
       
@@ -162,14 +187,19 @@ export const useClientsData = () => {
         },
       ];
       
-      const promises = mockClients.map(client => 
-        firestore.add({
-          ...client,
-          createdAt: serverTimestamp(),
-        })
-      );
+      // Add each client individually with proper error handling
+      for (const client of mockClients) {
+        try {
+          await firestore.add({
+            ...client,
+            createdAt: serverTimestamp(),
+          });
+        } catch (error) {
+          console.error('Error adding mock client:', error);
+          // Continue with the next client even if one fails
+        }
+      }
       
-      await Promise.all(promises);
       console.log('Données de démonstration ajoutées avec succès');
       toast.success('Données de démonstration ajoutées avec succès');
       
