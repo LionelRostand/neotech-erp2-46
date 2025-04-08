@@ -35,6 +35,7 @@ const ClientsTable: React.FC<ClientTableProps> = ({
   onEdit,
   onDelete
 }) => {
+  // Handle loading state
   if (isLoading) {
     return (
       <div className="flex justify-center items-center p-8">
@@ -43,6 +44,7 @@ const ClientsTable: React.FC<ClientTableProps> = ({
     );
   }
 
+  // Handle error state
   if (error) {
     return (
       <div className="p-8 text-center">
@@ -51,7 +53,11 @@ const ClientsTable: React.FC<ClientTableProps> = ({
     );
   }
 
-  if (clients.length === 0) {
+  // Defensive check for clients array
+  const clientsArray = Array.isArray(clients) ? clients : [];
+
+  // Handle empty state
+  if (clientsArray.length === 0) {
     return (
       <div className="p-8 text-center">
         <p className="text-muted-foreground">Aucun client trouvé</p>
@@ -71,7 +77,7 @@ const ClientsTable: React.FC<ClientTableProps> = ({
         </TableRow>
       </TableHeader>
       <TableBody>
-        {clients.map((client) => (
+        {clientsArray.map((client) => (
           <TableRow key={client.id}>
             <TableCell className="font-medium">{client.name}</TableCell>
             <TableCell>

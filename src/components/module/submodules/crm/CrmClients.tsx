@@ -3,12 +3,12 @@ import React from 'react';
 import { Button } from "@/components/ui/button";
 import ClientSearch from './clients/ClientSearch';
 import ClientsTable from './clients/ClientsTable';
-import { useClients, sectors, statusOptions } from './hooks/useClients';
+import { useClients } from './hooks/useClients';
 import ClientDialogs from './clients/ClientDialogs';
 
 const CrmClients: React.FC = () => {
-  const clientsHook = useClients();
   const { 
+    clients,
     filteredClients, 
     searchTerm, 
     setSearchTerm, 
@@ -34,8 +34,10 @@ const CrmClients: React.FC = () => {
     viewClientDetails,
     resetForm,
     loading,
-    error
-  } = clientsHook;
+    error,
+    sectors,
+    statusOptions
+  } = useClients();
 
   return (
     <div className="min-h-screen w-full bg-neotech-background">
@@ -60,7 +62,7 @@ const CrmClients: React.FC = () => {
 
         <div className="mt-4">
           <ClientsTable 
-            clients={filteredClients}
+            clients={filteredClients || []}
             onView={viewClientDetails}
             onEdit={openEditDialog}
             onDelete={openDeleteDialog}

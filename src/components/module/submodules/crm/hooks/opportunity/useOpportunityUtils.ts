@@ -53,10 +53,16 @@ export const useOpportunityUtils = () => {
     }).format(value);
   };
 
+  // Format probability percentage for display
+  const formatProbability = (probability: number) => {
+    return `${probability}%`;
+  };
+
   return {
     getAllStages,
     getStageColor,
     getStageLabel,
-    formatCurrency
+    formatCurrency,
+    formatProbability
   };
 };
