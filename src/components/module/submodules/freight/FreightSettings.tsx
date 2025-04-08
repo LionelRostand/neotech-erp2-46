@@ -6,12 +6,18 @@ import FreightGeneralSettings from './settings/FreightGeneralSettings';
 import FreightPermissionsSettings from './settings/FreightPermissionsSettings';
 import { usePermissions } from '@/hooks/usePermissions';
 import { toast } from '@/hooks/use-toast';
+import { FreightAlert } from './components/FreightAlert';
+import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { COLLECTIONS } from '@/lib/firebase-collections';
+import { Button } from '@/components/ui/button';
 
 const FreightSettings: React.FC = () => {
   const [activeTab, setActiveTab] = useState("general");
   const { isAdmin, checkPermission, loading } = usePermissions('freight');
   const [canEditSettings, setCanEditSettings] = useState(false);
   const [isCheckingPermissions, setIsCheckingPermissions] = useState(true);
+  const [isGrantingAdminRights, setIsGrantingAdminRights] = useState(false);
   
   // Vérifier les permissions d'édition des paramètres uniquement une fois lors du chargement initial
   useEffect(() => {
@@ -44,25 +50,133 @@ const FreightSettings: React.FC = () => {
     }
   }, [loading, isAdmin, checkPermission]);
 
+  // Fonction pour accorder les droits d'administrateur à admin@neotech-consulting.com
+  const grantAdminRightsToSpecificUser = async () => {
+    try {
+      setIsGrantingAdminRights(true);
+      
+      // 1. Trouver l'utilisateur par son email
+      const usersCollection = await getDoc(doc(db, COLLECTIONS.USERS, 'admin-permissions-config'));
+      const adminEmail = 'admin@neotech-consulting.com';
+      let adminUserId = '';
+      
+      if (usersCollection.exists()) {
+        const config = usersCollection.data();
+        adminUserId = config.adminUserId || '';
+      } else {
+        // Créer le document de configuration s'il n'existe pas
+        await updateDoc(doc(db, COLLECTIONS.USERS, 'admin-permissions-config'), {
+          adminEmail: adminEmail,
+          adminUserId: adminUserId,
+          updatedAt: new Date()
+        });
+      }
+      
+      // 2. Vérifier si l'utilisateur existe
+      if (!adminUserId) {
+        toast({
+          title: "Information",
+          description: "Configuration pour admin@neotech-consulting.com prête. Veuillez vous assurer que cet utilisateur existe dans le système.",
+          variant: "default"
+        });
+        return;
+      }
+      
+      // 3. Mettre à jour les permissions pour le module Freight
+      const userPermissionsRef = doc(db, COLLECTIONS.USER_PERMISSIONS, adminUserId);
+      const userPermissionsDoc = await getDoc(userPermissionsRef);
+      
+      if (userPermissionsDoc.exists()) {
+        const currentPermissions = userPermissionsDoc.data();
+        
+        // Mettre à jour les permissions spécifiques du module Freight
+        await updateDoc(userPermissionsRef, {
+          permissions: {
+            ...currentPermissions.permissions,
+            freight: {
+              view: true,
+              create: true,
+              edit: true,
+              delete: true,
+              export: true,
+              modify: true
+            }
+          }
+        });
+        
+        toast({
+          title: "Succès",
+          description: "Les droits d'administration pour le module Freight ont été accordés à admin@neotech-consulting.com",
+          variant: "default"
+        });
+      } else {
+        // Créer des permissions complètes pour cet utilisateur
+        await updateDoc(userPermissionsRef, {
+          userId: adminUserId,
+          permissions: {
+            freight: {
+              view: true,
+              create: true,
+              edit: true,
+              delete: true,
+              export: true,
+              modify: true
+            }
+          },
+          updatedAt: new Date()
+        });
+        
+        toast({
+          title: "Succès",
+          description: "Nouvelles permissions créées pour admin@neotech-consulting.com avec droits complets sur le module Freight",
+          variant: "default"
+        });
+      }
+    } catch (error) {
+      console.error("Erreur lors de l'attribution des droits d'administrateur:", error);
+      toast({
+        title: "Erreur",
+        description: "Une erreur est survenue lors de l'attribution des droits d'administrateur.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsGrantingAdminRights(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <h2 className="text-3xl font-bold">Paramètres du Module Fret</h2>
+      
+      {isAdmin && (
+        <div className="mb-6 p-4 bg-blue-50 border border-blue-100 rounded-md">
+          <h3 className="text-lg font-medium text-blue-800 mb-2">Administration spéciale</h3>
+          <p className="text-blue-700 mb-4">En tant qu'administrateur système, vous pouvez accorder des droits d'administrateur complets sur ce module à admin@neotech-consulting.com.</p>
+          <Button 
+            onClick={grantAdminRightsToSpecificUser}
+            disabled={isGrantingAdminRights}
+            className="bg-blue-600 hover:bg-blue-700"
+          >
+            {isGrantingAdminRights ? "Attribution en cours..." : "Accorder les pleins droits"}
+          </Button>
+        </div>
+      )}
       
       {isCheckingPermissions ? (
         <div className="p-4 border rounded-md bg-slate-50 animate-pulse">
           Vérification des permissions...
         </div>
       ) : !canEditSettings && !isAdmin ? (
-        <div className="p-4 bg-amber-50 border border-amber-200 rounded-md flex items-start gap-3 text-amber-800">
-          <AlertCircle className="h-5 w-5 mt-0.5 flex-shrink-0" />
-          <div>
-            <h3 className="font-medium">Accès limité</h3>
-            <p className="text-sm mt-1">
-              Vous n'avez pas les droits suffisants pour modifier les paramètres du module Fret. 
-              Vous pouvez consulter les informations, mais ne pourrez pas les modifier.
-            </p>
-          </div>
-        </div>
+        <FreightAlert 
+          variant="warning" 
+          title="Accès limité"
+          className="mb-4"
+        >
+          <p>
+            Vous n'avez pas les droits suffisants pour modifier les paramètres du module Fret. 
+            Vous pouvez consulter les informations, mais ne pourrez pas les modifier.
+          </p>
+        </FreightAlert>
       ) : null}
       
       <Tabs defaultValue="general" className="w-full" onValueChange={setActiveTab}>
