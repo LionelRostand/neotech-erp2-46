@@ -86,7 +86,7 @@ export const COLLECTIONS = {
     ROUTES: 'freight/routes',
     QUOTES: 'freight/quotes',
     BILLING: 'freight/billing',
-    // Changed from 'freight/settings' to 'freight_settings'
+    // Utiliser 'freight_settings' au lieu de 'freight/settings' pour éviter les erreurs de référence
     SETTINGS: 'freight_settings',
     VEHICLES: 'freight/vehicles',
     DRIVERS: 'freight/drivers',

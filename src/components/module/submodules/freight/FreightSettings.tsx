@@ -1,29 +1,43 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Settings as SettingsIcon, Shield } from "lucide-react";
+import { Settings as SettingsIcon, Shield, AlertCircle } from "lucide-react";
 import FreightGeneralSettings from './settings/FreightGeneralSettings';
 import FreightPermissionsSettings from './settings/FreightPermissionsSettings';
 import { usePermissions } from '@/hooks/usePermissions';
+import { toast } from '@/components/ui/use-toast';
 
 const FreightSettings: React.FC = () => {
   const [activeTab, setActiveTab] = useState("general");
   const { isAdmin, checkPermission, loading } = usePermissions('freight');
-  const [canEditSettings, setCanEditSettings] = useState(true);
+  const [canEditSettings, setCanEditSettings] = useState(false);
+  const [isCheckingPermissions, setIsCheckingPermissions] = useState(true);
   
   // Vérifier les permissions d'édition des paramètres uniquement une fois lors du chargement initial
-  React.useEffect(() => {
+  useEffect(() => {
     if (!loading) {
       const checkEditAccess = async () => {
-        // Les administrateurs ont toujours accès
-        if (isAdmin) {
-          setCanEditSettings(true);
-          return;
+        try {
+          setIsCheckingPermissions(true);
+          // Les administrateurs ont toujours accès
+          if (isAdmin) {
+            setCanEditSettings(true);
+            return;
+          }
+          
+          // Vérifier la permission d'édition pour les autres utilisateurs
+          const hasAccess = await checkPermission('freight', 'modify');
+          setCanEditSettings(hasAccess);
+        } catch (error) {
+          console.error("Erreur lors de la vérification des permissions:", error);
+          toast({
+            title: "Erreur",
+            description: "Impossible de vérifier vos permissions. Veuillez réessayer.",
+            variant: "destructive"
+          });
+        } finally {
+          setIsCheckingPermissions(false);
         }
-        
-        // Vérifier la permission d'édition pour les autres utilisateurs
-        const hasAccess = await checkPermission('freight', 'modify');
-        setCanEditSettings(hasAccess);
       };
       
       checkEditAccess();
@@ -33,6 +47,23 @@ const FreightSettings: React.FC = () => {
   return (
     <div className="space-y-6">
       <h2 className="text-3xl font-bold">Paramètres du Module Fret</h2>
+      
+      {isCheckingPermissions ? (
+        <div className="p-4 border rounded-md bg-slate-50 animate-pulse">
+          Vérification des permissions...
+        </div>
+      ) : !canEditSettings && !isAdmin ? (
+        <div className="p-4 bg-amber-50 border border-amber-200 rounded-md flex items-start gap-3 text-amber-800">
+          <AlertCircle className="h-5 w-5 mt-0.5 flex-shrink-0" />
+          <div>
+            <h3 className="font-medium">Accès limité</h3>
+            <p className="text-sm mt-1">
+              Vous n'avez pas les droits suffisants pour modifier les paramètres du module Fret. 
+              Vous pouvez consulter les informations, mais ne pourrez pas les modifier.
+            </p>
+          </div>
+        </div>
+      ) : null}
       
       <Tabs defaultValue="general" className="w-full" onValueChange={setActiveTab}>
         <TabsList className="mb-4">
@@ -47,7 +78,7 @@ const FreightSettings: React.FC = () => {
         </TabsList>
         
         <TabsContent value="general">
-          <FreightGeneralSettings />
+          <FreightGeneralSettings isAdmin={isAdmin} canEdit={canEditSettings} />
         </TabsContent>
         
         <TabsContent value="permissions">
