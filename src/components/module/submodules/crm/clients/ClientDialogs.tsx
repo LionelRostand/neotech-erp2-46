@@ -3,22 +3,13 @@ import React from 'react';
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import { ClientFormData, Client } from '../types/crm-types';
+import { Client, ClientFormData } from '../types/crm-types';
 import ClientForm from './ClientForm';
 import ClientDetails from './ClientDetails';
 
@@ -35,12 +26,12 @@ interface ClientDialogsProps {
   formData: ClientFormData;
   handleInputChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
   handleSelectChange: (name: string, value: string) => void;
-  handleCreateClient: () => void;
-  handleUpdateClient: () => void;
+  handleCreateClient: (e: React.FormEvent) => void;
+  handleUpdateClient: (e: React.FormEvent) => void;
   handleDeleteClient: () => void;
   resetForm: () => void;
-  sectorOptions: { value: string; label: string }[];
-  statusOptions: { value: string; label: string }[];
+  sectorOptions: { label: string; value: string }[];
+  statusOptions: { label: string; value: string }[];
   openEditDialog: (client: Client) => void;
 }
 
@@ -63,112 +54,118 @@ const ClientDialogs: React.FC<ClientDialogsProps> = ({
   resetForm,
   sectorOptions,
   statusOptions,
-  openEditDialog,
+  openEditDialog
 }) => {
-  // Add Client Dialog
-  const AddClientDialog = (
-    <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-      <DialogContent className="sm:max-w-[600px]">
-        <DialogHeader>
-          <DialogTitle>Ajouter un client</DialogTitle>
-        </DialogHeader>
-        <ClientForm
-          formData={formData}
-          handleInputChange={handleInputChange}
-          handleSelectChange={handleSelectChange}
-          sectorOptions={sectorOptions}
-          statusOptions={statusOptions}
-        />
-        <DialogFooter>
-          <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
-            Annuler
-          </Button>
-          <Button onClick={handleCreateClient}>
-            Ajouter
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-
-  // Edit Client Dialog
-  const EditClientDialog = (
-    <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-      <DialogContent className="sm:max-w-[600px]">
-        <DialogHeader>
-          <DialogTitle>Modifier le client</DialogTitle>
-        </DialogHeader>
-        <ClientForm
-          formData={formData}
-          handleInputChange={handleInputChange}
-          handleSelectChange={handleSelectChange}
-          sectorOptions={sectorOptions}
-          statusOptions={statusOptions}
-        />
-        <DialogFooter>
-          <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
-            Annuler
-          </Button>
-          <Button onClick={handleUpdateClient}>
-            Mettre à jour
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-
-  // Delete Client Dialog
-  const DeleteClientDialog = (
-    <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>Êtes-vous sûr?</AlertDialogTitle>
-          <AlertDialogDescription>
-            Cette action ne peut pas être annulée. Cela supprimera définitivement le client{' '}
-            <strong>{selectedClient?.name}</strong> et supprimera les données associées.
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel>Annuler</AlertDialogCancel>
-          <AlertDialogAction onClick={handleDeleteClient} className="bg-red-500 hover:bg-red-600">
-            Supprimer
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
-  );
-
-  // View Client Details Dialog
-  const ViewClientDetailsDialog = (
-    <Dialog open={isViewDetailsOpen} onOpenChange={setIsViewDetailsOpen}>
-      <DialogContent className="sm:max-w-[600px]">
-        <DialogHeader>
-          <DialogTitle>Détails du client</DialogTitle>
-        </DialogHeader>
-        {selectedClient && (
-          <ClientDetails 
-            client={selectedClient}
-            onEdit={() => {
-              setIsViewDetailsOpen(false);
-              openEditDialog(selectedClient);
-            }}
-          />
-        )}
-        <DialogFooter>
-          <Button variant="outline" onClick={() => setIsViewDetailsOpen(false)}>
-            Fermer
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-
   return (
     <>
-      {AddClientDialog}
-      {EditClientDialog}
-      {DeleteClientDialog}
-      {ViewClientDetailsDialog}
+      {/* Add Client Dialog */}
+      <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Ajouter un nouveau client</DialogTitle>
+            <DialogDescription>
+              Complétez les informations pour créer un nouveau client
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleCreateClient}>
+            <ClientForm 
+              formData={formData} 
+              handleInputChange={handleInputChange}
+              handleSelectChange={handleSelectChange}
+              sectorOptions={sectorOptions}
+              statusOptions={statusOptions}
+            />
+            <DialogFooter className="mt-4">
+              <Button type="button" variant="outline" onClick={() => {
+                resetForm();
+                setIsAddDialogOpen(false);
+              }}>
+                Annuler
+              </Button>
+              <Button type="submit">Ajouter</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Client Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Modifier le client</DialogTitle>
+            <DialogDescription>
+              Modifiez les informations du client
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleUpdateClient}>
+            <ClientForm 
+              formData={formData} 
+              handleInputChange={handleInputChange}
+              handleSelectChange={handleSelectChange}
+              sectorOptions={sectorOptions}
+              statusOptions={statusOptions}
+            />
+            <DialogFooter className="mt-4">
+              <Button type="button" variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+                Annuler
+              </Button>
+              <Button type="submit">Enregistrer</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Client Dialog */}
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Supprimer le client</DialogTitle>
+            <DialogDescription>
+              Êtes-vous sûr de vouloir supprimer ce client ? Cette action est irréversible.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            {selectedClient && (
+              <div>
+                <p><strong>Client :</strong> {selectedClient.name}</p>
+                <p><strong>Contact :</strong> {selectedClient.contactName}</p>
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
+              Annuler
+            </Button>
+            <Button variant="destructive" onClick={handleDeleteClient}>
+              Supprimer
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* View Client Details Dialog */}
+      <Dialog open={isViewDetailsOpen} onOpenChange={setIsViewDetailsOpen}>
+        <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-auto">
+          <DialogHeader>
+            <DialogTitle>Détails du client</DialogTitle>
+          </DialogHeader>
+          {selectedClient && (
+            <ClientDetails 
+              client={selectedClient} 
+              onEdit={() => {
+                setIsViewDetailsOpen(false);
+                // Use setTimeout to avoid dialog closing conflicts
+                setTimeout(() => openEditDialog(selectedClient), 100);
+              }} 
+            />
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsViewDetailsOpen(false)}>
+              Fermer
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 };

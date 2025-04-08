@@ -23,39 +23,41 @@ export const useClientsData = () => {
       
       // Format the client data
       const formattedClients = fetchedClients.map(client => {
+        const typedClient = client as any; // Type assertion to avoid property access errors
+        
         // Handle Firestore Timestamp conversion
         let createdAtStr = '';
         let customerSinceStr = '';
         
-        if (client.createdAt instanceof Timestamp) {
-          createdAtStr = client.createdAt.toDate().toISOString();
-        } else if (client.createdAt) {
-          createdAtStr = new Date(client.createdAt).toISOString();
+        if (typedClient.createdAt instanceof Timestamp) {
+          createdAtStr = typedClient.createdAt.toDate().toISOString();
+        } else if (typedClient.createdAt) {
+          createdAtStr = new Date(typedClient.createdAt).toISOString();
         } else {
           createdAtStr = new Date().toISOString();
         }
         
-        if (client.customerSince instanceof Timestamp) {
-          customerSinceStr = client.customerSince.toDate().toISOString().split('T')[0];
-        } else if (client.customerSince) {
-          customerSinceStr = new Date(client.customerSince).toISOString().split('T')[0];
+        if (typedClient.customerSince instanceof Timestamp) {
+          customerSinceStr = typedClient.customerSince.toDate().toISOString().split('T')[0];
+        } else if (typedClient.customerSince) {
+          customerSinceStr = new Date(typedClient.customerSince).toISOString().split('T')[0];
         } else {
           customerSinceStr = new Date().toISOString().split('T')[0];
         }
         
         return {
-          id: client.id,
-          ...client,
+          id: typedClient.id,
+          ...typedClient,
           createdAt: createdAtStr,
           customerSince: customerSinceStr,
           // Ensure all required fields are present
-          name: client.name || '',
-          contactName: client.contactName || '',
-          contactEmail: client.contactEmail || '',
-          contactPhone: client.contactPhone || '',
-          sector: client.sector || '',
-          revenue: client.revenue || '',
-          status: client.status || 'active'
+          name: typedClient.name || '',
+          contactName: typedClient.contactName || '',
+          contactEmail: typedClient.contactEmail || '',
+          contactPhone: typedClient.contactPhone || '',
+          sector: typedClient.sector || '',
+          revenue: typedClient.revenue || '',
+          status: typedClient.status || 'active'
         } as Client;
       });
       
@@ -90,7 +92,7 @@ export const useClientsData = () => {
   };
 
   // Update an existing client
-  const updateClient = async (id: string, clientData: Partial<ClientFormData>) => {
+  const updateClient = async (id: string, clientData: Partial<Client>) => {
     try {
       await firestore.update(id, {
         ...clientData,

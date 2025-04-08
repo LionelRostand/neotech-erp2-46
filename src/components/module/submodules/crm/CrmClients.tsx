@@ -40,6 +40,9 @@ const CrmClients: React.FC = () => {
     statusOptions
   } = useClients();
 
+  // Convert error to string for the table component
+  const errorMessage = error ? error.message : '';
+
   // Ensure filteredClients is always an array
   const safeFilteredClients = Array.isArray(filteredClients) ? filteredClients : [];
 
@@ -74,7 +77,7 @@ const CrmClients: React.FC = () => {
             onEdit={openEditDialog}
             onDelete={openDeleteDialog}
             isLoading={loading}
-            error={error}
+            error={errorMessage}
           />
         </div>
 
@@ -91,8 +94,8 @@ const CrmClients: React.FC = () => {
           formData={formData}
           handleInputChange={handleInputChange}
           handleSelectChange={handleSelectChange}
-          handleCreateClient={handleCreateClient}
-          handleUpdateClient={handleUpdateClient}
+          handleCreateClient={(e) => handleCreateClient(e)}
+          handleUpdateClient={(e) => handleUpdateClient(e)}
           handleDeleteClient={handleDeleteClient}
           resetForm={resetForm}
           sectorOptions={sectors}

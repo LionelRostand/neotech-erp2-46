@@ -70,7 +70,12 @@ export const useClients = () => {
   const handleCreateClient = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await addClientToFirestore(formData);
+      // Ensure status is a valid enum value
+      const clientData = {
+        ...formData,
+        status: formData.status as 'active' | 'inactive' | 'lead'
+      };
+      await addClientToFirestore(clientData);
       setIsAddDialogOpen(false);
       resetForm();
     } catch (error) {
@@ -84,7 +89,12 @@ export const useClients = () => {
     if (!selectedClient) return;
 
     try {
-      await updateClientInFirestore(selectedClient.id, formData);
+      // Ensure status is a valid enum value
+      const clientData = {
+        ...formData,
+        status: formData.status as 'active' | 'inactive' | 'lead'
+      };
+      await updateClientInFirestore(selectedClient.id, clientData);
       setIsEditDialogOpen(false);
     } catch (error) {
       console.error('Error updating client:', error);
