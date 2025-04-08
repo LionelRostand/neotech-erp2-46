@@ -30,7 +30,7 @@ const FreightGeneralSettings: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   
   // Use the appropriate collection/document pattern
-  const settingsCollectionPath = COLLECTIONS.FREIGHT.SETTINGS.replace('freight/settings', 'freight_settings');
+  const settingsCollectionPath = COLLECTIONS.FREIGHT.SETTINGS;
   const settingsDocumentId = 'general';
   const firestore = useFirestore(settingsCollectionPath);
 
@@ -38,9 +38,12 @@ const FreightGeneralSettings: React.FC = () => {
     const loadSettings = async () => {
       try {
         setIsLoading(true);
-        const settings = await firestore.getById(settingsDocumentId);
+        const settingsData = await firestore.getById(settingsDocumentId);
         
-        if (settings) {
+        if (settingsData) {
+          // Cast the returned data to our interface to ensure type safety
+          const settings = settingsData as FreightSettings;
+          
           // Use optional chaining and nullish coalescing to safely access potentially undefined properties
           setAutoTrackingUpdates(settings.autoTrackingUpdates ?? true);
           setClientPortalEnabled(settings.clientPortalEnabled ?? true);
@@ -77,7 +80,7 @@ const FreightGeneralSettings: React.FC = () => {
       toast.success("Paramètres enregistrés avec succès");
     } catch (error) {
       console.error("Error saving freight settings:", error);
-      toast.error(`Erreur lors de l'enregistrement des paramètres: ${error.message}`);
+      toast.error(`Erreur lors de l'enregistrement des paramètres: ${(error as Error).message}`);
     } finally {
       setIsLoading(false);
     }
