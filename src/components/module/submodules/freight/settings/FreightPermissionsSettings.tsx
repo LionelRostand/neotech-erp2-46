@@ -9,6 +9,8 @@ import { toast } from "sonner";
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import { useFirestore } from '@/hooks/useFirestore';
 import { useEmployeesPermissions, EmployeeUser } from '@/hooks/useEmployeesPermissions';
+import { AlertCircle, RefreshCw } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 // Define the permissions interface
 interface ModulePermission {
@@ -30,35 +32,49 @@ const FreightPermissionsSettings: React.FC = () => {
   const [permissions, setPermissions] = useState<{[userId: string]: ModulePermission}>({});
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [isOffline, setIsOffline] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
   
   const { employees, isLoading: isLoadingEmployees } = useEmployeesPermissions();
   
   // Use the appropriate collection path
-  const permissionsCollectionPath = COLLECTIONS.FREIGHT.SETTINGS;
+  const permissionsCollectionPath = COLLECTIONS.FREIGHT.PERMISSIONS;
   const permissionsDocumentId = 'permissions';
   const firestore = useFirestore(permissionsCollectionPath);
 
-  useEffect(() => {
-    const loadPermissions = async () => {
-      try {
-        setIsLoading(true);
-        const permissionsData = await firestore.getById(permissionsDocumentId);
-        
-        if (permissionsData) {
-          // Cast to our interface
-          const data = permissionsData as FreightPermissions;
-          setPermissions(data.permissions || {});
-        }
-      } catch (error) {
-        console.error("Error loading freight permissions:", error);
-        toast.error("Erreur lors du chargement des permissions");
-      } finally {
-        setIsLoading(false);
+  const loadPermissions = async () => {
+    try {
+      setIsLoading(true);
+      setIsOffline(false);
+      const permissionsData = await firestore.getById(permissionsDocumentId);
+      
+      if (permissionsData) {
+        // Cast to our interface
+        const data = permissionsData as FreightPermissions;
+        setPermissions(data.permissions || {});
       }
-    };
-    
+    } catch (error: any) {
+      console.error("Error loading freight permissions:", error);
+      
+      // Check if error is related to offline status
+      if (error.code === 'unavailable' || error.message?.includes('offline')) {
+        setIsOffline(true);
+        toast.error("Vous êtes hors ligne. Les permissions ne peuvent pas être chargées.");
+      } else {
+        toast.error("Erreur lors du chargement des permissions");
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  useEffect(() => {
     loadPermissions();
-  }, [firestore]);
+  }, [firestore, retryCount]);
+
+  const handleRetry = () => {
+    setRetryCount(prev => prev + 1);
+  };
 
   const togglePermission = (userId: string, action: keyof ModulePermission) => {
     setPermissions(prev => {
@@ -104,9 +120,17 @@ const FreightPermissionsSettings: React.FC = () => {
       await firestore.set(permissionsDocumentId, permissionsData);
       
       toast.success("Permissions enregistrées avec succès");
-    } catch (error) {
+      setIsOffline(false);
+    } catch (error: any) {
       console.error("Error saving freight permissions:", error);
-      toast.error(`Erreur lors de l'enregistrement des permissions: ${(error as Error).message}`);
+      
+      // Check if error is related to offline status
+      if (error.code === 'unavailable' || error.message?.includes('offline')) {
+        setIsOffline(true);
+        toast.error("Impossible d'enregistrer les permissions en mode hors ligne");
+      } else {
+        toast.error(`Erreur lors de l'enregistrement des permissions: ${(error as Error).message}`);
+      }
     } finally {
       setIsSaving(false);
     }
@@ -121,8 +145,27 @@ const FreightPermissionsSettings: React.FC = () => {
         </CardDescription>
       </CardHeader>
       <CardContent>
+        {isOffline && (
+          <Alert variant="destructive" className="mb-4">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription className="flex items-center justify-between">
+              <span>Vous êtes actuellement hors ligne. Les modifications ne seront pas enregistrées.</span>
+              <Button variant="outline" size="sm" onClick={handleRetry} className="ml-2 flex items-center gap-1">
+                <RefreshCw className="h-3 w-3" /> Réessayer
+              </Button>
+            </AlertDescription>
+          </Alert>
+        )}
+        
         {isLoading || isLoadingEmployees ? (
           <div className="text-center py-4">Chargement des données...</div>
+        ) : isOffline && Object.keys(permissions).length === 0 ? (
+          <div className="text-center py-8">
+            <p className="text-muted-foreground mb-4">Impossible de charger les permissions en mode hors ligne</p>
+            <Button onClick={handleRetry} className="flex items-center gap-2 mx-auto">
+              <RefreshCw className="h-4 w-4" /> Réessayer
+            </Button>
+          </div>
         ) : (
           <>
             <Table>
@@ -148,6 +191,7 @@ const FreightPermissionsSettings: React.FC = () => {
                         <Checkbox 
                           checked={!!permissions[employee.id]?.[action]}
                           onCheckedChange={() => togglePermission(employee.id, action)}
+                          disabled={isOffline}
                         />
                       </TableCell>
                     ))}
@@ -159,12 +203,12 @@ const FreightPermissionsSettings: React.FC = () => {
             <Separator className="my-6" />
             
             <div className="flex justify-end space-x-4">
-              <Button variant="outline" disabled={isSaving}>
+              <Button variant="outline" disabled={isSaving || isOffline}>
                 Annuler
               </Button>
               <Button 
                 onClick={savePermissions} 
-                disabled={isSaving}
+                disabled={isSaving || isOffline}
               >
                 {isSaving ? "Enregistrement..." : "Enregistrer les permissions"}
               </Button>
