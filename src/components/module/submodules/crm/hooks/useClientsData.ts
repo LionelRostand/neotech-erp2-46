@@ -57,7 +57,15 @@ export const useClientsData = () => {
           id: doc.id,
           ...data,
           createdAt: createdAtStr,
-          customerSince: customerSinceStr
+          customerSince: customerSinceStr,
+          // Ensure all required fields are present
+          name: data.name || '',
+          contactName: data.contactName || '',
+          contactEmail: data.contactEmail || '',
+          contactPhone: data.contactPhone || '',
+          sector: data.sector || '',
+          revenue: data.revenue || '',
+          status: data.status || 'active'
         } as Client;
       });
       

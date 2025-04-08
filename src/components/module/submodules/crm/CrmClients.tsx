@@ -39,6 +39,9 @@ const CrmClients: React.FC = () => {
     statusOptions
   } = useClients();
 
+  // Ensure filteredClients is always an array
+  const safeFilteredClients = Array.isArray(filteredClients) ? filteredClients : [];
+
   return (
     <div className="min-h-screen w-full bg-neotech-background">
       <div className="p-6">
@@ -62,7 +65,7 @@ const CrmClients: React.FC = () => {
 
         <div className="mt-4">
           <ClientsTable 
-            clients={filteredClients || []}
+            clients={safeFilteredClients}
             onView={viewClientDetails}
             onEdit={openEditDialog}
             onDelete={openDeleteDialog}

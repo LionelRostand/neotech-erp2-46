@@ -1,6 +1,5 @@
 
 import { useState, useEffect, useCallback } from 'react';
-import { collection, addDoc, updateDoc, deleteDoc, doc, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import { Client, ClientFormData } from '../types/crm-types';
@@ -101,10 +100,16 @@ export const useClients = () => {
   const handleCreateClient = async () => {
     try {
       await addClient({
-        ...formData,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        customerSince: new Date().toISOString().split('T')[0],
+        name: formData.name,
+        contactName: formData.contactName,
+        contactEmail: formData.contactEmail,
+        contactPhone: formData.contactPhone,
+        sector: formData.sector,
+        status: formData.status as 'active' | 'inactive' | 'lead',
+        revenue: formData.revenue,
+        address: formData.address || '',
+        website: formData.website || '',
+        notes: formData.notes || '',
       });
       
       toast.success('Client ajouté avec succès');
@@ -121,8 +126,16 @@ export const useClients = () => {
     
     try {
       await updateClient(selectedClient.id, {
-        ...formData,
-        updatedAt: new Date().toISOString(),
+        name: formData.name,
+        contactName: formData.contactName,
+        contactEmail: formData.contactEmail,
+        contactPhone: formData.contactPhone,
+        sector: formData.sector,
+        status: formData.status,
+        revenue: formData.revenue,
+        address: formData.address,
+        website: formData.website,
+        notes: formData.notes
       });
       
       toast.success('Client mis à jour avec succès');

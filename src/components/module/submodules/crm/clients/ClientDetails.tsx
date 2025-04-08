@@ -1,93 +1,104 @@
 
 import React from 'react';
-import { Card } from "@/components/ui/card";
-import { Users, BarChart3 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Calendar, Edit, Globe, Mail, MapPin, Phone } from "lucide-react";
+import { Client } from '../types/crm-types';
 
 interface ClientDetailsProps {
-  client: {
-    id: string;
-    name: string;
-    sector: string;
-    revenue: string;
-    status: string;
-    contactName: string;
-    contactEmail: string;
-    contactPhone: string;
-    address: string;
-  };
+  client: Client;
+  onEdit: () => void;
 }
 
-const ClientDetails: React.FC<ClientDetailsProps> = ({ client }) => {
+const ClientDetails: React.FC<ClientDetailsProps> = ({ client, onEdit }) => {
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-2 gap-4">
+      <div className="flex justify-between items-start">
         <div>
-          <h3 className="font-semibold mb-2">Informations générales</h3>
-          <div className="space-y-2 text-sm">
-            <div><span className="font-medium">Nom:</span> {client.name}</div>
-            <div><span className="font-medium">Secteur:</span> {client.sector}</div>
-            <div><span className="font-medium">CA:</span> {parseInt(client.revenue).toLocaleString('fr-FR')} €</div>
-            <div><span className="font-medium">Statut:</span> {client.status === 'active' ? 'Actif' : 'Inactif'}</div>
-            <div><span className="font-medium">Adresse:</span> {client.address}</div>
+          <h2 className="text-xl font-bold">{client.name}</h2>
+          <p className="text-muted-foreground">{client.sector}</p>
+        </div>
+        <Button size="sm" variant="outline" onClick={onEdit}>
+          <Edit className="h-4 w-4 mr-2" />
+          Modifier
+        </Button>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="space-y-3">
+          <h3 className="text-sm font-medium text-muted-foreground">Informations générales</h3>
+          
+          <div className="space-y-2">
+            <div className="flex items-center">
+              <div className={`w-2 h-2 rounded-full mr-2 ${
+                client.status === 'active' ? 'bg-green-500' : 
+                client.status === 'inactive' ? 'bg-gray-400' : 'bg-blue-500'
+              }`}></div>
+              <span>
+                {client.status === 'active' ? 'Client actif' : 
+                 client.status === 'inactive' ? 'Inactif' : 'Prospect'}
+              </span>
+            </div>
+            
+            {client.website && (
+              <div className="flex items-start">
+                <Globe className="h-4 w-4 mr-2 mt-0.5 text-muted-foreground" />
+                <a 
+                  href={client.website.startsWith('http') ? client.website : `https://${client.website}`} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-blue-600 hover:underline"
+                >
+                  {client.website}
+                </a>
+              </div>
+            )}
+            
+            {client.address && (
+              <div className="flex items-start">
+                <MapPin className="h-4 w-4 mr-2 mt-0.5 text-muted-foreground" />
+                <span>{client.address}</span>
+              </div>
+            )}
+            
+            {client.customerSince && (
+              <div className="flex items-start">
+                <Calendar className="h-4 w-4 mr-2 mt-0.5 text-muted-foreground" />
+                <span>Client depuis le {new Date(client.customerSince).toLocaleDateString()}</span>
+              </div>
+            )}
           </div>
         </div>
         
-        <div>
-          <h3 className="font-semibold mb-2">Contact principal</h3>
-          <div className="space-y-2 text-sm">
-            <div><span className="font-medium">Nom:</span> {client.contactName}</div>
-            <div><span className="font-medium">Email:</span> {client.contactEmail}</div>
-            <div><span className="font-medium">Téléphone:</span> {client.contactPhone}</div>
+        <div className="space-y-3">
+          <h3 className="text-sm font-medium text-muted-foreground">Contact principal</h3>
+          
+          <div className="space-y-2">
+            <div className="font-medium">{client.contactName}</div>
+            
+            <div className="flex items-start">
+              <Mail className="h-4 w-4 mr-2 mt-0.5 text-muted-foreground" />
+              <a 
+                href={`mailto:${client.contactEmail}`}
+                className="text-blue-600 hover:underline"
+              >
+                {client.contactEmail}
+              </a>
+            </div>
+            
+            <div className="flex items-start">
+              <Phone className="h-4 w-4 mr-2 mt-0.5 text-muted-foreground" />
+              <span>{client.contactPhone}</span>
+            </div>
           </div>
-        </div>
-      </div>
-
-      <div>
-        <h3 className="font-semibold mb-2">Statistiques</h3>
-        <div className="grid grid-cols-3 gap-4">
-          <Card className="p-4">
-            <div className="flex flex-col items-center">
-              <Users className="h-8 w-8 text-blue-500 mb-2" />
-              <div className="text-2xl font-bold">3</div>
-              <div className="text-sm text-muted-foreground">Contacts</div>
-            </div>
-          </Card>
-          <Card className="p-4">
-            <div className="flex flex-col items-center">
-              <BarChart3 className="h-8 w-8 text-green-500 mb-2" />
-              <div className="text-2xl font-bold">12</div>
-              <div className="text-sm text-muted-foreground">Opportunités</div>
-            </div>
-          </Card>
-          <Card className="p-4">
-            <div className="flex flex-col items-center">
-              <BarChart3 className="h-8 w-8 text-purple-500 mb-2" />
-              <div className="text-2xl font-bold">8</div>
-              <div className="text-sm text-muted-foreground">Interactions</div>
-            </div>
-          </Card>
         </div>
       </div>
       
-      <div>
-        <h3 className="font-semibold mb-2">Historique récent</h3>
-        <div className="space-y-2">
-          <div className="p-2 border rounded-md">
-            <div className="flex justify-between items-center">
-              <span className="font-medium">Appel téléphonique</span>
-              <span className="text-xs text-muted-foreground">Il y a 2 jours</span>
-            </div>
-            <p className="text-sm mt-1">Discussion sur le renouvellement du contrat</p>
-          </div>
-          <div className="p-2 border rounded-md">
-            <div className="flex justify-between items-center">
-              <span className="font-medium">Email</span>
-              <span className="text-xs text-muted-foreground">Il y a 1 semaine</span>
-            </div>
-            <p className="text-sm mt-1">Envoi de la proposition commerciale</p>
-          </div>
+      {client.notes && (
+        <div className="space-y-3">
+          <h3 className="text-sm font-medium text-muted-foreground">Notes</h3>
+          <p className="text-sm whitespace-pre-line">{client.notes}</p>
         </div>
-      </div>
+      )}
     </div>
   );
 };
