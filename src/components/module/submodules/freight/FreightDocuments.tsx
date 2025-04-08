@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
@@ -7,6 +6,7 @@ import { DocumentsList } from '@/components/module/documents/components/Document
 import { FileSearch, FileText, Plus, Filter, Upload, LayoutGrid, List } from 'lucide-react';
 import { fetchFreightCollectionData } from '@/hooks/fetchFreightCollectionData';
 import DocumentViewDialog from './DocumentViewDialog';
+import DocumentCreateDialog from './DocumentCreateDialog';
 import { DocumentsEmptyState } from '@/components/module/documents/components/DocumentsEmptyState';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -33,38 +33,36 @@ const FreightDocuments: React.FC = () => {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [selectedDocument, setSelectedDocument] = useState<FreightDocument | null>(null);
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const { toast } = useToast();
 
-  // Fetch documents data
+  const fetchDocuments = async () => {
+    try {
+      setIsLoading(true);
+      const data = await fetchFreightCollectionData<FreightDocument>('DOCUMENTS');
+      setDocuments(data);
+      setFilteredDocuments(data);
+      setIsLoading(false);
+    } catch (error) {
+      console.error("Error loading documents:", error);
+      toast({
+        title: "Erreur de chargement",
+        description: "Impossible de charger les documents. Veuillez réessayer.",
+        variant: "destructive"
+      });
+      setIsLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const loadDocuments = async () => {
-      try {
-        setIsLoading(true);
-        const data = await fetchFreightCollectionData<FreightDocument>('DOCUMENTS');
-        setDocuments(data);
-        setFilteredDocuments(data);
-        setIsLoading(false);
-      } catch (error) {
-        console.error("Error loading documents:", error);
-        toast({
-          title: "Erreur de chargement",
-          description: "Impossible de charger les documents. Veuillez réessayer.",
-          variant: "destructive"
-        });
-        setIsLoading(false);
-      }
-    };
-    
-    loadDocuments();
+    fetchDocuments();
   }, [toast]);
 
-  // Filter documents based on search term and type filter
   useEffect(() => {
     if (!documents) return;
     
     let filtered = [...documents];
     
-    // Apply search filter
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
       filtered = filtered.filter(doc => 
@@ -74,7 +72,6 @@ const FreightDocuments: React.FC = () => {
       );
     }
     
-    // Apply type filter
     if (typeFilter !== 'all') {
       filtered = filtered.filter(doc => doc.type === typeFilter);
     }
@@ -83,10 +80,7 @@ const FreightDocuments: React.FC = () => {
   }, [documents, searchTerm, typeFilter]);
 
   const handleAddDocument = () => {
-    toast({
-      title: "Fonction en développement",
-      description: "L'ajout de documents sera disponible prochainement.",
-    });
+    setIsCreateDialogOpen(true);
   };
 
   const handleViewDocument = (document: FreightDocument) => {
@@ -101,15 +95,14 @@ const FreightDocuments: React.FC = () => {
     });
   };
 
-  // Convert FreightDocument to DocumentFile format for DocumentsList component
   const convertToDocumentFile = (doc: FreightDocument): DocumentFile => {
     return {
       id: doc.id,
       name: doc.name,
       format: doc.format,
-      size: doc.format === 'pdf' ? 1024 * 1024 : 500 * 1024, // Fake size for demo
-      createdAt: new Date(doc.date), // Convert string to Date object
-      updatedAt: new Date(doc.date), // Convert string to Date object
+      size: doc.format === 'pdf' ? 1024 * 1024 : 500 * 1024,
+      createdAt: new Date(doc.date),
+      updatedAt: new Date(doc.date),
       isEncrypted: false,
       description: `Document lié à l'expédition ${doc.shipment}`,
       tags: doc.tags || [],
@@ -208,6 +201,12 @@ const FreightDocuments: React.FC = () => {
           onPrint={handlePrint}
         />
       )}
+
+      <DocumentCreateDialog
+        isOpen={isCreateDialogOpen}
+        onClose={() => setIsCreateDialogOpen(false)}
+        onSuccess={fetchDocuments}
+      />
     </div>
   );
 };
