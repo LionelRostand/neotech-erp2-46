@@ -6,12 +6,12 @@ import { getAuth, Auth } from 'firebase/auth';
 
 // Firebase configuration - updated with new credentials
 const firebaseConfig = {
-  apiKey: "AIzaSyA-neotech-key-for-development-only",
+  apiKey: "AIzaSyD3ZQYPtVHk4w63bCvOX0b8RVJyybWyOqU",
   authDomain: "neotech-erp.firebaseapp.com",
   projectId: "neotech-erp",
-  storageBucket: "neotech-erp.appspot.com",
-  messagingSenderId: "123456789012",
-  appId: "1:123456789012:web:a1b2c3d4e5f6a7b8c9d0e1"
+  storageBucket: "neotech-erp.firebasestorage.app",
+  messagingSenderId: "803661896660",
+  appId: "1:803661896660:web:94f17531b963627cbd5441"
 };
 
 // Initialize Firebase
