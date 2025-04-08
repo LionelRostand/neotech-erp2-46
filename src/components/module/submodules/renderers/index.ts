@@ -1,8 +1,8 @@
 
-// Export all renderers for easy import in other files
-export * from './AccountingRenderer';
-export * from './EmployeesRenderer';
-export * from './FreightRenderer';
-export * from './HealthRenderer';
-export * from './ProjectsRenderer';
-export * from './CrmRenderer';
+export { renderEmployeesSubmodule } from './EmployeesRenderer';
+export { renderAccountingSubmodule } from './AccountingRenderer';
+export { renderFreightSubmodule } from './FreightRenderer';
+export { renderProjectsSubmodule } from './ProjectsRenderer';
+export { renderHealthSubmodule } from './HealthRenderer';
+export { renderCrmSubmodule } from './CrmRenderer';
+export { renderDocumentsSubmodule } from './DocumentsRenderer';

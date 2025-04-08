@@ -14,6 +14,8 @@ import FreightClientPortal from '../freight/FreightClientPortal';
 import FreightSettings from '../freight/FreightSettings';
 
 export const renderFreightSubmodule = (submoduleId: string, submodule: SubModule) => {
+  console.log(`Rendering freight submodule: ${submoduleId}`);
+  
   switch (submoduleId) {
     case 'freight-dashboard':
       return <FreightDashboard />;

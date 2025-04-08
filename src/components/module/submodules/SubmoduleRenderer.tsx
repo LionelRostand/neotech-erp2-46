@@ -32,6 +32,8 @@ export const renderSubmoduleContent = ({ submoduleId, submodule }: SubmoduleRend
       return Renderers.renderHealthSubmodule(submoduleId, submodule);
     case 'crm':
       return Renderers.renderCrmSubmodule(submoduleId, submodule);
+    case 'documents':
+      return Renderers.renderDocumentsSubmodule(submoduleId, submodule);
     default:
       console.warn(`No renderer found for submodule: ${submoduleId}`);
       return <DefaultSubmoduleContent submodule={submodule} />;
