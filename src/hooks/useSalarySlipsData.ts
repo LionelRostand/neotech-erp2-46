@@ -1,6 +1,7 @@
 
 import { useMemo } from 'react';
 import { useHrModuleData } from './useHrModuleData';
+import { formatDate } from '@/lib/utils';
 import { Company } from '@/components/module/submodules/companies/types';
 
 export interface SalarySlip {
@@ -56,16 +57,6 @@ export const useSalarySlipsData = () => {
     });
   }, [payslips, employees]);
   
-  // Fonction pour formater les dates
-  const formatDate = (dateStr: string) => {
-    try {
-      return new Date(dateStr).toLocaleDateString('fr-FR');
-    } catch (error) {
-      console.error('Erreur de formatage de date:', dateStr, error);
-      return dateStr;
-    }
-  };
-
   // Obtenir des statistiques sur les fiches de paie
   const salaryStats = useMemo(() => {
     const generated = formattedSalarySlips.filter(slip => slip.status === 'Généré').length;
