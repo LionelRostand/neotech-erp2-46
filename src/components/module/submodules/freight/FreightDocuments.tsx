@@ -25,6 +25,26 @@ interface FreightDocument {
   tags?: string[];
 }
 
+// Adding this interface to match the DocumentFile type expected by DocumentsList
+interface DocumentFile {
+  id: string;
+  name: string;
+  format: string;
+  size: number;
+  createdAt: string;
+  updatedAt: string;
+  isEncrypted: boolean;
+  description: string;
+  tags: string[];
+  versions: any[];
+  permissions: any[];
+  url: string;
+  type: string;
+  path: string;
+  createdBy: string;
+  status: string;
+}
+
 const FreightDocuments: React.FC = () => {
   const [documents, setDocuments] = useState<FreightDocument[]>([]);
   const [filteredDocuments, setFilteredDocuments] = useState<FreightDocument[]>([]);
@@ -103,7 +123,7 @@ const FreightDocuments: React.FC = () => {
   };
 
   // Convert FreightDocument to DocumentFile format for DocumentsList component
-  const convertToDocumentFile = (doc: FreightDocument) => {
+  const convertToDocumentFile = (doc: FreightDocument): DocumentFile => {
     return {
       id: doc.id,
       name: doc.name,
@@ -116,7 +136,11 @@ const FreightDocuments: React.FC = () => {
       tags: doc.tags || [],
       versions: [],
       permissions: [],
-      url: doc.url || ''
+      url: doc.url || '',
+      type: doc.type || 'document',
+      path: `/documents/${doc.id}`,
+      createdBy: doc.creator || 'System',
+      status: 'active'
     };
   };
 

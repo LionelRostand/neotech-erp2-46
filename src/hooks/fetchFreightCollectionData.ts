@@ -20,6 +20,8 @@ export async function fetchFreightCollectionData<T>(
     const q = constraints.length > 0 ? query(collectionRef, ...constraints) : query(collectionRef);
     const querySnapshot = await getDocs(q);
     
+    console.log(`Fetched ${querySnapshot.docs.length} documents from ${collectionName}`);
+    
     return querySnapshot.docs.map(doc => ({ 
       id: doc.id, 
       ...doc.data() 

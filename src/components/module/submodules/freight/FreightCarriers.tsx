@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
@@ -10,7 +9,7 @@ import { Edit, Plus, Trash2, Search, Globe, Truck, Route } from 'lucide-react';
 import { Carrier } from '@/types/freight';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import StatCard from '@/components/StatCard';
-import { fetchCollectionData } from '@/hooks/fetchCollectionData';
+import { fetchFreightCollectionData } from '@/hooks/fetchFreightCollectionData';
 
 const FreightCarriers: React.FC = () => {
   const [carriers, setCarriers] = useState<Carrier[]>([]);
@@ -25,10 +24,11 @@ const FreightCarriers: React.FC = () => {
     const loadCarriers = async () => {
       try {
         setIsLoading(true);
-        const data = await fetchCollectionData<Carrier>(COLLECTIONS.FREIGHT.CARRIERS);
+        const data = await fetchFreightCollectionData<Carrier>('CARRIERS');
         setCarriers(data);
         setFilteredCarriers(data);
         setIsLoading(false);
+        console.log('Carriers loaded:', data.length);
       } catch (error) {
         console.error("Error loading carriers:", error);
         toast({
