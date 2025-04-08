@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Settings as SettingsIcon, Shield, AlertCircle } from "lucide-react";
+import { Settings as SettingsIcon, Shield, AlertCircle, WifiOff } from "lucide-react";
 import FreightGeneralSettings from './settings/FreightGeneralSettings';
 import FreightPermissionsSettings from './settings/FreightPermissionsSettings';
 import { usePermissions } from '@/hooks/usePermissions';
@@ -11,13 +11,15 @@ import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import { Button } from '@/components/ui/button';
+import { restoreFirestoreConnectivity } from '@/hooks/firestore/network-operations';
 
 const FreightSettings: React.FC = () => {
   const [activeTab, setActiveTab] = useState("general");
-  const { isAdmin, checkPermission, loading } = usePermissions('freight');
+  const { isAdmin, checkPermission, loading, isOffline } = usePermissions('freight');
   const [canEditSettings, setCanEditSettings] = useState(false);
   const [isCheckingPermissions, setIsCheckingPermissions] = useState(true);
   const [isGrantingAdminRights, setIsGrantingAdminRights] = useState(false);
+  const [isReconnecting, setIsReconnecting] = useState(false);
   
   // Vérifier les permissions d'édition des paramètres uniquement une fois lors du chargement initial
   useEffect(() => {
@@ -143,6 +145,71 @@ const FreightSettings: React.FC = () => {
       setIsGrantingAdminRights(false);
     }
   };
+
+  // Tentative de reconnexion à Firebase
+  const handleReconnect = async () => {
+    setIsReconnecting(true);
+    try {
+      const success = await restoreFirestoreConnectivity();
+      if (success) {
+        toast({
+          title: "Connexion rétablie",
+          description: "La connexion à la base de données a été rétablie avec succès.",
+          variant: "default"
+        });
+        // Rafraîchir la page pour recharger les données
+        window.location.reload();
+      } else {
+        toast({
+          title: "Échec de la reconnexion",
+          description: "Impossible de se reconnecter à la base de données. Veuillez vérifier votre connexion internet.",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      console.error("Erreur lors de la tentative de reconnexion:", error);
+      toast({
+        title: "Erreur",
+        description: "Une erreur est survenue lors de la tentative de reconnexion.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsReconnecting(false);
+    }
+  };
+
+  // Si l'utilisateur est hors ligne, afficher un message d'erreur
+  if (isOffline) {
+    return (
+      <div className="space-y-6">
+        <h2 className="text-3xl font-bold">Paramètres du Module Fret</h2>
+        
+        <FreightAlert 
+          variant="warning" 
+          title="Connexion perdue"
+          className="mb-4"
+        >
+          <div className="flex flex-col gap-4">
+            <div className="flex items-center gap-2">
+              <WifiOff className="h-5 w-5 text-amber-600" />
+              <p>
+                Vous êtes actuellement hors ligne. Les paramètres du module Fret ne peuvent pas être chargés ou modifiés
+                sans connexion à Internet.
+              </p>
+            </div>
+            <Button 
+              onClick={handleReconnect}
+              disabled={isReconnecting}
+              variant="outline"
+              className="w-fit"
+            >
+              {isReconnecting ? "Reconnexion en cours..." : "Tenter une reconnexion"}
+            </Button>
+          </div>
+        </FreightAlert>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
