@@ -9,10 +9,10 @@ import { Badge } from '@/components/ui/badge';
 import { Edit, Plus, Trash2, Search, Globe, Truck, Route } from 'lucide-react';
 import { Carrier } from '@/types/freight';
 import StatCard from '@/components/StatCard';
-import { collection, getDocs, query, where } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import CarrierFormDialog from './CarrierFormDialog';
+import { fetchFreightCollectionData } from '@/hooks/fetchFreightCollectionData';
+import { FirebaseErrorAlert } from './components/FirebaseErrorAlert';
 
 const FreightCarriers: React.FC = () => {
   const [carriers, setCarriers] = useState<Carrier[]>([]);
@@ -21,19 +21,16 @@ const FreightCarriers: React.FC = () => {
   const [filteredCarriers, setFilteredCarriers] = useState<Carrier[]>([]);
   const [carrierTypeFilter, setCarrierTypeFilter] = useState('all');
   const [showNewCarrierForm, setShowNewCarrierForm] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
   const { toast } = useToast();
 
   // Fetch carriers data
   const fetchCarriers = async () => {
     try {
       setIsLoading(true);
-      const carriersRef = collection(db, COLLECTIONS.FREIGHT.CARRIERS);
-      const carriersSnapshot = await getDocs(carriersRef);
+      setError(null);
       
-      const carriersData = carriersSnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      } as Carrier));
+      const carriersData = await fetchFreightCollectionData<Carrier>('CARRIERS');
       
       setCarriers(carriersData);
       setFilteredCarriers(carriersData);
@@ -41,6 +38,7 @@ const FreightCarriers: React.FC = () => {
       console.log('Carriers loaded:', carriersData.length);
     } catch (error) {
       console.error("Error loading carriers:", error);
+      setError(error instanceof Error ? error : new Error(String(error)));
       toast({
         title: "Erreur de chargement",
         description: "Impossible de charger les transporteurs. Veuillez réessayer.",
@@ -113,6 +111,31 @@ const FreightCarriers: React.FC = () => {
         return <Badge>{type}</Badge>;
     }
   };
+
+  const retryFetch = () => {
+    fetchCarriers();
+  };
+
+  if (error) {
+    return (
+      <div className="p-6">
+        <FirebaseErrorAlert 
+          error={error} 
+          onRetry={retryFetch} 
+          className="mb-4"
+        />
+        <div className="bg-white rounded-lg shadow p-6">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-xl font-bold">Gestion des Transporteurs</h2>
+            <Button onClick={handleAddCarrier}>
+              <Plus className="mr-2 h-4 w-4" />
+              Nouveau Transporteur
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return <div className="flex justify-center p-12">Chargement des transporteurs...</div>;

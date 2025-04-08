@@ -29,7 +29,8 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { useForm } from 'react-hook-form';
-import { addDocument } from '@/hooks/firestore/firestore-utils';
+import { collection, addDoc } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import { Carrier } from '@/types/freight';
 
@@ -60,8 +61,14 @@ const CarrierFormDialog: React.FC<CarrierFormDialogProps> = ({ isOpen, onClose, 
     try {
       setIsSubmitting(true);
       
-      // Ajouter le transporteur à Firebase
-      await addDocument(COLLECTIONS.FREIGHT.CARRIERS, {
+      // Get the correct collection reference for freight/carriers
+      const parts = COLLECTIONS.FREIGHT.CARRIERS.split('/');
+      const collectionRef = parts.length === 2 
+        ? collection(db, parts[0], parts[0], parts[1])
+        : collection(db, COLLECTIONS.FREIGHT.CARRIERS);
+      
+      // Add the carrier to Firebase
+      await addDoc(collectionRef, {
         ...data,
         createdAt: new Date().toISOString()
       });
