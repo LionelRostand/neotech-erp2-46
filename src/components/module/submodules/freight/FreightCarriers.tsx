@@ -9,7 +9,10 @@ import { Badge } from '@/components/ui/badge';
 import { Edit, Plus, Trash2, Search, Globe, Truck, Route } from 'lucide-react';
 import { Carrier } from '@/types/freight';
 import StatCard from '@/components/StatCard';
-import { fetchFreightCollectionData } from '@/hooks/fetchFreightCollectionData';
+import { collection, getDocs, query, where } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { COLLECTIONS } from '@/lib/firebase-collections';
+import CarrierFormDialog from './CarrierFormDialog';
 
 const FreightCarriers: React.FC = () => {
   const [carriers, setCarriers] = useState<Carrier[]>([]);
@@ -17,30 +20,38 @@ const FreightCarriers: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filteredCarriers, setFilteredCarriers] = useState<Carrier[]>([]);
   const [carrierTypeFilter, setCarrierTypeFilter] = useState('all');
+  const [showNewCarrierForm, setShowNewCarrierForm] = useState(false);
   const { toast } = useToast();
 
   // Fetch carriers data
+  const fetchCarriers = async () => {
+    try {
+      setIsLoading(true);
+      const carriersRef = collection(db, COLLECTIONS.FREIGHT.CARRIERS);
+      const carriersSnapshot = await getDocs(carriersRef);
+      
+      const carriersData = carriersSnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      } as Carrier));
+      
+      setCarriers(carriersData);
+      setFilteredCarriers(carriersData);
+      setIsLoading(false);
+      console.log('Carriers loaded:', carriersData.length);
+    } catch (error) {
+      console.error("Error loading carriers:", error);
+      toast({
+        title: "Erreur de chargement",
+        description: "Impossible de charger les transporteurs. Veuillez réessayer.",
+        variant: "destructive"
+      });
+      setIsLoading(false);
+    }
+  };
+  
   useEffect(() => {
-    const loadCarriers = async () => {
-      try {
-        setIsLoading(true);
-        const data = await fetchFreightCollectionData<Carrier>('CARRIERS');
-        setCarriers(data);
-        setFilteredCarriers(data);
-        setIsLoading(false);
-        console.log('Carriers loaded:', data.length);
-      } catch (error) {
-        console.error("Error loading carriers:", error);
-        toast({
-          title: "Erreur de chargement",
-          description: "Impossible de charger les transporteurs. Veuillez réessayer.",
-          variant: "destructive"
-        });
-        setIsLoading(false);
-      }
-    };
-    
-    loadCarriers();
+    fetchCarriers();
   }, [toast]);
 
   // Filter carriers based on search term and type filter
@@ -68,10 +79,7 @@ const FreightCarriers: React.FC = () => {
   }, [carriers, searchTerm, carrierTypeFilter]);
 
   const handleAddCarrier = () => {
-    toast({
-      title: "Fonction en développement",
-      description: "L'ajout de transporteurs sera disponible prochainement.",
-    });
+    setShowNewCarrierForm(true);
   };
 
   const handleEditCarrier = (id: string) => {
@@ -238,6 +246,14 @@ const FreightCarriers: React.FC = () => {
           </Table>
         </div>
       </div>
+      
+      {showNewCarrierForm && (
+        <CarrierFormDialog 
+          isOpen={showNewCarrierForm} 
+          onClose={() => setShowNewCarrierForm(false)}
+          onSuccess={fetchCarriers}
+        />
+      )}
     </div>
   );
 };

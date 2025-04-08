@@ -8,8 +8,11 @@ import { Container, Search, Plus, Filter, Download, Ship } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { fetchFreightCollectionData } from '@/hooks/fetchFreightCollectionData';
 import StatCard from '@/components/StatCard';
+import ContainerFormDialog from './ContainerFormDialog';
+import { collection, getDocs } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { COLLECTIONS } from '@/lib/firebase-collections';
 
 interface FreightContainer {
   id: string;
@@ -33,29 +36,39 @@ const FreightContainers: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [showContainerForm, setShowContainerForm] = useState(false);
   const { toast } = useToast();
 
   // Fetch containers data
+  const fetchContainers = async () => {
+    try {
+      setIsLoading(true);
+      const containersRef = collection(db, COLLECTIONS.FREIGHT.CONTAINERS);
+      const containersSnapshot = await getDocs(containersRef);
+      
+      const containersData = containersSnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        lastUpdated: doc.data().updatedAt || doc.data().createdAt || new Date().toISOString()
+      } as FreightContainer));
+      
+      setContainers(containersData);
+      setFilteredContainers(containersData);
+      setIsLoading(false);
+      console.log('Containers loaded:', containersData.length);
+    } catch (error) {
+      console.error("Error loading containers:", error);
+      toast({
+        title: "Erreur de chargement",
+        description: "Impossible de charger les conteneurs. Veuillez réessayer.",
+        variant: "destructive"
+      });
+      setIsLoading(false);
+    }
+  };
+  
   useEffect(() => {
-    const loadContainers = async () => {
-      try {
-        setIsLoading(true);
-        const data = await fetchFreightCollectionData<FreightContainer>('CONTAINERS');
-        setContainers(data);
-        setFilteredContainers(data);
-        setIsLoading(false);
-      } catch (error) {
-        console.error("Error loading containers:", error);
-        toast({
-          title: "Erreur de chargement",
-          description: "Impossible de charger les conteneurs. Veuillez réessayer.",
-          variant: "destructive"
-        });
-        setIsLoading(false);
-      }
-    };
-    
-    loadContainers();
+    fetchContainers();
   }, [toast]);
 
   // Filter containers based on search term and status filter
@@ -83,10 +96,11 @@ const FreightContainers: React.FC = () => {
   }, [containers, searchTerm, statusFilter]);
 
   const handleAddContainer = () => {
-    toast({
-      title: "Fonction en développement",
-      description: "L'ajout de conteneurs sera disponible prochainement.",
-    });
+    setShowContainerForm(true);
+  };
+
+  const handleContainerAdded = () => {
+    fetchContainers();
   };
 
   const handleExportData = () => {
@@ -274,6 +288,14 @@ const FreightContainers: React.FC = () => {
           </Table>
         </div>
       </Card>
+      
+      {showContainerForm && (
+        <ContainerFormDialog 
+          isOpen={showContainerForm} 
+          onClose={() => setShowContainerForm(false)}
+          onSave={handleContainerAdded}
+        />
+      )}
     </div>
   );
 };

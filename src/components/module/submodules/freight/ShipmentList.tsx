@@ -1,122 +1,173 @@
 
 import React, { useState } from 'react';
+import { useToast } from '@/hooks/use-toast';
 import { 
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow
+  Table, 
+  TableBody, 
+  TableCell, 
+  TableHead, 
+  TableHeader, 
+  TableRow 
 } from '@/components/ui/table';
-import StatusBadge from '@/components/StatusBadge';
-import { Shipment } from '@/types/freight';
+import { 
+  Badge,
+  Eye,
+  Edit,
+  Trash2,
+  Calendar,
+  Truck,
+  Package,
+  ArrowRight,
+  Loader2
+} from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { Button } from '@/components/ui/button';
-import { Eye, FileEdit, Trash2, Loader2 } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { useShipments } from './hooks/useShipments';
+import { Shipment } from '@/types/freight';
 import ShipmentViewDialog from './ShipmentViewDialog';
 import ShipmentEditDialog from './ShipmentEditDialog';
 import ShipmentDeleteDialog from './ShipmentDeleteDialog';
-import { useShipments } from './hooks/useShipments';
-import { deleteShipment } from './services/shipmentService';
+import { deleteDoc, doc } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { COLLECTIONS } from '@/lib/firebase-collections';
+import { updateDocument } from '@/hooks/firestore/firestore-utils';
 
 interface ShipmentListProps {
   filter: 'all' | 'ongoing' | 'delivered' | 'delayed';
 }
 
 const ShipmentList: React.FC<ShipmentListProps> = ({ filter }) => {
-  const { toast } = useToast();
   const { shipments, isLoading, error } = useShipments(filter);
-  
-  // États pour les dialogues
-  const [viewDialogOpen, setViewDialogOpen] = useState(false);
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [selectedShipment, setSelectedShipment] = useState<Shipment | null>(null);
+  const [viewShipment, setViewShipment] = useState<Shipment | null>(null);
+  const [editShipment, setEditShipment] = useState<Shipment | null>(null);
+  const [deleteShipment, setDeleteShipment] = useState<Shipment | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
-  
-  const getStatusColor = (status: string): "success" | "warning" | "danger" => {
+  const { toast } = useToast();
+
+  const getStatusBadge = (status: string) => {
     switch (status) {
-      case 'delivered':
-        return 'success';
-      case 'in_transit':
-      case 'confirmed':
-        return 'warning';
-      case 'delayed':
-      case 'cancelled':
       case 'draft':
+        return <Badge variant="outline" className="bg-slate-100 text-slate-800 border-none">Brouillon</Badge>;
+      case 'confirmed':
+        return <Badge variant="outline" className="bg-blue-100 text-blue-800 border-none">Confirmée</Badge>;
+      case 'in_transit':
+        return <Badge variant="outline" className="bg-amber-100 text-amber-800 border-none">En transit</Badge>;
+      case 'delivered':
+        return <Badge variant="outline" className="bg-green-100 text-green-800 border-none">Livrée</Badge>;
+      case 'cancelled':
+        return <Badge variant="outline" className="bg-red-100 text-red-800 border-none">Annulée</Badge>;
+      case 'delayed':
+        return <Badge variant="outline" className="bg-purple-100 text-purple-800 border-none">Retardée</Badge>;
       default:
-        return 'danger';
+        return <Badge variant="outline">{status}</Badge>;
     }
   };
 
-  const getStatusText = (status: string): string => {
-    switch (status) {
-      case 'draft': return 'Brouillon';
-      case 'confirmed': return 'Confirmée';
-      case 'in_transit': return 'En transit';
-      case 'delivered': return 'Livrée';
-      case 'cancelled': return 'Annulée';
-      case 'delayed': return 'Retardée';
-      default: return status || 'Inconnu';
+  const getShipmentTypeLabel = (type: string) => {
+    switch (type) {
+      case 'import':
+        return 'Import';
+      case 'export':
+        return 'Export';
+      case 'local':
+        return 'Local';
+      case 'international':
+        return 'International';
+      default:
+        return type;
     }
   };
-  
-  const handleViewShipment = (shipment: Shipment) => {
-    setSelectedShipment(shipment);
-    setViewDialogOpen(true);
+
+  const formatDate = (dateString: string) => {
+    try {
+      return format(new Date(dateString), 'PPP', { locale: fr });
+    } catch (error) {
+      return 'Date invalide';
+    }
   };
-  
-  const handleEditShipment = (shipment: Shipment) => {
-    setSelectedShipment(shipment);
-    setEditDialogOpen(true);
-  };
-  
-  const handleDeleteShipment = (shipment: Shipment) => {
-    setSelectedShipment(shipment);
-    setDeleteDialogOpen(true);
-  };
-  
-  const confirmDeleteShipment = async () => {
-    if (selectedShipment) {
+
+  const handleDelete = async () => {
+    if (!deleteShipment) return;
+    
+    try {
       setIsDeleting(true);
-      try {
-        await deleteShipment(selectedShipment.id);
-        
-        toast({
-          title: "Expédition supprimée",
-          description: `L'expédition ${selectedShipment.reference} a été supprimée avec succès.`,
-        });
-        
-        setDeleteDialogOpen(false);
-      } catch (error) {
-        console.error("Erreur lors de la suppression:", error);
-        toast({
-          title: "Erreur",
-          description: "Une erreur est survenue lors de la suppression de l'expédition.",
-          variant: "destructive",
-        });
-      } finally {
-        setIsDeleting(false);
-      }
+      
+      // Supprimer l'expédition de Firebase
+      await deleteDoc(doc(db, COLLECTIONS.FREIGHT.SHIPMENTS, deleteShipment.id));
+      
+      toast({
+        title: "Expédition supprimée",
+        description: `L'expédition ${deleteShipment.reference} a été supprimée avec succès.`,
+      });
+      
+      // Fermer la boîte de dialogue
+      setDeleteShipment(null);
+      setIsDeleting(false);
+      
+      // Recharger la liste des expéditions (le hook useShipments va se mettre à jour automatiquement)
+    } catch (error) {
+      console.error('Erreur lors de la suppression de l\'expédition:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de supprimer l'expédition. Veuillez réessayer.",
+        variant: "destructive"
+      });
+      setIsDeleting(false);
     }
   };
-  
+
+  const handleSaveEdit = async (updatedShipment: Shipment) => {
+    try {
+      // Mettre à jour l'expédition dans Firebase
+      await updateDocument(COLLECTIONS.FREIGHT.SHIPMENTS, updatedShipment.id, updatedShipment);
+      
+      toast({
+        title: "Expédition mise à jour",
+        description: `L'expédition ${updatedShipment.reference} a été mise à jour avec succès.`,
+      });
+      
+      // Fermer la boîte de dialogue
+      setEditShipment(null);
+      
+      // Recharger la liste des expéditions (le hook useShipments va se mettre à jour automatiquement)
+    } catch (error) {
+      console.error('Erreur lors de la mise à jour de l\'expédition:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de mettre à jour l'expédition. Veuillez réessayer.",
+        variant: "destructive"
+      });
+    }
+  };
+
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center py-12">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <span className="ml-2 text-gray-500">Chargement des expéditions...</span>
+      <div className="flex flex-col items-center justify-center p-8">
+        <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
+        <p className="text-muted-foreground">Chargement des expéditions...</p>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="rounded-md bg-red-50 p-6 text-center">
-        <p className="text-red-600">Une erreur est survenue lors du chargement des expéditions.</p>
-        <p className="text-sm text-red-500 mt-1">{error.message}</p>
+      <div className="flex flex-col items-center justify-center p-8 text-red-500">
+        <p className="font-semibold">Erreur lors du chargement des expéditions</p>
+        <p className="text-sm">{error.message}</p>
+      </div>
+    );
+  }
+
+  if (shipments.length === 0) {
+    return (
+      <div className="text-center p-8 border rounded-md bg-muted/20">
+        <Package className="h-12 w-12 mx-auto text-muted-foreground mb-2" />
+        <h3 className="text-lg font-medium">Aucune expédition trouvée</h3>
+        <p className="text-muted-foreground mb-4">
+          Il n'y a pas d'expéditions correspondant à vos critères.
+        </p>
+        <Button variant="outline">Créer une nouvelle expédition</Button>
       </div>
     );
   }
@@ -129,6 +180,7 @@ const ShipmentList: React.FC<ShipmentListProps> = ({ filter }) => {
             <TableRow>
               <TableHead>Référence</TableHead>
               <TableHead>Client</TableHead>
+              <TableHead>Type</TableHead>
               <TableHead>Origine</TableHead>
               <TableHead>Destination</TableHead>
               <TableHead>Transporteur</TableHead>
@@ -138,87 +190,59 @@ const ShipmentList: React.FC<ShipmentListProps> = ({ filter }) => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {shipments.length > 0 ? (
-              shipments.map((shipment) => (
-                <TableRow key={shipment.id}>
-                  <TableCell className="font-medium">{shipment.reference}</TableCell>
-                  <TableCell>{shipment.customer}</TableCell>
-                  <TableCell>{shipment.origin}</TableCell>
-                  <TableCell>{shipment.destination}</TableCell>
-                  <TableCell>{shipment.carrierName}</TableCell>
-                  <TableCell>
-                    {shipment.scheduledDate ? 
-                      format(new Date(shipment.scheduledDate), 'dd MMM yyyy', { locale: fr }) : 
-                      'Non planifiée'}
-                  </TableCell>
-                  <TableCell>
-                    <StatusBadge status={getStatusColor(shipment.status)}>
-                      {getStatusText(shipment.status)}
-                    </StatusBadge>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end gap-2">
-                      <Button 
-                        variant="ghost" 
-                        size="sm"
-                        onClick={() => handleViewShipment(shipment)}
-                      >
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="sm"
-                        onClick={() => handleEditShipment(shipment)}
-                      >
-                        <FileEdit className="h-4 w-4" />
-                      </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="sm"
-                        onClick={() => handleDeleteShipment(shipment)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell colSpan={8} className="text-center py-6 text-gray-500">
-                  Aucune expédition trouvée
+            {shipments.map((shipment) => (
+              <TableRow key={shipment.id}>
+                <TableCell className="font-medium">{shipment.reference}</TableCell>
+                <TableCell>{shipment.customer}</TableCell>
+                <TableCell>{getShipmentTypeLabel(shipment.shipmentType)}</TableCell>
+                <TableCell>{shipment.origin}</TableCell>
+                <TableCell>{shipment.destination}</TableCell>
+                <TableCell>{shipment.carrierName || '-'}</TableCell>
+                <TableCell>{formatDate(shipment.scheduledDate)}</TableCell>
+                <TableCell>{getStatusBadge(shipment.status)}</TableCell>
+                <TableCell className="text-right">
+                  <div className="flex justify-end gap-2">
+                    <Button variant="ghost" size="icon" onClick={() => setViewShipment(shipment)}>
+                      <Eye className="h-4 w-4" />
+                    </Button>
+                    <Button variant="ghost" size="icon" onClick={() => setEditShipment(shipment)}>
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button variant="ghost" size="icon" onClick={() => setDeleteShipment(shipment)}>
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </TableCell>
               </TableRow>
-            )}
+            ))}
           </TableBody>
         </Table>
       </div>
 
-      {/* Dialogue de visualisation */}
-      {selectedShipment && (
+      {/* Boîtes de dialogue */}
+      {viewShipment && (
         <ShipmentViewDialog
-          isOpen={viewDialogOpen}
-          onClose={() => setViewDialogOpen(false)}
-          shipment={selectedShipment}
+          isOpen={!!viewShipment}
+          onClose={() => setViewShipment(null)}
+          shipment={viewShipment}
         />
       )}
-      
-      {/* Dialogue de modification */}
-      {selectedShipment && (
+
+      {editShipment && (
         <ShipmentEditDialog
-          isOpen={editDialogOpen}
-          onClose={() => setEditDialogOpen(false)}
-          shipment={selectedShipment}
+          isOpen={!!editShipment}
+          onClose={() => setEditShipment(null)}
+          shipment={editShipment}
+          onSave={handleSaveEdit}
         />
       )}
-      
-      {/* Dialogue de suppression */}
-      {selectedShipment && (
+
+      {deleteShipment && (
         <ShipmentDeleteDialog
-          isOpen={deleteDialogOpen}
-          onClose={() => setDeleteDialogOpen(false)}
-          shipment={selectedShipment}
-          onConfirm={confirmDeleteShipment}
+          isOpen={!!deleteShipment}
+          onClose={() => setDeleteShipment(null)}
+          shipment={deleteShipment}
+          onConfirm={handleDelete}
           isDeleting={isDeleting}
         />
       )}

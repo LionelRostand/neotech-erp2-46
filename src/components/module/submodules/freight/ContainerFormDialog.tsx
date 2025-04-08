@@ -13,25 +13,30 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
+import { addDocument } from '@/hooks/firestore/firestore-utils';
+import { COLLECTIONS } from '@/lib/firebase-collections';
 
 interface ContainerFormDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (container: any) => void;
+  onSave: () => void;
 }
 
 const ContainerFormDialog: React.FC<ContainerFormDialogProps> = ({ isOpen, onClose, onSave }) => {
   const { toast } = useToast();
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
   const [formData, setFormData] = useState({
     number: '',
     type: '',
-    location: '',
+    size: '',
+    status: 'empty',
+    carrier: '',
+    carrierName: '',
+    origin: '',
     destination: '',
-    client: '',
-    departure: '',
-    arrival: '',
-    status: 'ready'
+    departureDate: '',
+    arrivalDate: ''
   });
   
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -49,21 +54,39 @@ const ContainerFormDialog: React.FC<ContainerFormDialogProps> = ({ isOpen, onClo
     }));
   };
   
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Générer un ID unique
-    const newContainer = {
-      id: `CONT${Math.floor(100000 + Math.random() * 900000)}`,
-      ...formData
-    };
-    
-    onSave(newContainer);
-    toast({
-      title: "Conteneur créé",
-      description: `Le conteneur ${newContainer.number} a été créé avec succès.`,
-    });
-    onClose();
+    try {
+      setIsSubmitting(true);
+      
+      // Générer un ID unique
+      const containerData = {
+        ...formData,
+        createdAt: new Date().toISOString(),
+        lastUpdated: new Date().toISOString()
+      };
+      
+      // Ajouter le conteneur à Firebase
+      await addDocument(COLLECTIONS.FREIGHT.CONTAINERS, containerData);
+      
+      toast({
+        title: "Conteneur créé",
+        description: `Le conteneur ${formData.number} a été créé avec succès.`,
+      });
+      
+      onSave();
+      onClose();
+    } catch (error) {
+      console.error("Erreur lors de la création du conteneur:", error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de créer le conteneur. Veuillez réessayer.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
   
   const containerTypes = [
@@ -76,6 +99,13 @@ const ContainerFormDialog: React.FC<ContainerFormDialogProps> = ({ isOpen, onClo
     "40ft Open Top",
     "20ft Flat Rack",
     "40ft Flat Rack"
+  ];
+  
+  const containerSizes = [
+    "20ft",
+    "40ft",
+    "45ft",
+    "53ft"
   ];
 
   return (
@@ -123,14 +153,23 @@ const ContainerFormDialog: React.FC<ContainerFormDialogProps> = ({ isOpen, onClo
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="client">Client</Label>
-              <Input
-                id="client"
-                name="client"
-                placeholder="Nom du client"
-                value={formData.client}
-                onChange={handleChange}
-              />
+              <Label htmlFor="size">Taille</Label>
+              <Select
+                value={formData.size}
+                onValueChange={(value) => handleSelectChange('size', value)}
+                required
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Sélectionner une taille" />
+                </SelectTrigger>
+                <SelectContent>
+                  {containerSizes.map((size) => (
+                    <SelectItem key={size} value={size}>
+                      {size}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             
             <div className="space-y-2">
@@ -143,22 +182,34 @@ const ContainerFormDialog: React.FC<ContainerFormDialogProps> = ({ isOpen, onClo
                   <SelectValue placeholder="Sélectionner un statut" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="ready">Prêt</SelectItem>
+                  <SelectItem value="empty">Vide</SelectItem>
                   <SelectItem value="loading">En chargement</SelectItem>
+                  <SelectItem value="loaded">Chargé</SelectItem>
                   <SelectItem value="in_transit">En transit</SelectItem>
-                  <SelectItem value="customs">En douane</SelectItem>
                   <SelectItem value="delivered">Livré</SelectItem>
+                  <SelectItem value="returned">Retourné</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="location">Localisation actuelle</Label>
+              <Label htmlFor="carrierName">Transporteur</Label>
               <Input
-                id="location"
-                name="location"
+                id="carrierName"
+                name="carrierName"
+                placeholder="Nom du transporteur"
+                value={formData.carrierName}
+                onChange={handleChange}
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="origin">Origine</Label>
+              <Input
+                id="origin"
+                name="origin"
                 placeholder="Ville, Pays"
-                value={formData.location}
+                value={formData.origin}
                 onChange={handleChange}
               />
             </div>
@@ -175,34 +226,42 @@ const ContainerFormDialog: React.FC<ContainerFormDialogProps> = ({ isOpen, onClo
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="departure">Date de départ</Label>
+              <Label htmlFor="departureDate">Date de départ</Label>
               <Input
-                id="departure"
-                name="departure"
+                id="departureDate"
+                name="departureDate"
                 type="date"
-                value={formData.departure}
+                value={formData.departureDate}
                 onChange={handleChange}
               />
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="arrival">Date d'arrivée estimée</Label>
+              <Label htmlFor="arrivalDate">Date d'arrivée estimée</Label>
               <Input
-                id="arrival"
-                name="arrival"
+                id="arrivalDate"
+                name="arrivalDate"
                 type="date"
-                value={formData.arrival}
+                value={formData.arrivalDate}
                 onChange={handleChange}
               />
             </div>
           </div>
           
           <DialogFooter className="mt-6">
-            <Button type="button" variant="outline" onClick={onClose}>
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={onClose}
+              disabled={isSubmitting}
+            >
               Annuler
             </Button>
-            <Button type="submit">
-              Créer le conteneur
+            <Button 
+              type="submit"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? "Création en cours..." : "Créer le conteneur"}
             </Button>
           </DialogFooter>
         </form>
