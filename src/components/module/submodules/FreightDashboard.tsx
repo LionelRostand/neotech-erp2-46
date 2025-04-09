@@ -8,6 +8,8 @@ import StatCard from '@/components/StatCard';
 import { TrendingUp, TrendingDown, Timer, FileText, Ship, Truck, Container, Package } from 'lucide-react';
 import { fetchFreightCollectionData } from '@/hooks/fetchFreightCollectionData';
 import { Shipment, Package as FreightPackage, TrackingEvent } from '@/types/freight';
+import { format, parseISO, subDays, startOfWeek, endOfWeek, eachDayOfInterval } from 'date-fns';
+import { fr } from 'date-fns/locale';
 
 const FreightDashboard: React.FC = () => {
   const [shipments, setShipments] = useState<Shipment[]>([]);
@@ -96,53 +98,219 @@ const FreightDashboard: React.FC = () => {
     }
   ];
 
-  // Données pour le graphique d'activité (simulées)
-  const activityData = {
-    labels: ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'],
-    datasets: [
-      {
-        label: 'Expéditions',
-        data: [5, 8, 12, 9, 7, 3, 1],
-        borderColor: 'rgb(59, 130, 246)',
-        backgroundColor: 'rgba(59, 130, 246, 0.5)',
-      },
-      {
-        label: 'Livraisons',
-        data: [3, 4, 7, 8, 6, 5, 2],
-        borderColor: 'rgb(34, 197, 94)',
-        backgroundColor: 'rgba(34, 197, 94, 0.5)',
+  // Préparation des données pour le graphique d'activité en fonction de la période sélectionnée
+  const getActivityChartData = () => {
+    if (!shipments || shipments.length === 0) {
+      return {
+        labels: ['Aucune donnée'],
+        datasets: [
+          {
+            label: 'Expéditions',
+            data: [0],
+            borderColor: 'rgb(59, 130, 246)',
+            backgroundColor: 'rgba(59, 130, 246, 0.5)',
+          },
+          {
+            label: 'Livraisons',
+            data: [0],
+            borderColor: 'rgb(34, 197, 94)',
+            backgroundColor: 'rgba(34, 197, 94, 0.5)',
+          }
+        ]
+      };
+    }
+
+    const today = new Date();
+    let startDate: Date;
+    let dateFormat: string;
+    let interval: { start: Date; end: Date };
+
+    // Définir la plage de dates en fonction de la période sélectionnée
+    switch (selectedPeriod) {
+      case 'week':
+        startDate = subDays(today, 6);
+        dateFormat = 'EEE';
+        interval = { start: startDate, end: today };
+        break;
+      case 'month':
+        startDate = subDays(today, 30);
+        dateFormat = 'dd MMM';
+        interval = { start: startDate, end: today };
+        break;
+      case 'quarter':
+        startDate = subDays(today, 90);
+        dateFormat = 'MMM';
+        interval = { start: startDate, end: today };
+        break;
+      case 'year':
+        startDate = subDays(today, 365);
+        dateFormat = 'MMM yyyy';
+        interval = { start: startDate, end: today };
+        break;
+      default:
+        startDate = subDays(today, 30);
+        dateFormat = 'dd MMM';
+        interval = { start: startDate, end: today };
+    }
+
+    // Générer tous les jours dans l'intervalle
+    const days = eachDayOfInterval(interval);
+    
+    // Préparer les labels pour l'axe X
+    const labels = days.map(day => format(day, dateFormat, { locale: fr }));
+    
+    // Compter les expéditions créées et livrées par jour
+    const createdData = new Array(days.length).fill(0);
+    const deliveredData = new Array(days.length).fill(0);
+    
+    shipments.forEach(shipment => {
+      try {
+        const createdDate = parseISO(shipment.createdAt);
+        const dayIndex = days.findIndex(day => 
+          createdDate.getDate() === day.getDate() && 
+          createdDate.getMonth() === day.getMonth() &&
+          createdDate.getFullYear() === day.getFullYear()
+        );
+        
+        if (dayIndex !== -1) {
+          createdData[dayIndex]++;
+        }
+        
+        if (shipment.status === 'delivered' && shipment.actualDeliveryDate) {
+          const deliveredDate = parseISO(shipment.actualDeliveryDate);
+          const deliveredDayIndex = days.findIndex(day => 
+            deliveredDate.getDate() === day.getDate() && 
+            deliveredDate.getMonth() === day.getMonth() &&
+            deliveredDate.getFullYear() === day.getFullYear()
+          );
+          
+          if (deliveredDayIndex !== -1) {
+            deliveredData[deliveredDayIndex]++;
+          }
+        }
+      } catch (error) {
+        console.error(`Error processing shipment date:`, error);
       }
-    ]
+    });
+    
+    return {
+      labels,
+      datasets: [
+        {
+          label: 'Expéditions créées',
+          data: createdData,
+          borderColor: 'rgb(59, 130, 246)',
+          backgroundColor: 'rgba(59, 130, 246, 0.5)',
+        },
+        {
+          label: 'Livraisons',
+          data: deliveredData,
+          borderColor: 'rgb(34, 197, 94)',
+          backgroundColor: 'rgba(34, 197, 94, 0.5)',
+        }
+      ]
+    };
   };
 
-  // Données pour le graphique de répartition des types d'expédition (simulées)
-  const shipmentTypesData = {
-    labels: ['International', 'Export', 'Import', 'Local'],
-    datasets: [
-      {
-        data: [25, 35, 20, 20],
-        backgroundColor: [
-          'rgba(59, 130, 246, 0.7)',
-          'rgba(168, 85, 247, 0.7)',
-          'rgba(234, 88, 12, 0.7)',
-          'rgba(34, 197, 94, 0.7)'
-        ],
-        borderWidth: 1
+  // Préparation des données pour le graphique de types d'expédition
+  const getShipmentTypesData = () => {
+    if (!shipments || shipments.length === 0) {
+      return {
+        labels: ['Aucune donnée'],
+        datasets: [
+          {
+            data: [1],
+            backgroundColor: ['rgba(209, 213, 219, 0.7)'],
+            borderWidth: 1
+          }
+        ]
+      };
+    }
+    
+    // Compter les expéditions par type
+    const typeCounts = {
+      international: 0,
+      export: 0,
+      import: 0,
+      local: 0
+    };
+    
+    shipments.forEach(shipment => {
+      if (shipment.shipmentType in typeCounts) {
+        typeCounts[shipment.shipmentType as keyof typeof typeCounts]++;
       }
-    ]
+    });
+    
+    return {
+      labels: ['International', 'Export', 'Import', 'Local'],
+      datasets: [
+        {
+          data: [
+            typeCounts.international,
+            typeCounts.export,
+            typeCounts.import,
+            typeCounts.local
+          ],
+          backgroundColor: [
+            'rgba(59, 130, 246, 0.7)',
+            'rgba(168, 85, 247, 0.7)',
+            'rgba(234, 88, 12, 0.7)',
+            'rgba(34, 197, 94, 0.7)'
+          ],
+          borderWidth: 1
+        }
+      ]
+    };
   };
 
-  // Données pour le graphique des transporteurs (simulées)
-  const carriersData = {
-    labels: ['Carrier A', 'Carrier B', 'Carrier C', 'Carrier D', 'Carrier E'],
-    datasets: [
-      {
-        label: 'Nombre d\'expéditions',
-        data: [12, 9, 7, 5, 3],
-        backgroundColor: 'rgba(59, 130, 246, 0.7)'
+  // Préparation des données pour le graphique de transporteurs
+  const getCarriersData = () => {
+    if (!shipments || shipments.length === 0) {
+      return {
+        labels: ['Aucun transporteur'],
+        datasets: [
+          {
+            label: 'Nombre d\'expéditions',
+            data: [0],
+            backgroundColor: 'rgba(59, 130, 246, 0.7)'
+          }
+        ]
+      };
+    }
+    
+    // Compter les expéditions par transporteur
+    const carrierCounts: Record<string, number> = {};
+    
+    shipments.forEach(shipment => {
+      const carrierName = shipment.carrierName || 'Non spécifié';
+      if (carrierCounts[carrierName]) {
+        carrierCounts[carrierName]++;
+      } else {
+        carrierCounts[carrierName] = 1;
       }
-    ]
+    });
+    
+    // Trier par nombre d'expéditions et prendre les 5 premiers
+    const sortedCarriers = Object.entries(carrierCounts)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5);
+    
+    return {
+      labels: sortedCarriers.map(([carrier]) => carrier),
+      datasets: [
+        {
+          label: 'Nombre d\'expéditions',
+          data: sortedCarriers.map(([_, count]) => count),
+          backgroundColor: 'rgba(59, 130, 246, 0.7)'
+        }
+      ]
+    };
   };
+
+  // Obtenir les données de graphiques à partir des données réelles
+  const activityData = getActivityChartData();
+  const shipmentTypesData = getShipmentTypesData();
+  const carriersData = getCarriersData();
 
   if (isLoading) {
     return <div className="flex justify-center p-12">Chargement du tableau de bord...</div>;
