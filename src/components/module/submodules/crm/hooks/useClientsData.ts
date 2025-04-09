@@ -35,10 +35,21 @@ export const useClientsData = () => {
       }
       
       // Cast the data to Client type to ensure type safety
-      const typedClients = clientsData.map(client => ({
-        ...client,
-        status: client.status as "active" | "inactive" | "lead"
-      })) as Client[];
+      const typedClients = clientsData.map(client => {
+        const typedClient: Partial<Client> = {
+          ...client,
+          name: client.name || '',
+          contactName: client.contactName || '',
+          contactEmail: client.contactEmail || '',
+          contactPhone: client.contactPhone || '',
+          sector: client.sector || '',
+          revenue: client.revenue || '',
+          createdAt: client.createdAt || new Date().toISOString(),
+          status: (client.status as "active" | "inactive" | "lead") || "active"
+        };
+        
+        return typedClient as Client;
+      });
       
       setClients(typedClients);
       setIsOfflineMode(false);
@@ -92,7 +103,6 @@ export const useClientsData = () => {
         ...clientData,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
-        // Ensure status is a valid enum value
         status: clientData.status as "active" | "inactive" | "lead"
       };
       
@@ -136,7 +146,6 @@ export const useClientsData = () => {
       const updatedClient = {
         ...clientData,
         updatedAt: new Date().toISOString(),
-        // Ensure status is a valid enum value
         status: clientData.status as "active" | "inactive" | "lead"
       };
       
@@ -155,7 +164,7 @@ export const useClientsData = () => {
         ));
         
         toast.success("Client mis à jour en mode démo");
-        return offlineUpdatedClient;
+        return offlineUpdatedClient as Client;
       }
       
       // Otherwise, update in Firestore
