@@ -35,8 +35,12 @@ try {
   console.warn('Error setting up Firestore persistence:', err);
 }
 
-// Use Firestore emulator if in development and EMULATOR=true
-if (process.env.NODE_ENV === 'development' && process.env.EMULATOR === 'true') {
+// Use Firestore emulator if in development and EMULATOR is true
+// In Vite, environment variables are accessed via import.meta.env instead of process.env
+const isDevMode = import.meta.env.DEV;
+const useEmulator = import.meta.env.VITE_EMULATOR === 'true';
+
+if (isDevMode && useEmulator) {
   try {
     connectFirestoreEmulator(firestore, 'localhost', 8080);
     console.log('Connected to Firestore emulator');
@@ -48,8 +52,8 @@ if (process.env.NODE_ENV === 'development' && process.env.EMULATOR === 'true') {
 // Initialize Auth
 const firebaseAuth = getAuth(app);
 
-// Use Auth emulator if in development and EMULATOR=true
-if (process.env.NODE_ENV === 'development' && process.env.EMULATOR === 'true') {
+// Use Auth emulator if in development and EMULATOR is true
+if (isDevMode && useEmulator) {
   try {
     connectAuthEmulator(firebaseAuth, 'http://localhost:9099');
     console.log('Connected to Auth emulator');

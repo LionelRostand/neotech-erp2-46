@@ -19,4 +19,8 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  define: {
+    // Explicitly provide environment variables that should be available in client code
+    'import.meta.env.VITE_EMULATOR': JSON.stringify(process.env.VITE_EMULATOR || 'false'),
+  },
 }));
