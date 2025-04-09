@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -44,8 +45,8 @@ const InvoicesPage = () => {
   const { toast } = useToast();
 
   const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
-  const [currencyFilter, setCurrencyFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [currencyFilter, setCurrencyFilter] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
@@ -77,8 +78,8 @@ const InvoicesPage = () => {
 
   const filteredInvoices = invoices?.filter((invoice) => {
     const searchRegex = new RegExp(searchQuery, 'i');
-    const statusMatch = statusFilter ? invoice.status === statusFilter : true;
-    const currencyMatch = currencyFilter ? invoice.currency === currencyFilter : true;
+    const statusMatch = statusFilter === 'all' ? true : invoice.status === statusFilter;
+    const currencyMatch = currencyFilter === 'all' ? true : invoice.currency === currencyFilter;
 
     return (
       searchRegex.test(invoice.invoiceNumber) &&
@@ -133,7 +134,7 @@ const InvoicesPage = () => {
                   <SelectValue placeholder="Filtrer par statut" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Tous les statuts</SelectItem>
+                  <SelectItem value="all">Tous les statuts</SelectItem>
                   {statusOptions.map((option) => (
                     <SelectItem key={option.value} value={option.value}>
                       {option.label}
@@ -148,7 +149,7 @@ const InvoicesPage = () => {
                   <SelectValue placeholder="Filtrer par devise" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Toutes les devises</SelectItem>
+                  <SelectItem value="all">Toutes les devises</SelectItem>
                   {currencyOptions.map((option) => (
                     <SelectItem key={option.value} value={option.value}>
                       {option.label}
