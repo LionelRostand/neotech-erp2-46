@@ -15,7 +15,8 @@ export const useClients = () => {
     addClient: addClientToDb,
     updateClient: updateClientInDb,
     deleteClient: deleteClientFromDb,
-    seedMockClients
+    seedMockClients,
+    cancelLoading: cancelLoadingOp
   } = useClientsData();
 
   // Local state
@@ -57,6 +58,12 @@ export const useClients = () => {
       notes: '',
     });
   };
+
+  // Expose the cancelLoading function
+  const cancelLoading = useCallback(() => {
+    console.log("Cancelling loading operation from useClients");
+    cancelLoadingOp();
+  }, [cancelLoadingOp]);
 
   // Handle input change
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -281,6 +288,7 @@ export const useClients = () => {
     isOfflineMode,
     sectors,
     statusOptions,
-    refreshClients
+    refreshClients,
+    cancelLoading
   };
 };

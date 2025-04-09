@@ -11,6 +11,7 @@ import { toast } from 'sonner';
 
 const CrmClients: React.FC = () => {
   const [loadingTimedOut, setLoadingTimedOut] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
   
   const { 
     clients,
@@ -43,26 +44,29 @@ const CrmClients: React.FC = () => {
     isOfflineMode,
     sectors,
     statusOptions,
-    refreshClients
+    refreshClients,
+    cancelLoading
   } = useClients();
 
   // Add a timeout to stop the loading indicator after a certain period
   useEffect(() => {
     let timer: NodeJS.Timeout | null = null;
     
-    if (loading) {
+    if (loading && !loadingTimedOut) {
       timer = setTimeout(() => {
         setLoadingTimedOut(true);
         console.log("Loading timed out after 10 seconds");
-      }, 10000); // 10 seconds timeout
-    } else {
+        // Cancel the loading operation when timeout occurs
+        cancelLoading();
+      }, 8000); // 8 seconds timeout
+    } else if (!loading) {
       setLoadingTimedOut(false);
     }
     
     return () => {
       if (timer) clearTimeout(timer);
     };
-  }, [loading]);
+  }, [loading, loadingTimedOut, cancelLoading]);
 
   // Automatically prompt to add demo data if there are no clients
   useEffect(() => {
@@ -78,6 +82,12 @@ const CrmClients: React.FC = () => {
     }
   }, [clients, loading, loadingTimedOut, error]);
 
+  const handleRefreshClick = () => {
+    setLoadingTimedOut(false);
+    setRetryCount(prevCount => prevCount + 1);
+    refreshClients();
+  };
+
   // Convert error to string for the table component
   const errorMessage = error ? (error.message || String(error)) : '';
 
@@ -91,7 +101,7 @@ const CrmClients: React.FC = () => {
           <h1 className="text-2xl font-bold mb-3 md:mb-0">Clients</h1>
           <div className="flex space-x-2">
             {!loading && (
-              <Button variant="outline" onClick={refreshClients} title="Rafraîchir les données">
+              <Button variant="outline" onClick={handleRefreshClick} title="Rafraîchir les données">
                 <RefreshCcw className="h-4 w-4 mr-2" />
                 Rafraîchir
               </Button>
@@ -113,6 +123,16 @@ const CrmClients: React.FC = () => {
           </div>
         )}
 
+        {loadingTimedOut && (
+          <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-md flex items-center space-x-2 text-amber-800">
+            <AlertTriangle className="h-5 w-5" />
+            <span>Le chargement des données a pris trop de temps. </span>
+            <Button variant="link" className="text-amber-900 p-0 h-auto" onClick={handleRefreshClick}>
+              Cliquez ici pour réessayer
+            </Button>
+          </div>
+        )}
+
         <ClientSearch 
           searchTerm={searchTerm}
           onSearchChange={setSearchTerm}
@@ -128,7 +148,7 @@ const CrmClients: React.FC = () => {
             onEdit={openEditDialog}
             onDelete={openDeleteDialog}
             isLoading={loading && !loadingTimedOut}
-            error={loadingTimedOut ? "Chargement des données a pris trop de temps. Veuillez rafraîchir la page." : errorMessage}
+            error={loadingTimedOut ? "Chargement des données a pris trop de temps. Utilisez le bouton 'Rafraîchir'." : errorMessage}
           />
         </div>
 
