@@ -16,6 +16,7 @@ import { Invoice } from '../types/accounting-types';
 
 interface RecentInvoicesTableProps {
   invoices: Invoice[];
+  onViewInvoice?: (invoice: Invoice) => void;
 }
 
 const getStatusBadge = (status: string) => {
@@ -37,7 +38,12 @@ const getStatusBadge = (status: string) => {
   }
 };
 
-const RecentInvoicesTable: React.FC<RecentInvoicesTableProps> = ({ invoices }) => {
+const RecentInvoicesTable: React.FC<RecentInvoicesTableProps> = ({ invoices, onViewInvoice }) => {
+  const formatDate = (dateString: string) => {
+    if (!dateString) return 'N/A';
+    return new Date(dateString).toLocaleDateString();
+  };
+
   return (
     <Table>
       <TableHeader>
@@ -61,15 +67,19 @@ const RecentInvoicesTable: React.FC<RecentInvoicesTableProps> = ({ invoices }) =
         ) : (
           invoices.map((invoice) => (
             <TableRow key={invoice.id}>
-              <TableCell className="font-medium">{invoice.invoiceNumber || invoice.number}</TableCell>
-              <TableCell>{invoice.clientName}</TableCell>
-              <TableCell>{new Date(invoice.issueDate).toLocaleDateString()}</TableCell>
-              <TableCell>{new Date(invoice.dueDate).toLocaleDateString()}</TableCell>
-              <TableCell className="font-medium">{formatCurrency(invoice.total, invoice.currency)}</TableCell>
+              <TableCell className="font-medium">{invoice.invoiceNumber || invoice.number || 'N/A'}</TableCell>
+              <TableCell>{invoice.clientName || 'Client'}</TableCell>
+              <TableCell>{formatDate(invoice.issueDate)}</TableCell>
+              <TableCell>{formatDate(invoice.dueDate)}</TableCell>
+              <TableCell className="font-medium">{formatCurrency(invoice.total || 0, invoice.currency || 'EUR')}</TableCell>
               <TableCell>{getStatusBadge(invoice.status)}</TableCell>
               <TableCell className="text-right">
                 <div className="flex justify-end space-x-2">
-                  <Button variant="ghost" size="icon">
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    onClick={() => onViewInvoice && onViewInvoice(invoice)}
+                  >
                     <Eye className="h-4 w-4" />
                   </Button>
                   <Button variant="ghost" size="icon">

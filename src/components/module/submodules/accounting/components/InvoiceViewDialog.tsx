@@ -64,6 +64,13 @@ const InvoiceViewDialog: React.FC<InvoiceViewDialogProps> = ({ open, onOpenChang
 
   // Ensure we have all required properties with fallbacks for invoice display
   const invoiceNumber = invoice.invoiceNumber || invoice.number || 'N/A';
+  const items = invoice.items || [];
+  const subtotal = invoice.subtotal || 0;
+  const taxAmount = invoice.taxAmount || 0;
+  const total = invoice.total || 0;
+  const currency = invoice.currency || 'EUR';
+  const notes = invoice.notes || '';
+  const termsAndConditions = invoice.termsAndConditions || 'Paiement à réception de la facture';
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -93,7 +100,7 @@ const InvoiceViewDialog: React.FC<InvoiceViewDialogProps> = ({ open, onOpenChang
           <div className="grid grid-cols-2 gap-8 mb-8">
             <div>
               <p className="font-bold mb-2">Facturer à:</p>
-              <p className="font-medium">{invoice.clientName}</p>
+              <p className="font-medium">{invoice.clientName || 'Client'}</p>
               <p>Adresse du client</p>
               <p>Ville, Pays</p>
             </div>
@@ -124,14 +131,14 @@ const InvoiceViewDialog: React.FC<InvoiceViewDialogProps> = ({ open, onOpenChang
                   </tr>
                 </thead>
                 <tbody>
-                  {invoice.items.map((item, index) => (
+                  {items.map((item, index) => (
                     <tr key={index} className="border-b">
                       <td className="py-2 px-4">{item.description}</td>
                       <td className="py-2 px-4 text-right">{item.quantity}</td>
-                      <td className="py-2 px-4 text-right">{formatCurrency(item.unitPrice, invoice.currency)}</td>
-                      <td className="py-2 px-4 text-right">{item.taxRate}%</td>
+                      <td className="py-2 px-4 text-right">{formatCurrency(item.unitPrice, currency)}</td>
+                      <td className="py-2 px-4 text-right">{item.taxRate || 0}%</td>
                       <td className="py-2 px-4 text-right">
-                        {formatCurrency(item.quantity * item.unitPrice * (1 + (item.taxRate || 0) / 100), invoice.currency)}
+                        {formatCurrency(item.quantity * item.unitPrice * (1 + (item.taxRate || 0) / 100), currency)}
                       </td>
                     </tr>
                   ))}
@@ -144,29 +151,29 @@ const InvoiceViewDialog: React.FC<InvoiceViewDialogProps> = ({ open, onOpenChang
             <div className="w-64">
               <div className="flex justify-between py-2">
                 <span>Sous-total:</span>
-                <span>{formatCurrency(invoice.subtotal, invoice.currency)}</span>
+                <span>{formatCurrency(subtotal, currency)}</span>
               </div>
               <div className="flex justify-between py-2">
                 <span>TVA:</span>
-                <span>{formatCurrency(invoice.taxAmount, invoice.currency)}</span>
+                <span>{formatCurrency(taxAmount, currency)}</span>
               </div>
               <div className="flex justify-between py-2 font-bold text-lg">
                 <span>Total:</span>
-                <span>{formatCurrency(invoice.total, invoice.currency)}</span>
+                <span>{formatCurrency(total, currency)}</span>
               </div>
             </div>
           </div>
           
-          {invoice.notes && (
+          {notes && (
             <div className="mb-6">
               <p className="font-bold mb-2">Notes:</p>
-              <p>{invoice.notes}</p>
+              <p>{notes}</p>
             </div>
           )}
           
           <div className="border-t pt-4">
             <p className="font-bold mb-2">Conditions de paiement:</p>
-            <p>{invoice.termsAndConditions || 'Paiement à réception de la facture'}</p>
+            <p>{termsAndConditions}</p>
           </div>
         </div>
         

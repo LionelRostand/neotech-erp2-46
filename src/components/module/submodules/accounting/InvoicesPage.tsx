@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import {
   Table,
@@ -48,7 +49,7 @@ const InvoicesPage = () => {
   };
 
   const handleViewClick = (invoice: Invoice) => {
-    setSelectedInvoice(invoice);
+    setSelectedInvoice({...invoice}); // Create a copy to avoid any reference issues
     setIsViewOpen(true);
   };
 
@@ -74,19 +75,20 @@ const InvoicesPage = () => {
   const handleExportToExcel = () => {
     const worksheet = XLSX.utils.json_to_sheet(
       invoices.map(invoice => ({
-        'Numéro': invoice.invoiceNumber,
-        'Client': invoice.clientName,
-        'Date d\'émission': invoice.issueDate,
-        'Date d\'échéance': invoice.dueDate,
-        'Montant HT': invoice.subtotal,
-        'TVA': invoice.taxAmount,
-        'Montant total': invoice.total,
-        'Devise': invoice.currency,
+        'Numéro': invoice.invoiceNumber || invoice.number || 'N/A',
+        'Client': invoice.clientName || 'Client',
+        'Date d\'émission': invoice.issueDate || 'N/A',
+        'Date d\'échéance': invoice.dueDate || 'N/A',
+        'Montant HT': invoice.subtotal || 0,
+        'TVA': invoice.taxAmount || 0,
+        'Montant total': invoice.total || 0,
+        'Devise': invoice.currency || 'EUR',
         'Statut': invoice.status === 'paid' ? 'Payée' : 
                  invoice.status === 'draft' ? 'Brouillon' :
                  invoice.status === 'sent' ? 'Envoyée' :
-                 invoice.status === 'overdue' ? 'En retard' : 'Annulée',
-        'Date de création': invoice.createdAt,
+                 invoice.status === 'overdue' ? 'En retard' : 
+                 invoice.status === 'pending' ? 'En attente' : 'Annulée',
+        'Date de création': invoice.createdAt || 'N/A',
       }))
     );
     
@@ -190,11 +192,11 @@ const InvoicesPage = () => {
             <TableBody>
               {invoices.map((invoice) => (
                 <TableRow key={invoice.id}>
-                  <TableCell className="font-medium">{invoice.invoiceNumber}</TableCell>
-                  <TableCell>{invoice.clientName}</TableCell>
-                  <TableCell>{invoice.issueDate}</TableCell>
-                  <TableCell>{invoice.dueDate}</TableCell>
-                  <TableCell>{formatCurrency(invoice.total, invoice.currency)}</TableCell>
+                  <TableCell className="font-medium">{invoice.invoiceNumber || invoice.number || 'N/A'}</TableCell>
+                  <TableCell>{invoice.clientName || 'Client'}</TableCell>
+                  <TableCell>{invoice.issueDate || 'N/A'}</TableCell>
+                  <TableCell>{invoice.dueDate || 'N/A'}</TableCell>
+                  <TableCell>{formatCurrency(invoice.total || 0, invoice.currency || 'EUR')}</TableCell>
                   <TableCell>
                     <Badge variant={getStatusBadgeVariant(invoice.status)}>
                       {getStatusText(invoice.status)}
