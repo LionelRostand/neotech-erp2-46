@@ -2,124 +2,135 @@
 import { useState, useCallback, useEffect } from 'react';
 import { collection, query, where, getDocs, doc, deleteDoc, addDoc, updateDoc, DocumentReference } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { v4 as uuidv4 } from 'uuid';
-import { Client, ClientFormData } from '../types/crm-types';
+import { ClientFormData, Client } from '../types/crm-types';
 import { COLLECTIONS } from '@/lib/firebase-collections';
-import mockClientsData from "../data/mockClients";
+import { v4 as uuidv4 } from 'uuid';
+import { mockClients } from '../data/mockClients';
 import { toast } from 'sonner';
-import { executeWithNetworkRetry, isNetworkError } from '@/hooks/firestore/network-handler';
+import { executeWithNetworkRetry } from '@/hooks/firestore/network-handler';
 
 export const useClientsData = () => {
   const [clients, setClients] = useState<Client[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<Error | null>(null);
-  const [isOfflineMode, setIsOfflineMode] = useState(false);
-  const [loadingTimedOut, setLoadingTimedOut] = useState(false);
-  const [loadingCancelled, setLoadingCancelled] = useState(false);
-
-  const cancelLoading = useCallback(() => {
-    console.log("Loading operation cancelled");
-    setLoadingCancelled(true);
-    setIsLoading(false);
-  }, []);
+  const [isOfflineMode, setIsOfflineMode] = useState<boolean>(false);
+  const [loadingOperationCancelled, setLoadingOperationCancelled] = useState<boolean>(false);
 
   const fetchClients = useCallback(async () => {
     setIsLoading(true);
-    setLoadingCancelled(false);
-    setLoadingTimedOut(false);
-    
+    setLoadingOperationCancelled(false);
     try {
+      // Attempt to get real data from Firestore
       const clientsCollection = collection(db, COLLECTIONS.CRM.CLIENTS);
       const clientsQuery = query(clientsCollection);
+      const querySnapshot = await getDocs(clientsQuery);
       
-      const timeoutPromise = new Promise<never>((_, reject) => {
-        setTimeout(() => {
-          setLoadingTimedOut(true);
-          setIsLoading(false);
-          reject(new Error('Le chargement des données a pris trop de temps'));
-        }, 10000);
+      // Process the results
+      const clientsData: Client[] = [];
+      querySnapshot.forEach(doc => {
+        clientsData.push({ id: doc.id, ...doc.data() } as Client);
       });
       
-      const querySnapshot = await Promise.race([
-        getDocs(clientsQuery),
-        timeoutPromise
-      ]);
-      
-      if (loadingCancelled) {
-        console.log("Fetch operation cancelled, not processing results");
-        return;
-      }
-      
-      const clientsData = querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      })) as Client[];
-      
-      console.log(`Successfully fetched ${clientsData.length} clients from Firebase collection ${COLLECTIONS.CRM.CLIENTS}`);
+      console.log(`Retrieved ${clientsData.length} clients from Firestore`);
       setClients(clientsData);
+      setIsOfflineMode(false);
       setError(null);
-    } catch (err: any) {
-      if (loadingTimedOut) {
-        console.warn("Fetch operation timed out, handling error");
-        toast.warning("Le chargement des données a pris trop de temps. Veuillez vérifier votre connexion.");
-      } else if (isNetworkError(err)) {
-        console.error('Network error while fetching clients:', err);
+    } catch (err) {
+      // Handle error and fall back to mock data if appropriate
+      const error = err as Error;
+      console.error('Error fetching clients:', error);
+      
+      // Only show error message for network-related errors
+      if (error.message.includes('offline') || 
+          error.message.includes('unavailable')) {
+        console.log('Network error, using mock data');
+        toast.error('Application fonctionnant en mode hors ligne');
+        setClients(mockClients);
         setIsOfflineMode(true);
-        toast.error("Mode hors ligne activé. Les modifications ne seront pas synchronisées tant que vous n'êtes pas en ligne.");
       } else {
-        console.error('Error fetching clients:', err);
-        setError(err);
-        toast.error(`Erreur lors du chargement des clients: ${err.message}`);
+        // For other errors, show the error message
+        setError(error);
+        toast.error(`Erreur lors du chargement des clients: ${error.message}`);
       }
     } finally {
-      if (!loadingTimedOut && !loadingCancelled) {
+      if (!loadingOperationCancelled) {
         setIsLoading(false);
       }
     }
-  }, [loadingCancelled, loadingTimedOut]);
+  }, [loadingOperationCancelled]);
+
+  // Load clients when the component mounts
+  useEffect(() => {
+    fetchClients();
+  }, [fetchClients]);
+
+  const cancelLoading = useCallback(() => {
+    console.log("Loading operation cancelled");
+    setLoadingOperationCancelled(true);
+    setIsLoading(false);
+  }, []);
+
+  // Seed mock clients for demonstration purposes
+  const seedMockClients = async () => {
+    setIsLoading(true);
+    try {
+      // Add each mock client to Firebase
+      for (const mockClient of mockClients) {
+        const clientsCollection = collection(db, COLLECTIONS.CRM.CLIENTS);
+        await addDoc(clientsCollection, {
+          ...mockClient,
+          id: undefined // Firebase will assign an ID
+        });
+      }
+      
+      toast.success("Données démo ajoutées avec succès");
+      // Refresh the client list after seeding
+      await fetchClients();
+    } catch (error: any) {
+      console.error("Error seeding mock clients:", error);
+      toast.error(`Erreur lors de l'ajout des données démo: ${error.message}`);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const addClient = async (clientData: ClientFormData): Promise<Client | void> => {
     try {
       setIsLoading(true);
       const statusValue = clientData.status as 'active' | 'inactive' | 'lead';
       
-      // Créer l'objet client, mais sans l'ajouter à l'état tout de suite
-      const newClient: Client = {
-        id: '', // L'id sera défini après l'ajout à Firebase
+      // Préparer les données client pour Firebase (sans ID)
+      const newClientData = {
         ...clientData,
         status: statusValue,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       };
       
-      // Exécuter l'ajout à Firebase
-      let addedClient: Client | null = null;
-      
+      // Ajouter à Firebase
+      let docRef;
       await executeWithNetworkRetry(async () => {
         const clientsCollection = collection(db, COLLECTIONS.CRM.CLIENTS);
-        const docRef = await addDoc(clientsCollection, newClient);
-        
-        // Mettre à jour l'ID avec celui généré par Firebase
-        addedClient = {
-          ...newClient,
-          id: docRef.id
-        };
-        
+        docRef = await addDoc(clientsCollection, newClientData);
         console.log(`Client added to collection ${COLLECTIONS.CRM.CLIENTS} with ID: ${docRef.id}`);
         toast.success("Client ajouté avec succès");
       });
       
-      // Uniquement si l'ajout à Firebase a réussi, mettre à jour l'état local
-      if (addedClient) {
-        setClients(prevClients => [...prevClients, addedClient!]);
-        return addedClient;
+      // Récupérer les données mises à jour depuis Firebase
+      await fetchClients();
+      
+      // Retourner le nouveau client avec l'ID généré
+      if (docRef) {
+        return { 
+          id: docRef.id, 
+          ...newClientData 
+        } as Client;
       }
     } catch (error: any) {
       console.error("Error adding client:", error);
       
-      if (isNetworkError(error)) {
-        setIsOfflineMode(true);
-        toast.error("Mode hors ligne activé. Les modifications ne seront pas synchronisées tant que vous n'êtes pas en ligne.");
+      if (error.message.includes('offline') || error.message.includes('unavailable')) {
+        toast.error("Impossible d'ajouter le client en mode hors ligne");
       } else {
         toast.error(`Erreur lors de l'ajout du client: ${error.message}`);
       }
@@ -133,45 +144,31 @@ export const useClientsData = () => {
       setIsLoading(true);
       const statusValue = clientData.status as 'active' | 'inactive' | 'lead';
       
-      const existingClientIndex = clients.findIndex(client => client.id === clientId);
-      const existingClient = existingClientIndex >= 0 ? clients[existingClientIndex] : null;
-      
-      if (!existingClient) {
-        console.error("Client not found for update:", clientId);
-        toast.error("Client introuvable pour la mise à jour");
-        return;
-      }
-      
-      const updatedClient: Client = {
-        id: clientId,
+      const updateData = {
         ...clientData,
         status: statusValue,
-        createdAt: existingClient.createdAt,
         updatedAt: new Date().toISOString(),
       };
       
       await executeWithNetworkRetry(async () => {
         const clientDocRef = doc(db, COLLECTIONS.CRM.CLIENTS, clientId);
-        const updateData = { 
-          ...clientData, 
-          status: statusValue, 
-          updatedAt: new Date().toISOString() 
-        };
         await updateDoc(clientDocRef, updateData);
-        console.log(`Client updated in collection ${COLLECTIONS.CRM.CLIENTS} with ID: ${clientId}`);
+        console.log(`Client ${clientId} updated successfully`);
         toast.success("Client mis à jour avec succès");
       });
       
-      setClients(prevClients =>
-        prevClients.map(client => (client.id === clientId ? updatedClient : client))
-      );
-      return updatedClient;
+      // Récupérer les données mises à jour depuis Firebase
+      await fetchClients();
+      
+      return { 
+        id: clientId, 
+        ...updateData 
+      } as Client;
     } catch (error: any) {
       console.error("Error updating client:", error);
       
-      if (isNetworkError(error)) {
-        setIsOfflineMode(true);
-        toast.error("Mode hors ligne activé. Les modifications ne seront pas synchronisées tant que vous n'êtes pas en ligne.");
+      if (error.message.includes('offline') || error.message.includes('unavailable')) {
+        toast.error("Impossible de mettre à jour le client en mode hors ligne");
       } else {
         toast.error(`Erreur lors de la mise à jour du client: ${error.message}`);
       }
@@ -186,17 +183,17 @@ export const useClientsData = () => {
       await executeWithNetworkRetry(async () => {
         const clientDocRef = doc(db, COLLECTIONS.CRM.CLIENTS, clientId);
         await deleteDoc(clientDocRef);
-        console.log(`Client deleted from collection ${COLLECTIONS.CRM.CLIENTS} with ID: ${clientId}`);
+        console.log(`Client ${clientId} deleted successfully`);
         toast.success("Client supprimé avec succès");
       });
       
-      setClients(prevClients => prevClients.filter(client => client.id !== clientId));
+      // Récupérer les données mises à jour depuis Firebase
+      await fetchClients();
     } catch (error: any) {
       console.error("Error deleting client:", error);
       
-      if (isNetworkError(error)) {
-        setIsOfflineMode(true);
-        toast.error("Mode hors ligne activé. Les modifications ne seront pas synchronisées tant que vous n'êtes pas en ligne.");
+      if (error.message.includes('offline') || error.message.includes('unavailable')) {
+        toast.error("Impossible de supprimer le client en mode hors ligne");
       } else {
         toast.error(`Erreur lors de la suppression du client: ${error.message}`);
       }
@@ -204,47 +201,6 @@ export const useClientsData = () => {
       setIsLoading(false);
     }
   };
-
-  const seedMockClients = async () => {
-    setIsLoading(true);
-    try {
-      console.log(`Seeding ${mockClientsData.length} mock clients to collection: ${COLLECTIONS.CRM.CLIENTS}`);
-      
-      for (const client of mockClientsData) {
-        const statusValue = client.status as 'active' | 'inactive' | 'lead';
-        const clientWithCorrectStatus = { 
-          ...client, 
-          status: statusValue,
-          createdAt: client.createdAt || new Date().toISOString(),
-          updatedAt: new Date().toISOString()
-        };
-        
-        await executeWithNetworkRetry(async () => {
-          const clientsCollection = collection(db, COLLECTIONS.CRM.CLIENTS);
-          await addDoc(clientsCollection, clientWithCorrectStatus);
-        });
-      }
-      
-      console.log(`Successfully seeded ${mockClientsData.length} mock clients to Firebase collection ${COLLECTIONS.CRM.CLIENTS}`);
-      await fetchClients();
-      toast.success("Données de démonstration ajoutées avec succès");
-    } catch (error: any) {
-      console.error("Error seeding mock clients:", error);
-      
-      if (isNetworkError(error)) {
-        setIsOfflineMode(true);
-        toast.error("Mode hors ligne activé. Les modifications ne seront pas synchronisées tant que vous n'êtes pas en ligne.");
-      } else {
-        toast.error(`Erreur lors de l'ajout des données de démonstration: ${error.message}`);
-      }
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchClients();
-  }, [fetchClients]);
 
   return {
     clients,
