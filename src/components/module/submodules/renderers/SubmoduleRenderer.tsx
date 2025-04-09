@@ -10,9 +10,6 @@ import { renderHealthSubmodule } from './HealthRenderer';
 import { renderDocumentsSubmodule } from './DocumentsRenderer';
 import DefaultSubmoduleContent from '../DefaultSubmoduleContent';
 
-// Import all renderer functions from the renderers/index.ts
-import * as Renderers from '.';
-
 interface SubmoduleRenderProps {
   submoduleId: string;
   submodule: SubModule;
@@ -21,23 +18,23 @@ interface SubmoduleRenderProps {
 export const renderSubmoduleContent = ({ submoduleId, submodule }: SubmoduleRenderProps) => {
   console.log('SubmoduleRenderer - Rendering submodule:', submoduleId);
   
-  // Déterminer le module parent du sous-module
+  // Determine the parent module of the submodule
   const modulePrefix = submoduleId.split('-')[0];
   
-  // Sélectionner le bon renderer en fonction du module
+  // Select the appropriate renderer based on the module
   switch (modulePrefix) {
     case 'employees':
-      return renderEmployeesSubmodule(submoduleId, submodule);
+      return renderEmployeesSubmodule(submoduleId);
     case 'accounting':
-      return renderAccountingSubmodule(submoduleId, submodule);
+      return renderAccountingSubmodule(submoduleId);
     case 'freight':
-      return renderFreightSubmodule(submoduleId, submodule);
+      return renderFreightSubmodule(submoduleId);
     case 'projects':
-      return renderProjectsSubmodule(submoduleId, submodule);
+      return renderProjectsSubmodule(submoduleId);
     case 'health':
-      return renderHealthSubmodule(submoduleId, submodule);
+      return renderHealthSubmodule(submoduleId);
     case 'documents':
-      return renderDocumentsSubmodule(submoduleId, submodule);
+      return renderDocumentsSubmodule(submoduleId);
     case 'companies':
       // We don't need to handle companies here, they'll be part of employees
       return <DefaultSubmoduleContent submodule={submodule} />;

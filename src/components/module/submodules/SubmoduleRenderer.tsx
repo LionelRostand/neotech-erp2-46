@@ -21,19 +21,19 @@ export const renderSubmoduleContent = ({ submoduleId, submodule }: SubmoduleRend
   // Sélectionner le bon renderer en fonction du module
   switch (modulePrefix) {
     case 'employees':
-      return Renderers.renderEmployeesSubmodule(submoduleId, submodule);
+      return Renderers.renderEmployeesSubmodule(submoduleId);
     case 'accounting':
-      return Renderers.renderAccountingSubmodule(submoduleId, submodule);
+      return Renderers.renderAccountingSubmodule(submoduleId);
     case 'freight':
-      return Renderers.renderFreightSubmodule(submoduleId, submodule);
+      return Renderers.renderFreightSubmodule(submoduleId);
     case 'projects':
-      return Renderers.renderProjectsSubmodule(submoduleId, submodule);
+      return Renderers.renderProjectsSubmodule(submoduleId);
     case 'health':
-      return Renderers.renderHealthSubmodule(submoduleId, submodule);
+      return Renderers.renderHealthSubmodule(submoduleId);
     case 'crm':
-      return Renderers.renderCrmSubmodule(submoduleId, submodule);
+      return Renderers.renderCrmSubmodule(submoduleId);
     case 'documents':
-      return Renderers.renderDocumentsSubmodule(submoduleId, submodule);
+      return Renderers.renderDocumentsSubmodule(submoduleId);
     default:
       console.warn(`No renderer found for submodule: ${submoduleId}`);
       return <DefaultSubmoduleContent submodule={submodule} />;
