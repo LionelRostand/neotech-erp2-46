@@ -1,7 +1,6 @@
-
 import { useState, useEffect, useCallback } from 'react';
-import { useClientsData } from './useClientsData';
 import { Client, ClientFormData } from '../types/crm-types';
+import { useClientsData } from './useClientsData';
 import { toast } from 'sonner';
 
 export const useClients = () => {
@@ -12,9 +11,10 @@ export const useClients = () => {
     error,
     isOfflineMode,
     fetchClients,
-    addClient: addClientToFirestore,
-    updateClient: updateClientInFirestore,
-    deleteClient: deleteClientFromFirestore
+    addClient: addClientToDb,
+    updateClient: updateClientInDb,
+    deleteClient: deleteClientFromDb,
+    seedMockClients
   } = useClientsData();
 
   // Local state
@@ -82,7 +82,7 @@ export const useClients = () => {
         status: clientData.status as 'active' | 'inactive' | 'lead'
       };
       
-      await addClientToFirestore(validClientData);
+      await addClientToDb(validClientData);
       setIsAddDialogOpen(false);
       resetForm();
     } catch (error) {
@@ -92,8 +92,8 @@ export const useClients = () => {
   };
 
   // Update client
-  const handleUpdateClient = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleUpdateClient = async (event: React.FormEvent) => {
+    event.preventDefault();
     if (!selectedClient) {
       console.error("No client selected for update");
       toast.error("Erreur: Aucun client sélectionné");
@@ -115,15 +115,11 @@ export const useClients = () => {
         status: formData.status as 'active' | 'inactive' | 'lead'
       };
       
-      const result = await updateClientInFirestore(selectedClient.id, clientData);
-      console.log("Client updated successfully:", result);
+      const result = await updateClientInDb(selectedClient!.id, clientData);
       
-      // Check if the update was processed in offline mode
-      if (result && result._offlineUpdated) {
-        // If updated in offline mode, manually update the filtered clients
-        setFilteredClients(prev => prev.map(client => 
-          client.id === selectedClient.id ? { ...client, ...clientData } : client
-        ));
+      // Check if the operation was completed offline
+      if (result && '_offlineUpdated' in result && result._offlineUpdated) {
+        console.log('Client updated in offline mode:', result);
       }
       
       setIsEditDialogOpen(false);
@@ -147,7 +143,7 @@ export const useClients = () => {
 
     try {
       console.log("Deleting client", selectedClient.id);
-      await deleteClientFromFirestore(selectedClient.id);
+      await deleteClientFromDb(selectedClient.id);
       
       // Also update the local state to remove the client immediately
       // even if we're offline

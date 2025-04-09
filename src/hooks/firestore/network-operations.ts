@@ -1,5 +1,7 @@
+
 import { doc, setDoc, deleteDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { reconnectToFirestore } from './network-handler';
 
 // Store operations to be processed when back online
 const offlineOperations: {
@@ -100,5 +102,29 @@ export const handleOfflineOperations = () => {
     processOfflineOperations().catch(error => {
       console.error('Error processing offline operations', error);
     });
+  }
+};
+
+/**
+ * Attempts to restore connectivity to Firestore
+ * @returns Promise<boolean> - true if successfully restored connection
+ */
+export const restoreFirestoreConnectivity = async (): Promise<boolean> => {
+  console.log('Attempting to restore Firestore connectivity...');
+  try {
+    const success = await reconnectToFirestore();
+    
+    if (success) {
+      console.log('Firestore connectivity restored successfully');
+      // Process any pending operations
+      await processOfflineOperations();
+    } else {
+      console.log('Failed to restore Firestore connectivity');
+    }
+    
+    return success;
+  } catch (error) {
+    console.error('Error while restoring Firestore connectivity:', error);
+    return false;
   }
 };

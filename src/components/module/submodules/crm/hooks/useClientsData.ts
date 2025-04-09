@@ -4,6 +4,7 @@ import { Client, ClientFormData } from '../types/crm-types';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import useFirestore from '@/hooks/useFirestore';
 import { toast } from 'sonner';
+import { v4 as uuidv4 } from 'uuid';
 
 export const useClientsData = () => {
   const [clients, setClients] = useState<Client[]>([]);
@@ -170,6 +171,42 @@ export const useClientsData = () => {
     }
   }, [firestore]);
 
+  // Add mock clients for testing
+  const seedMockClients = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      
+      const sectors = ['Technologie', 'Finance', 'Santé', 'Éducation', 'Commerce', 'Industrie', 'Services'];
+      const statuses = ['active', 'inactive', 'lead'] as const;
+      
+      const mockClients: ClientFormData[] = Array.from({ length: 10 }, (_, i) => ({
+        name: `Client Démo ${i + 1}`,
+        contactName: `Contact ${i + 1}`,
+        contactEmail: `contact${i + 1}@example.com`,
+        contactPhone: `+33 1 23 45 67 ${i < 9 ? '0' + (i + 1) : i + 1}`,
+        sector: sectors[Math.floor(Math.random() * sectors.length)],
+        revenue: `${Math.floor(Math.random() * 500) + 50}K €`,
+        status: statuses[Math.floor(Math.random() * statuses.length)],
+        address: `${i + 1} Rue de Demo, 75000 Paris`,
+        website: `https://example${i + 1}.com`,
+        notes: `Notes pour le client démo ${i + 1}`
+      }));
+      
+      const promises = mockClients.map(client => addClient(client));
+      await Promise.all(promises);
+      
+      toast.success('10 clients de démonstration ajoutés avec succès');
+      
+      // Refresh the client list
+      await fetchClients();
+    } catch (err) {
+      console.error('Error seeding mock clients:', err);
+      toast.error(`Erreur lors de l'ajout des clients de démonstration: ${err instanceof Error ? err.message : 'Erreur inconnue'}`);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [addClient, fetchClients]);
+
   // Fetch clients on component mount
   useEffect(() => {
     fetchClients();
@@ -207,6 +244,7 @@ export const useClientsData = () => {
     fetchClients,
     addClient,
     updateClient,
-    deleteClient
+    deleteClient,
+    seedMockClients
   };
 };
