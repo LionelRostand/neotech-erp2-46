@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -8,310 +8,245 @@ import {
   DialogFooter
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { 
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage
-} from "@/components/ui/form";
-import { useForm } from "react-hook-form";
-import { toast } from "sonner";
-import { Payment } from '../types/accounting-types';
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { Payment } from '../types/accounting-types';
 import { useFirestore } from '@/hooks/use-firestore';
 import { COLLECTIONS } from '@/lib/firebase-collections';
+import { toast } from 'sonner';
 
 interface PaymentFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   payment?: Payment | null;
-  mode: 'create' | 'edit';
   onSuccess: () => void;
 }
-
-type FormValues = {
-  invoiceId: string;
-  amount: number;
-  date: string;
-  method: string;
-  status: string;
-  transactionId: string;
-  currency: string;
-  notes: string;
-};
 
 const PaymentFormDialog: React.FC<PaymentFormDialogProps> = ({
   open,
   onOpenChange,
   payment,
-  mode,
   onSuccess
 }) => {
+  const isEditMode = !!payment;
   const paymentsCollection = useFirestore(COLLECTIONS.ACCOUNTING.PAYMENTS);
-  const [isLoading, setIsLoading] = useState(false);
-
-  const form = useForm<FormValues>({
-    defaultValues: {
-      invoiceId: '',
-      amount: 0,
-      date: new Date().toISOString().substring(0, 10),
-      method: 'bank_transfer',
-      status: 'pending',
-      transactionId: '',
-      currency: 'EUR',
-      notes: '',
-    }
+  
+  const [formData, setFormData] = useState({
+    amount: 0,
+    invoiceId: '',
+    date: new Date().toISOString().split('T')[0],
+    method: 'bank_transfer',
+    status: 'pending',
+    transactionId: '',
+    currency: 'EUR',
+    notes: '',
   });
 
   useEffect(() => {
-    if (payment && mode === 'edit') {
-      form.reset({
-        invoiceId: payment.invoiceId || '',
+    if (payment) {
+      setFormData({
         amount: payment.amount || 0,
-        date: payment.date || new Date().toISOString().substring(0, 10),
+        invoiceId: payment.invoiceId || '',
+        date: payment.date || new Date().toISOString().split('T')[0],
         method: payment.method || 'bank_transfer',
         status: payment.status || 'pending',
         transactionId: payment.transactionId || '',
         currency: payment.currency || 'EUR',
         notes: payment.notes || '',
       });
-    } else {
-      form.reset({
-        invoiceId: '',
-        amount: 0,
-        date: new Date().toISOString().substring(0, 10),
-        method: 'bank_transfer',
-        status: 'pending',
-        transactionId: '',
-        currency: 'EUR',
-        notes: '',
-      });
     }
-  }, [payment, mode, form]);
+  }, [payment]);
 
-  const onSubmit = async (data: FormValues) => {
-    setIsLoading(true);
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: name === 'amount' ? parseFloat(value) || 0 : value
+    }));
+  };
+
+  const handleSelectChange = (name: string, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
     try {
       const paymentData = {
-        ...data,
-        amount: Number(data.amount),
+        ...formData,
         updatedAt: new Date(),
       };
-
-      if (mode === 'create') {
-        paymentData.createdAt = new Date();
-        paymentData.createdBy = 'current-user'; // Normally this would come from auth context
-
-        await paymentsCollection.addDoc(paymentData);
-        toast.success('Paiement ajouté avec succès');
-      } else if (mode === 'edit' && payment?.id) {
-        await paymentsCollection.updateDoc(payment.id, paymentData);
+      
+      if (!isEditMode) {
+        // Add new properties for new payments
+        const newPaymentData = {
+          ...paymentData,
+          createdAt: new Date(),
+          createdBy: 'current-user',
+        };
+        
+        await paymentsCollection.add(newPaymentData);
+        toast.success('Paiement créé avec succès');
+      } else if (payment?.id) {
+        await paymentsCollection.update(payment.id, paymentData);
         toast.success('Paiement mis à jour avec succès');
       }
-
+      
       onSuccess();
       onOpenChange(false);
     } catch (error) {
-      console.error('Erreur lors de la sauvegarde du paiement:', error);
-      toast.error(`Erreur lors de la ${mode === 'create' ? 'création' : 'mise à jour'} du paiement`);
-    } finally {
-      setIsLoading(false);
+      console.error('Erreur lors de l\'enregistrement du paiement:', error);
+      toast.error('Impossible d\'enregistrer le paiement');
     }
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[550px]">
         <DialogHeader>
           <DialogTitle>
-            {mode === 'create' ? 'Ajouter un paiement' : 'Modifier le paiement'}
+            {isEditMode ? 'Modifier le paiement' : 'Nouveau paiement'}
           </DialogTitle>
         </DialogHeader>
 
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="invoiceId"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Numéro de facture</FormLabel>
-                  <FormControl>
-                    <Input placeholder="FACT-2023-0001" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="amount"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Montant</FormLabel>
-                    <FormControl>
-                      <Input 
-                        type="number" 
-                        step="0.01" 
-                        min="0" 
-                        placeholder="0.00" 
-                        {...field} 
-                        onChange={e => field.onChange(parseFloat(e.target.value) || 0)}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="currency"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Devise</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Sélectionner une devise" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="EUR">EUR (€)</SelectItem>
-                        <SelectItem value="USD">USD ($)</SelectItem>
-                        <SelectItem value="GBP">GBP (£)</SelectItem>
-                        <SelectItem value="CAD">CAD (C$)</SelectItem>
-                        <SelectItem value="CHF">CHF (Fr)</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="amount">Montant</Label>
+              <div className="flex">
+                <Input
+                  id="amount"
+                  name="amount"
+                  type="number"
+                  value={formData.amount}
+                  onChange={handleChange}
+                  step="0.01"
+                  min="0"
+                  required
+                />
+              </div>
             </div>
-
-            <FormField
-              control={form.control}
-              name="date"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Date</FormLabel>
-                  <FormControl>
-                    <Input type="date" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="method"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Méthode de paiement</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Sélectionner une méthode" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="bank_transfer">Virement bancaire</SelectItem>
-                        <SelectItem value="stripe">Carte de crédit</SelectItem>
-                        <SelectItem value="paypal">PayPal</SelectItem>
-                        <SelectItem value="cash">Espèces</SelectItem>
-                        <SelectItem value="check">Chèque</SelectItem>
-                        <SelectItem value="other">Autre</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="status"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Statut</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Sélectionner un statut" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="completed">Validé</SelectItem>
-                        <SelectItem value="pending">En attente</SelectItem>
-                        <SelectItem value="failed">Échoué</SelectItem>
-                        <SelectItem value="refunded">Remboursé</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            <FormField
-              control={form.control}
-              name="transactionId"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>ID de transaction (optionnel)</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Ex: ch_123456789" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="notes"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Notes (optionnel)</FormLabel>
-                  <FormControl>
-                    <Textarea placeholder="Notes additionnelles" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <DialogFooter>
-              <Button 
-                type="button" 
-                variant="outline" 
-                onClick={() => onOpenChange(false)}
-                disabled={isLoading}
+            
+            <div className="space-y-2">
+              <Label htmlFor="currency">Devise</Label>
+              <Select 
+                value={formData.currency} 
+                onValueChange={(value) => handleSelectChange('currency', value)}
               >
-                Annuler
-              </Button>
-              <Button type="submit" disabled={isLoading}>
-                {isLoading ? 'Chargement...' : mode === 'create' ? 'Ajouter' : 'Mettre à jour'}
-              </Button>
-            </DialogFooter>
-          </form>
-        </Form>
+                <SelectTrigger>
+                  <SelectValue placeholder="Sélectionner une devise" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="EUR">EUR</SelectItem>
+                  <SelectItem value="USD">USD</SelectItem>
+                  <SelectItem value="GBP">GBP</SelectItem>
+                  <SelectItem value="CAD">CAD</SelectItem>
+                  <SelectItem value="JPY">JPY</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="invoiceId">Numéro de facture</Label>
+            <Input
+              id="invoiceId"
+              name="invoiceId"
+              value={formData.invoiceId}
+              onChange={handleChange}
+              required
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="date">Date de paiement</Label>
+              <Input
+                id="date"
+                name="date"
+                type="date"
+                value={formData.date}
+                onChange={handleChange}
+                required
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="method">Méthode de paiement</Label>
+              <Select 
+                value={formData.method} 
+                onValueChange={(value) => handleSelectChange('method', value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Sélectionner une méthode" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="bank_transfer">Virement bancaire</SelectItem>
+                  <SelectItem value="cash">Espèces</SelectItem>
+                  <SelectItem value="check">Chèque</SelectItem>
+                  <SelectItem value="stripe">Carte de crédit</SelectItem>
+                  <SelectItem value="paypal">PayPal</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="status">Statut</Label>
+              <Select 
+                value={formData.status} 
+                onValueChange={(value) => handleSelectChange('status', value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Sélectionner un statut" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="pending">En attente</SelectItem>
+                  <SelectItem value="completed">Validé</SelectItem>
+                  <SelectItem value="failed">Échoué</SelectItem>
+                  <SelectItem value="refunded">Remboursé</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="transactionId">ID de transaction</Label>
+              <Input
+                id="transactionId"
+                name="transactionId"
+                value={formData.transactionId}
+                onChange={handleChange}
+              />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="notes">Notes</Label>
+            <Textarea
+              id="notes"
+              name="notes"
+              value={formData.notes}
+              onChange={handleChange}
+              rows={3}
+            />
+          </div>
+
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+              Annuler
+            </Button>
+            <Button type="submit">
+              {isEditMode ? 'Mettre à jour' : 'Enregistrer'}
+            </Button>
+          </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   );

@@ -1,131 +1,113 @@
 
 import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Plus, Search, FileDown, Eye, Pencil, Trash2 } from 'lucide-react';
-import { usePayments } from './hooks/usePayments';
-import { Payment } from './types/accounting-types';
-import { formatCurrency } from './utils/formatting';
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableHead,
+  TableCell
 } from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
-import { exportToExcel } from '@/utils/exportUtils';
-import { toast } from 'sonner';
+import { 
+  Download, 
+  CreditCard, 
+  PlusCircle, 
+  Eye, 
+  Pencil, 
+  Trash2
+} from "lucide-react";
+import { toast } from "sonner";
+import { usePayments } from './hooks/usePayments';
+import { formatCurrency } from './utils/formatting';
+import { Payment } from './types/accounting-types';
+import { useFirestore } from '@/hooks/use-firestore';
+import { COLLECTIONS } from '@/lib/firebase-collections';
 import PaymentFormDialog from './components/PaymentFormDialog';
 import PaymentViewDialog from './components/PaymentViewDialog';
 import DeleteConfirmDialog from './components/DeleteConfirmDialog';
-import { useFirestore } from '@/hooks/use-firestore';
-import { COLLECTIONS } from '@/lib/firebase-collections';
+import * as XLSX from 'xlsx';
 
-const PaymentsPage: React.FC = () => {
-  const [searchTerm, setSearchTerm] = useState('');
+const PaymentsPage = () => {
   const { payments, isLoading, reload } = usePayments();
   const paymentsCollection = useFirestore(COLLECTIONS.ACCOUNTING.PAYMENTS);
   
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
+  const [isViewOpen, setIsViewOpen] = useState(false);
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
-  const [formMode, setFormMode] = useState<'create' | 'edit'>('create');
 
-  const filteredPayments = searchTerm 
-    ? payments.filter(payment => 
-        payment.invoiceId?.toLowerCase().includes(searchTerm.toLowerCase()) || 
-        payment.transactionId?.toLowerCase().includes(searchTerm.toLowerCase())
-      )
-    : payments;
-
-  const handleOpenCreateForm = () => {
+  const handleCreateClick = () => {
     setSelectedPayment(null);
-    setFormMode('create');
     setIsFormOpen(true);
   };
 
-  const handleOpenEditForm = (payment: Payment) => {
+  const handleEditClick = (payment: Payment) => {
     setSelectedPayment(payment);
-    setFormMode('edit');
     setIsFormOpen(true);
   };
 
-  const handleOpenDeleteDialog = (payment: Payment) => {
+  const handleViewClick = (payment: Payment) => {
     setSelectedPayment(payment);
-    setIsDeleteDialogOpen(true);
+    setIsViewOpen(true);
   };
 
-  const handleOpenViewDialog = (payment: Payment) => {
+  const handleDeleteClick = (payment: Payment) => {
     setSelectedPayment(payment);
-    setIsViewDialogOpen(true);
+    setIsDeleteOpen(true);
   };
 
-  const handleDeletePayment = async () => {
+  const handleDeleteConfirm = async () => {
     if (!selectedPayment) return;
     
     try {
-      await paymentsCollection.deleteDoc(selectedPayment.id);
+      await paymentsCollection.remove(selectedPayment.id);
       toast.success('Paiement supprimé avec succès');
       reload();
     } catch (error) {
       console.error('Erreur lors de la suppression du paiement:', error);
-      toast.error('Erreur lors de la suppression du paiement');
-    } finally {
-      setIsDeleteDialogOpen(false);
+      toast.error('Impossible de supprimer le paiement');
     }
+    
+    setIsDeleteOpen(false);
   };
 
   const handleExportToExcel = () => {
-    if (filteredPayments.length === 0) {
-      toast.error('Aucune donnée à exporter');
-      return;
-    }
-
-    // Format data for export
-    const dataToExport = filteredPayments.map(payment => ({
-      'Date': payment.date || 'N/A',
-      'Numéro de facture': payment.invoiceId || 'N/A',
-      'ID Transaction': payment.transactionId || 'N/A',
-      'Méthode': getMethodName(payment.method || ''),
-      'Montant': formatCurrency(payment.amount || 0, payment.currency || 'EUR'),
-      'Statut': getStatusText(payment.status || ''),
-      'Notes': payment.notes || '',
-      'Créé le': payment.createdAt || '',
-      'Modifié le': payment.updatedAt || '',
-    }));
+    const worksheet = XLSX.utils.json_to_sheet(
+      payments.map(payment => ({
+        'Facture': payment.invoiceId,
+        'Montant': payment.amount,
+        'Devise': payment.currency,
+        'Date': payment.date,
+        'Méthode': payment.method === 'bank_transfer' ? 'Virement bancaire' :
+                  payment.method === 'cash' ? 'Espèces' :
+                  payment.method === 'check' ? 'Chèque' :
+                  payment.method === 'stripe' ? 'Carte de crédit' :
+                  payment.method === 'paypal' ? 'PayPal' : payment.method,
+        'Statut': payment.status === 'completed' ? 'Validé' :
+                 payment.status === 'pending' ? 'En attente' :
+                 payment.status === 'failed' ? 'Échoué' :
+                 payment.status === 'refunded' ? 'Remboursé' : payment.status,
+        'ID de transaction': payment.transactionId,
+        'Date de création': payment.createdAt,
+      }))
+    );
     
-    const success = exportToExcel(dataToExport, 'Paiements', 'paiements');
-    if (success) {
-      toast.success('Les paiements ont été exportés avec succès');
-    } else {
-      toast.error('Erreur lors de l\'exportation des paiements');
-    }
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Paiements");
+    XLSX.writeFile(workbook, "Paiements.xlsx");
+    
+    toast.success('Export des paiements réussi');
   };
 
-  const getMethodIcon = (method: string) => {
-    switch (method) {
-      case 'stripe': return '💳';
-      case 'bank_transfer': return '🏦';
-      case 'cash': return '💵';
-      case 'check': return '📝';
-      case 'paypal': return 'PayPal';
-      default: return '💰';
-    }
-  };
-
-  const getMethodName = (method: string) => {
-    switch (method) {
-      case 'stripe': return 'Carte de crédit';
-      case 'bank_transfer': return 'Virement bancaire';
-      case 'cash': return 'Espèces';
-      case 'check': return 'Chèque';
-      case 'paypal': return 'PayPal';
-      default: return 'Virement bancaire';
+  const getStatusBadgeVariant = (status: string) => {
+    switch (status) {
+      case 'completed': return 'success';
+      case 'pending': return 'warning';
+      case 'failed': return 'destructive';
+      case 'refunded': return 'info';
+      default: return 'secondary';
     }
   };
 
@@ -135,141 +117,135 @@ const PaymentsPage: React.FC = () => {
       case 'pending': return 'En attente';
       case 'failed': return 'Échoué';
       case 'refunded': return 'Remboursé';
-      default: return 'En attente';
+      default: return status;
+    }
+  };
+
+  const getMethodText = (method: string) => {
+    switch (method) {
+      case 'bank_transfer': return 'Virement bancaire';
+      case 'cash': return 'Espèces';
+      case 'check': return 'Chèque';
+      case 'stripe': return 'Carte de crédit';
+      case 'paypal': return 'PayPal';
+      default: return method;
     }
   };
 
   return (
-    <div className="container mx-auto py-6">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Paiements</h1>
-        <div className="flex space-x-2">
-          <Button onClick={handleExportToExcel}>
-            <FileDown className="mr-2 h-4 w-4" />
+    <div className="space-y-4">
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-bold">Paiements</h2>
+        <div className="flex gap-2">
+          <Button 
+            variant="outline" 
+            onClick={handleExportToExcel}
+            disabled={payments.length === 0}
+          >
+            <Download className="h-4 w-4 mr-2" />
             Exporter
           </Button>
-          <Button onClick={handleOpenCreateForm}>
-            <Plus className="mr-2 h-4 w-4" />
+          <Button onClick={handleCreateClick}>
+            <PlusCircle className="h-4 w-4 mr-2" />
             Nouveau Paiement
           </Button>
         </div>
       </div>
-      
-      <Card className="mb-6">
-        <CardContent className="pt-6">
-          <div className="relative">
-            <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Rechercher par numéro de facture ou transaction..."
-              className="pl-8"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
-        </CardContent>
-      </Card>
-      
-      <Card>
-        <CardHeader>
-          <CardTitle>Liste des Paiements</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <div className="space-y-2">
-              <Skeleton className="h-10 w-full" />
-              <Skeleton className="h-10 w-full" />
-              <Skeleton className="h-10 w-full" />
-              <Skeleton className="h-10 w-full" />
-              <Skeleton className="h-10 w-full" />
-            </div>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Facture</TableHead>
-                  <TableHead>Transaction</TableHead>
-                  <TableHead>Méthode</TableHead>
-                  <TableHead>Montant</TableHead>
-                  <TableHead>Statut</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredPayments.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={7} className="text-center py-4">
-                      Aucun paiement trouvé
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  filteredPayments.map((payment: Payment) => (
-                    <TableRow key={payment.id}>
-                      <TableCell>{payment.date || 'N/A'}</TableCell>
-                      <TableCell className="font-medium">{payment.invoiceId || 'N/A'}</TableCell>
-                      <TableCell>{payment.transactionId || 'N/A'}</TableCell>
-                      <TableCell>
-                        <span className="flex items-center">
-                          <span className="mr-2">{getMethodIcon(payment.method || '')}</span>
-                          {getMethodName(payment.method || '')}
-                        </span>
-                      </TableCell>
-                      <TableCell>{formatCurrency(payment.amount || 0, payment.currency || 'EUR')}</TableCell>
-                      <TableCell>
-                        <Badge variant={
-                          payment.status === 'completed' ? 'success' : 
-                          payment.status === 'pending' ? 'outline' : 
-                          payment.status === 'refunded' ? 'warning' :
-                          'destructive'
-                        }>
-                          {getStatusText(payment.status || '')}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end space-x-1">
-                          <Button variant="ghost" size="icon" onClick={() => handleOpenViewDialog(payment)}>
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                          <Button variant="ghost" size="icon" onClick={() => handleOpenEditForm(payment)}>
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <Button variant="ghost" size="icon" onClick={() => handleOpenDeleteDialog(payment)}>
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
-      </Card>
 
-      {/* Payment Form Dialog */}
+      {isLoading ? (
+        <div className="flex justify-center my-8">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+        </div>
+      ) : payments.length === 0 ? (
+        <div className="text-center p-8 border rounded-lg bg-muted/40">
+          <CreditCard className="h-10 w-10 mx-auto mb-2 text-muted-foreground" />
+          <h3 className="text-lg font-medium">Aucun paiement</h3>
+          <p className="text-muted-foreground">Commencez par enregistrer un nouveau paiement.</p>
+          <Button onClick={handleCreateClick} className="mt-4">
+            <PlusCircle className="h-4 w-4 mr-2" />
+            Nouveau Paiement
+          </Button>
+        </div>
+      ) : (
+        <div className="border rounded-lg">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Facture</TableHead>
+                <TableHead>Montant</TableHead>
+                <TableHead>Date</TableHead>
+                <TableHead>Méthode</TableHead>
+                <TableHead>Statut</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {payments.map((payment) => (
+                <TableRow key={payment.id}>
+                  <TableCell className="font-medium">{payment.invoiceId}</TableCell>
+                  <TableCell>{formatCurrency(payment.amount, payment.currency)}</TableCell>
+                  <TableCell>{payment.date}</TableCell>
+                  <TableCell>{getMethodText(payment.method)}</TableCell>
+                  <TableCell>
+                    <Badge variant={getStatusBadgeVariant(payment.status)}>
+                      {getStatusText(payment.status)}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex justify-end gap-2">
+                      <Button 
+                        variant="ghost" 
+                        size="icon"
+                        onClick={() => handleViewClick(payment)}
+                      >
+                        <Eye className="h-4 w-4" />
+                        <span className="sr-only">Voir</span>
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        size="icon"
+                        onClick={() => handleEditClick(payment)}
+                      >
+                        <Pencil className="h-4 w-4" />
+                        <span className="sr-only">Modifier</span>
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        size="icon"
+                        onClick={() => handleDeleteClick(payment)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                        <span className="sr-only">Supprimer</span>
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      )}
+
+      {/* Dialogs */}
       <PaymentFormDialog
         open={isFormOpen}
         onOpenChange={setIsFormOpen}
         payment={selectedPayment}
-        mode={formMode}
         onSuccess={reload}
       />
 
-      {/* Delete Confirmation Dialog */}
-      <DeleteConfirmDialog
-        open={isDeleteDialogOpen}
-        onOpenChange={setIsDeleteDialogOpen}
-        onConfirm={handleDeletePayment}
-        title="Supprimer le paiement"
-        description="Êtes-vous sûr de vouloir supprimer ce paiement ? Cette action est irréversible."
+      <PaymentViewDialog
+        open={isViewOpen}
+        onOpenChange={setIsViewOpen}
+        payment={selectedPayment}
       />
 
-      {/* View Payment Dialog */}
-      <PaymentViewDialog
-        open={isViewDialogOpen}
-        onOpenChange={setIsViewDialogOpen}
-        payment={selectedPayment}
+      <DeleteConfirmDialog
+        open={isDeleteOpen}
+        onOpenChange={setIsDeleteOpen}
+        title="Supprimer le paiement"
+        description="Êtes-vous sûr de vouloir supprimer ce paiement ? Cette action est irréversible."
+        onConfirm={handleDeleteConfirm}
       />
     </div>
   );
