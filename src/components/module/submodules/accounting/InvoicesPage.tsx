@@ -1,5 +1,4 @@
-
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -22,7 +21,6 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { useInvoices } from './hooks/useInvoices';
 import { PaginationComponent } from './components/PaginationComponent';
-import { cn } from '@/lib/utils';
 
 const statusOptions = [
   { value: "draft", label: "Draft" },
@@ -64,7 +62,6 @@ const InvoicesPage = () => {
   };
 
   const handleDeleteInvoice = async (invoiceId: string) => {
-    // Placeholder for delete invoice logic
     toast({
       title: "Supprimer la facture",
       description: "Fonctionnalité à venir",
@@ -72,7 +69,6 @@ const InvoicesPage = () => {
   };
 
   const handleExportInvoices = () => {
-    // Placeholder for export invoices logic
     toast({
       title: "Exporter les factures",
       description: "Fonctionnalité à venir",
