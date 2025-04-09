@@ -1,11 +1,12 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import ClientSearch from './clients/ClientSearch';
 import ClientsTable from './clients/ClientsTable';
 import { useClients } from './hooks/useClients';
 import ClientDialogs from './clients/ClientDialogs';
 import SeedDataButton from './clients/SeedDataButton';
+import { toast } from 'sonner';
 
 const CrmClients: React.FC = () => {
   const { 
@@ -39,6 +40,20 @@ const CrmClients: React.FC = () => {
     sectors,
     statusOptions
   } = useClients();
+
+  // Automatically prompt to add demo data if there are no clients
+  useEffect(() => {
+    if (!loading && !error && clients.length === 0) {
+      const timer = setTimeout(() => {
+        toast.info(
+          "Aucun client trouvé. Utilisez le bouton 'Ajouter des données démo' pour initialiser des données de test.",
+          { duration: 5000 }
+        );
+      }, 2000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [clients, loading, error]);
 
   // Convert error to string for the table component
   const errorMessage = error ? error.message : '';

@@ -28,7 +28,7 @@ export const restoreFirestoreConnectivity = async (): Promise<boolean> => {
     return await reconnectToFirestore();
   } catch (err) {
     console.error('Failed to restore Firestore connectivity:', err);
-    toast.error("Échec de la connexion à la base de données");
+    toast.error("Échec de la connexion à la base de données. L'application fonctionne en mode démo.");
     return false;
   }
 };
@@ -52,21 +52,27 @@ export const handleOfflineOperations = () => {
     toast.warning('Connexion internet perdue, passage en mode hors-ligne');
   });
   
-  // Handle 400 errors specifically by listening to fetch errors
-  window.addEventListener('error', async (event) => {
-    if (event.target && (event.target as any).tagName === 'LINK') {
-      // Ignore resource loading errors
-      return;
-    }
+  // Special handler for 400 errors which commonly occur in development environments
+  window.addEventListener('unhandledrejection', async (event) => {
+    const error = event.reason;
     
-    // Look for Firestore-related 400 errors
-    if (event.message?.includes('400') && 
-        (event.message?.includes('firestore') || event.message?.includes('googleapis'))) {
-      console.log('Caught Firestore 400 error event:', event);
+    // Look for specific 400 errors with Firestore
+    if (error && error.message && 
+        (error.message.includes('400') || error.code === 400) && 
+        (error.message.includes('firestore') || error.message.includes('googleapis'))) {
+      
+      console.log('Caught Firestore 400 error:', error);
+      event.preventDefault();
+      
+      toast.error('Erreur 400 détectée lors d\'une opération Firestore. Tentative de reconnexion...');
       
       // Try to restore connectivity
-      toast.error("Problème de connexion avec Firestore. Tentative de reconnexion...");
-      await restoreFirestoreConnectivity();
+      const reconnected = await restoreFirestoreConnectivity();
+      if (reconnected) {
+        toast.success('Connexion à Firestore rétablie');
+      } else {
+        toast.error('Impossible de se connecter à Firestore. L\'application fonctionne en mode démo.');
+      }
     }
   });
   
@@ -99,6 +105,7 @@ export const handleOfflineOperations = () => {
     window.removeEventListener('online', async () => {});
     window.removeEventListener('offline', () => {});
     window.removeEventListener('error', () => {});
+    window.removeEventListener('unhandledrejection', async () => {});
     // Reset the addEventListener (though this won't remove already attached listeners)
     window.addEventListener = originalAddEventListener;
   };
@@ -120,12 +127,12 @@ export const registerFirebaseErrorHandler = () => {
       
       console.log('Caught unhandled Firestore rejection:', error);
       
-      if (isNetworkError(error)) {
+      if (isNetworkError(error) || (error.code && error.code === 400)) {
         // Prevent default error handling
         event.preventDefault();
         
         // Show toast notification
-        toast.error("Problème de connexion avec la base de données. Tentative de reconnexion...");
+        toast.error("Problème de connexion avec la base de données. L'application fonctionne en mode démo.");
         
         // Attempt reconnection
         restoreFirestoreConnectivity();

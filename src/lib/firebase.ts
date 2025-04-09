@@ -1,8 +1,9 @@
 
 // Firebase lite implementation for development
 import { initializeApp } from 'firebase/app';
-import { getFirestore } from 'firebase/firestore';
-import { getAuth, Auth } from 'firebase/auth';
+import { getFirestore, enableIndexedDbPersistence, connectFirestoreEmulator } from 'firebase/firestore';
+import { getAuth, Auth, connectAuthEmulator } from 'firebase/auth';
+import { toast } from 'sonner';
 
 // Firebase configuration - this would normally come from environment variables
 // For development purposes, we're using a placeholder config
@@ -20,20 +21,70 @@ const app = initializeApp(firebaseConfig);
 
 // Initialize Firebase services
 const firestore = getFirestore(app);
+
+// Enable offline persistence for Firestore (for demo/development)
+try {
+  enableIndexedDbPersistence(firestore)
+    .then(() => {
+      console.log('Firestore offline persistence enabled');
+    })
+    .catch((err) => {
+      console.warn('Failed to enable Firestore offline persistence:', err);
+    });
+} catch (err) {
+  console.warn('Error setting up Firestore persistence:', err);
+}
+
+// Use Firestore emulator if in development and EMULATOR=true
+if (process.env.NODE_ENV === 'development' && process.env.EMULATOR === 'true') {
+  try {
+    connectFirestoreEmulator(firestore, 'localhost', 8080);
+    console.log('Connected to Firestore emulator');
+  } catch (err) {
+    console.warn('Failed to connect to Firestore emulator:', err);
+  }
+}
+
+// Initialize Auth
 const firebaseAuth = getAuth(app);
+
+// Use Auth emulator if in development and EMULATOR=true
+if (process.env.NODE_ENV === 'development' && process.env.EMULATOR === 'true') {
+  try {
+    connectAuthEmulator(firebaseAuth, 'http://localhost:9099');
+    console.log('Connected to Auth emulator');
+  } catch (err) {
+    console.warn('Failed to connect to Auth emulator:', err);
+  }
+}
 
 // Mock authentication for development
 const auth: Auth = {
   ...firebaseAuth,
-  currentUser: null,
+  currentUser: { uid: 'mock-user-id', email: 'demo@example.com' } as any,
   onAuthStateChanged: (callback: any) => {
-    callback(null);
+    callback({ uid: 'mock-user-id', email: 'demo@example.com' });
     return () => {};
   },
-  signInWithEmailAndPassword: async () => ({ user: null } as any),
-  createUserWithEmailAndPassword: async () => ({ user: null } as any),
+  signInWithEmailAndPassword: async () => ({ 
+    user: { uid: 'mock-user-id', email: 'demo@example.com' } 
+  } as any),
+  createUserWithEmailAndPassword: async () => ({
+    user: { uid: 'mock-user-id', email: 'demo@example.com' }
+  } as any),
   signOut: async () => {},
 } as Auth;
 
+// Improve error handling for Firestore operations
+const handleFirestoreError = (error: any) => {
+  console.error('Firestore operation failed:', error);
+  
+  if (error.code === 'unavailable' || error.code === 'failed-precondition') {
+    toast.error('La connexion à la base de données a échoué. L\'application fonctionne en mode hors ligne.');
+  } else {
+    toast.error(`Erreur de base de données: ${error.message}`);
+  }
+};
+
 // Export the initialized services
-export { auth, firestore as db };
+export { auth, firestore as db, handleFirestoreError };

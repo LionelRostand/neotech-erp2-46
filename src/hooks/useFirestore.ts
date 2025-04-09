@@ -11,6 +11,21 @@ export const useFirestore = (collectionPath?: string) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
   
+  // Helper to handle Firestore errors consistently
+  const handleFirestoreError = (err: any, operation: string) => {
+    console.error(`Error during ${operation}:`, err);
+    setError(err);
+    
+    // Handle 400 errors specifically 
+    if (err.code === 400 || (err.message && err.message.includes('400'))) {
+      toast.error(`Erreur de connexion à la base de données. L'application fonctionne en mode démo.`);
+    } else {
+      toast.error(`Erreur: ${err.message}`);
+    }
+    
+    throw err;
+  };
+  
   const getAll = async (constraints?: any) => {
     setLoading(true);
     try {
@@ -18,9 +33,17 @@ export const useFirestore = (collectionPath?: string) => {
       const results = await getAllDocuments(path, constraints);
       return results;
     } catch (err: any) {
+      // Don't throw error here, just return empty array to avoid breaking the UI
       console.error('Error fetching documents:', err);
       setError(err);
-      toast.error(`Erreur: ${err.message}`);
+      
+      // Show different message based on error type
+      if (err.code === 400 || (err.message && err.message.includes('400'))) {
+        toast.error(`Erreur de connexion à la base de données. L'application fonctionne en mode démo.`);
+      } else {
+        toast.error(`Erreur: ${err.message}`);
+      }
+      
       return [];
     } finally {
       setLoading(false);
@@ -33,10 +56,7 @@ export const useFirestore = (collectionPath?: string) => {
       const path = collectionPath || '';
       return await getDocumentById(path, id);
     } catch (err: any) {
-      console.error('Error fetching document:', err);
-      setError(err);
-      toast.error(`Erreur: ${err.message}`);
-      return null;
+      return handleFirestoreError(err, 'fetching document');
     } finally {
       setLoading(false);
     }
@@ -48,10 +68,7 @@ export const useFirestore = (collectionPath?: string) => {
       const path = collectionPath || '';
       return await addDocument(path, data);
     } catch (err: any) {
-      console.error('Error adding document:', err);
-      setError(err);
-      toast.error(`Erreur: ${err.message}`);
-      throw err;
+      return handleFirestoreError(err, 'adding document');
     } finally {
       setLoading(false);
     }
@@ -63,10 +80,7 @@ export const useFirestore = (collectionPath?: string) => {
       const path = collectionPath || '';
       return await updateDocument(path, id, data);
     } catch (err: any) {
-      console.error('Error updating document:', err);
-      setError(err);
-      toast.error(`Erreur: ${err.message}`);
-      throw err;
+      return handleFirestoreError(err, 'updating document');
     } finally {
       setLoading(false);
     }
@@ -78,10 +92,7 @@ export const useFirestore = (collectionPath?: string) => {
       const path = collectionPath || '';
       return await deleteDocument(path, id);
     } catch (err: any) {
-      console.error('Error deleting document:', err);
-      setError(err);
-      toast.error(`Erreur: ${err.message}`);
-      throw err;
+      return handleFirestoreError(err, 'deleting document');
     } finally {
       setLoading(false);
     }
@@ -93,10 +104,7 @@ export const useFirestore = (collectionPath?: string) => {
       const path = collectionPath || '';
       return await setDocument(path, id, data);
     } catch (err: any) {
-      console.error('Error setting document:', err);
-      setError(err);
-      toast.error(`Erreur: ${err.message}`);
-      throw err;
+      return handleFirestoreError(err, 'setting document');
     } finally {
       setLoading(false);
     }

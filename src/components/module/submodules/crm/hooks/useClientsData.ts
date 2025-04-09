@@ -1,7 +1,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { collection, query, orderBy, where, serverTimestamp, Timestamp } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { db, handleFirestoreError } from '@/lib/firebase';
 import { Client, ClientFormData } from '../types/crm-types';
 import { toast } from 'sonner';
 import { COLLECTIONS } from '@/lib/firebase-collections';
@@ -71,8 +71,14 @@ export const useClientsData = () => {
     } catch (err) {
       console.error('Error fetching clients:', err);
       setError(err as Error);
-      // Afficher un message d'erreur mais toujours finir le chargement
-      toast.error('Erreur lors du chargement des clients. Essayez de rafraîchir la page.');
+      
+      // Handle the error better - checking for 400 status code
+      const anyError = err as any;
+      if (anyError.code === 400 || (anyError.message && anyError.message.includes('400'))) {
+        toast.error('Erreur de connexion à la base de données. L\'application fonctionne en mode démo.');
+      } else {
+        toast.error('Erreur lors du chargement des clients. Essayez de rafraîchir la page.');
+      }
     } finally {
       // Toujours mettre fin au chargement, même en cas d'erreur
       setIsLoading(false);
@@ -84,8 +90,10 @@ export const useClientsData = () => {
     try {
       await seedMockClients();
       console.log('Demo data initialized');
+      toast.success('Données de démonstration initialisées');
     } catch (error) {
       console.error('Failed to initialize demo data:', error);
+      toast.error('Impossible d\'initialiser les données de démonstration');
     }
   }, []);
 
@@ -118,7 +126,15 @@ export const useClientsData = () => {
       toast.success('Client ajouté avec succès');
     } catch (err) {
       console.error('Error adding client:', err);
-      toast.error('Erreur lors de l\'ajout du client');
+      
+      // Special handling for 400 errors
+      const anyError = err as any;
+      if (anyError.code === 400 || (anyError.message && anyError.message.includes('400'))) {
+        toast.error('Erreur de connexion à la base de données. Les modifications seront disponibles en mode local.');
+      } else {
+        toast.error('Erreur lors de l\'ajout du client');
+      }
+      
       throw err;
     }
   };
@@ -148,7 +164,15 @@ export const useClientsData = () => {
       return true;
     } catch (err) {
       console.error('Error updating client:', err);
-      toast.error('Erreur lors de la mise à jour du client');
+      
+      // Special handling for 400 errors
+      const anyError = err as any;
+      if (anyError.code === 400 || (anyError.message && anyError.message.includes('400'))) {
+        toast.error('Erreur de connexion à la base de données. Les modifications seront disponibles en mode local.');
+      } else {
+        toast.error('Erreur lors de la mise à jour du client');
+      }
+      
       throw err;
     }
   };
@@ -165,7 +189,15 @@ export const useClientsData = () => {
       return true;
     } catch (err) {
       console.error('Error deleting client:', err);
-      toast.error('Erreur lors de la suppression du client');
+      
+      // Special handling for 400 errors
+      const anyError = err as any;
+      if (anyError.code === 400 || (anyError.message && anyError.message.includes('400'))) {
+        toast.error('Erreur de connexion à la base de données. Les modifications seront disponibles en mode local.');
+      } else {
+        toast.error('Erreur lors de la suppression du client');
+      }
+      
       throw err;
     }
   };
