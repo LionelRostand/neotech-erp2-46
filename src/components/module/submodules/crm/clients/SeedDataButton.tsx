@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
-import { Database } from "lucide-react";
+import { Database, Loader2 } from "lucide-react";
 import { useClientsData } from '../hooks/useClientsData';
 import { toast } from 'sonner';
 
@@ -30,8 +30,17 @@ const SeedDataButton: React.FC = () => {
       disabled={isSeeding}
       title="Ajouter des clients de démonstration"
     >
-      <Database className="h-4 w-4 mr-2" />
-      {isSeeding ? "Ajout en cours..." : "Ajouter des données démo"}
+      {isSeeding ? (
+        <>
+          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+          Ajout en cours...
+        </>
+      ) : (
+        <>
+          <Database className="h-4 w-4 mr-2" />
+          Ajouter des données démo
+        </>
+      )}
     </Button>
   );
 };
