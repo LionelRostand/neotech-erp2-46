@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { AlertTriangle, RefreshCcw } from "lucide-react";
 import ClientSearch from './clients/ClientSearch';
@@ -10,6 +10,8 @@ import SeedDataButton from './clients/SeedDataButton';
 import { toast } from 'sonner';
 
 const CrmClients: React.FC = () => {
+  const [loadingTimedOut, setLoadingTimedOut] = useState(false);
+  
   const { 
     clients,
     filteredClients, 
@@ -44,9 +46,27 @@ const CrmClients: React.FC = () => {
     refreshClients
   } = useClients();
 
+  // Add a timeout to stop the loading indicator after a certain period
+  useEffect(() => {
+    let timer: NodeJS.Timeout | null = null;
+    
+    if (loading) {
+      timer = setTimeout(() => {
+        setLoadingTimedOut(true);
+        console.log("Loading timed out after 10 seconds");
+      }, 10000); // 10 seconds timeout
+    } else {
+      setLoadingTimedOut(false);
+    }
+    
+    return () => {
+      if (timer) clearTimeout(timer);
+    };
+  }, [loading]);
+
   // Automatically prompt to add demo data if there are no clients
   useEffect(() => {
-    if (!loading && !error && clients.length === 0) {
+    if (!loading && !loadingTimedOut && !error && clients.length === 0) {
       const timer = setTimeout(() => {
         toast.info(
           "Aucun client trouvé. Utilisez le bouton 'Ajouter des données démo' pour initialiser des données de test.",
@@ -56,7 +76,7 @@ const CrmClients: React.FC = () => {
       
       return () => clearTimeout(timer);
     }
-  }, [clients, loading, error]);
+  }, [clients, loading, loadingTimedOut, error]);
 
   // Convert error to string for the table component
   const errorMessage = error ? (error.message || String(error)) : '';
@@ -107,8 +127,8 @@ const CrmClients: React.FC = () => {
             onView={viewClientDetails}
             onEdit={openEditDialog}
             onDelete={openDeleteDialog}
-            isLoading={loading}
-            error={errorMessage}
+            isLoading={loading && !loadingTimedOut}
+            error={loadingTimedOut ? "Chargement des données a pris trop de temps. Veuillez rafraîchir la page." : errorMessage}
           />
         </div>
 
