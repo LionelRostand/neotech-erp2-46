@@ -7,6 +7,18 @@ import { fetchCollectionData } from '@/hooks/fetchCollectionData';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import { where, orderBy } from 'firebase/firestore';
 
+interface Deal {
+  closedAt: { seconds: number; nanoseconds: number };
+  value: number;
+  [key: string]: any;
+}
+
+interface Opportunity {
+  stage: string;
+  value: number;
+  [key: string]: any;
+}
+
 export const useCrmDashboard = () => {
   const { clients, prospects, opportunities, isLoading: isCrmDataLoading } = useCrmData();
   const [salesData, setSalesData] = useState([]);
@@ -46,7 +58,7 @@ export const useCrmDashboard = () => {
         }
         
         // Sum deal values by month
-        deals.forEach(deal => {
+        deals.forEach((deal: Deal) => {
           if (deal.closedAt && deal.value) {
             const dealDate = new Date(deal.closedAt.seconds * 1000);
             const monthKey = format(dealDate, 'MMM', { locale: fr });
@@ -89,7 +101,7 @@ export const useCrmDashboard = () => {
         const stageGroups = {};
         let totalCount = 0;
         
-        activeOpportunities.forEach(opp => {
+        activeOpportunities.forEach((opp: Opportunity) => {
           const stage = opp.stage || 'Nouveau';
           if (!stageGroups[stage]) {
             stageGroups[stage] = { count: 0, value: 0 };
