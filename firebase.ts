@@ -1,8 +1,8 @@
 
 // Firebase lite implementation for development
 import { initializeApp } from 'firebase/app';
-import { getFirestore } from 'firebase/firestore';
-import { getAuth, Auth } from 'firebase/auth';
+import { getFirestore, enableIndexedDbPersistence, connectFirestoreEmulator } from 'firebase/firestore';
+import { getAuth, Auth, connectAuthEmulator } from 'firebase/auth';
 
 // Firebase configuration - this would normally come from environment variables
 // For development purposes, we're using a placeholder config
@@ -20,7 +20,29 @@ const app = initializeApp(firebaseConfig);
 
 // Initialize Firebase services
 const firestore = getFirestore(app);
+
+// Use development environment variables
+const isDevMode = import.meta.env.DEV;
+const useEmulator = import.meta.env.VITE_EMULATOR === 'true';
+
+// Enable emulators if configured
+if (isDevMode && useEmulator) {
+  try {
+    connectFirestoreEmulator(firestore, 'localhost', 8080);
+  } catch (err) {
+    console.warn('Failed to connect to Firestore emulator:', err);
+  }
+}
+
 const firebaseAuth = getAuth(app);
+
+if (isDevMode && useEmulator) {
+  try {
+    connectAuthEmulator(firebaseAuth, 'http://localhost:9099');
+  } catch (err) {
+    console.warn('Failed to connect to Auth emulator:', err);
+  }
+}
 
 // Mock authentication for development
 const auth: Auth = {
