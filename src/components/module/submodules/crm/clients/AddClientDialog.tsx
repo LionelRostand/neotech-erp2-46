@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -10,6 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 import ClientForm from './ClientForm';
 import { ClientFormData } from '../types/crm-types';
+import { Loader2 } from "lucide-react";
 
 interface AddClientDialogProps {
   isOpen: boolean;
@@ -32,9 +33,21 @@ const AddClientDialog: React.FC<AddClientDialogProps> = ({
   sectorOptions,
   statusOptions
 }) => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onAdd(formData);
+    setIsSubmitting(true);
+    
+    // Call the onAdd function with the current formData
+    try {
+      onAdd(formData);
+    } catch (error) {
+      console.error("Error submitting form:", error);
+    } finally {
+      // Reset submitting state after a short delay to show feedback
+      setTimeout(() => setIsSubmitting(false), 500);
+    }
   };
 
   return (
@@ -54,11 +67,18 @@ const AddClientDialog: React.FC<AddClientDialogProps> = ({
           />
           
           <DialogFooter className="mt-4">
-            <Button type="button" variant="outline" onClick={onClose}>
+            <Button type="button" variant="outline" onClick={onClose} disabled={isSubmitting}>
               Annuler
             </Button>
-            <Button type="submit">
-              Ajouter
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Ajout en cours...
+                </>
+              ) : (
+                "Ajouter"
+              )}
             </Button>
           </DialogFooter>
         </form>

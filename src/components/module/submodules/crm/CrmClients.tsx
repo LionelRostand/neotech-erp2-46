@@ -1,6 +1,7 @@
 
 import React, { useEffect } from 'react';
 import { Button } from "@/components/ui/button";
+import { AlertTriangle } from "lucide-react";
 import ClientSearch from './clients/ClientSearch';
 import ClientsTable from './clients/ClientsTable';
 import { useClients } from './hooks/useClients';
@@ -37,6 +38,7 @@ const CrmClients: React.FC = () => {
     resetForm,
     loading,
     error,
+    isOfflineMode,
     sectors,
     statusOptions
   } = useClients();
@@ -76,6 +78,13 @@ const CrmClients: React.FC = () => {
             </Button>
           </div>
         </div>
+
+        {isOfflineMode && (
+          <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-md flex items-center space-x-2 text-yellow-800">
+            <AlertTriangle className="h-5 w-5" />
+            <span>Mode démo activé: Les changements ne seront pas sauvegardés sur le serveur.</span>
+          </div>
+        )}
 
         <ClientSearch 
           searchTerm={searchTerm}

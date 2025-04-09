@@ -2,13 +2,15 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useClientsData } from './useClientsData';
 import { Client, ClientFormData } from '../types/crm-types';
+import { toast } from 'sonner';
 
 export const useClients = () => {
-  // Get clients data from Firestore
+  // Get clients data from Firestore with offline fallback
   const { 
     clients, 
     isLoading: loading, 
-    error, 
+    error,
+    isOfflineMode,
     fetchClients,
     addClient: addClientToFirestore,
     updateClient: updateClientInFirestore,
@@ -68,17 +70,24 @@ export const useClients = () => {
 
   // Create client
   const handleCreateClient = async (clientData: ClientFormData) => {
+    if (!clientData.name.trim()) {
+      toast.error("Le nom du client est requis");
+      return;
+    }
+    
     try {
       // Ensure status is a valid enum value
       const validClientData = {
         ...clientData,
         status: clientData.status as 'active' | 'inactive' | 'lead'
       };
+      
       await addClientToFirestore(validClientData);
       setIsAddDialogOpen(false);
       resetForm();
     } catch (error) {
       console.error('Error creating client:', error);
+      // Error is already handled in the useClientsData hook
     }
   };
 
@@ -86,6 +95,11 @@ export const useClients = () => {
   const handleUpdateClient = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedClient) return;
+    
+    if (!formData.name.trim()) {
+      toast.error("Le nom du client est requis");
+      return;
+    }
 
     try {
       // Ensure status is a valid enum value
@@ -93,10 +107,12 @@ export const useClients = () => {
         ...formData,
         status: formData.status as 'active' | 'inactive' | 'lead'
       };
+      
       await updateClientInFirestore(selectedClient.id, clientData);
       setIsEditDialogOpen(false);
     } catch (error) {
       console.error('Error updating client:', error);
+      // Error is already handled in the useClientsData hook
     }
   };
 
@@ -109,6 +125,7 @@ export const useClients = () => {
       setIsDeleteDialogOpen(false);
     } catch (error) {
       console.error('Error deleting client:', error);
+      // Error is already handled in the useClientsData hook
     }
   };
 
@@ -218,6 +235,7 @@ export const useClients = () => {
     resetForm,
     loading,
     error,
+    isOfflineMode,
     sectors,
     statusOptions
   };
