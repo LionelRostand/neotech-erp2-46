@@ -1,4 +1,3 @@
-
 import { useMemo, useState, useEffect } from 'react';
 import { useCrmData } from '@/hooks/modules/useCrmData';
 import { format, subMonths } from 'date-fns';
@@ -37,7 +36,7 @@ export const useCrmDashboard = () => {
         const sixMonthsAgo = subMonths(now, 6);
         
         // Fetch deals closed in the last 6 months
-        const deals = await fetchCollectionData(
+        const deals = await fetchCollectionData<Deal>(
           COLLECTIONS.CRM.DEALS,
           [
             where('closedAt', '>=', sixMonthsAgo),
@@ -92,7 +91,7 @@ export const useCrmDashboard = () => {
     const fetchPipelineData = async () => {
       try {
         // Fetch all active opportunities
-        const activeOpportunities = await fetchCollectionData(
+        const activeOpportunities = await fetchCollectionData<Opportunity>(
           COLLECTIONS.CRM.OPPORTUNITIES,
           [where('stage', '!=', 'closed_won'), where('stage', '!=', 'closed_lost')]
         );

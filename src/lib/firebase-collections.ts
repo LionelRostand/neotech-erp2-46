@@ -1,4 +1,3 @@
-
 export const COLLECTIONS = {
   USERS: 'users',
   COMPANIES: 'companies',
@@ -7,7 +6,18 @@ export const COLLECTIONS = {
   DOCUMENTS: 'documents',
   SETTINGS: 'settings',
   CONTACTS: 'contacts',
-  
+
+  CRM: {
+    CLIENTS: 'crm_clients',
+    PROSPECTS: 'crm_prospects',
+    REMINDERS: 'crm_reminders',
+    OPPORTUNITIES: 'crm_opportunities',
+    LEADS: 'crm_leads',
+    CONTACTS: 'crm_contacts',
+    DEALS: 'crm_deals',
+    SETTINGS: 'crm_settings'
+  },
+
   // Add FREIGHT collections
   FREIGHT: {
     SHIPMENTS: 'freight/shipments',
@@ -28,18 +38,7 @@ export const COLLECTIONS = {
     CUSTOMERS: 'freight/customers',
     PERMISSIONS: 'freight/permissions'
   },
-  
-  CRM: {
-    CLIENTS: 'crm_clients',
-    PROSPECTS: 'crm_prospects',
-    REMINDERS: 'crm_reminders',
-    OPPORTUNITIES: 'crm_opportunities',
-    LEADS: 'crm_leads',
-    CONTACTS: 'crm_contacts',
-    DEALS: 'crm_deals',
-    SETTINGS: 'crm_settings',
-  },
-  
+
   ACCOUNTING: {
     INVOICES: 'accounting_invoices',
     PAYMENTS: 'accounting_payments',
@@ -52,7 +51,7 @@ export const COLLECTIONS = {
     TRANSACTIONS: 'accounting_transactions',
     PERMISSIONS: 'accounting_permissions',
   },
-  
+
   HR: {
     EMPLOYEES: 'hr-employees',
     LEAVES: 'hr-leaves',
@@ -74,7 +73,7 @@ export const COLLECTIONS = {
     ABSENCES: 'hr-absences',
     SALARIES: 'hr-salaries',
   },
-  
+
   HEALTH: {
     PATIENTS: 'health-patients',
     DOCTORS: 'health-doctors',
@@ -90,8 +89,7 @@ export const COLLECTIONS = {
     HEALTH_BILLING: 'health-billing',
     STAFF: 'health-staff',
   },
-  
-  // Add MESSAGES collections
+
   MESSAGES: {
     INBOX: 'messages/inbox',
     SENT: 'messages/sent',
@@ -102,16 +100,14 @@ export const COLLECTIONS = {
     CONTACTS: 'messages/contacts',
     METRICS: 'messages/metrics'
   },
-  
-  // Add PROJECTS collections
+
   PROJECTS: {
     PROJECTS: 'projects/projects',
     TASKS: 'projects/tasks',
     TEAMS: 'projects/teams',
     NOTIFICATIONS: 'projects/notifications'
   },
-  
-  // Add LIBRARY collections
+
   LIBRARY: {
     BOOKS: 'library/books',
     MEMBERS: 'library/members',
@@ -123,8 +119,7 @@ export const COLLECTIONS = {
     SETTINGS: 'library/settings',
     STATS: 'library/stats'
   },
-  
-  // Add TRANSPORT collections
+
   TRANSPORT: {
     VEHICLES: 'transport/vehicles',
     DRIVERS: 'transport/drivers',
@@ -136,6 +131,6 @@ export const COLLECTIONS = {
     BILLING: 'transport/billing',
     SETTINGS: 'transport/settings'
   },
-  
+
   USER_PERMISSIONS: 'userPermissions',
 };
