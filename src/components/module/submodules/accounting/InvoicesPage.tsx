@@ -19,7 +19,7 @@ const InvoicesPage = () => {
 
   // États pour gérer les différentes boîtes de dialogue
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -32,7 +32,8 @@ const InvoicesPage = () => {
       invoice.invoiceNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
       invoice.clientName.toLowerCase().includes(searchTerm.toLowerCase());
     
-    const matchesStatus = statusFilter ? invoice.status === statusFilter : true;
+    // Updated to check for "all" value which should include all statuses
+    const matchesStatus = statusFilter === 'all' ? true : invoice.status === statusFilter;
     
     return matchesSearch && matchesStatus;
   });
@@ -67,7 +68,7 @@ const InvoicesPage = () => {
   // Fonction pour réinitialiser les filtres
   const resetFilters = () => {
     setSearchTerm('');
-    setStatusFilter('');
+    setStatusFilter('all');
   };
 
   // Fonction pour rafraîchir la liste après une opération
