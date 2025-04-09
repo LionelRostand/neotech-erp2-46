@@ -162,7 +162,7 @@ const InvoicesPage = () => {
                   <SelectValue placeholder="Filtrer par statut" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Tous les statuts</SelectItem>
+                  <SelectItem value="all">Tous les statuts</SelectItem>
                   <SelectItem value="draft">Brouillon</SelectItem>
                   <SelectItem value="sent">Envoyée</SelectItem>
                   <SelectItem value="paid">Payée</SelectItem>
