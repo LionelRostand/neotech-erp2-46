@@ -23,6 +23,7 @@ export interface Client {
   createdAt: string;
   updatedAt?: string;
   customerSince?: string;
+  _offlineCreated?: boolean; // Propriété pour le suivi des créations hors ligne
   _offlineUpdated?: boolean; // Propriété pour le suivi des mises à jour hors ligne
   _offlineDeleted?: boolean; // Propriété pour le suivi des suppressions hors ligne
 }

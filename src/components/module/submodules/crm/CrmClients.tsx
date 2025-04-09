@@ -1,7 +1,7 @@
 
 import React, { useEffect } from 'react';
 import { Button } from "@/components/ui/button";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, RefreshCcw } from "lucide-react";
 import ClientSearch from './clients/ClientSearch';
 import ClientsTable from './clients/ClientsTable';
 import { useClients } from './hooks/useClients';
@@ -40,7 +40,8 @@ const CrmClients: React.FC = () => {
     error,
     isOfflineMode,
     sectors,
-    statusOptions
+    statusOptions,
+    refreshClients
   } = useClients();
 
   // Automatically prompt to add demo data if there are no clients
@@ -58,7 +59,7 @@ const CrmClients: React.FC = () => {
   }, [clients, loading, error]);
 
   // Convert error to string for the table component
-  const errorMessage = error ? error.message : '';
+  const errorMessage = error ? (error.message || String(error)) : '';
 
   // Ensure filteredClients is always an array
   const safeFilteredClients = Array.isArray(filteredClients) ? filteredClients : [];
@@ -69,6 +70,12 @@ const CrmClients: React.FC = () => {
         <div className="flex flex-col md:flex-row justify-between items-center mb-4">
           <h1 className="text-2xl font-bold mb-3 md:mb-0">Clients</h1>
           <div className="flex space-x-2">
+            {!loading && (
+              <Button variant="outline" onClick={refreshClients} title="Rafraîchir les données">
+                <RefreshCcw className="h-4 w-4 mr-2" />
+                Rafraîchir
+              </Button>
+            )}
             <SeedDataButton />
             <Button onClick={() => {
               resetForm();

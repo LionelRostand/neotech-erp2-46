@@ -18,16 +18,32 @@ export const useClientsData = () => {
   // Fetch all clients
   const fetchClients = useCallback(async () => {
     setIsLoading(true);
+    setError(null);
     try {
       const clientsData = await firestore.getAll();
       console.log('Fetched clients data:', clientsData);
       setClients(clientsData as Client[]);
-      setError(null);
+      
+      // Si l'opération a réussi mais qu'aucun client n'a été trouvé, c'est ok
+      if (clientsData.length === 0) {
+        console.log('No clients found, but connection is working');
+      }
     } catch (err) {
       console.error('Error fetching clients:', err);
       setError(err instanceof Error ? err : new Error('Unknown error'));
-      toast.error(`Erreur lors du chargement des clients: ${err instanceof Error ? err.message : 'Erreur inconnue'}`);
+      
+      // Afficher un message d'erreur spécifique
+      if (err instanceof Error) {
+        if (err.message.includes('timeout') || err.message.includes('unavailable')) {
+          toast.error(`Impossible de se connecter à la base de données. Vérifiez votre connexion.`);
+        } else {
+          toast.error(`Erreur lors du chargement des clients: ${err.message}`);
+        }
+      } else {
+        toast.error(`Erreur lors du chargement des clients: Erreur inconnue`);
+      }
     } finally {
+      // Dans tous les cas, arrêter le chargement
       setIsLoading(false);
     }
   }, [firestore]);
@@ -67,9 +83,27 @@ export const useClientsData = () => {
       const message = err instanceof Error ? err.message : 'Erreur inconnue';
       
       // Check if this is a network error
-      if (message.includes('offline') || message.includes('unavailable') || message.includes('backend')) {
+      if (message.includes('offline') || message.includes('unavailable') || message.includes('backend') || message.includes('timeout')) {
         setIsOfflineMode(true);
         toast.info('Client enregistré en mode hors ligne. Les données seront synchronisées lorsque la connexion sera rétablie.');
+        
+        // Create a temporary client with a generated ID
+        const tempId = uuidv4();
+        const now = new Date().toISOString();
+        
+        const offlineClient: Client = {
+          id: tempId,
+          ...clientData,
+          status: clientData.status as 'active' | 'inactive' | 'lead',
+          createdAt: now,
+          updatedAt: now,
+          _offlineCreated: true
+        };
+        
+        // Add to local state
+        setClients(prevClients => [...prevClients, offlineClient]);
+        
+        return offlineClient;
       } else {
         toast.error(`Erreur lors de l'ajout du client: ${message}`);
       }
@@ -112,7 +146,7 @@ export const useClientsData = () => {
       const message = err instanceof Error ? err.message : 'Erreur inconnue';
       
       // Check if this is a network error
-      if (message.includes('offline') || message.includes('unavailable') || message.includes('backend')) {
+      if (message.includes('offline') || message.includes('unavailable') || message.includes('backend') || message.includes('timeout')) {
         setIsOfflineMode(true);
         toast.info('Modification enregistrée en mode hors ligne. Les données seront synchronisées lorsque la connexion sera rétablie.');
         
@@ -156,7 +190,7 @@ export const useClientsData = () => {
       console.error('Error deleting client:', err);
       const message = err instanceof Error ? err.message : 'Erreur inconnue';
       
-      if (message.includes('offline') || message.includes('unavailable') || message.includes('backend')) {
+      if (message.includes('offline') || message.includes('unavailable') || message.includes('backend') || message.includes('timeout')) {
         setIsOfflineMode(true);
         toast.info('Suppression enregistrée en mode hors ligne. Les données seront synchronisées lorsque la connexion sera rétablie.');
         

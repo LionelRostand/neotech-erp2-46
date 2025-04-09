@@ -1,5 +1,7 @@
 
-import { doc, setDoc, deleteDoc } from 'firebase/firestore';
+import { 
+  doc, setDoc, deleteDoc 
+} from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { reconnectToFirestore } from './network-handler';
 

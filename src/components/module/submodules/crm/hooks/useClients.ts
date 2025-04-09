@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { Client, ClientFormData } from '../types/crm-types';
 import { useClientsData } from './useClientsData';
@@ -67,6 +68,17 @@ export const useClients = () => {
   const handleSelectChange = (name: string, value: string) => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
+
+  // Function to refresh clients data
+  const refreshClients = useCallback(async () => {
+    try {
+      await fetchClients();
+      toast.success('Données clients mises à jour');
+    } catch (err) {
+      console.error('Error refreshing clients:', err);
+      toast.error('Impossible de rafraîchir les données. Véfiez votre connexion.');
+    }
+  }, [fetchClients]);
 
   // Create client
   const handleCreateClient = async (clientData: ClientFormData) => {
@@ -268,6 +280,7 @@ export const useClients = () => {
     error,
     isOfflineMode,
     sectors,
-    statusOptions
+    statusOptions,
+    refreshClients
   };
 };
