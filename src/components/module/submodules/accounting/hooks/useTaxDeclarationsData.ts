@@ -25,19 +25,29 @@ export const useTaxDeclarationsData = (filterStatus?: string) => {
   useEffect(() => {
     if (!dataLoading && data) {
       // Transformer les données en objets TaxDeclaration
-      const formattedDeclarations: TaxDeclaration[] = data.filter((doc: any) => doc.type === 'declaration').map((doc: any) => ({
-        id: doc.id,
-        period: doc.period || '',
-        dateFiled: doc.dateFiled || null,
-        dueDate: doc.dueDate || '',
-        amount: doc.amount || 0,
-        estimatedAmount: doc.estimatedAmount || 0,
-        status: doc.status || 'upcoming',
-        filedBy: doc.filedBy || '',
-        notes: doc.notes || '',
-        createdAt: doc.createdAt || '',
-        updatedAt: doc.updatedAt || ''
-      }));
+      const formattedDeclarations: TaxDeclaration[] = data
+        .filter((doc: any) => doc.type === 'declaration')
+        .map((doc: any) => ({
+          id: doc.id,
+          period: doc.period || '',
+          startDate: doc.startDate || '',
+          endDate: doc.endDate || '',
+          dueDate: doc.dueDate || '',
+          totalTaxCollected: doc.totalTaxCollected || 0, 
+          totalTaxPaid: doc.totalTaxPaid || 0,
+          balance: doc.balance || 0,
+          status: doc.status || 'draft',
+          reference: doc.reference || '',
+          notes: doc.notes || '',
+          attachments: doc.attachments || [],
+          // Backward compatibility fields
+          amount: doc.amount || 0,
+          estimatedAmount: doc.estimatedAmount || 0,
+          dateFiled: doc.dateFiled || '',
+          filedBy: doc.filedBy || '',
+          createdAt: doc.createdAt || '',
+          updatedAt: doc.updatedAt || ''
+        }));
       
       setTaxDeclarations(formattedDeclarations);
       setIsLoading(false);

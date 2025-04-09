@@ -53,13 +53,13 @@ const PaymentViewDialog: React.FC<PaymentViewDialogProps> = ({
     }
   };
 
-  const getStatusVariant = (status: 'completed' | 'pending' | 'failed' | 'refunded') => {
+  const getStatusVariant = (status: string) => {
     switch (status) {
-      case 'completed': return 'success';
-      case 'pending': return 'outline';
-      case 'failed': return 'destructive';
-      case 'refunded': return 'warning';
-      default: return 'outline';
+      case 'completed': return 'success' as const;
+      case 'pending': return 'outline' as const;
+      case 'failed': return 'destructive' as const;
+      case 'refunded': return 'warning' as const;
+      default: return 'outline' as const;
     }
   };
 
@@ -82,7 +82,7 @@ const PaymentViewDialog: React.FC<PaymentViewDialogProps> = ({
                 {formatCurrency(payment.amount || 0, payment.currency || 'EUR')}
               </p>
             </div>
-            <Badge variant={getStatusVariant(payment.status)}>
+            <Badge variant={getStatusVariant(payment.status || '')}>
               {getStatusText(payment.status || '')}
             </Badge>
           </div>

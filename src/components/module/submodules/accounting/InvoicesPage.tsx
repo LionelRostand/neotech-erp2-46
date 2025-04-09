@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -119,7 +118,7 @@ const InvoicesPage: React.FC = () => {
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">Factures</h1>
         <div className="flex space-x-2">
-          <Button variant="outline" onClick={handleExportInvoices}>
+          <Button variant="default" onClick={handleExportInvoices}>
             <Download className="mr-2 h-4 w-4" /> Exporter
           </Button>
           <Button onClick={handleAddInvoice}>

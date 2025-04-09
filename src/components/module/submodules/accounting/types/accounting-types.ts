@@ -30,6 +30,7 @@ export interface InvoiceItem {
   quantity: number;
   unitPrice: number;
   taxRate?: number;
+  id?: string; // Adding optional id property
 }
 
 // Type pour les paiements
@@ -91,6 +92,12 @@ export interface TaxDeclaration {
   attachments?: string[];
   createdAt?: string;
   updatedAt?: string;
+  
+  // Backward compatibility fields for existing code
+  amount?: number;
+  estimatedAmount?: number;
+  dateFiled?: string;
+  filedBy?: string;
 }
 
 // Type pour les paramètres de comptabilité

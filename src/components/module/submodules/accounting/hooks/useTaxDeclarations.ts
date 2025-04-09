@@ -24,18 +24,26 @@ export const useTaxDeclarations = () => {
       const declarationsData = data.map((doc: any) => ({
         id: doc.id,
         period: doc.period || '',
-        dateFiled: doc.dateFiled || '',
+        startDate: doc.startDate || '',
+        endDate: doc.endDate || '',
         dueDate: doc.dueDate || '',
+        totalTaxCollected: doc.totalTaxCollected || 0,
+        totalTaxPaid: doc.totalTaxPaid || 0,
+        balance: doc.balance || 0,
+        status: doc.status || 'draft',
+        reference: doc.reference || '',
+        notes: doc.notes || '',
+        attachments: doc.attachments || [],
+        // Backward compatibility fields
         amount: doc.amount || 0,
         estimatedAmount: doc.estimatedAmount || 0,
-        status: doc.status || 'upcoming',
+        dateFiled: doc.dateFiled || '',
         filedBy: doc.filedBy || '',
-        notes: doc.notes || '',
         createdAt: doc.createdAt ? new Date(doc.createdAt.seconds * 1000).toISOString() : '',
         updatedAt: doc.updatedAt ? new Date(doc.updatedAt.seconds * 1000).toISOString() : '',
       }));
       
-      setDeclarations(declarationsData);
+      setDeclarations(declarationsData as TaxDeclaration[]);
     } catch (error) {
       console.error('Erreur lors du chargement des déclarations:', error);
       toast.error('Impossible de charger les déclarations');

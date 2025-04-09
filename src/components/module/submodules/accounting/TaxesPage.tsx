@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -131,7 +130,7 @@ const TaxesPage: React.FC = () => {
                         <TableRow key={report.id}>
                           <TableCell className="font-medium">{report.period}</TableCell>
                           <TableCell>{formatDate(report.dueDate)}</TableCell>
-                          <TableCell>{formatCurrency(report.amount, 'EUR')}</TableCell>
+                          <TableCell>{formatCurrency(report.balance || 0, 'EUR')}</TableCell>
                           <TableCell>{getStatusLabel(report.status)}</TableCell>
                           <TableCell className="text-right">
                             <Button variant="ghost" size="sm">
