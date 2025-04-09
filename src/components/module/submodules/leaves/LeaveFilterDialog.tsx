@@ -118,7 +118,8 @@ export const LeaveFilterDialog: React.FC<LeaveFilterDialogProps> = ({
             <Label htmlFor="startDate">Date de début</Label>
             <DatePicker 
               date={filters.startDate} 
-              setDate={(date) => setFilters({...filters, startDate: date})} 
+              onSelect={(date) => setFilters({...filters, startDate: date})} 
+              placeholder="Sélectionner une date"
             />
           </div>
           
@@ -126,7 +127,8 @@ export const LeaveFilterDialog: React.FC<LeaveFilterDialogProps> = ({
             <Label htmlFor="endDate">Date de fin</Label>
             <DatePicker 
               date={filters.endDate} 
-              setDate={(date) => setFilters({...filters, endDate: date})} 
+              onSelect={(date) => setFilters({...filters, endDate: date})} 
+              placeholder="Sélectionner une date"
             />
           </div>
         </div>
