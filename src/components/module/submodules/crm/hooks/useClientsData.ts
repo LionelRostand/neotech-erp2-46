@@ -19,7 +19,11 @@ export const useClientsData = () => {
   const fetchClients = useCallback(async () => {
     setIsLoading(true);
     try {
+      console.log('Fetching clients from collection:', COLLECTIONS.CRM.CLIENTS);
+      
+      // Get data directly using the getAll method
       const fetchedClients = await firestore.getAll([orderBy('createdAt', 'desc')]);
+      console.log('Fetched clients:', fetchedClients);
       
       // Format the client data
       const formattedClients = fetchedClients.map(client => {
@@ -61,16 +65,29 @@ export const useClientsData = () => {
         } as Client;
       });
       
+      console.log('Formatted clients:', formattedClients);
       setClients(formattedClients);
       setError(null);
     } catch (err) {
       console.error('Error fetching clients:', err);
       setError(err as Error);
-      toast.error('Erreur lors du chargement des clients');
+      // Afficher un message d'erreur mais toujours finir le chargement
+      toast.error('Erreur lors du chargement des clients. Essayez de rafraîchir la page.');
     } finally {
+      // Toujours mettre fin au chargement, même en cas d'erreur
       setIsLoading(false);
     }
   }, [firestore]);
+
+  // Initialiser avec des données de démo si aucun client n'est trouvé
+  const initializeWithDemoData = useCallback(async () => {
+    try {
+      await seedMockClients();
+      console.log('Demo data initialized');
+    } catch (error) {
+      console.error('Failed to initialize demo data:', error);
+    }
+  }, []);
 
   // Add a new client
   const addClient = async (clientData: Omit<Client, 'id' | 'createdAt'>) => {
@@ -213,7 +230,11 @@ export const useClientsData = () => {
 
   // Load clients on component mount
   useEffect(() => {
-    fetchClients();
+    const loadData = async () => {
+      await fetchClients();
+    };
+    
+    loadData();
   }, [fetchClients]);
 
   return {
@@ -224,6 +245,7 @@ export const useClientsData = () => {
     addClient,
     updateClient,
     deleteClient,
-    seedMockClients
+    seedMockClients,
+    initializeWithDemoData
   };
 };

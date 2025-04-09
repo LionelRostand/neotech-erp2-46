@@ -3,7 +3,7 @@ import React from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Eye, FileEdit, Trash2 } from "lucide-react";
+import { Eye, FileEdit, Trash2, Loader2 } from "lucide-react";
 import { Client } from '../types/crm-types';
 
 interface ClientsTableProps {
@@ -24,11 +24,21 @@ const ClientsTable: React.FC<ClientsTableProps> = ({
   error
 }) => {
   if (isLoading) {
-    return <div className="text-center py-4">Chargement des clients...</div>;
+    return (
+      <div className="flex justify-center items-center py-8">
+        <Loader2 className="h-8 w-8 animate-spin text-primary mr-2" />
+        <span>Chargement des clients...</span>
+      </div>
+    );
   }
 
   if (error) {
-    return <div className="text-center py-4 text-red-500">Erreur: {error}</div>;
+    return (
+      <div className="text-center py-4 text-red-500">
+        <p>Erreur: {error}</p>
+        <p className="mt-2">Veuillez rafraîchir la page ou réessayer plus tard.</p>
+      </div>
+    );
   }
 
   if (clients.length === 0) {
