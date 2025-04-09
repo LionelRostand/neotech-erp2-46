@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -25,14 +24,12 @@ const InvoiceViewDialog: React.FC<InvoiceViewDialogProps> = ({ open, onOpenChang
     }
   };
 
-  // Fonction pour formater la date
   const formatDate = (dateString: string) => {
     if (!dateString) return 'N/A';
     const date = new Date(dateString);
     return new Intl.DateTimeFormat('fr-FR').format(date);
   };
 
-  // Fonction pour obtenir le label du statut en français
   const getStatusLabel = (status: string): string => {
     switch (status) {
       case 'paid': return 'Payée';
@@ -145,7 +142,7 @@ const InvoiceViewDialog: React.FC<InvoiceViewDialogProps> = ({ open, onOpenChang
           
           <div className="border-t pt-4">
             <p className="font-bold mb-2">Conditions de paiement:</p>
-            <p>{invoice.termsAndConditions}</p>
+            <p>{invoice.termsAndConditions || 'Paiement à réception de la facture'}</p>
           </div>
         </div>
         

@@ -47,6 +47,7 @@ export const useInvoices = (filters?: { status?: string; clientId?: string; }) =
         total: doc.total || 0,
         status: doc.status || 'pending',
         notes: doc.notes || '',
+        termsAndConditions: doc.termsAndConditions || '',
         currency: doc.currency || 'EUR',
         createdAt: doc.createdAt ? new Date(doc.createdAt.seconds * 1000).toISOString() : '',
         updatedAt: doc.updatedAt ? new Date(doc.updatedAt.seconds * 1000).toISOString() : '',

@@ -1,3 +1,4 @@
+
 export interface Invoice {
   id: string;
   number: string;
@@ -14,6 +15,7 @@ export interface Invoice {
   status: 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled' | 'pending';
   notes: string;
   currency: string;
+  termsAndConditions?: string;
   createdAt: string;
   updatedAt: string;
   createdBy: string;
@@ -36,7 +38,7 @@ export interface Payment {
   clientId?: string;
   clientName?: string;
   date: string;
-  method: 'card' | 'cash' | 'transfer' | 'check' | 'other';
+  method: 'bank_transfer' | 'cash' | 'check' | 'stripe' | 'paypal' | 'other';
   status: 'completed' | 'pending' | 'failed' | 'refunded';
   transactionId: string;
   currency: string;
@@ -66,4 +68,15 @@ export interface TaxDeclaration {
   notes?: string;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface Transaction {
+  id: string;
+  date: string;
+  description: string;
+  amount: number;
+  type: 'income' | 'expense' | 'transfer';
+  category: string;
+  isReconciled: boolean;
+  currency: string;
 }
