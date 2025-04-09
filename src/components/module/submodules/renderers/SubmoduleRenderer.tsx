@@ -24,17 +24,17 @@ export const renderSubmoduleContent = ({ submoduleId, submodule }: SubmoduleRend
   // Select the appropriate renderer based on the module
   switch (modulePrefix) {
     case 'employees':
-      return renderEmployeesSubmodule(submoduleId);
+      return renderEmployeesSubmodule(submoduleId, submodule);
     case 'accounting':
-      return renderAccountingSubmodule(submoduleId);
+      return renderAccountingSubmodule(submoduleId, submodule);
     case 'freight':
-      return renderFreightSubmodule(submoduleId);
+      return renderFreightSubmodule(submoduleId, submodule);
     case 'projects':
-      return renderProjectsSubmodule(submoduleId);
+      return renderProjectsSubmodule(submoduleId, submodule);
     case 'health':
-      return renderHealthSubmodule(submoduleId);
+      return renderHealthSubmodule(submoduleId, submodule);
     case 'documents':
-      return renderDocumentsSubmodule(submoduleId);
+      return renderDocumentsSubmodule(submoduleId, submodule);
     case 'companies':
       // We don't need to handle companies here, they'll be part of employees
       return <DefaultSubmoduleContent submodule={submodule} />;

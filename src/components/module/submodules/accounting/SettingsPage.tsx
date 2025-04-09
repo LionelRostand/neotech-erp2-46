@@ -1,16 +1,18 @@
 
 import React, { useState } from 'react';
-import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useState } from 'react';
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Save } from "lucide-react";
+import PermissionsTab from "./components/PermissionsTab";
+import { toast } from "sonner";
 
-// Import the PermissionsTab component correctly
-import PermissionsTab from './components/PermissionsTab';
-import { useToast } from '@/hooks/use-toast';
-
-// Define interface for accounting settings
 interface AccountingSettings {
-  // General settings
   companyName: string;
   address: string;
   phone: string;
@@ -20,7 +22,6 @@ interface AccountingSettings {
   defaultCurrency: string;
   defaultPaymentTerms: string;
   logo: string;
-  
   // Notification settings
   enableEmailNotifications: boolean;
   invoiceCreatedNotify: boolean;
@@ -30,8 +31,7 @@ interface AccountingSettings {
   weeklyReportNotify: boolean;
   monthlyReportNotify: boolean;
   reminderDaysBefore: number;
-  notificationEmails: string[];
-  
+  notificationEmails: string;
   // Integration settings
   bankConnected: boolean;
   emailServiceConnected: boolean;
@@ -40,12 +40,11 @@ interface AccountingSettings {
 }
 
 const SettingsPage: React.FC = () => {
-  const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("general");
+  const [isSaving, setIsSaving] = useState(false);
   
-  // State for accounting settings with default values
+  // Settings data state
   const [settings, setSettings] = useState<AccountingSettings>({
-    // General settings
     companyName: "Ma Société",
     address: "123 Rue Principale, 75000 Paris",
     phone: "+33 1 23 45 67 89",
@@ -54,8 +53,7 @@ const SettingsPage: React.FC = () => {
     taxIdNumber: "FR12345678901",
     defaultCurrency: "EUR",
     defaultPaymentTerms: "30",
-    logo: "/logo.png",
-    
+    logo: "",
     // Notification settings
     enableEmailNotifications: true,
     invoiceCreatedNotify: true,
@@ -65,200 +63,168 @@ const SettingsPage: React.FC = () => {
     weeklyReportNotify: false,
     monthlyReportNotify: true,
     reminderDaysBefore: 3,
-    notificationEmails: ["comptabilite@masociete.fr"],
-    
+    notificationEmails: "finance@masociete.fr, direction@masociete.fr",
     // Integration settings
     bankConnected: false,
     emailServiceConnected: true,
-    crmConnected: false,
+    crmConnected: true,
     erConnected: false
   });
-  
-  // Mock function to update settings
+
   const handleSaveSettings = () => {
-    toast({
-      title: "Paramètres sauvegardés",
-      description: "Les paramètres de comptabilité ont été mis à jour avec succès."
-    });
+    setIsSaving(true);
+    
+    // Simulate API call
+    setTimeout(() => {
+      setIsSaving(false);
+      toast.success("Paramètres sauvegardés avec succès");
+    }, 1000);
   };
   
-  // Handle input changes
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value, type, checked } = e.target;
+  const handleChange = (field: keyof AccountingSettings, value: string | boolean | number) => {
     setSettings(prev => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : value
+      [field]: value
     }));
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">Paramètres de la Comptabilité</h1>
+    <div className="container mx-auto py-6">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-3xl font-bold">Paramètres de Comptabilité</h1>
+        <Button onClick={handleSaveSettings} disabled={isSaving}>
+          <Save className="mr-2 h-4 w-4" />
+          {isSaving ? "Sauvegarde..." : "Sauvegarder les modifications"}
+        </Button>
       </div>
-      
-      <Tabs defaultValue="general" value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid grid-cols-5 w-full">
+
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="mb-4">
           <TabsTrigger value="general">Général</TabsTrigger>
           <TabsTrigger value="permissions">Permissions</TabsTrigger>
           <TabsTrigger value="notifications">Notifications</TabsTrigger>
           <TabsTrigger value="integrations">Intégrations</TabsTrigger>
           <TabsTrigger value="database">Base de données</TabsTrigger>
         </TabsList>
-        
-        {/* General Settings Tab */}
+
         <TabsContent value="general">
           <Card>
             <CardContent className="pt-6">
-              <div className="grid gap-4 py-4">
-                <div className="space-y-2">
-                  <h3 className="text-lg font-medium">Informations de l'entreprise</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Ces informations apparaîtront sur vos factures et autres documents.
-                  </p>
-                </div>
-                
-                <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-4">
                   <div className="space-y-2">
-                    <label htmlFor="companyName" className="text-sm font-medium">Nom de l'entreprise</label>
-                    <input 
+                    <Label htmlFor="companyName">Nom de l'entreprise</Label>
+                    <Input
                       id="companyName"
-                      name="companyName"
-                      className="w-full p-2 border rounded-md"
                       value={settings.companyName}
-                      onChange={handleChange}
+                      onChange={(e) => handleChange('companyName', e.target.value)}
                     />
                   </div>
                   
                   <div className="space-y-2">
-                    <label htmlFor="taxIdNumber" className="text-sm font-medium">Numéro de TVA</label>
-                    <input 
-                      id="taxIdNumber"
-                      name="taxIdNumber"
-                      className="w-full p-2 border rounded-md"
-                      value={settings.taxIdNumber}
-                      onChange={handleChange}
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <label htmlFor="address" className="text-sm font-medium">Adresse</label>
-                    <input 
+                    <Label htmlFor="address">Adresse</Label>
+                    <Textarea
                       id="address"
-                      name="address"
-                      className="w-full p-2 border rounded-md"
                       value={settings.address}
-                      onChange={handleChange}
+                      onChange={(e) => handleChange('address', e.target.value)}
                     />
                   </div>
                   
                   <div className="space-y-2">
-                    <label htmlFor="phone" className="text-sm font-medium">Téléphone</label>
-                    <input 
+                    <Label htmlFor="phone">Téléphone</Label>
+                    <Input
                       id="phone"
-                      name="phone"
-                      className="w-full p-2 border rounded-md"
                       value={settings.phone}
-                      onChange={handleChange}
+                      onChange={(e) => handleChange('phone', e.target.value)}
                     />
                   </div>
                   
                   <div className="space-y-2">
-                    <label htmlFor="email" className="text-sm font-medium">Email</label>
-                    <input 
+                    <Label htmlFor="email">Email</Label>
+                    <Input
                       id="email"
-                      name="email"
-                      className="w-full p-2 border rounded-md"
+                      type="email"
                       value={settings.email}
-                      onChange={handleChange}
+                      onChange={(e) => handleChange('email', e.target.value)}
                     />
                   </div>
-                  
+                </div>
+                
+                <div className="space-y-4">
                   <div className="space-y-2">
-                    <label htmlFor="website" className="text-sm font-medium">Site Web</label>
-                    <input 
+                    <Label htmlFor="website">Site web</Label>
+                    <Input
                       id="website"
-                      name="website"
-                      className="w-full p-2 border rounded-md"
                       value={settings.website}
-                      onChange={handleChange}
-                    />
-                  </div>
-                </div>
-                
-                <div className="space-y-2 mt-4">
-                  <h3 className="text-lg font-medium">Paramètres par défaut</h3>
-                </div>
-                
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <label htmlFor="defaultCurrency" className="text-sm font-medium">Devise par défaut</label>
-                    <input 
-                      id="defaultCurrency"
-                      name="defaultCurrency"
-                      className="w-full p-2 border rounded-md"
-                      value={settings.defaultCurrency}
-                      onChange={handleChange}
+                      onChange={(e) => handleChange('website', e.target.value)}
                     />
                   </div>
                   
                   <div className="space-y-2">
-                    <label htmlFor="defaultPaymentTerms" className="text-sm font-medium">Conditions de paiement (jours)</label>
-                    <input 
-                      id="defaultPaymentTerms"
-                      name="defaultPaymentTerms"
-                      className="w-full p-2 border rounded-md"
-                      value={settings.defaultPaymentTerms}
-                      onChange={handleChange}
-                      type="number"
+                    <Label htmlFor="taxIdNumber">Numéro de TVA</Label>
+                    <Input
+                      id="taxIdNumber"
+                      value={settings.taxIdNumber}
+                      onChange={(e) => handleChange('taxIdNumber', e.target.value)}
                     />
                   </div>
-                </div>
-                
-                <div className="flex justify-end mt-4">
-                  <button 
-                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-                    onClick={handleSaveSettings}
-                  >
-                    Enregistrer les modifications
-                  </button>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="defaultCurrency">Devise par défaut</Label>
+                    <Select
+                      value={settings.defaultCurrency}
+                      onValueChange={(value) => handleChange('defaultCurrency', value)}
+                    >
+                      <SelectTrigger id="defaultCurrency">
+                        <SelectValue placeholder="Sélectionner une devise" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="EUR">Euro (EUR)</SelectItem>
+                        <SelectItem value="USD">Dollar américain (USD)</SelectItem>
+                        <SelectItem value="GBP">Livre sterling (GBP)</SelectItem>
+                        <SelectItem value="CHF">Franc suisse (CHF)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="defaultPaymentTerms">Délai de paiement par défaut (jours)</Label>
+                    <Select
+                      value={settings.defaultPaymentTerms}
+                      onValueChange={(value) => handleChange('defaultPaymentTerms', value)}
+                    >
+                      <SelectTrigger id="defaultPaymentTerms">
+                        <SelectValue placeholder="Sélectionner un délai" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="7">7 jours</SelectItem>
+                        <SelectItem value="14">14 jours</SelectItem>
+                        <SelectItem value="30">30 jours</SelectItem>
+                        <SelectItem value="45">45 jours</SelectItem>
+                        <SelectItem value="60">60 jours</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
               </div>
             </CardContent>
           </Card>
         </TabsContent>
-        
-        {/* Permissions Tab */}
+
         <TabsContent value="permissions">
-          <PermissionsTab
+          <PermissionsTab 
             users={[
-              { id: "1", displayName: "Admin User", email: "admin@masociete.fr", role: "Admin" },
-              { id: "2", displayName: "Finance Manager", email: "finance@masociete.fr", role: "Manager" },
-              { id: "3", displayName: "Accountant", email: "accountant@masociete.fr", role: "Staff" }
+              { id: '1', displayName: 'Admin Utilisateur', email: 'admin@masociete.fr', role: 'Administrateur' },
+              { id: '2', displayName: 'Comptable Principal', email: 'comptable@masociete.fr', role: 'Comptable' },
+              { id: '3', displayName: 'Assistant Comptable', email: 'assistant@masociete.fr', role: 'Assistant' }
             ]}
-            userPermissions={[
-              {
-                userId: "1",
-                userName: "Admin User",
-                userEmail: "admin@masociete.fr",
-                userRole: "Admin",
-                moduleId: "invoices",
-                permissions: { canView: true, canCreate: true, canEdit: true, canDelete: true }
-              },
-              {
-                userId: "2",
-                userName: "Finance Manager",
-                userEmail: "finance@masociete.fr",
-                userRole: "Manager",
-                moduleId: "invoices",
-                permissions: { canView: true, canCreate: true, canEdit: true, canDelete: false }
-              }
-            ]}
+            userPermissions={[]}
             accountingSubmodules={[
-              { id: "invoices", name: "Factures" },
-              { id: "payments", name: "Paiements" },
-              { id: "taxes", name: "Taxes" },
-              { id: "reports", name: "Rapports" }
+              { id: 'accounting-invoices', name: 'Factures' },
+              { id: 'accounting-payments', name: 'Paiements' },
+              { id: 'accounting-taxes', name: 'Taxes & TVA' },
+              { id: 'accounting-reports', name: 'Rapports' },
+              { id: 'accounting-settings', name: 'Paramètres' }
             ]}
             loading={false}
             saving={false}
@@ -269,379 +235,246 @@ const SettingsPage: React.FC = () => {
             savePermissions={async () => {}}
           />
         </TabsContent>
-        
-        {/* Notifications Tab */}
+
         <TabsContent value="notifications">
           <Card>
             <CardContent className="pt-6">
-              <div className="grid gap-4 py-4">
-                <div className="space-y-2">
-                  <h3 className="text-lg font-medium">Paramètres des notifications</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Configurez quand et comment vous souhaitez recevoir des notifications.
-                  </p>
-                </div>
-                
-                <div className="flex items-center space-x-2">
-                  <input 
-                    type="checkbox" 
-                    id="enableEmailNotifications" 
-                    name="enableEmailNotifications"
+              <div className="space-y-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label htmlFor="enableNotifications" className="text-base">Activer les notifications par e-mail</Label>
+                    <p className="text-sm text-muted-foreground">Envoyer des notifications automatiques aux clients et à l'équipe</p>
+                  </div>
+                  <Switch
+                    id="enableNotifications"
                     checked={settings.enableEmailNotifications}
-                    onChange={handleChange}
-                    className="h-4 w-4 rounded border-gray-300"
+                    onCheckedChange={(checked) => handleChange('enableEmailNotifications', checked)}
                   />
-                  <label htmlFor="enableEmailNotifications" className="text-sm font-medium">
-                    Activer les notifications par email
-                  </label>
                 </div>
                 
-                <div className="grid grid-cols-2 gap-4 mt-2">
-                  <div className="flex items-center space-x-2">
-                    <input 
-                      type="checkbox" 
-                      id="invoiceCreatedNotify" 
-                      name="invoiceCreatedNotify"
-                      checked={settings.invoiceCreatedNotify}
-                      onChange={handleChange}
-                      className="h-4 w-4 rounded border-gray-300"
-                      disabled={!settings.enableEmailNotifications}
-                    />
-                    <label htmlFor="invoiceCreatedNotify" className="text-sm font-medium">
-                      Facture créée
-                    </label>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-4">
+                    <h3 className="font-medium">Notifications des factures</h3>
+                    
+                    <div className="flex items-center space-x-2">
+                      <Switch
+                        id="invoiceCreated"
+                        checked={settings.invoiceCreatedNotify}
+                        onCheckedChange={(checked) => handleChange('invoiceCreatedNotify', checked)}
+                        disabled={!settings.enableEmailNotifications}
+                      />
+                      <Label htmlFor="invoiceCreated">Quand une facture est créée</Label>
+                    </div>
+                    
+                    <div className="flex items-center space-x-2">
+                      <Switch
+                        id="invoicePaid"
+                        checked={settings.invoicePaidNotify}
+                        onCheckedChange={(checked) => handleChange('invoicePaidNotify', checked)}
+                        disabled={!settings.enableEmailNotifications}
+                      />
+                      <Label htmlFor="invoicePaid">Quand une facture est payée</Label>
+                    </div>
+                    
+                    <div className="flex items-center space-x-2">
+                      <Switch
+                        id="invoiceOverdue"
+                        checked={settings.invoiceOverdueNotify}
+                        onCheckedChange={(checked) => handleChange('invoiceOverdueNotify', checked)}
+                        disabled={!settings.enableEmailNotifications}
+                      />
+                      <Label htmlFor="invoiceOverdue">Quand une facture est en retard</Label>
+                    </div>
                   </div>
                   
-                  <div className="flex items-center space-x-2">
-                    <input 
-                      type="checkbox" 
-                      id="invoicePaidNotify" 
-                      name="invoicePaidNotify"
-                      checked={settings.invoicePaidNotify}
-                      onChange={handleChange}
-                      className="h-4 w-4 rounded border-gray-300"
-                      disabled={!settings.enableEmailNotifications}
-                    />
-                    <label htmlFor="invoicePaidNotify" className="text-sm font-medium">
-                      Facture payée
-                    </label>
-                  </div>
-                  
-                  <div className="flex items-center space-x-2">
-                    <input 
-                      type="checkbox" 
-                      id="invoiceOverdueNotify" 
-                      name="invoiceOverdueNotify"
-                      checked={settings.invoiceOverdueNotify}
-                      onChange={handleChange}
-                      className="h-4 w-4 rounded border-gray-300"
-                      disabled={!settings.enableEmailNotifications}
-                    />
-                    <label htmlFor="invoiceOverdueNotify" className="text-sm font-medium">
-                      Facture en retard
-                    </label>
-                  </div>
-                  
-                  <div className="flex items-center space-x-2">
-                    <input 
-                      type="checkbox" 
-                      id="paymentReceivedNotify" 
-                      name="paymentReceivedNotify"
-                      checked={settings.paymentReceivedNotify}
-                      onChange={handleChange}
-                      className="h-4 w-4 rounded border-gray-300"
-                      disabled={!settings.enableEmailNotifications}
-                    />
-                    <label htmlFor="paymentReceivedNotify" className="text-sm font-medium">
-                      Paiement reçu
-                    </label>
-                  </div>
-                  
-                  <div className="flex items-center space-x-2">
-                    <input 
-                      type="checkbox" 
-                      id="weeklyReportNotify" 
-                      name="weeklyReportNotify"
-                      checked={settings.weeklyReportNotify}
-                      onChange={handleChange}
-                      className="h-4 w-4 rounded border-gray-300"
-                      disabled={!settings.enableEmailNotifications}
-                    />
-                    <label htmlFor="weeklyReportNotify" className="text-sm font-medium">
-                      Rapport hebdomadaire
-                    </label>
-                  </div>
-                  
-                  <div className="flex items-center space-x-2">
-                    <input 
-                      type="checkbox" 
-                      id="monthlyReportNotify" 
-                      name="monthlyReportNotify"
-                      checked={settings.monthlyReportNotify}
-                      onChange={handleChange}
-                      className="h-4 w-4 rounded border-gray-300"
-                      disabled={!settings.enableEmailNotifications}
-                    />
-                    <label htmlFor="monthlyReportNotify" className="text-sm font-medium">
-                      Rapport mensuel
-                    </label>
+                  <div className="space-y-4">
+                    <h3 className="font-medium">Notifications de reporting</h3>
+                    
+                    <div className="flex items-center space-x-2">
+                      <Switch
+                        id="weeklyReport"
+                        checked={settings.weeklyReportNotify}
+                        onCheckedChange={(checked) => handleChange('weeklyReportNotify', checked)}
+                        disabled={!settings.enableEmailNotifications}
+                      />
+                      <Label htmlFor="weeklyReport">Rapport hebdomadaire</Label>
+                    </div>
+                    
+                    <div className="flex items-center space-x-2">
+                      <Switch
+                        id="monthlyReport"
+                        checked={settings.monthlyReportNotify}
+                        onCheckedChange={(checked) => handleChange('monthlyReportNotify', checked)}
+                        disabled={!settings.enableEmailNotifications}
+                      />
+                      <Label htmlFor="monthlyReport">Rapport mensuel</Label>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="reminderDays">Rappeler les factures avant échéance (jours)</Label>
+                      <Input
+                        id="reminderDays"
+                        type="number"
+                        min="1"
+                        max="30"
+                        value={settings.reminderDaysBefore}
+                        onChange={(e) => handleChange('reminderDaysBefore', parseInt(e.target.value))}
+                        disabled={!settings.enableEmailNotifications}
+                      />
+                    </div>
                   </div>
                 </div>
                 
-                <div className="space-y-2 mt-4">
-                  <label htmlFor="reminderDaysBefore" className="text-sm font-medium">
-                    Envoyer un rappel (jours avant l'échéance)
-                  </label>
-                  <input 
-                    type="number" 
-                    id="reminderDaysBefore" 
-                    name="reminderDaysBefore"
-                    value={settings.reminderDaysBefore}
-                    onChange={handleChange}
-                    className="w-full p-2 border rounded-md"
-                    min="1"
-                    max="30"
+                <div className="space-y-2">
+                  <Label htmlFor="notificationEmails">Emails pour les notifications internes (séparés par des virgules)</Label>
+                  <Textarea
+                    id="notificationEmails"
+                    value={settings.notificationEmails}
+                    onChange={(e) => handleChange('notificationEmails', e.target.value)}
                     disabled={!settings.enableEmailNotifications}
+                    placeholder="email1@example.com, email2@example.com"
                   />
-                </div>
-                
-                <div className="space-y-2 mt-4">
-                  <label htmlFor="notificationEmails" className="text-sm font-medium">
-                    Emails de notification (séparés par des virgules)
-                  </label>
-                  <input 
-                    type="text" 
-                    id="notificationEmails" 
-                    name="notificationEmails"
-                    value={settings.notificationEmails.join(', ')}
-                    onChange={(e) => setSettings({...settings, notificationEmails: e.target.value.split(',').map(email => email.trim())})}
-                    className="w-full p-2 border rounded-md"
-                    disabled={!settings.enableEmailNotifications}
-                  />
-                </div>
-                
-                <div className="flex justify-end mt-4">
-                  <button 
-                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-                    onClick={handleSaveSettings}
-                  >
-                    Enregistrer les modifications
-                  </button>
                 </div>
               </div>
             </CardContent>
           </Card>
         </TabsContent>
-        
-        {/* Integrations Tab */}
+
         <TabsContent value="integrations">
           <Card>
             <CardContent className="pt-6">
-              <div className="grid gap-4 py-4">
-                <div className="space-y-2">
-                  <h3 className="text-lg font-medium">Intégrations externes</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Connectez votre système comptable à d'autres services.
-                  </p>
-                </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="border rounded-lg p-4">
-                    <div className="flex justify-between items-center">
+                    <div className="flex justify-between items-start">
                       <div>
-                        <h4 className="font-medium">Intégration bancaire</h4>
-                        <p className="text-sm text-muted-foreground">Connectez vos comptes bancaires pour réconcilier automatiquement les transactions</p>
+                        <h3 className="font-medium text-lg">Intégration bancaire</h3>
+                        <p className="text-sm text-muted-foreground">Connectez votre compte bancaire pour synchroniser automatiquement les transactions</p>
                       </div>
-                      <button 
-                        className={`px-3 py-1 rounded-md ${settings.bankConnected ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'}`}
-                        onClick={() => setSettings({...settings, bankConnected: !settings.bankConnected})}
-                      >
-                        {settings.bankConnected ? 'Déconnecter' : 'Connecter'}
-                      </button>
+                      <Switch
+                        checked={settings.bankConnected}
+                        onCheckedChange={(checked) => handleChange('bankConnected', checked)}
+                      />
                     </div>
-                    {settings.bankConnected && (
-                      <div className="mt-2 text-sm text-green-600">
-                        Connecté à la Banque Nationale
-                      </div>
+                    {settings.bankConnected ? (
+                      <p className="mt-4 text-sm text-green-600">Connecté</p>
+                    ) : (
+                      <Button className="mt-4" variant="outline" size="sm">Configurer</Button>
                     )}
                   </div>
                   
                   <div className="border rounded-lg p-4">
-                    <div className="flex justify-between items-center">
+                    <div className="flex justify-between items-start">
                       <div>
-                        <h4 className="font-medium">Service d'email</h4>
-                        <p className="text-sm text-muted-foreground">Connectez votre service d'email pour envoyer des factures et des notifications</p>
+                        <h3 className="font-medium text-lg">Service d'emails</h3>
+                        <p className="text-sm text-muted-foreground">Configurer le service d'email pour l'envoi automatique des factures</p>
                       </div>
-                      <button 
-                        className={`px-3 py-1 rounded-md ${settings.emailServiceConnected ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'}`}
-                        onClick={() => setSettings({...settings, emailServiceConnected: !settings.emailServiceConnected})}
-                      >
-                        {settings.emailServiceConnected ? 'Déconnecter' : 'Connecter'}
-                      </button>
+                      <Switch
+                        checked={settings.emailServiceConnected}
+                        onCheckedChange={(checked) => handleChange('emailServiceConnected', checked)}
+                      />
                     </div>
-                    {settings.emailServiceConnected && (
-                      <div className="mt-2 text-sm text-green-600">
-                        Connecté à Gmail
-                      </div>
+                    {settings.emailServiceConnected ? (
+                      <p className="mt-4 text-sm text-green-600">Connecté à SMTP</p>
+                    ) : (
+                      <Button className="mt-4" variant="outline" size="sm">Configurer</Button>
                     )}
                   </div>
                   
                   <div className="border rounded-lg p-4">
-                    <div className="flex justify-between items-center">
+                    <div className="flex justify-between items-start">
                       <div>
-                        <h4 className="font-medium">Intégration CRM</h4>
-                        <p className="text-sm text-muted-foreground">Connectez votre CRM pour synchroniser les données clients</p>
+                        <h3 className="font-medium text-lg">CRM</h3>
+                        <p className="text-sm text-muted-foreground">Intégrer avec le module CRM pour partager les données clients</p>
                       </div>
-                      <button 
-                        className={`px-3 py-1 rounded-md ${settings.crmConnected ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'}`}
-                        onClick={() => setSettings({...settings, crmConnected: !settings.crmConnected})}
-                      >
-                        {settings.crmConnected ? 'Déconnecter' : 'Connecter'}
-                      </button>
+                      <Switch
+                        checked={settings.crmConnected}
+                        onCheckedChange={(checked) => handleChange('crmConnected', checked)}
+                      />
                     </div>
-                    {settings.crmConnected && (
-                      <div className="mt-2 text-sm text-green-600">
-                        Connecté à Salesforce
-                      </div>
+                    {settings.crmConnected ? (
+                      <p className="mt-4 text-sm text-green-600">Connecté au CRM interne</p>
+                    ) : (
+                      <Button className="mt-4" variant="outline" size="sm">Configurer</Button>
                     )}
                   </div>
                   
                   <div className="border rounded-lg p-4">
-                    <div className="flex justify-between items-center">
+                    <div className="flex justify-between items-start">
                       <div>
-                        <h4 className="font-medium">Système ERP</h4>
-                        <p className="text-sm text-muted-foreground">Connectez votre ERP pour une gestion intégrée</p>
+                        <h3 className="font-medium text-lg">Logiciel ERP</h3>
+                        <p className="text-sm text-muted-foreground">Intégrer avec votre système ERP existant</p>
                       </div>
-                      <button 
-                        className={`px-3 py-1 rounded-md ${settings.erConnected ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'}`}
-                        onClick={() => setSettings({...settings, erConnected: !settings.erConnected})}
-                      >
-                        {settings.erConnected ? 'Déconnecter' : 'Connecter'}
-                      </button>
+                      <Switch
+                        checked={settings.erConnected}
+                        onCheckedChange={(checked) => handleChange('erConnected', checked)}
+                      />
                     </div>
-                    {settings.erConnected && (
-                      <div className="mt-2 text-sm text-green-600">
-                        Connecté à SAP
-                      </div>
+                    {settings.erConnected ? (
+                      <p className="mt-4 text-sm text-green-600">Connecté</p>
+                    ) : (
+                      <Button className="mt-4" variant="outline" size="sm">Configurer</Button>
                     )}
                   </div>
-                </div>
-                
-                <div className="flex justify-end mt-4">
-                  <button 
-                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-                    onClick={handleSaveSettings}
-                  >
-                    Enregistrer les modifications
-                  </button>
                 </div>
               </div>
             </CardContent>
           </Card>
         </TabsContent>
-        
-        {/* Database Tab */}
+
         <TabsContent value="database">
           <Card>
             <CardContent className="pt-6">
-              <div className="grid gap-4 py-4">
-                <div className="space-y-2">
-                  <h3 className="text-lg font-medium">Gestion de la base de données</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Gérez vos données comptables et effectuez des opérations de maintenance.
-                  </p>
+              <div className="space-y-6">
+                <div className="border rounded-lg p-6">
+                  <h3 className="text-lg font-medium mb-4">Gestion de la base de données</h3>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                    <div className="border rounded-lg p-4 bg-gray-50">
+                      <h4 className="font-medium">Taille de la base</h4>
+                      <p className="text-2xl font-bold mt-2">257 MB</p>
+                    </div>
+                    
+                    <div className="border rounded-lg p-4 bg-gray-50">
+                      <h4 className="font-medium">Dernière sauvegarde</h4>
+                      <p className="text-2xl font-bold mt-2">Aujourd'hui 08:30</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex flex-wrap gap-3">
+                    <Button variant="outline">
+                      Sauvegarder maintenant
+                    </Button>
+                    <Button variant="outline">
+                      Restaurer une sauvegarde
+                    </Button>
+                    <Button variant="outline" className="text-red-500 hover:text-red-600">
+                      Optimiser la base
+                    </Button>
+                  </div>
                 </div>
                 
-                <div className="space-y-4">
-                  <div className="border rounded-lg p-4">
-                    <h4 className="font-medium">Sauvegarde et restauration</h4>
-                    <p className="text-sm text-muted-foreground mb-4">
-                      Créez des sauvegardes de vos données ou restaurez à partir d'une sauvegarde existante.
-                    </p>
-                    <div className="flex gap-2">
-                      <button 
-                        className="px-3 py-1 rounded-md bg-blue-600 text-white"
-                        onClick={() => toast({
-                          title: "Sauvegarde lancée",
-                          description: "Une sauvegarde complète de vos données est en cours."
-                        })}
-                      >
-                        Créer une sauvegarde
-                      </button>
-                      <button 
-                        className="px-3 py-1 rounded-md border border-gray-300"
-                        onClick={() => toast({
-                          title: "Restauration",
-                          description: "Veuillez sélectionner un fichier de sauvegarde."
-                        })}
-                      >
-                        Restaurer
-                      </button>
+                <div className="border rounded-lg p-6">
+                  <h3 className="text-lg font-medium mb-4">Données archivées</h3>
+                  
+                  <div className="space-y-2 mb-4">
+                    <div className="flex justify-between items-center">
+                      <span>Factures antérieures à 2023</span>
+                      <span className="text-sm text-muted-foreground">127 Entrées</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span>Paiements antérieurs à 2023</span>
+                      <span className="text-sm text-muted-foreground">89 Entrées</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span>Rapports archivés</span>
+                      <span className="text-sm text-muted-foreground">45 Entrées</span>
                     </div>
                   </div>
                   
-                  <div className="border rounded-lg p-4">
-                    <h4 className="font-medium">Maintenance</h4>
-                    <p className="text-sm text-muted-foreground mb-4">
-                      Optimisez votre base de données pour de meilleures performances.
-                    </p>
-                    <div className="flex gap-2">
-                      <button 
-                        className="px-3 py-1 rounded-md bg-blue-600 text-white"
-                        onClick={() => toast({
-                          title: "Optimisation lancée",
-                          description: "L'optimisation de la base de données est en cours."
-                        })}
-                      >
-                        Optimiser la base de données
-                      </button>
-                      <button 
-                        className="px-3 py-1 rounded-md border border-gray-300"
-                        onClick={() => toast({
-                          title: "Vérification lancée",
-                          description: "La vérification de l'intégrité des données est en cours."
-                        })}
-                      >
-                        Vérifier l'intégrité
-                      </button>
-                    </div>
-                  </div>
-                  
-                  <div className="border rounded-lg p-4">
-                    <h4 className="font-medium">Exportation des données</h4>
-                    <p className="text-sm text-muted-foreground mb-4">
-                      Exportez vos données dans différents formats pour utilisation externe.
-                    </p>
-                    <div className="flex gap-2">
-                      <button 
-                        className="px-3 py-1 rounded-md border border-gray-300"
-                        onClick={() => toast({
-                          title: "Export CSV",
-                          description: "Exportation des données au format CSV en cours."
-                        })}
-                      >
-                        Exporter en CSV
-                      </button>
-                      <button 
-                        className="px-3 py-1 rounded-md border border-gray-300"
-                        onClick={() => toast({
-                          title: "Export Excel",
-                          description: "Exportation des données au format Excel en cours."
-                        })}
-                      >
-                        Exporter en Excel
-                      </button>
-                      <button 
-                        className="px-3 py-1 rounded-md border border-gray-300"
-                        onClick={() => toast({
-                          title: "Export PDF",
-                          description: "Exportation des données au format PDF en cours."
-                        })}
-                      >
-                        Exporter en PDF
-                      </button>
-                    </div>
-                  </div>
+                  <Button variant="secondary" size="sm">
+                    Gérer les archives
+                  </Button>
                 </div>
               </div>
             </CardContent>
