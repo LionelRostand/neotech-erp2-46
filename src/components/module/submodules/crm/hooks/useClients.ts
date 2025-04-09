@@ -94,7 +94,11 @@ export const useClients = () => {
   // Update client
   const handleUpdateClient = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedClient) return;
+    if (!selectedClient) {
+      console.error("No client selected for update");
+      toast.error("Erreur: Aucun client sélectionné");
+      return;
+    }
     
     if (!formData.name.trim()) {
       toast.error("Le nom du client est requis");
@@ -102,6 +106,9 @@ export const useClients = () => {
     }
 
     try {
+      console.log("Updating client with ID:", selectedClient.id);
+      console.log("Update data:", formData);
+      
       // Ensure status is a valid enum value
       const clientData = {
         ...formData,
@@ -109,9 +116,12 @@ export const useClients = () => {
       };
       
       await updateClientInFirestore(selectedClient.id, clientData);
+      console.log("Client updated successfully");
+      toast.success("Client mis à jour avec succès");
       setIsEditDialogOpen(false);
     } catch (error) {
       console.error('Error updating client:', error);
+      toast.error(`Erreur lors de la mise à jour: ${error instanceof Error ? error.message : 'Erreur inconnue'}`);
       // Error is already handled in the useClientsData hook
     }
   };

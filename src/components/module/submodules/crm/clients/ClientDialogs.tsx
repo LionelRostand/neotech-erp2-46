@@ -86,7 +86,11 @@ const ClientDialogs: React.FC<ClientDialogsProps> = ({
               Modifiez les informations du client
             </DialogDescription>
           </DialogHeader>
-          <form onSubmit={handleUpdateClient}>
+          <form onSubmit={(e) => {
+            console.log("Edit form submission started");
+            handleUpdateClient(e);
+            console.log("Edit form submission completed");
+          }}>
             <ClientForm 
               formData={formData} 
               handleInputChange={handleInputChange}
