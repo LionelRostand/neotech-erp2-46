@@ -34,6 +34,7 @@ export const useInvoices = (filters?: { status?: string; clientId?: string; }) =
       // Transformer en objets Invoice
       const invoicesData = data.map((doc: any) => ({
         id: doc.id,
+        number: doc.invoiceNumber || '',  // Ensuring type compatibility with Invoice
         invoiceNumber: doc.invoiceNumber || '',
         clientId: doc.clientId || '',
         clientName: doc.clientName || '',
@@ -52,7 +53,7 @@ export const useInvoices = (filters?: { status?: string; clientId?: string; }) =
         createdBy: doc.createdBy || '',
       }));
       
-      setInvoices(invoicesData);
+      setInvoices(invoicesData as Invoice[]);
     } catch (error) {
       console.error('Erreur lors du chargement des factures:', error);
       toast.error('Impossible de charger les factures');

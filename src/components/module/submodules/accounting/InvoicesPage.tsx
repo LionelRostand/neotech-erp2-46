@@ -85,7 +85,8 @@ const InvoicesPage = () => {
         'Montant total': invoice.total,
         'Devise': invoice.currency,
         'Statut': invoice.status === 'paid' ? 'Payée' : 
-                 invoice.status === 'pending' ? 'En attente' : 
+                 invoice.status === 'draft' ? 'Brouillon' :
+                 invoice.status === 'sent' ? 'Envoyée' :
                  invoice.status === 'overdue' ? 'En retard' : 'Annulée',
         'Date de création': invoice.createdAt,
       }))
@@ -101,7 +102,8 @@ const InvoicesPage = () => {
   const getStatusBadgeVariant = (status: string) => {
     switch (status) {
       case 'paid': return 'success';
-      case 'pending': return 'warning';
+      case 'draft': return 'secondary';
+      case 'sent': return 'warning';
       case 'overdue': return 'destructive';
       case 'cancelled': return 'outline';
       default: return 'secondary';
@@ -111,7 +113,8 @@ const InvoicesPage = () => {
   const getStatusText = (status: string) => {
     switch (status) {
       case 'paid': return 'Payée';
-      case 'pending': return 'En attente';
+      case 'draft': return 'Brouillon';
+      case 'sent': return 'Envoyée';
       case 'overdue': return 'En retard';
       case 'cancelled': return 'Annulée';
       default: return status;
