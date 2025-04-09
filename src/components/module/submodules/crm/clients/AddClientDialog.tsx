@@ -49,7 +49,9 @@ const AddClientDialog: React.FC<AddClientDialogProps> = ({
     
     // Call the onAdd function with the current formData
     try {
+      console.log("Submitting client data:", formData);
       await onAdd(formData);
+      console.log("Client successfully added");
       toast.success(`Client "${formData.name}" ajouté avec succès`);
       onClose(); // Ferme le dialog après succès
     } catch (error) {
