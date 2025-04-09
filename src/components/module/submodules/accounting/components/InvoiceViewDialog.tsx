@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -9,10 +10,29 @@ import { Card, CardContent } from '@/components/ui/card';
 interface InvoiceViewDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  invoice: Invoice;
+  invoice: Invoice | null;
 }
 
 const InvoiceViewDialog: React.FC<InvoiceViewDialogProps> = ({ open, onOpenChange, invoice }) => {
+  // Early return if invoice is null or undefined
+  if (!invoice) {
+    return (
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="sm:max-w-[800px]">
+          <DialogHeader>
+            <DialogTitle>Facture non disponible</DialogTitle>
+          </DialogHeader>
+          <p className="py-4">Les détails de la facture ne sont pas disponibles.</p>
+          <DialogFooter>
+            <Button type="button" onClick={() => onOpenChange(false)}>
+              Fermer
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
   const handlePrint = () => {
     const printContents = document.getElementById('invoice-to-print')?.innerHTML;
     const originalContents = document.body.innerHTML;
@@ -37,6 +57,7 @@ const InvoiceViewDialog: React.FC<InvoiceViewDialogProps> = ({ open, onOpenChang
       case 'overdue': return 'En retard';
       case 'draft': return 'Brouillon';
       case 'cancelled': return 'Annulée';
+      case 'pending': return 'En attente';
       default: return 'En attente';
     }
   };
@@ -107,7 +128,7 @@ const InvoiceViewDialog: React.FC<InvoiceViewDialogProps> = ({ open, onOpenChang
                       <td className="py-2 px-4 text-right">{formatCurrency(item.unitPrice, invoice.currency)}</td>
                       <td className="py-2 px-4 text-right">{item.taxRate}%</td>
                       <td className="py-2 px-4 text-right">
-                        {formatCurrency(item.quantity * item.unitPrice * (1 + item.taxRate / 100), invoice.currency)}
+                        {formatCurrency(item.quantity * item.unitPrice * (1 + (item.taxRate || 0) / 100), invoice.currency)}
                       </td>
                     </tr>
                   ))}

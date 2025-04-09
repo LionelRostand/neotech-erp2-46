@@ -65,12 +65,11 @@ const InvoicesPage = () => {
       await invoicesCollection.remove(selectedInvoice.id);
       toast.success('Facture supprimée avec succès');
       reload();
+      setIsDeleteOpen(false);
     } catch (error) {
       console.error('Erreur lors de la suppression de la facture:', error);
       toast.error('Impossible de supprimer la facture');
     }
-    
-    setIsDeleteOpen(false);
   };
 
   const handleExportToExcel = () => {
@@ -106,6 +105,7 @@ const InvoicesPage = () => {
       case 'sent': return 'warning';
       case 'overdue': return 'destructive';
       case 'cancelled': return 'outline';
+      case 'pending': return 'secondary';
       default: return 'secondary';
     }
   };
@@ -117,8 +117,28 @@ const InvoicesPage = () => {
       case 'sent': return 'Envoyée';
       case 'overdue': return 'En retard';
       case 'cancelled': return 'Annulée';
+      case 'pending': return 'En attente';
       default: return status;
     }
+  };
+
+  // Dialog close handlers
+  const handleCloseViewDialog = () => {
+    setIsViewOpen(false);
+    setSelectedInvoice(null);
+  };
+
+  const handleCloseFormDialog = (success?: boolean) => {
+    setIsFormOpen(false);
+    setSelectedInvoice(null);
+    if (success) {
+      reload();
+    }
+  };
+
+  const handleCloseDeleteDialog = () => {
+    setIsDeleteOpen(false);
+    setSelectedInvoice(null);
   };
 
   return (
@@ -220,20 +240,20 @@ const InvoicesPage = () => {
       {/* Dialogs */}
       <InvoiceFormDialog
         open={isFormOpen}
-        onOpenChange={setIsFormOpen}
+        onOpenChange={handleCloseFormDialog}
         invoice={selectedInvoice}
         onSuccess={reload}
       />
 
       <InvoiceViewDialog
         open={isViewOpen}
-        onOpenChange={setIsViewOpen}
+        onOpenChange={handleCloseViewDialog}
         invoice={selectedInvoice}
       />
 
       <DeleteConfirmDialog
         open={isDeleteOpen}
-        onOpenChange={setIsDeleteOpen}
+        onOpenChange={handleCloseDeleteDialog}
         title="Supprimer la facture"
         description="Êtes-vous sûr de vouloir supprimer cette facture ? Cette action est irréversible."
         onConfirm={handleDeleteConfirm}
