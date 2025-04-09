@@ -27,7 +27,7 @@ interface ClientDialogsProps {
   formData: ClientFormData;
   handleInputChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
   handleSelectChange: (name: string, value: string) => void;
-  handleCreateClient: (e: React.FormEvent) => void;
+  handleCreateClient: (formData: ClientFormData) => void;
   handleUpdateClient: (e: React.FormEvent) => void;
   handleDeleteClient: () => void;
   resetForm: () => void;
