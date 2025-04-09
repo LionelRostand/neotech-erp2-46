@@ -13,6 +13,7 @@ import { Client, ClientFormData } from '../types/crm-types';
 import ClientForm from './ClientForm';
 import ClientDetails from './ClientDetails';
 import AddClientDialog from './AddClientDialog';
+import DeleteClientDialog from './DeleteClientDialog';
 
 interface ClientDialogsProps {
   isAddDialogOpen: boolean;
@@ -104,32 +105,12 @@ const ClientDialogs: React.FC<ClientDialogsProps> = ({
       </Dialog>
 
       {/* Delete Client Dialog */}
-      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Supprimer le client</DialogTitle>
-            <DialogDescription>
-              Êtes-vous sûr de vouloir supprimer ce client ? Cette action est irréversible.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="py-4">
-            {selectedClient && (
-              <div>
-                <p><strong>Client :</strong> {selectedClient.name}</p>
-                <p><strong>Contact :</strong> {selectedClient.contactName}</p>
-              </div>
-            )}
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
-              Annuler
-            </Button>
-            <Button variant="destructive" onClick={handleDeleteClient}>
-              Supprimer
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <DeleteClientDialog
+        isOpen={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+        client={selectedClient}
+        onConfirm={handleDeleteClient}
+      />
 
       {/* View Client Details Dialog */}
       <Dialog open={isViewDetailsOpen} onOpenChange={setIsViewDetailsOpen}>
