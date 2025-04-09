@@ -54,6 +54,7 @@ export const useClientsData = () => {
         ...doc.data()
       })) as Client[];
       
+      console.log(`Successfully fetched ${clientsData.length} clients from Firebase collection ${COLLECTIONS.CRM.CLIENTS}`);
       setClients(clientsData);
       setError(null);
     } catch (err: any) {
@@ -90,8 +91,9 @@ export const useClientsData = () => {
       
       await executeWithNetworkRetry(async () => {
         const clientsCollection = collection(db, COLLECTIONS.CRM.CLIENTS);
-        await addDoc(clientsCollection, newClient);
-        console.log("Client added to collection:", COLLECTIONS.CRM.CLIENTS);
+        const docRef = await addDoc(clientsCollection, newClient);
+        newClient.id = docRef.id;
+        console.log(`Client added to collection ${COLLECTIONS.CRM.CLIENTS} with ID: ${docRef.id}`);
         toast.success("Client ajouté avec succès");
       });
       
@@ -132,9 +134,13 @@ export const useClientsData = () => {
       
       await executeWithNetworkRetry(async () => {
         const clientDocRef = doc(db, COLLECTIONS.CRM.CLIENTS, clientId);
-        const updateData = { ...clientData, status: statusValue, updatedAt: new Date().toISOString() };
+        const updateData = { 
+          ...clientData, 
+          status: statusValue, 
+          updatedAt: new Date().toISOString() 
+        };
         await updateDoc(clientDocRef, updateData);
-        console.log("Client updated in collection:", COLLECTIONS.CRM.CLIENTS);
+        console.log(`Client updated in collection ${COLLECTIONS.CRM.CLIENTS} with ID: ${clientId}`);
         toast.success("Client mis à jour avec succès");
       });
       
@@ -159,7 +165,7 @@ export const useClientsData = () => {
       await executeWithNetworkRetry(async () => {
         const clientDocRef = doc(db, COLLECTIONS.CRM.CLIENTS, clientId);
         await deleteDoc(clientDocRef);
-        console.log("Client deleted from collection:", COLLECTIONS.CRM.CLIENTS);
+        console.log(`Client deleted from collection ${COLLECTIONS.CRM.CLIENTS} with ID: ${clientId}`);
         toast.success("Client supprimé avec succès");
       });
       
@@ -179,18 +185,24 @@ export const useClientsData = () => {
   const seedMockClients = async () => {
     setIsLoading(true);
     try {
-      console.log("Seeding clients to collection:", COLLECTIONS.CRM.CLIENTS);
+      console.log(`Seeding ${mockClientsData.length} mock clients to collection: ${COLLECTIONS.CRM.CLIENTS}`);
       
       for (const client of mockClientsData) {
         const statusValue = client.status as 'active' | 'inactive' | 'lead';
-        const clientWithCorrectStatus = { ...client, status: statusValue };
+        const clientWithCorrectStatus = { 
+          ...client, 
+          status: statusValue,
+          createdAt: client.createdAt || new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        };
         
-        const clientRef = doc(db, COLLECTIONS.CRM.CLIENTS, client.id);
         await executeWithNetworkRetry(async () => {
-          await updateDoc(clientRef, clientWithCorrectStatus);
+          const clientsCollection = collection(db, COLLECTIONS.CRM.CLIENTS);
+          await addDoc(clientsCollection, clientWithCorrectStatus);
         });
       }
       
+      console.log(`Successfully seeded ${mockClientsData.length} mock clients to Firebase collection ${COLLECTIONS.CRM.CLIENTS}`);
       await fetchClients();
       toast.success("Données de démonstration ajoutées avec succès");
     } catch (error: any) {
