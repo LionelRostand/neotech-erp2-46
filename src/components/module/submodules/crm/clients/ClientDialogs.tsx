@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Client, ClientFormData } from '../types/crm-types';
 import ClientForm from './ClientForm';
 import ClientDetails from './ClientDetails';
+import AddClientDialog from './AddClientDialog';
 
 interface ClientDialogsProps {
   isAddDialogOpen: boolean;
@@ -56,37 +57,24 @@ const ClientDialogs: React.FC<ClientDialogsProps> = ({
   statusOptions,
   openEditDialog
 }) => {
+  const closeAddDialog = () => {
+    resetForm();
+    setIsAddDialogOpen(false);
+  };
+
   return (
     <>
       {/* Add Client Dialog */}
-      <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-        <DialogContent className="sm:max-w-[500px]">
-          <DialogHeader>
-            <DialogTitle>Ajouter un nouveau client</DialogTitle>
-            <DialogDescription>
-              Complétez les informations pour créer un nouveau client
-            </DialogDescription>
-          </DialogHeader>
-          <form onSubmit={handleCreateClient}>
-            <ClientForm 
-              formData={formData} 
-              handleInputChange={handleInputChange}
-              handleSelectChange={handleSelectChange}
-              sectorOptions={sectorOptions}
-              statusOptions={statusOptions}
-            />
-            <DialogFooter className="mt-4">
-              <Button type="button" variant="outline" onClick={() => {
-                resetForm();
-                setIsAddDialogOpen(false);
-              }}>
-                Annuler
-              </Button>
-              <Button type="submit">Ajouter</Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
+      <AddClientDialog 
+        isOpen={isAddDialogOpen}
+        onClose={closeAddDialog}
+        onAdd={handleCreateClient}
+        formData={formData}
+        handleInputChange={handleInputChange}
+        handleSelectChange={handleSelectChange}
+        sectorOptions={sectorOptions}
+        statusOptions={statusOptions}
+      />
 
       {/* Edit Client Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>

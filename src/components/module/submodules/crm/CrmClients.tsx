@@ -109,8 +109,8 @@ const CrmClients: React.FC = () => {
           formData={formData}
           handleInputChange={handleInputChange}
           handleSelectChange={handleSelectChange}
-          handleCreateClient={(e) => handleCreateClient(e)}
-          handleUpdateClient={(e) => handleUpdateClient(e)}
+          handleCreateClient={handleCreateClient}
+          handleUpdateClient={handleUpdateClient}
           handleDeleteClient={handleDeleteClient}
           resetForm={resetForm}
           sectorOptions={sectors}
