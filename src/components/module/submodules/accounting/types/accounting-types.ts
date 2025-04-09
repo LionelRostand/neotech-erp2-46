@@ -18,9 +18,11 @@ export interface Invoice {
   subtotal?: number;
   tax?: number;
   taxRate?: number;
+  taxAmount?: number;
   discountAmount?: number;
   discountRate?: number;
   dueAmount?: number;
+  termsAndConditions?: string;
   createdAt?: any;
   updatedAt?: any;
   createdBy?: string;
@@ -48,8 +50,13 @@ export interface Payment {
   status: string;
   reference?: string;
   notes?: string;
+  // Additional properties to match actual usage
+  date?: string;
+  method?: string;
+  transactionId?: string;
   createdAt?: any;
   updatedAt?: any;
+  createdBy?: string;
 }
 
 export interface TaxDeclaration {
@@ -66,6 +73,15 @@ export interface TaxDeclaration {
   submittedDate?: string;
   reference?: string;
   notes?: string;
+  // Additional properties to match actual usage
+  balance?: number;
+  totalTaxCollected?: number;
+  totalTaxPaid?: number;
+  attachments?: any[];
+  amount?: number;
+  estimatedAmount?: number;
+  dateFiled?: string;
+  filedBy?: string;
   createdAt?: any;
   updatedAt?: any;
 }
@@ -77,4 +93,20 @@ export interface TaxRate {
   description?: string;
   isDefault?: boolean;
   active: boolean;
+}
+
+export interface Transaction {
+  id: string;
+  date: string;
+  description: string;
+  amount: number;
+  type: 'income' | 'expense' | 'transfer';
+  category: string;
+  account: string;
+  isReconciled: boolean;
+  reference?: string;
+  notes?: string;
+  currency: string;
+  createdAt?: any;
+  updatedAt?: any;
 }
