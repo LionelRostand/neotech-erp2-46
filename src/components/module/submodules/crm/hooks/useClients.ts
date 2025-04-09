@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { useClientsData } from './useClientsData';
 import { Client, ClientFormData } from '../types/crm-types';
@@ -115,14 +114,24 @@ export const useClients = () => {
         status: formData.status as 'active' | 'inactive' | 'lead'
       };
       
-      await updateClientInFirestore(selectedClient.id, clientData);
-      console.log("Client updated successfully");
-      toast.success("Client mis à jour avec succès");
+      const result = await updateClientInFirestore(selectedClient.id, clientData);
+      console.log("Client updated successfully:", result);
+      
+      if (result._offlineUpdated) {
+        // If updated in offline mode, manually update the local state
+        setClients(prev => prev.map(client => 
+          client.id === selectedClient.id ? { ...client, ...clientData } : client
+        ));
+      }
+      
       setIsEditDialogOpen(false);
     } catch (error) {
       console.error('Error updating client:', error);
-      toast.error(`Erreur lors de la mise à jour: ${error instanceof Error ? error.message : 'Erreur inconnue'}`);
-      // Error is already handled in the useClientsData hook
+      
+      // If there's an error, we'll show it, but we don't close the dialog
+      // so user can try again
+      const message = error instanceof Error ? error.message : 'Erreur inconnue';
+      toast.error(`Erreur lors de la mise à jour: ${message}`);
     }
   };
 

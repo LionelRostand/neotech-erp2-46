@@ -1,4 +1,3 @@
-
 import React from 'react';
 import {
   Dialog,
@@ -102,7 +101,9 @@ const ClientDialogs: React.FC<ClientDialogsProps> = ({
               <Button type="button" variant="outline" onClick={() => setIsEditDialogOpen(false)}>
                 Annuler
               </Button>
-              <Button type="submit">Enregistrer</Button>
+              <Button type="submit" className="bg-primary">
+                Enregistrer
+              </Button>
             </DialogFooter>
           </form>
         </DialogContent>

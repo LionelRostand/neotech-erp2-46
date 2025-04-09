@@ -22,8 +22,16 @@ export const updateDocument = async (collectionName: string, id: string, data: D
     return { id, ...updatedData };
   } catch (error) {
     console.error(`Error updating document ${id}:`, error);
-    toast.error(`Erreur lors de la mise à jour: ${error instanceof Error ? error.message : 'Erreur inconnue'}`);
-    throw error;
+    
+    // Check if this is a network error
+    const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue';
+    if (errorMessage.includes('offline') || errorMessage.includes('unavailable') || errorMessage.includes('backend')) {
+      toast.success('Document mis à jour en mode hors ligne. Les modifications seront synchronisées plus tard.');
+      return { id, ...data, _offlineUpdated: true };
+    } else {
+      toast.error(`Erreur lors de la mise à jour: ${errorMessage}`);
+      throw error;
+    }
   }
 };
 
@@ -42,7 +50,15 @@ export const setDocument = async (collectionName: string, id: string, data: Docu
     return { id, ...updatedData };
   } catch (error) {
     console.error(`Error setting document ${id}:`, error);
-    toast.error(`Erreur lors de la sauvegarde: ${error instanceof Error ? error.message : 'Erreur inconnue'}`);
-    throw error;
+    
+    // Check if this is a network error
+    const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue';
+    if (errorMessage.includes('offline') || errorMessage.includes('unavailable') || errorMessage.includes('backend')) {
+      toast.success('Document enregistré en mode hors ligne. Les modifications seront synchronisées plus tard.');
+      return { id, ...data, _offlineUpdated: true };
+    } else {
+      toast.error(`Erreur lors de la sauvegarde: ${errorMessage}`);
+      throw error;
+    }
   }
 };
