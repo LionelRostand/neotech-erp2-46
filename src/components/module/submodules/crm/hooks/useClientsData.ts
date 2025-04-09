@@ -36,8 +36,9 @@ export const useClientsData = () => {
       
       // Cast the data to Client type to ensure type safety
       const typedClients = clientsData.map(client => {
-        const typedClient: Partial<Client> = {
-          ...client,
+        // Initialize a typed client object with default values for required fields
+        const typedClient: Client = {
+          id: client.id,
           name: client.name || '',
           contactName: client.contactName || '',
           contactEmail: client.contactEmail || '',
@@ -48,7 +49,17 @@ export const useClientsData = () => {
           status: (client.status as "active" | "inactive" | "lead") || "active"
         };
         
-        return typedClient as Client;
+        // Add optional fields if they exist in the data
+        if (client.address) typedClient.address = client.address;
+        if (client.website) typedClient.website = client.website;
+        if (client.notes) typedClient.notes = client.notes;
+        if (client.updatedAt) typedClient.updatedAt = client.updatedAt;
+        if (client.customerSince) typedClient.customerSince = client.customerSince;
+        if (client._offlineCreated) typedClient._offlineCreated = client._offlineCreated;
+        if (client._offlineUpdated) typedClient._offlineUpdated = client._offlineUpdated;
+        if (client._offlineDeleted) typedClient._offlineDeleted = client._offlineDeleted;
+        
+        return typedClient;
       });
       
       setClients(typedClients);
@@ -108,7 +119,7 @@ export const useClientsData = () => {
       
       // If offline, add to local state only
       if (isOfflineMode) {
-        const mockClient = {
+        const mockClient: Client = {
           ...newClient,
           id: `mock-${Date.now()}`,
           _offlineCreated: true
@@ -123,7 +134,7 @@ export const useClientsData = () => {
       const result = await firestore.add(newClient);
       
       // Add the new client to the state
-      const clientWithId = {
+      const clientWithId: Client = {
         ...newClient,
         id: result.id
       } as Client;
@@ -151,27 +162,27 @@ export const useClientsData = () => {
       
       // If offline, update in local state only
       if (isOfflineMode) {
-        const offlineUpdatedClient = {
+        const offlineUpdatedClient: Client = {
           ...updatedClient,
           id,
           _offlineUpdated: true
-        };
+        } as Client;
         
         setClients(prev => prev.map(client => 
           client.id === id 
-            ? { ...client, ...offlineUpdatedClient } as Client
+            ? offlineUpdatedClient
             : client
         ));
         
         toast.success("Client mis à jour en mode démo");
-        return offlineUpdatedClient as Client;
+        return offlineUpdatedClient;
       }
       
       // Otherwise, update in Firestore
       await firestore.update(id, updatedClient);
       
       // Update the client in the state
-      const clientWithId = {
+      const clientWithId: Client = {
         ...updatedClient,
         id
       } as Client;
@@ -195,11 +206,17 @@ export const useClientsData = () => {
     try {
       // If offline, mark as deleted in local state
       if (isOfflineMode) {
-        setClients(prev => prev.map(client => 
-          client.id === id 
-            ? { ...client, _offlineDeleted: true, updatedAt: new Date().toISOString(), _offlineUpdated: true } as Client
-            : client
-        ).filter(client => !client._offlineDeleted));
+        setClients(prev => prev.map(client => {
+          if (client.id === id) {
+            return {
+              ...client,
+              _offlineDeleted: true,
+              updatedAt: new Date().toISOString(),
+              _offlineUpdated: true
+            } as Client;
+          }
+          return client;
+        }).filter(client => !client._offlineDeleted));
         
         toast.success("Client supprimé en mode démo");
         return true;
