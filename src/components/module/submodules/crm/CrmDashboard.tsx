@@ -9,13 +9,16 @@ import { ChartContainer, ChartTooltip } from '@/components/ui/chart';
 import { Progress } from '@/components/ui/progress';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const CrmDashboard: React.FC = () => {
   const { 
     stats, 
     salesData, 
+    pipelineData,
     opportunitiesData, 
     recentActivities,
+    isLoading,
     COLORS
   } = useCrmDashboard();
 
@@ -61,19 +64,30 @@ const CrmDashboard: React.FC = () => {
             <BarChartIcon className="h-5 w-5 text-blue-600 mr-2" />
             <h3 className="font-medium">Performance des ventes</h3>
           </div>
-          <ChartContainer className="h-64" config={{ data: { label: 'Ventes', theme: { light: '#60a5fa', dark: '#3b82f6' } } }}>
-            <BarChart data={salesData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" />
-              <YAxis />
-              <Tooltip />
-              <Bar dataKey="value" fill="var(--color-data)" />
-            </BarChart>
-          </ChartContainer>
-          <div className="mt-4 text-sm text-muted-foreground">
-            <p>CA généré: <span className="font-medium text-foreground">{stats.revenueGenerated.toLocaleString('fr-FR')} €</span></p>
-            <p>Montant moyen: <span className="font-medium text-foreground">{stats.averageDealSize.toLocaleString('fr-FR')} €</span></p>
-          </div>
+          
+          {isLoading ? (
+            <div className="space-y-3">
+              <Skeleton className="h-64 w-full" />
+              <Skeleton className="h-4 w-3/4" />
+              <Skeleton className="h-4 w-1/2" />
+            </div>
+          ) : (
+            <>
+              <ChartContainer className="h-64" config={{ data: { label: 'Ventes', theme: { light: '#60a5fa', dark: '#3b82f6' } } }}>
+                <BarChart data={salesData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="name" />
+                  <YAxis />
+                  <Tooltip />
+                  <Bar dataKey="value" fill="var(--color-data)" />
+                </BarChart>
+              </ChartContainer>
+              <div className="mt-4 text-sm text-muted-foreground">
+                <p>CA généré: <span className="font-medium text-foreground">{stats.revenueGenerated.toLocaleString('fr-FR')} €</span></p>
+                <p>Montant moyen: <span className="font-medium text-foreground">{stats.averageDealSize.toLocaleString('fr-FR')} €</span></p>
+              </div>
+            </>
+          )}
         </Card>
         
         <Card className="p-6">
@@ -81,72 +95,62 @@ const CrmDashboard: React.FC = () => {
             <PieChartIcon className="h-5 w-5 text-purple-600 mr-2" />
             <h3 className="font-medium">Répartition des opportunités</h3>
           </div>
-          <ResponsiveContainer width="100%" height={260}>
-            <PieChart>
-              <Pie
-                data={opportunitiesData}
-                cx="50%"
-                cy="50%"
-                labelLine={false}
-                label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                outerRadius={80}
-                fill="#8884d8"
-                dataKey="value"
-              >
-                {opportunitiesData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                ))}
-              </Pie>
-              <Tooltip formatter={(value, name) => [`${value}`, name]} />
-            </PieChart>
-          </ResponsiveContainer>
+          
+          {isLoading ? (
+            <Skeleton className="h-[260px] w-full rounded-md" />
+          ) : (
+            <ResponsiveContainer width="100%" height={260}>
+              <PieChart>
+                <Pie
+                  data={opportunitiesData}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={false}
+                  label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                  outerRadius={80}
+                  fill="#8884d8"
+                  dataKey="value"
+                >
+                  {opportunitiesData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip formatter={(value, name) => [`${value}`, name]} />
+              </PieChart>
+            </ResponsiveContainer>
+          )}
         </Card>
       </div>
 
       {/* Pipeline Progress */}
       <Card className="p-6">
         <h3 className="text-lg font-medium mb-4">Pipeline de Ventes</h3>
-        <div className="space-y-6">
-          <div>
-            <div className="flex justify-between mb-1">
-              <span className="text-sm font-medium">Nouveau (12)</span>
-              <span className="text-sm text-muted-foreground">25%</span>
-            </div>
-            <Progress value={25} className="h-2" />
+        
+        {isLoading ? (
+          <div className="space-y-4">
+            {[1, 2, 3, 4, 5].map((i) => (
+              <div key={i} className="space-y-2">
+                <div className="flex justify-between">
+                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="h-4 w-12" />
+                </div>
+                <Skeleton className="h-2 w-full" />
+              </div>
+            ))}
           </div>
-          
-          <div>
-            <div className="flex justify-between mb-1">
-              <span className="text-sm font-medium">En négociation (8)</span>
-              <span className="text-sm text-muted-foreground">17%</span>
-            </div>
-            <Progress value={17} className="h-2" />
+        ) : (
+          <div className="space-y-6">
+            {pipelineData.map((stage) => (
+              <div key={stage.id}>
+                <div className="flex justify-between mb-1">
+                  <span className="text-sm font-medium">{stage.name} ({stage.count})</span>
+                  <span className="text-sm text-muted-foreground">{stage.percentage}%</span>
+                </div>
+                <Progress value={stage.percentage} className="h-2" />
+              </div>
+            ))}
           </div>
-          
-          <div>
-            <div className="flex justify-between mb-1">
-              <span className="text-sm font-medium">Devis envoyé (15)</span>
-              <span className="text-sm text-muted-foreground">31%</span>
-            </div>
-            <Progress value={31} className="h-2" />
-          </div>
-          
-          <div>
-            <div className="flex justify-between mb-1">
-              <span className="text-sm font-medium">En attente (9)</span>
-              <span className="text-sm text-muted-foreground">19%</span>
-            </div>
-            <Progress value={19} className="h-2" />
-          </div>
-          
-          <div>
-            <div className="flex justify-between mb-1">
-              <span className="text-sm font-medium">Gagné (4)</span>
-              <span className="text-sm text-muted-foreground">8%</span>
-            </div>
-            <Progress value={8} className="h-2 bg-green-100" />
-          </div>
-        </div>
+        )}
       </Card>
       
       {/* Recent Activity */}
