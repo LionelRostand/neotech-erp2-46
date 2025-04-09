@@ -10,8 +10,11 @@ const SeedDataButton: React.FC = () => {
   const { seedMockClients } = useClientsData();
 
   const handleSeedData = async () => {
+    if (isSeeding) return; // Prevent multiple clicks
+    
     try {
       setIsSeeding(true);
+      toast.info("Ajout des données de démonstration en cours...");
       await seedMockClients();
       // Toast notification is already handled in seedMockClients
     } catch (error) {

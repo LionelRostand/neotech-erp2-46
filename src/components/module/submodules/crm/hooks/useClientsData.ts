@@ -95,6 +95,11 @@ export const useClientsData = () => {
   // Add a new client
   const addClient = async (clientData: ClientFormData): Promise<Client> => {
     try {
+      // Validate required fields
+      if (!clientData.name?.trim()) {
+        throw new Error("Le nom du client est obligatoire");
+      }
+      
       // Prepare client data with timestamp
       const newClient = {
         ...clientData,
@@ -102,8 +107,12 @@ export const useClientsData = () => {
         status: clientData.status as 'active' | 'inactive' | 'lead',
       };
       
+      console.log("Adding client to Firebase:", newClient);
+      
       // Add to Firestore
       const addedClient = await clientsFirestore.add(newClient);
+      
+      console.log("Client added successfully, response:", addedClient);
       
       // Create properly typed client object
       const typedClient: Client = {
