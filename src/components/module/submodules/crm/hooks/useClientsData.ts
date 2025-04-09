@@ -1,3 +1,4 @@
+
 import { useState, useCallback, useEffect } from 'react';
 import { collection, query, where, getDocs, doc, deleteDoc, addDoc, updateDoc, DocumentReference } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
@@ -32,6 +33,7 @@ export const useClientsData = () => {
     setLoadingTimedOut(false); // Reset the timeout flag
     
     try {
+      // Utilisation explicite de la collection crm_clients
       const clientsCollection = collection(db, COLLECTIONS.CRM.CLIENTS);
       const clientsQuery = query(clientsCollection);
       
@@ -85,17 +87,23 @@ export const useClientsData = () => {
   // Add a client to Firestore
   const addClient = async (clientData: ClientFormData): Promise<Client | void> => {
     try {
+      // S'assurer que le statut est de type correct
+      const statusValue = clientData.status as 'active' | 'inactive' | 'lead';
+      
       const newClient: Client = {
         id: uuidv4(),
         ...clientData,
+        status: statusValue,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       };
       
       // Execute the add operation with network retry
       await executeWithNetworkRetry(async () => {
+        // Utilisation explicite de la collection crm_clients
         const clientsCollection = collection(db, COLLECTIONS.CRM.CLIENTS);
         await addDoc(clientsCollection, newClient);
+        console.log("Client added to collection:", COLLECTIONS.CRM.CLIENTS);
         toast.success("Client ajouté avec succès");
       });
       
@@ -117,16 +125,23 @@ export const useClientsData = () => {
   // Update a client in Firestore
   const updateClient = async (clientId: string, clientData: ClientFormData): Promise<Client | void> => {
     try {
+      // S'assurer que le statut est de type correct
+      const statusValue = clientData.status as 'active' | 'inactive' | 'lead';
+      
       const updatedClient: Client = {
         id: clientId,
         ...clientData,
+        status: statusValue,
         updatedAt: new Date().toISOString(),
-      } as Client;
+      };
       
       // Execute the update operation with network retry
       await executeWithNetworkRetry(async () => {
+        // Utilisation explicite de la collection crm_clients
         const clientDocRef = doc(db, COLLECTIONS.CRM.CLIENTS, clientId);
-        await updateDoc(clientDocRef, clientData);
+        const updateData = { ...clientData, status: statusValue, updatedAt: new Date().toISOString() };
+        await updateDoc(clientDocRef, updateData);
+        console.log("Client updated in collection:", COLLECTIONS.CRM.CLIENTS);
         toast.success("Client mis à jour avec succès");
       });
       
@@ -152,8 +167,10 @@ export const useClientsData = () => {
     try {
       // Execute the delete operation with network retry
       await executeWithNetworkRetry(async () => {
+        // Utilisation explicite de la collection crm_clients
         const clientDocRef = doc(db, COLLECTIONS.CRM.CLIENTS, clientId);
         await deleteDoc(clientDocRef);
+        console.log("Client deleted from collection:", COLLECTIONS.CRM.CLIENTS);
         toast.success("Client supprimé avec succès");
       });
       
@@ -175,10 +192,17 @@ export const useClientsData = () => {
   const seedMockClients = async () => {
     setIsLoading(true);
     try {
+      console.log("Seeding clients to collection:", COLLECTIONS.CRM.CLIENTS);
+      
       for (const client of mockClientsData) {
+        // S'assurer que le statut est de type correct
+        const statusValue = client.status as 'active' | 'inactive' | 'lead';
+        const clientWithCorrectStatus = { ...client, status: statusValue };
+        
+        // Utilisation explicite de la collection crm_clients
         const clientRef = doc(db, COLLECTIONS.CRM.CLIENTS, client.id);
         await executeWithNetworkRetry(async () => {
-          await updateDoc(clientRef, client);
+          await updateDoc(clientRef, clientWithCorrectStatus);
         });
       }
       
