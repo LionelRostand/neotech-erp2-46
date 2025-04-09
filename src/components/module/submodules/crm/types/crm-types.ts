@@ -23,7 +23,8 @@ export interface Client {
   createdAt: string;
   updatedAt?: string;
   customerSince?: string;
-  _offlineUpdated?: boolean; // Add this property for offline updates tracking
+  _offlineUpdated?: boolean; // Propriété pour le suivi des mises à jour hors ligne
+  _offlineDeleted?: boolean; // Propriété pour le suivi des suppressions hors ligne
 }
 
 export interface Prospect {
@@ -71,7 +72,7 @@ export interface Opportunity {
   source?: string;
   notes?: string;
   assignedTo?: string;
-  ownerName?: string; // Allow owner data to be stored
+  ownerName?: string;
   nextContact?: string;
   title?: string;
 }

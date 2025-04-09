@@ -1,145 +1,104 @@
+import { doc, setDoc, deleteDoc } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 
-import { 
-  enableFirestoreNetwork, 
-  disableFirestoreNetwork, 
-  reconnectToFirestore, 
-  isNetworkError 
-} from './network-handler';
-import { toast } from 'sonner';
+// Store operations to be processed when back online
+const offlineOperations: {
+  type: 'create' | 'update' | 'delete';
+  collectionPath: string;
+  id: string;
+  data?: any;
+}[] = [];
 
-/**
- * Attempts to restore Firestore connectivity
- * @returns {Promise<boolean>} True if connectivity was restored
- */
-export const restoreFirestoreConnectivity = async (): Promise<boolean> => {
+// Add an operation to the queue
+export const addOfflineOperation = (type: 'create' | 'update' | 'delete', collectionPath: string, id: string, data?: any) => {
+  console.log(`Adding offline operation: ${type} for ${collectionPath}/${id}`);
+  offlineOperations.push({ type, collectionPath, id, data });
+  
+  // Store in localStorage for persistence
   try {
-    // First try disabling to clear any problematic connections
-    await disableFirestoreNetwork();
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    // Then try simple network enable
-    const simpleReconnect = await enableFirestoreNetwork();
-    if (simpleReconnect) {
-      console.log('Connectivity to Firestore restored');
-      return true;
-    }
-    
-    // If simple reconnect fails, try the exponential backoff strategy
-    return await reconnectToFirestore();
-  } catch (err) {
-    console.error('Failed to restore Firestore connectivity:', err);
-    toast.error("Échec de la connexion à la base de données. L'application fonctionne en mode démo.");
-    return false;
+    localStorage.setItem('offlineOperations', JSON.stringify(offlineOperations));
+  } catch (error) {
+    console.error('Error storing offline operations in localStorage', error);
   }
 };
 
-/**
- * Handles offline operations and data persistence
- * This could be expanded with more functionality as needed
- */
+// Process all offline operations when back online
+export const processOfflineOperations = async () => {
+  if (offlineOperations.length === 0) {
+    console.log('No offline operations to process');
+    return;
+  }
+  
+  console.log(`Processing ${offlineOperations.length} offline operations`);
+  
+  // Process in order
+  for (const operation of [...offlineOperations]) {
+    try {
+      const { type, collectionPath, id, data } = operation;
+      const docRef = doc(db, collectionPath, id);
+      
+      if (type === 'create' || type === 'update') {
+        await setDoc(docRef, data, { merge: true });
+        console.log(`Successfully processed offline ${type} for ${collectionPath}/${id}`);
+      } else if (type === 'delete') {
+        await deleteDoc(docRef);
+        console.log(`Successfully processed offline delete for ${collectionPath}/${id}`);
+      }
+      
+      // Remove from queue after successful processing
+      const index = offlineOperations.indexOf(operation);
+      if (index > -1) {
+        offlineOperations.splice(index, 1);
+      }
+    } catch (error) {
+      console.error('Error processing offline operation', operation, error);
+      // Keep the operation in the queue to retry later
+    }
+  }
+  
+  // Update localStorage
+  try {
+    localStorage.setItem('offlineOperations', JSON.stringify(offlineOperations));
+  } catch (error) {
+    console.error('Error updating offline operations in localStorage', error);
+  }
+};
+
+// Load offline operations from localStorage on startup
+export const loadOfflineOperations = () => {
+  try {
+    const stored = localStorage.getItem('offlineOperations');
+    if (stored) {
+      const loaded = JSON.parse(stored);
+      if (Array.isArray(loaded)) {
+        // Replace the array contents
+        offlineOperations.length = 0;
+        loaded.forEach(op => offlineOperations.push(op));
+        console.log(`Loaded ${offlineOperations.length} offline operations from localStorage`);
+      }
+    }
+  } catch (error) {
+    console.error('Error loading offline operations from localStorage', error);
+  }
+};
+
+// Setup online event listeners to process operations
 export const handleOfflineOperations = () => {
-  // Subscribe to online/offline status changes
-  window.addEventListener('online', async () => {
-    console.log('Browser is online, attempting to reconnect to Firestore...');
-    const success = await restoreFirestoreConnectivity();
-    if (success) {
-      toast.success('Connexion internet rétablie, synchronisation des données en cours...');
-    }
+  // Load saved operations
+  loadOfflineOperations();
+  
+  // Process operations when back online
+  window.addEventListener('online', () => {
+    console.log('Back online, processing offline operations...');
+    processOfflineOperations().catch(error => {
+      console.error('Error processing offline operations', error);
+    });
   });
   
-  window.addEventListener('offline', () => {
-    console.log('Browser is offline, Firestore will use cached data if available');
-    toast.warning('Connexion internet perdue, passage en mode hors-ligne');
-  });
-  
-  // Special handler for 400 errors which commonly occur in development environments
-  window.addEventListener('unhandledrejection', async (event) => {
-    const error = event.reason;
-    
-    // Look for specific 400 errors with Firestore
-    if (error && error.message && 
-        (error.message.includes('400') || error.code === 400) && 
-        (error.message.includes('firestore') || error.message.includes('googleapis'))) {
-      
-      console.log('Caught Firestore 400 error:', error);
-      event.preventDefault();
-      
-      toast.error('Erreur 400 détectée lors d\'une opération Firestore. Tentative de reconnexion...');
-      
-      // Try to restore connectivity
-      const reconnected = await restoreFirestoreConnectivity();
-      if (reconnected) {
-        toast.success('Connexion à Firestore rétablie');
-      } else {
-        toast.error('Impossible de se connecter à Firestore. L\'application fonctionne en mode démo.');
-      }
-    }
-  });
-  
-  // Add network error event listener to Firebase global error events
-  const originalAddEventListener = window.addEventListener;
-  window.addEventListener = function(type, listener, options) {
-    if (type === 'error') {
-      const wrappedListener = function(event: any) {
-        // Check if it's a Firestore error
-        if ((event.filename?.includes('firestore') || 
-             event.message?.includes('firestore') ||
-             event.message?.includes('googleapis')) && 
-            event.error && 
-            isNetworkError(event.error)) {
-          console.log('Caught Firestore error event:', event);
-          // Suppress default error and trigger reconnect
-          event.preventDefault();
-          restoreFirestoreConnectivity();
-          return false;
-        }
-        return listener.call(this, event);
-      };
-      return originalAddEventListener.call(this, type, wrappedListener, options);
-    }
-    return originalAddEventListener.call(this, type, listener, options);
-  };
-  
-  // Return cleanup function
-  return () => {
-    window.removeEventListener('online', async () => {});
-    window.removeEventListener('offline', () => {});
-    window.removeEventListener('error', () => {});
-    window.removeEventListener('unhandledrejection', async () => {});
-    // Reset the addEventListener (though this won't remove already attached listeners)
-    window.addEventListener = originalAddEventListener;
-  };
+  // Check if we're online and process immediately
+  if (navigator.onLine) {
+    processOfflineOperations().catch(error => {
+      console.error('Error processing offline operations', error);
+    });
+  }
 };
-
-/**
- * Register unhandled Firebase error listener
- * This provides a global safety net for Firebase errors
- */
-export const registerFirebaseErrorHandler = () => {
-  // Listen for unhandled promise rejections that might be Firebase related
-  window.addEventListener('unhandledrejection', (event) => {
-    const error = event.reason;
-    
-    // Check if it's a Firestore network error
-    if (error && (error.name?.includes('FirebaseError') || 
-         error.message?.includes('firestore') ||
-         error.message?.includes('googleapis'))) {
-      
-      console.log('Caught unhandled Firestore rejection:', error);
-      
-      if (isNetworkError(error) || (error.code && error.code === 400)) {
-        // Prevent default error handling
-        event.preventDefault();
-        
-        // Show toast notification
-        toast.error("Problème de connexion avec la base de données. L'application fonctionne en mode démo.");
-        
-        // Attempt reconnection
-        restoreFirestoreConnectivity();
-      }
-    }
-  });
-};
-
-// Initialize global error handler when this module is imported
-registerFirebaseErrorHandler();
