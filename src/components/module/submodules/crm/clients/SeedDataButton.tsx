@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Database } from "lucide-react";
 import { useClientsData } from '../hooks/useClientsData';
+import { toast } from 'sonner';
 
 const SeedDataButton: React.FC = () => {
   const [isSeeding, setIsSeeding] = useState(false);
@@ -12,8 +13,11 @@ const SeedDataButton: React.FC = () => {
     try {
       setIsSeeding(true);
       await seedMockClients();
+      toast.success("Données de démonstration ajoutées avec succès");
     } catch (error) {
       console.error("Error seeding demo data:", error);
+      const errorMessage = error instanceof Error ? error.message : "Erreur inconnue";
+      toast.error(`Erreur lors de l'ajout des données de démonstration: ${errorMessage}`);
     } finally {
       setIsSeeding(false);
     }
