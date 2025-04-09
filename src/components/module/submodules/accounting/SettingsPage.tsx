@@ -1,7 +1,7 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-// Remove the duplicate import of useState
 
 // Import the PermissionsTab component correctly
 import PermissionsTab from './components/PermissionsTab';
@@ -44,6 +44,7 @@ const SettingsPage: React.FC = () => {
   
   // State for accounting settings with default values
   const [settings, setSettings] = useState<AccountingSettings>({
+    // General settings
     companyName: "Ma Société",
     address: "123 Rue Principale, 75000 Paris",
     phone: "+33 1 23 45 67 89",
@@ -240,18 +241,32 @@ const SettingsPage: React.FC = () => {
                 userName: "Admin User",
                 userEmail: "admin@masociete.fr",
                 userRole: "Admin",
-                permissions: [
-                  { moduleId: "invoices", name: "Factures", canView: true, canCreate: true, canEdit: true, canDelete: true }
-                ]
+                moduleId: "invoices",
+                permissions: { canView: true, canCreate: true, canEdit: true, canDelete: true }
+              },
+              {
+                userId: "1",
+                userName: "Admin User",
+                userEmail: "admin@masociete.fr",
+                userRole: "Admin",
+                moduleId: "payments",
+                permissions: { canView: true, canCreate: true, canEdit: true, canDelete: true }
               },
               {
                 userId: "2",
                 userName: "Finance Manager",
                 userEmail: "finance@masociete.fr",
                 userRole: "Manager",
-                permissions: [
-                  { moduleId: "invoices", name: "Factures", canView: true, canCreate: true, canEdit: true, canDelete: false }
-                ]
+                moduleId: "invoices",
+                permissions: { canView: true, canCreate: true, canEdit: true, canDelete: false }
+              },
+              {
+                userId: "2",
+                userName: "Finance Manager",
+                userEmail: "finance@masociete.fr",
+                userRole: "Manager",
+                moduleId: "payments",
+                permissions: { canView: true, canCreate: true, canEdit: false, canDelete: false }
               }
             ]}
             accountingSubmodules={[
