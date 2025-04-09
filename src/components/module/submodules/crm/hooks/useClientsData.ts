@@ -1,35 +1,23 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Client, ClientFormData } from '../types/crm-types';
-import { COLLECTIONS } from '@/lib/firebase-collections';
 import { useFirestore } from '@/hooks/useFirestore';
+import { COLLECTIONS } from '@/lib/firebase-collections';
 import { toast } from 'sonner';
-import { v4 as uuidv4 } from 'uuid';
-import { onSnapshot, collection, getDocs, query, QueryConstraint, orderBy, limit } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import mockClientsData from '../data/mockClients';
 
 export const useClientsData = () => {
   const [clients, setClients] = useState<Client[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
-  const [isOfflineMode, setIsOfflineMode] = useState<boolean>(false);
+  const [isOfflineMode, setIsOfflineMode] = useState(false);
+  const [isCancelled, setIsCancelled] = useState(false);
   
-  const { add, update, remove, get } = useFirestore(COLLECTIONS.CRM.CLIENTS);
+  // Get the Firestore hook for clients collection
+  const firestore = useFirestore(COLLECTIONS.CRM.CLIENTS);
   
-  const abortControllerRef = useRef<AbortController | null>(null);
-
-  const cancelLoading = useCallback(() => {
-    if (abortControllerRef.current) {
-      console.log("Aborting client data fetch operation");
-      abortControllerRef.current.abort();
-      abortControllerRef.current = null;
-    }
-  }, []);
-
+  // Function to fetch clients from Firestore
   const fetchClients = useCallback(async () => {
-    cancelLoading();
-    
-    const abortController = new AbortController();
-    abortControllerRef.current = abortController;
+    if (isCancelled) return;
     
     setIsLoading(true);
     setError(null);
@@ -37,270 +25,236 @@ export const useClientsData = () => {
     try {
       console.log("Fetching clients data...");
       
-      try {
-        const collectionPath = COLLECTIONS.CRM.CLIENTS;
-        console.log("Getting collection reference for", collectionPath);
-        
-        const collectionRef = collection(db, collectionPath);
-        
-        const q = query(
-          collectionRef,
-          orderBy('createdAt', 'desc'),
-          limit(100)
-        );
-        
-        const unsubscribe = onSnapshot(
-          q,
-          (snapshot) => {
-            if (abortController.signal.aborted) {
-              console.log("Fetch was aborted, not updating state");
-              return;
-            }
-            
-            const clientsData = snapshot.docs.map((doc) => ({
-              id: doc.id,
-              ...doc.data()
-            })) as Client[];
-            
-            console.log("Fetched clients data:", clientsData);
-            setClients(clientsData);
-            setIsLoading(false);
-            setIsOfflineMode(false);
-            
-            if (clientsData.length === 0) {
-              console.log("No clients found, but connection is working");
-            }
-          },
-          (err) => {
-            console.error("Error fetching clients:", err);
-            
-            if (abortController.signal.aborted) {
-              console.log("Fetch was aborted, not updating error state");
-              return;
-            }
-            
-            if (err.code === 'failed-precondition' || err.code === 'unavailable' || err.code === 'resource-exhausted') {
-              console.log("Network error, switching to offline mode");
-              setIsOfflineMode(true);
-              
-              setClients([]);
-            } else {
-              setError(err);
-            }
-            
-            setIsLoading(false);
-          }
-        );
-        
-        abortController.signal.addEventListener('abort', () => {
-          console.log("Aborting client data fetch, unsubscribing");
-          unsubscribe();
-          setIsLoading(false);
+      // Use the getAll method from the firestore hook
+      const clientsData = await firestore.getAll();
+      
+      console.log("Fetched clients data:", clientsData);
+      
+      if (clientsData.length === 0) {
+        console.log("No clients found, but connection is working");
+      }
+      
+      // Cast the data to Client type to ensure type safety
+      const typedClients = clientsData.map(client => ({
+        ...client,
+        status: client.status as "active" | "inactive" | "lead"
+      })) as Client[];
+      
+      setClients(typedClients);
+      setIsOfflineMode(false);
+    } catch (err) {
+      console.error("Error fetching clients:", err);
+      setError(err instanceof Error ? err : new Error(String(err)));
+      
+      // If we can't connect to Firestore, fall back to mock data
+      if (!isOfflineMode) {
+        setIsOfflineMode(true);
+        toast.error("Impossible de se connecter à la base de données. Mode démo activé.", {
+          duration: 5000
         });
         
-        return () => {
-          unsubscribe();
-        };
-      } catch (err) {
-        console.error("Error setting up clients listener:", err);
-        
-        if (abortController.signal.aborted) {
-          console.log("Setup was aborted, not updating error state");
-          return;
-        }
-        
-        throw err;
+        // Initialize with mock data in offline mode
+        setClients(mockClientsData as Client[]);
       }
-    } catch (err) {
-      console.error("Error in fetchClients:", err);
-      
-      if (abortController.signal.aborted) {
-        console.log("Operation was aborted, not updating error state");
-        return;
+    } finally {
+      if (!isCancelled) {
+        setIsLoading(false);
       }
-      
-      const error = err instanceof Error ? err : new Error('Unknown error occurred');
-      setError(error);
-      setIsLoading(false);
-      
-      setIsOfflineMode(true);
-      setClients([]);
     }
-  }, [cancelLoading]);
-
+  }, [firestore, isOfflineMode, isCancelled]);
+  
+  // Cancel loading operation
+  const cancelLoading = useCallback(() => {
+    setIsCancelled(true);
+    setIsLoading(false);
+    
+    // Reset after a delay to allow for new operations
+    setTimeout(() => {
+      setIsCancelled(false);
+    }, 500);
+  }, []);
+  
+  // Fetch clients on component mount
   useEffect(() => {
     fetchClients();
     
+    // Cleanup function
     return () => {
-      cancelLoading();
+      setIsCancelled(true);
     };
-  }, [fetchClients, cancelLoading]);
-
+  }, [fetchClients]);
+  
+  // Add client
   const addClient = async (clientData: ClientFormData) => {
     try {
-      const status = clientData.status as 'active' | 'inactive' | 'lead';
-      
-      const newClient: Omit<Client, 'id'> = {
+      // Prepare the client data
+      const newClient = {
         ...clientData,
-        status,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
-        _offlineCreated: isOfflineMode
+        // Ensure status is a valid enum value
+        status: clientData.status as "active" | "inactive" | "lead"
       };
       
+      // If offline, add to local state only
       if (isOfflineMode) {
-        const offlineClient: Client = {
+        const mockClient = {
           ...newClient,
-          id: `temp-${uuidv4()}`,
-        };
+          id: `mock-${Date.now()}`,
+          _offlineCreated: true
+        } as Client;
         
-        setClients(prev => [offlineClient, ...prev]);
-        toast.success("Client ajouté en mode hors ligne");
-        return offlineClient;
-      } else {
-        const docRef = await add(newClient);
-        
-        if (docRef && docRef.id) {
-          const addedClient: Client = {
-            ...newClient,
-            id: docRef.id,
-          };
-          
-          setClients(prev => [addedClient, ...prev]);
-          toast.success("Client ajouté avec succès");
-          return addedClient;
-        } else {
-          throw new Error("Échec de l'ajout du client");
-        }
+        setClients(prev => [...prev, mockClient]);
+        toast.success("Client ajouté en mode démo");
+        return mockClient;
       }
-    } catch (error) {
-      console.error("Error adding client:", error);
-      const message = error instanceof Error ? error.message : 'Erreur inconnue';
-      toast.error(`Erreur lors de l'ajout: ${message}`);
-      throw error;
+      
+      // Otherwise, add to Firestore
+      const result = await firestore.add(newClient);
+      
+      // Add the new client to the state
+      const clientWithId = {
+        ...newClient,
+        id: result.id
+      } as Client;
+      
+      setClients(prev => [...prev, clientWithId]);
+      toast.success("Client ajouté avec succès");
+      return clientWithId;
+    } catch (err) {
+      console.error("Error adding client:", err);
+      const message = err instanceof Error ? err.message : String(err);
+      toast.error(`Erreur lors de l'ajout du client: ${message}`);
+      throw err;
     }
   };
-
-  const updateClient = async (clientId: string, clientData: ClientFormData) => {
+  
+  // Update client
+  const updateClient = async (id: string, clientData: ClientFormData) => {
     try {
-      const status = clientData.status as 'active' | 'inactive' | 'lead';
-      
-      const updatedFields = {
+      // Create updated client data
+      const updatedClient = {
         ...clientData,
-        status,
-        updatedAt: new Date().toISOString()
+        updatedAt: new Date().toISOString(),
+        // Ensure status is a valid enum value
+        status: clientData.status as "active" | "inactive" | "lead"
       };
       
+      // If offline, update in local state only
       if (isOfflineMode) {
-        const updatedClient = {
-          ...updatedFields,
-          id: clientId,
-          _offlineUpdated: true as const
+        const offlineUpdatedClient = {
+          ...updatedClient,
+          id,
+          _offlineUpdated: true
         };
         
         setClients(prev => prev.map(client => 
-          client.id === clientId ? { ...client, ...updatedClient } as Client : client
+          client.id === id 
+            ? { ...client, ...offlineUpdatedClient } as Client
+            : client
         ));
         
-        toast.success("Client mis à jour en mode hors ligne");
-        return updatedClient;
-      } else {
-        await update(clientId, updatedFields);
-        
-        setClients(prev => prev.map(client => 
-          client.id === clientId ? { ...client, ...updatedFields, id: clientId } as Client : client
-        ));
-        
-        toast.success("Client mis à jour avec succès");
-        return { ...updatedFields, id: clientId };
+        toast.success("Client mis à jour en mode démo");
+        return offlineUpdatedClient;
       }
-    } catch (error) {
-      console.error("Error updating client:", error);
-      const message = error instanceof Error ? error.message : 'Erreur inconnue';
-      toast.error(`Erreur lors de la mise à jour: ${message}`);
-      throw error;
+      
+      // Otherwise, update in Firestore
+      await firestore.update(id, updatedClient);
+      
+      // Update the client in the state
+      const clientWithId = {
+        ...updatedClient,
+        id
+      } as Client;
+      
+      setClients(prev => prev.map(client => 
+        client.id === id ? clientWithId : client
+      ));
+      
+      toast.success("Client mis à jour avec succès");
+      return clientWithId;
+    } catch (err) {
+      console.error("Error updating client:", err);
+      const message = err instanceof Error ? err.message : String(err);
+      toast.error(`Erreur lors de la mise à jour du client: ${message}`);
+      throw err;
     }
   };
-
-  const deleteClient = async (clientId: string) => {
+  
+  // Delete client
+  const deleteClient = async (id: string) => {
     try {
+      // If offline, mark as deleted in local state
       if (isOfflineMode) {
-        const deletedClient = {
-          updatedAt: new Date().toISOString(),
-          _offlineUpdated: true as const,
-          _offlineDeleted: true as const
-        };
-        
         setClients(prev => prev.map(client => 
-          client.id === clientId ? { ...client, ...deletedClient } as Client : client
+          client.id === id 
+            ? { ...client, _offlineDeleted: true, updatedAt: new Date().toISOString(), _offlineUpdated: true } as Client
+            : client
         ).filter(client => !client._offlineDeleted));
         
-        toast.success("Client supprimé en mode hors ligne");
-        return true;
-      } else {
-        await remove(clientId);
-        
-        setClients(prev => prev.filter(client => client.id !== clientId));
-        
-        toast.success("Client supprimé avec succès");
+        toast.success("Client supprimé en mode démo");
         return true;
       }
-    } catch (error) {
-      console.error("Error deleting client:", error);
-      const message = error instanceof Error ? error.message : 'Erreur inconnue';
-      toast.error(`Erreur lors de la suppression: ${message}`);
-      throw error;
+      
+      // Otherwise, delete from Firestore
+      await firestore.remove(id);
+      
+      // Remove the client from the state
+      setClients(prev => prev.filter(client => client.id !== id));
+      
+      toast.success("Client supprimé avec succès");
+      return true;
+    } catch (err) {
+      console.error("Error deleting client:", err);
+      const message = err instanceof Error ? err.message : String(err);
+      toast.error(`Erreur lors de la suppression du client: ${message}`);
+      throw err;
     }
   };
-
-  const seedMockClients = useCallback(async () => {
+  
+  // Seed mock clients
+  const seedMockClients = async () => {
     try {
-      setIsLoading(true);
+      if (isOfflineMode) {
+        // In offline mode, just use mock data directly
+        setClients(mockClientsData as Client[]);
+        toast.success("Clients démo ajoutés en mode hors ligne");
+        return;
+      }
       
-      const mockData = [
-        {
-          name: "Tech Solutions",
-          contactName: "Jean Martin",
-          contactEmail: "jean@techsolutions.com",
-          contactPhone: "01 23 45 67 89",
-          sector: "technology",
-          status: "active" as const,
-          revenue: "1-10M",
-        },
-        {
-          name: "Finance Express",
-          contactName: "Marie Dubois",
-          contactEmail: "marie@financeexpress.fr",
-          contactPhone: "01 98 76 54 32",
-          sector: "finance",
-          status: "active" as const,
-          revenue: "10-50M",
-        },
-        {
-          name: "Education Plus",
-          contactName: "Pierre Lambert",
-          contactEmail: "pierre@educationplus.org",
-          contactPhone: "01 45 67 89 12",
-          sector: "education",
-          status: "inactive" as const,
-          revenue: "<1M",
+      // Otherwise, add them to Firestore
+      const promises = mockClientsData.map(async client => {
+        const { id, _offlineCreated, ...clientData } = client;
+        try {
+          return await firestore.add({
+            ...clientData,
+            status: clientData.status as "active" | "inactive" | "lead"
+          });
+        } catch (error) {
+          console.error(`Error adding demo client ${client.name}:`, error);
+          return null;
         }
-      ];
+      });
       
-      const addPromises = mockData.map(client => addClient(client));
-      await Promise.all(addPromises);
+      const results = await Promise.all(promises);
+      const successCount = results.filter(Boolean).length;
       
-      setIsLoading(false);
-      return true;
-    } catch (error) {
-      console.error("Error seeding mock clients:", error);
-      setIsLoading(false);
-      return false;
+      await fetchClients(); // Refresh the client list
+      
+      if (successCount > 0) {
+        toast.success(`${successCount} clients de démo ajoutés avec succès.`);
+      } else {
+        toast.error("Impossible d'ajouter les clients de démo. Vérifiez votre connexion.");
+      }
+    } catch (err) {
+      console.error("Error seeding clients:", err);
+      const message = err instanceof Error ? err.message : String(err);
+      toast.error(`Erreur lors de l'ajout des clients démo: ${message}`);
     }
-  }, [addClient]);
-
+  };
+  
   return {
-    clients,
+    clients: clients.filter(client => !client._offlineDeleted),
     isLoading,
     error,
     isOfflineMode,
