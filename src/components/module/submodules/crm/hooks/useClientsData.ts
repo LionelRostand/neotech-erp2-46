@@ -1,3 +1,4 @@
+
 import { useState, useCallback, useEffect } from 'react';
 import { collection, query, where, getDocs, doc, deleteDoc, addDoc, updateDoc, DocumentReference } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
@@ -79,26 +80,40 @@ export const useClientsData = () => {
 
   const addClient = async (clientData: ClientFormData): Promise<Client | void> => {
     try {
+      setIsLoading(true);
       const statusValue = clientData.status as 'active' | 'inactive' | 'lead';
       
+      // Créer l'objet client, mais sans l'ajouter à l'état tout de suite
       const newClient: Client = {
-        id: uuidv4(),
+        id: '', // L'id sera défini après l'ajout à Firebase
         ...clientData,
         status: statusValue,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       };
       
+      // Exécuter l'ajout à Firebase
+      let addedClient: Client | null = null;
+      
       await executeWithNetworkRetry(async () => {
         const clientsCollection = collection(db, COLLECTIONS.CRM.CLIENTS);
         const docRef = await addDoc(clientsCollection, newClient);
-        newClient.id = docRef.id;
+        
+        // Mettre à jour l'ID avec celui généré par Firebase
+        addedClient = {
+          ...newClient,
+          id: docRef.id
+        };
+        
         console.log(`Client added to collection ${COLLECTIONS.CRM.CLIENTS} with ID: ${docRef.id}`);
         toast.success("Client ajouté avec succès");
       });
       
-      setClients(prevClients => [...prevClients, newClient]);
-      return newClient;
+      // Uniquement si l'ajout à Firebase a réussi, mettre à jour l'état local
+      if (addedClient) {
+        setClients(prevClients => [...prevClients, addedClient!]);
+        return addedClient;
+      }
     } catch (error: any) {
       console.error("Error adding client:", error);
       
@@ -108,11 +123,14 @@ export const useClientsData = () => {
       } else {
         toast.error(`Erreur lors de l'ajout du client: ${error.message}`);
       }
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const updateClient = async (clientId: string, clientData: ClientFormData): Promise<Client | void> => {
     try {
+      setIsLoading(true);
       const statusValue = clientData.status as 'active' | 'inactive' | 'lead';
       
       const existingClientIndex = clients.findIndex(client => client.id === clientId);
@@ -157,11 +175,14 @@ export const useClientsData = () => {
       } else {
         toast.error(`Erreur lors de la mise à jour du client: ${error.message}`);
       }
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const deleteClient = async (clientId: string): Promise<void> => {
     try {
+      setIsLoading(true);
       await executeWithNetworkRetry(async () => {
         const clientDocRef = doc(db, COLLECTIONS.CRM.CLIENTS, clientId);
         await deleteDoc(clientDocRef);
@@ -179,6 +200,8 @@ export const useClientsData = () => {
       } else {
         toast.error(`Erreur lors de la suppression du client: ${error.message}`);
       }
+    } finally {
+      setIsLoading(false);
     }
   };
 
