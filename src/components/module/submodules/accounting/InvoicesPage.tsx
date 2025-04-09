@@ -110,9 +110,9 @@ const InvoicesPage: React.FC = () => {
                       <TableCell>{invoice.dueDate || 'N/A'}</TableCell>
                       <TableCell>{formatCurrency(invoice.total || 0, invoice.currency || 'EUR')}</TableCell>
                       <TableCell>
-                        <Badge className={getStatusBadgeColor(invoice.status || 'pending')}>
+                        <Badge className={getStatusBadgeColor(invoice.status || '')}>
                           {invoice.status === 'paid' && 'Payée'}
-                          {invoice.status === 'pending' && 'En attente'}
+                          {invoice.status === 'sent' && 'En attente'}
                           {invoice.status === 'overdue' && 'En retard'}
                           {invoice.status === 'draft' && 'Brouillon'}
                           {!invoice.status && 'En attente'}

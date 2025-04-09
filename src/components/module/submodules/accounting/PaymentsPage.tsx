@@ -31,10 +31,10 @@ const PaymentsPage: React.FC = () => {
 
   const getMethodIcon = (method: string) => {
     switch (method) {
-      case 'credit_card': return '💳';
+      case 'stripe': return '💳';
       case 'bank_transfer': return '🏦';
       case 'cash': return '💵';
-      case 'cheque': return '📝';
+      case 'check': return '📝';
       case 'paypal': return 'PayPal';
       default: return '💰';
     }
@@ -111,10 +111,10 @@ const PaymentsPage: React.FC = () => {
                       <TableCell>
                         <span className="flex items-center">
                           <span className="mr-2">{getMethodIcon(payment.method || '')}</span>
-                          {payment.method === 'credit_card' && 'Carte de crédit'}
+                          {payment.method === 'stripe' && 'Carte de crédit'}
                           {payment.method === 'bank_transfer' && 'Virement bancaire'}
                           {payment.method === 'cash' && 'Espèces'}
-                          {payment.method === 'cheque' && 'Chèque'}
+                          {payment.method === 'check' && 'Chèque'}
                           {payment.method === 'paypal' && 'PayPal'}
                           {!payment.method && 'Virement bancaire'}
                         </span>
