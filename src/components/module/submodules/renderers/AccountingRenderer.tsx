@@ -5,7 +5,7 @@ import AccountingDashboard from '../accounting/AccountingDashboard';
 import InvoicesPage from '../accounting/InvoicesPage';
 import PaymentsPage from '../accounting/PaymentsPage';
 import TaxesPage from '../accounting/TaxesPage';
-import AccountingReportsPage from '../accounting/ReportsPage';
+import ReportsPage from '../accounting/ReportsPage';
 import AccountingSettingsPage from '../accounting/SettingsPage';
 import { SubModule } from '@/data/types/modules';
 
@@ -20,7 +20,7 @@ export const renderAccountingSubmodule = (submoduleId: string, submodule: SubMod
     case 'accounting-taxes':
       return <TaxesPage />;
     case 'accounting-reports':
-      return <AccountingReportsPage />;
+      return <ReportsPage />;
     case 'accounting-settings':
       return <AccountingSettingsPage />;
     default:
