@@ -14,7 +14,7 @@ export interface Invoice {
   total: number;
   status: 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled' | 'pending';
   notes: string;
-  currency: string;
+  currency: 'EUR' | 'USD' | 'GBP' | 'CAD' | 'CHF' | 'JPY';
   termsAndConditions?: string;
   createdAt: string;
   updatedAt: string;
