@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import ClientForm from './ClientForm';
 import { ClientFormData } from '../types/crm-types';
 import { Loader2 } from "lucide-react";
+import { toast } from 'sonner';
 
 interface AddClientDialogProps {
   isOpen: boolean;
@@ -35,23 +36,35 @@ const AddClientDialog: React.FC<AddClientDialogProps> = ({
 }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
     
+    // Validation basique
+    if (!formData.name.trim()) {
+      toast.error("Le nom du client est requis");
+      setIsSubmitting(false);
+      return;
+    }
+    
     // Call the onAdd function with the current formData
     try {
-      onAdd(formData);
+      await onAdd(formData);
+      toast.success(`Client "${formData.name}" ajouté avec succès`);
+      onClose(); // Ferme le dialog après succès
     } catch (error) {
       console.error("Error submitting form:", error);
+      toast.error("Erreur lors de l'ajout du client: " + (error instanceof Error ? error.message : "Erreur inconnue"));
     } finally {
-      // Reset submitting state after a short delay to show feedback
-      setTimeout(() => setIsSubmitting(false), 500);
+      // Reset submitting state
+      setIsSubmitting(false);
     }
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={(open) => {
+      if (!open && !isSubmitting) onClose();
+    }}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>Ajouter un nouveau client</DialogTitle>
