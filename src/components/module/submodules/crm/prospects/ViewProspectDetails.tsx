@@ -31,7 +31,7 @@ const ViewProspectDetails: React.FC<ViewProspectDetailsProps> = ({
           <DialogTitle>Détails du prospect</DialogTitle>
         </DialogHeader>
         
-        <ProspectDetails prospect={prospect} />
+        <ProspectDetails prospect={prospect} onClose={onClose} />
         
         <DialogFooter className="space-x-2">
           {onEdit && (

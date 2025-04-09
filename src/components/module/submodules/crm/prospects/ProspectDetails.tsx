@@ -1,7 +1,9 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Prospect } from '../types/crm-types';
 import { formatDate } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 interface ProspectDetailsProps {
   prospect: Prospect | null;
@@ -17,7 +19,7 @@ const ProspectDetails: React.FC<ProspectDetailsProps> = ({ prospect, onClose }) 
         </CardHeader>
         <CardContent>
           <p>Aucun prospect sélectionné.</p>
-          <button onClick={onClose}>Fermer</button>
+          <Button onClick={onClose} className="mt-4">Fermer</Button>
         </CardContent>
       </Card>
     );
@@ -67,7 +69,6 @@ const ProspectDetails: React.FC<ProspectDetailsProps> = ({ prospect, onClose }) 
           <p className="text-sm font-medium">Date de création:</p>
           <p>{formatDate(prospect.createdAt)}</p>
         </div>
-        <button onClick={onClose}>Fermer</button>
       </CardContent>
     </Card>
   );

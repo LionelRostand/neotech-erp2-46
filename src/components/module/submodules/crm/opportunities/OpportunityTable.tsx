@@ -1,9 +1,10 @@
+
 import React from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Eye, FileEdit, Trash2 } from "lucide-react";
-import { Opportunity } from '../types/crm-types';
+import { Opportunity, OpportunityStage } from '../types/crm-types';
 import { formatCurrency } from "@/lib/utils";
 
 interface OpportunityTableProps {
@@ -57,22 +58,22 @@ const OpportunityTable: React.FC<OpportunityTableProps> = ({
               <TableCell className="font-medium">{opportunity.name}</TableCell>
               <TableCell>{formatCurrency(opportunity.value)}</TableCell>
               <TableCell>
-                {opportunity.stage === 'new' && (
+                {opportunity.stage === OpportunityStage.LEAD && (
                   <Badge className="bg-gray-500">Nouveau</Badge>
                 )}
-                {opportunity.stage === 'negotiation' && (
+                {opportunity.stage === OpportunityStage.NEGOTIATION && (
                   <Badge className="bg-blue-500">Négociation</Badge>
                 )}
-                {opportunity.stage === 'quote' && (
+                {opportunity.stage === OpportunityStage.PROPOSAL && (
                   <Badge className="bg-amber-500">Devis envoyé</Badge>
                 )}
-                {opportunity.stage === 'pending' && (
+                {opportunity.stage === OpportunityStage.DISCOVERY && (
                   <Badge className="bg-purple-500">En attente</Badge>
                 )}
-                {opportunity.stage === 'won' && (
+                {opportunity.stage === OpportunityStage.CLOSED_WON && (
                   <Badge className="bg-green-500">Gagné</Badge>
                 )}
-                {opportunity.stage === 'closed_lost' && (
+                {opportunity.stage === OpportunityStage.CLOSED_LOST && (
                   <Badge className="bg-red-500">Perdu</Badge>
                 )}
               </TableCell>
