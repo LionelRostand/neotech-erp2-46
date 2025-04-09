@@ -7,16 +7,56 @@ import { Client, ClientFormData } from '../types/crm-types';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import { v4 as uuidv4 } from 'uuid';
 
+// Type definition for Firestore timestamp
 interface FirestoreTimestamp {
   seconds: number;
   nanoseconds: number;
 }
 
+// Mock client data for seeding
+const mockClients = [
+  {
+    name: 'Tech Innovations',
+    contactName: 'Pierre Dupont',
+    contactEmail: 'pierre@techinnovations.fr',
+    contactPhone: '01 23 45 67 89',
+    sector: 'technology',
+    status: 'active' as const,
+    revenue: '250000',
+    address: '123 Boulevard de l\'Innovation, Paris',
+    website: 'www.techinnovations.fr',
+    notes: 'Client principal depuis 2020'
+  },
+  {
+    name: 'Green Solutions',
+    contactName: 'Marie Lambert',
+    contactEmail: 'marie@greensolutions.fr',
+    contactPhone: '01 98 76 54 32',
+    sector: 'services',
+    status: 'active' as const,
+    revenue: '150000',
+    address: '456 Rue de l\'Écologie, Lyon',
+    website: 'www.greensolutions.fr',
+    notes: 'Intéressé par nos solutions écologiques'
+  },
+  {
+    name: 'Global Finance',
+    contactName: 'Julien Martin',
+    contactEmail: 'julien@globalfinance.fr',
+    contactPhone: '01 45 67 89 01',
+    sector: 'finance',
+    status: 'inactive' as const,
+    revenue: '500000',
+    address: '789 Avenue des Finances, Bordeaux',
+    website: 'www.globalfinance.fr',
+    notes: 'Grand compte, contrat à renouveler'
+  }
+];
+
 // Function to create a mock timestamp (for offline/fallback mode)
-const createMockTimestamp = (): FirestoreTimestamp => ({
-  seconds: Math.floor(Date.now() / 1000),
-  nanoseconds: 0
-});
+const createMockTimestamp = (): Timestamp => {
+  return Timestamp.fromDate(new Date());
+};
 
 export const useClientsData = () => {
   const [clients, setClients] = useState<Client[]>([]);
@@ -62,8 +102,8 @@ export const useClientsData = () => {
           setError(err as Error);
           setIsLoading(false);
           
-          // If error is a 400 or network error, switch to offline mode
-          if (err.code === 400 || err.code === "unavailable" || err.message?.includes('400')) {
+          // If error is a network error, switch to offline mode
+          if (err.code === "unavailable" || err.message?.includes('network') || err.message?.includes('400')) {
             setIsOfflineMode(true);
             toast.error("Problème de connexion à la base de données. Mode démo activé.", {
               duration: 4000,
@@ -79,8 +119,8 @@ export const useClientsData = () => {
       setError(err);
       setIsLoading(false);
       
-      // If error is a 400, switch to offline mode
-      if (err.code === 400 || err.message?.includes('400')) {
+      // If error is a network error, switch to offline mode
+      if (err.message?.includes('network') || err.message?.includes('400')) {
         setIsOfflineMode(true);
         toast.error("Problème de connexion à la base de données. Mode démo activé.");
       }
@@ -104,6 +144,8 @@ export const useClientsData = () => {
     try {
       const clientData = {
         ...formData,
+        // Ensure status is a valid enum value
+        status: formData.status as 'active' | 'inactive' | 'lead',
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp()
       };
@@ -114,13 +156,15 @@ export const useClientsData = () => {
       
       return { 
         id: docRef.id, 
-        ...formData
+        ...formData,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
       } as Client;
     } catch (err: any) {
       console.error("Error adding client:", err);
       
-      // Check if it's a 400 error or Firebase is unavailable
-      if (err.code === 400 || err.code === "unavailable" || err.message?.includes('400')) {
+      // Check if it's a network error or Firebase is unavailable
+      if (err.code === "unavailable" || err.message?.includes('network') || err.message?.includes('400')) {
         setIsOfflineMode(true);
         toast.warning("Mode démo: Client ajouté localement (temporaire)");
         
@@ -128,8 +172,10 @@ export const useClientsData = () => {
         const mockClient: Client = {
           id: uuidv4(),
           ...formData,
-          createdAt: createMockTimestamp(),
-          updatedAt: createMockTimestamp()
+          // Ensure status is a valid enum value
+          status: formData.status as 'active' | 'inactive' | 'lead',
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
         };
         
         // Update the local state
@@ -150,6 +196,8 @@ export const useClientsData = () => {
       
       await updateDoc(clientRef, {
         ...formData,
+        // Ensure status is a valid enum value
+        status: formData.status as 'active' | 'inactive' | 'lead',
         updatedAt: serverTimestamp()
       });
       
@@ -157,8 +205,8 @@ export const useClientsData = () => {
     } catch (err: any) {
       console.error("Error updating client:", err);
       
-      // Check if it's a 400 error or Firebase is unavailable
-      if (err.code === 400 || err.code === "unavailable" || err.message?.includes('400')) {
+      // Check if it's a network error or Firebase is unavailable
+      if (err.code === "unavailable" || err.message?.includes('network') || err.message?.includes('400')) {
         setIsOfflineMode(true);
         toast.warning("Mode démo: Modifications locales uniquement (temporaire)");
         
@@ -167,8 +215,10 @@ export const useClientsData = () => {
           prev.map(client => 
             client.id === id ? { 
               ...client, 
-              ...formData, 
-              updatedAt: createMockTimestamp() 
+              ...formData,
+              // Ensure status is a valid enum value
+              status: formData.status as 'active' | 'inactive' | 'lead',
+              updatedAt: new Date().toISOString()
             } : client
           )
         );
@@ -189,8 +239,8 @@ export const useClientsData = () => {
     } catch (err: any) {
       console.error("Error deleting client:", err);
       
-      // Check if it's a 400 error or Firebase is unavailable
-      if (err.code === 400 || err.code === "unavailable" || err.message?.includes('400')) {
+      // Check if it's a network error or Firebase is unavailable
+      if (err.code === "unavailable" || err.message?.includes('network') || err.message?.includes('400')) {
         setIsOfflineMode(true);
         toast.warning("Mode démo: Suppression locale uniquement (temporaire)");
         
@@ -203,6 +253,28 @@ export const useClientsData = () => {
     }
   };
 
+  // Seed mock clients
+  const seedMockClients = async (): Promise<void> => {
+    setIsLoading(true);
+    try {
+      // Add each mock client to the database
+      for (const mockClient of mockClients) {
+        try {
+          await addClient(mockClient);
+        } catch (error) {
+          console.error('Error adding mock client:', error);
+        }
+      }
+      toast.success('Données de démonstration ajoutées avec succès');
+    } catch (err: any) {
+      console.error('Error seeding mock clients:', err);
+      toast.error('Erreur lors de l\'ajout des données de démonstration');
+      setError(err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return {
     clients,
     isLoading,
@@ -211,6 +283,7 @@ export const useClientsData = () => {
     fetchClients,
     addClient,
     updateClient,
-    deleteClient
+    deleteClient,
+    seedMockClients
   };
 };
