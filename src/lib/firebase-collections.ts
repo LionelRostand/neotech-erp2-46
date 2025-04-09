@@ -18,7 +18,19 @@ export const COLLECTIONS = {
     SETTINGS: 'crm_settings'
   },
 
-  // Add FREIGHT collections
+  ACCOUNTING: {
+    INVOICES: 'accounting_invoices',
+    PAYMENTS: 'accounting_payments',
+    EXPENSES: 'accounting_expenses',
+    CLIENTS: 'accounting_clients',
+    SUPPLIERS: 'accounting_suppliers',
+    REPORTS: 'accounting_reports',
+    TAXES: 'accounting_taxes',
+    SETTINGS: 'accounting_settings',
+    TRANSACTIONS: 'accounting_transactions',
+    PERMISSIONS: 'accounting_permissions',
+  },
+
   FREIGHT: {
     SHIPMENTS: 'freight/shipments',
     CONTAINERS: 'freight/containers',
@@ -37,19 +49,6 @@ export const COLLECTIONS = {
     DRIVERS: 'freight/drivers',
     CUSTOMERS: 'freight/customers',
     PERMISSIONS: 'freight/permissions'
-  },
-
-  ACCOUNTING: {
-    INVOICES: 'accounting_invoices',
-    PAYMENTS: 'accounting_payments',
-    EXPENSES: 'accounting_expenses',
-    CLIENTS: 'accounting_clients',
-    SUPPLIERS: 'accounting_suppliers',
-    REPORTS: 'accounting_reports',
-    TAXES: 'accounting_taxes',
-    SETTINGS: 'accounting_settings',
-    TRANSACTIONS: 'accounting_transactions',
-    PERMISSIONS: 'accounting_permissions',
   },
 
   HR: {

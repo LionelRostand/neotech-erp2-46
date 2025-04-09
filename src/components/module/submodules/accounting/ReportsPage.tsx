@@ -1,389 +1,319 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from "@/components/ui/select";
-import { 
-  BarChart, 
-  Bar, 
-  LineChart, 
-  Line, 
-  PieChart, 
-  Pie, 
-  Cell,
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
-  Legend, 
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
   ResponsiveContainer,
-  TooltipProps
+  PieChart,
+  Pie,
+  Cell,
 } from 'recharts';
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
-import { Badge } from "@/components/ui/badge";
-import { 
-  Download, 
-  FileText, 
-  BarChart2, 
-  TrendingUp, 
-  CreditCard, 
-  Wallet,
-  Calendar
-} from 'lucide-react';
-import { formatCurrency } from './utils/formatting';
-
-// Données mockées pour les graphiques
-const incomeExpenseData = [
-  { month: 'Jan', income: 15000, expenses: 8000 },
-  { month: 'Fév', income: 18000, expenses: 9500 },
-  { month: 'Mar', income: 16000, expenses: 8800 },
-  { month: 'Avr', income: 20000, expenses: 10200 },
-  { month: 'Mai', income: 22000, expenses: 11000 },
-  { month: 'Juin', income: 19000, expenses: 9800 },
-];
-
-const profitMarginData = [
-  { month: 'Jan', margin: 46.7 },
-  { month: 'Fév', margin: 47.2 },
-  { month: 'Mar', margin: 45.0 },
-  { month: 'Avr', margin: 49.0 },
-  { month: 'Mai', margin: 50.0 },
-  { month: 'Juin', margin: 48.4 },
-];
-
-const expenseCategoryData = [
-  { name: 'Achats', value: 35000 },
-  { name: 'Loyer', value: 18000 },
-  { name: 'Salaires', value: 45000 },
-  { name: 'Marketing', value: 12000 },
-  { name: 'Utilities', value: 6000 },
-  { name: 'Autres', value: 8000 },
-];
-
-const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#82ca9d'];
-
-interface ReportConfig {
-  id: string;
-  name: string;
-  description: string;
-  icon: React.ReactNode;
-  format: 'pdf' | 'excel';
-}
-
-const reportsList: ReportConfig[] = [
-  {
-    id: 'balance-sheet',
-    name: 'Bilan comptable',
-    description: 'État de la situation financière, actifs et passifs',
-    icon: <FileText className="h-5 w-5" />,
-    format: 'pdf'
-  },
-  {
-    id: 'income-statement',
-    name: 'Compte de résultat',
-    description: 'Revenus, dépenses et résultats sur une période',
-    icon: <BarChart2 className="h-5 w-5" />,
-    format: 'pdf'
-  },
-  {
-    id: 'cash-flow',
-    name: 'Flux de trésorerie',
-    description: 'Entrées et sorties de trésorerie',
-    icon: <TrendingUp className="h-5 w-5" />,
-    format: 'pdf'
-  },
-  {
-    id: 'sales-report',
-    name: 'Rapport des ventes',
-    description: 'Analyse détaillée des ventes par client, produit',
-    icon: <CreditCard className="h-5 w-5" />,
-    format: 'excel'
-  },
-  {
-    id: 'expense-report',
-    name: 'Rapport des dépenses',
-    description: 'Analyse des dépenses par catégorie',
-    icon: <Wallet className="h-5 w-5" />,
-    format: 'excel'
-  },
-  {
-    id: 'tax-report',
-    name: 'Rapport de TVA',
-    description: 'Récapitulatif de la TVA collectée et déductible',
-    icon: <FileText className="h-5 w-5" />,
-    format: 'pdf'
-  }
-];
+import { useReportsCollection, useTransactionsCollection } from './hooks/useAccountingCollection';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { FileDown } from 'lucide-react';
 
 const ReportsPage: React.FC = () => {
-  const [selectedPeriod, setSelectedPeriod] = useState<string>('this-quarter');
-  const [comparePeriod, setComparePeriod] = useState<string>('last-year');
-  
+  const [activeTab, setActiveTab] = useState("revenu");
+  const [periodFilter, setPeriodFilter] = useState("year");
+  const { data: reportsData, isLoading: reportsLoading } = useReportsCollection();
+  const { data: transactions, isLoading: transactionsLoading } = useTransactionsCollection();
+
+  // Données mock pour les graphiques en attendant l'implémentation réelle
+  const revenueData = [
+    { month: 'Jan', income: 10500, expenses: 8000 },
+    { month: 'Fév', income: 12000, expenses: 8500 },
+    { month: 'Mar', income: 9800, expenses: 7800 },
+    { month: 'Avr', income: 15000, expenses: 9000 },
+    { month: 'Mai', income: 14000, expenses: 8200 },
+    { month: 'Juin', income: 17000, expenses: 9500 },
+  ];
+
+  const taxData = [
+    { name: 'TVA Collectée', value: 5800, fill: '#4f46e5' },
+    { name: 'TVA Déductible', value: 3200, fill: '#10b981' },
+    { name: 'TVA à Payer', value: 2600, fill: '#f59e0b' },
+  ];
+
+  const clientsData = [
+    { name: 'Tech Solutions', value: 28000, fill: '#4f46e5' },
+    { name: 'Eco Consulting', value: 22000, fill: '#10b981' },
+    { name: 'Global Finance', value: 18000, fill: '#f59e0b' },
+    { name: 'Digital Media', value: 15000, fill: '#ef4444' },
+    { name: 'Autres', value: 17000, fill: '#a3a3a3' },
+  ];
+
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">Rapports financiers</h1>
-        <div className="flex items-center gap-2">
-          <Select defaultValue={selectedPeriod} onValueChange={setSelectedPeriod}>
-            <SelectTrigger className="w-[180px]">
+    <div className="container mx-auto py-6">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-3xl font-bold">Rapports Financiers</h1>
+        <div className="flex space-x-4">
+          <Select value={periodFilter} onValueChange={setPeriodFilter}>
+            <SelectTrigger className="w-40">
               <SelectValue placeholder="Période" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="this-month">Ce mois</SelectItem>
-              <SelectItem value="this-quarter">Ce trimestre</SelectItem>
-              <SelectItem value="this-year">Cette année</SelectItem>
-              <SelectItem value="last-year">Année précédente</SelectItem>
-              <SelectItem value="custom">Période personnalisée</SelectItem>
+              <SelectItem value="month">Ce mois</SelectItem>
+              <SelectItem value="quarter">Ce trimestre</SelectItem>
+              <SelectItem value="year">Cette année</SelectItem>
+              <SelectItem value="custom">Personnalisé</SelectItem>
             </SelectContent>
           </Select>
-          <Select defaultValue={comparePeriod} onValueChange={setComparePeriod}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Comparer avec" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="previous-period">Période précédente</SelectItem>
-              <SelectItem value="last-year">Même période année précédente</SelectItem>
-              <SelectItem value="none">Aucune comparaison</SelectItem>
-            </SelectContent>
-          </Select>
+          <Button>
+            <FileDown className="mr-2 h-4 w-4" />
+            Exporter
+          </Button>
         </div>
       </div>
       
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <Card className="lg:col-span-2">
-          <CardHeader>
-            <CardTitle>Performance financière</CardTitle>
-            <CardDescription>Revenus et dépenses pour {selectedPeriod === 'this-quarter' ? 'ce trimestre' : selectedPeriod === 'this-month' ? 'ce mois' : 'cette année'}</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ChartContainer className="h-80" config={{}}>
-              <BarChart data={incomeExpenseData}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                <XAxis dataKey="month" />
-                <YAxis 
-                  tickFormatter={(value) => `${Math.round(value / 1000)}k€`}
-                />
-                <Tooltip 
-                  content={({ active, payload }) => {
-                    if (active && payload && payload.length) {
-                      return (
-                        <div className="bg-background border rounded-md shadow-sm p-2 text-sm">
-                          <p className="font-semibold">{payload[0].payload.month}</p>
-                          <p className="text-blue-600">
-                            Revenus: {Number(payload[0].value)?.toLocaleString()} €
-                          </p>
-                          <p className="text-red-600">
-                            Dépenses: {Number(payload[1].value)?.toLocaleString()} €
-                          </p>
-                          <p className="font-medium pt-1 border-t mt-1">
-                            Marge: {(Number(payload[0].value) - Number(payload[1].value)).toLocaleString()} €
-                          </p>
-                        </div>
-                      );
-                    }
-                    return null;
-                  }}
-                />
-                <Legend />
-                <Bar 
-                  dataKey="income" 
-                  name="Revenus" 
-                  fill="#3b82f6" 
-                  radius={[4, 4, 0, 0]}
-                />
-                <Bar 
-                  dataKey="expenses" 
-                  name="Dépenses" 
-                  fill="#ef4444" 
-                  radius={[4, 4, 0, 0]}
-                />
-              </BarChart>
-            </ChartContainer>
-          </CardContent>
-        </Card>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="grid grid-cols-4 mb-6">
+          <TabsTrigger value="revenu">Revenu & Dépenses</TabsTrigger>
+          <TabsTrigger value="tva">TVA</TabsTrigger>
+          <TabsTrigger value="clients">Par Client</TabsTrigger>
+          <TabsTrigger value="balance">Bilan</TabsTrigger>
+        </TabsList>
         
-        <Card>
-          <CardHeader>
-            <CardTitle>Marge bénéficiaire</CardTitle>
-            <CardDescription>Évolution mensuelle (%)</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ChartContainer className="h-60" config={{}}>
-              <LineChart data={profitMarginData}>
-                <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} />
-                <XAxis dataKey="month" />
-                <YAxis 
-                  domain={[40, 55]}
-                  tickFormatter={(value) => `${value}%`}
-                />
-                <Tooltip 
-                  content={({ active, payload }) => {
-                    if (active && payload && payload.length) {
-                      return (
-                        <div className="bg-background border rounded-md shadow-sm p-2 text-sm">
-                          <p className="font-semibold">{payload[0].payload.month}</p>
-                          <p className="text-emerald-600 font-medium">
-                            {typeof payload[0].value === 'number' ? payload[0].value.toFixed(1) : '0'}%
-                          </p>
-                        </div>
-                      );
-                    }
-                    return null;
-                  }}
-                />
-                <Line 
-                  type="monotone" 
-                  dataKey="margin" 
-                  name="Marge (%)" 
-                  stroke="#10b981" 
-                  strokeWidth={2}
-                  dot={{ r: 4 }}
-                  activeDot={{ r: 6 }}
-                />
-              </LineChart>
-            </ChartContainer>
-            
-            <div className="mt-4 text-center">
-              <div className="text-lg font-bold">47.7%</div>
-              <div className="text-sm text-muted-foreground">Marge moyenne</div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-      
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Répartition des dépenses</CardTitle>
-            <CardDescription>Par catégorie</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ChartContainer className="h-64" config={{}}>
-              <PieChart>
-                <Pie
-                  data={expenseCategoryData}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  outerRadius={80}
-                  fill="#8884d8"
-                  dataKey="value"
-                  nameKey="name"
-                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                >
-                  {expenseCategoryData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip
-                  content={({ active, payload }) => {
-                    if (active && payload && payload.length) {
-                      return (
-                        <div className="bg-background border rounded-md shadow-sm p-2 text-sm">
-                          <p className="font-semibold">{payload[0].name}</p>
-                          <p className="font-medium">{formatCurrency(Number(payload[0].value))}</p>
-                        </div>
-                      );
-                    }
-                    return null;
-                  }}
-                />
-              </PieChart>
-            </ChartContainer>
-          </CardContent>
-        </Card>
+        <TabsContent value="revenu">
+          <Card>
+            <CardHeader>
+              <CardTitle>Revenu et Dépenses</CardTitle>
+              <CardDescription>
+                Vue d'ensemble des revenus et dépenses pour la période sélectionnée
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="pt-4">
+              <div className="h-80">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart
+                    data={revenueData}
+                    margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="month" />
+                    <YAxis />
+                    <Tooltip formatter={(value) => `${value} €`} />
+                    <Legend />
+                    <Bar dataKey="income" name="Revenu" fill="#4f46e5" />
+                    <Bar dataKey="expenses" name="Dépenses" fill="#ef4444" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+              <div className="mt-6 grid grid-cols-3 gap-4">
+                <Card>
+                  <CardContent className="pt-6">
+                    <p className="text-sm text-muted-foreground">Revenu Total</p>
+                    <h3 className="text-2xl font-bold text-green-600">78 300 €</h3>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="pt-6">
+                    <p className="text-sm text-muted-foreground">Dépenses Totales</p>
+                    <h3 className="text-2xl font-bold text-red-600">51 000 €</h3>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="pt-6">
+                    <p className="text-sm text-muted-foreground">Bénéfice Net</p>
+                    <h3 className="text-2xl font-bold">27 300 €</h3>
+                  </CardContent>
+                </Card>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
         
-        <Card className="lg:col-span-2">
-          <CardHeader>
-            <CardTitle>Générer des rapports</CardTitle>
-            <CardDescription>
-              Rapports financiers disponibles pour exportation
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {reportsList.map((report) => (
-                <div 
-                  key={report.id} 
-                  className="p-4 border rounded flex items-start space-x-4 hover:bg-muted/50 transition-colors cursor-pointer"
-                >
-                  <div className="p-2 bg-primary/10 rounded text-primary">
-                    {report.icon}
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex items-center justify-between">
-                      <h3 className="font-medium">{report.name}</h3>
-                      <Badge variant={report.format === 'pdf' ? 'default' : 'secondary'}>
-                        {report.format.toUpperCase()}
-                      </Badge>
-                    </div>
-                    <p className="text-sm text-muted-foreground mt-1">{report.description}</p>
-                    <Button variant="outline" size="sm" className="mt-2">
-                      <Download className="h-3.5 w-3.5 mr-1" /> Télécharger
-                    </Button>
-                  </div>
+        <TabsContent value="tva">
+          <Card>
+            <CardHeader>
+              <CardTitle>Rapport de TVA</CardTitle>
+              <CardDescription>
+                Résumé de la TVA collectée, déductible et à payer
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="h-80">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={taxData}
+                        cx="50%"
+                        cy="50%"
+                        outerRadius={100}
+                        dataKey="value"
+                        label={({ name, value }) => `${name}: ${value} €`}
+                      >
+                        {taxData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.fill} />
+                        ))}
+                      </Pie>
+                      <Tooltip formatter={(value) => `${value} €`} />
+                      <Legend />
+                    </PieChart>
+                  </ResponsiveContainer>
                 </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-      
-      <Card>
-        <CardHeader>
-          <CardTitle>Comparaison par période</CardTitle>
-          <CardDescription>
-            Ce {selectedPeriod === 'this-quarter' ? 'trimestre' : selectedPeriod === 'this-month' ? 'mois' : 'année'} vs {comparePeriod === 'last-year' ? 'même période année précédente' : 'période précédente'}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div>
-              <h3 className="text-sm font-medium text-muted-foreground mb-2">Revenus</h3>
-              <div className="flex items-baseline">
-                <span className="text-2xl font-bold mr-2">110 000 €</span>
-                <Badge className="bg-green-500">+12.5%</Badge>
+                <div className="space-y-4">
+                  <Card>
+                    <CardContent className="pt-6">
+                      <p className="text-sm text-muted-foreground">TVA Collectée</p>
+                      <h3 className="text-2xl font-bold">5 800 €</h3>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardContent className="pt-6">
+                      <p className="text-sm text-muted-foreground">TVA Déductible</p>
+                      <h3 className="text-2xl font-bold">3 200 €</h3>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardContent className="pt-6">
+                      <p className="text-sm text-muted-foreground">TVA à Payer</p>
+                      <h3 className="text-2xl font-bold">2 600 €</h3>
+                    </CardContent>
+                  </Card>
+                </div>
               </div>
-              <div className="text-sm text-muted-foreground mt-1">98 000 € période précédente</div>
-            </div>
-            
-            <div>
-              <h3 className="text-sm font-medium text-muted-foreground mb-2">Dépenses</h3>
-              <div className="flex items-baseline">
-                <span className="text-2xl font-bold mr-2">57 300 €</span>
-                <Badge className="bg-amber-500">+8.2%</Badge>
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="clients">
+          <Card>
+            <CardHeader>
+              <CardTitle>Répartition par Client</CardTitle>
+              <CardDescription>
+                Analyse des revenus par client
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="h-80">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={clientsData}
+                      cx="50%"
+                      cy="50%"
+                      outerRadius={100}
+                      dataKey="value"
+                      label={({ name, value }) => `${name}: ${value} €`}
+                    >
+                      {clientsData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.fill} />
+                      ))}
+                    </Pie>
+                    <Tooltip formatter={(value) => `${value} €`} />
+                    <Legend />
+                  </PieChart>
+                </ResponsiveContainer>
               </div>
-              <div className="text-sm text-muted-foreground mt-1">53 000 € période précédente</div>
-            </div>
-            
-            <div>
-              <h3 className="text-sm font-medium text-muted-foreground mb-2">Résultat net</h3>
-              <div className="flex items-baseline">
-                <span className="text-2xl font-bold mr-2">52 700 €</span>
-                <Badge className="bg-green-500">+17.1%</Badge>
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="balance">
+          <Card>
+            <CardHeader>
+              <CardTitle>Bilan Comptable</CardTitle>
+              <CardDescription>
+                Résumé des actifs et passifs
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Actifs</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <Table>
+                      <TableBody>
+                        <TableRow>
+                          <TableCell className="font-medium">Trésorerie</TableCell>
+                          <TableCell className="text-right">45 000 €</TableCell>
+                        </TableRow>
+                        <TableRow>
+                          <TableCell className="font-medium">Créances clients</TableCell>
+                          <TableCell className="text-right">32 500 €</TableCell>
+                        </TableRow>
+                        <TableRow>
+                          <TableCell className="font-medium">Immobilisations</TableCell>
+                          <TableCell className="text-right">78 000 €</TableCell>
+                        </TableRow>
+                        <TableRow>
+                          <TableCell className="font-medium">Stocks</TableCell>
+                          <TableCell className="text-right">12 000 €</TableCell>
+                        </TableRow>
+                        <TableRow className="border-t-2">
+                          <TableCell className="font-bold">Total Actifs</TableCell>
+                          <TableCell className="text-right font-bold">167 500 €</TableCell>
+                        </TableRow>
+                      </TableBody>
+                    </Table>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Passifs</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <Table>
+                      <TableBody>
+                        <TableRow>
+                          <TableCell className="font-medium">Dettes fournisseurs</TableCell>
+                          <TableCell className="text-right">18 000 €</TableCell>
+                        </TableRow>
+                        <TableRow>
+                          <TableCell className="font-medium">Emprunts</TableCell>
+                          <TableCell className="text-right">50 000 €</TableCell>
+                        </TableRow>
+                        <TableRow>
+                          <TableCell className="font-medium">Dettes fiscales</TableCell>
+                          <TableCell className="text-right">12 500 €</TableCell>
+                        </TableRow>
+                        <TableRow>
+                          <TableCell className="font-medium">Capitaux propres</TableCell>
+                          <TableCell className="text-right">87 000 €</TableCell>
+                        </TableRow>
+                        <TableRow className="border-t-2">
+                          <TableCell className="font-bold">Total Passifs</TableCell>
+                          <TableCell className="text-right font-bold">167 500 €</TableCell>
+                        </TableRow>
+                      </TableBody>
+                    </Table>
+                  </CardContent>
+                </Card>
               </div>
-              <div className="text-sm text-muted-foreground mt-1">45 000 € période précédente</div>
-            </div>
-          </div>
-          
-          <div className="mt-8 flex justify-between">
-            <Button variant="outline">
-              <Calendar className="h-4 w-4 mr-2" /> Période personnalisée
-            </Button>
-            <Button>
-              <Download className="h-4 w-4 mr-2" /> Exporter la comparaison
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
 
 export default ReportsPage;
+
+// Component de table interne pour éviter les erreurs d'import
+const Table = ({ children }: { children: React.ReactNode }) => (
+  <table className="w-full">{children}</table>
+);
+
+const TableBody = ({ children }: { children: React.ReactNode }) => (
+  <tbody>{children}</tbody>
+);
+
+const TableRow = ({ children, className = '' }: { children: React.ReactNode, className?: string }) => (
+  <tr className={className}>{children}</tr>
+);
+
+const TableCell = ({ children, className = '' }: { children: React.ReactNode, className?: string }) => (
+  <td className={`py-2 ${className}`}>{children}</td>
+);

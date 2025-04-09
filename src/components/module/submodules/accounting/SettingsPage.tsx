@@ -5,8 +5,9 @@ import { Card } from "@/components/ui/card";
 import { Settings, Users, Bell, Database, Link } from 'lucide-react';
 import { useAccountingPermissions } from './hooks/useAccountingPermissions';
 import PermissionsTab from './components/PermissionsTab';
+import { useAccountingSettingsCollection } from './hooks/useAccountingCollection';
 
-// Mock data for accounting submodules
+// Liste des sous-modules de comptabilité
 const accountingSubmodules = [
   { id: 'accounting-invoices', name: 'Factures' },
   { id: 'accounting-payments', name: 'Paiements' },
@@ -28,6 +29,9 @@ const AccountingSettingsPage: React.FC = () => {
     setAllPermissionsOfType, 
     savePermissions 
   } = useAccountingPermissions();
+  
+  // Récupération des paramètres depuis Firestore
+  const { data: settings, isLoading: settingsLoading } = useAccountingSettingsCollection();
 
   return (
     <div className="container mx-auto py-6">
