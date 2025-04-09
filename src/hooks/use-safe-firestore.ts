@@ -1,6 +1,6 @@
 
 import { useState, useEffect, useCallback } from 'react';
-import { useFirestore } from './use-firestore';
+import { useFirestore } from './useFirestore';
 import { toast } from 'sonner';
 import { restoreFirestoreConnectivity } from './firestore/network-operations';
 import { isNetworkError, isRateLimitError } from './firestore/network-handler';
