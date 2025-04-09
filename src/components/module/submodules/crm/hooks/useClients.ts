@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { useClientsData } from './useClientsData';
 import { Client, ClientFormData } from '../types/crm-types';
@@ -117,9 +118,10 @@ export const useClients = () => {
       const result = await updateClientInFirestore(selectedClient.id, clientData);
       console.log("Client updated successfully:", result);
       
-      if (result._offlineUpdated) {
-        // If updated in offline mode, manually update the local state
-        setClients(prev => prev.map(client => 
+      // Check if the update was processed in offline mode
+      if (result && result._offlineUpdated) {
+        // If updated in offline mode, manually update the filtered clients
+        setFilteredClients(prev => prev.map(client => 
           client.id === selectedClient.id ? { ...client, ...clientData } : client
         ));
       }

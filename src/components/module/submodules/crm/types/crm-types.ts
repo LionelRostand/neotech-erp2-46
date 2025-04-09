@@ -1,4 +1,3 @@
-
 export enum OpportunityStage {
   LEAD = 'lead',
   DISCOVERY = 'discovery',
@@ -24,6 +23,7 @@ export interface Client {
   createdAt: string;
   updatedAt?: string;
   customerSince?: string;
+  _offlineUpdated?: boolean; // Add this property for offline updates tracking
 }
 
 export interface Prospect {
