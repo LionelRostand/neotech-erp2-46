@@ -36,7 +36,6 @@ const InvoiceFormDialog: React.FC<InvoiceFormDialogProps> = ({
       : {
           invoiceNumber: `INV-${Date.now().toString().slice(-6)}`,
           clientName: '',
-          clientEmail: '',
           issueDate: format(new Date(), 'yyyy-MM-dd'),
           dueDate: format(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), 'yyyy-MM-dd'),
           items: [],
