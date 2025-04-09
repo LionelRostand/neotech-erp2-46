@@ -41,7 +41,6 @@ export const useClientsData = () => {
       
       // Process and type-check data from Firestore 
       const typedClients: Client[] = clientsData.map((doc: any): Client => {
-        // Ensure all required fields are present with defaults
         return {
           id: doc.id || '',
           name: doc.name || '',
@@ -106,8 +105,24 @@ export const useClientsData = () => {
       // Add to Firestore
       const addedClient = await clientsFirestore.add(newClient);
       
-      // Type-checking the response
-      const typedClient = addedClient as unknown as Client;
+      // Create properly typed client object
+      const typedClient: Client = {
+        id: addedClient.id || '',
+        name: newClient.name || '',
+        contactName: newClient.contactName || '',
+        contactEmail: newClient.contactEmail || '',
+        contactPhone: newClient.contactPhone || '',
+        sector: newClient.sector || '',
+        revenue: newClient.revenue || '',
+        status: newClient.status,
+        address: newClient.address || '',
+        website: newClient.website || '',
+        notes: newClient.notes || '',
+        createdAt: newClient.createdAt,
+        _offlineCreated: false,
+        _offlineUpdated: false,
+        _offlineDeleted: false
+      };
       
       // Update local state
       setClients(prev => [...prev, typedClient]);
@@ -133,18 +148,28 @@ export const useClientsData = () => {
       };
       
       // Update in Firestore
-      const updatedClient = await clientsFirestore.update(id, updateData);
+      await clientsFirestore.update(id, updateData);
+      
+      // Find current client data to merge with updates
+      const currentClient = clients.find(client => client.id === id);
+      if (!currentClient) {
+        throw new Error(`Client with ID ${id} not found`);
+      }
+      
+      // Create updated client object
+      const updatedClient: Client = {
+        ...currentClient,
+        ...updateData,
+        id
+      };
       
       // Update local state
       setClients(prev => 
-        prev.map(client => client.id === id 
-          ? { ...client, ...updateData, id } 
-          : client
-        )
+        prev.map(client => client.id === id ? updatedClient : client)
       );
 
       toast.success(`Client "${clientData.name || 'sélectionné'}" mis à jour avec succès`);
-      return updatedClient as Client;
+      return updatedClient;
     } catch (err) {
       console.error("Error updating client:", err);
       const errorMessage = err instanceof Error ? err.message : String(err);
