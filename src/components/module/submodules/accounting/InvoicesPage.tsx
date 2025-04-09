@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,41 +8,20 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
-import {
-  Table,
-  TableBody,
-  TableCaption,
-  TableCell,
-  TableFooter,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
-import { Plus, Search, FileDown, Edit, Trash2, Eye } from 'lucide-react';
+} from "@/components/ui/card";
+import { Plus, FileDown } from 'lucide-react';
 import { InvoicesTable } from './components/InvoicesTable';
-import { Invoice } from './types/accounting-types';
 import { useToast } from '@/hooks/use-toast';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import { Badge } from '@/components/ui/badge';
+} from "@/components/ui/select";
 import { useNavigate } from 'react-router-dom';
 import { useInvoices } from './hooks/useInvoices';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Pagination } from '@/components/ui/pagination';
+import { PaginationComponent } from './components/PaginationComponent';
 import { cn } from '@/lib/utils';
 
 const statusOptions = [
@@ -88,7 +68,7 @@ const InvoicesPage = () => {
     toast({
       title: "Supprimer la facture",
       description: "Fonctionnalité à venir",
-    })
+    });
   };
 
   const handleExportInvoices = () => {
@@ -96,7 +76,7 @@ const InvoicesPage = () => {
     toast({
       title: "Exporter les factures",
       description: "Fonctionnalité à venir",
-    })
+    });
   };
 
   const filteredInvoices = invoices?.filter((invoice) => {
@@ -224,7 +204,7 @@ const InvoicesPage = () => {
             <SelectItem value="50">50 par page</SelectItem>
           </SelectContent>
         </Select>
-        <Pagination
+        <PaginationComponent
           currentPage={currentPage}
           totalItems={totalItems}
           itemsPerPage={itemsPerPage}
