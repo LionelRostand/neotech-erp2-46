@@ -7,66 +7,16 @@ import { Plus, Filter } from "lucide-react";
 import RecentInvoicesTable from './components/RecentInvoicesTable';
 import InvoiceViewDialog from './components/InvoiceViewDialog';
 import { Invoice } from './types/accounting-types';
-
-// Exemple de données pour les factures
-const mockInvoices: Invoice[] = [
-  {
-    id: '1',
-    invoiceNumber: 'INV-2023-001',
-    clientName: 'Entreprise ABC',
-    issueDate: '2023-01-15',
-    dueDate: '2023-02-15',
-    total: 1250.00,
-    status: 'paid',
-    currency: 'EUR',
-    items: [
-      { description: 'Service de consultation', quantity: 5, unitPrice: 200, taxRate: 20 },
-      { description: 'Frais administratifs', quantity: 1, unitPrice: 50, taxRate: 20 }
-    ],
-    subtotal: 1050.00,
-    taxAmount: 200.00,
-    notes: 'Paiement reçu avec remerciements.',
-    termsAndConditions: 'Paiement à 30 jours'
-  },
-  {
-    id: '2',
-    invoiceNumber: 'INV-2023-002',
-    clientName: 'Société XYZ',
-    issueDate: '2023-01-20',
-    dueDate: '2023-02-20',
-    total: 850.00,
-    status: 'pending',
-    currency: 'EUR',
-    items: [
-      { description: 'Développement web', quantity: 10, unitPrice: 75, taxRate: 20 },
-      { description: 'Hébergement annuel', quantity: 1, unitPrice: 100, taxRate: 0 }
-    ],
-    subtotal: 750.00,
-    taxAmount: 100.00,
-    notes: ''
-  },
-  {
-    id: '3',
-    invoiceNumber: 'INV-2023-003',
-    clientName: 'Client Particulier',
-    issueDate: '2023-02-01',
-    dueDate: '2023-03-01',
-    total: 450.00,
-    status: 'overdue',
-    currency: 'EUR',
-    items: [
-      { description: 'Audit de sécurité', quantity: 1, unitPrice: 300, taxRate: 20 },
-      { description: 'Rapport détaillé', quantity: 1, unitPrice: 150, taxRate: 0 }
-    ],
-    subtotal: 450.00,
-    taxAmount: 0.00
-  }
-];
+import { useInvoicesData } from './hooks/useInvoicesData';
+import { Skeleton } from "@/components/ui/skeleton";
 
 const InvoicesPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState("recent");
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+
+  // Récupération des données depuis Firestore
+  const { invoices, isLoading } = useInvoicesData();
 
   const handleViewInvoice = (invoice: Invoice) => {
     setSelectedInvoice(invoice);
@@ -76,6 +26,11 @@ const InvoicesPage: React.FC = () => {
   const handleCloseDialog = () => {
     setDialogOpen(false);
   };
+
+  // Filtrer les factures selon leur statut
+  const draftInvoices = invoices.filter(inv => inv.status === 'draft');
+  const paidInvoices = invoices.filter(inv => inv.status === 'paid');
+  const overdueInvoices = invoices.filter(inv => inv.status === 'overdue');
 
   return (
     <div className="container mx-auto py-6">
@@ -105,10 +60,18 @@ const InvoicesPage: React.FC = () => {
               <CardTitle>Factures récentes</CardTitle>
             </CardHeader>
             <CardContent>
-              <RecentInvoicesTable 
-                invoices={mockInvoices}
-                onViewInvoice={handleViewInvoice}
-              />
+              {isLoading ? (
+                <div className="space-y-2">
+                  <Skeleton className="h-10 w-full" />
+                  <Skeleton className="h-10 w-full" />
+                  <Skeleton className="h-10 w-full" />
+                </div>
+              ) : (
+                <RecentInvoicesTable 
+                  invoices={invoices}
+                  onViewInvoice={handleViewInvoice}
+                />
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -119,10 +82,17 @@ const InvoicesPage: React.FC = () => {
               <CardTitle>Brouillons de factures</CardTitle>
             </CardHeader>
             <CardContent>
-              <RecentInvoicesTable 
-                invoices={mockInvoices.filter(inv => inv.status === 'draft')}
-                onViewInvoice={handleViewInvoice}
-              />
+              {isLoading ? (
+                <div className="space-y-2">
+                  <Skeleton className="h-10 w-full" />
+                  <Skeleton className="h-10 w-full" />
+                </div>
+              ) : (
+                <RecentInvoicesTable 
+                  invoices={draftInvoices}
+                  onViewInvoice={handleViewInvoice}
+                />
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -133,10 +103,17 @@ const InvoicesPage: React.FC = () => {
               <CardTitle>Factures payées</CardTitle>
             </CardHeader>
             <CardContent>
-              <RecentInvoicesTable 
-                invoices={mockInvoices.filter(inv => inv.status === 'paid')}
-                onViewInvoice={handleViewInvoice}
-              />
+              {isLoading ? (
+                <div className="space-y-2">
+                  <Skeleton className="h-10 w-full" />
+                  <Skeleton className="h-10 w-full" />
+                </div>
+              ) : (
+                <RecentInvoicesTable 
+                  invoices={paidInvoices}
+                  onViewInvoice={handleViewInvoice}
+                />
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -147,10 +124,17 @@ const InvoicesPage: React.FC = () => {
               <CardTitle>Factures en retard</CardTitle>
             </CardHeader>
             <CardContent>
-              <RecentInvoicesTable 
-                invoices={mockInvoices.filter(inv => inv.status === 'overdue')}
-                onViewInvoice={handleViewInvoice}
-              />
+              {isLoading ? (
+                <div className="space-y-2">
+                  <Skeleton className="h-10 w-full" />
+                  <Skeleton className="h-10 w-full" />
+                </div>
+              ) : (
+                <RecentInvoicesTable 
+                  invoices={overdueInvoices}
+                  onViewInvoice={handleViewInvoice}
+                />
+              )}
             </CardContent>
           </Card>
         </TabsContent>

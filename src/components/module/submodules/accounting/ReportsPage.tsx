@@ -1,47 +1,28 @@
 
 import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Download, Filter, Printer, Calendar } from "lucide-react";
-import { formatCurrency } from './utils/formatting';
-import { 
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-  LineChart,
-  Line
-} from 'recharts';
-
-const mockFinancialData = [
-  { mois: 'Jan', revenus: 12400, depenses: 8200, profit: 4200 },
-  { mois: 'Fév', revenus: 9800, depenses: 7500, profit: 2300 },
-  { mois: 'Mar', revenus: 15000, depenses: 10200, profit: 4800 },
-  { mois: 'Avr', revenus: 16700, depenses: 11800, profit: 4900 },
-  { mois: 'Mai', revenus: 14300, depenses: 9400, profit: 4900 },
-  { mois: 'Jui', revenus: 18200, depenses: 12100, profit: 6100 },
-];
-
-const mockQuarterlyData = [
-  { trimestre: 'T1', revenus: 37200, depenses: 25900, profit: 11300 },
-  { trimestre: 'T2', revenus: 49200, depenses: 33300, profit: 15900 },
-];
+import { Button } from "@/components/ui/button";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { useTransactionsData } from './hooks/useTransactionsData';
+import { BarChart, AreaChart, PieChart, Calendar, Download, Filter } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { formatCurrency, formatDate } from './utils/formatting';
 
 const ReportsPage: React.FC = () => {
-  const [activeTab, setActiveTab] = useState("overview");
-  const [reportPeriod, setReportPeriod] = useState("monthly");
-
-  const currentData = reportPeriod === 'monthly' ? mockFinancialData : mockQuarterlyData;
-  const xAxisDataKey = reportPeriod === 'monthly' ? 'mois' : 'trimestre';
-
-  const totalRevenue = currentData.reduce((sum, item) => sum + item.revenus, 0);
-  const totalExpenses = currentData.reduce((sum, item) => sum + item.depenses, 0);
-  const totalProfit = currentData.reduce((sum, item) => sum + item.profit, 0);
+  const [activeTab, setActiveTab] = useState("transactions");
+  const { transactions, isLoading } = useTransactionsData();
+  
+  // Calculer quelques statistiques de base
+  const totalIncomes = transactions
+    .filter(t => t.type === 'income')
+    .reduce((sum, t) => sum + t.amount, 0);
+    
+  const totalExpenses = transactions
+    .filter(t => t.type === 'expense')
+    .reduce((sum, t) => sum + t.amount, 0);
+    
+  const netAmount = totalIncomes - totalExpenses;
 
   return (
     <div className="container mx-auto py-6">
@@ -52,142 +33,126 @@ const ReportsPage: React.FC = () => {
             <Calendar className="mr-2 h-4 w-4" /> Période
           </Button>
           <Button variant="outline">
-            <Printer className="mr-2 h-4 w-4" /> Imprimer
-          </Button>
-          <Button>
             <Download className="mr-2 h-4 w-4" /> Exporter
           </Button>
         </div>
       </div>
-
+      
+      {/* Statistiques rapides */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Chiffre d'affaires total
+            <CardDescription>Revenus totaux</CardDescription>
+            <CardTitle className="text-2xl text-green-500">
+              {isLoading ? <Skeleton className="h-8 w-24" /> : formatCurrency(totalIncomes, 'EUR')}
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(totalRevenue, 'EUR')}</div>
-            <p className="text-xs text-muted-foreground">
-              +15% par rapport à la période précédente
-            </p>
-          </CardContent>
         </Card>
+        
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Dépenses totales
+            <CardDescription>Dépenses totales</CardDescription>
+            <CardTitle className="text-2xl text-red-500">
+              {isLoading ? <Skeleton className="h-8 w-24" /> : formatCurrency(totalExpenses, 'EUR')}
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(totalExpenses, 'EUR')}</div>
-            <p className="text-xs text-muted-foreground">
-              +8% par rapport à la période précédente
-            </p>
-          </CardContent>
         </Card>
+        
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Bénéfice net
+            <CardDescription>Résultat net</CardDescription>
+            <CardTitle className={`text-2xl ${netAmount >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+              {isLoading ? <Skeleton className="h-8 w-24" /> : formatCurrency(netAmount, 'EUR')}
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(totalProfit, 'EUR')}</div>
-            <p className="text-xs text-muted-foreground">
-              +22% par rapport à la période précédente
-            </p>
-          </CardContent>
         </Card>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <div className="flex items-center justify-between mb-4">
           <TabsList>
-            <TabsTrigger value="overview">Vue d'ensemble</TabsTrigger>
-            <TabsTrigger value="revenue">Revenus</TabsTrigger>
-            <TabsTrigger value="expenses">Dépenses</TabsTrigger>
-            <TabsTrigger value="profit">Rentabilité</TabsTrigger>
+            <TabsTrigger value="transactions" className="flex items-center gap-2">
+              <BarChart className="h-4 w-4" />
+              <span>Transactions</span>
+            </TabsTrigger>
+            <TabsTrigger value="incomes" className="flex items-center gap-2">
+              <AreaChart className="h-4 w-4" />
+              <span>Revenus</span>
+            </TabsTrigger>
+            <TabsTrigger value="expenses" className="flex items-center gap-2">
+              <PieChart className="h-4 w-4" />
+              <span>Dépenses</span>
+            </TabsTrigger>
           </TabsList>
-          <div className="flex items-center space-x-2">
-            <Button
-              variant={reportPeriod === 'monthly' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setReportPeriod('monthly')}
-            >
-              Mensuel
-            </Button>
-            <Button
-              variant={reportPeriod === 'quarterly' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setReportPeriod('quarterly')}
-            >
-              Trimestriel
-            </Button>
-            <Button variant="outline" size="sm">
-              <Filter className="h-4 w-4 mr-2" /> Filtrer
-            </Button>
-          </div>
+          <Button variant="outline" size="sm">
+            <Filter className="mr-2 h-4 w-4" /> Filtrer
+          </Button>
         </div>
 
-        <TabsContent value="overview">
+        <TabsContent value="transactions">
           <Card>
             <CardHeader>
-              <CardTitle>Vue d'ensemble financière</CardTitle>
+              <CardTitle>Transactions récentes</CardTitle>
             </CardHeader>
-            <CardContent className="pt-2">
-              <div className="h-[400px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart
-                    data={currentData}
-                    margin={{
-                      top: 20,
-                      right: 30,
-                      left: 20,
-                      bottom: 5,
-                    }}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey={xAxisDataKey} />
-                    <YAxis />
-                    <Tooltip formatter={(value) => formatCurrency(value as number, 'EUR')} />
-                    <Legend />
-                    <Bar dataKey="revenus" name="Revenus" fill="#4f46e5" />
-                    <Bar dataKey="depenses" name="Dépenses" fill="#ef4444" />
-                    <Bar dataKey="profit" name="Profit" fill="#10b981" />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
+            <CardContent>
+              {isLoading ? (
+                <div className="space-y-2">
+                  <Skeleton className="h-10 w-full" />
+                  <Skeleton className="h-10 w-full" />
+                  <Skeleton className="h-10 w-full" />
+                </div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Description</TableHead>
+                      <TableHead>Catégorie</TableHead>
+                      <TableHead>Type</TableHead>
+                      <TableHead>Montant</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {transactions.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={5} className="text-center py-4">
+                          Aucune transaction trouvée
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      transactions.slice(0, 10).map((transaction) => (
+                        <TableRow key={transaction.id}>
+                          <TableCell>{formatDate(transaction.date)}</TableCell>
+                          <TableCell className="font-medium">{transaction.description}</TableCell>
+                          <TableCell>{transaction.category}</TableCell>
+                          <TableCell>
+                            {transaction.type === 'income' ? 'Revenu' : 
+                             transaction.type === 'expense' ? 'Dépense' : 'Transfert'}
+                          </TableCell>
+                          <TableCell className={`font-medium ${
+                            transaction.type === 'income' ? 'text-green-500' : 
+                            transaction.type === 'expense' ? 'text-red-500' : ''
+                          }`}>
+                            {formatCurrency(transaction.amount, transaction.currency)}
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
 
-        <TabsContent value="revenue">
+        <TabsContent value="incomes">
           <Card>
             <CardHeader>
               <CardTitle>Analyse des revenus</CardTitle>
             </CardHeader>
-            <CardContent className="pt-2">
-              <div className="h-[400px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart
-                    data={currentData}
-                    margin={{
-                      top: 20,
-                      right: 30,
-                      left: 20,
-                      bottom: 5,
-                    }}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey={xAxisDataKey} />
-                    <YAxis />
-                    <Tooltip formatter={(value) => formatCurrency(value as number, 'EUR')} />
-                    <Legend />
-                    <Line type="monotone" dataKey="revenus" name="Revenus" stroke="#4f46e5" activeDot={{ r: 8 }} />
-                  </LineChart>
-                </ResponsiveContainer>
+            <CardContent>
+              <div className="h-80 flex items-center justify-center text-muted-foreground">
+                Graphique des revenus (À implémenter)
               </div>
             </CardContent>
           </Card>
@@ -198,56 +163,9 @@ const ReportsPage: React.FC = () => {
             <CardHeader>
               <CardTitle>Analyse des dépenses</CardTitle>
             </CardHeader>
-            <CardContent className="pt-2">
-              <div className="h-[400px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart
-                    data={currentData}
-                    margin={{
-                      top: 20,
-                      right: 30,
-                      left: 20,
-                      bottom: 5,
-                    }}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey={xAxisDataKey} />
-                    <YAxis />
-                    <Tooltip formatter={(value) => formatCurrency(value as number, 'EUR')} />
-                    <Legend />
-                    <Line type="monotone" dataKey="depenses" name="Dépenses" stroke="#ef4444" activeDot={{ r: 8 }} />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="profit">
-          <Card>
-            <CardHeader>
-              <CardTitle>Analyse de la rentabilité</CardTitle>
-            </CardHeader>
-            <CardContent className="pt-2">
-              <div className="h-[400px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart
-                    data={currentData}
-                    margin={{
-                      top: 20,
-                      right: 30,
-                      left: 20,
-                      bottom: 5,
-                    }}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey={xAxisDataKey} />
-                    <YAxis />
-                    <Tooltip formatter={(value) => formatCurrency(value as number, 'EUR')} />
-                    <Legend />
-                    <Line type="monotone" dataKey="profit" name="Profit" stroke="#10b981" activeDot={{ r: 8 }} />
-                  </LineChart>
-                </ResponsiveContainer>
+            <CardContent>
+              <div className="h-80 flex items-center justify-center text-muted-foreground">
+                Graphique des dépenses (À implémenter)
               </div>
             </CardContent>
           </Card>

@@ -5,64 +5,19 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus, Edit, Trash2, BarChart4 } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { TaxRate } from './types/accounting-types';
-
-const mockTaxRates: TaxRate[] = [
-  {
-    id: '1',
-    name: 'TVA Standard',
-    rate: 20,
-    description: 'Taux de TVA standard en France',
-    isDefault: true
-  },
-  {
-    id: '2',
-    name: 'TVA Intermédiaire',
-    rate: 10,
-    description: 'Taux intermédiaire applicable aux travaux de rénovation, etc.',
-    isDefault: false
-  },
-  {
-    id: '3',
-    name: 'TVA Réduit',
-    rate: 5.5,
-    description: 'Taux réduit applicable aux produits de première nécessité',
-    isDefault: false
-  },
-  {
-    id: '4',
-    name: 'Exonéré',
-    rate: 0,
-    description: 'Opérations exonérées de TVA',
-    isDefault: false
-  }
-];
-
-const mockTaxReports = [
-  {
-    id: '1',
-    period: '2023-T1',
-    startDate: '2023-01-01',
-    endDate: '2023-03-31',
-    totalHT: 15000,
-    totalTVA: 3000,
-    status: 'submitted',
-    submissionDate: '2023-04-10'
-  },
-  {
-    id: '2',
-    period: '2023-T2',
-    startDate: '2023-04-01',
-    endDate: '2023-06-30',
-    totalHT: 18500,
-    totalTVA: 3700,
-    status: 'draft',
-    submissionDate: null
-  }
-];
+import { Skeleton } from "@/components/ui/skeleton";
+import { useTaxRatesData } from './hooks/useTaxRatesData';
+import { useTaxDeclarationsData } from './hooks/useTaxDeclarationsData';
+import { formatCurrency, formatDate } from './utils/formatting';
 
 const TaxesPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState("rates");
+  
+  // Récupération des données de taux de TVA
+  const { taxRates, isLoading: taxRatesLoading } = useTaxRatesData();
+  
+  // Récupération des données de déclarations de TVA
+  const { taxDeclarations, isLoading: taxDeclarationsLoading } = useTaxDeclarationsData();
 
   return (
     <div className="container mx-auto py-6">
@@ -90,37 +45,53 @@ const TaxesPage: React.FC = () => {
               <CardTitle>Taux de TVA configurés</CardTitle>
             </CardHeader>
             <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Nom</TableHead>
-                    <TableHead>Taux (%)</TableHead>
-                    <TableHead>Description</TableHead>
-                    <TableHead>Par défaut</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {mockTaxRates.map((taxRate) => (
-                    <TableRow key={taxRate.id}>
-                      <TableCell className="font-medium">{taxRate.name}</TableCell>
-                      <TableCell>{taxRate.rate}%</TableCell>
-                      <TableCell>{taxRate.description}</TableCell>
-                      <TableCell>{taxRate.isDefault ? "Oui" : "Non"}</TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end space-x-2">
-                          <Button variant="ghost" size="icon">
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button variant="ghost" size="icon" disabled={taxRate.isDefault}>
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
+              {taxRatesLoading ? (
+                <div className="space-y-2">
+                  <Skeleton className="h-10 w-full" />
+                  <Skeleton className="h-10 w-full" />
+                  <Skeleton className="h-10 w-full" />
+                </div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Nom</TableHead>
+                      <TableHead>Taux (%)</TableHead>
+                      <TableHead>Description</TableHead>
+                      <TableHead>Par défaut</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {taxRates.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={5} className="text-center py-4">
+                          Aucun taux de TVA trouvé
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      taxRates.map((taxRate) => (
+                        <TableRow key={taxRate.id}>
+                          <TableCell className="font-medium">{taxRate.name}</TableCell>
+                          <TableCell>{taxRate.rate}%</TableCell>
+                          <TableCell>{taxRate.description}</TableCell>
+                          <TableCell>{taxRate.isDefault ? "Oui" : "Non"}</TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex justify-end space-x-2">
+                              <Button variant="ghost" size="icon">
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                              <Button variant="ghost" size="icon" disabled={taxRate.isDefault}>
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -131,36 +102,48 @@ const TaxesPage: React.FC = () => {
               <CardTitle>Déclarations de TVA</CardTitle>
             </CardHeader>
             <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Période</TableHead>
-                    <TableHead>Du</TableHead>
-                    <TableHead>Au</TableHead>
-                    <TableHead>Total HT</TableHead>
-                    <TableHead>Total TVA</TableHead>
-                    <TableHead>Statut</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {mockTaxReports.map((report) => (
-                    <TableRow key={report.id}>
-                      <TableCell className="font-medium">{report.period}</TableCell>
-                      <TableCell>{formatDate(report.startDate)}</TableCell>
-                      <TableCell>{formatDate(report.endDate)}</TableCell>
-                      <TableCell>{formatCurrency(report.totalHT, 'EUR')}</TableCell>
-                      <TableCell>{formatCurrency(report.totalTVA, 'EUR')}</TableCell>
-                      <TableCell>{getStatusLabel(report.status)}</TableCell>
-                      <TableCell className="text-right">
-                        <Button variant="ghost" size="sm">
-                          {report.status === 'draft' ? 'Compléter' : 'Voir'}
-                        </Button>
-                      </TableCell>
+              {taxDeclarationsLoading ? (
+                <div className="space-y-2">
+                  <Skeleton className="h-10 w-full" />
+                  <Skeleton className="h-10 w-full" />
+                  <Skeleton className="h-10 w-full" />
+                </div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Période</TableHead>
+                      <TableHead>Date limite</TableHead>
+                      <TableHead>Total</TableHead>
+                      <TableHead>Statut</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {taxDeclarations.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={5} className="text-center py-4">
+                          Aucune déclaration de TVA trouvée
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      taxDeclarations.map((report) => (
+                        <TableRow key={report.id}>
+                          <TableCell className="font-medium">{report.period}</TableCell>
+                          <TableCell>{formatDate(report.dueDate)}</TableCell>
+                          <TableCell>{formatCurrency(report.amount, 'EUR')}</TableCell>
+                          <TableCell>{getStatusLabel(report.status)}</TableCell>
+                          <TableCell className="text-right">
+                            <Button variant="ghost" size="sm">
+                              {report.status === 'upcoming' ? 'Préparer' : 'Voir'}
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -169,27 +152,13 @@ const TaxesPage: React.FC = () => {
   );
 };
 
-// Fonction utilitaire pour formater les dates
-const formatDate = (dateString: string | null) => {
-  if (!dateString) return '—';
-  return new Date(dateString).toLocaleDateString();
-};
-
-// Fonction utilitaire pour formater la monnaie
-const formatCurrency = (amount: number, currency: string) => {
-  return new Intl.NumberFormat('fr-FR', {
-    style: 'currency',
-    currency: currency,
-  }).format(amount);
-};
-
 // Fonction utilitaire pour obtenir le libellé de statut
 const getStatusLabel = (status: string) => {
   switch (status) {
-    case 'draft': return 'Brouillon';
-    case 'submitted': return 'Soumis';
-    case 'accepted': return 'Accepté';
-    case 'rejected': return 'Rejeté';
+    case 'upcoming': return 'À venir';
+    case 'filed': return 'Soumis';
+    case 'paid': return 'Payé';
+    case 'late': return 'En retard';
     default: return status;
   }
 };

@@ -1,280 +1,184 @@
 
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Button } from '@/components/ui/button';
-import { formatCurrency } from './utils/formatting';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell } from 'recharts';
-import { ArrowRight, Plus, Calendar, Download } from 'lucide-react';
-import RecentInvoicesTable from './components/RecentInvoicesTable';
-import { Invoice } from './types/accounting-types';
-
-// Exemples de données
-const mockInvoices: Invoice[] = [
-  {
-    id: '1',
-    invoiceNumber: 'INV-2023-001',
-    clientName: 'Entreprise ABC',
-    issueDate: '2023-01-15',
-    dueDate: '2023-02-15',
-    total: 1250.00,
-    status: 'paid',
-    currency: 'EUR'
-  },
-  {
-    id: '2',
-    invoiceNumber: 'INV-2023-002',
-    clientName: 'Société XYZ',
-    issueDate: '2023-01-20',
-    dueDate: '2023-02-20',
-    total: 850.00,
-    status: 'pending',
-    currency: 'EUR'
-  },
-  {
-    id: '3',
-    invoiceNumber: 'INV-2023-003',
-    clientName: 'Client Particulier',
-    issueDate: '2023-02-01',
-    dueDate: '2023-03-01',
-    total: 450.00,
-    status: 'overdue',
-    currency: 'EUR'
-  }
-];
-
-const revenueData = [
-  { name: 'Jan', value: 12500 },
-  { name: 'Fév', value: 9800 },
-  { name: 'Mar', value: 15000 },
-  { name: 'Avr', value: 16700 },
-  { name: 'Mai', value: 14300 },
-  { name: 'Jui', value: 18200 }
-];
-
-const invoiceStatusData = [
-  { name: 'Payées', value: 28, color: '#10b981' },
-  { name: 'En attente', value: 45, color: '#f59e0b' },
-  { name: 'En retard', value: 13, color: '#ef4444' },
-  { name: 'Brouillons', value: 14, color: '#6b7280' }
-];
-
-const COLORS = ['#10b981', '#f59e0b', '#ef4444', '#6b7280'];
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { useAccountingData } from '@/hooks/modules/useAccountingData';
+import { formatCurrency, formatDate } from './utils/formatting';
+import { Skeleton } from "@/components/ui/skeleton";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { AreaChart, BarChart, Calendar } from "lucide-react";
 
 const AccountingDashboard: React.FC = () => {
-  const [selectedInvoice, setSelectedInvoice] = React.useState<Invoice | null>(null);
-  const [dialogOpen, setDialogOpen] = React.useState(false);
+  const { invoices, payments, transactions, isLoading, error } = useAccountingData();
 
-  const handleViewInvoice = (invoice: Invoice) => {
-    setSelectedInvoice(invoice);
-    setDialogOpen(true);
-  };
+  // Calculer les statistiques
+  const totalUnpaidInvoices = invoices
+    .filter(inv => inv.status === 'pending' || inv.status === 'overdue')
+    .reduce((sum, inv) => sum + (inv.total || 0), 0);
+    
+  const totalPaidInvoices = invoices
+    .filter(inv => inv.status === 'paid')
+    .reduce((sum, inv) => sum + (inv.total || 0), 0);
+    
+  const totalReceivedPayments = payments
+    .filter(p => p.status === 'completed')
+    .reduce((sum, p) => sum + p.amount, 0);
 
   return (
     <div className="container mx-auto py-6">
-      <h1 className="text-3xl font-bold mb-6">Tableau de bord comptabilité</h1>
-
-      {/* KPI Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+      <h1 className="text-3xl font-bold mb-6">Tableau de bord comptable</h1>
+      
+      {/* Cartes de statistiques */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Chiffre d'affaires (mois en cours)
+            <CardDescription>Factures à payer</CardDescription>
+            <CardTitle className="text-2xl text-amber-500">
+              {isLoading ? <Skeleton className="h-8 w-24" /> : formatCurrency(totalUnpaidInvoices, 'EUR')}
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(18200, 'EUR')}</div>
-            <p className="text-xs text-muted-foreground">
-              +12% par rapport au mois dernier
+            <p className="text-sm text-muted-foreground">
+              {invoices.filter(inv => inv.status === 'pending' || inv.status === 'overdue').length} factures en attente
             </p>
           </CardContent>
         </Card>
+        
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Factures impayées
+            <CardDescription>Revenus du mois</CardDescription>
+            <CardTitle className="text-2xl text-green-500">
+              {isLoading ? <Skeleton className="h-8 w-24" /> : formatCurrency(totalReceivedPayments, 'EUR')}
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(7850, 'EUR')}</div>
-            <p className="text-xs text-muted-foreground">
-              8 factures en attente
+            <p className="text-sm text-muted-foreground">
+              {payments.filter(p => p.status === 'completed').length} paiements reçus
             </p>
           </CardContent>
         </Card>
+        
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Dépenses (mois en cours)
+            <CardDescription>Factures payées</CardDescription>
+            <CardTitle className="text-2xl text-blue-500">
+              {isLoading ? <Skeleton className="h-8 w-24" /> : formatCurrency(totalPaidInvoices, 'EUR')}
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(12100, 'EUR')}</div>
-            <p className="text-xs text-muted-foreground">
-              -5% par rapport au mois dernier
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              TVA à déclarer
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(3700, 'EUR')}</div>
-            <p className="text-xs text-muted-foreground">
-              Prochaine déclaration: T2 2023
+            <p className="text-sm text-muted-foreground">
+              {invoices.filter(inv => inv.status === 'paid').length} factures réglées
             </p>
           </CardContent>
         </Card>
       </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Left Column - Charts */}
-        <div className="md:col-span-2 space-y-6">
-          <Card>
-            <CardHeader className="pb-2">
-              <div className="flex items-center justify-between">
-                <CardTitle>Évolution du chiffre d'affaires</CardTitle>
-                <Button variant="outline" size="sm">
-                  <Calendar className="h-4 w-4 mr-2" />
-                  Période
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="h-[300px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart
-                    data={revenueData}
-                    margin={{
-                      top: 5,
-                      right: 10,
-                      left: 10,
-                      bottom: 5,
-                    }}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" />
-                    <YAxis />
-                    <Tooltip formatter={(value) => formatCurrency(value as number, 'EUR')} />
-                    <Legend />
-                    <Line
-                      type="monotone"
-                      dataKey="value"
-                      name="Chiffre d'affaires"
-                      stroke="#4f46e5"
-                      strokeWidth={2}
-                      activeDot={{ r: 8 }}
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Tabs defaultValue="invoices" className="w-full">
-            <TabsList className="mb-4">
-              <TabsTrigger value="invoices">Factures récentes</TabsTrigger>
-              <TabsTrigger value="expenses">Dépenses récentes</TabsTrigger>
-            </TabsList>
-            <TabsContent value="invoices">
-              <Card>
-                <CardHeader className="pb-2">
-                  <div className="flex items-center justify-between">
-                    <CardTitle>Factures récentes</CardTitle>
-                    <Button size="sm" variant="outline" asChild>
-                      <a href="/modules/accounting/invoices">
-                        Voir toutes <ArrowRight className="ml-2 h-4 w-4" />
-                      </a>
-                    </Button>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <RecentInvoicesTable 
-                    invoices={mockInvoices} 
-                    onViewInvoice={handleViewInvoice}
-                  />
-                </CardContent>
-              </Card>
-            </TabsContent>
-            <TabsContent value="expenses">
-              <Card>
-                <CardHeader className="pb-2">
-                  <div className="flex items-center justify-between">
-                    <CardTitle>Dépenses récentes</CardTitle>
-                    <Button size="sm" variant="outline">
-                      Voir toutes <ArrowRight className="ml-2 h-4 w-4" />
-                    </Button>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-center py-8 text-muted-foreground">
-                    Le module de gestion des dépenses sera disponible prochainement
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-          </Tabs>
-        </div>
-
-        {/* Right Column - Status and Actions */}
-        <div className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Statut des factures</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="h-[250px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={invoiceStatusData}
-                      cx="50%"
-                      cy="50%"
-                      labelLine={false}
-                      outerRadius={80}
-                      fill="#8884d8"
-                      dataKey="value"
-                      label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                    >
-                      {invoiceStatusData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <Tooltip formatter={(value) => `${value}%`} />
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Actions rapides</CardTitle>
-            </CardHeader>
-            <CardContent>
+      
+      {/* Graphiques */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <AreaChart className="h-5 w-5" />
+              <span>Flux de trésorerie</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="h-60 flex items-center justify-center text-muted-foreground">
+              {isLoading ? (
+                <Skeleton className="w-full h-full" />
+              ) : (
+                "Graphique de flux de trésorerie (À implémenter)"
+              )}
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <BarChart className="h-5 w-5" />
+              <span>Revenus vs Dépenses</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="h-60 flex items-center justify-center text-muted-foreground">
+              {isLoading ? (
+                <Skeleton className="w-full h-full" />
+              ) : (
+                "Graphique revenus/dépenses (À implémenter)"
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+      
+      {/* Dernières transactions */}
+      <div className="grid grid-cols-1 gap-6">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Calendar className="h-5 w-5" />
+              <span>Dernières activités</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {isLoading ? (
               <div className="space-y-2">
-                <Button className="w-full justify-start" asChild>
-                  <a href="/modules/accounting/invoices">
-                    <Plus className="mr-2 h-4 w-4" /> Nouvelle facture
-                  </a>
-                </Button>
-                <Button className="w-full justify-start" variant="outline" asChild>
-                  <a href="/modules/accounting/payments">
-                    <Plus className="mr-2 h-4 w-4" /> Nouveau paiement
-                  </a>
-                </Button>
-                <Button className="w-full justify-start" variant="outline" asChild>
-                  <a href="/modules/accounting/reports">
-                    <Download className="mr-2 h-4 w-4" /> Rapport financier
-                  </a>
-                </Button>
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-10 w-full" />
               </div>
-            </CardContent>
-          </Card>
-        </div>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Type</TableHead>
+                    <TableHead>Description</TableHead>
+                    <TableHead>Montant</TableHead>
+                    <TableHead>Statut</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {[...invoices.map(inv => ({
+                    id: inv.id,
+                    date: inv.issueDate || '',
+                    type: 'Facture',
+                    description: `Facture ${inv.invoiceNumber} - ${inv.clientName}`,
+                    amount: inv.total || 0,
+                    status: inv.status
+                  })), ...payments.map(payment => ({
+                    id: payment.id,
+                    date: payment.date,
+                    type: 'Paiement',
+                    description: `Paiement pour facture ${payment.invoiceId}`,
+                    amount: payment.amount,
+                    status: payment.status
+                  }))].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+                    .slice(0, 5)
+                    .map((activity) => (
+                    <TableRow key={activity.id}>
+                      <TableCell>{formatDate(activity.date)}</TableCell>
+                      <TableCell>{activity.type}</TableCell>
+                      <TableCell className="font-medium">{activity.description}</TableCell>
+                      <TableCell>{formatCurrency(activity.amount, 'EUR')}</TableCell>
+                      <TableCell>
+                        <Badge variant={
+                          activity.status === 'paid' || activity.status === 'completed' ? 'success' :
+                          activity.status === 'pending' ? 'outline' :
+                          activity.status === 'overdue' || activity.status === 'failed' ? 'destructive' :
+                          'secondary'
+                        }>
+                          {activity.status}
+                        </Badge>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

@@ -1,44 +1,30 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus, Filter, Calendar } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { formatCurrency } from './utils/formatting';
-
-const mockPayments = [
-  {
-    id: '1',
-    invoiceNumber: 'INV-2023-001',
-    clientName: 'Entreprise ABC',
-    date: '2023-02-10',
-    amount: 1250.00,
-    method: 'Carte bancaire',
-    status: 'completed'
-  },
-  {
-    id: '2',
-    invoiceNumber: 'INV-2023-005',
-    clientName: 'Société XYZ',
-    date: '2023-02-15',
-    amount: 750.00,
-    method: 'Virement bancaire',
-    status: 'pending'
-  },
-  {
-    id: '3',
-    invoiceNumber: 'INV-2023-008',
-    clientName: 'Client Particulier',
-    date: '2023-02-18',
-    amount: 450.00,
-    method: 'PayPal',
-    status: 'completed'
-  }
-];
+import { formatCurrency, formatDate } from './utils/formatting';
+import { usePaymentsData } from './hooks/usePaymentsData';
+import { Payment } from './types/accounting-types';
+import { Skeleton } from "@/components/ui/skeleton";
+import PaymentViewDialog from './components/PaymentViewDialog';
 
 const PaymentsPage: React.FC = () => {
+  const [activeTab, setActiveTab] = useState("all");
+  const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  
+  // Récupération des données depuis Firestore
+  const { payments, isLoading } = usePaymentsData();
+  
+  const handleViewPayment = (payment: Payment) => {
+    setSelectedPayment(payment);
+    setDialogOpen(true);
+  };
+
   return (
     <div className="container mx-auto py-6">
       <div className="flex justify-between items-center mb-6">
@@ -53,7 +39,7 @@ const PaymentsPage: React.FC = () => {
         </div>
       </div>
 
-      <Tabs defaultValue="all" className="w-full">
+      <Tabs defaultValue={activeTab} onValueChange={setActiveTab} className="w-full">
         <div className="flex items-center justify-between mb-4">
           <TabsList>
             <TabsTrigger value="all">Tous</TabsTrigger>
@@ -72,7 +58,15 @@ const PaymentsPage: React.FC = () => {
               <CardTitle>Tous les paiements</CardTitle>
             </CardHeader>
             <CardContent>
-              <PaymentsTable payments={mockPayments} />
+              {isLoading ? (
+                <div className="space-y-2">
+                  <Skeleton className="h-10 w-full" />
+                  <Skeleton className="h-10 w-full" />
+                  <Skeleton className="h-10 w-full" />
+                </div>
+              ) : (
+                <PaymentsTable payments={payments} onViewPayment={handleViewPayment} />
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -83,7 +77,17 @@ const PaymentsPage: React.FC = () => {
               <CardTitle>Paiements complétés</CardTitle>
             </CardHeader>
             <CardContent>
-              <PaymentsTable payments={mockPayments.filter(p => p.status === 'completed')} />
+              {isLoading ? (
+                <div className="space-y-2">
+                  <Skeleton className="h-10 w-full" />
+                  <Skeleton className="h-10 w-full" />
+                </div>
+              ) : (
+                <PaymentsTable 
+                  payments={payments.filter(p => p.status === 'completed')} 
+                  onViewPayment={handleViewPayment}
+                />
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -94,7 +98,17 @@ const PaymentsPage: React.FC = () => {
               <CardTitle>Paiements en attente</CardTitle>
             </CardHeader>
             <CardContent>
-              <PaymentsTable payments={mockPayments.filter(p => p.status === 'pending')} />
+              {isLoading ? (
+                <div className="space-y-2">
+                  <Skeleton className="h-10 w-full" />
+                  <Skeleton className="h-10 w-full" />
+                </div>
+              ) : (
+                <PaymentsTable 
+                  payments={payments.filter(p => p.status === 'pending')} 
+                  onViewPayment={handleViewPayment}
+                />
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -105,28 +119,37 @@ const PaymentsPage: React.FC = () => {
               <CardTitle>Paiements échoués</CardTitle>
             </CardHeader>
             <CardContent>
-              <PaymentsTable payments={mockPayments.filter(p => p.status === 'failed')} />
+              {isLoading ? (
+                <div className="space-y-2">
+                  <Skeleton className="h-10 w-full" />
+                  <Skeleton className="h-10 w-full" />
+                </div>
+              ) : (
+                <PaymentsTable 
+                  payments={payments.filter(p => p.status === 'failed')} 
+                  onViewPayment={handleViewPayment}
+                />
+              )}
             </CardContent>
           </Card>
         </TabsContent>
       </Tabs>
+      
+      <PaymentViewDialog 
+        open={dialogOpen} 
+        onOpenChange={setDialogOpen} 
+        payment={selectedPayment} 
+      />
     </div>
   );
 };
 
 interface PaymentsTableProps {
-  payments: {
-    id: string;
-    invoiceNumber: string;
-    clientName: string;
-    date: string;
-    amount: number;
-    method: string;
-    status: string;
-  }[];
+  payments: Payment[];
+  onViewPayment: (payment: Payment) => void;
 }
 
-const PaymentsTable: React.FC<PaymentsTableProps> = ({ payments }) => {
+const PaymentsTable: React.FC<PaymentsTableProps> = ({ payments, onViewPayment }) => {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'completed':
@@ -135,25 +158,34 @@ const PaymentsTable: React.FC<PaymentsTableProps> = ({ payments }) => {
         return <Badge variant="secondary">En attente</Badge>;
       case 'failed':
         return <Badge variant="destructive">Échoué</Badge>;
+      case 'refunded':
+        return <Badge variant="warning">Remboursé</Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
     }
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString();
+  const getMethodName = (method: string) => {
+    switch (method) {
+      case 'stripe': return 'Carte de crédit';
+      case 'bank_transfer': return 'Virement bancaire';
+      case 'cash': return 'Espèces';
+      case 'check': return 'Chèque';
+      case 'paypal': return 'PayPal';
+      default: return method || 'Virement bancaire';
+    }
   };
 
   return (
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead>Numéro de facture</TableHead>
-          <TableHead>Client</TableHead>
+          <TableHead>Facture</TableHead>
           <TableHead>Date</TableHead>
           <TableHead>Montant</TableHead>
           <TableHead>Méthode</TableHead>
           <TableHead>Statut</TableHead>
+          <TableHead>Actions</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -165,13 +197,20 @@ const PaymentsTable: React.FC<PaymentsTableProps> = ({ payments }) => {
           </TableRow>
         ) : (
           payments.map((payment) => (
-            <TableRow key={payment.id}>
-              <TableCell className="font-medium">{payment.invoiceNumber}</TableCell>
-              <TableCell>{payment.clientName}</TableCell>
+            <TableRow key={payment.id} className="cursor-pointer hover:bg-muted/50" onClick={() => onViewPayment(payment)}>
+              <TableCell className="font-medium">{payment.invoiceId}</TableCell>
               <TableCell>{formatDate(payment.date)}</TableCell>
-              <TableCell>{formatCurrency(payment.amount, 'EUR')}</TableCell>
-              <TableCell>{payment.method}</TableCell>
+              <TableCell>{formatCurrency(payment.amount, payment.currency)}</TableCell>
+              <TableCell>{getMethodName(payment.method)}</TableCell>
               <TableCell>{getStatusBadge(payment.status)}</TableCell>
+              <TableCell>
+                <Button variant="ghost" size="sm" onClick={(e) => {
+                  e.stopPropagation();
+                  onViewPayment(payment);
+                }}>
+                  Voir
+                </Button>
+              </TableCell>
             </TableRow>
           ))
         )}
