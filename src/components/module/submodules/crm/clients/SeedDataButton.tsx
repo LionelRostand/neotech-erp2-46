@@ -15,12 +15,30 @@ const SeedDataButton: React.FC = () => {
     try {
       setIsSeeding(true);
       toast.info("Ajout des données de démonstration en cours...");
-      await seedMockClients();
-      // Toast notification is already handled in seedMockClients
+      
+      // Add a timeout for the entire operation
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        setTimeout(() => {
+          setIsSeeding(false);
+          reject(new Error('L\'opération a pris trop de temps'));
+        }, 20000); // 20 seconds overall timeout
+      });
+      
+      // Race between the seeding operation and the timeout
+      await Promise.race([
+        seedMockClients(),
+        timeoutPromise
+      ]);
     } catch (error) {
       console.error("Error seeding demo data:", error);
-      const errorMessage = error instanceof Error ? error.message : "Erreur inconnue";
-      toast.error(`Erreur lors de l'ajout des données de démonstration: ${errorMessage}`);
+      
+      // Check if it's a timeout error
+      if (error instanceof Error && error.message.includes('trop de temps')) {
+        toast.warning("L'ajout des données de démonstration a été interrompu car il prenait trop de temps. Certains clients ont pu être ajoutés.");
+      } else {
+        const errorMessage = error instanceof Error ? error.message : "Erreur inconnue";
+        toast.error(`Erreur lors de l'ajout des données de démonstration: ${errorMessage}`);
+      }
     } finally {
       setIsSeeding(false);
     }

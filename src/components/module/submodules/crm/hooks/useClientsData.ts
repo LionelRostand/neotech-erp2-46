@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import { useFirestore } from '@/hooks/useFirestore';
@@ -22,7 +21,7 @@ export const useClientsData = () => {
     setIsLoading(false);
   }, []);
 
-  // Function to fetch clients from Firestore
+  // Function to fetch clients from Firestore with timeouts
   const fetchClients = useCallback(async () => {
     // Reset cancellation state
     setIsCancelled(false);
@@ -31,7 +30,22 @@ export const useClientsData = () => {
 
     try {
       console.log("Fetching clients from Firestore...");
-      const clientsData = await clientsFirestore.getAll();
+      
+      // Add a timeout to the fetch operation
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        const timeoutId = setTimeout(() => {
+          reject(new Error('Délai d\'attente dépassé lors du chargement des clients'));
+        }, 5000); // 5 seconds timeout
+        
+        // Clean up timeout if needed
+        if (isCancelled) clearTimeout(timeoutId);
+      });
+      
+      // Race between the actual fetch and the timeout
+      const clientsData = await Promise.race([
+        clientsFirestore.getAll(),
+        timeoutPromise
+      ]);
       
       // Check if operation was cancelled during fetch
       if (isCancelled) {
@@ -71,16 +85,29 @@ export const useClientsData = () => {
       // Check if operation was cancelled
       if (isCancelled) return;
       
+      // Handle timeout error specifically
+      if (err instanceof Error && err.message.includes('Délai d\'attente')) {
+        console.log("Timeout occurred, using mock data");
+        setIsOfflineMode(true);
+        setClients(mockClientsData);
+        setError(err);
+        toast.warning("Le délai de chargement a été dépassé. Utilisation des données de démonstration.");
+        return;
+      }
+      
       // Handle firebase's offline mode
       const errorMessage = err instanceof Error ? err.message : 'Unknown error';
       
       if (errorMessage.includes('offline') || 
           errorMessage.includes('unavailable') || 
-          errorMessage.includes('internal')) {
+          errorMessage.includes('internal') ||
+          errorMessage.includes('timeout') ||
+          errorMessage.includes('timed out')) {
         console.log("Using offline mode with mock data");
         setIsOfflineMode(true);
         setClients(mockClientsData);
         setError(null);
+        toast.info("Mode hors ligne activé. Les données locales sont affichées.");
       } else {
         setError(err instanceof Error ? err : new Error(String(err)));
         toast.error(`Erreur lors du chargement des clients: ${errorMessage}`);
@@ -92,7 +119,7 @@ export const useClientsData = () => {
     }
   }, [clientsFirestore, isCancelled]);
 
-  // Add a new client
+  // Add a new client with timeout handling
   const addClient = async (clientData: ClientFormData): Promise<Client> => {
     try {
       // Validate required fields
@@ -109,8 +136,18 @@ export const useClientsData = () => {
       
       console.log("Adding client to Firebase:", newClient);
       
-      // Add to Firestore
-      const addedClient = await clientsFirestore.add(newClient);
+      // Add a timeout to the add operation
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        setTimeout(() => {
+          reject(new Error('Délai d\'attente dépassé lors de l\'ajout du client'));
+        }, 7000); // 7 seconds timeout
+      });
+      
+      // Race between the actual add and the timeout
+      const addedClient = await Promise.race([
+        clientsFirestore.add(newClient),
+        timeoutPromise
+      ]);
       
       console.log("Client added successfully, response:", addedClient);
       
@@ -140,13 +177,42 @@ export const useClientsData = () => {
       return typedClient;
     } catch (err) {
       console.error("Error adding client:", err);
+      
+      // Handle timeout error specifically
+      if (err instanceof Error && err.message.includes('Délai d\'attente')) {
+        // Attempt to save in offline mode
+        const offlineClient: Client = {
+          id: `offline_${Date.now()}`,
+          name: clientData.name || '',
+          contactName: clientData.contactName || '',
+          contactEmail: clientData.contactEmail || '',
+          contactPhone: clientData.contactPhone || '',
+          sector: clientData.sector || '',
+          revenue: clientData.revenue || '',
+          status: clientData.status as 'active' | 'inactive' | 'lead',
+          address: clientData.address || '',
+          website: clientData.website || '',
+          notes: clientData.notes || '',
+          createdAt: new Date().toISOString(),
+          _offlineCreated: true,
+          _offlineUpdated: false,
+          _offlineDeleted: false
+        };
+        
+        setClients(prev => [...prev, offlineClient]);
+        setIsOfflineMode(true);
+        
+        toast.warning("Délai d'attente dépassé. Le client a été sauvegardé localement et sera synchronisé ultérieurement.");
+        return offlineClient;
+      }
+      
       const errorMessage = err instanceof Error ? err.message : String(err);
       toast.error(`Erreur lors de l'ajout du client: ${errorMessage}`);
       throw err;
     }
   };
 
-  // Update an existing client
+  // Update an existing client with timeout handling
   const updateClient = async (id: string, clientData: Partial<ClientFormData>): Promise<Client> => {
     try {
       // Prepare update data with timestamp
@@ -156,8 +222,18 @@ export const useClientsData = () => {
         status: clientData.status as 'active' | 'inactive' | 'lead',
       };
       
-      // Update in Firestore
-      await clientsFirestore.update(id, updateData);
+      // Add a timeout to the update operation
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        setTimeout(() => {
+          reject(new Error('Délai d\'attente dépassé lors de la mise à jour du client'));
+        }, 7000); // 7 seconds timeout
+      });
+      
+      // Race between the actual update and the timeout
+      await Promise.race([
+        clientsFirestore.update(id, updateData),
+        timeoutPromise
+      ]);
       
       // Find current client data to merge with updates
       const currentClient = clients.find(client => client.id === id);
@@ -181,17 +257,53 @@ export const useClientsData = () => {
       return updatedClient;
     } catch (err) {
       console.error("Error updating client:", err);
+      
+      // Handle timeout error specifically
+      if (err instanceof Error && err.message.includes('Délai d\'attente')) {
+        // Find the client to update locally
+        const currentClient = clients.find(client => client.id === id);
+        if (!currentClient) {
+          throw new Error(`Client with ID ${id} not found`);
+        }
+        
+        // Update the client locally
+        const offlineUpdatedClient: Client = {
+          ...currentClient,
+          ...clientData,
+          updatedAt: new Date().toISOString(),
+          _offlineUpdated: true
+        };
+        
+        setClients(prev => 
+          prev.map(client => client.id === id ? offlineUpdatedClient : client)
+        );
+        
+        setIsOfflineMode(true);
+        toast.warning("Délai d'attente dépassé. Les modifications ont été sauvegardées localement et seront synchronisées ultérieurement.");
+        return offlineUpdatedClient;
+      }
+      
       const errorMessage = err instanceof Error ? err.message : String(err);
       toast.error(`Erreur lors de la mise à jour du client: ${errorMessage}`);
       throw err;
     }
   };
 
-  // Delete a client
+  // Delete a client with timeout handling
   const deleteClient = async (id: string): Promise<void> => {
     try {
-      // Delete from Firestore
-      await clientsFirestore.remove(id);
+      // Add a timeout to the delete operation
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        setTimeout(() => {
+          reject(new Error('Délai d\'attente dépassé lors de la suppression du client'));
+        }, 7000); // 7 seconds timeout
+      });
+      
+      // Race between the actual delete and the timeout
+      await Promise.race([
+        clientsFirestore.remove(id),
+        timeoutPromise
+      ]);
       
       // Update local state
       setClients(prev => prev.filter(client => client.id !== id));
@@ -199,31 +311,95 @@ export const useClientsData = () => {
       toast.success("Client supprimé avec succès");
     } catch (err) {
       console.error("Error deleting client:", err);
+      
+      // Handle timeout error specifically
+      if (err instanceof Error && err.message.includes('Délai d\'attente')) {
+        // Mark client as deleted locally
+        const deletedClient = clients.find(client => client.id === id);
+        if (deletedClient) {
+          const offlineDeletedClient: Client = {
+            ...deletedClient,
+            _offlineDeleted: true
+          };
+          
+          // Keep in list but mark as deleted for later sync
+          setClients(prev => 
+            prev.map(client => client.id === id ? offlineDeletedClient : client).filter(client => !client._offlineDeleted)
+          );
+          
+          setIsOfflineMode(true);
+          toast.warning("Délai d'attente dépassé. Le client a été marqué pour suppression et sera synchronisé ultérieurement.");
+          return;
+        }
+      }
+      
       const errorMessage = err instanceof Error ? err.message : String(err);
       toast.error(`Erreur lors de la suppression du client: ${errorMessage}`);
       throw err;
     }
   };
 
-  // Seed mock clients to Firestore
+  // Seed mock clients to Firestore with timeout handling
   const seedMockClients = async (): Promise<void> => {
     try {
       setIsLoading(true);
       let seedCount = 0;
+      let timeoutCount = 0;
       
-      for (const client of mockClientsData) {
-        // Skip the ID as Firestore will generate one
-        const { id, ...clientData } = client;
+      const addClientWithTimeout = async (clientData: any) => {
+        try {
+          // Add a timeout to each add operation
+          const timeoutPromise = new Promise<never>((_, reject) => {
+            setTimeout(() => {
+              reject(new Error('timeout'));
+            }, 5000); // 5 seconds timeout per client
+          });
+          
+          // Race between the actual add and the timeout
+          await Promise.race([
+            clientsFirestore.add(clientData),
+            timeoutPromise
+          ]);
+          
+          seedCount++;
+          return true;
+        } catch (err) {
+          if (err instanceof Error && err.message.includes('timeout')) {
+            timeoutCount++;
+            return false;
+          }
+          throw err;
+        }
+      };
+      
+      // Process clients in batches to reduce timeouts
+      const batchSize = 3;
+      for (let i = 0; i < mockClientsData.length; i += batchSize) {
+        const batch = mockClientsData.slice(i, i + batchSize);
         
-        // Add to Firestore without updating our local state yet
-        await clientsFirestore.add(clientData);
-        seedCount++;
+        // Process batch in parallel
+        const promises = batch.map(client => {
+          // Skip the ID as Firestore will generate one
+          const { id, ...clientData } = client;
+          return addClientWithTimeout(clientData);
+        });
+        
+        await Promise.all(promises);
+        
+        // Show progress toast
+        if ((i + batchSize) < mockClientsData.length) {
+          toast.info(`Ajout des clients en cours... ${i + batchSize}/${mockClientsData.length}`);
+        }
       }
       
       // Refresh the clients list to get the newly added documents
       await fetchClients();
       
-      toast.success(`${seedCount} clients de démonstration ajoutés avec succès`);
+      if (timeoutCount > 0) {
+        toast.warning(`${seedCount} clients ajoutés. ${timeoutCount} clients n'ont pas pu être ajoutés en raison d'un délai d'attente.`);
+      } else {
+        toast.success(`${seedCount} clients de démonstration ajoutés avec succès`);
+      }
     } catch (err) {
       console.error("Error seeding mock clients:", err);
       const errorMessage = err instanceof Error ? err.message : String(err);
