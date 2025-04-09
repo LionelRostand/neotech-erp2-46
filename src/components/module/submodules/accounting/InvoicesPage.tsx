@@ -22,14 +22,19 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { useInvoices } from './hooks/useInvoices';
 import { PaginationComponent } from './components/PaginationComponent';
+import InvoiceFormDialog from './components/InvoiceFormDialog';
+import DeleteInvoiceDialog from './components/DeleteInvoiceDialog';
+import InvoiceViewDialog from './components/InvoiceViewDialog';
+import { Invoice } from './types/accounting-types';
+import { exportToExcel } from '@/utils/exportUtils';
 
 const statusOptions = [
-  { value: "draft", label: "Draft" },
-  { value: "sent", label: "Sent" },
-  { value: "paid", label: "Paid" },
-  { value: "overdue", label: "Overdue" },
-  { value: "cancelled", label: "Cancelled" },
-  { value: "pending", label: "Pending" },
+  { value: "draft", label: "Brouillon" },
+  { value: "sent", label: "Envoyée" },
+  { value: "paid", label: "Payée" },
+  { value: "overdue", label: "En retard" },
+  { value: "cancelled", label: "Annulée" },
+  { value: "pending", label: "En attente" },
 ];
 
 const currencyOptions = [
@@ -49,31 +54,80 @@ const InvoicesPage = () => {
   const [currencyFilter, setCurrencyFilter] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
+  
+  // Dialogues d'état
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [viewDialogOpen, setViewDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
 
   const handleAddInvoice = () => {
-    navigate('/accounting/invoices/new');
+    setSelectedInvoice(null);
+    setCreateDialogOpen(true);
   };
 
   const handleViewInvoice = (invoiceId: string) => {
-    navigate(`/accounting/invoices/${invoiceId}`);
+    const invoice = invoices.find(inv => inv.id === invoiceId);
+    if (invoice) {
+      setSelectedInvoice(invoice);
+      setViewDialogOpen(true);
+    }
   };
 
   const handleEditInvoice = (invoiceId: string) => {
-    navigate(`/accounting/invoices/edit/${invoiceId}`);
+    const invoice = invoices.find(inv => inv.id === invoiceId);
+    if (invoice) {
+      setSelectedInvoice(invoice);
+      setEditDialogOpen(true);
+    }
   };
 
-  const handleDeleteInvoice = async (invoiceId: string) => {
-    toast({
-      title: "Supprimer la facture",
-      description: "Fonctionnalité à venir",
-    });
+  const handleDeleteInvoice = (invoiceId: string) => {
+    const invoice = invoices.find(inv => inv.id === invoiceId);
+    if (invoice) {
+      setSelectedInvoice(invoice);
+      setDeleteDialogOpen(true);
+    }
   };
 
   const handleExportInvoices = () => {
-    toast({
-      title: "Exporter les factures",
-      description: "Fonctionnalité à venir",
-    });
+    if (!filteredInvoices || filteredInvoices.length === 0) {
+      toast({
+        title: "Export impossible",
+        description: "Aucune facture à exporter.",
+      });
+      return;
+    }
+
+    // Préparer les données pour l'export
+    const dataToExport = filteredInvoices.map(invoice => ({
+      'Numéro': invoice.invoiceNumber || invoice.number || '',
+      'Client': invoice.clientName || '',
+      'Date': invoice.issueDate || '',
+      'Échéance': invoice.dueDate || '',
+      'Statut': invoice.status || '',
+      'Devise': invoice.currency || '',
+      'Montant HT': invoice.subtotal || 0,
+      'TVA': invoice.taxAmount || 0,
+      'Montant Total': invoice.total || 0,
+    }));
+
+    // Exporter en Excel
+    const success = exportToExcel(dataToExport, 'Factures', 'factures_export');
+
+    if (success) {
+      toast({
+        title: "Export réussi",
+        description: "Les factures ont été exportées avec succès.",
+      });
+    } else {
+      toast({
+        title: "Erreur d'export",
+        description: "Une erreur est survenue lors de l'export des factures.",
+        variant: "destructive"
+      });
+    }
   };
 
   const filteredInvoices = invoices?.filter((invoice) => {
@@ -208,6 +262,36 @@ const InvoicesPage = () => {
           onPageChange={setCurrentPage}
         />
       </div>
+
+      {/* Dialogues */}
+      <InvoiceFormDialog 
+        open={createDialogOpen} 
+        onOpenChange={setCreateDialogOpen} 
+        onSuccess={reload}
+      />
+      
+      <InvoiceFormDialog 
+        open={editDialogOpen} 
+        onOpenChange={setEditDialogOpen} 
+        invoice={selectedInvoice}
+        onSuccess={reload}
+      />
+      
+      <InvoiceViewDialog 
+        open={viewDialogOpen} 
+        onOpenChange={setViewDialogOpen} 
+        invoice={selectedInvoice} 
+      />
+      
+      {selectedInvoice && (
+        <DeleteInvoiceDialog 
+          open={deleteDialogOpen} 
+          onOpenChange={setDeleteDialogOpen} 
+          invoiceId={selectedInvoice.id} 
+          invoiceNumber={selectedInvoice.invoiceNumber || selectedInvoice.number || ''} 
+          onSuccess={reload}
+        />
+      )}
     </div>
   );
 };
