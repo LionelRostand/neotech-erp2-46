@@ -1,482 +1,440 @@
+
 import { useState, useEffect, useCallback } from 'react';
-import { collection, doc, getDocs, addDoc, updateDoc, deleteDoc, serverTimestamp, Timestamp } from 'firebase/firestore';
+import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { toast } from 'sonner';
-import { COLLECTIONS } from '@/lib/firebase-collections';
 import { Client, ClientFormData } from '../types/crm-types';
+import { COLLECTIONS } from '@/lib/firebase-collections';
+import { toast } from 'sonner';
 import { v4 as uuidv4 } from 'uuid';
 
-// Define the type for Firestore timestamp
-type FirestoreTimestamp = Timestamp;
-
+/**
+ * Hook to manage clients data with Firestore
+ * Includes functions for fetching, adding, updating, and deleting clients
+ */
 export const useClientsData = () => {
   const [clients, setClients] = useState<Client[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
   const [isOfflineMode, setIsOfflineMode] = useState(false);
+  
+  // Mock data for offline mode
+  const mockClients: Client[] = [
+    {
+      id: '1',
+      name: 'TechSolutions Inc.',
+      contactName: 'Jean Dupont',
+      contactEmail: 'jean.dupont@techsolutions.com',
+      contactPhone: '+33 1 23 45 67 89',
+      sector: 'technology',
+      revenue: '10-50M',
+      status: 'active',
+      address: '15 Rue de l\'Innovation, 75001 Paris',
+      website: 'https://techsolutions.example.com',
+      notes: 'Client depuis 5 ans, très satisfait de nos services.',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      customerSince: new Date(2019, 5, 15).toISOString()
+    },
+    {
+      id: '2',
+      name: 'Finance Plus',
+      contactName: 'Marie Laurent',
+      contactEmail: 'marie.laurent@financeplus.com',
+      contactPhone: '+33 1 98 76 54 32',
+      sector: 'finance',
+      revenue: '>100M',
+      status: 'active',
+      address: '8 Avenue des Finances, 69002 Lyon',
+      website: 'https://financeplus.example.com',
+      notes: 'Grand compte, plusieurs projets en cours.',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      customerSince: new Date(2020, 3, 10).toISOString()
+    }
+  ];
 
-  // Fetch clients data from Firestore
+  // Function to fetch clients from Firestore
   const fetchClients = useCallback(async () => {
     setIsLoading(true);
+    setError(null);
+    
     try {
       const clientsCollection = collection(db, COLLECTIONS.CRM.CLIENTS);
-      const clientsSnapshot = await getDocs(clientsCollection);
+      const snapshot = await getDocs(clientsCollection);
       
-      const clientsData = clientsSnapshot.docs.map(doc => {
-        const data = doc.data();
-        return {
-          id: doc.id,
-          name: data.name,
-          contactName: data.contactName,
-          contactEmail: data.contactEmail,
-          contactPhone: data.contactPhone,
-          sector: data.sector,
-          status: data.status,
-          revenue: data.revenue,
-          address: data.address,
-          website: data.website,
-          notes: data.notes,
-          createdAt: data.createdAt?.toDate?.() || new Date(),
-          updatedAt: data.updatedAt?.toDate?.() || new Date(),
-          customerSince: data.customerSince
-        } as Client;
-      });
-
-      setClients(clientsData);
-      setIsOfflineMode(false);
-      setError(null);
-      console.log('Fetched clients:', clientsData.length);
-    } catch (err: any) {
-      console.error('Error fetching clients:', err);
-      
-      // Check for specific Firestore errors that indicate offline/connection issues
-      if (err.code === 'unavailable' || 
-          err.code === 'failed-precondition' || 
-          err.code === 'resource-exhausted' ||
-          err.name === 'FirebaseError') {
-        console.log('Firebase connection issue detected, switching to offline mode');
+      if (snapshot.empty) {
+        console.log('No clients found in Firestore');
+        setClients([]);
         setIsOfflineMode(true);
-        toast.error('La connexion à Firebase a échoué. Mode démo activé.');
-      } else {
-        setError(err);
-        toast.error(`Erreur de chargement des clients: ${err.message}`);
+        return () => {};
       }
+      
+      const clientsList = snapshot.docs.map(doc => {
+        // Convert Firestore data to Client object
+        const data = doc.data();
+        const client: Client = {
+          id: doc.id,
+          name: data.name || '',
+          contactName: data.contactName || '',
+          contactEmail: data.contactEmail || '',
+          contactPhone: data.contactPhone || '',
+          sector: data.sector || '',
+          status: data.status || 'active',
+          revenue: data.revenue || '',
+          address: data.address || '',
+          website: data.website || '',
+          notes: data.notes || '',
+          // Convert Firestore timestamps to ISO strings
+          createdAt: data.createdAt ? new Date(data.createdAt.seconds * 1000).toISOString() : new Date().toISOString(),
+          updatedAt: data.updatedAt ? new Date(data.updatedAt.seconds * 1000).toISOString() : new Date().toISOString(),
+          customerSince: data.customerSince || undefined
+        };
+        return client;
+      });
+      
+      setClients(clientsList);
+      setIsOfflineMode(false);
+    } catch (err) {
+      console.error('Error fetching clients:', err);
+      setError(err instanceof Error ? err : new Error('Failed to fetch clients'));
+      setIsOfflineMode(true);
+      toast.error('Erreur lors du chargement des clients, mode démo activé');
     } finally {
       setIsLoading(false);
     }
     
-    // Return a cleanup function
-    return () => {
-      console.log('Cleanup function called');
-    };
+    return () => {};
   }, []);
 
-  // Add a new client to Firestore
+  // Function to add a client to Firestore
   const addClient = async (formData: ClientFormData) => {
     try {
-      // Check if we're in offline mode
       if (isOfflineMode) {
-        // Create a mock client with a unique ID
-        const newMockClient: Client = {
+        // In offline mode, add to local state only
+        const newClient: Client = {
           id: uuidv4(),
           ...formData,
           status: formData.status as 'active' | 'inactive' | 'lead',
-          createdAt: new Date(),
-          updatedAt: new Date(),
-          customerSince: new Date().toISOString().split('T')[0]
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
         };
-
-        // Add to local state
-        setClients(prev => [...prev, newMockClient]);
-        toast.success('Client ajouté en mode démo.');
-        return newMockClient;
+        
+        setClients(prev => [...prev, newClient]);
+        toast.success('Client ajouté en mode démo');
+        return newClient;
       }
-
-      // Online mode - add to Firestore
+      
+      // Add to Firestore
       const clientsCollection = collection(db, COLLECTIONS.CRM.CLIENTS);
       const docRef = await addDoc(clientsCollection, {
         ...formData,
         createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-        customerSince: new Date().toISOString().split('T')[0]
+        updatedAt: serverTimestamp()
       });
-
-      // Create the new client object with the document ID
+      
+      // Add to local state for immediate UI update
       const newClient: Client = {
         id: docRef.id,
         ...formData,
         status: formData.status as 'active' | 'inactive' | 'lead',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        customerSince: new Date().toISOString().split('T')[0]
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
       };
-
-      // Update local state
+      
       setClients(prev => [...prev, newClient]);
-      toast.success('Client ajouté avec succès.');
+      toast.success('Client ajouté avec succès');
       return newClient;
-    } catch (err: any) {
+    } catch (err) {
       console.error('Error adding client:', err);
-      
-      // Check if this is a connection issue
-      if (err.code === 'unavailable' || 
-          err.code === 'failed-precondition' || 
-          err.name === 'FirebaseError') {
-        setIsOfflineMode(true);
-        toast.error('Impossible d\'ajouter le client. Mode démo activé.');
-        
-        // Create and return a mock client anyway
-        const mockClient: Client = {
-          id: uuidv4(),
-          ...formData,
-          status: formData.status as 'active' | 'inactive' | 'lead',
-          createdAt: new Date(),
-          updatedAt: new Date(),
-          customerSince: new Date().toISOString().split('T')[0]
-        };
-        
-        setClients(prev => [...prev, mockClient]);
-        return mockClient;
-      }
-      
-      toast.error(`Erreur d'ajout du client: ${err.message}`);
+      toast.error('Erreur lors de l\'ajout du client');
       throw err;
     }
   };
 
-  // Update a client in Firestore
+  // Function to update a client in Firestore
   const updateClient = async (id: string, formData: ClientFormData) => {
     try {
-      // Check if we're in offline mode
       if (isOfflineMode) {
-        // Update the client in local state only
-        setClients(prev => prev.map(client => 
-          client.id === id 
-            ? { 
-                ...client, 
-                ...formData, 
-                status: formData.status as 'active' | 'inactive' | 'lead',
-                updatedAt: new Date()
-              } 
-            : client
-        ));
-        toast.success('Client mis à jour en mode démo.');
+        // In offline mode, update local state only
+        setClients(prev => 
+          prev.map(client => 
+            client.id === id 
+              ? {
+                  ...client,
+                  ...formData,
+                  status: formData.status as 'active' | 'inactive' | 'lead',
+                  updatedAt: new Date().toISOString()
+                }
+              : client
+          )
+        );
+        toast.success('Client mis à jour en mode démo');
         return;
       }
-
-      // Online mode - update in Firestore
+      
+      // Update in Firestore
       const clientDoc = doc(db, COLLECTIONS.CRM.CLIENTS, id);
       await updateDoc(clientDoc, {
         ...formData,
         updatedAt: serverTimestamp()
       });
-
-      // Update local state
-      setClients(prev => prev.map(client => 
-        client.id === id 
-          ? { 
-              ...client, 
-              ...formData, 
-              status: formData.status as 'active' | 'inactive' | 'lead',
-              updatedAt: new Date()
-            } 
-          : client
-      ));
-      toast.success('Client mis à jour avec succès.');
-    } catch (err: any) {
-      console.error('Error updating client:', err);
       
-      // Check if this is a connection issue
-      if (err.code === 'unavailable' || 
-          err.code === 'failed-precondition' || 
-          err.name === 'FirebaseError') {
-        setIsOfflineMode(true);
-        
-        // Update in local state despite the error
-        setClients(prev => prev.map(client => 
+      // Update local state for immediate UI update
+      setClients(prev => 
+        prev.map(client => 
           client.id === id 
-            ? { 
-                ...client, 
-                ...formData, 
+            ? {
+                ...client,
+                ...formData,
                 status: formData.status as 'active' | 'inactive' | 'lead',
-                updatedAt: new Date()
-              } 
+                updatedAt: new Date().toISOString()
+              }
             : client
-        ));
-        toast.warning('Client mis à jour en mode démo.');
-        return;
-      }
-      
-      toast.error(`Erreur de mise à jour du client: ${err.message}`);
+        )
+      );
+      toast.success('Client mis à jour avec succès');
+    } catch (err) {
+      console.error('Error updating client:', err);
+      toast.error('Erreur lors de la mise à jour du client');
       throw err;
     }
   };
 
-  // Delete a client from Firestore
+  // Function to delete a client from Firestore
   const deleteClient = async (id: string) => {
     try {
-      // Check if we're in offline mode
       if (isOfflineMode) {
-        // Remove the client from local state only
+        // In offline mode, remove from local state only
         setClients(prev => prev.filter(client => client.id !== id));
-        toast.success('Client supprimé en mode démo.');
+        toast.success('Client supprimé en mode démo');
         return;
       }
-
-      // Online mode - delete from Firestore
+      
+      // Delete from Firestore
       const clientDoc = doc(db, COLLECTIONS.CRM.CLIENTS, id);
       await deleteDoc(clientDoc);
-
+      
       // Update local state
       setClients(prev => prev.filter(client => client.id !== id));
-      toast.success('Client supprimé avec succès.');
-    } catch (err: any) {
+      toast.success('Client supprimé avec succès');
+    } catch (err) {
       console.error('Error deleting client:', err);
-      
-      // Check if this is a connection issue
-      if (err.code === 'unavailable' || 
-          err.code === 'failed-precondition' || 
-          err.name === 'FirebaseError') {
-        setIsOfflineMode(true);
-        
-        // Remove from local state despite the error
-        setClients(prev => prev.filter(client => client.id !== id));
-        toast.warning('Client supprimé en mode démo.');
-        return;
-      }
-      
-      toast.error(`Erreur de suppression du client: ${err.message}`);
+      toast.error('Erreur lors de la suppression du client');
       throw err;
     }
   };
 
-  // Seed mock clients data for demo mode
+  // Helper function to convert a Date to ISO string
+  const formatDate = (date: Date): string => {
+    return date.toISOString();
+  };
+
+  // Function to seed demo clients
   const seedMockClients = async () => {
     try {
-      // Check if already in offline mode
-      if (!isOfflineMode) {
-        // Try to access Firestore to confirm connection
-        try {
-          const clientsCollection = collection(db, COLLECTIONS.CRM.CLIENTS);
-          await getDocs(clientsCollection);
-        } catch (err) {
-          // If error, switch to offline mode
-          setIsOfflineMode(true);
-        }
-      }
-
-      // Generate mock clients
-      const mockClients: Client[] = [
+      setIsLoading(true);
+      
+      const demoClients: Client[] = [
         {
           id: uuidv4(),
-          name: "TechSolutions",
-          contactName: "Jean Dupont",
-          contactEmail: "jean.dupont@techsolutions.com",
-          contactPhone: "01 23 45 67 89",
-          sector: "technology",
-          status: "active",
-          revenue: "250000",
-          address: "15 rue de l'Innovation, 75001 Paris",
-          website: "www.techsolutions.com",
-          notes: "Client fidèle depuis 5 ans",
-          createdAt: new Date(2023, 1, 15),
-          updatedAt: new Date(2023, 5, 10),
-          customerSince: "2023-01-15"
+          name: 'TechSolutions Inc.',
+          contactName: 'Jean Dupont',
+          contactEmail: 'jean.dupont@techsolutions.com',
+          contactPhone: '+33 1 23 45 67 89',
+          sector: 'technology',
+          revenue: '10-50M',
+          status: 'active',
+          address: '15 Rue de l\'Innovation, 75001 Paris',
+          website: 'https://techsolutions.example.com',
+          notes: 'Client depuis 5 ans, très satisfait de nos services.',
+          createdAt: formatDate(new Date()),
+          updatedAt: formatDate(new Date()),
+          customerSince: formatDate(new Date(2019, 5, 15))
         },
         {
           id: uuidv4(),
-          name: "FinanceExpert",
-          contactName: "Marie Leclerc",
-          contactEmail: "marie@financeexpert.fr",
-          contactPhone: "01 98 76 54 32",
-          sector: "finance",
-          status: "active",
-          revenue: "500000",
-          address: "8 avenue des Finances, 69002 Lyon",
-          website: "www.financeexpert.fr",
-          notes: "Contrat annuel de conseil",
-          createdAt: new Date(2022, 8, 20),
-          updatedAt: new Date(2023, 4, 5),
-          customerSince: "2022-08-20"
+          name: 'Finance Plus',
+          contactName: 'Marie Laurent',
+          contactEmail: 'marie.laurent@financeplus.com',
+          contactPhone: '+33 1 98 76 54 32',
+          sector: 'finance',
+          revenue: '>100M',
+          status: 'active',
+          address: '8 Avenue des Finances, 69002 Lyon',
+          website: 'https://financeplus.example.com',
+          notes: 'Grand compte, plusieurs projets en cours.',
+          createdAt: formatDate(new Date()),
+          updatedAt: formatDate(new Date()),
+          customerSince: formatDate(new Date(2020, 3, 10))
         },
         {
           id: uuidv4(),
-          name: "Santé Plus",
-          contactName: "Pierre Martin",
-          contactEmail: "pierre@santeplus.org",
-          contactPhone: "04 56 78 90 12",
-          sector: "healthcare",
-          status: "inactive",
-          revenue: "120000",
-          address: "25 boulevard Santé, 33000 Bordeaux",
-          website: "www.santeplus.org",
-          notes: "En attente de renouvellement",
-          createdAt: new Date(2022, 5, 8),
-          updatedAt: new Date(2023, 2, 15),
-          customerSince: "2022-05-08"
+          name: 'Santé Optimale',
+          contactName: 'Pierre Martin',
+          contactEmail: 'pierre.martin@santeoptimale.com',
+          contactPhone: '+33 4 56 78 90 12',
+          sector: 'healthcare',
+          revenue: '1-10M',
+          status: 'active',
+          address: '23 Boulevard de la Santé, 33000 Bordeaux',
+          website: 'https://santeoptimale.example.com',
+          notes: 'Nouveau client, grand potentiel de croissance.',
+          createdAt: formatDate(new Date()),
+          updatedAt: formatDate(new Date()),
+          customerSince: formatDate(new Date(2021, 7, 22))
         },
         {
           id: uuidv4(),
-          name: "EduFutur",
-          contactName: "Sophie Bernard",
-          contactEmail: "sophie@edufutur.edu",
-          contactPhone: "03 45 67 89 01",
-          sector: "education",
-          status: "lead",
-          revenue: "75000",
-          address: "12 rue de l'Enseignement, 59000 Lille",
-          website: "www.edufutur.edu",
-          notes: "Intéressé par notre solution de gestion",
-          createdAt: new Date(2023, 3, 12),
-          updatedAt: new Date(2023, 3, 12),
-          customerSince: "2023-03-12"
+          name: 'Éducation Nationale',
+          contactName: 'Sophie Dubois',
+          contactEmail: 'sophie.dubois@education.gouv.fr',
+          contactPhone: '+33 1 23 45 67 89',
+          sector: 'education',
+          revenue: '>100M',
+          status: 'active',
+          address: '110 Rue de Grenelle, 75007 Paris',
+          website: 'https://education.gouv.fr',
+          notes: 'Client institutionnel, projets de digitalisation en cours.',
+          createdAt: formatDate(new Date()),
+          updatedAt: formatDate(new Date()),
+          customerSince: formatDate(new Date(2018, 1, 5))
         },
         {
           id: uuidv4(),
-          name: "Mode Express",
-          contactName: "Lucie Petit",
-          contactEmail: "lucie@modeexpress.com",
-          contactPhone: "01 34 56 78 90",
-          sector: "retail",
-          status: "active",
-          revenue: "350000",
-          address: "45 avenue de la Mode, 75008 Paris",
-          website: "www.modeexpress.com",
-          notes: "Commandes régulières",
-          createdAt: new Date(2021, 11, 5),
-          updatedAt: new Date(2023, 6, 20),
-          customerSince: "2021-11-05"
+          name: 'Commerces Réunis',
+          contactName: 'Thomas Blanc',
+          contactEmail: 'thomas.blanc@commercesreunis.com',
+          contactPhone: '+33 6 78 90 12 34',
+          sector: 'retail',
+          revenue: '10-50M',
+          status: 'active',
+          address: '45 Rue du Commerce, 59000 Lille',
+          website: 'https://commercesreunis.example.com',
+          notes: 'Réseau de magasins en expansion, projets e-commerce.',
+          createdAt: formatDate(new Date()),
+          updatedAt: formatDate(new Date()),
+          customerSince: formatDate(new Date(2019, 9, 30))
+        },
+        {
+          id: uuidv4(),
+          name: 'Usines Modernes',
+          contactName: 'Claire Legrand',
+          contactEmail: 'claire.legrand@usinesmodernes.com',
+          contactPhone: '+33 3 45 67 89 01',
+          sector: 'manufacturing',
+          revenue: '50-100M',
+          status: 'active',
+          address: '78 Avenue de l\'Industrie, 67000 Strasbourg',
+          website: 'https://usinesmodernes.example.com',
+          notes: 'Modernisation des chaînes de production en cours.',
+          createdAt: formatDate(new Date()),
+          updatedAt: formatDate(new Date()),
+          customerSince: formatDate(new Date(2017, 4, 18))
+        },
+        {
+          id: uuidv4(),
+          name: 'Services Plus',
+          contactName: 'Nicolas Petit',
+          contactEmail: 'nicolas.petit@servicesplus.com',
+          contactPhone: '+33 7 89 01 23 45',
+          sector: 'services',
+          revenue: '1-10M',
+          status: 'lead',
+          address: '12 Rue des Services, 44000 Nantes',
+          website: 'https://servicesplus.example.com',
+          notes: 'En discussion pour un contrat de service.',
+          createdAt: formatDate(new Date()),
+          updatedAt: formatDate(new Date())
+        },
+        {
+          id: uuidv4(),
+          name: 'Startup Innovante',
+          contactName: 'Julie Moreau',
+          contactEmail: 'julie.moreau@startupinnovante.com',
+          contactPhone: '+33 6 12 34 56 78',
+          sector: 'technology',
+          revenue: '<1M',
+          status: 'lead',
+          address: '5 Allée des Startups, 31000 Toulouse',
+          website: 'https://startupinnovante.example.com',
+          notes: 'Startup prometteuse, en recherche de solutions technologiques.',
+          createdAt: formatDate(new Date()),
+          updatedAt: formatDate(new Date())
+        },
+        {
+          id: uuidv4(),
+          name: 'Assurances Sécurité',
+          contactName: 'Michel Durand',
+          contactEmail: 'michel.durand@assurances-securite.com',
+          contactPhone: '+33 4 56 78 90 12',
+          sector: 'finance',
+          revenue: '10-50M',
+          status: 'inactive',
+          address: '34 Boulevard des Assurances, 13001 Marseille',
+          website: 'https://assurances-securite.example.com',
+          notes: 'Ancien client, contrat terminé mais potentiel de réactivation.',
+          createdAt: formatDate(new Date()),
+          updatedAt: formatDate(new Date()),
+          customerSince: formatDate(new Date(2016, 2, 7))
+        },
+        {
+          id: uuidv4(),
+          name: 'Transports Internationaux',
+          contactName: 'Hélène Fabre',
+          contactEmail: 'helene.fabre@transports-inter.com',
+          contactPhone: '+33 5 67 89 01 23',
+          sector: 'services',
+          revenue: '50-100M',
+          status: 'active',
+          address: '56 Rue des Transporteurs, 06000 Nice',
+          website: 'https://transports-inter.example.com',
+          notes: 'Client fidèle, projets d\'expansion internationale.',
+          createdAt: formatDate(new Date()),
+          updatedAt: formatDate(new Date()),
+          customerSince: formatDate(new Date(2015, 8, 12))
         }
       ];
 
-      // If in offline mode, just update local state
       if (isOfflineMode) {
-        setClients(mockClients);
-        toast.success('Données de démonstration chargées en mode démo.');
-        return;
-      }
-
-      // Otherwise, add to Firestore
-      const clientsCollection = collection(db, COLLECTIONS.CRM.CLIENTS);
-      const addPromises = mockClients.map(async (client) => {
-        try {
-          // Remove id before adding to Firestore (it will generate its own)
-          const { id, createdAt, updatedAt, ...clientData } = client;
-          
-          await addDoc(clientsCollection, {
+        // In offline mode, add to local state only
+        setClients(demoClients);
+        toast.success('10 clients démo ont été ajoutés');
+      } else {
+        // Add demo clients to Firestore
+        const clientsCollection = collection(db, COLLECTIONS.CRM.CLIENTS);
+        
+        // First check if there are already clients in Firestore
+        const snapshot = await getDocs(clientsCollection);
+        if (!snapshot.empty) {
+          toast.info('Des clients existent déjà dans la base de données');
+          return;
+        }
+        
+        // Add clients to Firestore
+        const promises = demoClients.map(async client => {
+          // Remove id from client for Firestore to generate one
+          const { id, ...clientData } = client;
+          return addDoc(clientsCollection, {
             ...clientData,
+            // Convert dates to Firestore serverTimestamp
             createdAt: serverTimestamp(),
             updatedAt: serverTimestamp()
           });
-        } catch (err) {
-          console.error(`Failed to add mock client ${client.name}:`, err);
-        }
-      });
-
-      await Promise.all(addPromises);
-      
-      // Refresh clients from Firestore
-      await fetchClients();
-      toast.success('Données de démonstration ajoutées avec succès.');
-    } catch (err: any) {
+        });
+        
+        await Promise.all(promises);
+        await fetchClients(); // Refresh clients from Firestore
+        toast.success('10 clients démo ont été ajoutés');
+      }
+    } catch (err) {
       console.error('Error seeding mock clients:', err);
-      
-      // Still show the mock data in case of error
-      const mockClients = generateMockClients();
-      setClients(mockClients);
-      setIsOfflineMode(true);
-      
-      toast.error(`Erreur lors de l'ajout des données: ${err.message}`);
+      toast.error('Erreur lors de l\'ajout des clients démo');
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  // Helper function to generate mock clients
-  const generateMockClients = (): Client[] => {
-    return [
-      {
-        id: uuidv4(),
-        name: "TechSolutions",
-        contactName: "Jean Dupont",
-        contactEmail: "jean.dupont@techsolutions.com",
-        contactPhone: "01 23 45 67 89",
-        sector: "technology",
-        status: "active",
-        revenue: "250000",
-        address: "15 rue de l'Innovation, 75001 Paris",
-        website: "www.techsolutions.com",
-        notes: "Client fidèle depuis 5 ans",
-        createdAt: new Date(2023, 1, 15),
-        updatedAt: new Date(2023, 5, 10),
-        customerSince: "2023-01-15"
-      },
-      {
-        id: uuidv4(),
-        name: "FinanceExpert",
-        contactName: "Marie Leclerc",
-        contactEmail: "marie@financeexpert.fr",
-        contactPhone: "01 98 76 54 32",
-        sector: "finance",
-        status: "active",
-        revenue: "500000",
-        address: "8 avenue des Finances, 69002 Lyon",
-        website: "www.financeexpert.fr",
-        notes: "Contrat annuel de conseil",
-        createdAt: new Date(2022, 8, 20),
-        updatedAt: new Date(2023, 4, 5),
-        customerSince: "2022-08-20"
-      },
-      {
-        id: uuidv4(),
-        name: "Santé Plus",
-        contactName: "Pierre Martin",
-        contactEmail: "pierre@santeplus.org",
-        contactPhone: "04 56 78 90 12",
-        sector: "healthcare",
-        status: "inactive",
-        revenue: "120000",
-        address: "25 boulevard Santé, 33000 Bordeaux",
-        website: "www.santeplus.org",
-        notes: "En attente de renouvellement",
-        createdAt: new Date(2022, 5, 8),
-        updatedAt: new Date(2023, 2, 15),
-        customerSince: "2022-05-08"
-      },
-      {
-        id: uuidv4(),
-        name: "EduFutur",
-        contactName: "Sophie Bernard",
-        contactEmail: "sophie@edufutur.edu",
-        contactPhone: "03 45 67 89 01",
-        sector: "education",
-        status: "lead",
-        revenue: "75000",
-        address: "12 rue de l'Enseignement, 59000 Lille",
-        website: "www.edufutur.edu",
-        notes: "Intéressé par notre solution de gestion",
-        createdAt: new Date(2023, 3, 12),
-        updatedAt: new Date(2023, 3, 12),
-        customerSince: "2023-03-12"
-      },
-      {
-        id: uuidv4(),
-        name: "Mode Express",
-        contactName: "Lucie Petit",
-        contactEmail: "lucie@modeexpress.com",
-        contactPhone: "01 34 56 78 90",
-        sector: "retail",
-        status: "active",
-        revenue: "350000",
-        address: "45 avenue de la Mode, 75008 Paris",
-        website: "www.modeexpress.com",
-        notes: "Commandes régulières",
-        createdAt: new Date(2021, 11, 5),
-        updatedAt: new Date(2023, 6, 20),
-        customerSince: "2021-11-05"
-      }
-    ];
-  };
-
-  // Initial fetch of clients
+  // Fetch clients on mount
   useEffect(() => {
     fetchClients();
   }, [fetchClients]);
