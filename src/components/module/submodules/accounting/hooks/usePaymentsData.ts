@@ -38,8 +38,8 @@ export const usePaymentsData = (filterStatus?: string) => {
         status: doc.status || 'pending',
         reference: doc.reference || '',
         // Map properties that might be referenced directly
-        date: doc.date || '',
-        method: doc.method || 'bank_transfer',
+        date: doc.date || doc.paymentDate || '',
+        method: doc.method || doc.paymentMethod || 'bank_transfer',
         transactionId: doc.transactionId || '',
         notes: doc.notes || '',
         createdAt: doc.createdAt || '',

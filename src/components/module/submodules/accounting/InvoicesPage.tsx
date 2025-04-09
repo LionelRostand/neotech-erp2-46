@@ -1,295 +1,232 @@
 
-import React, { useState, useCallback } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Plus, FileDown } from 'lucide-react';
+import React, { useState } from 'react';
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { InvoicesTable } from './components/InvoicesTable';
-import { useToast } from '@/hooks/use-toast';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { useNavigate } from 'react-router-dom';
-import { useInvoices } from './hooks/useInvoices';
-import { PaginationComponent } from './components/PaginationComponent';
+import { PlusCircle, FileText, Download } from 'lucide-react';
+import { useInvoicesData } from './hooks/useInvoicesData';
 import InvoiceFormDialog from './components/InvoiceFormDialog';
-import DeleteInvoiceDialog from './components/DeleteInvoiceDialog';
 import InvoiceViewDialog from './components/InvoiceViewDialog';
-import { Invoice } from './types/accounting-types';
+import DeleteInvoiceDialog from './components/DeleteInvoiceDialog';
 import { exportToExcel } from '@/utils/exportUtils';
-
-const statusOptions = [
-  { value: "draft", label: "Brouillon" },
-  { value: "sent", label: "Envoyée" },
-  { value: "paid", label: "Payée" },
-  { value: "overdue", label: "En retard" },
-  { value: "cancelled", label: "Annulée" },
-  { value: "pending", label: "En attente" },
-];
-
-const currencyOptions = [
-  { value: "EUR", label: "EUR" },
-  { value: "USD", label: "USD" },
-  { value: "GBP", label: "GBP" },
-  { value: "CAD", label: "CAD" },
-];
+import { useToast } from '@/hooks/use-toast';
 
 const InvoicesPage = () => {
-  const navigate = useNavigate();
-  const { invoices, isLoading, reload } = useInvoices();
+  const { invoices, isLoading, error } = useInvoicesData();
   const { toast } = useToast();
 
-  const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [currencyFilter, setCurrencyFilter] = useState('all');
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(10);
-  
-  // Dialogues d'état
-  const [createDialogOpen, setCreateDialogOpen] = useState(false);
-  const [viewDialogOpen, setViewDialogOpen] = useState(false);
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
+  // États pour gérer les différentes boîtes de dialogue
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [selectedInvoice, setSelectedInvoice] = useState<any>(null);
 
+  // Filtrer les factures en fonction des critères de recherche et de filtrage
+  const filteredInvoices = invoices.filter(invoice => {
+    const matchesSearch = 
+      invoice.invoiceNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      invoice.clientName.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesStatus = statusFilter ? invoice.status === statusFilter : true;
+    
+    return matchesSearch && matchesStatus;
+  });
+
+  // Ouvrir la boîte de dialogue pour ajouter une nouvelle facture
   const handleAddInvoice = () => {
     setSelectedInvoice(null);
-    setCreateDialogOpen(true);
+    setIsAddDialogOpen(true);
   };
 
-  const handleViewInvoice = (invoiceId: string) => {
-    const invoice = invoices.find(inv => inv.id === invoiceId);
-    if (invoice) {
-      setSelectedInvoice(invoice);
-      setViewDialogOpen(true);
-    }
+  // Ouvrir la boîte de dialogue pour visualiser une facture
+  const handleViewInvoice = (id: string) => {
+    const invoice = invoices.find(inv => inv.id === id);
+    setSelectedInvoice(invoice);
+    setIsViewDialogOpen(true);
   };
 
-  const handleEditInvoice = (invoiceId: string) => {
-    const invoice = invoices.find(inv => inv.id === invoiceId);
-    if (invoice) {
-      setSelectedInvoice(invoice);
-      setEditDialogOpen(true);
-    }
+  // Ouvrir la boîte de dialogue pour modifier une facture
+  const handleEditInvoice = (id: string) => {
+    const invoice = invoices.find(inv => inv.id === id);
+    setSelectedInvoice(invoice);
+    setIsEditDialogOpen(true);
   };
 
-  const handleDeleteInvoice = (invoiceId: string) => {
-    const invoice = invoices.find(inv => inv.id === invoiceId);
-    if (invoice) {
-      setSelectedInvoice(invoice);
-      setDeleteDialogOpen(true);
-    }
+  // Ouvrir la boîte de dialogue pour supprimer une facture
+  const handleDeleteInvoice = (id: string) => {
+    const invoice = invoices.find(inv => inv.id === id);
+    setSelectedInvoice(invoice);
+    setIsDeleteDialogOpen(true);
   };
 
-  const handleExportInvoices = () => {
-    if (!filteredInvoices || filteredInvoices.length === 0) {
-      toast({
-        title: "Export impossible",
-        description: "Aucune facture à exporter.",
-      });
-      return;
-    }
+  // Fonction pour réinitialiser les filtres
+  const resetFilters = () => {
+    setSearchTerm('');
+    setStatusFilter('');
+  };
 
-    // Préparer les données pour l'export
-    const dataToExport = filteredInvoices.map(invoice => ({
-      'Numéro': invoice.invoiceNumber || invoice.number || '',
-      'Client': invoice.clientName || '',
-      'Date': invoice.issueDate || '',
-      'Échéance': invoice.dueDate || '',
-      'Statut': invoice.status || '',
-      'Devise': invoice.currency || '',
-      'Montant HT': invoice.subtotal || 0,
-      'TVA': invoice.taxAmount || 0,
-      'Montant Total': invoice.total || 0,
-    }));
+  // Fonction pour rafraîchir la liste après une opération
+  const refreshList = () => {
+    // La liste sera mise à jour automatiquement grâce au hook useInvoicesData
+    toast({
+      title: "Liste mise à jour",
+      description: "La liste des factures a été mise à jour avec succès."
+    });
+  };
 
-    // Exporter en Excel
-    const success = exportToExcel(dataToExport, 'Factures', 'factures_export');
-
-    if (success) {
+  // Fonction pour exporter les factures vers Excel
+  const handleExportToExcel = () => {
+    try {
+      // Préparer les données pour l'export en transformant les données
+      const exportData = filteredInvoices.map(invoice => ({
+        'Numéro': invoice.invoiceNumber,
+        'Client': invoice.clientName,
+        'Date Émission': invoice.issueDate,
+        'Date Échéance': invoice.dueDate,
+        'Montant HT': invoice.subtotal || 0,
+        'TVA': invoice.taxAmount || 0,
+        'Montant Total': invoice.total,
+        'Statut': getStatusLabel(invoice.status),
+        'Devise': invoice.currency
+      }));
+      
+      // Exporter vers Excel
+      exportToExcel(
+        exportData,
+        'Factures',
+        `Factures_${new Date().toISOString().split('T')[0]}`
+      );
+      
       toast({
         title: "Export réussi",
-        description: "Les factures ont été exportées avec succès.",
+        description: "Les factures ont été exportées avec succès vers Excel."
       });
-    } else {
+    } catch (error) {
+      console.error('Erreur lors de l\'export:', error);
       toast({
-        title: "Erreur d'export",
-        description: "Une erreur est survenue lors de l'export des factures.",
+        title: "Erreur d'exportation",
+        description: "Une erreur s'est produite lors de l'exportation des factures.",
         variant: "destructive"
       });
     }
   };
 
-  const filteredInvoices = invoices?.filter((invoice) => {
-    const searchRegex = new RegExp(searchQuery, 'i');
-    const statusMatch = statusFilter === 'all' ? true : invoice.status === statusFilter;
-    const currencyMatch = currencyFilter === 'all' ? true : invoice.currency === currencyFilter;
-
-    return (
-      searchRegex.test(invoice.invoiceNumber) &&
-      statusMatch &&
-      currencyMatch
-    );
-  });
-
-  const totalItems = filteredInvoices?.length || 0;
-  const totalPages = Math.ceil(totalItems / itemsPerPage);
-
-  const paginatedInvoices = () => {
-    if (!filteredInvoices) return [];
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    const endIndex = startIndex + itemsPerPage;
-    return filteredInvoices.slice(startIndex, endIndex);
+  // Fonction pour traduire les statuts
+  const getStatusLabel = (status: string): string => {
+    switch (status) {
+      case 'draft': return 'Brouillon';
+      case 'sent': return 'Envoyée';
+      case 'paid': return 'Payée';
+      case 'overdue': return 'En retard';
+      case 'cancelled': return 'Annulée';
+      default: return status;
+    }
   };
 
-  const isLoadingData = isLoading;
-
   return (
-    <div className="container mx-auto py-10">
-      <div className="mb-4 flex justify-between items-center">
-        <CardTitle className="text-2xl font-bold">Factures</CardTitle>
-        <Button
-          onClick={() => handleAddInvoice()}
-        >
-          <Plus className="mr-2 h-4 w-4" /> Nouvelle Facture
-        </Button>
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h1 className="text-2xl font-bold">Gestion des Factures</h1>
+        <div className="flex gap-2">
+          <Button onClick={handleAddInvoice}>
+            <PlusCircle className="h-4 w-4 mr-2" />
+            Nouvelle Facture
+          </Button>
+          <Button variant="outline" onClick={handleExportToExcel}>
+            <Download className="h-4 w-4 mr-2" />
+            Exporter
+          </Button>
+        </div>
       </div>
 
-      <Card className="mb-4">
-        <CardHeader>
-          <CardTitle>Rechercher & Filtrer</CardTitle>
-          <CardDescription>
-            Rechercher, filtrer et gérer vos factures.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-4 sm:grid-cols-4">
-            <div className="col-span-4 sm:col-span-1">
+      <Card>
+        <CardContent className="pt-6">
+          {/* Filtres */}
+          <div className="flex gap-4 mb-6">
+            <div className="flex-1">
               <Input
-                type="search"
-                placeholder="Rechercher par #facture..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Rechercher par numéro ou client..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full"
               />
             </div>
-            <div className="col-span-4 sm:col-span-1">
+            <div className="w-64">
               <Select value={statusFilter} onValueChange={setStatusFilter}>
                 <SelectTrigger>
                   <SelectValue placeholder="Filtrer par statut" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Tous les statuts</SelectItem>
-                  {statusOptions.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
+                  <SelectItem value="">Tous les statuts</SelectItem>
+                  <SelectItem value="draft">Brouillon</SelectItem>
+                  <SelectItem value="sent">Envoyée</SelectItem>
+                  <SelectItem value="paid">Payée</SelectItem>
+                  <SelectItem value="overdue">En retard</SelectItem>
+                  <SelectItem value="cancelled">Annulée</SelectItem>
                 </SelectContent>
               </Select>
             </div>
-            <div className="col-span-4 sm:col-span-1">
-              <Select value={currencyFilter} onValueChange={setCurrencyFilter}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Filtrer par devise" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Toutes les devises</SelectItem>
-                  {currencyOptions.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="col-span-4 sm:col-span-1 flex items-end">
-              <Button variant="outline" onClick={handleExportInvoices}>
-                <FileDown className="mr-2 h-4 w-4" />
-                Exporter
-              </Button>
-            </div>
+            <Button variant="ghost" onClick={resetFilters}>
+              Réinitialiser
+            </Button>
           </div>
-        </CardContent>
-      </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Liste des Factures</CardTitle>
-          <CardDescription>
-            Visualisez et gérez vos factures.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
+          {/* Tableau des factures */}
           <InvoicesTable
-            invoices={paginatedInvoices()}
-            isLoading={isLoadingData}
+            invoices={filteredInvoices}
+            isLoading={isLoading}
             onView={handleViewInvoice}
             onEdit={handleEditInvoice}
             onDelete={handleDeleteInvoice}
           />
+
+          {/* Affiche un message si aucune facture ne correspond aux filtres */}
+          {!isLoading && filteredInvoices.length === 0 && (
+            <div className="py-8 text-center">
+              <FileText className="h-12 w-12 mx-auto text-gray-300 mb-4" />
+              <p className="text-lg font-medium">Aucune facture trouvée</p>
+              <p className="text-muted-foreground">
+                {invoices.length > 0
+                  ? "Aucune facture ne correspond à vos critères de recherche."
+                  : "Commencez par créer votre première facture."}
+              </p>
+            </div>
+          )}
         </CardContent>
       </Card>
 
-      <div className="flex justify-between items-center mt-4">
-        <Select
-          value={String(itemsPerPage)}
-          onValueChange={(value) => setItemsPerPage(Number(value))}
-        >
-          <SelectTrigger className="w-[120px]">
-            <SelectValue placeholder="Par page" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="5">5 par page</SelectItem>
-            <SelectItem value="10">10 par page</SelectItem>
-            <SelectItem value="20">20 par page</SelectItem>
-            <SelectItem value="50">50 par page</SelectItem>
-          </SelectContent>
-        </Select>
-        <PaginationComponent
-          currentPage={currentPage}
-          totalItems={totalItems}
-          itemsPerPage={itemsPerPage}
-          onPageChange={setCurrentPage}
-        />
-      </div>
+      {/* Boîtes de dialogue */}
+      <InvoiceFormDialog
+        open={isAddDialogOpen}
+        onOpenChange={setIsAddDialogOpen}
+        onSuccess={refreshList}
+      />
 
-      {/* Dialogues */}
-      <InvoiceFormDialog 
-        open={createDialogOpen} 
-        onOpenChange={setCreateDialogOpen} 
-        onSuccess={reload}
-      />
-      
-      <InvoiceFormDialog 
-        open={editDialogOpen} 
-        onOpenChange={setEditDialogOpen} 
+      <InvoiceFormDialog
+        open={isEditDialogOpen}
+        onOpenChange={setIsEditDialogOpen}
+        onSuccess={refreshList}
         invoice={selectedInvoice}
-        onSuccess={reload}
       />
-      
-      <InvoiceViewDialog 
-        open={viewDialogOpen} 
-        onOpenChange={setViewDialogOpen} 
-        invoice={selectedInvoice} 
+
+      <InvoiceViewDialog
+        open={isViewDialogOpen}
+        onOpenChange={setIsViewDialogOpen}
+        invoice={selectedInvoice}
       />
-      
+
       {selectedInvoice && (
-        <DeleteInvoiceDialog 
-          open={deleteDialogOpen} 
-          onOpenChange={setDeleteDialogOpen} 
-          invoiceId={selectedInvoice.id} 
-          invoiceNumber={selectedInvoice.invoiceNumber || selectedInvoice.number || ''} 
-          onSuccess={reload}
+        <DeleteInvoiceDialog
+          open={isDeleteDialogOpen}
+          onOpenChange={setIsDeleteDialogOpen}
+          invoiceId={selectedInvoice.id}
+          invoiceNumber={selectedInvoice.invoiceNumber}
+          onSuccess={refreshList}
         />
       )}
     </div>

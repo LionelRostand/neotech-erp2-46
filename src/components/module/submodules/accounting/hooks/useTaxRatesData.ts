@@ -24,7 +24,7 @@ export const useTaxRatesData = () => {
         rate: doc.rate || 0,
         description: doc.description || '',
         isDefault: doc.isDefault || false,
-        active: doc.active || true, // Add the required active property
+        active: doc.active !== undefined ? doc.active : true, // Ensure active property is set
       }));
       
       // Si aucun taux par défaut n'est défini et qu'il y a des données, définir le premier comme défaut

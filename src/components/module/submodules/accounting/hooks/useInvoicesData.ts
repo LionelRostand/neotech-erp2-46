@@ -12,7 +12,7 @@ export const useInvoicesData = (filterStatus?: string) => {
   // Préparer les contraintes de requête
   const constraints: QueryConstraint[] = [orderBy('issueDate', 'desc')];
   
-  if (filterStatus) {
+  if (filterStatus && filterStatus !== 'all') {
     constraints.push(where('status', '==', filterStatus));
   }
 
@@ -31,6 +31,7 @@ export const useInvoicesData = (filterStatus?: string) => {
         number: doc.invoiceNumber || doc.number || '',
         clientName: doc.clientName || '',
         clientId: doc.clientId || '',
+        clientEmail: doc.clientEmail || '',
         issueDate: doc.issueDate || '',
         dueDate: doc.dueDate || '',
         total: doc.total || 0,
@@ -38,8 +39,11 @@ export const useInvoicesData = (filterStatus?: string) => {
         currency: doc.currency || 'EUR',
         items: doc.items || [],
         subtotal: doc.subtotal || 0,
+        tax: doc.tax || 0,
         taxRate: doc.taxRate || 0,
         taxAmount: doc.taxAmount || 0,
+        discountAmount: doc.discountAmount || 0,
+        discountRate: doc.discountRate || 0,
         notes: doc.notes || '',
         termsAndConditions: doc.termsAndConditions || '',
         createdAt: doc.createdAt || '',
