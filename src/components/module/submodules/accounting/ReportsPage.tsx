@@ -1,315 +1,253 @@
 
-import React from 'react';
-import { 
-  Card, 
-  CardContent, 
-  CardHeader, 
-  CardTitle, 
-  CardDescription 
-} from "@/components/ui/card";
+import React, { useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { 
-  ResponsiveContainer, 
-  LineChart, 
-  Line, 
-  BarChart, 
-  Bar, 
-  PieChart, 
-  Pie, 
-  Cell, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
-  Legend 
-} from 'recharts';
-import { Skeleton } from "@/components/ui/skeleton";
-import { useReportsData } from './hooks/useReportsData';
+import { Download, Filter, Printer, Calendar } from "lucide-react";
 import { formatCurrency } from './utils/formatting';
+import { 
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+  LineChart,
+  Line
+} from 'recharts';
 
-// Custom tooltip component for financial data
-const CustomTooltip = ({ active, payload, label, prefix = '' }: any) => {
-  if (active && payload && payload.length) {
-    return (
-      <div className="bg-white p-3 border border-gray-200 rounded-md shadow-sm">
-        <p className="text-sm font-medium">{`${prefix}${label}`}</p>
-        {payload.map((entry: any, index: number) => (
-          <p key={`item-${index}`} className="text-sm" style={{ color: entry.color }}>
-            {`${entry.name}: ${formatCurrency(entry.value)}`}
-          </p>
-        ))}
-      </div>
-    );
-  }
-  return null;
-};
+const mockFinancialData = [
+  { mois: 'Jan', revenus: 12400, depenses: 8200, profit: 4200 },
+  { mois: 'Fév', revenus: 9800, depenses: 7500, profit: 2300 },
+  { mois: 'Mar', revenus: 15000, depenses: 10200, profit: 4800 },
+  { mois: 'Avr', revenus: 16700, depenses: 11800, profit: 4900 },
+  { mois: 'Mai', revenus: 14300, depenses: 9400, profit: 4900 },
+  { mois: 'Jui', revenus: 18200, depenses: 12100, profit: 6100 },
+];
 
-// Custom tooltip component for comparison charts
-const ComparisonTooltip = ({ active, payload, label }: any) => {
-  if (active && payload && payload.length) {
-    return (
-      <div className="bg-white p-3 border border-gray-200 rounded-md shadow-sm">
-        <p className="text-sm font-medium">{label}</p>
-        <p className="text-sm" style={{ color: '#4f46e5' }}>
-          {`Cette année: ${formatCurrency(payload[0]?.value || 0)}`}
-        </p>
-        <p className="text-sm" style={{ color: '#94a3b8' }}>
-          {`Année précédente: ${formatCurrency(payload[1]?.value || 0)}`}
-        </p>
-      </div>
-    );
-  }
-  return null;
-};
-
-// Colors for pie charts
-const COLORS = ['#4f46e5', '#3b82f6', '#0ea5e9', '#8b5cf6', '#d946ef', '#ec4899'];
+const mockQuarterlyData = [
+  { trimestre: 'T1', revenus: 37200, depenses: 25900, profit: 11300 },
+  { trimestre: 'T2', revenus: 49200, depenses: 33300, profit: 15900 },
+];
 
 const ReportsPage: React.FC = () => {
-  const { 
-    monthlyRevenueData, 
-    paymentMethodsData, 
-    invoiceStatusData, 
-    quarterlyComparisonData, 
-    financialStats,
-    isLoading 
-  } = useReportsData();
+  const [activeTab, setActiveTab] = useState("overview");
+  const [reportPeriod, setReportPeriod] = useState("monthly");
+
+  const currentData = reportPeriod === 'monthly' ? mockFinancialData : mockQuarterlyData;
+  const xAxisDataKey = reportPeriod === 'monthly' ? 'mois' : 'trimestre';
+
+  const totalRevenue = currentData.reduce((sum, item) => sum + item.revenus, 0);
+  const totalExpenses = currentData.reduce((sum, item) => sum + item.depenses, 0);
+  const totalProfit = currentData.reduce((sum, item) => sum + item.profit, 0);
 
   return (
     <div className="container mx-auto py-6">
-      <h1 className="text-3xl font-bold mb-6">Rapports Financiers</h1>
-      
-      {/* Financial stats cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-3xl font-bold">Rapports financiers</h1>
+        <div className="flex space-x-2">
+          <Button variant="outline">
+            <Calendar className="mr-2 h-4 w-4" /> Période
+          </Button>
+          <Button variant="outline">
+            <Printer className="mr-2 h-4 w-4" /> Imprimer
+          </Button>
+          <Button>
+            <Download className="mr-2 h-4 w-4" /> Exporter
+          </Button>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
-              Revenu Total
+              Chiffre d'affaires total
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {isLoading ? (
-                <Skeleton className="h-8 w-24" />
-              ) : (
-                formatCurrency(financialStats.totalRevenue)
-              )}
-            </div>
+            <div className="text-2xl font-bold">{formatCurrency(totalRevenue, 'EUR')}</div>
+            <p className="text-xs text-muted-foreground">
+              +15% par rapport à la période précédente
+            </p>
           </CardContent>
         </Card>
-        
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
-              Montant payé
+              Dépenses totales
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {isLoading ? (
-                <Skeleton className="h-8 w-24" />
-              ) : (
-                formatCurrency(financialStats.totalPaid)
-              )}
-            </div>
+            <div className="text-2xl font-bold">{formatCurrency(totalExpenses, 'EUR')}</div>
+            <p className="text-xs text-muted-foreground">
+              +8% par rapport à la période précédente
+            </p>
           </CardContent>
         </Card>
-        
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
-              Montant dû
+              Bénéfice net
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {isLoading ? (
-                <Skeleton className="h-8 w-24" />
-              ) : (
-                formatCurrency(financialStats.totalDue)
-              )}
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Facture moyenne
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {isLoading ? (
-                <Skeleton className="h-8 w-24" />
-              ) : (
-                formatCurrency(financialStats.averageInvoice)
-              )}
-            </div>
+            <div className="text-2xl font-bold">{formatCurrency(totalProfit, 'EUR')}</div>
+            <p className="text-xs text-muted-foreground">
+              +22% par rapport à la période précédente
+            </p>
           </CardContent>
         </Card>
       </div>
-      
-      {/* Main content with tabs */}
-      <Tabs defaultValue="revenue" className="space-y-6">
-        <TabsList className="grid grid-cols-4 w-full max-w-2xl">
-          <TabsTrigger value="revenue">Revenus</TabsTrigger>
-          <TabsTrigger value="invoices">Factures</TabsTrigger>
-          <TabsTrigger value="payments">Paiements</TabsTrigger>
-          <TabsTrigger value="comparison">Comparaison</TabsTrigger>
-        </TabsList>
-        
-        {/* Revenue tab */}
-        <TabsContent value="revenue" className="space-y-6">
+
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <div className="flex items-center justify-between mb-4">
+          <TabsList>
+            <TabsTrigger value="overview">Vue d'ensemble</TabsTrigger>
+            <TabsTrigger value="revenue">Revenus</TabsTrigger>
+            <TabsTrigger value="expenses">Dépenses</TabsTrigger>
+            <TabsTrigger value="profit">Rentabilité</TabsTrigger>
+          </TabsList>
+          <div className="flex items-center space-x-2">
+            <Button
+              variant={reportPeriod === 'monthly' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setReportPeriod('monthly')}
+            >
+              Mensuel
+            </Button>
+            <Button
+              variant={reportPeriod === 'quarterly' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setReportPeriod('quarterly')}
+            >
+              Trimestriel
+            </Button>
+            <Button variant="outline" size="sm">
+              <Filter className="h-4 w-4 mr-2" /> Filtrer
+            </Button>
+          </div>
+        </div>
+
+        <TabsContent value="overview">
           <Card>
             <CardHeader>
-              <CardTitle>Revenus Mensuels</CardTitle>
-              <CardDescription>Revenus générés par mois pour l'année en cours</CardDescription>
+              <CardTitle>Vue d'ensemble financière</CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="h-96">
-                {isLoading ? (
-                  <div className="flex items-center justify-center h-full">
-                    <Skeleton className="h-80 w-full" />
-                  </div>
-                ) : (
-                  <ResponsiveContainer width="100%" height="100%">
-                    <LineChart
-                      data={monthlyRevenueData}
-                      margin={{ top: 20, right: 30, left: 20, bottom: 10 }}
-                    >
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="name" />
-                      <YAxis />
-                      <Tooltip content={<CustomTooltip />} />
-                      <Legend />
-                      <Line
-                        type="monotone"
-                        dataKey="revenue"
-                        name="Revenus"
-                        stroke="#4f46e5"
-                        activeDot={{ r: 8 }}
-                        strokeWidth={2}
-                      />
-                    </LineChart>
-                  </ResponsiveContainer>
-                )}
+            <CardContent className="pt-2">
+              <div className="h-[400px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart
+                    data={currentData}
+                    margin={{
+                      top: 20,
+                      right: 30,
+                      left: 20,
+                      bottom: 5,
+                    }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey={xAxisDataKey} />
+                    <YAxis />
+                    <Tooltip formatter={(value) => formatCurrency(value as number, 'EUR')} />
+                    <Legend />
+                    <Bar dataKey="revenus" name="Revenus" fill="#4f46e5" />
+                    <Bar dataKey="depenses" name="Dépenses" fill="#ef4444" />
+                    <Bar dataKey="profit" name="Profit" fill="#10b981" />
+                  </BarChart>
+                </ResponsiveContainer>
               </div>
             </CardContent>
           </Card>
         </TabsContent>
-        
-        {/* Invoices tab */}
-        <TabsContent value="invoices" className="space-y-6">
+
+        <TabsContent value="revenue">
           <Card>
             <CardHeader>
-              <CardTitle>Statut des Factures</CardTitle>
-              <CardDescription>Répartition des factures par statut</CardDescription>
+              <CardTitle>Analyse des revenus</CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="h-96">
-                {isLoading ? (
-                  <div className="flex items-center justify-center h-full">
-                    <Skeleton className="h-80 w-full" />
-                  </div>
-                ) : (
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={invoiceStatusData}
-                        cx="50%"
-                        cy="50%"
-                        labelLine={false}
-                        outerRadius={150}
-                        fill="#8884d8"
-                        dataKey="value"
-                        nameKey="name"
-                        label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                      >
-                        {invoiceStatusData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                        ))}
-                      </Pie>
-                      <Tooltip formatter={(value: any) => Number(value).toLocaleString('fr-FR')} />
-                      <Legend />
-                    </PieChart>
-                  </ResponsiveContainer>
-                )}
+            <CardContent className="pt-2">
+              <div className="h-[400px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart
+                    data={currentData}
+                    margin={{
+                      top: 20,
+                      right: 30,
+                      left: 20,
+                      bottom: 5,
+                    }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey={xAxisDataKey} />
+                    <YAxis />
+                    <Tooltip formatter={(value) => formatCurrency(value as number, 'EUR')} />
+                    <Legend />
+                    <Line type="monotone" dataKey="revenus" name="Revenus" stroke="#4f46e5" activeDot={{ r: 8 }} />
+                  </LineChart>
+                </ResponsiveContainer>
               </div>
             </CardContent>
           </Card>
         </TabsContent>
-        
-        {/* Payments tab */}
-        <TabsContent value="payments" className="space-y-6">
+
+        <TabsContent value="expenses">
           <Card>
             <CardHeader>
-              <CardTitle>Méthodes de Paiement</CardTitle>
-              <CardDescription>Répartition des paiements par méthode</CardDescription>
+              <CardTitle>Analyse des dépenses</CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="h-96">
-                {isLoading ? (
-                  <div className="flex items-center justify-center h-full">
-                    <Skeleton className="h-80 w-full" />
-                  </div>
-                ) : (
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={paymentMethodsData}
-                        cx="50%"
-                        cy="50%"
-                        labelLine={false}
-                        outerRadius={150}
-                        fill="#8884d8"
-                        dataKey="value"
-                        nameKey="name"
-                        label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                      >
-                        {paymentMethodsData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                        ))}
-                      </Pie>
-                      <Tooltip formatter={(value: any) => Number(value).toLocaleString('fr-FR')} />
-                      <Legend />
-                    </PieChart>
-                  </ResponsiveContainer>
-                )}
+            <CardContent className="pt-2">
+              <div className="h-[400px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart
+                    data={currentData}
+                    margin={{
+                      top: 20,
+                      right: 30,
+                      left: 20,
+                      bottom: 5,
+                    }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey={xAxisDataKey} />
+                    <YAxis />
+                    <Tooltip formatter={(value) => formatCurrency(value as number, 'EUR')} />
+                    <Legend />
+                    <Line type="monotone" dataKey="depenses" name="Dépenses" stroke="#ef4444" activeDot={{ r: 8 }} />
+                  </LineChart>
+                </ResponsiveContainer>
               </div>
             </CardContent>
           </Card>
         </TabsContent>
-        
-        {/* Comparison tab */}
-        <TabsContent value="comparison" className="space-y-6">
+
+        <TabsContent value="profit">
           <Card>
             <CardHeader>
-              <CardTitle>Comparaison Trimestrielle</CardTitle>
-              <CardDescription>Revenus par trimestre (année courante vs année précédente)</CardDescription>
+              <CardTitle>Analyse de la rentabilité</CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="h-96">
-                {isLoading ? (
-                  <div className="flex items-center justify-center h-full">
-                    <Skeleton className="h-80 w-full" />
-                  </div>
-                ) : (
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart
-                      data={quarterlyComparisonData}
-                      margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-                    >
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="name" />
-                      <YAxis />
-                      <Tooltip content={<ComparisonTooltip />} />
-                      <Legend />
-                      <Bar dataKey="current" name="Cette année" fill="#4f46e5" />
-                      <Bar dataKey="previous" name="Année précédente" fill="#94a3b8" />
-                    </BarChart>
-                  </ResponsiveContainer>
-                )}
+            <CardContent className="pt-2">
+              <div className="h-[400px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart
+                    data={currentData}
+                    margin={{
+                      top: 20,
+                      right: 30,
+                      left: 20,
+                      bottom: 5,
+                    }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey={xAxisDataKey} />
+                    <YAxis />
+                    <Tooltip formatter={(value) => formatCurrency(value as number, 'EUR')} />
+                    <Legend />
+                    <Line type="monotone" dataKey="profit" name="Profit" stroke="#10b981" activeDot={{ r: 8 }} />
+                  </LineChart>
+                </ResponsiveContainer>
               </div>
             </CardContent>
           </Card>

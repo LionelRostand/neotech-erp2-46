@@ -1,194 +1,197 @@
 
 import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { useTaxesCollection } from './hooks/useAccountingCollection';
-import { useTaxDeclarations } from './hooks/useTaxDeclarations';
-import { Skeleton } from "@/components/ui/skeleton";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Download, PlusCircle } from "lucide-react";
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from "@/components/ui/table";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { toast } from "sonner";
-import * as XLSX from 'xlsx';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Plus, Edit, Trash2, BarChart4 } from "lucide-react";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { TaxRate } from './types/accounting-types';
+
+const mockTaxRates: TaxRate[] = [
+  {
+    id: '1',
+    name: 'TVA Standard',
+    rate: 20,
+    description: 'Taux de TVA standard en France',
+    isDefault: true
+  },
+  {
+    id: '2',
+    name: 'TVA Intermédiaire',
+    rate: 10,
+    description: 'Taux intermédiaire applicable aux travaux de rénovation, etc.',
+    isDefault: false
+  },
+  {
+    id: '3',
+    name: 'TVA Réduit',
+    rate: 5.5,
+    description: 'Taux réduit applicable aux produits de première nécessité',
+    isDefault: false
+  },
+  {
+    id: '4',
+    name: 'Exonéré',
+    rate: 0,
+    description: 'Opérations exonérées de TVA',
+    isDefault: false
+  }
+];
+
+const mockTaxReports = [
+  {
+    id: '1',
+    period: '2023-T1',
+    startDate: '2023-01-01',
+    endDate: '2023-03-31',
+    totalHT: 15000,
+    totalTVA: 3000,
+    status: 'submitted',
+    submissionDate: '2023-04-10'
+  },
+  {
+    id: '2',
+    period: '2023-T2',
+    startDate: '2023-04-01',
+    endDate: '2023-06-30',
+    totalHT: 18500,
+    totalTVA: 3700,
+    status: 'draft',
+    submissionDate: null
+  }
+];
 
 const TaxesPage: React.FC = () => {
-  const [activeTab, setActiveTab] = useState("taux");
-  const { data: taxes, isLoading: isTaxesLoading } = useTaxesCollection();
-  const { declarations, isLoading: isDeclarationsLoading, reload: reloadDeclarations } = useTaxDeclarations();
-
-  const handleExportToExcel = () => {
-    let dataToExport = [];
-    
-    if (activeTab === "taux") {
-      dataToExport = taxes.map(tax => ({
-        'Nom': tax.name || 'N/A',
-        'Taux (%)': tax.rate || 0,
-        'Description': tax.description || '-',
-        'Par défaut': tax.isDefault ? 'Oui' : 'Non',
-      }));
-    } else {
-      dataToExport = declarations.map(declaration => ({
-        'Période': declaration.period,
-        'Date de déclaration': declaration.status === 'filed' ? declaration.dateFiled : `À déposer avant le ${declaration.dueDate}`,
-        'Montant': declaration.status === 'filed' ? declaration.amount : declaration.estimatedAmount,
-        'Statut': declaration.status === 'filed' ? 'Déposée' : 'À venir',
-      }));
-    }
-    
-    const worksheet = XLSX.utils.json_to_sheet(dataToExport);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, activeTab === "taux" ? "Taux de TVA" : "Déclarations TVA");
-    XLSX.writeFile(workbook, activeTab === "taux" ? "Taux_TVA.xlsx" : "Declarations_TVA.xlsx");
-    
-    toast.success(`Export ${activeTab === "taux" ? "des taux de TVA" : "des déclarations"} réussi`);
-  };
+  const [activeTab, setActiveTab] = useState("rates");
 
   return (
     <div className="container mx-auto py-6">
       <div className="flex justify-between items-center mb-6">
-        <div>
-          <h1 className="text-3xl font-bold">Taxes & TVA</h1>
-          <p className="text-muted-foreground mt-2">
-            Gérez vos taux de TVA et vos déclarations fiscales
-          </p>
+        <h1 className="text-3xl font-bold">Taxes & TVA</h1>
+        <div className="flex space-x-2">
+          <Button variant="outline">
+            <BarChart4 className="mr-2 h-4 w-4" /> Rapport
+          </Button>
+          <Button>
+            <Plus className="mr-2 h-4 w-4" /> Nouveau taux
+          </Button>
         </div>
-        <Button variant="outline" onClick={handleExportToExcel}>
-          <Download className="h-4 w-4 mr-2" />
-          Exporter
-        </Button>
       </div>
-      
+
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid grid-cols-2 mb-6">
-          <TabsTrigger value="taux">Taux de TVA</TabsTrigger>
-          <TabsTrigger value="declarations">Déclarations</TabsTrigger>
+        <TabsList className="mb-4">
+          <TabsTrigger value="rates">Taux de TVA</TabsTrigger>
+          <TabsTrigger value="reports">Déclarations</TabsTrigger>
         </TabsList>
-        
-        <TabsContent value="taux">
+
+        <TabsContent value="rates">
           <Card>
             <CardHeader>
-              <CardTitle>Taux de TVA</CardTitle>
-              <CardDescription>
-                Configuration des différents taux de TVA applicables à vos transactions
-              </CardDescription>
+              <CardTitle>Taux de TVA configurés</CardTitle>
             </CardHeader>
             <CardContent>
-              {isTaxesLoading ? (
-                <div className="space-y-2">
-                  <Skeleton className="h-10 w-full" />
-                  <Skeleton className="h-10 w-full" />
-                  <Skeleton className="h-10 w-full" />
-                </div>
-              ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Nom</TableHead>
-                      <TableHead>Taux (%)</TableHead>
-                      <TableHead>Description</TableHead>
-                      <TableHead>Par défaut</TableHead>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Nom</TableHead>
+                    <TableHead>Taux (%)</TableHead>
+                    <TableHead>Description</TableHead>
+                    <TableHead>Par défaut</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {mockTaxRates.map((taxRate) => (
+                    <TableRow key={taxRate.id}>
+                      <TableCell className="font-medium">{taxRate.name}</TableCell>
+                      <TableCell>{taxRate.rate}%</TableCell>
+                      <TableCell>{taxRate.description}</TableCell>
+                      <TableCell>{taxRate.isDefault ? "Oui" : "Non"}</TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end space-x-2">
+                          <Button variant="ghost" size="icon">
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button variant="ghost" size="icon" disabled={taxRate.isDefault}>
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
                     </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {taxes.length === 0 ? (
-                      <TableRow>
-                        <TableCell colSpan={4} className="text-center py-4">
-                          Aucun taux de TVA configuré
-                        </TableCell>
-                      </TableRow>
-                    ) : (
-                      taxes.map((tax) => (
-                        <TableRow key={tax.id}>
-                          <TableCell className="font-medium">{tax.name || 'N/A'}</TableCell>
-                          <TableCell>{tax.rate || 0}%</TableCell>
-                          <TableCell>{tax.description || '-'}</TableCell>
-                          <TableCell>{tax.isDefault ? '✓' : '-'}</TableCell>
-                        </TableRow>
-                      ))
-                    )}
-                  </TableBody>
-                </Table>
-              )}
+                  ))}
+                </TableBody>
+              </Table>
             </CardContent>
           </Card>
         </TabsContent>
-        
-        <TabsContent value="declarations">
+
+        <TabsContent value="reports">
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <div>
-                <CardTitle>Déclarations de TVA</CardTitle>
-                <CardDescription>
-                  Historique et planification de vos déclarations de TVA
-                </CardDescription>
-              </div>
-              <Button>
-                <PlusCircle className="h-4 w-4 mr-2" />
-                Nouvelle déclaration
-              </Button>
+            <CardHeader>
+              <CardTitle>Déclarations de TVA</CardTitle>
             </CardHeader>
             <CardContent>
-              {isDeclarationsLoading ? (
-                <div className="space-y-2">
-                  <Skeleton className="h-10 w-full" />
-                  <Skeleton className="h-10 w-full" />
-                  <Skeleton className="h-10 w-full" />
-                </div>
-              ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Période</TableHead>
-                      <TableHead>Date de déclaration</TableHead>
-                      <TableHead>Montant</TableHead>
-                      <TableHead>Statut</TableHead>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Période</TableHead>
+                    <TableHead>Du</TableHead>
+                    <TableHead>Au</TableHead>
+                    <TableHead>Total HT</TableHead>
+                    <TableHead>Total TVA</TableHead>
+                    <TableHead>Statut</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {mockTaxReports.map((report) => (
+                    <TableRow key={report.id}>
+                      <TableCell className="font-medium">{report.period}</TableCell>
+                      <TableCell>{formatDate(report.startDate)}</TableCell>
+                      <TableCell>{formatDate(report.endDate)}</TableCell>
+                      <TableCell>{formatCurrency(report.totalHT, 'EUR')}</TableCell>
+                      <TableCell>{formatCurrency(report.totalTVA, 'EUR')}</TableCell>
+                      <TableCell>{getStatusLabel(report.status)}</TableCell>
+                      <TableCell className="text-right">
+                        <Button variant="ghost" size="sm">
+                          {report.status === 'draft' ? 'Compléter' : 'Voir'}
+                        </Button>
+                      </TableCell>
                     </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {declarations.length === 0 ? (
-                      <TableRow>
-                        <TableCell colSpan={4} className="text-center py-4">
-                          Aucune déclaration de TVA enregistrée
-                        </TableCell>
-                      </TableRow>
-                    ) : (
-                      declarations.map((declaration) => (
-                        <TableRow key={declaration.id}>
-                          <TableCell className="font-medium">{declaration.period}</TableCell>
-                          <TableCell>
-                            {declaration.status === 'filed' 
-                              ? declaration.dateFiled 
-                              : `À déposer avant le ${declaration.dueDate}`}
-                          </TableCell>
-                          <TableCell>
-                            {declaration.status === 'filed' 
-                              ? `${declaration.amount.toFixed(2)} €` 
-                              : `${declaration.estimatedAmount.toFixed(2)} € (estimé)`}
-                          </TableCell>
-                          <TableCell>
-                            {declaration.status === 'filed' 
-                              ? <span className="text-green-600">Déposée</span> 
-                              : <span className="text-amber-600">À venir</span>}
-                          </TableCell>
-                        </TableRow>
-                      ))
-                    )}
-                  </TableBody>
-                </Table>
-              )}
+                  ))}
+                </TableBody>
+              </Table>
             </CardContent>
           </Card>
         </TabsContent>
       </Tabs>
     </div>
   );
+};
+
+// Fonction utilitaire pour formater les dates
+const formatDate = (dateString: string | null) => {
+  if (!dateString) return '—';
+  return new Date(dateString).toLocaleDateString();
+};
+
+// Fonction utilitaire pour formater la monnaie
+const formatCurrency = (amount: number, currency: string) => {
+  return new Intl.NumberFormat('fr-FR', {
+    style: 'currency',
+    currency: currency,
+  }).format(amount);
+};
+
+// Fonction utilitaire pour obtenir le libellé de statut
+const getStatusLabel = (status: string) => {
+  switch (status) {
+    case 'draft': return 'Brouillon';
+    case 'submitted': return 'Soumis';
+    case 'accepted': return 'Accepté';
+    case 'rejected': return 'Rejeté';
+    default: return status;
+  }
 };
 
 export default TaxesPage;

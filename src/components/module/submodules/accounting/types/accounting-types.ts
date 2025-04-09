@@ -1,82 +1,62 @@
 
 export interface Invoice {
   id: string;
-  number: string;
-  invoiceNumber: string;
-  clientId: string;
-  clientName: string;
-  issueDate: string;
-  dueDate: string;
-  items: InvoiceItem[];
-  subtotal: number;
-  taxRate: number;
-  taxAmount: number;
-  total: number;
-  status: 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled' | 'pending';
-  notes: string;
-  currency: 'EUR' | 'USD' | 'GBP' | 'CAD' | 'CHF' | 'JPY';
+  invoiceNumber?: string;
+  number?: string;
+  clientName?: string;
+  issueDate?: string;
+  dueDate?: string;
+  total?: number;
+  status: string;
+  currency?: string;
+  items?: InvoiceItem[];
+  subtotal?: number;
+  taxAmount?: number;
+  notes?: string;
   termsAndConditions?: string;
-  createdAt: string;
-  updatedAt: string;
-  createdBy: string;
 }
 
 export interface InvoiceItem {
-  id: string;
   description: string;
   quantity: number;
   unitPrice: number;
   taxRate?: number;
-  amount: number;
+}
+
+export interface PaymentMethod {
+  id: string;
+  name: string;
+  type: 'bank' | 'card' | 'cash' | 'other';
+  isDefault: boolean;
 }
 
 export interface Payment {
   id: string;
-  amount: number;
   invoiceId: string;
-  invoiceNumber?: string;
-  clientId?: string;
-  clientName?: string;
-  date: string;
-  method: 'bank_transfer' | 'cash' | 'check' | 'stripe' | 'paypal' | 'other';
-  status: 'completed' | 'pending' | 'failed' | 'refunded';
-  transactionId: string;
+  amount: number;
   currency: string;
-  notes: string;
-  createdAt: string;
-  updatedAt: string;
-  createdBy: string;
+  date: string;
+  method: string;
+  status: 'completed' | 'pending' | 'failed';
+  reference?: string;
 }
 
 export interface TaxRate {
   id: string;
   name: string;
   rate: number;
-  description: string;
+  description?: string;
   isDefault: boolean;
 }
 
-export interface TaxDeclaration {
-  id: string;
-  period: string;
-  dateFiled?: string;
-  dueDate?: string;
-  amount: number;
-  estimatedAmount?: number;
-  status: 'filed' | 'upcoming';
-  filedBy?: string;
-  notes?: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface Transaction {
-  id: string;
-  date: string;
-  description: string;
-  amount: number;
-  type: 'income' | 'expense' | 'transfer';
-  category: string;
-  isReconciled: boolean;
-  currency: string;
+export interface AccountingSettings {
+  companyName: string;
+  address: string;
+  vatNumber?: string;
+  defaultCurrency: string;
+  defaultPaymentTerms: number;
+  defaultNotes?: string;
+  defaultTerms?: string;
+  invoiceNumberPrefix: string;
+  nextInvoiceNumber: number;
 }

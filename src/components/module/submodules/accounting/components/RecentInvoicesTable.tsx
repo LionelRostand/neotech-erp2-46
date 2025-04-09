@@ -39,7 +39,7 @@ const getStatusBadge = (status: string) => {
 };
 
 const RecentInvoicesTable: React.FC<RecentInvoicesTableProps> = ({ invoices, onViewInvoice }) => {
-  const formatDate = (dateString: string) => {
+  const formatDate = (dateString: string | undefined) => {
     if (!dateString) return 'N/A';
     return new Date(dateString).toLocaleDateString();
   };

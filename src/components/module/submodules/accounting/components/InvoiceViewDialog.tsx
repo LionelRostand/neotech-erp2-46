@@ -44,7 +44,7 @@ const InvoiceViewDialog: React.FC<InvoiceViewDialogProps> = ({ open, onOpenChang
     }
   };
 
-  const formatDate = (dateString: string) => {
+  const formatDate = (dateString: string | undefined) => {
     if (!dateString) return 'N/A';
     const date = new Date(dateString);
     return new Intl.DateTimeFormat('fr-FR').format(date);
