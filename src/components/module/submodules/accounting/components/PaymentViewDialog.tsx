@@ -53,6 +53,16 @@ const PaymentViewDialog: React.FC<PaymentViewDialogProps> = ({
     }
   };
 
+  const getStatusVariant = (status: 'completed' | 'pending' | 'failed' | 'refunded') => {
+    switch (status) {
+      case 'completed': return 'success';
+      case 'pending': return 'outline';
+      case 'failed': return 'destructive';
+      case 'refunded': return 'warning';
+      default: return 'outline';
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[550px]">
@@ -72,12 +82,7 @@ const PaymentViewDialog: React.FC<PaymentViewDialogProps> = ({
                 {formatCurrency(payment.amount || 0, payment.currency || 'EUR')}
               </p>
             </div>
-            <Badge variant={
-              payment.status === 'completed' ? 'success' : 
-              payment.status === 'pending' ? 'outline' : 
-              payment.status === 'refunded' ? 'warning' :
-              'destructive'
-            } className="px-3 py-1 text-xs">
+            <Badge variant={getStatusVariant(payment.status)}>
               {getStatusText(payment.status || '')}
             </Badge>
           </div>
@@ -131,13 +136,13 @@ const PaymentViewDialog: React.FC<PaymentViewDialogProps> = ({
                   <p className="flex items-center">
                     <Clock className="h-3 w-3 mr-1" /> Créé le:
                   </p>
-                  <p>{new Date(payment.createdAt || Date.now()).toLocaleString()}</p>
+                  <p>{payment.createdAt ? new Date(payment.createdAt).toLocaleString() : 'N/A'}</p>
                 </div>
                 <div>
                   <p className="flex items-center">
                     <Clock className="h-3 w-3 mr-1" /> Modifié le:
                   </p>
-                  <p>{new Date(payment.updatedAt || Date.now()).toLocaleString()}</p>
+                  <p>{payment.updatedAt ? new Date(payment.updatedAt).toLocaleString() : 'N/A'}</p>
                 </div>
               </div>
             </div>
