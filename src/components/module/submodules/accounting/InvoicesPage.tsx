@@ -68,7 +68,7 @@ const InvoicesPage: React.FC = () => {
     }
   };
 
-  const handleExportInvoices = () => {
+  const handleExportToExcel = () => {
     const dataToExport = invoices.map(invoice => ({
       'Numéro': invoice.invoiceNumber,
       'Client': invoice.clientName,
@@ -118,7 +118,7 @@ const InvoicesPage: React.FC = () => {
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">Factures</h1>
         <div className="flex space-x-2">
-          <Button variant="default" onClick={handleExportInvoices}>
+          <Button variant="default" onClick={handleExportToExcel} className="ml-2">
             <Download className="mr-2 h-4 w-4" /> Exporter
           </Button>
           <Button onClick={handleAddInvoice}>
