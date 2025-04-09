@@ -139,14 +139,28 @@ export const useClients = () => {
 
   // Delete client
   const handleDeleteClient = async () => {
-    if (!selectedClient) return;
+    if (!selectedClient) {
+      console.error("No client selected for deletion");
+      toast.error("Erreur: Aucun client sélectionné");
+      return;
+    }
 
     try {
+      console.log("Deleting client", selectedClient.id);
       await deleteClientFromFirestore(selectedClient.id);
+      
+      // Also update the local state to remove the client immediately
+      // even if we're offline
+      setFilteredClients(prev => prev.filter(client => client.id !== selectedClient.id));
+      
+      // Close the delete dialog after successful deletion
       setIsDeleteDialogOpen(false);
+      toast.success("Client supprimé avec succès");
     } catch (error) {
       console.error('Error deleting client:', error);
-      // Error is already handled in the useClientsData hook
+      const message = error instanceof Error ? error.message : 'Erreur inconnue';
+      toast.error(`Erreur lors de la suppression: ${message}`);
+      // We do not close the dialog in case of error so the user can try again
     }
   };
 

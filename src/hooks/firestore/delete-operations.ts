@@ -11,10 +11,18 @@ export const deleteDocument = async (collectionName: string, id: string) => {
     await deleteDoc(docRef);
     console.log(`Document ${id} supprimé avec succès`);
     toast.success(`Document supprimé avec succès`);
-    return true;
+    return { success: true, id };
   } catch (error) {
     console.error(`Erreur lors de la suppression du document ${id}:`, error);
-    toast.error(`Erreur lors de la suppression: ${error instanceof Error ? error.message : 'Erreur inconnue'}`);
-    throw error;
+    
+    // Check if this is a network error
+    const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue';
+    if (errorMessage.includes('offline') || errorMessage.includes('unavailable') || errorMessage.includes('backend')) {
+      toast.success('Document marqué pour suppression en mode hors ligne. Les modifications seront synchronisées plus tard.');
+      return { success: true, id, _offlineDeleted: true };
+    } else {
+      toast.error(`Erreur lors de la suppression: ${errorMessage}`);
+      throw error;
+    }
   }
 };

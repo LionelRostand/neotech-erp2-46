@@ -9,7 +9,7 @@ import {
   DialogFooter
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, Loader2 } from "lucide-react";
 import { Client } from '../types/crm-types';
 
 interface DeleteClientDialogProps {
@@ -25,7 +25,28 @@ const DeleteClientDialog: React.FC<DeleteClientDialogProps> = ({
   client,
   onConfirm
 }) => {
+  const [isDeleting, setIsDeleting] = React.useState(false);
+
+  // Reset deleting state when dialog opens/closes
+  React.useEffect(() => {
+    if (!isOpen) {
+      setIsDeleting(false);
+    }
+  }, [isOpen]);
+
   if (!client) return null;
+
+  const handleDelete = async () => {
+    try {
+      setIsDeleting(true);
+      await onConfirm();
+      // The dialog will be closed by the parent component if deletion is successful
+    } catch (error) {
+      console.error("Error in delete handler:", error);
+      setIsDeleting(false);
+      // Error is handled in the parent component
+    }
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -45,19 +66,24 @@ const DeleteClientDialog: React.FC<DeleteClientDialogProps> = ({
             type="button"
             variant="outline"
             onClick={() => onOpenChange(false)}
+            disabled={isDeleting}
           >
             Annuler
           </Button>
           <Button
             type="button"
             variant="destructive"
-            onClick={() => {
-              console.log(`Confirmation de suppression du client: ${client.id}`);
-              onConfirm();
-              onOpenChange(false);
-            }}
+            onClick={handleDelete}
+            disabled={isDeleting}
           >
-            Supprimer définitivement
+            {isDeleting ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Suppression...
+              </>
+            ) : (
+              "Supprimer définitivement"
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>
