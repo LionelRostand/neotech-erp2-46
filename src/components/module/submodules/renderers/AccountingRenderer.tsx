@@ -1,15 +1,13 @@
 
 import React from 'react';
-import DefaultSubmoduleContent from '../DefaultSubmoduleContent';
-import AccountingDashboard from '../accounting/AccountingDashboard';
 import InvoicesPage from '../accounting/InvoicesPage';
+import SettingsPage from '../accounting/SettingsPage';
+import AccountingDashboard from '../accounting/AccountingDashboard';
 import PaymentsPage from '../accounting/PaymentsPage';
 import TaxesPage from '../accounting/TaxesPage';
 import ReportsPage from '../accounting/ReportsPage';
-import AccountingSettingsPage from '../accounting/SettingsPage';
-import { SubModule } from '@/data/types/modules';
 
-export const renderAccountingSubmodule = (submoduleId: string, submodule: SubModule) => {
+export const renderAccountingSubmodule = (submoduleId: string) => {
   switch (submoduleId) {
     case 'accounting-dashboard':
       return <AccountingDashboard />;
@@ -22,8 +20,8 @@ export const renderAccountingSubmodule = (submoduleId: string, submodule: SubMod
     case 'accounting-reports':
       return <ReportsPage />;
     case 'accounting-settings':
-      return <AccountingSettingsPage />;
+      return <SettingsPage />;
     default:
-      return <DefaultSubmoduleContent submodule={submodule} />;
+      return <div>Submodule {submoduleId} not found</div>;
   }
 };

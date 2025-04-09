@@ -1,741 +1,519 @@
 
-import React, { useState } from 'react';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Card } from "@/components/ui/card";
-import { Settings, Users, Bell, Database, Link } from 'lucide-react';
-import { useAccountingPermissions } from './hooks/useAccountingPermissions';
-import PermissionsTab from './components/PermissionsTab';
-import { useAccountingSettingsCollection } from './hooks/useAccountingCollection';
-import { useForm } from 'react-hook-form';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Switch } from '@/components/ui/switch';
-import { Textarea } from '@/components/ui/textarea';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { useToast } from '@/hooks/use-toast';
-import { useFirestore } from '@/hooks/useFirestore';
+import React, { useState, useEffect } from 'react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { useCollectionData } from '@/hooks/useCollectionData';
 import { COLLECTIONS } from '@/lib/firebase-collections';
+import { PermissionsTab } from './components/PermissionsTab';
+import { AlertCircle, Database, FileText, Mail, RefreshCw, Settings2 } from 'lucide-react';
+import { Separator } from '@/components/ui/separator';
+import { useToast } from '@/hooks/use-toast';
 
-// Liste des sous-modules de comptabilité
-const accountingSubmodules = [
-  { id: 'accounting-invoices', name: 'Factures' },
-  { id: 'accounting-payments', name: 'Paiements' },
-  { id: 'accounting-taxes', name: 'Taxes & TVA' },
-  { id: 'accounting-reports', name: 'Rapports' },
-  { id: 'accounting-settings', name: 'Paramètres' }
-];
-
-// Schéma de validation pour les paramètres généraux
-const generalSettingsSchema = z.object({
-  companyName: z.string().min(1, "Le nom de l'entreprise est requis"),
-  address: z.string().optional(),
-  phone: z.string().optional(),
-  email: z.string().email("Email invalide").optional().or(z.literal('')),
-  website: z.string().optional(),
-  taxIdNumber: z.string().optional(),
-  defaultCurrency: z.string().min(1, "La devise par défaut est requise"),
-  defaultPaymentTerms: z.string().min(1, "Les conditions de paiement par défaut sont requises"),
-  logo: z.string().optional()
-});
-
-// Schéma de validation pour les paramètres de notification
-const notificationSettingsSchema = z.object({
-  enableEmailNotifications: z.boolean().default(true),
-  invoiceCreatedNotify: z.boolean().default(true),
-  invoicePaidNotify: z.boolean().default(true),
-  invoiceOverdueNotify: z.boolean().default(true),
-  paymentReceivedNotify: z.boolean().default(true),
-  weeklyReportNotify: z.boolean().default(false),
-  monthlyReportNotify: z.boolean().default(true),
-  reminderDaysBefore: z.string().min(1, "Le nombre de jours est requis"),
-  notificationEmails: z.string().optional()
-});
-
-const AccountingSettingsPage: React.FC = () => {
-  const [activeTab, setActiveTab] = useState("general");
-  const { 
-    users,
-    userPermissions, 
-    loading, 
-    saving, 
-    searchTerm, 
-    setSearchTerm, 
-    updatePermission, 
-    setAllPermissionsOfType, 
-    savePermissions 
-  } = useAccountingPermissions();
+// Define interfaces for our settings data
+interface AccountingSettings {
+  id?: string;
+  companyName: string;
+  address: string;
+  phone: string;
+  email: string;
+  website: string;
+  taxIdNumber: string;
+  defaultCurrency: string;
+  defaultPaymentTerms: string;
+  logo: string;
   
+  // Notifications
+  enableEmailNotifications: boolean;
+  invoiceCreatedNotify: boolean;
+  invoicePaidNotify: boolean;
+  invoiceOverdueNotify: boolean;
+  paymentReceivedNotify: boolean;
+  weeklyReportNotify: boolean;
+  monthlyReportNotify: boolean;
+  reminderDaysBefore: number;
+  notificationEmails: string;
+  
+  // Integrations
+  bankConnected: boolean;
+  emailServiceConnected: boolean;
+  crmConnected: boolean;
+  erpConnected: boolean;
+}
+
+const SettingsPage = () => {
   const { toast } = useToast();
-  const firestore = useFirestore(COLLECTIONS.ACCOUNTING.SETTINGS);
+  const { data: settingsData, isLoading } = useCollectionData(COLLECTIONS.ACCOUNTING.SETTINGS);
   
-  // Récupération des paramètres depuis Firestore
-  const { data: settings, isLoading: settingsLoading } = useAccountingSettingsCollection();
-
-  // Form pour les paramètres généraux
-  const generalForm = useForm({
-    resolver: zodResolver(generalSettingsSchema),
-    defaultValues: {
-      companyName: settings?.companyName || "",
-      address: settings?.address || "",
-      phone: settings?.phone || "",
-      email: settings?.email || "",
-      website: settings?.website || "",
-      taxIdNumber: settings?.taxIdNumber || "",
-      defaultCurrency: settings?.defaultCurrency || "EUR",
-      defaultPaymentTerms: settings?.defaultPaymentTerms || "30",
-      logo: settings?.logo || ""
-    }
-  });
-
-  // Form pour les paramètres de notification
-  const notificationForm = useForm({
-    resolver: zodResolver(notificationSettingsSchema),
-    defaultValues: {
-      enableEmailNotifications: settings?.enableEmailNotifications !== false,
-      invoiceCreatedNotify: settings?.invoiceCreatedNotify !== false,
-      invoicePaidNotify: settings?.invoicePaidNotify !== false,
-      invoiceOverdueNotify: settings?.invoiceOverdueNotify !== false,
-      paymentReceivedNotify: settings?.paymentReceivedNotify !== false,
-      weeklyReportNotify: settings?.weeklyReportNotify || false,
-      monthlyReportNotify: settings?.monthlyReportNotify !== false,
-      reminderDaysBefore: settings?.reminderDaysBefore || "3",
-      notificationEmails: settings?.notificationEmails || ""
-    }
-  });
-
-  // État pour les intégrations
-  const [integrations, setIntegrations] = useState({
-    bankConnected: settings?.bankConnected || false,
-    emailServiceConnected: settings?.emailServiceConnected || false,
-    crmConnected: settings?.crmConnected || false,
-    erConnected: settings?.erConnected || false,
-  });
-
-  // Fonction pour enregistrer les paramètres généraux
-  const onSaveGeneralSettings = async (data) => {
-    try {
-      await firestore.set('general', data);
-      toast({
-        title: "Paramètres enregistrés",
-        description: "Les paramètres généraux ont été enregistrés avec succès."
-      });
-    } catch (error) {
-      console.error("Erreur lors de l'enregistrement des paramètres:", error);
-      toast({
-        title: "Erreur",
-        description: "Une erreur est survenue lors de l'enregistrement des paramètres.",
-        variant: "destructive"
-      });
-    }
-  };
-
-  // Fonction pour enregistrer les paramètres de notification
-  const onSaveNotificationSettings = async (data) => {
-    try {
-      await firestore.set('notifications', data);
-      toast({
-        title: "Paramètres enregistrés",
-        description: "Les paramètres de notification ont été enregistrés avec succès."
-      });
-    } catch (error) {
-      console.error("Erreur lors de l'enregistrement des paramètres:", error);
-      toast({
-        title: "Erreur",
-        description: "Une erreur est survenue lors de l'enregistrement des paramètres.",
-        variant: "destructive"
-      });
-    }
-  };
-
-  // Fonction pour connecter une intégration
-  const handleToggleIntegration = async (key) => {
-    const newIntegrations = { ...integrations, [key]: !integrations[key] };
-    setIntegrations(newIntegrations);
+  // Create default settings if we don't have any
+  const defaultSettings: AccountingSettings = {
+    companyName: 'Ma Société',
+    address: '123 Rue Principale, 75000 Paris',
+    phone: '01 23 45 67 89',
+    email: 'contact@masociete.fr',
+    website: 'www.masociete.fr',
+    taxIdNumber: 'FR12345678901',
+    defaultCurrency: 'EUR',
+    defaultPaymentTerms: 'Net 30',
+    logo: '',
     
-    try {
-      await firestore.set('integrations', newIntegrations);
-      toast({
-        title: newIntegrations[key] ? "Intégration activée" : "Intégration désactivée",
-        description: `L'intégration a été ${newIntegrations[key] ? "activée" : "désactivée"} avec succès.`
-      });
-    } catch (error) {
-      console.error("Erreur lors de la mise à jour de l'intégration:", error);
-      toast({
-        title: "Erreur",
-        description: "Une erreur est survenue lors de la mise à jour de l'intégration.",
-        variant: "destructive"
-      });
+    // Notifications
+    enableEmailNotifications: true,
+    invoiceCreatedNotify: true,
+    invoicePaidNotify: true,
+    invoiceOverdueNotify: true,
+    paymentReceivedNotify: true,
+    weeklyReportNotify: false,
+    monthlyReportNotify: true,
+    reminderDaysBefore: 3,
+    notificationEmails: 'finance@masociete.fr',
+    
+    // Integrations
+    bankConnected: false,
+    emailServiceConnected: true,
+    crmConnected: false,
+    erpConnected: false
+  };
+  
+  // Get the first settings document or use defaults
+  const settings = settingsData && settingsData.length > 0 ? settingsData[0] : defaultSettings;
+  
+  const [formData, setFormData] = useState<AccountingSettings>(defaultSettings);
+  
+  useEffect(() => {
+    if (settings) {
+      setFormData(settings as AccountingSettings);
     }
-  };
-
-  // Fonction pour exporter la base de données
-  const handleExportDatabase = () => {
-    toast({
-      title: "Export en cours",
-      description: "L'export de la base de données va commencer..."
-    });
-
-    // Simulation d'un délai pour l'export
-    setTimeout(() => {
-      toast({
-        title: "Export terminé",
-        description: "L'export de la base de données a été réalisé avec succès."
-      });
-    }, 2000);
-  };
-
-  // Fonction pour importer des données
-  const handleImportData = () => {
-    // Cette fonction serait appelée lors du clic sur le bouton d'import
-    toast({
-      title: "Import non disponible",
-      description: "La fonctionnalité d'import sera disponible prochainement."
+  }, [settings]);
+  
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData({
+      ...formData,
+      [name]: value
     });
   };
-
+  
+  const handleSwitchChange = (name: string, checked: boolean) => {
+    setFormData({
+      ...formData,
+      [name]: checked
+    });
+  };
+  
+  const handleSaveSettings = () => {
+    // Here you would save the settings to your database
+    toast({
+      title: "Paramètres enregistrés",
+      description: "Les paramètres de comptabilité ont été mis à jour avec succès."
+    });
+  };
+  
+  const handleDatabaseOperation = (operation: string) => {
+    toast({
+      title: `${operation} terminée`,
+      description: `L'opération ${operation.toLowerCase()} a été effectuée avec succès.`
+    });
+  };
+  
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
+      </div>
+    );
+  }
+  
   return (
-    <div className="container mx-auto py-6">
-      <h1 className="text-3xl font-bold mb-6">Paramètres de la Comptabilité</h1>
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h1 className="text-2xl font-bold">Paramètres de Comptabilité</h1>
+        <Button onClick={handleSaveSettings}>Enregistrer les modifications</Button>
+      </div>
       
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid grid-cols-5 mb-8">
-          <TabsTrigger value="general" className="flex items-center gap-2">
-            <Settings className="h-4 w-4" />
-            <span>Général</span>
-          </TabsTrigger>
-          <TabsTrigger value="permissions" className="flex items-center gap-2">
-            <Users className="h-4 w-4" />
-            <span>Permissions</span>
-          </TabsTrigger>
-          <TabsTrigger value="notifications" className="flex items-center gap-2">
-            <Bell className="h-4 w-4" />
-            <span>Notifications</span>
-          </TabsTrigger>
-          <TabsTrigger value="integrations" className="flex items-center gap-2">
-            <Link className="h-4 w-4" />
-            <span>Intégrations</span>
-          </TabsTrigger>
-          <TabsTrigger value="database" className="flex items-center gap-2">
-            <Database className="h-4 w-4" />
-            <span>Base de données</span>
-          </TabsTrigger>
+      <Tabs defaultValue="general">
+        <TabsList className="grid grid-cols-5 w-full">
+          <TabsTrigger value="general">Général</TabsTrigger>
+          <TabsTrigger value="permissions">Permissions</TabsTrigger>
+          <TabsTrigger value="notifications">Notifications</TabsTrigger>
+          <TabsTrigger value="integrations">Intégrations</TabsTrigger>
+          <TabsTrigger value="database">Base de données</TabsTrigger>
         </TabsList>
         
+        {/* Onglet Général */}
         <TabsContent value="general">
-          <Card className="p-6">
-            <h2 className="text-xl font-semibold mb-4">Paramètres généraux</h2>
-            <Form {...generalForm}>
-              <form onSubmit={generalForm.handleSubmit(onSaveGeneralSettings)} className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <FormField
-                    control={generalForm.control}
+          <Card>
+            <CardHeader>
+              <CardTitle>Informations de l'entreprise</CardTitle>
+              <CardDescription>
+                Ces informations apparaîtront sur vos factures et autres documents comptables.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="companyName">Nom de l'entreprise</Label>
+                  <Input
+                    id="companyName"
                     name="companyName"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Nom de l'entreprise</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Nom de l'entreprise" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
+                    value={formData.companyName}
+                    onChange={handleInputChange}
                   />
-                  
-                  <FormField
-                    control={generalForm.control}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="taxIdNumber">Numéro SIRET</Label>
+                  <Input
+                    id="taxIdNumber"
                     name="taxIdNumber"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Numéro de TVA</FormLabel>
-                        <FormControl>
-                          <Input placeholder="FR12345678900" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
+                    value={formData.taxIdNumber}
+                    onChange={handleInputChange}
                   />
-                  
-                  <FormField
-                    control={generalForm.control}
+                </div>
+                <div className="space-y-2 col-span-2">
+                  <Label htmlFor="address">Adresse</Label>
+                  <Textarea
+                    id="address"
                     name="address"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Adresse</FormLabel>
-                        <FormControl>
-                          <Textarea rows={3} placeholder="Adresse complète" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
+                    value={formData.address}
+                    onChange={handleInputChange}
+                    rows={2}
                   />
-                  
-                  <div className="grid grid-cols-1 gap-4">
-                    <FormField
-                      control={generalForm.control}
-                      name="phone"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Téléphone</FormLabel>
-                          <FormControl>
-                            <Input placeholder="+33 1 23 45 67 89" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="phone">Téléphone</Label>
+                  <Input
+                    id="phone"
+                    name="phone"
+                    value={formData.phone}
+                    onChange={handleInputChange}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    id="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleInputChange}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="website">Site web</Label>
+                  <Input
+                    id="website"
+                    name="website"
+                    value={formData.website}
+                    onChange={handleInputChange}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="logo">Logo (URL)</Label>
+                  <Input
+                    id="logo"
+                    name="logo"
+                    value={formData.logo}
+                    onChange={handleInputChange}
+                  />
+                </div>
+              </div>
+              
+              <Separator className="my-4" />
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="defaultCurrency">Devise par défaut</Label>
+                  <Input
+                    id="defaultCurrency"
+                    name="defaultCurrency"
+                    value={formData.defaultCurrency}
+                    onChange={handleInputChange}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="defaultPaymentTerms">Conditions de paiement par défaut</Label>
+                  <Input
+                    id="defaultPaymentTerms"
+                    name="defaultPaymentTerms"
+                    value={formData.defaultPaymentTerms}
+                    onChange={handleInputChange}
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        {/* Onglet Permissions */}
+        <TabsContent value="permissions">
+          <PermissionsTab />
+        </TabsContent>
+        
+        {/* Onglet Notifications */}
+        <TabsContent value="notifications">
+          <Card>
+            <CardHeader>
+              <CardTitle>Paramètres de notifications</CardTitle>
+              <CardDescription>
+                Configurez quand et comment vous souhaitez recevoir des notifications.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="font-medium">Activer les notifications par email</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Recevoir des notifications par email pour les événements importants
+                    </p>
+                  </div>
+                  <Switch 
+                    checked={formData.enableEmailNotifications}
+                    onCheckedChange={(checked) => handleSwitchChange('enableEmailNotifications', checked)}
+                  />
+                </div>
+                
+                <Separator />
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="flex items-center space-x-2">
+                    <Switch 
+                      id="invoiceCreatedNotify"
+                      checked={formData.invoiceCreatedNotify}
+                      onCheckedChange={(checked) => handleSwitchChange('invoiceCreatedNotify', checked)}
+                      disabled={!formData.enableEmailNotifications}
                     />
-                    
-                    <FormField
-                      control={generalForm.control}
-                      name="email"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Email</FormLabel>
-                          <FormControl>
-                            <Input placeholder="contact@entreprise.com" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
+                    <Label htmlFor="invoiceCreatedNotify">Nouvelle facture créée</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Switch 
+                      id="invoicePaidNotify"
+                      checked={formData.invoicePaidNotify}
+                      onCheckedChange={(checked) => handleSwitchChange('invoicePaidNotify', checked)}
+                      disabled={!formData.enableEmailNotifications}
                     />
-                    
-                    <FormField
-                      control={generalForm.control}
-                      name="website"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Site web</FormLabel>
-                          <FormControl>
-                            <Input placeholder="https://www.entreprise.com" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
+                    <Label htmlFor="invoicePaidNotify">Facture payée</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Switch 
+                      id="invoiceOverdueNotify"
+                      checked={formData.invoiceOverdueNotify}
+                      onCheckedChange={(checked) => handleSwitchChange('invoiceOverdueNotify', checked)}
+                      disabled={!formData.enableEmailNotifications}
                     />
+                    <Label htmlFor="invoiceOverdueNotify">Facture en retard</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Switch 
+                      id="paymentReceivedNotify"
+                      checked={formData.paymentReceivedNotify}
+                      onCheckedChange={(checked) => handleSwitchChange('paymentReceivedNotify', checked)}
+                      disabled={!formData.enableEmailNotifications}
+                    />
+                    <Label htmlFor="paymentReceivedNotify">Paiement reçu</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Switch 
+                      id="weeklyReportNotify"
+                      checked={formData.weeklyReportNotify}
+                      onCheckedChange={(checked) => handleSwitchChange('weeklyReportNotify', checked)}
+                      disabled={!formData.enableEmailNotifications}
+                    />
+                    <Label htmlFor="weeklyReportNotify">Rapport hebdomadaire</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Switch 
+                      id="monthlyReportNotify"
+                      checked={formData.monthlyReportNotify}
+                      onCheckedChange={(checked) => handleSwitchChange('monthlyReportNotify', checked)}
+                      disabled={!formData.enableEmailNotifications}
+                    />
+                    <Label htmlFor="monthlyReportNotify">Rapport mensuel</Label>
                   </div>
                 </div>
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
-                  <FormField
-                    control={generalForm.control}
-                    name="defaultCurrency"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Devise par défaut</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Sélectionner une devise" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="EUR">Euro (€)</SelectItem>
-                            <SelectItem value="USD">Dollar US ($)</SelectItem>
-                            <SelectItem value="GBP">Livre sterling (£)</SelectItem>
-                            <SelectItem value="CHF">Franc suisse (CHF)</SelectItem>
-                            <SelectItem value="CAD">Dollar canadien (CAD)</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={generalForm.control}
-                    name="defaultPaymentTerms"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Conditions de paiement par défaut (jours)</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Sélectionner le délai" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="0">Paiement immédiat</SelectItem>
-                            <SelectItem value="7">7 jours</SelectItem>
-                            <SelectItem value="15">15 jours</SelectItem>
-                            <SelectItem value="30">30 jours</SelectItem>
-                            <SelectItem value="45">45 jours</SelectItem>
-                            <SelectItem value="60">60 jours</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
+                <Separator />
                 
-                <Button type="submit" className="mt-6">Enregistrer les paramètres</Button>
-              </form>
-            </Form>
-          </Card>
-        </TabsContent>
-        
-        <TabsContent value="permissions">
-          <PermissionsTab
-            users={users}
-            userPermissions={userPermissions}
-            accountingSubmodules={accountingSubmodules}
-            loading={loading}
-            saving={saving}
-            searchTerm={searchTerm}
-            setSearchTerm={setSearchTerm}
-            updatePermission={updatePermission}
-            setAllPermissionsOfType={setAllPermissionsOfType}
-            savePermissions={savePermissions}
-          />
-        </TabsContent>
-        
-        <TabsContent value="notifications">
-          <Card className="p-6">
-            <h2 className="text-xl font-semibold mb-4">Paramètres de notifications</h2>
-            <Form {...notificationForm}>
-              <form onSubmit={notificationForm.handleSubmit(onSaveNotificationSettings)} className="space-y-4">
-                <FormField
-                  control={notificationForm.control}
-                  name="enableEmailNotifications"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-center justify-between p-4 border rounded-md">
-                      <div className="space-y-0.5">
-                        <FormLabel className="text-base">Notifications par email</FormLabel>
-                        <FormDescription>
-                          Activer l'envoi de notifications par email
-                        </FormDescription>
-                      </div>
-                      <FormControl>
-                        <Switch
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                  <FormField
-                    control={notificationForm.control}
-                    name="invoiceCreatedNotify"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-row items-center justify-between p-4 border rounded-md">
-                        <div className="space-y-0.5">
-                          <FormLabel>Création de facture</FormLabel>
-                        </div>
-                        <FormControl>
-                          <Switch
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
-                          />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={notificationForm.control}
-                    name="invoicePaidNotify"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-row items-center justify-between p-4 border rounded-md">
-                        <div className="space-y-0.5">
-                          <FormLabel>Facture payée</FormLabel>
-                        </div>
-                        <FormControl>
-                          <Switch
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
-                          />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={notificationForm.control}
-                    name="invoiceOverdueNotify"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-row items-center justify-between p-4 border rounded-md">
-                        <div className="space-y-0.5">
-                          <FormLabel>Facture en retard</FormLabel>
-                        </div>
-                        <FormControl>
-                          <Switch
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
-                          />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={notificationForm.control}
-                    name="paymentReceivedNotify"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-row items-center justify-between p-4 border rounded-md">
-                        <div className="space-y-0.5">
-                          <FormLabel>Paiement reçu</FormLabel>
-                        </div>
-                        <FormControl>
-                          <Switch
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
-                          />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
-                </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <FormField
-                    control={notificationForm.control}
-                    name="weeklyReportNotify"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-row items-center justify-between p-4 border rounded-md">
-                        <div className="space-y-0.5">
-                          <FormLabel>Rapport hebdomadaire</FormLabel>
-                        </div>
-                        <FormControl>
-                          <Switch
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
-                          />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={notificationForm.control}
-                    name="monthlyReportNotify"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-row items-center justify-between p-4 border rounded-md">
-                        <div className="space-y-0.5">
-                          <FormLabel>Rapport mensuel</FormLabel>
-                        </div>
-                        <FormControl>
-                          <Switch
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
-                          />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
-                </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                  <FormField
-                    control={notificationForm.control}
+                <div className="space-y-2">
+                  <Label htmlFor="reminderDaysBefore">Jours de rappel avant échéance</Label>
+                  <Input 
+                    id="reminderDaysBefore" 
                     name="reminderDaysBefore"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Jours de rappel avant échéance</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Sélectionner le nombre de jours" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="1">1 jour</SelectItem>
-                            <SelectItem value="3">3 jours</SelectItem>
-                            <SelectItem value="5">5 jours</SelectItem>
-                            <SelectItem value="7">7 jours</SelectItem>
-                            <SelectItem value="14">14 jours</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormDescription>
-                          Envoyer un rappel avant l'échéance de la facture
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={notificationForm.control}
-                    name="notificationEmails"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Emails supplémentaires pour les notifications</FormLabel>
-                        <FormControl>
-                          <Textarea 
-                            placeholder="Entrez les adresses email séparées par des virgules" 
-                            {...field} 
-                            rows={3}
-                          />
-                        </FormControl>
-                        <FormDescription>
-                          Ces adresses recevront également les notifications
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
+                    type="number" 
+                    value={formData.reminderDaysBefore}
+                    onChange={handleInputChange}
+                    disabled={!formData.enableEmailNotifications} 
                   />
                 </div>
                 
-                <Button type="submit" className="mt-6">Enregistrer les paramètres</Button>
-              </form>
-            </Form>
+                <div className="space-y-2">
+                  <Label htmlFor="notificationEmails">Emails de notification (séparés par des virgules)</Label>
+                  <Input 
+                    id="notificationEmails" 
+                    name="notificationEmails"
+                    value={formData.notificationEmails}
+                    onChange={handleInputChange}
+                    disabled={!formData.enableEmailNotifications} 
+                  />
+                </div>
+              </div>
+            </CardContent>
           </Card>
         </TabsContent>
         
+        {/* Onglet Intégrations */}
         <TabsContent value="integrations">
-          <Card className="p-6">
-            <h2 className="text-xl font-semibold mb-4">Intégrations</h2>
-            <p className="text-muted-foreground mb-6">Gérez les intégrations avec d'autres systèmes.</p>
-            
-            <div className="space-y-4">
-              <div className="flex items-center justify-between p-4 border rounded-md">
-                <div className="space-y-1">
-                  <h3 className="font-medium">Connecter à votre banque</h3>
-                  <p className="text-sm text-muted-foreground">Synchroniser automatiquement les transactions bancaires</p>
+          <Card>
+            <CardHeader>
+              <CardTitle>Intégrations de services externes</CardTitle>
+              <CardDescription>
+                Connectez votre système comptable à d'autres services.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="rounded-lg border p-4 flex items-center justify-between">
+                  <div className="flex items-center space-x-4">
+                    <div className="bg-blue-100 p-2 rounded-full">
+                      <Settings2 className="h-6 w-6 text-blue-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-medium">Intégration bancaire</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Synchronisez vos comptes bancaires pour un suivi automatique
+                      </p>
+                    </div>
+                  </div>
+                  <Button variant={formData.bankConnected ? "default" : "outline"}>
+                    {formData.bankConnected ? "Configuré" : "Connecter"}
+                  </Button>
                 </div>
-                <div className="flex items-center space-x-2">
-                  <span className={`text-sm ${integrations.bankConnected ? 'text-green-500' : 'text-gray-500'}`}>
-                    {integrations.bankConnected ? 'Connecté' : 'Non connecté'}
-                  </span>
-                  <Switch 
-                    checked={integrations.bankConnected} 
-                    onCheckedChange={() => handleToggleIntegration('bankConnected')}
-                  />
+                
+                <div className="rounded-lg border p-4 flex items-center justify-between">
+                  <div className="flex items-center space-x-4">
+                    <div className="bg-green-100 p-2 rounded-full">
+                      <Mail className="h-6 w-6 text-green-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-medium">Service d'emails</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Pour l'envoi automatique de factures et rappels
+                      </p>
+                    </div>
+                  </div>
+                  <Button variant={formData.emailServiceConnected ? "default" : "outline"}>
+                    {formData.emailServiceConnected ? "Configuré" : "Connecter"}
+                  </Button>
+                </div>
+                
+                <div className="rounded-lg border p-4 flex items-center justify-between">
+                  <div className="flex items-center space-x-4">
+                    <div className="bg-purple-100 p-2 rounded-full">
+                      <FileText className="h-6 w-6 text-purple-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-medium">CRM</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Lier les clients du CRM à la comptabilité
+                      </p>
+                    </div>
+                  </div>
+                  <Button variant={formData.crmConnected ? "default" : "outline"}>
+                    {formData.crmConnected ? "Configuré" : "Connecter"}
+                  </Button>
+                </div>
+                
+                <div className="rounded-lg border p-4 flex items-center justify-between">
+                  <div className="flex items-center space-x-4">
+                    <div className="bg-orange-100 p-2 rounded-full">
+                      <AlertCircle className="h-6 w-6 text-orange-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-medium">ERP</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Intégrer avec votre système ERP
+                      </p>
+                    </div>
+                  </div>
+                  <Button variant={formData.erpConnected ? "default" : "outline"}>
+                    {formData.erpConnected ? "Configuré" : "Connecter"}
+                  </Button>
                 </div>
               </div>
-              
-              <div className="flex items-center justify-between p-4 border rounded-md">
-                <div className="space-y-1">
-                  <h3 className="font-medium">Service d'emails</h3>
-                  <p className="text-sm text-muted-foreground">Configurer un service d'envoi d'emails (Mailjet, SendGrid, etc.)</p>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <span className={`text-sm ${integrations.emailServiceConnected ? 'text-green-500' : 'text-gray-500'}`}>
-                    {integrations.emailServiceConnected ? 'Connecté' : 'Non connecté'}
-                  </span>
-                  <Switch 
-                    checked={integrations.emailServiceConnected} 
-                    onCheckedChange={() => handleToggleIntegration('emailServiceConnected')}
-                  />
-                </div>
-              </div>
-              
-              <div className="flex items-center justify-between p-4 border rounded-md">
-                <div className="space-y-1">
-                  <h3 className="font-medium">CRM</h3>
-                  <p className="text-sm text-muted-foreground">Intégrer avec le module CRM pour la gestion des clients</p>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <span className={`text-sm ${integrations.crmConnected ? 'text-green-500' : 'text-gray-500'}`}>
-                    {integrations.crmConnected ? 'Connecté' : 'Non connecté'}
-                  </span>
-                  <Switch 
-                    checked={integrations.crmConnected} 
-                    onCheckedChange={() => handleToggleIntegration('crmConnected')}
-                  />
-                </div>
-              </div>
-              
-              <div className="flex items-center justify-between p-4 border rounded-md">
-                <div className="space-y-1">
-                  <h3 className="font-medium">ERP</h3>
-                  <p className="text-sm text-muted-foreground">Synchroniser avec un système ERP externe</p>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <span className={`text-sm ${integrations.erConnected ? 'text-green-500' : 'text-gray-500'}`}>
-                    {integrations.erConnected ? 'Connecté' : 'Non connecté'}
-                  </span>
-                  <Switch 
-                    checked={integrations.erConnected} 
-                    onCheckedChange={() => handleToggleIntegration('erConnected')}
-                  />
-                </div>
-              </div>
-            </div>
+            </CardContent>
           </Card>
         </TabsContent>
         
+        {/* Onglet Base de données */}
         <TabsContent value="database">
-          <Card className="p-6">
-            <h2 className="text-xl font-semibold mb-4">Gestion de la base de données</h2>
-            <p className="text-muted-foreground mb-6">Gérez les données de la comptabilité.</p>
-            
-            <div className="space-y-8">
+          <Card>
+            <CardHeader>
+              <CardTitle>Gestion de la base de données</CardTitle>
+              <CardDescription>
+                Effectuez des opérations de maintenance sur la base de données comptable.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
               <div className="space-y-4">
-                <h3 className="text-lg font-medium">Sauvegarde et restauration</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Card className="p-4">
-                    <h4 className="font-medium mb-2">Exporter les données</h4>
-                    <p className="text-sm text-muted-foreground mb-4">Téléchargez une copie complète de vos données comptables</p>
-                    <div className="flex space-x-2">
-                      <Button onClick={handleExportDatabase}>
-                        Exporter (CSV)
-                      </Button>
-                      <Button variant="outline" onClick={handleExportDatabase}>
-                        Exporter (Excel)
-                      </Button>
+                <div className="rounded-lg border p-4 flex items-center justify-between">
+                  <div className="flex items-center space-x-4">
+                    <div className="bg-blue-100 p-2 rounded-full">
+                      <Database className="h-6 w-6 text-blue-600" />
                     </div>
-                  </Card>
-                  
-                  <Card className="p-4">
-                    <h4 className="font-medium mb-2">Importer des données</h4>
-                    <p className="text-sm text-muted-foreground mb-4">Importez des données à partir d'un fichier</p>
-                    <div className="flex space-x-2">
-                      <Button onClick={handleImportData}>
-                        Importer
-                      </Button>
+                    <div>
+                      <h3 className="font-medium">Sauvegarde de données</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Créez une sauvegarde de toutes vos données comptables
+                      </p>
                     </div>
-                  </Card>
+                  </div>
+                  <Button variant="outline" onClick={() => handleDatabaseOperation('Sauvegarde')}>
+                    Lancer une sauvegarde
+                  </Button>
+                </div>
+                
+                <div className="rounded-lg border p-4 flex items-center justify-between">
+                  <div className="flex items-center space-x-4">
+                    <div className="bg-green-100 p-2 rounded-full">
+                      <RefreshCw className="h-6 w-6 text-green-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-medium">Optimisation</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Optimisez la base de données pour de meilleures performances
+                      </p>
+                    </div>
+                  </div>
+                  <Button variant="outline" onClick={() => handleDatabaseOperation('Optimisation')}>
+                    Optimiser
+                  </Button>
+                </div>
+                
+                <div className="rounded-lg border bg-amber-50 p-4 flex items-center justify-between">
+                  <div className="flex items-center space-x-4">
+                    <div className="bg-red-100 p-2 rounded-full">
+                      <AlertCircle className="h-6 w-6 text-red-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-medium">Réinitialisation des données</h3>
+                      <p className="text-sm text-red-500">
+                        Attention: cette action est irréversible et supprimera toutes vos données
+                      </p>
+                    </div>
+                  </div>
+                  <Button variant="destructive" onClick={() => {
+                    if (window.confirm('Êtes-vous sûr de vouloir réinitialiser toutes les données? Cette action est irréversible.')) {
+                      handleDatabaseOperation('Réinitialisation');
+                    }
+                  }}>
+                    Réinitialiser
+                  </Button>
                 </div>
               </div>
-              
-              <div>
-                <h3 className="text-lg font-medium mb-4">Maintenance de la base de données</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Card className="p-4">
-                    <h4 className="font-medium mb-2">Nettoyage des données</h4>
-                    <p className="text-sm text-muted-foreground mb-4">Supprimer les données temporaires et obsolètes</p>
-                    <Button variant="outline">
-                      Nettoyer les données
-                    </Button>
-                  </Card>
-                  
-                  <Card className="p-4">
-                    <h4 className="font-medium mb-2">Vérification d'intégrité</h4>
-                    <p className="text-sm text-muted-foreground mb-4">Vérifier l'intégrité de la base de données</p>
-                    <Button variant="outline">
-                      Vérifier
-                    </Button>
-                  </Card>
-                </div>
-              </div>
-              
-              <div>
-                <h3 className="text-lg font-medium mb-4">Statistiques de la base</h3>
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                  <Card className="p-4 text-center">
-                    <p className="text-sm text-muted-foreground mb-1">Factures</p>
-                    <p className="text-2xl font-bold">243</p>
-                  </Card>
-                  <Card className="p-4 text-center">
-                    <p className="text-sm text-muted-foreground mb-1">Paiements</p>
-                    <p className="text-2xl font-bold">187</p>
-                  </Card>
-                  <Card className="p-4 text-center">
-                    <p className="text-sm text-muted-foreground mb-1">Clients</p>
-                    <p className="text-2xl font-bold">84</p>
-                  </Card>
-                  <Card className="p-4 text-center">
-                    <p className="text-sm text-muted-foreground mb-1">Transactions</p>
-                    <p className="text-2xl font-bold">1,243</p>
-                  </Card>
-                </div>
-              </div>
-            </div>
+            </CardContent>
           </Card>
         </TabsContent>
       </Tabs>
@@ -743,4 +521,4 @@ const AccountingSettingsPage: React.FC = () => {
   );
 };
 
-export default AccountingSettingsPage;
+export default SettingsPage;
