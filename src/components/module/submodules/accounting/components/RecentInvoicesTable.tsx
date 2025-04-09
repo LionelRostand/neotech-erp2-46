@@ -30,6 +30,8 @@ const getStatusBadge = (status: string) => {
       return <Badge variant="destructive">En retard</Badge>;
     case 'cancelled':
       return <Badge variant="destructive">Annulée</Badge>;
+    case 'pending':
+      return <Badge variant="secondary">En attente</Badge>;
     default:
       return <Badge variant="outline">{status}</Badge>;
   }
@@ -59,7 +61,7 @@ const RecentInvoicesTable: React.FC<RecentInvoicesTableProps> = ({ invoices }) =
         ) : (
           invoices.map((invoice) => (
             <TableRow key={invoice.id}>
-              <TableCell className="font-medium">{invoice.number}</TableCell>
+              <TableCell className="font-medium">{invoice.invoiceNumber || invoice.number}</TableCell>
               <TableCell>{invoice.clientName}</TableCell>
               <TableCell>{new Date(invoice.issueDate).toLocaleDateString()}</TableCell>
               <TableCell>{new Date(invoice.dueDate).toLocaleDateString()}</TableCell>

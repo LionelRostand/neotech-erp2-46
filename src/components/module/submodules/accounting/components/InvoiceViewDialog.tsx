@@ -62,18 +62,21 @@ const InvoiceViewDialog: React.FC<InvoiceViewDialogProps> = ({ open, onOpenChang
     }
   };
 
+  // Ensure we have all required properties with fallbacks for invoice display
+  const invoiceNumber = invoice.invoiceNumber || invoice.number || 'N/A';
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Facture {invoice.number}</DialogTitle>
+          <DialogTitle>Facture {invoiceNumber}</DialogTitle>
         </DialogHeader>
         
         <div id="invoice-to-print" className="p-6 bg-white">
           <div className="flex justify-between mb-8">
             <div>
               <h1 className="text-3xl font-bold mb-2">FACTURE</h1>
-              <p className="text-xl font-semibold"># {invoice.number}</p>
+              <p className="text-xl font-semibold"># {invoiceNumber}</p>
               <p className="text-gray-500">
                 Status: <span className="font-medium">{getStatusLabel(invoice.status)}</span>
               </p>

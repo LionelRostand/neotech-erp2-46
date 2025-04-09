@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import {
   Table,
@@ -122,7 +121,6 @@ const InvoicesPage = () => {
     }
   };
 
-  // Dialog close handlers
   const handleCloseViewDialog = () => {
     setIsViewOpen(false);
     setSelectedInvoice(null);
@@ -237,7 +235,6 @@ const InvoicesPage = () => {
         </div>
       )}
 
-      {/* Dialogs */}
       <InvoiceFormDialog
         open={isFormOpen}
         onOpenChange={handleCloseFormDialog}
