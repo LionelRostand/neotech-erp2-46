@@ -3,24 +3,9 @@ import { useState, useEffect } from 'react';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import { useFirestore } from '@/hooks/use-firestore';
 import { toast } from 'sonner';
+import { Project as ProjectType } from '../types/project-types';
 
-export type Project = {
-  id: string;
-  name: string;
-  description?: string;
-  status: 'active' | 'completed' | 'on-hold' | 'cancelled'; // Updated 'onHold' to 'on-hold'
-  startDate: string;
-  endDate?: string;
-  budget?: number;
-  manager?: string;
-  team?: string[];
-  priority: 'low' | 'medium' | 'high';
-  progress: number;
-  createdAt: string;
-  updatedAt: string;
-  createdBy: string; // Added missing field
-  client?: string; // Added missing field
-};
+export type Project = ProjectType;
 
 export const useFetchProjects = () => {
   const [projects, setProjects] = useState<Project[]>([]);
@@ -37,6 +22,7 @@ export const useFetchProjects = () => {
         // Add default values for missing fields
         const enhancedData = data.map(project => ({
           ...project,
+          description: project.description || '',
           createdBy: project.createdBy || 'user-1',
           client: project.client || 'N/A',
           // Convert 'onHold' to 'on-hold' if needed
@@ -63,6 +49,7 @@ export const useFetchProjects = () => {
       // Add default values for missing fields
       const enhancedData = data.map(project => ({
         ...project,
+        description: project.description || '',
         createdBy: project.createdBy || 'user-1',
         client: project.client || 'N/A',
         // Convert 'onHold' to 'on-hold' if needed
