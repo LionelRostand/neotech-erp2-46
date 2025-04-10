@@ -1,3 +1,4 @@
+
 import { useState, useCallback, useEffect } from 'react';
 import { collection, query, where, getDocs, doc, deleteDoc, addDoc, updateDoc, DocumentReference } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
@@ -165,6 +166,10 @@ export const useClientsData = () => {
   const deleteClient = async (clientId: string): Promise<void> => {
     try {
       setIsLoading(true);
+      
+      // First, update local state immediately to provide instant UI feedback
+      setClients(prevClients => prevClients.filter(client => client.id !== clientId));
+      
       await executeWithNetworkRetry(async () => {
         const clientDocRef = doc(db, COLLECTIONS.CRM.CLIENTS, clientId);
         await deleteDoc(clientDocRef);
@@ -172,9 +177,14 @@ export const useClientsData = () => {
         toast.success("Client supprimé avec succès");
       });
       
-      await fetchClients();
+      // No need to fetch all clients again as we've already updated the local state
+      // This prevents any flicker or delay in the UI
+      
     } catch (error: any) {
       console.error("Error deleting client:", error);
+      
+      // Revert the optimistic update if deletion fails
+      await fetchClients();
       
       if (error.message.includes('offline') || error.message.includes('unavailable')) {
         toast.error("Impossible de supprimer le client en mode hors ligne");
