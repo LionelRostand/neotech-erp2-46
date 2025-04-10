@@ -5,6 +5,7 @@ import { COLLECTIONS } from '@/lib/firebase-collections';
 import { useCollectionData } from './useCollectionData';
 import { toast } from 'sonner';
 import { getAllCompanies } from '@/components/module/submodules/employees/services/companyService';
+import { useAuth } from './useAuth';
 
 /**
  * Hook pour accéder aux données des entreprises depuis Firebase
@@ -14,57 +15,16 @@ export const useFirebaseCompanies = () => {
   const [companies, setCompanies] = useState<Company[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
+  const { isOffline } = useAuth(); // Get isOffline from useAuth instead
   
   // Utiliser useCollectionData pour obtenir les données en temps réel avec gestion des erreurs de permission
   const { 
     data: firestoreCompanies, 
     isLoading: isFirestoreLoading, 
-    error: firestoreError,
-    isOffline
+    error: firestoreError
   } = useCollectionData(
     COLLECTIONS.COMPANIES, 
-    [], 
-    { 
-      // Add mock data for development when permissions fail
-      fallbackData: [
-        {
-          id: 'mock-company-1',
-          name: 'Enterprise Solutions (Demo)',
-          industry: 'Technology',
-          status: 'active',
-          website: 'www.enterprise-solutions.example',
-          phone: '+33 1 23 45 67 89',
-          email: 'contact@enterprise-solutions.example',
-          employeesCount: 45,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-          address: {
-            street: '123 Business Avenue',
-            city: 'Paris',
-            zip: '75001',
-            country: 'France'
-          }
-        },
-        {
-          id: 'mock-company-2',
-          name: 'TechInnovation (Demo)',
-          industry: 'IT Services',
-          status: 'active',
-          website: 'www.techinnovation.example',
-          phone: '+33 9 87 65 43 21',
-          email: 'info@techinnovation.example',
-          employeesCount: 24,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-          address: {
-            street: '456 Tech Park',
-            city: 'Lyon',
-            zip: '69001',
-            country: 'France'
-          }
-        }
-      ]
-    }
+    []
   );
   
   // Fonction pour rafraîchir manuellement les données
@@ -106,6 +66,6 @@ export const useFirebaseCompanies = () => {
     isLoading: isLoading || isFirestoreLoading,
     error: error || firestoreError,
     refetch,
-    isOffline
+    isOffline  // Pass isOffline from useAuth
   };
 };
