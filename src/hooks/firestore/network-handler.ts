@@ -72,3 +72,69 @@ export const isOfflineError = (error: any): boolean => {
   
   return false;
 };
+
+/**
+ * Helper function to check if the error is a network-related error
+ * @param error The error to check
+ * @returns boolean indicating if it's a network error
+ */
+export const isNetworkError = (error: any): boolean => {
+  if (error instanceof FirebaseError) {
+    return error.code === 'unavailable' || 
+           error.code === 'network-request-failed' ||
+           error.message.includes('network') ||
+           error.message.includes('offline') ||
+           error.message.includes('unavailable') ||
+           error.message.includes('connection');
+  }
+  
+  // Check for generic network errors
+  return error?.message?.includes('network') ||
+         error?.message?.includes('connection') ||
+         error?.name === 'NetworkError' ||
+         error?.name === 'AbortError';
+};
+
+/**
+ * Helper function to check if the error is due to rate limiting
+ * @param error The error to check
+ * @returns boolean indicating if it's a rate limit error
+ */
+export const isRateLimitError = (error: any): boolean => {
+  if (error instanceof FirebaseError) {
+    return error.code === 'resource-exhausted' ||
+           error.message.includes('quota') ||
+           error.message.includes('rate limit') ||
+           error.message.includes('too many requests');
+  }
+  
+  return error?.message?.includes('rate limit') ||
+         error?.message?.includes('too many requests') ||
+         error?.message?.includes('quota');
+};
+
+/**
+ * Attempts to reconnect to Firestore
+ * @returns Promise that resolves to true if reconnection was successful, false otherwise
+ */
+export const reconnectToFirestore = async (): Promise<boolean> => {
+  console.log('Tentative de reconnexion à Firestore...');
+  try {
+    // Import dynamically to avoid circular dependencies
+    const { checkFirestoreConnection } = await import('@/lib/firebase');
+    
+    // Try to reconnect
+    const isConnected = await checkFirestoreConnection();
+    
+    if (isConnected) {
+      console.log('Reconnexion à Firestore réussie');
+      return true;
+    } else {
+      console.log('Échec de la reconnexion à Firestore');
+      return false;
+    }
+  } catch (error) {
+    console.error('Erreur lors de la tentative de reconnexion:', error);
+    return false;
+  }
+};
