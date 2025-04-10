@@ -4,14 +4,30 @@ import { EmployeeFormValues } from './employeeFormSchema';
 import { v4 as uuidv4 } from 'uuid';
 
 export const prepareEmployeeData = (data: EmployeeFormValues): Partial<Employee> => {
-  // Convert the simple address string to the address object structure
-  const addressParts = data.address ? data.address.split(',').map(part => part.trim()) : [];
-  const addressObj = {
-    street: addressParts[0] || '',
-    city: addressParts[1] || '',
-    postalCode: addressParts[2] || '',
-    country: addressParts[3] || ''
-  };
+  // Convert the address to the address object structure
+  let addressObj;
+  
+  if (typeof data.address === 'string') {
+    // Handle string address
+    const addressParts = data.address.split(',').map(part => part.trim());
+    addressObj = {
+      street: addressParts[0] || '',
+      city: addressParts[1] || '',
+      postalCode: addressParts[2] || '',
+      country: addressParts[3] || ''
+    };
+  } else if (data.address && typeof data.address === 'object') {
+    // Handle object address
+    addressObj = data.address;
+  } else {
+    // Default empty address
+    addressObj = {
+      street: '',
+      city: '',
+      postalCode: '',
+      country: ''
+    };
+  }
 
   return {
     id: `EMP${Math.floor(1000 + Math.random() * 9000)}`, // Simple ID generation

@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -8,7 +7,7 @@ import { storage, db } from '@/lib/firebase';
 import { getDownloadURL, ref, uploadBytes, deleteObject } from 'firebase/storage';
 import { updateDoc, doc, getDoc, setDoc } from 'firebase/firestore';
 import { COLLECTIONS } from '@/lib/firebase-collections';
-import { updateEmployee, getEmployeeById } from '../services/employeeService';
+import { updateEmployee, getEmployee } from '../services/employeeService';
 
 interface PhotoUploaderProps {
   employeeId: string;
@@ -29,7 +28,6 @@ const PhotoUploader: React.FC<PhotoUploaderProps> = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [employeeIdDisplay, setEmployeeIdDisplay] = useState(employeeId);
 
-  // Initialiser à la valeur fournie en prop
   useEffect(() => {
     if (currentPhoto && currentPhoto !== photoURL) {
       setPhotoURL(currentPhoto);
@@ -39,7 +37,6 @@ const PhotoUploader: React.FC<PhotoUploaderProps> = ({
     }
   }, [currentPhoto, employeeId, photoURL]);
 
-  // Vérifier que l'employé existe avant de tenter des opérations
   const checkEmployeeExists = async (empId: string) => {
     try {
       if (!empId) {
@@ -69,47 +66,35 @@ const PhotoUploader: React.FC<PhotoUploaderProps> = ({
     const file = event.target.files?.[0];
     if (!file) return;
 
-    // Vérifier l'existence de l'employé d'abord
     const exists = await checkEmployeeExists(employeeId);
     if (!exists) return;
 
-    // Vérifier le type de fichier
     if (!file.type.startsWith('image/')) {
       toast.error("Veuillez sélectionner un fichier image");
       return;
     }
 
-    // Vérifier la taille du fichier (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
       toast.error("L'image est trop volumineuse. Taille maximum: 5MB");
       return;
     }
 
     setIsUploading(true);
-    // Conserver l'URL actuelle au cas où l'upload échoue
     const previousURL = photoURL;
     let newPhotoURL = '';
 
     try {
       console.log(`Téléversement de la photo pour l'employé ID: ${employeeId}`);
-      // Créer une référence pour le stockage Firebase
       const photoRef = ref(storage, `employees/${employeeId}/profile-photo`);
-      
-      // Téléverser l'image
       await uploadBytes(photoRef, file);
-      
-      // Obtenir l'URL de téléchargement
       newPhotoURL = await getDownloadURL(photoRef);
       console.log("Photo téléversée avec succès, URL:", newPhotoURL);
       
-      // Mettre à jour l'employé dans Firestore
-      // 1. Mise à jour dans la collection hr_employees
       await updateEmployee(employeeId, {
         photoURL: newPhotoURL,
         photo: newPhotoURL
       });
       
-      // 2. Ajouter également dans hr_documents
       const docData = {
         employeeId: employeeId,
         fileUrl: newPhotoURL,
@@ -121,23 +106,15 @@ const PhotoUploader: React.FC<PhotoUploaderProps> = ({
         uploadedBy: 'Système',
       };
       
-      try {
-        // Créer ou mettre à jour le document dans hr_documents
-        const documentRef = doc(db, COLLECTIONS.HR.DOCUMENTS, `photo_${employeeId}`);
-        await setDoc(documentRef, docData);
-      } catch (error) {
-        console.error("Erreur lors de l'ajout du document photo:", error);
-        // Continuer même si cette partie échoue
-      }
+      const documentRef = doc(db, COLLECTIONS.HR.DOCUMENTS, `photo_${employeeId}`);
+      await setDoc(documentRef, docData);
       
-      // Mettre à jour l'état et notifier parent
       setPhotoURL(newPhotoURL);
       onPhotoUpdated(newPhotoURL);
       toast.success("Photo de profil mise à jour avec succès");
     } catch (error) {
       console.error("Erreur lors de la mise à jour de la photo:", error);
       console.log(`ID de l'employé concerné: ${employeeId}`);
-      // Conserver l'ancienne URL en cas d'échec
       setPhotoURL(previousURL);
       toast.error(`Erreur lors de la mise à jour de la photo. ID employé: ${employeeId}`);
     } finally {
@@ -146,7 +123,6 @@ const PhotoUploader: React.FC<PhotoUploaderProps> = ({
   };
 
   const handleDeletePhoto = async () => {
-    // Vérifier l'existence de l'employé d'abord
     const exists = await checkEmployeeExists(employeeId);
     if (!exists) return;
 
@@ -157,25 +133,18 @@ const PhotoUploader: React.FC<PhotoUploaderProps> = ({
 
     try {
       console.log(`Suppression de la photo pour l'employé ID: ${employeeId}`);
-      // Supprimer l'image du stockage Firebase
       const photoRef = ref(storage, `employees/${employeeId}/profile-photo`);
       await deleteObject(photoRef).catch(error => {
         console.warn("L'image n'existait peut-être pas dans le stockage:", error);
       });
       
-      // Mettre à jour l'employé dans Firestore
       await updateEmployee(employeeId, {
         photoURL: '',
         photo: ''
       });
       
-      // Supprimer également de hr_documents si présent
-      try {
-        const docRef = doc(db, COLLECTIONS.HR.DOCUMENTS, `photo_${employeeId}`);
-        await updateDoc(docRef, { deleted: true });
-      } catch (error) {
-        console.warn("Le document photo n'existait peut-être pas:", error);
-      }
+      const docRef = doc(db, COLLECTIONS.HR.DOCUMENTS, `photo_${employeeId}`);
+      await updateDoc(docRef, { deleted: true });
       
       setPhotoURL('');
       onPhotoUpdated('');

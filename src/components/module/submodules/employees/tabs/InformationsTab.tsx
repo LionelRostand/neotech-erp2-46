@@ -16,7 +16,7 @@ interface InformationsTabProps {
 
 const InformationsTab: React.FC<InformationsTabProps> = ({ employee }) => {
   const [isAddressDialogOpen, setIsAddressDialogOpen] = useState(false);
-  const [addressData, setAddressData] = useState<Partial<EmployeeAddress>>(() => {
+  const [addressData, setAddressData] = useState<EmployeeAddress>(() => {
     // Initialiser avec les données d'adresse existantes
     if (typeof employee.address === 'object') {
       return employee.address as EmployeeAddress;
@@ -24,11 +24,11 @@ const InformationsTab: React.FC<InformationsTabProps> = ({ employee }) => {
       // Tenter de parser l'adresse si c'est une chaîne
       return {
         street: '',
-        streetNumber: '',
         city: '',
         postalCode: '',
+        country: 'France',
+        streetNumber: '',
         department: '',
-        country: 'France'
       };
     }
   });

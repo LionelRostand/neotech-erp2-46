@@ -5,7 +5,9 @@ import {
   updateDoc, 
   getDoc, 
   serverTimestamp,
-  arrayUnion
+  arrayUnion,
+  collection,
+  getDocs
 } from 'firebase/firestore';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import { Employee, EmployeeAddress } from '@/types/employee';
@@ -72,6 +74,11 @@ export const getEmployee = async (employeeId: string): Promise<Employee | null> 
 };
 
 /**
+ * Alias pour getEmployee, pour maintenir la compatibilité
+ */
+export const getEmployeeById = getEmployee;
+
+/**
  * Ajoute un document à un employé existant
  */
 export const addDocumentToEmployee = async (
@@ -102,5 +109,34 @@ export const addDocumentToEmployee = async (
   } catch (error) {
     console.error("Erreur lors de l'ajout du document à l'employé:", error);
     return false;
+  }
+};
+
+/**
+ * Rafraîchit les données des employés
+ */
+export const refreshEmployeesData = async (): Promise<Employee[]> => {
+  try {
+    const employeesRef = collection(db, COLLECTIONS.HR.EMPLOYEES);
+    const employeesSnapshot = await getDocs(employeesRef);
+    
+    if (employeesSnapshot.empty) {
+      console.log("Aucun employé trouvé");
+      return [];
+    }
+    
+    const employees: Employee[] = [];
+    employeesSnapshot.forEach((doc) => {
+      const data = doc.data();
+      employees.push({
+        id: doc.id,
+        ...data
+      } as Employee);
+    });
+    
+    return employees;
+  } catch (error) {
+    console.error("Erreur lors du rafraîchissement des données des employés:", error);
+    return [];
   }
 };

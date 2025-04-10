@@ -15,6 +15,25 @@ import { EmployeeFormValues } from './employeeFormSchema';
 const PersonalInfoFields: React.FC = () => {
   const form = useFormContext<EmployeeFormValues>();
 
+  // Helper to convert address object to string if needed
+  const formatAddressValue = (addressValue: string | any): string => {
+    if (typeof addressValue === 'string') {
+      return addressValue;
+    }
+    
+    // Convert address object to string
+    const { street, streetNumber, city, postalCode, department, country } = addressValue;
+    const parts = [
+      streetNumber && street ? `${streetNumber} ${street}` : street || '',
+      city || '',
+      postalCode || '',
+      department ? `(${department})` : '',
+      country || ''
+    ].filter(Boolean);
+    
+    return parts.join(', ');
+  };
+
   return (
     <>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -78,15 +97,25 @@ const PersonalInfoFields: React.FC = () => {
       <FormField
         control={form.control}
         name="address"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Adresse</FormLabel>
-            <FormControl>
-              <Textarea placeholder="Adresse complète" {...field} />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
+        render={({ field }) => {
+          const { onChange, value, ...rest } = field;
+          const stringValue = formatAddressValue(value);
+          
+          return (
+            <FormItem>
+              <FormLabel>Adresse</FormLabel>
+              <FormControl>
+                <Textarea 
+                  placeholder="Adresse complète" 
+                  value={stringValue}
+                  onChange={(e) => onChange(e.target.value)}
+                  {...rest}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          );
+        }}
       />
     </>
   );

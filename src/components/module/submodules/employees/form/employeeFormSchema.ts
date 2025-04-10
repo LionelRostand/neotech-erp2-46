@@ -11,6 +11,9 @@ export const addressSchema = z.object({
   country: z.string().default('France'),
 });
 
+// Type for addressSchema
+export type AddressSchemaType = z.infer<typeof addressSchema>;
+
 // Schéma pour la validation du formulaire
 export const employeeFormSchema = z.object({
   firstName: z.string().min(2, "Le prénom doit contenir au moins 2 caractères"),
