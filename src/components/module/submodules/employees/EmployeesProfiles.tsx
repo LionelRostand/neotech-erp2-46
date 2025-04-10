@@ -12,6 +12,7 @@ import { useEmployeeData } from '@/hooks/useEmployeeData';
 import { RefreshCw } from 'lucide-react';
 import { addDocument } from '@/hooks/firestore/create-operations';
 import { updateDocument, setDocument } from '@/hooks/firestore/update-operations';
+import { deleteDocument } from '@/hooks/firestore/delete-operations';
 import { FirebaseErrorAlert } from '@/components/ui/FirebaseErrorAlert';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import { refreshEmployeesData } from './services/employeeService';
@@ -113,15 +114,25 @@ const EmployeesProfiles: React.FC<EmployeesProfilesProps> = (props) => {
     }
   };
 
-  const handleDeleteEmployee = (employeeId: string) => {
-    const updatedEmployees = employees.filter(emp => emp.id !== employeeId);
-    setEmployees(updatedEmployees);
-    
-    if (selectedEmployee && selectedEmployee.id === employeeId) {
-      setSelectedEmployee(null);
+  const handleDeleteEmployee = async (employeeId: string) => {
+    try {
+      // Supprimer le document de la collection Firestore
+      await deleteDocument(COLLECTIONS.HR.EMPLOYEES, employeeId);
+      
+      // Mettre à jour l'état local
+      const updatedEmployees = employees.filter(emp => emp.id !== employeeId);
+      setEmployees(updatedEmployees);
+      
+      // Si l'employé supprimé est celui qui est affiché, revenir à la liste
+      if (selectedEmployee && selectedEmployee.id === employeeId) {
+        setSelectedEmployee(null);
+      }
+      
+      toast.success("Employé supprimé avec succès.");
+    } catch (error) {
+      console.error("Erreur lors de la suppression de l'employé:", error);
+      toast.error("Erreur lors de la suppression de l'employé");
     }
-    
-    toast.success("Employé supprimé avec succès.");
   };
 
   const handleRefreshData = async () => {
