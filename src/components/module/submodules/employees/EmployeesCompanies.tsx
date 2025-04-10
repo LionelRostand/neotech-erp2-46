@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -25,6 +26,13 @@ import { Company } from '../companies/types';
 import CompanyForm from '../CompanyForm';
 import { useAuth } from '@/hooks/useAuth';
 import { useFirebaseCompanies } from '@/hooks/useFirebaseCompanies';
+
+// Import les fonctions du service pour les employés
+import { 
+  updateCompany, 
+  deleteCompany, 
+  addCompany 
+} from './services/companyService';
 
 const EmployeesCompanies: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -70,7 +78,6 @@ const EmployeesCompanies: React.FC = () => {
         updatedAt: new Date().toISOString()
       };
       
-      const { updateCompany } = await import('../companies/services/companyService');
       await updateCompany(currentCompany.id, updateData);
       
       toast.success('Entreprise mise à jour avec succès');
@@ -90,7 +97,6 @@ const EmployeesCompanies: React.FC = () => {
     if (!currentCompany) return;
 
     try {
-      const { deleteCompany } = await import('../companies/services/companyService');
       await deleteCompany(currentCompany.id);
       
       toast.success('Entreprise supprimée avec succès');
@@ -105,7 +111,6 @@ const EmployeesCompanies: React.FC = () => {
     try {
       console.log('Tentative d\'ajout d\'une entreprise avec les données:', companyData);
       
-      const { addCompany } = await import('../companies/services/companyService');
       await addCompany({
         ...companyData,
         createdAt: new Date().toISOString(),
