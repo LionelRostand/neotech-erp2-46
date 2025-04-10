@@ -1,20 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Button } from '@/components/ui/button';
-import { 
-  ChartNode,
-  HierarchyVisualization 
-} from './hierarchy/HierarchyVisualization';
 import { Search, Users, RefreshCw } from 'lucide-react';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useEmployeeData } from '@/hooks/useEmployeeData';
+import { Button } from '@/components/ui/button';
 import { Employee } from '@/types/employee';
-import { Department } from './departments/types';
-import { toast } from 'sonner';
-import { useHrModuleData } from '@/hooks/useHrModuleData';
 import { refreshEmployeesData } from './employees/services/employeeService';
+import HierarchyVisualization from './employees/hierarchy/HierarchyVisualization';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const EmployeesHierarchy: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
