@@ -8,6 +8,7 @@ export const COLLECTIONS = {
   USERS: 'users',
   COMPANIES: 'companies',
   SETTINGS: 'settings',
+  CONTACTS: 'contacts', // Adding general contacts collection
   
   // Module CRM
   CRM: {
@@ -16,6 +17,9 @@ export const COLLECTIONS = {
     OPPORTUNITIES: 'crm_opportunities',
     REMINDERS: 'crm_reminders',
     SETTINGS: 'crm_settings',
+    CONTACTS: 'crm_contacts', // Adding CRM contacts
+    LEADS: 'crm_leads',       // Adding leads
+    DEALS: 'crm_deals'        // Adding deals
   },
   
   // Module Accounting
@@ -44,6 +48,13 @@ export const COLLECTIONS = {
     RECRUITMENTS: 'hr_recruitments',
     BADGES: 'hr_badges',
     DOCUMENTS: 'hr_documents',
+    PAYSLIPS: 'hr_payslips',               // Adding payslips
+    LEAVE_REQUESTS: 'hr_leave_requests',   // Adding leave requests
+    ATTENDANCE: 'hr_attendance',           // Adding attendance
+    ABSENCE_REQUESTS: 'hr_absence_requests', // Adding absence requests
+    TRAININGS: 'hr_trainings',             // Adding trainings
+    REPORTS: 'hr_reports',                 // Adding reports
+    ALERTS: 'hr_alerts'                    // Adding alerts
   },
   
   // Module Projects
@@ -80,6 +91,11 @@ export const COLLECTIONS = {
     DRIVERS: 'freight_drivers',
     WAREHOUSES: 'freight_warehouses',
     TRACKING: 'freight_tracking',
+    TRACKING_EVENTS: 'freight_tracking_events', // Adding tracking events
+    PACKAGE_TYPES: 'freight_package_types',     // Adding package types
+    PRICING: 'freight_pricing',                 // Adding pricing
+    BILLING: 'freight_billing',                 // Adding billing
+    QUOTES: 'freight_quotes'                    // Adding quotes
   },
   
   // Module Library
@@ -100,6 +116,8 @@ export const COLLECTIONS = {
     VEHICLES: 'transport_vehicles',
     ROUTES: 'transport_routes',
     SCHEDULES: 'transport_schedules',
+    RESERVATIONS: 'transport_reservations',    // Adding reservations 
+    CLIENTS: 'transport_clients'               // Adding clients
   },
   
   // Module Messages
@@ -129,6 +147,9 @@ export const FLAT_COLLECTIONS = {
   CRM_OPPORTUNITIES: COLLECTIONS.CRM.OPPORTUNITIES,
   CRM_REMINDERS: COLLECTIONS.CRM.REMINDERS,
   CRM_SETTINGS: COLLECTIONS.CRM.SETTINGS,
+  CRM_CONTACTS: COLLECTIONS.CRM.CONTACTS,
+  CRM_LEADS: COLLECTIONS.CRM.LEADS,
+  CRM_DEALS: COLLECTIONS.CRM.DEALS,
   
   INVOICES: COLLECTIONS.ACCOUNTING.INVOICES,
   PAYMENTS: COLLECTIONS.ACCOUNTING.PAYMENTS,
@@ -141,6 +162,25 @@ export const FLAT_COLLECTIONS = {
   LEAVES: COLLECTIONS.HR.LEAVES,
   CONTRACTS: COLLECTIONS.HR.CONTRACTS,
   EVALUATIONS: COLLECTIONS.HR.EVALUATIONS,
+  PAYSLIPS: COLLECTIONS.HR.PAYSLIPS,
+  LEAVE_REQUESTS: COLLECTIONS.HR.LEAVE_REQUESTS,
+  ATTENDANCE: COLLECTIONS.HR.ATTENDANCE,
+  ABSENCE_REQUESTS: COLLECTIONS.HR.ABSENCE_REQUESTS,
+  HR_DOCUMENTS: COLLECTIONS.HR.DOCUMENTS,
+  TRAININGS: COLLECTIONS.HR.TRAININGS,
+  HR_REPORTS: COLLECTIONS.HR.REPORTS,
+  HR_ALERTS: COLLECTIONS.HR.ALERTS,
+  
+  FREIGHT_SHIPMENTS: COLLECTIONS.FREIGHT.SHIPMENTS,
+  FREIGHT_PACKAGES: COLLECTIONS.FREIGHT.PACKAGES,
+  FREIGHT_TRACKING_EVENTS: COLLECTIONS.FREIGHT.TRACKING_EVENTS,
+  FREIGHT_PACKAGE_TYPES: COLLECTIONS.FREIGHT.PACKAGE_TYPES,
+  FREIGHT_PRICING: COLLECTIONS.FREIGHT.PRICING,
+  FREIGHT_BILLING: COLLECTIONS.FREIGHT.BILLING,
+  FREIGHT_QUOTES: COLLECTIONS.FREIGHT.QUOTES,
+  
+  TRANSPORT_RESERVATIONS: COLLECTIONS.TRANSPORT.RESERVATIONS,
+  TRANSPORT_CLIENTS: COLLECTIONS.TRANSPORT.CLIENTS,
   
   // ... add more flat references as needed for backward compatibility
 };
