@@ -1,58 +1,143 @@
 
 /**
- * Constantes pour les noms des collections Firestore
- * Centralise les noms de collections pour éviter les erreurs de frappe et faciliter les refactorisations
+ * Constants for Firestore collection names
+ * Centralizes collection names to avoid typos and facilitate refactoring
  */
 export const COLLECTIONS = {
-  // Collections principales
+  // Main collections
   USERS: 'users',
   COMPANIES: 'companies',
   SETTINGS: 'settings',
   
   // Module CRM
-  CRM_CLIENTS: 'crm_clients',
-  CRM_PROSPECTS: 'crm_prospects',
-  CRM_OPPORTUNITIES: 'crm_opportunities',
-  CRM_REMINDERS: 'crm_reminders',
-  CRM_SETTINGS: 'crm_settings',
+  CRM: {
+    CLIENTS: 'crm_clients',
+    PROSPECTS: 'crm_prospects',
+    OPPORTUNITIES: 'crm_opportunities',
+    REMINDERS: 'crm_reminders',
+    SETTINGS: 'crm_settings',
+  },
   
-  // Module Comptabilité
-  INVOICES: 'accounting_invoices',
-  PAYMENTS: 'accounting_payments',
-  EXPENSES: 'accounting_expenses',
-  ACCOUNTING_CLIENTS: 'accounting_clients',
-  ACCOUNTING_SUPPLIERS: 'accounting_suppliers',
+  // Module Accounting
+  ACCOUNTING: {
+    INVOICES: 'accounting_invoices',
+    PAYMENTS: 'accounting_payments',
+    EXPENSES: 'accounting_expenses',
+    CLIENTS: 'accounting_clients',
+    SUPPLIERS: 'accounting_suppliers',
+    REPORTS: 'accounting_reports',
+    TAXES: 'accounting_taxes',
+    SETTINGS: 'accounting_settings',
+    TRANSACTIONS: 'accounting_transactions',
+    PERMISSIONS: 'accounting_permissions',
+  },
   
-  // Module RH / Employés
-  EMPLOYEES: 'hr-employees',
-  DEPARTMENTS: 'hr-departments',
-  LEAVES: 'hr-leaves',
-  CONTRACTS: 'hr-contracts',
-  EVALUATIONS: 'hr-evaluations',
+  // Module HR / Employees
+  HR: {
+    EMPLOYEES: 'hr-employees',
+    DEPARTMENTS: 'hr-departments',
+    LEAVES: 'hr-leaves',
+    CONTRACTS: 'hr-contracts',
+    EVALUATIONS: 'hr-evaluations',
+    SALARIES: 'hr-salaries',
+    TIMESHEETS: 'hr-timesheets',
+    RECRUITMENTS: 'hr-recruitments',
+    BADGES: 'hr-badges',
+    DOCUMENTS: 'hr-documents',
+  },
   
-  // Module Projets
-  PROJECTS: 'projects/projects',
-  TASKS: 'projects/tasks',
-  TEAMS: 'projects/teams',
+  // Module Projects
+  PROJECTS: {
+    PROJECTS: 'projects/projects',
+    TASKS: 'projects/tasks',
+    TEAMS: 'projects/teams',
+    NOTIFICATIONS: 'projects/notifications',
+  },
   
-  // Module Santé
-  PATIENTS: 'health-patients',
-  DOCTORS: 'health-doctors',
-  APPOINTMENTS: 'health-appointments',
-  CONSULTATIONS: 'health-consultations',
+  // Module Health
+  HEALTH: {
+    PATIENTS: 'health-patients',
+    DOCTORS: 'health-doctors',
+    APPOINTMENTS: 'health-appointments',
+    CONSULTATIONS: 'health-consultations',
+    INSURANCE: 'health-insurance',
+    BILLING: 'health-billing',
+    SETTINGS: 'health-settings',
+    INTEGRATIONS: 'health-integrations',
+    STAFF: 'health-staff',
+  },
   
   // Module Freight
-  SHIPMENTS: 'freight/shipments',
-  PACKAGES: 'freight/packages',
-  FREIGHT_CUSTOMERS: 'freight/customers',
+  FREIGHT: {
+    SHIPMENTS: 'freight/shipments',
+    PACKAGES: 'freight/packages',
+    CUSTOMERS: 'freight/customers',
+    CARRIERS: 'freight/carriers',
+    CONTAINERS: 'freight/containers',
+    DOCUMENTS: 'freight/documents',
+    ROUTES: 'freight/routes',
+    VEHICLES: 'freight/vehicles',
+    DRIVERS: 'freight/drivers',
+    WAREHOUSES: 'freight/warehouses',
+    TRACKING: 'freight/tracking',
+  },
+  
+  // Module Library
+  LIBRARY: {
+    BOOKS: 'library/books',
+    MEMBERS: 'library/members',
+    LOANS: 'library/loans',
+    RETURNS: 'library/returns',
+    CATEGORIES: 'library/categories',
+    PUBLISHERS: 'library/publishers',
+    AUTHORS: 'library/authors',
+    STATS: 'library/stats',
+  },
+  
+  // Module Transport
+  TRANSPORT: {
+    DRIVERS: 'transport/drivers',
+    VEHICLES: 'transport/vehicles',
+    ROUTES: 'transport/routes',
+    SCHEDULES: 'transport/schedules',
+  },
   
   // Module Messages
-  MESSAGES: 'messages/inbox',
-  CONTACTS: 'messages/contacts',
+  MESSAGES: {
+    INBOX: 'messages/inbox',
+    ARCHIVED: 'messages/archived',
+    SCHEDULED: 'messages/scheduled',
+    CONTACTS: 'messages/contacts',
+    TEMPLATES: 'messages/templates',
+    METRICS: 'messages/metrics',
+  },
   
   // Module Documents
   DOCUMENTS: 'documents',
   
   // Permissions
   USER_PERMISSIONS: 'userPermissions'
+};
+
+// For backward compatibility with old code using flat references
+export const FLAT_COLLECTIONS = {
+  CRM_CLIENTS: COLLECTIONS.CRM.CLIENTS,
+  CRM_PROSPECTS: COLLECTIONS.CRM.PROSPECTS,
+  CRM_OPPORTUNITIES: COLLECTIONS.CRM.OPPORTUNITIES,
+  CRM_REMINDERS: COLLECTIONS.CRM.REMINDERS,
+  CRM_SETTINGS: COLLECTIONS.CRM.SETTINGS,
+  
+  INVOICES: COLLECTIONS.ACCOUNTING.INVOICES,
+  PAYMENTS: COLLECTIONS.ACCOUNTING.PAYMENTS,
+  EXPENSES: COLLECTIONS.ACCOUNTING.EXPENSES,
+  ACCOUNTING_CLIENTS: COLLECTIONS.ACCOUNTING.CLIENTS,
+  ACCOUNTING_SUPPLIERS: COLLECTIONS.ACCOUNTING.SUPPLIERS,
+  
+  EMPLOYEES: COLLECTIONS.HR.EMPLOYEES,
+  DEPARTMENTS: COLLECTIONS.HR.DEPARTMENTS,
+  LEAVES: COLLECTIONS.HR.LEAVES,
+  CONTRACTS: COLLECTIONS.HR.CONTRACTS,
+  EVALUATIONS: COLLECTIONS.HR.EVALUATIONS,
+  
+  // ... add more flat references as needed for backward compatibility
 };
