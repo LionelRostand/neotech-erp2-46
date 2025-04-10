@@ -1,13 +1,13 @@
+
 import { collection, getDocs, doc, getDoc, addDoc, updateDoc, deleteDoc, query, where, orderBy } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Company, CompanyFilters } from '../types';
-
-const COMPANIES_COLLECTION = 'companies';
+import { COLLECTIONS } from '@/lib/firebase-collections';
 
 class CompanyService {
   async getCompanies(filters?: CompanyFilters): Promise<{ companies: Company[] }> {
     try {
-      let q = collection(db, COMPANIES_COLLECTION);
+      let q = collection(db, COLLECTIONS.COMPANIES);
       
       if (filters) {
         // Build query with filters
@@ -57,7 +57,7 @@ class CompanyService {
 
   async getCompany(id: string): Promise<Company | null> {
     try {
-      const companyDoc = await getDoc(doc(db, COMPANIES_COLLECTION, id));
+      const companyDoc = await getDoc(doc(db, COLLECTIONS.COMPANIES, id));
       if (companyDoc.exists()) {
         return { id: companyDoc.id, ...companyDoc.data() } as Company;
       } else {
@@ -71,7 +71,7 @@ class CompanyService {
 
   async createCompany(company: Omit<Company, 'id'>): Promise<Company> {
     try {
-      const docRef = await addDoc(collection(db, COMPANIES_COLLECTION), company);
+      const docRef = await addDoc(collection(db, COLLECTIONS.COMPANIES), company);
       const newCompany = await this.getCompany(docRef.id);
       if (newCompany) {
         return newCompany;
@@ -86,7 +86,7 @@ class CompanyService {
 
   async updateCompany(id: string, updates: Partial<Company>): Promise<Company> {
     try {
-      await updateDoc(doc(db, COMPANIES_COLLECTION, id), updates);
+      await updateDoc(doc(db, COLLECTIONS.COMPANIES, id), updates);
       const updatedCompany = await this.getCompany(id);
       if (updatedCompany) {
         return updatedCompany;
@@ -101,7 +101,7 @@ class CompanyService {
 
   async deleteCompany(id: string): Promise<void> {
     try {
-      await deleteDoc(doc(db, COMPANIES_COLLECTION, id));
+      await deleteDoc(doc(db, COLLECTIONS.COMPANIES, id));
     } catch (error: any) {
       console.error("Error deleting company:", error);
       throw new Error(`Failed to delete company: ${error.message}`);
