@@ -1,11 +1,10 @@
-
 import { useState, useCallback, useEffect } from 'react';
 import { collection, query, where, getDocs, doc, deleteDoc, addDoc, updateDoc, DocumentReference } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { ClientFormData, Client } from '../types/crm-types';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import { v4 as uuidv4 } from 'uuid';
-import { mockClients } from '../data/mockClients';
+import mockClients from '../data/mockClients';
 import { toast } from 'sonner';
 import { executeWithNetworkRetry } from '@/hooks/firestore/network-handler';
 
@@ -20,12 +19,10 @@ export const useClientsData = () => {
     setIsLoading(true);
     setLoadingOperationCancelled(false);
     try {
-      // Attempt to get real data from Firestore
       const clientsCollection = collection(db, COLLECTIONS.CRM.CLIENTS);
       const clientsQuery = query(clientsCollection);
       const querySnapshot = await getDocs(clientsQuery);
       
-      // Process the results
       const clientsData: Client[] = [];
       querySnapshot.forEach(doc => {
         clientsData.push({ id: doc.id, ...doc.data() } as Client);
@@ -36,11 +33,9 @@ export const useClientsData = () => {
       setIsOfflineMode(false);
       setError(null);
     } catch (err) {
-      // Handle error and fall back to mock data if appropriate
       const error = err as Error;
       console.error('Error fetching clients:', error);
       
-      // Only show error message for network-related errors
       if (error.message.includes('offline') || 
           error.message.includes('unavailable')) {
         console.log('Network error, using mock data');
@@ -48,7 +43,6 @@ export const useClientsData = () => {
         setClients(mockClients);
         setIsOfflineMode(true);
       } else {
-        // For other errors, show the error message
         setError(error);
         toast.error(`Erreur lors du chargement des clients: ${error.message}`);
       }
@@ -59,7 +53,6 @@ export const useClientsData = () => {
     }
   }, [loadingOperationCancelled]);
 
-  // Load clients when the component mounts
   useEffect(() => {
     fetchClients();
   }, [fetchClients]);
@@ -70,21 +63,18 @@ export const useClientsData = () => {
     setIsLoading(false);
   }, []);
 
-  // Seed mock clients for demonstration purposes
   const seedMockClients = async () => {
     setIsLoading(true);
     try {
-      // Add each mock client to Firebase
       for (const mockClient of mockClients) {
         const clientsCollection = collection(db, COLLECTIONS.CRM.CLIENTS);
         await addDoc(clientsCollection, {
           ...mockClient,
-          id: undefined // Firebase will assign an ID
+          id: undefined
         });
       }
       
       toast.success("Données démo ajoutées avec succès");
-      // Refresh the client list after seeding
       await fetchClients();
     } catch (error: any) {
       console.error("Error seeding mock clients:", error);
@@ -99,7 +89,6 @@ export const useClientsData = () => {
       setIsLoading(true);
       const statusValue = clientData.status as 'active' | 'inactive' | 'lead';
       
-      // Préparer les données client pour Firebase (sans ID)
       const newClientData = {
         ...clientData,
         status: statusValue,
@@ -107,7 +96,6 @@ export const useClientsData = () => {
         updatedAt: new Date().toISOString(),
       };
       
-      // Ajouter à Firebase
       let docRef;
       await executeWithNetworkRetry(async () => {
         const clientsCollection = collection(db, COLLECTIONS.CRM.CLIENTS);
@@ -116,10 +104,8 @@ export const useClientsData = () => {
         toast.success("Client ajouté avec succès");
       });
       
-      // Récupérer les données mises à jour depuis Firebase
       await fetchClients();
       
-      // Retourner le nouveau client avec l'ID généré
       if (docRef) {
         return { 
           id: docRef.id, 
@@ -157,7 +143,6 @@ export const useClientsData = () => {
         toast.success("Client mis à jour avec succès");
       });
       
-      // Récupérer les données mises à jour depuis Firebase
       await fetchClients();
       
       return { 
@@ -187,7 +172,6 @@ export const useClientsData = () => {
         toast.success("Client supprimé avec succès");
       });
       
-      // Récupérer les données mises à jour depuis Firebase
       await fetchClients();
     } catch (error: any) {
       console.error("Error deleting client:", error);
