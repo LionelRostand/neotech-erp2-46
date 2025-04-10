@@ -3,12 +3,13 @@ import * as z from 'zod';
 
 // Schéma pour l'adresse détaillée
 export const addressSchema = z.object({
-  street: z.string().optional(),
+  street: z.string().min(1, "La rue est requise"),
   streetNumber: z.string().optional(),
-  city: z.string().optional(),
-  postalCode: z.string().optional(),
+  city: z.string().min(1, "La ville est requise"),
+  postalCode: z.string().min(1, "Le code postal est requis"),
   department: z.string().optional(),
   country: z.string().default('France'),
+  state: z.string().optional(),
 });
 
 // Type for addressSchema

@@ -1,11 +1,11 @@
 
-import { Employee } from '@/types/employee';
+import { Employee, EmployeeAddress } from '@/types/employee';
 import { EmployeeFormValues } from './employeeFormSchema';
 import { v4 as uuidv4 } from 'uuid';
 
 export const prepareEmployeeData = (data: EmployeeFormValues): Partial<Employee> => {
   // Convert the address to the address object structure
-  let addressObj;
+  let addressObj: EmployeeAddress;
   
   if (typeof data.address === 'string') {
     // Handle string address
@@ -17,15 +17,23 @@ export const prepareEmployeeData = (data: EmployeeFormValues): Partial<Employee>
       country: addressParts[3] || ''
     };
   } else if (data.address && typeof data.address === 'object') {
-    // Handle object address
-    addressObj = data.address;
+    // Handle object address, ensuring required fields are present
+    addressObj = {
+      street: data.address.street || '',
+      city: data.address.city || '',
+      postalCode: data.address.postalCode || '',
+      country: data.address.country || 'France',
+      streetNumber: data.address.streetNumber,
+      department: data.address.department,
+      state: data.address.state
+    };
   } else {
     // Default empty address
     addressObj = {
       street: '',
       city: '',
       postalCode: '',
-      country: ''
+      country: 'France'
     };
   }
 

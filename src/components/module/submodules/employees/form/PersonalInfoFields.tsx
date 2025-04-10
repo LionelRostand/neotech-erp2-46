@@ -11,17 +11,20 @@ import {
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { EmployeeFormValues } from './employeeFormSchema';
+import { EmployeeAddress } from '@/types/employee';
 
 const PersonalInfoFields: React.FC = () => {
   const form = useFormContext<EmployeeFormValues>();
 
   // Helper to convert address object to string if needed
-  const formatAddressValue = (addressValue: string | any): string => {
+  const formatAddressValue = (addressValue: any): string => {
     if (typeof addressValue === 'string') {
       return addressValue;
     }
     
     // Convert address object to string
+    if (!addressValue) return '';
+    
     const { street, streetNumber, city, postalCode, department, country } = addressValue;
     const parts = [
       streetNumber && street ? `${streetNumber} ${street}` : street || '',
@@ -99,7 +102,7 @@ const PersonalInfoFields: React.FC = () => {
         name="address"
         render={({ field }) => {
           const { onChange, value, ...rest } = field;
-          const stringValue = formatAddressValue(value);
+          const stringValue = value ? formatAddressValue(value) : '';
           
           return (
             <FormItem>
