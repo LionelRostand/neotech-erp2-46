@@ -22,18 +22,23 @@ const DocumentsTab: React.FC<DocumentsTabProps> = ({ employee }) => {
 
   useEffect(() => {
     if (employee?.id) {
+      console.log("DocumentsTab: ID employé détecté:", employee.id);
       fetchDocuments(employee.id);
-    } else if (employee?.documents) {
+    } else if (employee) {
+      console.warn("DocumentsTab: Employé sans ID:", employee);
       // Utiliser les documents depuis l'objet employee si disponibles
       setDocuments(Array.isArray(employee.documents) 
         ? employee.documents.map(processDocument) 
         : []);
+    } else {
+      console.warn("DocumentsTab: Aucun employé fourni");
     }
   }, [employee]);
 
   const fetchDocuments = async (employeeId: string) => {
     setIsLoading(true);
     try {
+      console.log("DocumentsTab: Récupération des documents pour l'ID:", employeeId);
       const docs = await getEmployeeDocuments(employeeId);
       setDocuments(docs);
     } catch (error) {
@@ -44,6 +49,11 @@ const DocumentsTab: React.FC<DocumentsTabProps> = ({ employee }) => {
   };
 
   const handleUpload = () => {
+    if (!employee?.id) {
+      console.error("DocumentsTab: Tentative d'upload sans ID employé valide");
+      toast.error("Impossible d'ajouter un document: ID employé manquant");
+      return;
+    }
     setUploadDocumentType('');
     setUploadDialogOpen(true);
   };
@@ -162,7 +172,11 @@ const DocumentsTab: React.FC<DocumentsTabProps> = ({ employee }) => {
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <h3 className="text-lg font-medium">Documents</h3>
-        <Button size="sm" onClick={handleUpload} disabled={!employee?.id}>
+        <Button 
+          size="sm" 
+          onClick={handleUpload} 
+          disabled={!employee?.id}
+        >
           <Upload className="w-4 h-4 mr-2" />
           Ajouter
         </Button>
@@ -172,7 +186,13 @@ const DocumentsTab: React.FC<DocumentsTabProps> = ({ employee }) => {
         <div className="text-center p-8 border border-dashed rounded-md bg-gray-50">
           <FileText className="w-12 h-12 mx-auto text-gray-400" />
           <p className="mt-2 text-gray-500">Aucun document trouvé</p>
-          <Button variant="outline" size="sm" className="mt-4" onClick={handleUpload} disabled={!employee?.id}>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="mt-4" 
+            onClick={handleUpload} 
+            disabled={!employee?.id}
+          >
             Importer un document
           </Button>
         </div>
@@ -221,8 +241,8 @@ const DocumentsTab: React.FC<DocumentsTabProps> = ({ employee }) => {
         </div>
       )}
 
-      {/* Upload Document Dialog - Key fix: ensuring employee ID is passed correctly */}
-      {employee && (
+      {/* Upload Document Dialog avec vérification explicite de l'ID employé */}
+      {employee?.id ? (
         <UploadDocumentDialog 
           open={uploadDialogOpen}
           onOpenChange={setUploadDialogOpen}
@@ -230,7 +250,7 @@ const DocumentsTab: React.FC<DocumentsTabProps> = ({ employee }) => {
           employeeId={employee.id}
           defaultType={uploadDocumentType}
         />
-      )}
+      ) : null}
     </div>
   );
 };

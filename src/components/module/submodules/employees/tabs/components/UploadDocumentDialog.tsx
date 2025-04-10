@@ -1,5 +1,4 @@
-
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
@@ -44,6 +43,17 @@ const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
     'Contrat', 'Avenant', 'Attestation', 'Diplôme', 'CV', 'Pièce d\'identité', 'Autre'
   ]);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  // Vérification de l'ID employé dès l'ouverture
+  useEffect(() => {
+    if (open && !employeeId) {
+      console.error("UploadDocumentDialog: Ouvert sans ID employé");
+      toast.error("Impossible de téléverser un document: employé non spécifié");
+      onOpenChange(false);
+    } else if (open) {
+      console.log("UploadDocumentDialog: Ouvert avec ID employé:", employeeId);
+    }
+  }, [open, employeeId, onOpenChange]);
   
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -112,8 +122,11 @@ const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
         date: format(new Date(), 'yyyy-MM-dd'),
         fileUrl: fileUrl,
         id: `doc_${Date.now()}`,
-        size: file.size
+        size: file.size,
+        employeeId: employeeId // Ajouter explicitement l'ID de l'employé
       };
+      
+      console.log("Document à ajouter:", documentData);
       
       const success = await addEmployeeDocument(employeeId, documentData);
       
