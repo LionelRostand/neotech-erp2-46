@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -30,7 +29,7 @@ const ProjectDashboard = () => {
   const statusData = [
     { name: 'Actifs', value: projectStats?.activeProjects || 0 },
     { name: 'Terminés', value: projectStats?.completedProjects || 0 },
-    { name: 'En attente', value: projects?.filter(p => p.status === 'on-hold').length || 0 },
+    { name: 'En attente', value: projects?.filter(p => p.status === 'on-hold').length || 0 }, // Fixed 'on-hold' status
     { name: 'Annulés', value: projects?.filter(p => p.status === 'cancelled').length || 0 },
   ];
 
@@ -39,6 +38,7 @@ const ProjectDashboard = () => {
     tasks: value
   }));
 
+  
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">

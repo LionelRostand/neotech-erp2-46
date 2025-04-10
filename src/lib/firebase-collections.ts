@@ -124,13 +124,16 @@ export const COLLECTIONS = {
     INBOX: 'messages/inbox',
     ARCHIVED: 'messages/archived',
     SCHEDULED: 'messages/scheduled',
-    CONTACTS: 'messages/contacts',
+    CONTACTS: 'messages/contacts', // Added CONTACTS collection
     TEMPLATES: 'messages/templates',
     METRICS: 'messages/metrics',
   },
   
   // Module Documents
   DOCUMENTS: 'documents',
+  
+  // Contacts collection for general use
+  CONTACTS: 'contacts', // Added top-level CONTACTS collection
   
   // Permissions
   USER_PERMISSIONS: 'userPermissions'

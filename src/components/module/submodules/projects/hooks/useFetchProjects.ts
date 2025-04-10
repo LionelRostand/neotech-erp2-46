@@ -8,7 +8,7 @@ export type Project = {
   id: string;
   name: string;
   description?: string;
-  status: 'active' | 'completed' | 'onHold' | 'cancelled';
+  status: 'active' | 'completed' | 'on-hold' | 'cancelled'; // Updated 'onHold' to 'on-hold'
   startDate: string;
   endDate?: string;
   budget?: number;
@@ -18,6 +18,8 @@ export type Project = {
   progress: number;
   createdAt: string;
   updatedAt: string;
+  createdBy: string; // Added missing field
+  client?: string; // Added missing field
 };
 
 export const useFetchProjects = () => {
@@ -32,7 +34,15 @@ export const useFetchProjects = () => {
       setIsLoading(true);
       try {
         const data = await projectsCollection.getAll();
-        setProjects(data as Project[]);
+        // Add default values for missing fields
+        const enhancedData = data.map(project => ({
+          ...project,
+          createdBy: project.createdBy || 'user-1',
+          client: project.client || 'N/A',
+          // Convert 'onHold' to 'on-hold' if needed
+          status: project.status === 'onHold' ? 'on-hold' : project.status
+        }));
+        setProjects(enhancedData as Project[]);
         setError(null);
       } catch (err) {
         console.error('Error fetching projects:', err);
@@ -50,7 +60,15 @@ export const useFetchProjects = () => {
     setIsLoading(true);
     try {
       const data = await projectsCollection.getAll();
-      setProjects(data as Project[]);
+      // Add default values for missing fields
+      const enhancedData = data.map(project => ({
+        ...project,
+        createdBy: project.createdBy || 'user-1',
+        client: project.client || 'N/A',
+        // Convert 'onHold' to 'on-hold' if needed
+        status: project.status === 'onHold' ? 'on-hold' : project.status
+      }));
+      setProjects(enhancedData as Project[]);
       setError(null);
       toast.success('Projets actualisés');
     } catch (err) {

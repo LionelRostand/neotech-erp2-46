@@ -21,13 +21,24 @@ interface CreateRecruitmentDialogProps {
   onSuccess: () => void;
 }
 
+interface RecruitmentFormData {
+  position: string;
+  department: string;
+  priority: string;
+  location: string;
+  contractType: string;
+  salary: string;
+  description: string;
+  requirements: string;
+}
+
 const CreateRecruitmentDialog: React.FC<CreateRecruitmentDialogProps> = ({
   open,
   onOpenChange,
   onSuccess,
 }) => {
   const { toast } = useToast();
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<RecruitmentFormData>({
     position: "",
     department: "IT",
     priority: "Moyenne",
@@ -56,7 +67,8 @@ const CreateRecruitmentDialog: React.FC<CreateRecruitmentDialogProps> = ({
     }));
   };
 
-  const handleCreateRecruitment = async (formData: RecruitmentFormData) => {
+  const handleCreateRecruitment = async (e: React.FormEvent) => {
+    e.preventDefault();
     try {
       setIsSubmitting(true);
       
@@ -106,7 +118,7 @@ const CreateRecruitmentDialog: React.FC<CreateRecruitmentDialogProps> = ({
         <DialogHeader>
           <DialogTitle>Nouvelle offre d'emploi</DialogTitle>
         </DialogHeader>
-        <form onSubmit={(e) => handleCreateRecruitment(formData)}>
+        <form onSubmit={handleCreateRecruitment}>
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
