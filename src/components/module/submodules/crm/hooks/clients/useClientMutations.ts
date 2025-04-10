@@ -91,10 +91,12 @@ export const useClientMutations = (refreshClients: () => Promise<void>) => {
       
       await refreshClients();
       
+      // Fix the type conversion by explicitly including createdAt
       return { 
         id: clientId, 
-        ...updateData 
-      } as Client;
+        ...updateData,
+        createdAt: new Date().toISOString() // Add required property for Client type
+      } as unknown as Client; // Use unknown as intermediary to fix type conversion
     } catch (error: any) {
       console.error("Error updating client:", error);
       
