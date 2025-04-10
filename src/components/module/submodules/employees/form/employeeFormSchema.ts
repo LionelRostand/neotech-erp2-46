@@ -21,7 +21,7 @@ export const employeeFormSchema = z.object({
   lastName: z.string().min(2, "Le nom doit contenir au moins 2 caractères"),
   email: z.string().email("Format d'email invalide").or(z.string().length(0)),
   phone: z.string().optional(),
-  // Nouvelle structure d'adresse avec des champs détaillés ou une chaîne simple pour compatibilité
+  // Ensure address form data matches EmployeeAddress interface
   address: z.union([
     z.string(),
     addressSchema
