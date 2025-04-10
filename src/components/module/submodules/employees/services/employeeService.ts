@@ -1,171 +1,124 @@
 
+import { 
+  collection, 
+  query, 
+  getDocs, 
+  addDoc, 
+  updateDoc, 
+  deleteDoc, 
+  doc, 
+  where, 
+  orderBy,
+  serverTimestamp
+} from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 import { Employee } from '@/types/employee';
-import { getAllDocuments, getDocumentById } from '@/hooks/firestore/read-operations';
-import { addDocument } from '@/hooks/firestore/create-operations';
-import { updateDocument, setDocument } from '@/hooks/firestore/update-operations';
-import { deleteDocument } from '@/hooks/firestore/delete-operations';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import { toast } from 'sonner';
-import { executeWithNetworkRetry } from '@/hooks/firestore/network-handler';
 
-// Récupérer tous les employés depuis Firestore
-export const getEmployeesData = async (): Promise<Employee[]> => {
+/**
+ * Récupère la liste des employés depuis Firestore
+ */
+export const refreshEmployeesData = async (): Promise<Employee[]> => {
   try {
-    console.log('Récupération des données employés depuis Firestore...');
+    console.log('Récupération des employés depuis Firestore...');
     
-    // Utiliser HR.EMPLOYEES au lieu de la collection EMPLOYEES
-    const firestoreData = await executeWithNetworkRetry(async () => {
-      return await getAllDocuments(COLLECTIONS.HR.EMPLOYEES);
+    // Utiliser le chemin correct pour la collection des employés
+    const employeesRef = collection(db, COLLECTIONS.HR.EMPLOYEES);
+    const q = query(employeesRef, orderBy('lastName', 'asc'));
+    const querySnapshot = await getDocs(q);
+    
+    const employees = querySnapshot.docs.map(doc => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        firstName: data.firstName || '',
+        lastName: data.lastName || '',
+        email: data.email || '',
+        phone: data.phone || '',
+        address: data.address || '',
+        position: data.position || '',
+        department: data.department || '',
+        status: data.status || 'active',
+        hireDate: data.hireDate || null,
+        company: data.company || '',
+        contract: data.contract || 'CDI',
+        manager: data.manager || '',
+        photo: data.photo || '',
+        photoURL: data.photoURL || '',
+        // Autres champs facultatifs avec valeurs par défaut
+        professionalEmail: data.professionalEmail || '',
+        skills: data.skills || [],
+        documents: data.documents || [],
+        education: data.education || []
+      } as Employee;
     });
     
-    // Vérifier si les données sont valides et non vides
-    if (firestoreData && Array.isArray(firestoreData) && firestoreData.length > 0) {
-      console.log(`${firestoreData.length} employés récupérés depuis Firestore`);
-      return firestoreData as Employee[];
-    }
-    
-    console.log('Aucune donnée trouvée dans Firestore');
-    toast.error("Aucune donnée d'employé trouvée");
+    console.log(`${employees.length} employés récupérés`);
+    return employees;
+  } catch (error) {
+    console.error('Erreur lors de la récupération des employés:', error);
+    toast.error('Erreur lors du chargement des employés');
     return [];
-  } catch (error) {
-    console.error("Erreur lors de la récupération des employés:", error);
-    toast.error("Erreur lors du chargement des employés");
-    return [];
   }
 };
 
-export const getEmployeeById = async (id: string): Promise<Employee | null> => {
+/**
+ * Ajoute un nouvel employé à Firestore
+ */
+export const addEmployee = async (employee: Omit<Employee, 'id'>): Promise<Employee | null> => {
   try {
-    console.log(`Récupération de l'employé ${id} depuis Firestore`);
-    const employeeData = await executeWithNetworkRetry(async () => {
-      return await getDocumentById(COLLECTIONS.HR.EMPLOYEES, id);
-    });
+    const employeeData = {
+      ...employee,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
+    };
     
-    if (employeeData) {
-      console.log(`Employé ${id} récupéré depuis Firestore`);
-      return employeeData as Employee;
-    }
+    const docRef = await addDoc(collection(db, COLLECTIONS.HR.EMPLOYEES), employeeData);
+    toast.success('Employé ajouté avec succès');
     
-    console.log(`Employé ${id} non trouvé dans Firestore`);
-    toast.error("Employé non trouvé");
-    return null;
+    return {
+      id: docRef.id,
+      ...employee
+    } as Employee;
   } catch (error) {
-    console.error(`Erreur lors de la récupération de l'employé ${id}:`, error);
-    toast.error(`Erreur lors du chargement des données de l'employé`);
-    return null;
-  }
-};
-
-// Ajouter un nouvel employé dans Firestore
-export const addEmployee = async (employeeData: Omit<Employee, 'id'>): Promise<Employee | null> => {
-  try {
-    console.log('Ajout d\'un nouvel employé dans Firestore...');
-    const newEmployee = await executeWithNetworkRetry(async () => {
-      return await addDocument(COLLECTIONS.HR.EMPLOYEES, employeeData);
-    });
-    
-    console.log('Employé ajouté avec succès:', newEmployee);
-    return newEmployee as Employee;
-  } catch (error) {
-    console.error("Erreur lors de l'ajout de l'employé:", error);
-    toast.error("Erreur lors de l'ajout de l'employé");
+    console.error('Erreur lors de l\'ajout de l\'employé:', error);
+    toast.error('Erreur lors de l\'ajout de l\'employé');
     return null;
   }
 };
 
-// Mettre à jour un employé existant dans Firestore
-export const updateEmployee = async (id: string, employeeData: Partial<Employee>): Promise<Employee | null> => {
+/**
+ * Met à jour un employé existant dans Firestore
+ */
+export const updateEmployee = async (id: string, updates: Partial<Employee>): Promise<boolean> => {
   try {
-    console.log(`Mise à jour de l'employé ${id} dans Firestore...`);
-    const updatedEmployee = await executeWithNetworkRetry(async () => {
-      return await updateDocument(COLLECTIONS.HR.EMPLOYEES, id, employeeData);
-    });
+    const updatedData = {
+      ...updates,
+      updatedAt: serverTimestamp()
+    };
     
-    console.log('Employé mis à jour avec succès:', updatedEmployee);
-    return updatedEmployee as Employee;
-  } catch (error) {
-    console.error("Erreur lors de la mise à jour de l'employé:", error);
-    toast.error("Erreur lors de la mise à jour de l'employé");
-    return null;
-  }
-};
-
-// Supprimer un employé de Firestore
-export const deleteEmployee = async (id: string): Promise<boolean> => {
-  try {
-    console.log(`Suppression de l'employé ${id} dans Firestore...`);
-    await executeWithNetworkRetry(async () => {
-      return await deleteDocument(COLLECTIONS.HR.EMPLOYEES, id);
-    });
-    
-    console.log('Employé supprimé avec succès');
+    await updateDoc(doc(db, COLLECTIONS.HR.EMPLOYEES), updatedData);
+    toast.success('Employé mis à jour avec succès');
     return true;
   } catch (error) {
-    console.error("Erreur lors de la suppression de l'employé:", error);
-    toast.error("Erreur lors de la suppression de l'employé");
+    console.error('Erreur lors de la mise à jour de l\'employé:', error);
+    toast.error('Erreur lors de la mise à jour de l\'employé');
     return false;
   }
 };
 
-// Fonction pour actualiser les données
-export const refreshEmployeesData = async (): Promise<Employee[]> => {
+/**
+ * Supprime un employé de Firestore
+ */
+export const deleteEmployee = async (id: string): Promise<boolean> => {
   try {
-    console.log("Actualisation des données employés depuis Firestore...");
-    
-    // Récupérer directement depuis Firestore avec executeWithNetworkRetry
-    const firestoreData = await executeWithNetworkRetry(async () => {
-      return await getAllDocuments(COLLECTIONS.HR.EMPLOYEES);
-    });
-    
-    if (firestoreData && Array.isArray(firestoreData) && firestoreData.length > 0) {
-      console.log(`${firestoreData.length} employés récupérés depuis Firestore`);
-      toast.success("Données employés actualisées avec succès");
-      return firestoreData as Employee[];
-    } else {
-      toast.warning("Aucune donnée trouvée sur Firestore");
-      return [];
-    }
+    await deleteDoc(doc(db, COLLECTIONS.HR.EMPLOYEES, id));
+    toast.success('Employé supprimé avec succès');
+    return true;
   } catch (error) {
-    console.error("Erreur lors de l'actualisation des employés:", error);
-    toast.error("Échec de l'actualisation des données employés");
-    return [];
-  }
-};
-
-// Récupérer les employés par département
-export const getEmployeesByDepartment = async (department: string): Promise<Employee[]> => {
-  try {
-    console.log(`Récupération des employés du département ${department} depuis Firestore...`);
-    
-    const employees = await executeWithNetworkRetry(async () => {
-      const allEmployees = await getAllDocuments(COLLECTIONS.HR.EMPLOYEES);
-      return allEmployees.filter((emp: any) => emp.department === department);
-    });
-    
-    console.log(`${employees.length} employés récupérés pour le département ${department}`);
-    return employees as Employee[];
-  } catch (error) {
-    console.error(`Erreur lors de la récupération des employés du département ${department}:`, error);
-    toast.error("Erreur lors du chargement des employés par département");
-    return [];
-  }
-};
-
-// Récupérer les employés par statut
-export const getEmployeesByStatus = async (status: string): Promise<Employee[]> => {
-  try {
-    console.log(`Récupération des employés avec le statut ${status} depuis Firestore...`);
-    
-    const employees = await executeWithNetworkRetry(async () => {
-      const allEmployees = await getAllDocuments(COLLECTIONS.HR.EMPLOYEES);
-      return allEmployees.filter((emp: any) => emp.status === status);
-    });
-    
-    console.log(`${employees.length} employés récupérés avec le statut ${status}`);
-    return employees as Employee[];
-  } catch (error) {
-    console.error(`Erreur lors de la récupération des employés avec le statut ${status}:`, error);
-    toast.error("Erreur lors du chargement des employés par statut");
-    return [];
+    console.error('Erreur lors de la suppression de l\'employé:', error);
+    toast.error('Erreur lors de la suppression de l\'employé');
+    return false;
   }
 };

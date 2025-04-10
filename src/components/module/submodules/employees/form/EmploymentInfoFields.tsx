@@ -1,16 +1,26 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useFirebaseCompanies } from '@/hooks/useFirebaseCompanies';
+import { Company } from '@/components/module/submodules/companies/types';
+import { Loader2 } from 'lucide-react';
 
 const EmploymentInfoFields = () => {
-  // List of companies
-  const companies = [
-    { id: 'enterprise1', name: 'Enterprise Solutions' },
-    { id: 'techinno', name: 'TechInnovation' },
-    { id: 'greenco', name: 'GreenCo' },
-  ];
+  const { companies, isLoading } = useFirebaseCompanies();
+  const [formattedCompanies, setFormattedCompanies] = useState<{id: string, name: string}[]>([]);
+  
+  useEffect(() => {
+    if (companies && companies.length > 0) {
+      // Format companies for select dropdown
+      const formatted = companies.map(company => ({
+        id: company.id,
+        name: company.name || `Entreprise (${company.id})`
+      }));
+      setFormattedCompanies(formatted);
+    }
+  }, [companies]);
 
   return (
     <div className="space-y-4">
@@ -56,15 +66,26 @@ const EmploymentInfoFields = () => {
               >
                 <FormControl>
                   <SelectTrigger>
-                    <SelectValue placeholder="Sélectionner une entreprise" />
+                    <SelectValue placeholder={isLoading ? "Chargement..." : "Sélectionner une entreprise"} />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  {companies.map((company) => (
-                    <SelectItem key={company.id} value={company.id}>
-                      {company.name}
+                  {isLoading ? (
+                    <div className="flex items-center justify-center p-2">
+                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                      Chargement des entreprises...
+                    </div>
+                  ) : formattedCompanies.length > 0 ? (
+                    formattedCompanies.map((company) => (
+                      <SelectItem key={company.id} value={company.id}>
+                        {company.name}
+                      </SelectItem>
+                    ))
+                  ) : (
+                    <SelectItem value="none" disabled>
+                      Aucune entreprise disponible
                     </SelectItem>
-                  ))}
+                  )}
                 </SelectContent>
               </Select>
               <FormMessage />

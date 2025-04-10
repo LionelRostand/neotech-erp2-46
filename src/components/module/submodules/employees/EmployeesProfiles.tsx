@@ -34,6 +34,7 @@ const EmployeesProfiles: React.FC<EmployeesProfilesProps> = (props) => {
   const [isPdfExportOpen, setIsPdfExportOpen] = useState(false);
   const [selectedCompany, setSelectedCompany] = useState<string>('all');
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const { companies } = useFirebaseCompanies();
 
   useEffect(() => {
     // Utiliser les employés provenant des props ou de useEmployeeData
@@ -44,11 +45,13 @@ const EmployeesProfiles: React.FC<EmployeesProfilesProps> = (props) => {
     setEmployees(employeesToUse);
   }, [props.employees, fetchedEmployees]);
 
-  const companies = [
+  // Transformer les companies pour le select
+  const companyOptions = [
     { id: 'all', name: 'Toutes les entreprises' },
-    { id: 'enterprise1', name: 'Enterprise Solutions' },
-    { id: 'techinno', name: 'TechInnovation' },
-    { id: 'greenco', name: 'GreenCo' },
+    ...companies.map(company => ({
+      id: company.id,
+      name: company.name
+    }))
   ];
 
   const handleViewEmployee = (employee: Employee) => {
@@ -170,7 +173,7 @@ const EmployeesProfiles: React.FC<EmployeesProfilesProps> = (props) => {
                   <SelectValue placeholder="Sélectionner une entreprise" />
                 </SelectTrigger>
                 <SelectContent>
-                  {companies.map((company) => (
+                  {companyOptions.map((company) => (
                     <SelectItem key={company.id} value={company.id}>{company.name}</SelectItem>
                   ))}
                 </SelectContent>
