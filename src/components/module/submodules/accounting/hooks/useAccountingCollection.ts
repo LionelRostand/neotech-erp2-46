@@ -60,7 +60,7 @@ export const useAccountingCollection = (
       };
     } catch (err) {
       const error = err instanceof Error ? err : new Error('Unknown error occurred');
-      console.error(`Error setting up listener for ${collectionKey}:`, error);
+      console.error(`Error setting up listener for ${String(collectionKey)}:`, error);
       setError(error);
       setIsLoading(false);
       toast.error(`Erreur lors de la configuration: ${error.message}`);
