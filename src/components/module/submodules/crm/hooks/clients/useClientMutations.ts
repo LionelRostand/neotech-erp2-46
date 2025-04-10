@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { collection, doc, deleteDoc, addDoc, updateDoc } from 'firebase/firestore';
+import { collection, doc, deleteDoc, addDoc, updateDoc, getDoc } from 'firebase/firestore';
 import { db, auth } from '@/lib/firebase';
 import { ClientFormData, Client } from '../../types/crm-types';
 import { COLLECTIONS } from '@/lib/firebase-collections';
@@ -116,15 +116,18 @@ export const useClientMutations = (refreshClients: () => Promise<void>) => {
   const fetchClientCreatedAt = async (clientId: string): Promise<string | null> => {
     try {
       const clientDocRef = doc(db, COLLECTIONS.CRM.CLIENTS, clientId);
-      const clientDoc = await executeWithNetworkRetry(async () => {
-        const docSnap = await clientDocRef.get();
-        if (docSnap.exists()) {
-          return docSnap.data();
-        }
-        return null;
+      
+      // Correction ici: utiliser getDoc au lieu de clientDocRef.get()
+      const docSnap = await executeWithNetworkRetry(async () => {
+        return await getDoc(clientDocRef);
       });
       
-      return clientDoc?.createdAt || null;
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        return data.createdAt || null;
+      }
+      
+      return null;
     } catch (error) {
       console.error("Error fetching client created date:", error);
       return null;
