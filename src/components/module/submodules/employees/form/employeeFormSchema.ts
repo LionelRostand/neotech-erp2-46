@@ -1,5 +1,6 @@
 
 import * as z from 'zod';
+import { EmployeeAddress } from '@/types/employee';
 
 // Schéma pour l'adresse détaillée - aligned with EmployeeAddress interface
 export const addressSchema = z.object({

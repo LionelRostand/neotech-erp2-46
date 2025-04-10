@@ -25,7 +25,7 @@ const PersonalInfoFields: React.FC = () => {
     // Convert address object to string
     if (!addressValue) return '';
     
-    const { street, streetNumber, city, postalCode, department, country } = addressValue;
+    const { street, streetNumber, city, postalCode, department, country } = addressValue as EmployeeAddress;
     const parts = [
       streetNumber && street ? `${streetNumber} ${street}` : street || '',
       city || '',
