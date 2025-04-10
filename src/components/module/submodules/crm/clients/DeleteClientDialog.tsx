@@ -40,11 +40,11 @@ const DeleteClientDialog: React.FC<DeleteClientDialogProps> = ({
     try {
       setIsDeleting(true);
       await onConfirm();
-      // The dialog will be closed by the parent component if deletion is successful
+      // Le dialogue sera fermé par le composant parent si la suppression réussit
     } catch (error) {
       console.error("Error in delete handler:", error);
       setIsDeleting(false);
-      // Error is handled in the parent component
+      // L'erreur est gérée dans le composant parent
     }
   };
 
