@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Employee } from '@/types/employee';
@@ -7,18 +8,24 @@ import EmployeeForm from './EmployeeForm';
 import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { 
-  getEmployeesData, 
-  refreshEmployeesData, 
-  addEmployee, 
-  updateEmployee, 
-  deleteEmployee 
-} from './services/employeeService';
-import { RefreshCw } from 'lucide-react';
-import { useAuth } from '@/hooks/useAuth';
+import { useEmployeeData } from '@/hooks/useEmployeeData';
+import { RefreshCw, Shield } from 'lucide-react';
+import { FirebaseErrorAlert } from '@/components/ui/FirebaseErrorAlert';
+import { refreshEmployeesData } from './services/employeeService';
 
-const EmployeesProfiles: React.FC = () => {
-  const [searchQuery, setSearchQuery] = useState('');
+interface EmployeesProfilesProps {
+  employees?: Employee[];
+  searchQuery?: string;
+  setSearchQuery?: (query: string) => void;
+  onViewEmployee?: (employee: Employee) => void;
+  onEditEmployee?: (employee: Employee) => void;
+  onDeleteEmployee?: (employeeId: string) => void;
+  onOpenAddEmployee?: () => void;
+}
+
+const EmployeesProfiles: React.FC<EmployeesProfilesProps> = (props) => {
+  const { employees: fetchedEmployees, isLoading, error } = useEmployeeData();
+  const [searchQuery, setSearchQuery] = useState(props.searchQuery || '');
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [isAddEmployeeOpen, setIsAddEmployeeOpen] = useState(false);
@@ -26,8 +33,16 @@ const EmployeesProfiles: React.FC = () => {
   const [employeeToEdit, setEmployeeToEdit] = useState<Employee | null>(null);
   const [isPdfExportOpen, setIsPdfExportOpen] = useState(false);
   const [selectedCompany, setSelectedCompany] = useState<string>('all');
-  const [loading, setLoading] = useState(true);
-  const { isOffline } = useAuth();
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  useEffect(() => {
+    // Utiliser les employés provenant des props ou de useEmployeeData
+    const employeesToUse = props.employees && props.employees.length > 0 
+      ? props.employees 
+      : fetchedEmployees;
+      
+    setEmployees(employeesToUse);
+  }, [props.employees, fetchedEmployees]);
 
   const companies = [
     { id: 'all', name: 'Toutes les entreprises' },
@@ -36,59 +51,20 @@ const EmployeesProfiles: React.FC = () => {
     { id: 'greenco', name: 'GreenCo' },
   ];
 
-  useEffect(() => {
-    loadEmployeesData();
-  }, []);
-
-  const loadEmployeesData = async () => {
-    setLoading(true);
-    try {
-      const data = await getEmployeesData();
-      setEmployees(data);
-    } catch (error) {
-      console.error("Erreur lors du chargement des données:", error);
-      toast.error("Impossible de charger les données des employés");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleRefreshData = async () => {
-    setLoading(true);
-    try {
-      const refreshedData = await refreshEmployeesData();
-      setEmployees(refreshedData);
-      toast.success("Données actualisées avec succès");
-    } catch (error) {
-      console.error("Erreur lors de l'actualisation:", error);
-      toast.error("Échec de l'actualisation des données");
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleViewEmployee = (employee: Employee) => {
     setSelectedEmployee(employee);
   };
 
-  const handleAddEmployee = async (newEmployee: Partial<Employee>) => {
-    setLoading(true);
-    try {
-      const addedEmployee = await addEmployee(newEmployee as Omit<Employee, 'id'>);
-      
-      if (addedEmployee) {
-        setEmployees(prev => [...prev, addedEmployee]);
-        toast.success("Employé ajouté avec succès.");
-      } else {
-        toast.error("Échec de l'ajout de l'employé.");
-      }
-    } catch (error) {
-      console.error("Erreur lors de l'ajout de l'employé:", error);
-      toast.error("Erreur lors de l'ajout de l'employé.");
-    } finally {
-      setLoading(false);
-      setIsAddEmployeeOpen(false);
-    }
+  const handleAddEmployee = (newEmployee: Partial<Employee>) => {
+    const employeeWithId = {
+      ...newEmployee,
+      id: `EMP${String(employees.length + 1).padStart(3, '0')}`,
+    } as Employee;
+    
+    const updatedEmployees = [...employees, employeeWithId];
+    setEmployees(updatedEmployees);
+    toast.success("Employé ajouté avec succès.");
+    setIsAddEmployeeOpen(false);
   };
 
   const handleEditEmployee = (employee: Employee) => {
@@ -96,61 +72,58 @@ const EmployeesProfiles: React.FC = () => {
     setIsEditEmployeeOpen(true);
   };
 
-  const handleUpdateEmployee = async (updatedEmployeeData: Partial<Employee>) => {
+  const handleUpdateEmployee = (updatedEmployee: Partial<Employee>) => {
     if (!employeeToEdit) return;
     
-    setLoading(true);
-    try {
-      const updatedEmployee = await updateEmployee(employeeToEdit.id, updatedEmployeeData);
-      
-      if (updatedEmployee) {
-        setEmployees(prev => prev.map(emp => 
-          emp.id === employeeToEdit.id ? updatedEmployee : emp
-        ));
-        
-        if (selectedEmployee && selectedEmployee.id === employeeToEdit.id) {
-          setSelectedEmployee(updatedEmployee);
-        }
-        
-        toast.success("Employé mis à jour avec succès.");
-      } else {
-        toast.error("Échec de la mise à jour de l'employé.");
-      }
-    } catch (error) {
-      console.error("Erreur lors de la mise à jour:", error);
-      toast.error("Erreur lors de la mise à jour de l'employé.");
-    } finally {
-      setLoading(false);
-      setIsEditEmployeeOpen(false);
+    const updatedEmployees = employees.map(emp => 
+      emp.id === employeeToEdit.id 
+        ? { ...emp, ...updatedEmployee } as Employee
+        : emp
+    );
+    
+    setEmployees(updatedEmployees);
+    
+    // Si l'employé est actuellement sélectionné, mettre à jour aussi
+    if (selectedEmployee && selectedEmployee.id === employeeToEdit.id) {
+      setSelectedEmployee({ ...selectedEmployee, ...updatedEmployee } as Employee);
     }
+    
+    toast.success("Employé mis à jour avec succès.");
+    setIsEditEmployeeOpen(false);
   };
 
-  const handleDeleteEmployee = async (employeeId: string) => {
-    setLoading(true);
+  const handleDeleteEmployee = (employeeId: string) => {
+    const updatedEmployees = employees.filter(emp => emp.id !== employeeId);
+    setEmployees(updatedEmployees);
+    
+    // Si l'employé supprimé est celui qui est affiché, revenir à la liste
+    if (selectedEmployee && selectedEmployee.id === employeeId) {
+      setSelectedEmployee(null);
+    }
+    
+    toast.success("Employé supprimé avec succès.");
+  };
+
+  const handleRefreshData = async () => {
+    setIsRefreshing(true);
     try {
-      const success = await deleteEmployee(employeeId);
-      
-      if (success) {
-        setEmployees(prev => prev.filter(emp => emp.id !== employeeId));
-        
-        if (selectedEmployee && selectedEmployee.id === employeeId) {
-          setSelectedEmployee(null);
-        }
-        
-        toast.success("Employé supprimé avec succès.");
-      } else {
-        toast.error("Échec de la suppression de l'employé.");
+      const refreshedEmployees = await refreshEmployeesData();
+      if (refreshedEmployees.length > 0) {
+        setEmployees(refreshedEmployees);
+        toast.success(`${refreshedEmployees.length} employés chargés avec succès`);
       }
-    } catch (error) {
-      console.error("Erreur lors de la suppression:", error);
-      toast.error("Erreur lors de la suppression de l'employé.");
+    } catch (err) {
+      console.error("Erreur lors de l'actualisation:", err);
     } finally {
-      setLoading(false);
+      setIsRefreshing(false);
     }
   };
 
   const handleExportPdf = () => {
+    // Show loading dialog
     setIsPdfExportOpen(true);
+    // The actual PDF export is now handled in EmployeeDetails component
+    // This is just for UI feedback
     setTimeout(() => {
       setIsPdfExportOpen(false);
     }, 1000);
@@ -162,6 +135,14 @@ const EmployeesProfiles: React.FC = () => {
 
   return (
     <div className="space-y-6">
+      {error && (
+        <FirebaseErrorAlert 
+          error={error} 
+          onRetry={handleRefreshData}
+          className="mb-4" 
+        />
+      )}
+
       {selectedEmployee ? (
         <>
           <div className="flex items-center mb-4">
@@ -196,13 +177,13 @@ const EmployeesProfiles: React.FC = () => {
               </Select>
             </div>
             <div className="flex items-center gap-2">
-              <Button 
+              <Button
                 variant="outline"
-                onClick={handleRefreshData}
-                disabled={loading || isOffline}
                 className="flex items-center gap-2"
+                onClick={handleRefreshData}
+                disabled={isLoading || isRefreshing}
               >
-                <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+                <RefreshCw className={`h-4 w-4 ${isLoading || isRefreshing ? 'animate-spin' : ''}`} />
                 Actualiser
               </Button>
               <Button 
@@ -215,14 +196,6 @@ const EmployeesProfiles: React.FC = () => {
             </div>
           </div>
           
-          {isOffline && (
-            <div className="bg-amber-50 border border-amber-200 rounded-md p-3 mb-4">
-              <p className="text-amber-800 text-sm">
-                Mode hors-ligne actif. Les données affichées peuvent ne pas être à jour.
-              </p>
-            </div>
-          )}
-          
           <EmployeesList
             employees={filteredEmployees}
             searchQuery={searchQuery}
@@ -230,7 +203,7 @@ const EmployeesProfiles: React.FC = () => {
             onViewEmployee={handleViewEmployee}
             onEditEmployee={handleEditEmployee}
             onDeleteEmployee={handleDeleteEmployee}
-            loading={loading}
+            loading={isLoading || isRefreshing}
           />
         </div>
       )}
@@ -251,6 +224,7 @@ const EmployeesProfiles: React.FC = () => {
         />
       )}
 
+      {/* Dialogue de simulation d'export PDF */}
       <Dialog open={isPdfExportOpen} onOpenChange={setIsPdfExportOpen}>
         <DialogContent>
           <DialogHeader>

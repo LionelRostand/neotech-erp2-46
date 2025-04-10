@@ -1,129 +1,74 @@
 
 import { FirebaseError } from 'firebase/app';
-import { checkFirestoreConnection } from '@/lib/firebase';
 import { toast } from 'sonner';
 
-// Nombre de tentatives maximum pour les opérations réseau
-const MAX_RETRIES = 3;
-// Délai entre les tentatives (en ms)
-const RETRY_DELAY = 1000;
-
 /**
- * Vérifie si une erreur est liée à la connectivité réseau
- */
-export const isNetworkError = (error: any): boolean => {
-  if (error instanceof FirebaseError) {
-    // Codes d'erreur Firebase liés à la connectivité réseau
-    const networkErrorCodes = [
-      'unavailable',
-      'network-request-failed',
-      'deadline-exceeded'
-    ];
-    return networkErrorCodes.includes(error.code);
-  }
-  
-  // Pour les autres types d'erreurs, vérifier le message
-  const errorMessage = String(error.message || error).toLowerCase();
-  return errorMessage.includes('network') || 
-         errorMessage.includes('connection') || 
-         errorMessage.includes('offline') ||
-         errorMessage.includes('internet') ||
-         errorMessage.includes('timeout');
-};
-
-/**
- * Vérifie si une erreur est liée aux limitations de taux (rate limits)
- */
-export const isRateLimitError = (error: any): boolean => {
-  if (error instanceof FirebaseError) {
-    // Codes d'erreur Firebase liés aux rate limits
-    const rateLimitCodes = [
-      'resource-exhausted',
-      'too-many-requests',
-      'quota-exceeded'
-    ];
-    return rateLimitCodes.includes(error.code);
-  }
-  
-  // Pour les autres types d'erreurs, vérifier le message
-  const errorMessage = String(error.message || error).toLowerCase();
-  return errorMessage.includes('quota') || 
-         errorMessage.includes('rate limit') || 
-         errorMessage.includes('too many requests') ||
-         errorMessage.includes('resource exhausted') ||
-         errorMessage.includes('429');
-};
-
-/**
- * Vérifie si une erreur est liée aux permissions
- */
-export const isPermissionError = (error: any): boolean => {
-  if (error instanceof FirebaseError) {
-    return error.code === 'permission-denied';
-  }
-  
-  // Pour les autres types d'erreurs, vérifier le message
-  const errorMessage = String(error.message || error).toLowerCase();
-  return errorMessage.includes('permission') || 
-         errorMessage.includes('not allowed') || 
-         errorMessage.includes('insufficient');
-};
-
-/**
- * Essaie de reconnecter à Firestore
- * @returns Promesse résolue avec true si la connexion est rétablie, false sinon
- */
-export const reconnectToFirestore = async (): Promise<boolean> => {
-  console.log('Tentative de reconnexion à Firestore...');
-  try {
-    const isConnected = await checkFirestoreConnection();
-    console.log('Résultat de la tentative de reconnexion:', isConnected ? 'Succès' : 'Échec');
-    return isConnected;
-  } catch (error) {
-    console.error('Erreur lors de la tentative de reconnexion:', error);
-    return false;
-  }
-};
-
-/**
- * Exécute une fonction avec retentatives en cas d'erreur réseau
- * @param operation Fonction à exécuter
- * @param maxRetries Nombre maximum de tentatives
- * @param delayMs Délai entre les tentatives en ms
- * @returns Résultat de l'opération
+ * Utility to execute a Firestore operation with network retry logic
+ * @param operation The async operation to execute
+ * @param maxRetries Maximum number of retries (default: 3)
+ * @returns Promise with the operation result
  */
 export const executeWithNetworkRetry = async <T>(
   operation: () => Promise<T>,
-  maxRetries: number = MAX_RETRIES,
-  delayMs: number = RETRY_DELAY
+  maxRetries: number = 3
 ): Promise<T> => {
-  let lastError: any;
-  let retryCount = 0;
+  let retries = 0;
   
-  while (retryCount < maxRetries) {
+  const execute = async (): Promise<T> => {
     try {
       return await operation();
     } catch (error) {
-      lastError = error;
-      retryCount++;
+      retries++;
+      console.error(`Erreur lors de la tentative ${retries}/${maxRetries}:`, error);
       
-      console.error(`Erreur lors de la tentative ${retryCount}/${maxRetries}:`, error);
-      
-      if (isPermissionError(error)) {
-        console.warn('Erreur de permission détectée, abandonnement des tentatives');
-        throw error; // Ne pas réessayer pour les erreurs de permission
+      // Handle specific Firebase errors
+      if (error instanceof FirebaseError) {
+        // Handle permission errors
+        if (error.code === 'permission-denied') {
+          console.warn('Erreur de permission détectée, abandonnement des tentatives');
+          toast.error(`Erreur de permission Firebase: ${error.message}. Vérifiez les règles de sécurité.`);
+          throw error;
+        }
+        
+        // Handle network errors
+        if (error.code === 'unavailable' || error.code === 'network-request-failed') {
+          if (retries < maxRetries) {
+            const delay = Math.min(Math.pow(2, retries) * 1000, 10000);
+            console.log(`Nouvelle tentative dans ${delay}ms...`);
+            await new Promise(resolve => setTimeout(resolve, delay));
+            return execute();
+          }
+        }
       }
       
-      if (!isNetworkError(error) || retryCount >= maxRetries) {
-        console.warn('Erreur non liée au réseau ou nombre maximum de tentatives atteint, abandonnement');
-        throw error;
+      // For other errors or after max retries
+      if (retries < maxRetries) {
+        const delay = Math.min(Math.pow(2, retries) * 1000, 10000);
+        console.log(`Nouvelle tentative dans ${delay}ms...`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+        return execute();
       }
       
-      console.log(`Attente de ${delayMs}ms avant la prochaine tentative...`);
-      await new Promise(resolve => setTimeout(resolve, delayMs));
+      // If we've reached max retries, throw the error
+      throw error;
     }
+  };
+  
+  return execute();
+};
+
+/**
+ * Helper function to check if the error is due to being offline
+ * @param error The error to check
+ * @returns boolean indicating if it's an offline error
+ */
+export const isOfflineError = (error: any): boolean => {
+  if (error instanceof FirebaseError) {
+    return error.code === 'unavailable' || 
+           error.code === 'network-request-failed' ||
+           error.message.includes('offline') ||
+           error.message.includes('network');
   }
   
-  // On ne devrait jamais arriver ici car soit l'opération réussit soit on throw une erreur
-  throw lastError;
+  return false;
 };
