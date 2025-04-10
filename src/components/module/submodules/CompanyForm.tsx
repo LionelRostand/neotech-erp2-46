@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -79,6 +80,7 @@ const CompanyForm: React.FC<CompanyFormProps> = ({
       return;
     }
     
+    // Appelle la fonction onSave passée en prop pour soumettre les données du formulaire
     onSave(formData);
   };
 
@@ -271,7 +273,7 @@ const CompanyForm: React.FC<CompanyFormProps> = ({
         />
       </div>
       
-      <div className="flex justify-end gap-3">
+      <div className="flex justify-end gap-3 mt-6">
         <Button type="button" variant="outline" onClick={onClose}>
           Annuler
         </Button>
