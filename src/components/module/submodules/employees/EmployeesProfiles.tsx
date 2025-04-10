@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useEmployeeData } from '@/hooks/useEmployeeData';
 import { RefreshCw } from 'lucide-react';
 import { addDocument } from '@/hooks/firestore/create-operations';
-import { updateDocument } from '@/hooks/firestore/update-operations';
+import { updateDocument, setDocument } from '@/hooks/firestore/update-operations';
 import { FirebaseErrorAlert } from '@/components/ui/FirebaseErrorAlert';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import { refreshEmployeesData } from './services/employeeService';
@@ -90,7 +90,8 @@ const EmployeesProfiles: React.FC<EmployeesProfilesProps> = (props) => {
     if (!employeeToEdit) return;
     
     try {
-      await updateDocument(COLLECTIONS.HR.EMPLOYEES, employeeToEdit.id, updatedEmployee);
+      // Utiliser setDocument au lieu de updateDocument pour créer le document s'il n'existe pas
+      await setDocument(COLLECTIONS.HR.EMPLOYEES, employeeToEdit.id, updatedEmployee);
       
       const updatedEmployees = employees.map(emp => 
         emp.id === employeeToEdit.id 
