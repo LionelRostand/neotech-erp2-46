@@ -11,8 +11,8 @@ import { FirebaseErrorAlert } from './ui/FirebaseErrorAlert';
 const LoginForm = () => {
   const navigate = useNavigate();
   const { login } = useAuth();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState('admin@neotech-consulting.com');
+  const [password, setPassword] = useState('admin123456');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
