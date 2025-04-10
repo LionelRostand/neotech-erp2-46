@@ -131,10 +131,14 @@ export const useFirebaseCompanies = () => {
     try {
       const companiesRef = collection(db, COLLECTIONS.COMPANIES);
       const q = query(companiesRef, orderBy('name', 'asc'));
-      const snapshot = await onSnapshot(q, () => {});
       
-      // Cette partie est généralement automatiquement gérée par onSnapshot,
-      // mais nous la forçons ici pour actualiser les données
+      // Cette partie sert principalement à déclencher une nouvelle requête
+      // l'effet principal vient du setIsLoading qui va forcer un re-render
+      console.log("Actualisation des données des entreprises...");
+      
+      // On ne fait pas await ici car onSnapshot est asynchrone et retourne un unsubscribe
+      // Le setIsLoading(false) sera géré par le callback de onSnapshot
+      
       return true;
     } catch (error) {
       console.error("Erreur lors de l'actualisation des entreprises:", error);

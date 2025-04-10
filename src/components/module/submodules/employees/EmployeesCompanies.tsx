@@ -41,9 +41,15 @@ const EmployeesCompanies: React.FC = () => {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [currentCompany, setCurrentCompany] = useState<Company | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const { isOffline } = useAuth();
   
-  const { companies, isLoading, error, refetch, isOffline } = useFirebaseCompanies();
+  // Get auth context data
+  const { isOffline: authIsOffline } = useAuth();
+  
+  // Get companies data
+  const { companies, isLoading, error, refetch, isOffline: dataIsOffline } = useFirebaseCompanies();
+
+  // Determine if we're offline based on either source
+  const isOffline = authIsOffline || dataIsOffline;
 
   useEffect(() => {
     if (searchQuery.trim() === '') {
@@ -140,7 +146,7 @@ const EmployeesCompanies: React.FC = () => {
   };
 
   // Check if we're using mock data
-  const usingMockData = companies.some(c => c.id.startsWith('mock-'));
+  const usingMockData = companies.some(c => c.id?.startsWith('mock-'));
 
   return (
     <div className="space-y-6">

@@ -1,331 +1,117 @@
 
-import React, { useRef, useEffect, useState } from 'react';
+import React from 'react';
+import { Employee } from '@/types/employee';
 import { Card } from '@/components/ui/card';
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
-import { ChevronDown, ChevronRight, User } from 'lucide-react';
+import { User, Users } from 'lucide-react';
 
-export interface ChartNode {
+interface HierarchyNode {
   id: string;
   name: string;
   position: string;
-  department: string;
-  imageUrl?: string;
-  children: ChartNode[];
+  department?: string;
+  photo?: string;
+  children: HierarchyNode[];
 }
 
 interface HierarchyVisualizationProps {
-  data: ChartNode;
-  viewMode: 'orgChart' | 'treeView';
-  searchQuery: string;
+  employees: Employee[];
+  loading?: boolean;
 }
 
-export const HierarchyVisualization: React.FC<HierarchyVisualizationProps> = ({ 
-  data, 
-  viewMode,
-  searchQuery 
-}) => {
-  return (
-    <div className="w-full overflow-auto">
-      {viewMode === 'orgChart' ? (
-        <OrganizationChart node={data} searchQuery={searchQuery} />
-      ) : (
-        <TreeView node={data} searchQuery={searchQuery} />
-      )}
-    </div>
-  );
-};
-
-// Organization Chart Component (top-down visualization)
-export const OrganizationChart: React.FC<{ node: ChartNode; searchQuery: string }> = ({ node, searchQuery }) => {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [filteredNode, setFilteredNode] = useState<ChartNode | null>(node);
-  
-  // Filter the tree based on search query
-  useEffect(() => {
-    if (!searchQuery) {
-      setFilteredNode(node);
-      return;
-    }
+const HierarchyVisualization: React.FC<HierarchyVisualizationProps> = ({ employees, loading = false }) => {
+  // Build hierarchy tree from flat employees list
+  const buildHierarchyTree = (): HierarchyNode[] => {
+    // Find managers (employees with no manager or whose managerId doesn't exist)
+    const managerIds = new Set(employees.map(emp => emp.managerId).filter(Boolean));
+    const allIds = new Set(employees.map(emp => emp.id));
     
-    const query = searchQuery.toLowerCase();
-    const filterNode = (n: ChartNode): ChartNode | null => {
-      // Check if current node matches
-      const nodeMatches = n.name.toLowerCase().includes(query) || 
-                          n.position.toLowerCase().includes(query) ||
-                          n.department.toLowerCase().includes(query);
+    // Find root employees (those who are not managed by anyone in the list)
+    const rootEmployees = employees.filter(emp => 
+      !emp.managerId || !allIds.has(emp.managerId)
+    );
+    
+    // Create tree nodes
+    const createNode = (employee: Employee): HierarchyNode => {
+      // Find all direct reports
+      const children = employees
+        .filter(emp => emp.managerId === employee.id)
+        .map(createNode);
       
-      // Filter children
-      const filteredChildren = n.children
-        .map(filterNode)
-        .filter((child): child is ChartNode => child !== null);
-      
-      // Return node if it matches or has matching children
-      if (nodeMatches || filteredChildren.length > 0) {
-        return {
-          ...n,
-          children: filteredChildren
-        };
-      }
-      
-      return null;
+      return {
+        id: employee.id,
+        name: `${employee.firstName} ${employee.lastName}`,
+        position: employee.position || 'N/A',
+        department: employee.department,
+        photo: employee.photoURL || employee.photo,
+        children
+      };
     };
     
-    setFilteredNode(filterNode(node));
-  }, [node, searchQuery]);
+    return rootEmployees.map(createNode);
+  };
   
-  if (!filteredNode) {
-    return <div className="text-center py-8">Aucun résultat trouvé pour "{searchQuery}"</div>;
-  }
-  
-  return (
-    <div className="flex flex-col items-center w-full overflow-auto p-4" ref={containerRef}>
-      <div className="org-chart">
-        <NodeCard node={filteredNode} isRoot={true} />
-        
-        {filteredNode.children.length > 0 && (
-          <>
-            <div className="connector-line-down"></div>
-            
-            <div className="children-container">
-              {filteredNode.children.map((child, index) => (
-                <div key={child.id} className="child-branch">
-                  <div className="connector-line-up"></div>
-                  <SubTree node={child} />
-                </div>
-              ))}
-            </div>
-          </>
-        )}
-      </div>
-      
-      <style>
-        {`
-        .org-chart {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          min-width: max-content;
-        }
-        
-        .connector-line-down {
-          width: 2px;
-          height: 20px;
-          background-color: #d1d5db;
-        }
-        
-        .connector-line-up {
-          width: 2px;
-          height: 20px;
-          background-color: #d1d5db;
-          margin: 0 auto;
-        }
-        
-        .children-container {
-          display: flex;
-          justify-content: center;
-          gap: 40px;
-        }
-        
-        .child-branch {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-        }
-        `}
-      </style>
-    </div>
-  );
-};
-
-// Recursive component for sub-trees in the org chart
-const SubTree: React.FC<{ node: ChartNode }> = ({ node }) => {
-  return (
-    <div className="subtree">
-      <NodeCard node={node} isRoot={false} />
-      
-      {node.children.length > 0 && (
-        <>
-          <div className="connector-line-down"></div>
-          
-          <div className="children-container">
-            {node.children.map((child) => (
-              <div key={child.id} className="child-branch">
-                <div className="connector-line-up"></div>
-                <SubTree node={child} />
-              </div>
-            ))}
-          </div>
-        </>
-      )}
-      
-      <style>
-        {`
-        .subtree {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-        }
-        
-        .connector-line-down {
-          width: 2px;
-          height: 20px;
-          background-color: #d1d5db;
-        }
-        
-        .connector-line-up {
-          width: 2px;
-          height: 20px;
-          background-color: #d1d5db;
-        }
-        
-        .children-container {
-          display: flex;
-          justify-content: center;
-          gap: 40px;
-        }
-        
-        .child-branch {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-        }
-        `}
-      </style>
-    </div>
-  );
-};
-
-// Node Card Component
-const NodeCard: React.FC<{ node: ChartNode; isRoot: boolean }> = ({ node, isRoot }) => {
-  return (
-    <Card className={`p-3 min-w-[220px] ${isRoot ? 'border-blue-500 shadow-lg' : ''}`}>
-      <div className="flex flex-col items-center text-center">
-        <Avatar className="h-16 w-16 mb-2">
-          {node.imageUrl ? (
-            <AvatarImage src={node.imageUrl} alt={node.name} />
+  // Recursively render a node and its children
+  const renderNode = (node: HierarchyNode, level = 0) => {
+    return (
+      <div key={node.id} className="mb-2" style={{ marginLeft: `${level * 20}px` }}>
+        <Card className="p-3 flex items-center bg-white hover:bg-slate-50 transition-colors">
+          {node.photo ? (
+            <img 
+              src={node.photo} 
+              alt={node.name} 
+              className="w-10 h-10 rounded-full mr-3"
+            />
           ) : (
-            <AvatarFallback>
-              <User className="h-8 w-8" />
-            </AvatarFallback>
+            <div className="w-10 h-10 rounded-full bg-slate-200 flex items-center justify-center mr-3">
+              <User className="h-5 w-5 text-slate-500" />
+            </div>
           )}
-        </Avatar>
-        <h4 className="font-bold text-sm">{node.name}</h4>
-        <p className="text-xs text-gray-500">{node.position}</p>
-        <Badge variant="outline" className="mt-1 text-xs">
-          {node.department}
-        </Badge>
-      </div>
-    </Card>
-  );
-};
-
-// Tree View Component (expandable/collapsible tree)
-export const TreeView: React.FC<{ node: ChartNode; searchQuery: string }> = ({ node, searchQuery }) => {
-  const [filteredNode, setFilteredNode] = useState<ChartNode | null>(node);
-
-  useEffect(() => {
-    if (!searchQuery) {
-      setFilteredNode(node);
-      return;
-    }
-    
-    const query = searchQuery.toLowerCase();
-    const filterNode = (n: ChartNode): ChartNode | null => {
-      // Check if current node matches
-      const nodeMatches = n.name.toLowerCase().includes(query) || 
-                          n.position.toLowerCase().includes(query) ||
-                          n.department.toLowerCase().includes(query);
-      
-      // Filter children
-      const filteredChildren = n.children
-        .map(filterNode)
-        .filter((child): child is ChartNode => child !== null);
-      
-      // Return node if it matches or has matching children
-      if (nodeMatches || filteredChildren.length > 0) {
-        return {
-          ...n,
-          children: filteredChildren
-        };
-      }
-      
-      return null;
-    };
-    
-    setFilteredNode(filterNode(node));
-  }, [node, searchQuery]);
-
-  if (!filteredNode) {
-    return <div className="text-center py-8">Aucun résultat trouvé pour "{searchQuery}"</div>;
-  }
-
-  return (
-    <div className="pl-4 w-full">
-      <TreeNode node={filteredNode} level={0} defaultExpanded={true} />
-    </div>
-  );
-};
-
-// Tree Node Component
-const TreeNode: React.FC<{ 
-  node: ChartNode; 
-  level: number;
-  defaultExpanded?: boolean;
-}> = ({ node, level, defaultExpanded = false }) => {
-  const [expanded, setExpanded] = useState(defaultExpanded || level < 2);
-  const hasChildren = node.children && node.children.length > 0;
-  
-  return (
-    <div className="mb-1">
-      <div className={`flex items-center py-1 ${level === 0 ? 'bg-blue-50 p-2 rounded' : ''}`}>
-        <div style={{ width: `${level * 12}px` }} />
-        
-        {hasChildren ? (
-          <button 
-            onClick={() => setExpanded(!expanded)} 
-            className="mr-1 text-gray-500 hover:text-gray-700 focus:outline-none"
-          >
-            {expanded ? (
-              <ChevronDown className="h-4 w-4" />
-            ) : (
-              <ChevronRight className="h-4 w-4" />
-            )}
-          </button>
-        ) : (
-          <div className="w-5 mr-1" />
-        )}
-        
-        <div className="flex items-center gap-2">
-          <Avatar className="h-8 w-8">
-            {node.imageUrl ? (
-              <AvatarImage src={node.imageUrl} alt={node.name} />
-            ) : (
-              <AvatarFallback>
-                <User className="h-4 w-4" />
-              </AvatarFallback>
-            )}
-          </Avatar>
           
           <div>
-            <p className="font-medium text-sm">{node.name}</p>
-            <div className="flex items-center gap-2">
-              <p className="text-xs text-gray-500">{node.position}</p>
-              <Badge variant="outline" className="text-xs">
-                {node.department}
-              </Badge>
-            </div>
+            <div className="font-medium">{node.name}</div>
+            <div className="text-sm text-slate-500">{node.position}</div>
+            {node.department && <div className="text-xs text-slate-400">{node.department}</div>}
           </div>
-        </div>
+        </Card>
+        
+        {node.children.length > 0 && (
+          <div className="pl-5 border-l border-slate-200 ml-5 mt-2">
+            {node.children.map(childNode => renderNode(childNode, level + 1))}
+          </div>
+        )}
       </div>
-      
-      {expanded && hasChildren && (
-        <div className="ml-4">
-          {node.children.map(child => (
-            <TreeNode key={child.id} node={child} level={level + 1} />
-          ))}
-        </div>
-      )}
+    );
+  };
+  
+  if (loading) {
+    return (
+      <div className="animate-pulse space-y-4">
+        {Array.from({ length: 5 }).map((_, i) => (
+          <div key={i} className="h-16 bg-slate-200 rounded"></div>
+        ))}
+      </div>
+    );
+  }
+  
+  const hierarchyTree = buildHierarchyTree();
+  
+  if (hierarchyTree.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-10 text-center">
+        <Users className="h-12 w-12 text-slate-400 mb-3" />
+        <h3 className="text-lg font-medium">Aucune hiérarchie trouvée</h3>
+        <p className="text-slate-500 mt-1">
+          Aucun employé n'a été trouvé ou les relations hiérarchiques ne sont pas définies.
+        </p>
+      </div>
+    );
+  }
+  
+  return (
+    <div className="space-y-4">
+      {hierarchyTree.map(node => renderNode(node))}
     </div>
   );
 };
+
+export default HierarchyVisualization;
