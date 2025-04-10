@@ -22,9 +22,9 @@ export const prepareEmployeeData = (data: EmployeeFormValues): Partial<Employee>
   } else if (data.address && typeof data.address === 'object') {
     // Handle object address, ensuring required fields have values
     addressObj = {
-      street: data.address.street,  // These are required by the schema
-      city: data.address.city,
-      postalCode: data.address.postalCode,
+      street: data.address.street || 'Rue non spécifiée', // Ensure required fields are present
+      city: data.address.city || 'Ville non spécifiée',
+      postalCode: data.address.postalCode || '00000',
       country: data.address.country || 'France',
       streetNumber: data.address.streetNumber,
       department: data.address.department,
