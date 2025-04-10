@@ -1,7 +1,7 @@
 
 import * as z from 'zod';
 
-// Schéma pour l'adresse détaillée
+// Schéma pour l'adresse détaillée - aligned with EmployeeAddress interface
 export const addressSchema = z.object({
   street: z.string().min(1, "La rue est requise"),
   streetNumber: z.string().optional(),

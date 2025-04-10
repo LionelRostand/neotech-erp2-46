@@ -11,7 +11,7 @@ export const prepareEmployeeData = (data: EmployeeFormValues): Partial<Employee>
     // Handle string address
     const addressParts = data.address.split(',').map(part => part.trim());
     addressObj = {
-      street: addressParts[0] || '',
+      street: addressParts[0] || '', // Ensure required fields are never empty
       city: addressParts[1] || '',
       postalCode: addressParts[2] || '',
       country: addressParts[3] || 'France'
@@ -19,7 +19,7 @@ export const prepareEmployeeData = (data: EmployeeFormValues): Partial<Employee>
   } else if (data.address && typeof data.address === 'object') {
     // Handle object address, ensuring required fields are present
     addressObj = {
-      street: data.address.street || '',
+      street: data.address.street || '', // Ensure required field has a value
       city: data.address.city || '',
       postalCode: data.address.postalCode || '',
       country: data.address.country || 'France',
@@ -28,7 +28,7 @@ export const prepareEmployeeData = (data: EmployeeFormValues): Partial<Employee>
       state: data.address.state
     };
   } else {
-    // Default empty address
+    // Default empty address with required fields
     addressObj = {
       street: '',
       city: '',
