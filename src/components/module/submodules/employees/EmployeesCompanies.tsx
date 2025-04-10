@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -38,10 +37,8 @@ const EmployeesCompanies: React.FC = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const { isOffline } = useAuth();
   
-  // Utiliser useFirebaseCompanies au lieu de useCompaniesData pour avoir des données à jour
   const { companies, isLoading, error, refetch } = useFirebaseCompanies();
 
-  // Rafraîchir les données filtrées lorsque les entreprises ou la recherche changent
   useEffect(() => {
     if (searchQuery.trim() === '') {
       setFilteredCompanies(companies);
@@ -69,7 +66,6 @@ const EmployeesCompanies: React.FC = () => {
     if (!currentCompany) return;
 
     try {
-      // Mettre à jour l'entreprise dans Firestore
       await companyService.updateCompany(currentCompany.id, {
         ...companyData,
         updatedAt: new Date().toISOString()
@@ -92,7 +88,6 @@ const EmployeesCompanies: React.FC = () => {
     if (!currentCompany) return;
 
     try {
-      // Supprimer réellement l'entreprise dans Firestore
       await companyService.deleteCompany(currentCompany.id);
       toast.success('Entreprise supprimée avec succès');
       setIsDeleteDialogOpen(false);
@@ -106,15 +101,14 @@ const EmployeesCompanies: React.FC = () => {
     try {
       console.log('Tentative d\'ajout d\'une entreprise avec les données:', companyData);
       
-      // Créer réellement l'entreprise dans Firestore
       const newCompany = await companyService.createCompany({
         ...companyData,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
         status: 'active' as const,
         employeesCount: 0
-      } as any); // Cast as any pour éviter les erreurs de type
-      
+      } as any);
+
       console.log('Entreprise ajoutée avec succès:', newCompany);
       toast.success('Entreprise ajoutée avec succès');
       setIsAddDialogOpen(false);
@@ -124,7 +118,6 @@ const EmployeesCompanies: React.FC = () => {
     }
   };
 
-  // Fonction pour actualiser manuellement les données
   const refreshData = async () => {
     setIsRefreshing(true);
     try {
@@ -132,7 +125,6 @@ const EmployeesCompanies: React.FC = () => {
         await refetch();
         toast.success('Données actualisées avec succès');
       } else {
-        // Fallback si refetch n'est pas disponible
         window.location.reload();
       }
     } catch (error) {
