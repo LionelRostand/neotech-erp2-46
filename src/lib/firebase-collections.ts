@@ -36,7 +36,14 @@ export const COLLECTIONS = {
     RECRUITMENTS: 'hr_recruitments',
     SALARIES: 'hr_salaries',
     TIMESHEETS: 'hr_timesheets',
-    DOCUMENTS: 'hr_documents'
+    DOCUMENTS: 'hr_documents',
+    BADGES: 'hr_badges',          // Ajout de la collection des badges
+    PAYSLIPS: 'hr_payslips',      // Ajout pour useHrData hook
+    LEAVE_REQUESTS: 'hr_leave_requests', // Ajout pour useHrData hook
+    ATTENDANCE: 'hr_attendance',   // Ajout pour useHrData hook
+    ABSENCE_REQUESTS: 'hr_absence_requests', // Ajout pour useHrData hook
+    REPORTS: 'hr_reports',         // Ajout pour useHrData hook
+    ALERTS: 'hr_alerts'           // Ajout pour useHrData hook
   },
   
   CRM: {
