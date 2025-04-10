@@ -8,10 +8,9 @@ import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useEmployeeData } from '@/hooks/useEmployeeData';
-import { RefreshCw, Shield } from 'lucide-react';
-import { FirebaseErrorAlert } from '@/components/ui/FirebaseErrorAlert';
-import { refreshEmployeesData } from './services/employeeService';
-import { useFirebaseCompanies } from '@/hooks/useFirebaseCompanies';
+import { RefreshCw } from 'lucide-react';
+import { addDocument } from '@/hooks/firestore/create-operations';
+import { COLLECTIONS } from '@/lib/firebase-collections';
 
 interface EmployeesProfilesProps {
   employees?: Employee[];
@@ -56,15 +55,24 @@ const EmployeesProfiles: React.FC<EmployeesProfilesProps> = (props) => {
     setSelectedEmployee(employee);
   };
 
-  const handleAddEmployee = (newEmployee: Partial<Employee>) => {
-    const employeeWithId = {
-      ...newEmployee,
-      id: `EMP${String(employees.length + 1).padStart(3, '0')}`,
-    } as Employee;
-    
-    const updatedEmployees = [...employees, employeeWithId];
-    setEmployees(updatedEmployees);
-    toast.success("Employé ajouté avec succès.");
+  const handleAddEmployee = async (newEmployee: Partial<Employee>) => {
+    try {
+      const createdEmployee = await addDocument(COLLECTIONS.HR.EMPLOYEES, newEmployee);
+      
+      if (createdEmployee) {
+        const employeeWithId = {
+          ...newEmployee,
+          id: createdEmployee.id,
+        } as Employee;
+        
+        const updatedEmployees = [...employees, employeeWithId];
+        setEmployees(updatedEmployees);
+        toast.success("Employé ajouté avec succès");
+      }
+    } catch (error) {
+      console.error("Erreur lors de l'ajout de l'employé:", error);
+      toast.error("Erreur lors de l'ajout de l'employé");
+    }
     setIsAddEmployeeOpen(false);
   };
 
