@@ -6,6 +6,7 @@ import { deleteDocument } from '@/hooks/firestore/delete-operations';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import { toast } from 'sonner';
 import { executeWithNetworkRetry } from '@/hooks/firestore/network-handler';
+import { Company } from '../../companies/types';
 
 // Récupérer toutes les entreprises
 export const getAllCompanies = async () => {
@@ -111,8 +112,8 @@ export const getEmployeesByCompany = async (companyId: string) => {
     console.log(`Récupération des employés de l'entreprise ${companyId} depuis Firestore...`);
     
     const employees = await executeWithNetworkRetry(async () => {
-      const allEmployees = await getAllDocuments(COLLECTIONS.EMPLOYEES);
-      return allEmployees.filter(emp => (emp as any).company === companyId);
+      const allEmployees = await getAllDocuments(COLLECTIONS.HR.EMPLOYEES);
+      return allEmployees.filter(emp => (emp as any).companyId === companyId);
     });
     
     console.log(`${employees.length} employés récupérés pour l'entreprise ${companyId}`);

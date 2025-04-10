@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -27,7 +26,7 @@ import CompanyForm from '../CompanyForm';
 import { useAuth } from '@/hooks/useAuth';
 import { useFirebaseCompanies } from '@/hooks/useFirebaseCompanies';
 
-// Import les fonctions du service pour les employés
+// Import les fonctions du service pour les entreprises
 import { 
   updateCompany, 
   deleteCompany, 
