@@ -7,15 +7,13 @@ import { getStorage, connectStorageEmulator } from 'firebase/storage';
 import { toast } from 'sonner';
 
 // Configuration Firebase
-// Pour un projet réel, remplacez ces valeurs par les vôtres
-// obtenues dans la console Firebase: https://console.firebase.google.com
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyBTD7MmllYBrHnhPt6PnCQ-Iteb8iZDrOg",
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "neotech-erp-demo.firebaseapp.com",
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "neotech-erp-demo",
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "neotech-erp-demo.appspot.com",
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "634343387498",
-  appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:634343387498:web:b1234567890123456789a"
+  apiKey: "AIzaSyD3ZQYPtVHk4w63bCvOX0b8RVJyybWyOqU",
+  authDomain: "neotech-erp.firebaseapp.com",
+  projectId: "neotech-erp",
+  storageBucket: "neotech-erp.firebasestorage.app",
+  messagingSenderId: "803661896660",
+  appId: "1:803661896660:web:94f17531b963627cbd5441"
 };
 
 // Initialiser Firebase
