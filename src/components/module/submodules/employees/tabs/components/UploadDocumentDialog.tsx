@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { FileText, Upload } from 'lucide-react';
-import { uploadEmployeeDocument } from '../../services/documentService';
+import { uploadEmployeeDocument, checkEmployeeExists } from '../../services/documentService';
 
 interface UploadDocumentDialogProps {
   open: boolean;
@@ -69,6 +69,13 @@ const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
 
     if (!documentType) {
       toast.error("Veuillez sélectionner un type de document");
+      return;
+    }
+
+    // Vérifier si l'employé existe
+    const employeeExists = await checkEmployeeExists(employeeId);
+    if (!employeeExists) {
+      toast.error(`Erreur: Employé avec ID ${employeeId} non trouvé`);
       return;
     }
 

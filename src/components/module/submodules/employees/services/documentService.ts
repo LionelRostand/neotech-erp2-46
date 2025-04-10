@@ -10,7 +10,8 @@ import {
   doc, 
   getDoc, 
   arrayUnion,
-  Timestamp
+  Timestamp,
+  setDoc
 } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { toast } from 'sonner';
@@ -33,8 +34,18 @@ export interface EmployeeDocument {
  */
 export const checkEmployeeExists = async (employeeId: string): Promise<boolean> => {
   try {
+    if (!employeeId) {
+      console.error("Erreur: ID d'employé manquant");
+      return false;
+    }
+    
     const docRef = doc(db, COLLECTIONS.HR.EMPLOYEES, employeeId);
     const docSnap = await getDoc(docRef);
+    
+    if (!docSnap.exists()) {
+      console.error(`Employé avec ID ${employeeId} non trouvé`);
+    }
+    
     return docSnap.exists();
   } catch (error) {
     console.error("Erreur lors de la vérification de l'employé:", error);
@@ -48,6 +59,12 @@ export const checkEmployeeExists = async (employeeId: string): Promise<boolean> 
 export const getEmployeeDocuments = async (employeeId: string): Promise<EmployeeDocument[]> => {
   try {
     console.log(`Récupération des documents pour l'employé: ${employeeId}`);
+    
+    if (!employeeId) {
+      console.error("ID d'employé manquant");
+      toast.error("Erreur: ID d'employé manquant");
+      return [];
+    }
     
     // 1. Vérifier d'abord si l'employé existe
     const employeeExists = await checkEmployeeExists(employeeId);
@@ -99,6 +116,12 @@ export const uploadEmployeeDocument = async (
   try {
     console.log(`Téléversement de document pour l'employé: ${employeeId}`);
     
+    if (!employeeId) {
+      console.error("ID d'employé manquant");
+      toast.error("Erreur: ID d'employé manquant");
+      return null;
+    }
+    
     // 1. Vérifier d'abord si l'employé existe
     const employeeExists = await checkEmployeeExists(employeeId);
     if (!employeeExists) {
@@ -124,20 +147,32 @@ export const uploadEmployeeDocument = async (
       uploadedBy: 'Utilisateur'
     };
     
+    // Option 1: Utiliser addDoc pour laisser Firebase générer un ID
     const docRef = await addDoc(collection(db, COLLECTIONS.HR.DOCUMENTS), documentData);
     const newDocumentId = docRef.id;
     
     // 4. Ajouter également le document à l'array documents de l'employé
-    const employeeRef = doc(db, COLLECTIONS.HR.EMPLOYEES, employeeId);
-    await updateDoc(employeeRef, {
-      documents: arrayUnion({
-        id: newDocumentId,
-        name: documentName,
-        type: documentType,
-        date: new Date().toISOString(),
-        fileUrl: fileUrl
-      })
-    });
+    try {
+      const employeeRef = doc(db, COLLECTIONS.HR.EMPLOYEES, employeeId);
+      const employeeDoc = await getDoc(employeeRef);
+      
+      if (employeeDoc.exists()) {
+        await updateDoc(employeeRef, {
+          documents: arrayUnion({
+            id: newDocumentId,
+            name: documentName,
+            type: documentType,
+            date: new Date().toISOString(),
+            fileUrl: fileUrl
+          })
+        });
+      } else {
+        console.error(`Employé avec ID ${employeeId} introuvable lors de l'ajout du document à l'employé`);
+      }
+    } catch (updateError) {
+      console.error("Erreur lors de la mise à jour des documents de l'employé:", updateError);
+      // Ne pas échouer si cette partie échoue, le document est déjà dans hr_documents
+    }
     
     // 5. Retourner le document créé avec son ID
     return {

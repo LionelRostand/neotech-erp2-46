@@ -6,9 +6,9 @@ import { Camera, Upload, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { storage, db } from '@/lib/firebase';
 import { getDownloadURL, ref, uploadBytes, deleteObject } from 'firebase/storage';
-import { updateDoc, doc, getDoc } from 'firebase/firestore';
+import { updateDoc, doc, getDoc, setDoc } from 'firebase/firestore';
 import { COLLECTIONS } from '@/lib/firebase-collections';
-import { updateEmployee, getEmployeeById } from '../../employees/services/employeeService';
+import { updateEmployee, getEmployeeById } from '../services/employeeService';
 
 interface PhotoUploaderProps {
   employeeId: string;
@@ -42,12 +42,21 @@ const PhotoUploader: React.FC<PhotoUploaderProps> = ({
   // Vérifier que l'employé existe avant de tenter des opérations
   const checkEmployeeExists = async (empId: string) => {
     try {
-      const employee = await getEmployeeById(empId);
-      if (!employee) {
+      if (!empId) {
+        console.error("ID d'employé manquant");
+        toast.error("Erreur: ID d'employé manquant");
+        return false;
+      }
+      
+      const docRef = doc(db, COLLECTIONS.HR.EMPLOYEES, empId);
+      const docSnap = await getDoc(docRef);
+      
+      if (!docSnap.exists()) {
         console.error(`Employé avec ID ${empId} non trouvé`);
         toast.error(`Erreur: Employé avec ID ${empId} non trouvé`);
         return false;
       }
+      
       return true;
     } catch (error) {
       console.error("Erreur lors de la vérification de l'employé:", error);
@@ -114,8 +123,8 @@ const PhotoUploader: React.FC<PhotoUploaderProps> = ({
       
       try {
         // Créer ou mettre à jour le document dans hr_documents
-        const docRef = doc(db, COLLECTIONS.HR.DOCUMENTS, `photo_${employeeId}`);
-        await updateDoc(docRef, docData);
+        const documentRef = doc(db, COLLECTIONS.HR.DOCUMENTS, `photo_${employeeId}`);
+        await setDoc(documentRef, docData);
       } catch (error) {
         console.error("Erreur lors de l'ajout du document photo:", error);
         // Continuer même si cette partie échoue
