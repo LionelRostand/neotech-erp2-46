@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import {
   Dialog,
@@ -57,39 +56,25 @@ const CreateRecruitmentDialog: React.FC<CreateRecruitmentDialogProps> = ({
     }));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!formData.position || !formData.location) {
-      toast({
-        title: "Champs requis",
-        description: "Veuillez remplir tous les champs obligatoires.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsSubmitting(true);
+  const handleCreateRecruitment = async (formData: RecruitmentFormData) => {
     try {
-      // Prepare data for saving
-      const jobData = {
+      setIsSubmitting(true);
+      
+      const docRef = await addDocument(COLLECTIONS.HR.RECRUITMENTS, {
         ...formData,
-        openDate: new Date().toISOString(), // Store as ISO string for proper date handling
+        openDate: new Date().toISOString(),
         status: "Ouvert",
-        hiringManagerId: "user-1", // Default or current user
-        hiringManagerName: "Utilisateur actuel", // Should be replaced with actual user name
+        hiringManagerId: "user-1",
+        hiringManagerName: "Utilisateur actuel",
         applicationCount: 0,
         interviewsScheduled: 0,
-      };
+      });
 
-      // Save to Firestore
-      await addDocument(COLLECTIONS.HR.RECRUITMENT, jobData);
-      
       toast({
         title: "Offre créée",
         description: "L'offre d'emploi a été créée avec succès.",
       });
-      
-      // Reset form
+
       setFormData({
         position: "",
         department: "IT",
@@ -100,7 +85,7 @@ const CreateRecruitmentDialog: React.FC<CreateRecruitmentDialogProps> = ({
         description: "",
         requirements: "",
       });
-      
+
       onSuccess();
       onOpenChange(false);
     } catch (error) {
@@ -121,7 +106,7 @@ const CreateRecruitmentDialog: React.FC<CreateRecruitmentDialogProps> = ({
         <DialogHeader>
           <DialogTitle>Nouvelle offre d'emploi</DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={(e) => handleCreateRecruitment(formData)}>
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">

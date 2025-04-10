@@ -16,6 +16,9 @@ export const COLLECTIONS = {
     OPPORTUNITIES: 'crm_opportunities',
     REMINDERS: 'crm_reminders',
     SETTINGS: 'crm_settings',
+    CONTACTS: 'crm_contacts',
+    LEADS: 'crm_leads',
+    DEALS: 'crm_deals'
   },
   
   // Module Accounting
@@ -44,6 +47,13 @@ export const COLLECTIONS = {
     RECRUITMENTS: 'hr-recruitments',
     BADGES: 'hr-badges',
     DOCUMENTS: 'hr-documents',
+    PAYSLIPS: 'hr-payslips',
+    LEAVE_REQUESTS: 'hr-leave-requests',
+    ATTENDANCE: 'hr-attendance',
+    ABSENCE_REQUESTS: 'hr-absence-requests',
+    TRAININGS: 'hr-trainings',
+    REPORTS: 'hr-reports',
+    ALERTS: 'hr-alerts',
   },
   
   // Module Projects
@@ -80,6 +90,11 @@ export const COLLECTIONS = {
     DRIVERS: 'freight/drivers',
     WAREHOUSES: 'freight/warehouses',
     TRACKING: 'freight/tracking',
+    TRACKING_EVENTS: 'freight/tracking_events',
+    PACKAGE_TYPES: 'freight/package_types',
+    PRICING: 'freight/pricing',
+    BILLING: 'freight/billing',
+    QUOTES: 'freight/quotes',
   },
   
   // Module Library
@@ -100,6 +115,8 @@ export const COLLECTIONS = {
     VEHICLES: 'transport/vehicles',
     ROUTES: 'transport/routes',
     SCHEDULES: 'transport/schedules',
+    RESERVATIONS: 'transport/reservations',
+    CLIENTS: 'transport/clients',
   },
   
   // Module Messages
