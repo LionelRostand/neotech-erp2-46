@@ -5,20 +5,28 @@ import { db } from '@/lib/firebase';
 import { toast } from 'sonner';
 import { isNetworkError, reconnectToFirestore } from './firestore/network-handler';
 
+interface UseCollectionDataOptions {
+  fallbackData?: any[];
+}
+
 /**
  * Custom hook to fetch data from a Firestore collection with real-time updates
  * @param collectionPath Path to the Firestore collection
  * @param queryConstraints Optional query constraints (where, orderBy, limit, etc.)
+ * @param options Additional options like fallback data for permission errors
  * @returns Object containing data, loading state, and error if any
  */
 export const useCollectionData = (
   collectionPath: string,
-  queryConstraints: QueryConstraint[] = []
+  queryConstraints: QueryConstraint[] = [],
+  options: UseCollectionDataOptions = {}
 ) => {
-  const [data, setData] = useState<any[]>([]);
+  const { fallbackData = [] } = options;
+  const [data, setData] = useState<any[]>(fallbackData);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
   const [isOffline, setIsOffline] = useState(false);
+  const [usedFallback, setUsedFallback] = useState(false);
 
   useEffect(() => {
     // For development/testing, you can use a timeout to simulate network latency
@@ -72,14 +80,32 @@ export const useCollectionData = (
             setData(documents);
             setIsLoading(false);
             setIsOffline(false);
+            setUsedFallback(false);
             console.log(`Received ${documents.length} documents from ${collectionPath}`);
           },
           async (err: Error) => {
             console.error(`Error fetching from ${collectionPath}:`, err);
             
-            if (isNetworkError(err)) {
+            // Check if it's a permissions error
+            const isPermissionError = err.message?.includes('permission-denied') || 
+                                      err.message?.includes('Missing or insufficient permissions');
+            
+            if (isPermissionError && fallbackData && fallbackData.length > 0) {
+              console.log(`Using fallback data for ${collectionPath} due to permission error`);
+              setData(fallbackData);
+              setUsedFallback(true);
+              setIsLoading(false);
+              // We don't show an error toast for permissions when fallback data is available
+            }
+            else if (isNetworkError(err)) {
               console.log('Network error detected in useCollectionData, app is offline');
               setIsOffline(true);
+              
+              if (fallbackData && fallbackData.length > 0) {
+                setData(fallbackData);
+                setUsedFallback(true);
+              }
+              
               toast.error('Votre appareil semble être hors ligne. Certaines fonctionnalités peuvent être limitées.');
               
               // Try to reconnect
@@ -87,9 +113,11 @@ export const useCollectionData = (
               if (reconnected) {
                 toast.success('Connexion rétablie. Les données vont se recharger automatiquement.');
               }
+            } else {
+              // For other types of errors, show the error
+              setError(err);
             }
             
-            setError(err);
             setIsLoading(false);
           }
         );
@@ -102,13 +130,22 @@ export const useCollectionData = (
       } catch (err) {
         const error = err instanceof Error ? err : new Error('Unknown error occurred');
         console.error(`Error setting up listener for ${collectionPath}:`, error);
-        setError(error);
+        
+        // Use fallback data if available
+        if (fallbackData && fallbackData.length > 0) {
+          console.log(`Using fallback data for ${collectionPath} due to setup error`);
+          setData(fallbackData);
+          setUsedFallback(true);
+        } else {
+          setError(error);
+        }
+        
         setIsLoading(false);
       }
     }, 500); // Simulate a small delay for loading states to be visible
     
     return () => clearTimeout(timeoutId);
-  }, [collectionPath, JSON.stringify(queryConstraints)]);
+  }, [collectionPath, JSON.stringify(queryConstraints), JSON.stringify(fallbackData)]);
 
-  return { data, isLoading, error, isOffline };
+  return { data, isLoading, error, isOffline, usedFallback };
 };

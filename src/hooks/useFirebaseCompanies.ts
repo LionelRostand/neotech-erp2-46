@@ -15,13 +15,57 @@ export const useFirebaseCompanies = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
   
-  // Utiliser useCollectionData pour obtenir les données en temps réel
+  // Utiliser useCollectionData pour obtenir les données en temps réel avec gestion des erreurs de permission
   const { 
     data: firestoreCompanies, 
     isLoading: isFirestoreLoading, 
     error: firestoreError,
     isOffline
-  } = useCollectionData(COLLECTIONS.COMPANIES);
+  } = useCollectionData(
+    COLLECTIONS.COMPANIES, 
+    [], 
+    { 
+      // Add mock data for development when permissions fail
+      fallbackData: [
+        {
+          id: 'mock-company-1',
+          name: 'Enterprise Solutions (Demo)',
+          industry: 'Technology',
+          status: 'active',
+          website: 'www.enterprise-solutions.example',
+          phone: '+33 1 23 45 67 89',
+          email: 'contact@enterprise-solutions.example',
+          employeesCount: 45,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          address: {
+            street: '123 Business Avenue',
+            city: 'Paris',
+            zip: '75001',
+            country: 'France'
+          }
+        },
+        {
+          id: 'mock-company-2',
+          name: 'TechInnovation (Demo)',
+          industry: 'IT Services',
+          status: 'active',
+          website: 'www.techinnovation.example',
+          phone: '+33 9 87 65 43 21',
+          email: 'info@techinnovation.example',
+          employeesCount: 24,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          address: {
+            street: '456 Tech Park',
+            city: 'Lyon',
+            zip: '69001',
+            country: 'France'
+          }
+        }
+      ]
+    }
+  );
   
   // Fonction pour rafraîchir manuellement les données
   const refetch = async () => {
@@ -54,19 +98,6 @@ export const useFirebaseCompanies = () => {
       console.error("Erreur lors de la récupération des entreprises:", firestoreError);
       setError(firestoreError);
       setIsLoading(false);
-      
-      // En cas d'erreur, tenter de récupérer les données directement sans le listener
-      if (!companies.length) {
-        console.log("Tentative de récupération directe des entreprises...");
-        getAllCompanies()
-          .then(data => {
-            if (Array.isArray(data) && data.length > 0) {
-              setCompanies(data as Company[]);
-              console.log(`${data.length} entreprises récupérées directement`);
-            }
-          })
-          .catch(err => console.error("Échec de la récupération directe:", err));
-      }
     }
   }, [firestoreCompanies, isFirestoreLoading, firestoreError]);
   

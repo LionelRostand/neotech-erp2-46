@@ -1,161 +1,106 @@
 
-import { 
-  doc, setDoc, deleteDoc, getFirestore, enableNetwork, disableNetwork 
-} from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { FirebaseError } from 'firebase/app';
+import { checkFirestoreConnection } from '@/lib/firebase';
+import { toast } from 'sonner';
 
-// Délai maximal pour les opérations réseau (10 secondes)
-const MAX_TIMEOUT = 10000;
-
-// Nombre maximal de tentatives
+// Nombre de tentatives maximum pour les opérations réseau
 const MAX_RETRIES = 3;
+// Délai entre les tentatives (en ms)
+const RETRY_DELAY = 1000;
 
 /**
- * Vérifie si une erreur est liée à un problème de réseau
+ * Vérifie si une erreur est liée à la connectivité réseau
  */
 export const isNetworkError = (error: any): boolean => {
-  if (!error) return false;
-  
-  // Vérification des types d'erreurs Firebase courants liés au réseau
-  const errorCode = error.code || '';
-  const errorMessage = error.message || '';
-  
-  return (
-    errorCode.includes('unavailable') ||
-    errorCode.includes('network-request-failed') ||
-    errorCode.includes('deadline-exceeded') ||
-    errorMessage.includes('network') ||
-    errorMessage.includes('timeout') ||
-    errorMessage.includes('timed out') ||
-    errorMessage.includes('unavailable') ||
-    errorMessage.includes('failed to fetch') ||
-    error.name === 'NetworkError' ||
-    error.name === 'AbortError'
-  );
-};
-
-/**
- * Vérifie si une erreur est liée à une limitation de débit (rate limit)
- */
-export const isRateLimitError = (error: any): boolean => {
-  if (!error) return false;
-  
-  const errorCode = error.code || '';
-  const errorMessage = error.message || '';
-  
-  return (
-    errorCode.includes('resource-exhausted') ||
-    errorMessage.includes('quota') ||
-    errorMessage.includes('rate limit') ||
-    errorMessage.includes('too many requests') ||
-    (errorCode.includes('429') || errorMessage.includes('429')) // HTTP 429 Too Many Requests
-  );
-};
-
-/**
- * Active la connexion réseau Firestore
- * @returns Promise<boolean> - true si réussi
- */
-export const enableFirestoreNetwork = async (): Promise<boolean> => {
-  try {
-    await enableNetwork(db);
-    return true;
-  } catch (error) {
-    console.error('Erreur lors de l\'activation du réseau Firestore:', error);
-    return false;
+  if (error instanceof FirebaseError) {
+    // Codes d'erreur Firebase liés à la connectivité réseau
+    const networkErrorCodes = [
+      'unavailable',
+      'network-request-failed',
+      'deadline-exceeded'
+    ];
+    return networkErrorCodes.includes(error.code);
   }
+  
+  // Pour les autres types d'erreurs, vérifier le message
+  const errorMessage = String(error.message || error).toLowerCase();
+  return errorMessage.includes('network') || 
+         errorMessage.includes('connection') || 
+         errorMessage.includes('offline') ||
+         errorMessage.includes('internet') ||
+         errorMessage.includes('timeout');
 };
 
 /**
- * Désactive la connexion réseau Firestore (utilisation hors ligne)
- * @returns Promise<boolean> - true si réussi
+ * Vérifie si une erreur est liée aux permissions
  */
-export const disableFirestoreNetwork = async (): Promise<boolean> => {
-  try {
-    await disableNetwork(db);
-    return true;
-  } catch (error) {
-    console.error('Erreur lors de la désactivation du réseau Firestore:', error);
-    return false;
+export const isPermissionError = (error: any): boolean => {
+  if (error instanceof FirebaseError) {
+    return error.code === 'permission-denied';
   }
+  
+  // Pour les autres types d'erreurs, vérifier le message
+  const errorMessage = String(error.message || error).toLowerCase();
+  return errorMessage.includes('permission') || 
+         errorMessage.includes('not allowed') || 
+         errorMessage.includes('insufficient');
 };
 
 /**
- * Tente de reconnecter à Firestore avec une stratégie de backoff exponentiel
- * @returns Promise<boolean> - true si réussi
+ * Essaie de reconnecter à Firestore
+ * @returns Promesse résolue avec true si la connexion est rétablie, false sinon
  */
 export const reconnectToFirestore = async (): Promise<boolean> => {
-  for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
-    try {
-      // Délai exponentiel: 1s, 2s, 4s, etc.
-      const delay = Math.pow(2, attempt) * 1000;
-      console.log(`Tentative de reconnexion à Firestore (${attempt + 1}/${MAX_RETRIES}) après ${delay}ms...`);
-      
-      // Attendre avant la tentative
-      await new Promise(resolve => setTimeout(resolve, delay));
-      
-      // Tenter d'activer le réseau
-      await enableNetwork(db);
-      
-      console.log('Reconnexion à Firestore réussie');
-      return true;
-    } catch (error) {
-      console.error(`Échec de la tentative de reconnexion ${attempt + 1}/${MAX_RETRIES}:`, error);
-    }
+  console.log('Tentative de reconnexion à Firestore...');
+  try {
+    const isConnected = await checkFirestoreConnection();
+    console.log('Résultat de la tentative de reconnexion:', isConnected ? 'Succès' : 'Échec');
+    return isConnected;
+  } catch (error) {
+    console.error('Erreur lors de la tentative de reconnexion:', error);
+    return false;
   }
-  
-  console.error(`Échec après ${MAX_RETRIES} tentatives de reconnexion à Firestore`);
-  return false;
 };
 
 /**
- * Exécute une fonction avec gestion automatique des erreurs réseau et retries
- * @param operation La fonction à exécuter
- * @param maxRetries Nombre maximum de tentatives (par défaut: 3)
- * @returns Le résultat de l'opération
+ * Exécute une fonction avec retentatives en cas d'erreur réseau
+ * @param operation Fonction à exécuter
+ * @param maxRetries Nombre maximum de tentatives
+ * @param delayMs Délai entre les tentatives en ms
+ * @returns Résultat de l'opération
  */
 export const executeWithNetworkRetry = async <T>(
   operation: () => Promise<T>,
-  maxRetries = 3
+  maxRetries: number = MAX_RETRIES,
+  delayMs: number = RETRY_DELAY
 ): Promise<T> => {
   let lastError: any;
+  let retryCount = 0;
   
-  for (let attempt = 0; attempt < maxRetries; attempt++) {
+  while (retryCount < maxRetries) {
     try {
-      // Utiliser un timeout pour éviter les opérations bloquées
-      const operationPromise = operation();
-      const timeoutPromise = new Promise<never>((_, reject) => {
-        setTimeout(() => reject(new Error('Operation timed out')), MAX_TIMEOUT);
-      });
-      
-      // Race entre l'opération et le timeout
-      const result = await Promise.race([operationPromise, timeoutPromise]) as T;
-      return result;
+      return await operation();
     } catch (error) {
       lastError = error;
-      console.error(`Erreur lors de la tentative ${attempt + 1}/${maxRetries}:`, error);
+      retryCount++;
       
-      // Si c'est une erreur réseau, tenter de reconnecter
-      if (isNetworkError(error) || (error instanceof Error && error.message.includes('timed out'))) {
-        console.log('Erreur réseau détectée, tentative de reconnexion...');
-        await reconnectToFirestore();
-        
-        // Pause avant la prochaine tentative
-        const delay = Math.pow(2, attempt) * 1000;
-        await new Promise(resolve => setTimeout(resolve, delay));
-      } else if (isRateLimitError(error)) {
-        // Si c'est une erreur de limitation de débit, attendre plus longtemps
-        const delay = Math.pow(2, attempt + 1) * 1000; // Délai plus long pour les rate limits
-        console.log(`Rate limit détecté, attente de ${delay}ms avant la prochaine tentative...`);
-        await new Promise(resolve => setTimeout(resolve, delay));
-      } else {
-        // Si ce n'est pas une erreur réseau ou de rate limit, ne pas réessayer
+      console.error(`Erreur lors de la tentative ${retryCount}/${maxRetries}:`, error);
+      
+      if (isPermissionError(error)) {
+        console.warn('Erreur de permission détectée, abandonnement des tentatives');
+        throw error; // Ne pas réessayer pour les erreurs de permission
+      }
+      
+      if (!isNetworkError(error) || retryCount >= maxRetries) {
+        console.warn('Erreur non liée au réseau ou nombre maximum de tentatives atteint, abandonnement');
         throw error;
       }
+      
+      console.log(`Attente de ${delayMs}ms avant la prochaine tentative...`);
+      await new Promise(resolve => setTimeout(resolve, delayMs));
     }
   }
   
-  // Si on arrive ici, toutes les tentatives ont échoué
-  console.error(`L'opération a échoué après ${maxRetries} tentatives`);
+  // On ne devrait jamais arriver ici car soit l'opération réussit soit on throw une erreur
   throw lastError;
 };

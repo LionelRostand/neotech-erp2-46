@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -18,7 +19,7 @@ import {
   AlertDialogTitle
 } from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
-import { Search, RefreshCw, Plus, Building } from 'lucide-react';
+import { Search, RefreshCw, Plus, Building, Info, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import CompaniesTable from '../companies/CompaniesTable';
 import { Company } from '../companies/types';
@@ -43,7 +44,7 @@ const EmployeesCompanies: React.FC = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const { isOffline } = useAuth();
   
-  const { companies, isLoading, error, refetch } = useFirebaseCompanies();
+  const { companies, isLoading, error, refetch, isOffline: isDataOffline } = useFirebaseCompanies();
 
   useEffect(() => {
     if (searchQuery.trim() === '') {
@@ -139,6 +140,9 @@ const EmployeesCompanies: React.FC = () => {
     }
   };
 
+  // Check if we're using mock data
+  const usingMockData = companies.some(c => c.id.startsWith('mock-'));
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -191,6 +195,15 @@ const EmployeesCompanies: React.FC = () => {
               <p className="text-amber-800 text-sm flex items-center">
                 <Building className="h-4 w-4 mr-2" />
                 Mode hors-ligne actif. Les données affichées peuvent ne pas être à jour.
+              </p>
+            </div>
+          )}
+          
+          {usingMockData && (
+            <div className="bg-blue-50 border border-blue-200 rounded-md p-3">
+              <p className="text-blue-800 text-sm flex items-center">
+                <Info className="h-4 w-4 mr-2" />
+                Mode démonstration : Les données affichées sont des exemples et ne sont pas enregistrées dans la base de données.
               </p>
             </div>
           )}
