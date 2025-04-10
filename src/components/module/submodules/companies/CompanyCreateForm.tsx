@@ -36,7 +36,7 @@ const CompanyCreateForm: React.FC = () => {
         phone: formData.get('phone') as string,
         email: formData.get('email') as string,
         website: formData.get('website') as string,
-        description: formData.get('description') as string,
+        notes: formData.get('description') as string, // Changed from description to notes to match the Company interface
         status: 'active' as 'active' | 'inactive' | 'pending',
         employeesCount: 0,
         createdAt: new Date().toISOString(),
