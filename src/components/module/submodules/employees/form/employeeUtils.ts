@@ -17,9 +17,9 @@ export const prepareEmployeeData = (data: EmployeeFormValues): Partial<Employee>
       country: addressParts[3] || 'France'
     };
   } else if (data.address && typeof data.address === 'object') {
-    // Handle object address, ensuring required fields are present
+    // Handle object address, ensuring required fields have values
     addressObj = {
-      street: data.address.street || 'Rue non spécifiée', // Ensure required field has a value
+      street: data.address.street || 'Rue non spécifiée',
       city: data.address.city || 'Ville non spécifiée',
       postalCode: data.address.postalCode || '00000',
       country: data.address.country || 'France',
@@ -37,8 +37,11 @@ export const prepareEmployeeData = (data: EmployeeFormValues): Partial<Employee>
     };
   }
 
+  // Generate a more reliable employee ID that won't conflict
+  const employeeId = `EMP${Math.floor(1000 + Math.random() * 9000)}`;
+  
   return {
-    id: `EMP${Math.floor(1000 + Math.random() * 9000)}`, // Simple ID generation
+    id: employeeId,
     firstName: data.firstName,
     lastName: data.lastName,
     email: data.email,
@@ -64,6 +67,14 @@ export const prepareEmployeeData = (data: EmployeeFormValues): Partial<Employee>
       thursday: '09:00 - 18:00',
       friday: '09:00 - 17:00',
     },
-    payslips: []
+    payslips: [],
+    // Add these required fields with default values
+    photo: '',
+    photoURL: '',
+    title: data.position || '',
+    role: '',
+    startDate: data.hireDate || '',
+    socialSecurityNumber: '',
+    birthDate: ''
   };
 };

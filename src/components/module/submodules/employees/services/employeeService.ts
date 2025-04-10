@@ -79,6 +79,23 @@ export const getEmployee = async (employeeId: string): Promise<Employee | null> 
 export const getEmployeeById = getEmployee;
 
 /**
+ * Vérifie si un employé existe
+ */
+export const checkEmployeeExists = async (employeeId: string): Promise<boolean> => {
+  try {
+    if (!employeeId) return false;
+    
+    const employeeRef = doc(db, COLLECTIONS.HR.EMPLOYEES, employeeId);
+    const employeeDoc = await getDoc(employeeRef);
+    
+    return employeeDoc.exists();
+  } catch (error) {
+    console.error("Erreur lors de la vérification de l'existence de l'employé:", error);
+    return false;
+  }
+};
+
+/**
  * Ajoute un document à un employé existant
  */
 export const addDocumentToEmployee = async (
@@ -89,6 +106,13 @@ export const addDocumentToEmployee = async (
   try {
     if (!employeeId || !documentId) {
       console.error("Erreur: ID d'employé ou ID de document manquant");
+      return false;
+    }
+    
+    // Vérifier d'abord si l'employé existe
+    const employeeExists = await checkEmployeeExists(employeeId);
+    if (!employeeExists) {
+      console.error(`Employé avec ID ${employeeId} non trouvé`);
       return false;
     }
     
