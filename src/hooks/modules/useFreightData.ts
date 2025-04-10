@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { Shipment, Carrier, Route, Package, TrackingEvent, PackageType, Quote, Invoice } from '@/types/freight';
-import { fetchFreightCollectionData } from '@/hooks/fetchFreightCollectionData';
+import { fetchFreightCollection } from '@/hooks/fetchFreightCollectionData';
 
 export const useFreightData = () => {
   const [shipments, setShipments] = useState<Shipment[]>([]);
@@ -31,59 +31,59 @@ export const useFreightData = () => {
         console.log("Fetching all freight data from Firebase collections");
         
         // Shipments collection
-        const shipmentsData = await fetchFreightCollectionData<Shipment>('SHIPMENTS');
+        const shipmentsData = await fetchFreightCollection<Shipment>('SHIPMENTS');
         setShipments(shipmentsData);
         
         // Vehicles collection
-        const vehiclesData = await fetchFreightCollectionData('VEHICLES');
+        const vehiclesData = await fetchFreightCollection('VEHICLES');
         setVehicles(vehiclesData);
         
         // Routes collection
-        const routesData = await fetchFreightCollectionData<Route>('ROUTES');
+        const routesData = await fetchFreightCollection<Route>('ROUTES');
         setRoutes(routesData);
         
         // Drivers collection
-        const driversData = await fetchFreightCollectionData('DRIVERS');
+        const driversData = await fetchFreightCollection('DRIVERS');
         setDrivers(driversData);
         
         // Packages collection
-        const packagesData = await fetchFreightCollectionData<Package>('PACKAGES');
+        const packagesData = await fetchFreightCollection<Package>('PACKAGES');
         setPackages(packagesData);
         
         // Carriers collection
-        const carriersData = await fetchFreightCollectionData<Carrier>('CARRIERS');
+        const carriersData = await fetchFreightCollection<Carrier>('CARRIERS');
         setCarriers(carriersData);
         
         // Tracking Events collection
-        const trackingEventsData = await fetchFreightCollectionData<TrackingEvent>('TRACKING_EVENTS');
+        const trackingEventsData = await fetchFreightCollection<TrackingEvent>('TRACKING_EVENTS');
         setTrackingEvents(trackingEventsData);
         
         // Package Types collection
-        const packageTypesData = await fetchFreightCollectionData<PackageType>('PACKAGE_TYPES');
+        const packageTypesData = await fetchFreightCollection<PackageType>('PACKAGE_TYPES');
         setPackageTypes(packageTypesData);
         
         // Containers collection
-        const containersData = await fetchFreightCollectionData('CONTAINERS');
+        const containersData = await fetchFreightCollection('CONTAINERS');
         setContainers(containersData);
         
         // Documents collection
-        const documentsData = await fetchFreightCollectionData('DOCUMENTS');
+        const documentsData = await fetchFreightCollection('DOCUMENTS');
         setDocuments(documentsData);
         
         // Pricing collection
-        const pricingData = await fetchFreightCollectionData('PRICING');
+        const pricingData = await fetchFreightCollection('PRICING');
         setPricing(pricingData);
         
         // Billing collection
-        const billingData = await fetchFreightCollectionData('BILLING');
+        const billingData = await fetchFreightCollection('BILLING');
         setBilling(billingData);
         
         // Quotes collection
-        const quotesData = await fetchFreightCollectionData<Quote>('QUOTES');
+        const quotesData = await fetchFreightCollection<Quote>('QUOTES');
         setQuotes(quotesData);
 
         // Invoices collection
-        const invoicesData = await fetchFreightCollectionData<Invoice>('BILLING');
+        const invoicesData = await fetchFreightCollection<Invoice>('BILLING');
         setInvoices(invoicesData);
         
         console.log("Finished fetching all freight data");

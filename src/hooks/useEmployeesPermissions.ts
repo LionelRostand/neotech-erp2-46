@@ -1,141 +1,162 @@
 
 import { useState, useEffect } from 'react';
-import { collection, getDocs, query, where, doc, updateDoc } from 'firebase/firestore';
+import { collection, query, getDocs, addDoc, updateDoc, deleteDoc, doc, onSnapshot } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { COLLECTIONS } from '@/lib/firebase-collections';
-import { toast } from 'sonner';
-import { isNetworkError, reconnectToFirestore } from './firestore/network-handler';
+import { useToast } from '@/hooks/use-toast';
 
-// Basic user type for permissions
-export interface EmployeeUser {
+// Définir les types pour les objets de permission
+export interface EmployeePermission {
   id: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  role?: string;
-  department?: string;
-  permissions?: {
-    [module: string]: {
-      view: boolean;
-      create: boolean;
-      edit: boolean;
-      delete: boolean;
-    };
-  };
+  employeeId: string;
+  module: string;
+  read: boolean;
+  write: boolean;
+  delete: boolean;
+  admin: boolean;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export const useEmployeesPermissions = () => {
-  const [employees, setEmployees] = useState<EmployeeUser[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [permissions, setPermissions] = useState<EmployeePermission[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+  const { toast } = useToast();
 
+  // Charger les permissions depuis Firestore
   useEffect(() => {
-    const fetchEmployees = async () => {
-      setIsLoading(true);
-      setError(null);
+    const fetchPermissions = async () => {
+      setLoading(true);
       try {
-        // Reference to the employees collection
-        const employeesRef = collection(db, COLLECTIONS.EMPLOYEES);
+        // Utiliser le chemin direct à la collection
+        const permissionsRef = collection(db, 'user_permissions');
+        const q = query(permissionsRef);
         
-        // Create a query to fetch employees
-        const q = query(employeesRef);
-        
-        // Execute the query
-        const querySnapshot = await getDocs(q);
-        
-        // Process the query results
-        const employeesData: EmployeeUser[] = [];
-        querySnapshot.forEach((doc) => {
-          const employeeData = doc.data();
-          employeesData.push({
+        // Configurer un abonnement en temps réel
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+          const permissionsData = snapshot.docs.map(doc => ({
             id: doc.id,
-            firstName: employeeData.firstName || '',
-            lastName: employeeData.lastName || '',
-            email: employeeData.email || '',
-            role: employeeData.role || employeeData.position || 'User',
-            department: employeeData.department || '',
-            permissions: employeeData.permissions || {}
+            ...doc.data(),
+            createdAt: doc.data().createdAt?.toDate() || new Date(),
+            updatedAt: doc.data().updatedAt?.toDate() || new Date()
+          })) as EmployeePermission[];
+          
+          setPermissions(permissionsData);
+          setLoading(false);
+        }, (err) => {
+          console.error("Error fetching permissions:", err);
+          setError(err);
+          setLoading(false);
+          toast({
+            title: "Erreur",
+            description: "Impossible de charger les permissions des employés.",
+            variant: "destructive",
           });
         });
         
-        setEmployees(employeesData);
-        console.log('Employees loaded:', employeesData.length);
-      } catch (err: any) {
-        console.error('Error fetching employees:', err);
-        
-        // Check if it's a network error
-        if (isNetworkError(err)) {
-          console.log('Network error detected when fetching employees, app is offline');
-          toast.error('Erreur de connexion: L\'application est hors ligne.');
-          
-          // Try to reconnect
-          await reconnectToFirestore();
-        } else {
-          setError('Failed to load employees data');
-          toast.error('Erreur lors du chargement des données employés');
-        }
-      } finally {
-        setIsLoading(false);
+        return unsubscribe;
+      } catch (err) {
+        const error = err instanceof Error ? err : new Error('Une erreur inconnue est survenue');
+        console.error("Error setting up permissions listener:", error);
+        setError(error);
+        setLoading(false);
+        return () => {};
       }
     };
+    
+    fetchPermissions();
+  }, [toast]);
 
-    fetchEmployees();
-  }, []);
-
-  const updateEmployeePermissions = async (
-    employeeId: string, 
-    moduleId: string, 
-    permissions: {
-      view: boolean;
-      create: boolean;
-      edit: boolean;
-      delete: boolean;
-    }
-  ) => {
+  // Ajouter une nouvelle permission
+  const addPermission = async (permission: Omit<EmployeePermission, 'id' | 'createdAt' | 'updatedAt'>) => {
     try {
-      // First update local state for immediate UI feedback
-      setEmployees(prevEmployees => 
-        prevEmployees.map(emp => 
-          emp.id === employeeId 
-            ? {
-                ...emp,
-                permissions: {
-                  ...emp.permissions,
-                  [moduleId]: permissions
-                }
-              }
-            : emp
-        )
-      );
+      // Utiliser le chemin direct à la collection
+      const permissionsRef = collection(db, 'user_permissions');
       
-      // Then try to update in Firestore
-      const employeeDocRef = doc(db, COLLECTIONS.EMPLOYEES, employeeId);
+      const newPermission = {
+        ...permission,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
       
-      // We need to update just the specific module permissions
-      await updateDoc(employeeDocRef, {
-        [`permissions.${moduleId}`]: permissions
+      const docRef = await addDoc(permissionsRef, newPermission);
+      
+      toast({
+        title: "Succès",
+        description: "La permission a été ajoutée avec succès.",
       });
       
-      toast.success('Permissions mises à jour');
+      return { id: docRef.id, ...newPermission };
+    } catch (err) {
+      console.error("Error adding permission:", err);
+      toast({
+        title: "Erreur",
+        description: "Impossible d'ajouter la permission.",
+        variant: "destructive",
+      });
+      throw err;
+    }
+  };
+
+  // Mettre à jour une permission existante
+  const updatePermission = async (id: string, updates: Partial<EmployeePermission>) => {
+    try {
+      // Utiliser le chemin direct au document
+      const permissionRef = doc(db, 'user_permissions', id);
+      
+      await updateDoc(permissionRef, {
+        ...updates,
+        updatedAt: new Date()
+      });
+      
+      toast({
+        title: "Succès",
+        description: "La permission a été mise à jour avec succès.",
+      });
+      
       return true;
-    } catch (err: any) {
-      console.error('Error updating employee permissions:', err);
+    } catch (err) {
+      console.error("Error updating permission:", err);
+      toast({
+        title: "Erreur",
+        description: "Impossible de mettre à jour la permission.",
+        variant: "destructive",
+      });
+      throw err;
+    }
+  };
+
+  // Supprimer une permission
+  const deletePermission = async (id: string) => {
+    try {
+      // Utiliser le chemin direct au document
+      const permissionRef = doc(db, 'user_permissions', id);
       
-      // Check if it's a network error
-      if (isNetworkError(err)) {
-        toast.error('Impossible de mettre à jour les permissions: Mode hors ligne');
-      } else {
-        toast.error(`Erreur lors de la mise à jour des permissions: ${err.message}`);
-      }
+      await deleteDoc(permissionRef);
       
-      return false;
+      toast({
+        title: "Succès",
+        description: "La permission a été supprimée avec succès.",
+      });
+      
+      return true;
+    } catch (err) {
+      console.error("Error deleting permission:", err);
+      toast({
+        title: "Erreur",
+        description: "Impossible de supprimer la permission.",
+        variant: "destructive",
+      });
+      throw err;
     }
   };
 
   return {
-    employees,
-    isLoading,
+    permissions,
+    loading,
     error,
-    updateEmployeePermissions
+    addPermission,
+    updatePermission,
+    deletePermission
   };
 };

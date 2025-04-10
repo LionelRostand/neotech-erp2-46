@@ -1,34 +1,61 @@
+
 import { 
   collection, 
   query, 
   where, 
   getDocs, 
-  QueryConstraint 
+  QueryConstraint,
+  doc,
+  getDoc
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 
 /**
- * Fonction pour récupérer des données d'une collection de fret avec des contraintes spécifiques
+ * Function to check if a freight collection exists
+ */
+export const checkFreightCollectionExists = async (
+  collectionName: keyof typeof COLLECTIONS.FREIGHT
+): Promise<boolean> => {
+  try {
+    // Get the collection path from the COLLECTIONS object
+    const collectionPath = COLLECTIONS.FREIGHT[collectionName];
+    
+    // Create a reference to the collection
+    const collectionRef = collection(db, collectionPath);
+    
+    // Execute a limited query to see if the collection has any documents
+    const q = query(collectionRef, where('__name__', '!=', ''), ...[]); // non-empty check
+    const querySnapshot = await getDocs(q);
+    
+    return !querySnapshot.empty;
+  } catch (error) {
+    console.error(`Error checking if ${String(collectionName)} collection exists:`, error);
+    return false;
+  }
+};
+
+/**
+ * Function to fetch data from a freight collection with specific constraints
  */
 export const fetchFreightCollection = async <T = any>(
   collectionName: keyof typeof COLLECTIONS.FREIGHT, 
   constraints: QueryConstraint[] = []
 ): Promise<T[]> => {
   try {
-    // Obtenir le chemin de la collection depuis l'objet COLLECTIONS
+    // Get the collection path from the COLLECTIONS object
     const collectionPath = COLLECTIONS.FREIGHT[collectionName];
     
-    // Créer une référence à la collection
+    // Create a reference to the collection
     const collectionRef = collection(db, collectionPath);
     
-    // Créer une requête avec les contraintes fournies
+    // Create a query with the provided constraints
     const q = query(collectionRef, ...constraints);
     
-    // Exécuter la requête
+    // Execute the query
     const querySnapshot = await getDocs(q);
     
-    // Transformer les documents en objets avec l'ID inclus
+    // Transform the documents into objects with the ID included
     const documents = querySnapshot.docs.map(doc => ({
       id: doc.id,
       ...doc.data()
@@ -44,7 +71,12 @@ export const fetchFreightCollection = async <T = any>(
 };
 
 /**
- * Fonction pour récupérer des expéditions avec filtrage optionnel
+ * Alias for fetchFreightCollection to maintain backward compatibility
+ */
+export const fetchFreightCollectionData = fetchFreightCollection;
+
+/**
+ * Function to fetch shipments with optional filtering
  */
 export const fetchShipments = async (
   status?: string,
@@ -52,7 +84,7 @@ export const fetchShipments = async (
   dateStart?: Date,
   dateEnd?: Date
 ) => {
-  // Construire les contraintes dynamiquement
+  // Build constraints dynamically
   const constraints: QueryConstraint[] = [];
   
   if (status) {
@@ -71,7 +103,7 @@ export const fetchShipments = async (
     constraints.push(where('departureDate', '<=', dateEnd));
   }
   
-  // Utiliser fetchFreightCollection avec le nom de collection spécifique
+  // Use fetchFreightCollection with the specific collection name
   return fetchFreightCollection(
     'SHIPMENTS',
     constraints
@@ -79,7 +111,7 @@ export const fetchShipments = async (
 };
 
 /**
- * Autres fonctions de récupération spécifiques pour d'autres collections de fret
+ * Other specific fetch functions for other freight collections
  */
 export const fetchContainers = async (status?: string) => {
   const constraints: QueryConstraint[] = [];
@@ -102,4 +134,4 @@ export const fetchCarriers = async () => {
   return fetchFreightCollection('CARRIERS');
 };
 
-// Et d'autres fonctions de récupération spécifiques au besoin...
+// And other specific fetch functions as needed...

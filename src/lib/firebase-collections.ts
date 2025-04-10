@@ -1,15 +1,30 @@
 
 /**
- * Définition des chemins vers les collections Firestore utilisées dans l'application
- * Centraliser ces chemins permet d'éviter les erreurs de frappe et facilite les changements
+ * Definition of paths to Firestore collections used in the application
+ * Centralizing these paths helps avoid typos and makes changes easier
  */
 export const COLLECTIONS = {
-  // Collections principales
+  // Main collections
   USERS: 'users',
   COMPANIES: 'companies',
   USER_PERMISSIONS: 'user_permissions',
+  EMPLOYEES: 'employees',
   
-  // Module RH (Ressources Humaines)
+  // Messages module
+  MESSAGES: {
+    INBOX: 'messages_inbox',
+    SENT: 'messages_sent',
+    ARCHIVED: 'messages_archived',
+    SCHEDULED: 'messages_scheduled',
+    DRAFTS: 'messages_drafts',
+    METRICS: 'messages_metrics',
+    TEMPLATES: 'message_templates'
+  },
+  
+  // Contacts collection
+  CONTACTS: 'contacts',
+  
+  // HR (Human Resources) Module
   HR: {
     EMPLOYEES: 'employees',
     DEPARTMENTS: 'departments',
@@ -31,7 +46,7 @@ export const COLLECTIONS = {
     ALERTS: 'hr_alerts'
   },
   
-  // Module Finance
+  // Finance Module
   FINANCE: {
     INVOICES: 'invoices',
     EXPENSES: 'expenses',
@@ -39,7 +54,7 @@ export const COLLECTIONS = {
     TRANSACTIONS: 'transactions'
   },
   
-  // Module CRM
+  // CRM Module
   CRM: {
     CLIENTS: 'clients',
     LEADS: 'leads',
@@ -51,7 +66,7 @@ export const COLLECTIONS = {
     REMINDERS: 'reminders'
   },
 
-  // Module Projets
+  // Projects Module
   PROJECTS: {
     PROJECTS: 'projects',
     TASKS: 'tasks',
@@ -61,14 +76,10 @@ export const COLLECTIONS = {
     NOTIFICATIONS: 'project_notifications'
   },
   
-  // Module Documents
+  // Documents Module
   DOCUMENTS: 'documents',
-
-  // Module Messages
-  MESSAGES: 'messages',
-  CONTACTS: 'contacts',
   
-  // Module Comptabilité
+  // Accounting Module
   ACCOUNTING: {
     INVOICES: 'accounting_invoices',
     CLIENTS: 'accounting_clients',
@@ -82,7 +93,7 @@ export const COLLECTIONS = {
     TRANSACTIONS: 'accounting_transactions'
   },
 
-  // Module Santé
+  // Health Module
   HEALTH: {
     PATIENTS: 'patients',
     CONSULTATIONS: 'consultations',
@@ -92,10 +103,11 @@ export const COLLECTIONS = {
     BILLING: 'health_billing',
     PRESCRIPTIONS: 'prescriptions',
     MEDICAL_RECORDS: 'medical_records',
-    INVENTORY: 'medical_inventory'
+    INVENTORY: 'medical_inventory',
+    DOCTORS: 'doctors'
   },
 
-  // Module Transport
+  // Transport Module
   TRANSPORT: {
     DRIVERS: 'transport_drivers',
     VEHICLES: 'transport_vehicles',
@@ -105,12 +117,13 @@ export const COLLECTIONS = {
     MAINTENANCE: 'transport_maintenance'
   },
 
-  // Module Fret
+  // Freight Module
   FREIGHT: {
     SHIPMENTS: 'shipments',
     CONTAINERS: 'containers',
     CARRIERS: 'carriers',
     TRACKING: 'tracking_events',
+    TRACKING_EVENTS: 'tracking_events',
     CUSTOMERS: 'freight_customers',
     DOCUMENTS: 'freight_documents',
     RATES: 'freight_rates',
@@ -118,10 +131,17 @@ export const COLLECTIONS = {
     CUSTOMS: 'customs_declarations',
     PERMISSIONS: 'freight_permissions',
     SETTINGS: 'freight_settings',
-    USERS: 'freight_users'
+    USERS: 'freight_users',
+    PACKAGES: 'freight_packages',
+    PACKAGE_TYPES: 'freight_package_types',
+    PRICING: 'freight_pricing',
+    BILLING: 'freight_billing',
+    QUOTES: 'freight_quotes',
+    VEHICLES: 'freight_vehicles',
+    DRIVERS: 'freight_drivers'
   },
 
-  // Module Bibliothèque
+  // Library Module
   LIBRARY: {
     BOOKS: 'books',
     CATEGORIES: 'book_categories',

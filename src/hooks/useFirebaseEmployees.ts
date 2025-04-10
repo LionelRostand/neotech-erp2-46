@@ -1,40 +1,167 @@
 
-import { COLLECTIONS } from '@/lib/firebase-collections';
-import { useFirebaseCollection } from './useFirebaseCollection';
-import { where, QueryConstraint } from 'firebase/firestore';
+import { useState, useEffect } from 'react';
+import { 
+  collection, 
+  query, 
+  onSnapshot, 
+  doc, 
+  addDoc, 
+  updateDoc, 
+  deleteDoc, 
+  serverTimestamp, 
+  DocumentData
+} from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { Employee } from '@/types/employee';
+import { useToast } from '@/hooks/use-toast';
 
-// Interface pour les données d'employés
-export interface Employee {
-  id: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  position: string;
-  department?: string;
-  companyId?: string;
-  hireDate: string;
-  status: 'active' | 'inactive' | 'on_leave';
-  [key: string]: any;
-}
+export const useFirebaseEmployees = () => {
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+  const { toast } = useToast();
 
-/**
- * Hook pour récupérer les employés depuis Firebase avec mise à jour en temps réel
- * @param companyId Optionnel - ID de l'entreprise pour filtrer les employés
- */
-export const useFirebaseEmployees = (companyId?: string) => {
-  // Préparer les contraintes de requête si un ID d'entreprise est fourni
-  const queryConstraints: QueryConstraint[] = [];
-  
-  if (companyId) {
-    queryConstraints.push(where('companyId', '==', companyId));
-  }
-  
-  const { 
-    data: employees, 
-    isLoading, 
-    error, 
-    refetch 
-  } = useFirebaseCollection<Employee>(COLLECTIONS.EMPLOYEES, queryConstraints);
+  useEffect(() => {
+    setIsLoading(true);
+    
+    try {
+      // Direct reference to the employees collection
+      const employeesRef = collection(db, 'employees');
+      const q = query(employeesRef);
+      
+      // Set up a real-time listener
+      const unsubscribe = onSnapshot(q, (snapshot) => {
+        const employeesData: Employee[] = snapshot.docs.map(doc => {
+          const data = doc.data();
+          return {
+            id: doc.id,
+            ...data,
+            hireDate: data.hireDate?.toDate() || null,
+            birthDate: data.birthDate?.toDate() || null,
+            createdAt: data.createdAt?.toDate() || new Date(),
+            updatedAt: data.updatedAt?.toDate() || new Date()
+          } as Employee;
+        });
+        
+        setEmployees(employeesData);
+        setIsLoading(false);
+      }, (err) => {
+        console.error("Error fetching employees:", err);
+        setError(err);
+        setIsLoading(false);
+        toast({
+          title: "Erreur",
+          description: "Impossible de charger les données des employés.",
+          variant: "destructive",
+        });
+      });
+      
+      return unsubscribe;
+    } catch (err) {
+      const error = err instanceof Error ? err : new Error('An unknown error occurred');
+      console.error("Error setting up employees listener:", error);
+      setError(error);
+      setIsLoading(false);
+      toast({
+        title: "Erreur",
+        description: "Erreur lors de l'initialisation du listener pour les employés.",
+        variant: "destructive",
+      });
+      return () => {};
+    }
+  }, [toast]);
 
-  return { employees, isLoading, error, refetch };
+  const addEmployee = async (employee: Omit<Employee, 'id' | 'createdAt' | 'updatedAt'>) => {
+    try {
+      // Direct reference to the employees collection
+      const employeesRef = collection(db, 'employees');
+      
+      // Prepare employee data
+      const employeeData = {
+        ...employee,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      };
+      
+      // Add the document
+      const docRef = await addDoc(employeesRef, employeeData);
+      
+      toast({
+        title: "Succès",
+        description: "L'employé a été ajouté avec succès.",
+      });
+      
+      return { id: docRef.id, ...employee };
+    } catch (err) {
+      console.error("Error adding employee:", err);
+      toast({
+        title: "Erreur",
+        description: "Impossible d'ajouter l'employé.",
+        variant: "destructive",
+      });
+      throw err;
+    }
+  };
+
+  const updateEmployee = async (id: string, updates: Partial<Employee>) => {
+    try {
+      // Direct reference to the employee document
+      const employeeRef = doc(db, 'employees', id);
+      
+      // Update the document
+      await updateDoc(employeeRef, {
+        ...updates,
+        updatedAt: serverTimestamp()
+      });
+      
+      toast({
+        title: "Succès",
+        description: "Les informations de l'employé ont été mises à jour.",
+      });
+      
+      return true;
+    } catch (err) {
+      console.error("Error updating employee:", err);
+      toast({
+        title: "Erreur",
+        description: "Impossible de mettre à jour les informations de l'employé.",
+        variant: "destructive",
+      });
+      throw err;
+    }
+  };
+
+  const deleteEmployee = async (id: string) => {
+    try {
+      // Direct reference to the employee document
+      const employeeRef = doc(db, 'employees', id);
+      
+      // Delete the document
+      await deleteDoc(employeeRef);
+      
+      toast({
+        title: "Succès",
+        description: "L'employé a été supprimé avec succès.",
+      });
+      
+      return true;
+    } catch (err) {
+      console.error("Error deleting employee:", err);
+      toast({
+        title: "Erreur",
+        description: "Impossible de supprimer l'employé.",
+        variant: "destructive",
+      });
+      throw err;
+    }
+  };
+
+  return {
+    employees,
+    isLoading,
+    error,
+    addEmployee,
+    updateEmployee,
+    deleteEmployee
+  };
 };
