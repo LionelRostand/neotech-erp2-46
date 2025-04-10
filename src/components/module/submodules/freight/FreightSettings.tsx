@@ -1,120 +1,251 @@
 
-import React, { useState, useEffect } from 'react';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import React, { useState } from 'react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
-import { Loader2, WifiOff, Settings, Shield, TruckIcon, UserCog } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import FreightGeneralSettings from './settings/FreightGeneralSettings';
+import { CheckCircle, Settings, Shield, Globe, Server, Plug, Activity } from 'lucide-react';
 import FreightSecuritySettings from './FreightSecuritySettings';
+import { fetchFreightCollection } from '@/hooks/fetchFreightCollectionData';
 import FreightPermissionsTab from './settings/FreightPermissionsTab';
-import { checkFreightCollectionExists } from '@/hooks/fetchFreightCollectionData';
 
 const FreightSettings = () => {
-  const [activeTab, setActiveTab] = useState('general');
-  const [isLoading, setIsLoading] = useState(true);
-  const [isOffline, setIsOffline] = useState(false);
   const { toast } = useToast();
-
-  useEffect(() => {
-    const checkConnection = async () => {
-      try {
-        setIsLoading(true);
-        // Try to fetch data to check if we're online
-        const exists = await checkFreightCollectionExists('SETTINGS');
-        setIsOffline(false);
-        setIsLoading(false);
-      } catch (err: any) {
-        console.error('Error checking connection status:', err);
-        if (err.code === 'unavailable' || err.message?.includes('offline')) {
-          setIsOffline(true);
-          toast({
-            title: "Mode hors ligne",
-            description: "Certaines fonctionnalités peuvent être limitées en raison de problèmes de connexion.",
-            variant: "destructive"
-          });
-        }
-        setIsLoading(false);
-      }
-    };
-
-    checkConnection();
-  }, [toast]);
-
-  // Retry connection
-  const handleRetryConnection = async () => {
-    setIsLoading(true);
-    try {
-      const exists = await checkFreightCollectionExists('SETTINGS');
-      setIsOffline(false);
-      toast({
-        title: "Connexion rétablie",
-        description: "Vous êtes à nouveau connecté au serveur.",
-      });
-    } catch (err) {
-      setIsOffline(true);
-      toast({
-        title: "Toujours hors ligne",
-        description: "Vérifiez votre connexion internet et réessayez.",
-        variant: "destructive"
-      });
-    }
-    setIsLoading(false);
+  const [activeTab, setActiveTab] = useState('general');
+  const [emailNotifications, setEmailNotifications] = useState(true);
+  const [smsNotifications, setSmsNotifications] = useState(false);
+  const [apiKey, setApiKey] = useState('sk_test_51LZX9KJHyZNgUBQK72nBXP');
+  const [freightApiEndpoint, setFreightApiEndpoint] = useState('https://api.freight-service.com/v1');
+  
+  const handleSaveSettings = () => {
+    toast({
+      title: "Paramètres enregistrés",
+      description: "Les paramètres ont été mis à jour avec succès.",
+      action: (
+        <div className="h-8 w-8 bg-green-500 rounded-full flex items-center justify-center">
+          <CheckCircle className="h-5 w-5 text-white" />
+        </div>
+      )
+    });
   };
-
-  if (isLoading) {
-    return (
-      <div className="flex flex-col items-center justify-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
-        <p className="text-muted-foreground">Chargement des paramètres...</p>
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-6">
-      {isOffline && (
-        <Alert variant="destructive" className="mb-6">
-          <WifiOff className="h-4 w-4 mr-2" />
-          <AlertTitle>Mode hors ligne</AlertTitle>
-          <AlertDescription className="flex justify-between items-center">
-            <span>Vous êtes actuellement en mode hors ligne. Certaines fonctionnalités peuvent être limitées.</span>
-            <button 
-              onClick={handleRetryConnection}
-              className="bg-primary text-white px-3 py-1 rounded-md text-sm hover:bg-primary/90 transition-colors"
-            >
-              Réessayer
-            </button>
-          </AlertDescription>
-        </Alert>
-      )}
-
-      <Tabs defaultValue="general" value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid grid-cols-3 mb-8">
-          <TabsTrigger value="general" className="flex items-center">
-            <Settings className="h-4 w-4 mr-2" />
-            Général
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="grid grid-cols-5 w-full">
+          <TabsTrigger value="general" className="flex gap-2 items-center">
+            <Settings className="h-4 w-4" />
+            <span>Général</span>
           </TabsTrigger>
-          <TabsTrigger value="security" className="flex items-center">
-            <Shield className="h-4 w-4 mr-2" />
-            Sécurité
+          <TabsTrigger value="security" className="flex gap-2 items-center">
+            <Shield className="h-4 w-4" />
+            <span>Sécurité</span>
           </TabsTrigger>
-          <TabsTrigger value="permissions" className="flex items-center">
-            <UserCog className="h-4 w-4 mr-2" />
-            Permissions
+          <TabsTrigger value="notifications" className="flex gap-2 items-center">
+            <Activity className="h-4 w-4" />
+            <span>Notifications</span>
+          </TabsTrigger>
+          <TabsTrigger value="api" className="flex gap-2 items-center">
+            <Server className="h-4 w-4" />
+            <span>API</span>
+          </TabsTrigger>
+          <TabsTrigger value="integrations" className="flex gap-2 items-center">
+            <Plug className="h-4 w-4" />
+            <span>Intégrations</span>
           </TabsTrigger>
         </TabsList>
-
-        <TabsContent value="general">
-          <FreightGeneralSettings isOffline={isOffline} />
+        
+        {/* Général */}
+        <TabsContent value="general" className="mt-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Paramètres généraux</CardTitle>
+              <CardDescription>
+                Configurez les paramètres généraux du module de transport de marchandises.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="company-name">Nom de l'entreprise</Label>
+                  <Input id="company-name" defaultValue="NeoTech Logistics" />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="tax-id">Numéro de TVA</Label>
+                  <Input id="tax-id" defaultValue="FR123456789" />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="currency">Devise par défaut</Label>
+                  <Input id="currency" defaultValue="EUR" />
+                </div>
+                
+                <div className="flex items-center space-x-2 pt-2">
+                  <Checkbox id="tracking" defaultChecked />
+                  <Label htmlFor="tracking">Activer le suivi en temps réel</Label>
+                </div>
+                
+                <div className="flex items-center space-x-2">
+                  <Checkbox id="auto-numbering" defaultChecked />
+                  <Label htmlFor="auto-numbering">Numérotation automatique des expéditions</Label>
+                </div>
+              </div>
+              
+              <Button onClick={handleSaveSettings}>Enregistrer les modifications</Button>
+            </CardContent>
+          </Card>
         </TabsContent>
         
-        <TabsContent value="security">
-          <FreightSecuritySettings />
+        {/* Sécurité */}
+        <TabsContent value="security" className="mt-6">
+          <FreightPermissionsTab />
         </TabsContent>
         
-        <TabsContent value="permissions">
-          <FreightPermissionsTab isOffline={isOffline} />
+        {/* Notifications */}
+        <TabsContent value="notifications" className="mt-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Paramètres de notification</CardTitle>
+              <CardDescription>
+                Configurez les notifications pour les expéditions et événements liés au transport.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="space-y-4">
+                <div className="flex items-center space-x-2">
+                  <Checkbox 
+                    id="email-notifications" 
+                    checked={emailNotifications} 
+                    onCheckedChange={() => setEmailNotifications(!emailNotifications)}
+                  />
+                  <Label htmlFor="email-notifications">Notifications par email</Label>
+                </div>
+                
+                <div className="flex items-center space-x-2">
+                  <Checkbox 
+                    id="sms-notifications" 
+                    checked={smsNotifications}
+                    onCheckedChange={() => setSmsNotifications(!smsNotifications)}
+                  />
+                  <Label htmlFor="sms-notifications">Notifications par SMS</Label>
+                </div>
+                
+                <div className="space-y-2 pt-2">
+                  <Label htmlFor="notification-email">Email de notification</Label>
+                  <Input id="notification-email" type="email" defaultValue="notifications@example.com" />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="sms-number">Numéro pour SMS</Label>
+                  <Input id="sms-number" type="tel" defaultValue="+33123456789" />
+                </div>
+              </div>
+              
+              <Button onClick={handleSaveSettings}>Enregistrer les modifications</Button>
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        {/* API */}
+        <TabsContent value="api" className="mt-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Configuration de l'API</CardTitle>
+              <CardDescription>
+                Gérez les clés API et les points d'accès pour les intégrations externes.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="api-key">Clé API</Label>
+                  <div className="flex gap-2">
+                    <Input 
+                      id="api-key" 
+                      value={apiKey} 
+                      onChange={(e) => setApiKey(e.target.value)} 
+                      type="password"
+                    />
+                    <Button variant="outline">Regenerate</Button>
+                  </div>
+                </div>
+                
+                <div className="space-y-2 pt-2">
+                  <Label htmlFor="api-endpoint">Point d'accès API</Label>
+                  <Input 
+                    id="api-endpoint" 
+                    value={freightApiEndpoint} 
+                    onChange={(e) => setFreightApiEndpoint(e.target.value)}
+                  />
+                </div>
+                
+                <div className="flex items-center space-x-2 pt-2">
+                  <Checkbox id="enable-api" defaultChecked />
+                  <Label htmlFor="enable-api">Activer l'API</Label>
+                </div>
+                
+                <div className="flex items-center space-x-2">
+                  <Checkbox id="webhook" defaultChecked />
+                  <Label htmlFor="webhook">Activer les webhooks</Label>
+                </div>
+              </div>
+              
+              <Button onClick={handleSaveSettings}>Enregistrer les modifications</Button>
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        {/* Intégrations */}
+        <TabsContent value="integrations" className="mt-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Intégrations</CardTitle>
+              <CardDescription>
+                Configurez les intégrations avec d'autres services et plateformes.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between py-2 border-b">
+                  <div className="flex items-center gap-2">
+                    <Globe className="h-5 w-5 text-blue-600" />
+                    <span>Google Maps</span>
+                  </div>
+                  <Button variant="outline" size="sm">Configurer</Button>
+                </div>
+                
+                <div className="flex items-center justify-between py-2 border-b">
+                  <div className="flex items-center gap-2">
+                    <Server className="h-5 w-5 text-green-600" />
+                    <span>Système ERP</span>
+                  </div>
+                  <Button variant="outline" size="sm">Configurer</Button>
+                </div>
+                
+                <div className="flex items-center justify-between py-2 border-b">
+                  <div className="flex items-center gap-2">
+                    <Activity className="h-5 w-5 text-purple-600" />
+                    <span>Service SMS</span>
+                  </div>
+                  <Button variant="outline" size="sm">Configurer</Button>
+                </div>
+                
+                <div className="flex items-center justify-between py-2">
+                  <div className="flex items-center gap-2">
+                    <Shield className="h-5 w-5 text-orange-600" />
+                    <span>Service d'authentification</span>
+                  </div>
+                  <Button variant="outline" size="sm">Configurer</Button>
+                </div>
+              </div>
+              
+              <Button onClick={handleSaveSettings}>Enregistrer les modifications</Button>
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
     </div>

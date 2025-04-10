@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { 
   collection, 
@@ -33,13 +32,35 @@ export const useFirebaseEmployees = () => {
       const unsubscribe = onSnapshot(q, (snapshot) => {
         const employeesData: Employee[] = snapshot.docs.map(doc => {
           const data = doc.data();
+          // Create a properly typed employee object with required fields
           return {
             id: doc.id,
-            ...data,
-            hireDate: data.hireDate?.toDate() || null,
-            birthDate: data.birthDate?.toDate() || null,
+            firstName: data.firstName || '',
+            lastName: data.lastName || '',
+            email: data.email || '',
+            phone: data.phone || '',
+            address: data.address || '',
+            status: data.status || 'inactive',
+            position: data.position || '',
+            department: data.department || '',
+            departmentId: data.departmentId || '',
+            hireDate: data.hireDate?.toDate()?.toISOString() || null,
+            birthDate: data.birthDate?.toDate()?.toISOString() || null,
             createdAt: data.createdAt?.toDate() || new Date(),
-            updatedAt: data.updatedAt?.toDate() || new Date()
+            updatedAt: data.updatedAt?.toDate() || new Date(),
+            // Include other required fields with defaults
+            photo: data.photo || '',
+            photoURL: data.photoURL || '',
+            socialSecurityNumber: data.socialSecurityNumber || '',
+            startDate: data.startDate || '',
+            manager: data.manager || '',
+            managerId: data.managerId || '',
+            title: data.title || '',
+            role: data.role || '',
+            // Include optional arrays
+            skills: data.skills || [],
+            documents: data.documents || [],
+            education: data.education || []
           } as Employee;
         });
         
