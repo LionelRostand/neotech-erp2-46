@@ -1,17 +1,18 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
+import { Camera, Upload, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
-import { updateEmployee, getEmployeeById } from '../services/employeeService';
-import { Camera, Upload, X, Info } from 'lucide-react';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { storage, db } from '@/lib/firebase';
+import { getDownloadURL, ref, uploadBytes, deleteObject } from 'firebase/storage';
+import { updateDoc, doc, getDoc } from 'firebase/firestore';
 import { COLLECTIONS } from '@/lib/firebase-collections';
-import { addDocument } from '@/hooks/firestore/firestore-utils';
+import { updateEmployee, getEmployeeById } from '../../employees/services/employeeService';
 
 interface PhotoUploaderProps {
   employeeId: string;
-  currentPhoto?: string;
+  currentPhoto: string;
   employeeName: string;
   onPhotoUpdated: (photoURL: string) => void;
 }
@@ -22,247 +23,238 @@ const PhotoUploader: React.FC<PhotoUploaderProps> = ({
   employeeName,
   onPhotoUpdated
 }) => {
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const [isUploading, setIsUploading] = useState(false);
-  const [previewPhoto, setPreviewPhoto] = useState<string | null>(null);
-  
-  // S'assurer que le previewPhoto est initialisé avec currentPhoto
+  const [photoURL, setPhotoURL] = useState(currentPhoto);
+  const [isHovering, setIsHovering] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [employeeIdDisplay, setEmployeeIdDisplay] = useState(employeeId);
+
+  // Initialiser à la valeur fournie en prop
   useEffect(() => {
-    if (currentPhoto) {
-      setPreviewPhoto(currentPhoto);
+    if (currentPhoto && currentPhoto !== photoURL) {
+      setPhotoURL(currentPhoto);
     }
-  }, [currentPhoto]);
-  
-  // Fonction pour simuler l'upload d'une image vers Firebase Storage
-  const simulatePhotoUpload = async (file: File): Promise<string> => {
-    // Dans un environnement réel, on utiliserait Firebase Storage
-    // Pour le simuler, on utilise URL.createObjectURL
-    return URL.createObjectURL(file);
-  };
-  
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      
-      // Vérifier le type de fichier
-      if (!file.type.startsWith('image/')) {
-        toast.error('Veuillez sélectionner une image');
-        return;
-      }
-      
-      // Vérifier la taille du fichier (max 5MB)
-      if (file.size > 5 * 1024 * 1024) {
-        toast.error('La taille de l\'image ne doit pas dépasser 5MB');
-        return;
-      }
-      
-      setIsUploading(true);
-      
-      try {
-        // Créer une URL pour la prévisualisation
-        const photoURL = await simulatePhotoUpload(file);
-        setPreviewPhoto(photoURL);
-        
-        console.log(`Mise à jour de la photo pour l'employé ID: ${employeeId}`);
-        
-        // Vérifier si l'employé existe avant la mise à jour
-        const employeeExists = await getEmployeeById(employeeId);
-        if (!employeeExists) {
-          console.error(`Employé avec ID ${employeeId} non trouvé dans la base de données`);
-          toast.error(`Employé avec ID ${employeeId} non trouvé`);
-          setIsUploading(false);
-          return;
-        }
-        
-        // Enregistrer également la photo dans hr_documents
-        try {
-          const docId = `photo_${employeeId}_${Date.now()}`;
-          
-          // Ajouter la photo comme document dans hr_documents
-          await addDocument(COLLECTIONS.HR.DOCUMENTS, {
-            id: docId,
-            title: `Photo de profil - ${employeeName}`,
-            name: `Photo de profil - ${employeeName}`,
-            type: 'Photo de profil',
-            url: photoURL,
-            fileUrl: photoURL,
-            employeeId: employeeId,
-            uploadDate: new Date().toISOString(),
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-            size: file.size,
-            fileType: file.type,
-            status: 'active'
-          });
-          
-          console.log('Photo ajoutée à hr_documents');
-        } catch (docError) {
-          console.error('Erreur lors de l\'ajout de la photo à hr_documents:', docError);
-          // Ne pas bloquer la mise à jour de l'employé en cas d'erreur
-        }
-        
-        // Mettre à jour l'employé dans Firestore avec la nouvelle URL de photo
-        const success = await updateEmployee(employeeId, { 
-          photo: photoURL,
-          photoURL: photoURL,
-          updatedAt: new Date().toISOString()
-        });
-        
-        if (success) {
-          console.log('Photo mise à jour avec succès');
-          toast.success('Photo mise à jour avec succès');
-          onPhotoUpdated(photoURL);
-        } else {
-          console.error('Erreur lors de la mise à jour de la photo');
-          toast.error('Erreur lors de la mise à jour de la photo');
-          // Ne pas réinitialiser le preview en cas d'erreur
-        }
-      } catch (error) {
-        console.error('Erreur lors du téléversement de la photo:', error);
-        toast.error('Erreur lors du téléversement de la photo');
-        // Ne pas réinitialiser le preview en cas d'erreur
-      } finally {
-        setIsUploading(false);
-        // Réinitialiser l'input file
-        if (fileInputRef.current) {
-          fileInputRef.current.value = '';
-        }
-      }
+    if (employeeId) {
+      setEmployeeIdDisplay(employeeId);
     }
-  };
-  
-  const handleButtonClick = () => {
-    fileInputRef.current?.click();
-  };
-  
-  const handleRemovePhoto = async () => {
-    if (isUploading) return;
-    
-    setIsUploading(true);
-    
+  }, [currentPhoto, employeeId, photoURL]);
+
+  // Vérifier que l'employé existe avant de tenter des opérations
+  const checkEmployeeExists = async (empId: string) => {
     try {
-      console.log(`Suppression de la photo pour l'employé ID: ${employeeId}`);
-      
-      // Vérifier si l'employé existe avant la mise à jour
-      const employeeExists = await getEmployeeById(employeeId);
-      if (!employeeExists) {
-        console.error(`Employé avec ID ${employeeId} non trouvé dans la base de données`);
-        toast.error(`Employé avec ID ${employeeId} non trouvé`);
-        setIsUploading(false);
-        return;
+      const employee = await getEmployeeById(empId);
+      if (!employee) {
+        console.error(`Employé avec ID ${empId} non trouvé`);
+        toast.error(`Erreur: Employé avec ID ${empId} non trouvé`);
+        return false;
       }
+      return true;
+    } catch (error) {
+      console.error("Erreur lors de la vérification de l'employé:", error);
+      toast.error("Erreur lors de la vérification de l'employé");
+      return false;
+    }
+  };
+
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Vérifier l'existence de l'employé d'abord
+    const exists = await checkEmployeeExists(employeeId);
+    if (!exists) return;
+
+    // Vérifier le type de fichier
+    if (!file.type.startsWith('image/')) {
+      toast.error("Veuillez sélectionner un fichier image");
+      return;
+    }
+
+    // Vérifier la taille du fichier (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("L'image est trop volumineuse. Taille maximum: 5MB");
+      return;
+    }
+
+    setIsUploading(true);
+    // Conserver l'URL actuelle au cas où l'upload échoue
+    const previousURL = photoURL;
+    let newPhotoURL = '';
+
+    try {
+      console.log(`Téléversement de la photo pour l'employé ID: ${employeeId}`);
+      // Créer une référence pour le stockage Firebase
+      const photoRef = ref(storage, `employees/${employeeId}/profile-photo`);
       
-      // Mettre à jour l'employé dans Firestore sans photo
-      const success = await updateEmployee(employeeId, { 
-        photo: '',
-        photoURL: '',
-        updatedAt: new Date().toISOString()
+      // Téléverser l'image
+      await uploadBytes(photoRef, file);
+      
+      // Obtenir l'URL de téléchargement
+      newPhotoURL = await getDownloadURL(photoRef);
+      console.log("Photo téléversée avec succès, URL:", newPhotoURL);
+      
+      // Mettre à jour l'employé dans Firestore
+      // 1. Mise à jour dans la collection hr_employees
+      await updateEmployee(employeeId, {
+        photoURL: newPhotoURL,
+        photo: newPhotoURL
       });
       
-      if (success) {
-        console.log('Photo supprimée avec succès');
-        toast.success('Photo supprimée avec succès');
-        setPreviewPhoto(null);
-        onPhotoUpdated('');
-      } else {
-        console.error('Erreur lors de la suppression de la photo');
-        toast.error('Erreur lors de la suppression de la photo');
+      // 2. Ajouter également dans hr_documents
+      const docData = {
+        employeeId: employeeId,
+        fileUrl: newPhotoURL,
+        name: `Photo de profil - ${employeeName}`,
+        type: 'photo',
+        date: new Date().toISOString(),
+        fileType: file.type,
+        fileSize: file.size,
+        uploadedBy: 'Système',
+      };
+      
+      try {
+        // Créer ou mettre à jour le document dans hr_documents
+        const docRef = doc(db, COLLECTIONS.HR.DOCUMENTS, `photo_${employeeId}`);
+        await updateDoc(docRef, docData);
+      } catch (error) {
+        console.error("Erreur lors de l'ajout du document photo:", error);
+        // Continuer même si cette partie échoue
       }
+      
+      // Mettre à jour l'état et notifier parent
+      setPhotoURL(newPhotoURL);
+      onPhotoUpdated(newPhotoURL);
+      toast.success("Photo de profil mise à jour avec succès");
     } catch (error) {
-      console.error('Erreur lors de la suppression de la photo:', error);
-      toast.error('Erreur lors de la suppression de la photo');
+      console.error("Erreur lors de la mise à jour de la photo:", error);
+      console.log(`ID de l'employé concerné: ${employeeId}`);
+      // Conserver l'ancienne URL en cas d'échec
+      setPhotoURL(previousURL);
+      toast.error(`Erreur lors de la mise à jour de la photo. ID employé: ${employeeId}`);
     } finally {
       setIsUploading(false);
     }
   };
-  
-  // Obtenir les initiales de l'employé pour le fallback
-  const getInitials = (name: string) => {
-    const names = name.split(' ');
-    if (names.length >= 2) {
-      return `${names[0].charAt(0)}${names[1].charAt(0)}`.toUpperCase();
+
+  const handleDeletePhoto = async () => {
+    // Vérifier l'existence de l'employé d'abord
+    const exists = await checkEmployeeExists(employeeId);
+    if (!exists) return;
+
+    if (!photoURL) return;
+
+    setIsUploading(true);
+    const previousURL = photoURL;
+
+    try {
+      console.log(`Suppression de la photo pour l'employé ID: ${employeeId}`);
+      // Supprimer l'image du stockage Firebase
+      const photoRef = ref(storage, `employees/${employeeId}/profile-photo`);
+      await deleteObject(photoRef).catch(error => {
+        console.warn("L'image n'existait peut-être pas dans le stockage:", error);
+      });
+      
+      // Mettre à jour l'employé dans Firestore
+      await updateEmployee(employeeId, {
+        photoURL: '',
+        photo: ''
+      });
+      
+      // Supprimer également de hr_documents si présent
+      try {
+        const docRef = doc(db, COLLECTIONS.HR.DOCUMENTS, `photo_${employeeId}`);
+        await updateDoc(docRef, { deleted: true });
+      } catch (error) {
+        console.warn("Le document photo n'existait peut-être pas:", error);
+      }
+      
+      setPhotoURL('');
+      onPhotoUpdated('');
+      toast.success("Photo de profil supprimée avec succès");
+    } catch (error) {
+      console.error("Erreur lors de la suppression de la photo:", error);
+      console.log(`ID de l'employé concerné: ${employeeId}`);
+      setPhotoURL(previousURL);
+      toast.error(`Erreur lors de la suppression de la photo. ID employé: ${employeeId}`);
+    } finally {
+      setIsUploading(false);
     }
-    return name.charAt(0).toUpperCase();
   };
-  
-  // Photo actuelle à afficher (priorité au preview)
-  const displayPhoto = previewPhoto || currentPhoto || '';
-  
+
+  const getInitials = () => {
+    return employeeName
+      .split(' ')
+      .map(name => name.charAt(0))
+      .join('')
+      .toUpperCase();
+  };
+
   return (
-    <div className="space-y-2">
-      <div className="flex items-center justify-center">
-        <Avatar className="w-24 h-24 relative group">
-          <AvatarImage src={displayPhoto} alt={employeeName} />
-          <AvatarFallback className="text-xl">{getInitials(employeeName)}</AvatarFallback>
-          
-          <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-full">
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              className="text-white h-8 w-8 p-0"
-              onClick={handleButtonClick}
-              disabled={isUploading}
-            >
-              <Camera className="h-5 w-5" />
-            </Button>
-            
-            {displayPhoto && (
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="text-white h-8 w-8 p-0"
-                onClick={handleRemovePhoto}
-                disabled={isUploading}
-              >
-                <X className="h-5 w-5" />
-              </Button>
-            )}
-          </div>
-          
-          {isUploading && (
-            <div className="absolute inset-0 bg-black/50 flex items-center justify-center rounded-full">
-              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white"></div>
-            </div>
-          )}
+    <div className="relative flex flex-col items-center">
+      <input
+        type="file"
+        ref={fileInputRef}
+        accept="image/*"
+        className="hidden"
+        onChange={handleFileChange}
+        disabled={isUploading}
+      />
+      
+      <div 
+        className="relative cursor-pointer"
+        onMouseEnter={() => setIsHovering(true)}
+        onMouseLeave={() => setIsHovering(false)}
+        onClick={() => !isUploading && fileInputRef.current?.click()}
+      >
+        <Avatar className="h-24 w-24 border-2 border-primary">
+          {photoURL ? (
+            <AvatarImage src={photoURL} alt={employeeName} />
+          ) : null}
+          <AvatarFallback className="text-lg bg-primary-50 text-primary">
+            {getInitials()}
+          </AvatarFallback>
         </Avatar>
         
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button variant="ghost" size="icon" className="ml-2">
-                <Info className="h-4 w-4 text-gray-500" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p className="text-xs">ID: {employeeId}</p>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
+        {isHovering && !isUploading && (
+          <div className="absolute inset-0 bg-black bg-opacity-50 rounded-full flex items-center justify-center">
+            <Camera className="h-8 w-8 text-white" />
+          </div>
+        )}
+        
+        {isUploading && (
+          <div className="absolute inset-0 bg-black bg-opacity-50 rounded-full flex items-center justify-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
+          </div>
+        )}
       </div>
       
-      <div className="flex flex-col items-center">
+      <div className="mt-2 flex space-x-2">
         <Button 
-          variant="outline" 
           size="sm" 
-          className="text-xs"
-          onClick={handleButtonClick}
+          variant="outline" 
+          onClick={() => !isUploading && fileInputRef.current?.click()}
           disabled={isUploading}
         >
-          <Upload className="h-3 w-3 mr-1" />
-          {displayPhoto ? 'Changer' : 'Ajouter'} la photo
+          <Upload className="h-4 w-4 mr-1" />
+          Changer
         </Button>
         
-        <input
-          type="file"
-          ref={fileInputRef}
-          onChange={handleFileChange}
-          accept="image/*"
-          className="hidden"
-        />
-        
-        <div className="mt-1 text-xs text-gray-500">
-          ID: {employeeId}
-        </div>
+        {photoURL && (
+          <Button 
+            size="sm" 
+            variant="outline" 
+            onClick={handleDeletePhoto}
+            disabled={isUploading}
+            className="text-red-500 hover:text-red-700"
+          >
+            <Trash2 className="h-4 w-4 mr-1" />
+            Supprimer
+          </Button>
+        )}
+      </div>
+      
+      <div className="mt-1 text-xs text-gray-500">
+        ID: {employeeIdDisplay}
       </div>
     </div>
   );

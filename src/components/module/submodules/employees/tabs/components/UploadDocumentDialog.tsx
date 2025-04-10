@@ -1,274 +1,216 @@
 
-import React, { useState, useRef, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
+import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { FileUp, Upload, X } from 'lucide-react';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
-import * as z from 'zod';
-import { format } from 'date-fns';
-import { fr } from 'date-fns/locale';
 import { toast } from 'sonner';
-import { addEmployeeDocument, getDocumentTypes } from '../../services/documentService';
-
-// Définition du schéma de validation
-const formSchema = z.object({
-  name: z.string().min(1, 'Nom du document requis'),
-  type: z.string().min(1, 'Type de document requis'),
-  file: z.instanceof(File, { message: 'Fichier requis' }).optional(),
-});
-
-type FormValues = z.infer<typeof formSchema>;
+import { FileText, Upload } from 'lucide-react';
+import { uploadEmployeeDocument } from '../../services/documentService';
 
 interface UploadDocumentDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
-  employeeId?: string;
+  employeeId: string;
   defaultType?: string;
 }
 
-const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({ 
-  open, 
-  onOpenChange, 
-  onSuccess, 
+const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
+  open,
+  onOpenChange,
+  onSuccess,
   employeeId,
-  defaultType = '' 
+  defaultType = ''
 }) => {
   const [file, setFile] = useState<File | null>(null);
+  const [documentName, setDocumentName] = useState('');
+  const [documentType, setDocumentType] = useState(defaultType);
   const [isUploading, setIsUploading] = useState(false);
-  const [documentTypes, setDocumentTypes] = useState<string[]>([
-    'Contrat', 'Avenant', 'Attestation', 'Diplôme', 'CV', 'Pièce d\'identité', 'Autre'
-  ]);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  
-  // Vérification de l'ID employé dès l'ouverture
-  useEffect(() => {
-    if (open) {
-      console.log("UploadDocumentDialog: Ouvert avec ID employé:", employeeId);
-      if (!employeeId) {
-        console.error("UploadDocumentDialog: Ouvert sans ID employé");
-        toast.error("Impossible de téléverser un document: employé non spécifié");
-        onOpenChange(false);
-      }
-    }
-  }, [open, employeeId, onOpenChange]);
-  
-  const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      name: '',
-      type: defaultType || '',
-    },
-  });
 
-  // Chargement des types de documents depuis Firestore
-  React.useEffect(() => {
-    const loadDocumentTypes = async () => {
-      const types = await getDocumentTypes();
-      if (types.length > 0) {
-        setDocumentTypes(types);
-      }
-    };
-    
-    loadDocumentTypes();
-  }, []);
+  const documentTypes = [
+    { value: 'contrat', label: 'Contrat de travail' },
+    { value: 'avenant', label: 'Avenant' },
+    { value: 'attestation', label: 'Attestation' },
+    { value: 'formulaire', label: 'Formulaire' },
+    { value: 'identite', label: 'Pièce d\'identité' },
+    { value: 'diplome', label: 'Diplôme' },
+    { value: 'cv', label: 'CV' },
+    { value: 'formation', label: 'Formation' },
+    { value: 'certification', label: 'Certification' },
+    { value: 'autre', label: 'Autre document' }
+  ];
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const selectedFile = e.target.files[0];
       setFile(selectedFile);
       
-      // Auto-populate name field with filename (without extension)
-      const fileName = selectedFile.name.split('.').slice(0, -1).join('.');
-      form.setValue('name', fileName);
+      // Si le nom du document est vide, utiliser le nom du fichier
+      if (!documentName) {
+        // Supprimer l'extension du fichier
+        const fileName = selectedFile.name.split('.').slice(0, -1).join('.');
+        setDocumentName(fileName);
+      }
     }
   };
 
-  const resetForm = () => {
-    form.reset();
-    setFile(null);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
-  };
-  
-  // Fonction pour simuler l'upload d'un fichier et générer une URL
-  const simulateFileUpload = async (file: File): Promise<string> => {
-    // Dans un environnement réel, ce serait un appel à Firebase Storage
-    // Ici on simule avec URL.createObjectURL
-    return URL.createObjectURL(file);
-  };
-
-  const onSubmit = async (values: FormValues) => {
+  const handleUpload = async () => {
     if (!file) {
-      toast.error('Veuillez sélectionner un fichier');
+      toast.error("Veuillez sélectionner un fichier");
       return;
     }
-    
-    if (!employeeId) {
-      toast.error('ID de l\'employé manquant');
-      console.error('Upload document error: No employee ID provided', { employeeId });
+
+    if (!documentName.trim()) {
+      toast.error("Veuillez donner un nom au document");
       return;
     }
-    
+
+    if (!documentType) {
+      toast.error("Veuillez sélectionner un type de document");
+      return;
+    }
+
     setIsUploading(true);
-    
+
     try {
-      console.log('Téléversement de document pour employé ID:', employeeId);
-      
-      // Simuler l'upload du fichier
-      const fileUrl = await simulateFileUpload(file);
-      
-      // Préparation des métadonnées du document
-      const documentData = {
-        name: values.name,
-        type: values.type,
-        date: format(new Date(), 'yyyy-MM-dd'),
-        fileUrl: fileUrl,
-        id: `doc_${Date.now()}`,
-        size: file.size,
-        employeeId: employeeId,
-        // Métadonnées additionnelles pour faciliter l'intégration avec d'autres parties de l'application
-        format: file.name.split('.').pop() || '',
-        fileType: file.type
-      };
-      
-      console.log("Document à ajouter pour employé ID:", employeeId, documentData);
-      
-      // Ajout du document à la fois à l'employé et à la collection hr_documents
-      const success = await addEmployeeDocument(employeeId, documentData);
-      
-      if (success) {
-        resetForm();
+      console.log(`Téléversement de document pour l'employé ID: ${employeeId}`);
+      const result = await uploadEmployeeDocument(
+        employeeId,
+        file,
+        documentName,
+        documentType
+      );
+
+      if (result) {
+        toast.success("Document ajouté avec succès");
         onSuccess();
-        onOpenChange(false);
+        handleClose();
+      } else {
+        toast.error("Erreur lors du téléversement du document");
       }
     } catch (error) {
-      console.error('Erreur lors du téléversement:', error);
-      toast.error('Erreur lors du téléversement du document');
+      console.error("Erreur lors du téléversement:", error);
+      toast.error(`Erreur lors du téléversement: ${error instanceof Error ? error.message : 'Erreur inconnue'}`);
     } finally {
       setIsUploading(false);
     }
   };
 
-  const handleCancel = () => {
-    resetForm();
+  const handleClose = () => {
+    setFile(null);
+    setDocumentName('');
+    setDocumentType(defaultType);
     onOpenChange(false);
   };
-
-  // Si pas d'ID employé, ne pas rendre le composant
-  if (!employeeId && open) {
-    return null;
-  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Téléverser un document (ID Employé: {employeeId})</DialogTitle>
+          <DialogTitle>Ajouter un document</DialogTitle>
         </DialogHeader>
-        
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <div 
-              className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer hover:bg-gray-50 transition-colors ${file ? 'border-green-300 bg-green-50' : 'border-gray-300'}`}
-              onClick={() => fileInputRef.current?.click()}
-            >
+
+        <div className="space-y-4 py-4">
+          <div className="space-y-2">
+            <Label htmlFor="file">Fichier</Label>
+            <div className="border border-dashed rounded-md p-6 flex flex-col items-center justify-center">
               {file ? (
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center">
-                    <FileUp className="h-6 w-6 text-green-500 mr-2" />
-                    <div className="text-sm text-left">
-                      <p className="font-medium truncate" style={{ maxWidth: '180px' }}>{file.name}</p>
-                      <p className="text-xs text-gray-500">
-                        {file.size < 1024 * 1024 
-                          ? `${(file.size / 1024).toFixed(1)} KB` 
-                          : `${(file.size / (1024 * 1024)).toFixed(1)} MB`}
-                      </p>
-                    </div>
-                  </div>
+                <div className="flex flex-col items-center gap-2">
+                  <FileText className="h-8 w-8 text-blue-500" />
+                  <span className="text-sm font-medium">{file.name}</span>
+                  <span className="text-xs text-gray-500">{(file.size / 1024).toFixed(2)} KB</span>
                   <Button 
-                    type="button" 
-                    variant="ghost" 
-                    size="sm"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setFile(null);
-                      if (fileInputRef.current) fileInputRef.current.value = '';
-                    }}
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => setFile(null)}
+                    disabled={isUploading}
                   >
-                    <X className="h-4 w-4" />
+                    Changer
                   </Button>
                 </div>
               ) : (
-                <>
-                  <Upload className="h-8 w-8 mx-auto text-gray-400" />
-                  <p className="mt-2 text-sm text-gray-500">Cliquez pour sélectionner un fichier</p>
-                  <p className="text-xs text-gray-400 mt-1">PDF, Word, Excel, Images</p>
-                </>
-              )}
-              <input
-                type="file"
-                ref={fileInputRef}
-                onChange={handleFileChange}
-                className="hidden"
-              />
-            </div>
-            
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Nom du document</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Nom du document" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="type"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Type de document</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
+                <div className="flex flex-col items-center gap-2">
+                  <Upload className="h-8 w-8 text-gray-400" />
+                  <p className="text-sm text-gray-500">Cliquez pour sélectionner un fichier ou déposez-le ici</p>
+                  <Input 
+                    id="file" 
+                    type="file" 
+                    className="hidden" 
+                    onChange={handleFileChange}
+                    disabled={isUploading}
+                  />
+                  <Button 
+                    variant="outline" 
+                    onClick={() => document.getElementById('file')?.click()}
+                    disabled={isUploading}
                   >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Sélectionner un type" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {documentTypes.map((type) => (
-                        <SelectItem key={type} value={type}>{type}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
+                    Sélectionner un fichier
+                  </Button>
+                </div>
               )}
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="name">Nom du document</Label>
+            <Input 
+              id="name" 
+              value={documentName} 
+              onChange={(e) => setDocumentName(e.target.value)}
+              placeholder="Exemple: Contrat de travail"
+              disabled={isUploading}
             />
-            
-            <DialogFooter className="mt-6">
-              <Button type="button" variant="outline" onClick={handleCancel}>
-                Annuler
-              </Button>
-              <Button type="submit" disabled={isUploading}>
-                {isUploading ? 'Téléversement...' : 'Téléverser'}
-              </Button>
-            </DialogFooter>
-          </form>
-        </Form>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="type">Type de document</Label>
+            <Select 
+              value={documentType} 
+              onValueChange={setDocumentType}
+              disabled={isUploading}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Sélectionner un type" />
+              </SelectTrigger>
+              <SelectContent>
+                {documentTypes.map((type) => (
+                  <SelectItem key={type.value} value={type.value}>
+                    {type.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="text-xs text-gray-500">
+            ID Employé: {employeeId}
+          </div>
+        </div>
+
+        <DialogFooter>
+          <Button 
+            variant="outline" 
+            onClick={handleClose}
+            disabled={isUploading}
+          >
+            Annuler
+          </Button>
+          <Button 
+            onClick={handleUpload}
+            disabled={!file || !documentName.trim() || !documentType || isUploading}
+          >
+            {isUploading ? (
+              <>
+                <div className="animate-spin mr-2 h-4 w-4 border-2 border-t-transparent border-white rounded-full"></div>
+                Téléversement...
+              </>
+            ) : (
+              'Téléverser'
+            )}
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
