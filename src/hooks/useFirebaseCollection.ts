@@ -18,7 +18,7 @@ export function useFirebaseCollection<T>(
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
-  // Fonction pour charger les données une seule fois
+  // Fonction pour charger les données une seule fois en cas de problème avec le listener
   const fetchDataOnce = useCallback(async () => {
     try {
       console.log(`Récupération unique depuis ${collectionPath}...`);
@@ -38,8 +38,6 @@ export function useFirebaseCollection<T>(
     } catch (err) {
       console.error(`Échec de la récupération depuis ${collectionPath}:`, err);
       throw err;
-    } finally {
-      setIsLoading(false);
     }
   }, [collectionPath, queryConstraints]);
 
@@ -91,7 +89,7 @@ export function useFirebaseCollection<T>(
           setIsLoading(false);
           
           // En cas d'erreur, essayer de charger les données une seule fois
-          fetchDataOnce();
+          fetchDataOnce().catch(e => console.error('Erreur lors de la récupération de secours:', e));
         }
       );
       
@@ -103,7 +101,7 @@ export function useFirebaseCollection<T>(
       setIsLoading(false);
       
       // En cas d'erreur, essayer de charger les données une seule fois
-      fetchDataOnce();
+      fetchDataOnce().catch(e => console.error('Erreur lors de la récupération de secours:', e));
     }
   }, [collectionPath, queryConstraints, fetchDataOnce]);
 

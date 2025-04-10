@@ -25,7 +25,6 @@ import { Company } from '../companies/types';
 import CompanyForm from '../CompanyForm';
 import { useAuth } from '@/hooks/useAuth';
 import { useFirebaseCompanies } from '@/hooks/useFirebaseCompanies';
-import { companyService } from '../companies/services/companyService';
 
 const EmployeesCompanies: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -66,10 +65,13 @@ const EmployeesCompanies: React.FC = () => {
     if (!currentCompany) return;
 
     try {
-      await companyService.updateCompany(currentCompany.id, {
+      const updateData = {
         ...companyData,
         updatedAt: new Date().toISOString()
-      });
+      };
+      
+      const { updateCompany } = await import('../companies/services/companyService');
+      await updateCompany(currentCompany.id, updateData);
       
       toast.success('Entreprise mise à jour avec succès');
       setIsEditDialogOpen(false);
@@ -88,7 +90,9 @@ const EmployeesCompanies: React.FC = () => {
     if (!currentCompany) return;
 
     try {
-      await companyService.deleteCompany(currentCompany.id);
+      const { deleteCompany } = await import('../companies/services/companyService');
+      await deleteCompany(currentCompany.id);
+      
       toast.success('Entreprise supprimée avec succès');
       setIsDeleteDialogOpen(false);
     } catch (error) {
@@ -101,15 +105,15 @@ const EmployeesCompanies: React.FC = () => {
     try {
       console.log('Tentative d\'ajout d\'une entreprise avec les données:', companyData);
       
-      const newCompany = await companyService.createCompany({
+      const { addCompany } = await import('../companies/services/companyService');
+      await addCompany({
         ...companyData,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
         status: 'active' as const,
         employeesCount: 0
-      } as any);
+      });
 
-      console.log('Entreprise ajoutée avec succès:', newCompany);
       toast.success('Entreprise ajoutée avec succès');
       setIsAddDialogOpen(false);
     } catch (error) {
@@ -121,12 +125,8 @@ const EmployeesCompanies: React.FC = () => {
   const refreshData = async () => {
     setIsRefreshing(true);
     try {
-      if (refetch) {
-        await refetch();
-        toast.success('Données actualisées avec succès');
-      } else {
-        window.location.reload();
-      }
+      await refetch();
+      toast.success('Données actualisées avec succès');
     } catch (error) {
       console.error('Erreur lors de l\'actualisation des données:', error);
       toast.error('Échec de l\'actualisation des données');
