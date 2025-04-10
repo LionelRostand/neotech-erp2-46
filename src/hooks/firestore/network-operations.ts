@@ -1,7 +1,6 @@
 
 import { checkFirestoreConnection } from '@/lib/firebase';
 import { toast } from 'sonner';
-import { isNetworkError, isRateLimitError } from './network-handler';
 
 /**
  * File avec les opérations réseau pour Firestore
@@ -87,11 +86,17 @@ const processOperationsQueue = async () => {
     try {
       const result = await operation.operation();
       operation.resolve(result);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erreur lors de l\'exécution d\'une opération en file d\'attente:', error);
       
-      if (isNetworkError(error)) {
-        // Si c'est une erreur réseau et que nous n'avons pas dépassé le nombre maximum de tentatives
+      const isNetworkError = error.code === 'unavailable' || 
+        error.code === 'deadline-exceeded' ||
+        error.message?.includes('network') ||
+        error.message?.includes('timeout') ||
+        error.name === 'AbortError';
+      
+      // Si c'est une erreur réseau et que nous n'avons pas dépassé le nombre maximum de tentatives
+      if (isNetworkError) {
         if (operation.retryCount < operation.maxRetries) {
           console.log(`Remise en file d'attente de l'opération (tentative ${operation.retryCount + 1}/${operation.maxRetries})`);
           operationsQueue.push({

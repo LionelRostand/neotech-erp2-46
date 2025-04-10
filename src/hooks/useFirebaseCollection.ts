@@ -3,7 +3,6 @@ import { useState, useEffect, useCallback } from 'react';
 import { collection, getDocs, query, onSnapshot, QueryConstraint } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { toast } from 'sonner';
-import { isNetworkError } from './firestore/network-handler';
 
 /**
  * Hook générique pour récupérer des données depuis une collection Firebase avec mise à jour en temps réel
@@ -79,7 +78,13 @@ export function useFirebaseCollection<T>(
         (err) => {
           console.error(`Erreur lors du chargement depuis ${collectionPath}:`, err);
           
-          if (isNetworkError(err)) {
+          const isNetworkError = err.code === 'unavailable' || 
+            err.code === 'deadline-exceeded' ||
+            err.message?.includes('network') ||
+            err.message?.includes('timeout') ||
+            err.name === 'AbortError';
+          
+          if (isNetworkError) {
             toast.error(`Impossible de charger les données: Mode hors ligne`);
           } else {
             toast.error(`Erreur lors du chargement des données: ${err.message}`);

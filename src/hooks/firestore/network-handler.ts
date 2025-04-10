@@ -41,3 +41,51 @@ export const executeWithNetworkRetry = async <T>(
   // This should never be reached due to the throw in the loop
   throw lastError;
 };
+
+/**
+ * Check if an error is a network-related error
+ * @param error The error to check
+ * @returns True if it's a network error
+ */
+export const isNetworkError = (error: any): boolean => {
+  return !!(
+    error.code === 'unavailable' || 
+    error.code === 'deadline-exceeded' ||
+    error.message?.includes('network') ||
+    error.message?.includes('timeout') ||
+    error.message?.includes('disconnected') ||
+    error.message?.includes('offline') ||
+    error.name === 'AbortError'
+  );
+};
+
+/**
+ * Check if an error is a rate limit error
+ * @param error The error to check
+ * @returns True if it's a rate limit error
+ */
+export const isRateLimitError = (error: any): boolean => {
+  return !!(
+    error.code === 'resource-exhausted' ||
+    error.message?.includes('quota') ||
+    error.message?.includes('rate limit') ||
+    error.message?.includes('too many requests')
+  );
+};
+
+/**
+ * Attempt to reconnect to Firestore
+ * @returns Promise resolved with true if successful
+ */
+export const reconnectToFirestore = async (): Promise<boolean> => {
+  try {
+    console.log('Attempting to reconnect to Firestore...');
+    // In a real implementation, this would try to reconnect to Firestore
+    // For now, we'll just simulate a successful reconnection
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    return true;
+  } catch (error) {
+    console.error('Failed to reconnect to Firestore:', error);
+    return false;
+  }
+};

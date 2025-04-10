@@ -3,7 +3,6 @@ import { useState, useEffect, useCallback } from 'react';
 import { useFirestore } from './use-firestore';
 import { toast } from 'sonner';
 import { restoreFirestoreConnectivity } from './firestore/network-operations';
-import { isNetworkError, isRateLimitError } from './firestore/network-handler';
 
 /**
  * Ce hook enveloppe le hook useFirestore pour éviter les rechargements infinis
@@ -17,6 +16,25 @@ export const useSafeFirestore = (collectionName: string) => {
   const [retryAttempts, setRetryAttempts] = useState(0);
   const [retryTimeout, setRetryTimeout] = useState<NodeJS.Timeout | null>(null);
   const MAX_RETRY_ATTEMPTS = 3;
+  
+  // Helper functions to determine error types
+  const isNetworkError = (error: any): boolean => {
+    return !!(
+      error.code === 'unavailable' || 
+      error.code === 'deadline-exceeded' ||
+      error.message?.includes('network') ||
+      error.message?.includes('timeout') ||
+      error.name === 'AbortError'
+    );
+  };
+  
+  const isRateLimitError = (error: any): boolean => {
+    return !!(
+      error.code === 'resource-exhausted' ||
+      error.message?.includes('quota') ||
+      error.message?.includes('rate limit')
+    );
+  };
   
   // Clean up any pending timers when unmounting
   useEffect(() => {
@@ -152,7 +170,7 @@ export const useSafeFirestore = (collectionName: string) => {
       setDataFetched(true); // Même en cas d'erreur, on considère que la tentative a été faite
       throw error;
     }
-  }, [firestore, dataFetched, networkError, rateLimited, collectionName, retryAttempts]);
+  }, [firestore, dataFetched, networkError, rateLimited, collectionName, retryAttempts, isNetworkError, isRateLimitError]);
   
   // Fonction pour réinitialiser l'état de chargement
   const resetFetchState = useCallback(() => {
