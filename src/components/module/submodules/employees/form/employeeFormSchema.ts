@@ -1,13 +1,27 @@
 
 import * as z from 'zod';
 
+// Schéma pour l'adresse détaillée
+export const addressSchema = z.object({
+  street: z.string().optional(),
+  streetNumber: z.string().optional(),
+  city: z.string().optional(),
+  postalCode: z.string().optional(),
+  department: z.string().optional(),
+  country: z.string().default('France'),
+});
+
 // Schéma pour la validation du formulaire
 export const employeeFormSchema = z.object({
   firstName: z.string().min(2, "Le prénom doit contenir au moins 2 caractères"),
   lastName: z.string().min(2, "Le nom doit contenir au moins 2 caractères"),
   email: z.string().email("Format d'email invalide").or(z.string().length(0)),
   phone: z.string().optional(),
-  address: z.string().optional(),
+  // Nouvelle structure d'adresse avec des champs détaillés ou une chaîne simple pour compatibilité
+  address: z.union([
+    z.string(),
+    addressSchema
+  ]).optional(),
   department: z.string().optional(),
   position: z.string().optional(),
   contract: z.string(),

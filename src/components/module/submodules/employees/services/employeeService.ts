@@ -1,100 +1,106 @@
 
 import { db } from '@/lib/firebase';
-import { collection, getDocs, doc, getDoc, addDoc, updateDoc, deleteDoc, query, orderBy } from 'firebase/firestore';
-import { Employee } from '@/types/employee';
-import { toast } from 'sonner';
+import { 
+  doc, 
+  updateDoc, 
+  getDoc, 
+  serverTimestamp,
+  arrayUnion
+} from 'firebase/firestore';
 import { COLLECTIONS } from '@/lib/firebase-collections';
+import { Employee, EmployeeAddress } from '@/types/employee';
 
 /**
- * Fetch employees data from Firestore
+ * Met à jour les informations d'un employé
  */
-export const fetchEmployeesData = async (): Promise<Employee[]> => {
+export const updateEmployee = async (employeeId: string, updates: Partial<Employee>): Promise<boolean> => {
   try {
-    const employeesRef = collection(db, COLLECTIONS.HR.EMPLOYEES);
-    const q = query(employeesRef, orderBy('lastName', 'asc'));
-    const snapshot = await getDocs(q);
-    
-    return snapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    } as Employee));
-  } catch (error) {
-    console.error('Error fetching employees:', error);
-    toast.error('Error fetching employees data');
-    return [];
-  }
-};
-
-/**
- * Refresh employees data (same as fetchEmployeesData but named differently for clarity)
- */
-export const refreshEmployeesData = async (): Promise<Employee[]> => {
-  return fetchEmployeesData();
-};
-
-/**
- * Get an employee by ID
- */
-export const getEmployeeById = async (id: string): Promise<Employee | null> => {
-  try {
-    const docRef = doc(db, COLLECTIONS.HR.EMPLOYEES, id);
-    const docSnap = await getDoc(docRef);
-    
-    if (docSnap.exists()) {
-      return {
-        id: docSnap.id,
-        ...docSnap.data()
-      } as Employee;
+    if (!employeeId) {
+      console.error("Erreur: ID d'employé manquant");
+      return false;
     }
     
-    return null;
-  } catch (error) {
-    console.error('Error getting employee:', error);
-    toast.error('Error retrieving employee data');
-    return null;
-  }
-};
-
-/**
- * Add a new employee
- */
-export const addEmployee = async (employeeData: Omit<Employee, 'id'>): Promise<string | null> => {
-  try {
-    const docRef = await addDoc(collection(db, COLLECTIONS.HR.EMPLOYEES), employeeData);
-    return docRef.id;
-  } catch (error) {
-    console.error('Error adding employee:', error);
-    toast.error('Error adding new employee');
-    return null;
-  }
-};
-
-/**
- * Update an employee
- */
-export const updateEmployee = async (id: string, data: Partial<Employee>): Promise<boolean> => {
-  try {
-    const docRef = doc(db, COLLECTIONS.HR.EMPLOYEES, id);
-    await updateDoc(docRef, data);
+    const employeeRef = doc(db, COLLECTIONS.HR.EMPLOYEES, employeeId);
+    const employeeDoc = await getDoc(employeeRef);
+    
+    if (!employeeDoc.exists()) {
+      console.error(`Employé avec ID ${employeeId} non trouvé`);
+      return false;
+    }
+    
+    // Préparer les données de mise à jour
+    const updateData: any = {
+      ...updates,
+      updatedAt: serverTimestamp()
+    };
+    
+    await updateDoc(employeeRef, updateData);
     return true;
   } catch (error) {
-    console.error('Error updating employee:', error);
-    toast.error('Error updating employee data');
+    console.error("Erreur lors de la mise à jour de l'employé:", error);
     return false;
   }
 };
 
 /**
- * Delete an employee
+ * Récupère les informations d'un employé
  */
-export const deleteEmployee = async (id: string): Promise<boolean> => {
+export const getEmployee = async (employeeId: string): Promise<Employee | null> => {
   try {
-    const docRef = doc(db, COLLECTIONS.HR.EMPLOYEES, id);
-    await deleteDoc(docRef);
+    if (!employeeId) {
+      console.error("Erreur: ID d'employé manquant");
+      return null;
+    }
+    
+    const employeeRef = doc(db, COLLECTIONS.HR.EMPLOYEES, employeeId);
+    const employeeDoc = await getDoc(employeeRef);
+    
+    if (!employeeDoc.exists()) {
+      console.error(`Employé avec ID ${employeeId} non trouvé`);
+      return null;
+    }
+    
+    const employeeData = employeeDoc.data();
+    return {
+      id: employeeDoc.id,
+      ...employeeData
+    } as Employee;
+  } catch (error) {
+    console.error("Erreur lors de la récupération de l'employé:", error);
+    return null;
+  }
+};
+
+/**
+ * Ajoute un document à un employé existant
+ */
+export const addDocumentToEmployee = async (
+  employeeId: string, 
+  documentId: string, 
+  documentData: any
+): Promise<boolean> => {
+  try {
+    if (!employeeId || !documentId) {
+      console.error("Erreur: ID d'employé ou ID de document manquant");
+      return false;
+    }
+    
+    const employeeRef = doc(db, COLLECTIONS.HR.EMPLOYEES, employeeId);
+    
+    await updateDoc(employeeRef, {
+      documents: arrayUnion({
+        id: documentId,
+        name: documentData.name,
+        type: documentData.type,
+        date: documentData.date,
+        fileUrl: documentData.fileUrl
+      }),
+      updatedAt: serverTimestamp()
+    });
+    
     return true;
   } catch (error) {
-    console.error('Error deleting employee:', error);
-    toast.error('Error deleting employee');
+    console.error("Erreur lors de l'ajout du document à l'employé:", error);
     return false;
   }
 };
