@@ -32,6 +32,29 @@ export const isNetworkError = (error: any): boolean => {
 };
 
 /**
+ * Vérifie si une erreur est liée aux limitations de taux (rate limits)
+ */
+export const isRateLimitError = (error: any): boolean => {
+  if (error instanceof FirebaseError) {
+    // Codes d'erreur Firebase liés aux rate limits
+    const rateLimitCodes = [
+      'resource-exhausted',
+      'too-many-requests',
+      'quota-exceeded'
+    ];
+    return rateLimitCodes.includes(error.code);
+  }
+  
+  // Pour les autres types d'erreurs, vérifier le message
+  const errorMessage = String(error.message || error).toLowerCase();
+  return errorMessage.includes('quota') || 
+         errorMessage.includes('rate limit') || 
+         errorMessage.includes('too many requests') ||
+         errorMessage.includes('resource exhausted') ||
+         errorMessage.includes('429');
+};
+
+/**
  * Vérifie si une erreur est liée aux permissions
  */
 export const isPermissionError = (error: any): boolean => {
