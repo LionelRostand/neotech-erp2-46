@@ -8,7 +8,7 @@ export const COLLECTIONS = {
   USERS: 'users',
   COMPANIES: 'companies',
   SETTINGS: 'settings',
-  CONTACTS: 'contacts', // Adding general contacts collection
+  CONTACTS: 'contacts', // General contacts collection
   
   // Module CRM
   CRM: {
@@ -17,7 +17,7 @@ export const COLLECTIONS = {
     OPPORTUNITIES: 'crm_opportunities',
     REMINDERS: 'crm_reminders',
     SETTINGS: 'crm_settings',
-    CONTACTS: 'crm_contacts', // Adding CRM contacts
+    CONTACTS: 'crm_contacts', // CRM contacts
     LEADS: 'crm_leads',       // Adding leads
     DEALS: 'crm_deals'        // Adding deals
   },
@@ -132,9 +132,6 @@ export const COLLECTIONS = {
   
   // Module Documents
   DOCUMENTS: 'documents',
-  
-  // Contacts collection for general use
-  CONTACTS: 'contacts',
   
   // Permissions
   USER_PERMISSIONS: 'userPermissions'
