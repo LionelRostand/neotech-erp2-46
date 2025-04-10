@@ -42,8 +42,8 @@ const CompanyCreateForm: React.FC = () => {
         updatedAt: new Date().toISOString()
       };
       
-      // Submit to service
-      await companyService.getCompanies(); // Simulate API call
+      // Enregistrer réellement l'entreprise dans Firestore au lieu de simuler
+      await companyService.createCompany(companyData);
       
       toast.success('Entreprise créée avec succès');
       navigate('/modules/companies/list');

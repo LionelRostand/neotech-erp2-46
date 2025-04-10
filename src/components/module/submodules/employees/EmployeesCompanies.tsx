@@ -25,7 +25,8 @@ import CompaniesTable from '../companies/CompaniesTable';
 import { Company } from '../companies/types';
 import CompanyForm from '../CompanyForm';
 import { useAuth } from '@/hooks/useAuth';
-import { useCompaniesData } from '@/hooks/useCompaniesData';
+import { useFirebaseCompanies } from '@/hooks/useFirebaseCompanies';
+import { companyService } from '../companies/services/companyService';
 
 const EmployeesCompanies: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -36,8 +37,10 @@ const EmployeesCompanies: React.FC = () => {
   const [currentCompany, setCurrentCompany] = useState<Company | null>(null);
   const { isOffline } = useAuth();
   
-  const { companies, isLoading, error } = useCompaniesData();
+  // Utiliser useFirebaseCompanies au lieu de useCompaniesData pour avoir des données à jour
+  const { companies, isLoading, error } = useFirebaseCompanies();
 
+  // Rafraîchir les données filtrées lorsque les entreprises ou la recherche changent
   useEffect(() => {
     if (searchQuery.trim() === '') {
       setFilteredCompanies(companies);
@@ -61,21 +64,22 @@ const EmployeesCompanies: React.FC = () => {
     setIsEditDialogOpen(true);
   };
 
-  const handleUpdateCompany = (companyData: Partial<Company>) => {
+  const handleUpdateCompany = async (companyData: Partial<Company>) => {
     if (!currentCompany) return;
 
-    const updatedCompany = {
-      ...currentCompany,
-      ...companyData,
-      updatedAt: new Date().toISOString()
-    };
-
-    const updatedCompanies = companies.map(c => 
-      c.id === currentCompany.id ? updatedCompany as Company : c
-    );
-    
-    toast.success('Entreprise mise à jour avec succès');
-    setIsEditDialogOpen(false);
+    try {
+      // Mettre à jour l'entreprise dans Firestore
+      await companyService.updateCompany(currentCompany.id, {
+        ...companyData,
+        updatedAt: new Date().toISOString()
+      });
+      
+      toast.success('Entreprise mise à jour avec succès');
+      setIsEditDialogOpen(false);
+    } catch (error) {
+      console.error('Erreur lors de la mise à jour:', error);
+      toast.error('Échec de la mise à jour de l\'entreprise');
+    }
   };
 
   const handleDeleteClick = (company: Company) => {
@@ -83,24 +87,42 @@ const EmployeesCompanies: React.FC = () => {
     setIsDeleteDialogOpen(true);
   };
 
-  const handleDeleteConfirm = () => {
+  const handleDeleteConfirm = async () => {
     if (!currentCompany) return;
 
-    toast.success('Entreprise supprimée avec succès');
-    setIsDeleteDialogOpen(false);
+    try {
+      // Supprimer réellement l'entreprise dans Firestore
+      await companyService.deleteCompany(currentCompany.id);
+      toast.success('Entreprise supprimée avec succès');
+      setIsDeleteDialogOpen(false);
+    } catch (error) {
+      console.error('Erreur lors de la suppression:', error);
+      toast.error('Échec de la suppression de l\'entreprise');
+    }
   };
 
-  const handleAddCompany = (companyData: Partial<Company>) => {
-    const newCompany = {
-      ...companyData,
-      id: `COMP${Date.now().toString().slice(-6)}`,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      status: 'active' as const
-    } as Company;
+  const handleAddCompany = async (companyData: Partial<Company>) => {
+    try {
+      // Créer réellement l'entreprise dans Firestore
+      await companyService.createCompany({
+        ...companyData,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        status: 'active' as const,
+        employeesCount: 0
+      } as any); // Cast as any pour éviter les erreurs de type
+      
+      toast.success('Entreprise ajoutée avec succès');
+      setIsAddDialogOpen(false);
+    } catch (error) {
+      console.error('Erreur lors de l\'ajout:', error);
+      toast.error('Échec de l\'ajout de l\'entreprise');
+    }
+  };
 
-    toast.success('Entreprise ajoutée avec succès');
-    setIsAddDialogOpen(false);
+  // Fonction pour actualiser manuellement les données
+  const refreshData = () => {
+    window.location.reload();
   };
 
   return (
