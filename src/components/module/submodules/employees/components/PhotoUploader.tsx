@@ -3,8 +3,9 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { toast } from 'sonner';
-import { updateEmployee } from '../services/employeeService';
-import { Camera, Upload, X } from 'lucide-react';
+import { updateEmployee, getEmployeeById } from '../services/employeeService';
+import { Camera, Upload, X, Info } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface PhotoUploaderProps {
   employeeId: string;
@@ -25,10 +26,10 @@ const PhotoUploader: React.FC<PhotoUploaderProps> = ({
   
   // S'assurer que le previewPhoto est initialisé avec currentPhoto
   useEffect(() => {
-    if (currentPhoto && !previewPhoto) {
+    if (currentPhoto) {
       setPreviewPhoto(currentPhoto);
     }
-  }, [currentPhoto, previewPhoto]);
+  }, [currentPhoto]);
   
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -55,6 +56,15 @@ const PhotoUploader: React.FC<PhotoUploaderProps> = ({
         
         console.log(`Mise à jour de la photo pour l'employé ID: ${employeeId}`);
         
+        // Vérifier si l'employé existe avant la mise à jour
+        const employeeExists = await getEmployeeById(employeeId);
+        if (!employeeExists) {
+          console.error(`Employé avec ID ${employeeId} non trouvé dans la base de données`);
+          toast.error(`Employé avec ID ${employeeId} non trouvé`);
+          setIsUploading(false);
+          return;
+        }
+        
         // Dans un environnement réel, on téléverserait le fichier sur un stockage (Firebase Storage)
         // et on récupérerait l'URL du fichier
         
@@ -71,12 +81,12 @@ const PhotoUploader: React.FC<PhotoUploaderProps> = ({
         } else {
           console.error('Erreur lors de la mise à jour de la photo');
           toast.error('Erreur lors de la mise à jour de la photo');
-          setPreviewPhoto(currentPhoto);
+          // Ne pas réinitialiser le preview en cas d'erreur
         }
       } catch (error) {
         console.error('Erreur lors du téléversement de la photo:', error);
         toast.error('Erreur lors du téléversement de la photo');
-        setPreviewPhoto(currentPhoto);
+        // Ne pas réinitialiser le preview en cas d'erreur
       } finally {
         setIsUploading(false);
         // Réinitialiser l'input file
@@ -98,6 +108,15 @@ const PhotoUploader: React.FC<PhotoUploaderProps> = ({
     
     try {
       console.log(`Suppression de la photo pour l'employé ID: ${employeeId}`);
+      
+      // Vérifier si l'employé existe avant la mise à jour
+      const employeeExists = await getEmployeeById(employeeId);
+      if (!employeeExists) {
+        console.error(`Employé avec ID ${employeeId} non trouvé dans la base de données`);
+        toast.error(`Employé avec ID ${employeeId} non trouvé`);
+        setIsUploading(false);
+        return;
+      }
       
       // Mettre à jour l'employé dans Firestore sans photo
       const success = await updateEmployee(employeeId, { 
@@ -136,40 +155,55 @@ const PhotoUploader: React.FC<PhotoUploaderProps> = ({
   
   return (
     <div className="space-y-2">
-      <Avatar className="w-24 h-24 relative group">
-        <AvatarImage src={displayPhoto} alt={employeeName} />
-        <AvatarFallback className="text-xl">{getInitials(employeeName)}</AvatarFallback>
-        
-        <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-full">
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            className="text-white h-8 w-8 p-0"
-            onClick={handleButtonClick}
-            disabled={isUploading}
-          >
-            <Camera className="h-5 w-5" />
-          </Button>
+      <div className="flex items-center justify-center">
+        <Avatar className="w-24 h-24 relative group">
+          <AvatarImage src={displayPhoto} alt={employeeName} />
+          <AvatarFallback className="text-xl">{getInitials(employeeName)}</AvatarFallback>
           
-          {displayPhoto && (
+          <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-full">
             <Button 
               variant="ghost" 
               size="sm" 
               className="text-white h-8 w-8 p-0"
-              onClick={handleRemovePhoto}
+              onClick={handleButtonClick}
               disabled={isUploading}
             >
-              <X className="h-5 w-5" />
+              <Camera className="h-5 w-5" />
             </Button>
-          )}
-        </div>
-        
-        {isUploading && (
-          <div className="absolute inset-0 bg-black/50 flex items-center justify-center rounded-full">
-            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white"></div>
+            
+            {displayPhoto && (
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="text-white h-8 w-8 p-0"
+                onClick={handleRemovePhoto}
+                disabled={isUploading}
+              >
+                <X className="h-5 w-5" />
+              </Button>
+            )}
           </div>
-        )}
-      </Avatar>
+          
+          {isUploading && (
+            <div className="absolute inset-0 bg-black/50 flex items-center justify-center rounded-full">
+              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white"></div>
+            </div>
+          )}
+        </Avatar>
+        
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="ghost" size="icon" className="ml-2">
+                <Info className="h-4 w-4 text-gray-500" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p className="text-xs">ID: {employeeId}</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      </div>
       
       <div className="flex flex-col items-center">
         <Button 
@@ -190,6 +224,10 @@ const PhotoUploader: React.FC<PhotoUploaderProps> = ({
           accept="image/*"
           className="hidden"
         />
+        
+        <div className="mt-1 text-xs text-gray-500">
+          ID: {employeeId}
+        </div>
       </div>
     </div>
   );
