@@ -3,6 +3,8 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { User, AuthContextType } from '@/types/user';
 import { authService } from '@/services/authService';
 import { useNavigate } from 'react-router-dom';
+import { onAuthStateChanged } from 'firebase/auth';
+import { auth } from '@/lib/firebase';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -26,8 +28,27 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     };
   }, []);
 
+  // Écouter les changements d'état d'authentification Firebase
   useEffect(() => {
-    // Load user from localStorage on startup
+    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+      if (firebaseUser) {
+        // Si nous avons des données d'utilisateur dans le localStorage, les utiliser
+        const storedUser = authService.getCurrentUser();
+        if (storedUser) {
+          setUser(storedUser);
+        }
+      } else {
+        // Utilisateur déconnecté
+        setUser(null);
+      }
+      setIsLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  // Aussi, charger l'utilisateur depuis localStorage au démarrage
+  useEffect(() => {
     const loadUser = () => {
       const currentUser = authService.getCurrentUser();
       setUser(currentUser);
@@ -65,7 +86,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     logout,
     isAuthenticated: !!user,
     isLoading,
-    // Alias properties to maintain compatibility with components using different property names
+    // Alias properties to maintain compatibility
     currentUser: user,
     userData: user,
     loading: isLoading,

@@ -2,7 +2,8 @@
 import React from 'react';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { RefreshCw, ShieldAlert, WifiOff, Settings, ArrowRight } from "lucide-react";
+import { RefreshCw, ShieldAlert, WifiOff, Settings, ArrowRight, LogIn } from "lucide-react";
+import { useNavigate } from 'react-router-dom';
 
 interface FirebaseErrorAlertProps {
   error: Error | null;
@@ -15,6 +16,8 @@ export const FirebaseErrorAlert: React.FC<FirebaseErrorAlertProps> = ({
   onRetry,
   className,
 }) => {
+  const navigate = useNavigate();
+  
   if (!error) return null;
   
   const errorMessage = error.message || String(error);
@@ -23,6 +26,10 @@ export const FirebaseErrorAlert: React.FC<FirebaseErrorAlertProps> = ({
                             errorMessage.includes('unauthorized') ||
                             errorMessage.includes('access');
   const isOfflineError = errorMessage.includes('offline') || errorMessage.includes('network');
+  const isAuthError = errorMessage.includes('auth/') || 
+                      errorMessage.includes('unauthenticated') ||
+                      errorMessage.includes('login') ||
+                      errorMessage.includes('sign-in');
   
   // Déterminer un message d'aide spécifique basé sur le type d'erreur
   const getHelpText = () => {
@@ -30,6 +37,8 @@ export const FirebaseErrorAlert: React.FC<FirebaseErrorAlertProps> = ({
       return "Cette erreur est souvent due à des règles de sécurité Firebase qui ne sont pas correctement configurées. Voici les actions possibles:";
     } else if (isOfflineError) {
       return "Vous êtes actuellement hors ligne. Veuillez vérifier votre connexion Internet et réessayer.";
+    } else if (isAuthError) {
+      return "Vous n'êtes pas connecté ou votre session a expiré. Veuillez vous reconnecter pour accéder à cette ressource.";
     } else {
       return `Une erreur est survenue lors de la récupération des données: ${errorMessage}`;
     }
@@ -72,6 +81,26 @@ export const FirebaseErrorAlert: React.FC<FirebaseErrorAlertProps> = ({
     );
   };
   
+  // Actions d'aide pour les erreurs d'authentification
+  const renderAuthHelp = () => {
+    if (!isAuthError) return null;
+    
+    return (
+      <div className="mt-2 bg-blue-50 text-blue-900 p-3 rounded-md text-sm">
+        <p>Votre session a peut-être expiré ou vous n'êtes pas connecté.</p>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => navigate('/login')}
+          className="mt-2 flex items-center gap-1"
+        >
+          <LogIn className="h-4 w-4 mr-1" />
+          Se connecter
+        </Button>
+      </div>
+    );
+  };
+  
   return (
     <Alert variant="destructive" className={className}>
       <AlertTitle className="flex items-center gap-2">
@@ -85,6 +114,11 @@ export const FirebaseErrorAlert: React.FC<FirebaseErrorAlertProps> = ({
             <WifiOff className="h-4 w-4" />
             Erreur de connexion
           </>
+        ) : isAuthError ? (
+          <>
+            <LogIn className="h-4 w-4" />
+            Erreur d'authentification
+          </>
         ) : (
           <>
             <Settings className="h-4 w-4" />
@@ -97,6 +131,7 @@ export const FirebaseErrorAlert: React.FC<FirebaseErrorAlertProps> = ({
           <p>{getHelpText()}</p>
           
           {renderPermissionHelp()}
+          {renderAuthHelp()}
           
           {onRetry && (
             <div className="flex justify-end mt-2">
