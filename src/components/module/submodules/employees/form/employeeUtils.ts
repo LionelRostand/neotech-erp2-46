@@ -14,7 +14,7 @@ export const prepareEmployeeData = (data: EmployeeFormValues): Partial<Employee>
       street: addressParts[0] || '',
       city: addressParts[1] || '',
       postalCode: addressParts[2] || '',
-      country: addressParts[3] || ''
+      country: addressParts[3] || 'France'
     };
   } else if (data.address && typeof data.address === 'object') {
     // Handle object address, ensuring required fields are present

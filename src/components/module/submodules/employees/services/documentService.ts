@@ -1,37 +1,12 @@
 
-import { db, storage } from '@/lib/firebase';
-import { 
-  collection, 
-  addDoc, 
-  query, 
-  where, 
-  getDocs, 
-  updateDoc, 
-  doc, 
-  getDoc, 
-  arrayUnion,
-  Timestamp,
-  setDoc,
-  serverTimestamp
-} from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
-import { toast } from 'sonner';
+import { db } from '@/lib/firebase';
+import { doc, getDoc, setDoc, updateDoc, serverTimestamp, arrayUnion } from 'firebase/firestore';
 import { COLLECTIONS } from '@/lib/firebase-collections';
-import { addDocumentToEmployee } from './employeeService';
-
-export interface EmployeeDocument {
-  id?: string;
-  name: string;
-  date: string;
-  type: string;
-  fileUrl?: string;
-  fileType?: string;
-  fileSize?: number;
-  employeeId?: string;
-  uploadedBy?: string;
-  createdAt?: any;
-  updatedAt?: any;
-}
+import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
+import { storage } from '@/lib/firebase';
+import { v4 as uuidv4 } from 'uuid';
+import { Employee } from '@/types/employee';
+import { getEmployee } from './employeeService';
 
 /**
  * Vérifie si un employé existe dans la base de données
@@ -39,73 +14,16 @@ export interface EmployeeDocument {
 export const checkEmployeeExists = async (employeeId: string): Promise<boolean> => {
   try {
     if (!employeeId) {
-      console.error("Erreur: ID d'employé manquant");
+      console.error("ID d'employé non fourni pour la vérification");
       return false;
     }
     
-    const docRef = doc(db, COLLECTIONS.HR.EMPLOYEES, employeeId);
-    const docSnap = await getDoc(docRef);
-    
-    if (!docSnap.exists()) {
-      console.error(`Employé avec ID ${employeeId} non trouvé`);
-    }
-    
-    return docSnap.exists();
+    // Utiliser la fonction getEmployee du service employé
+    const employee = await getEmployee(employeeId);
+    return employee !== null;
   } catch (error) {
-    console.error("Erreur lors de la vérification de l'employé:", error);
+    console.error(`Erreur lors de la vérification de l'employé ID ${employeeId}:`, error);
     return false;
-  }
-};
-
-/**
- * Récupère les documents d'un employé depuis la collection hr_documents
- */
-export const getEmployeeDocuments = async (employeeId: string): Promise<EmployeeDocument[]> => {
-  try {
-    console.log(`Récupération des documents pour l'employé: ${employeeId}`);
-    
-    if (!employeeId) {
-      console.error("ID d'employé manquant");
-      toast.error("Erreur: ID d'employé manquant");
-      return [];
-    }
-    
-    // 1. Vérifier d'abord si l'employé existe
-    const employeeExists = await checkEmployeeExists(employeeId);
-    if (!employeeExists) {
-      console.error(`Employé avec ID ${employeeId} non trouvé`);
-      toast.error(`Erreur: Employé avec ID ${employeeId} non trouvé`);
-      return [];
-    }
-    
-    // 2. Récupérer les documents de l'employé dans la collection hr_documents
-    const documentsRef = collection(db, COLLECTIONS.HR.DOCUMENTS);
-    const q = query(documentsRef, where("employeeId", "==", employeeId));
-    
-    const querySnapshot = await getDocs(q);
-    const documents: EmployeeDocument[] = [];
-    
-    querySnapshot.forEach((doc) => {
-      const data = doc.data();
-      documents.push({
-        id: doc.id,
-        name: data.name || 'Document sans nom',
-        date: data.date || new Date().toISOString(),
-        type: data.type || 'autre',
-        fileUrl: data.fileUrl || '',
-        fileType: data.fileType || '',
-        fileSize: data.fileSize || 0,
-        employeeId: data.employeeId || employeeId,
-        uploadedBy: data.uploadedBy || 'Système'
-      });
-    });
-    
-    console.log(`${documents.length} documents récupérés pour l'employé ${employeeId}`);
-    return documents;
-  } catch (error) {
-    console.error("Erreur lors de la récupération des documents:", error);
-    toast.error("Erreur lors de la récupération des documents");
-    return [];
   }
 };
 
@@ -117,124 +35,95 @@ export const uploadEmployeeDocument = async (
   file: File,
   documentName: string,
   documentType: string
-): Promise<EmployeeDocument | null> => {
+): Promise<boolean> => {
   try {
-    console.log(`Téléversement de document pour l'employé: ${employeeId}`);
-    
-    if (!employeeId) {
-      console.error("ID d'employé manquant");
-      toast.error("Erreur: ID d'employé manquant");
-      return null;
-    }
-    
-    // 1. Vérifier d'abord si l'employé existe
+    // Vérifier d'abord si l'employé existe
     const employeeExists = await checkEmployeeExists(employeeId);
+    
     if (!employeeExists) {
       console.error(`Employé avec ID ${employeeId} non trouvé`);
-      toast.error(`Erreur: Employé avec ID ${employeeId} non trouvé`);
-      return null;
+      return false;
     }
     
-    // 2. Téléverser le fichier sur Firebase Storage
-    const storageRef = ref(storage, `employees/${employeeId}/documents/${Date.now()}_${file.name}`);
-    await uploadBytes(storageRef, file);
-    const fileUrl = await getDownloadURL(storageRef);
+    // Générer un ID unique pour le document
+    const documentId = uuidv4();
     
-    // 3. Créer un nouveau document dans la collection hr_documents
-    const now = new Date().toISOString();
-    const documentData: EmployeeDocument = {
+    // Référence au fichier dans le stockage
+    const storageRef = ref(storage, `employees/${employeeId}/documents/${documentId}_${file.name}`);
+    
+    // Téléversement du fichier
+    const uploadResult = await uploadBytes(storageRef, file);
+    
+    // Obtenir l'URL de téléchargement
+    const downloadURL = await getDownloadURL(uploadResult.ref);
+    
+    // Date actuelle pour le document
+    const currentDate = new Date().toLocaleDateString('fr-FR');
+    
+    // Données du document
+    const documentData = {
+      id: documentId,
       name: documentName,
       type: documentType,
-      date: now,
-      fileUrl: fileUrl,
-      fileType: file.type,
-      fileSize: file.size,
-      employeeId: employeeId,
-      uploadedBy: 'Utilisateur',
-      createdAt: serverTimestamp(),
+      date: currentDate,
+      fileUrl: downloadURL,
+      uploadedAt: serverTimestamp()
+    };
+    
+    // Ajouter le document à l'employé
+    const employeeRef = doc(db, COLLECTIONS.HR.EMPLOYEES, employeeId);
+    
+    await updateDoc(employeeRef, {
+      documents: arrayUnion(documentData),
       updatedAt: serverTimestamp()
-    };
+    });
     
-    // Option 1: Utiliser addDoc pour laisser Firebase générer un ID
-    const docRef = await addDoc(collection(db, COLLECTIONS.HR.DOCUMENTS), documentData);
-    const newDocumentId = docRef.id;
-    
-    // 4. Ajouter également le document à l'array documents de l'employé
-    const success = await addDocumentToEmployee(
-      employeeId, 
-      newDocumentId, 
-      {
-        name: documentName,
-        type: documentType,
-        date: now,
-        fileUrl: fileUrl
-      }
-    );
-    
-    if (!success) {
-      console.warn(`Document créé dans hr_documents mais non ajouté à l'employé ${employeeId}`);
-    }
-    
-    // 5. Retourner le document créé avec son ID
-    return {
-      ...documentData,
-      id: newDocumentId
-    };
+    console.log(`Document ${documentName} ajouté à l'employé ${employeeId}`);
+    return true;
   } catch (error) {
     console.error("Erreur lors du téléversement du document:", error);
-    toast.error("Erreur lors du téléversement du document");
-    return null;
+    return false;
   }
 };
 
 /**
  * Supprime un document d'un employé
  */
-export const deleteEmployeeDocument = async (documentId: string, employeeId: string, fileUrl?: string): Promise<boolean> => {
+export const deleteEmployeeDocument = async (
+  employeeId: string,
+  documentId: string
+): Promise<boolean> => {
   try {
-    if (!documentId) {
-      console.error("ID de document manquant");
+    // Obtenir l'employé
+    const employee = await getEmployee(employeeId);
+    
+    if (!employee) {
+      console.error(`Employé avec ID ${employeeId} non trouvé`);
       return false;
     }
     
-    // 1. Supprimer le document de la collection hr_documents
-    const documentRef = doc(db, COLLECTIONS.HR.DOCUMENTS, documentId);
-    await setDoc(documentRef, { deleted: true, updatedAt: serverTimestamp() }, { merge: true });
-    
-    // 2. Si l'URL du fichier est fournie, supprimer le fichier du stockage
-    if (fileUrl) {
-      try {
-        // Extraire le chemin de storage à partir de l'URL
-        const storagePath = decodeURIComponent(fileUrl.split('/o/')[1].split('?')[0]);
-        const storageRef = ref(storage, storagePath);
-        await deleteObject(storageRef);
-      } catch (storageError) {
-        console.error("Erreur lors de la suppression du fichier du stockage:", storageError);
-        // Continuer même si la suppression du fichier échoue
-      }
+    if (!employee.documents || !Array.isArray(employee.documents)) {
+      console.error(`Documents non trouvés pour l'employé ${employeeId}`);
+      return false;
     }
     
-    // 3. Si l'ID de l'employé est fourni, mettre à jour l'employé pour marquer le document comme supprimé
-    if (employeeId) {
-      const employeeRef = doc(db, COLLECTIONS.HR.EMPLOYEES, employeeId);
-      const employeeDoc = await getDoc(employeeRef);
-      
-      if (employeeDoc.exists()) {
-        const employeeData = employeeDoc.data();
-        const documents = employeeData.documents || [];
-        
-        // Filtrer le document supprimé des documents de l'employé
-        const updatedDocuments = documents.map((doc: any) => 
-          doc.id === documentId ? { ...doc, deleted: true } : doc
-        );
-        
-        await updateDoc(employeeRef, { 
-          documents: updatedDocuments,
-          updatedAt: serverTimestamp()
-        });
-      }
-    }
+    // Filtrer les documents pour retirer celui à supprimer
+    const updatedDocuments = employee.documents.filter(doc => 
+      doc.id !== documentId && typeof doc === 'object'
+    );
     
+    // Mettre à jour l'employé
+    const employeeRef = doc(db, COLLECTIONS.HR.EMPLOYEES, employeeId);
+    
+    await updateDoc(employeeRef, {
+      documents: updatedDocuments,
+      updatedAt: serverTimestamp()
+    });
+    
+    // Note: Nous ne supprimons pas le fichier du stockage pour l'instant
+    // Cela pourrait être ajouté ultérieurement
+    
+    console.log(`Document ${documentId} supprimé de l'employé ${employeeId}`);
     return true;
   } catch (error) {
     console.error("Erreur lors de la suppression du document:", error);
