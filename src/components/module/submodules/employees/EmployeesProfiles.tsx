@@ -10,7 +10,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useEmployeeData } from '@/hooks/useEmployeeData';
 import { RefreshCw } from 'lucide-react';
 import { addDocument } from '@/hooks/firestore/create-operations';
+import { FirebaseErrorAlert } from '@/components/ui/FirebaseErrorAlert';
 import { COLLECTIONS } from '@/lib/firebase-collections';
+import { refreshEmployeesData } from './services/employeeService';
+import { useHrModuleData } from '@/hooks/useHrModuleData';
 
 interface EmployeesProfilesProps {
   employees?: Employee[];
@@ -33,7 +36,7 @@ const EmployeesProfiles: React.FC<EmployeesProfilesProps> = (props) => {
   const [isPdfExportOpen, setIsPdfExportOpen] = useState(false);
   const [selectedCompany, setSelectedCompany] = useState<string>('all');
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const { companies } = useFirebaseCompanies();
+  const { companies } = useHrModuleData();
 
   useEffect(() => {
     const employeesToUse = props.employees && props.employees.length > 0 
