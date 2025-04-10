@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Employee } from '@/types/employee';
@@ -9,7 +10,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useEmployeeData } from '@/hooks/useEmployeeData';
 import { RefreshCw } from 'lucide-react';
-import { addDocument, updateDocument } from '@/hooks/firestore/update-operations';
+import { addDocument } from '@/hooks/firestore/create-operations';
+import { updateDocument } from '@/hooks/firestore/update-operations';
 import { FirebaseErrorAlert } from '@/components/ui/FirebaseErrorAlert';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import { refreshEmployeesData } from './services/employeeService';
