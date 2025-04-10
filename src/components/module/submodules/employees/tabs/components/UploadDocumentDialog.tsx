@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
@@ -46,12 +47,13 @@ const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
   
   // Vérification de l'ID employé dès l'ouverture
   useEffect(() => {
-    if (open && !employeeId) {
-      console.error("UploadDocumentDialog: Ouvert sans ID employé");
-      toast.error("Impossible de téléverser un document: employé non spécifié");
-      onOpenChange(false);
-    } else if (open) {
+    if (open) {
       console.log("UploadDocumentDialog: Ouvert avec ID employé:", employeeId);
+      if (!employeeId) {
+        console.error("UploadDocumentDialog: Ouvert sans ID employé");
+        toast.error("Impossible de téléverser un document: employé non spécifié");
+        onOpenChange(false);
+      }
     }
   }, [open, employeeId, onOpenChange]);
   
@@ -126,7 +128,7 @@ const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
         employeeId: employeeId // Ajouter explicitement l'ID de l'employé
       };
       
-      console.log("Document à ajouter:", documentData);
+      console.log("Document à ajouter pour employé ID:", employeeId, documentData);
       
       const success = await addEmployeeDocument(employeeId, documentData);
       
@@ -147,6 +149,11 @@ const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
     resetForm();
     onOpenChange(false);
   };
+
+  // Si pas d'ID employé, ne pas rendre le composant
+  if (!employeeId && open) {
+    return null;
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

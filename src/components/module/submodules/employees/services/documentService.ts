@@ -23,7 +23,10 @@ const checkEmployeeExists = async (employeeId: string): Promise<boolean> => {
   try {
     console.log(`Vérification de l'existence de l'employé ${employeeId}...`);
     const employeeData = await executeWithNetworkRetry(async () => {
-      return await getDocumentById(COLLECTIONS.HR.EMPLOYEES, employeeId);
+      // Assurons-nous d'utiliser le bon chemin pour récupérer l'employé
+      const data = await getDocumentById(COLLECTIONS.HR.EMPLOYEES, employeeId);
+      console.log("Données de l'employé récupérées:", data ? "Trouvé" : "Non trouvé");
+      return data;
     });
     
     const exists = !!employeeData;
@@ -46,11 +49,13 @@ export const getEmployeeDocuments = async (employeeId: string): Promise<Employee
     }
     
     const employeeData = await executeWithNetworkRetry(async () => {
-      return await getDocumentById(COLLECTIONS.HR.EMPLOYEES, employeeId);
+      const data = await getDocumentById(COLLECTIONS.HR.EMPLOYEES, employeeId);
+      console.log("Données employé récupérées pour documents:", data ? "Trouvé" : "Non trouvé");
+      return data;
     });
     
     if (!employeeData) {
-      console.log(`Employé ${employeeId} non trouvé`);
+      console.log(`Employé ${employeeId} non trouvé lors de la récupération des documents`);
       return [];
     }
     
@@ -77,16 +82,22 @@ export const addEmployeeDocument = async (employeeId: string, document: Employee
     }
     
     // Vérifier d'abord si l'employé existe
+    console.log("Vérification de l'existence de l'employé avant d'ajouter un document...");
     const employeeExists = await checkEmployeeExists(employeeId);
+    
     if (!employeeExists) {
       console.error(`Erreur: Employé ${employeeId} introuvable dans la base de données`);
       toast.error("Employé non trouvé dans la base de données");
       return false;
     }
     
+    console.log(`Employé ${employeeId} trouvé, récupération des données...`);
+    
     // 1. Récupérer les données actuelles de l'employé
     const employeeData = await executeWithNetworkRetry(async () => {
-      return await getDocumentById(COLLECTIONS.HR.EMPLOYEES, employeeId);
+      const data = await getDocumentById(COLLECTIONS.HR.EMPLOYEES, employeeId);
+      console.log("Données de l'employé pour mise à jour:", data ? "Trouvé" : "Non trouvé");
+      return data;
     });
     
     // Vérification supplémentaire (au cas où l'employé aurait été supprimé entre-temps)
@@ -107,25 +118,29 @@ export const addEmployeeDocument = async (employeeId: string, document: Employee
     
     // 3. Ajouter le document à la collection hr_documents
     await executeWithNetworkRetry(async () => {
+      console.log("Ajout du document à la collection de documents...");
       return await addDocument(COLLECTIONS.HR.DOCUMENTS, documentWithEmployeeId);
     });
     
     // 4. Mettre à jour l'employé avec le nouveau document
-    const documents = (employeeData as any).documents || [];
+    const documents = Array.isArray((employeeData as any).documents) ? (employeeData as any).documents : [];
     const updatedDocuments = [...documents, documentWithEmployeeId];
     
     console.log(`Mise à jour de l'employé avec ${updatedDocuments.length} documents`);
     
     const success = await executeWithNetworkRetry(async () => {
+      console.log(`Mise à jour du document employé ${employeeId} avec les nouveaux documents...`);
       return await updateDocument(COLLECTIONS.HR.EMPLOYEES, employeeId, {
         documents: updatedDocuments
       });
     });
     
     if (success) {
+      console.log("Document ajouté avec succès");
       toast.success("Document ajouté avec succès");
       return true;
     } else {
+      console.error("Erreur lors de la mise à jour du document employé");
       toast.error("Erreur lors de l'ajout du document");
       return false;
     }

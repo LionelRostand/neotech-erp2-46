@@ -54,6 +54,7 @@ const DocumentsTab: React.FC<DocumentsTabProps> = ({ employee }) => {
       toast.error("Impossible d'ajouter un document: ID employé manquant");
       return;
     }
+    console.log("DocumentsTab: Ouverture dialogue téléversement avec ID:", employee.id);
     setUploadDocumentType('');
     setUploadDialogOpen(true);
   };
@@ -241,8 +242,7 @@ const DocumentsTab: React.FC<DocumentsTabProps> = ({ employee }) => {
         </div>
       )}
 
-      {/* Upload Document Dialog avec vérification explicite de l'ID employé */}
-      {employee?.id ? (
+      {employee?.id && (
         <UploadDocumentDialog 
           open={uploadDialogOpen}
           onOpenChange={setUploadDialogOpen}
@@ -250,7 +250,7 @@ const DocumentsTab: React.FC<DocumentsTabProps> = ({ employee }) => {
           employeeId={employee.id}
           defaultType={uploadDocumentType}
         />
-      ) : null}
+      )}
     </div>
   );
 };

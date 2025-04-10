@@ -1,5 +1,5 @@
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { toast } from 'sonner';
@@ -22,6 +22,13 @@ const PhotoUploader: React.FC<PhotoUploaderProps> = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [previewPhoto, setPreviewPhoto] = useState<string | null>(null);
+  
+  // S'assurer que le previewPhoto est initialisé avec currentPhoto
+  useEffect(() => {
+    if (currentPhoto && !previewPhoto) {
+      setPreviewPhoto(currentPhoto);
+    }
+  }, [currentPhoto, previewPhoto]);
   
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -46,6 +53,8 @@ const PhotoUploader: React.FC<PhotoUploaderProps> = ({
         const photoURL = URL.createObjectURL(file);
         setPreviewPhoto(photoURL);
         
+        console.log(`Mise à jour de la photo pour l'employé ID: ${employeeId}`);
+        
         // Dans un environnement réel, on téléverserait le fichier sur un stockage (Firebase Storage)
         // et on récupérerait l'URL du fichier
         
@@ -56,16 +65,18 @@ const PhotoUploader: React.FC<PhotoUploaderProps> = ({
         });
         
         if (success) {
+          console.log('Photo mise à jour avec succès');
           toast.success('Photo mise à jour avec succès');
           onPhotoUpdated(photoURL);
         } else {
+          console.error('Erreur lors de la mise à jour de la photo');
           toast.error('Erreur lors de la mise à jour de la photo');
-          setPreviewPhoto(null);
+          setPreviewPhoto(currentPhoto);
         }
       } catch (error) {
         console.error('Erreur lors du téléversement de la photo:', error);
         toast.error('Erreur lors du téléversement de la photo');
-        setPreviewPhoto(null);
+        setPreviewPhoto(currentPhoto);
       } finally {
         setIsUploading(false);
         // Réinitialiser l'input file
@@ -86,6 +97,8 @@ const PhotoUploader: React.FC<PhotoUploaderProps> = ({
     setIsUploading(true);
     
     try {
+      console.log(`Suppression de la photo pour l'employé ID: ${employeeId}`);
+      
       // Mettre à jour l'employé dans Firestore sans photo
       const success = await updateEmployee(employeeId, { 
         photo: '',
@@ -93,10 +106,12 @@ const PhotoUploader: React.FC<PhotoUploaderProps> = ({
       });
       
       if (success) {
+        console.log('Photo supprimée avec succès');
         toast.success('Photo supprimée avec succès');
         setPreviewPhoto(null);
         onPhotoUpdated('');
       } else {
+        console.error('Erreur lors de la suppression de la photo');
         toast.error('Erreur lors de la suppression de la photo');
       }
     } catch (error) {
@@ -116,10 +131,13 @@ const PhotoUploader: React.FC<PhotoUploaderProps> = ({
     return name.charAt(0).toUpperCase();
   };
   
+  // Photo actuelle à afficher (priorité au preview)
+  const displayPhoto = previewPhoto || currentPhoto || '';
+  
   return (
     <div className="space-y-2">
       <Avatar className="w-24 h-24 relative group">
-        <AvatarImage src={previewPhoto || currentPhoto} alt={employeeName} />
+        <AvatarImage src={displayPhoto} alt={employeeName} />
         <AvatarFallback className="text-xl">{getInitials(employeeName)}</AvatarFallback>
         
         <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-full">
@@ -133,7 +151,7 @@ const PhotoUploader: React.FC<PhotoUploaderProps> = ({
             <Camera className="h-5 w-5" />
           </Button>
           
-          {(currentPhoto || previewPhoto) && (
+          {displayPhoto && (
             <Button 
               variant="ghost" 
               size="sm" 
@@ -162,7 +180,7 @@ const PhotoUploader: React.FC<PhotoUploaderProps> = ({
           disabled={isUploading}
         >
           <Upload className="h-3 w-3 mr-1" />
-          {currentPhoto ? 'Changer' : 'Ajouter'} la photo
+          {displayPhoto ? 'Changer' : 'Ajouter'} la photo
         </Button>
         
         <input
