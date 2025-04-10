@@ -101,7 +101,9 @@ export const COLLECTIONS = {
     PRICING: 'freight_pricing',                  // Ajout de PRICING
     BILLING: 'freight_billing',                  // Ajout de BILLING
     QUOTES: 'freight_quotes',                    // Ajout de QUOTES
-    CUSTOMERS: 'freight_customers'               // Ajout de CUSTOMERS
+    CUSTOMERS: 'freight_customers',              // Ajout de CUSTOMERS
+    VEHICLES: 'freight_vehicles',                // Ajout de VEHICLES
+    DRIVERS: 'freight_drivers'                   // Ajout de DRIVERS
   },
   
   LIBRARY: {
