@@ -91,11 +91,11 @@ export const useClientMutations = (refreshClients: () => Promise<void>) => {
       
       await refreshClients();
       
-      // Ajouter la propriété createdAt pour satisfaire le type Client
+      // Retourner le client mis à jour en incluant la propriété createdAt nécessaire au type Client
       return { 
         id: clientId, 
         ...updateData,
-        createdAt: new Date().toISOString() // Ajouter createdAt pour le type Client
+        createdAt: await fetchClientCreatedAt(clientId) || new Date().toISOString() 
       } as Client;
     } catch (error: any) {
       console.error("Error updating client:", error);
@@ -109,6 +109,25 @@ export const useClientMutations = (refreshClients: () => Promise<void>) => {
       }
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  // Fonction utilitaire pour récupérer la date de création d'un client existant
+  const fetchClientCreatedAt = async (clientId: string): Promise<string | null> => {
+    try {
+      const clientDocRef = doc(db, COLLECTIONS.CRM.CLIENTS, clientId);
+      const clientDoc = await executeWithNetworkRetry(async () => {
+        const docSnap = await clientDocRef.get();
+        if (docSnap.exists()) {
+          return docSnap.data();
+        }
+        return null;
+      });
+      
+      return clientDoc?.createdAt || null;
+    } catch (error) {
+      console.error("Error fetching client created date:", error);
+      return null;
     }
   };
 
