@@ -2,6 +2,7 @@
 import { Employee } from '@/types/employee';
 import { getDocumentById, addDocument } from '@/hooks/firestore/firestore-utils';
 import { updateDocument, setDocument } from '@/hooks/firestore/update-operations';
+import { deleteDocument } from '@/hooks/firestore/delete-operations';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import { toast } from 'sonner';
 import { executeWithNetworkRetry } from '@/hooks/firestore/network-handler';
