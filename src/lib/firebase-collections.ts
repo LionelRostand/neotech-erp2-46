@@ -54,7 +54,9 @@ export const COLLECTIONS = {
     ACTIVITIES: 'crm_activities',
     DEALS: 'crm_deals',
     SETTINGS: 'crm_settings',
-    DASHBOARDS: 'crm_dashboards'
+    DASHBOARDS: 'crm_dashboards',
+    LEADS: 'crm_leads',           // Ajout de LEADS
+    REMINDERS: 'crm_reminders'    // Ajout de REMINDERS
   },
   
   ACCOUNTING: {
@@ -64,7 +66,14 @@ export const COLLECTIONS = {
     TAX_DECLARATIONS: 'accounting_tax_declarations',
     TAX_RATES: 'accounting_tax_rates',
     ACCOUNTS: 'accounting_accounts',
-    LEDGERS: 'accounting_ledgers'
+    LEDGERS: 'accounting_ledgers',
+    EXPENSES: 'accounting_expenses',       // Ajout de EXPENSES
+    CLIENTS: 'accounting_clients',         // Ajout de CLIENTS
+    SUPPLIERS: 'accounting_suppliers',     // Ajout de SUPPLIERS
+    REPORTS: 'accounting_reports',         // Ajout de REPORTS
+    TAXES: 'accounting_taxes',             // Ajout de TAXES
+    SETTINGS: 'accounting_settings',       // Ajout de SETTINGS
+    PERMISSIONS: 'accounting_permissions'  // Ajout de PERMISSIONS
   },
   
   HEALTH: {
@@ -73,7 +82,9 @@ export const COLLECTIONS = {
     STAFF: 'health_staff',
     BILLING: 'health_billing',
     INSURANCE: 'health_insurance',
-    TREATMENTS: 'health_treatments'
+    TREATMENTS: 'health_treatments',
+    DOCTORS: 'health_doctors',             // Ajout de DOCTORS
+    APPOINTMENTS: 'health_appointments'    // Ajout de APPOINTMENTS
   },
   
   FREIGHT: {
@@ -84,7 +95,13 @@ export const COLLECTIONS = {
     CONTAINERS: 'freight_containers',
     TRACKING: 'freight_tracking',
     DOCUMENTS: 'freight_documents',
-    CLIENTS: 'freight_clients'
+    CLIENTS: 'freight_clients',
+    TRACKING_EVENTS: 'freight_tracking_events',  // Ajout de TRACKING_EVENTS
+    PACKAGE_TYPES: 'freight_package_types',      // Ajout de PACKAGE_TYPES
+    PRICING: 'freight_pricing',                  // Ajout de PRICING
+    BILLING: 'freight_billing',                  // Ajout de BILLING
+    QUOTES: 'freight_quotes',                    // Ajout de QUOTES
+    CUSTOMERS: 'freight_customers'               // Ajout de CUSTOMERS
   },
   
   LIBRARY: {
@@ -92,14 +109,17 @@ export const COLLECTIONS = {
     MEMBERS: 'library_members',
     LOANS: 'library_loans',
     CATEGORIES: 'library_categories',
-    PUBLISHERS: 'library_publishers'
+    PUBLISHERS: 'library_publishers',
+    STATS: 'library_stats'                       // Ajout de STATS
   },
   
   TRANSPORT: {
     VEHICLES: 'transport_vehicles',
     DRIVERS: 'transport_drivers',
     ROUTES: 'transport_routes',
-    SCHEDULES: 'transport_schedules'
+    SCHEDULES: 'transport_schedules',
+    RESERVATIONS: 'transport_reservations',      // Ajout de RESERVATIONS
+    CLIENTS: 'transport_clients'                 // Ajout de CLIENTS
   }
 };
 
