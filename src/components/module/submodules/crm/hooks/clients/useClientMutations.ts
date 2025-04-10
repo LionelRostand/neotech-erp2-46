@@ -1,0 +1,127 @@
+
+import { useState } from 'react';
+import { collection, doc, deleteDoc, addDoc, updateDoc } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { ClientFormData, Client } from '../../types/crm-types';
+import { COLLECTIONS } from '@/lib/firebase-collections';
+import { toast } from 'sonner';
+import { executeWithNetworkRetry } from '@/hooks/firestore/network-handler';
+
+export const useClientMutations = (refreshClients: () => Promise<void>) => {
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+
+  const addClient = async (clientData: ClientFormData): Promise<Client | void> => {
+    try {
+      setIsLoading(true);
+      const statusValue = clientData.status as 'active' | 'inactive' | 'lead';
+      
+      const newClientData = {
+        ...clientData,
+        status: statusValue,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+      
+      let docRef;
+      await executeWithNetworkRetry(async () => {
+        const clientsCollection = collection(db, COLLECTIONS.CRM.CLIENTS);
+        docRef = await addDoc(clientsCollection, newClientData);
+        console.log(`Client added to collection ${COLLECTIONS.CRM.CLIENTS} with ID: ${docRef.id}`);
+        toast.success("Client ajouté avec succès");
+      });
+      
+      await refreshClients();
+      
+      if (docRef) {
+        return { 
+          id: docRef.id, 
+          ...newClientData 
+        } as Client;
+      }
+    } catch (error: any) {
+      console.error("Error adding client:", error);
+      
+      if (error.message.includes('offline') || error.message.includes('unavailable')) {
+        toast.error("Impossible d'ajouter le client en mode hors ligne");
+      } else {
+        toast.error(`Erreur lors de l'ajout du client: ${error.message}`);
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const updateClient = async (clientId: string, clientData: ClientFormData): Promise<Client | void> => {
+    try {
+      setIsLoading(true);
+      const statusValue = clientData.status as 'active' | 'inactive' | 'lead';
+      
+      const updateData = {
+        ...clientData,
+        status: statusValue,
+        updatedAt: new Date().toISOString(),
+      };
+      
+      await executeWithNetworkRetry(async () => {
+        const clientDocRef = doc(db, COLLECTIONS.CRM.CLIENTS, clientId);
+        await updateDoc(clientDocRef, updateData);
+        console.log(`Client ${clientId} updated successfully`);
+        toast.success("Client mis à jour avec succès");
+      });
+      
+      await refreshClients();
+      
+      return { 
+        id: clientId, 
+        ...updateData 
+      } as Client;
+    } catch (error: any) {
+      console.error("Error updating client:", error);
+      
+      if (error.message.includes('offline') || error.message.includes('unavailable')) {
+        toast.error("Impossible de mettre à jour le client en mode hors ligne");
+      } else {
+        toast.error(`Erreur lors de la mise à jour du client: ${error.message}`);
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const deleteClient = async (clientId: string): Promise<void> => {
+    try {
+      setIsLoading(true);
+      
+      await executeWithNetworkRetry(async () => {
+        const clientDocRef = doc(db, COLLECTIONS.CRM.CLIENTS, clientId);
+        await deleteDoc(clientDocRef);
+        console.log(`Client ${clientId} deleted successfully`);
+        toast.success("Client supprimé avec succès");
+      });
+      
+      // Force refresh client list
+      await refreshClients();
+      
+    } catch (error: any) {
+      console.error("Error deleting client:", error);
+      
+      if (error.message.includes('offline') || error.message.includes('unavailable')) {
+        toast.error("Impossible de supprimer le client en mode hors ligne");
+      } else {
+        toast.error(`Erreur lors de la suppression du client: ${error.message}`);
+      }
+      
+      // Refresh the client list in case of error to ensure UI is in sync
+      await refreshClients();
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return {
+    isLoading,
+    addClient,
+    updateClient,
+    deleteClient
+  };
+};
