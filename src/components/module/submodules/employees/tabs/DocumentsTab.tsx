@@ -61,9 +61,8 @@ const DocumentsTab: React.FC<DocumentsTabProps> = ({ employee }) => {
     setIsDeleting(true);
     try {
       const success = await deleteEmployeeDocument(
-        documentToDelete.id!, 
-        employee.id, 
-        documentToDelete.fileUrl
+        documentToDelete.id, 
+        employee.id
       );
       
       if (success) {

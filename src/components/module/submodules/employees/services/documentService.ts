@@ -1,12 +1,22 @@
 
 import { db } from '@/lib/firebase';
-import { doc, getDoc, setDoc, updateDoc, serverTimestamp, arrayUnion } from 'firebase/firestore';
+import { doc, getDoc, setDoc, updateDoc, serverTimestamp, arrayUnion, arrayRemove } from 'firebase/firestore';
 import { COLLECTIONS } from '@/lib/firebase-collections';
-import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
+import { getDownloadURL, ref, uploadBytes, deleteObject } from 'firebase/storage';
 import { storage } from '@/lib/firebase';
 import { v4 as uuidv4 } from 'uuid';
-import { Employee } from '@/types/employee';
+import { Employee, Document } from '@/types/employee';
 import { getEmployee } from './employeeService';
+
+// Define EmployeeDocument type for consistent usage
+export interface EmployeeDocument extends Document {
+  id: string;
+  name: string;
+  type: string;
+  date: string;
+  fileUrl: string;
+  uploadedAt?: any;
+}
 
 /**
  * Vérifie si un employé existe dans la base de données
@@ -24,6 +34,29 @@ export const checkEmployeeExists = async (employeeId: string): Promise<boolean> 
   } catch (error) {
     console.error(`Erreur lors de la vérification de l'employé ID ${employeeId}:`, error);
     return false;
+  }
+};
+
+/**
+ * Récupère tous les documents d'un employé
+ */
+export const getEmployeeDocuments = async (employeeId: string): Promise<EmployeeDocument[]> => {
+  try {
+    const employee = await getEmployee(employeeId);
+    
+    if (!employee) {
+      console.error(`Employé avec ID ${employeeId} non trouvé`);
+      return [];
+    }
+    
+    if (!employee.documents || !Array.isArray(employee.documents)) {
+      return [];
+    }
+    
+    return employee.documents as EmployeeDocument[];
+  } catch (error) {
+    console.error("Erreur lors de la récupération des documents:", error);
+    return [];
   }
 };
 
@@ -90,8 +123,8 @@ export const uploadEmployeeDocument = async (
  * Supprime un document d'un employé
  */
 export const deleteEmployeeDocument = async (
-  employeeId: string,
-  documentId: string
+  documentId: string,
+  employeeId: string
 ): Promise<boolean> => {
   try {
     // Obtenir l'employé
@@ -107,21 +140,34 @@ export const deleteEmployeeDocument = async (
       return false;
     }
     
-    // Filtrer les documents pour retirer celui à supprimer
-    const updatedDocuments = employee.documents.filter(doc => 
-      doc.id !== documentId && typeof doc === 'object'
+    // Trouver le document à supprimer
+    const documentToDelete = employee.documents.find(doc => 
+      typeof doc === 'object' && doc.id === documentId
     );
     
-    // Mettre à jour l'employé
+    if (!documentToDelete) {
+      console.error(`Document avec ID ${documentId} non trouvé`);
+      return false;
+    }
+    
+    // Supprimer le fichier du stockage si fileUrl existe
+    if (documentToDelete.fileUrl) {
+      try {
+        const fileRef = ref(storage, documentToDelete.fileUrl);
+        await deleteObject(fileRef);
+      } catch (error) {
+        console.warn("Erreur lors de la suppression du fichier de stockage:", error);
+        // Continue even if file deletion fails
+      }
+    }
+    
+    // Mettre à jour l'employé pour supprimer le document
     const employeeRef = doc(db, COLLECTIONS.HR.EMPLOYEES, employeeId);
     
     await updateDoc(employeeRef, {
-      documents: updatedDocuments,
+      documents: arrayRemove(documentToDelete),
       updatedAt: serverTimestamp()
     });
-    
-    // Note: Nous ne supprimons pas le fichier du stockage pour l'instant
-    // Cela pourrait être ajouté ultérieurement
     
     console.log(`Document ${documentId} supprimé de l'employé ${employeeId}`);
     return true;
