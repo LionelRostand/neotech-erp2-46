@@ -16,9 +16,6 @@ export const COLLECTIONS = {
     OPPORTUNITIES: 'crm_opportunities',
     REMINDERS: 'crm_reminders',
     SETTINGS: 'crm_settings',
-    CONTACTS: 'crm_contacts',
-    LEADS: 'crm_leads',
-    DEALS: 'crm_deals'
   },
   
   // Module Accounting
@@ -37,103 +34,89 @@ export const COLLECTIONS = {
   
   // Module HR / Employees
   HR: {
-    EMPLOYEES: 'hr-employees',
-    DEPARTMENTS: 'hr-departments',
-    LEAVES: 'hr-leaves',
-    CONTRACTS: 'hr-contracts',
-    EVALUATIONS: 'hr-evaluations',
-    SALARIES: 'hr-salaries',
-    TIMESHEETS: 'hr-timesheets',
-    RECRUITMENTS: 'hr-recruitments',
-    BADGES: 'hr-badges',
-    DOCUMENTS: 'hr-documents',
-    PAYSLIPS: 'hr-payslips',
-    LEAVE_REQUESTS: 'hr-leave-requests',
-    ATTENDANCE: 'hr-attendance',
-    ABSENCE_REQUESTS: 'hr-absence-requests',
-    TRAININGS: 'hr-trainings',
-    REPORTS: 'hr-reports',
-    ALERTS: 'hr-alerts',
+    EMPLOYEES: 'hr_employees',
+    DEPARTMENTS: 'hr_departments',
+    LEAVES: 'hr_leaves',
+    CONTRACTS: 'hr_contracts',
+    EVALUATIONS: 'hr_evaluations',
+    SALARIES: 'hr_salaries',
+    TIMESHEETS: 'hr_timesheets',
+    RECRUITMENTS: 'hr_recruitments',
+    BADGES: 'hr_badges',
+    DOCUMENTS: 'hr_documents',
   },
   
   // Module Projects
   PROJECTS: {
-    PROJECTS: 'projects/projects',
-    TASKS: 'projects/tasks',
-    TEAMS: 'projects/teams',
-    NOTIFICATIONS: 'projects/notifications',
+    PROJECTS: 'projects_projects',
+    TASKS: 'projects_tasks',
+    TEAMS: 'projects_teams',
+    NOTIFICATIONS: 'projects_notifications',
   },
   
   // Module Health
   HEALTH: {
-    PATIENTS: 'health-patients',
-    DOCTORS: 'health-doctors',
-    APPOINTMENTS: 'health-appointments',
-    CONSULTATIONS: 'health-consultations',
-    INSURANCE: 'health-insurance',
-    BILLING: 'health-billing',
-    SETTINGS: 'health-settings',
-    INTEGRATIONS: 'health-integrations',
-    STAFF: 'health-staff',
+    PATIENTS: 'health_patients',
+    DOCTORS: 'health_doctors',
+    APPOINTMENTS: 'health_appointments',
+    CONSULTATIONS: 'health_consultations',
+    INSURANCE: 'health_insurance',
+    BILLING: 'health_billing',
+    SETTINGS: 'health_settings',
+    INTEGRATIONS: 'health_integrations',
+    STAFF: 'health_staff',
   },
   
   // Module Freight
   FREIGHT: {
-    SHIPMENTS: 'freight/shipments',
-    PACKAGES: 'freight/packages',
-    CUSTOMERS: 'freight/customers',
-    CARRIERS: 'freight/carriers',
-    CONTAINERS: 'freight/containers',
-    DOCUMENTS: 'freight/documents',
-    ROUTES: 'freight/routes',
-    VEHICLES: 'freight/vehicles',
-    DRIVERS: 'freight/drivers',
-    WAREHOUSES: 'freight/warehouses',
-    TRACKING: 'freight/tracking',
-    TRACKING_EVENTS: 'freight/tracking_events',
-    PACKAGE_TYPES: 'freight/package_types',
-    PRICING: 'freight/pricing',
-    BILLING: 'freight/billing',
-    QUOTES: 'freight/quotes',
+    SHIPMENTS: 'freight_shipments',
+    PACKAGES: 'freight_packages',
+    CUSTOMERS: 'freight_customers',
+    CARRIERS: 'freight_carriers',
+    CONTAINERS: 'freight_containers',
+    DOCUMENTS: 'freight_documents',
+    ROUTES: 'freight_routes',
+    VEHICLES: 'freight_vehicles',
+    DRIVERS: 'freight_drivers',
+    WAREHOUSES: 'freight_warehouses',
+    TRACKING: 'freight_tracking',
   },
   
   // Module Library
   LIBRARY: {
-    BOOKS: 'library/books',
-    MEMBERS: 'library/members',
-    LOANS: 'library/loans',
-    RETURNS: 'library/returns',
-    CATEGORIES: 'library/categories',
-    PUBLISHERS: 'library/publishers',
-    AUTHORS: 'library/authors',
-    STATS: 'library/stats',
+    BOOKS: 'library_books',
+    MEMBERS: 'library_members',
+    LOANS: 'library_loans',
+    RETURNS: 'library_returns',
+    CATEGORIES: 'library_categories',
+    PUBLISHERS: 'library_publishers',
+    AUTHORS: 'library_authors',
+    STATS: 'library_stats',
   },
   
   // Module Transport
   TRANSPORT: {
-    DRIVERS: 'transport/drivers',
-    VEHICLES: 'transport/vehicles',
-    ROUTES: 'transport/routes',
-    SCHEDULES: 'transport/schedules',
-    RESERVATIONS: 'transport/reservations',
-    CLIENTS: 'transport/clients',
+    DRIVERS: 'transport_drivers',
+    VEHICLES: 'transport_vehicles',
+    ROUTES: 'transport_routes',
+    SCHEDULES: 'transport_schedules',
   },
   
   // Module Messages
   MESSAGES: {
-    INBOX: 'messages/inbox',
-    ARCHIVED: 'messages/archived',
-    SCHEDULED: 'messages/scheduled',
-    CONTACTS: 'messages/contacts', // Added CONTACTS collection
-    TEMPLATES: 'messages/templates',
-    METRICS: 'messages/metrics',
+    INBOX: 'messages_inbox',
+    ARCHIVED: 'messages_archived',
+    SCHEDULED: 'messages_scheduled',
+    CONTACTS: 'messages_contacts',
+    TEMPLATES: 'messages_templates',
+    METRICS: 'messages_metrics',
   },
   
   // Module Documents
   DOCUMENTS: 'documents',
   
   // Contacts collection for general use
-  CONTACTS: 'contacts', // Added top-level CONTACTS collection
+  CONTACTS: 'contacts',
   
   // Permissions
   USER_PERMISSIONS: 'userPermissions'
