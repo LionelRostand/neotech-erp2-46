@@ -13,7 +13,7 @@ export const getEmployeesData = async (): Promise<Employee[]> => {
   try {
     console.log('Récupération des données employés depuis Firestore...');
     
-    // Use HR.EMPLOYEES instead of EMPLOYEES collection
+    // Utiliser HR.EMPLOYEES au lieu de la collection EMPLOYEES
     const firestoreData = await executeWithNetworkRetry(async () => {
       return await getAllDocuments(COLLECTIONS.HR.EMPLOYEES);
     });
