@@ -9,6 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { companyService } from './services/companyService';
+import { Company } from './types';
 
 const CompanyCreateForm: React.FC = () => {
   const navigate = useNavigate();
@@ -21,7 +22,7 @@ const CompanyCreateForm: React.FC = () => {
     try {
       const formData = new FormData(e.currentTarget);
       
-      const companyData = {
+      const companyData: Omit<Company, 'id'> = {
         name: formData.get('name') as string,
         address: {
           street: formData.get('street') as string,
@@ -36,7 +37,7 @@ const CompanyCreateForm: React.FC = () => {
         email: formData.get('email') as string,
         website: formData.get('website') as string,
         description: formData.get('description') as string,
-        status: 'active',
+        status: 'active' as 'active' | 'inactive' | 'pending',
         employeesCount: 0,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
