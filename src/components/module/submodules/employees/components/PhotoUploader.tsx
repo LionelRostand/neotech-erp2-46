@@ -6,6 +6,8 @@ import { toast } from 'sonner';
 import { updateEmployee, getEmployeeById } from '../services/employeeService';
 import { Camera, Upload, X, Info } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { COLLECTIONS } from '@/lib/firebase-collections';
+import { addDocument } from '@/hooks/firestore/firestore-utils';
 
 interface PhotoUploaderProps {
   employeeId: string;
@@ -31,6 +33,13 @@ const PhotoUploader: React.FC<PhotoUploaderProps> = ({
     }
   }, [currentPhoto]);
   
+  // Fonction pour simuler l'upload d'une image vers Firebase Storage
+  const simulatePhotoUpload = async (file: File): Promise<string> => {
+    // Dans un environnement réel, on utiliserait Firebase Storage
+    // Pour le simuler, on utilise URL.createObjectURL
+    return URL.createObjectURL(file);
+  };
+  
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
@@ -51,7 +60,7 @@ const PhotoUploader: React.FC<PhotoUploaderProps> = ({
       
       try {
         // Créer une URL pour la prévisualisation
-        const photoURL = URL.createObjectURL(file);
+        const photoURL = await simulatePhotoUpload(file);
         setPreviewPhoto(photoURL);
         
         console.log(`Mise à jour de la photo pour l'employé ID: ${employeeId}`);
@@ -65,13 +74,38 @@ const PhotoUploader: React.FC<PhotoUploaderProps> = ({
           return;
         }
         
-        // Dans un environnement réel, on téléverserait le fichier sur un stockage (Firebase Storage)
-        // et on récupérerait l'URL du fichier
+        // Enregistrer également la photo dans hr_documents
+        try {
+          const docId = `photo_${employeeId}_${Date.now()}`;
+          
+          // Ajouter la photo comme document dans hr_documents
+          await addDocument(COLLECTIONS.HR.DOCUMENTS, {
+            id: docId,
+            title: `Photo de profil - ${employeeName}`,
+            name: `Photo de profil - ${employeeName}`,
+            type: 'Photo de profil',
+            url: photoURL,
+            fileUrl: photoURL,
+            employeeId: employeeId,
+            uploadDate: new Date().toISOString(),
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            size: file.size,
+            fileType: file.type,
+            status: 'active'
+          });
+          
+          console.log('Photo ajoutée à hr_documents');
+        } catch (docError) {
+          console.error('Erreur lors de l\'ajout de la photo à hr_documents:', docError);
+          // Ne pas bloquer la mise à jour de l'employé en cas d'erreur
+        }
         
         // Mettre à jour l'employé dans Firestore avec la nouvelle URL de photo
         const success = await updateEmployee(employeeId, { 
           photo: photoURL,
-          photoURL: photoURL
+          photoURL: photoURL,
+          updatedAt: new Date().toISOString()
         });
         
         if (success) {
@@ -121,7 +155,8 @@ const PhotoUploader: React.FC<PhotoUploaderProps> = ({
       // Mettre à jour l'employé dans Firestore sans photo
       const success = await updateEmployee(employeeId, { 
         photo: '',
-        photoURL: ''
+        photoURL: '',
+        updatedAt: new Date().toISOString()
       });
       
       if (success) {

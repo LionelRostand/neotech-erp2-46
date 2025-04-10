@@ -87,7 +87,7 @@ export const addEmployeeDocument = async (employeeId: string, document: Employee
     
     if (!employeeExists) {
       console.error(`Erreur: Employé ${employeeId} introuvable dans la base de données`);
-      toast.error("Employé non trouvé dans la base de données");
+      toast.error(`Employé avec ID ${employeeId} non trouvé dans la base de données`);
       return false;
     }
     
@@ -103,7 +103,7 @@ export const addEmployeeDocument = async (employeeId: string, document: Employee
     // Vérification supplémentaire (au cas où l'employé aurait été supprimé entre-temps)
     if (!employeeData) {
       console.error(`Employé ${employeeId} non trouvé lors de l'ajout du document`);
-      toast.error("Employé non trouvé");
+      toast.error(`Employé avec ID ${employeeId} non trouvé`);
       return false;
     }
     
@@ -118,8 +118,17 @@ export const addEmployeeDocument = async (employeeId: string, document: Employee
     
     // 3. Ajouter le document à la collection hr_documents
     await executeWithNetworkRetry(async () => {
-      console.log("Ajout du document à la collection de documents...");
-      return await addDocument(COLLECTIONS.HR.DOCUMENTS, documentWithEmployeeId);
+      console.log("Ajout du document à la collection hr_documents...");
+      return await addDocument(COLLECTIONS.HR.DOCUMENTS, {
+        ...documentWithEmployeeId,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        // Ajouter des champs supplémentaires pour la collection hr_documents
+        title: documentWithEmployeeId.name,
+        url: documentWithEmployeeId.fileUrl,
+        uploadDate: new Date().toISOString(),
+        status: 'active'
+      });
     });
     
     // 4. Mettre à jour l'employé avec le nouveau document
@@ -131,7 +140,8 @@ export const addEmployeeDocument = async (employeeId: string, document: Employee
     const success = await executeWithNetworkRetry(async () => {
       console.log(`Mise à jour du document employé ${employeeId} avec les nouveaux documents...`);
       return await updateDocument(COLLECTIONS.HR.EMPLOYEES, employeeId, {
-        documents: updatedDocuments
+        documents: updatedDocuments,
+        updatedAt: new Date().toISOString()
       });
     });
     
@@ -162,7 +172,7 @@ export const removeEmployeeDocument = async (employeeId: string, documentId: str
     
     if (!employeeData) {
       console.log(`Employé ${employeeId} non trouvé`);
-      toast.error("Employé non trouvé");
+      toast.error(`Employé avec ID ${employeeId} non trouvé`);
       return false;
     }
     
@@ -175,9 +185,21 @@ export const removeEmployeeDocument = async (employeeId: string, documentId: str
     // Update the employee record without the removed document
     const success = await executeWithNetworkRetry(async () => {
       return await updateDocument(COLLECTIONS.HR.EMPLOYEES, employeeId, {
-        documents: updatedDocuments
+        documents: updatedDocuments,
+        updatedAt: new Date().toISOString()
       });
     });
+    
+    // Tenter également de supprimer le document de la collection hr_documents
+    try {
+      await executeWithNetworkRetry(async () => {
+        return await deleteDocument(COLLECTIONS.HR.DOCUMENTS, documentId);
+      });
+      console.log(`Document ${documentId} supprimé de la collection hr_documents`);
+    } catch (error) {
+      console.error(`Erreur lors de la suppression du document ${documentId} de hr_documents:`, error);
+      // Continuer malgré l'erreur, car la suppression des documents de l'employé est la partie importante
+    }
     
     if (success) {
       toast.success("Document supprimé avec succès");

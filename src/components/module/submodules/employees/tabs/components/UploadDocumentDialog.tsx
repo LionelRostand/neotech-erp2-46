@@ -95,6 +95,13 @@ const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
       fileInputRef.current.value = '';
     }
   };
+  
+  // Fonction pour simuler l'upload d'un fichier et générer une URL
+  const simulateFileUpload = async (file: File): Promise<string> => {
+    // Dans un environnement réel, ce serait un appel à Firebase Storage
+    // Ici on simule avec URL.createObjectURL
+    return URL.createObjectURL(file);
+  };
 
   const onSubmit = async (values: FormValues) => {
     if (!file) {
@@ -113,11 +120,10 @@ const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
     try {
       console.log('Téléversement de document pour employé ID:', employeeId);
       
-      // Dans un environnement réel, on téléverserait le fichier sur un stockage (Firebase Storage)
-      // et on récupérerait l'URL du fichier
-      const fileUrl = URL.createObjectURL(file);
+      // Simuler l'upload du fichier
+      const fileUrl = await simulateFileUpload(file);
       
-      // Créer le document dans Firestore
+      // Préparation des métadonnées du document
       const documentData = {
         name: values.name,
         type: values.type,
@@ -125,11 +131,15 @@ const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
         fileUrl: fileUrl,
         id: `doc_${Date.now()}`,
         size: file.size,
-        employeeId: employeeId // Ajouter explicitement l'ID de l'employé
+        employeeId: employeeId,
+        // Métadonnées additionnelles pour faciliter l'intégration avec d'autres parties de l'application
+        format: file.name.split('.').pop() || '',
+        fileType: file.type
       };
       
       console.log("Document à ajouter pour employé ID:", employeeId, documentData);
       
+      // Ajout du document à la fois à l'employé et à la collection hr_documents
       const success = await addEmployeeDocument(employeeId, documentData);
       
       if (success) {
@@ -159,7 +169,7 @@ const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Téléverser un document</DialogTitle>
+          <DialogTitle>Téléverser un document (ID Employé: {employeeId})</DialogTitle>
         </DialogHeader>
         
         <Form {...form}>
