@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Search, Users, RefreshCw } from 'lucide-react';
@@ -7,6 +8,10 @@ import { Employee } from '@/types/employee';
 import { refreshEmployeesData } from './employees/services/employeeService';
 import HierarchyVisualization from './employees/hierarchy/HierarchyVisualization';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { toast } from 'sonner';
+import { Skeleton } from '@/components/ui/skeleton';
+import { ChartNode } from './employees/hierarchy/types';
+import { useHrModuleData } from '@/hooks/useHrModuleData';
 
 const EmployeesHierarchy: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -15,8 +20,8 @@ const EmployeesHierarchy: React.FC = () => {
   const [hierarchyData, setHierarchyData] = useState<ChartNode | null>(null);
   const [loading, setLoading] = useState(true);
   
-  // Use the real data from Firebase via our hooks
-  const { employees, departments, isLoading: isDataLoading } = useEmployeeData();
+  // Use the real data from the hook
+  const { employees, departments, isLoading: isDataLoading } = useHrModuleData();
 
   // Build the hierarchy data structure when employees or departments change
   useEffect(() => {
