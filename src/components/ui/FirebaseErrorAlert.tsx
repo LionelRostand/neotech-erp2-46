@@ -2,7 +2,7 @@
 import React from 'react';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { RefreshCw, ShieldAlert, WifiOff, Settings } from "lucide-react";
+import { RefreshCw, ShieldAlert, WifiOff, Settings, ArrowRight } from "lucide-react";
 
 interface FirebaseErrorAlertProps {
   error: Error | null;
@@ -45,9 +45,29 @@ export const FirebaseErrorAlert: React.FC<FirebaseErrorAlertProps> = ({
         <ol className="list-decimal ml-5 space-y-1">
           <li>Vérifiez que vous êtes connecté avec un utilisateur ayant les droits appropriés.</li>
           <li>Assurez-vous que les règles de sécurité Firebase permettent l'accès à cette collection.</li>
-          <li>Si vous êtes en développement, vous pouvez temporairement assouplir les règles.</li>
-          <li>Contactez l'administrateur pour mettre à jour les droits d'accès.</li>
+          <li>Pour la collection <code>hr_employees</code>, vérifiez que les règles suivantes sont appliquées:</li>
         </ol>
+        <div className="bg-zinc-800 text-amber-100 p-2 my-2 rounded-md font-mono text-xs overflow-auto">
+          match /hr_employees/{'{'}document=**{'}'} {'{'}
+            <br />
+            &#160;&#160;allow read: if isAuthenticated() && (hasPermission('employees', 'view') || isAdmin());
+            <br />
+            &#160;&#160;allow create: if isAuthenticated() && (hasPermission('employees', 'create') || isAdmin());
+            <br />
+            &#160;&#160;allow update: if isAuthenticated() && (hasPermission('employees', 'edit') || isAdmin());
+            <br />
+            &#160;&#160;allow delete: if isAuthenticated() && (hasPermission('employees', 'delete') || isAdmin());
+            <br />
+          {'}'}
+        </div>
+        <p className="mt-2">En mode développement, vous pouvez temporairement permettre un accès complet:</p>
+        <div className="bg-zinc-800 text-amber-100 p-2 my-2 rounded-md font-mono text-xs overflow-auto">
+          match /hr_employees/{'{'}document=**{'}'} {'{'}
+            <br />
+            &#160;&#160;allow read, write: if true; // Uniquement pour le développement
+            <br />
+          {'}'}
+        </div>
       </div>
     );
   };
@@ -87,7 +107,7 @@ export const FirebaseErrorAlert: React.FC<FirebaseErrorAlertProps> = ({
                 className="flex items-center gap-1"
               >
                 <RefreshCw className="h-4 w-4 mr-1" />
-                Réessayer
+                Réessayer avec données démo
               </Button>
             </div>
           )}
