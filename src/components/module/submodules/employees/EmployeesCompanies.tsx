@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -103,8 +104,10 @@ const EmployeesCompanies: React.FC = () => {
 
   const handleAddCompany = async (companyData: Partial<Company>) => {
     try {
+      console.log('Tentative d\'ajout d\'une entreprise avec les données:', companyData);
+      
       // Créer réellement l'entreprise dans Firestore
-      await companyService.createCompany({
+      const newCompany = await companyService.createCompany({
         ...companyData,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
@@ -112,6 +115,7 @@ const EmployeesCompanies: React.FC = () => {
         employeesCount: 0
       } as any); // Cast as any pour éviter les erreurs de type
       
+      console.log('Entreprise ajoutée avec succès:', newCompany);
       toast.success('Entreprise ajoutée avec succès');
       setIsAddDialogOpen(false);
     } catch (error) {
@@ -133,23 +137,13 @@ const EmployeesCompanies: React.FC = () => {
           <p className="text-gray-500">Gérez les entreprises associées à vos employés</p>
         </div>
         <div className="flex space-x-2">
-          <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-            <DialogTrigger asChild>
-              <Button className="flex items-center gap-2">
-                <Plus className="h-4 w-4" />
-                Nouvelle entreprise
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-2xl">
-              <DialogHeader>
-                <DialogTitle>Ajouter une nouvelle entreprise</DialogTitle>
-              </DialogHeader>
-              <CompanyForm
-                onClose={() => setIsAddDialogOpen(false)}
-                onSave={handleAddCompany}
-              />
-            </DialogContent>
-          </Dialog>
+          <Button 
+            className="flex items-center gap-2"
+            onClick={() => setIsAddDialogOpen(true)}
+          >
+            <Plus className="h-4 w-4" />
+            Nouvelle entreprise
+          </Button>
         </div>
       </div>
 
@@ -167,7 +161,7 @@ const EmployeesCompanies: React.FC = () => {
             </div>
             <Button 
               variant="outline" 
-              onClick={() => setSearchQuery('')}
+              onClick={refreshData}
               className="flex items-center gap-2"
             >
               <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
@@ -199,6 +193,18 @@ const EmployeesCompanies: React.FC = () => {
           />
         </CardContent>
       </Card>
+
+      <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Ajouter une nouvelle entreprise</DialogTitle>
+          </DialogHeader>
+          <CompanyForm
+            onClose={() => setIsAddDialogOpen(false)}
+            onSave={handleAddCompany}
+          />
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent className="max-w-2xl">
