@@ -35,10 +35,11 @@ const EmployeesCompanies: React.FC = () => {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [currentCompany, setCurrentCompany] = useState<Company | null>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const { isOffline } = useAuth();
   
   // Utiliser useFirebaseCompanies au lieu de useCompaniesData pour avoir des données à jour
-  const { companies, isLoading, error } = useFirebaseCompanies();
+  const { companies, isLoading, error, refetch } = useFirebaseCompanies();
 
   // Rafraîchir les données filtrées lorsque les entreprises ou la recherche changent
   useEffect(() => {
@@ -124,8 +125,22 @@ const EmployeesCompanies: React.FC = () => {
   };
 
   // Fonction pour actualiser manuellement les données
-  const refreshData = () => {
-    window.location.reload();
+  const refreshData = async () => {
+    setIsRefreshing(true);
+    try {
+      if (refetch) {
+        await refetch();
+        toast.success('Données actualisées avec succès');
+      } else {
+        // Fallback si refetch n'est pas disponible
+        window.location.reload();
+      }
+    } catch (error) {
+      console.error('Erreur lors de l\'actualisation des données:', error);
+      toast.error('Échec de l\'actualisation des données');
+    } finally {
+      setIsRefreshing(false);
+    }
   };
 
   return (
@@ -161,10 +176,11 @@ const EmployeesCompanies: React.FC = () => {
             <Button 
               variant="outline" 
               onClick={refreshData}
+              disabled={isRefreshing}
               className="flex items-center gap-2"
             >
-              <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
-              Actualiser
+              <RefreshCw className={`h-4 w-4 ${isRefreshing || isLoading ? 'animate-spin' : ''}`} />
+              {isRefreshing ? 'Actualisation...' : 'Actualiser'}
             </Button>
           </div>
 
@@ -185,7 +201,7 @@ const EmployeesCompanies: React.FC = () => {
 
           <CompaniesTable 
             companies={filteredCompanies} 
-            isLoading={isLoading} 
+            isLoading={isLoading || isRefreshing} 
             onView={handleViewCompany}
             onEdit={handleEditCompany}
             onDelete={handleDeleteClick}

@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { collection, getDocs, query, onSnapshot } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Company } from '@/components/module/submodules/companies/types';
@@ -14,6 +14,42 @@ export const useFirebaseCompanies = () => {
   const [companies, setCompanies] = useState<Company[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
+
+  // Fonction pour charger les données une seule fois
+  const fetchCompaniesOnce = async () => {
+    try {
+      const companiesCollection = collection(db, COLLECTIONS.COMPANIES);
+      const q = query(companiesCollection);
+      const querySnapshot = await getDocs(q);
+      
+      const companiesData = querySnapshot.docs.map(doc => ({ 
+        id: doc.id, 
+        ...doc.data() 
+      })) as Company[];
+      
+      setCompanies(companiesData);
+      return companiesData;
+    } catch (err) {
+      console.error('Échec de la récupération unique:', err);
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Fonction pour rafraîchir manuellement les données
+  const refetch = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      await fetchCompaniesOnce();
+      return true;
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error('Erreur inconnue'));
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
     setIsLoading(true);
@@ -61,26 +97,6 @@ export const useFirebaseCompanies = () => {
       fetchCompaniesOnce();
     }
   }, []);
-  
-  // Fonction pour charger les données une seule fois en cas d'échec du listener
-  const fetchCompaniesOnce = async () => {
-    try {
-      const companiesCollection = collection(db, COLLECTIONS.COMPANIES);
-      const q = query(companiesCollection);
-      const querySnapshot = await getDocs(q);
-      
-      const companiesData = querySnapshot.docs.map(doc => ({ 
-        id: doc.id, 
-        ...doc.data() 
-      })) as Company[];
-      
-      setCompanies(companiesData);
-    } catch (err) {
-      console.error('Échec également de la récupération unique:', err);
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
-  return { companies, isLoading, error };
+  return { companies, isLoading, error, refetch };
 };
