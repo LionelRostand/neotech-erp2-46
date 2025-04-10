@@ -4,11 +4,11 @@ import * as z from 'zod';
 // Schéma pour l'adresse détaillée - aligned with EmployeeAddress interface
 export const addressSchema = z.object({
   street: z.string().min(1, "La rue est requise"),
-  streetNumber: z.string().optional(),
   city: z.string().min(1, "La ville est requise"),
   postalCode: z.string().min(1, "Le code postal est requis"),
-  department: z.string().optional(),
   country: z.string().default('France'),
+  streetNumber: z.string().optional(),
+  department: z.string().optional(),
   state: z.string().optional(),
 });
 
