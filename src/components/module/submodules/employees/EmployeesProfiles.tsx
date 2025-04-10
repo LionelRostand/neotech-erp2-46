@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useEmployeeData } from '@/hooks/useEmployeeData';
 import { RefreshCw } from 'lucide-react';
-import { addDocument } from '@/hooks/firestore/create-operations';
+import { addDocument, updateDocument } from '@/hooks/firestore/update-operations';
 import { FirebaseErrorAlert } from '@/components/ui/FirebaseErrorAlert';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import { refreshEmployeesData } from './services/employeeService';
@@ -84,23 +84,30 @@ const EmployeesProfiles: React.FC<EmployeesProfilesProps> = (props) => {
     setIsEditEmployeeOpen(true);
   };
 
-  const handleUpdateEmployee = (updatedEmployee: Partial<Employee>) => {
+  const handleUpdateEmployee = async (updatedEmployee: Partial<Employee>) => {
     if (!employeeToEdit) return;
     
-    const updatedEmployees = employees.map(emp => 
-      emp.id === employeeToEdit.id 
-        ? { ...emp, ...updatedEmployee } as Employee
-        : emp
-    );
-    
-    setEmployees(updatedEmployees);
-    
-    if (selectedEmployee && selectedEmployee.id === employeeToEdit.id) {
-      setSelectedEmployee({ ...selectedEmployee, ...updatedEmployee } as Employee);
+    try {
+      await updateDocument(COLLECTIONS.HR.EMPLOYEES, employeeToEdit.id, updatedEmployee);
+      
+      const updatedEmployees = employees.map(emp => 
+        emp.id === employeeToEdit.id 
+          ? { ...emp, ...updatedEmployee } as Employee
+          : emp
+      );
+      
+      setEmployees(updatedEmployees);
+      
+      if (selectedEmployee && selectedEmployee.id === employeeToEdit.id) {
+        setSelectedEmployee({ ...selectedEmployee, ...updatedEmployee } as Employee);
+      }
+      
+      toast.success("Employé mis à jour avec succès.");
+      setIsEditEmployeeOpen(false);
+    } catch (error) {
+      console.error("Erreur lors de la mise à jour de l'employé:", error);
+      toast.error("Erreur lors de la mise à jour de l'employé");
     }
-    
-    toast.success("Employé mis à jour avec succès.");
-    setIsEditEmployeeOpen(false);
   };
 
   const handleDeleteEmployee = (employeeId: string) => {
