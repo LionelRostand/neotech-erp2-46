@@ -1,7 +1,7 @@
 
 import { Employee } from '@/types/employee';
-import { getDocumentById, getAllDocuments } from '@/hooks/firestore/read-operations';
-import { updateDocument } from '@/hooks/firestore/update-operations';
+import { getDocumentById, addDocument } from '@/hooks/firestore/firestore-utils';
+import { updateDocument, setDocument } from '@/hooks/firestore/update-operations';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import { toast } from 'sonner';
 import { executeWithNetworkRetry } from '@/hooks/firestore/network-handler';
@@ -13,6 +13,8 @@ export interface EmployeeDocument {
   type: string;
   fileUrl?: string;
   id?: string;
+  size?: number;
+  employeeId?: string;
 }
 
 // Get all documents for an employee
@@ -45,6 +47,7 @@ export const addEmployeeDocument = async (employeeId: string, document: Employee
   try {
     console.log(`Ajout d'un document pour l'employé ${employeeId}...`);
     
+    // 1. D'abord, récupérer les données actuelles de l'employé
     const employeeData = await executeWithNetworkRetry(async () => {
       return await getDocumentById(COLLECTIONS.HR.EMPLOYEES, employeeId);
     });
@@ -55,18 +58,25 @@ export const addEmployeeDocument = async (employeeId: string, document: Employee
       return false;
     }
     
-    // Ensure documents array exists
+    // 2. Ajouter l'ID de l'employé au document
+    const documentWithEmployeeId = {
+      ...document,
+      employeeId,
+      id: document.id || `doc_${Date.now()}`
+    };
+    
+    // 3. Ajouter le document à la collection hr_documents
+    await executeWithNetworkRetry(async () => {
+      return await addDocument(COLLECTIONS.HR.DOCUMENTS, documentWithEmployeeId);
+    });
+    
+    // 4. Mettre à jour l'employé avec le nouveau document
     const documents = (employeeData as any).documents || [];
+    const updatedDocuments = [...documents, documentWithEmployeeId];
     
-    // Add new document with a unique ID if not provided
-    if (!document.id) {
-      document.id = `doc_${Date.now()}`;
-    }
-    
-    // Update the employee record with the new document
     const success = await executeWithNetworkRetry(async () => {
       return await updateDocument(COLLECTIONS.HR.EMPLOYEES, employeeId, {
-        documents: [...documents, document]
+        documents: updatedDocuments
       });
     });
     
@@ -137,13 +147,15 @@ export const getDocumentTypes = async (): Promise<string[]> => {
     
     if (!settingsDoc) {
       console.log("Paramètres des documents non trouvés");
-      return ["Contrat", "Avenant", "Formation", "Pièce d'identité", "Autre"];
+      // Valeurs par défaut
+      return ["Contrat", "Avenant", "Attestation", "Diplôme", "CV", "Pièce d'identité", "Autre"];
     }
     
     const types = (settingsDoc as any).types || [];
     return types;
   } catch (error) {
     console.error("Erreur lors de la récupération des types de documents:", error);
-    return ["Contrat", "Avenant", "Formation", "Pièce d'identité", "Autre"];
+    // Valeurs par défaut en cas d'erreur
+    return ["Contrat", "Avenant", "Attestation", "Diplôme", "CV", "Pièce d'identité", "Autre"];
   }
 };

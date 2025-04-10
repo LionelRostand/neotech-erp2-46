@@ -1,89 +1,146 @@
 
-import React from 'react';
-import { Employee, EmployeeAddress } from '@/types/employee';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Card, CardContent } from '@/components/ui/card';
+import React, { useState } from 'react';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { Mail, Phone, MapPin } from 'lucide-react';
+import { Calendar, Mail, Phone, Building } from 'lucide-react';
+import { Employee } from '@/types/employee';
+import PhotoUploader from './components/PhotoUploader';
 
 interface EmployeeProfileHeaderProps {
   employee: Employee;
 }
 
 const EmployeeProfileHeader: React.FC<EmployeeProfileHeaderProps> = ({ employee }) => {
-  // Format address to display
-  const formatAddress = (address: string | EmployeeAddress): string => {
-    if (typeof address === 'string') {
-      return address;
-    } else {
-      const { street, city, postalCode, country } = address;
-      return `${street}, ${postalCode} ${city}, ${country}`;
+  const [photo, setPhoto] = useState(employee.photoURL || employee.photo || '');
+
+  // Fonction pour formater la date (exemple: "20 janvier 2023")
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return 'Non spécifié';
+    
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return 'Date invalide';
+      
+      return date.toLocaleDateString('fr-FR', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric'
+      });
+    } catch (error) {
+      return 'Date invalide';
     }
   };
 
-  // Get employee initials for avatar fallback
-  const getInitials = (): string => {
-    return `${employee.firstName.charAt(0)}${employee.lastName.charAt(0)}`;
+  // Calculer l'ancienneté
+  const calculateTenure = (hireDateString?: string) => {
+    if (!hireDateString) return 'Non spécifié';
+    
+    try {
+      const hireDate = new Date(hireDateString);
+      if (isNaN(hireDate.getTime())) return 'Date invalide';
+      
+      const now = new Date();
+      let years = now.getFullYear() - hireDate.getFullYear();
+      let months = now.getMonth() - hireDate.getMonth();
+      
+      if (months < 0) {
+        years--;
+        months += 12;
+      }
+      
+      if (years === 0 && months === 0) {
+        const days = Math.floor((now.getTime() - hireDate.getTime()) / (1000 * 60 * 60 * 24));
+        return `${days} jour${days > 1 ? 's' : ''}`;
+      } else if (years === 0) {
+        return `${months} mois`;
+      } else {
+        return `${years} an${years > 1 ? 's' : ''} et ${months} mois`;
+      }
+    } catch (error) {
+      return 'Date invalide';
+    }
   };
 
-  // Get status color for badge
-  const getStatusColor = (): string => {
-    switch (employee.status) {
-      case 'active':
-      case 'Actif':
-        return 'bg-green-100 text-green-800 hover:bg-green-100';
-      case 'inactive':
-        return 'bg-red-100 text-red-800 hover:bg-red-100';
-      case 'onLeave':
-        return 'bg-amber-100 text-amber-800 hover:bg-amber-100';
-      default:
-        return 'bg-gray-100 text-gray-800 hover:bg-gray-100';
-    }
+  // Gérer le fallback d'image
+  const getInitials = () => {
+    return `${employee.firstName.charAt(0)}${employee.lastName.charAt(0)}`.toUpperCase();
+  };
+
+  const handlePhotoUpdated = (photoURL: string) => {
+    setPhoto(photoURL);
   };
 
   return (
-    <Card>
-      <CardContent className="p-6">
-        <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
-          <Avatar className="h-24 w-24">
-            <AvatarImage src={employee.photoURL || employee.photo} alt={`${employee.firstName} ${employee.lastName}`} />
-            <AvatarFallback className="text-2xl">{getInitials()}</AvatarFallback>
-          </Avatar>
-          
-          <div className="flex-1 text-center md:text-left">
+    <div className="bg-white rounded-lg shadow-sm border p-6">
+      <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
+        <div className="flex flex-col items-center">
+          <PhotoUploader 
+            employeeId={employee.id}
+            currentPhoto={photo}
+            employeeName={`${employee.firstName} ${employee.lastName}`}
+            onPhotoUpdated={handlePhotoUpdated}
+          />
+        </div>
+        
+        <div className="flex-1 space-y-2">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2">
             <h2 className="text-2xl font-bold">{employee.firstName} {employee.lastName}</h2>
-            <p className="text-muted-foreground">{employee.position || employee.title}</p>
-            
-            <div className="flex flex-wrap gap-2 mt-2 justify-center md:justify-start">
-              <Badge variant="outline" className={getStatusColor()}>
-                {employee.status === 'active' || employee.status === 'Actif' ? 'Actif' : 
-                 employee.status === 'inactive' ? 'Inactif' : 
-                 employee.status === 'onLeave' ? 'En congé' : employee.status}
-              </Badge>
-              <Badge variant="outline">{employee.department}</Badge>
-              <Badge variant="outline">{employee.contract || 'CDI'}</Badge>
+            <Badge 
+              variant={employee.status === 'active' || employee.status === 'Actif' ? 'default' : 'secondary'}
+              className="text-xs h-6"
+            >
+              {employee.status === 'active' || employee.status === 'Actif' ? 'Actif' : employee.status}
+            </Badge>
+          </div>
+          
+          <div className="flex flex-col sm:flex-row gap-1 sm:gap-4 text-gray-500 text-sm">
+            <span className="flex items-center">
+              <Building className="h-4 w-4 mr-1" />
+              {typeof employee.company === 'string' ? employee.company : employee.company?.name || 'Non spécifié'}
+            </span>
+            <span className="flex items-center">
+              {employee.position || employee.title || 'Poste non spécifié'}
+            </span>
+            <span className="flex items-center">
+              {employee.department || 'Département non spécifié'}
+            </span>
+          </div>
+          
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 mt-3">
+            <div className="flex items-center text-sm">
+              <Calendar className="h-4 w-4 mr-2 text-gray-400" />
+              <div>
+                <p className="text-gray-500">Date d'embauche</p>
+                <p>{formatDate(employee.hireDate || employee.startDate)}</p>
+              </div>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
-              <div className="flex items-center">
-                <Mail className="h-4 w-4 mr-2 text-muted-foreground" />
-                <span className="text-sm">{employee.email}</span>
+            <div className="flex items-center text-sm">
+              <Mail className="h-4 w-4 mr-2 text-gray-400" />
+              <div>
+                <p className="text-gray-500">Email</p>
+                <p className="break-all">{employee.email}</p>
               </div>
-              
-              <div className="flex items-center">
-                <Phone className="h-4 w-4 mr-2 text-muted-foreground" />
-                <span className="text-sm">{employee.phone}</span>
-              </div>
-              
-              <div className="flex items-center">
-                <MapPin className="h-4 w-4 mr-2 text-muted-foreground" />
-                <span className="text-sm">{formatAddress(employee.address)}</span>
+            </div>
+            
+            <div className="flex items-center text-sm">
+              <Phone className="h-4 w-4 mr-2 text-gray-400" />
+              <div>
+                <p className="text-gray-500">Téléphone</p>
+                <p>{employee.phone || 'Non spécifié'}</p>
               </div>
             </div>
           </div>
         </div>
-      </CardContent>
-    </Card>
+        
+        <div className="bg-gray-50 p-4 rounded-lg">
+          <div className="text-center">
+            <p className="text-gray-500 text-sm">Ancienneté</p>
+            <p className="font-bold text-lg">{calculateTenure(employee.hireDate || employee.startDate)}</p>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 };
 

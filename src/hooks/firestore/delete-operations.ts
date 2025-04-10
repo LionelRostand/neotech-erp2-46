@@ -1,28 +1,29 @@
 
-import { deleteDoc } from 'firebase/firestore';
+import { 
+  deleteDoc
+} from 'firebase/firestore';
 import { getDocRef } from './common-utils';
 import { toast } from 'sonner';
 
-// Supprimer un document
-export const deleteDocument = async (collectionName: string, id: string) => {
+/**
+ * Delete a document from a collection
+ * @param collectionName Collection path
+ * @param id Document ID
+ * @returns True if successful
+ */
+export const deleteDocument = async (collectionName: string, id: string): Promise<boolean> => {
   try {
-    console.log(`Suppression du document ${id} de la collection ${collectionName}`);
+    console.log(`Deleting document ${id} from collection ${collectionName}`);
+    
     const docRef = getDocRef(collectionName, id);
     await deleteDoc(docRef);
-    console.log(`Document ${id} supprimé avec succès`);
-    toast.success(`Document supprimé avec succès`);
-    return { success: true, id };
-  } catch (error) {
-    console.error(`Erreur lors de la suppression du document ${id}:`, error);
     
-    // Check if this is a network error
-    const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue';
-    if (errorMessage.includes('offline') || errorMessage.includes('unavailable') || errorMessage.includes('backend')) {
-      toast.success('Document marqué pour suppression en mode hors ligne. Les modifications seront synchronisées plus tard.');
-      return { success: true, id, _offlineDeleted: true };
-    } else {
-      toast.error(`Erreur lors de la suppression: ${errorMessage}`);
-      throw error;
-    }
+    console.log(`Document ${id} deleted successfully`);
+    toast.success('Document supprimé avec succès');
+    return true;
+  } catch (error) {
+    console.error(`Error deleting document ${id}:`, error);
+    toast.error('Erreur lors de la suppression du document');
+    return false;
   }
 };
