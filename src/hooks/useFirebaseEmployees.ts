@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { 
   collection, 
@@ -13,6 +14,7 @@ import {
 import { db } from '@/lib/firebase';
 import { Employee } from '@/types/employee';
 import { useToast } from '@/hooks/use-toast';
+import { COLLECTIONS } from '@/lib/firebase-collections';
 
 export const useFirebaseEmployees = () => {
   const [employees, setEmployees] = useState<Employee[]>([]);
@@ -25,14 +27,14 @@ export const useFirebaseEmployees = () => {
     
     try {
       // Direct reference to the employees collection
-      const employeesRef = collection(db, 'employees');
+      const employeesRef = collection(db, COLLECTIONS.HR.EMPLOYEES);
       const q = query(employeesRef);
       
       // Set up a real-time listener
       const unsubscribe = onSnapshot(q, (snapshot) => {
         const employeesData: Employee[] = snapshot.docs.map(doc => {
           const data = doc.data();
-          // Create a properly typed employee object with required fields
+          // Create a properly typed employee object with required fields and defaults
           return {
             id: doc.id,
             firstName: data.firstName || '',
@@ -44,6 +46,9 @@ export const useFirebaseEmployees = () => {
             position: data.position || '',
             department: data.department || '',
             departmentId: data.departmentId || '',
+            contract: data.contract || '',
+            company: data.company || '',
+            professionalEmail: data.professionalEmail || '',
             hireDate: data.hireDate?.toDate()?.toISOString() || null,
             birthDate: data.birthDate?.toDate()?.toISOString() || null,
             createdAt: data.createdAt?.toDate() || new Date(),
@@ -57,6 +62,7 @@ export const useFirebaseEmployees = () => {
             managerId: data.managerId || '',
             title: data.title || '',
             role: data.role || '',
+            payslips: data.payslips || [],
             // Include optional arrays
             skills: data.skills || [],
             documents: data.documents || [],
