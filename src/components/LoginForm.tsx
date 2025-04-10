@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { Loader2 } from "lucide-react";
 import { useAuth } from '@/hooks/useAuth';
+import { FirebaseErrorAlert } from './ui/FirebaseErrorAlert';
 
 const LoginForm = () => {
   const navigate = useNavigate();
@@ -13,10 +14,12 @@ const LoginForm = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setError(null);
     
     try {
       const user = await login(email, password);
@@ -27,10 +30,16 @@ const LoginForm = () => {
       }
     } catch (error: any) {
       console.error("Erreur de connexion:", error);
+      setError(error);
+      
       let errorMessage = "Identifiants incorrects";
       
-      if (error.message) {
-        errorMessage = error.message;
+      if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
+        errorMessage = "Email ou mot de passe incorrect";
+      } else if (error.code === 'auth/too-many-requests') {
+        errorMessage = "Trop de tentatives. Veuillez réessayer plus tard";
+      } else if (error.code === 'auth/api-key-not-valid.-please-pass-a-valid-api-key.') {
+        errorMessage = "Erreur de configuration. Veuillez contacter l'administrateur.";
       }
       
       toast.error("Erreur de connexion", {
@@ -53,6 +62,12 @@ const LoginForm = () => {
           <h2 className="text-2xl font-bold mt-4 text-gray-800">NEOTECH-ERP</h2>
           <p className="text-gray-500 mt-2">Connectez-vous à votre espace</p>
         </div>
+        
+        {error && (
+          <div className="mb-6">
+            <FirebaseErrorAlert error={error} />
+          </div>
+        )}
         
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">

@@ -30,11 +30,16 @@ export const FirebaseErrorAlert: React.FC<FirebaseErrorAlertProps> = ({
                       errorMessage.includes('unauthenticated') ||
                       errorMessage.includes('login') ||
                       errorMessage.includes('sign-in');
+  const isConfigError = errorMessage.includes('api-key-not-valid') || 
+                        errorMessage.includes('API key not valid') ||
+                        errorMessage.includes('configuration');
   
   // Déterminer un message d'aide spécifique basé sur le type d'erreur
   const getHelpText = () => {
-    if (isPermissionError) {
-      return "Cette erreur est souvent due à des règles de sécurité Firebase qui ne sont pas correctement configurées. Voici les actions possibles:";
+    if (isConfigError) {
+      return "Cette erreur est due à une configuration Firebase invalide. La clé API Firebase n'est pas valide ou est manquante.";
+    } else if (isPermissionError) {
+      return "Cette erreur est souvent due à des règles de sécurité Firebase qui ne sont pas correctement configurées.";
     } else if (isOfflineError) {
       return "Vous êtes actuellement hors ligne. Veuillez vérifier votre connexion Internet et réessayer.";
     } else if (isAuthError) {
@@ -42,6 +47,22 @@ export const FirebaseErrorAlert: React.FC<FirebaseErrorAlertProps> = ({
     } else {
       return `Une erreur est survenue lors de la récupération des données: ${errorMessage}`;
     }
+  };
+  
+  // Actions d'aide pour les erreurs de configuration
+  const renderConfigHelp = () => {
+    if (!isConfigError) return null;
+    
+    return (
+      <div className="mt-2 bg-red-50 text-red-900 p-3 rounded-md text-sm space-y-2">
+        <p><strong>Problème de configuration:</strong></p>
+        <ol className="list-decimal ml-5 space-y-1">
+          <li>Vérifiez que vous avez remplacé la clé API factice par une véritable clé API Firebase.</li>
+          <li>Pour un projet de développement, utilisez la clé API Firebase de développement.</li>
+          <li>Vérifiez que votre projet Firebase est correctement configuré et que l'authentification est activée.</li>
+        </ol>
+      </div>
+    );
   };
   
   // Actions d'aide pour les erreurs de permission
@@ -104,7 +125,12 @@ export const FirebaseErrorAlert: React.FC<FirebaseErrorAlertProps> = ({
   return (
     <Alert variant="destructive" className={className}>
       <AlertTitle className="flex items-center gap-2">
-        {isPermissionError ? (
+        {isConfigError ? (
+          <>
+            <Settings className="h-4 w-4" />
+            Erreur de configuration Firebase
+          </>
+        ) : isPermissionError ? (
           <>
             <ShieldAlert className="h-4 w-4" />
             Erreur de permissions Firebase
@@ -130,6 +156,7 @@ export const FirebaseErrorAlert: React.FC<FirebaseErrorAlertProps> = ({
         <div className="flex flex-col space-y-2">
           <p>{getHelpText()}</p>
           
+          {renderConfigHelp()}
           {renderPermissionHelp()}
           {renderAuthHelp()}
           
@@ -142,7 +169,7 @@ export const FirebaseErrorAlert: React.FC<FirebaseErrorAlertProps> = ({
                 className="flex items-center gap-1"
               >
                 <RefreshCw className="h-4 w-4 mr-1" />
-                Réessayer avec données démo
+                Réessayer
               </Button>
             </div>
           )}
