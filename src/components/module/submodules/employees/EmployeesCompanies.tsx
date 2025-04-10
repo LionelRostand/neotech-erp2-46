@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -41,15 +42,12 @@ const EmployeesCompanies: React.FC = () => {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [currentCompany, setCurrentCompany] = useState<Company | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const { isOffline: authOffline } = useAuth();
   
-  // Get auth context data
-  const { isOffline: authIsOffline } = useAuth();
-  
-  // Get companies data
-  const { companies, isLoading, error, refetch, isOffline: dataIsOffline } = useFirebaseCompanies();
+  const { companies, isLoading, error, refetch, isOffline: companiesOffline } = useFirebaseCompanies();
 
-  // Determine if we're offline based on either source
-  const isOffline = authIsOffline || dataIsOffline;
+  // Use either offline state (prioritize companiesOffline)
+  const isOffline = companiesOffline || authOffline;
 
   useEffect(() => {
     if (searchQuery.trim() === '') {
@@ -269,6 +267,92 @@ const EmployeesCompanies: React.FC = () => {
       </AlertDialog>
     </div>
   );
+  
+  // Define the refreshData function that was referenced in the JSX
+  function refreshData() {
+    setIsRefreshing(true);
+    try {
+      refetch().then(() => {
+        toast.success('Données actualisées avec succès');
+        setIsRefreshing(false);
+      }).catch(error => {
+        console.error('Erreur lors de l\'actualisation des données:', error);
+        toast.error('Échec de l\'actualisation des données');
+        setIsRefreshing(false);
+      });
+    } catch (error) {
+      console.error('Erreur lors de l\'actualisation des données:', error);
+      toast.error('Échec de l\'actualisation des données');
+      setIsRefreshing(false);
+    }
+  }
+  
+  function handleViewCompany(company: Company) {
+    console.log('Affichage des détails de l\'entreprise:', company);
+  }
+  
+  function handleEditCompany(company: Company) {
+    setCurrentCompany(company);
+    setIsEditDialogOpen(true);
+  }
+  
+  async function handleUpdateCompany(companyData: Partial<Company>) {
+    if (!currentCompany) return;
+
+    try {
+      const updateData = {
+        ...companyData,
+        updatedAt: new Date().toISOString()
+      };
+      
+      await updateCompany(currentCompany.id, updateData);
+      
+      toast.success('Entreprise mise à jour avec succès');
+      setIsEditDialogOpen(false);
+    } catch (error) {
+      console.error('Erreur lors de la mise à jour:', error);
+      toast.error('Échec de la mise à jour de l\'entreprise');
+    }
+  }
+  
+  function handleDeleteClick(company: Company) {
+    setCurrentCompany(company);
+    setIsDeleteDialogOpen(true);
+  }
+  
+  async function handleDeleteConfirm() {
+    if (!currentCompany) return;
+
+    try {
+      await deleteCompany(currentCompany.id);
+      
+      toast.success('Entreprise supprimée avec succès');
+      setIsDeleteDialogOpen(false);
+    } catch (error) {
+      console.error('Erreur lors de la suppression:', error);
+      toast.error('Échec de la suppression de l\'entreprise');
+    }
+  }
+  
+  async function handleAddCompany(companyData: Partial<Company>) {
+    try {
+      console.log('Tentative d\'ajout d\'une entreprise avec les données:', companyData);
+      
+      await addCompany({
+        ...companyData,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        status: 'active' as const,
+        employeesCount: 0
+      });
+
+      toast.success('Entreprise ajoutée avec succès');
+      setIsAddDialogOpen(false);
+    } catch (error) {
+      console.error('Erreur lors de l\'ajout:', error);
+      toast.error('Échec de l\'ajout de l\'entreprise');
+    }
+  }
 };
 
 export default EmployeesCompanies;
