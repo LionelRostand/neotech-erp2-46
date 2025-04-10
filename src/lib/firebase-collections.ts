@@ -1,154 +1,58 @@
 
 /**
- * Definition of paths to Firestore collections used in the application
- * Centralizing these paths helps avoid typos and makes changes easier
+ * Constantes pour les noms des collections Firestore
+ * Centralise les noms de collections pour éviter les erreurs de frappe et faciliter les refactorisations
  */
 export const COLLECTIONS = {
-  // Main collections
+  // Collections principales
   USERS: 'users',
   COMPANIES: 'companies',
-  USER_PERMISSIONS: 'user_permissions',
-  EMPLOYEES: 'employees',
+  SETTINGS: 'settings',
   
-  // Messages module
-  MESSAGES: {
-    INBOX: 'messages_inbox',
-    SENT: 'messages_sent',
-    ARCHIVED: 'messages_archived',
-    SCHEDULED: 'messages_scheduled',
-    DRAFTS: 'messages_drafts',
-    METRICS: 'messages_metrics',
-    TEMPLATES: 'message_templates'
-  },
+  // Module CRM
+  CRM_CLIENTS: 'crm_clients',
+  CRM_PROSPECTS: 'crm_prospects',
+  CRM_OPPORTUNITIES: 'crm_opportunities',
+  CRM_REMINDERS: 'crm_reminders',
+  CRM_SETTINGS: 'crm_settings',
   
-  // Contacts collection
-  CONTACTS: 'contacts',
+  // Module Comptabilité
+  INVOICES: 'accounting_invoices',
+  PAYMENTS: 'accounting_payments',
+  EXPENSES: 'accounting_expenses',
+  ACCOUNTING_CLIENTS: 'accounting_clients',
+  ACCOUNTING_SUPPLIERS: 'accounting_suppliers',
   
-  // HR (Human Resources) Module
-  HR: {
-    EMPLOYEES: 'employees',
-    DEPARTMENTS: 'departments',
-    POSITIONS: 'positions',
-    LEAVES: 'leaves',
-    ATTENDANCE: 'attendance',
-    PAYROLL: 'payroll',
-    RECRUITMENT: 'recruitment',
-    CONTRACTS: 'contracts',
-    EVALUATIONS: 'evaluations',
-    PAYSLIPS: 'payslips',
-    LEAVE_REQUESTS: 'leave_requests',
-    DOCUMENTS: 'hr_documents',
-    TIMESHEETS: 'timesheets',
-    BADGES: 'badges',
-    ABSENCE_REQUESTS: 'absence_requests',
-    TRAININGS: 'trainings',
-    REPORTS: 'hr_reports',
-    ALERTS: 'hr_alerts'
-  },
+  // Module RH / Employés
+  EMPLOYEES: 'hr-employees',
+  DEPARTMENTS: 'hr-departments',
+  LEAVES: 'hr-leaves',
+  CONTRACTS: 'hr-contracts',
+  EVALUATIONS: 'hr-evaluations',
   
-  // Finance Module
-  FINANCE: {
-    INVOICES: 'invoices',
-    EXPENSES: 'expenses',
-    ACCOUNTS: 'accounts',
-    TRANSACTIONS: 'transactions'
-  },
+  // Module Projets
+  PROJECTS: 'projects/projects',
+  TASKS: 'projects/tasks',
+  TEAMS: 'projects/teams',
   
-  // CRM Module
-  CRM: {
-    CLIENTS: 'clients',
-    LEADS: 'leads',
-    OPPORTUNITIES: 'opportunities',
-    CONTACTS: 'contacts',
-    PROSPECTS: 'prospects',
-    DEALS: 'deals',
-    SETTINGS: 'crm_settings',
-    REMINDERS: 'reminders'
-  },
-
-  // Projects Module
-  PROJECTS: {
-    PROJECTS: 'projects',
-    TASKS: 'tasks',
-    MILESTONES: 'milestones',
-    TIMESHEETS: 'project_timesheets',
-    TEAMS: 'teams',
-    NOTIFICATIONS: 'project_notifications'
-  },
+  // Module Santé
+  PATIENTS: 'health-patients',
+  DOCTORS: 'health-doctors',
+  APPOINTMENTS: 'health-appointments',
+  CONSULTATIONS: 'health-consultations',
   
-  // Documents Module
+  // Module Freight
+  SHIPMENTS: 'freight/shipments',
+  PACKAGES: 'freight/packages',
+  FREIGHT_CUSTOMERS: 'freight/customers',
+  
+  // Module Messages
+  MESSAGES: 'messages/inbox',
+  CONTACTS: 'messages/contacts',
+  
+  // Module Documents
   DOCUMENTS: 'documents',
   
-  // Accounting Module
-  ACCOUNTING: {
-    INVOICES: 'accounting_invoices',
-    CLIENTS: 'accounting_clients',
-    SUPPLIERS: 'accounting_suppliers',
-    PAYMENTS: 'accounting_payments',
-    EXPENSES: 'accounting_expenses',
-    TAXES: 'accounting_taxes',
-    REPORTS: 'accounting_reports',
-    SETTINGS: 'accounting_settings',
-    PERMISSIONS: 'accounting_permissions',
-    TRANSACTIONS: 'accounting_transactions'
-  },
-
-  // Health Module
-  HEALTH: {
-    PATIENTS: 'patients',
-    CONSULTATIONS: 'consultations',
-    STAFF: 'health_staff',
-    APPOINTMENTS: 'appointments',
-    INSURANCE: 'insurance',
-    BILLING: 'health_billing',
-    PRESCRIPTIONS: 'prescriptions',
-    MEDICAL_RECORDS: 'medical_records',
-    INVENTORY: 'medical_inventory',
-    DOCTORS: 'doctors'
-  },
-
-  // Transport Module
-  TRANSPORT: {
-    DRIVERS: 'transport_drivers',
-    VEHICLES: 'transport_vehicles',
-    RESERVATIONS: 'transport_reservations',
-    CLIENTS: 'transport_clients',
-    ROUTES: 'transport_routes',
-    MAINTENANCE: 'transport_maintenance'
-  },
-
-  // Freight Module
-  FREIGHT: {
-    SHIPMENTS: 'shipments',
-    CONTAINERS: 'containers',
-    CARRIERS: 'carriers',
-    TRACKING: 'tracking_events',
-    TRACKING_EVENTS: 'tracking_events',
-    CUSTOMERS: 'freight_customers',
-    DOCUMENTS: 'freight_documents',
-    RATES: 'freight_rates',
-    ROUTES: 'freight_routes',
-    CUSTOMS: 'customs_declarations',
-    PERMISSIONS: 'freight_permissions',
-    SETTINGS: 'freight_settings',
-    USERS: 'freight_users',
-    PACKAGES: 'freight_packages',
-    PACKAGE_TYPES: 'freight_package_types',
-    PRICING: 'freight_pricing',
-    BILLING: 'freight_billing',
-    QUOTES: 'freight_quotes',
-    VEHICLES: 'freight_vehicles',
-    DRIVERS: 'freight_drivers'
-  },
-
-  // Library Module
-  LIBRARY: {
-    BOOKS: 'books',
-    CATEGORIES: 'book_categories',
-    MEMBERS: 'library_members',
-    LOANS: 'book_loans',
-    RESERVATIONS: 'book_reservations',
-    STATS: 'library_stats',
-    EVENTS: 'library_events'
-  }
+  // Permissions
+  USER_PERMISSIONS: 'userPermissions'
 };
