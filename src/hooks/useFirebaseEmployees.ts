@@ -26,7 +26,7 @@ export const useFirebaseEmployees = () => {
     setIsLoading(true);
     
     try {
-      // Direct reference to the employees collection
+      // Updated reference to the correct HR employees collection path
       const employeesRef = collection(db, COLLECTIONS.HR.EMPLOYEES);
       const q = query(employeesRef);
       
@@ -100,8 +100,8 @@ export const useFirebaseEmployees = () => {
 
   const addEmployee = async (employee: Omit<Employee, 'id' | 'createdAt' | 'updatedAt'>) => {
     try {
-      // Direct reference to the employees collection
-      const employeesRef = collection(db, 'employees');
+      // Update reference to the employees collection
+      const employeesRef = collection(db, COLLECTIONS.HR.EMPLOYEES);
       
       // Prepare employee data
       const employeeData = {
@@ -132,8 +132,8 @@ export const useFirebaseEmployees = () => {
 
   const updateEmployee = async (id: string, updates: Partial<Employee>) => {
     try {
-      // Direct reference to the employee document
-      const employeeRef = doc(db, 'employees', id);
+      // Update reference to the employee document
+      const employeeRef = doc(db, COLLECTIONS.HR.EMPLOYEES, id);
       
       // Update the document
       await updateDoc(employeeRef, {
@@ -160,8 +160,8 @@ export const useFirebaseEmployees = () => {
 
   const deleteEmployee = async (id: string) => {
     try {
-      // Direct reference to the employee document
-      const employeeRef = doc(db, 'employees', id);
+      // Update reference to the employee document
+      const employeeRef = doc(db, COLLECTIONS.HR.EMPLOYEES, id);
       
       // Delete the document
       await deleteDoc(employeeRef);
