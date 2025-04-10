@@ -1,3 +1,4 @@
+
 import React, { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
@@ -91,12 +92,15 @@ const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
     
     if (!employeeId) {
       toast.error('ID de l\'employé manquant');
+      console.error('Upload document error: No employee ID provided', { employeeId });
       return;
     }
     
     setIsUploading(true);
     
     try {
+      console.log('Téléversement de document pour employé ID:', employeeId);
+      
       // Dans un environnement réel, on téléverserait le fichier sur un stockage (Firebase Storage)
       // et on récupérerait l'URL du fichier
       const fileUrl = URL.createObjectURL(file);

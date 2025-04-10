@@ -46,7 +46,13 @@ export const getEmployeeDocuments = async (employeeId: string): Promise<Employee
 // Add a new document to an employee
 export const addEmployeeDocument = async (employeeId: string, document: EmployeeDocument): Promise<boolean> => {
   try {
-    console.log(`Ajout d'un document pour l'employé ${employeeId}...`);
+    console.log(`Ajout d'un document pour l'employé ${employeeId}...`, document);
+    
+    if (!employeeId) {
+      console.error('Erreur: ID employé manquant');
+      toast.error("ID employé manquant");
+      return false;
+    }
     
     // 1. D'abord, récupérer les données actuelles de l'employé
     const employeeData = await executeWithNetworkRetry(async () => {
@@ -54,7 +60,7 @@ export const addEmployeeDocument = async (employeeId: string, document: Employee
     });
     
     if (!employeeData) {
-      console.log(`Employé ${employeeId} non trouvé`);
+      console.error(`Employé ${employeeId} non trouvé lors de l'ajout du document`);
       toast.error("Employé non trouvé");
       return false;
     }

@@ -221,8 +221,8 @@ const DocumentsTab: React.FC<DocumentsTabProps> = ({ employee }) => {
         </div>
       )}
 
-      {/* Upload Document Dialog */}
-      {employee?.id && (
+      {/* Upload Document Dialog - Key fix: ensuring employee ID is passed correctly */}
+      {employee && (
         <UploadDocumentDialog 
           open={uploadDialogOpen}
           onOpenChange={setUploadDialogOpen}
