@@ -5,12 +5,14 @@ import { Button } from "@/components/ui/button";
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { Loader2 } from "lucide-react";
-import { useAuth } from '@/hooks/useAuth';
 import { FirebaseErrorAlert } from './ui/FirebaseErrorAlert';
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { auth, db } from '@/lib/firebase';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { COLLECTIONS } from '@/lib/firebase-collections';
 
 const LoginForm = () => {
   const navigate = useNavigate();
-  const { login } = useAuth();
   const [email, setEmail] = useState('admin@neotech-consulting.com');
   const [password, setPassword] = useState('admin123456');
   const [isLoading, setIsLoading] = useState(false);
@@ -22,10 +24,61 @@ const LoginForm = () => {
     setError(null);
     
     try {
-      const user = await login(email, password);
+      // Utiliser directement Firebase Auth au lieu du service
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const { uid } = userCredential.user;
       
-      if (user) {
-        toast.success(`Bienvenue, ${user.firstName} ${user.lastName}`);
+      try {
+        // Récupérer les données utilisateur depuis Firestore
+        const userRef = doc(db, COLLECTIONS.USERS, uid);
+        const userDoc = await getDoc(userRef);
+        
+        let userData;
+        
+        if (userDoc.exists()) {
+          userData = userDoc.data();
+          // Mettre à jour la date de dernière connexion
+          await setDoc(userRef, { lastLogin: new Date() }, { merge: true });
+        } else {
+          // Créer un utilisateur par défaut si nécessaire
+          userData = {
+            email: userCredential.user.email,
+            firstName: "Admin",
+            lastName: "User",
+            role: "admin",
+            createdAt: new Date(),
+            lastLogin: new Date()
+          };
+          
+          await setDoc(userRef, userData);
+        }
+        
+        // Stocker les données utilisateur dans localStorage pour l'état global
+        const user = {
+          id: uid,
+          email: userCredential.user.email,
+          firstName: userData.firstName,
+          lastName: userData.lastName,
+          role: userData.role
+        };
+        
+        localStorage.setItem('user', JSON.stringify(user));
+        
+        toast.success(`Bienvenue, ${userData.firstName} ${userData.lastName}`);
+        navigate('/welcome');
+      } catch (firestoreError) {
+        console.error("Erreur Firestore:", firestoreError);
+        // Continuer même si Firestore n'est pas disponible
+        const defaultUser = {
+          id: uid,
+          email: userCredential.user.email,
+          firstName: "Admin",
+          lastName: "User",
+          role: "admin"
+        };
+        
+        localStorage.setItem('user', JSON.stringify(defaultUser));
+        toast.success(`Bienvenue!`);
         navigate('/welcome');
       }
     } catch (error: any) {
