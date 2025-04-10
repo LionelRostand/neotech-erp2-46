@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -44,7 +43,7 @@ const EmployeesCompanies: React.FC = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const { isOffline } = useAuth();
   
-  const { companies, isLoading, error, refetch, isOffline: isDataOffline } = useFirebaseCompanies();
+  const { companies, isLoading, error, refetch, isOffline } = useFirebaseCompanies();
 
   useEffect(() => {
     if (searchQuery.trim() === '') {

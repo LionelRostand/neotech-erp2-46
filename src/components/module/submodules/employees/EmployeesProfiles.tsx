@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Employee } from '@/types/employee';
@@ -12,6 +11,7 @@ import { useEmployeeData } from '@/hooks/useEmployeeData';
 import { RefreshCw, Shield } from 'lucide-react';
 import { FirebaseErrorAlert } from '@/components/ui/FirebaseErrorAlert';
 import { refreshEmployeesData } from './services/employeeService';
+import { useFirebaseCompanies } from '@/hooks/useFirebaseCompanies';
 
 interface EmployeesProfilesProps {
   employees?: Employee[];
@@ -37,7 +37,6 @@ const EmployeesProfiles: React.FC<EmployeesProfilesProps> = (props) => {
   const { companies } = useFirebaseCompanies();
 
   useEffect(() => {
-    // Utiliser les employés provenant des props ou de useEmployeeData
     const employeesToUse = props.employees && props.employees.length > 0 
       ? props.employees 
       : fetchedEmployees;
@@ -45,7 +44,6 @@ const EmployeesProfiles: React.FC<EmployeesProfilesProps> = (props) => {
     setEmployees(employeesToUse);
   }, [props.employees, fetchedEmployees]);
 
-  // Transformer les companies pour le select
   const companyOptions = [
     { id: 'all', name: 'Toutes les entreprises' },
     ...companies.map(company => ({
@@ -86,7 +84,6 @@ const EmployeesProfiles: React.FC<EmployeesProfilesProps> = (props) => {
     
     setEmployees(updatedEmployees);
     
-    // Si l'employé est actuellement sélectionné, mettre à jour aussi
     if (selectedEmployee && selectedEmployee.id === employeeToEdit.id) {
       setSelectedEmployee({ ...selectedEmployee, ...updatedEmployee } as Employee);
     }
@@ -99,7 +96,6 @@ const EmployeesProfiles: React.FC<EmployeesProfilesProps> = (props) => {
     const updatedEmployees = employees.filter(emp => emp.id !== employeeId);
     setEmployees(updatedEmployees);
     
-    // Si l'employé supprimé est celui qui est affiché, revenir à la liste
     if (selectedEmployee && selectedEmployee.id === employeeId) {
       setSelectedEmployee(null);
     }
@@ -123,10 +119,7 @@ const EmployeesProfiles: React.FC<EmployeesProfilesProps> = (props) => {
   };
 
   const handleExportPdf = () => {
-    // Show loading dialog
     setIsPdfExportOpen(true);
-    // The actual PDF export is now handled in EmployeeDetails component
-    // This is just for UI feedback
     setTimeout(() => {
       setIsPdfExportOpen(false);
     }, 1000);
@@ -227,7 +220,6 @@ const EmployeesProfiles: React.FC<EmployeesProfilesProps> = (props) => {
         />
       )}
 
-      {/* Dialogue de simulation d'export PDF */}
       <Dialog open={isPdfExportOpen} onOpenChange={setIsPdfExportOpen}>
         <DialogContent>
           <DialogHeader>

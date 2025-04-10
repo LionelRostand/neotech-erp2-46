@@ -98,7 +98,7 @@ export const updateEmployee = async (id: string, updates: Partial<Employee>): Pr
       updatedAt: serverTimestamp()
     };
     
-    await updateDoc(doc(db, COLLECTIONS.HR.EMPLOYEES), updatedData);
+    await updateDoc(doc(db, COLLECTIONS.HR.EMPLOYEES, id), updatedData);
     toast.success('Employé mis à jour avec succès');
     return true;
   } catch (error) {

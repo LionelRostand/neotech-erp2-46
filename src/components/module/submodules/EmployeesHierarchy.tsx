@@ -1,422 +1,234 @@
-
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ListTree, Users, Building, ChevronRight, ChevronDown } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Button } from '@/components/ui/button';
+import { 
+  ChartNode,
+  HierarchyVisualization 
+} from './hierarchy/HierarchyVisualization';
+import { Search, Users, RefreshCw } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useEmployeeData } from '@/hooks/useEmployeeData';
 import { Employee } from '@/types/employee';
-import { getSyncedDepartments } from './departments/utils/departmentUtils';
-import { getEmployeesData } from './employees/services/employeeService';
-
-// Interface pour département dans la hiérarchie
-interface Department {
-  id: string;
-  name: string;
-  managerId: string | null;
-  managerName: string | null;
-  color: string;
-  employeeIds?: string[];
-  employeesCount?: number;
-}
-
-// Interface pour employé dans la hiérarchie
-interface EmployeeNode extends Employee {
-  subordinates: EmployeeNode[];
-  managerOf?: string[];
-  departmentColor?: string;
-  level?: number;
-}
+import { Department } from './departments/types';
+import { toast } from 'sonner';
+import { useHrModuleData } from '@/hooks/useHrModuleData';
+import { refreshEmployeesData } from './employees/services/employeeService';
 
 const EmployeesHierarchy: React.FC = () => {
-  // Données des employés provenant de Firebase
-  const [employees, setEmployees] = useState<Employee[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedDepartment, setSelectedDepartment] = useState<string>('all');
+  const [viewMode, setViewMode] = useState<'orgChart' | 'treeView'>('orgChart');
+  const [hierarchyData, setHierarchyData] = useState<ChartNode | null>(null);
+  const [loading, setLoading] = useState(true);
   
-  // Départements - maintenant synchronisés avec la gestion des départements
-  const [departments, setDepartments] = useState<Department[]>([]);
+  // Use the real data from Firebase via our hooks
+  const { employees, departments, isLoading: isDataLoading } = useEmployeeData();
 
-  // State for hierarchy data
-  const [employeeHierarchy, setEmployeeHierarchy] = useState<EmployeeNode[]>([]);
-  const [activeTab, setActiveTab] = useState("employees");
-  const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set());
-
-  // Fetch employees data from Firebase
+  // Build the hierarchy data structure when employees or departments change
   useEffect(() => {
-    const fetchEmployees = async () => {
-      setLoading(true);
-      try {
-        const data = await getEmployeesData();
-        setEmployees(data);
-        console.log("Données employés chargées:", data.length);
-      } catch (error) {
-        console.error("Erreur lors du chargement des employés:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchEmployees();
-  }, []);
-
-  // Fetch departments from synced storage
-  useEffect(() => {
-    const loadSyncedDepartments = () => {
-      const syncedDepartments = getSyncedDepartments();
-      if (syncedDepartments && syncedDepartments.length > 0) {
-        console.log("Loaded synced departments:", syncedDepartments);
-        setDepartments(syncedDepartments);
-      } else {
-        // Fallback to default departments
-        setDepartments([
-          {
-            id: "DEP001",
-            name: "Marketing",
-            managerId: "EMP003",
-            managerName: "Sophie Martin",
-            color: "#3b82f6", // blue-500
-            employeesCount: 2,
-            employeeIds: ["EMP003", "EMP004"]
-          },
-          {
-            id: "DEP002",
-            name: "Direction",
-            managerId: "EMP002",
-            managerName: "Lionel Djossa",
-            color: "#10b981", // emerald-500
-            employeesCount: 1,
-            employeeIds: ["EMP002"]
-          },
-          {
-            id: "DEP003",
-            name: "Finance",
-            managerId: "EMP005",
-            managerName: "Marie Dupont",
-            color: "#8b5cf6", // violet-500
-            employeesCount: 3,
-            employeeIds: ["EMP005", "EMP006", "EMP010"]
-          },
-          {
-            id: "DEP004",
-            name: "Technique",
-            managerId: "EMP007",
-            managerName: "Jean Leroy",
-            color: "#f59e0b", // amber-500
-            employeesCount: 2,
-            employeeIds: ["EMP007", "EMP008"]
-          },
-          {
-            id: "DEP005",
-            name: "Ressources Humaines",
-            managerId: "EMP009",
-            managerName: "Camille Rousseau",
-            color: "#ec4899", // pink-500
-            employeesCount: 1,
-            employeeIds: ["EMP009"]
-          },
-        ]);
-      }
-    };
-
-    loadSyncedDepartments();
-
-    // Listen for storage changes to keep departments in sync
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'hierarchy_departments_data') {
-        loadSyncedDepartments();
-      }
-    };
-
-    window.addEventListener('storage', handleStorageChange);
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
-    };
-  }, []);
-
-  // Build employee hierarchy when employees and departments are loaded
-  useEffect(() => {
-    if (departments.length > 0 && employees.length > 0 && !loading) {
-      buildEmployeeHierarchy();
+    if (!isDataLoading && employees.length > 0) {
+      buildHierarchyData();
     }
-  }, [departments, employees, loading]);
+  }, [employees, departments, isDataLoading, selectedDepartment]);
 
-  // Toggle node expansion
-  const toggleNodeExpansion = (employeeId: string) => {
-    setExpandedNodes(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(employeeId)) {
-        newSet.delete(employeeId);
-      } else {
-        newSet.add(employeeId);
-      }
-      return newSet;
-    });
-  };
-
-  // Function to build employee hierarchy
-  const buildEmployeeHierarchy = () => {
-    // Create a map of employees by ID
-    const employeeMap = new Map<string, EmployeeNode>();
+  const buildHierarchyData = () => {
+    setLoading(true);
     
-    // First, create nodes for all employees
-    const employeeNodes: EmployeeNode[] = employees.map(emp => {
-      const node: EmployeeNode = {
-        ...emp,
-        subordinates: [],
-        managerOf: [],
-        level: 0
+    try {
+      // Filter employees if department selected
+      const filteredEmployees = selectedDepartment === 'all' 
+        ? employees 
+        : employees.filter(emp => emp.departmentId === selectedDepartment || emp.department === selectedDepartment);
+
+      if (filteredEmployees.length === 0) {
+        setHierarchyData(null);
+        setLoading(false);
+        return;
+      }
+      
+      // Find managers (employees who are managers of departments)
+      const managers = departments
+        .filter(dept => dept.managerId)
+        .map(dept => dept.managerId as string);
+      
+      // Find CEO or top level employee (no manager)
+      const topLevelEmployees = filteredEmployees.filter(emp => 
+        (emp.position?.toLowerCase().includes('ceo') || 
+         emp.position?.toLowerCase().includes('président') ||
+         emp.position?.toLowerCase().includes('directeur général')) &&
+        !emp.managerId
+      );
+      
+      let rootEmployee: Employee | undefined;
+      
+      if (topLevelEmployees.length > 0) {
+        rootEmployee = topLevelEmployees[0];
+      } else {
+        // If no CEO found, take the first employee with no manager
+        rootEmployee = filteredEmployees.find(emp => !emp.managerId);
+      }
+      
+      if (!rootEmployee) {
+        // If still no root found, just take first employee
+        rootEmployee = filteredEmployees[0];
+      }
+      
+      // Build the tree recursively
+      const buildEmployeeNode = (employee: Employee): ChartNode => {
+        const employeeDept = departments.find(d => d.id === employee.departmentId);
+        
+        return {
+          id: employee.id,
+          name: `${employee.firstName} ${employee.lastName}`,
+          position: employee.position || 'Non défini',
+          department: employeeDept?.name || employee.department || 'Non défini',
+          imageUrl: employee.photoURL || employee.photo || '',
+          children: getDirectReports(employee.id, filteredEmployees)
+            .map(directReport => buildEmployeeNode(directReport))
+        };
       };
       
-      // Add department color if employee is a manager of a department
-      const managedDepartment = departments.find(dep => dep.managerId === emp.id);
-      if (managedDepartment) {
-        node.departmentColor = managedDepartment.color;
-        node.managerOf = [managedDepartment.name];
-      }
-      
-      employeeMap.set(emp.id, node);
-      return node;
-    });
-    
-    // Then, build the hierarchy by adding subordinates and setting levels
-    const rootNodes: EmployeeNode[] = [];
-    
-    employeeNodes.forEach(node => {
-      // If this employee has a manager, add them as a subordinate to their manager
-      if (node.manager) {
-        // Find the manager in our employee list
-        const managerNode = employeeNodes.find(emp => 
-          `${emp.firstName} ${emp.lastName}` === node.manager
-        );
-        
-        if (managerNode) {
-          const manager = employeeMap.get(managerNode.id);
-          if (manager) {
-            manager.subordinates.push(node);
-            node.level = (manager.level || 0) + 1;
-          }
-          return; // This node is not a root node
-        }
-      }
-      
-      // If we reach here, this employee has no manager in our system or is at the top of the hierarchy
-      rootNodes.push(node);
-    });
-    
-    // Expand all root nodes by default
-    const initialExpanded = new Set<string>();
-    rootNodes.forEach(node => initialExpanded.add(node.id));
-    setExpandedNodes(initialExpanded);
-    
-    setEmployeeHierarchy(rootNodes);
-  };
-
-  // Recursive component to render employee hierarchy
-  const renderEmployeeNode = (node: EmployeeNode, level: number = 0) => {
-    const hasSubordinates = node.subordinates.length > 0;
-    const isExpanded = expandedNodes.has(node.id);
-    
-    return (
-      <div key={node.id} className="relative">
-        <div 
-          className={`flex items-center py-2 pl-${level * 4} transition-colors hover:bg-gray-50 rounded-md`}
-          style={{ 
-            paddingLeft: `${level * 20 + 8}px`, 
-            borderLeft: node.departmentColor ? `3px solid ${node.departmentColor}` : 'none'
-          }}
-        >
-          {hasSubordinates && (
-            <button 
-              onClick={() => toggleNodeExpansion(node.id)}
-              className="mr-2 focus:outline-none"
-            >
-              {isExpanded ? 
-                <ChevronDown className="h-4 w-4 text-gray-500" /> : 
-                <ChevronRight className="h-4 w-4 text-gray-500" />
-              }
-            </button>
-          )}
-          
-          {!hasSubordinates && <div className="w-6 mr-2"></div>}
-          
-          <div className="flex-1">
-            <div className="font-medium">{node.firstName} {node.lastName}</div>
-            <div className="text-sm text-gray-500">{node.position}</div>
-            {node.managerOf && node.managerOf.length > 0 && (
-              <div className="text-xs text-gray-500 mt-1">
-                <div 
-                  className="inline-block px-2 py-0.5 rounded-full text-white"
-                  style={{ backgroundColor: node.departmentColor }}
-                >
-                  Responsable {node.managerOf.join(', ')}
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-        
-        {isExpanded && node.subordinates.length > 0 && (
-          <div className="ml-6 border-l border-gray-200 pl-2">
-            {node.subordinates.map(subordinate => renderEmployeeNode(subordinate, level + 1))}
-          </div>
-        )}
-      </div>
-    );
-  };
-
-  // Render departments with improved pyramid style
-  const renderDepartmentsPyramid = () => {
-    // Group employees by department
-    const departmentEmployees = departments.map(department => {
-      // Use employeeIds from synced departments if available
-      let deptEmployees = [];
-      if (department.employeeIds && department.employeeIds.length > 0) {
-        deptEmployees = employees.filter(emp => department.employeeIds!.includes(emp.id));
-      } else {
-        deptEmployees = employees.filter(emp => emp.department === department.name);
-      }
-      
-      return {
-        ...department,
-        employees: deptEmployees,
-        manager: employees.find(emp => emp.id === department.managerId),
-        count: department.employeesCount || deptEmployees.length
+      const getDirectReports = (managerId: string, empList: Employee[]): Employee[] => {
+        return empList.filter(emp => emp.managerId === managerId);
       };
-    });
+      
+      // Start building from root
+      const rootNode = buildEmployeeNode(rootEmployee);
+      setHierarchyData(rootNode);
+    } catch (error) {
+      console.error('Error building hierarchy:', error);
+      toast.error('Erreur lors de la génération de la hiérarchie');
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    return (
-      <div className="space-y-8 mt-4">
-        {departmentEmployees.map(department => (
-          <Card key={department.id} className="overflow-hidden">
-            <div className="h-2" style={{ backgroundColor: department.color }}></div>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Building className="h-5 w-5" style={{ color: department.color }} />
-                {department.name} <span className="text-sm font-normal text-gray-500">({department.count} membres)</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {/* Department Manager */}
-              {department.manager ? (
-                <div className="mb-6">
-                  <div className="text-center relative">
-                    <div 
-                      className="inline-block p-4 bg-gray-100 rounded-lg mb-2 border-2 shadow-sm transform hover:scale-105 transition-transform" 
-                      style={{ borderColor: department.color }}
-                    >
-                      <div className="font-bold">{department.managerName}</div>
-                      <div className="text-sm text-gray-600">{department.manager.position}</div>
-                      <div 
-                        className="text-xs mt-1 py-1 px-2 rounded-full" 
-                        style={{ backgroundColor: department.color, color: 'white' }}
-                      >
-                        Responsable
-                      </div>
-                    </div>
-                    
-                    {/* Connecting lines to subordinates */}
-                    {department.employees.length > 0 && (
-                      <>
-                        <div className="w-0.5 h-10 bg-gray-300 mx-auto"></div>
-                        <div className="w-full h-0.5 bg-gray-300 absolute left-0 bottom-0"></div>
-                      </>
-                    )}
-                  </div>
-                </div>
-              ) : (
-                <div className="text-center text-gray-500 mb-6">Aucun responsable assigné</div>
-              )}
-              
-              {/* Department Employees */}
-              {department.employees.length > 0 ? (
-                <div className="mt-12">
-                  <div className="flex flex-wrap justify-center gap-4">
-                    {department.employees
-                      .filter(emp => emp.id !== department.managerId) // Exclude the manager
-                      .map(emp => (
-                        <div 
-                          key={emp.id} 
-                          className="p-3 bg-gray-50 rounded-md shadow-sm border text-center w-[160px] hover:shadow-md transition-shadow"
-                          style={{ borderTop: `3px solid ${department.color}` }}
-                        >
-                          <div className="font-medium">{emp.firstName} {emp.lastName}</div>
-                          <div className="text-sm text-gray-500">{emp.position}</div>
-                          <div className="text-xs text-gray-400 mt-1">{emp.email}</div>
-                        </div>
-                      ))
-                    }
-                  </div>
-                </div>
-              ) : (
-                <div className="text-center text-gray-500 mt-4">
-                  Aucun employé dans ce département
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-    );
+  const handleRefresh = () => {
+    buildHierarchyData();
+    toast.success('Données hiérarchiques actualisées');
   };
 
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold">Hiérarchie de l'entreprise</h2>
-      
-      {loading ? (
-        <div className="flex justify-center items-center p-8">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      <div className="flex justify-between items-center">
+        <div>
+          <h2 className="text-2xl font-bold">Hiérarchie</h2>
+          <p className="text-gray-500">Visualisation de l'organigramme de l'entreprise</p>
         </div>
-      ) : (
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="employees" className="flex items-center gap-2">
-              <Users className="h-4 w-4" />
-              <span>Par employés</span>
-            </TabsTrigger>
-            <TabsTrigger value="departments" className="flex items-center gap-2">
-              <Building className="h-4 w-4" />
-              <span>Par départements</span>
-            </TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="employees" className="mt-6">
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="flex items-center gap-2">
-                  <ListTree className="h-5 w-5" />
-                  Organigramme des employés
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="overflow-x-auto">
-                  <div className="min-w-[600px] p-2">
-                    {employeeHierarchy.length > 0 ? (
-                      employeeHierarchy.map(node => renderEmployeeNode(node))
-                    ) : (
-                      <div className="text-center py-8 text-gray-500">
-                        Aucun employé trouvé
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-          
-          <TabsContent value="departments" className="mt-6">
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="flex items-center gap-2">
-                  <Building className="h-5 w-5" />
-                  Organisation par départements
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {renderDepartmentsPyramid()}
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
-      )}
+        <Button onClick={handleRefresh} variant="outline" className="flex items-center gap-2">
+          <RefreshCw className="h-4 w-4" />
+          Actualiser
+        </Button>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card>
+          <CardContent className="p-4 flex items-center">
+            <div className="bg-blue-100 p-3 rounded-full mr-4">
+              <Users className="h-6 w-6 text-blue-600" />
+            </div>
+            <div>
+              <h3 className="text-sm font-medium text-gray-500">Employés</h3>
+              <p className="text-2xl font-bold">{isDataLoading ? <Skeleton className="h-8 w-16" /> : employees.length}</p>
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardContent className="p-4 flex items-center">
+            <div className="bg-green-100 p-3 rounded-full mr-4">
+              <Users className="h-6 w-6 text-green-600" />
+            </div>
+            <div>
+              <h3 className="text-sm font-medium text-gray-500">Départements</h3>
+              <p className="text-2xl font-bold">{isDataLoading ? <Skeleton className="h-8 w-16" /> : departments.length}</p>
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardContent className="p-4 flex items-center">
+            <div className="bg-purple-100 p-3 rounded-full mr-4">
+              <Users className="h-6 w-6 text-purple-600" />
+            </div>
+            <div>
+              <h3 className="text-sm font-medium text-gray-500">Managers</h3>
+              <p className="text-2xl font-bold">
+                {isDataLoading ? (
+                  <Skeleton className="h-8 w-16" />
+                ) : (
+                  departments.filter(dept => dept.managerId).length
+                )}
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="flex flex-col md:flex-row md:items-center gap-4 mb-6">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+          <Input 
+            placeholder="Rechercher un employé..." 
+            className="pl-10"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </div>
+        
+        <div className="flex items-center gap-2">
+          <label className="text-sm font-medium">Département:</label>
+          <Select value={selectedDepartment} onValueChange={setSelectedDepartment}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Tous les départements" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Tous les départements</SelectItem>
+              {departments.map(dept => (
+                <SelectItem key={dept.id} value={dept.id}>{dept.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        
+        <div className="flex items-center gap-2">
+          <label className="text-sm font-medium">Affichage:</label>
+          <Select value={viewMode} onValueChange={(value) => setViewMode(value as 'orgChart' | 'treeView')}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Type d'affichage" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="orgChart">Organigramme</SelectItem>
+              <SelectItem value="treeView">Vue arborescente</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      <Card>
+        <CardContent className="p-6 min-h-[500px]">
+          {loading || isDataLoading ? (
+            <div className="flex items-center justify-center h-96">
+              <div className="flex flex-col items-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+                <p className="mt-4 text-gray-500">Chargement de la hiérarchie...</p>
+              </div>
+            </div>
+          ) : hierarchyData ? (
+            <HierarchyVisualization 
+              data={hierarchyData} 
+              viewMode={viewMode} 
+              searchQuery={searchQuery}
+            />
+          ) : (
+            <div className="flex items-center justify-center h-96">
+              <p className="text-gray-500">Aucune donnée hiérarchique disponible</p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 };
