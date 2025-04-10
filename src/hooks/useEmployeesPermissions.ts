@@ -26,7 +26,7 @@ export interface EmployeeUser {
 export const useEmployeesPermissions = () => {
   const [employees, setEmployees] = useState<EmployeeUser[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
     const fetchEmployees = async () => {
@@ -61,7 +61,9 @@ export const useEmployeesPermissions = () => {
         console.log('Employees loaded:', employeesData.length);
       } catch (err) {
         console.error('Error fetching employees:', err);
-        setError('Failed to load employees data');
+        // Convert string errors to Error objects to ensure consistent error handling
+        const errorObj = err instanceof Error ? err : new Error(String(err));
+        setError(errorObj);
         toast.error('Erreur lors du chargement des données employés');
       } finally {
         setIsLoading(false);
