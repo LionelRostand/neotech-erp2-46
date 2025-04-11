@@ -5,10 +5,11 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { FileUp, Loader2, CheckCircle, AlertCircle } from 'lucide-react';
+import { FileUp, Loader2, AlertCircle, Info } from 'lucide-react';
 import { uploadEmployeeDocument } from '../../services/documentService';
 import { toast } from 'sonner';
 import { Progress } from '@/components/ui/progress';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface UploadDocumentDialogProps {
   open: boolean;
@@ -28,12 +29,23 @@ const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const [corsError, setCorsError] = useState(false);
+
+  // Limite de taille de fichier (15 Mo)
+  const MAX_FILE_SIZE = 15 * 1024 * 1024;
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (files && files.length > 0) {
-      setSelectedFile(files[0]);
+      const file = files[0];
+      setSelectedFile(file);
       setUploadError(null);
+      setCorsError(false);
+      
+      // Vérifier la taille du fichier
+      if (file.size > MAX_FILE_SIZE) {
+        setUploadError(`Le fichier est trop volumineux (max 15 Mo). Taille actuelle: ${formatFileSize(file.size)}`);
+      }
     }
   };
 
@@ -53,18 +65,17 @@ const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
       return;
     }
 
+    // Vérifier à nouveau la taille du fichier
+    if (selectedFile.size > MAX_FILE_SIZE) {
+      setUploadError(`Le fichier est trop volumineux (max 15 Mo). Taille actuelle: ${formatFileSize(selectedFile.size)}`);
+      return;
+    }
+
     try {
       setUploading(true);
       setUploadProgress(0);
       setUploadError(null);
-
-      // Vérifie si le fichier est trop volumineux (limite à 15 Mo pour éviter timeout)
-      const MAX_FILE_SIZE = 15 * 1024 * 1024; // 15 Mo
-      if (selectedFile.size > MAX_FILE_SIZE) {
-        setUploadError("Le fichier est trop volumineux (max 15 Mo)");
-        setUploading(false);
-        return;
-      }
+      setCorsError(false);
 
       // Téléverser le document
       await uploadEmployeeDocument(
@@ -84,7 +95,17 @@ const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
       onSuccess();
     } catch (error: any) {
       console.error("Erreur lors du téléversement:", error);
-      setUploadError(error.message || "Erreur lors du téléversement");
+      
+      // Vérifier si c'est une erreur CORS
+      if (error.name === 'FirebaseError' && (error.code === 'storage/unauthorized' || error.message.includes('CORS'))) {
+        setCorsError(true);
+        setUploadError("Erreur d'accès au stockage. Problème de configuration CORS.");
+      } else if (error.code === 'storage/retry-limit-exceeded') {
+        setUploadError("Le délai de téléversement a expiré. Essayez avec un fichier plus petit ou vérifiez votre connexion.");
+      } else {
+        setUploadError(error.message || "Erreur lors du téléversement");
+      }
+      
       setUploading(false);
     }
   };
@@ -134,6 +155,9 @@ const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
                 accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
               />
             </div>
+            <p className="text-xs text-muted-foreground">
+              Taille maximale: 15 Mo
+            </p>
           </div>
 
           {selectedFile && (
@@ -142,7 +166,7 @@ const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
                 <div className="flex-1 truncate text-sm font-medium">
                   {selectedFile.name}
                 </div>
-                <div className="text-xs text-muted-foreground ml-2">
+                <div className={`text-xs ${selectedFile.size > MAX_FILE_SIZE ? 'text-red-500 font-bold' : 'text-muted-foreground'} ml-2`}>
                   {formatFileSize(selectedFile.size)}
                 </div>
               </div>
@@ -162,10 +186,23 @@ const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
           )}
 
           {uploadError && (
-            <div className="rounded-md bg-destructive/10 p-3 text-sm flex items-start">
-              <AlertCircle className="h-4 w-4 text-destructive mr-2 mt-0.5 flex-shrink-0" />
-              <span>{uploadError}</span>
-            </div>
+            <Alert variant="destructive" className="mt-2">
+              <AlertCircle className="h-4 w-4 mr-2" />
+              <AlertDescription>{uploadError}</AlertDescription>
+            </Alert>
+          )}
+          
+          {corsError && (
+            <Alert className="mt-2 bg-amber-50 text-amber-800 border-amber-200">
+              <Info className="h-4 w-4 mr-2" />
+              <AlertDescription>
+                <p className="font-medium">Problème d'accès CORS détecté</p>
+                <p className="text-xs mt-1">
+                  Vous devez configurer les règles CORS dans la console Firebase Storage. 
+                  Contactez l'administrateur système.
+                </p>
+              </AlertDescription>
+            </Alert>
           )}
         </div>
 
@@ -179,7 +216,7 @@ const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
           </Button>
           <Button
             onClick={handleUpload}
-            disabled={!selectedFile || uploading}
+            disabled={!selectedFile || uploading || (selectedFile && selectedFile.size > MAX_FILE_SIZE)}
             className="relative"
           >
             {uploading ? (

@@ -1,3 +1,4 @@
+
 import { ref, uploadBytesResumable, getDownloadURL, deleteObject } from 'firebase/storage';
 import { collection, addDoc, deleteDoc, query, where, getDocs, doc } from 'firebase/firestore';
 import { storage, db } from '@/lib/firebase';
@@ -82,7 +83,13 @@ export const uploadEmployeeDocument = async (
       contentType: file.type,
       customMetadata: {
         'Access-Control-Allow-Origin': '*',
-        'Cache-Control': 'no-cache'
+        'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type',
+        'Cache-Control': 'public, max-age=31536000',
+        'employeeId': employeeId,
+        'documentType': documentType,
+        'fileName': file.name,
+        'uploadTime': timestamp.toString()
       }
     };
     
@@ -108,11 +115,21 @@ export const uploadEmployeeDocument = async (
         (error) => {
           // Gérer les erreurs de téléversement
           console.error("Erreur lors du téléversement du document:", error);
+          
+          if (error.code === 'storage/unauthorized' || error.name === 'FirebaseError' && error.message.includes('CORS')) {
+            toast.error("Erreur CORS: Problème d'accès au stockage. Contactez l'administrateur.");
+            console.error("Erreur CORS détectée. Vérifiez la configuration CORS de Firebase Storage.");
+          } else if (error.code === 'storage/retry-limit-exceeded') {
+            toast.error("Le délai de téléversement a expiré. Essayez avec un fichier plus petit ou vérifiez votre connexion.");
+          } else {
+            toast.error(`Erreur: ${error.message || "Problème lors du téléversement"}`);
+          }
+          
           reject(error);
         },
         async () => {
           try {
-            // Téléversement terminé, obtenir l'URL de téléchargement
+            // Téléversement terminé, obtenir l'URL de téléchargement avec token d'accès
             const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
             
             // Créer l'entrée du document dans Firestore
@@ -180,12 +197,12 @@ export const deleteEmployeeDocument = async (documentId: string, employeeId: str
     try {
       // Extraire le chemin du stockage à partir de l'URL
       const fileUrl = documentToDelete.fileUrl;
-      const fileName = fileUrl.split('/').pop();
-      const storagePath = `employees/${employeeId}/documents/${fileName}`;
       
-      // Créer une référence au fichier et le supprimer
-      const storageRef = ref(storage, storagePath);
+      // Créer une référence directement à partir de l'URL
+      const storageRef = ref(storage, fileUrl);
       await deleteObject(storageRef);
+      
+      console.log("Fichier supprimé du stockage avec succès");
     } catch (storageError) {
       console.warn("Impossible de supprimer le fichier du stockage:", storageError);
       // Continuer pour supprimer l'entrée de la base de données

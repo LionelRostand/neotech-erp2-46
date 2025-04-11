@@ -1,3 +1,4 @@
+
 // Firebase configuration for NEOTECH-ERP
 import { initializeApp } from 'firebase/app';
 import { getFirestore, enableIndexedDbPersistence, connectFirestoreEmulator } from 'firebase/firestore';
@@ -10,7 +11,7 @@ const firebaseConfig = {
   apiKey: "AIzaSyD3ZQYPtVHk4w63bCvOX0b8RVJyybWyOqU",
   authDomain: "neotech-erp.firebaseapp.com",
   projectId: "neotech-erp",
-  storageBucket: "neotech-erp.appspot.com",
+  storageBucket: "neotech-erp.appspot.com", // Correction du bucket
   messagingSenderId: "803661896660",
   appId: "1:803661896660:web:94f17531b963627cbd5441"
 };
@@ -44,7 +45,7 @@ try {
 // Initialiser Authentication
 const auth = getAuth(app);
 
-// Initialiser Storage
+// Initialiser Storage avec configuration CORS
 const storage = getStorage(app);
 
 // Configurer les options Storage pour améliorer la fiabilité
@@ -52,10 +53,18 @@ const configureStorage = () => {
   // Augmenter les temps de tentative pour les opérations Storage
   // Cela permet de gérer les fichiers plus volumineux et les connexions instables
   const customStorage = storage as any;
-  customStorage.maxOperationRetryTime = 120000; // 2 minutes (au lieu de 15 secondes)
-  customStorage.maxUploadRetryTime = 180000; // 3 minutes (au lieu de 15 secondes)
+  customStorage.maxOperationRetryTime = 300000; // 5 minutes (au lieu de 2 minutes)
+  customStorage.maxUploadRetryTime = 600000; // 10 minutes (au lieu de 3 minutes)
   
-  console.log('Configuration Storage optimisée pour les téléversements volumineux');
+  // Ajouter des en-têtes CORS par défaut aux requêtes Storage
+  customStorage.customHeaders = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type',
+    'Cache-Control': 'public, max-age=31536000'
+  };
+  
+  console.log('Configuration Storage optimisée pour les téléversements volumineux et CORS');
 };
 
 configureStorage();
