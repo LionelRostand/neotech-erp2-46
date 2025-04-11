@@ -26,6 +26,7 @@ export const updateEmployee = async (employeeId: string, updates: Partial<Employ
     
     console.log(`Tentative de mise à jour de l'employé avec ID: ${employeeId}`);
     console.log("Collection path:", COLLECTIONS.HR.EMPLOYEES);
+    console.log("Données de mise à jour:", updates);
     
     const employeeRef = doc(db, COLLECTIONS.HR.EMPLOYEES, employeeId);
     const employeeDoc = await getDoc(employeeRef);
@@ -42,11 +43,17 @@ export const updateEmployee = async (employeeId: string, updates: Partial<Employ
       if (key === 'address' && typeof value === 'object') {
         // Nettoyage spécifique pour l'objet adresse
         const cleanAddress = Object.entries(value).reduce((addrAcc, [addrKey, addrVal]) => {
-          if (addrVal !== undefined) {
+          if (addrVal !== undefined && addrVal !== null) {
             addrAcc[addrKey] = addrVal;
           }
           return addrAcc;
         }, {} as Record<string, any>);
+        
+        // S'assurer que les champs requis sont présents
+        if (!cleanAddress.street) cleanAddress.street = '';
+        if (!cleanAddress.city) cleanAddress.city = '';
+        if (!cleanAddress.postalCode) cleanAddress.postalCode = '';
+        if (!cleanAddress.country) cleanAddress.country = 'France';
         
         // Seulement mettre à jour l'adresse si elle a au moins une propriété
         if (Object.keys(cleanAddress).length > 0) {
@@ -72,8 +79,17 @@ export const updateEmployee = async (employeeId: string, updates: Partial<Employ
       updatedAt: serverTimestamp()
     };
     
+    console.log("Données nettoyées pour mise à jour:", updateData);
+    
     await updateDoc(employeeRef, updateData);
     console.log(`Employé ${employeeId} mis à jour avec succès avec les données:`, updateData);
+    
+    // Récupérer et retourner l'employé mis à jour pour confirmation
+    const updatedEmployeeDoc = await getDoc(employeeRef);
+    if (updatedEmployeeDoc.exists()) {
+      console.log("Document mis à jour:", updatedEmployeeDoc.data());
+    }
+    
     return true;
   } catch (error) {
     console.error("Erreur lors de la mise à jour de l'employé:", error);

@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Employee, EmployeeAddress } from '@/types/employee';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
@@ -33,6 +33,17 @@ const InformationsTab: React.FC<InformationsTabProps> = ({ employee }) => {
     }
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [currentEmployee, setCurrentEmployee] = useState<Employee>(employee);
+
+  // Mettre à jour l'état local lorsque l'employé change
+  useEffect(() => {
+    setCurrentEmployee(employee);
+    
+    // Mise à jour de l'état de l'adresse lorsque l'employé change
+    if (typeof employee.address === 'object') {
+      setAddressData(employee.address as EmployeeAddress);
+    }
+  }, [employee]);
 
   // Fonction pour formater une adresse
   const formatAddress = (address: EmployeeAddress | string): string => {
@@ -55,8 +66,27 @@ const InformationsTab: React.FC<InformationsTabProps> = ({ employee }) => {
   const handleSaveAddress = async () => {
     setIsSubmitting(true);
     try {
+      // Vérifier que toutes les valeurs requises sont définies
+      const cleanedAddress: EmployeeAddress = {
+        street: addressData.street || '',
+        city: addressData.city || '',
+        postalCode: addressData.postalCode || '',
+        country: addressData.country || 'France',
+        // Ne pas inclure les valeurs undefined
+        ...(addressData.streetNumber ? { streetNumber: addressData.streetNumber } : {}),
+        ...(addressData.department ? { department: addressData.department } : {}),
+        ...(addressData.state ? { state: addressData.state } : {})
+      };
+
       // Mettre à jour l'adresse dans Firebase
-      await updateEmployee(employee.id, { address: addressData });
+      await updateEmployee(employee.id, { address: cleanedAddress });
+      
+      // Mettre à jour l'employé local pour refléter le changement immédiatement
+      setCurrentEmployee({
+        ...currentEmployee,
+        address: cleanedAddress
+      });
+      
       toast.success("Adresse mise à jour avec succès");
       setIsAddressDialogOpen(false);
     } catch (error) {
@@ -75,23 +105,23 @@ const InformationsTab: React.FC<InformationsTabProps> = ({ employee }) => {
       <CardContent className="space-y-4">
         <div className="space-y-1">
           <h4 className="text-sm font-semibold">Nom complet</h4>
-          <p>{employee.firstName} {employee.lastName}</p>
+          <p>{currentEmployee.firstName} {currentEmployee.lastName}</p>
         </div>
         <Separator />
         <div className="space-y-1">
           <h4 className="text-sm font-semibold">Email</h4>
-          <p>{employee.email}</p>
+          <p>{currentEmployee.email}</p>
         </div>
         <Separator />
         <div className="space-y-1">
           <h4 className="text-sm font-semibold">Téléphone</h4>
-          <p>{employee.phone || 'Non renseigné'}</p>
+          <p>{currentEmployee.phone || 'Non renseigné'}</p>
         </div>
         <Separator />
         <div className="space-y-1 flex justify-between items-start">
           <div>
             <h4 className="text-sm font-semibold">Adresse</h4>
-            <p>{formatAddress(employee.address)}</p>
+            <p>{formatAddress(currentEmployee.address)}</p>
           </div>
           <Button 
             variant="outline" 
