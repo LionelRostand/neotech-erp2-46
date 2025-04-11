@@ -40,7 +40,7 @@ export const prepareEmployeeData = (data: EmployeeFormValues): Partial<Employee>
     };
   }
 
-  // Generate a more reliable employee ID that won't conflict
+  // Generate a reliable employee ID in a format that ensures compatibility with Firestore
   const employeeId = `EMP${Math.floor(1000 + Math.random() * 9000)}`;
   
   return {

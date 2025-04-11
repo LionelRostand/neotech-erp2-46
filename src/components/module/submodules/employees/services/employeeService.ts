@@ -22,6 +22,7 @@ export const updateEmployee = async (employeeId: string, updates: Partial<Employ
       return false;
     }
     
+    console.log(`Tentative de mise à jour de l'employé avec ID: ${employeeId}`);
     const employeeRef = doc(db, COLLECTIONS.HR.EMPLOYEES, employeeId);
     const employeeDoc = await getDoc(employeeRef);
     
@@ -37,6 +38,7 @@ export const updateEmployee = async (employeeId: string, updates: Partial<Employ
     };
     
     await updateDoc(employeeRef, updateData);
+    console.log(`Employé ${employeeId} mis à jour avec succès`);
     return true;
   } catch (error) {
     console.error("Erreur lors de la mise à jour de l'employé:", error);
@@ -54,15 +56,17 @@ export const getEmployee = async (employeeId: string): Promise<Employee | null> 
       return null;
     }
     
+    console.log(`Tentative de récupération de l'employé avec ID: ${employeeId}`);
     const employeeRef = doc(db, COLLECTIONS.HR.EMPLOYEES, employeeId);
     const employeeDoc = await getDoc(employeeRef);
     
     if (!employeeDoc.exists()) {
-      console.error(`Employé avec ID ${employeeId} non trouvé`);
+      console.error(`Employé avec ID ${employeeId} non trouvé dans la collection ${COLLECTIONS.HR.EMPLOYEES}`);
       return null;
     }
     
     const employeeData = employeeDoc.data();
+    console.log(`Employé ${employeeId} trouvé avec succès`);
     return {
       id: employeeDoc.id,
       ...employeeData
@@ -85,10 +89,14 @@ export const checkEmployeeExists = async (employeeId: string): Promise<boolean> 
   try {
     if (!employeeId) return false;
     
+    console.log(`Vérification de l'existence de l'employé avec ID: ${employeeId}`);
     const employeeRef = doc(db, COLLECTIONS.HR.EMPLOYEES, employeeId);
     const employeeDoc = await getDoc(employeeRef);
     
-    return employeeDoc.exists();
+    const exists = employeeDoc.exists();
+    console.log(`Employé ${employeeId} existe: ${exists}`);
+    
+    return exists;
   } catch (error) {
     console.error("Erreur lors de la vérification de l'existence de l'employé:", error);
     return false;

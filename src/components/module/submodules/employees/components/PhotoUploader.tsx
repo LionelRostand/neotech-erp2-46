@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -45,10 +46,14 @@ const PhotoUploader: React.FC<PhotoUploaderProps> = ({
         return false;
       }
       
+      console.log(`Vérification de l'employé ID ${empId} avant mise à jour de photo`);
       const docRef = doc(db, COLLECTIONS.HR.EMPLOYEES, empId);
       const docSnap = await getDoc(docRef);
       
-      if (!docSnap.exists()) {
+      const exists = docSnap.exists();
+      console.log(`L'employé ${empId} existe: ${exists}`);
+      
+      if (!exists) {
         console.error(`Employé avec ID ${empId} non trouvé`);
         toast.error(`Erreur: Employé avec ID ${empId} non trouvé`);
         return false;
@@ -66,6 +71,9 @@ const PhotoUploader: React.FC<PhotoUploaderProps> = ({
     const file = event.target.files?.[0];
     if (!file) return;
 
+    console.log(`Tentative de mise à jour de photo pour l'employé ID: ${employeeId}`);
+    
+    // Vérifier l'existence de l'employé
     const exists = await checkEmployeeExists(employeeId);
     if (!exists) return;
 
@@ -90,9 +98,12 @@ const PhotoUploader: React.FC<PhotoUploaderProps> = ({
       newPhotoURL = await getDownloadURL(photoRef);
       console.log("Photo téléversée avec succès, URL:", newPhotoURL);
       
-      await updateEmployee(employeeId, {
+      // Mettre à jour l'employé avec la nouvelle photo
+      const employeeRef = doc(db, COLLECTIONS.HR.EMPLOYEES, employeeId);
+      await updateDoc(employeeRef, {
         photoURL: newPhotoURL,
-        photo: newPhotoURL
+        photo: newPhotoURL,
+        updatedAt: new Date()
       });
       
       const docData = {

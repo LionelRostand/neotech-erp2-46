@@ -1,4 +1,3 @@
-
 import { db } from '@/lib/firebase';
 import { doc, getDoc, setDoc, updateDoc, serverTimestamp, arrayUnion, arrayRemove } from 'firebase/firestore';
 import { COLLECTIONS } from '@/lib/firebase-collections';
@@ -6,7 +5,6 @@ import { getDownloadURL, ref, uploadBytes, deleteObject } from 'firebase/storage
 import { storage } from '@/lib/firebase';
 import { v4 as uuidv4 } from 'uuid';
 import { Employee, Document } from '@/types/employee';
-import { getEmployee } from './employeeService';
 
 // Define EmployeeDocument type for consistent usage
 export interface EmployeeDocument extends Document {
@@ -28,9 +26,14 @@ export const checkEmployeeExists = async (employeeId: string): Promise<boolean> 
       return false;
     }
     
-    // Utiliser la fonction getEmployee du service employé
-    const employee = await getEmployee(employeeId);
-    return employee !== null;
+    console.log(`Vérification de l'existence de l'employé avec ID: ${employeeId}`);
+    const docRef = doc(db, COLLECTIONS.HR.EMPLOYEES, employeeId);
+    const docSnap = await getDoc(docRef);
+    
+    const exists = docSnap.exists();
+    console.log(`Employé ${employeeId} existe: ${exists}`);
+    
+    return exists;
   } catch (error) {
     console.error(`Erreur lors de la vérification de l'employé ID ${employeeId}:`, error);
     return false;
@@ -42,12 +45,15 @@ export const checkEmployeeExists = async (employeeId: string): Promise<boolean> 
  */
 export const getEmployeeDocuments = async (employeeId: string): Promise<EmployeeDocument[]> => {
   try {
-    const employee = await getEmployee(employeeId);
+    const docRef = doc(db, COLLECTIONS.HR.EMPLOYEES, employeeId);
+    const docSnap = await getDoc(docRef);
     
-    if (!employee) {
+    if (!docSnap.exists()) {
       console.error(`Employé avec ID ${employeeId} non trouvé`);
       return [];
     }
+    
+    const employee = docSnap.data() as Employee;
     
     if (!employee.documents || !Array.isArray(employee.documents)) {
       return [];
