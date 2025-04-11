@@ -1,7 +1,18 @@
-import { db, storage } from '@/firebase';
-import { collection, doc, updateDoc, getDoc, setDoc } from 'firebase/firestore';
+
+import { db, storage } from '@/lib/firebase';
+import { 
+  doc, 
+  updateDoc, 
+  getDoc, 
+  serverTimestamp,
+  arrayUnion,
+  collection,
+  getDocs,
+  setDoc
+} from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { Employee } from '@/types/employee';
+import { COLLECTIONS } from '@/lib/firebase-collections';
+import { Employee, EmployeeAddress } from '@/types/employee';
 import { toast } from 'sonner';
 
 /**
@@ -15,11 +26,11 @@ export const uploadEmployeePhoto = async (employeeId: string, file: File): Promi
     console.log(`Début du téléversement de photo pour l'employé ${employeeId}`);
     
     // Check if employee exists
-    const employeeRef = doc(db, 'hr_employees', employeeId);
+    const employeeRef = doc(db, COLLECTIONS.HR.EMPLOYEES, employeeId);
     const employeeSnap = await getDoc(employeeRef);
     
     if (!employeeSnap.exists()) {
-      console.error(`Employé avec ID ${employeeId} non trouvé dans la collection hr_employees`);
+      console.error(`Employé avec ID ${employeeId} non trouvé dans la collection ${COLLECTIONS.HR.EMPLOYEES}`);
       throw new Error(`Employé avec ID ${employeeId} non trouvé`);
     }
     
@@ -43,7 +54,7 @@ export const uploadEmployeePhoto = async (employeeId: string, file: File): Promi
     });
     
     // Add photo to documents collection
-    const docRef = doc(collection(db, 'hr_documents'));
+    const docRef = doc(collection(db, COLLECTIONS.HR.DOCUMENTS));
     await setDoc(docRef, {
       employeeId: employeeId,
       name: `Photo de profil (${new Date().toLocaleDateString('fr-FR')})`,
