@@ -29,6 +29,25 @@ export const checkEmployeeExists = async (employeeId: string): Promise<boolean> 
     }
     
     console.log(`Vérification de l'existence de l'employé avec ID: ${employeeId}`);
+    
+    // Gérer le cas des IDs non persistés (employés récemment ajoutés)
+    if (employeeId.startsWith('EMP') && !isNaN(parseInt(employeeId.slice(3)))) {
+      // Pour les IDs générés par le frontend comme EMP4896,
+      // vérifier s'il existe des employés dans la liste en mémoire
+      console.log("ID d'employé au format EMP détecté, utilisation de la recherche alternative");
+      
+      // Utiliser la fonction getEmployee si elle est disponible pour chercher par ID
+      try {
+        const employee = await getEmployee(employeeId);
+        const exists = !!employee;
+        console.log(`Employé ${employeeId} trouvé par recherche alternative: ${exists}`);
+        return exists;
+      } catch (e) {
+        console.warn("Échec de la recherche alternative:", e);
+        // Continuer avec la méthode standard
+      }
+    }
+    
     // Utiliser explicitement le chemin complet de la collection
     const docRef = doc(db, COLLECTIONS.HR.EMPLOYEES, employeeId);
     const docSnap = await getDoc(docRef);

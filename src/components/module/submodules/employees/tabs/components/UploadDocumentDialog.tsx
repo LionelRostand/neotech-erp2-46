@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -8,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { toast } from 'sonner';
 import { FileText, Upload } from 'lucide-react';
 import { uploadEmployeeDocument, checkEmployeeExists } from '../../services/documentService';
+import { getEmployee } from '../../services/employeeService';
 
 interface UploadDocumentDialogProps {
   open: boolean;
@@ -47,9 +47,7 @@ const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
       const selectedFile = e.target.files[0];
       setFile(selectedFile);
       
-      // Si le nom du document est vide, utiliser le nom du fichier
       if (!documentName) {
-        // Supprimer l'extension du fichier
         const fileName = selectedFile.name.split('.').slice(0, -1).join('.');
         setDocumentName(fileName);
       }
@@ -72,17 +70,18 @@ const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
       return;
     }
 
-    // Vérifier si l'employé existe
-    const employeeExists = await checkEmployeeExists(employeeId);
-    if (!employeeExists) {
-      toast.error(`Erreur: Employé avec ID ${employeeId} non trouvé`);
-      return;
-    }
-
-    setIsUploading(true);
-
     try {
-      console.log(`Téléversement de document pour l'employé ID: ${employeeId}`);
+      setIsUploading(true);
+      
+      const employee = await getEmployee(employeeId);
+      if (!employee) {
+        console.error(`L'employé avec ID ${employeeId} n'a pas été trouvé par getEmployee`);
+        toast.error(`Erreur: Employé avec ID ${employeeId} non trouvé`);
+        setIsUploading(false);
+        return;
+      }
+      
+      console.log(`Téléversement de document pour l'employé ID: ${employeeId}`, employee);
       const result = await uploadEmployeeDocument(
         employeeId,
         file,
