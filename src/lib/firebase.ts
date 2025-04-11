@@ -1,4 +1,3 @@
-
 // Firebase configuration for NEOTECH-ERP
 import { initializeApp } from 'firebase/app';
 import { getFirestore, enableIndexedDbPersistence, connectFirestoreEmulator } from 'firebase/firestore';
@@ -11,7 +10,7 @@ const firebaseConfig = {
   apiKey: "AIzaSyD3ZQYPtVHk4w63bCvOX0b8RVJyybWyOqU",
   authDomain: "neotech-erp.firebaseapp.com",
   projectId: "neotech-erp",
-  storageBucket: "neotech-erp.firebasestorage.app",
+  storageBucket: "neotech-erp.appspot.com",
   messagingSenderId: "803661896660",
   appId: "1:803661896660:web:94f17531b963627cbd5441"
 };
@@ -48,19 +47,18 @@ const auth = getAuth(app);
 // Initialiser Storage
 const storage = getStorage(app);
 
-// Configurer les règles CORS pour Storage
-// Ceci est une configuration côté client, mais les règles CORS doivent être configurées sur Firebase Storage également
-const setCorsHeaders = () => {
-  // Paramètres des options pour Firebase Storage
-  storage.maxOperationRetryTime = 15000; // Augmenter le temps de tentative pour contourner certains problèmes CORS
-  storage.maxUploadRetryTime = 15000;
+// Configurer les options Storage pour améliorer la fiabilité
+const configureStorage = () => {
+  // Augmenter les temps de tentative pour les opérations Storage
+  // Cela permet de gérer les fichiers plus volumineux et les connexions instables
+  const customStorage = storage as any;
+  customStorage.maxOperationRetryTime = 120000; // 2 minutes (au lieu de 15 secondes)
+  customStorage.maxUploadRetryTime = 180000; // 3 minutes (au lieu de 15 secondes)
   
-  console.log('Configuration CORS pour Firebase Storage initialisée');
-  console.log('Note: Pour une configuration CORS complète, utilisez également Firebase CLI:');
-  console.log('gsutil cors set cors-config.json gs://neotech-erp.firebasestorage.app');
+  console.log('Configuration Storage optimisée pour les téléversements volumineux');
 };
 
-setCorsHeaders();
+configureStorage();
 
 // Détecter le mode développement et la configuration des émulateurs
 const isDevMode = import.meta.env.DEV;

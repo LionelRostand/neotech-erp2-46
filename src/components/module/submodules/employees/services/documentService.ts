@@ -1,263 +1,205 @@
 
-import { db } from '@/lib/firebase';
-import { doc, getDoc, setDoc, updateDoc, serverTimestamp, arrayUnion, arrayRemove, deleteDoc } from 'firebase/firestore';
-import { COLLECTIONS } from '@/lib/firebase-collections';
-import { getDownloadURL, ref, uploadBytes, deleteObject } from 'firebase/storage';
-import { storage } from '@/lib/firebase';
-import { v4 as uuidv4 } from 'uuid';
-import { Employee, Document } from '@/types/employee';
-import { getEmployee } from './employeeService'; // Import the getEmployee function
+import { ref, uploadBytesResumable, getDownloadURL, deleteObject } from 'firebase/storage';
+import { collection, addDoc, deleteDoc, query, where, getDocs } from 'firebase/firestore';
+import { storage, db } from '@/lib/firebase';
+import { toast } from 'sonner';
+import { getEmployee } from './employeeService';
 
-// Define EmployeeDocument type for consistent usage
-export interface EmployeeDocument extends Document {
+export interface EmployeeDocument {
   id: string;
   name: string;
   type: string;
-  date: string;
   fileUrl: string;
-  uploadedAt?: any;
+  date: string;
+  employeeId: string;
+  fileSize?: number;
+  fileType?: string;
+  uploadProgress?: number;
 }
 
-/**
- * Vérifie si un employé existe dans la base de données
- */
-export const checkEmployeeExists = async (employeeId: string): Promise<boolean> => {
-  try {
-    if (!employeeId) {
-      console.error("ID d'employé non fourni pour la vérification");
-      return false;
-    }
-    
-    console.log(`Vérification de l'existence de l'employé avec ID: ${employeeId}`);
-    
-    // Gérer le cas des IDs non persistés (employés récemment ajoutés)
-    if (employeeId.startsWith('EMP') && !isNaN(parseInt(employeeId.slice(3)))) {
-      // Pour les IDs générés par le frontend comme EMP4896,
-      // vérifier s'il existe des employés dans la liste en mémoire
-      console.log("ID d'employé au format EMP détecté, utilisation de la recherche alternative");
-      
-      // Utiliser la fonction getEmployee si elle est disponible pour chercher par ID
-      try {
-        const employee = await getEmployee(employeeId);
-        const exists = !!employee;
-        console.log(`Employé ${employeeId} trouvé par recherche alternative: ${exists}`);
-        return exists;
-      } catch (e) {
-        console.warn("Échec de la recherche alternative:", e);
-        // Continuer avec la méthode standard
-      }
-    }
-    
-    // Utiliser explicitement le chemin complet de la collection
-    const docRef = doc(db, COLLECTIONS.HR.EMPLOYEES, employeeId);
-    const docSnap = await getDoc(docRef);
-    
-    const exists = docSnap.exists();
-    console.log(`Employé ${employeeId} existe: ${exists}`);
-    
-    // Afficher plus d'informations de débogage si l'employé n'existe pas
-    if (!exists) {
-      console.error(`Employé avec ID ${employeeId} non trouvé dans la collection ${COLLECTIONS.HR.EMPLOYEES}`);
-      console.log("Collection path:", COLLECTIONS.HR.EMPLOYEES);
-    }
-    
-    return exists;
-  } catch (error) {
-    console.error(`Erreur lors de la vérification de l'employé ID ${employeeId}:`, error);
-    return false;
-  }
-};
+const DOCUMENTS_COLLECTION = 'employee_documents';
 
-/**
- * Récupère tous les documents d'un employé
- */
+// Récupérer tous les documents d'un employé
 export const getEmployeeDocuments = async (employeeId: string): Promise<EmployeeDocument[]> => {
   try {
-    const docRef = doc(db, COLLECTIONS.HR.EMPLOYEES, employeeId);
-    const docSnap = await getDoc(docRef);
-    
-    if (!docSnap.exists()) {
-      console.error(`Employé avec ID ${employeeId} non trouvé`);
+    // Vérifier si l'employé existe d'abord
+    const employee = await getEmployee(employeeId);
+    if (!employee) {
+      console.warn(`Aucun employé trouvé avec l'ID: ${employeeId}`);
       return [];
     }
     
-    const employee = docSnap.data() as Employee;
+    const q = query(
+      collection(db, DOCUMENTS_COLLECTION),
+      where('employeeId', '==', employeeId)
+    );
     
-    if (!employee.documents || !Array.isArray(employee.documents)) {
-      return [];
-    }
+    const querySnapshot = await getDocs(q);
+    const documents: EmployeeDocument[] = [];
     
-    return employee.documents as EmployeeDocument[];
+    querySnapshot.forEach((doc) => {
+      documents.push({
+        id: doc.id,
+        ...doc.data()
+      } as EmployeeDocument);
+    });
+    
+    return documents;
   } catch (error) {
     console.error("Erreur lors de la récupération des documents:", error);
+    toast.error("Erreur lors du chargement des documents");
     return [];
   }
 };
 
-/**
- * Téléverse un document pour un employé
- */
+// Téléverser un document pour un employé
 export const uploadEmployeeDocument = async (
-  employeeId: string,
   file: File,
-  documentName: string,
-  documentType: string
-): Promise<boolean> => {
+  employeeId: string,
+  documentType: string,
+  onProgress?: (progress: number) => void
+): Promise<EmployeeDocument | null> => {
   try {
-    console.log(`Début du téléversement de document pour l'employé ID: ${employeeId}`);
-    
-    // Vérifier d'abord si l'employé existe
-    const employeeExists = await checkEmployeeExists(employeeId);
-    
-    if (!employeeExists) {
-      console.error(`Employé avec ID ${employeeId} non trouvé lors du téléversement de document`);
-      return false;
+    // Vérifier si l'employé existe d'abord
+    const employee = await getEmployee(employeeId);
+    if (!employee) {
+      throw new Error(`Employé avec ID ${employeeId} non trouvé`);
     }
+
+    // Créer un nom de fichier unique avec timestamp pour éviter les problèmes de cache
+    const timestamp = Date.now();
+    const uniqueId = Math.random().toString(36).substring(2, 15);
+    const safeFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+    const storagePath = `employees/${employeeId}/documents/${uniqueId}_${safeFileName}`;
     
-    console.log(`Employé ${employeeId} trouvé, téléversement du document en cours...`);
+    // Créer une référence au fichier dans Firebase Storage
+    const storageRef = ref(storage, storagePath);
     
-    // Générer un ID unique pour le document
-    const documentId = uuidv4();
+    // Convertir le fichier en ArrayBuffer pour un téléversement binaire
+    const arrayBuffer = await file.arrayBuffer();
     
-    // Référence au fichier dans le stockage
-    const storageRef = ref(storage, `employees/${employeeId}/documents/${documentId}_${file.name}`);
-    
-    // Convertir le fichier en ArrayBuffer pour assurer un téléversement binaire correct
-    const fileArrayBuffer = await file.arrayBuffer();
-    
-    // Ajouter des métadonnées CORS et spécifier le type de contenu correct
+    // Définir les métadonnées pour le fichier (IMPORTANT pour CORS)
     const metadata = {
       contentType: file.type,
       customMetadata: {
         'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-        'Cache-Control': 'public, max-age=31536000',
-        'Content-Disposition': `attachment; filename="${file.name}"`,
-        'originalName': file.name,
-        'documentType': documentType,
-        'documentId': documentId
+        'Cache-Control': 'no-cache'
       }
     };
     
-    // Téléversement du fichier avec métadonnées en tant que données binaires
-    console.log(`Téléversement du fichier ${file.name} (${file.size} octets) en tant que données binaires...`);
-    const uploadResult = await uploadBytes(storageRef, new Uint8Array(fileArrayBuffer), metadata);
-    console.log('Téléversement réussi, résultat:', uploadResult);
+    // Téléverser le fichier avec suivi de progression
+    const uploadTask = uploadBytesResumable(storageRef, arrayBuffer, metadata);
     
-    // Obtenir l'URL de téléchargement
-    const downloadURL = await getDownloadURL(uploadResult.ref);
-    console.log('URL de téléchargement obtenue:', downloadURL);
-    
-    // Date actuelle pour le document
-    const currentDate = new Date().toLocaleDateString('fr-FR');
-    
-    // Données du document
-    const documentData = {
-      id: documentId,
-      name: documentName,
-      type: documentType,
-      date: currentDate,
-      fileUrl: downloadURL,
-      uploadedAt: serverTimestamp(),
-      fileSize: file.size,
-      fileType: file.type
-    };
-    
-    // Ajouter le document à l'employé
-    const employeeRef = doc(db, COLLECTIONS.HR.EMPLOYEES, employeeId);
-    
-    await updateDoc(employeeRef, {
-      documents: arrayUnion(documentData),
-      updatedAt: serverTimestamp()
+    // Créer une promesse qui sera résolue lorsque le téléversement sera terminé
+    return new Promise((resolve, reject) => {
+      uploadTask.on(
+        'state_changed',
+        (snapshot) => {
+          // Calculer et reporter la progression
+          const progress = Math.round(
+            (snapshot.bytesTransferred / snapshot.totalBytes) * 100
+          );
+          console.log(`Progression du téléversement: ${progress}%`);
+          
+          // Appeler le callback de progression si fourni
+          if (onProgress) {
+            onProgress(progress);
+          }
+        },
+        (error) => {
+          // Gérer les erreurs de téléversement
+          console.error("Erreur lors du téléversement du document:", error);
+          reject(error);
+        },
+        async () => {
+          try {
+            // Téléversement terminé, obtenir l'URL de téléchargement
+            const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+            
+            // Créer l'entrée du document dans Firestore
+            const docData: Omit<EmployeeDocument, 'id'> = {
+              name: file.name,
+              type: documentType,
+              fileUrl: downloadURL,
+              date: new Date().toISOString(),
+              employeeId: employeeId,
+              fileSize: file.size,
+              fileType: file.type
+            };
+            
+            // Ajouter le document à Firestore
+            const docRef = await addDoc(collection(db, DOCUMENTS_COLLECTION), docData);
+            
+            // Construire l'objet document complet
+            const newDocument: EmployeeDocument = {
+              id: docRef.id,
+              ...docData
+            };
+            
+            toast.success(`Document "${file.name}" téléversé avec succès`);
+            resolve(newDocument);
+          } catch (error) {
+            console.error("Erreur lors de la finalisation du téléversement:", error);
+            reject(error);
+          }
+        }
+      );
     });
-    
-    // Également enregistrer ce document dans la collection hrDocuments pour la centralisation
-    try {
-      const hrDocRef = doc(db, COLLECTIONS.HR.DOCUMENTS, documentId);
-      await setDoc(hrDocRef, {
-        ...documentData,
-        employeeId: employeeId,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp()
-      });
-      console.log(`Document également ajouté à la collection centralisée HR_DOCUMENTS`);
-    } catch (error) {
-      console.warn("Erreur lors de l'ajout à la collection centralisée:", error);
-      // Continue même en cas d'erreur pour ne pas bloquer le processus principal
-    }
-    
-    console.log(`Document ${documentName} ajouté à l'employé ${employeeId}`);
-    return true;
   } catch (error) {
     console.error("Erreur lors du téléversement du document:", error);
-    return false;
+    toast.error("Erreur lors du téléversement du document");
+    throw error;
   }
 };
 
-/**
- * Supprime un document d'un employé
- */
-export const deleteEmployeeDocument = async (
-  documentId: string,
-  employeeId: string
-): Promise<boolean> => {
+// Supprimer un document d'employé
+export const deleteEmployeeDocument = async (documentId: string, employeeId: string): Promise<boolean> => {
   try {
-    // Obtenir l'employé
-    const employee = await getEmployee(employeeId);
-    
-    if (!employee) {
-      console.error(`Employé avec ID ${employeeId} non trouvé`);
-      return false;
-    }
-    
-    if (!employee.documents || !Array.isArray(employee.documents)) {
-      console.error(`Documents non trouvés pour l'employé ${employeeId}`);
-      return false;
-    }
-    
-    // Trouver le document à supprimer
-    const documentToDelete = employee.documents.find(doc => 
-      typeof doc === 'object' && doc.id === documentId
+    // Récupérer le document pour obtenir le chemin de stockage
+    const q = query(
+      collection(db, DOCUMENTS_COLLECTION),
+      where('employeeId', '==', employeeId)
     );
     
-    if (!documentToDelete) {
-      console.error(`Document avec ID ${documentId} non trouvé`);
-      return false;
-    }
+    const querySnapshot = await getDocs(q);
+    let documentToDelete: EmployeeDocument | null = null;
     
-    // Supprimer le fichier du stockage si fileUrl existe
-    if (documentToDelete.fileUrl) {
-      try {
-        const fileRef = ref(storage, documentToDelete.fileUrl);
-        await deleteObject(fileRef);
-      } catch (error) {
-        console.warn("Erreur lors de la suppression du fichier de stockage:", error);
-        // Continue even if file deletion fails
+    querySnapshot.forEach((doc) => {
+      if (doc.id === documentId) {
+        documentToDelete = {
+          id: doc.id,
+          ...doc.data()
+        } as EmployeeDocument;
       }
-    }
-    
-    // Mettre à jour l'employé pour supprimer le document
-    const employeeRef = doc(db, COLLECTIONS.HR.EMPLOYEES, employeeId);
-    
-    await updateDoc(employeeRef, {
-      documents: arrayRemove(documentToDelete),
-      updatedAt: serverTimestamp()
     });
     
-    // Supprimer également de la collection centralisée si elle existe
-    try {
-      const hrDocRef = doc(db, COLLECTIONS.HR.DOCUMENTS, documentId);
-      await deleteDoc(hrDocRef);
-      console.log(`Document également supprimé de la collection centralisée HR_DOCUMENTS`);
-    } catch (error) {
-      console.warn("Erreur lors de la suppression de la collection centralisée:", error);
-      // Continue même en cas d'erreur
+    if (!documentToDelete) {
+      throw new Error(`Document avec ID ${documentId} non trouvé`);
     }
     
-    console.log(`Document ${documentId} supprimé de l'employé ${employeeId}`);
+    // Supprimer le fichier de Firebase Storage
+    try {
+      // Extraire le chemin du stockage à partir de l'URL
+      const fileUrl = documentToDelete.fileUrl;
+      const fileName = fileUrl.split('/').pop();
+      const storagePath = `employees/${employeeId}/documents/${fileName}`;
+      
+      // Créer une référence au fichier et le supprimer
+      const storageRef = ref(storage, storagePath);
+      await deleteObject(storageRef);
+    } catch (storageError) {
+      console.warn("Impossible de supprimer le fichier du stockage:", storageError);
+      // Continuer pour supprimer l'entrée de la base de données
+    }
+    
+    // Supprimer l'entrée de la base de données
+    await deleteDoc(collection(db, DOCUMENTS_COLLECTION).doc(documentId));
+    
+    toast.success("Document supprimé avec succès");
     return true;
   } catch (error) {
     console.error("Erreur lors de la suppression du document:", error);
+    toast.error("Erreur lors de la suppression du document");
     return false;
   }
 };
