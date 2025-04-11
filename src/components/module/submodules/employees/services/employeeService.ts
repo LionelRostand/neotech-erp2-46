@@ -7,10 +7,12 @@ import {
   serverTimestamp,
   arrayUnion,
   collection,
-  getDocs
+  getDocs,
+  setDoc
 } from 'firebase/firestore';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import { Employee, EmployeeAddress } from '@/types/employee';
+import { toast } from 'sonner';
 
 /**
  * Met à jour les informations d'un employé
@@ -44,6 +46,38 @@ export const updateEmployee = async (employeeId: string, updates: Partial<Employ
     return true;
   } catch (error) {
     console.error("Erreur lors de la mise à jour de l'employé:", error);
+    return false;
+  }
+};
+
+/**
+ * Crée un nouvel employé
+ */
+export const createEmployee = async (employeeData: Partial<Employee>): Promise<boolean> => {
+  try {
+    if (!employeeData.id) {
+      console.error("Erreur: ID d'employé manquant dans les données");
+      return false;
+    }
+    
+    console.log(`Tentative de création de l'employé avec ID: ${employeeData.id}`);
+    
+    const employeeRef = doc(db, COLLECTIONS.HR.EMPLOYEES, employeeData.id);
+    
+    // Ajouter les timestamps
+    const dataWithTimestamps = {
+      ...employeeData,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
+    };
+    
+    await setDoc(employeeRef, dataWithTimestamps);
+    console.log(`Employé ${employeeData.id} créé avec succès`);
+    toast.success("Employé créé avec succès");
+    return true;
+  } catch (error) {
+    console.error("Erreur lors de la création de l'employé:", error);
+    toast.error("Erreur lors de la création de l'employé");
     return false;
   }
 };
@@ -112,6 +146,38 @@ export const checkEmployeeExists = async (employeeId: string): Promise<boolean> 
     return exists;
   } catch (error) {
     console.error("Erreur lors de la vérification de l'existence de l'employé:", error);
+    return false;
+  }
+};
+
+/**
+ * Vérifie si un email est déjà utilisé
+ */
+export const checkEmailExists = async (email: string): Promise<boolean> => {
+  try {
+    if (!email) {
+      console.error("Email non fourni pour la vérification");
+      return false;
+    }
+    
+    console.log(`Vérification si l'email ${email} est déjà utilisé`);
+    
+    const employeesRef = collection(db, COLLECTIONS.HR.EMPLOYEES);
+    const employeesSnapshot = await getDocs(employeesRef);
+    
+    let emailExists = false;
+    
+    employeesSnapshot.forEach((doc) => {
+      const data = doc.data();
+      if (data.email === email || data.professionalEmail === email) {
+        emailExists = true;
+      }
+    });
+    
+    console.log(`Email ${email} existe: ${emailExists}`);
+    return emailExists;
+  } catch (error) {
+    console.error("Erreur lors de la vérification de l'existence de l'email:", error);
     return false;
   }
 };

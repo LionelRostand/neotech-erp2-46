@@ -44,10 +44,14 @@ export const prepareEmployeeData = (data: EmployeeFormValues): Partial<Employee>
   // Fix: Check for employeeId in the data parameter directly, not data.id which doesn't exist
   const employeeId = data.employeeId || `EMP${Math.floor(1000 + Math.random() * 9000)}`;
   
-  console.log(`Préparation des données pour l'employé avec ID: ${employeeId}`);
+  // Include userId if it's provided, otherwise generate a new one (useful for user account creation)
+  const userId = data.userId || uuidv4();
+  
+  console.log(`Préparation des données pour l'employé avec ID: ${employeeId}, userId: ${userId}`);
   
   return {
     id: employeeId,
+    userId: userId, // Add this field to connect to user accounts
     firstName: data.firstName,
     lastName: data.lastName,
     email: data.email,

@@ -19,6 +19,7 @@ export type AddressSchemaType = z.infer<typeof addressSchema>;
 // Schéma pour la validation du formulaire
 export const employeeFormSchema = z.object({
   employeeId: z.string().optional(), // Add employeeId field to match what we use in employeeUtils
+  userId: z.string().optional(), // Add userId field to ensure we have an ID for user creation
   firstName: z.string().min(2, "Le prénom doit contenir au moins 2 caractères"),
   lastName: z.string().min(2, "Le nom doit contenir au moins 2 caractères"),
   email: z.string().email("Format d'email invalide").or(z.string().length(0)),
