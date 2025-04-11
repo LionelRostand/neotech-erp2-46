@@ -1,6 +1,5 @@
-
 import { ref, uploadBytesResumable, getDownloadURL, deleteObject } from 'firebase/storage';
-import { collection, addDoc, deleteDoc, query, where, getDocs } from 'firebase/firestore';
+import { collection, addDoc, deleteDoc, query, where, getDocs, doc } from 'firebase/firestore';
 import { storage, db } from '@/lib/firebase';
 import { toast } from 'sonner';
 import { getEmployee } from './employeeService';
@@ -164,11 +163,11 @@ export const deleteEmployeeDocument = async (documentId: string, employeeId: str
     const querySnapshot = await getDocs(q);
     let documentToDelete: EmployeeDocument | null = null;
     
-    querySnapshot.forEach((doc) => {
-      if (doc.id === documentId) {
+    querySnapshot.forEach((docSnapshot) => {
+      if (docSnapshot.id === documentId) {
         documentToDelete = {
-          id: doc.id,
-          ...doc.data()
+          id: docSnapshot.id,
+          ...docSnapshot.data()
         } as EmployeeDocument;
       }
     });
@@ -193,7 +192,7 @@ export const deleteEmployeeDocument = async (documentId: string, employeeId: str
     }
     
     // Supprimer l'entrée de la base de données
-    await deleteDoc(collection(db, DOCUMENTS_COLLECTION).doc(documentId));
+    await deleteDoc(doc(db, DOCUMENTS_COLLECTION, documentId));
     
     toast.success("Document supprimé avec succès");
     return true;
