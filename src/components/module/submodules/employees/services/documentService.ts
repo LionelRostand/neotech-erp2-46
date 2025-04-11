@@ -1,6 +1,6 @@
 
 import { db } from '@/lib/firebase';
-import { doc, getDoc, setDoc, updateDoc, serverTimestamp, arrayUnion, arrayRemove } from 'firebase/firestore';
+import { doc, getDoc, setDoc, updateDoc, serverTimestamp, arrayUnion, arrayRemove, deleteDoc } from 'firebase/firestore';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import { getDownloadURL, ref, uploadBytes, deleteObject } from 'firebase/storage';
 import { storage } from '@/lib/firebase';
@@ -122,21 +122,31 @@ export const uploadEmployeeDocument = async (
     // Référence au fichier dans le stockage
     const storageRef = ref(storage, `employees/${employeeId}/documents/${documentId}_${file.name}`);
     
-    // Ajouter des métadonnées CORS
+    // Convertir le fichier en ArrayBuffer pour assurer un téléversement binaire correct
+    const fileArrayBuffer = await file.arrayBuffer();
+    
+    // Ajouter des métadonnées CORS et spécifier le type de contenu correct
     const metadata = {
       contentType: file.type,
       customMetadata: {
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-        'Cache-Control': 'public, max-age=31536000'
+        'Cache-Control': 'public, max-age=31536000',
+        'Content-Disposition': `attachment; filename="${file.name}"`,
+        'originalName': file.name,
+        'documentType': documentType,
+        'documentId': documentId
       }
     };
     
-    // Téléversement du fichier avec métadonnées
-    const uploadResult = await uploadBytes(storageRef, file, metadata);
+    // Téléversement du fichier avec métadonnées en tant que données binaires
+    console.log(`Téléversement du fichier ${file.name} (${file.size} octets) en tant que données binaires...`);
+    const uploadResult = await uploadBytes(storageRef, new Uint8Array(fileArrayBuffer), metadata);
+    console.log('Téléversement réussi, résultat:', uploadResult);
     
     // Obtenir l'URL de téléchargement
     const downloadURL = await getDownloadURL(uploadResult.ref);
+    console.log('URL de téléchargement obtenue:', downloadURL);
     
     // Date actuelle pour le document
     const currentDate = new Date().toLocaleDateString('fr-FR');
@@ -148,7 +158,9 @@ export const uploadEmployeeDocument = async (
       type: documentType,
       date: currentDate,
       fileUrl: downloadURL,
-      uploadedAt: serverTimestamp()
+      uploadedAt: serverTimestamp(),
+      fileSize: file.size,
+      fileType: file.type
     };
     
     // Ajouter le document à l'employé
@@ -158,6 +170,21 @@ export const uploadEmployeeDocument = async (
       documents: arrayUnion(documentData),
       updatedAt: serverTimestamp()
     });
+    
+    // Également enregistrer ce document dans la collection hrDocuments pour la centralisation
+    try {
+      const hrDocRef = doc(db, COLLECTIONS.HR.DOCUMENTS, documentId);
+      await setDoc(hrDocRef, {
+        ...documentData,
+        employeeId: employeeId,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      });
+      console.log(`Document également ajouté à la collection centralisée HR_DOCUMENTS`);
+    } catch (error) {
+      console.warn("Erreur lors de l'ajout à la collection centralisée:", error);
+      // Continue même en cas d'erreur pour ne pas bloquer le processus principal
+    }
     
     console.log(`Document ${documentName} ajouté à l'employé ${employeeId}`);
     return true;
@@ -216,6 +243,16 @@ export const deleteEmployeeDocument = async (
       documents: arrayRemove(documentToDelete),
       updatedAt: serverTimestamp()
     });
+    
+    // Supprimer également de la collection centralisée si elle existe
+    try {
+      const hrDocRef = doc(db, COLLECTIONS.HR.DOCUMENTS, documentId);
+      await deleteDoc(hrDocRef);
+      console.log(`Document également supprimé de la collection centralisée HR_DOCUMENTS`);
+    } catch (error) {
+      console.warn("Erreur lors de la suppression de la collection centralisée:", error);
+      // Continue même en cas d'erreur
+    }
     
     console.log(`Document ${documentId} supprimé de l'employé ${employeeId}`);
     return true;

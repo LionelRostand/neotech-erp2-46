@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -6,7 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { FileText, Upload } from 'lucide-react';
+import { FileText, Upload, Info } from 'lucide-react';
 import { uploadEmployeeDocument, checkEmployeeExists } from '../../services/documentService';
 import { getEmployee } from '../../services/employeeService';
 
@@ -29,6 +28,7 @@ const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
   const [documentName, setDocumentName] = useState('');
   const [documentType, setDocumentType] = useState(defaultType);
   const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
 
   const documentTypes = [
     { value: 'contrat', label: 'Contrat de travail' },
@@ -52,7 +52,33 @@ const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
         const fileName = selectedFile.name.split('.').slice(0, -1).join('.');
         setDocumentName(fileName);
       }
+      
+      console.log(`Fichier sélectionné: ${selectedFile.name}, type: ${selectedFile.type}, taille: ${selectedFile.size} octets`);
     }
+  };
+
+  const formatFileSize = (size: number): string => {
+    if (size < 1024) {
+      return `${size} octets`;
+    } else if (size < 1024 * 1024) {
+      return `${(size / 1024).toFixed(1)} Ko`;
+    } else {
+      return `${(size / (1024 * 1024)).toFixed(1)} Mo`;
+    }
+  };
+
+  const simulateProgress = () => {
+    let progress = 0;
+    const interval = setInterval(() => {
+      progress += Math.random() * 15;
+      if (progress > 95) {
+        progress = 95;
+        clearInterval(interval);
+      }
+      setUploadProgress(Math.floor(progress));
+    }, 300);
+    
+    return () => clearInterval(interval);
   };
 
   const handleUpload = async () => {
@@ -73,8 +99,10 @@ const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
 
     try {
       setIsUploading(true);
+      setUploadProgress(0);
       
-      // Vérification préalable de l'existence de l'employé
+      const stopProgress = simulateProgress();
+      
       console.log(`Vérification préalable pour l'employé ${employeeId} avant téléversement`);
       const employee = await getEmployee(employeeId);
       
@@ -82,15 +110,17 @@ const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
         console.error(`L'employé avec ID ${employeeId} n'a pas été trouvé par getEmployee`);
         toast.error(`Erreur: Employé avec ID ${employeeId} non trouvé`);
         setIsUploading(false);
+        stopProgress();
         return;
       }
       
       console.log(`Téléversement de document pour l'employé ID: ${employeeId}`, employee);
       
-      // Ajouter un paramètre de temps aux noms de fichiers pour éviter les problèmes de cache
       const timestamp = new Date().getTime();
       const filenameWithTimestamp = `${timestamp}_${file.name}`;
       const fileWithTimestamp = new File([file], filenameWithTimestamp, { type: file.type });
+      
+      console.log(`Préparation du fichier binaire: ${filenameWithTimestamp} (${formatFileSize(fileWithTimestamp.size)})`);
       
       const result = await uploadEmployeeDocument(
         employeeId,
@@ -98,6 +128,9 @@ const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
         documentName,
         documentType
       );
+
+      stopProgress();
+      setUploadProgress(100);
 
       if (result) {
         toast.success("Document ajouté avec succès");
@@ -118,6 +151,7 @@ const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
     setFile(null);
     setDocumentName('');
     setDocumentType(defaultType);
+    setUploadProgress(0);
     onOpenChange(false);
   };
 
@@ -136,7 +170,11 @@ const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
                 <div className="flex flex-col items-center gap-2">
                   <FileText className="h-8 w-8 text-blue-500" />
                   <span className="text-sm font-medium">{file.name}</span>
-                  <span className="text-xs text-gray-500">{(file.size / 1024).toFixed(2)} KB</span>
+                  <span className="text-xs text-gray-500">{formatFileSize(file.size)}</span>
+                  <div className="text-xs text-gray-500 flex items-center gap-1 mt-1">
+                    <Info className="h-3 w-3" />
+                    <span>Sera stocké comme fichier binaire</span>
+                  </div>
                   <Button 
                     variant="outline" 
                     size="sm" 
@@ -199,6 +237,21 @@ const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
               </SelectContent>
             </Select>
           </div>
+
+          {isUploading && (
+            <div className="space-y-2">
+              <div className="flex justify-between text-xs text-gray-500">
+                <span>Progression</span>
+                <span>{uploadProgress}%</span>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-2.5">
+                <div 
+                  className="bg-blue-600 h-2.5 rounded-full transition-all duration-300" 
+                  style={{ width: `${uploadProgress}%` }}
+                ></div>
+              </div>
+            </div>
+          )}
 
           <div className="text-xs text-gray-500">
             ID Employé: {employeeId}
