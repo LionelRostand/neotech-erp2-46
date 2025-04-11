@@ -49,7 +49,7 @@ export const prepareEmployeeData = (data: EmployeeFormValues): Partial<Employee>
     lastName: data.lastName,
     email: data.email,
     phone: data.phone,
-    address: addressObj,
+    address: addressObj, // This is now a properly formed EmployeeAddress object
     department: data.department,
     departmentId: data.department,
     position: data.position,

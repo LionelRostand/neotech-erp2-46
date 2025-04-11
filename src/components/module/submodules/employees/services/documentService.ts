@@ -1,3 +1,4 @@
+
 import { db } from '@/lib/firebase';
 import { doc, getDoc, setDoc, updateDoc, serverTimestamp, arrayUnion, arrayRemove } from 'firebase/firestore';
 import { COLLECTIONS } from '@/lib/firebase-collections';
@@ -5,6 +6,7 @@ import { getDownloadURL, ref, uploadBytes, deleteObject } from 'firebase/storage
 import { storage } from '@/lib/firebase';
 import { v4 as uuidv4 } from 'uuid';
 import { Employee, Document } from '@/types/employee';
+import { getEmployee } from './employeeService'; // Import the getEmployee function
 
 // Define EmployeeDocument type for consistent usage
 export interface EmployeeDocument extends Document {

@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
@@ -121,9 +122,52 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
           toast.error("Erreur lors de la création du compte utilisateur");
         }
       } else {
-        const employeeData = isEditing 
-          ? data
-          : prepareEmployeeData(data);
+        // Handle different submission paths for editing vs creating
+        let employeeData: Partial<Employee>;
+        
+        if (isEditing) {
+          // When editing, we need to ensure the address is properly formatted
+          let formattedAddress: string | EmployeeAddress;
+          
+          if (typeof data.address === 'string') {
+            // If it's a string, parse it into the required structure
+            const addressParts = data.address.split(',').map(part => part.trim());
+            formattedAddress = {
+              street: addressParts[0] || 'Rue non spécifiée',
+              city: addressParts[1] || 'Ville non spécifiée',
+              postalCode: addressParts[2] || '00000',
+              country: addressParts[3] || 'France'
+            };
+          } else if (data.address) {
+            // Ensure all required fields are present
+            formattedAddress = {
+              street: data.address.street || 'Rue non spécifiée',
+              city: data.address.city || 'Ville non spécifiée',
+              postalCode: data.address.postalCode || '00000',
+              country: data.address.country || 'France',
+              streetNumber: data.address.streetNumber,
+              department: data.address.department,
+              state: data.address.state
+            };
+          } else {
+            // Default address if none provided
+            formattedAddress = {
+              street: 'Rue non spécifiée',
+              city: 'Ville non spécifiée',
+              postalCode: '00000',
+              country: 'France'
+            };
+          }
+          
+          // Create a properly formatted employee object
+          employeeData = {
+            ...data,
+            address: formattedAddress
+          };
+        } else {
+          // For new employees, use prepareEmployeeData which already handles address formatting
+          employeeData = prepareEmployeeData(data);
+        }
         
         onSubmit(employeeData);
         toast.success(`Employé ${isEditing ? 'mis à jour' : 'ajouté'} avec succès`);

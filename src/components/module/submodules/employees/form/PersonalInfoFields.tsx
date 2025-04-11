@@ -26,12 +26,14 @@ const PersonalInfoFields: React.FC = () => {
     if (!addressValue) return '';
     
     const { street, streetNumber, city, postalCode, department, country } = addressValue as EmployeeAddress;
+    
+    // Make sure to handle potentially missing required fields
     const parts = [
-      streetNumber && street ? `${streetNumber} ${street}` : street || '',
-      city || '',
-      postalCode || '',
+      streetNumber && street ? `${streetNumber} ${street}` : street || 'Rue non spécifiée',
+      city || 'Ville non spécifiée',
+      postalCode || '00000',
       department ? `(${department})` : '',
-      country || ''
+      country || 'France'
     ].filter(Boolean);
     
     return parts.join(', ');
