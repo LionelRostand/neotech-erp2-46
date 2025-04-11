@@ -15,6 +15,7 @@ const EmployeeProfileHeader: React.FC<EmployeeProfileHeaderProps> = ({ employee 
 
   // S'assurer que la photo est toujours à jour quand l'employé change
   useEffect(() => {
+    console.log("EmployeeProfileHeader - Photo mise à jour:", employee.photoURL || employee.photo || '');
     setPhoto(employee.photoURL || employee.photo || '');
   }, [employee.photoURL, employee.photo, employee]);
 

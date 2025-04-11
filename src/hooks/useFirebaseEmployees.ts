@@ -68,6 +68,7 @@ export const useFirebaseEmployees = () => {
           } as Employee;
         });
         
+        console.log("Employés chargés depuis Firestore:", employeesData.length);
         setEmployees(employeesData);
         setIsLoading(false);
       }, (err) => {
@@ -205,6 +206,9 @@ export const useFirebaseEmployees = () => {
         cleanedUpdates.photo = cleanedUpdates.photoURL;
       }
       
+      // Ajout de logging pour débugger
+      console.log(`Mise à jour de l'employé ${id} avec les données:`, cleanedUpdates);
+      
       await updateDoc(employeeRef, {
         ...cleanedUpdates,
         updatedAt: serverTimestamp()
@@ -225,8 +229,17 @@ export const useFirebaseEmployees = () => {
           ...cleanedUpdates 
         } as Employee;
         
+        console.log("Employé mis à jour dans le cache local:", updatedEmployee);
+        
+        // Mise à jour immédiate du cache local
         setEmployees(prev => 
-          prev.map(emp => emp.id === id ? updatedEmployee : emp)
+          prev.map(emp => emp.id === id ? {
+            ...emp,
+            ...updatedEmployee,
+            // S'assurer que les champs photo sont toujours synchronisés
+            photo: updatedEmployee.photoURL || updatedEmployee.photo || emp.photo || emp.photoURL || '',
+            photoURL: updatedEmployee.photoURL || updatedEmployee.photo || emp.photoURL || emp.photo || ''
+          } : emp)
         );
       }
       

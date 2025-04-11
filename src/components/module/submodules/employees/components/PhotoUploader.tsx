@@ -129,8 +129,10 @@ const PhotoUploader: React.FC<PhotoUploaderProps> = ({
       const documentRef = doc(db, COLLECTIONS.HR.DOCUMENTS, `photo_${employeeId}`);
       await setDoc(documentRef, docData);
       
+      // Mettre à jour l'état local et propager le changement via le callback
       setPhotoURL(newPhotoURL);
       onPhotoUpdated(newPhotoURL);
+      console.log("État photoURL mis à jour avec:", newPhotoURL);
       toast.success("Photo de profil mise à jour avec succès");
     } catch (error) {
       console.error("Erreur lors de la mise à jour de la photo:", error);
@@ -139,6 +141,10 @@ const PhotoUploader: React.FC<PhotoUploaderProps> = ({
       toast.error(`Erreur lors de la mise à jour de la photo. ID employé: ${employeeId}`);
     } finally {
       setIsUploading(false);
+      // Forcer une mise à jour de l'affichage
+      if (file.current) {
+        file.current.value = '';
+      }
     }
   };
 
@@ -218,7 +224,15 @@ const PhotoUploader: React.FC<PhotoUploaderProps> = ({
       >
         <Avatar className="h-24 w-24 border-2 border-primary">
           {photoURL ? (
-            <AvatarImage src={photoURL} alt={employeeName} />
+            <AvatarImage 
+              src={photoURL} 
+              alt={employeeName} 
+              className="object-cover"
+              onError={(e) => {
+                console.error("Erreur de chargement de l'image:", photoURL);
+                e.currentTarget.style.display = 'none';
+              }}
+            />
           ) : null}
           <AvatarFallback className="text-lg bg-primary-50 text-primary">
             {getInitials()}
