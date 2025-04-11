@@ -77,7 +77,7 @@ const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
       setUploadError(null);
       setCorsError(false);
 
-      // Téléverser le document
+      // Téléverser le document en mode binaire
       await uploadEmployeeDocument(
         selectedFile,
         employeeId,
@@ -99,9 +99,11 @@ const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
       // Vérifier si c'est une erreur CORS
       if (error.name === 'FirebaseError' && (error.code === 'storage/unauthorized' || error.message.includes('CORS'))) {
         setCorsError(true);
-        setUploadError("Erreur d'accès au stockage. Problème de configuration CORS.");
+        setUploadError("Erreur d'accès au stockage. Le serveur a refusé la requête (CORS).");
       } else if (error.code === 'storage/retry-limit-exceeded') {
         setUploadError("Le délai de téléversement a expiré. Essayez avec un fichier plus petit ou vérifiez votre connexion.");
+      } else if (error.code === 'storage/unknown') {
+        setUploadError("Erreur inconnue lors du stockage. Contactez l'administrateur.");
       } else {
         setUploadError(error.message || "Erreur lors du téléversement");
       }
@@ -176,7 +178,7 @@ const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
                   <Progress value={uploadProgress} className="h-2" />
                   <div className="flex justify-between items-center text-xs">
                     <span className="text-muted-foreground">
-                      Téléversement en cours...
+                      Téléversement binaire en cours...
                     </span>
                     <span>{uploadProgress}%</span>
                   </div>
@@ -199,7 +201,7 @@ const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
                 <p className="font-medium">Problème d'accès CORS détecté</p>
                 <p className="text-xs mt-1">
                   Vous devez configurer les règles CORS dans la console Firebase Storage. 
-                  Contactez l'administrateur système.
+                  Cela peut être dû au fait que le domaine de l'application n'est pas autorisé à accéder au stockage.
                 </p>
               </AlertDescription>
             </Alert>

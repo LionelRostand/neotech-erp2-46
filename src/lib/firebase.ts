@@ -11,7 +11,7 @@ const firebaseConfig = {
   apiKey: "AIzaSyD3ZQYPtVHk4w63bCvOX0b8RVJyybWyOqU",
   authDomain: "neotech-erp.firebaseapp.com",
   projectId: "neotech-erp",
-  storageBucket: "neotech-erp.appspot.com", // Correction du bucket
+  storageBucket: "neotech-erp.appspot.com",
   messagingSenderId: "803661896660",
   appId: "1:803661896660:web:94f17531b963627cbd5441"
 };
@@ -45,26 +45,20 @@ try {
 // Initialiser Authentication
 const auth = getAuth(app);
 
-// Initialiser Storage avec configuration CORS
+// Initialiser Storage avec configuration optimisée pour les fichiers binaires
 const storage = getStorage(app);
 
-// Configurer les options Storage pour améliorer la fiabilité
+// Configurer les options Storage pour améliorer la fiabilité des uploads binaires
 const configureStorage = () => {
   // Augmenter les temps de tentative pour les opérations Storage
   // Cela permet de gérer les fichiers plus volumineux et les connexions instables
   const customStorage = storage as any;
-  customStorage.maxOperationRetryTime = 300000; // 5 minutes (au lieu de 2 minutes)
-  customStorage.maxUploadRetryTime = 600000; // 10 minutes (au lieu de 3 minutes)
   
-  // Ajouter des en-têtes CORS par défaut aux requêtes Storage
-  customStorage.customHeaders = {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type',
-    'Cache-Control': 'public, max-age=31536000'
-  };
+  // Augmenter significativement les temps de tentative pour le téléversement de fichiers binaires
+  customStorage.maxOperationRetryTime = 600000; // 10 minutes (au lieu de 2 minutes)
+  customStorage.maxUploadRetryTime = 1200000;   // 20 minutes (au lieu de 3 minutes)
   
-  console.log('Configuration Storage optimisée pour les téléversements volumineux et CORS');
+  console.log('Configuration Storage optimisée pour les téléversements binaires volumineux');
 };
 
 configureStorage();

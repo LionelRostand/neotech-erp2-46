@@ -75,25 +75,22 @@ export const uploadEmployeeDocument = async (
     // Créer une référence au fichier dans Firebase Storage
     const storageRef = ref(storage, storagePath);
     
-    // Convertir le fichier en ArrayBuffer pour un téléversement binaire
+    // Lire le fichier comme ArrayBuffer (format binaire)
     const arrayBuffer = await file.arrayBuffer();
     
-    // Définir les métadonnées pour le fichier (IMPORTANT pour CORS)
+    // Définir les métadonnées pour le fichier
     const metadata = {
       contentType: file.type,
       customMetadata: {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type',
-        'Cache-Control': 'public, max-age=31536000',
+        'filename': file.name,
         'employeeId': employeeId,
         'documentType': documentType,
-        'fileName': file.name,
-        'uploadTime': timestamp.toString()
+        'uploadTime': timestamp.toString(),
+        'fileSize': file.size.toString()
       }
     };
     
-    // Téléverser le fichier avec suivi de progression
+    // Téléverser le fichier sous forme binaire avec suivi de progression
     const uploadTask = uploadBytesResumable(storageRef, arrayBuffer, metadata);
     
     // Créer une promesse qui sera résolue lorsque le téléversement sera terminé
@@ -116,11 +113,13 @@ export const uploadEmployeeDocument = async (
           // Gérer les erreurs de téléversement
           console.error("Erreur lors du téléversement du document:", error);
           
-          if (error.code === 'storage/unauthorized' || error.name === 'FirebaseError' && error.message.includes('CORS')) {
-            toast.error("Erreur CORS: Problème d'accès au stockage. Contactez l'administrateur.");
-            console.error("Erreur CORS détectée. Vérifiez la configuration CORS de Firebase Storage.");
+          if (error.code === 'storage/unauthorized') {
+            toast.error("Erreur d'autorisation: Vérifiez les permissions de stockage.");
           } else if (error.code === 'storage/retry-limit-exceeded') {
             toast.error("Le délai de téléversement a expiré. Essayez avec un fichier plus petit ou vérifiez votre connexion.");
+            console.error("Limite de tentatives atteinte. Détails:", error);
+          } else if (error.code === 'storage/unknown') {
+            toast.error("Erreur inconnue lors du téléversement. Veuillez réessayer.");
           } else {
             toast.error(`Erreur: ${error.message || "Problème lors du téléversement"}`);
           }
@@ -129,8 +128,9 @@ export const uploadEmployeeDocument = async (
         },
         async () => {
           try {
-            // Téléversement terminé, obtenir l'URL de téléchargement avec token d'accès
+            // Téléversement terminé, obtenir l'URL de téléchargement
             const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+            console.log("Téléversement terminé. URL:", downloadURL);
             
             // Créer l'entrée du document dans Firestore
             const docData: Omit<EmployeeDocument, 'id'> = {
@@ -156,6 +156,7 @@ export const uploadEmployeeDocument = async (
             resolve(newDocument);
           } catch (error) {
             console.error("Erreur lors de la finalisation du téléversement:", error);
+            toast.error("Erreur lors de l'enregistrement des métadonnées du document");
             reject(error);
           }
         }
@@ -171,7 +172,7 @@ export const uploadEmployeeDocument = async (
 // Supprimer un document d'employé
 export const deleteEmployeeDocument = async (documentId: string, employeeId: string): Promise<boolean> => {
   try {
-    // Récupérer le document pour obtenir le chemin de stockage
+    // Récupérer le document pour obtenir l'URL de stockage
     const q = query(
       collection(db, DOCUMENTS_COLLECTION),
       where('employeeId', '==', employeeId)
@@ -197,11 +198,9 @@ export const deleteEmployeeDocument = async (documentId: string, employeeId: str
     try {
       // Extraire le chemin du stockage à partir de l'URL
       const fileUrl = documentToDelete.fileUrl;
+      const fileRef = ref(storage, fileUrl);
       
-      // Créer une référence directement à partir de l'URL
-      const storageRef = ref(storage, fileUrl);
-      await deleteObject(storageRef);
-      
+      await deleteObject(fileRef);
       console.log("Fichier supprimé du stockage avec succès");
     } catch (storageError) {
       console.warn("Impossible de supprimer le fichier du stockage:", storageError);
