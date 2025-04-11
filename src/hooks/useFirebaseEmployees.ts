@@ -9,7 +9,8 @@ import {
   updateDoc, 
   deleteDoc, 
   serverTimestamp, 
-  DocumentData
+  DocumentData,
+  getDoc
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Employee } from '@/types/employee';
@@ -203,8 +204,9 @@ export const useFirebaseEmployees = () => {
       });
       
       // Force refresh the employees list
-      const employeeDoc = await doc(db, COLLECTIONS.HR.EMPLOYEES, id);
-      const employeeSnapshot = await doc(db, COLLECTIONS.HR.EMPLOYEES, id).get();
+      const employeeDoc = doc(db, COLLECTIONS.HR.EMPLOYEES, id);
+      // Fix: Using getDoc instead of calling .get() directly on the reference
+      const employeeSnapshot = await getDoc(employeeDoc);
       
       if (employeeSnapshot.exists()) {
         const updatedEmployee = { 
