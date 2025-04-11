@@ -40,8 +40,9 @@ export const prepareEmployeeData = (data: EmployeeFormValues): Partial<Employee>
     };
   }
 
-  // Générer un ID d'employé fiable qui ne changera pas d'une session à l'autre
-  const employeeId = data.id || `EMP${Math.floor(1000 + Math.random() * 9000)}`;
+  // Generate a reliable employee ID that won't change from session to session
+  // Fix: Check for employeeId in the data parameter directly, not data.id which doesn't exist
+  const employeeId = data.employeeId || `EMP${Math.floor(1000 + Math.random() * 9000)}`;
   
   console.log(`Préparation des données pour l'employé avec ID: ${employeeId}`);
   
