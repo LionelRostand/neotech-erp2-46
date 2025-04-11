@@ -1,14 +1,9 @@
-
 import React, { useState, useRef, useEffect } from 'react';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { Camera, Upload, Trash2 } from 'lucide-react';
+import { Upload, X } from 'lucide-react';
 import { toast } from 'sonner';
-import { storage, db } from '@/lib/firebase';
-import { getDownloadURL, ref, uploadBytes, deleteObject } from 'firebase/storage';
-import { updateDoc, doc, getDoc, setDoc } from 'firebase/firestore';
-import { COLLECTIONS } from '@/lib/firebase-collections';
-import { updateEmployee, getEmployee } from '../services/employeeService';
+import { uploadEmployeePhoto } from '../services/employeeService';
 
 interface PhotoUploaderProps {
   employeeId: string;
@@ -17,269 +12,191 @@ interface PhotoUploaderProps {
   onPhotoUpdated: (photoURL: string) => void;
 }
 
-const PhotoUploader: React.FC<PhotoUploaderProps> = ({
-  employeeId,
-  currentPhoto,
+const PhotoUploader: React.FC<PhotoUploaderProps> = ({ 
+  employeeId, 
+  currentPhoto, 
   employeeName,
-  onPhotoUpdated
+  onPhotoUpdated 
 }) => {
-  const [isUploading, setIsUploading] = useState(false);
-  const [photoURL, setPhotoURL] = useState(currentPhoto);
-  const [isHovering, setIsHovering] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [employeeIdDisplay, setEmployeeIdDisplay] = useState(employeeId);
-
+  
   useEffect(() => {
-    if (currentPhoto && currentPhoto !== photoURL) {
-      setPhotoURL(currentPhoto);
+    // Reset preview when currentPhoto changes
+    if (currentPhoto) {
+      setPhotoPreview(null);
     }
-    if (employeeId) {
-      setEmployeeIdDisplay(employeeId);
-    }
-  }, [currentPhoto, employeeId, photoURL]);
-
-  const checkEmployeeExists = async (empId: string) => {
-    try {
-      if (!empId) {
-        console.error("ID d'employé manquant");
-        toast.error("Erreur: ID d'employé manquant");
-        return false;
-      }
-      
-      console.log(`Vérification de l'employé ID ${empId} avant mise à jour de photo`);
-      
-      // Vérification simplifiée: on va juste essayer d'obtenir l'employé directement
-      const docRef = doc(db, COLLECTIONS.HR.EMPLOYEES, empId);
-      const docSnap = await getDoc(docRef);
-      
-      const exists = docSnap.exists();
-      console.log(`L'employé ${empId} existe: ${exists}`);
-      
-      // Si l'employé n'existe pas dans la base de données, on retourne false
-      if (!exists) {
-        console.error(`Employé avec ID ${empId} non trouvé dans la base de données`);
-        console.error(`Collection: ${COLLECTIONS.HR.EMPLOYEES}, ID: ${empId}`);
-        toast.error(`Erreur: Employé avec ID ${empId} non trouvé. Vérifiez l'ID ou demandez à l'administrateur.`);
-        return false;
-      }
-      
-      console.log(`Employé ${empId} trouvé avec succès`);
-      return true;
-    } catch (error) {
-      console.error("Erreur lors de la vérification de l'employé:", error);
-      toast.error("Erreur lors de la vérification de l'employé");
-      return false;
+  }, [currentPhoto]);
+  
+  const openFileSelector = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
     }
   };
-
-  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
-
-    console.log(`Tentative de mise à jour de photo pour l'employé ID: ${employeeId}`);
     
-    // Vérifier l'existence de l'employé
-    const exists = await checkEmployeeExists(employeeId);
-    if (!exists) {
-      console.error(`L'employé avec ID ${employeeId} n'existe pas, impossible de téléverser la photo`);
-      return;
-    }
-
+    // Validate file type
     if (!file.type.startsWith('image/')) {
-      toast.error("Veuillez sélectionner un fichier image");
+      toast.error('Veuillez sélectionner une image valide');
       return;
     }
-
+    
+    // Validate file size (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
-      toast.error("L'image est trop volumineuse. Taille maximum: 5MB");
+      toast.error('La taille de l\'image ne doit pas dépasser 5MB');
       return;
     }
-
-    setIsUploading(true);
-    const previousURL = photoURL;
-    let newPhotoURL = '';
-
-    try {
-      console.log(`Téléversement de la photo pour l'employé ID: ${employeeId}`);
-      const photoRef = ref(storage, `employees/${employeeId}/profile-photo`);
-      await uploadBytes(photoRef, file);
-      newPhotoURL = await getDownloadURL(photoRef);
-      console.log("Photo téléversée avec succès, URL:", newPhotoURL);
-      
-      // Mettre à jour l'employé avec la nouvelle photo
-      await updateEmployee(employeeId, {
-        photoURL: newPhotoURL,
-        photo: newPhotoURL
-      });
-      
-      // Enregistrer le document photo dans la collection hr_documents
-      const docData = {
-        employeeId: employeeId,
-        fileUrl: newPhotoURL,
-        name: `Photo de profil - ${employeeName}`,
-        type: 'photo',
-        date: new Date().toISOString(),
-        fileType: file.type,
-        fileSize: file.size,
-        uploadedBy: 'Système',
-        title: `Photo de profil - ${employeeName}`,
-        uploadDate: new Date().toISOString()
-      };
-      
-      const documentRef = doc(db, COLLECTIONS.HR.DOCUMENTS, `photo_${employeeId}`);
-      await setDoc(documentRef, docData);
-      
-      // Mettre à jour l'état local et propager le changement via le callback
-      setPhotoURL(newPhotoURL);
-      onPhotoUpdated(newPhotoURL);
-      console.log("État photoURL mis à jour avec:", newPhotoURL);
-      toast.success("Photo de profil mise à jour avec succès");
-    } catch (error) {
-      console.error("Erreur lors de la mise à jour de la photo:", error);
-      console.log(`ID de l'employé concerné: ${employeeId}`);
-      setPhotoURL(previousURL);
-      toast.error(`Erreur lors de la mise à jour de la photo. ID employé: ${employeeId}`);
-    } finally {
-      setIsUploading(false);
-      // Forcer une mise à jour de l'affichage
-      if (file.current) {
-        file.current.value = '';
-      }
+    
+    // Create preview
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      setPhotoPreview(e.target?.result as string);
+    };
+    reader.readAsDataURL(file);
+    
+    // Store selected file
+    setSelectedFile(file);
+  };
+  
+  const cancelUpload = () => {
+    setPhotoPreview(null);
+    setSelectedFile(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
     }
   };
-
-  const handleDeletePhoto = async () => {
-    const exists = await checkEmployeeExists(employeeId);
-    if (!exists) return;
-
-    if (!photoURL) return;
-
-    setIsUploading(true);
-    const previousURL = photoURL;
-
+  
+  const uploadPhoto = async () => {
+    if (!selectedFile) return;
+    
     try {
-      console.log(`Suppression de la photo pour l'employé ID: ${employeeId}`);
-      const photoRef = ref(storage, `employees/${employeeId}/profile-photo`);
-      await deleteObject(photoRef).catch(error => {
-        console.warn("L'image n'existait peut-être pas dans le stockage:", error);
-      });
+      setUploading(true);
+      console.log(`Début du téléversement de la photo pour l'employé ${employeeId}`);
       
-      await updateEmployee(employeeId, {
-        photoURL: '',
-        photo: ''
-      });
+      const photoURL = await uploadEmployeePhoto(employeeId, selectedFile);
+      console.log(`Photo téléversée avec succès, URL: ${photoURL}`);
       
-      // Marquer le document comme supprimé dans la collection hr_documents
-      try {
-        const docRef = doc(db, COLLECTIONS.HR.DOCUMENTS, `photo_${employeeId}`);
-        const docSnap = await getDoc(docRef);
+      if (photoURL) {
+        onPhotoUpdated(photoURL);
+        toast.success('Photo de profil mise à jour');
         
-        if (docSnap.exists()) {
-          await updateDoc(docRef, { 
-            deleted: true,
-            deletedAt: new Date().toISOString()
-          });
+        // Reset state
+        setPhotoPreview(null);
+        setSelectedFile(null);
+        if (fileInputRef.current) {
+          fileInputRef.current.value = '';
         }
-      } catch (docError) {
-        console.warn("Erreur lors de la mise à jour du document photo:", docError);
+      } else {
+        toast.error('Erreur lors du téléversement de la photo');
       }
-      
-      setPhotoURL('');
-      onPhotoUpdated('');
-      toast.success("Photo de profil supprimée avec succès");
-    } catch (error) {
-      console.error("Erreur lors de la suppression de la photo:", error);
-      console.log(`ID de l'employé concerné: ${employeeId}`);
-      setPhotoURL(previousURL);
-      toast.error(`Erreur lors de la suppression de la photo. ID employé: ${employeeId}`);
+    } catch (error: any) {
+      console.error('Erreur lors du téléversement:', error);
+      toast.error(`Erreur: ${error.message || 'Impossible de téléverser la photo'}`);
     } finally {
-      setIsUploading(false);
+      setUploading(false);
     }
   };
-
+  
+  // Get initials for fallback avatar
   const getInitials = () => {
-    return employeeName
-      .split(' ')
-      .map(name => name.charAt(0))
-      .join('')
-      .toUpperCase();
+    if (!employeeName) return 'UN';
+    
+    const nameParts = employeeName.split(' ');
+    if (nameParts.length >= 2) {
+      return `${nameParts[0].charAt(0)}${nameParts[1].charAt(0)}`.toUpperCase();
+    }
+    return nameParts[0].slice(0, 2).toUpperCase();
+  };
+  
+  // Determine which image to display
+  const getImageSource = () => {
+    // If there's a preview, show that first
+    if (photoPreview) {
+      return photoPreview;
+    }
+    
+    // Otherwise show current photo if available
+    if (currentPhoto) {
+      return currentPhoto;
+    }
+    
+    // No image available
+    return null;
+  };
+  
+  // Generate a cache-busting URL to prevent stale images
+  const getImageUrl = (url: string) => {
+    if (!url) return '';
+    
+    // Add a timestamp query parameter to force a refresh
+    const timestamp = new Date().getTime();
+    const separator = url.includes('?') ? '&' : '?';
+    return `${url}${separator}t=${timestamp}`;
   };
 
   return (
-    <div className="relative flex flex-col items-center">
+    <div className="flex flex-col items-center">
       <input
         type="file"
         ref={fileInputRef}
+        onChange={handleFileChange}
         accept="image/*"
         className="hidden"
-        onChange={handleFileChange}
-        disabled={isUploading}
       />
       
-      <div 
-        className="relative cursor-pointer"
-        onMouseEnter={() => setIsHovering(true)}
-        onMouseLeave={() => setIsHovering(false)}
-        onClick={() => !isUploading && fileInputRef.current?.click()}
-      >
-        <Avatar className="h-24 w-24 border-2 border-primary">
-          {photoURL ? (
-            <AvatarImage 
-              src={photoURL} 
-              alt={employeeName} 
-              className="object-cover"
-              onError={(e) => {
-                console.error("Erreur de chargement de l'image:", photoURL);
-                e.currentTarget.style.display = 'none';
-              }}
-            />
-          ) : null}
-          <AvatarFallback className="text-lg bg-primary-50 text-primary">
-            {getInitials()}
-          </AvatarFallback>
-        </Avatar>
-        
-        {isHovering && !isUploading && (
-          <div className="absolute inset-0 bg-black bg-opacity-50 rounded-full flex items-center justify-center">
-            <Camera className="h-8 w-8 text-white" />
-          </div>
-        )}
-        
-        {isUploading && (
-          <div className="absolute inset-0 bg-black bg-opacity-50 rounded-full flex items-center justify-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
-          </div>
-        )}
-      </div>
+      <Avatar className="h-24 w-24 border border-gray-200">
+        <AvatarImage 
+          src={getImageUrl(getImageSource() || '')} 
+          alt={employeeName} 
+          className="object-cover"
+          onError={(e) => {
+            const target = e.target as HTMLImageElement;
+            target.src = '';
+            console.error("Erreur de chargement de l'image:", target.src);
+          }}
+        />
+        <AvatarFallback className="text-xl bg-blue-100 text-blue-600">{getInitials()}</AvatarFallback>
+      </Avatar>
       
-      <div className="mt-2 flex space-x-2">
-        <Button 
-          size="sm" 
-          variant="outline" 
-          onClick={() => !isUploading && fileInputRef.current?.click()}
-          disabled={isUploading}
-        >
-          <Upload className="h-4 w-4 mr-1" />
-          Changer
-        </Button>
-        
-        {photoURL && (
+      {photoPreview ? (
+        <div className="mt-3 flex space-x-2">
           <Button 
             size="sm" 
             variant="outline" 
-            onClick={handleDeletePhoto}
-            disabled={isUploading}
-            className="text-red-500 hover:text-red-700"
+            type="button" 
+            onClick={cancelUpload}
+            disabled={uploading}
           >
-            <Trash2 className="h-4 w-4 mr-1" />
-            Supprimer
+            <X className="h-4 w-4 mr-1" />
+            Annuler
           </Button>
-        )}
-      </div>
-      
-      <div className="mt-1 text-xs text-gray-500">
-        ID: {employeeIdDisplay}
-      </div>
+          
+          <Button 
+            size="sm" 
+            variant="default" 
+            type="button" 
+            onClick={uploadPhoto}
+            disabled={uploading}
+          >
+            {uploading ? 'Envoi...' : 'Enregistrer'}
+          </Button>
+        </div>
+      ) : (
+        <Button 
+          variant="outline" 
+          size="sm" 
+          className="mt-3" 
+          onClick={openFileSelector}
+        >
+          <Upload className="h-4 w-4 mr-1" />
+          Changer photo
+        </Button>
+      )}
     </div>
   );
 };
