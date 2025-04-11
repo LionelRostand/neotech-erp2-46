@@ -47,18 +47,19 @@ const PhotoUploader: React.FC<PhotoUploaderProps> = ({
       }
       
       console.log(`Vérification de l'employé ID ${empId} avant mise à jour de photo`);
-      console.log("Collection path:", COLLECTIONS.HR.EMPLOYEES);
       
+      // Vérification simplifiée: on va juste essayer d'obtenir l'employé directement
       const docRef = doc(db, COLLECTIONS.HR.EMPLOYEES, empId);
       const docSnap = await getDoc(docRef);
       
       const exists = docSnap.exists();
       console.log(`L'employé ${empId} existe: ${exists}`);
       
+      // Si l'employé n'existe pas dans la base de données, on retourne false
       if (!exists) {
         console.error(`Employé avec ID ${empId} non trouvé dans la base de données`);
         console.error(`Collection: ${COLLECTIONS.HR.EMPLOYEES}, ID: ${empId}`);
-        toast.error(`Erreur: Employé avec ID ${empId} non trouvé`);
+        toast.error(`Erreur: Employé avec ID ${empId} non trouvé. Vérifiez l'ID ou demandez à l'administrateur.`);
         return false;
       }
       
@@ -106,20 +107,12 @@ const PhotoUploader: React.FC<PhotoUploaderProps> = ({
       console.log("Photo téléversée avec succès, URL:", newPhotoURL);
       
       // Mettre à jour l'employé avec la nouvelle photo
-      const employeeRef = doc(db, COLLECTIONS.HR.EMPLOYEES, employeeId);
-      
-      // Vérifier une dernière fois que l'employé existe
-      const docSnapshot = await getDoc(employeeRef);
-      if (!docSnapshot.exists()) {
-        throw new Error(`Employé ${employeeId} introuvable lors de la mise à jour de la photo`);
-      }
-      
-      await updateDoc(employeeRef, {
+      await updateEmployee(employeeId, {
         photoURL: newPhotoURL,
-        photo: newPhotoURL,
-        updatedAt: new Date()
+        photo: newPhotoURL
       });
       
+      // Enregistrer le document photo dans la collection hr_documents
       const docData = {
         employeeId: employeeId,
         fileUrl: newPhotoURL,
@@ -129,6 +122,8 @@ const PhotoUploader: React.FC<PhotoUploaderProps> = ({
         fileType: file.type,
         fileSize: file.size,
         uploadedBy: 'Système',
+        title: `Photo de profil - ${employeeName}`,
+        uploadDate: new Date().toISOString()
       };
       
       const documentRef = doc(db, COLLECTIONS.HR.DOCUMENTS, `photo_${employeeId}`);
@@ -168,8 +163,20 @@ const PhotoUploader: React.FC<PhotoUploaderProps> = ({
         photo: ''
       });
       
-      const docRef = doc(db, COLLECTIONS.HR.DOCUMENTS, `photo_${employeeId}`);
-      await updateDoc(docRef, { deleted: true });
+      // Marquer le document comme supprimé dans la collection hr_documents
+      try {
+        const docRef = doc(db, COLLECTIONS.HR.DOCUMENTS, `photo_${employeeId}`);
+        const docSnap = await getDoc(docRef);
+        
+        if (docSnap.exists()) {
+          await updateDoc(docRef, { 
+            deleted: true,
+            deletedAt: new Date().toISOString()
+          });
+        }
+      } catch (docError) {
+        console.warn("Erreur lors de la mise à jour du document photo:", docError);
+      }
       
       setPhotoURL('');
       onPhotoUpdated('');

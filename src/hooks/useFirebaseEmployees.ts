@@ -162,6 +162,18 @@ export const useFirebaseEmployees = () => {
     try {
       const employeeRef = doc(db, COLLECTIONS.HR.EMPLOYEES, id);
       
+      // Vérifier si l'employé existe avant de tenter de le mettre à jour
+      const employeeDoc = await getDoc(employeeRef);
+      if (!employeeDoc.exists()) {
+        console.error(`Employé avec ID ${id} n'existe pas.`);
+        toast({
+          title: "Erreur",
+          description: `Employé avec ID ${id} non trouvé.`,
+          variant: "destructive",
+        });
+        throw new Error(`Employee with ID ${id} not found`);
+      }
+      
       // Nettoyage des données pour éviter les valeurs undefined
       const cleanedUpdates = Object.entries(updates).reduce((acc, [key, value]) => {
         if (value === undefined) return acc;
@@ -203,15 +215,13 @@ export const useFirebaseEmployees = () => {
         description: "Les informations de l'employé ont été mises à jour.",
       });
       
-      // Force refresh the employees list
-      const employeeDoc = doc(db, COLLECTIONS.HR.EMPLOYEES, id);
-      // Fix: Using getDoc instead of calling .get() directly on the reference
-      const employeeSnapshot = await getDoc(employeeDoc);
+      // Mettre à jour la liste des employés avec les nouvelles données
+      const updatedEmployeeData = await getDoc(employeeRef);
       
-      if (employeeSnapshot.exists()) {
+      if (updatedEmployeeData.exists()) {
         const updatedEmployee = { 
           id, 
-          ...employeeSnapshot.data(),
+          ...updatedEmployeeData.data(),
           ...cleanedUpdates 
         } as Employee;
         
