@@ -29,11 +29,18 @@ export const checkEmployeeExists = async (employeeId: string): Promise<boolean> 
     }
     
     console.log(`Vérification de l'existence de l'employé avec ID: ${employeeId}`);
+    // Utiliser explicitement le chemin complet de la collection
     const docRef = doc(db, COLLECTIONS.HR.EMPLOYEES, employeeId);
     const docSnap = await getDoc(docRef);
     
     const exists = docSnap.exists();
     console.log(`Employé ${employeeId} existe: ${exists}`);
+    
+    // Afficher plus d'informations de débogage si l'employé n'existe pas
+    if (!exists) {
+      console.error(`Employé avec ID ${employeeId} non trouvé dans la collection ${COLLECTIONS.HR.EMPLOYEES}`);
+      console.log("Collection path:", COLLECTIONS.HR.EMPLOYEES);
+    }
     
     return exists;
   } catch (error) {
@@ -78,13 +85,17 @@ export const uploadEmployeeDocument = async (
   documentType: string
 ): Promise<boolean> => {
   try {
+    console.log(`Début du téléversement de document pour l'employé ID: ${employeeId}`);
+    
     // Vérifier d'abord si l'employé existe
     const employeeExists = await checkEmployeeExists(employeeId);
     
     if (!employeeExists) {
-      console.error(`Employé avec ID ${employeeId} non trouvé`);
+      console.error(`Employé avec ID ${employeeId} non trouvé lors du téléversement de document`);
       return false;
     }
+    
+    console.log(`Employé ${employeeId} trouvé, téléversement du document en cours...`);
     
     // Générer un ID unique pour le document
     const documentId = uuidv4();

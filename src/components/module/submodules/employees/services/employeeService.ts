@@ -23,11 +23,13 @@ export const updateEmployee = async (employeeId: string, updates: Partial<Employ
     }
     
     console.log(`Tentative de mise à jour de l'employé avec ID: ${employeeId}`);
+    console.log("Collection path:", COLLECTIONS.HR.EMPLOYEES);
+    
     const employeeRef = doc(db, COLLECTIONS.HR.EMPLOYEES, employeeId);
     const employeeDoc = await getDoc(employeeRef);
     
     if (!employeeDoc.exists()) {
-      console.error(`Employé avec ID ${employeeId} non trouvé`);
+      console.error(`Employé avec ID ${employeeId} non trouvé dans la collection ${COLLECTIONS.HR.EMPLOYEES}`);
       return false;
     }
     
@@ -57,6 +59,8 @@ export const getEmployee = async (employeeId: string): Promise<Employee | null> 
     }
     
     console.log(`Tentative de récupération de l'employé avec ID: ${employeeId}`);
+    console.log("Collection path:", COLLECTIONS.HR.EMPLOYEES);
+    
     const employeeRef = doc(db, COLLECTIONS.HR.EMPLOYEES, employeeId);
     const employeeDoc = await getDoc(employeeRef);
     
@@ -87,14 +91,23 @@ export const getEmployeeById = getEmployee;
  */
 export const checkEmployeeExists = async (employeeId: string): Promise<boolean> => {
   try {
-    if (!employeeId) return false;
+    if (!employeeId) {
+      console.error("ID d'employé non fourni pour la vérification");
+      return false;
+    }
     
     console.log(`Vérification de l'existence de l'employé avec ID: ${employeeId}`);
+    console.log("Collection path:", COLLECTIONS.HR.EMPLOYEES);
+    
     const employeeRef = doc(db, COLLECTIONS.HR.EMPLOYEES, employeeId);
     const employeeDoc = await getDoc(employeeRef);
     
     const exists = employeeDoc.exists();
     console.log(`Employé ${employeeId} existe: ${exists}`);
+    
+    if (!exists) {
+      console.error(`Employé avec ID ${employeeId} non trouvé dans la collection ${COLLECTIONS.HR.EMPLOYEES}`);
+    }
     
     return exists;
   } catch (error) {

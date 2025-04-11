@@ -47,6 +47,8 @@ const PhotoUploader: React.FC<PhotoUploaderProps> = ({
       }
       
       console.log(`Vérification de l'employé ID ${empId} avant mise à jour de photo`);
+      console.log("Collection path:", COLLECTIONS.HR.EMPLOYEES);
+      
       const docRef = doc(db, COLLECTIONS.HR.EMPLOYEES, empId);
       const docSnap = await getDoc(docRef);
       
@@ -54,11 +56,13 @@ const PhotoUploader: React.FC<PhotoUploaderProps> = ({
       console.log(`L'employé ${empId} existe: ${exists}`);
       
       if (!exists) {
-        console.error(`Employé avec ID ${empId} non trouvé`);
+        console.error(`Employé avec ID ${empId} non trouvé dans la base de données`);
+        console.error(`Collection: ${COLLECTIONS.HR.EMPLOYEES}, ID: ${empId}`);
         toast.error(`Erreur: Employé avec ID ${empId} non trouvé`);
         return false;
       }
       
+      console.log(`Employé ${empId} trouvé avec succès`);
       return true;
     } catch (error) {
       console.error("Erreur lors de la vérification de l'employé:", error);
@@ -75,7 +79,10 @@ const PhotoUploader: React.FC<PhotoUploaderProps> = ({
     
     // Vérifier l'existence de l'employé
     const exists = await checkEmployeeExists(employeeId);
-    if (!exists) return;
+    if (!exists) {
+      console.error(`L'employé avec ID ${employeeId} n'existe pas, impossible de téléverser la photo`);
+      return;
+    }
 
     if (!file.type.startsWith('image/')) {
       toast.error("Veuillez sélectionner un fichier image");
@@ -100,6 +107,13 @@ const PhotoUploader: React.FC<PhotoUploaderProps> = ({
       
       // Mettre à jour l'employé avec la nouvelle photo
       const employeeRef = doc(db, COLLECTIONS.HR.EMPLOYEES, employeeId);
+      
+      // Vérifier une dernière fois que l'employé existe
+      const docSnapshot = await getDoc(employeeRef);
+      if (!docSnapshot.exists()) {
+        throw new Error(`Employé ${employeeId} introuvable lors de la mise à jour de la photo`);
+      }
+      
       await updateDoc(employeeRef, {
         photoURL: newPhotoURL,
         photo: newPhotoURL,
