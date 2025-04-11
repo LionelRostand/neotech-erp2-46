@@ -1,18 +1,66 @@
-
-import { db } from '@/lib/firebase';
-import { 
-  doc, 
-  updateDoc, 
-  getDoc, 
-  serverTimestamp,
-  arrayUnion,
-  collection,
-  getDocs,
-  setDoc
-} from 'firebase/firestore';
-import { COLLECTIONS } from '@/lib/firebase-collections';
-import { Employee, EmployeeAddress } from '@/types/employee';
+import { db, storage } from '@/firebase';
+import { collection, doc, updateDoc, getDoc, setDoc } from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { Employee } from '@/types/employee';
 import { toast } from 'sonner';
+
+/**
+ * Upload an employee photo to Firebase Storage and update the employee record
+ * @param employeeId Employee ID
+ * @param file Photo file to upload
+ * @returns Promise with the download URL on success
+ */
+export const uploadEmployeePhoto = async (employeeId: string, file: File): Promise<string> => {
+  try {
+    console.log(`Début du téléversement de photo pour l'employé ${employeeId}`);
+    
+    // Check if employee exists
+    const employeeRef = doc(db, 'hr_employees', employeeId);
+    const employeeSnap = await getDoc(employeeRef);
+    
+    if (!employeeSnap.exists()) {
+      console.error(`Employé avec ID ${employeeId} non trouvé dans la collection hr_employees`);
+      throw new Error(`Employé avec ID ${employeeId} non trouvé`);
+    }
+    
+    // Create a unique filename with timestamp
+    const timestamp = new Date().getTime();
+    const fileName = `employee_photos/${employeeId}_${timestamp}.${file.name.split('.').pop()}`;
+    
+    // Upload to Firebase Storage
+    const storageRef = ref(storage, fileName);
+    await uploadBytes(storageRef, file);
+    
+    // Get the download URL
+    const downloadURL = await getDownloadURL(storageRef);
+    console.log(`Photo téléversée, URL: ${downloadURL}`);
+    
+    // Update employee record with photo URL
+    await updateDoc(employeeRef, {
+      photo: downloadURL,
+      photoURL: downloadURL,
+      updatedAt: new Date()
+    });
+    
+    // Add photo to documents collection
+    const docRef = doc(collection(db, 'hr_documents'));
+    await setDoc(docRef, {
+      employeeId: employeeId,
+      name: `Photo de profil (${new Date().toLocaleDateString('fr-FR')})`,
+      date: new Date().toISOString(),
+      type: 'photo',
+      fileUrl: downloadURL,
+      createdAt: new Date()
+    });
+    
+    console.log(`Informations de l'employé mises à jour avec la nouvelle photo`);
+    return downloadURL;
+  } catch (error: any) {
+    console.error("Erreur lors du téléversement de la photo:", error);
+    toast.error(`Erreur: ${error.message || "Échec du téléversement de la photo"}`);
+    throw error;
+  }
+};
 
 /**
  * Met à jour les informations d'un employé
