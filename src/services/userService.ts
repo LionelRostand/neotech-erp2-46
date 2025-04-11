@@ -10,39 +10,54 @@ import {
 import { doc, setDoc, getDoc, collection, getDocs, query, where } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase";
 import { User, UserPermission } from "@/types/user";
-import { useToast } from "@/hooks/use-toast";
 import { COLLECTIONS } from "@/lib/firebase-collections";
 import { toast } from "sonner";
 
-// Créer un nouvel utilisateur dans Firebase Authentication et Firestore
-export const createUser = async (userData: User, password: string): Promise<User | null> => {
+// Vérifier si un email est déjà utilisé (dans Firebase Auth ou Firestore)
+export const checkEmailExists = async (email: string): Promise<{exists: boolean, reason?: string}> => {
   try {
-    // Vérifier si l'utilisateur existe déjà
+    // 1. Vérifier dans Firebase Auth
+    const methods = await fetchSignInMethodsForEmail(auth, email);
+    if (methods && methods.length > 0) {
+      console.log(`Email ${email} existe déjà dans Firebase Auth`);
+      return { exists: true, reason: "auth" };
+    }
+    
+    // 2. Vérifier dans Firestore
     const emailQuery = query(
       collection(db, COLLECTIONS.USERS), 
-      where("email", "==", userData.email)
+      where("email", "==", email)
     );
     const existingUsers = await getDocs(emailQuery);
     
     if (!existingUsers.empty) {
-      console.error("Un utilisateur avec cet email existe déjà dans Firestore");
+      console.log(`Email ${email} existe déjà dans Firestore`);
+      return { exists: true, reason: "firestore" };
+    }
+    
+    return { exists: false };
+  } catch (error) {
+    console.error("Erreur lors de la vérification de l'email:", error);
+    // En cas d'erreur, on suppose que l'email est disponible
+    return { exists: false };
+  }
+};
+
+// Créer un nouvel utilisateur dans Firebase Authentication et Firestore
+export const createUser = async (userData: User, password: string): Promise<User | null> => {
+  try {
+    // Vérifier si l'utilisateur existe déjà (à la fois dans Auth et Firestore)
+    const emailExists = await checkEmailExists(userData.email);
+    
+    if (emailExists.exists) {
+      const source = emailExists.reason === "auth" ? "Firebase Authentication" : "Firestore";
+      console.error(`Un utilisateur avec cet email existe déjà dans ${source}`);
       toast.error("Un utilisateur avec cet email existe déjà");
       return null;
     }
-    
-    // Vérifier si l'email est déjà utilisé dans Firebase Auth
-    try {
-      const methods = await fetchSignInMethodsForEmail(auth, userData.email);
-      if (methods && methods.length > 0) {
-        console.error("Cet email est déjà utilisé dans Firebase Authentication");
-        toast.error("Un compte existe déjà avec cet email");
-        return null;
-      }
-    } catch (authError) {
-      console.error("Erreur lors de la vérification de l'email:", authError);
-    }
 
     // Créer l'utilisateur dans Firebase Authentication
+    console.log("Tentative de création de l'utilisateur dans Firebase Auth:", userData.email);
     const userCredential = await createUserWithEmailAndPassword(auth, userData.email, password);
     const { uid } = userCredential.user;
     
@@ -195,30 +210,26 @@ export const sendPasswordEmail = async (email: string): Promise<boolean> => {
 // Créer un employé avec compte utilisateur
 export const createEmployeeWithAccount = async (employeeData: any, professionalEmail: string): Promise<{success: boolean, employee?: any, user?: User, error?: string}> => {
   try {
-    // Vérifier si l'email est déjà utilisé
-    try {
-      const methods = await fetchSignInMethodsForEmail(auth, professionalEmail);
-      if (methods && methods.length > 0) {
-        console.error("Cet email professionnel est déjà utilisé");
-        toast.error("Un compte existe déjà avec cet email professionnel");
-        return { 
-          success: false, 
-          error: "Un compte existe déjà avec cet email professionnel" 
-        };
-      }
-    } catch (authError) {
-      console.error("Erreur lors de la vérification de l'email:", authError);
+    // Vérifier d'abord si l'email est déjà utilisé (dans Firebase Auth ou Firestore)
+    const emailExists = await checkEmailExists(professionalEmail);
+    
+    if (emailExists.exists) {
+      const source = emailExists.reason === "auth" ? "Firebase Authentication" : "Firestore";
+      const errorMessage = `Cet email professionnel est déjà utilisé dans ${source}`;
+      console.error(errorMessage);
+      toast.error("Un compte existe déjà avec cet email professionnel");
+      return { 
+        success: false, 
+        error: errorMessage
+      };
     }
 
-    // Generate a temporary password
+    // Générer un mot de passe temporaire aléatoire
     const tempPassword = Math.random().toString(36).slice(-8);
+    console.log(`Création d'un compte avec email: ${professionalEmail}`);
 
-    // Create user in Firebase Auth - ensure we include the id property
-    // We'll use a temporary ID here, which will be replaced by Firebase UID after creation
-    const tempId = `temp-${Date.now()}`;
-    
+    // Créer l'utilisateur dans Firebase Auth
     const userData: User = {
-      id: tempId, // Add the required id property
       email: professionalEmail,
       firstName: employeeData.firstName,
       lastName: employeeData.lastName,
@@ -228,7 +239,7 @@ export const createEmployeeWithAccount = async (employeeData: any, professionalE
       status: 'pending'
     };
 
-    // Créer l'utilisateur
+    // Créer l'utilisateur avec notre fonction améliorée
     const newUser = await createUser(userData, tempPassword);
     
     if (!newUser) {
