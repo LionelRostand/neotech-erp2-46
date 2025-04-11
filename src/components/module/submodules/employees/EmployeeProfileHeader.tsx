@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Calendar, Mail, Phone, Building } from 'lucide-react';
@@ -12,6 +12,11 @@ interface EmployeeProfileHeaderProps {
 
 const EmployeeProfileHeader: React.FC<EmployeeProfileHeaderProps> = ({ employee }) => {
   const [photo, setPhoto] = useState(employee.photoURL || employee.photo || '');
+
+  // S'assurer que la photo est toujours à jour quand l'employé change
+  useEffect(() => {
+    setPhoto(employee.photoURL || employee.photo || '');
+  }, [employee.photoURL, employee.photo, employee]);
 
   // Fonction pour formater la date (exemple: "20 janvier 2023")
   const formatDate = (dateString?: string) => {
@@ -67,6 +72,7 @@ const EmployeeProfileHeader: React.FC<EmployeeProfileHeaderProps> = ({ employee 
   };
 
   const handlePhotoUpdated = (photoURL: string) => {
+    console.log("Photo mise à jour dans EmployeeProfileHeader:", photoURL);
     setPhoto(photoURL);
   };
 

@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { 
   collection, 
@@ -98,23 +99,36 @@ export const useFirebaseEmployees = () => {
     try {
       const employeesRef = collection(db, COLLECTIONS.HR.EMPLOYEES);
       
+      // Nettoyage des données pour éviter les valeurs undefined
       const cleanedData = Object.entries(employee).reduce((acc, [key, value]) => {
         if (value === undefined) return acc;
         
         if (key === 'address' && typeof value === 'object') {
+          // Nettoyage spécifique pour l'objet adresse
           const cleanAddress = Object.entries(value).reduce((addrAcc, [addrKey, addrVal]) => {
             if (addrVal !== undefined) {
               addrAcc[addrKey] = addrVal;
             }
             return addrAcc;
           }, {} as Record<string, any>);
-          acc[key] = cleanAddress;
+          
+          // Seulement ajouter l'adresse si elle a au moins une propriété
+          if (Object.keys(cleanAddress).length > 0) {
+            acc[key] = cleanAddress;
+          }
         } else {
           acc[key] = value;
         }
         
         return acc;
       }, {} as Record<string, any>);
+      
+      // S'assurer que photoURL est inclus si photo est défini
+      if (cleanedData.photo && !cleanedData.photoURL) {
+        cleanedData.photoURL = cleanedData.photo;
+      } else if (cleanedData.photoURL && !cleanedData.photo) {
+        cleanedData.photo = cleanedData.photoURL;
+      }
       
       const employeeData = {
         ...cleanedData,
@@ -123,6 +137,7 @@ export const useFirebaseEmployees = () => {
         updatedAt: serverTimestamp()
       };
       
+      console.log("Ajout d'employé avec données:", employeeData);
       const docRef = await addDoc(employeesRef, employeeData);
       
       toast({
@@ -146,8 +161,39 @@ export const useFirebaseEmployees = () => {
     try {
       const employeeRef = doc(db, COLLECTIONS.HR.EMPLOYEES, id);
       
+      // Nettoyage des données pour éviter les valeurs undefined
+      const cleanedUpdates = Object.entries(updates).reduce((acc, [key, value]) => {
+        if (value === undefined) return acc;
+        
+        if (key === 'address' && typeof value === 'object') {
+          // Nettoyage spécifique pour l'objet adresse
+          const cleanAddress = Object.entries(value).reduce((addrAcc, [addrKey, addrVal]) => {
+            if (addrVal !== undefined) {
+              addrAcc[addrKey] = addrVal;
+            }
+            return addrAcc;
+          }, {} as Record<string, any>);
+          
+          // Seulement mettre à jour l'adresse si elle a au moins une propriété
+          if (Object.keys(cleanAddress).length > 0) {
+            acc[key] = cleanAddress;
+          }
+        } else {
+          acc[key] = value;
+        }
+        
+        return acc;
+      }, {} as Record<string, any>);
+      
+      // Synchroniser photo et photoURL
+      if (cleanedUpdates.photo && !cleanedUpdates.photoURL) {
+        cleanedUpdates.photoURL = cleanedUpdates.photo;
+      } else if (cleanedUpdates.photoURL && !cleanedUpdates.photo) {
+        cleanedUpdates.photo = cleanedUpdates.photoURL;
+      }
+      
       await updateDoc(employeeRef, {
-        ...updates,
+        ...cleanedUpdates,
         updatedAt: serverTimestamp()
       });
       
@@ -155,6 +201,22 @@ export const useFirebaseEmployees = () => {
         title: "Succès",
         description: "Les informations de l'employé ont été mises à jour.",
       });
+      
+      // Force refresh the employees list
+      const employeeDoc = await doc(db, COLLECTIONS.HR.EMPLOYEES, id);
+      const employeeSnapshot = await doc(db, COLLECTIONS.HR.EMPLOYEES, id).get();
+      
+      if (employeeSnapshot.exists()) {
+        const updatedEmployee = { 
+          id, 
+          ...employeeSnapshot.data(),
+          ...cleanedUpdates 
+        } as Employee;
+        
+        setEmployees(prev => 
+          prev.map(emp => emp.id === id ? updatedEmployee : emp)
+        );
+      }
       
       return true;
     } catch (err) {

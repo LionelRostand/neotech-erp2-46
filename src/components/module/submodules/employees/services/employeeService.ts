@@ -35,14 +35,45 @@ export const updateEmployee = async (employeeId: string, updates: Partial<Employ
       return false;
     }
     
+    // Nettoyage des données avant mise à jour
+    const cleanedUpdates = Object.entries(updates).reduce((acc, [key, value]) => {
+      if (value === undefined) return acc;
+      
+      if (key === 'address' && typeof value === 'object') {
+        // Nettoyage spécifique pour l'objet adresse
+        const cleanAddress = Object.entries(value).reduce((addrAcc, [addrKey, addrVal]) => {
+          if (addrVal !== undefined) {
+            addrAcc[addrKey] = addrVal;
+          }
+          return addrAcc;
+        }, {} as Record<string, any>);
+        
+        // Seulement mettre à jour l'adresse si elle a au moins une propriété
+        if (Object.keys(cleanAddress).length > 0) {
+          acc[key] = cleanAddress;
+        }
+      } else {
+        acc[key] = value;
+      }
+      
+      return acc;
+    }, {} as Record<string, any>);
+    
+    // S'assurer que photo et photoURL sont synchronisés
+    if (cleanedUpdates.photo && !cleanedUpdates.photoURL) {
+      cleanedUpdates.photoURL = cleanedUpdates.photo;
+    } else if (cleanedUpdates.photoURL && !cleanedUpdates.photo) {
+      cleanedUpdates.photo = cleanedUpdates.photoURL;
+    }
+    
     // Préparer les données de mise à jour
-    const updateData: any = {
-      ...updates,
+    const updateData = {
+      ...cleanedUpdates,
       updatedAt: serverTimestamp()
     };
     
     await updateDoc(employeeRef, updateData);
-    console.log(`Employé ${employeeId} mis à jour avec succès`);
+    console.log(`Employé ${employeeId} mis à jour avec succès avec les données:`, updateData);
     return true;
   } catch (error) {
     console.error("Erreur lors de la mise à jour de l'employé:", error);
@@ -105,6 +136,14 @@ export const getEmployee = async (employeeId: string): Promise<Employee | null> 
     
     const employeeData = employeeDoc.data();
     console.log(`Employé ${employeeId} trouvé avec succès`);
+    
+    // S'assurer que photo et photoURL sont synchronisés
+    if (employeeData.photo && !employeeData.photoURL) {
+      employeeData.photoURL = employeeData.photo;
+    } else if (employeeData.photoURL && !employeeData.photo) {
+      employeeData.photo = employeeData.photoURL;
+    }
+    
     return {
       id: employeeDoc.id,
       ...employeeData
