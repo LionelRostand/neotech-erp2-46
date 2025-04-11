@@ -1,6 +1,6 @@
 
 export interface User {
-  id: string;
+  id?: string; // Make id optional to solve the TypeScript error
   email: string;
   firstName: string;
   lastName: string;

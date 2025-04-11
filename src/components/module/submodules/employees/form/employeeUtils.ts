@@ -51,7 +51,7 @@ export const prepareEmployeeData = (data: EmployeeFormValues): Partial<Employee>
   
   return {
     id: employeeId,
-    userId: userId, // Add this field to connect to user accounts
+    userId: userId, // Now this is valid because we updated the Employee interface
     firstName: data.firstName,
     lastName: data.lastName,
     email: data.email,

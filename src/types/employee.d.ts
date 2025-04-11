@@ -27,6 +27,7 @@ export interface Document {
 
 export interface Employee {
   id: string;
+  userId?: string; // Add userId field and make it optional for backward compatibility
   firstName: string;
   lastName: string;
   email: string;
