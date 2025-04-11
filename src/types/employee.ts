@@ -27,7 +27,7 @@ export interface Document {
 
 export interface Employee {
   id: string;
-  userId: string; // Add userId field to link to user accounts
+  userId?: string; // Make userId optional for compatibility
   firstName: string;
   lastName: string;
   email: string;

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { 
   collection, 
@@ -15,6 +14,7 @@ import { db } from '@/lib/firebase';
 import { Employee } from '@/types/employee';
 import { useToast } from '@/hooks/use-toast';
 import { COLLECTIONS } from '@/lib/firebase-collections';
+import { v4 as uuidv4 } from 'uuid';
 
 export const useFirebaseEmployees = () => {
   const [employees, setEmployees] = useState<Employee[]>([]);
@@ -26,17 +26,15 @@ export const useFirebaseEmployees = () => {
     setIsLoading(true);
     
     try {
-      // Updated reference to the correct HR employees collection path
       const employeesRef = collection(db, COLLECTIONS.HR.EMPLOYEES);
       const q = query(employeesRef);
       
-      // Set up a real-time listener
       const unsubscribe = onSnapshot(q, (snapshot) => {
         const employeesData: Employee[] = snapshot.docs.map(doc => {
           const data = doc.data();
-          // Create a properly typed employee object with required fields and defaults
           return {
             id: doc.id,
+            userId: data.userId || uuidv4(),
             firstName: data.firstName || '',
             lastName: data.lastName || '',
             email: data.email || '',
@@ -49,11 +47,10 @@ export const useFirebaseEmployees = () => {
             contract: data.contract || '',
             company: data.company || '',
             professionalEmail: data.professionalEmail || '',
-            hireDate: data.hireDate?.toDate()?.toISOString() || null,
-            birthDate: data.birthDate?.toDate()?.toISOString() || null,
+            hireDate: data.hireDate?.toDate()?.toISOString() || '',
+            birthDate: data.birthDate?.toDate()?.toISOString() || '',
             createdAt: data.createdAt?.toDate() || new Date(),
             updatedAt: data.updatedAt?.toDate() || new Date(),
-            // Include other required fields with defaults
             photo: data.photo || '',
             photoURL: data.photoURL || '',
             socialSecurityNumber: data.socialSecurityNumber || '',
@@ -63,7 +60,6 @@ export const useFirebaseEmployees = () => {
             title: data.title || '',
             role: data.role || '',
             payslips: data.payslips || [],
-            // Include optional arrays
             skills: data.skills || [],
             documents: data.documents || [],
             education: data.education || []
@@ -100,17 +96,33 @@ export const useFirebaseEmployees = () => {
 
   const addEmployee = async (employee: Omit<Employee, 'id' | 'createdAt' | 'updatedAt'>) => {
     try {
-      // Update reference to the employees collection
       const employeesRef = collection(db, COLLECTIONS.HR.EMPLOYEES);
       
-      // Prepare employee data
+      const cleanedData = Object.entries(employee).reduce((acc, [key, value]) => {
+        if (value === undefined) return acc;
+        
+        if (key === 'address' && typeof value === 'object') {
+          const cleanAddress = Object.entries(value).reduce((addrAcc, [addrKey, addrVal]) => {
+            if (addrVal !== undefined) {
+              addrAcc[addrKey] = addrVal;
+            }
+            return addrAcc;
+          }, {} as Record<string, any>);
+          acc[key] = cleanAddress;
+        } else {
+          acc[key] = value;
+        }
+        
+        return acc;
+      }, {} as Record<string, any>);
+      
       const employeeData = {
-        ...employee,
+        ...cleanedData,
+        userId: employee.userId || uuidv4(),
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp()
       };
       
-      // Add the document
       const docRef = await addDoc(employeesRef, employeeData);
       
       toast({
@@ -120,7 +132,7 @@ export const useFirebaseEmployees = () => {
       
       return { id: docRef.id, ...employee };
     } catch (err) {
-      console.error("Error adding employee:", err);
+      console.error("Erreur lors de l'ajout de l'employé:", err);
       toast({
         title: "Erreur",
         description: "Impossible d'ajouter l'employé.",
@@ -132,10 +144,8 @@ export const useFirebaseEmployees = () => {
 
   const updateEmployee = async (id: string, updates: Partial<Employee>) => {
     try {
-      // Update reference to the employee document
       const employeeRef = doc(db, COLLECTIONS.HR.EMPLOYEES, id);
       
-      // Update the document
       await updateDoc(employeeRef, {
         ...updates,
         updatedAt: serverTimestamp()
@@ -160,10 +170,8 @@ export const useFirebaseEmployees = () => {
 
   const deleteEmployee = async (id: string) => {
     try {
-      // Update reference to the employee document
       const employeeRef = doc(db, COLLECTIONS.HR.EMPLOYEES, id);
       
-      // Delete the document
       await deleteDoc(employeeRef);
       
       toast({

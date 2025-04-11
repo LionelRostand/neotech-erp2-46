@@ -15,20 +15,22 @@ export const prepareEmployeeData = (data: EmployeeFormValues): Partial<Employee>
       city: addressParts[1] || 'Ville non spécifiée',
       postalCode: addressParts[2] || '00000',
       country: addressParts[3] || 'France',
-      streetNumber: undefined,
-      department: undefined,
-      state: undefined
+      // Do not include optional fields with undefined values
+      ...(addressParts[4] ? { state: addressParts[4] } : {}),
+      // Don't set streetNumber or department if they're undefined
     };
   } else if (data.address && typeof data.address === 'object') {
     // Handle object address, ensuring required fields have values
+    // and filtering out undefined values for optional fields
     addressObj = {
-      street: data.address.street || 'Rue non spécifiée', // Ensure required fields are present
+      street: data.address.street || 'Rue non spécifiée',
       city: data.address.city || 'Ville non spécifiée',
       postalCode: data.address.postalCode || '00000',
       country: data.address.country || 'France',
-      streetNumber: data.address.streetNumber,
-      department: data.address.department,
-      state: data.address.state
+      // Only include optional fields if they have values
+      ...(data.address.streetNumber ? { streetNumber: data.address.streetNumber } : {}),
+      ...(data.address.department ? { department: data.address.department } : {}),
+      ...(data.address.state ? { state: data.address.state } : {})
     };
   } else {
     // Default empty address with required fields
@@ -51,22 +53,22 @@ export const prepareEmployeeData = (data: EmployeeFormValues): Partial<Employee>
   
   return {
     id: employeeId,
-    userId: userId, // Now this is valid because we updated the Employee interface
+    userId, // Now this is valid because we updated the Employee interface
     firstName: data.firstName,
     lastName: data.lastName,
     email: data.email,
-    phone: data.phone,
-    address: addressObj, // This is now a properly formed EmployeeAddress object
-    department: data.department,
-    departmentId: data.department,
-    position: data.position,
-    contract: data.contract,
-    hireDate: data.hireDate,
+    phone: data.phone || '',
+    address: addressObj, // This is now a properly formed EmployeeAddress object without undefined values
+    department: data.department || '',
+    departmentId: data.department || '',
+    position: data.position || '',
+    contract: data.contract || '',
+    hireDate: data.hireDate || '',
     manager: data.manager || '',
     managerId: '',
     status: data.status as 'active' | 'inactive' | 'onLeave' | 'Actif',
-    company: data.company,
-    professionalEmail: data.professionalEmail,
+    company: data.company || '',
+    professionalEmail: data.professionalEmail || '',
     skills: [],
     education: [],
     documents: [],
