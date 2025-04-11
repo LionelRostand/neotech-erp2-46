@@ -122,8 +122,18 @@ export const uploadEmployeeDocument = async (
     // Référence au fichier dans le stockage
     const storageRef = ref(storage, `employees/${employeeId}/documents/${documentId}_${file.name}`);
     
-    // Téléversement du fichier
-    const uploadResult = await uploadBytes(storageRef, file);
+    // Ajouter des métadonnées CORS
+    const metadata = {
+      contentType: file.type,
+      customMetadata: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+        'Cache-Control': 'public, max-age=31536000'
+      }
+    };
+    
+    // Téléversement du fichier avec métadonnées
+    const uploadResult = await uploadBytes(storageRef, file, metadata);
     
     // Obtenir l'URL de téléchargement
     const downloadURL = await getDownloadURL(uploadResult.ref);

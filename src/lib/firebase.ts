@@ -48,6 +48,17 @@ const auth = getAuth(app);
 // Initialiser Storage
 const storage = getStorage(app);
 
+// Configurer les règles CORS pour Storage
+// Ceci est une configuration côté client, mais les règles CORS doivent être configurées sur Firebase Storage également
+const setCorsHeaders = () => {
+  // Ceci est un paramétrages des options pour Firebase Storage
+  // Note: Les règles CORS complètes doivent être configurées dans la console Firebase
+  storage.maxOperationRetryTime = 10000; // Augmenter le temps de tentative pour contourner certains problèmes CORS
+  storage.maxUploadRetryTime = 10000;
+};
+
+setCorsHeaders();
+
 // Détecter le mode développement et la configuration des émulateurs
 const isDevMode = import.meta.env.DEV;
 const useEmulator = import.meta.env.VITE_EMULATOR === 'true';

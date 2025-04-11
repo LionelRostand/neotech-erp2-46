@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -73,7 +74,10 @@ const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
     try {
       setIsUploading(true);
       
+      // Vérification préalable de l'existence de l'employé
+      console.log(`Vérification préalable pour l'employé ${employeeId} avant téléversement`);
       const employee = await getEmployee(employeeId);
+      
       if (!employee) {
         console.error(`L'employé avec ID ${employeeId} n'a pas été trouvé par getEmployee`);
         toast.error(`Erreur: Employé avec ID ${employeeId} non trouvé`);
@@ -82,9 +86,15 @@ const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
       }
       
       console.log(`Téléversement de document pour l'employé ID: ${employeeId}`, employee);
+      
+      // Ajouter un paramètre de temps aux noms de fichiers pour éviter les problèmes de cache
+      const timestamp = new Date().getTime();
+      const filenameWithTimestamp = `${timestamp}_${file.name}`;
+      const fileWithTimestamp = new File([file], filenameWithTimestamp, { type: file.type });
+      
       const result = await uploadEmployeeDocument(
         employeeId,
-        file,
+        fileWithTimestamp,
         documentName,
         documentType
       );
