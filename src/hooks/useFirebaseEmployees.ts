@@ -5,7 +5,7 @@ import {
   query, 
   onSnapshot, 
   doc, 
-  addDoc, 
+  setDoc, 
   updateDoc, 
   deleteDoc, 
   serverTimestamp, 
@@ -17,6 +17,7 @@ import { db } from '@/lib/firebase';
 import { Employee } from '@/types/employee';
 import { useToast } from '@/hooks/use-toast';
 import { COLLECTIONS } from '@/lib/firebase-collections';
+import { v4 as uuidv4 } from 'uuid';
 
 export const useFirebaseEmployees = () => {
   const [employees, setEmployees] = useState<Employee[]>([]);
@@ -177,8 +178,11 @@ export const useFirebaseEmployees = () => {
         throw new Error('Un employé avec des informations similaires existe déjà');
       }
       
+      // Générer un ID unique pour le nouvel employé
+      const employeeId = uuidv4();
+      
       // Update reference to the employees collection
-      const employeesRef = collection(db, COLLECTIONS.HR.EMPLOYEES);
+      const employeeRef = doc(db, COLLECTIONS.HR.EMPLOYEES, employeeId);
       
       // Prepare employee data
       const employeeData = {
@@ -187,15 +191,15 @@ export const useFirebaseEmployees = () => {
         updatedAt: serverTimestamp()
       };
       
-      // Add the document
-      const docRef = await addDoc(employeesRef, employeeData);
+      // Use setDoc with the custom ID instead of addDoc
+      await setDoc(employeeRef, employeeData);
       
       toast({
         title: "Succès",
         description: "L'employé a été ajouté avec succès.",
       });
       
-      return { id: docRef.id, ...employee };
+      return { id: employeeId, ...employee };
     } catch (err) {
       console.error("Error adding employee:", err);
       toast({

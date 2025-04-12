@@ -1,9 +1,9 @@
-
 import { db } from '@/lib/firebase';
-import { collection, getDocs, doc, getDoc, addDoc, updateDoc, deleteDoc, query, orderBy, where } from 'firebase/firestore';
+import { collection, getDocs, doc, getDoc, setDoc, updateDoc, deleteDoc, query, orderBy, where } from 'firebase/firestore';
 import { Employee } from '@/types/employee';
 import { toast } from 'sonner';
 import { COLLECTIONS } from '@/lib/firebase-collections';
+import { v4 as uuidv4 } from 'uuid';
 
 /**
  * Fetch employees data from Firestore
@@ -129,7 +129,7 @@ export const checkEmployeeDuplicate = async (
 };
 
 /**
- * Add a new employee
+ * Add a new employee with a custom ID
  */
 export const addEmployee = async (employeeData: Omit<Employee, 'id'>): Promise<string | null> => {
   try {
@@ -141,8 +141,14 @@ export const addEmployee = async (employeeData: Omit<Employee, 'id'>): Promise<s
       return null;
     }
     
-    const docRef = await addDoc(collection(db, COLLECTIONS.HR.EMPLOYEES), employeeData);
-    return docRef.id;
+    // Générer un ID unique pour le nouvel employé
+    const employeeId = uuidv4();
+    
+    // Utiliser setDoc avec l'ID personnalisé au lieu de addDoc
+    const docRef = doc(db, COLLECTIONS.HR.EMPLOYEES, employeeId);
+    await setDoc(docRef, employeeData);
+    
+    return employeeId;
   } catch (error) {
     console.error('Error adding employee:', error);
     toast.error('Error adding new employee');
