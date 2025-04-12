@@ -48,7 +48,7 @@ const EmployeesDepartments: React.FC = () => {
             departments={departments}
             loading={loading}
             onEditDepartment={handleEditDepartment}
-            onDeleteDepartment={handleDeleteDepartment}
+            onDeleteDepartment={(id: string) => handleDeleteDepartment(id)}
             onManageEmployees={handleManageEmployees}
           />
         </CardContent>

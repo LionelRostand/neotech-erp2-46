@@ -5,8 +5,9 @@ export interface Department {
   description?: string;
   managerId?: string;
   managerName?: string;
+  employeesCount?: number;
   color?: string;
-  employeeCount?: number;
+  employeeIds?: string[];
   createdAt?: string;
   updatedAt?: string;
   parentDepartmentId?: string;

@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { Department } from './types';
 import { useDepartmentService } from './services/departmentService';
@@ -167,7 +166,7 @@ export const useDepartments = () => {
         description: formData.description,
         managerId: formData.managerId || undefined,
         color: formData.color,
-        employeeCount: selectedEmployees.length,
+        employeesCount: selectedEmployees.length,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       };
@@ -202,7 +201,7 @@ export const useDepartments = () => {
         description: formData.description,
         managerId: formData.managerId || undefined,
         color: formData.color,
-        employeeCount: selectedEmployees.length,
+        employeesCount: selectedEmployees.length,
         updatedAt: new Date().toISOString(),
       };
       
@@ -251,7 +250,7 @@ export const useDepartments = () => {
       // Update department with new employee count
       const updatedDepartment: Department = {
         ...currentDepartment,
-        employeeCount: selectedEmployees.length,
+        employeesCount: selectedEmployees.length,
         updatedAt: new Date().toISOString(),
       };
       
