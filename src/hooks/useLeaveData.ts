@@ -137,6 +137,9 @@ export const useLeaveData = () => {
           }
         }
         
+        // Rename approverName to approvedBy for consistency
+        const approvedBy = leave.approvedBy || leave.approverName || '';
+        
         return {
           id: leave.id,
           employeeName: employee ? `${employee.firstName} ${employee.lastName}` : 'Employé inconnu',
@@ -149,7 +152,7 @@ export const useLeaveData = () => {
           reason: leave.reason || leave.comment || '',
           employeeId: leave.employeeId,
           requestDate: formatSafeDate(validRequestDate),
-          approvedBy: leave.approvedBy || '',
+          approvedBy,
           employeePhoto: employee?.photoURL || employee?.photo || '',
         };
       });

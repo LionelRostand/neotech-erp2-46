@@ -1,100 +1,79 @@
 
-import { format } from 'date-fns';
-import { fr } from 'date-fns/locale';
-
 /**
- * Format a date string to a readable format
+ * Format a date according to the specified locale and options
+ * @param dateString Date string to format
+ * @param options DateTimeFormatOptions (defaults to standard DD/MM/YYYY)
+ * @param locale Locale string (defaults to fr-FR)
+ * @returns Formatted date string
  */
-export const formatDate = (dateString: string | undefined, options?: Intl.DateTimeFormatOptions): string => {
-  if (!dateString) return '';
-  
+export const formatDate = (
+  dateString: string, 
+  options: Intl.DateTimeFormatOptions = {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric'
+  },
+  locale: string = 'fr-FR'
+): string => {
   try {
-    // Check if dateString is a valid date string first
-    const timestamp = Date.parse(dateString);
-    if (isNaN(timestamp)) {
-      console.warn('Invalid date value:', dateString);
-      return '';
-    }
+    if (!dateString) return '';
     
     const date = new Date(dateString);
     
-    // Double-check if the date is valid
     if (isNaN(date.getTime())) {
-      console.warn('Invalid date object created from:', dateString);
+      console.warn('Invalid date provided to formatDate:', dateString);
       return '';
     }
     
-    const defaultOptions: Intl.DateTimeFormatOptions = {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric'
-    };
-    
-    return new Intl.DateTimeFormat('fr-FR', options || defaultOptions).format(date);
+    return new Intl.DateTimeFormat(locale, options).format(date);
   } catch (error) {
-    console.error('Error formatting date:', dateString, error);
+    console.error('Error formatting date:', error);
     return '';
   }
 };
 
 /**
- * Format a number or string to a currency format
+ * Format a number as currency
+ * @param value Number to format
+ * @param currency Currency code (defaults to EUR)
+ * @param locale Locale string (defaults to fr-FR)
+ * @returns Formatted currency string
  */
-export const formatCurrency = (value: number | string): string => {
-  const amount = typeof value === 'string' ? parseFloat(value) : value;
-  
-  return new Intl.NumberFormat('fr-FR', {
-    style: 'currency',
-    currency: 'EUR'
-  }).format(amount);
-};
-
-/**
- * Format a percentage value
- */
-export const formatPercentage = (value: number | string): string => {
-  const percentage = typeof value === 'string' ? parseFloat(value) : value;
-  
-  return new Intl.NumberFormat('fr-FR', {
-    style: 'percent',
-    minimumFractionDigits: 1,
-    maximumFractionDigits: 2
-  }).format(percentage / 100);
-};
-
-/**
- * Format a phone number in French format
- */
-export const formatPhoneNumber = (phoneNumber: string): string => {
-  // Remove all non-digit characters
-  const cleaned = phoneNumber.replace(/\D/g, '');
-  
-  // Check if it's a standard French number (10 digits)
-  if (cleaned.length === 10) {
-    return cleaned.replace(/(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})/, '$1 $2 $3 $4 $5');
+export const formatCurrency = (
+  value: number,
+  currency: string = 'EUR',
+  locale: string = 'fr-FR'
+): string => {
+  try {
+    return new Intl.NumberFormat(locale, {
+      style: 'currency',
+      currency
+    }).format(value);
+  } catch (error) {
+    console.error('Error formatting currency:', error);
+    return `${value} ${currency}`;
   }
-  
-  // If it doesn't match the pattern, return the original
-  return phoneNumber;
 };
 
 /**
- * Truncate a string if it exceeds the maximum length
+ * Format a number with the specified number of decimal places
+ * @param value Number to format
+ * @param decimals Number of decimal places
+ * @param locale Locale string (defaults to fr-FR)
+ * @returns Formatted number string
  */
-export const truncateString = (str: string, maxLength = 50): string => {
-  if (str.length <= maxLength) return str;
-  return str.slice(0, maxLength) + '...';
-};
-
-/**
- * Format file size in readable format (KB, MB, GB)
- */
-export const formatFileSize = (bytes: number): string => {
-  if (bytes === 0) return '0 Bytes';
-  
-  const k = 1024;
-  const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+export const formatNumber = (
+  value: number,
+  decimals: number = 2,
+  locale: string = 'fr-FR'
+): string => {
+  try {
+    return new Intl.NumberFormat(locale, {
+      minimumFractionDigits: decimals,
+      maximumFractionDigits: decimals
+    }).format(value);
+  } catch (error) {
+    console.error('Error formatting number:', error);
+    return value.toString();
+  }
 };
