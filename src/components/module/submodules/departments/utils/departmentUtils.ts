@@ -77,7 +77,9 @@ export const getDepartmentEmployees = (departmentId: string): Employee[] => {
     
     // Check if department is an object with an id property
     if (typeof emp.department === 'object' && emp.department !== null) {
-      return 'id' in emp.department && emp.department.id === departmentId;
+      // Type assertion to tell TypeScript this object should have an id property
+      const deptObj = emp.department as { id: string };
+      return deptObj.id === departmentId;
     }
     
     // Check departmentId property
