@@ -37,6 +37,12 @@ export const addEmployeeDocument = async (employeeId: string, document: Document
   try {
     const employeeRef = doc(db, COLLECTIONS.HR.EMPLOYEES, employeeId) as DocumentReference<any>;
     
+    // Récupérer d'abord le document de l'employé pour vérifier s'il existe
+    const employeeDoc = await getDoc(employeeRef);
+    if (!employeeDoc.exists()) {
+      throw new Error(`L'employé avec l'ID ${employeeId} n'existe pas`);
+    }
+    
     // Ajouter un identifiant unique au document s'il n'en a pas déjà un
     if (!document.id) {
       document.id = `doc_${Date.now()}`;
@@ -53,7 +59,7 @@ export const addEmployeeDocument = async (employeeId: string, document: Document
       document.type = document.type + ' (stocké localement)';
     }
     
-    // Ajouter le document au tableau des documents de l'employé
+    // Ajouter le document au tableau des documents de l'employé sans modifier d'autres champs
     await updateDoc(employeeRef, {
       documents: arrayUnion(document)
     });

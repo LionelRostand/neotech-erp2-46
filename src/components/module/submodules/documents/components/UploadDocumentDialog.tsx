@@ -45,8 +45,12 @@ const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
     
     if (open) {
       fetchDocumentTypes();
+      // Reset form when dialog opens
+      setDocumentName('');
+      setDocumentType(defaultType);
+      setSelectedFile(null);
     }
-  }, [open]);
+  }, [open, defaultType]);
   
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {

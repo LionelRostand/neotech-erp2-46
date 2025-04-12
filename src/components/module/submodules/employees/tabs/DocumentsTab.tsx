@@ -12,9 +12,10 @@ import { downloadFile, viewDocument, hexToDataUrl, getDocumentDataSource } from 
 
 interface DocumentsTabProps {
   employee: Employee;
+  onEmployeeUpdate?: (updatedEmployee: Employee) => void;
 }
 
-const DocumentsTab: React.FC<DocumentsTabProps> = ({ employee }) => {
+const DocumentsTab: React.FC<DocumentsTabProps> = ({ employee, onEmployeeUpdate }) => {
   const [documents, setDocuments] = useState<Document[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAddDocumentOpen, setIsAddDocumentOpen] = useState(false);
@@ -83,6 +84,11 @@ const DocumentsTab: React.FC<DocumentsTabProps> = ({ employee }) => {
         toast.error("Erreur lors de la suppression du document");
       }
     }
+  };
+  
+  // Fonction pour rafraîchir sans mettre à jour tout l'employé
+  const handleDocumentAdded = () => {
+    fetchDocuments();
   };
   
   return (
@@ -170,7 +176,7 @@ const DocumentsTab: React.FC<DocumentsTabProps> = ({ employee }) => {
         open={isAddDocumentOpen}
         onOpenChange={setIsAddDocumentOpen}
         employee={employee}
-        onDocumentAdded={fetchDocuments}
+        onDocumentAdded={handleDocumentAdded}
       />
     </div>
   );
