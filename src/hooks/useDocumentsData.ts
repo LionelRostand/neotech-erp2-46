@@ -28,7 +28,7 @@ export interface HrDocument {
 export const useDocumentsData = () => {
   const { hrDocuments, employees, isLoading, error } = useHrModuleData();
   
-  // Fonction pour formater la date de manière sécurisée
+  // Fonction pour formater la date de manière sécurisée avec fallback
   const formatDate = (dateString?: string): string => {
     if (!dateString) return '';
     
@@ -37,13 +37,29 @@ export const useDocumentsData = () => {
       const timestamp = Date.parse(dateString);
       if (isNaN(timestamp)) {
         console.warn('Invalid document date:', dateString);
-        return '';
+        return 'Date non valide';
       }
       
-      return formatDateUtil(dateString);
+      const formattedDate = formatDateUtil(dateString);
+      return formattedDate || 'Date non valide';
     } catch (error) {
       console.error('Error formatting document date:', error);
-      return '';
+      return 'Date non valide';
+    }
+  };
+  
+  // Valider que la date existe et est valide
+  const isValidDate = (dateString?: string): boolean => {
+    if (!dateString) return false;
+    
+    try {
+      const timestamp = Date.parse(dateString);
+      if (isNaN(timestamp)) return false;
+      
+      const date = new Date(timestamp);
+      return !isNaN(date.getTime()) && date.getFullYear() >= 1900 && date.getFullYear() <= 2100;
+    } catch (e) {
+      return false;
     }
   };
   
@@ -68,8 +84,9 @@ export const useDocumentsData = () => {
       
       // Determine which date field to use and handle any invalid dates
       let dateToFormat = document.uploadDate || document.createdAt || document.date || '';
-      // Try to ensure the date is valid
-      if (dateToFormat && isNaN(Date.parse(dateToFormat))) {
+      
+      // Use current date as fallback if invalid
+      if (!isValidDate(dateToFormat)) {
         console.warn(`Invalid date detected: ${dateToFormat}, using current date instead`);
         dateToFormat = new Date().toISOString();
       }
@@ -99,16 +116,25 @@ export const useDocumentsData = () => {
 
   // Obtenir des statistiques sur les documents
   const documentStats = useMemo(() => {
-    // Grouper par type de document
-    const typeCount = formattedDocuments.reduce((acc, doc) => {
-      acc[doc.type] = (acc[doc.type] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
-    
-    return {
-      total: formattedDocuments.length,
-      byType: typeCount
-    };
+    try {
+      // Grouper par type de document
+      const typeCount = formattedDocuments.reduce((acc, doc) => {
+        const type = doc.type || 'Autre';
+        acc[type] = (acc[type] || 0) + 1;
+        return acc;
+      }, {} as Record<string, number>);
+      
+      return {
+        total: formattedDocuments.length,
+        byType: typeCount
+      };
+    } catch (error) {
+      console.error('Error calculating document stats:', error);
+      return {
+        total: formattedDocuments.length,
+        byType: {}
+      };
+    }
   }, [formattedDocuments]);
   
   return {

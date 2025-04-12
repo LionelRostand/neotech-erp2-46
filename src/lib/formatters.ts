@@ -26,9 +26,20 @@ export const formatDate = (
     }
     
     const date = new Date(timestamp);
+    
+    // Double-check the date is valid (some valid timestamps can produce invalid dates)
+    if (
+      isNaN(date.getTime()) || 
+      date.getFullYear() < 1900 || 
+      date.getFullYear() > 2100
+    ) {
+      console.warn('Date out of reasonable range:', dateString);
+      return '';
+    }
+    
     return new Intl.DateTimeFormat(locale, options).format(date);
   } catch (error) {
-    console.error('Error formatting date:', error);
+    console.error('Error formatting date:', error, 'for input:', dateString);
     return '';
   }
 };
