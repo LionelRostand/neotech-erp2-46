@@ -23,14 +23,8 @@ const EmployeesHierarchy = () => {
   const hierarchyData = useMemo(() => {
     if (!employees || employees.length === 0) return null;
     
-    // Filtrer pour avoir des employés uniques (par ID)
-    const uniqueEmployees = employees.reduce((acc: any[], current) => {
-      const isDuplicate = acc.find(item => item.id === current.id);
-      if (!isDuplicate) {
-        acc.push(current);
-      }
-      return acc;
-    }, []);
+    // Les employés sont déjà dédupliqués par useEmployeeData
+    const uniqueEmployees = employees;
     
     // Créer un map des employés pour un accès facile
     const employeesMap = new Map();

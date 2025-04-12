@@ -1,118 +1,164 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { 
-  SunMedium, 
-  Calendar, 
-  Clock, 
-  ListFilter, 
+  Calendar,
+  Filter,
   Plus,
-  Download,
-  FileText
+  Check,
+  X,
+  Clock,
+  FileText,
+  UserCircle
 } from 'lucide-react';
-import { LeaveRequestsList } from './LeaveRequestsList';
-import LeaveBalanceCards from './LeaveBalanceCards';
-import { LeaveCalendar } from './LeaveCalendar';
-import { LeavePolicies } from './LeavePolicies';
-import { LeaveBalances } from './LeaveBalances';
-import { CreateLeaveRequestDialog } from './CreateLeaveRequestDialog';
-import { LeaveFilterDialog, LeaveFilters } from './LeaveFilterDialog';
+import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { useLeaveData } from '@/hooks/useLeaveData';
+import { formatDate } from '@/lib/formatters';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { CreateLeaveRequestDialog } from './CreateLeaveRequestDialog';
+import { addDocument } from '@/hooks/firestore/add-operations';
+import { updateDocument } from '@/hooks/firestore/update-operations';
+import { COLLECTIONS } from '@/lib/firebase-collections';
 
 const EmployeesLeaves: React.FC = () => {
-  const [activeTab, setActiveTab] = useState('demandes');
   const { leaves, stats, isLoading, error } = useLeaveData();
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [isFilterDialogOpen, setIsFilterDialogOpen] = useState(false);
-  const [filters, setFilters] = useState<LeaveFilters>({
-    status: 'all',
-    type: 'all',
-    department: 'all',
-    startDate: undefined,
-    endDate: undefined
-  });
-
-  const handleApproveLeave = (id: string) => {
-    // Dans une application réelle, nous mettrions à jour Firebase ici
-    toast.success(`Demande de congé #${id} approuvée`);
-  };
-
-  const handleRejectLeave = (id: string) => {
-    // Dans une application réelle, nous mettrions à jour Firebase ici
-    toast.success(`Demande de congé #${id} refusée`);
-  };
-
-  const handleExportData = () => {
-    toast.success("Export des données de congés démarré");
-    // Logique d'export à implémenter
-  };
+  const [leaveRequests, setLeaveRequests] = useState(leaves || []);
+  const [isRequestDialogOpen, setIsRequestDialogOpen] = useState(false);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
   
-  const handleCreateLeaveRequest = (data: any) => {
-    // Dans une application réelle, nous enregistrerions dans Firebase ici
-    console.log('Nouvelle demande de congé:', data);
-    toast.success('Demande de congé créée avec succès');
-    setIsCreateDialogOpen(false);
-  };
+  // Quand les données du hook sont mises à jour, mettre à jour l'état local
+  useEffect(() => {
+    if (leaves && leaves.length > 0) {
+      setLeaveRequests(leaves);
+    }
+  }, [leaves]);
   
-  const handleApplyFilters = (newFilters: LeaveFilters) => {
-    setFilters(newFilters);
-    toast.success('Filtres appliqués');
+  const handleApprove = async (id: string) => {
+    try {
+      // Mettre à jour le statut dans la collection LEAVE_REQUESTS
+      await updateDocument(COLLECTIONS.HR.LEAVE_REQUESTS, id, {
+        status: 'approved',
+        approvedBy: 'CurrentUser', // Idéalement, utiliser l'ID de l'utilisateur connecté
+        approvedAt: new Date().toISOString()
+      });
+      
+      // Mettre à jour l'état local
+      setLeaveRequests(leaveRequests.map(request => 
+        request.id === id ? { ...request, status: 'Approuvé', approverName: 'Vous' } : request
+      ));
+      
+      // Déclencher un rafraîchissement des données
+      setRefreshTrigger(prev => prev + 1);
+      
+      toast.success('Demande de congés approuvée');
+    } catch (error) {
+      console.error('Erreur lors de l\'approbation de la demande:', error);
+      toast.error('Erreur lors de l\'approbation de la demande');
+    }
   };
 
-  if (error) {
-    return (
-      <div className="p-4 bg-red-50 text-red-700 rounded-md">
-        Une erreur est survenue lors du chargement des données de congés.
-      </div>
-    );
-  }
+  const handleReject = async (id: string) => {
+    try {
+      // Mettre à jour le statut dans la collection LEAVE_REQUESTS
+      await updateDocument(COLLECTIONS.HR.LEAVE_REQUESTS, id, {
+        status: 'rejected',
+        approvedBy: 'CurrentUser', // Idéalement, utiliser l'ID de l'utilisateur connecté
+        approvedAt: new Date().toISOString()
+      });
+      
+      // Mettre à jour l'état local
+      setLeaveRequests(leaveRequests.map(request => 
+        request.id === id ? { ...request, status: 'Refusé', approverName: 'Vous' } : request
+      ));
+      
+      // Déclencher un rafraîchissement des données
+      setRefreshTrigger(prev => prev + 1);
+      
+      toast.success('Demande de congés refusée');
+    } catch (error) {
+      console.error('Erreur lors du refus de la demande:', error);
+      toast.error('Erreur lors du refus de la demande');
+    }
+  };
+
+  const handleAddLeaveRequest = async (data: any) => {
+    try {
+      // Ajouter la demande à la collection LEAVE_REQUESTS
+      const docId = await addDocument(COLLECTIONS.HR.LEAVE_REQUESTS, {
+        ...data,
+        requestDate: new Date().toISOString(),
+        status: 'pending'
+      });
+      
+      // Mettre à jour l'état local avec la nouvelle demande
+      const newRequest = {
+        id: docId,
+        employeeName: data.employeeName,
+        employeeId: data.employeeId,
+        type: data.type,
+        startDate: formatDate(new Date(data.startDate), { day: '2-digit', month: '2-digit', year: 'numeric' }),
+        endDate: formatDate(new Date(data.endDate), { day: '2-digit', month: '2-digit', year: 'numeric' }),
+        days: data.days,
+        status: 'En attente',
+        reason: data.reason,
+        requestDate: formatDate(new Date(), { day: '2-digit', month: '2-digit', year: 'numeric' }),
+        approverName: '',
+        employeePhoto: data.employeePhoto || ''
+      };
+      
+      setLeaveRequests([...leaveRequests, newRequest]);
+      
+      // Déclencher un rafraîchissement des données
+      setRefreshTrigger(prev => prev + 1);
+      
+      toast.success('Demande de congés ajoutée avec succès');
+    } catch (error) {
+      console.error('Erreur lors de l\'ajout de la demande:', error);
+      toast.error('Erreur lors de l\'ajout de la demande');
+    }
+  };
+
+  const getStatusBadge = (status: string) => {
+    const normalizedStatus = status.toLowerCase();
+    
+    if (normalizedStatus.includes('approuv') || normalizedStatus.includes('valid')) {
+      return <Badge className="bg-green-100 text-green-800">Approuvé</Badge>;
+    } else if (normalizedStatus.includes('refus') || normalizedStatus.includes('rejet')) {
+      return <Badge className="bg-red-100 text-red-800">Refusé</Badge>;
+    } else {
+      return <Badge className="bg-amber-100 text-amber-800">En attente</Badge>;
+    }
+  };
 
   return (
     <div className="space-y-6">
-      {/* Header with actions */}
-      <div className="flex flex-col space-y-4 md:flex-row md:justify-between md:items-center">
+      <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-2xl font-bold">Gestion des congés</h2>
-          <p className="text-gray-500">Suivi et approbation des demandes de congés</p>
+          <h2 className="text-2xl font-bold">Congés</h2>
+          <p className="text-gray-500">Gestion des demandes de congés</p>
         </div>
         <div className="flex gap-2">
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={() => setIsFilterDialogOpen(true)}
-          >
-            <ListFilter className="h-4 w-4 mr-2" />
+          <Button variant="outline" size="sm">
+            <Filter className="mr-2 h-4 w-4" />
             Filtres
           </Button>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={handleExportData}
-          >
-            <Download className="h-4 w-4 mr-2" />
-            Exporter
-          </Button>
-          <Button 
-            size="sm"
-            onClick={() => setIsCreateDialogOpen(true)}
-          >
-            <Plus className="h-4 w-4 mr-2" />
+          <Button size="sm" onClick={() => setIsRequestDialogOpen(true)}>
+            <Plus className="mr-2 h-4 w-4" />
             Nouvelle demande
           </Button>
         </div>
       </div>
 
-      {/* Stats cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card className="bg-blue-50">
           <CardContent className="p-4 flex items-center justify-between">
             <div>
               <h3 className="text-sm font-medium text-blue-900">En attente</h3>
               <p className="text-2xl font-bold text-blue-700">
-                {isLoading ? '...' : stats.pending}
+                {stats?.pending || 0}
               </p>
             </div>
             <Clock className="h-8 w-8 text-blue-500" />
@@ -122,24 +168,24 @@ const EmployeesLeaves: React.FC = () => {
         <Card className="bg-green-50">
           <CardContent className="p-4 flex items-center justify-between">
             <div>
-              <h3 className="text-sm font-medium text-green-900">Approuvées</h3>
+              <h3 className="text-sm font-medium text-green-900">Approuvés</h3>
               <p className="text-2xl font-bold text-green-700">
-                {isLoading ? '...' : stats.approved}
+                {stats?.approved || 0}
               </p>
             </div>
-            <SunMedium className="h-8 w-8 text-green-500" />
+            <Check className="h-8 w-8 text-green-500" />
           </CardContent>
         </Card>
         
         <Card className="bg-red-50">
           <CardContent className="p-4 flex items-center justify-between">
             <div>
-              <h3 className="text-sm font-medium text-red-900">Refusées</h3>
+              <h3 className="text-sm font-medium text-red-900">Refusés</h3>
               <p className="text-2xl font-bold text-red-700">
-                {isLoading ? '...' : stats.rejected}
+                {stats?.rejected || 0}
               </p>
             </div>
-            <Calendar className="h-8 w-8 text-red-500" />
+            <X className="h-8 w-8 text-red-500" />
           </CardContent>
         </Card>
         
@@ -148,83 +194,122 @@ const EmployeesLeaves: React.FC = () => {
             <div>
               <h3 className="text-sm font-medium text-gray-900">Total</h3>
               <p className="text-2xl font-bold text-gray-700">
-                {isLoading ? '...' : stats.total}
+                {stats?.total || 0}
               </p>
             </div>
-            <FileText className="h-8 w-8 text-gray-500" />
+            <Calendar className="h-8 w-8 text-gray-500" />
           </CardContent>
         </Card>
       </div>
 
-      {/* Tabs for different views */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="w-full max-w-3xl grid grid-cols-4">
-          <TabsTrigger value="demandes" className="flex items-center">
-            <FileText className="h-4 w-4 mr-2" />
-            Demandes
-          </TabsTrigger>
-          <TabsTrigger value="calendrier" className="flex items-center">
-            <Calendar className="h-4 w-4 mr-2" />
-            Calendrier
-          </TabsTrigger>
-          <TabsTrigger value="soldes" className="flex items-center">
-            <SunMedium className="h-4 w-4 mr-2" />
-            Soldes
-          </TabsTrigger>
-          <TabsTrigger value="politiques" className="flex items-center">
-            <Clock className="h-4 w-4 mr-2" />
-            Politiques
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="demandes">
-          <Card>
-            <CardContent className="p-6">
-              <LeaveRequestsList 
-                onApprove={handleApproveLeave}
-                onReject={handleRejectLeave}
-              />
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="calendrier">
-          <Card>
-            <CardContent className="p-6">
-              <LeaveCalendar />
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="soldes">
-          <Card>
-            <CardContent className="p-6">
-              <LeaveBalances />
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="politiques">
-          <Card>
-            <CardContent className="p-6">
-              <LeavePolicies />
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+      <Card>
+        <CardContent className="p-6">
+          {isLoading ? (
+            <div className="flex justify-center items-center py-12">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-800"></div>
+              <p className="ml-2">Chargement des demandes de congés...</p>
+            </div>
+          ) : error ? (
+            <div className="text-center py-12 text-red-500">
+              <p>Erreur lors du chargement des données</p>
+              <p className="text-sm">{error.message}</p>
+            </div>
+          ) : leaveRequests.length === 0 ? (
+            <div className="text-center py-12 text-gray-500">
+              <Calendar className="h-12 w-12 mx-auto text-gray-300 mb-3" />
+              <p>Aucune demande de congés enregistrée</p>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="mt-4"
+                onClick={() => setIsRequestDialogOpen(true)}
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Ajouter une demande
+              </Button>
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Employé</TableHead>
+                  <TableHead>Type de congé</TableHead>
+                  <TableHead>Période</TableHead>
+                  <TableHead>Jours</TableHead>
+                  <TableHead>Date de la demande</TableHead>
+                  <TableHead>Statut</TableHead>
+                  <TableHead>Approuvé par</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {leaveRequests.map((request) => (
+                  <TableRow key={request.id}>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        {request.employeePhoto ? (
+                          <Avatar className="h-8 w-8">
+                            <AvatarImage src={request.employeePhoto} alt={request.employeeName} />
+                            <AvatarFallback>
+                              <UserCircle className="h-6 w-6" />
+                            </AvatarFallback>
+                          </Avatar>
+                        ) : (
+                          <UserCircle className="h-6 w-6 text-gray-400" />
+                        )}
+                        <span>{request.employeeName}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <span className="capitalize">{request.type}</span>
+                    </TableCell>
+                    <TableCell>
+                      {request.startDate} au {request.endDate}
+                    </TableCell>
+                    <TableCell>
+                      {request.days} jour{request.days > 1 ? 's' : ''}
+                    </TableCell>
+                    <TableCell>{request.requestDate}</TableCell>
+                    <TableCell>{getStatusBadge(request.status)}</TableCell>
+                    <TableCell>{request.approverName || '-'}</TableCell>
+                    <TableCell className="text-right">
+                      {(request.status.toLowerCase() === 'en attente' || request.status.toLowerCase() === 'pending') ? (
+                        <div className="flex justify-end space-x-2">
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            onClick={() => handleApprove(request.id)}
+                            className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                          >
+                            <Check className="h-4 w-4 mr-1" /> Approuver
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => handleReject(request.id)}
+                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                          >
+                            <X className="h-4 w-4 mr-1" /> Refuser
+                          </Button>
+                        </div>
+                      ) : (
+                        <Button variant="ghost" size="sm">
+                          <FileText className="h-4 w-4 mr-1" /> Détails
+                        </Button>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
       
-      {/* Dialogs */}
       <CreateLeaveRequestDialog 
-        isOpen={isCreateDialogOpen}
-        onClose={() => setIsCreateDialogOpen(false)}
-        onSubmit={handleCreateLeaveRequest}
-      />
-      
-      <LeaveFilterDialog 
-        isOpen={isFilterDialogOpen}
-        onClose={() => setIsFilterDialogOpen(false)}
-        onApplyFilters={handleApplyFilters}
-        currentFilters={filters}
+        isOpen={isRequestDialogOpen} 
+        onClose={() => setIsRequestDialogOpen(false)}
+        onSubmit={handleAddLeaveRequest}
       />
     </div>
   );
