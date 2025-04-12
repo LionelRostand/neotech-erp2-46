@@ -9,7 +9,11 @@ import {
   DocumentReference,
   collection,
   addDoc,
-  serverTimestamp
+  serverTimestamp,
+  deleteDoc,
+  query,
+  where,
+  getDocs
 } from 'firebase/firestore';
 import { Document } from '@/types/employee';
 import { COLLECTIONS } from '@/lib/firebase-collections';
@@ -129,16 +133,18 @@ export const removeEmployeeDocument = async (employeeId: string, documentId: str
           try {
             // Rechercher le document dans hr_documents par son ID
             const docsRef = collection(db, COLLECTIONS.HR.DOCUMENTS);
-            const q = await collection(db, COLLECTIONS.HR.DOCUMENTS)
-              .where('id', '==', documentId)
-              .where('employeeId', '==', employeeId)
-              .get();
+            const q = query(docsRef, 
+              where('id', '==', documentId),
+              where('employeeId', '==', employeeId)
+            );
             
-            if (!q.empty) {
+            const querySnapshot = await getDocs(q);
+            
+            if (!querySnapshot.empty) {
               // Supprimer chaque résultat correspondant
-              for (const docRef of q.docs) {
+              querySnapshot.forEach(async (docRef) => {
                 await deleteDoc(doc(db, COLLECTIONS.HR.DOCUMENTS, docRef.id));
-              }
+              });
               console.log(`Document ${documentId} supprimé de hr_documents`);
             }
           } catch (error) {
