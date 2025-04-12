@@ -43,7 +43,7 @@ export const formatDate = (
         console.warn('Invalid date provided to formatDate:', dateString);
         return '';
       }
-      date = new Date(timestamp);
+      date = new Date(dateString);
     }
     
     // Double-check the date is valid (some valid timestamps can produce invalid dates)
