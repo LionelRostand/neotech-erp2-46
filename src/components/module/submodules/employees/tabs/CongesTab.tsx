@@ -1,26 +1,19 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
-import { Employee } from '@/types/employee';
 import { Button } from '@/components/ui/button';
-import { toast } from 'sonner';
-import { Calendar, Clock, Save, Plus } from 'lucide-react';
 import { Input } from '@/components/ui/input';
-import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
+import { CalendarIcon, Plus, Save, Trash2 } from 'lucide-react';
+import { Employee, LeaveRequest } from '@/types/employee';
+import { Badge } from '@/components/ui/badge';
 import { updateDocument } from '@/hooks/firestore/update-operations';
 import { COLLECTIONS } from '@/lib/firebase-collections';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Calendar as CalendarComponent } from '@/components/ui/calendar';
-import { format } from 'date-fns';
-
-interface LeaveRequest {
-  id: string;
-  startDate: string;
-  endDate: string;
-  type: string;
-  status: 'pending' | 'approved' | 'rejected';
-  comments?: string;
-}
+import { toast } from 'sonner';
 
 interface CongesTabProps {
   employee: Employee;
@@ -39,7 +32,6 @@ const CongesTab: React.FC<CongesTabProps> = ({ employee, isEditing = false, onFi
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
 
   useEffect(() => {
-    // Mettre à jour les congés avec les données de l'employé
     setLeaveRequests(employee.leaveRequests || []);
   }, [employee]);
 
@@ -86,7 +78,6 @@ const CongesTab: React.FC<CongesTabProps> = ({ employee, isEditing = false, onFi
 
     setLeaveRequests([...leaveRequests, newLeaveRequest]);
     
-    // Réinitialiser le formulaire
     setNewLeave({
       type: 'Congés payés',
       status: 'pending'

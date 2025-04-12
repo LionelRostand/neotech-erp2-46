@@ -7,9 +7,11 @@ import { MapPin, Building, Phone, Mail } from 'lucide-react';
 
 interface InformationsTabProps {
   employee: Employee;
+  isEditing?: boolean;
+  onFinishEditing?: () => void;
 }
 
-const InformationsTab: React.FC<InformationsTabProps> = ({ employee }) => {
+const InformationsTab: React.FC<InformationsTabProps> = ({ employee, isEditing = false, onFinishEditing }) => {
   // Fonction pour formater une adresse
   const formatAddress = (address: EmployeeAddress | string): string => {
     if (typeof address === 'string') {
