@@ -7,7 +7,6 @@ import { Badge } from '@/components/ui/badge';
 import { Mail, Phone, MapPin, Upload, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useStorageUpload } from '@/hooks/storage/useStorageUpload';
-import { updateEmployee } from '@/components/module/submodules/employees/services/employeeService';
 import { updateDocument } from '@/hooks/firestore/update-operations';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 
@@ -48,6 +47,19 @@ const EmployeeProfileHeader: React.FC<EmployeeProfileHeaderProps> = ({ employee,
       default:
         return 'bg-gray-100 text-gray-800 hover:bg-gray-100';
     }
+  };
+
+  // Sélectionner la meilleure source d'image disponible
+  const getPhotoSource = (): string | undefined => {
+    // Priorité: 1. photoData (base64), 2. photoURL ou photo
+    if (employee.photoData) {
+      return employee.photoData;
+    } else if (employee.photoURL) {
+      return employee.photoURL;
+    } else if (employee.photo) {
+      return employee.photo;
+    }
+    return undefined;
   };
 
   // Handle photo upload
@@ -130,7 +142,7 @@ const EmployeeProfileHeader: React.FC<EmployeeProfileHeaderProps> = ({ employee,
           <div className="relative group">
             <Avatar className="h-24 w-24">
               <AvatarImage 
-                src={employee.photoURL || employee.photo || (employee.photoData ? employee.photoData : undefined)} 
+                src={getPhotoSource()} 
                 alt={`${employee.firstName} ${employee.lastName}`} 
               />
               <AvatarFallback className="text-2xl">{getInitials()}</AvatarFallback>

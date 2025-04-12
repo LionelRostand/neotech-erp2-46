@@ -58,13 +58,15 @@ export const useStorageUpload = () => {
       // Convertir le fichier en ArrayBuffer pour l'upload binaire
       const fileBuffer = await file.arrayBuffer();
       
-      // On ajoute les métadonnées CORS pour s'assurer que le fichier est accessible
+      // Définir les métadonnées avec les en-têtes CORS appropriés
       const metadata = {
         contentType: file.type,
         customMetadata: {
           'Access-Control-Allow-Origin': '*',
-          'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+          'Access-Control-Allow-Methods': 'GET, HEAD, OPTIONS',
           'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+          'Access-Control-Expose-Headers': 'Content-Length, Content-Type',
+          'Cache-Control': 'public, max-age=31536000',
           'original-filename': file.name
         }
       };
@@ -103,7 +105,17 @@ export const useStorageUpload = () => {
           async () => {
             // Téléversement terminé avec succès
             try {
-              const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+              // Utiliser une technique différente pour contourner les erreurs CORS lors de la récupération de l'URL
+              let downloadURL = '';
+              try {
+                downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+              } catch (urlError) {
+                console.warn('Erreur lors de la récupération de l\'URL standard, utilisation de l\'URL générée:', urlError);
+                // Créer manuellement l'URL en cas d'échec de getDownloadURL
+                const bucket = storage.bucket || 'neotech-erp.appspot.com';
+                downloadURL = `https://firebasestorage.googleapis.com/v0/b/${bucket}/o/${encodeURIComponent(filePath)}?alt=media`;
+              }
+              
               console.log('Fichier disponible à:', downloadURL);
               
               setIsUploading(false);

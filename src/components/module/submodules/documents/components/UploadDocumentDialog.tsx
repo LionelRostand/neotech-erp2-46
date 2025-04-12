@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -37,7 +37,7 @@ const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
   const { uploadFile, isUploading, uploadProgress } = useStorageUpload();
   
   // Fetch document types on component mount
-  React.useEffect(() => {
+  useEffect(() => {
     const fetchDocumentTypes = async () => {
       const types = await getDocumentTypes();
       setDocumentTypes(types);
@@ -90,9 +90,7 @@ const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
         type: documentType,
         date: new Date().toISOString(),
         fileUrl: result.fileUrl,
-        filePath: result.filePath,
-        fileType: result.fileType,
-        fileSize: result.fileSize,
+        fileData: result.fileData, // Stocker les données base64 du document
         id: `doc_${Date.now()}`
       });
       

@@ -35,27 +35,52 @@ const DocumentsTab: React.FC<DocumentsTabProps> = ({ employee }) => {
     fetchDocuments();
   }, [employee.id]);
   
-  const handleViewDocument = (fileUrl?: string) => {
-    if (!fileUrl) {
+  const handleViewDocument = (document: Document) => {
+    // Priorité: 1. données binaires base64, 2. URL du fichier
+    if (document.fileData) {
+      // Si nous avons des données base64, ouvrir dans un nouvel onglet
+      const newTab = window.open();
+      if (newTab) {
+        newTab.document.write(`
+          <html>
+            <head>
+              <title>${document.name || 'Document'}</title>
+            </head>
+            <body style="margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; background: #f0f0f0;">
+              <img src="${document.fileData}" style="max-width: 100%; max-height: 90vh; box-shadow: 0 4px 6px rgba(0,0,0,0.1);" />
+            </body>
+          </html>
+        `);
+        newTab.document.close();
+      } else {
+        toast.error("Le navigateur a bloqué l'ouverture d'un nouvel onglet");
+      }
+    } else if (document.fileUrl) {
+      window.open(document.fileUrl, '_blank');
+    } else {
       toast.error("Aucun fichier disponible pour ce document");
-      return;
     }
-    
-    window.open(fileUrl, '_blank');
   };
   
-  const handleDownloadDocument = (fileUrl?: string, name?: string) => {
-    if (!fileUrl) {
+  const handleDownloadDocument = (document: Document) => {
+    if (document.fileData) {
+      // Créer un lien de téléchargement à partir des données base64
+      const link = document.createElement('a');
+      link.href = document.fileData;
+      link.download = document.name || 'document';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } else if (document.fileUrl) {
+      const link = document.createElement('a');
+      link.href = document.fileUrl;
+      link.download = document.name || 'document';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } else {
       toast.error("Aucun fichier disponible pour ce document");
-      return;
     }
-    
-    const link = document.createElement('a');
-    link.href = fileUrl;
-    link.download = name || 'document';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
   };
   
   const handleDeleteDocument = async (documentId?: string) => {
@@ -124,7 +149,7 @@ const DocumentsTab: React.FC<DocumentsTabProps> = ({ employee }) => {
                       <Button 
                         variant="ghost" 
                         size="icon"
-                        onClick={() => handleViewDocument(document.fileUrl)}
+                        onClick={() => handleViewDocument(document)}
                         title="Visualiser"
                       >
                         <Eye className="h-4 w-4" />
@@ -132,7 +157,7 @@ const DocumentsTab: React.FC<DocumentsTabProps> = ({ employee }) => {
                       <Button 
                         variant="ghost" 
                         size="icon"
-                        onClick={() => handleDownloadDocument(document.fileUrl, document.name)}
+                        onClick={() => handleDownloadDocument(document)}
                         title="Télécharger"
                       >
                         <Download className="h-4 w-4" />

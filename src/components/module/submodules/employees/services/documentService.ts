@@ -1,170 +1,107 @@
 
-import { Employee } from '@/types/employee';
-import { getDocumentById, getAllDocuments } from '@/hooks/firestore/read-operations';
-import { updateDocument } from '@/hooks/firestore/update-operations';
-import { deleteDocument, deleteStorageFile } from '@/hooks/firestore/delete-operations';
+import { db } from '@/lib/firebase';
+import { 
+  doc, 
+  getDoc, 
+  updateDoc, 
+  arrayUnion, 
+  arrayRemove, 
+  DocumentReference 
+} from 'firebase/firestore';
+import { Document } from '@/types/employee';
 import { COLLECTIONS } from '@/lib/firebase-collections';
-import { toast } from 'sonner';
-import { executeWithNetworkRetry } from '@/hooks/firestore/network-handler';
 
-// Interface for employee documents
-export interface EmployeeDocument {
-  name: string;
-  date: string;
-  type: string;
-  fileUrl?: string;
-  id?: string;
-  fileType?: string;
-  fileSize?: number;
-  filePath?: string;
-}
-
-// Get all documents for an employee
-export const getEmployeeDocuments = async (employeeId: string): Promise<EmployeeDocument[]> => {
+// Récupérer les documents d'un employé
+export const getEmployeeDocuments = async (employeeId: string): Promise<Document[]> => {
   try {
-    console.log(`Récupération des documents pour l'employé ${employeeId}...`);
+    const employeeRef = doc(db, COLLECTIONS.HR.EMPLOYEES, employeeId);
+    const employeeDoc = await getDoc(employeeRef);
     
-    const employeeData = await executeWithNetworkRetry(async () => {
-      return await getDocumentById(COLLECTIONS.HR.EMPLOYEES, employeeId);
-    });
-    
-    if (!employeeData) {
-      console.log(`Employé ${employeeId} non trouvé`);
-      return [];
+    if (employeeDoc.exists()) {
+      const employeeData = employeeDoc.data();
+      // Si les documents existent et sont un tableau, les retourner, sinon retourner un tableau vide
+      return employeeData.documents && Array.isArray(employeeData.documents) 
+        ? employeeData.documents 
+        : [];
     }
     
-    // Make sure to handle missing documents array
-    const documents = (employeeData as any).documents || [];
-    console.log(`${documents.length} documents trouvés pour l'employé ${employeeId}`);
-    
-    return documents as EmployeeDocument[];
-  } catch (error) {
-    console.error(`Erreur lors de la récupération des documents pour l'employé ${employeeId}:`, error);
     return [];
+  } catch (error) {
+    console.error("Erreur lors de la récupération des documents:", error);
+    throw error;
   }
 };
 
-// Add a new document to an employee
-export const addEmployeeDocument = async (employeeId: string, document: EmployeeDocument): Promise<boolean> => {
+// Ajouter un document à un employé
+export const addEmployeeDocument = async (employeeId: string, document: Document): Promise<void> => {
   try {
-    console.log(`Ajout d'un document pour l'employé ${employeeId}...`);
+    const employeeRef = doc(db, COLLECTIONS.HR.EMPLOYEES, employeeId) as DocumentReference<any>;
     
-    const employeeData = await executeWithNetworkRetry(async () => {
-      return await getDocumentById(COLLECTIONS.HR.EMPLOYEES, employeeId);
-    });
-    
-    if (!employeeData) {
-      console.log(`Employé ${employeeId} non trouvé`);
-      toast.error("Employé non trouvé");
-      return false;
-    }
-    
-    // Ensure documents array exists
-    const documents = (employeeData as any).documents || [];
-    
-    // Add new document with a unique ID if not provided
+    // Ajouter un identifiant unique au document s'il n'en a pas déjà un
     if (!document.id) {
       document.id = `doc_${Date.now()}`;
     }
     
-    // Update the employee record with the new document
-    const success = await executeWithNetworkRetry(async () => {
-      return await updateDocument(COLLECTIONS.HR.EMPLOYEES, employeeId, {
-        documents: [...documents, document]
-      });
-    });
-    
-    if (success) {
-      toast.success("Document ajouté avec succès");
-      return true;
-    } else {
-      toast.error("Erreur lors de l'ajout du document");
-      return false;
+    // Ajouter la date actuelle si elle n'existe pas
+    if (!document.date) {
+      document.date = new Date().toISOString();
     }
+    
+    // Ajouter le document au tableau des documents de l'employé
+    await updateDoc(employeeRef, {
+      documents: arrayUnion(document)
+    });
   } catch (error) {
-    console.error(`Erreur lors de l'ajout du document pour l'employé ${employeeId}:`, error);
-    toast.error("Erreur lors de l'ajout du document");
-    return false;
+    console.error("Erreur lors de l'ajout du document:", error);
+    throw error;
   }
 };
 
-// Remove a document from an employee
-export const removeEmployeeDocument = async (employeeId: string, documentId: string): Promise<boolean> => {
+// Supprimer un document d'un employé
+export const removeEmployeeDocument = async (employeeId: string, documentId: string): Promise<void> => {
   try {
-    console.log(`Suppression du document ${documentId} pour l'employé ${employeeId}...`);
+    const employeeRef = doc(db, COLLECTIONS.HR.EMPLOYEES, employeeId);
+    const employeeDoc = await getDoc(employeeRef);
     
-    const employeeData = await executeWithNetworkRetry(async () => {
-      return await getDocumentById(COLLECTIONS.HR.EMPLOYEES, employeeId);
-    });
-    
-    if (!employeeData) {
-      console.log(`Employé ${employeeId} non trouvé`);
-      toast.error("Employé non trouvé");
-      return false;
-    }
-    
-    // Ensure documents array exists
-    const documents = (employeeData as any).documents || [];
-    
-    // Find the document to remove
-    const documentToRemove = documents.find((doc: EmployeeDocument) => doc.id === documentId);
-    if (!documentToRemove) {
-      toast.error("Document non trouvé");
-      return false;
-    }
-    
-    // Delete file from storage if filePath exists
-    if (documentToRemove.filePath) {
-      try {
-        await deleteStorageFile(documentToRemove.filePath);
-      } catch (error) {
-        console.error(`Erreur lors de la suppression du fichier dans le storage:`, error);
-        // Continue even if file deletion fails
+    if (employeeDoc.exists()) {
+      const employeeData = employeeDoc.data();
+      
+      if (employeeData.documents && Array.isArray(employeeData.documents)) {
+        const documentToRemove = employeeData.documents.find((doc: Document) => doc.id === documentId);
+        
+        if (documentToRemove) {
+          // Supprimer le document du tableau des documents de l'employé
+          await updateDoc(employeeRef, {
+            documents: arrayRemove(documentToRemove)
+          });
+        }
       }
     }
-    
-    // Filter out the document to remove
-    const updatedDocuments = documents.filter((doc: EmployeeDocument) => doc.id !== documentId);
-    
-    // Update the employee record without the removed document
-    const success = await executeWithNetworkRetry(async () => {
-      return await updateDocument(COLLECTIONS.HR.EMPLOYEES, employeeId, {
-        documents: updatedDocuments
-      });
-    });
-    
-    if (success) {
-      toast.success("Document supprimé avec succès");
-      return true;
-    } else {
-      toast.error("Erreur lors de la suppression du document");
-      return false;
-    }
   } catch (error) {
-    console.error(`Erreur lors de la suppression du document pour l'employé ${employeeId}:`, error);
-    toast.error("Erreur lors de la suppression du document");
-    return false;
+    console.error("Erreur lors de la suppression du document:", error);
+    throw error;
   }
 };
 
-// Get document types from settings
+// Récupérer les types de documents disponibles
 export const getDocumentTypes = async (): Promise<string[]> => {
-  try {
-    console.log("Récupération des types de documents...");
-    
-    const settingsDoc = await executeWithNetworkRetry(async () => {
-      return await getDocumentById(COLLECTIONS.HR.DOCUMENTS, "settings");
-    });
-    
-    if (!settingsDoc) {
-      console.log("Paramètres des documents non trouvés");
-      return ["Contrat", "Avenant", "Formation", "Pièce d'identité", "Autre"];
-    }
-    
-    const types = (settingsDoc as any).types || [];
-    return types;
-  } catch (error) {
-    console.error("Erreur lors de la récupération des types de documents:", error);
-    return ["Contrat", "Avenant", "Formation", "Pièce d'identité", "Autre"];
-  }
+  // Pour l'instant, nous utilisons une liste statique
+  // Plus tard, cela pourrait venir de la base de données
+  return [
+    'Contrat de travail',
+    'Avenant',
+    'Certificat de travail',
+    'Diplôme',
+    'Attestation',
+    'Facture',
+    'Note de frais',
+    'Fiche de paie',
+    'CV',
+    'Lettre de motivation',
+    'Pièce d'identité',
+    'Permis de conduire',
+    'Visa',
+    'Carte de séjour',
+    'Autre'
+  ];
 };

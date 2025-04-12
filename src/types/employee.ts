@@ -20,6 +20,7 @@ export interface Document {
   date: string;
   type: string;
   fileUrl?: string;
+  fileData?: string; // Base64 data for document
   id?: string;
 }
 

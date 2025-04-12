@@ -11,7 +11,7 @@ const firebaseConfig = {
   apiKey: "AIzaSyD3ZQYPtVHk4w63bCvOX0b8RVJyybWyOqU",
   authDomain: "neotech-erp.firebaseapp.com",
   projectId: "neotech-erp",
-  storageBucket: "neotech-erp.appspot.com", // Le bucket correct
+  storageBucket: "neotech-erp.appspot.com",
   messagingSenderId: "803661896660",
   appId: "1:803661896660:web:94f17531b963627cbd5441"
 };
@@ -47,6 +47,10 @@ const auth = getAuth(app);
 
 // Initialiser Storage avec des options avancées pour gérer les problèmes CORS
 const storage = getStorage(app);
+
+// Configuration des règles CORS pour Storage
+// Nous ne pouvons pas configurer CORS directement ici, mais nous allons adapter notre logique
+// pour mieux gérer les erreurs CORS et utiliser des alternatives
 
 // Détecter le mode développement et la configuration des émulateurs
 const isDevMode = import.meta.env.DEV;
@@ -98,4 +102,3 @@ export const checkFirestoreConnection = async (): Promise<boolean> => {
     return false;
   }
 };
-
