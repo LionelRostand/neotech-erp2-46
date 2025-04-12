@@ -37,6 +37,11 @@ const ManageEmployeesDialog: React.FC<ManageEmployeesDialogProps> = ({
       )
     : employees;
   
+  // Wrapper function to match the expected signature
+  const handleEmployeeSelection = (employeeId: string) => {
+    onEmployeeSelection(employeeId, !selectedEmployees.includes(employeeId));
+  };
+  
   return (
     <DialogContent className="sm:max-w-[600px]">
       <DialogHeader>
@@ -57,7 +62,7 @@ const ManageEmployeesDialog: React.FC<ManageEmployeesDialogProps> = ({
       <EmployeesList
         employees={filteredEmployees}
         selectedEmployees={selectedEmployees}
-        onEmployeeSelection={(employeeId) => onEmployeeSelection(employeeId, !selectedEmployees.includes(employeeId))}
+        onEmployeeSelection={handleEmployeeSelection}
         id="manage"
       />
       

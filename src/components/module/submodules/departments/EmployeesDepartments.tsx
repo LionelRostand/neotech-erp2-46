@@ -48,7 +48,7 @@ const EmployeesDepartments: React.FC = () => {
             departments={departments}
             loading={loading}
             onEditDepartment={(id) => handleEditDepartment(departments.find(dept => dept.id === id)!)}
-            onDeleteDepartment={(id) => handleDeleteDepartment(id, departments.find(dept => dept.id === id)?.name || 'Département')}
+            onDeleteDepartment={handleDeleteDepartment}
             onManageEmployees={(id) => handleManageEmployees(departments.find(dept => dept.id === id)!)}
           />
         </CardContent>
@@ -64,7 +64,7 @@ const EmployeesDepartments: React.FC = () => {
           onInputChange={handleInputChange}
           onManagerChange={handleManagerChange}
           onColorChange={handleColorChange}
-          onEmployeeSelection={handleEmployeeSelection}
+          onEmployeeSelection={(employeeId) => handleEmployeeSelection(employeeId, !selectedEmployees.includes(employeeId))}
           onClose={() => setIsAddDialogOpen(false)}
           onSave={handleSaveDepartment}
         />
@@ -80,7 +80,7 @@ const EmployeesDepartments: React.FC = () => {
           onInputChange={handleInputChange}
           onManagerChange={handleManagerChange}
           onColorChange={handleColorChange}
-          onEmployeeSelection={handleEmployeeSelection}
+          onEmployeeSelection={(employeeId) => handleEmployeeSelection(employeeId, !selectedEmployees.includes(employeeId))}
           onClose={() => setIsEditDialogOpen(false)}
           onUpdate={handleUpdateDepartment}
         />

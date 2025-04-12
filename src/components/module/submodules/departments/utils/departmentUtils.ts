@@ -1,4 +1,3 @@
-
 import { Department, DepartmentFormData } from '../types';
 import { Employee } from '@/types/employee';
 import { employees } from '@/data/employees';
@@ -65,17 +64,17 @@ export const prepareDepartmentFromForm = (
   };
 };
 
-export const getDepartmentEmployees = (departmentId: string, departments: Department[]): Employee[] => {
-  const department = departments.find(dep => dep.id === departmentId);
-  if (!department || !department.employeeIds) return [];
-  
-  return employees.filter(emp => department.employeeIds.includes(emp.id));
+export const getDepartmentEmployees = (departmentId: string): Employee[] => {
+  const allEmployees = employees;
+  return allEmployees.filter(emp => {
+    return emp.departmentId === departmentId || 
+           emp.department === departmentId || 
+           (typeof emp.department === 'object' && emp.department?.id === departmentId);
+  });
 };
 
-// Fonction pour notifier les composants de l'interface utilisateur des mises à jour de départements
 export const notifyDepartmentUpdates = (departments: Department[]) => {
   try {
-    // Émettre un événement personnalisé pour notifier les autres composants
     const updateEvent = new CustomEvent('departments-updated', { 
       detail: { departments } 
     });
@@ -87,7 +86,6 @@ export const notifyDepartmentUpdates = (departments: Department[]) => {
   }
 };
 
-// S'abonner aux mises à jour des départements
 export const subscribeToDepartmentUpdates = (callback: (departments: Department[]) => void) => {
   const handleUpdate = (event: Event) => {
     const customEvent = event as CustomEvent<{departments: Department[]}>;
@@ -98,7 +96,6 @@ export const subscribeToDepartmentUpdates = (callback: (departments: Department[
   
   window.addEventListener('departments-updated', handleUpdate);
   
-  // Retourner une fonction de nettoyage
   return () => {
     window.removeEventListener('departments-updated', handleUpdate);
   };
