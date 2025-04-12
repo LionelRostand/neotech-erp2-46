@@ -23,12 +23,9 @@ const EmployeesHierarchy = () => {
   const hierarchyData = useMemo(() => {
     if (!employees || employees.length === 0) return null;
     
-    // Les employés sont déjà dédupliqués par useEmployeeData
-    const uniqueEmployees = employees;
-    
     // Créer un map des employés pour un accès facile
     const employeesMap = new Map();
-    uniqueEmployees.forEach(employee => {
+    employees.forEach(employee => {
       employeesMap.set(employee.id, {
         id: employee.id,
         name: `${employee.firstName} ${employee.lastName}`,
@@ -65,11 +62,18 @@ const EmployeesHierarchy = () => {
         id: 'root',
         name: 'Organisation',
         position: 'Structure globale',
+        department: '',
         children: topLevelNodes,
       };
     }
     
     return null;
+  }, [employees]);
+
+  // Calculer le nombre réel d'employés dans la hiérarchie
+  const employeeCount = useMemo(() => {
+    if (!employees) return 0;
+    return employees.length;
   }, [employees]);
 
   return (
@@ -78,6 +82,9 @@ const EmployeesHierarchy = () => {
         <h1 className="text-2xl font-bold flex items-center">
           <Users className="mr-2 h-6 w-6" />
           Hiérarchie des employés
+          <span className="ml-2 text-sm text-gray-500 font-normal">
+            ({employeeCount} employé{employeeCount > 1 ? 's' : ''})
+          </span>
         </h1>
         
         <div className="flex flex-col sm:flex-row gap-4">
