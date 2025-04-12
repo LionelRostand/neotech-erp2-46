@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import HierarchyVisualization from './HierarchyVisualization';
@@ -14,14 +13,12 @@ const EmployeesHierarchy: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const { departments, isLoading } = useFirebaseDepartments();
   
-  // Build hierarchy data from departments and employees
   useEffect(() => {
     if (!isLoading && departments && departments.length > 0) {
       buildHierarchyData(departments);
     }
   }, [departments, isLoading]);
   
-  // Subscribe to department updates for live synchronization
   useEffect(() => {
     const unsubscribe = subscribeToDepartmentUpdates((updatedDepartments) => {
       buildHierarchyData(updatedDepartments);
@@ -31,7 +28,6 @@ const EmployeesHierarchy: React.FC = () => {
   }, []);
   
   const buildHierarchyData = (departments: Department[]) => {
-    // Find the direction/root department
     const rootDept = departments.find(dept => 
       dept.name.includes('Direction') || 
       dept.name.includes('CEO') || 
@@ -40,7 +36,6 @@ const EmployeesHierarchy: React.FC = () => {
     
     if (!rootDept) {
       console.log('No root department found, using first department');
-      // If no direction department, use the first one as root
       if (departments.length > 0) {
         createHierarchyFromDepartment(departments[0], departments);
       }
@@ -51,26 +46,26 @@ const EmployeesHierarchy: React.FC = () => {
   };
   
   const createHierarchyFromDepartment = (rootDept: Department, allDepts: Department[]) => {
-    // Get all employees for this department
     const deptEmployees = rootDept.employeeIds 
       ? employees.filter(emp => rootDept.employeeIds?.includes(emp.id))
       : employees.filter(emp => {
-          // Check department as string ID
-          if (emp.department !== null && emp.department !== undefined && typeof emp.department === 'string') {
+          if (emp.department === null || emp.department === undefined) {
+            return emp.departmentId === rootDept.id;
+          }
+          
+          if (typeof emp.department === 'string') {
             return emp.department === rootDept.id;
           }
-          // Check department as object with ID property
-          if (emp.department !== null && emp.department !== undefined && typeof emp.department === 'object' && 'id' in emp.department) {
-            return emp.department.id === rootDept.id;
+          
+          if (typeof emp.department === 'object' && emp.department !== null && 'id' in emp.department) {
+            return (emp.department as { id: string }).id === rootDept.id;
           }
-          // Check departmentId property
-          return emp.departmentId === rootDept.id;
+          
+          return false;
         });
     
-    // Find the manager
     const manager = deptEmployees.find(emp => emp.id === rootDept.managerId) || null;
     
-    // Create the root node
     const rootNode: HierarchyNode = {
       id: rootDept.id,
       name: rootDept.name,
@@ -80,19 +75,16 @@ const EmployeesHierarchy: React.FC = () => {
       children: []
     };
     
-    // For each child department (simplified - assuming departments with parent are children)
     const childDepts = allDepts.filter(dept => 
       dept.id !== rootDept.id && 
       dept.parentDepartmentId === rootDept.id
     );
     
-    // Add child departments
     childDepts.forEach(childDept => {
       const childNode = createDepartmentNode(childDept, allDepts);
       rootNode.children.push(childNode);
     });
     
-    // Add employees that are not managers as direct children
     deptEmployees
       .filter(emp => emp.id !== rootDept.managerId)
       .forEach(emp => {
@@ -100,7 +92,7 @@ const EmployeesHierarchy: React.FC = () => {
           id: emp.id,
           name: `${emp.firstName} ${emp.lastName}`,
           title: emp.position || 'Employé',
-          color: '#64748b', // slate-500
+          color: '#64748b',
           children: []
         });
       });
@@ -109,23 +101,24 @@ const EmployeesHierarchy: React.FC = () => {
   };
   
   const createDepartmentNode = (dept: Department, allDepts: Department[]): HierarchyNode => {
-    // Get all employees for this department
     const deptEmployees = dept.employeeIds 
       ? employees.filter(emp => dept.employeeIds?.includes(emp.id))
       : employees.filter(emp => {
-          // Check department as string ID
-          if (emp.department !== null && emp.department !== undefined && typeof emp.department === 'string') {
+          if (emp.department === null || emp.department === undefined) {
+            return emp.departmentId === dept.id;
+          }
+          
+          if (typeof emp.department === 'string') {
             return emp.department === dept.id;
           }
-          // Check department as object with ID property
-          if (emp.department !== null && emp.department !== undefined && typeof emp.department === 'object' && 'id' in emp.department) {
-            return emp.department.id === dept.id;
+          
+          if (typeof emp.department === 'object' && emp.department !== null && 'id' in emp.department) {
+            return (emp.department as { id: string }).id === dept.id;
           }
-          // Check departmentId property
-          return emp.departmentId === dept.id;
+          
+          return false;
         });
     
-    // Find the manager
     const manager = deptEmployees.find(emp => emp.id === dept.managerId) || null;
     
     const deptNode: HierarchyNode = {
@@ -137,19 +130,16 @@ const EmployeesHierarchy: React.FC = () => {
       children: []
     };
     
-    // For each child department
     const childDepts = allDepts.filter(d => 
       d.id !== dept.id && 
       d.parentDepartmentId === dept.id
     );
     
-    // Add child departments recursively
     childDepts.forEach(childDept => {
       const childNode = createDepartmentNode(childDept, allDepts);
       deptNode.children.push(childNode);
     });
     
-    // Add employees that are not managers as direct children
     deptEmployees
       .filter(emp => emp.id !== dept.managerId)
       .forEach(emp => {
@@ -157,7 +147,7 @@ const EmployeesHierarchy: React.FC = () => {
           id: emp.id,
           name: `${emp.firstName} ${emp.lastName}`,
           title: emp.position || 'Employé',
-          color: '#64748b', // slate-500
+          color: '#64748b',
           children: []
         });
       });
