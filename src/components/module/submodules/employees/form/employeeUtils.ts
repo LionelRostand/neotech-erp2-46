@@ -24,8 +24,13 @@ export const prepareEmployeeData = (data: EmployeeFormValues, existingId?: strin
     }
   } : {};
 
+  // Utiliser l'ID existant ou générer un nouvel ID employé unique avec un préfixe
+  const employeeId = existingId || `EMP${Math.floor(1000 + Math.random() * 9000)}`;
+  
+  console.log(`Préparation des données pour l'employé avec l'ID: ${employeeId}`);
+
   return {
-    id: existingId || `EMP${Math.floor(1000 + Math.random() * 9000)}`, // Use existing ID if provided or generate a new one
+    id: employeeId,
     firstName: data.firstName,
     lastName: data.lastName,
     email: data.email,

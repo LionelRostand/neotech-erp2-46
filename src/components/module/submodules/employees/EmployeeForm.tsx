@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -108,30 +109,41 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
     try {
       console.log('Données du formulaire soumises:', data);
       
-      // Keep the employee ID if we're editing an existing employee
-      const employeeId = isEditing && employee ? employee.id : `EMP${Math.floor(1000 + Math.random() * 9000)}`;
+      // Utiliser l'ID existant pour l'édition, ou null pour la création
+      const employeeId = isEditing && employee ? employee.id : null;
+      
+      console.log(`Mode: ${isEditing ? 'Édition' : 'Création'}, ID: ${employeeId || 'Nouveau'}`);
       
       const employeeData = prepareEmployeeData(data, employeeId);
       console.log('Données préparées pour la sauvegarde:', employeeData);
       
-      // Check if the document exists before attempting to update it
+      // S'assurer que nous avons un ID valide
+      if (!employeeData.id) {
+        toast.error('Erreur: ID d\'employé manquant');
+        return;
+      }
+      
+      // Vérifier si le document existe avant de tenter de le mettre à jour
       if (isEditing && employee) {
-        // Check if the document exists in Firestore
+        // Vérifier si le document existe dans Firestore
         const docRef = doc(db, COLLECTIONS.HR.EMPLOYEES, employee.id);
         const docSnap = await getDoc(docRef);
         
         if (docSnap.exists()) {
-          // Document exists, update it
+          // Le document existe, le mettre à jour
+          console.log(`Mise à jour du document existant: ${employee.id}`);
           await updateDocument(COLLECTIONS.HR.EMPLOYEES, employee.id, employeeData);
           toast.success('Employé mis à jour avec succès');
         } else {
-          // Document doesn't exist, create it instead
+          // Le document n'existe pas, le créer à la place
+          console.log(`Création d'un document avec ID spécifique: ${employee.id}`);
           await setDocument(COLLECTIONS.HR.EMPLOYEES, employee.id, employeeData);
           toast.success('Employé créé avec succès');
         }
       } 
-      // Create a new employee document
+      // Créer un nouveau document d'employé
       else {
+        console.log(`Création d'un nouveau document avec ID généré: ${employeeData.id}`);
         await setDocument(COLLECTIONS.HR.EMPLOYEES, employeeData.id as string, employeeData);
         toast.success('Employé créé avec succès');
       }
@@ -139,6 +151,10 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
       // Appeler le callback onSubmit pour mettre à jour l'UI
       onSubmit(employeeData);
       onOpenChange(false);
+      
+      // Réinitialiser le formulaire
+      form.reset();
+      
     } catch (error) {
       console.error('Erreur lors de la soumission du formulaire:', error);
       toast.error('Erreur lors de la sauvegarde des données');

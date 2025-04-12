@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Employee } from '@/types/employee';
@@ -32,11 +33,11 @@ const EmployeesProfiles: React.FC<EmployeesProfilesProps> = (props) => {
   const [selectedCompany, setSelectedCompany] = useState<string>('all');
 
   useEffect(() => {
-    const employeesToUse = props.employees && props.employees.length > 0 
-      ? props.employees 
-      : fetchedEmployees;
-      
-    setEmployees(employeesToUse);
+    if (props.employees && props.employees.length > 0) {
+      setEmployees(props.employees);
+    } else if (fetchedEmployees) {
+      setEmployees(fetchedEmployees);
+    }
   }, [props.employees, fetchedEmployees]);
 
   const companies = [
@@ -51,14 +52,30 @@ const EmployeesProfiles: React.FC<EmployeesProfilesProps> = (props) => {
   };
 
   const handleAddEmployee = (newEmployee: Partial<Employee>) => {
-    const employeeWithId = {
-      ...newEmployee,
-      id: `EMP${String(employees.length + 1).padStart(3, '0')}`,
-    } as Employee;
+    if (!newEmployee.id) {
+      toast.error("Erreur: L'ID de l'employé est manquant");
+      return;
+    }
     
-    const updatedEmployees = [...employees, employeeWithId];
-    setEmployees(updatedEmployees);
-    toast.success("Employé ajouté avec succès.");
+    console.log("Ajout d'un nouvel employé:", newEmployee);
+    
+    // Vérifier si l'employé existe déjà
+    const existingIndex = employees.findIndex(emp => emp.id === newEmployee.id);
+    
+    if (existingIndex >= 0) {
+      // Mettre à jour l'employé existant
+      const updatedEmployees = [...employees];
+      updatedEmployees[existingIndex] = { ...updatedEmployees[existingIndex], ...newEmployee } as Employee;
+      setEmployees(updatedEmployees);
+      toast.success("Employé mis à jour avec succès.");
+    } else {
+      // Ajouter le nouvel employé
+      const employeeWithId = newEmployee as Employee;
+      const updatedEmployees = [...employees, employeeWithId];
+      setEmployees(updatedEmployees);
+      toast.success("Employé ajouté avec succès.");
+    }
+    
     setIsAddEmployeeOpen(false);
   };
 

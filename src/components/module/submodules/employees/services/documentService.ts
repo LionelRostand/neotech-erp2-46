@@ -35,6 +35,7 @@ export const getEmployeeDocuments = async (employeeId: string): Promise<Document
 // Ajouter un document à un employé
 export const addEmployeeDocument = async (employeeId: string, document: Document): Promise<void> => {
   try {
+    console.log(`Ajout d'un document pour l'employé ${employeeId}:`, document);
     const employeeRef = doc(db, COLLECTIONS.HR.EMPLOYEES, employeeId) as DocumentReference<any>;
     
     // Récupérer d'abord le document de l'employé pour vérifier s'il existe
@@ -63,6 +64,8 @@ export const addEmployeeDocument = async (employeeId: string, document: Document
     await updateDoc(employeeRef, {
       documents: arrayUnion(document)
     });
+    
+    console.log(`Document ajouté avec succès pour l'employé ${employeeId}`);
   } catch (error) {
     console.error("Erreur lors de l'ajout du document:", error);
     throw error;
