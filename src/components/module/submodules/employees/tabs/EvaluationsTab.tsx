@@ -6,6 +6,7 @@ import { Employee, Evaluation } from '@/types/employee';
 import { updateDocument } from '@/hooks/firestore/update-operations';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import { toast } from 'sonner';
+import { Save } from 'lucide-react';
 
 interface EvaluationsTabProps {
   employee: Employee;
