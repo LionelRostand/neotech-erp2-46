@@ -22,6 +22,16 @@ export interface Absence {
 export const useAbsencesData = () => {
   const { absenceRequests, employees, isLoading, error } = useHrModuleData();
   
+  // Fonction pour formater les dates - moved before it's used
+  const formatDate = (dateStr: string) => {
+    try {
+      return new Date(dateStr).toLocaleDateString('fr-FR');
+    } catch (error) {
+      console.error('Erreur de formatage de date:', dateStr, error);
+      return dateStr;
+    }
+  };
+  
   // Enrichir les absences avec les noms des employés
   const formattedAbsences = useMemo(() => {
     if (!absenceRequests || absenceRequests.length === 0) return [];
@@ -52,16 +62,6 @@ export const useAbsencesData = () => {
       } as Absence;
     });
   }, [absenceRequests, employees]);
-  
-  // Fonction pour formater les dates
-  const formatDate = (dateStr: string) => {
-    try {
-      return new Date(dateStr).toLocaleDateString('fr-FR');
-    } catch (error) {
-      console.error('Erreur de formatage de date:', dateStr, error);
-      return dateStr;
-    }
-  };
 
   // Obtenir des statistiques sur les absences
   const absenceStats = useMemo(() => {
