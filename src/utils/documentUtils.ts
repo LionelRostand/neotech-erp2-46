@@ -84,28 +84,157 @@ export const viewDocument = (
       <html>
         <head>
           <title>${name || 'Document'}</title>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <style>
+            body {
+              margin: 0;
+              padding: 0;
+              display: flex;
+              justify-content: center;
+              align-items: center;
+              min-height: 100vh;
+              background: #f0f0f0;
+              font-family: Arial, sans-serif;
+            }
+            .container {
+              max-width: 95%;
+              background: white;
+              box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+              border-radius: 4px;
+              overflow: hidden;
+              display: flex;
+              flex-direction: column;
+            }
+            .header {
+              padding: 15px;
+              background: #f8f8f8;
+              border-bottom: 1px solid #eaeaea;
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+            }
+            .header h2 {
+              margin: 0;
+              font-size: 18px;
+              color: #333;
+            }
+            .content {
+              padding: 20px;
+              flex: 1;
+              display: flex;
+              justify-content: center;
+              align-items: center;
+              min-height: 80vh;
+            }
+            .actions {
+              display: flex;
+              gap: 10px;
+            }
+            .button {
+              padding: 8px 15px;
+              background: #0070f3;
+              color: white;
+              border: none;
+              border-radius: 4px;
+              cursor: pointer;
+              font-size: 14px;
+              text-decoration: none;
+            }
+            .button:hover {
+              background: #0060df;
+            }
+            .error-container {
+              text-align: center;
+              padding: 40px;
+            }
+            iframe, img, object {
+              max-width: 100%;
+              max-height: 80vh;
+              border: none;
+            }
+            .text-content {
+              white-space: pre-wrap;
+              font-family: monospace;
+              padding: 20px;
+              border: 1px solid #eaeaea;
+              border-radius: 4px;
+              background: #fafafa;
+              overflow: auto;
+              max-height: 80vh;
+              width: 100%;
+            }
+          </style>
         </head>
-        <body style="margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; background: #f0f0f0;">
+        <body>
+          <div class="container">
+            <div class="header">
+              <h2>${name || 'Document'}</h2>
+              <div class="actions">
+                <a href="${dataToDisplay}" download="${name}" class="button">Télécharger</a>
+              </div>
+            </div>
+            <div class="content">
     `);
     
-    // Ajouter le contenu approprié en fonction du type de fichier
+    // Afficher le contenu approprié en fonction du type de fichier
     if (fileType.startsWith('image/')) {
-      newTab.document.write(`<img src="${dataToDisplay}" style="max-width: 100%; max-height: 90vh; box-shadow: 0 4px 6px rgba(0,0,0,0.1);" />`);
+      // Afficher une image
+      newTab.document.write(`<img src="${dataToDisplay}" alt="${name}" />`);
     } else if (fileType === 'application/pdf') {
-      newTab.document.write(`<iframe src="${dataToDisplay}" style="width: 100%; height: 90vh; border: none;" />`);
-    } else {
+      // Afficher un PDF
+      newTab.document.write(`<iframe src="${dataToDisplay}" width="100%" height="100%" />`);
+    } else if (fileType.startsWith('text/')) {
+      // Pour les fichiers texte, essayer de les afficher directement
       newTab.document.write(`
-        <div style="text-align: center; padding: 20px;">
-          <h2>Visualisation non disponible pour ce type de fichier</h2>
+        <div class="text-content" id="textContent">Chargement du contenu...</div>
+        <script>
+          fetch("${dataToDisplay}")
+            .then(response => response.text())
+            .then(text => {
+              document.getElementById("textContent").innerText = text;
+            })
+            .catch(error => {
+              document.getElementById("textContent").innerText = "Erreur lors du chargement du texte: " + error;
+            });
+        </script>
+      `);
+    } else if (fileType.includes('word') || fileType.includes('document')) {
+      // Pour les documents Word/Office, proposer le téléchargement
+      newTab.document.write(`
+        <div class="error-container">
+          <h3>Aperçu non disponible pour ce type de document</h3>
           <p>Type: ${fileType}</p>
-          <p>Nom: ${name}</p>
-          <a href="${dataToDisplay}" download="${name}" style="display: inline-block; padding: 10px 20px; background: #0070f3; color: white; text-decoration: none; border-radius: 4px; margin-top: 20px;">Télécharger le fichier</a>
+          <p>Ce type de document ne peut pas être affiché directement dans le navigateur.</p>
+          <a href="${dataToDisplay}" download="${name}" class="button">Télécharger le document</a>
+        </div>
+      `);
+    } else if (fileType.includes('spreadsheet') || fileType.includes('excel')) {
+      // Pour les feuilles de calcul, proposer le téléchargement
+      newTab.document.write(`
+        <div class="error-container">
+          <h3>Aperçu non disponible pour ce type de document</h3>
+          <p>Type: ${fileType}</p>
+          <p>Ce type de document ne peut pas être affiché directement dans le navigateur.</p>
+          <a href="${dataToDisplay}" download="${name}" class="button">Télécharger le document</a>
+        </div>
+      `);
+    } else {
+      // Pour tous les autres types de fichiers, proposer un téléchargement
+      newTab.document.write(`
+        <div class="error-container">
+          <h3>Aperçu non disponible</h3>
+          <p>Type: ${fileType}</p>
+          <p>Ce type de document ne peut pas être affiché directement dans le navigateur.</p>
+          <a href="${dataToDisplay}" download="${name}" class="button">Télécharger le document</a>
         </div>
       `);
     }
     
     newTab.document.write(`
-      </body>
+            </div>
+          </div>
+        </body>
       </html>
     `);
     newTab.document.close();
@@ -134,3 +263,4 @@ export const getDocumentDataSource = (document: any): { data: string; format: 'b
   // Fallback if no data is available
   return { data: '', format: 'url' };
 };
+
