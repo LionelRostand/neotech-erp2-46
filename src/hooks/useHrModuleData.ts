@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { useHrData } from './modules/useHrData';
 import { toast } from 'sonner';
 import { Company } from '@/components/module/submodules/companies/types';
+import { useAuth } from './useAuth';
 
 /**
  * Hook centralisant l'accès aux données du module HR (Employés)
@@ -25,6 +26,9 @@ export const useHrModuleData = () => {
     isLoading,
     error
   } = useHrData();
+
+  // Get current user from auth context
+  const { currentUser } = useAuth();
 
   // État pour stocker les entreprises
   const [companies, setCompanies] = useState<Company[]>([]);
@@ -103,7 +107,8 @@ export const useHrModuleData = () => {
     trainings: trainings || [],
     hrReports: hrReports || [],
     hrAlerts: hrAlerts || [],
-    companies: companies || [], // Ajout de l'exposition des données d'entreprises
+    companies: companies || [],
+    currentUser, // Add currentUser to the returned object
     isLoading,
     error
   };

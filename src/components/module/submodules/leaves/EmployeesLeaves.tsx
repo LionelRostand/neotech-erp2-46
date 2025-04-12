@@ -15,10 +15,13 @@ import { db } from '@/lib/firebase';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import { toast } from 'sonner';
 import { useHrModuleData } from '@/hooks/useHrModuleData';
+import { useAuth } from '@/hooks/useAuth';
 
 const EmployeesLeaves: React.FC = () => {
   const { leaves, stats, isLoading, refetch } = useLeaveData();
   const { currentUser } = useHrModuleData();
+  const { userData } = useAuth(); // Fallback to useAuth if needed
+  
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   
   // Rafraîchir les données au chargement du composant
@@ -42,9 +45,13 @@ const EmployeesLeaves: React.FC = () => {
   const handleApproveLeave = async (id: string) => {
     try {
       const leaveRef = doc(db, COLLECTIONS.HR.LEAVE_REQUESTS, id);
+      const approverName = currentUser?.displayName || userData?.firstName ? 
+        `${userData?.firstName} ${userData?.lastName}` : 
+        'Administrateur';
+        
       await updateDoc(leaveRef, {
         status: 'Approuvé',
-        approvedBy: currentUser?.displayName || 'Administrateur',
+        approvedBy: approverName,
         updatedAt: new Date().toISOString()
       });
       
@@ -59,9 +66,13 @@ const EmployeesLeaves: React.FC = () => {
   const handleRejectLeave = async (id: string) => {
     try {
       const leaveRef = doc(db, COLLECTIONS.HR.LEAVE_REQUESTS, id);
+      const approverName = currentUser?.displayName || userData?.firstName ? 
+        `${userData?.firstName} ${userData?.lastName}` : 
+        'Administrateur';
+        
       await updateDoc(leaveRef, {
         status: 'Refusé',
-        approvedBy: currentUser?.displayName || 'Administrateur',
+        approvedBy: approverName,
         updatedAt: new Date().toISOString()
       });
       
