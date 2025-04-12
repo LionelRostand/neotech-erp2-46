@@ -21,6 +21,11 @@ export const DocumentsCalendar: React.FC<DocumentsCalendarProps> = ({ documents,
     
     try {
       // Try to parse the date safely
+      if (typeof dateString !== 'string') {
+        console.warn('Non-string date value:', dateString);
+        return null;
+      }
+      
       const timestamp = Date.parse(dateString);
       if (isNaN(timestamp)) {
         console.warn('Invalid date:', dateString);
@@ -28,7 +33,7 @@ export const DocumentsCalendar: React.FC<DocumentsCalendarProps> = ({ documents,
       }
       
       const date = new Date(timestamp);
-      if (!isValid(date)) {
+      if (!isValid(date) || date.getFullYear() < 1900 || date.getFullYear() > 2100) {
         console.warn('Date is not valid after parsing:', dateString);
         return null;
       }
@@ -43,7 +48,11 @@ export const DocumentsCalendar: React.FC<DocumentsCalendarProps> = ({ documents,
   // Convert and validate document dates - moved to useMemo for performance
   const documentDates = useMemo(() => {
     return documents
-      .map(doc => safeParseDate(doc.uploadDate))
+      .map(doc => {
+        // Try all possible date fields
+        const dateStr = doc.uploadDate || doc.createdAt || doc.date;
+        return safeParseDate(dateStr);
+      })
       .filter((date): date is Date => date !== null);
   }, [documents]);
 
@@ -79,7 +88,7 @@ export const DocumentsCalendar: React.FC<DocumentsCalendarProps> = ({ documents,
   // Return a custom content for each day that has documents
   const renderDay = (day: Date) => {
     try {
-      if (!isValid(day)) {
+      if (!day || !isValid(day)) {
         return <div>{day.getDate()}</div>;
       }
       

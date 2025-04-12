@@ -7,7 +7,7 @@
  * @returns Formatted date string
  */
 export const formatDate = (
-  dateString: string, 
+  dateString: string | null | undefined, 
   options: Intl.DateTimeFormatOptions = {
     day: '2-digit',
     month: '2-digit',
@@ -17,6 +17,12 @@ export const formatDate = (
 ): string => {
   try {
     if (!dateString) return '';
+    
+    // Validate that the input is actually a string
+    if (typeof dateString !== 'string') {
+      console.warn('Non-string value provided to formatDate:', dateString);
+      return '';
+    }
     
     // Make sure the date is valid first
     const timestamp = Date.parse(dateString);
