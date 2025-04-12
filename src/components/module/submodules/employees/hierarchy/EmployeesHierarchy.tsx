@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react';
+
+import React, { useEffect, useState, useMemo } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import HierarchyVisualization from './HierarchyVisualization';
 import { HierarchyNode } from './types';
@@ -16,15 +17,25 @@ const EmployeesHierarchy: React.FC = () => {
   const { departments, isLoading } = useFirebaseDepartments();
   const { employees } = useEmployeeData();
   
+  // Log de debug pour inspecter les données des employés
   useEffect(() => {
-    if (!isLoading && departments && departments.length > 0) {
+    console.log(`EmployeesHierarchy - Nombre d'employés: ${employees?.length || 0}`);
+    if (employees?.length > 0) {
+      console.log("Liste des employés:", employees.map(e => `${e.firstName} ${e.lastName} (${e.id})`));
+    }
+  }, [employees]);
+  
+  useEffect(() => {
+    if (!isLoading && departments && departments.length > 0 && employees && employees.length > 0) {
       buildHierarchyData(departments);
     }
   }, [departments, employees, isLoading]);
   
   useEffect(() => {
     const unsubscribe = subscribeToDepartmentUpdates((updatedDepartments) => {
-      buildHierarchyData(updatedDepartments);
+      if (employees && employees.length > 0) {
+        buildHierarchyData(updatedDepartments);
+      }
     });
     
     return () => unsubscribe();
@@ -49,6 +60,12 @@ const EmployeesHierarchy: React.FC = () => {
   };
   
   const createHierarchyFromDepartment = (rootDept: Department, allDepts: Department[]) => {
+    // S'assurer qu'on travaille avec la liste dédupliquée des employés
+    if (!employees || employees.length === 0) {
+      console.log("Aucun employé disponible pour construire la hiérarchie");
+      return;
+    }
+    
     const deptEmployees = rootDept.employeeIds 
       ? employees.filter(emp => rootDept.employeeIds?.includes(emp.id))
       : employees.filter(emp => {
@@ -66,6 +83,8 @@ const EmployeesHierarchy: React.FC = () => {
           
           return false;
         });
+    
+    console.log(`Employés dans le département ${rootDept.name}: ${deptEmployees.length}`);
     
     const manager = deptEmployees.find(emp => emp.id === rootDept.managerId) || null;
     
@@ -98,17 +117,19 @@ const EmployeesHierarchy: React.FC = () => {
       rootNode.children.push(childNode);
     });
     
-    deptEmployees
-      .filter(emp => emp.id !== rootDept.managerId)
-      .forEach(emp => {
-        rootNode.children.push({
-          id: emp.id,
-          name: `${emp.firstName} ${emp.lastName}`,
-          title: emp.position || 'Employé',
-          color: '#64748b',
-          children: []
-        });
+    // Ajouter les employés qui ne sont pas managers
+    const nonManagerEmployees = deptEmployees.filter(emp => emp.id !== rootDept.managerId);
+    console.log(`Employés non-managers dans le département ${rootDept.name}: ${nonManagerEmployees.length}`);
+    
+    nonManagerEmployees.forEach(emp => {
+      rootNode.children.push({
+        id: emp.id,
+        name: `${emp.firstName} ${emp.lastName}`,
+        title: emp.position || 'Employé',
+        color: '#64748b',
+        children: []
       });
+    });
     
     setHierarchyData(rootNode);
   };
@@ -163,17 +184,18 @@ const EmployeesHierarchy: React.FC = () => {
       deptNode.children.push(childNode);
     });
     
-    deptEmployees
-      .filter(emp => emp.id !== dept.managerId)
-      .forEach(emp => {
-        deptNode.children.push({
-          id: emp.id,
-          name: `${emp.firstName} ${emp.lastName}`,
-          title: emp.position || 'Employé',
-          color: '#64748b',
-          children: []
-        });
+    // Ajouter les employés qui ne sont pas managers
+    const nonManagerEmployees = deptEmployees.filter(emp => emp.id !== dept.managerId);
+    
+    nonManagerEmployees.forEach(emp => {
+      deptNode.children.push({
+        id: emp.id,
+        name: `${emp.firstName} ${emp.lastName}`,
+        title: emp.position || 'Employé',
+        color: '#64748b',
+        children: []
       });
+    });
     
     return deptNode;
   };

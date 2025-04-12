@@ -22,6 +22,11 @@ const EmployeesDashboard: React.FC = () => {
     isLoading 
   } = useHrModuleData();
 
+  // Log de debug pour vérifier le nombre d'employés
+  useMemo(() => {
+    console.log(`EmployeesDashboard - Nombre d'employés: ${employees?.length || 0}`);
+  }, [employees]);
+
   // Calculer les statistiques en temps réel
   const stats = useMemo(() => {
     if (isLoading) return null;

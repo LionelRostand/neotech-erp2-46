@@ -26,8 +26,8 @@ export const useEmployeeData = () => {
       
       // Vérifier si l'employé est un doublon
       if (!seenIds.has(employee.id) && 
-          !seenEmails.has(email) && 
-          !seenFullNames.has(fullName)) {
+          (!email || !seenEmails.has(email)) && 
+          (!fullName || !seenFullNames.has(fullName))) {
         
         seenIds.add(employee.id);
         if (email) seenEmails.add(email);
@@ -44,6 +44,7 @@ export const useEmployeeData = () => {
       }
     }
     
+    console.log(`Total d'employés avant déduplication: ${employees.length}, après: ${uniqueEmployees.length}`);
     return uniqueEmployees;
   }, [employees]);
   
