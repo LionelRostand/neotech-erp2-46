@@ -47,9 +47,9 @@ const EmployeesDepartments: React.FC = () => {
           <DepartmentTable 
             departments={departments}
             loading={loading}
-            onEditDepartment={handleEditDepartment}
-            onDeleteDepartment={handleDeleteDepartment}
-            onManageEmployees={handleManageEmployees}
+            onEditDepartment={(id) => handleEditDepartment(id)}
+            onDeleteDepartment={(id) => handleDeleteDepartment(id)}
+            onManageEmployees={(id) => handleManageEmployees(id)}
           />
         </CardContent>
       </Card>
@@ -64,7 +64,7 @@ const EmployeesDepartments: React.FC = () => {
           onInputChange={handleInputChange}
           onManagerChange={handleManagerChange}
           onColorChange={handleColorChange}
-          onEmployeeSelection={handleEmployeeSelection}
+          onEmployeeSelection={(employeeId) => handleEmployeeSelection(employeeId)}
           onClose={() => setIsAddDialogOpen(false)}
           onSave={handleSaveDepartment}
         />
@@ -80,7 +80,7 @@ const EmployeesDepartments: React.FC = () => {
           onInputChange={handleInputChange}
           onManagerChange={handleManagerChange}
           onColorChange={handleColorChange}
-          onEmployeeSelection={handleEmployeeSelection}
+          onEmployeeSelection={(employeeId) => handleEmployeeSelection(employeeId)}
           onClose={() => setIsEditDialogOpen(false)}
           onUpdate={handleUpdateDepartment}
         />
@@ -95,8 +95,8 @@ const EmployeesDepartments: React.FC = () => {
           <ManageEmployeesDialog 
             department={currentDepartment}
             selectedEmployees={selectedEmployees}
-            onEmployeeSelection={handleEmployeeSelection}
-            getDepartmentEmployees={getDepartmentEmployees}
+            onEmployeeSelection={(employeeId) => handleEmployeeSelection(employeeId)}
+            getDepartmentEmployees={(departmentId) => getDepartmentEmployees(departmentId)}
             onClose={() => setIsManageEmployeesDialogOpen(false)}
             onSave={handleSaveEmployeeAssignments}
           />

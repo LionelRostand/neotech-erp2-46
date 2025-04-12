@@ -170,7 +170,7 @@ const EmployeesHierarchy: React.FC = () => {
     <div className="space-y-6">
       <Card>
         <CardContent className="p-6 overflow-auto">
-          <HierarchyVisualization data={hierarchyData} />
+          <HierarchyVisualization data={hierarchyData} viewMode="default" searchQuery="" />
         </CardContent>
       </Card>
     </div>
