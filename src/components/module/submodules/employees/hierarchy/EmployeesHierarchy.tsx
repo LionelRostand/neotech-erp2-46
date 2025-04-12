@@ -52,9 +52,13 @@ const EmployeesHierarchy: React.FC = () => {
   
   const createHierarchyFromDepartment = (rootDept: Department, allDepts: Department[]) => {
     // Get all employees for this department
-    const deptEmployees = employees.filter(emp => 
-      rootDept.employeeIds?.includes(emp.id)
-    );
+    const deptEmployees = rootDept.employeeIds 
+      ? employees.filter(emp => rootDept.employeeIds?.includes(emp.id))
+      : employees.filter(emp => 
+          emp.department === rootDept.id || 
+          (typeof emp.department === 'object' && emp.department?.id === rootDept.id) ||
+          emp.departmentId === rootDept.id
+        );
     
     // Find the manager
     const manager = deptEmployees.find(emp => emp.id === rootDept.managerId) || null;
@@ -99,9 +103,13 @@ const EmployeesHierarchy: React.FC = () => {
   
   const createDepartmentNode = (dept: Department, allDepts: Department[]): HierarchyNode => {
     // Get all employees for this department
-    const deptEmployees = employees.filter(emp => 
-      dept.employeeIds?.includes(emp.id)
-    );
+    const deptEmployees = dept.employeeIds 
+      ? employees.filter(emp => dept.employeeIds?.includes(emp.id))
+      : employees.filter(emp => 
+          emp.department === dept.id || 
+          (typeof emp.department === 'object' && emp.department?.id === dept.id) ||
+          emp.departmentId === dept.id
+        );
     
     // Find the manager
     const manager = deptEmployees.find(emp => emp.id === dept.managerId) || null;

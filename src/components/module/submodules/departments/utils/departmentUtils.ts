@@ -67,7 +67,15 @@ export const prepareDepartmentFromForm = (
 
 export const getDepartmentEmployees = (departmentId: string): Employee[] => {
   const allEmployees = employees;
+  
   return allEmployees.filter(emp => {
+    // Vérifier si l'ID de l'employé est dans le tableau employeeIds du département
+    const departmentObj = createDefaultDepartments().find(dept => dept.id === departmentId);
+    if (departmentObj && departmentObj.employeeIds && departmentObj.employeeIds.includes(emp.id)) {
+      return true;
+    }
+    
+    // Vérifier par les autres méthodes si ce n'est pas trouvé ci-dessus
     if (!emp.department && !emp.departmentId) return false;
     
     // Check if department is a string (departmentId)
