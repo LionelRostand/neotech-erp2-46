@@ -39,7 +39,7 @@ function Calendar({
         value={String(props.value)}
         onValueChange={(value) => {
           if (props.onChange) {
-            props.onChange(value);
+            props.onChange(value as any);
           }
         }}
       >

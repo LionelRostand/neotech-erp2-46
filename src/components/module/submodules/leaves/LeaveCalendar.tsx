@@ -1,268 +1,236 @@
 
 import React, { useState } from 'react';
-import { Calendar } from '@/components/ui/calendar';
-import { useLeaveData } from '@/hooks/useLeaveData';
-import { Card, CardContent } from '@/components/ui/card';
+import { Calendar as CalendarIcon } from 'lucide-react';
+import { Calendar } from "@/components/ui/calendar";
+import { fr } from 'date-fns/locale';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, ArrowRight, Eye, Calendar as CalendarIcon } from 'lucide-react';
-import { 
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from '@/components/ui/select';
+import { useLeaveRequestsData } from '@/hooks/useLeaveRequestsData';
+import { DayContentProps } from 'react-day-picker';
+import { Avatar } from '@/components/ui/avatar';
+import { AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { createPortal } from 'react-dom';
+import { Badge } from '@/components/ui/badge';
 
-interface LeaveEvent {
+interface LeaveDate {
   date: Date;
-  events: {
-    id: string;
-    employeeName: string;
-    type: string;
-    status: string;
-  }[];
+  leaves: any[];
 }
 
-export const LeaveCalendar: React.FC = () => {
-  const { leaves, isLoading } = useLeaveData();
+export const LeaveCalendar = () => {
   const [currentMonth, setCurrentMonth] = useState<Date>(new Date());
-  const [selectedView, setSelectedView] = useState<'month' | 'week' | 'day'>('month');
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
+  const { leaveRequests } = useLeaveRequestsData();
   
-  // Calculate events for the calendar
-  const leaveEvents: LeaveEvent[] = React.useMemo(() => {
-    if (!leaves || leaves.length === 0) return [];
+  // Format leave requests for calendar display
+  const leaveDates: { [key: string]: any[] } = {};
+  
+  leaveRequests.forEach(request => {
+    const startDate = new Date(request.startDate);
+    const endDate = new Date(request.endDate);
     
-    const events: { [key: string]: LeaveEvent } = {};
-    
-    // Parse leaves into calendar events
-    leaves.forEach(leave => {
-      try {
-        // Process each day in the leave period
-        const startDate = new Date(leave.startDate);
-        const endDate = new Date(leave.endDate);
-        
-        // Iterate through each day in the range
-        const currentDate = new Date(startDate);
-        while (currentDate <= endDate) {
-          const dateKey = currentDate.toISOString().split('T')[0];
-          
-          if (!events[dateKey]) {
-            events[dateKey] = {
-              date: new Date(currentDate),
-              events: []
-            };
-          }
-          
-          events[dateKey].events.push({
-            id: leave.id,
-            employeeName: leave.employeeName,
-            type: leave.type,
-            status: leave.status
-          });
-          
-          // Move to next day
-          currentDate.setDate(currentDate.getDate() + 1);
-        }
-      } catch (e) {
-        console.error('Error processing leave for calendar', e);
+    // Create an entry for each day of the leave period
+    const currentDate = new Date(startDate);
+    while (currentDate <= endDate) {
+      const dateKey = currentDate.toISOString().split('T')[0];
+      
+      if (!leaveDates[dateKey]) {
+        leaveDates[dateKey] = [];
       }
-    });
-    
-    return Object.values(events);
-  }, [leaves]);
+      
+      leaveDates[dateKey].push(request);
+      
+      // Move to next day
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
+  });
   
-  const handlePreviousMonth = () => {
-    const date = new Date(currentMonth);
-    date.setMonth(date.getMonth() - 1);
-    setCurrentMonth(date);
-  };
-  
-  const handleNextMonth = () => {
-    const date = new Date(currentMonth);
-    date.setMonth(date.getMonth() + 1);
-    setCurrentMonth(date);
-  };
-  
-  const getDateContent = (day: Date) => {
-    // Find events for this date
-    const dateString = day.toISOString().split('T')[0];
-    const eventForDate = leaveEvents.find(
-      event => event.date.toISOString().split('T')[0] === dateString
-    );
-    
-    if (!eventForDate) return null;
-    
-    // Count by status
-    const statuses = eventForDate.events.reduce((acc, event) => {
-      const status = event.status.toLowerCase();
-      acc[status] = (acc[status] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
+  // Custom day content for the calendar
+  const renderDayContent = (props: DayContentProps) => {
+    const dateKey = props.date.toISOString().split('T')[0];
+    const leavesForDay = leaveDates[dateKey] || [];
     
     return (
-      <div className="flex gap-1 mt-1 justify-center">
-        {statuses.pending && (
-          <div className="h-2 w-2 rounded-full bg-amber-500" title="En attente"></div>
-        )}
-        {statuses.approved && (
-          <div className="h-2 w-2 rounded-full bg-green-500" title="Approuvé"></div>
-        )}
-        {statuses.rejected && (
-          <div className="h-2 w-2 rounded-full bg-red-500" title="Refusé"></div>
+      <div className="relative w-full h-full">
+        {props.date && <div>{props.date.getDate()}</div>}
+        
+        {leavesForDay.length > 0 && (
+          <div className="absolute bottom-0 left-0 right-0 flex justify-center">
+            <div className="flex -space-x-1 overflow-hidden">
+              {leavesForDay.slice(0, 3).map((leave, index) => (
+                <div 
+                  key={`${leave.id}-${index}`} 
+                  className="h-2 w-2 rounded-full"
+                  style={{ 
+                    backgroundColor: getLeaveTypeColor(leave.type),
+                    marginLeft: index > 0 ? '2px' : '0'
+                  }}
+                />
+              ))}
+              {leavesForDay.length > 3 && (
+                <div className="h-2 w-2 rounded-full bg-gray-400" />
+              )}
+            </div>
+          </div>
         )}
       </div>
     );
   };
-  
-  const SelectedDayDetails = () => {
-    if (!selectedDate) return null;
-    
-    const dateString = selectedDate.toISOString().split('T')[0];
-    const eventForDate = leaveEvents.find(
-      event => event.date.toISOString().split('T')[0] === dateString
-    );
-    
-    if (!eventForDate || eventForDate.events.length === 0) {
-      return (
-        <div className="text-center py-6 text-gray-500">
-          Aucun congé pour cette date
-        </div>
-      );
+
+  // Function to determine color based on leave type
+  const getLeaveTypeColor = (type: string) => {
+    switch (type.toLowerCase()) {
+      case 'congés payés':
+        return '#3b82f6'; // blue
+      case 'rtt':
+        return '#10b981'; // green
+      case 'congé maladie':
+        return '#ef4444'; // red
+      case 'congé sans solde':
+        return '#f59e0b'; // amber
+      case 'congé familial':
+        return '#8b5cf6'; // purple
+      case 'congé maternité':
+        return '#ec4899'; // pink
+      case 'congé paternité':
+        return '#6366f1'; // indigo
+      default:
+        return '#6b7280'; // gray
     }
+  };
+
+  // Get status badge based on status
+  const getStatusBadge = (status: string) => {
+    switch (status.toLowerCase()) {
+      case 'approved':
+      case 'approuvé':
+      case 'en attente':
+        return <Badge variant="success">Approuvé</Badge>;
+      case 'pending':
+      case 'en attente':
+        return <Badge variant="warning">En attente</Badge>;
+      case 'rejected':
+      case 'refusé':
+        return <Badge variant="destructive">Refusé</Badge>;
+      default:
+        return <Badge variant="outline">{status}</Badge>;
+    }
+  };
+
+  // Get leaves for selected date
+  const getSelectedDateLeaves = () => {
+    if (!selectedDate) return [];
     
-    return (
-      <div className="space-y-3">
-        <h3 className="font-medium">
-          Congés du {selectedDate.toLocaleDateString('fr-FR', { 
-            day: 'numeric', 
-            month: 'long', 
-            year: 'numeric' 
-          })}
-        </h3>
-        <div className="space-y-2">
-          {eventForDate.events.map((event, index) => (
-            <div 
-              key={`${event.id}-${index}`} 
-              className="p-2 rounded border flex justify-between items-center"
-            >
-              <div>
-                <div className="font-medium">{event.employeeName}</div>
-                <div className="text-sm text-gray-500">{event.type}</div>
+    const dateKey = selectedDate.toISOString().split('T')[0];
+    return leaveDates[dateKey] || [];
+  };
+
+  return (
+    <Card className="col-span-7 lg:col-span-5">
+      <CardHeader className="pb-3">
+        <CardTitle className="flex items-center text-xl">
+          <CalendarIcon className="h-5 w-5 mr-2" />
+          Calendrier des congés
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="grid grid-cols-1 md:grid-cols-7 gap-6">
+          <div className="md:col-span-5">
+            <Calendar
+              mode="single"
+              selected={selectedDate}
+              onSelect={setSelectedDate}
+              locale={fr}
+              className="w-full"
+              month={currentMonth}
+              onMonthChange={setCurrentMonth}
+              components={{
+                DayContent: (props) => renderDayContent(props)
+              }}
+            />
+            
+            <div className="mt-4 flex flex-wrap gap-2">
+              <div className="flex items-center">
+                <div className="h-3 w-3 rounded-full bg-blue-500 mr-1" />
+                <span className="text-xs">Congés payés</span>
               </div>
-              <div className={`px-2 py-1 text-xs rounded-full ${
-                event.status.toLowerCase() === 'approved' ? 'bg-green-100 text-green-800' :
-                event.status.toLowerCase() === 'rejected' ? 'bg-red-100 text-red-800' :
-                'bg-amber-100 text-amber-800'
-              }`}>
-                {event.status === 'approved' ? 'Approuvé' : 
-                 event.status === 'rejected' ? 'Refusé' : 'En attente'}
+              <div className="flex items-center">
+                <div className="h-3 w-3 rounded-full bg-green-500 mr-1" />
+                <span className="text-xs">RTT</span>
+              </div>
+              <div className="flex items-center">
+                <div className="h-3 w-3 rounded-full bg-red-500 mr-1" />
+                <span className="text-xs">Maladie</span>
+              </div>
+              <div className="flex items-center">
+                <div className="h-3 w-3 rounded-full bg-amber-500 mr-1" />
+                <span className="text-xs">Sans solde</span>
+              </div>
+              <div className="flex items-center">
+                <div className="h-3 w-3 rounded-full bg-purple-500 mr-1" />
+                <span className="text-xs">Familial</span>
+              </div>
+              <div className="flex items-center">
+                <div className="h-3 w-3 rounded-full bg-gray-400 mr-1" />
+                <span className="text-xs">Autre</span>
               </div>
             </div>
-          ))}
-        </div>
-      </div>
-    );
-  };
-  
-  return (
-    <div className="space-y-4">
-      <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
-        <div className="flex items-center gap-2">
-          <Button 
-            variant="outline" 
-            size="icon" 
-            onClick={handlePreviousMonth}
-            aria-label="Mois précédent"
-          >
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-          <h3 className="text-lg font-medium">
-            {currentMonth.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}
-          </h3>
-          <Button 
-            variant="outline" 
-            size="icon" 
-            onClick={handleNextMonth}
-            aria-label="Mois suivant"
-          >
-            <ArrowRight className="h-4 w-4" />
-          </Button>
-        </div>
-        <Select 
-          value={selectedView}
-          onValueChange={(value: 'month' | 'week' | 'day') => setSelectedView(value)}
-        >
-          <SelectTrigger className="w-[180px]">
-            <CalendarIcon className="h-4 w-4 mr-2" />
-            <SelectValue placeholder="Vue" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="month">Vue mensuelle</SelectItem>
-            <SelectItem value="week">Vue hebdomadaire</SelectItem>
-            <SelectItem value="day">Vue journalière</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-      
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="md:col-span-2">
-          <Card className="p-2">
-            <CardContent className="p-0">
-              <Calendar
-                mode="single"
-                selected={selectedDate}
-                onSelect={setSelectedDate}
-                month={currentMonth}
-                onMonthChange={setCurrentMonth}
-                locale={undefined}
-                disabled={isLoading}
-                className="rounded border-0 pointer-events-auto"
-                components={{
-                  DayContent: (props) => (
-                    <div>
-                      {props.children}
-                      {getDateContent(props.date)}
-                    </div>
-                  )
-                }}
-              />
-            </CardContent>
-          </Card>
-        </div>
-        
-        <Card>
-          <CardContent className="p-4">
+          </div>
+          
+          <div className="md:col-span-2 min-h-[300px]">
             {selectedDate ? (
-              <SelectedDayDetails />
+              <div>
+                <div className="mb-3 font-medium">
+                  {selectedDate.toLocaleDateString('fr-FR', { 
+                    weekday: 'long', 
+                    day: 'numeric', 
+                    month: 'long' 
+                  })}
+                </div>
+                
+                <div className="space-y-3">
+                  {getSelectedDateLeaves().length > 0 ? (
+                    getSelectedDateLeaves().map((leave, index) => (
+                      <div key={`${leave.id}-${index}`} className="flex items-start gap-2 p-2 rounded-lg bg-gray-50">
+                        <Avatar className="h-8 w-8">
+                          {leave.employeePhoto ? (
+                            <AvatarImage src={leave.employeePhoto} alt={leave.employeeName} />
+                          ) : (
+                            <AvatarFallback className="text-xs">
+                              {leave.employeeName?.split(' ').map((n: string) => n[0]).join('')}
+                            </AvatarFallback>
+                          )}
+                        </Avatar>
+                        <div className="space-y-1">
+                          <div className="text-sm font-medium">{leave.employeeName}</div>
+                          <div className="text-xs text-gray-500">
+                            {leave.type} • {leave.durationDays || 1} jour(s)
+                          </div>
+                          <div className="text-xs">
+                            {getStatusBadge(leave.status)}
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-sm text-gray-500">
+                      Aucun congé pour cette date
+                    </div>
+                  )}
+                </div>
+              </div>
             ) : (
-              <div className="flex flex-col items-center justify-center h-full py-10 text-center text-gray-500">
-                <Eye className="h-12 w-12 text-gray-300 mb-3" />
-                <p>Sélectionnez une date pour voir les détails des congés</p>
+              <div className="h-full flex items-center justify-center">
+                <div className="text-center text-gray-500">
+                  <CalendarIcon className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                  <p>Sélectionnez une date pour voir les congés</p>
+                </div>
               </div>
             )}
-          </CardContent>
-        </Card>
-      </div>
-      
-      <div className="flex flex-col space-y-2 mt-4">
-        <div className="text-sm font-medium">Légende</div>
-        <div className="flex gap-4">
-          <div className="flex items-center gap-2">
-            <div className="h-3 w-3 rounded-full bg-amber-500"></div>
-            <span className="text-sm">En attente</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="h-3 w-3 rounded-full bg-green-500"></div>
-            <span className="text-sm">Approuvé</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="h-3 w-3 rounded-full bg-red-500"></div>
-            <span className="text-sm">Refusé</span>
           </div>
         </div>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 };
 
