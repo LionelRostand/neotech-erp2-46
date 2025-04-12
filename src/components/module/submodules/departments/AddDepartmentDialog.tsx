@@ -18,7 +18,7 @@ interface AddDepartmentDialogProps {
   onInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onManagerChange: (value: string) => void;
   onColorChange: (value: string) => void;
-  onEmployeeSelection: (employeeId: string) => void;
+  onEmployeeSelection: (employeeId: string, checked: boolean) => void;
   onClose: () => void;
   onSave: () => void;
 }

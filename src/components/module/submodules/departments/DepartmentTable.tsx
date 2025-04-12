@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
@@ -34,17 +35,17 @@ const DepartmentTable: React.FC<DepartmentTableProps> = ({
         </TableHeader>
         <TableBody>
           {loading ? (
-            <tr>
+            <TableRow>
               <TableCell colSpan={6} className="text-center py-4">
                 Chargement...
               </TableCell>
-            </tr>
+            </TableRow>
           ) : departments.length === 0 ? (
-            <tr>
+            <TableRow>
               <TableCell colSpan={6} className="text-center py-4">
                 Aucun département trouvé.
               </TableCell>
-            </tr>
+            </TableRow>
           ) : (
             departments.map((department) => (
               <TableRow key={department.id}>
