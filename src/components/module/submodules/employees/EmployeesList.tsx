@@ -43,7 +43,10 @@ const EmployeesList: React.FC<EmployeesListProps> = ({
   
   // Log pour s'assurer que nous avons bien des employés dédupliqués
   useEffect(() => {
-    console.log(`EmployeesList - Nombre d'employés reçus (dédupliqués): ${employees?.length || 0}`);
+    console.log(`[EmployeesList] - Nombre d'employés reçus (dédupliqués): ${employees?.length || 0}`);
+    if (employees?.length > 0) {
+      console.log("[EmployeesList] - IDs des employés:", employees.map(e => e.id));
+    }
   }, [employees]);
 
   // Filtrer uniquement selon les critères de recherche, sans déduplication supplémentaire

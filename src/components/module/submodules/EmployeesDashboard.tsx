@@ -24,9 +24,10 @@ const EmployeesDashboard: React.FC = () => {
 
   // Log de debug pour vérifier le nombre d'employés
   useMemo(() => {
-    console.log(`EmployeesDashboard - Nombre d'employés dédupliqués: ${employees?.length || 0}`);
+    console.log(`[EmployeesDashboard] - Nombre d'employés dédupliqués: ${employees?.length || 0}`);
     if (employees?.length > 0) {
-      console.log("Liste des employés dédupliqués sur le tableau de bord:", employees.map(e => `${e.firstName} ${e.lastName} (${e.id})`));
+      console.log("[EmployeesDashboard] - Liste des employés dédupliqués sur le tableau de bord:", 
+        employees.map(e => `${e.firstName} ${e.lastName} (${e.id})`));
     }
   }, [employees]);
 
