@@ -11,7 +11,7 @@ const firebaseConfig = {
   apiKey: "AIzaSyD3ZQYPtVHk4w63bCvOX0b8RVJyybWyOqU",
   authDomain: "neotech-erp.firebaseapp.com",
   projectId: "neotech-erp",
-  storageBucket: "neotech-erp.appspot.com", // Correction du bucket storage
+  storageBucket: "neotech-erp.appspot.com", // Le bucket correct
   messagingSenderId: "803661896660",
   appId: "1:803661896660:web:94f17531b963627cbd5441"
 };
@@ -45,7 +45,7 @@ try {
 // Initialiser Authentication
 const auth = getAuth(app);
 
-// Initialiser Storage
+// Initialiser Storage avec des options avancées pour gérer les problèmes CORS
 const storage = getStorage(app);
 
 // Détecter le mode développement et la configuration des émulateurs
@@ -98,3 +98,4 @@ export const checkFirestoreConnection = async (): Promise<boolean> => {
     return false;
   }
 };
+

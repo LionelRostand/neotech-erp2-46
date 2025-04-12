@@ -72,8 +72,14 @@ const EmployeeProfileHeader: React.FC<EmployeeProfileHeaderProps> = ({ employee,
     try {
       setIsUploading(true);
       
+      // Show toast indicating upload start
+      toast.loading('Téléversement de la photo de profil en cours...', {
+        id: 'photo-upload',
+        duration: 3000
+      });
+      
       // Upload to Firebase Storage
-      const uploadPath = `employees/${employee.id}/profile`;
+      const uploadPath = `hr_employees/${employee.id}/profile`;
       const result = await uploadFile(file, uploadPath, 'profile_photo');
       
       // Mise à jour directe du document dans Firestore
@@ -93,10 +99,14 @@ const EmployeeProfileHeader: React.FC<EmployeeProfileHeaderProps> = ({ employee,
         });
       }
       
-      toast.success('Photo de profil mise à jour avec succès');
+      toast.success('Photo de profil mise à jour avec succès', {
+        id: 'photo-upload'
+      });
     } catch (error) {
       console.error('Erreur lors du téléversement de la photo:', error);
-      toast.error('Erreur lors du téléversement de la photo');
+      toast.error('Erreur lors du téléversement de la photo', {
+        id: 'photo-upload'
+      });
     } finally {
       setIsUploading(false);
     }

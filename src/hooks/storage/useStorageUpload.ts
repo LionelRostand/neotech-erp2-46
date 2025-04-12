@@ -48,7 +48,8 @@ export const useStorageUpload = () => {
         contentType: file.type,
         customMetadata: {
           'Access-Control-Allow-Origin': '*',
-          'Access-Control-Allow-Methods': 'GET',
+          'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+          'Access-Control-Allow-Headers': 'Content-Type, Authorization',
           'original-filename': file.name
         }
       };
@@ -70,6 +71,16 @@ export const useStorageUpload = () => {
           (error) => {
             // Gérer les erreurs
             console.error('Erreur de téléversement:', error);
+            
+            // Détecter si c'est une erreur CORS
+            const errorMessage = error.message || '';
+            if (errorMessage.includes('CORS') || error.code === 'storage/unauthorized') {
+              console.error('Erreur CORS détectée:', error);
+              toast.error('Erreur d\'accès au stockage. Problème de CORS détecté.');
+            } else {
+              toast.error(`Erreur de téléversement: ${errorMessage}`);
+            }
+            
             setUploadError(error);
             setIsUploading(false);
             reject(error);
@@ -91,6 +102,13 @@ export const useStorageUpload = () => {
               });
             } catch (error) {
               console.error('Erreur lors de la récupération de l\'URL:', error);
+              
+              if (error instanceof Error && error.message.includes('CORS')) {
+                toast.error('Erreur d\'accès au fichier téléversé. Problème de CORS détecté.');
+              } else {
+                toast.error('Erreur lors de la récupération de l\'URL du fichier');
+              }
+              
               setUploadError(error instanceof Error ? error : new Error('Erreur inconnue'));
               setIsUploading(false);
               reject(error);
