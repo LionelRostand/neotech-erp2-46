@@ -1,109 +1,70 @@
 
-import { useState, useEffect, useCallback } from 'react';
-import { collection, getDocs, query, onSnapshot, QueryConstraint } from 'firebase/firestore';
+import { useState, useEffect } from 'react';
+import { collection, query, onSnapshot, QueryConstraint, DocumentData, QuerySnapshot } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { toast } from 'sonner';
-import { isNetworkError } from './firestore/network-handler';
 
 /**
- * Hook générique pour récupérer des données depuis une collection Firebase avec mise à jour en temps réel
- * @param collectionPath Chemin de la collection Firestore (ex: COLLECTIONS.COMPANIES)
- * @param queryConstraints Contraintes optionnelles pour la requête
+ * Hook personnalisé pour récupérer des données d'une collection Firestore avec mises à jour en temps réel
+ * @param collectionPath Chemin vers la collection Firestore
+ * @param queryConstraints Contraintes de requête optionnelles (where, orderBy, limit, etc.)
+ * @returns Objet contenant les données, l'état de chargement et les erreurs éventuelles
  */
-export function useFirebaseCollection<T>(
+export const useFirebaseCollection = <T>(
   collectionPath: string,
   queryConstraints: QueryConstraint[] = []
-) {
+) => {
   const [data, setData] = useState<T[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
-
-  // Fonction pour charger les données une seule fois en cas de problème avec le listener
-  const fetchDataOnce = useCallback(async () => {
-    try {
-      console.log(`Récupération unique depuis ${collectionPath}...`);
-      
-      const collectionRef = collection(db, collectionPath);
-      const q = query(collectionRef, ...queryConstraints);
-      const querySnapshot = await getDocs(q);
-      
-      const fetchedData = querySnapshot.docs.map(doc => ({ 
-        id: doc.id, 
-        ...doc.data() 
-      })) as T[];
-      
-      console.log(`${fetchedData.length} documents récupérés depuis ${collectionPath}`);
-      setData(fetchedData);
-      return fetchedData;
-    } catch (err) {
-      console.error(`Échec de la récupération depuis ${collectionPath}:`, err);
-      throw err;
-    }
-  }, [collectionPath, queryConstraints]);
-
-  // Fonction pour rafraîchir manuellement les données
-  const refetch = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      await fetchDataOnce();
-      return true;
-    } catch (err) {
-      setError(err instanceof Error ? err : new Error('Erreur inconnue'));
-      return false;
-    } finally {
-      setIsLoading(false);
-    }
-  }, [fetchDataOnce]);
+  const [refetchTrigger, setRefetchTrigger] = useState(0);
 
   useEffect(() => {
-    setIsLoading(true);
-    
     try {
-      console.log(`Configuration du listener pour ${collectionPath}...`);
+      console.log(`Fetching data from collection: ${collectionPath}`);
       
-      // Utiliser onSnapshot pour obtenir des mises à jour en temps réel
+      // Create a reference to the collection
       const collectionRef = collection(db, collectionPath);
+      
+      // Create a query with the provided constraints
       const q = query(collectionRef, ...queryConstraints);
       
-      const unsubscribe = onSnapshot(q, 
-        (querySnapshot) => {
-          const fetchedData = querySnapshot.docs.map(doc => ({ 
-            id: doc.id, 
-            ...doc.data() 
+      // Set up a real-time listener
+      const unsubscribe = onSnapshot(
+        q,
+        (snapshot: QuerySnapshot<DocumentData>) => {
+          const documents = snapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
           })) as T[];
           
-          console.log(`Mise à jour en temps réel: ${fetchedData.length} documents depuis ${collectionPath}`);
-          setData(fetchedData);
+          setData(documents);
           setIsLoading(false);
+          console.log(`Received ${documents.length} documents from ${collectionPath}`);
         },
-        (err) => {
-          console.error(`Erreur lors du chargement depuis ${collectionPath}:`, err);
-          
-          if (isNetworkError(err)) {
-            toast.error(`Impossible de charger les données: Mode hors ligne`);
-          } else {
-            toast.error(`Erreur lors du chargement des données: ${err.message}`);
-          }
-          
-          setError(err instanceof Error ? err : new Error('Erreur inconnue'));
+        (err: Error) => {
+          console.error(`Error fetching from ${collectionPath}:`, err);
+          setError(err);
           setIsLoading(false);
-          
-          // En cas d'erreur, essayer de charger les données une seule fois
-          fetchDataOnce().catch(e => console.error('Erreur lors de la récupération de secours:', e));
         }
       );
       
-      // Nettoyage lors du démontage du composant
-      return () => unsubscribe();
-    } catch (err: any) {
-      console.error(`Erreur lors de la configuration du listener pour ${collectionPath}:`, err);
-      setError(err instanceof Error ? err : new Error('Erreur inconnue'));
+      // Clean up subscription on unmount
+      return () => {
+        console.log(`Unsubscribing from collection: ${collectionPath}`);
+        unsubscribe();
+      };
+    } catch (err) {
+      const error = err instanceof Error ? err : new Error('Unknown error occurred');
+      console.error(`Error setting up listener for ${collectionPath}:`, error);
+      setError(error);
       setIsLoading(false);
-      
-      // En cas d'erreur, essayer de charger les données une seule fois
-      fetchDataOnce().catch(e => console.error('Erreur lors de la récupération de secours:', e));
     }
-  }, [collectionPath, queryConstraints, fetchDataOnce]);
+  }, [collectionPath, JSON.stringify(queryConstraints), refetchTrigger]);
+
+  // Function to trigger a refetch
+  const refetch = () => {
+    setRefetchTrigger(prev => prev + 1);
+  };
 
   return { data, isLoading, error, refetch };
-}
+};

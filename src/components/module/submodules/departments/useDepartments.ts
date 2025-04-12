@@ -1,184 +1,54 @@
 
-import { useState, useEffect } from 'react';
-import { toast } from 'sonner';
-import { Department, DepartmentFormData } from './types';
+import { useState, useEffect, useCallback } from 'react';
+import { COLLECTIONS } from '@/lib/firebase-collections';
+import { Department, DepartmentFormData, departmentColors } from './types';
+import { createEmptyFormData, prepareDepartmentFromForm, getDepartmentEmployees, notifyDepartmentUpdates } from './utils/departmentUtils';
 import { useDepartmentService } from './services/departmentService';
-import { useEmployeeData } from '@/hooks/useEmployeeData';
-import { v4 as uuidv4 } from 'uuid';
-
-// Fonction pour créer un nouveau département vide
-const createEmptyFormData = (): DepartmentFormData => {
-  return {
-    id: uuidv4(),
-    name: '',
-    description: '',
-    managerId: '',
-    color: '#3b82f6', // Bleu par défaut
-    employeeIds: []
-  };
-};
-
-// Fonction pour préparer les données du formulaire pour l'enregistrement
-const prepareDepartmentFromForm = (
-  formData: DepartmentFormData,
-  selectedEmployees: string[],
-  currentDepartment?: Department
-): Department => {
-  return {
-    id: formData.id,
-    name: formData.name,
-    description: formData.description,
-    managerId: formData.managerId === 'none' ? null : formData.managerId,
-    managerName: null, // Sera rempli par useEmployeeData
-    color: formData.color,
-    employeeIds: selectedEmployees,
-    employeesCount: selectedEmployees.length
-  };
-};
+import { useFirebaseDepartments } from '@/hooks/useFirebaseDepartments';
+import { toast } from 'sonner';
+import { Employee } from '@/types/employee';
+import { employees } from '@/data/employees';
 
 export const useDepartments = () => {
-  // Service d'accès aux départements dans Firebase
-  const departmentService = useDepartmentService();
+  // Fetch departments directly from Firestore
+  const { departments = [], isLoading: loading, error } = useFirebaseDepartments();
   
-  // Utiliser notre hook pour récupérer les données des employés et départements
-  const { employees, departments: hrDepartments, isLoading } = useEmployeeData();
-
-  // États pour les départements
-  const [departments, setDepartments] = useState<Department[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  // États pour les dialogues et formulaires
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isManageEmployeesDialogOpen, setIsManageEmployeesDialogOpen] = useState(false);
-  const [formData, setFormData] = useState<DepartmentFormData>(createEmptyFormData());
   const [currentDepartment, setCurrentDepartment] = useState<Department | null>(null);
-  const [activeTab, setActiveTab] = useState("department-info");
+  const [formData, setFormData] = useState<DepartmentFormData>(createEmptyFormData(departments));
+  const [activeTab, setActiveTab] = useState("general");
   const [selectedEmployees, setSelectedEmployees] = useState<string[]>([]);
-
-  // Charger les départements depuis Firestore via useEmployeeData
+  
+  const departmentService = useDepartmentService();
+  
+  // Fetch all available employees
+  const allEmployees = employees;
+  
+  // Reset form when departments change
   useEffect(() => {
-    if (!isLoading) {
-      if (hrDepartments && hrDepartments.length > 0) {
-        setDepartments(hrDepartments);
-        setLoading(false);
-      } else {
-        // Si aucun département n'est disponible, on charge depuis Firestore
-        loadDepartmentsFromFirestore();
-      }
+    if (departments && departments.length > 0) {
+      setFormData(createEmptyFormData(departments));
     }
-  }, [hrDepartments, isLoading]);
-
-  // Fonction pour charger les départements directement depuis Firestore
-  const loadDepartmentsFromFirestore = async () => {
-    setLoading(true);
-    try {
-      const data = await departmentService.getAll();
-      
-      if (data.length > 0) {
-        setDepartments(data);
-      } else {
-        // Si aucun département n'est trouvé, initialiser avec des départements par défaut
-        const defaultDepartments = createDefaultDepartments();
-        
-        // Enregistrer les départements par défaut dans Firestore
-        for (const dept of defaultDepartments) {
-          await departmentService.createDepartment(dept);
-        }
-        
-        setDepartments(defaultDepartments);
-      }
-    } catch (error) {
-      console.error("Error loading departments:", error);
-      toast.error("Erreur lors du chargement des départements");
-    } finally {
-      setLoading(false);
+  }, [departments]);
+  
+  // Notify other components when departments are updated
+  useEffect(() => {
+    if (departments && departments.length > 0) {
+      notifyDepartmentUpdates(departments);
     }
-  };
-
-  // Créer des départements par défaut
-  const createDefaultDepartments = (): Department[] => {
-    return [
-      {
-        id: uuidv4(),
-        name: 'Direction',
-        description: 'Direction générale de l\'entreprise',
-        managerId: null,
-        managerName: null,
-        employeesCount: 0,
-        color: '#111827',
-        employeeIds: []
-      },
-      {
-        id: uuidv4(),
-        name: 'Ressources Humaines',
-        description: 'Gestion du personnel et recrutement',
-        managerId: null,
-        managerName: null,
-        employeesCount: 0,
-        color: '#3b82f6',
-        employeeIds: []
-      },
-      {
-        id: uuidv4(),
-        name: 'Développement',
-        description: 'Équipe de développement logiciel',
-        managerId: null,
-        managerName: null,
-        employeesCount: 0,
-        color: '#10b981',
-        employeeIds: []
-      },
-      {
-        id: uuidv4(),
-        name: 'Marketing',
-        description: 'Service marketing et communication',
-        managerId: null,
-        managerName: null,
-        employeesCount: 0,
-        color: '#f59e0b',
-        employeeIds: []
-      },
-      {
-        id: uuidv4(),
-        name: 'Commercial',
-        description: 'Équipe commerciale et ventes',
-        managerId: null,
-        managerName: null,
-        employeesCount: 0,
-        color: '#ef4444',
-        employeeIds: []
-      }
-    ];
-  };
-
-  // Gérer les changements d'inputs
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
-  };
-
-  // Gérer la sélection du manager
-  const handleManagerChange = (value: string) => {
-    // Si value est 'none', définir sur une chaîne vide pour indiquer aucun manager
-    setFormData({ ...formData, managerId: value === 'none' ? '' : value });
-  };
-
-  // Gérer la sélection de couleur
-  const handleColorChange = (value: string) => {
-    setFormData({ ...formData, color: value });
-  };
-
-  // Ouvrir la boîte de dialogue d'ajout de département
-  const handleAddDepartment = () => {
-    setFormData(createEmptyFormData());
+  }, [departments]);
+  
+  // Handle dialog open/close
+  const handleAddDepartment = useCallback(() => {
+    setFormData(createEmptyFormData(departments));
     setSelectedEmployees([]);
-    setActiveTab("department-info");
+    setActiveTab("general");
     setIsAddDialogOpen(true);
-  };
-
-  // Ouvrir la boîte de dialogue d'édition de département
-  const handleEditDepartment = (department: Department) => {
+  }, [departments]);
+  
+  const handleEditDepartment = useCallback((department: Department) => {
     setCurrentDepartment(department);
     setFormData({
       id: department.id,
@@ -189,131 +59,130 @@ export const useDepartments = () => {
       employeeIds: department.employeeIds || []
     });
     setSelectedEmployees(department.employeeIds || []);
-    setActiveTab("department-info");
+    setActiveTab("general");
     setIsEditDialogOpen(true);
-  };
-
-  // Ouvrir la boîte de dialogue de gestion des employés
-  const handleManageEmployees = (department: Department) => {
+  }, []);
+  
+  const handleManageEmployees = useCallback((department: Department) => {
     setCurrentDepartment(department);
     setSelectedEmployees(department.employeeIds || []);
     setIsManageEmployeesDialogOpen(true);
-  };
-
-  // Gérer la sélection/désélection des employés
-  const handleEmployeeSelection = (employeeId: string) => {
+  }, []);
+  
+  // Form input handlers
+  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  }, []);
+  
+  const handleManagerChange = useCallback((value: string) => {
+    setFormData(prev => ({ ...prev, managerId: value }));
+  }, []);
+  
+  const handleColorChange = useCallback((value: string) => {
+    setFormData(prev => ({ ...prev, color: value }));
+  }, []);
+  
+  const handleEmployeeSelection = useCallback((employeeId: string, checked: boolean) => {
     setSelectedEmployees(prev => {
-      if (prev.includes(employeeId)) {
-        return prev.filter(id => id !== employeeId);
-      } else {
+      if (checked) {
         return [...prev, employeeId];
+      } else {
+        return prev.filter(id => id !== employeeId);
       }
     });
-  };
-
-  // Enregistrer un nouveau département
-  const handleSaveDepartment = async () => {
-    if (!formData.name) {
-      toast.error("Le nom du département est requis");
+  }, []);
+  
+  // Department operations
+  const handleSaveDepartment = useCallback(async () => {
+    if (!formData.name || !formData.description) {
+      toast.error("Veuillez remplir tous les champs obligatoires");
       return;
     }
-
-    const newDepartment = prepareDepartmentFromForm(formData, selectedEmployees);
-    const success = await departmentService.createDepartment(newDepartment);
     
-    if (success) {
-      setDepartments([...departments, newDepartment]);
-      setIsAddDialogOpen(false);
-      // Recharger les données pour obtenir les informations enrichies
-      loadDepartmentsFromFirestore();
-    }
-  };
-
-  // Mettre à jour un département existant
-  const handleUpdateDepartment = async () => {
-    if (!formData.name || !currentDepartment) {
-      toast.error("Le nom du département est requis");
-      return;
-    }
-
-    const updatedDepartment = prepareDepartmentFromForm(
-      formData, 
-      selectedEmployees, 
-      currentDepartment
-    );
-
-    const success = await departmentService.updateDepartment(updatedDepartment);
-    
-    if (success) {
-      const updatedDepartments = departments.map(dep => {
-        if (dep.id === currentDepartment.id) {
-          return updatedDepartment;
-        }
-        return dep;
-      });
-
-      setDepartments(updatedDepartments);
-      setIsEditDialogOpen(false);
-      // Recharger les données pour obtenir les informations enrichies
-      loadDepartmentsFromFirestore();
-    }
-  };
-
-  // Supprimer un département
-  const handleDeleteDepartment = async (id: string) => {
-    const departmentToDelete = departments.find(dep => dep.id === id);
-    if (!departmentToDelete) return;
-
-    // Confirmer la suppression
-    if (window.confirm(`Êtes-vous sûr de vouloir supprimer le département ${departmentToDelete.name} ?`)) {
-      const success = await departmentService.deleteDepartment(id, departmentToDelete.name);
+    try {
+      const departmentToSave = prepareDepartmentFromForm(formData, selectedEmployees);
+      const success = await departmentService.createDepartment(departmentToSave);
       
       if (success) {
-        setDepartments(departments.filter(dep => dep.id !== id));
+        setIsAddDialogOpen(false);
+        toast.success(`Département ${formData.name} créé avec succès`);
+      }
+    } catch (error) {
+      console.error("Error saving department:", error);
+      toast.error("Erreur lors de la création du département");
+    }
+  }, [formData, selectedEmployees, departmentService]);
+  
+  const handleUpdateDepartment = useCallback(async () => {
+    if (!formData.name || !formData.description) {
+      toast.error("Veuillez remplir tous les champs obligatoires");
+      return;
+    }
+    
+    if (!currentDepartment) {
+      toast.error("Aucun département sélectionné pour la mise à jour");
+      return;
+    }
+    
+    try {
+      const departmentToUpdate = prepareDepartmentFromForm(formData, selectedEmployees, currentDepartment);
+      const success = await departmentService.updateDepartment(departmentToUpdate);
+      
+      if (success) {
+        setIsEditDialogOpen(false);
+        toast.success(`Département ${formData.name} mis à jour avec succès`);
+      }
+    } catch (error) {
+      console.error("Error updating department:", error);
+      toast.error("Erreur lors de la mise à jour du département");
+    }
+  }, [formData, selectedEmployees, currentDepartment, departmentService]);
+  
+  const handleDeleteDepartment = useCallback(async (id: string, name: string) => {
+    if (window.confirm(`Êtes-vous sûr de vouloir supprimer le département "${name}" ?`)) {
+      try {
+        const success = await departmentService.deleteDepartment(id, name);
+        
+        if (success) {
+          toast.success(`Département ${name} supprimé avec succès`);
+        }
+      } catch (error) {
+        console.error("Error deleting department:", error);
+        toast.error("Erreur lors de la suppression du département");
       }
     }
-  };
-
-  // Enregistrer les affectations d'employés
-  const handleSaveEmployeeAssignments = async () => {
-    if (!currentDepartment) return;
-
-    const updatedDepartment = {
-      ...currentDepartment,
-      employeeIds: selectedEmployees,
-      employeesCount: selectedEmployees.length
-    };
-
-    const success = await departmentService.updateDepartment(updatedDepartment);
-    
-    if (success) {
-      const updatedDepartments = departments.map(dep => {
-        if (dep.id === currentDepartment.id) {
-          return updatedDepartment;
-        }
-        return dep;
-      });
-
-      setDepartments(updatedDepartments);
-      setIsManageEmployeesDialogOpen(false);
-      // Recharger les données pour obtenir les informations enrichies
-      loadDepartmentsFromFirestore();
+  }, [departmentService]);
+  
+  const handleSaveEmployeeAssignments = useCallback(async () => {
+    if (!currentDepartment) {
+      toast.error("Aucun département sélectionné");
+      return;
     }
-  };
-
-  // Obtenir les employés pour un département spécifique en utilisant les données réelles
-  const getDepartmentEmployeesById = (departmentId: string) => {
-    if (!employees || !employees.length) return [];
     
-    return employees.filter(emp => {
-      const empDeptId = emp.departmentId || emp.department;
-      return empDeptId === departmentId;
-    });
-  };
-
+    try {
+      const updatedDepartment: Department = {
+        ...currentDepartment,
+        employeeIds: selectedEmployees,
+        employeesCount: selectedEmployees.length
+      };
+      
+      const success = await departmentService.updateDepartment(updatedDepartment);
+      
+      if (success) {
+        setIsManageEmployeesDialogOpen(false);
+        toast.success(`Assignations d'employés mises à jour pour ${currentDepartment.name}`);
+      }
+    } catch (error) {
+      console.error("Error updating employee assignments:", error);
+      toast.error("Erreur lors de la mise à jour des assignations d'employés");
+    }
+  }, [currentDepartment, selectedEmployees, departmentService]);
+  
   return {
     departments,
     loading,
+    error,
     isAddDialogOpen,
     isEditDialogOpen,
     isManageEmployeesDialogOpen,
@@ -321,6 +190,7 @@ export const useDepartments = () => {
     currentDepartment,
     activeTab,
     selectedEmployees,
+    allEmployees,
     setIsAddDialogOpen,
     setIsEditDialogOpen,
     setIsManageEmployeesDialogOpen,
@@ -336,6 +206,8 @@ export const useDepartments = () => {
     handleUpdateDepartment,
     handleDeleteDepartment,
     handleSaveEmployeeAssignments,
-    getDepartmentEmployees: getDepartmentEmployeesById
+    getDepartmentEmployees
   };
 };
+
+export default useDepartments;

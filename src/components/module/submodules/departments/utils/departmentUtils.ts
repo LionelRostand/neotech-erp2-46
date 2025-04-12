@@ -3,9 +3,6 @@ import { Department, DepartmentFormData } from '../types';
 import { Employee } from '@/types/employee';
 import { employees } from '@/data/employees';
 
-// Store department data in local storage for hierarchy component to access
-const DEPARTMENTS_STORAGE_KEY = 'hierarchy_departments_data';
-
 export const createDefaultDepartments = (): Department[] => {
   return [
     {
@@ -75,35 +72,19 @@ export const getDepartmentEmployees = (departmentId: string, departments: Depart
   return employees.filter(emp => department.employeeIds.includes(emp.id));
 };
 
-// Fonction améliorée pour synchroniser les départements avec la hiérarchie
-export const syncDepartmentsWithHierarchy = (departments: Department[]) => {
+// Fonction pour notifier les composants de l'interface utilisateur des mises à jour de départements
+export const notifyDepartmentUpdates = (departments: Department[]) => {
   try {
-    // Synchronisation via localStorage
-    localStorage.setItem(DEPARTMENTS_STORAGE_KEY, JSON.stringify(departments));
-    
     // Émettre un événement personnalisé pour notifier les autres composants
-    const syncEvent = new CustomEvent('departments-updated', { 
+    const updateEvent = new CustomEvent('departments-updated', { 
       detail: { departments } 
     });
-    window.dispatchEvent(syncEvent);
+    window.dispatchEvent(updateEvent);
     
-    console.log("Departments synced with hierarchy:", departments);
+    console.log("Departments update notification sent:", departments);
   } catch (error) {
-    console.error("Error syncing departments with hierarchy:", error);
+    console.error("Error notifying department updates:", error);
   }
-};
-
-// Function for hierarchy component to get synced departments
-export const getSyncedDepartments = (): Department[] => {
-  try {
-    const data = localStorage.getItem(DEPARTMENTS_STORAGE_KEY);
-    if (data) {
-      return JSON.parse(data);
-    }
-  } catch (error) {
-    console.error("Error getting synced departments:", error);
-  }
-  return [];
 };
 
 // S'abonner aux mises à jour des départements
