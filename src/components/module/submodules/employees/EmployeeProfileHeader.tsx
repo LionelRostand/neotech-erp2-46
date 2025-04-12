@@ -8,6 +8,8 @@ import { Mail, Phone, MapPin, Upload, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useStorageUpload } from '@/hooks/storage/useStorageUpload';
 import { updateEmployee } from '@/components/module/submodules/employees/services/employeeService';
+import { updateDocument } from '@/hooks/firestore/update-operations';
+import { COLLECTIONS } from '@/lib/firebase-collections';
 
 interface EmployeeProfileHeaderProps {
   employee: Employee;
@@ -74,11 +76,13 @@ const EmployeeProfileHeader: React.FC<EmployeeProfileHeaderProps> = ({ employee,
       const uploadPath = `employees/${employee.id}/profile`;
       const result = await uploadFile(file, uploadPath, 'profile_photo');
       
-      // Update employee data in Firestore
-      await updateEmployee(employee.id, {
+      // Mise à jour directe du document dans Firestore
+      await updateDocument(COLLECTIONS.HR.EMPLOYEES, employee.id, {
         photoURL: result.fileUrl,
         photo: result.fileUrl
       });
+      
+      console.log('Photo mise à jour dans Firestore:', result.fileUrl);
       
       // Update local state if callback provided
       if (onEmployeeUpdate) {

@@ -43,8 +43,18 @@ export const useStorageUpload = () => {
       // Convertir le fichier en ArrayBuffer pour l'upload binaire
       const fileBuffer = await file.arrayBuffer();
       
-      // Téléverser le fichier
-      const uploadTask = uploadBytesResumable(storageRef, fileBuffer);
+      // On ajoute les métadonnées CORS pour s'assurer que le fichier est accessible
+      const metadata = {
+        contentType: file.type,
+        customMetadata: {
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'GET',
+          'original-filename': file.name
+        }
+      };
+      
+      // Téléverser le fichier avec les métadonnées
+      const uploadTask = uploadBytesResumable(storageRef, fileBuffer, metadata);
 
       return new Promise((resolve, reject) => {
         uploadTask.on(
