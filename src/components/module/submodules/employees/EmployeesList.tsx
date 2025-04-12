@@ -17,7 +17,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 
 interface EmployeesListProps {
@@ -41,28 +41,19 @@ const EmployeesList: React.FC<EmployeesListProps> = ({
 }) => {
   const [employeeToDelete, setEmployeeToDelete] = useState<Employee | null>(null);
   
-  // Ensure employees exists before filtering (defensive programming)
+  // Log pour s'assurer que nous avons bien des employés dédupliqués
+  useEffect(() => {
+    console.log(`EmployeesList - Nombre d'employés reçus (dédupliqués): ${employees?.length || 0}`);
+  }, [employees]);
+
+  // Filtrer uniquement selon les critères de recherche, sans déduplication supplémentaire
+  // car les employés sont déjà dédupliqués par useEmployeeData
   const filteredEmployees = employees ? employees.filter(employee => {
     const fullName = `${employee.firstName} ${employee.lastName}`.toLowerCase();
     return fullName.includes(searchQuery.toLowerCase()) || 
            (employee.position && employee.position.toLowerCase().includes(searchQuery.toLowerCase())) ||
            (employee.department && employee.department.toLowerCase().includes(searchQuery.toLowerCase()));
   }) : [];
-
-  // Filtrer les doublons en fonction de l'email et du nom complet
-  const uniqueEmployees = filteredEmployees.reduce((acc: Employee[], current) => {
-    const isDuplicate = acc.find(
-      (item) => 
-        item.email === current.email || 
-        (item.firstName === current.firstName && item.lastName === current.lastName)
-    );
-    
-    if (!isDuplicate) {
-      acc.push(current);
-    }
-    
-    return acc;
-  }, []);
 
   const handleConfirmDelete = () => {
     if (employeeToDelete) {
@@ -124,8 +115,8 @@ const EmployeesList: React.FC<EmployeesListProps> = ({
             <TableBody>
               {loading ? (
                 <LoadingSkeleton />
-              ) : uniqueEmployees.length > 0 ? (
-                uniqueEmployees.map((employee) => (
+              ) : filteredEmployees.length > 0 ? (
+                filteredEmployees.map((employee) => (
                   <TableRow key={employee.id}>
                     <TableCell className="font-medium">
                       {employee.firstName} {employee.lastName}
@@ -136,11 +127,11 @@ const EmployeesList: React.FC<EmployeesListProps> = ({
                     <TableCell>{employee.hireDate}</TableCell>
                     <TableCell>
                       <Badge className={`${
-                        employee.status === "Actif" 
+                        employee.status === "Actif" || employee.status === "active" 
                           ? "bg-green-100 text-green-800 hover:bg-green-100" 
                           : "bg-red-100 text-red-800 hover:bg-red-100"
                       }`}>
-                        {employee.status}
+                        {employee.status === "active" ? "Actif" : employee.status}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right space-x-1">

@@ -10,7 +10,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useEmployeeData } from '@/hooks/useEmployeeData';
 
 const EmployeesDashboard: React.FC = () => {
-  // Utiliser useEmployeeData au lieu de useHrModuleData directement
+  // Utiliser useEmployeeData pour avoir les employés dédupliqués
   const { 
     employees, 
     departments 
@@ -24,7 +24,10 @@ const EmployeesDashboard: React.FC = () => {
 
   // Log de debug pour vérifier le nombre d'employés
   useMemo(() => {
-    console.log(`EmployeesDashboard - Nombre d'employés: ${employees?.length || 0}`);
+    console.log(`EmployeesDashboard - Nombre d'employés dédupliqués: ${employees?.length || 0}`);
+    if (employees?.length > 0) {
+      console.log("Liste des employés dédupliqués sur le tableau de bord:", employees.map(e => `${e.firstName} ${e.lastName} (${e.id})`));
+    }
   }, [employees]);
 
   // Calculer les statistiques en temps réel
@@ -33,7 +36,7 @@ const EmployeesDashboard: React.FC = () => {
     
     const today = new Date().toISOString().split('T')[0];
     
-    // Total des employés actifs
+    // Total des employés actifs (dédupliqués)
     const totalEmployees = employees?.length || 0;
     
     // Employés présents aujourd'hui

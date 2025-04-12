@@ -3,6 +3,7 @@ import { useMemo } from 'react';
 import { useHrModuleData } from './useHrModuleData';
 import { Employee } from '@/types/employee';
 import { Department } from '@/components/module/submodules/departments/types';
+import { toast } from 'sonner';
 
 /**
  * Hook centralisé pour accéder aux données des employés et départements
@@ -20,16 +21,19 @@ export const useEmployeeData = () => {
     const seenEmails = new Set();
     const seenFullNames = new Set();
     
+    console.log(`Total d'employés avant déduplication: ${employees.length}`);
+    
     for (const employee of employees) {
-      const fullName = `${employee.firstName || ''}${employee.lastName || ''}`.toLowerCase();
-      const email = (employee.email || employee.professionalEmail || '').toLowerCase();
+      const fullName = `${employee.firstName || ''}${employee.lastName || ''}`.toLowerCase().trim();
+      const email = (employee.email || employee.professionalEmail || '').toLowerCase().trim();
+      const employeeId = employee.id;
       
       // Vérifier si l'employé est un doublon
-      if (!seenIds.has(employee.id) && 
+      if (!seenIds.has(employeeId) && 
           (!email || !seenEmails.has(email)) && 
           (!fullName || !seenFullNames.has(fullName))) {
         
-        seenIds.add(employee.id);
+        seenIds.add(employeeId);
         if (email) seenEmails.add(email);
         if (fullName) seenFullNames.add(fullName);
         
@@ -44,7 +48,12 @@ export const useEmployeeData = () => {
       }
     }
     
-    console.log(`Total d'employés avant déduplication: ${employees.length}, après: ${uniqueEmployees.length}`);
+    console.log(`Total d'employés après déduplication: ${uniqueEmployees.length}`);
+    
+    if (employees.length !== uniqueEmployees.length) {
+      toast.info(`${employees.length - uniqueEmployees.length} doublons d'employés ont été filtrés`);
+    }
+    
     return uniqueEmployees;
   }, [employees]);
   

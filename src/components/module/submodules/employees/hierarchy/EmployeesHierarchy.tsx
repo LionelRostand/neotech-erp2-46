@@ -10,6 +10,7 @@ import { subscribeToDepartmentUpdates } from '@/components/module/submodules/dep
 import { Input } from '@/components/ui/input';
 import { Search } from 'lucide-react';
 import { useEmployeeData } from '@/hooks/useEmployeeData';
+import { toast } from 'sonner';
 
 const EmployeesHierarchy: React.FC = () => {
   const [hierarchyData, setHierarchyData] = useState<HierarchyNode | null>(null);
@@ -19,14 +20,15 @@ const EmployeesHierarchy: React.FC = () => {
   
   // Log de debug pour inspecter les données des employés
   useEffect(() => {
-    console.log(`EmployeesHierarchy - Nombre d'employés: ${employees?.length || 0}`);
+    console.log(`EmployeesHierarchy - Nombre d'employés dédupliqués: ${employees?.length || 0}`);
     if (employees?.length > 0) {
-      console.log("Liste des employés:", employees.map(e => `${e.firstName} ${e.lastName} (${e.id})`));
+      console.log("Liste des employés dédupliqués:", employees.map(e => `${e.firstName} ${e.lastName} (${e.id})`));
     }
   }, [employees]);
   
   useEffect(() => {
     if (!isLoading && departments && departments.length > 0 && employees && employees.length > 0) {
+      console.log(`Construction de la hiérarchie avec ${departments.length} départements et ${employees.length} employés dédupliqués`);
       buildHierarchyData(departments);
     }
   }, [departments, employees, isLoading]);
@@ -34,6 +36,7 @@ const EmployeesHierarchy: React.FC = () => {
   useEffect(() => {
     const unsubscribe = subscribeToDepartmentUpdates((updatedDepartments) => {
       if (employees && employees.length > 0) {
+        console.log(`Mise à jour de la hiérarchie suite à des changements de départements (${updatedDepartments.length} départements, ${employees.length} employés dédupliqués)`);
         buildHierarchyData(updatedDepartments);
       }
     });
@@ -49,7 +52,7 @@ const EmployeesHierarchy: React.FC = () => {
     );
     
     if (!rootDept) {
-      console.log('No root department found, using first department');
+      console.log('Aucun département racine trouvé, utilisation du premier département');
       if (departments.length > 0) {
         createHierarchyFromDepartment(departments[0], departments);
       }
@@ -84,7 +87,7 @@ const EmployeesHierarchy: React.FC = () => {
           return false;
         });
     
-    console.log(`Employés dans le département ${rootDept.name}: ${deptEmployees.length}`);
+    console.log(`Employés dédupliqués dans le département ${rootDept.name}: ${deptEmployees.length}`);
     
     const manager = deptEmployees.find(emp => emp.id === rootDept.managerId) || null;
     
@@ -119,16 +122,26 @@ const EmployeesHierarchy: React.FC = () => {
     
     // Ajouter les employés qui ne sont pas managers
     const nonManagerEmployees = deptEmployees.filter(emp => emp.id !== rootDept.managerId);
-    console.log(`Employés non-managers dans le département ${rootDept.name}: ${nonManagerEmployees.length}`);
+    console.log(`Employés non-managers dédupliqués dans le département ${rootDept.name}: ${nonManagerEmployees.length}`);
+    
+    // Utiliser un Set pour éviter les doublons dans l'affichage
+    const addedEmployeeIds = new Set<string>();
+    
+    if (manager) {
+      addedEmployeeIds.add(manager.id);
+    }
     
     nonManagerEmployees.forEach(emp => {
-      rootNode.children.push({
-        id: emp.id,
-        name: `${emp.firstName} ${emp.lastName}`,
-        title: emp.position || 'Employé',
-        color: '#64748b',
-        children: []
-      });
+      if (!addedEmployeeIds.has(emp.id)) {
+        addedEmployeeIds.add(emp.id);
+        rootNode.children.push({
+          id: emp.id,
+          name: `${emp.firstName} ${emp.lastName}`,
+          title: emp.position || 'Employé',
+          color: '#64748b',
+          children: []
+        });
+      }
     });
     
     setHierarchyData(rootNode);
@@ -164,7 +177,11 @@ const EmployeesHierarchy: React.FC = () => {
       children: []
     };
     
+    // Utiliser un Set pour éviter les doublons dans l'affichage
+    const addedEmployeeIds = new Set<string>();
+    
     if (manager) {
+      addedEmployeeIds.add(manager.id);
       deptNode.children.push({
         id: manager.id,
         name: `${manager.firstName} ${manager.lastName}`,
@@ -188,13 +205,16 @@ const EmployeesHierarchy: React.FC = () => {
     const nonManagerEmployees = deptEmployees.filter(emp => emp.id !== dept.managerId);
     
     nonManagerEmployees.forEach(emp => {
-      deptNode.children.push({
-        id: emp.id,
-        name: `${emp.firstName} ${emp.lastName}`,
-        title: emp.position || 'Employé',
-        color: '#64748b',
-        children: []
-      });
+      if (!addedEmployeeIds.has(emp.id)) {
+        addedEmployeeIds.add(emp.id);
+        deptNode.children.push({
+          id: emp.id,
+          name: `${emp.firstName} ${emp.lastName}`,
+          title: emp.position || 'Employé',
+          color: '#64748b',
+          children: []
+        });
+      }
     });
     
     return deptNode;
