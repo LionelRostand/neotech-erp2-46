@@ -25,6 +25,8 @@ import {
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { TimeReport, TimeReportStatus } from '@/types/timesheet';
+import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
 
 interface TimesheetTableProps {
   data: TimeReport[];
@@ -56,6 +58,33 @@ const TimesheetTable: React.FC<TimesheetTableProps> = ({
       default:
         return <Badge variant="outline">{status}</Badge>;
     }
+  };
+
+  // Fonction pour formater les dates et gérer les timestamps Firestore
+  const formatDateValue = (dateValue: any): string => {
+    if (!dateValue) return '';
+    
+    // Si la date est un objet avec seconds et nanoseconds (Firestore Timestamp)
+    if (dateValue && typeof dateValue === 'object' && 'seconds' in dateValue) {
+      return new Date(dateValue.seconds * 1000).toLocaleDateString('fr');
+    }
+    
+    // Si c'est une chaîne de date ISO
+    if (typeof dateValue === 'string') {
+      try {
+        return new Date(dateValue).toLocaleDateString('fr');
+      } catch (e) {
+        return dateValue;
+      }
+    }
+    
+    // Si c'est déjà un objet Date
+    if (dateValue instanceof Date) {
+      return dateValue.toLocaleDateString('fr');
+    }
+    
+    // Fallback
+    return String(dateValue);
   };
 
   if (isLoading) {
@@ -101,7 +130,7 @@ const TimesheetTable: React.FC<TimesheetTableProps> = ({
                 </TableCell>
                 <TableCell>
                   <div className="text-sm">
-                    {report.startDate && new Date(report.startDate).toLocaleDateString('fr')} - {report.endDate && new Date(report.endDate).toLocaleDateString('fr')}
+                    {formatDateValue(report.startDate)} - {formatDateValue(report.endDate)}
                   </div>
                 </TableCell>
                 <TableCell className="hidden md:table-cell">
@@ -114,7 +143,7 @@ const TimesheetTable: React.FC<TimesheetTableProps> = ({
                   {getStatusBadge(report.status)}
                 </TableCell>
                 <TableCell className="hidden md:table-cell text-sm text-muted-foreground">
-                  {report.lastUpdateText || report.lastUpdated && new Date(report.lastUpdated).toLocaleDateString('fr')}
+                  {report.lastUpdateText || formatDateValue(report.lastUpdated)}
                 </TableCell>
                 <TableCell className="text-right">
                   <DropdownMenu>

@@ -6,6 +6,41 @@ import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { getAllTimeSheets } from '@/components/module/submodules/timesheet/services/timesheetService';
 
+// Fonction pour formater la date
+const formatDate = (dateValue: any): string => {
+  if (!dateValue) return '';
+  
+  // Si la date est un objet avec seconds et nanoseconds (Firestore Timestamp)
+  if (dateValue && typeof dateValue === 'object' && 'seconds' in dateValue) {
+    try {
+      return format(new Date(dateValue.seconds * 1000), 'dd MMM yyyy', { locale: fr });
+    } catch (error) {
+      return new Date(dateValue.seconds * 1000).toLocaleDateString('fr');
+    }
+  }
+  
+  // Si c'est une chaîne de date ISO
+  if (typeof dateValue === 'string') {
+    try {
+      return format(new Date(dateValue), 'dd MMM yyyy', { locale: fr });
+    } catch (error) {
+      return dateValue;
+    }
+  }
+  
+  // Si c'est déjà un objet Date
+  if (dateValue instanceof Date) {
+    try {
+      return format(dateValue, 'dd MMM yyyy', { locale: fr });
+    } catch (error) {
+      return dateValue.toLocaleDateString('fr');
+    }
+  }
+  
+  // Fallback
+  return String(dateValue);
+};
+
 /**
  * Hook pour accéder aux données des feuilles de temps
  */
@@ -15,15 +50,6 @@ export const useTimeSheetData = () => {
   const [isLocalLoading, setIsLocalLoading] = useState(false);
   const [localError, setLocalError] = useState<Error | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  
-  // Fonction pour formater la date
-  const formatDate = (dateString: string) => {
-    try {
-      return format(new Date(dateString), 'dd MMM yyyy', { locale: fr });
-    } catch (error) {
-      return dateString;
-    }
-  };
   
   // Fonction pour rafraîchir les données directement depuis Firestore
   const refetch = useCallback(async () => {
@@ -57,6 +83,11 @@ export const useTimeSheetData = () => {
     return mergedTimeSheets.map(timeSheet => {
       const employee = employees.find(emp => emp.id === timeSheet.employeeId);
       
+      // Formatter les dates qui pourraient être des timestamps Firestore
+      const formattedStartDate = timeSheet.startDate ? formatDate(timeSheet.startDate) : '';
+      const formattedEndDate = timeSheet.endDate ? formatDate(timeSheet.endDate) : '';
+      const formattedLastUpdated = timeSheet.updatedAt || timeSheet.lastUpdated || timeSheet.createdAt || new Date().toISOString();
+      
       // S'assurer que toutes les propriétés nécessaires sont présentes
       return {
         ...timeSheet, // Garder toutes les propriétés existantes
@@ -67,10 +98,10 @@ export const useTimeSheetData = () => {
         endDate: timeSheet.endDate || new Date().toISOString(),
         totalHours: timeSheet.totalHours || 0,
         status: (timeSheet.status as TimeReportStatus) || "En cours",
-        lastUpdated: timeSheet.updatedAt || timeSheet.lastUpdated || timeSheet.createdAt || new Date().toISOString(),
+        lastUpdated: formattedLastUpdated,
         employeeName: employee ? `${employee.firstName} ${employee.lastName}` : (timeSheet.employeeName || 'Employé inconnu'),
         employeePhoto: employee?.photoURL || employee?.photo || timeSheet.employeePhoto || '',
-        lastUpdateText: formatDate(timeSheet.updatedAt || timeSheet.lastUpdated || timeSheet.createdAt || new Date().toISOString())
+        lastUpdateText: formatDate(formattedLastUpdated)
       } as TimeReport;
     }) as TimeReport[];
   }, [mergedTimeSheets, employees]);

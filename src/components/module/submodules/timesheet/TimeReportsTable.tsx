@@ -41,12 +41,39 @@ const TimeReportsTable: React.FC<TimeReportsTableProps> = ({ reports }) => {
     }
   };
 
-  const formatDate = (dateString: string) => {
-    try {
-      return format(new Date(dateString), 'dd MMM yyyy', { locale: fr });
-    } catch (error) {
-      return dateString;
+  // Fonction pour formater les dates et gérer les timestamps Firestore
+  const formatDateValue = (dateValue: any): string => {
+    if (!dateValue) return '';
+    
+    // Si la date est un objet avec seconds et nanoseconds (Firestore Timestamp)
+    if (dateValue && typeof dateValue === 'object' && 'seconds' in dateValue) {
+      try {
+        return format(new Date(dateValue.seconds * 1000), 'dd MMM yyyy', { locale: fr });
+      } catch (error) {
+        return new Date(dateValue.seconds * 1000).toLocaleDateString('fr');
+      }
     }
+    
+    // Si c'est une chaîne de date ISO
+    if (typeof dateValue === 'string') {
+      try {
+        return format(new Date(dateValue), 'dd MMM yyyy', { locale: fr });
+      } catch (error) {
+        return dateValue;
+      }
+    }
+    
+    // Si c'est déjà un objet Date
+    if (dateValue instanceof Date) {
+      try {
+        return format(dateValue, 'dd MMM yyyy', { locale: fr });
+      } catch (error) {
+        return dateValue.toLocaleDateString('fr');
+      }
+    }
+    
+    // Fallback
+    return String(dateValue);
   };
 
   return (
@@ -69,7 +96,7 @@ const TimeReportsTable: React.FC<TimeReportsTableProps> = ({ reports }) => {
               <TableCell className="font-medium">{report.title}</TableCell>
               <TableCell>{report.employeeName}</TableCell>
               <TableCell>
-                {formatDate(report.startDate)} - {formatDate(report.endDate)}
+                {formatDateValue(report.startDate)} - {formatDateValue(report.endDate)}
               </TableCell>
               <TableCell>{report.totalHours}h</TableCell>
               <TableCell>
@@ -77,7 +104,7 @@ const TimeReportsTable: React.FC<TimeReportsTableProps> = ({ reports }) => {
                   {report.status}
                 </Badge>
               </TableCell>
-              <TableCell>{formatDate(report.lastUpdated)}</TableCell>
+              <TableCell>{report.lastUpdateText || formatDateValue(report.lastUpdated)}</TableCell>
               <TableCell className="text-right">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
