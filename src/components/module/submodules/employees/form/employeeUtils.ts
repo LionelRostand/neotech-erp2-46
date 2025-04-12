@@ -3,7 +3,7 @@ import { Employee } from '@/types/employee';
 import { EmployeeFormValues } from './employeeFormSchema';
 import { v4 as uuidv4 } from 'uuid';
 
-export const prepareEmployeeData = (data: EmployeeFormValues): Partial<Employee> => {
+export const prepareEmployeeData = (data: EmployeeFormValues, existingId?: string): Partial<Employee> => {
   // Construct address object from individual fields
   const addressObj = {
     street: (data.streetNumber ? data.streetNumber + ' ' : '') + (data.streetName || ''),
@@ -14,7 +14,7 @@ export const prepareEmployeeData = (data: EmployeeFormValues): Partial<Employee>
   };
 
   return {
-    id: data.id || `EMP${Math.floor(1000 + Math.random() * 9000)}`, // Keep existing ID if provided
+    id: existingId || `EMP${Math.floor(1000 + Math.random() * 9000)}`, // Use existing ID if provided or generate a new one
     firstName: data.firstName,
     lastName: data.lastName,
     email: data.email,

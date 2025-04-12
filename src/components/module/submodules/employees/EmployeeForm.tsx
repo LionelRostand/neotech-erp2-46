@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -66,8 +65,8 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
     if (employee && isEditing) {
       const addressFields = extractAddressFields(employee.address);
       
-      form.reset({
-        id: employee.id,
+      // Create a form values object without the id field for reset
+      const formValues: EmployeeFormValues = {
         firstName: employee.firstName || '',
         lastName: employee.lastName || '',
         email: employee.email || '',
@@ -85,7 +84,9 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
         status: (employee.status as any) || 'active',
         professionalEmail: employee.professionalEmail || '',
         company: typeof employee.company === 'string' ? employee.company : '',
-      });
+      };
+      
+      form.reset(formValues);
 
       console.log('Formulaire initialisé avec les données:', employee);
       console.log('Champs d\'adresse extraits:', addressFields);
@@ -95,7 +96,11 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
   const handleFormSubmit = async (data: EmployeeFormValues) => {
     try {
       console.log('Données du formulaire soumises:', data);
-      const employeeData = prepareEmployeeData(data);
+      
+      // Keep the employee ID if we're editing an existing employee
+      const employeeId = isEditing && employee ? employee.id : undefined;
+      
+      const employeeData = prepareEmployeeData(data, employeeId);
       console.log('Données préparées pour la sauvegarde:', employeeData);
       
       // Si nous modifions un employé existant, mettre à jour le document Firestore
