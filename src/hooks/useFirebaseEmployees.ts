@@ -116,7 +116,7 @@ export const useFirebaseEmployees = () => {
             toast({
               title: "Doublon détecté",
               description: `Un employé avec l'email ${employee.email} existe déjà.`,
-              variant: "destructive",
+              variant: "destructive", // Changed from "warning" to "destructive"
             });
             return true;
           }
@@ -133,7 +133,7 @@ export const useFirebaseEmployees = () => {
             toast({
               title: "Doublon détecté",
               description: `Un employé avec l'email professionnel ${employee.professionalEmail} existe déjà.`,
-              variant: "destructive",
+              variant: "destructive", // Changed from "warning" to "destructive"
             });
             return true;
           }
@@ -155,7 +155,7 @@ export const useFirebaseEmployees = () => {
             toast({
               title: "Attention",
               description: `Un employé nommé ${employee.firstName} ${employee.lastName} existe déjà.`,
-              variant: "warning",
+              variant: "default", // Changed from "warning" to "default"
             });
             // Ne pas bloquer pour les homonymes, mais avertir
             break;
