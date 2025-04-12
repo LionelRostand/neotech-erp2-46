@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { EmployeeFormValues } from './employeeFormSchema';
-import { Home, MapPin, Building, City } from 'lucide-react';
+import { Home, MapPin, Building, Landmark } from 'lucide-react';
 
 const PersonalInfoFields: React.FC = () => {
   const form = useFormContext<EmployeeFormValues>();
@@ -123,7 +123,7 @@ const PersonalInfoFields: React.FC = () => {
                 <FormLabel>Ville</FormLabel>
                 <FormControl>
                   <div className="flex items-center">
-                    <City className="h-4 w-4 mr-2 text-muted-foreground" />
+                    <Landmark className="h-4 w-4 mr-2 text-muted-foreground" />
                     <Input placeholder="Paris" {...field} />
                   </div>
                 </FormControl>

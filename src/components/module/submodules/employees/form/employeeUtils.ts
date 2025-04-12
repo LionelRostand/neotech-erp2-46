@@ -4,13 +4,13 @@ import { EmployeeFormValues } from './employeeFormSchema';
 import { v4 as uuidv4 } from 'uuid';
 
 export const prepareEmployeeData = (data: EmployeeFormValues): Partial<Employee> => {
-  // Convert the simple address string to the address object structure
-  const addressParts = data.address ? data.address.split(',').map(part => part.trim()) : [];
+  // Construct address object from individual fields
   const addressObj = {
-    street: addressParts[0] || '',
-    city: addressParts[1] || '',
-    postalCode: addressParts[2] || '',
-    country: addressParts[3] || ''
+    street: (data.streetNumber ? data.streetNumber + ' ' : '') + (data.streetName || ''),
+    city: data.city || '',
+    postalCode: data.zipCode || '',
+    state: data.region || '',
+    country: 'France' // Default country
   };
 
   return {
