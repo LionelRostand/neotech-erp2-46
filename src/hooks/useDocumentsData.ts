@@ -28,27 +28,6 @@ export interface HrDocument {
 export const useDocumentsData = () => {
   const { hrDocuments, employees, isLoading, error } = useHrModuleData();
   
-  // Fonction pour formater les dates - moved before its first usage
-  const formatDate = (dateStr: string | undefined) => {
-    if (!dateStr) return '';
-    
-    try {
-      // First, ensure we have a valid date
-      const date = new Date(dateStr);
-      
-      // Check if the date is valid
-      if (isNaN(date.getTime())) {
-        console.warn('Date invalide:', dateStr);
-        return '';
-      }
-      
-      return date.toLocaleDateString('fr-FR');
-    } catch (error) {
-      console.error('Erreur de formatage de date:', dateStr, error);
-      return '';
-    }
-  };
-  
   // Enrichir les documents avec les noms des employés si nécessaire
   const formattedDocuments = useMemo(() => {
     if (!hrDocuments || hrDocuments.length === 0) return [];
@@ -68,14 +47,22 @@ export const useDocumentsData = () => {
         }
       }
       
-      // Use a safe date value for uploadDate
+      // Determine which date field to use and handle any invalid dates
       const dateToUse = document.uploadDate || document.createdAt || document.date || '';
+      let formattedDate = '';
+      
+      try {
+        formattedDate = formatDateUtil(dateToUse);
+      } catch (error) {
+        console.error('Error formatting document date:', error);
+        formattedDate = '';
+      }
       
       return {
         id: document.id,
         title: document.title || document.filename || document.name || 'Document sans titre',
         type: document.type || 'Autre',
-        uploadDate: formatDate(dateToUse),
+        uploadDate: formattedDate,
         fileSize: document.fileSize,
         fileType: document.fileType,
         url: document.url,

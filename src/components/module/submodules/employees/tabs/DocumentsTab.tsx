@@ -9,6 +9,7 @@ import {
   removeEmployeeDocument 
 } from '../services/documentService';
 import UploadDocumentDialog from '../../documents/components/UploadDocumentDialog';
+import { formatDate } from '@/lib/formatters';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 
 interface DocumentsTabProps {
@@ -27,17 +28,14 @@ const DocumentsTab: React.FC<DocumentsTabProps> = ({
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [documentToDelete, setDocumentToDelete] = useState<Document | null>(null);
   
-  // Fetch documents when component mounts or employee changes
   useEffect(() => {
     const fetchDocuments = async () => {
       setIsLoading(true);
       try {
         if (employee.id) {
-          // If documents are directly in the employee object, use them
           if (employee.documents && Array.isArray(employee.documents) && employee.documents.length > 0) {
             setDocuments(employee.documents as Document[]);
           } else {
-            // Otherwise fetch them
             const fetchedDocs = await getEmployeeDocuments(employee.id);
             setDocuments(fetchedDocs);
           }
@@ -54,7 +52,6 @@ const DocumentsTab: React.FC<DocumentsTabProps> = ({
   }, [employee]);
   
   const handleDocumentAdded = (newDocument: Document) => {
-    // Add the new document to the list without re-fetching
     setDocuments(prev => [...prev, newDocument]);
   };
   
@@ -64,7 +61,6 @@ const DocumentsTab: React.FC<DocumentsTabProps> = ({
     try {
       await removeEmployeeDocument(employee.id, documentToDelete.id!);
       
-      // Update local state to remove the deleted document
       setDocuments(prev => prev.filter(doc => doc.id !== documentToDelete.id));
       
       toast.success("Document supprimé avec succès");
@@ -76,7 +72,6 @@ const DocumentsTab: React.FC<DocumentsTabProps> = ({
     }
   };
   
-  // Function to determine document icon based on type/fileType
   const getDocumentIcon = (document: Document) => {
     const fileType = document.fileType?.toLowerCase() || '';
     
@@ -89,7 +84,6 @@ const DocumentsTab: React.FC<DocumentsTabProps> = ({
     }
   };
   
-  // Format file size for display
   const formatFileSize = (size?: number): string => {
     if (!size) return '';
     
@@ -102,20 +96,12 @@ const DocumentsTab: React.FC<DocumentsTabProps> = ({
     }
   };
   
-  // Format date for display
-  const formatDate = (dateString?: string): string => {
-    if (!dateString) return '';
-    
-    try {
-      const date = new Date(dateString);
-      return date.toLocaleDateString('fr-FR', { 
-        year: 'numeric', 
-        month: 'long', 
-        day: 'numeric' 
-      });
-    } catch (e) {
-      return dateString;
-    }
+  const formatDocumentDate = (dateString?: string): string => {
+    return formatDate(dateString, { 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric' 
+    });
   };
   
   return (
@@ -153,7 +139,7 @@ const DocumentsTab: React.FC<DocumentsTabProps> = ({
                       {document.fileSize && (
                         <span> • {formatFileSize(document.fileSize)}</span>
                       )}
-                      <span> • {formatDate(document.date)}</span>
+                      <span> • {formatDocumentDate(document.date)}</span>
                     </div>
                   </div>
                   {isEditing && (
@@ -203,18 +189,15 @@ const DocumentsTab: React.FC<DocumentsTabProps> = ({
         )}
       </Card>
       
-      {/* Document upload dialog */}
       <UploadDocumentDialog 
         open={isDialogOpen}
         onOpenChange={setIsDialogOpen}
         employee={employee}
         onDocumentAdded={handleDocumentAdded}
         onSuccess={() => {
-          // Optional additional success handling
         }}
       />
       
-      {/* Confirm delete dialog */}
       <AlertDialog 
         open={!!documentToDelete} 
         onOpenChange={(open) => !open && setDocumentToDelete(null)}
