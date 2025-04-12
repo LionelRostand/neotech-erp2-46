@@ -4,7 +4,6 @@ import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/comp
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useFirebaseCompanies } from '@/hooks/useFirebaseCompanies';
-import { Company } from '@/components/module/submodules/companies/types';
 import { Loader2 } from 'lucide-react';
 
 const EmploymentInfoFields = () => {
@@ -24,8 +23,6 @@ const EmploymentInfoFields = () => {
 
   return (
     <div className="space-y-4">
-      <h3 className="text-lg font-medium">Informations professionnelles</h3>
-      
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <FormField
           name="department"

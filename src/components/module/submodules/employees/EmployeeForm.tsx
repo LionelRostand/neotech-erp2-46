@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -17,6 +18,7 @@ import {
 import { Button } from '@/components/ui/button';
 import PersonalInfoFields from './form/PersonalInfoFields';
 import EmploymentInfoFields from './form/EmploymentInfoFields';
+import PhotoUploadField from './form/PhotoUploadField';
 import { prepareEmployeeData, extractAddressFields } from './form/employeeUtils';
 import { toast } from 'sonner';
 import { updateDocument, setDocument } from '@/hooks/firestore/update-operations';
@@ -57,6 +59,7 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
       status: 'active',
       professionalEmail: '',
       company: '',
+      photo: undefined,
     },
   });
 
@@ -84,6 +87,13 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
         status: (employee.status as any) || 'active',
         professionalEmail: employee.professionalEmail || '',
         company: typeof employee.company === 'string' ? employee.company : '',
+        photo: employee.photoData ? {
+          data: employee.photoData,
+          fileName: employee.photoMeta?.fileName || 'profile.jpg',
+          fileType: employee.photoMeta?.fileType || 'image/jpeg',
+          fileSize: employee.photoMeta?.fileSize || 0,
+          updatedAt: employee.photoMeta?.updatedAt || new Date().toISOString()
+        } : undefined,
       };
       
       form.reset(formValues);
@@ -134,14 +144,20 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
         
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-6">
-            <div className="space-y-4">
-              <h3 className="text-lg font-medium">Informations personnelles</h3>
-              <PersonalInfoFields />
-            </div>
-            
-            <div className="space-y-4">
-              <h3 className="text-lg font-medium">Informations professionnelles</h3>
-              <EmploymentInfoFields />
+            <div className="space-y-6">
+              <div className="text-center">
+                <PhotoUploadField defaultPhotoUrl={employee?.photoData} />
+              </div>
+              
+              <div className="space-y-4">
+                <h3 className="text-lg font-medium">Informations personnelles</h3>
+                <PersonalInfoFields />
+              </div>
+              
+              <div className="space-y-4">
+                <h3 className="text-lg font-medium">Informations professionnelles</h3>
+                <EmploymentInfoFields />
+              </div>
             </div>
             
             <DialogFooter>

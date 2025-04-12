@@ -13,6 +13,17 @@ export const prepareEmployeeData = (data: EmployeeFormValues, existingId?: strin
     country: 'France' // Default country
   };
 
+  // Prepare photo data if available
+  const photoData = data.photo ? {
+    photoData: data.photo.data,
+    photoMeta: {
+      fileName: data.photo.fileName,
+      fileType: data.photo.fileType,
+      fileSize: data.photo.fileSize,
+      updatedAt: data.photo.updatedAt
+    }
+  } : {};
+
   return {
     id: existingId || `EMP${Math.floor(1000 + Math.random() * 9000)}`, // Use existing ID if provided or generate a new one
     firstName: data.firstName,
@@ -40,7 +51,8 @@ export const prepareEmployeeData = (data: EmployeeFormValues, existingId?: strin
       thursday: '09:00 - 18:00',
       friday: '09:00 - 17:00',
     },
-    payslips: []
+    payslips: [],
+    ...photoData
   };
 };
 
