@@ -14,18 +14,33 @@ export const useEmployeeData = () => {
   const formattedEmployees = useMemo(() => {
     if (!employees || employees.length === 0) return [];
     
-    // Filtrer pour n'avoir que des employés uniques par ID
+    // Filtrer pour n'avoir que des employés uniques par ID, email et nom complet
     const uniqueEmployees = [];
     const seenIds = new Set();
+    const seenEmails = new Set();
+    const seenFullNames = new Set();
     
     for (const employee of employees) {
-      if (!seenIds.has(employee.id)) {
+      const fullName = `${employee.firstName || ''}${employee.lastName || ''}`.toLowerCase();
+      const email = (employee.email || employee.professionalEmail || '').toLowerCase();
+      
+      // Vérifier si l'employé est un doublon
+      if (!seenIds.has(employee.id) && 
+          !seenEmails.has(email) && 
+          !seenFullNames.has(fullName)) {
+        
         seenIds.add(employee.id);
+        if (email) seenEmails.add(email);
+        if (fullName) seenFullNames.add(fullName);
+        
         uniqueEmployees.push({
           ...employee,
           // Garantir que chaque employé a une photo (même placeholder)
           photoURL: employee.photoURL || employee.photo || '',
         });
+      } else {
+        // Pour le debug, afficher les doublons identifiés
+        console.log(`Doublon identifié et filtré: ${employee.firstName} ${employee.lastName} (${employee.id})`);
       }
     }
     

@@ -7,11 +7,16 @@ import { useHrModuleData } from '@/hooks/useHrModuleData';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useEmployeeData } from '@/hooks/useEmployeeData';
 
 const EmployeesDashboard: React.FC = () => {
+  // Utiliser useEmployeeData au lieu de useHrModuleData directement
   const { 
     employees, 
-    departments, 
+    departments 
+  } = useEmployeeData();
+  
+  const {
     attendance, 
     leaveRequests, 
     isLoading 
