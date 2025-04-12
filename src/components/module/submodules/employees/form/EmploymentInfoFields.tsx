@@ -4,11 +4,15 @@ import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/comp
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useFirebaseCompanies } from '@/hooks/useFirebaseCompanies';
+import { useFirebaseDepartments } from '@/hooks/useFirebaseDepartments';
 import { Loader2, Mail } from 'lucide-react';
+import { Department } from '@/components/module/submodules/departments/types';
 
 const EmploymentInfoFields = () => {
   const { companies, isLoading } = useFirebaseCompanies();
+  const { departments, isLoading: loadingDepartments } = useFirebaseDepartments();
   const [formattedCompanies, setFormattedCompanies] = useState<{id: string, name: string}[]>([]);
+  const [formattedDepartments, setFormattedDepartments] = useState<{id: string, name: string}[]>([]);
   
   useEffect(() => {
     if (companies && companies.length > 0) {
@@ -21,6 +25,17 @@ const EmploymentInfoFields = () => {
     }
   }, [companies]);
 
+  useEffect(() => {
+    if (departments && departments.length > 0) {
+      // Format departments for select dropdown
+      const formatted = departments.map(department => ({
+        id: department.id,
+        name: department.name || `Département (${department.id})`
+      }));
+      setFormattedDepartments(formatted);
+    }
+  }, [departments]);
+
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -29,9 +44,34 @@ const EmploymentInfoFields = () => {
           render={({ field }) => (
             <FormItem>
               <FormLabel>Département</FormLabel>
-              <FormControl>
-                <Input {...field} placeholder="Département" />
-              </FormControl>
+              <Select 
+                onValueChange={field.onChange} 
+                defaultValue={field.value}
+              >
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder={loadingDepartments ? "Chargement..." : "Sélectionner un département"} />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {loadingDepartments ? (
+                    <div className="flex items-center justify-center p-2">
+                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                      Chargement des départements...
+                    </div>
+                  ) : formattedDepartments.length > 0 ? (
+                    formattedDepartments.map((department) => (
+                      <SelectItem key={department.id} value={department.id}>
+                        {department.name}
+                      </SelectItem>
+                    ))
+                  ) : (
+                    <SelectItem value="none" disabled>
+                      Aucun département disponible
+                    </SelectItem>
+                  )}
+                </SelectContent>
+              </Select>
               <FormMessage />
             </FormItem>
           )}
