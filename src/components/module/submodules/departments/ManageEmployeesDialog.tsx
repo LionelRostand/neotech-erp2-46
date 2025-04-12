@@ -13,7 +13,7 @@ import EmployeesList from './EmployeesList';
 interface ManageEmployeesDialogProps {
   department: Department;
   selectedEmployees: string[];
-  onEmployeeSelection: (employeeId: string) => void;
+  onEmployeeSelection: (employeeId: string, checked: boolean) => void;
   getDepartmentEmployees: (departmentId: string) => Employee[];
   onClose: () => void;
   onSave: () => void;
@@ -23,6 +23,7 @@ const ManageEmployeesDialog: React.FC<ManageEmployeesDialogProps> = ({
   department,
   selectedEmployees,
   onEmployeeSelection,
+  getDepartmentEmployees,
   onClose,
   onSave
 }) => {
@@ -56,7 +57,7 @@ const ManageEmployeesDialog: React.FC<ManageEmployeesDialogProps> = ({
       <EmployeesList
         employees={filteredEmployees}
         selectedEmployees={selectedEmployees}
-        onEmployeeSelection={onEmployeeSelection}
+        onEmployeeSelection={(employeeId) => onEmployeeSelection(employeeId, !selectedEmployees.includes(employeeId))}
         id="manage"
       />
       

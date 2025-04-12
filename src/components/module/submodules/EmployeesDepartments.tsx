@@ -64,7 +64,7 @@ const EmployeesDepartments: React.FC = () => {
           onInputChange={handleInputChange}
           onManagerChange={handleManagerChange}
           onColorChange={handleColorChange}
-          onEmployeeSelection={(employeeId) => handleEmployeeSelection(employeeId, !selectedEmployees.includes(employeeId))}
+          onEmployeeSelection={handleEmployeeSelection}
           onClose={() => setIsAddDialogOpen(false)}
           onSave={handleSaveDepartment}
         />
@@ -80,7 +80,7 @@ const EmployeesDepartments: React.FC = () => {
           onInputChange={handleInputChange}
           onManagerChange={handleManagerChange}
           onColorChange={handleColorChange}
-          onEmployeeSelection={(employeeId) => handleEmployeeSelection(employeeId, !selectedEmployees.includes(employeeId))}
+          onEmployeeSelection={handleEmployeeSelection}
           onClose={() => setIsEditDialogOpen(false)}
           onUpdate={handleUpdateDepartment}
         />
@@ -95,8 +95,8 @@ const EmployeesDepartments: React.FC = () => {
           <ManageEmployeesDialog 
             department={currentDepartment}
             selectedEmployees={selectedEmployees}
-            onEmployeeSelection={(employeeId) => handleEmployeeSelection(employeeId, !selectedEmployees.includes(employeeId))}
-            getDepartmentEmployees={(departmentId) => getDepartmentEmployees(departmentId)}
+            onEmployeeSelection={handleEmployeeSelection}
+            getDepartmentEmployees={getDepartmentEmployees}
             onClose={() => setIsManageEmployeesDialogOpen(false)}
             onSave={handleSaveEmployeeAssignments}
           />
