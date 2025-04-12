@@ -121,7 +121,7 @@ export const LeavePolicies: React.FC = () => {
             <ul className="space-y-1 text-sm">
               <li>• <strong>Congés été (juillet/août) :</strong> au moins 3 mois à l'avance</li>
               <li>• <strong>Congés > 1 semaine :</strong> au moins 30 jours à l'avance</li>
-              <li>• <strong>Congés < 1 semaine :</strong> au moins 15 jours à l'avance</li>
+              <li>• <strong>Congés &lt; 1 semaine :</strong> au moins 15 jours à l'avance</li>
               <li>• <strong>RTT :</strong> au moins 7 jours à l'avance</li>
               <li>• <strong>Congés exceptionnels :</strong> dès que possible</li>
             </ul>
@@ -131,3 +131,5 @@ export const LeavePolicies: React.FC = () => {
     </div>
   );
 };
+
+export default LeavePolicies;
