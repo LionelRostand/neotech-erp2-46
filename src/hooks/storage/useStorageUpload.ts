@@ -11,12 +11,23 @@ export interface UploadResult {
   fileName: string;
   fileType: string;
   fileSize: number;
+  fileData?: string; // Base64 data for the file
 }
 
 export const useStorageUpload = () => {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadError, setUploadError] = useState<Error | null>(null);
+
+  // Fonction pour convertir le fichier en Base64
+  const convertFileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = (error) => reject(error);
+    });
+  };
 
   const uploadFile = async (
     file: File, 
@@ -36,6 +47,10 @@ export const useStorageUpload = () => {
       
       const filePath = `${path}/${fileName}`;
       console.log(`Téléversement du fichier vers ${filePath}`);
+
+      // Convertir le fichier en Base64 pour le stockage dans Firestore
+      const base64Data = await convertFileToBase64(file);
+      console.log('Fichier converti en Base64 pour stockage binaire');
 
       // Créer une référence au fichier dans Storage
       const storageRef = ref(storage, filePath);
@@ -98,7 +113,8 @@ export const useStorageUpload = () => {
                 filePath,
                 fileName,
                 fileType: file.type,
-                fileSize: file.size
+                fileSize: file.size,
+                fileData: base64Data // Ajouter les données binaires en Base64
               });
             } catch (error) {
               console.error('Erreur lors de la récupération de l\'URL:', error);

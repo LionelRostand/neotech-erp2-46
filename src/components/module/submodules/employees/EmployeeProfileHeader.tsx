@@ -82,20 +82,31 @@ const EmployeeProfileHeader: React.FC<EmployeeProfileHeaderProps> = ({ employee,
       const uploadPath = `hr_employees/${employee.id}/profile`;
       const result = await uploadFile(file, uploadPath, 'profile_photo');
       
-      // Mise à jour directe du document dans Firestore
+      console.log('Résultat du téléversement:', result);
+      
+      // Mise à jour directe du document dans Firestore avec l'URL ET les données binaires
       await updateDocument(COLLECTIONS.HR.EMPLOYEES, employee.id, {
         photoURL: result.fileUrl,
-        photo: result.fileUrl
+        photo: result.fileUrl,
+        // Stocker les données binaires dans un champ dédié
+        photoData: result.fileData,
+        photoMeta: {
+          fileName: result.fileName,
+          fileType: result.fileType,
+          fileSize: result.fileSize,
+          updatedAt: new Date().toISOString()
+        }
       });
       
-      console.log('Photo mise à jour dans Firestore:', result.fileUrl);
+      console.log('Photo et données binaires mises à jour dans Firestore:', result.fileUrl);
       
       // Update local state if callback provided
       if (onEmployeeUpdate) {
         onEmployeeUpdate({
           ...employee,
           photoURL: result.fileUrl,
-          photo: result.fileUrl
+          photo: result.fileUrl,
+          photoData: result.fileData
         });
       }
       
@@ -118,7 +129,10 @@ const EmployeeProfileHeader: React.FC<EmployeeProfileHeaderProps> = ({ employee,
         <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
           <div className="relative group">
             <Avatar className="h-24 w-24">
-              <AvatarImage src={employee.photoURL || employee.photo} alt={`${employee.firstName} ${employee.lastName}`} />
+              <AvatarImage 
+                src={employee.photoURL || employee.photo || (employee.photoData ? employee.photoData : undefined)} 
+                alt={`${employee.firstName} ${employee.lastName}`} 
+              />
               <AvatarFallback className="text-2xl">{getInitials()}</AvatarFallback>
             </Avatar>
             

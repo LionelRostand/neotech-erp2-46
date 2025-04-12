@@ -34,6 +34,13 @@ export interface Employee {
   departmentId: string;
   photo: string;
   photoURL: string;
+  photoData?: string; // Base64 data for the photo
+  photoMeta?: {
+    fileName: string;
+    fileType: string;
+    fileSize: number;
+    updatedAt: string;
+  };
   hireDate: string;
   startDate: string;
   status: 'active' | 'inactive' | 'onLeave' | 'Actif';
