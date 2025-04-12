@@ -113,31 +113,41 @@ export const useStorageUpload = () => {
             const errorMessage = error.message || '';
             if (errorMessage.includes('CORS') || error.code === 'storage/unauthorized') {
               console.error('Erreur CORS détectée:', error);
-              toast.error('Erreur d\'accès au stockage. Problème de CORS détecté.');
+              // En cas d'erreur CORS, nous pouvons toujours retourner les données hexadécimales et base64
+              // qui ont été converties localement et n'ont pas besoin d'un accès réseau
+              toast.warning('Impossible de téléverser sur Firebase Storage à cause des restrictions CORS. Utilisation du stockage local.');
+              
+              resolve({
+                fileUrl: '', // Pas d'URL disponible
+                filePath: filePath,
+                fileName: fileName,
+                fileType: file.type,
+                fileSize: file.size,
+                fileData: base64Data,
+                fileHex: hexData
+              });
             } else {
               toast.error(`Erreur de téléversement: ${errorMessage}`);
+              setUploadError(error);
+              setIsUploading(false);
+              reject(error);
             }
-            
-            setUploadError(error);
-            setIsUploading(false);
-            reject(error);
           },
           async () => {
             // Téléversement terminé avec succès
             try {
-              // Utiliser une technique différente pour contourner les erreurs CORS lors de la récupération de l'URL
               let downloadURL = '';
+              
               try {
+                // Essayer de récupérer l'URL de téléchargement
                 downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
               } catch (urlError) {
-                console.warn('Erreur lors de la récupération de l\'URL standard, utilisation de l\'URL générée:', urlError);
-                // Créer manuellement l'URL en cas d'échec de getDownloadURL
-                // Use environment-specific bucket or fallback to a default
-                const bucketName = import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || 'neotech-erp.appspot.com';
-                downloadURL = `https://firebasestorage.googleapis.com/v0/b/${bucketName}/o/${encodeURIComponent(filePath)}?alt=media`;
+                console.warn('Erreur lors de la récupération de l\'URL, utilisation des données locales:', urlError);
+                // En cas d'échec de getDownloadURL, nous utiliserons uniquement les données locales
+                downloadURL = ''; // Pas d'URL disponible
               }
               
-              console.log('Fichier disponible à:', downloadURL);
+              console.log('Téléversement terminé, données disponibles en local et via URL:', downloadURL ? 'Oui' : 'Non');
               
               setIsUploading(false);
               
@@ -147,21 +157,25 @@ export const useStorageUpload = () => {
                 fileName,
                 fileType: file.type,
                 fileSize: file.size,
-                fileData: base64Data, // Ajouter les données binaires en Base64
-                fileHex: hexData     // Ajouter les données en format hexadécimal
+                fileData: base64Data, // Données binaires en Base64
+                fileHex: hexData     // Données en format hexadécimal
               });
             } catch (error) {
-              console.error('Erreur lors de la récupération de l\'URL:', error);
+              console.error('Erreur finale:', error);
               
-              if (error instanceof Error && error.message.includes('CORS')) {
-                toast.error('Erreur d\'accès au fichier téléversé. Problème de CORS détecté.');
-              } else {
-                toast.error('Erreur lors de la récupération de l\'URL du fichier');
-              }
+              // Même en cas d'erreur finale, retourner les données locales
+              toast.info('Le fichier a été stocké localement mais n\'est pas accessible via URL.');
               
-              setUploadError(error instanceof Error ? error : new Error('Erreur inconnue'));
               setIsUploading(false);
-              reject(error);
+              resolve({
+                fileUrl: '',
+                filePath,
+                fileName,
+                fileType: file.type,
+                fileSize: file.size,
+                fileData: base64Data,
+                fileHex: hexData
+              });
             }
           }
         );

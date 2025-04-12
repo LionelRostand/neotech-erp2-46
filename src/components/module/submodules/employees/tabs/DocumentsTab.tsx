@@ -8,7 +8,7 @@ import { FileText, Plus, Trash2, Download, Eye } from 'lucide-react';
 import { toast } from 'sonner';
 import { getEmployeeDocuments, removeEmployeeDocument } from '../services/documentService';
 import UploadDocumentDialog from '../../documents/components/UploadDocumentDialog';
-import { downloadFile, viewDocument, hexToDataUrl } from '@/utils/documentUtils';
+import { downloadFile, viewDocument, hexToDataUrl, getDocumentDataSource } from '@/utils/documentUtils';
 
 interface DocumentsTabProps {
   employee: Employee;
@@ -37,29 +37,36 @@ const DocumentsTab: React.FC<DocumentsTabProps> = ({ employee }) => {
   }, [employee.id]);
   
   const handleViewDocument = (document: Document) => {
-    // Priorité: 1. données hexadécimales, 2. données binaires base64, 3. URL du fichier
-    if (document.fileHex) {
-      const fileType = document.fileType || 'application/octet-stream';
-      viewDocument(document.fileHex, document.name || 'Document', fileType, 'hex');
-    } else if (document.fileData) {
-      viewDocument(document.fileData, document.name || 'Document', document.fileType || 'application/octet-stream', 'base64');
-    } else if (document.fileUrl) {
-      viewDocument(document.fileUrl, document.name || 'Document', document.fileType || 'application/octet-stream', 'url');
-    } else {
+    const { data, format } = getDocumentDataSource(document);
+    
+    if (!data) {
       toast.error("Aucun fichier disponible pour ce document");
+      return;
     }
+    
+    viewDocument(
+      data, 
+      document.name || 'Document', 
+      document.fileType || 'application/octet-stream', 
+      format
+    );
   };
   
   const handleDownloadDocument = (document: Document) => {
-    if (document.fileHex) {
-      const dataUrl = hexToDataUrl(document.fileHex, document.fileType || 'application/octet-stream');
-      downloadFile(dataUrl, document.name || 'document');
-    } else if (document.fileData) {
-      downloadFile(document.fileData, document.name || 'document');
-    } else if (document.fileUrl) {
-      downloadFile(document.fileUrl, document.name || 'document');
-    } else {
+    const { data, format } = getDocumentDataSource(document);
+    
+    if (!data) {
       toast.error("Aucun fichier disponible pour ce document");
+      return;
+    }
+    
+    // If hex data, convert to data URL
+    if (format === 'hex') {
+      const dataUrl = hexToDataUrl(data, document.fileType || 'application/octet-stream');
+      downloadFile(dataUrl, document.name || 'document');
+    } else {
+      // Base64 data or URL
+      downloadFile(data, document.name || 'document');
     }
   };
   

@@ -58,7 +58,7 @@ export const viewDocument = (
   
   // Determine how to process the file data based on format
   if (format === 'base64') {
-    // If we have base64 data, open in a new tab
+    // If we have base64 data, use directly
     dataToDisplay = fileData;
   } else if (format === 'hex') {
     // If we have hex data, convert it to a data URL
@@ -68,7 +68,8 @@ export const viewDocument = (
     dataToDisplay = fileData;
   }
   
-  const newTab = window.open();
+  // Create a new window to display the document
+  const newTab = window.open('', '_blank');
   if (newTab) {
     newTab.document.write(`
       <html>
@@ -82,4 +83,23 @@ export const viewDocument = (
     `);
     newTab.document.close();
   }
+};
+
+/**
+ * Gets the most reliable data source for a document
+ * @param document The document object
+ * @returns An object containing the data and its format
+ */
+export const getDocumentDataSource = (document: any): { data: string; format: 'base64' | 'hex' | 'url' } => {
+  // Prioritize local data over URLs to avoid CORS issues
+  if (document.fileHex && document.fileType) {
+    return { data: document.fileHex, format: 'hex' };
+  } else if (document.fileData) {
+    return { data: document.fileData, format: 'base64' };
+  } else if (document.fileUrl) {
+    return { data: document.fileUrl, format: 'url' };
+  }
+  
+  // Fallback if no data is available
+  return { data: '', format: 'url' };
 };

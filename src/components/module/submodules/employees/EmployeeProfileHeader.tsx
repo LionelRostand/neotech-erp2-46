@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 import { useStorageUpload } from '@/hooks/storage/useStorageUpload';
 import { updateDocument } from '@/hooks/firestore/update-operations';
 import { COLLECTIONS } from '@/lib/firebase-collections';
+import { hexToDataUrl } from '@/utils/documentUtils';
 
 interface EmployeeProfileHeaderProps {
   employee: Employee;
@@ -20,20 +21,14 @@ const EmployeeProfileHeader: React.FC<EmployeeProfileHeaderProps> = ({ employee,
   const [photoSrc, setPhotoSrc] = useState<string | undefined>();
   const { uploadFile } = useStorageUpload();
   
-  // Effect pour convertir les données hexadécimales en base64 si disponibles
+  // Effect pour convertir les données hexadécimales en URL si disponibles
   useEffect(() => {
     if (employee.photoHex) {
       try {
-        // Convertir le hex en un tableau d'octets
-        const byteArray = new Uint8Array(
-          employee.photoHex.match(/.{1,2}/g)?.map(byte => parseInt(byte, 16)) || []
+        const imageUrl = hexToDataUrl(
+          employee.photoHex, 
+          employee.photoMeta?.fileType || 'image/jpeg'
         );
-        
-        // Convertir le tableau d'octets en blob
-        const blob = new Blob([byteArray], { type: employee.photoMeta?.fileType || 'image/jpeg' });
-        
-        // Créer une URL pour le blob
-        const imageUrl = URL.createObjectURL(blob);
         setPhotoSrc(imageUrl);
         
         // Nettoyer l'URL quand le composant est démonté
@@ -119,16 +114,23 @@ const EmployeeProfileHeader: React.FC<EmployeeProfileHeaderProps> = ({ employee,
         duration: 3000
       });
       
-      // Upload to Firebase Storage
+      // Upload to Firebase Storage (with CORS handling)
       const uploadPath = `hr_employees/${employee.id}/profile`;
       const result = await uploadFile(file, uploadPath, 'profile_photo');
       
       console.log('Résultat du téléversement:', result);
       
+      // Si nous n'avons pas d'URL à cause des problèmes CORS, afficher un message pour informer l'utilisateur
+      if (!result.fileUrl && (result.fileData || result.fileHex)) {
+        toast.info('La photo a été stockée localement pour éviter les problèmes CORS.', {
+          duration: 5000
+        });
+      }
+      
       // Mise à jour directe du document dans Firestore avec l'URL, les données binaires ET les données hexadécimales
       await updateDocument(COLLECTIONS.HR.EMPLOYEES, employee.id, {
-        photoURL: result.fileUrl,
-        photo: result.fileUrl,
+        photoURL: result.fileUrl || '',
+        photo: result.fileUrl || '',
         // Stocker les données binaires dans un champ dédié
         photoData: result.fileData,
         // Stocker les données hexadécimales dans un champ dédié
@@ -141,14 +143,14 @@ const EmployeeProfileHeader: React.FC<EmployeeProfileHeaderProps> = ({ employee,
         }
       });
       
-      console.log('Photo et données binaires mises à jour dans Firestore:', result.fileUrl);
+      console.log('Photo et données binaires mises à jour dans Firestore');
       
       // Update local state if callback provided
       if (onEmployeeUpdate) {
         onEmployeeUpdate({
           ...employee,
-          photoURL: result.fileUrl,
-          photo: result.fileUrl,
+          photoURL: result.fileUrl || '',
+          photo: result.fileUrl || '',
           photoData: result.fileData,
           photoHex: result.fileHex,
           photoMeta: {

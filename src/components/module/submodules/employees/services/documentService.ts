@@ -47,6 +47,12 @@ export const addEmployeeDocument = async (employeeId: string, document: Document
       document.date = new Date().toISOString();
     }
     
+    // Si nous n'avons pas d'URL de fichier (à cause des problèmes CORS) mais que nous avons les données
+    // locales, indiquez-le dans le type de document
+    if (!document.fileUrl && (document.fileHex || document.fileData)) {
+      document.type = document.type + ' (stocké localement)';
+    }
+    
     // Ajouter le document au tableau des documents de l'employé
     await updateDoc(employeeRef, {
       documents: arrayUnion(document)
