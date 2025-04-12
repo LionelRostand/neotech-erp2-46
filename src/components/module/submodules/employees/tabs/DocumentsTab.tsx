@@ -5,7 +5,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Employee, Document } from '@/types/employee';
 import { FileText, Plus, Trash2, Download, Eye } from 'lucide-react';
-import { formatDate } from 'date-fns';
 import { toast } from 'sonner';
 import { getEmployeeDocuments, removeEmployeeDocument } from '../services/documentService';
 import UploadDocumentDialog from '../../documents/components/UploadDocumentDialog';

@@ -7,26 +7,29 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useStorageUpload } from '@/hooks/storage/useStorageUpload';
 import { toast } from 'sonner';
-import { addEmployeeDocument } from '../../../employees/services/documentService';
+import { addEmployeeDocument, getDocumentTypes } from '@/components/module/submodules/employees/services/documentService';
 import { Employee } from '@/types/employee';
 import { Loader2 } from 'lucide-react';
-import { getDocumentTypes } from '../../../employees/services/documentService';
 
 interface UploadDocumentDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  employee: Employee;
+  employee?: Employee;
   onDocumentAdded?: () => void;
+  onSuccess?: () => void;
+  defaultType?: string;
 }
 
 const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
   open,
   onOpenChange,
   employee,
-  onDocumentAdded
+  onDocumentAdded,
+  onSuccess,
+  defaultType = ''
 }) => {
   const [documentName, setDocumentName] = useState('');
-  const [documentType, setDocumentType] = useState('');
+  const [documentType, setDocumentType] = useState(defaultType);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [documentTypes, setDocumentTypes] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -69,6 +72,11 @@ const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
       return;
     }
     
+    if (!employee) {
+      toast.error("Aucun employé sélectionné");
+      return;
+    }
+    
     try {
       setIsLoading(true);
       
@@ -98,6 +106,11 @@ const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
       // Notify parent component
       if (onDocumentAdded) {
         onDocumentAdded();
+      }
+      
+      // Call onSuccess if provided
+      if (onSuccess) {
+        onSuccess();
       }
       
       onOpenChange(false);
