@@ -43,6 +43,15 @@ export const CreateLeaveRequestDialog: React.FC<CreateLeaveRequestDialogProps> =
   const [reason, setReason] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   
+  // Filtrer les employés uniques basés sur leur ID pour éviter les doublons
+  const uniqueEmployees = employees?.reduce((acc: any[], current) => {
+    const isDuplicate = acc.find(item => item.id === current.id);
+    if (!isDuplicate) {
+      acc.push(current);
+    }
+    return acc;
+  }, []) || [];
+  
   const calculateDays = () => {
     if (!startDate || !endDate) return 0;
     // Add 1 because the period is inclusive
@@ -81,7 +90,7 @@ export const CreateLeaveRequestDialog: React.FC<CreateLeaveRequestDialogProps> =
     const diffDays = calculateDays();
     
     // Récupérer l'employé sélectionné
-    const employee = employees?.find(emp => emp.id === selectedEmployee);
+    const employee = uniqueEmployees.find(emp => emp.id === selectedEmployee);
     
     const newLeaveRequest = {
       employeeId: selectedEmployee,
@@ -131,7 +140,7 @@ export const CreateLeaveRequestDialog: React.FC<CreateLeaveRequestDialogProps> =
                 <SelectValue placeholder="Sélectionner un employé" />
               </SelectTrigger>
               <SelectContent>
-                {employees?.map(employee => (
+                {uniqueEmployees.map(employee => (
                   <SelectItem key={employee.id} value={employee.id}>
                     {employee.firstName} {employee.lastName}
                   </SelectItem>

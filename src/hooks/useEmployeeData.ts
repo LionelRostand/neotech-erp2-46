@@ -10,15 +10,26 @@ import { Department } from '@/components/module/submodules/departments/types';
 export const useEmployeeData = () => {
   const { employees, departments, isLoading, error } = useHrModuleData();
   
-  // On s'assure que les données des employés sont correctement formatées
+  // On s'assure que les données des employés sont correctement formatées et dédupliquées
   const formattedEmployees = useMemo(() => {
     if (!employees || employees.length === 0) return [];
     
-    return employees.map(employee => ({
-      ...employee,
-      // Garantir que chaque employé a une photo (même placeholder)
-      photoURL: employee.photoURL || employee.photo || '',
-    }));
+    // Filtrer pour n'avoir que des employés uniques par ID
+    const uniqueEmployees = [];
+    const seenIds = new Set();
+    
+    for (const employee of employees) {
+      if (!seenIds.has(employee.id)) {
+        seenIds.add(employee.id);
+        uniqueEmployees.push({
+          ...employee,
+          // Garantir que chaque employé a une photo (même placeholder)
+          photoURL: employee.photoURL || employee.photo || '',
+        });
+      }
+    }
+    
+    return uniqueEmployees;
   }, [employees]);
   
   // Formater les départements pour les enrichir avec les données des managers
