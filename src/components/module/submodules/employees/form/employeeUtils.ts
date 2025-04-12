@@ -1,4 +1,3 @@
-
 import { Employee } from '@/types/employee';
 import { EmployeeFormValues } from './employeeFormSchema';
 import { v4 as uuidv4 } from 'uuid';
@@ -46,7 +45,7 @@ export const prepareEmployeeData = (data: EmployeeFormValues, existingId?: strin
     managerId: '',
     status: data.status as 'active' | 'inactive' | 'onLeave' | 'Actif',
     company: data.company,
-    professionalEmail: data.professionalEmail,
+    professionalEmail: data.professionalEmail || '',
     skills: [],
     education: [],
     documents: [],

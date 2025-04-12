@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useFormContext } from 'react-hook-form';
 import {
@@ -10,7 +9,7 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { EmployeeFormValues } from './employeeFormSchema';
-import { Home, MapPin, Building, Landmark } from 'lucide-react';
+import { Home, MapPin, Building, Landmark, Mail } from 'lucide-react';
 
 const PersonalInfoFields: React.FC = () => {
   const form = useFormContext<EmployeeFormValues>();
@@ -164,6 +163,27 @@ const PersonalInfoFields: React.FC = () => {
           )}
         />
       </div>
+      
+      <FormField
+        control={form.control}
+        name="professionalEmail"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Email professionnel</FormLabel>
+            <FormControl>
+              <div className="flex items-center">
+                <Mail className="h-4 w-4 mr-2 text-muted-foreground" />
+                <Input 
+                  type="email" 
+                  placeholder="email.professionnel@entreprise.com" 
+                  {...field} 
+                />
+              </div>
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
     </>
   );
 };
