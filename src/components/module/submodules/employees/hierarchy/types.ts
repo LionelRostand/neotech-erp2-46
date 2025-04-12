@@ -18,7 +18,7 @@ export interface ChartNode {
 }
 
 export interface HierarchyVisualizationProps {
-  data: HierarchyNode;
-  viewMode?: 'default' | 'compact' | 'expanded';
-  searchQuery?: string;
+  data: HierarchyNode | ChartNode;
+  viewMode: 'orgChart' | 'treeView';
+  searchQuery: string;
 }

@@ -2,13 +2,7 @@
 import React from 'react';
 import { Card } from '@/components/ui/card';
 import { User, Users } from 'lucide-react';
-import { ChartNode } from './types';
-
-interface HierarchyVisualizationProps {
-  data: ChartNode | null;
-  viewMode: 'orgChart' | 'treeView';
-  searchQuery: string;
-}
+import { ChartNode, HierarchyNode, HierarchyVisualizationProps } from './types';
 
 const HierarchyVisualization: React.FC<HierarchyVisualizationProps> = ({ 
   data, 
@@ -16,14 +10,18 @@ const HierarchyVisualization: React.FC<HierarchyVisualizationProps> = ({
   searchQuery 
 }) => {
   // Helper function to check if a node or its children match the search query
-  const nodeMatchesSearch = (node: ChartNode, query: string): boolean => {
+  const nodeMatchesSearch = (node: ChartNode | HierarchyNode, query: string): boolean => {
     if (!query.trim()) return true;
     
     const searchLower = query.toLowerCase();
+    const nodeName = node.name.toLowerCase();
+    const nodePosition = 'position' in node ? node.position.toLowerCase() : node.title.toLowerCase();
+    const nodeDepartment = 'department' in node && node.department ? node.department.toLowerCase() : '';
+    
     if (
-      node.name.toLowerCase().includes(searchLower) ||
-      node.position.toLowerCase().includes(searchLower) ||
-      (node.department && node.department.toLowerCase().includes(searchLower))
+      nodeName.includes(searchLower) ||
+      nodePosition.includes(searchLower) ||
+      nodeDepartment.includes(searchLower)
     ) {
       return true;
     }
@@ -31,6 +29,20 @@ const HierarchyVisualization: React.FC<HierarchyVisualizationProps> = ({
     // Check children
     return node.children.some(child => nodeMatchesSearch(child, query));
   };
+  
+  // Convert HierarchyNode to ChartNode if needed
+  const getChartNode = (node: HierarchyNode): ChartNode => {
+    return {
+      id: node.id,
+      name: node.name,
+      position: node.title,
+      department: node.manager ? `Manager: ${node.manager}` : undefined,
+      children: node.children.map(child => getChartNode(child))
+    };
+  };
+  
+  // Ensure we're working with a ChartNode
+  const chartData = 'position' in data ? data : getChartNode(data as HierarchyNode);
   
   // OrgChart view rendering
   const renderOrgChart = (node: ChartNode) => {
@@ -124,11 +136,11 @@ const HierarchyVisualization: React.FC<HierarchyVisualizationProps> = ({
       <div className="inline-block min-w-full p-4">
         {viewMode === 'orgChart' ? (
           <div className="flex justify-center">
-            {renderOrgChart(data)}
+            {renderOrgChart(chartData)}
           </div>
         ) : (
           <div className="space-y-2">
-            {renderTreeView(data)}
+            {renderTreeView(chartData)}
           </div>
         )}
       </div>

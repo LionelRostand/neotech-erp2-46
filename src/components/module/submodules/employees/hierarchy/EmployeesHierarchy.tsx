@@ -11,6 +11,7 @@ import { subscribeToDepartmentUpdates } from '@/components/module/submodules/dep
 
 const EmployeesHierarchy: React.FC = () => {
   const [hierarchyData, setHierarchyData] = useState<HierarchyNode | null>(null);
+  const [searchQuery, setSearchQuery] = useState<string>('');
   const { departments, isLoading } = useFirebaseDepartments();
   
   // Build hierarchy data from departments and employees
@@ -170,7 +171,11 @@ const EmployeesHierarchy: React.FC = () => {
     <div className="space-y-6">
       <Card>
         <CardContent className="p-6 overflow-auto">
-          <HierarchyVisualization data={hierarchyData} viewMode="default" searchQuery="" />
+          <HierarchyVisualization 
+            data={hierarchyData} 
+            viewMode="orgChart" 
+            searchQuery={searchQuery} 
+          />
         </CardContent>
       </Card>
     </div>

@@ -47,9 +47,9 @@ const EmployeesDepartments: React.FC = () => {
           <DepartmentTable 
             departments={departments}
             loading={loading}
-            onEditDepartment={(id) => handleEditDepartment(id)}
-            onDeleteDepartment={(id) => handleDeleteDepartment(id)}
-            onManageEmployees={(id) => handleManageEmployees(id)}
+            onEditDepartment={(id) => handleEditDepartment(departments.find(dept => dept.id === id)!)}
+            onDeleteDepartment={(id) => handleDeleteDepartment(id, departments.find(dept => dept.id === id)?.name || 'Département')}
+            onManageEmployees={(id) => handleManageEmployees(departments.find(dept => dept.id === id)!)}
           />
         </CardContent>
       </Card>
@@ -64,7 +64,7 @@ const EmployeesDepartments: React.FC = () => {
           onInputChange={handleInputChange}
           onManagerChange={handleManagerChange}
           onColorChange={handleColorChange}
-          onEmployeeSelection={(employeeId) => handleEmployeeSelection(employeeId)}
+          onEmployeeSelection={(employeeId) => handleEmployeeSelection(employeeId, !selectedEmployees.includes(employeeId))}
           onClose={() => setIsAddDialogOpen(false)}
           onSave={handleSaveDepartment}
         />
@@ -80,7 +80,7 @@ const EmployeesDepartments: React.FC = () => {
           onInputChange={handleInputChange}
           onManagerChange={handleManagerChange}
           onColorChange={handleColorChange}
-          onEmployeeSelection={(employeeId) => handleEmployeeSelection(employeeId)}
+          onEmployeeSelection={(employeeId) => handleEmployeeSelection(employeeId, !selectedEmployees.includes(employeeId))}
           onClose={() => setIsEditDialogOpen(false)}
           onUpdate={handleUpdateDepartment}
         />
@@ -95,7 +95,7 @@ const EmployeesDepartments: React.FC = () => {
           <ManageEmployeesDialog 
             department={currentDepartment}
             selectedEmployees={selectedEmployees}
-            onEmployeeSelection={(employeeId) => handleEmployeeSelection(employeeId)}
+            onEmployeeSelection={(employeeId) => handleEmployeeSelection(employeeId, !selectedEmployees.includes(employeeId))}
             getDepartmentEmployees={(departmentId) => getDepartmentEmployees(departmentId)}
             onClose={() => setIsManageEmployeesDialogOpen(false)}
             onSave={handleSaveEmployeeAssignments}
