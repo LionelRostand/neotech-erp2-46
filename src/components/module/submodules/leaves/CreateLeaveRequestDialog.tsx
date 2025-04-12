@@ -23,6 +23,9 @@ import { format, differenceInDays, addDays } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { toast } from 'sonner';
 import { CalendarIcon } from 'lucide-react';
+import { COLLECTIONS } from '@/lib/firebase-collections';
+import { doc, setDoc, collection } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 
 interface CreateLeaveRequestDialogProps {
   isOpen: boolean;
@@ -58,7 +61,7 @@ export const CreateLeaveRequestDialog: React.FC<CreateLeaveRequestDialogProps> =
     return differenceInDays(addDays(endDate, 1), startDate);
   };
   
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!selectedEmployee) {
       toast.error("Veuillez sélectionner un employé");
       return;
@@ -93,6 +96,7 @@ export const CreateLeaveRequestDialog: React.FC<CreateLeaveRequestDialogProps> =
     const employee = uniqueEmployees.find(emp => emp.id === selectedEmployee);
     
     const newLeaveRequest = {
+      id: `leave-${Date.now()}`,
       employeeId: selectedEmployee,
       type: leaveType,
       startDate: format(startDate, 'yyyy-MM-dd'),
@@ -102,14 +106,29 @@ export const CreateLeaveRequestDialog: React.FC<CreateLeaveRequestDialogProps> =
       reason,
       requestDate: new Date().toISOString(),
       employeeName: employee ? `${employee.firstName} ${employee.lastName}` : 'Employé inconnu',
+      employeePhoto: employee?.photoURL || employee?.photo || '',
+      department: employee?.department || 'Non spécifié',
+      approvedBy: ''
     };
     
-    // Simuler une latence réseau
-    setTimeout(() => {
+    try {
+      // Sauvegarder dans Firebase
+      const leaveRef = doc(collection(db, COLLECTIONS.HR.LEAVES), newLeaveRequest.id);
+      await setDoc(leaveRef, newLeaveRequest);
+      
+      toast.success("Demande de congé soumise avec succès");
+      
+      // Appeler le callback de soumission avec les données de la demande
       onSubmit(newLeaveRequest);
-      setIsSubmitting(false);
+      
+      // Réinitialiser le formulaire
       resetForm();
-    }, 1000);
+    } catch (error) {
+      console.error('Erreur lors de la soumission de la demande de congé:', error);
+      toast.error("Erreur lors de la soumission de la demande");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
   
   const resetForm = () => {

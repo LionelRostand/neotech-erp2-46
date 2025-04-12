@@ -1,7 +1,10 @@
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useCallback } from 'react';
 import { useHrModuleData } from './useHrModuleData';
 import { formatDate } from '@/lib/formatters';
+import { collection, getDocs, query, orderBy } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { COLLECTIONS } from '@/lib/firebase-collections';
 
 // Define the Leave type to be exported
 export interface Leave {
@@ -21,8 +24,25 @@ export interface Leave {
 }
 
 export const useLeaveData = () => {
-  const { leaveRequests, employees, isLoading } = useHrModuleData();
+  const { leaveRequests, employees, isLoading: isDataLoading } = useHrModuleData();
   const [error, setError] = useState<Error | null>(null);
+  const [isLoading, setIsLoading] = useState(isDataLoading);
+  const [refreshCounter, setRefreshCounter] = useState(0);
+  
+  // Function to manually refresh data
+  const refetch = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      // Cette fonction est appelée manuellement pour refetcher les données
+      // La mise à jour de refreshCounter force le recalcul des données
+      setRefreshCounter(prev => prev + 1);
+    } catch (err) {
+      console.error('Error refreshing leave data', err);
+      setError(err instanceof Error ? err : new Error('Erreur lors du rafraîchissement des données'));
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
   
   // Calculate stats based on leave requests
   const stats = useMemo(() => {
@@ -45,7 +65,7 @@ export const useLeaveData = () => {
       rejected,
       total: leaveRequests.length
     };
-  }, [leaveRequests]);
+  }, [leaveRequests, refreshCounter]);
   
   // Format leave requests to a more user-friendly format
   const leaves = useMemo(() => {
@@ -142,8 +162,8 @@ export const useLeaveData = () => {
         
         return {
           id: leave.id,
-          employeeName: employee ? `${employee.firstName} ${employee.lastName}` : 'Employé inconnu',
-          department: employee?.department || 'Non spécifié',
+          employeeName: employee ? `${employee.firstName} ${employee.lastName}` : leave.employeeName || 'Employé inconnu',
+          department: employee?.department || leave.department || 'Non spécifié',
           type: leave.type || 'Congés payés',
           startDate,
           endDate,
@@ -153,7 +173,7 @@ export const useLeaveData = () => {
           employeeId: leave.employeeId,
           requestDate: formatSafeDate(validRequestDate),
           approvedBy,
-          employeePhoto: employee?.photoURL || employee?.photo || '',
+          employeePhoto: employee?.photoURL || employee?.photo || leave.employeePhoto || '',
         };
       });
     } catch (err) {
@@ -161,7 +181,7 @@ export const useLeaveData = () => {
       setError(err instanceof Error ? err : new Error('Erreur de traitement des données de congés'));
       return [];
     }
-  }, [leaveRequests, employees]);
+  }, [leaveRequests, employees, refreshCounter]);
   
-  return { leaves, stats, isLoading, error };
+  return { leaves, stats, isLoading, error, refetch };
 };
