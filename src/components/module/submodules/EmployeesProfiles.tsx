@@ -59,24 +59,30 @@ const EmployeesProfiles: React.FC<EmployeesProfilesProps> = (props) => {
     
     console.log("Ajout d'un nouvel employé:", newEmployee);
     
-    // Vérifier si l'employé existe déjà
+    // Vérifier si l'employé existe déjà dans la liste locale
     const existingIndex = employees.findIndex(emp => emp.id === newEmployee.id);
     
     if (existingIndex >= 0) {
-      // Mettre à jour l'employé existant
+      // Mettre à jour l'employé existant dans la liste locale
       const updatedEmployees = [...employees];
       updatedEmployees[existingIndex] = { ...updatedEmployees[existingIndex], ...newEmployee } as Employee;
       setEmployees(updatedEmployees);
-      toast.success("Employé mis à jour avec succès.");
+      toast.success("Employé mis à jour avec succès dans l'interface");
     } else {
-      // Ajouter le nouvel employé
+      // Ajouter le nouvel employé à la liste locale
       const employeeWithId = newEmployee as Employee;
       const updatedEmployees = [...employees, employeeWithId];
       setEmployees(updatedEmployees);
-      toast.success("Employé ajouté avec succès.");
+      toast.success("Employé ajouté avec succès à l'interface");
     }
     
+    // Fermer le formulaire
     setIsAddEmployeeOpen(false);
+    
+    // Si l'employé en cours d'affichage est celui qui a été modifié, mettre à jour la vue
+    if (selectedEmployee && selectedEmployee.id === newEmployee.id) {
+      setSelectedEmployee({ ...selectedEmployee, ...newEmployee } as Employee);
+    }
   };
 
   const handleEditEmployee = (employee: Employee) => {
@@ -86,12 +92,13 @@ const EmployeesProfiles: React.FC<EmployeesProfilesProps> = (props) => {
   };
 
   const handleUpdateEmployee = (updatedEmployee: Partial<Employee>) => {
-    if (!employeeToEdit) return;
+    if (!employeeToEdit || !updatedEmployee.id) return;
     
     console.log('Mise à jour de l\'employé:', updatedEmployee);
     
+    // Mettre à jour l'employé dans la liste locale
     const updatedEmployees = employees.map(emp => 
-      emp.id === employeeToEdit.id 
+      emp.id === updatedEmployee.id 
         ? { ...emp, ...updatedEmployee } as Employee
         : emp
     );
@@ -99,17 +106,17 @@ const EmployeesProfiles: React.FC<EmployeesProfilesProps> = (props) => {
     setEmployees(updatedEmployees);
     
     // Si l'employé est actuellement sélectionné, mettre à jour aussi
-    if (selectedEmployee && selectedEmployee.id === employeeToEdit.id) {
-      const updatedSelectedEmployee = { ...selectedEmployee, ...updatedEmployee } as Employee;
-      console.log('Mise à jour de l\'employé sélectionné:', updatedSelectedEmployee);
-      setSelectedEmployee(updatedSelectedEmployee);
+    if (selectedEmployee && selectedEmployee.id === updatedEmployee.id) {
+      setSelectedEmployee({ ...selectedEmployee, ...updatedEmployee } as Employee);
     }
     
-    toast.success("Employé mis à jour avec succès.");
+    toast.success("Employé mis à jour avec succès dans l'interface");
     setIsEditEmployeeOpen(false);
+    setEmployeeToEdit(null);
   };
 
   const handleDeleteEmployee = (employeeId: string) => {
+    // Supprimer l'employé de la liste locale
     const updatedEmployees = employees.filter(emp => emp.id !== employeeId);
     setEmployees(updatedEmployees);
     
@@ -118,7 +125,7 @@ const EmployeesProfiles: React.FC<EmployeesProfilesProps> = (props) => {
       setSelectedEmployee(null);
     }
     
-    toast.success("Employé supprimé avec succès.");
+    toast.success("Employé supprimé avec succès");
   };
 
   const handleExportPdf = () => {
@@ -128,6 +135,7 @@ const EmployeesProfiles: React.FC<EmployeesProfilesProps> = (props) => {
     }, 1000);
   };
 
+  // Filtrer les employés selon l'entreprise sélectionnée
   const filteredEmployees = selectedCompany === 'all' 
     ? employees 
     : employees.filter(emp => emp.company === selectedCompany);
@@ -171,7 +179,11 @@ const EmployeesProfiles: React.FC<EmployeesProfilesProps> = (props) => {
               <Button
                 variant="outline"
                 className="flex items-center gap-2"
-                onClick={() => setEmployees(fetchedEmployees)}
+                onClick={() => {
+                  // Recharger les données depuis le hook
+                  setEmployees(fetchedEmployees);
+                  toast.success("Données des employés actualisées");
+                }}
                 disabled={isLoading}
               >
                 <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />

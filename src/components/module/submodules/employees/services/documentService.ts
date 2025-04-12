@@ -36,10 +36,11 @@ export const getEmployeeDocuments = async (employeeId: string): Promise<Document
 export const addEmployeeDocument = async (employeeId: string, document: Document): Promise<void> => {
   try {
     console.log(`Ajout d'un document pour l'employé ${employeeId}:`, document);
-    const employeeRef = doc(db, COLLECTIONS.HR.EMPLOYEES, employeeId) as DocumentReference<any>;
     
-    // Récupérer d'abord le document de l'employé pour vérifier s'il existe
+    // Vérifier d'abord si l'employé existe
+    const employeeRef = doc(db, COLLECTIONS.HR.EMPLOYEES, employeeId) as DocumentReference<any>;
     const employeeDoc = await getDoc(employeeRef);
+    
     if (!employeeDoc.exists()) {
       throw new Error(`L'employé avec l'ID ${employeeId} n'existe pas`);
     }
@@ -60,9 +61,19 @@ export const addEmployeeDocument = async (employeeId: string, document: Document
       document.type = document.type + ' (stocké localement)';
     }
     
+    // Récupérer les documents existants pour vérifier si un document avec le même ID existe déjà
+    const existingDocs = await getEmployeeDocuments(employeeId);
+    const documentExists = existingDocs.some(doc => doc.id === document.id);
+    
+    if (documentExists) {
+      console.log(`Document avec ID ${document.id} existe déjà, mise à jour skippée`);
+      return;
+    }
+    
     // Ajouter le document au tableau des documents de l'employé sans modifier d'autres champs
     await updateDoc(employeeRef, {
-      documents: arrayUnion(document)
+      documents: arrayUnion(document),
+      updatedAt: new Date().toISOString() // Mettre à jour la date de modification
     });
     
     console.log(`Document ajouté avec succès pour l'employé ${employeeId}`);
@@ -87,10 +98,17 @@ export const removeEmployeeDocument = async (employeeId: string, documentId: str
         if (documentToRemove) {
           // Supprimer le document du tableau des documents de l'employé
           await updateDoc(employeeRef, {
-            documents: arrayRemove(documentToRemove)
+            documents: arrayRemove(documentToRemove),
+            updatedAt: new Date().toISOString() // Mettre à jour la date de modification
           });
+          
+          console.log(`Document ${documentId} supprimé avec succès pour l'employé ${employeeId}`);
+        } else {
+          console.warn(`Document ${documentId} non trouvé pour l'employé ${employeeId}`);
         }
       }
+    } else {
+      console.warn(`Employé avec ID ${employeeId} non trouvé lors de la suppression du document`);
     }
   } catch (error) {
     console.error("Erreur lors de la suppression du document:", error);

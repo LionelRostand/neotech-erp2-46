@@ -19,9 +19,14 @@ import { Button } from '@/components/ui/button';
 import PersonalInfoFields from './form/PersonalInfoFields';
 import EmploymentInfoFields from './form/EmploymentInfoFields';
 import PhotoUploadField from './form/PhotoUploadField';
-import { prepareEmployeeData, extractAddressFields } from './form/employeeUtils';
+import { 
+  prepareEmployeeData, 
+  extractAddressFields, 
+  generateUniqueEmployeeId, 
+  isValidEmployeeId 
+} from './form/employeeUtils';
 import { toast } from 'sonner';
-import { updateDocument, setDocument } from '@/hooks/firestore/update-operations';
+import { setDocument } from '@/hooks/firestore/update-operations';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import { getDoc, doc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
@@ -109,10 +114,24 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
     try {
       console.log('Données du formulaire soumises:', data);
       
-      // Utiliser l'ID existant pour l'édition, ou null pour la création
-      const employeeId = isEditing && employee ? employee.id : null;
+      // Utiliser l'ID existant pour l'édition, ou générer un nouvel ID pour la création
+      let employeeId: string;
       
-      console.log(`Mode: ${isEditing ? 'Édition' : 'Création'}, ID: ${employeeId || 'Nouveau'}`);
+      if (isEditing && employee) {
+        // Mode édition : utiliser l'ID existant
+        employeeId = employee.id;
+        console.log(`Mode: Édition, ID: ${employeeId}`);
+      } else {
+        // Mode création : générer un nouvel ID unique
+        employeeId = generateUniqueEmployeeId();
+        console.log(`Mode: Création, ID: ${employeeId}`);
+      }
+      
+      // Vérifier que l'ID est au format correct
+      if (!isValidEmployeeId(employeeId)) {
+        console.warn(`Format d'ID non standard: ${employeeId}, conversion au format standard`);
+        employeeId = generateUniqueEmployeeId();
+      }
       
       const employeeData = prepareEmployeeData(data, employeeId);
       console.log('Données préparées pour la sauvegarde:', employeeData);
@@ -123,29 +142,20 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
         return;
       }
       
-      // Vérifier si le document existe avant de tenter de le mettre à jour
-      if (isEditing && employee) {
-        // Vérifier si le document existe dans Firestore
-        const docRef = doc(db, COLLECTIONS.HR.EMPLOYEES, employee.id);
-        const docSnap = await getDoc(docRef);
-        
-        if (docSnap.exists()) {
-          // Le document existe, le mettre à jour
-          console.log(`Mise à jour du document existant: ${employee.id}`);
-          await updateDocument(COLLECTIONS.HR.EMPLOYEES, employee.id, employeeData);
-          toast.success('Employé mis à jour avec succès');
-        } else {
-          // Le document n'existe pas, le créer à la place
-          console.log(`Création d'un document avec ID spécifique: ${employee.id}`);
-          await setDocument(COLLECTIONS.HR.EMPLOYEES, employee.id, employeeData);
-          toast.success('Employé créé avec succès');
-        }
-      } 
-      // Créer un nouveau document d'employé
-      else {
-        console.log(`Création d'un nouveau document avec ID généré: ${employeeData.id}`);
-        await setDocument(COLLECTIONS.HR.EMPLOYEES, employeeData.id as string, employeeData);
+      // Vérifier si le document existe avant de tenter de le créer/mettre à jour
+      const docRef = doc(db, COLLECTIONS.HR.EMPLOYEES, employeeId);
+      const docSnap = await getDoc(docRef);
+      
+      // Créer ou mettre à jour le document avec setDocument (qui gère les deux cas)
+      await setDocument(COLLECTIONS.HR.EMPLOYEES, employeeId, employeeData);
+      
+      // Message différent selon que le document existait déjà ou non
+      if (docSnap.exists()) {
+        toast.success('Employé mis à jour avec succès');
+        console.log(`Document existant mis à jour: ${employeeId}`);
+      } else {
         toast.success('Employé créé avec succès');
+        console.log(`Nouveau document créé: ${employeeId}`);
       }
       
       // Appeler le callback onSubmit pour mettre à jour l'UI

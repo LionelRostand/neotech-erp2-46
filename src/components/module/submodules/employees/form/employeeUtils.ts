@@ -25,6 +25,7 @@ export const prepareEmployeeData = (data: EmployeeFormValues, existingId?: strin
   } : {};
 
   // Utiliser l'ID existant ou générer un nouvel ID employé unique avec un préfixe
+  // Garantir que l'ID est toujours dans le même format EMP#### pour la cohérence
   const employeeId = existingId || `EMP${Math.floor(1000 + Math.random() * 9000)}`;
   
   console.log(`Préparation des données pour l'employé avec l'ID: ${employeeId}`);
@@ -57,7 +58,10 @@ export const prepareEmployeeData = (data: EmployeeFormValues, existingId?: strin
       friday: '09:00 - 17:00',
     },
     payslips: [],
-    ...photoData
+    ...photoData,
+    // Ajouter des timestamps pour le suivi des modifications
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
   };
 };
 
@@ -109,4 +113,15 @@ export const extractAddressFields = (address: string | any): {
     zipCode: '',
     region: '',
   };
+};
+
+// Générer un ID unique pour un nouvel employé
+export const generateUniqueEmployeeId = (): string => {
+  // Format: EMP + 4 chiffres aléatoires
+  return `EMP${Math.floor(1000 + Math.random() * 9000)}`;
+};
+
+// Vérifier si l'ID employé est dans le format correct
+export const isValidEmployeeId = (id: string): boolean => {
+  return /^EMP\d{4}$/.test(id);
 };
