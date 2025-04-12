@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -23,6 +22,8 @@ import { prepareEmployeeData, extractAddressFields } from './form/employeeUtils'
 import { toast } from 'sonner';
 import { updateDocument, setDocument } from '@/hooks/firestore/update-operations';
 import { COLLECTIONS } from '@/lib/firebase-collections';
+import { getDoc, doc } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 
 interface EmployeeFormProps {
   open: boolean;
@@ -108,17 +109,28 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
       console.log('Données du formulaire soumises:', data);
       
       // Keep the employee ID if we're editing an existing employee
-      const employeeId = isEditing && employee ? employee.id : undefined;
+      const employeeId = isEditing && employee ? employee.id : `EMP${Math.floor(1000 + Math.random() * 9000)}`;
       
       const employeeData = prepareEmployeeData(data, employeeId);
       console.log('Données préparées pour la sauvegarde:', employeeData);
       
-      // Si nous modifions un employé existant, mettre à jour le document Firestore
+      // Check if the document exists before attempting to update it
       if (isEditing && employee) {
-        await updateDocument(COLLECTIONS.HR.EMPLOYEES, employee.id, employeeData);
-        toast.success('Employé mis à jour avec succès');
+        // Check if the document exists in Firestore
+        const docRef = doc(db, COLLECTIONS.HR.EMPLOYEES, employee.id);
+        const docSnap = await getDoc(docRef);
+        
+        if (docSnap.exists()) {
+          // Document exists, update it
+          await updateDocument(COLLECTIONS.HR.EMPLOYEES, employee.id, employeeData);
+          toast.success('Employé mis à jour avec succès');
+        } else {
+          // Document doesn't exist, create it instead
+          await setDocument(COLLECTIONS.HR.EMPLOYEES, employee.id, employeeData);
+          toast.success('Employé créé avec succès');
+        }
       } 
-      // Sinon, créer un nouveau document
+      // Create a new employee document
       else {
         await setDocument(COLLECTIONS.HR.EMPLOYEES, employeeData.id as string, employeeData);
         toast.success('Employé créé avec succès');
