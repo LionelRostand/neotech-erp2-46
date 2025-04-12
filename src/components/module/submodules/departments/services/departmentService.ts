@@ -1,6 +1,6 @@
 
 import { Department } from '../types';
-import { addDocument, getAllDocuments, updateDocument, deleteDocument } from '@/hooks/firestore/firestore-utils';
+import { addDocument, getAllDocuments, updateDocument, deleteDocument, getDocumentById } from '@/hooks/firestore/firestore-utils';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import { toast } from 'sonner';
 
@@ -36,6 +36,17 @@ export const useDepartmentService = () => {
 
   const updateDepartment = async (department: Department): Promise<boolean> => {
     try {
+      // Vérifier si le document existe avant de le mettre à jour
+      const existingDoc = await getDocumentById(DEPARTMENTS_COLLECTION, department.id);
+      
+      if (!existingDoc) {
+        console.warn(`Department with ID ${department.id} does not exist. Creating instead of updating.`);
+        // Si le document n'existe pas, on le crée au lieu de le mettre à jour
+        await addDocument(DEPARTMENTS_COLLECTION, department);
+        toast.success(`Département ${department.name} créé avec succès`);
+        return true;
+      }
+      
       // Mettre à jour dans Firestore
       await updateDocument(DEPARTMENTS_COLLECTION, department.id, department);
       toast.success(`Département ${department.name} mis à jour avec succès`);
@@ -55,6 +66,15 @@ export const useDepartmentService = () => {
     }
     
     try {
+      // Vérifier si le document existe avant de le supprimer
+      const existingDoc = await getDocumentById(DEPARTMENTS_COLLECTION, id);
+      
+      if (!existingDoc) {
+        console.warn(`Department with ID ${id} does not exist. Nothing to delete.`);
+        toast.info(`Le département ${name} n'existe pas ou a déjà été supprimé`);
+        return true;
+      }
+      
       // Supprimer dans Firestore
       await deleteDocument(DEPARTMENTS_COLLECTION, id);
       toast.success(`Département ${name} supprimé avec succès`);
