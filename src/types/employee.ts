@@ -24,6 +24,10 @@ export interface Document {
   fileHex?: string;  // Hexadecimal data for document
   fileType?: string; // MIME type of the document
   id?: string;
+  employeeId?: string; // ID de l'employé associé
+  filePath?: string;  // Chemin dans Firebase Storage
+  fileSize?: number;  // Taille du fichier
+  storedInFirebase?: boolean; // Indique si stocké dans Firebase
 }
 
 export interface Employee {
@@ -47,7 +51,7 @@ export interface Employee {
   };
   hireDate: string;
   startDate: string;
-  status: 'active' | 'inactive' | 'onLeave' | 'Actif';
+  status: 'active' | 'inactive' | 'onLeave' | 'Actif' | 'En congé' | 'Suspendu' | 'Inactif';
   address: string | EmployeeAddress;
   contract: string;
   socialSecurityNumber: string;
