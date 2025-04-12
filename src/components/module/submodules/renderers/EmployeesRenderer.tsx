@@ -44,6 +44,7 @@ export const renderEmployeesSubmodule = (submoduleId: string, submodule: SubModu
     case 'employees-timesheet':
       return <EmployeesTimesheet />;
     case 'employees-leaves':
+      console.log('Rendering leaves component');
       return <EmployeesLeaves />;
     case 'employees-absences':
       return <EmployeesAbsences />;

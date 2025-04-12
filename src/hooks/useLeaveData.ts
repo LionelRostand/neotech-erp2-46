@@ -1,11 +1,12 @@
 
-import { useMemo, useState, useCallback } from 'react';
+import { useMemo, useState, useCallback, useEffect } from 'react';
 import { useHrModuleData } from './useHrModuleData';
 import { formatDate } from '@/lib/formatters';
-import { collection, getDocs, query, orderBy, doc, setDoc } from 'firebase/firestore';
+import { collection, getDocs, query, orderBy, doc, setDoc, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import { toast } from 'sonner';
+import { v4 as uuidv4 } from 'uuid';
 
 // Define the Leave type to be exported
 export interface Leave {
@@ -39,10 +40,17 @@ export const useLeaveData = () => {
   const [isLoading, setIsLoading] = useState(isDataLoading);
   const [refreshCounter, setRefreshCounter] = useState(0);
   
+  // Effet pour déclencher un rafraîchissement au montage du composant
+  useEffect(() => {
+    // Rafraîchir les données au chargement initial
+    refetch();
+  }, []);
+  
   // Function to manually refresh data
   const refetch = useCallback(async () => {
     setIsLoading(true);
     try {
+      console.log('Rafraîchissement des données de congés');
       // Cette fonction est appelée manuellement pour refetcher les données
       // La mise à jour de refreshCounter force le recalcul des données
       setRefreshCounter(prev => prev + 1);
@@ -58,8 +66,13 @@ export const useLeaveData = () => {
   const createLeaveRequest = useCallback(async (leaveData: CreateLeaveRequest) => {
     setIsLoading(true);
     try {
-      const leaveId = `leave-${Date.now()}`;
+      // Génération d'un ID unique pour la demande
+      const leaveId = `leave-${Date.now()}-${uuidv4().slice(0, 8)}`;
       const employee = employees?.find(emp => emp.id === leaveData.employeeId);
+      
+      if (!employee) {
+        throw new Error("Employé non trouvé. Impossible de créer la demande de congé.");
+      }
       
       const newLeaveRequest = {
         id: leaveId,
@@ -71,14 +84,18 @@ export const useLeaveData = () => {
         status: 'En attente',
         reason: leaveData.reason || '',
         requestDate: new Date().toISOString(),
-        employeeName: employee ? `${employee.firstName} ${employee.lastName}` : 'Employé inconnu',
+        employeeName: `${employee.firstName} ${employee.lastName}`,
         employeePhoto: employee?.photoURL || employee?.photo || '',
         department: employee?.department || 'Non spécifié',
-        approvedBy: ''
+        approvedBy: '',
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
       };
       
+      console.log('Création d\'une nouvelle demande de congé:', newLeaveRequest);
+      
       // Sauvegarder dans Firebase
-      const leaveRef = doc(db, COLLECTIONS.HR.LEAVES, leaveId);
+      const leaveRef = doc(db, COLLECTIONS.HR.LEAVE_REQUESTS, leaveId);
       await setDoc(leaveRef, newLeaveRequest);
       
       toast.success("Demande de congé soumise avec succès");

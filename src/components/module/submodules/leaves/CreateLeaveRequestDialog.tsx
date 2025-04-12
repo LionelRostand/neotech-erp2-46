@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -37,13 +37,20 @@ export const CreateLeaveRequestDialog: React.FC<CreateLeaveRequestDialogProps> =
   onSubmit
 }) => {
   const { employees } = useHrModuleData();
-  const { createLeaveRequest } = useLeaveData();
+  const { createLeaveRequest, refetch } = useLeaveData();
   const [selectedEmployee, setSelectedEmployee] = useState('');
   const [leaveType, setLeaveType] = useState('');
   const [startDate, setStartDate] = useState<Date | undefined>(undefined);
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
   const [reason, setReason] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // Réinitialiser le formulaire lorsque la boîte de dialogue s'ouvre
+  useEffect(() => {
+    if (isOpen) {
+      resetForm();
+    }
+  }, [isOpen]);
   
   // Filtrer les employés uniques basés sur leur ID pour éviter les doublons
   const uniqueEmployees = employees?.reduce((acc: any[], current) => {
@@ -102,13 +109,20 @@ export const CreateLeaveRequestDialog: React.FC<CreateLeaveRequestDialogProps> =
         reason
       });
       
+      console.log('Demande de congé créée:', newLeaveRequest);
+      
       // Appeler le callback de soumission avec les données de la demande
       onSubmit(newLeaveRequest);
       
-      // Réinitialiser le formulaire
+      // Réinitialiser le formulaire et fermer la boîte de dialogue
       resetForm();
+      onClose();
+      
+      // Rafraîchir les données pour afficher la nouvelle demande
+      await refetch();
     } catch (error) {
       console.error('Erreur lors de la soumission de la demande de congé:', error);
+      toast.error("Une erreur s'est produite lors de la création de la demande");
     } finally {
       setIsSubmitting(false);
     }
