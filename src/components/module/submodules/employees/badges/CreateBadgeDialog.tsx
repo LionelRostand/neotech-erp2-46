@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter 
 } from '@/components/ui/dialog';
@@ -38,6 +38,28 @@ const CreateBadgeDialog: React.FC<CreateBadgeDialogProps> = ({
 }) => {
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<string>('');
   const [selectedAccessLevel, setSelectedAccessLevel] = useState<string>('');
+  const [uniqueEmployees, setUniqueEmployees] = useState<Employee[]>([]);
+  
+  // Filter out duplicate employees by email and name
+  useEffect(() => {
+    if (employees && employees.length > 0) {
+      const filteredEmployees = employees.reduce((acc: Employee[], current) => {
+        const isDuplicate = acc.find(
+          (item) => 
+            item.email === current.email || 
+            (item.firstName === current.firstName && item.lastName === current.lastName)
+        );
+        
+        if (!isDuplicate) {
+          acc.push(current);
+        }
+        
+        return acc;
+      }, []);
+      
+      setUniqueEmployees(filteredEmployees);
+    }
+  }, [employees]);
   
   const handleCreate = async () => {
     if (!selectedEmployeeId || !selectedAccessLevel) {
@@ -45,7 +67,7 @@ const CreateBadgeDialog: React.FC<CreateBadgeDialogProps> = ({
     }
     
     // Trouver les informations de l'employé sélectionné
-    const employee = employees.find(emp => emp.id === selectedEmployeeId);
+    const employee = uniqueEmployees.find(emp => emp.id === selectedEmployeeId);
     if (!employee) return;
     
     const newBadge: BadgeData = {
@@ -86,7 +108,7 @@ const CreateBadgeDialog: React.FC<CreateBadgeDialogProps> = ({
                 <SelectValue placeholder="Sélectionner un employé" />
               </SelectTrigger>
               <SelectContent>
-                {employees.map((employee) => (
+                {uniqueEmployees.map((employee) => (
                   <SelectItem key={employee.id} value={employee.id}>
                     {`${employee.firstName} ${employee.lastName}`}
                   </SelectItem>
