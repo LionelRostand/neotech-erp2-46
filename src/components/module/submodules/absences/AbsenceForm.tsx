@@ -9,6 +9,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { Calendar as CalendarIcon } from 'lucide-react';
+import { useEmployeeData } from '@/hooks/useEmployeeData';
 
 interface AbsenceFormProps {
   onSubmit: (data: any) => void;
@@ -16,9 +17,11 @@ interface AbsenceFormProps {
 }
 
 const AbsenceForm: React.FC<AbsenceFormProps> = ({ onSubmit, onCancel }) => {
+  const { employees, isLoading } = useEmployeeData();
+  
   const [formData, setFormData] = useState({
-    employeeId: 'employee-123', // For demo purposes
-    employeeName: 'Jean Dupont', // For demo purposes
+    employeeId: '',
+    employeeName: '',
     type: 'maladie',
     startDate: new Date(),
     endDate: new Date(),
@@ -35,6 +38,14 @@ const AbsenceForm: React.FC<AbsenceFormProps> = ({ onSubmit, onCancel }) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
+  const handleEmployeeChange = (employeeId: string) => {
+    const selectedEmployee = employees.find(emp => emp.id === employeeId);
+    if (selectedEmployee) {
+      handleChange('employeeId', employeeId);
+      handleChange('employeeName', `${selectedEmployee.firstName} ${selectedEmployee.lastName}`);
+    }
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSubmit(formData);
@@ -44,16 +55,30 @@ const AbsenceForm: React.FC<AbsenceFormProps> = ({ onSubmit, onCancel }) => {
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label htmlFor="employeeName" className="block text-sm font-medium mb-1">
+          <label htmlFor="employeeId" className="block text-sm font-medium mb-1">
             Employé
           </label>
-          <Input 
-            id="employeeName" 
-            placeholder="Nom de l'employé"
-            value={formData.employeeName}
-            onChange={(e) => handleChange('employeeName', e.target.value)}
-            required
-          />
+          <Select 
+            value={formData.employeeId}
+            onValueChange={handleEmployeeChange}
+          >
+            <SelectTrigger id="employeeId">
+              <SelectValue placeholder="Sélectionner un employé" />
+            </SelectTrigger>
+            <SelectContent>
+              {isLoading ? (
+                <SelectItem value="loading" disabled>Chargement des employés...</SelectItem>
+              ) : employees.length === 0 ? (
+                <SelectItem value="none" disabled>Aucun employé disponible</SelectItem>
+              ) : (
+                employees.map((employee) => (
+                  <SelectItem key={employee.id} value={employee.id}>
+                    {employee.firstName} {employee.lastName}
+                  </SelectItem>
+                ))
+              )}
+            </SelectContent>
+          </Select>
         </div>
         
         <div>
@@ -160,7 +185,7 @@ const AbsenceForm: React.FC<AbsenceFormProps> = ({ onSubmit, onCancel }) => {
         <Button type="button" variant="outline" onClick={onCancel}>
           Annuler
         </Button>
-        <Button type="submit">
+        <Button type="submit" disabled={!formData.employeeId}>
           Soumettre
         </Button>
       </div>
