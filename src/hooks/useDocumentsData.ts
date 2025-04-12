@@ -29,12 +29,23 @@ export const useDocumentsData = () => {
   const { hrDocuments, employees, isLoading, error } = useHrModuleData();
   
   // Fonction pour formater les dates - moved before its first usage
-  const formatDate = (dateStr: string) => {
+  const formatDate = (dateStr: string | undefined) => {
+    if (!dateStr) return '';
+    
     try {
-      return new Date(dateStr).toLocaleDateString('fr-FR');
+      // First, ensure we have a valid date
+      const date = new Date(dateStr);
+      
+      // Check if the date is valid
+      if (isNaN(date.getTime())) {
+        console.warn('Date invalide:', dateStr);
+        return '';
+      }
+      
+      return date.toLocaleDateString('fr-FR');
     } catch (error) {
       console.error('Erreur de formatage de date:', dateStr, error);
-      return dateStr;
+      return '';
     }
   };
   
@@ -57,11 +68,14 @@ export const useDocumentsData = () => {
         }
       }
       
+      // Use a safe date value for uploadDate
+      const dateToUse = document.uploadDate || document.createdAt || document.date || '';
+      
       return {
         id: document.id,
         title: document.title || document.filename || document.name || 'Document sans titre',
         type: document.type || 'Autre',
-        uploadDate: formatDate(document.uploadDate || document.createdAt || document.date),
+        uploadDate: formatDate(dateToUse),
         fileSize: document.fileSize,
         fileType: document.fileType,
         url: document.url,

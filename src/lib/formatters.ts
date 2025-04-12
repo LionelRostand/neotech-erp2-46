@@ -1,16 +1,29 @@
-
 /**
  * Format a date string to a readable format
  */
-export const formatDate = (dateString: string, options?: Intl.DateTimeFormatOptions): string => {
-  const date = new Date(dateString);
-  const defaultOptions: Intl.DateTimeFormatOptions = {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric'
-  };
+export const formatDate = (dateString: string | undefined, options?: Intl.DateTimeFormatOptions): string => {
+  if (!dateString) return '';
   
-  return new Intl.DateTimeFormat('fr-FR', options || defaultOptions).format(date);
+  try {
+    const date = new Date(dateString);
+    
+    // Check if the date is valid
+    if (isNaN(date.getTime())) {
+      console.warn('Invalid date value:', dateString);
+      return '';
+    }
+    
+    const defaultOptions: Intl.DateTimeFormatOptions = {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    };
+    
+    return new Intl.DateTimeFormat('fr-FR', options || defaultOptions).format(date);
+  } catch (error) {
+    console.error('Error formatting date:', dateString, error);
+    return '';
+  }
 };
 
 /**
