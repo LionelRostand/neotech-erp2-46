@@ -2,71 +2,115 @@
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { Loader2 } from 'lucide-react';
-import { useLeaveBalances } from '@/hooks/useLeaveBalances';
+import { SunMedium, Clock, Calendar, AlertCircle } from 'lucide-react';
 
-const LeaveBalanceCards: React.FC = () => {
-  const { leaveBalances, isLoading, error } = useLeaveBalances();
+interface LeaveBalanceCardsProps {
+  data?: {
+    paidLeave: number;
+    paidLeaveUsed: number;
+    rtt: number;
+    rttUsed: number;
+    sickLeave: number;
+    sickLeaveUsed: number;
+    other: number;
+    otherUsed: number;
+  };
+}
+
+const LeaveBalanceCards: React.FC<LeaveBalanceCardsProps> = ({ 
+  data = {
+    paidLeave: 25,
+    paidLeaveUsed: 10,
+    rtt: 12,
+    rttUsed: 4,
+    sickLeave: 3,
+    sickLeaveUsed: 1,
+    other: 5,
+    otherUsed: 0
+  }
+}) => {
+  // Fonction pour calculer le pourcentage utilisé
+  const getPercentage = (used: number, total: number) => {
+    return total > 0 ? Math.round((used / total) * 100) : 0;
+  };
   
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-48">
-        <Loader2 className="h-8 w-8 text-gray-400 animate-spin" />
-        <p className="ml-2 text-gray-500">Chargement des soldes de congés...</p>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="p-4 bg-red-50 text-red-700 rounded-md">
-        Une erreur est survenue lors du chargement des soldes de congés.
-      </div>
-    );
-  }
-
-  // Group balances by type
-  const balancesByType = leaveBalances.reduce((acc, balance) => {
-    if (!acc[balance.type]) {
-      acc[balance.type] = {
-        type: balance.type,
-        total: balance.total,
-        used: balance.used,
-        remaining: balance.remaining
-      };
-    }
-    return acc;
-  }, {});
-
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-      {Object.values(balancesByType).map((balance: any, index) => (
-        <Card key={index}>
-          <CardContent className="p-6">
-            <h3 className="font-medium text-lg mb-3">{balance.type}</h3>
-            <div className="flex justify-between items-center">
-              <div className="flex flex-col">
-                <span className="text-3xl font-bold">{balance.remaining}</span>
-                <span className="text-sm text-gray-500">Jours restants</span>
-              </div>
-              <div className="text-right">
-                <div className="text-sm text-gray-500">
-                  <span className="font-medium">{balance.used}</span> utilisés
-                </div>
-                <div className="text-sm text-gray-500">
-                  <span className="font-medium">{balance.total}</span> total
-                </div>
-              </div>
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <Card>
+        <CardContent className="p-4">
+          <div className="flex items-start justify-between mb-3">
+            <div>
+              <h3 className="text-sm font-medium text-gray-700">Congés payés</h3>
+              <p className="text-2xl font-bold">{data.paidLeave - data.paidLeaveUsed} jours</p>
             </div>
-            <div className="mt-3">
-              <Progress 
-                value={(balance.used / balance.total) * 100} 
-                className="h-2" 
-              />
+            <SunMedium className="h-6 w-6 text-amber-500" />
+          </div>
+          <div className="space-y-1">
+            <div className="flex items-center justify-between text-xs">
+              <span>Utilisés: {data.paidLeaveUsed} jours</span>
+              <span>Total: {data.paidLeave} jours</span>
             </div>
-          </CardContent>
-        </Card>
-      ))}
+            <Progress value={getPercentage(data.paidLeaveUsed, data.paidLeave)} className="h-2" />
+          </div>
+        </CardContent>
+      </Card>
+      
+      <Card>
+        <CardContent className="p-4">
+          <div className="flex items-start justify-between mb-3">
+            <div>
+              <h3 className="text-sm font-medium text-gray-700">RTT</h3>
+              <p className="text-2xl font-bold">{data.rtt - data.rttUsed} jours</p>
+            </div>
+            <Clock className="h-6 w-6 text-blue-500" />
+          </div>
+          <div className="space-y-1">
+            <div className="flex items-center justify-between text-xs">
+              <span>Utilisés: {data.rttUsed} jours</span>
+              <span>Total: {data.rtt} jours</span>
+            </div>
+            <Progress value={getPercentage(data.rttUsed, data.rtt)} className="h-2" />
+          </div>
+        </CardContent>
+      </Card>
+      
+      <Card>
+        <CardContent className="p-4">
+          <div className="flex items-start justify-between mb-3">
+            <div>
+              <h3 className="text-sm font-medium text-gray-700">Congés maladie</h3>
+              <p className="text-2xl font-bold">{data.sickLeave - data.sickLeaveUsed} jours</p>
+            </div>
+            <Calendar className="h-6 w-6 text-green-500" />
+          </div>
+          <div className="space-y-1">
+            <div className="flex items-center justify-between text-xs">
+              <span>Utilisés: {data.sickLeaveUsed} jours</span>
+              <span>Total: {data.sickLeave} jours</span>
+            </div>
+            <Progress value={getPercentage(data.sickLeaveUsed, data.sickLeave)} className="h-2" />
+          </div>
+        </CardContent>
+      </Card>
+      
+      <Card>
+        <CardContent className="p-4">
+          <div className="flex items-start justify-between mb-3">
+            <div>
+              <h3 className="text-sm font-medium text-gray-700">Autres congés</h3>
+              <p className="text-2xl font-bold">{data.other - data.otherUsed} jours</p>
+            </div>
+            <AlertCircle className="h-6 w-6 text-purple-500" />
+          </div>
+          <div className="space-y-1">
+            <div className="flex items-center justify-between text-xs">
+              <span>Utilisés: {data.otherUsed} jours</span>
+              <span>Total: {data.other} jours</span>
+            </div>
+            <Progress value={getPercentage(data.otherUsed, data.other)} className="h-2" />
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };

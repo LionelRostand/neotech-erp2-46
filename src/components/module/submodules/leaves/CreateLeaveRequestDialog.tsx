@@ -8,7 +8,6 @@ import {
   DialogFooter
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { 
@@ -19,9 +18,11 @@ import {
   SelectValue 
 } from '@/components/ui/select';
 import { useHrModuleData } from '@/hooks/useHrModuleData';
-import { format } from 'date-fns';
+import { DatePicker } from '@/components/ui/date-picker';
+import { format, differenceInDays, addDays } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { toast } from 'sonner';
+import { CalendarIcon } from 'lucide-react';
 
 interface CreateLeaveRequestDialogProps {
   isOpen: boolean;
@@ -37,10 +38,16 @@ export const CreateLeaveRequestDialog: React.FC<CreateLeaveRequestDialogProps> =
   const { employees } = useHrModuleData();
   const [selectedEmployee, setSelectedEmployee] = useState('');
   const [leaveType, setLeaveType] = useState('');
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
+  const [startDate, setStartDate] = useState<Date | undefined>(undefined);
+  const [endDate, setEndDate] = useState<Date | undefined>(undefined);
   const [reason, setReason] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  const calculateDays = () => {
+    if (!startDate || !endDate) return 0;
+    // Add 1 because the period is inclusive
+    return differenceInDays(addDays(endDate, 1), startDate);
+  };
   
   const handleSubmit = () => {
     if (!selectedEmployee) {
@@ -63,10 +70,7 @@ export const CreateLeaveRequestDialog: React.FC<CreateLeaveRequestDialogProps> =
       return;
     }
     
-    const start = new Date(startDate);
-    const end = new Date(endDate);
-    
-    if (start > end) {
+    if (startDate > endDate) {
       toast.error("La date de fin doit être postérieure à la date de début");
       return;
     }
@@ -74,8 +78,7 @@ export const CreateLeaveRequestDialog: React.FC<CreateLeaveRequestDialogProps> =
     setIsSubmitting(true);
     
     // Calculer le nombre de jours
-    const diffTime = Math.abs(end.getTime() - start.getTime());
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1; // +1 car inclusif
+    const diffDays = calculateDays();
     
     // Récupérer l'employé sélectionné
     const employee = employees?.find(emp => emp.id === selectedEmployee);
@@ -83,8 +86,8 @@ export const CreateLeaveRequestDialog: React.FC<CreateLeaveRequestDialogProps> =
     const newLeaveRequest = {
       employeeId: selectedEmployee,
       type: leaveType,
-      startDate: format(start, 'yyyy-MM-dd'),
-      endDate: format(end, 'yyyy-MM-dd'),
+      startDate: format(startDate, 'yyyy-MM-dd'),
+      endDate: format(endDate, 'yyyy-MM-dd'),
       days: diffDays,
       status: 'En attente',
       reason,
@@ -103,8 +106,8 @@ export const CreateLeaveRequestDialog: React.FC<CreateLeaveRequestDialogProps> =
   const resetForm = () => {
     setSelectedEmployee('');
     setLeaveType('');
-    setStartDate('');
-    setEndDate('');
+    setStartDate(undefined);
+    setEndDate(undefined);
     setReason('');
   };
   
@@ -151,6 +154,9 @@ export const CreateLeaveRequestDialog: React.FC<CreateLeaveRequestDialogProps> =
                 <SelectItem value="RTT">RTT</SelectItem>
                 <SelectItem value="Congé sans solde">Congé sans solde</SelectItem>
                 <SelectItem value="Congé maladie">Congé maladie</SelectItem>
+                <SelectItem value="Congé familial">Congé familial</SelectItem>
+                <SelectItem value="Congé maternité">Congé maternité</SelectItem>
+                <SelectItem value="Congé paternité">Congé paternité</SelectItem>
                 <SelectItem value="Congé exceptionnel">Congé exceptionnel</SelectItem>
               </SelectContent>
             </Select>
@@ -158,25 +164,32 @@ export const CreateLeaveRequestDialog: React.FC<CreateLeaveRequestDialogProps> =
           
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="startDate">Date de début</Label>
-              <Input 
-                id="startDate" 
-                type="date" 
-                value={startDate} 
-                onChange={(e) => setStartDate(e.target.value)}
+              <Label>Date de début</Label>
+              <DatePicker 
+                date={startDate} 
+                onSelect={setStartDate}
+                placeholder="Début du congé"
               />
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="endDate">Date de fin</Label>
-              <Input 
-                id="endDate" 
-                type="date" 
-                value={endDate} 
-                onChange={(e) => setEndDate(e.target.value)}
+              <Label>Date de fin</Label>
+              <DatePicker 
+                date={endDate} 
+                onSelect={setEndDate}
+                placeholder="Fin du congé"
               />
             </div>
           </div>
+          
+          {startDate && endDate && (
+            <div className="bg-blue-50 p-3 rounded-md flex items-center">
+              <CalendarIcon className="h-5 w-5 mr-2 text-blue-500" />
+              <span className="text-sm text-blue-700">
+                Durée: <span className="font-semibold">{calculateDays()} jour{calculateDays() > 1 ? 's' : ''}</span>
+              </span>
+            </div>
+          )}
           
           <div className="space-y-2">
             <Label htmlFor="reason">Motif (optionnel)</Label>
