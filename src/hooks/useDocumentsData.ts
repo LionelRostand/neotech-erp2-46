@@ -28,27 +28,7 @@ export interface HrDocument {
 export const useDocumentsData = () => {
   const { hrDocuments, employees, isLoading, error } = useHrModuleData();
   
-  // Fonction pour formater la date de manière sécurisée avec fallback
-  const formatDate = (dateString?: string): string => {
-    if (!dateString) return '';
-    
-    try {
-      // Validate date string before formatting
-      const timestamp = Date.parse(dateString);
-      if (isNaN(timestamp)) {
-        console.warn('Invalid document date:', dateString);
-        return 'Date non valide';
-      }
-      
-      const formattedDate = formatDateUtil(dateString);
-      return formattedDate || 'Date non valide';
-    } catch (error) {
-      console.error('Error formatting document date:', error);
-      return 'Date non valide';
-    }
-  };
-  
-  // Valider que la date existe et est valide
+  // Fonction pour valider que la date existe et est valide
   const isValidDate = (dateString?: string): boolean => {
     if (!dateString) return false;
     
@@ -59,7 +39,27 @@ export const useDocumentsData = () => {
       const date = new Date(timestamp);
       return !isNaN(date.getTime()) && date.getFullYear() >= 1900 && date.getFullYear() <= 2100;
     } catch (e) {
+      console.warn('Date validation error:', e);
       return false;
+    }
+  };
+  
+  // Fonction pour formater la date de manière sécurisée avec fallback
+  const formatDate = (dateString?: string): string => {
+    if (!dateString) return '';
+    
+    try {
+      // Validate date string before formatting
+      if (!isValidDate(dateString)) {
+        console.warn('Invalid document date:', dateString);
+        return 'Date non valide';
+      }
+      
+      const formattedDate = formatDateUtil(dateString);
+      return formattedDate || 'Date non valide';
+    } catch (error) {
+      console.error('Error formatting document date:', error);
+      return 'Date non valide';
     }
   };
   
