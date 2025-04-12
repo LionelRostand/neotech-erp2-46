@@ -1,4 +1,7 @@
 
+import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
+
 /**
  * Format a date string to a readable format
  */
