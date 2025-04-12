@@ -3,7 +3,7 @@ import React, { useState, useMemo } from 'react';
 import { Calendar } from '@/components/ui/calendar';
 import { Badge } from '@/components/ui/badge';
 import { fr } from 'date-fns/locale';
-import { format, isSameDay, isValid } from 'date-fns';
+import { format, isSameDay, isValid, parseISO } from 'date-fns';
 import { HrDocument } from '@/hooks/useDocumentsData';
 
 interface DocumentsCalendarProps {
@@ -20,12 +20,38 @@ export const DocumentsCalendar: React.FC<DocumentsCalendarProps> = ({ documents,
     if (!dateString) return null;
     
     try {
+      // Check for problematic values
+      if (dateString === 'Invalid Date' || dateString === 'NaN' || dateString === 'undefined') {
+        return null;
+      }
+      
       // Try to parse the date safely
       if (typeof dateString !== 'string') {
         console.warn('Non-string date value:', dateString);
         return null;
       }
       
+      // Handle numeric timestamps
+      if (/^\d+$/.test(dateString)) {
+        const timestamp = parseInt(dateString, 10);
+        const date = new Date(timestamp);
+        if (isValid(date) && date.getFullYear() >= 1900 && date.getFullYear() <= 2100) {
+          return date;
+        }
+        return null;
+      }
+      
+      // Try to parse as ISO date first
+      try {
+        const isoDate = parseISO(dateString);
+        if (isValid(isoDate) && isoDate.getFullYear() >= 1900 && isoDate.getFullYear() <= 2100) {
+          return isoDate;
+        }
+      } catch (e) {
+        // Ignore and try the next method
+      }
+      
+      // Try standard Date parsing
       const timestamp = Date.parse(dateString);
       if (isNaN(timestamp)) {
         console.warn('Invalid date:', dateString);

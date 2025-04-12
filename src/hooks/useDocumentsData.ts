@@ -32,14 +32,27 @@ export const useDocumentsData = () => {
   const isValidDate = (dateString?: string): boolean => {
     if (!dateString) return false;
     
+    // Handle problematic string values
+    if (dateString === 'Invalid Date' || dateString === 'NaN' || dateString === 'undefined') {
+      return false;
+    }
+    
     try {
+      // Special case for timestamps stored as numbers
+      if (typeof dateString === 'number' || /^\d+$/.test(dateString)) {
+        const timestamp = typeof dateString === 'number' ? dateString : parseInt(dateString, 10);
+        const date = new Date(timestamp);
+        return !isNaN(date.getTime()) && date.getFullYear() >= 1900 && date.getFullYear() <= 2100;
+      }
+      
+      // Regular date string validation
       const timestamp = Date.parse(dateString);
       if (isNaN(timestamp)) return false;
       
       const date = new Date(timestamp);
       return !isNaN(date.getTime()) && date.getFullYear() >= 1900 && date.getFullYear() <= 2100;
     } catch (e) {
-      console.warn('Date validation error:', e);
+      console.warn('Date validation error:', e, 'for date:', dateString);
       return false;
     }
   };
@@ -91,6 +104,7 @@ export const useDocumentsData = () => {
         dateToFormat = new Date().toISOString();
       }
       
+      // Format the date (now using a valid date string)
       const formattedDate = formatDate(dateToFormat);
       
       return {

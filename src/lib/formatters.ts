@@ -24,14 +24,27 @@ export const formatDate = (
       return '';
     }
     
-    // Make sure the date is valid first
-    const timestamp = Date.parse(dateString);
-    if (isNaN(timestamp)) {
-      console.warn('Invalid date provided to formatDate:', dateString);
+    // Handle exotic date formats or values that could be problematic
+    if (dateString === 'Invalid Date' || dateString === 'NaN' || dateString === 'undefined') {
+      console.warn('Invalid date string literal:', dateString);
       return '';
     }
     
-    const date = new Date(timestamp);
+    // Special case for timestamps stored as numbers
+    let date: Date;
+    if (/^\d+$/.test(dateString)) {
+      // This might be a numeric timestamp
+      const timestamp = parseInt(dateString, 10);
+      date = new Date(timestamp);
+    } else {
+      // Make sure the date is valid first
+      const timestamp = Date.parse(dateString);
+      if (isNaN(timestamp)) {
+        console.warn('Invalid date provided to formatDate:', dateString);
+        return '';
+      }
+      date = new Date(timestamp);
+    }
     
     // Double-check the date is valid (some valid timestamps can produce invalid dates)
     if (
