@@ -1,6 +1,6 @@
 
 import { Department } from '../types';
-import { addDocument, getAllDocuments, updateDocument, deleteDocument, setDocument } from '@/hooks/firestore/firestore-utils';
+import { addDocument, getAllDocuments, updateDocument, deleteDocument } from '@/hooks/firestore/firestore-utils';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import { toast } from 'sonner';
 
@@ -36,8 +36,8 @@ export const useDepartmentService = () => {
 
   const updateDepartment = async (department: Department): Promise<boolean> => {
     try {
-      // Always use setDocument for department updates to ensure document creation if needed
-      await setDocument(DEPARTMENTS_COLLECTION, department.id, department);
+      // Mettre à jour dans Firestore
+      await updateDocument(DEPARTMENTS_COLLECTION, department.id, department);
       toast.success(`Département ${department.name} mis à jour avec succès`);
       return true;
     } catch (error) {

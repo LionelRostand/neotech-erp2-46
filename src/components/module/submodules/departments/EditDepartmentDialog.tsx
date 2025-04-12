@@ -13,12 +13,12 @@ import { useEmployeeData } from '@/hooks/useEmployeeData';
 interface EditDepartmentDialogProps {
   formData: DepartmentFormData;
   selectedEmployees: string[];
-  activeTab: number;
-  onTabChange: (tab: number) => void;
+  activeTab: string;
+  onTabChange: (tab: string) => void;
   onInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onManagerChange: (value: string) => void;
   onColorChange: (value: string) => void;
-  onEmployeeSelection: (employeeIds: string[]) => void;
+  onEmployeeSelection: (employeeId: string) => void;
   onClose: () => void;
   onUpdate: () => void;
 }
@@ -38,30 +38,13 @@ const EditDepartmentDialog: React.FC<EditDepartmentDialogProps> = ({
   // Utiliser les données des employés depuis Firebase
   const { employees, isLoading } = useEmployeeData();
 
-  // Handle single employee selection and update the array
-  const handleSingleEmployeeSelection = (employeeId: string) => {
-    const updatedSelection = selectedEmployees.includes(employeeId)
-      ? selectedEmployees.filter(id => id !== employeeId)
-      : [...selectedEmployees, employeeId];
-    
-    onEmployeeSelection(updatedSelection);
-  };
-
-  // Convert numeric tab index to string for Tabs component
-  const tabValue = activeTab === 0 ? "department-info" : "department-employees";
-  
-  // Convert string tab value back to numeric index
-  const handleTabChange = (value: string) => {
-    onTabChange(value === "department-info" ? 0 : 1);
-  };
-
   return (
     <DialogContent className="sm:max-w-[600px]">
       <DialogHeader>
         <DialogTitle>Modifier le département</DialogTitle>
       </DialogHeader>
       
-      <Tabs value={tabValue} onValueChange={handleTabChange} className="w-full">
+      <Tabs value={activeTab} onValueChange={onTabChange} className="w-full">
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="department-info">
             Informations
@@ -159,7 +142,7 @@ const EditDepartmentDialog: React.FC<EditDepartmentDialogProps> = ({
           <EmployeesList 
             employees={employees || []}
             selectedEmployees={selectedEmployees}
-            onEmployeeSelection={handleSingleEmployeeSelection}
+            onEmployeeSelection={onEmployeeSelection}
             id="edit"
           />
         </TabsContent>

@@ -13,7 +13,7 @@ import EmployeesList from './EmployeesList';
 interface ManageEmployeesDialogProps {
   department: Department;
   selectedEmployees: string[];
-  onEmployeeSelection: (employeeIds: string[]) => void;
+  onEmployeeSelection: (employeeId: string) => void;
   getDepartmentEmployees: (departmentId: string) => Employee[];
   onClose: () => void;
   onSave: () => void;
@@ -36,15 +36,6 @@ const ManageEmployeesDialog: React.FC<ManageEmployeesDialogProps> = ({
       )
     : employees;
   
-  // Handle single employee selection and update the array
-  const handleSingleEmployeeSelection = (employeeId: string) => {
-    const updatedSelection = selectedEmployees.includes(employeeId)
-      ? selectedEmployees.filter(id => id !== employeeId)
-      : [...selectedEmployees, employeeId];
-    
-    onEmployeeSelection(updatedSelection);
-  };
-
   return (
     <DialogContent className="sm:max-w-[600px]">
       <DialogHeader>
@@ -65,7 +56,7 @@ const ManageEmployeesDialog: React.FC<ManageEmployeesDialogProps> = ({
       <EmployeesList
         employees={filteredEmployees}
         selectedEmployees={selectedEmployees}
-        onEmployeeSelection={handleSingleEmployeeSelection}
+        onEmployeeSelection={onEmployeeSelection}
         id="manage"
       />
       
