@@ -35,6 +35,24 @@ export interface Document {
   base64Data?: string; // Données au format base64
 }
 
+export interface LeaveRequest {
+  id: string;
+  startDate: string;
+  endDate: string;
+  type: string;
+  status: 'pending' | 'approved' | 'rejected';
+  comments?: string;
+}
+
+export interface Evaluation {
+  id: string;
+  date: string;
+  title: string;
+  rating: number;
+  comments: string;
+  evaluator?: string;
+}
+
 export interface Employee {
   id: string;
   firstName: string;
@@ -69,6 +87,7 @@ export interface Employee {
   photo?: string;
   photoURL?: string;
   photoData?: string;
+  photoHex?: string;
   photoMeta?: {
     fileName: string;
     fileType: string;
@@ -81,4 +100,7 @@ export interface Employee {
   company?: string | Company;
   createdAt?: string; // Adding timestamp for creation date
   updatedAt?: string; // Adding timestamp for last update
+  leaveRequests?: LeaveRequest[]; // Nouvelle propriété pour les congés
+  evaluations?: Evaluation[]; // Nouvelle propriété pour les évaluations
 }
+

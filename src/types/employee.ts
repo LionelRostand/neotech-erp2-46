@@ -35,6 +35,24 @@ export interface Document {
   base64Data?: string; // Données au format base64
 }
 
+export interface LeaveRequest {
+  id: string;
+  startDate: string;
+  endDate: string;
+  type: string;
+  status: 'pending' | 'approved' | 'rejected';
+  comments?: string;
+}
+
+export interface Evaluation {
+  id: string;
+  date: string;
+  title: string;
+  rating: number;
+  comments: string;
+  evaluator?: string;
+}
+
 export interface Employee {
   id: string;
   firstName: string;
@@ -83,4 +101,7 @@ export interface Employee {
   address_string?: string; // For backward compatibility
   createdAt?: string; // Adding timestamp for creation date
   updatedAt?: string; // Adding timestamp for last update
+  leaveRequests?: LeaveRequest[]; // Nouvelle propriété pour les congés
+  evaluations?: Evaluation[]; // Nouvelle propriété pour les évaluations
 }
+

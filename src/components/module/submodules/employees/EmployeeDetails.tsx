@@ -31,10 +31,27 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
   const handleEditTab = () => {
     if (activeTab === 'infos') {
       onEdit();
-    } else if (activeTab === 'conges') {
+    } else {
+      // Activer le mode édition pour l'onglet actif
       setIsEditing(true);
-    } else if (activeTab === 'evaluations') {
-      setIsEditing(true);
+      toast.info(`Mode édition activé pour l'onglet ${getTabName(activeTab)}`);
+    }
+  };
+
+  const handleFinishEditing = () => {
+    setIsEditing(false);
+    toast.success(`Modifications enregistrées pour l'onglet ${getTabName(activeTab)}`);
+  };
+
+  const getTabName = (tabId: string): string => {
+    switch (tabId) {
+      case 'infos': return 'Informations';
+      case 'documents': return 'Documents';
+      case 'competences': return 'Compétences';
+      case 'horaires': return 'Horaires';
+      case 'conges': return 'Congés';
+      case 'evaluations': return 'Évaluations';
+      default: return tabId;
     }
   };
 
@@ -147,26 +164,42 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
         </TabsList>
         
         <TabsContent value="infos">
-          <InformationsTab employee={updatedEmployee} />
+          <InformationsTab 
+            employee={updatedEmployee} 
+            isEditing={isEditing && activeTab === 'infos'}
+            onFinishEditing={handleFinishEditing}
+          />
         </TabsContent>
         
         <TabsContent value="documents">
-          <DocumentsTab employee={updatedEmployee} />
+          <DocumentsTab 
+            employee={updatedEmployee} 
+            isEditing={isEditing && activeTab === 'documents'}
+            onFinishEditing={handleFinishEditing}
+          />
         </TabsContent>
         
         <TabsContent value="competences">
-          <CompetencesTab employee={updatedEmployee} />
+          <CompetencesTab 
+            employee={updatedEmployee}
+            isEditing={isEditing && activeTab === 'competences'}
+            onFinishEditing={handleFinishEditing}
+          />
         </TabsContent>
         
         <TabsContent value="horaires">
-          <HorairesTab employee={updatedEmployee} />
+          <HorairesTab 
+            employee={updatedEmployee}
+            isEditing={isEditing && activeTab === 'horaires'}
+            onFinishEditing={handleFinishEditing}
+          />
         </TabsContent>
         
         <TabsContent value="conges">
           <CongesTab 
             employee={updatedEmployee} 
             isEditing={isEditing && activeTab === 'conges'} 
-            onFinishEditing={() => setIsEditing(false)} 
+            onFinishEditing={handleFinishEditing} 
           />
         </TabsContent>
         
@@ -174,14 +207,16 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
           <EvaluationsTab 
             employee={updatedEmployee} 
             isEditing={isEditing && activeTab === 'evaluations'} 
-            onFinishEditing={() => setIsEditing(false)} 
+            onFinishEditing={handleFinishEditing} 
           />
         </TabsContent>
       </Tabs>
       
       <div className="flex justify-end gap-3 mt-6">
         <Button variant="outline" onClick={handleExportPdf}>Exporter PDF</Button>
-        <Button variant="outline" onClick={handleEditTab}>Modifier</Button>
+        <Button variant={isEditing ? "default" : "outline"} onClick={isEditing ? handleFinishEditing : handleEditTab}>
+          {isEditing ? "Terminer" : "Modifier"}
+        </Button>
       </div>
     </div>
   );

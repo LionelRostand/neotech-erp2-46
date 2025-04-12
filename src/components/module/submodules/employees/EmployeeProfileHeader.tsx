@@ -4,7 +4,7 @@ import { Employee, EmployeeAddress } from '@/types/employee';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Mail, Phone, MapPin, Upload, Loader2 } from 'lucide-react';
+import { Mail, Phone, MapPin, Upload, Loader2, IdCard } from 'lucide-react';
 import { toast } from 'sonner';
 import { useStorageUpload } from '@/hooks/storage/useStorageUpload';
 import { updateDocument } from '@/hooks/firestore/update-operations';
@@ -206,6 +206,12 @@ const EmployeeProfileHeader: React.FC<EmployeeProfileHeaderProps> = ({ employee,
               disabled={isUploading}
               className="hidden" 
             />
+            
+            {/* Affichage de l'ID de l'employé */}
+            <div className="flex items-center justify-center mt-2 text-sm text-muted-foreground">
+              <IdCard className="h-3 w-3 mr-1" />
+              <span>ID: {employee.id}</span>
+            </div>
           </div>
           
           <div className="flex-1 text-center md:text-left">
