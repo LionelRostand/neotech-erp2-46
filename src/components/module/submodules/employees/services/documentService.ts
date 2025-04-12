@@ -210,7 +210,7 @@ export const getDocumentTypes = async (): Promise<string[]> => {
     'Fiche de paie',
     'CV',
     'Lettre de motivation',
-    "Pièce d'identité',
+    "Pièce d'identité",
     'Permis de conduire',
     'Visa',
     'Carte de séjour',
