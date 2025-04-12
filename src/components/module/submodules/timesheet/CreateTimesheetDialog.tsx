@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 import { addTimeSheet } from './services/timesheetService';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { TimeReportStatus } from '@/types/timesheet';
 
 interface CreateTimesheetDialogProps {
   open: boolean;
@@ -34,6 +35,17 @@ const CreateTimesheetDialog: React.FC<CreateTimesheetDialogProps> = ({
       // Date actuelle pour les timestamps
       const now = new Date().toISOString();
       
+      // Convertir le statut en TimeReportStatus valide
+      const statusMap: Record<string, TimeReportStatus> = {
+        'active': 'En cours',
+        'pending': 'Soumis',
+        'validated': 'Validé',
+        'rejected': 'Rejeté'
+      };
+      
+      // Utiliser le statut converti ou "En cours" par défaut
+      const timeSheetStatus: TimeReportStatus = statusMap[data.status] || 'En cours';
+      
       // Formater les données pour Firestore
       const timeSheetData = {
         employeeId: data.employeeId,
@@ -42,10 +54,7 @@ const CreateTimesheetDialog: React.FC<CreateTimesheetDialogProps> = ({
         startDate: format(data.weekStartDate, 'yyyy-MM-dd'),
         endDate: format(data.weekEndDate, 'yyyy-MM-dd'),
         title: `Feuille de temps du ${format(data.weekStartDate, 'dd/MM/yyyy', { locale: fr })}`,
-        status: data.status === 'active' ? 'En cours' : 
-               data.status === 'pending' ? 'Soumis' : 
-               data.status === 'validated' ? 'Validé' : 
-               data.status === 'rejected' ? 'Rejeté' : 'En cours',
+        status: timeSheetStatus,
         totalHours: data.totalHours,
         hours: data.hours,
         notes: data.notes,
