@@ -40,6 +40,19 @@ const TimesheetForm: React.FC<TimesheetFormProps> = ({ onSubmit, onCancel, emplo
 
   const [weekStartDateOpen, setWeekStartDateOpen] = useState(false);
 
+  // Dédupliquer les employés par ID pour le sélecteur
+  const uniqueEmployees = React.useMemo(() => {
+    const employeeIds = new Set();
+    return employees.filter(employee => {
+      // Si l'ID de l'employé n'est pas déjà dans le Set, l'ajouter et garder cet employé
+      if (!employeeIds.has(employee.id)) {
+        employeeIds.add(employee.id);
+        return true;
+      }
+      return false;
+    });
+  }, [employees]);
+
   const handleChange = (field: string, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
@@ -76,13 +89,13 @@ const TimesheetForm: React.FC<TimesheetFormProps> = ({ onSubmit, onCancel, emplo
 
   // Initialize with the first employee if available
   useEffect(() => {
-    if (employees && employees.length > 0 && !formData.employeeId) {
+    if (uniqueEmployees.length > 0 && !formData.employeeId) {
       setFormData(prev => ({
         ...prev,
-        employeeId: employees[0].id
+        employeeId: uniqueEmployees[0].id
       }));
     }
-  }, [employees, formData.employeeId]);
+  }, [uniqueEmployees, formData.employeeId]);
 
   // Calculate week end date
   const weekEndDate = formData.weekEndDate || endOfWeek(formData.weekStartDate, { weekStartsOn: 1 });
@@ -115,7 +128,7 @@ const TimesheetForm: React.FC<TimesheetFormProps> = ({ onSubmit, onCancel, emplo
               <SelectValue placeholder="Sélectionner un employé" />
             </SelectTrigger>
             <SelectContent>
-              {employees.map((employee) => (
+              {uniqueEmployees.map((employee) => (
                 <SelectItem key={employee.id} value={employee.id}>
                   {employee.firstName} {employee.lastName}
                 </SelectItem>
