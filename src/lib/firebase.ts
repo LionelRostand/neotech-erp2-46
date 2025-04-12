@@ -11,7 +11,7 @@ const firebaseConfig = {
   apiKey: "AIzaSyD3ZQYPtVHk4w63bCvOX0b8RVJyybWyOqU",
   authDomain: "neotech-erp.firebaseapp.com",
   projectId: "neotech-erp",
-  storageBucket: "neotech-erp.appspot.com",
+  storageBucket: "neotech-erp.firebasestorage.app",
   messagingSenderId: "803661896660",
   appId: "1:803661896660:web:94f17531b963627cbd5441"
 };
@@ -45,23 +45,8 @@ try {
 // Initialiser Authentication
 const auth = getAuth(app);
 
-// Initialiser Storage avec configuration optimisée pour les fichiers binaires
+// Initialiser Storage
 const storage = getStorage(app);
-
-// Configurer les options Storage pour améliorer la fiabilité des uploads binaires
-const configureStorage = () => {
-  // Augmenter les temps de tentative pour les opérations Storage
-  // Cela permet de gérer les fichiers plus volumineux et les connexions instables
-  const customStorage = storage as any;
-  
-  // Augmenter significativement les temps de tentative pour le téléversement de fichiers binaires
-  customStorage.maxOperationRetryTime = 600000; // 10 minutes (au lieu de 2 minutes)
-  customStorage.maxUploadRetryTime = 1200000;   // 20 minutes (au lieu de 3 minutes)
-  
-  console.log('Configuration Storage optimisée pour les téléversements binaires volumineux');
-};
-
-configureStorage();
 
 // Détecter le mode développement et la configuration des émulateurs
 const isDevMode = import.meta.env.DEV;

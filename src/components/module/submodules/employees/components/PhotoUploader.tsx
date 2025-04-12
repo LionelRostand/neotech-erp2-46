@@ -1,202 +1,178 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+
+import React, { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
-import { Upload, X } from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { toast } from 'sonner';
-import { uploadEmployeePhoto } from '../services/employeeService';
+import { updateEmployee } from '../services/employeeService';
+import { Camera, Upload, X } from 'lucide-react';
 
 interface PhotoUploaderProps {
   employeeId: string;
-  currentPhoto: string;
+  currentPhoto?: string;
   employeeName: string;
   onPhotoUpdated: (photoURL: string) => void;
 }
 
-const PhotoUploader: React.FC<PhotoUploaderProps> = ({ 
-  employeeId, 
-  currentPhoto, 
+const PhotoUploader: React.FC<PhotoUploaderProps> = ({
+  employeeId,
+  currentPhoto,
   employeeName,
-  onPhotoUpdated 
+  onPhotoUpdated
 }) => {
-  const [uploading, setUploading] = useState(false);
-  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [previewPhoto, setPreviewPhoto] = useState<string | null>(null);
   
-  useEffect(() => {
-    // Reset preview when currentPhoto changes
-    if (currentPhoto) {
-      setPhotoPreview(null);
-    }
-  }, [currentPhoto]);
-  
-  const openFileSelector = () => {
-    if (fileInputRef.current) {
-      fileInputRef.current.click();
-    }
-  };
-  
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-    
-    // Validate file type
-    if (!file.type.startsWith('image/')) {
-      toast.error('Veuillez sélectionner une image valide');
-      return;
-    }
-    
-    // Validate file size (max 5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error('La taille de l\'image ne doit pas dépasser 5MB');
-      return;
-    }
-    
-    // Create preview
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      setPhotoPreview(e.target?.result as string);
-    };
-    reader.readAsDataURL(file);
-    
-    // Store selected file
-    setSelectedFile(file);
-  };
-  
-  const cancelUpload = () => {
-    setPhotoPreview(null);
-    setSelectedFile(null);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
-  };
-  
-  const uploadPhoto = async () => {
-    if (!selectedFile) return;
-    
-    try {
-      setUploading(true);
-      console.log(`Début du téléversement de la photo pour l'employé ${employeeId}`);
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
       
-      const photoURL = await uploadEmployeePhoto(employeeId, selectedFile);
-      console.log(`Photo téléversée avec succès, URL: ${photoURL}`);
+      // Vérifier le type de fichier
+      if (!file.type.startsWith('image/')) {
+        toast.error('Veuillez sélectionner une image');
+        return;
+      }
       
-      if (photoURL) {
-        onPhotoUpdated(photoURL);
-        toast.success('Photo de profil mise à jour');
+      // Vérifier la taille du fichier (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error('La taille de l\'image ne doit pas dépasser 5MB');
+        return;
+      }
+      
+      setIsUploading(true);
+      
+      try {
+        // Créer une URL pour la prévisualisation
+        const photoURL = URL.createObjectURL(file);
+        setPreviewPhoto(photoURL);
         
-        // Reset state
-        setPhotoPreview(null);
-        setSelectedFile(null);
+        // Dans un environnement réel, on téléverserait le fichier sur un stockage (Firebase Storage)
+        // et on récupérerait l'URL du fichier
+        
+        // Mettre à jour l'employé dans Firestore avec la nouvelle URL de photo
+        const success = await updateEmployee(employeeId, { 
+          photo: photoURL,
+          photoURL: photoURL
+        });
+        
+        if (success) {
+          toast.success('Photo mise à jour avec succès');
+          onPhotoUpdated(photoURL);
+        } else {
+          toast.error('Erreur lors de la mise à jour de la photo');
+          setPreviewPhoto(null);
+        }
+      } catch (error) {
+        console.error('Erreur lors du téléversement de la photo:', error);
+        toast.error('Erreur lors du téléversement de la photo');
+        setPreviewPhoto(null);
+      } finally {
+        setIsUploading(false);
+        // Réinitialiser l'input file
         if (fileInputRef.current) {
           fileInputRef.current.value = '';
         }
-      } else {
-        toast.error('Erreur lors du téléversement de la photo');
       }
-    } catch (error: any) {
-      console.error('Erreur lors du téléversement:', error);
-      toast.error(`Erreur: ${error.message || 'Impossible de téléverser la photo'}`);
+    }
+  };
+  
+  const handleButtonClick = () => {
+    fileInputRef.current?.click();
+  };
+  
+  const handleRemovePhoto = async () => {
+    if (isUploading) return;
+    
+    setIsUploading(true);
+    
+    try {
+      // Mettre à jour l'employé dans Firestore sans photo
+      const success = await updateEmployee(employeeId, { 
+        photo: '',
+        photoURL: ''
+      });
+      
+      if (success) {
+        toast.success('Photo supprimée avec succès');
+        setPreviewPhoto(null);
+        onPhotoUpdated('');
+      } else {
+        toast.error('Erreur lors de la suppression de la photo');
+      }
+    } catch (error) {
+      console.error('Erreur lors de la suppression de la photo:', error);
+      toast.error('Erreur lors de la suppression de la photo');
     } finally {
-      setUploading(false);
+      setIsUploading(false);
     }
   };
   
-  // Get initials for fallback avatar
-  const getInitials = () => {
-    if (!employeeName) return 'UN';
-    
-    const nameParts = employeeName.split(' ');
-    if (nameParts.length >= 2) {
-      return `${nameParts[0].charAt(0)}${nameParts[1].charAt(0)}`.toUpperCase();
+  // Obtenir les initiales de l'employé pour le fallback
+  const getInitials = (name: string) => {
+    const names = name.split(' ');
+    if (names.length >= 2) {
+      return `${names[0].charAt(0)}${names[1].charAt(0)}`.toUpperCase();
     }
-    return nameParts[0].slice(0, 2).toUpperCase();
+    return name.charAt(0).toUpperCase();
   };
   
-  // Determine which image to display
-  const getImageSource = () => {
-    // If there's a preview, show that first
-    if (photoPreview) {
-      return photoPreview;
-    }
-    
-    // Otherwise show current photo if available
-    if (currentPhoto) {
-      return currentPhoto;
-    }
-    
-    // No image available
-    return null;
-  };
-  
-  // Generate a cache-busting URL to prevent stale images
-  const getImageUrl = (url: string) => {
-    if (!url) return '';
-    
-    // Add a timestamp query parameter to force a refresh
-    const timestamp = new Date().getTime();
-    const separator = url.includes('?') ? '&' : '?';
-    return `${url}${separator}t=${timestamp}`;
-  };
-
   return (
-    <div className="flex flex-col items-center">
-      <input
-        type="file"
-        ref={fileInputRef}
-        onChange={handleFileChange}
-        accept="image/*"
-        className="hidden"
-      />
-      
-      <Avatar className="h-24 w-24 border border-gray-200">
-        <AvatarImage 
-          src={getImageUrl(getImageSource() || '')} 
-          alt={employeeName} 
-          className="object-cover"
-          onError={(e) => {
-            const target = e.target as HTMLImageElement;
-            target.src = '';
-            console.error("Erreur de chargement de l'image:", target.src);
-          }}
-        />
-        <AvatarFallback className="text-xl bg-blue-100 text-blue-600">{getInitials()}</AvatarFallback>
-      </Avatar>
-      
-      {photoPreview ? (
-        <div className="mt-3 flex space-x-2">
+    <div className="space-y-2">
+      <Avatar className="w-24 h-24 relative group">
+        <AvatarImage src={previewPhoto || currentPhoto} alt={employeeName} />
+        <AvatarFallback className="text-xl">{getInitials(employeeName)}</AvatarFallback>
+        
+        <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-full">
           <Button 
+            variant="ghost" 
             size="sm" 
-            variant="outline" 
-            type="button" 
-            onClick={cancelUpload}
-            disabled={uploading}
+            className="text-white h-8 w-8 p-0"
+            onClick={handleButtonClick}
+            disabled={isUploading}
           >
-            <X className="h-4 w-4 mr-1" />
-            Annuler
+            <Camera className="h-5 w-5" />
           </Button>
           
-          <Button 
-            size="sm" 
-            variant="default" 
-            type="button" 
-            onClick={uploadPhoto}
-            disabled={uploading}
-          >
-            {uploading ? 'Envoi...' : 'Enregistrer'}
-          </Button>
+          {(currentPhoto || previewPhoto) && (
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="text-white h-8 w-8 p-0"
+              onClick={handleRemovePhoto}
+              disabled={isUploading}
+            >
+              <X className="h-5 w-5" />
+            </Button>
+          )}
         </div>
-      ) : (
+        
+        {isUploading && (
+          <div className="absolute inset-0 bg-black/50 flex items-center justify-center rounded-full">
+            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white"></div>
+          </div>
+        )}
+      </Avatar>
+      
+      <div className="flex flex-col items-center">
         <Button 
           variant="outline" 
           size="sm" 
-          className="mt-3" 
-          onClick={openFileSelector}
+          className="text-xs"
+          onClick={handleButtonClick}
+          disabled={isUploading}
         >
-          <Upload className="h-4 w-4 mr-1" />
-          Changer photo
+          <Upload className="h-3 w-3 mr-1" />
+          {currentPhoto ? 'Changer' : 'Ajouter'} la photo
         </Button>
-      )}
+        
+        <input
+          type="file"
+          ref={fileInputRef}
+          onChange={handleFileChange}
+          accept="image/*"
+          className="hidden"
+        />
+      </div>
     </div>
   );
 };

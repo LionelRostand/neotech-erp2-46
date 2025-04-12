@@ -9,14 +9,12 @@ import {
   updateDoc, 
   deleteDoc, 
   serverTimestamp, 
-  DocumentData,
-  getDoc
+  DocumentData
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Employee } from '@/types/employee';
 import { useToast } from '@/hooks/use-toast';
 import { COLLECTIONS } from '@/lib/firebase-collections';
-import { v4 as uuidv4 } from 'uuid';
 
 export const useFirebaseEmployees = () => {
   const [employees, setEmployees] = useState<Employee[]>([]);
@@ -28,15 +26,17 @@ export const useFirebaseEmployees = () => {
     setIsLoading(true);
     
     try {
+      // Updated reference to the correct HR employees collection path
       const employeesRef = collection(db, COLLECTIONS.HR.EMPLOYEES);
       const q = query(employeesRef);
       
+      // Set up a real-time listener
       const unsubscribe = onSnapshot(q, (snapshot) => {
         const employeesData: Employee[] = snapshot.docs.map(doc => {
           const data = doc.data();
+          // Create a properly typed employee object with required fields and defaults
           return {
             id: doc.id,
-            userId: data.userId || uuidv4(),
             firstName: data.firstName || '',
             lastName: data.lastName || '',
             email: data.email || '',
@@ -49,10 +49,11 @@ export const useFirebaseEmployees = () => {
             contract: data.contract || '',
             company: data.company || '',
             professionalEmail: data.professionalEmail || '',
-            hireDate: data.hireDate?.toDate()?.toISOString() || '',
-            birthDate: data.birthDate?.toDate()?.toISOString() || '',
+            hireDate: data.hireDate?.toDate()?.toISOString() || null,
+            birthDate: data.birthDate?.toDate()?.toISOString() || null,
             createdAt: data.createdAt?.toDate() || new Date(),
             updatedAt: data.updatedAt?.toDate() || new Date(),
+            // Include other required fields with defaults
             photo: data.photo || '',
             photoURL: data.photoURL || '',
             socialSecurityNumber: data.socialSecurityNumber || '',
@@ -62,13 +63,13 @@ export const useFirebaseEmployees = () => {
             title: data.title || '',
             role: data.role || '',
             payslips: data.payslips || [],
+            // Include optional arrays
             skills: data.skills || [],
             documents: data.documents || [],
             education: data.education || []
           } as Employee;
         });
         
-        console.log("Employés chargés depuis Firestore:", employeesData.length);
         setEmployees(employeesData);
         setIsLoading(false);
       }, (err) => {
@@ -99,47 +100,17 @@ export const useFirebaseEmployees = () => {
 
   const addEmployee = async (employee: Omit<Employee, 'id' | 'createdAt' | 'updatedAt'>) => {
     try {
+      // Update reference to the employees collection
       const employeesRef = collection(db, COLLECTIONS.HR.EMPLOYEES);
       
-      // Nettoyage des données pour éviter les valeurs undefined
-      const cleanedData = Object.entries(employee).reduce((acc, [key, value]) => {
-        if (value === undefined) return acc;
-        
-        if (key === 'address' && typeof value === 'object') {
-          // Nettoyage spécifique pour l'objet adresse
-          const cleanAddress = Object.entries(value).reduce((addrAcc, [addrKey, addrVal]) => {
-            if (addrVal !== undefined) {
-              addrAcc[addrKey] = addrVal;
-            }
-            return addrAcc;
-          }, {} as Record<string, any>);
-          
-          // Seulement ajouter l'adresse si elle a au moins une propriété
-          if (Object.keys(cleanAddress).length > 0) {
-            acc[key] = cleanAddress;
-          }
-        } else {
-          acc[key] = value;
-        }
-        
-        return acc;
-      }, {} as Record<string, any>);
-      
-      // S'assurer que photoURL est inclus si photo est défini
-      if (cleanedData.photo && !cleanedData.photoURL) {
-        cleanedData.photoURL = cleanedData.photo;
-      } else if (cleanedData.photoURL && !cleanedData.photo) {
-        cleanedData.photo = cleanedData.photoURL;
-      }
-      
+      // Prepare employee data
       const employeeData = {
-        ...cleanedData,
-        userId: employee.userId || uuidv4(),
+        ...employee,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp()
       };
       
-      console.log("Ajout d'employé avec données:", employeeData);
+      // Add the document
       const docRef = await addDoc(employeesRef, employeeData);
       
       toast({
@@ -149,7 +120,7 @@ export const useFirebaseEmployees = () => {
       
       return { id: docRef.id, ...employee };
     } catch (err) {
-      console.error("Erreur lors de l'ajout de l'employé:", err);
+      console.error("Error adding employee:", err);
       toast({
         title: "Erreur",
         description: "Impossible d'ajouter l'employé.",
@@ -161,56 +132,12 @@ export const useFirebaseEmployees = () => {
 
   const updateEmployee = async (id: string, updates: Partial<Employee>) => {
     try {
+      // Update reference to the employee document
       const employeeRef = doc(db, COLLECTIONS.HR.EMPLOYEES, id);
       
-      // Vérifier si l'employé existe avant de tenter de le mettre à jour
-      const employeeDoc = await getDoc(employeeRef);
-      if (!employeeDoc.exists()) {
-        console.error(`Employé avec ID ${id} n'existe pas.`);
-        toast({
-          title: "Erreur",
-          description: `Employé avec ID ${id} non trouvé.`,
-          variant: "destructive",
-        });
-        throw new Error(`Employee with ID ${id} not found`);
-      }
-      
-      // Nettoyage des données pour éviter les valeurs undefined
-      const cleanedUpdates = Object.entries(updates).reduce((acc, [key, value]) => {
-        if (value === undefined) return acc;
-        
-        if (key === 'address' && typeof value === 'object') {
-          // Nettoyage spécifique pour l'objet adresse
-          const cleanAddress = Object.entries(value).reduce((addrAcc, [addrKey, addrVal]) => {
-            if (addrVal !== undefined) {
-              addrAcc[addrKey] = addrVal;
-            }
-            return addrAcc;
-          }, {} as Record<string, any>);
-          
-          // Seulement mettre à jour l'adresse si elle a au moins une propriété
-          if (Object.keys(cleanAddress).length > 0) {
-            acc[key] = cleanAddress;
-          }
-        } else {
-          acc[key] = value;
-        }
-        
-        return acc;
-      }, {} as Record<string, any>);
-      
-      // Synchroniser photo et photoURL
-      if (cleanedUpdates.photo && !cleanedUpdates.photoURL) {
-        cleanedUpdates.photoURL = cleanedUpdates.photo;
-      } else if (cleanedUpdates.photoURL && !cleanedUpdates.photo) {
-        cleanedUpdates.photo = cleanedUpdates.photoURL;
-      }
-      
-      // Ajout de logging pour débugger
-      console.log(`Mise à jour de l'employé ${id} avec les données:`, cleanedUpdates);
-      
+      // Update the document
       await updateDoc(employeeRef, {
-        ...cleanedUpdates,
+        ...updates,
         updatedAt: serverTimestamp()
       });
       
@@ -218,30 +145,6 @@ export const useFirebaseEmployees = () => {
         title: "Succès",
         description: "Les informations de l'employé ont été mises à jour.",
       });
-      
-      // Mettre à jour la liste des employés avec les nouvelles données
-      const updatedEmployeeData = await getDoc(employeeRef);
-      
-      if (updatedEmployeeData.exists()) {
-        const updatedEmployee = { 
-          id, 
-          ...updatedEmployeeData.data(),
-          ...cleanedUpdates 
-        } as Employee;
-        
-        console.log("Employé mis à jour dans le cache local:", updatedEmployee);
-        
-        // Mise à jour immédiate du cache local
-        setEmployees(prev => 
-          prev.map(emp => emp.id === id ? {
-            ...emp,
-            ...updatedEmployee,
-            // S'assurer que les champs photo sont toujours synchronisés
-            photo: updatedEmployee.photoURL || updatedEmployee.photo || emp.photo || emp.photoURL || '',
-            photoURL: updatedEmployee.photoURL || updatedEmployee.photo || emp.photoURL || emp.photo || ''
-          } : emp)
-        );
-      }
       
       return true;
     } catch (err) {
@@ -257,8 +160,10 @@ export const useFirebaseEmployees = () => {
 
   const deleteEmployee = async (id: string) => {
     try {
+      // Update reference to the employee document
       const employeeRef = doc(db, COLLECTIONS.HR.EMPLOYEES, id);
       
+      // Delete the document
       await deleteDoc(employeeRef);
       
       toast({

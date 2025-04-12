@@ -1,5 +1,5 @@
 
-import { useMemo, useEffect, useState } from 'react';
+import { useMemo } from 'react';
 import { useHrModuleData } from './useHrModuleData';
 import { Employee } from '@/types/employee';
 import { Department } from '@/components/module/submodules/departments/types';
@@ -9,16 +9,6 @@ import { Department } from '@/components/module/submodules/departments/types';
  */
 export const useEmployeeData = () => {
   const { employees, departments, isLoading, error } = useHrModuleData();
-  const [forceUpdate, setForceUpdate] = useState(0);
-  
-  // Force refresh when photos change
-  useEffect(() => {
-    const refreshInterval = setInterval(() => {
-      setForceUpdate(prev => prev + 1);
-    }, 5000); // Refresh every 5 seconds
-    
-    return () => clearInterval(refreshInterval);
-  }, []);
   
   // On s'assure que les données des employés sont correctement formatées
   const formattedEmployees = useMemo(() => {
@@ -28,9 +18,8 @@ export const useEmployeeData = () => {
       ...employee,
       // Garantir que chaque employé a une photo (même placeholder)
       photoURL: employee.photoURL || employee.photo || '',
-      photo: employee.photo || employee.photoURL || '',
     }));
-  }, [employees, forceUpdate]); // Add forceUpdate to dependencies
+  }, [employees]);
   
   // Formater les départements pour les enrichir avec les données des managers
   const formattedDepartments = useMemo(() => {
@@ -53,7 +42,7 @@ export const useEmployeeData = () => {
         employeesCount: department.employeeIds?.length || deptEmployeesCount || 0
       } as Department;
     });
-  }, [departments, formattedEmployees, forceUpdate]); // Add forceUpdate to dependencies
+  }, [departments, formattedEmployees]);
   
   return {
     employees: formattedEmployees as Employee[],

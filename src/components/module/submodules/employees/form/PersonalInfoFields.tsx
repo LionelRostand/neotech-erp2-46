@@ -11,33 +11,9 @@ import {
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { EmployeeFormValues } from './employeeFormSchema';
-import { EmployeeAddress } from '@/types/employee';
 
 const PersonalInfoFields: React.FC = () => {
   const form = useFormContext<EmployeeFormValues>();
-
-  // Helper to convert address object to string if needed
-  const formatAddressValue = (addressValue: any): string => {
-    if (typeof addressValue === 'string') {
-      return addressValue;
-    }
-    
-    // Convert address object to string
-    if (!addressValue) return '';
-    
-    const { street, streetNumber, city, postalCode, department, country } = addressValue as EmployeeAddress;
-    
-    // Make sure to handle potentially missing required fields
-    const parts = [
-      streetNumber && street ? `${streetNumber} ${street}` : street || 'Rue non spécifiée',
-      city || 'Ville non spécifiée',
-      postalCode || '00000',
-      department ? `(${department})` : '',
-      country || 'France'
-    ].filter(Boolean);
-    
-    return parts.join(', ');
-  };
 
   return (
     <>
@@ -102,25 +78,15 @@ const PersonalInfoFields: React.FC = () => {
       <FormField
         control={form.control}
         name="address"
-        render={({ field }) => {
-          const { onChange, value, ...rest } = field;
-          const stringValue = value ? formatAddressValue(value) : '';
-          
-          return (
-            <FormItem>
-              <FormLabel>Adresse</FormLabel>
-              <FormControl>
-                <Textarea 
-                  placeholder="Adresse complète" 
-                  value={stringValue}
-                  onChange={(e) => onChange(e.target.value)}
-                  {...rest}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          );
-        }}
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Adresse</FormLabel>
+            <FormControl>
+              <Textarea placeholder="Adresse complète" {...field} />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
       />
     </>
   );

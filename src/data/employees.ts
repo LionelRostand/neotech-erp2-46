@@ -5,7 +5,6 @@ import { Employee, EmployeeAddress, Education, Document } from '@/types/employee
 export const employees: Employee[] = [
   {
     id: "EMP001",
-    userId: "USER001", // Added userId
     firstName: "Martin",
     lastName: "Dupont",
     email: "martin.dupont@example.com",
@@ -55,7 +54,6 @@ export const employees: Employee[] = [
   
   {
     id: "EMP002",
-    userId: "USER002", // Added userId
     firstName: "Lionel",
     lastName: "Djossa",
     email: "lionel.djossa@example.com",
@@ -103,7 +101,6 @@ export const employees: Employee[] = [
   
   {
     id: "EMP003",
-    userId: "USER003", // Added userId
     firstName: "Sophie",
     lastName: "Martin",
     email: "sophie.martin@example.com",

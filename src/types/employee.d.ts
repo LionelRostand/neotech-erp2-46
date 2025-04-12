@@ -2,13 +2,10 @@
 import { Company } from '@/components/module/submodules/companies/types';
 
 export interface EmployeeAddress {
-  street: string;
-  city: string;
-  postalCode: string;
-  country: string;
-  state?: string;
-  streetNumber?: string;
-  department?: string;
+  street?: string;
+  city?: string;
+  postalCode?: string;
+  country?: string;
 }
 
 export interface Education {
@@ -27,7 +24,6 @@ export interface Document {
 
 export interface Employee {
   id: string;
-  userId?: string; // Add userId field and make it optional for backward compatibility
   firstName: string;
   lastName: string;
   email: string;
@@ -63,5 +59,4 @@ export interface Employee {
   role?: string;
   professionalEmail?: string;
   company?: string | Company;
-  address_string?: string;
 }

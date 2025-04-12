@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Employee } from '@/types/employee';
@@ -26,20 +26,6 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
 }) => {
   const [activeTab, setActiveTab] = useState('infos');
   const [isEditing, setIsEditing] = useState(false);
-  const [localEmployee, setLocalEmployee] = useState<Employee>(employee);
-  
-  // Mettre à jour l'employé local lorsque l'employé change
-  useEffect(() => {
-    setLocalEmployee(employee);
-    console.log("EmployeeDetails - Employé mis à jour:", employee);
-    
-    // Debug logs pour la photo
-    if (employee?.photoURL || employee?.photo) {
-      console.log("EmployeeDetails - Photo présente:", employee.photoURL || employee.photo);
-    } else {
-      console.log("EmployeeDetails - Pas de photo pour l'employé");
-    }
-  }, [employee]);
   
   // Vérifier que l'employé a un ID
   React.useEffect(() => {
@@ -101,12 +87,10 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
     doc.setFontSize(11);
     
     const personalInfo = [
-      [`Nom: ${localEmployee.lastName}`, `Prénom: ${localEmployee.firstName}`],
-      [`Email: ${localEmployee.email}`, `Téléphone: ${localEmployee.phone || "Non renseigné"}`],
+      [`Nom: ${employee.lastName}`, `Prénom: ${employee.firstName}`],
+      [`Email: ${employee.email}`, `Téléphone: ${employee.phone || "Non renseigné"}`],
       // Use optional chaining to safely access education
-      [`Date de naissance: ${localEmployee.birthDate || "Non renseignée"}`, `Adresse: ${typeof localEmployee.address === 'object' && localEmployee.address ? 
-        `${localEmployee.address.street || ''}, ${localEmployee.address.city || ''}` : 
-        (localEmployee.address || "Non renseignée")}`]
+      [`Date de naissance: ${employee.education?.[0]?.year || "Non renseignée"}`, `Adresse: ${employee.address || "Non renseignée"}`]
     ];
     
     let yPos = 90;
@@ -124,10 +108,10 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
     doc.setFontSize(11);
     
     const professionalInfo = [
-      [`Poste: ${localEmployee.position || localEmployee.title || "Non spécifié"}`, `Département: ${localEmployee.department || "Non spécifié"}`],
-      [`Date d'embauche: ${localEmployee.hireDate || localEmployee.startDate || "Non spécifiée"}`, `Manager: ${localEmployee.manager || "Aucun"}`],
+      [`Poste: ${employee.position}`, `Département: ${employee.department}`],
+      [`Date d'embauche: ${employee.hireDate}`, `Manager: ${employee.manager || "Aucun"}`],
       // Fixed: Using contract instead of contractType
-      [`Type de contrat: ${localEmployee.contract || "Non spécifié"}`, `Statut: ${localEmployee.status || "Actif"}`]
+      [`Type de contrat: ${employee.contract || "Non spécifié"}`, `Statut: ${employee.status || "Actif"}`]
     ];
     
     yPos += 20;
@@ -138,21 +122,16 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
     });
     
     // Save PDF
-    doc.save(`fiche-employe-${localEmployee.firstName.toLowerCase()}-${localEmployee.lastName.toLowerCase()}.pdf`);
+    doc.save(`fiche-employe-${employee.firstName.toLowerCase()}-${employee.lastName.toLowerCase()}.pdf`);
     toast.success("Document PDF exporté avec succès");
     
     // Also call the parent onExportPdf to manage any UI updates
     onExportPdf();
   };
 
-  // Si l'employé n'est pas disponible, afficher un message de chargement
-  if (!localEmployee) {
-    return <div className="p-6 bg-white rounded-lg shadow-sm">Chargement des données de l'employé...</div>;
-  }
-
   return (
     <div className="space-y-6">
-      <EmployeeProfileHeader employee={localEmployee} />
+      <EmployeeProfileHeader employee={employee} />
 
       <Tabs defaultValue="infos" value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid grid-cols-4 md:grid-cols-6 mb-6">
@@ -165,24 +144,24 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
         </TabsList>
         
         <TabsContent value="infos">
-          <InformationsTab employee={localEmployee} />
+          <InformationsTab employee={employee} />
         </TabsContent>
         
         <TabsContent value="documents">
-          <DocumentsTab employee={localEmployee} />
+          <DocumentsTab employee={employee} />
         </TabsContent>
         
         <TabsContent value="competences">
-          <CompetencesTab employee={localEmployee} />
+          <CompetencesTab employee={employee} />
         </TabsContent>
         
         <TabsContent value="horaires">
-          <HorairesTab employee={localEmployee} />
+          <HorairesTab employee={employee} />
         </TabsContent>
         
         <TabsContent value="conges">
           <CongesTab 
-            employee={localEmployee} 
+            employee={employee} 
             isEditing={isEditing && activeTab === 'conges'} 
             onFinishEditing={() => setIsEditing(false)} 
           />
@@ -190,7 +169,7 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
         
         <TabsContent value="evaluations">
           <EvaluationsTab 
-            employee={localEmployee} 
+            employee={employee} 
             isEditing={isEditing && activeTab === 'evaluations'} 
             onFinishEditing={() => setIsEditing(false)} 
           />

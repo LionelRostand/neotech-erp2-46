@@ -1,33 +1,13 @@
 
 import * as z from 'zod';
-import { EmployeeAddress } from '@/types/employee';
-
-// Schéma pour l'adresse détaillée - aligned with EmployeeAddress interface
-export const addressSchema = z.object({
-  street: z.string().min(1, "La rue est requise"),
-  city: z.string().min(1, "La ville est requise"),
-  postalCode: z.string().min(1, "Le code postal est requis"),
-  country: z.string().default('France'),
-  streetNumber: z.string().optional(),
-  department: z.string().optional(),
-  state: z.string().optional(),
-});
-
-// Type for addressSchema
-export type AddressSchemaType = z.infer<typeof addressSchema>;
 
 // Schéma pour la validation du formulaire
 export const employeeFormSchema = z.object({
-  employeeId: z.string().optional(), // Add employeeId field to match what we use in employeeUtils
-  userId: z.string().optional(), // Add userId field to ensure we have an ID for user creation
   firstName: z.string().min(2, "Le prénom doit contenir au moins 2 caractères"),
   lastName: z.string().min(2, "Le nom doit contenir au moins 2 caractères"),
   email: z.string().email("Format d'email invalide").or(z.string().length(0)),
   phone: z.string().optional(),
-  address: z.union([
-    z.string(),
-    addressSchema
-  ]).optional(),
+  address: z.string().optional(),
   department: z.string().optional(),
   position: z.string().optional(),
   contract: z.string(),

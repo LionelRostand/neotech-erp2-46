@@ -7,8 +7,6 @@ export interface EmployeeAddress {
   postalCode: string;
   country: string;
   state?: string;
-  streetNumber?: string;
-  department?: string;
 }
 
 export interface Education {
@@ -27,7 +25,6 @@ export interface Document {
 
 export interface Employee {
   id: string;
-  userId?: string; // Make userId optional for compatibility
   firstName: string;
   lastName: string;
   email: string;
@@ -64,6 +61,4 @@ export interface Employee {
   };
   payslips: any[];
   address_string?: string; // For backward compatibility
-  createdAt?: Date;
-  updatedAt?: Date;
 }
