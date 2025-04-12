@@ -70,11 +70,18 @@ export const getDepartmentEmployees = (departmentId: string): Employee[] => {
   return allEmployees.filter(emp => {
     if (!emp.department && !emp.departmentId) return false;
     
-    return (
-      emp.departmentId === departmentId || 
-      (typeof emp.department === 'string' && emp.department === departmentId) || 
-      (typeof emp.department === 'object' && emp.department && emp.department.id === departmentId)
-    );
+    // Check if department is a string (departmentId)
+    if (typeof emp.department === 'string') {
+      return emp.department === departmentId;
+    }
+    
+    // Check if department is an object with an id property
+    if (typeof emp.department === 'object' && emp.department !== null) {
+      return 'id' in emp.department && emp.department.id === departmentId;
+    }
+    
+    // Check departmentId property
+    return emp.departmentId === departmentId;
   });
 };
 
