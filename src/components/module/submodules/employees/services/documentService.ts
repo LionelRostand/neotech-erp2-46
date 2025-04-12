@@ -6,7 +6,10 @@ import {
   updateDoc, 
   arrayUnion, 
   arrayRemove, 
-  DocumentReference 
+  DocumentReference,
+  collection,
+  addDoc,
+  serverTimestamp
 } from 'firebase/firestore';
 import { Document } from '@/types/employee';
 import { COLLECTIONS } from '@/lib/firebase-collections';
@@ -32,7 +35,7 @@ export const getEmployeeDocuments = async (employeeId: string): Promise<Document
   }
 };
 
-// Ajouter un document à un employé
+// Ajouter un document à un employé et à la collection hr_documents
 export const addEmployeeDocument = async (employeeId: string, document: Document): Promise<void> => {
   try {
     console.log(`Ajout d'un document pour l'employé ${employeeId}:`, document);
@@ -61,6 +64,9 @@ export const addEmployeeDocument = async (employeeId: string, document: Document
       document.type = document.type + ' (stocké localement)';
     }
     
+    // Ajouter l'ID de l'employé au document
+    document.employeeId = employeeId;
+    
     // Récupérer les documents existants pour vérifier si un document avec le même ID existe déjà
     const existingDocs = await getEmployeeDocuments(employeeId);
     const documentExists = existingDocs.some(doc => doc.id === document.id);
@@ -75,6 +81,23 @@ export const addEmployeeDocument = async (employeeId: string, document: Document
       documents: arrayUnion(document),
       updatedAt: new Date().toISOString() // Mettre à jour la date de modification
     });
+    
+    // Également enregistrer une référence dans la collection hr_documents
+    try {
+      const hrDocumentsRef = collection(db, COLLECTIONS.HR.DOCUMENTS);
+      await addDoc(hrDocumentsRef, {
+        ...document,
+        employeeId,
+        employeeName: `${employeeDoc.data().firstName} ${employeeDoc.data().lastName}`,
+        department: employeeDoc.data().department || '',
+        uploadDate: serverTimestamp(),
+        createdAt: serverTimestamp()
+      });
+      console.log(`Document ajouté à la collection hr_documents pour l'employé ${employeeId}`);
+    } catch (error) {
+      console.error("Erreur lors de l'ajout dans hr_documents:", error);
+      // On continue même en cas d'erreur pour ne pas bloquer l'ajout au profil employé
+    }
     
     console.log(`Document ajouté avec succès pour l'employé ${employeeId}`);
   } catch (error) {
@@ -101,6 +124,27 @@ export const removeEmployeeDocument = async (employeeId: string, documentId: str
             documents: arrayRemove(documentToRemove),
             updatedAt: new Date().toISOString() // Mettre à jour la date de modification
           });
+          
+          // Essayer de supprimer également de la collection hr_documents
+          try {
+            // Rechercher le document dans hr_documents par son ID
+            const docsRef = collection(db, COLLECTIONS.HR.DOCUMENTS);
+            const q = await collection(db, COLLECTIONS.HR.DOCUMENTS)
+              .where('id', '==', documentId)
+              .where('employeeId', '==', employeeId)
+              .get();
+            
+            if (!q.empty) {
+              // Supprimer chaque résultat correspondant
+              for (const docRef of q.docs) {
+                await deleteDoc(doc(db, COLLECTIONS.HR.DOCUMENTS, docRef.id));
+              }
+              console.log(`Document ${documentId} supprimé de hr_documents`);
+            }
+          } catch (error) {
+            console.error("Erreur lors de la suppression dans hr_documents:", error);
+            // On continue malgré l'erreur
+          }
           
           console.log(`Document ${documentId} supprimé avec succès pour l'employé ${employeeId}`);
         } else {

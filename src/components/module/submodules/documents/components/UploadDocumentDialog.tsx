@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useStorageUpload } from '@/hooks/storage/useStorageUpload';
 import { toast } from 'sonner';
 import { addEmployeeDocument, getDocumentTypes } from '@/components/module/submodules/employees/services/documentService';
-import { Employee } from '@/types/employee';
+import { Employee, Document } from '@/types/employee';
 import { Loader2 } from 'lucide-react';
 
 interface UploadDocumentDialogProps {
@@ -55,6 +55,14 @@ const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       setSelectedFile(e.target.files[0]);
+      
+      // Auto-fill document name with file name if empty
+      if (!documentName.trim()) {
+        const fileName = e.target.files[0].name;
+        // Remove extension from filename
+        const nameWithoutExtension = fileName.split('.').slice(0, -1).join('.');
+        setDocumentName(nameWithoutExtension || fileName);
+      }
     }
   };
   
@@ -88,15 +96,24 @@ const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
       const uploadPath = `employees/${employee.id}/documents`;
       const result = await uploadFile(selectedFile, uploadPath);
       
-      // Add document reference to employee record
-      await addEmployeeDocument(employee.id, {
+      // Préparer les données du document
+      const newDocument: Document = {
         name: documentName,
         type: documentType,
         date: new Date().toISOString(),
         fileUrl: result.fileUrl,
         fileData: result.fileData, // Stocker les données base64 du document
-        id: `doc_${Date.now()}`
-      });
+        fileHex: result.fileHex,   // Stocker les données hex du document
+        fileType: selectedFile.type,
+        fileSize: selectedFile.size,
+        filePath: result.filePath,
+        id: `doc_${Date.now()}`,
+        employeeId: employee.id,
+        storedInFirebase: !!result.fileUrl // Indique si le document est stocké dans Firebase
+      };
+      
+      // Add document reference to employee record
+      await addEmployeeDocument(employee.id, newDocument);
       
       toast.success("Document ajouté avec succès");
       
@@ -134,6 +151,24 @@ const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
         <form onSubmit={handleSubmit}>
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="document-file" className="text-right">
+                Fichier
+              </Label>
+              <div className="col-span-3">
+                <Input
+                  id="document-file"
+                  type="file"
+                  onChange={handleFileChange}
+                />
+                {selectedFile && (
+                  <div className="text-sm text-muted-foreground mt-1">
+                    {selectedFile.name} ({Math.round(selectedFile.size / 1024)} KB)
+                  </div>
+                )}
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="document-name" className="text-right">
                 Nom
               </Label>
@@ -161,24 +196,6 @@ const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
                   ))}
                 </SelectContent>
               </Select>
-            </div>
-            
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="document-file" className="text-right">
-                Fichier
-              </Label>
-              <div className="col-span-3">
-                <Input
-                  id="document-file"
-                  type="file"
-                  onChange={handleFileChange}
-                />
-                {selectedFile && (
-                  <div className="text-sm text-muted-foreground mt-1">
-                    {selectedFile.name} ({Math.round(selectedFile.size / 1024)} KB)
-                  </div>
-                )}
-              </div>
             </div>
           </div>
           

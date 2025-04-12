@@ -37,6 +37,18 @@ const DocumentsTab: React.FC<DocumentsTabProps> = ({ employee, onEmployeeUpdate 
     fetchDocuments();
   }, [employee.id]);
   
+  const formatFileSize = (size?: number) => {
+    if (!size) return 'N/A';
+    
+    if (size < 1024) {
+      return `${size} B`;
+    } else if (size < 1024 * 1024) {
+      return `${(size / 1024).toFixed(1)} KB`;
+    } else {
+      return `${(size / (1024 * 1024)).toFixed(1)} MB`;
+    }
+  };
+  
   const handleViewDocument = (document: Document) => {
     const { data, format } = getDocumentDataSource(document);
     
@@ -127,6 +139,8 @@ const DocumentsTab: React.FC<DocumentsTabProps> = ({ employee, onEmployeeUpdate 
                   <TableHead>Nom</TableHead>
                   <TableHead>Type</TableHead>
                   <TableHead>Date</TableHead>
+                  <TableHead>Taille</TableHead>
+                  <TableHead>Stockage</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -137,6 +151,12 @@ const DocumentsTab: React.FC<DocumentsTabProps> = ({ employee, onEmployeeUpdate 
                     <TableCell>{document.type}</TableCell>
                     <TableCell>
                       {document.date ? new Date(document.date).toLocaleDateString() : 'N/A'}
+                    </TableCell>
+                    <TableCell>{formatFileSize(document.fileSize)}</TableCell>
+                    <TableCell>
+                      {document.storedInFirebase 
+                        ? <span className="text-green-600 bg-green-50 px-2 py-1 rounded-md text-xs">Firebase</span> 
+                        : <span className="text-yellow-600 bg-yellow-50 px-2 py-1 rounded-md text-xs">Local</span>}
                     </TableCell>
                     <TableCell className="text-right space-x-2">
                       <Button 
