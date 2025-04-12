@@ -20,9 +20,10 @@ export const DocumentsCalendar: React.FC<DocumentsCalendarProps> = ({ documents,
     .map(doc => {
       try {
         if (!doc.uploadDate) return null;
-        const date = parseISO(doc.uploadDate);
-        if (isNaN(date.getTime())) return null;
-        return date;
+        // Try to parse the date safely
+        const timestamp = Date.parse(doc.uploadDate);
+        if (isNaN(timestamp)) return null;
+        return new Date(timestamp);
       } catch (e) {
         console.warn('Invalid date in document:', doc.uploadDate);
         return null;
@@ -85,8 +86,8 @@ export const DocumentsCalendar: React.FC<DocumentsCalendarProps> = ({ documents,
             return renderDay(date);
           }
         }}
+        className="p-3 pointer-events-auto"
       />
     </div>
   );
 };
-

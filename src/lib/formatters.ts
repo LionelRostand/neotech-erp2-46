@@ -18,13 +18,14 @@ export const formatDate = (
   try {
     if (!dateString) return '';
     
-    const date = new Date(dateString);
-    
-    if (isNaN(date.getTime())) {
+    // Make sure the date is valid first
+    const timestamp = Date.parse(dateString);
+    if (isNaN(timestamp)) {
       console.warn('Invalid date provided to formatDate:', dateString);
       return '';
     }
     
+    const date = new Date(timestamp);
     return new Intl.DateTimeFormat(locale, options).format(date);
   } catch (error) {
     console.error('Error formatting date:', error);
