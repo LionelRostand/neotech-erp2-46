@@ -9,7 +9,9 @@ import {
   updateDoc, 
   deleteDoc, 
   serverTimestamp, 
-  DocumentData
+  DocumentData,
+  where,
+  getDocs
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Employee } from '@/types/employee';
@@ -98,8 +100,83 @@ export const useFirebaseEmployees = () => {
     }
   }, [toast]);
 
+  // Vérifier les doublons potentiels
+  const checkForDuplicates = async (employee: Omit<Employee, 'id'>, excludeId?: string): Promise<boolean> => {
+    try {
+      const employeesRef = collection(db, COLLECTIONS.HR.EMPLOYEES);
+      
+      // Vérifier le mail personnel
+      if (employee.email) {
+        const emailQuery = query(employeesRef, where('email', '==', employee.email));
+        const emailSnapshot = await getDocs(emailQuery);
+        
+        for (const doc of emailSnapshot.docs) {
+          if (doc.id !== excludeId) {
+            toast({
+              title: "Doublon détecté",
+              description: `Un employé avec l'email ${employee.email} existe déjà.`,
+              variant: "destructive",
+            });
+            return true;
+          }
+        }
+      }
+      
+      // Vérifier le mail professionnel
+      if (employee.professionalEmail) {
+        const profEmailQuery = query(employeesRef, where('professionalEmail', '==', employee.professionalEmail));
+        const profEmailSnapshot = await getDocs(profEmailQuery);
+        
+        for (const doc of profEmailSnapshot.docs) {
+          if (doc.id !== excludeId) {
+            toast({
+              title: "Doublon détecté",
+              description: `Un employé avec l'email professionnel ${employee.professionalEmail} existe déjà.`,
+              variant: "destructive",
+            });
+            return true;
+          }
+        }
+      }
+      
+      // Vérifier la combinaison nom/prénom comme avertissement
+      if (employee.firstName && employee.lastName) {
+        const nameQuery = query(
+          employeesRef,
+          where('firstName', '==', employee.firstName),
+          where('lastName', '==', employee.lastName)
+        );
+        
+        const nameSnapshot = await getDocs(nameQuery);
+        
+        for (const doc of nameSnapshot.docs) {
+          if (doc.id !== excludeId) {
+            toast({
+              title: "Attention",
+              description: `Un employé nommé ${employee.firstName} ${employee.lastName} existe déjà.`,
+              variant: "warning",
+            });
+            // Ne pas bloquer pour les homonymes, mais avertir
+            break;
+          }
+        }
+      }
+      
+      return false;
+    } catch (error) {
+      console.error("Erreur lors de la vérification des doublons:", error);
+      return false; // En cas d'erreur, continuer quand même
+    }
+  };
+
   const addEmployee = async (employee: Omit<Employee, 'id' | 'createdAt' | 'updatedAt'>) => {
     try {
+      // Vérifier les doublons avant d'ajouter
+      const hasDuplicates = await checkForDuplicates(employee);
+      if (hasDuplicates) {
+        throw new Error('Un employé avec des informations similaires existe déjà');
+      }
+      
       // Update reference to the employees collection
       const employeesRef = collection(db, COLLECTIONS.HR.EMPLOYEES);
       
@@ -132,6 +209,12 @@ export const useFirebaseEmployees = () => {
 
   const updateEmployee = async (id: string, updates: Partial<Employee>) => {
     try {
+      // Vérifier les doublons avant de mettre à jour
+      const hasDuplicates = await checkForDuplicates(updates as Omit<Employee, 'id'>, id);
+      if (hasDuplicates) {
+        throw new Error('Un employé avec des informations similaires existe déjà');
+      }
+      
       // Update reference to the employee document
       const employeeRef = doc(db, COLLECTIONS.HR.EMPLOYEES, id);
       

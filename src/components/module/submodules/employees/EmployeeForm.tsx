@@ -112,13 +112,50 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
     }
   }, [employee, isEditing, form]);
 
-  // Vérifier si un employé avec les mêmes nom, prénom et email existe déjà
+  // Vérifier si un employé avec les mêmes informations existe déjà
   const checkEmployeeExists = async (data: EmployeeFormValues) => {
     try {
-      // Ne pas vérifier en mode édition (car l'employé existe déjà)
-      if (isEditing) return false;
+      // Ne pas vérifier en mode édition (sauf si on veut éviter les doublons avec d'autres employés)
+      if (isEditing && employee) {
+        // En mode édition, vérifier uniquement si un AUTRE employé a le même email
+        const emailQuery = query(
+          collection(db, COLLECTIONS.HR.EMPLOYEES),
+          where('email', '==', data.email)
+        );
+        
+        const emailSnapshot = await getDocs(emailQuery);
+        
+        // Parcourir les résultats et exclure l'employé actuel
+        for (const doc of emailSnapshot.docs) {
+          if (doc.id !== employee.id) {
+            toast.error(`Un autre employé avec l'email ${data.email} existe déjà.`);
+            return true;
+          }
+        }
+        
+        // Vérifier pour l'email professionnel si fourni
+        if (data.professionalEmail) {
+          const profEmailQuery = query(
+            collection(db, COLLECTIONS.HR.EMPLOYEES),
+            where('professionalEmail', '==', data.professionalEmail)
+          );
+          
+          const profEmailSnapshot = await getDocs(profEmailQuery);
+          
+          for (const doc of profEmailSnapshot.docs) {
+            if (doc.id !== employee.id) {
+              toast.error(`Un autre employé avec l'email professionnel ${data.professionalEmail} existe déjà.`);
+              return true;
+            }
+          }
+        }
+        
+        return false;
+      }
       
-      // Créer une requête pour trouver un employé avec le même email
+      // Mode création - vérifier tous les doublons potentiels
+      
+      // Vérifier l'email personnel
       const emailQuery = query(
         collection(db, COLLECTIONS.HR.EMPLOYEES),
         where('email', '==', data.email)
@@ -131,7 +168,22 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
         return true;
       }
       
-      // Créer une requête pour trouver un employé avec les mêmes nom et prénom
+      // Vérifier l'email professionnel si fourni
+      if (data.professionalEmail) {
+        const profEmailQuery = query(
+          collection(db, COLLECTIONS.HR.EMPLOYEES),
+          where('professionalEmail', '==', data.professionalEmail)
+        );
+        
+        const profEmailSnapshot = await getDocs(profEmailQuery);
+        
+        if (!profEmailSnapshot.empty) {
+          toast.error(`Un employé avec l'email professionnel ${data.professionalEmail} existe déjà.`);
+          return true;
+        }
+      }
+      
+      // Vérifier la combinaison nom/prénom
       const nameQuery = query(
         collection(db, COLLECTIONS.HR.EMPLOYEES),
         where('firstName', '==', data.firstName),
@@ -141,8 +193,9 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
       const nameSnapshot = await getDocs(nameQuery);
       
       if (!nameSnapshot.empty) {
-        toast.error(`Un employé avec le nom ${data.firstName} ${data.lastName} existe déjà.`);
-        return true;
+        // Afficher un avertissement mais laisser continuer (peut être homonyme légitime)
+        toast.warning(`Un employé avec le nom ${data.firstName} ${data.lastName} existe déjà. Vérifiez qu'il ne s'agit pas d'un doublon.`);
+        // Return false pour permettre de continuer
       }
       
       return false;
