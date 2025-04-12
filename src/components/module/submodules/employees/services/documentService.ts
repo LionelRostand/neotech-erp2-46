@@ -1,4 +1,3 @@
-
 import { db } from '@/lib/firebase';
 import { 
   doc, 
@@ -62,12 +61,6 @@ export const addEmployeeDocument = async (employeeId: string, document: Document
       document.date = new Date().toISOString();
     }
     
-    // Si nous n'avons pas d'URL de fichier (à cause des problèmes CORS) mais que nous avons les données
-    // locales, indiquez-le dans le type de document
-    if (!document.fileUrl && (document.fileHex || document.fileData)) {
-      document.type = document.type + ' (stocké localement)';
-    }
-    
     // Ajouter l'ID de l'employé au document
     document.employeeId = employeeId;
     
@@ -80,28 +73,55 @@ export const addEmployeeDocument = async (employeeId: string, document: Document
       return;
     }
     
-    // Ajouter le document au tableau des documents de l'employé sans modifier d'autres champs
-    await updateDoc(employeeRef, {
-      documents: arrayUnion(document),
-      updatedAt: new Date().toISOString() // Mettre à jour la date de modification
-    });
-    
-    // Également enregistrer une référence dans la collection hr_documents
+    // Stocker d'abord les données complètes dans hr_documents (avec les données binaires)
+    let documentRef;
     try {
       const hrDocumentsRef = collection(db, COLLECTIONS.HR.DOCUMENTS);
-      await addDoc(hrDocumentsRef, {
+      const documentData = {
         ...document,
         employeeId,
         employeeName: `${employeeDoc.data().firstName} ${employeeDoc.data().lastName}`,
         department: employeeDoc.data().department || '',
         uploadDate: serverTimestamp(),
-        createdAt: serverTimestamp()
-      });
-      console.log(`Document ajouté à la collection hr_documents pour l'employé ${employeeId}`);
+        createdAt: serverTimestamp(),
+        binaryData: true,
+        storedInHrDocuments: true
+      };
+      
+      // Ajouter le document complet dans hr_documents
+      documentRef = await addDoc(hrDocumentsRef, documentData);
+      console.log(`Document complet ajouté à hr_documents avec ID: ${documentRef.id}`);
+      
+      // Stocker l'ID du document hr_documents dans l'objet document
+      document.documentId = documentRef.id;
+      document.storedInHrDocuments = true;
+      
     } catch (error) {
       console.error("Erreur lors de l'ajout dans hr_documents:", error);
       // On continue même en cas d'erreur pour ne pas bloquer l'ajout au profil employé
     }
+    
+    // Créer une version allégée du document sans les données binaires pour hr_employees
+    const documentReference: Document = {
+      id: document.id,
+      name: document.name,
+      type: document.type,
+      date: document.date,
+      fileType: document.fileType,
+      fileSize: document.fileSize,
+      filePath: document.filePath,
+      fileUrl: document.fileUrl,
+      storedInFirebase: document.storedInFirebase,
+      employeeId: employeeId,
+      documentId: documentRef?.id, // Référence à hr_documents
+      storedInHrDocuments: true
+    };
+    
+    // Ajouter la référence de document au tableau des documents de l'employé
+    await updateDoc(employeeRef, {
+      documents: arrayUnion(documentReference),
+      updatedAt: new Date().toISOString() // Mettre à jour la date de modification
+    });
     
     console.log(`Document ajouté avec succès pour l'employé ${employeeId}`);
   } catch (error) {
@@ -129,27 +149,36 @@ export const removeEmployeeDocument = async (employeeId: string, documentId: str
             updatedAt: new Date().toISOString() // Mettre à jour la date de modification
           });
           
-          // Essayer de supprimer également de la collection hr_documents
-          try {
-            // Rechercher le document dans hr_documents par son ID
-            const docsRef = collection(db, COLLECTIONS.HR.DOCUMENTS);
-            const q = query(docsRef, 
-              where('id', '==', documentId),
-              where('employeeId', '==', employeeId)
-            );
-            
-            const querySnapshot = await getDocs(q);
-            
-            if (!querySnapshot.empty) {
-              // Supprimer chaque résultat correspondant
-              querySnapshot.forEach(async (docRef) => {
-                await deleteDoc(doc(db, COLLECTIONS.HR.DOCUMENTS, docRef.id));
-              });
-              console.log(`Document ${documentId} supprimé de hr_documents`);
+          // Supprimer également de la collection hr_documents si référencé
+          if (documentToRemove.documentId) {
+            try {
+              // Supprimer directement par l'ID hr_documents
+              await deleteDoc(doc(db, COLLECTIONS.HR.DOCUMENTS, documentToRemove.documentId));
+              console.log(`Document ${documentToRemove.documentId} supprimé de hr_documents`);
+            } catch (error) {
+              console.error("Erreur lors de la suppression directe dans hr_documents:", error);
             }
-          } catch (error) {
-            console.error("Erreur lors de la suppression dans hr_documents:", error);
-            // On continue malgré l'erreur
+          } else {
+            // Rechercher le document dans hr_documents par son ID
+            try {
+              const docsRef = collection(db, COLLECTIONS.HR.DOCUMENTS);
+              const q = query(docsRef, 
+                where('id', '==', documentId),
+                where('employeeId', '==', employeeId)
+              );
+              
+              const querySnapshot = await getDocs(q);
+              
+              if (!querySnapshot.empty) {
+                // Supprimer chaque résultat correspondant
+                querySnapshot.forEach(async (docRef) => {
+                  await deleteDoc(doc(db, COLLECTIONS.HR.DOCUMENTS, docRef.id));
+                });
+                console.log(`Document ${documentId} supprimé de hr_documents`);
+              }
+            } catch (error) {
+              console.error("Erreur lors de la suppression dans hr_documents:", error);
+            }
           }
           
           console.log(`Document ${documentId} supprimé avec succès pour l'employé ${employeeId}`);
@@ -181,7 +210,7 @@ export const getDocumentTypes = async (): Promise<string[]> => {
     'Fiche de paie',
     'CV',
     'Lettre de motivation',
-    "Pièce d'identité",
+    "Pièce d'identité',
     'Permis de conduire',
     'Visa',
     'Carte de séjour',

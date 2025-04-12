@@ -103,6 +103,17 @@ const DocumentsTab: React.FC<DocumentsTabProps> = ({ employee, onEmployeeUpdate 
     fetchDocuments();
   };
   
+  // Obtenir le libellé du type de stockage
+  const getStorageTypeLabel = (document: Document) => {
+    if (document.storedInHrDocuments) {
+      return <span className="text-blue-600 bg-blue-50 px-2 py-1 rounded-md text-xs">HR Documents</span>;
+    } else if (document.storedInFirebase) {
+      return <span className="text-green-600 bg-green-50 px-2 py-1 rounded-md text-xs">Firebase</span>;
+    } else {
+      return <span className="text-yellow-600 bg-yellow-50 px-2 py-1 rounded-md text-xs">Local</span>;
+    }
+  };
+  
   return (
     <div className="space-y-4">
       <Card>
@@ -154,9 +165,7 @@ const DocumentsTab: React.FC<DocumentsTabProps> = ({ employee, onEmployeeUpdate 
                     </TableCell>
                     <TableCell>{formatFileSize(document.fileSize)}</TableCell>
                     <TableCell>
-                      {document.storedInFirebase 
-                        ? <span className="text-green-600 bg-green-50 px-2 py-1 rounded-md text-xs">Firebase</span> 
-                        : <span className="text-yellow-600 bg-yellow-50 px-2 py-1 rounded-md text-xs">Local</span>}
+                      {getStorageTypeLabel(document)}
                     </TableCell>
                     <TableCell className="text-right space-x-2">
                       <Button 

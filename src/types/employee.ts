@@ -1,4 +1,3 @@
-
 import { Company } from '@/components/module/submodules/companies/types';
 
 export interface EmployeeAddress {
@@ -28,6 +27,9 @@ export interface Document {
   filePath?: string;  // Chemin dans Firebase Storage
   fileSize?: number;  // Taille du fichier
   storedInFirebase?: boolean; // Indique si stocké dans Firebase
+  documentId?: string; // ID du document dans la collection hr_documents
+  binaryData?: boolean; // Indique si les données sont stockées sous format binaire
+  storedInHrDocuments?: boolean; // Indique si stocké dans hr_documents
 }
 
 export interface Employee {

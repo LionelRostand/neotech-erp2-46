@@ -109,10 +109,12 @@ const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
         filePath: result.filePath,
         id: `doc_${Date.now()}`,
         employeeId: employee.id,
-        storedInFirebase: !!result.fileUrl // Indique si le document est stocké dans Firebase
+        storedInFirebase: !!result.fileUrl, // Indique si le document est stocké dans Firebase
+        binaryData: true, // Indique que les données sont stockées sous format binaire
+        storedInHrDocuments: true // Sera stocké dans hr_documents
       };
       
-      // Add document reference to employee record
+      // Add document to hr_documents and reference in employee record
       await addEmployeeDocument(employee.id, newDocument);
       
       toast.success("Document ajouté avec succès");
