@@ -2,6 +2,7 @@
 import { Employee } from '@/types/employee';
 import { getDocumentById, getAllDocuments } from '@/hooks/firestore/read-operations';
 import { updateDocument } from '@/hooks/firestore/update-operations';
+import { deleteDocument, deleteStorageFile } from '@/hooks/firestore/delete-operations';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import { toast } from 'sonner';
 import { executeWithNetworkRetry } from '@/hooks/firestore/network-handler';
@@ -13,6 +14,9 @@ export interface EmployeeDocument {
   type: string;
   fileUrl?: string;
   id?: string;
+  fileType?: string;
+  fileSize?: number;
+  filePath?: string;
 }
 
 // Get all documents for an employee
@@ -101,6 +105,23 @@ export const removeEmployeeDocument = async (employeeId: string, documentId: str
     
     // Ensure documents array exists
     const documents = (employeeData as any).documents || [];
+    
+    // Find the document to remove
+    const documentToRemove = documents.find((doc: EmployeeDocument) => doc.id === documentId);
+    if (!documentToRemove) {
+      toast.error("Document non trouvé");
+      return false;
+    }
+    
+    // Delete file from storage if filePath exists
+    if (documentToRemove.filePath) {
+      try {
+        await deleteStorageFile(documentToRemove.filePath);
+      } catch (error) {
+        console.error(`Erreur lors de la suppression du fichier dans le storage:`, error);
+        // Continue even if file deletion fails
+      }
+    }
     
     // Filter out the document to remove
     const updatedDocuments = documents.filter((doc: EmployeeDocument) => doc.id !== documentId);

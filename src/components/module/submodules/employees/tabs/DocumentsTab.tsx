@@ -1,31 +1,51 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Employee } from '@/types/employee';
-import { FileText, Download, Plus, Upload, Calendar, FilePen, FileArchive, FileImage, File } from 'lucide-react';
-import UploadDocumentDialog from '../../documents/components/UploadDocumentDialog';
+import { FileText, Download, Upload, Calendar, FilePen, FileArchive, FileImage, File, Trash2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { toast } from 'sonner';
-
-interface Document {
-  name: string;
-  date: string;
-  type: string;
-  fileUrl?: string;
-  id?: string;
-  size?: number;
-}
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import UploadDocumentDialog from '../../documents/components/UploadDocumentDialog';
+import { getEmployeeDocuments, removeEmployeeDocument, EmployeeDocument } from '../services/documentService';
 
 interface DocumentsTabProps {
-  documents?: Document[] | string[];
+  documents?: EmployeeDocument[] | string[];
   employee?: Employee;
 }
 
-const DocumentsTab: React.FC<DocumentsTabProps> = ({ documents = [], employee }) => {
+const DocumentsTab: React.FC<DocumentsTabProps> = ({ documents: initialDocuments = [], employee }) => {
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   const [uploadDocumentType, setUploadDocumentType] = useState('');
+  const [documents, setDocuments] = useState<EmployeeDocument[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [selectedDocumentId, setSelectedDocumentId] = useState<string | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+
+  // Charger les documents
+  useEffect(() => {
+    const fetchDocuments = async () => {
+      if (employee?.id) {
+        setLoading(true);
+        try {
+          const docs = await getEmployeeDocuments(employee.id);
+          setDocuments(docs);
+        } catch (error) {
+          console.error('Erreur lors du chargement des documents:', error);
+          toast.error('Erreur lors du chargement des documents');
+        } finally {
+          setLoading(false);
+        }
+      } else if (initialDocuments && initialDocuments.length > 0) {
+        // Utiliser les documents fournis en props
+        setDocuments(initialDocuments.map(processDocument));
+      }
+    };
+
+    fetchDocuments();
+  }, [employee, initialDocuments]);
 
   const handleUpload = () => {
     setUploadDocumentType('');
@@ -33,12 +53,20 @@ const DocumentsTab: React.FC<DocumentsTabProps> = ({ documents = [], employee })
   };
 
   const handleUploadSuccess = () => {
-    toast.success("Document ajouté avec succès");
-    // In a real implementation, we would refresh the documents list here
+    // Actualiser la liste des documents
+    if (employee?.id) {
+      getEmployeeDocuments(employee.id)
+        .then(docs => {
+          setDocuments(docs);
+        })
+        .catch(error => {
+          console.error('Erreur lors de l\'actualisation des documents:', error);
+        });
+    }
   };
 
-  const handleDownload = (document: Document | string) => {
-    const processedDoc = processDocument(document);
+  const handleDownload = (document: EmployeeDocument | string) => {
+    const processedDoc = typeof document === 'string' ? processDocument(document) : document;
     if (processedDoc.fileUrl) {
       window.open(processedDoc.fileUrl, '_blank');
     } else {
@@ -46,8 +74,34 @@ const DocumentsTab: React.FC<DocumentsTabProps> = ({ documents = [], employee })
     }
   };
 
+  const handleDelete = (id: string) => {
+    setSelectedDocumentId(id);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!selectedDocumentId || !employee?.id) {
+      setDeleteDialogOpen(false);
+      return;
+    }
+
+    try {
+      const success = await removeEmployeeDocument(employee.id, selectedDocumentId);
+      if (success) {
+        // Mettre à jour la liste de documents locale
+        setDocuments(prev => prev.filter(doc => doc.id !== selectedDocumentId));
+      }
+    } catch (error) {
+      console.error('Erreur lors de la suppression:', error);
+      toast.error("Erreur lors de la suppression du document");
+    } finally {
+      setDeleteDialogOpen(false);
+      setSelectedDocumentId(null);
+    }
+  };
+
   // Function to convert a string to a Document object if needed
-  const processDocument = (doc: Document | string): Document => {
+  const processDocument = (doc: EmployeeDocument | string): EmployeeDocument => {
     if (typeof doc === 'string') {
       return {
         name: doc,
@@ -58,12 +112,8 @@ const DocumentsTab: React.FC<DocumentsTabProps> = ({ documents = [], employee })
     return doc;
   };
 
-  const processedDocuments = Array.isArray(documents) 
-    ? documents.map(processDocument) 
-    : [];
-
   // Group documents by month
-  const groupedDocuments = processedDocuments.reduce((acc, doc) => {
+  const groupedDocuments = documents.reduce((acc, doc) => {
     try {
       const date = new Date(doc.date);
       if (isNaN(date.getTime())) {
@@ -85,7 +135,7 @@ const DocumentsTab: React.FC<DocumentsTabProps> = ({ documents = [], employee })
       acc["Non daté"].push(doc);
     }
     return acc;
-  }, {} as Record<string, Document[]>);
+  }, {} as Record<string, EmployeeDocument[]>);
 
   // Sort months in descending order (newest first)
   const sortedMonths = Object.keys(groupedDocuments).sort((a, b) => {
@@ -112,16 +162,14 @@ const DocumentsTab: React.FC<DocumentsTabProps> = ({ documents = [], employee })
 
   // Get appropriate icon for document type
   const getDocumentTypeIcon = (type: string) => {
-    const documentTypes = {
-      'contrat': <FilePen className="w-5 h-5 text-primary" />,
-      'attestation': <FileText className="w-5 h-5 text-primary" />,
-      'formulaire': <FileArchive className="w-5 h-5 text-primary" />,
-      'identite': <FileImage className="w-5 h-5 text-primary" />,
-      'diplome': <File className="w-5 h-5 text-primary" />,
-      'cv': <File className="w-5 h-5 text-primary" />
-    };
-    
-    return documentTypes[type.toLowerCase() as keyof typeof documentTypes] || <FileText className="w-5 h-5 text-primary" />;
+    const lowerType = type.toLowerCase();
+    if (lowerType.includes('contrat')) return <FilePen className="w-5 h-5 text-primary" />;
+    if (lowerType.includes('avenant')) return <FileText className="w-5 h-5 text-primary" />;
+    if (lowerType.includes('formulaire')) return <FileArchive className="w-5 h-5 text-primary" />;
+    if (lowerType.includes('identité') || lowerType.includes('identite')) return <FileImage className="w-5 h-5 text-primary" />;
+    if (lowerType.includes('diplôme') || lowerType.includes('diplome')) return <File className="w-5 h-5 text-primary" />;
+    if (lowerType.includes('cv')) return <File className="w-5 h-5 text-primary" />;
+    return <FileText className="w-5 h-5 text-primary" />;
   };
 
   // Format date properly to avoid displaying zeros
@@ -137,23 +185,43 @@ const DocumentsTab: React.FC<DocumentsTabProps> = ({ documents = [], employee })
     }
   };
 
+  // Format file size
+  const formatFileSize = (size?: number): string => {
+    if (!size) return '';
+    if (size < 1024) {
+      return `${size} B`;
+    } else if (size < 1024 * 1024) {
+      return `${(size / 1024).toFixed(1)} KB`;
+    } else {
+      return `${(size / (1024 * 1024)).toFixed(1)} MB`;
+    }
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <h3 className="text-lg font-medium">Documents</h3>
-        <Button size="sm" onClick={handleUpload}>
-          <Upload className="w-4 h-4 mr-2" />
-          Ajouter
-        </Button>
+        {employee?.id && (
+          <Button size="sm" onClick={handleUpload}>
+            <Upload className="w-4 h-4 mr-2" />
+            Ajouter
+          </Button>
+        )}
       </div>
 
-      {processedDocuments.length === 0 ? (
+      {loading ? (
+        <div className="flex items-center justify-center p-8">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        </div>
+      ) : documents.length === 0 ? (
         <div className="text-center p-8 border border-dashed rounded-md bg-gray-50">
           <FileText className="w-12 h-12 mx-auto text-gray-400" />
           <p className="mt-2 text-gray-500">Aucun document trouvé</p>
-          <Button variant="outline" size="sm" className="mt-4" onClick={handleUpload}>
-            Importer un document
-          </Button>
+          {employee?.id && (
+            <Button variant="outline" size="sm" className="mt-4" onClick={handleUpload}>
+              Importer un document
+            </Button>
+          )}
         </div>
       ) : (
         <div className="space-y-6">
@@ -169,16 +237,16 @@ const DocumentsTab: React.FC<DocumentsTabProps> = ({ documents = [], employee })
                     key={doc.id || index} 
                     className="flex items-center justify-between p-3 border rounded-md hover:bg-gray-50 transition-colors"
                   >
-                    <div className="flex items-center">
+                    <div className="flex items-center flex-1 min-w-0">
                       <div className="bg-primary-50 p-2 rounded mr-3">
                         {getDocumentTypeIcon(doc.type)}
                       </div>
-                      <div>
-                        <p className="font-medium line-clamp-1" title={doc.name}>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium truncate" title={doc.name}>
                           {doc.name}
                         </p>
-                        <div className="flex items-center text-xs text-gray-500">
-                          <Badge variant="outline" className="mr-2 text-xs">
+                        <div className="flex flex-wrap items-center text-xs text-gray-500 gap-2">
+                          <Badge variant="outline" className="text-xs">
                             {doc.type}
                           </Badge>
                           {doc.date && formatDocumentDate(doc.date) && (
@@ -186,12 +254,24 @@ const DocumentsTab: React.FC<DocumentsTabProps> = ({ documents = [], employee })
                               {formatDocumentDate(doc.date)}
                             </span>
                           )}
+                          {doc.fileSize && (
+                            <span className="text-gray-400">
+                              {formatFileSize(doc.fileSize)}
+                            </span>
+                          )}
                         </div>
                       </div>
                     </div>
-                    <Button variant="ghost" size="sm" onClick={() => handleDownload(doc)}>
-                      <Download className="w-4 h-4" />
-                    </Button>
+                    <div className="flex gap-1">
+                      <Button variant="ghost" size="icon" onClick={() => handleDownload(doc)} title="Télécharger">
+                        <Download className="w-4 h-4" />
+                      </Button>
+                      {employee?.id && (
+                        <Button variant="ghost" size="icon" onClick={() => handleDelete(doc.id!)} className="text-red-500 hover:text-red-700" title="Supprimer">
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>
@@ -201,12 +281,33 @@ const DocumentsTab: React.FC<DocumentsTabProps> = ({ documents = [], employee })
       )}
 
       {/* Upload Document Dialog */}
-      <UploadDocumentDialog 
-        open={uploadDialogOpen}
-        onOpenChange={setUploadDialogOpen}
-        onSuccess={handleUploadSuccess}
-        defaultType={uploadDocumentType}
-      />
+      {employee?.id && (
+        <UploadDocumentDialog 
+          open={uploadDialogOpen}
+          onOpenChange={setUploadDialogOpen}
+          onSuccess={handleUploadSuccess}
+          defaultType={uploadDocumentType}
+          employeeId={employee.id}
+        />
+      )}
+
+      {/* Confirm Delete Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Supprimer le document</AlertDialogTitle>
+            <AlertDialogDescription>
+              Êtes-vous sûr de vouloir supprimer ce document ? Cette action est irréversible.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete} className="bg-red-500 hover:bg-red-600">
+              Supprimer
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

@@ -26,6 +26,7 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
 }) => {
   const [activeTab, setActiveTab] = useState('infos');
   const [isEditing, setIsEditing] = useState(false);
+  const [updatedEmployee, setUpdatedEmployee] = useState<Employee>(employee);
   
   const handleEditTab = () => {
     if (activeTab === 'infos') {
@@ -81,7 +82,11 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
       [`Nom: ${employee.lastName}`, `Prénom: ${employee.firstName}`],
       [`Email: ${employee.email}`, `Téléphone: ${employee.phone || "Non renseigné"}`],
       // Use optional chaining to safely access education
-      [`Date de naissance: ${employee.education?.[0]?.year || "Non renseignée"}`, `Adresse: ${employee.address || "Non renseignée"}`]
+      [`Date de naissance: ${employee.birthDate || "Non renseignée"}`, `Adresse: ${
+        typeof employee.address === 'object' 
+          ? `${employee.address.street}, ${employee.address.city}` 
+          : employee.address || "Non renseignée"
+      }`]
     ];
     
     let yPos = 90;
@@ -120,9 +125,16 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
     onExportPdf();
   };
 
+  const handleEmployeeUpdate = (updatedEmp: Employee) => {
+    setUpdatedEmployee(updatedEmp);
+  };
+
   return (
     <div className="space-y-6">
-      <EmployeeProfileHeader employee={employee} />
+      <EmployeeProfileHeader 
+        employee={updatedEmployee} 
+        onEmployeeUpdate={handleEmployeeUpdate}
+      />
 
       <Tabs defaultValue="infos" value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid grid-cols-4 md:grid-cols-6 mb-6">
@@ -135,24 +147,24 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
         </TabsList>
         
         <TabsContent value="infos">
-          <InformationsTab employee={employee} />
+          <InformationsTab employee={updatedEmployee} />
         </TabsContent>
         
         <TabsContent value="documents">
-          <DocumentsTab employee={employee} />
+          <DocumentsTab employee={updatedEmployee} />
         </TabsContent>
         
         <TabsContent value="competences">
-          <CompetencesTab employee={employee} />
+          <CompetencesTab employee={updatedEmployee} />
         </TabsContent>
         
         <TabsContent value="horaires">
-          <HorairesTab employee={employee} />
+          <HorairesTab employee={updatedEmployee} />
         </TabsContent>
         
         <TabsContent value="conges">
           <CongesTab 
-            employee={employee} 
+            employee={updatedEmployee} 
             isEditing={isEditing && activeTab === 'conges'} 
             onFinishEditing={() => setIsEditing(false)} 
           />
@@ -160,7 +172,7 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
         
         <TabsContent value="evaluations">
           <EvaluationsTab 
-            employee={employee} 
+            employee={updatedEmployee} 
             isEditing={isEditing && activeTab === 'evaluations'} 
             onFinishEditing={() => setIsEditing(false)} 
           />

@@ -1,5 +1,7 @@
 
-import { deleteDoc } from 'firebase/firestore';
+import { deleteDoc, doc } from 'firebase/firestore';
+import { deleteObject, ref } from 'firebase/storage';
+import { db, storage } from '@/lib/firebase';
 import { getDocRef } from './common-utils';
 import { toast } from 'sonner';
 
@@ -24,5 +26,21 @@ export const deleteDocument = async (collectionName: string, id: string) => {
       toast.error(`Erreur lors de la suppression: ${errorMessage}`);
       throw error;
     }
+  }
+};
+
+// Supprimer un fichier du storage
+export const deleteStorageFile = async (filePath: string) => {
+  try {
+    console.log(`Suppression du fichier ${filePath}`);
+    const fileRef = ref(storage, filePath);
+    await deleteObject(fileRef);
+    console.log(`Fichier ${filePath} supprimé avec succès`);
+    return { success: true, path: filePath };
+  } catch (error) {
+    console.error(`Erreur lors de la suppression du fichier ${filePath}:`, error);
+    const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue';
+    toast.error(`Erreur lors de la suppression du fichier: ${errorMessage}`);
+    throw error;
   }
 };

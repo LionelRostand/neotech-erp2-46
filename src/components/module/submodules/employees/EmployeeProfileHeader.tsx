@@ -1,16 +1,23 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Employee, EmployeeAddress } from '@/types/employee';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Mail, Phone, MapPin } from 'lucide-react';
+import { Mail, Phone, MapPin, Upload, Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
+import { useStorageUpload } from '@/hooks/storage/useStorageUpload';
+import { updateEmployee } from '@/components/module/submodules/employees/services/employeeService';
 
 interface EmployeeProfileHeaderProps {
   employee: Employee;
+  onEmployeeUpdate?: (updatedEmployee: Employee) => void;
 }
 
-const EmployeeProfileHeader: React.FC<EmployeeProfileHeaderProps> = ({ employee }) => {
+const EmployeeProfileHeader: React.FC<EmployeeProfileHeaderProps> = ({ employee, onEmployeeUpdate }) => {
+  const [isUploading, setIsUploading] = useState(false);
+  const { uploadFile } = useStorageUpload();
+  
   // Format address to display
   const formatAddress = (address: string | EmployeeAddress): string => {
     if (typeof address === 'string') {
@@ -41,14 +48,85 @@ const EmployeeProfileHeader: React.FC<EmployeeProfileHeaderProps> = ({ employee 
     }
   };
 
+  // Handle photo upload
+  const handlePhotoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (!files || files.length === 0) return;
+
+    const file = files[0];
+    
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast.error('Veuillez sélectionner une image');
+      return;
+    }
+    
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('L\'image ne doit pas dépasser 5MB');
+      return;
+    }
+
+    try {
+      setIsUploading(true);
+      
+      // Upload to Firebase Storage
+      const uploadPath = `employees/${employee.id}/profile`;
+      const result = await uploadFile(file, uploadPath, 'profile_photo');
+      
+      // Update employee data in Firestore
+      await updateEmployee(employee.id, {
+        photoURL: result.fileUrl,
+        photo: result.fileUrl
+      });
+      
+      // Update local state if callback provided
+      if (onEmployeeUpdate) {
+        onEmployeeUpdate({
+          ...employee,
+          photoURL: result.fileUrl,
+          photo: result.fileUrl
+        });
+      }
+      
+      toast.success('Photo de profil mise à jour avec succès');
+    } catch (error) {
+      console.error('Erreur lors du téléversement de la photo:', error);
+      toast.error('Erreur lors du téléversement de la photo');
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
   return (
     <Card>
       <CardContent className="p-6">
         <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
-          <Avatar className="h-24 w-24">
-            <AvatarImage src={employee.photoURL || employee.photo} alt={`${employee.firstName} ${employee.lastName}`} />
-            <AvatarFallback className="text-2xl">{getInitials()}</AvatarFallback>
-          </Avatar>
+          <div className="relative group">
+            <Avatar className="h-24 w-24">
+              <AvatarImage src={employee.photoURL || employee.photo} alt={`${employee.firstName} ${employee.lastName}`} />
+              <AvatarFallback className="text-2xl">{getInitials()}</AvatarFallback>
+            </Avatar>
+            
+            <label 
+              htmlFor="profile-photo-upload" 
+              className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 rounded-full opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity"
+            >
+              {isUploading ? (
+                <Loader2 className="h-8 w-8 text-white animate-spin" />
+              ) : (
+                <Upload className="h-8 w-8 text-white" />
+              )}
+            </label>
+            <input 
+              id="profile-photo-upload" 
+              type="file" 
+              accept="image/*" 
+              onChange={handlePhotoUpload} 
+              disabled={isUploading}
+              className="hidden" 
+            />
+          </div>
           
           <div className="flex-1 text-center md:text-left">
             <h2 className="text-2xl font-bold">{employee.firstName} {employee.lastName}</h2>
