@@ -24,6 +24,29 @@ export const prepareEmployeeData = (data: EmployeeFormValues, employeeId: string
     updatedAt: data.photo.updatedAt || new Date().toISOString()
   } : undefined;
   
+  // Convertir le statut en une valeur acceptée par le type Employee
+  let status: 'active' | 'inactive' | 'onLeave' | 'Actif';
+  
+  // Faire correspondre la valeur du formulaire avec les valeurs acceptées
+  switch(data.status) {
+    case 'Actif':
+      status = 'Actif';
+      break;
+    case 'active':
+      status = 'active';
+      break;
+    case 'inactive':
+      status = 'inactive';
+      break;
+    case 'En congé':
+    case 'onLeave':
+      status = 'onLeave';
+      break;
+    default:
+      // Valeur par défaut si la valeur n'est pas reconnue
+      status = 'active';
+  }
+  
   // Retourner l'objet employé préparé
   return {
     id: employeeId,
@@ -37,7 +60,7 @@ export const prepareEmployeeData = (data: EmployeeFormValues, employeeId: string
     contract: data.contract,
     hireDate: data.hireDate || '',
     birthDate: data.birthDate || '', // Ajout de la date de naissance
-    status: data.status,
+    status: status,
     manager: data.manager || '',
     professionalEmail: data.professionalEmail || '',
     company: data.company || '',

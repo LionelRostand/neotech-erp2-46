@@ -17,7 +17,7 @@ export const employeeFormSchema = z.object({
   hireDate: z.string().optional(),
   birthDate: z.string().optional(), // Ajout du champ date de naissance
   manager: z.string().optional(),
-  status: z.string(),
+  status: z.enum(['active', 'inactive', 'onLeave', 'Actif', 'En congé', 'Suspendu', 'Inactif']),
   professionalEmail: z.string().email({ message: 'Email professionnel invalide' }).optional().or(z.literal('')),
   company: z.string().optional(),
   photo: z.any().optional(), // Accepte les données de la photo

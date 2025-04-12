@@ -37,7 +37,7 @@ export interface Employee {
   position?: string;
   hireDate?: string;
   startDate?: string;
-  status: 'active' | 'inactive' | 'onLeave' | 'Actif' | string;
+  status: 'active' | 'inactive' | 'onLeave' | 'Actif' | 'En congé' | 'Suspendu' | 'Inactif';
   contract?: string;
   manager?: string;
   managerId?: string;
