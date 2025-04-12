@@ -1,312 +1,194 @@
 
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Calendar as CalendarIcon, Upload, FileText, File } from 'lucide-react';
-import { format } from 'date-fns';
-import { fr } from 'date-fns/locale';
-import { Calendar } from '@/components/ui/calendar';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { cn } from '@/lib/utils';
-import { Separator } from '@/components/ui/separator';
-import { Progress } from '@/components/ui/progress';
 import { useStorageUpload } from '@/hooks/storage/useStorageUpload';
-import { getDocumentTypes, addEmployeeDocument } from '@/components/module/submodules/employees/services/documentService';
 import { toast } from 'sonner';
+import { addEmployeeDocument } from '../../../employees/services/documentService';
+import { Employee } from '@/types/employee';
+import { Loader2 } from 'lucide-react';
+import { getDocumentTypes } from '../../../employees/services/documentService';
 
 interface UploadDocumentDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSuccess: () => void;
-  defaultType?: string;
-  employeeId?: string;
+  employee: Employee;
+  onDocumentAdded?: () => void;
 }
 
 const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
   open,
   onOpenChange,
-  onSuccess,
-  defaultType = '',
-  employeeId
+  employee,
+  onDocumentAdded
 }) => {
-  const [file, setFile] = useState<File | null>(null);
   const [documentName, setDocumentName] = useState('');
-  const [documentType, setDocumentType] = useState(defaultType);
-  const [date, setDate] = useState<Date>(new Date());
+  const [documentType, setDocumentType] = useState('');
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [documentTypes, setDocumentTypes] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
   
-  const { uploadFile, uploadProgress, isUploading } = useStorageUpload();
-
-  // Charger les types de documents
+  const { uploadFile, isUploading, uploadProgress } = useStorageUpload();
+  
+  // Fetch document types on component mount
   React.useEffect(() => {
     const fetchDocumentTypes = async () => {
-      try {
-        const types = await getDocumentTypes();
-        setDocumentTypes(types);
-      } catch (error) {
-        console.error('Erreur lors du chargement des types de documents:', error);
-        setDocumentTypes(["Contrat", "Avenant", "Formation", "Pièce d'identité", "Autre"]);
-      }
+      const types = await getDocumentTypes();
+      setDocumentTypes(types);
     };
     
     if (open) {
       fetchDocumentTypes();
     }
   }, [open]);
-
-  // Reset form when dialog is opened/closed
-  React.useEffect(() => {
-    if (!open) {
-      setFile(null);
-      setDocumentName('');
-      setDocumentType(defaultType);
-      setDate(new Date());
-      setIsLoading(false);
-    }
-  }, [open, defaultType]);
-
-  // Format file size
-  const formatFileSize = (size: number): string => {
-    if (size < 1024) {
-      return `${size} B`;
-    } else if (size < 1024 * 1024) {
-      return `${(size / 1024).toFixed(1)} KB`;
-    } else {
-      return `${(size / (1024 * 1024)).toFixed(1)} MB`;
-    }
-  };
-
+  
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFile = e.target.files?.[0];
-    if (selectedFile) {
-      // Vérifier la taille du fichier (max 10MB)
-      if (selectedFile.size > 10 * 1024 * 1024) {
-        toast.error('Le fichier ne doit pas dépasser 10MB');
-        return;
-      }
-      
-      setFile(selectedFile);
-      
-      // Auto-set document name if empty
-      if (!documentName) {
-        setDocumentName(selectedFile.name.split('.')[0]);
-      }
+    if (e.target.files && e.target.files[0]) {
+      setSelectedFile(e.target.files[0]);
     }
   };
-
-  const handleUpload = async () => {
-    if (!file) {
-      toast.error('Veuillez sélectionner un fichier');
-      return;
-    }
+  
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     
-    if (!documentName) {
-      toast.error('Veuillez saisir un nom de document');
+    if (!documentName.trim()) {
+      toast.error("Veuillez entrer un nom de document");
       return;
     }
     
     if (!documentType) {
-      toast.error('Veuillez sélectionner un type de document');
+      toast.error("Veuillez sélectionner un type de document");
       return;
     }
     
-    if (!employeeId) {
-      toast.error('ID employé manquant');
+    if (!selectedFile) {
+      toast.error("Veuillez sélectionner un fichier");
       return;
     }
     
     try {
       setIsLoading(true);
       
-      // Charger le fichier dans Firebase Storage
-      const uploadPath = `employees/${employeeId}/documents`;
-      const result = await uploadFile(file, uploadPath);
+      // Upload the file to Firebase Storage
+      const uploadPath = `employees/${employee.id}/documents`;
+      const result = await uploadFile(selectedFile, uploadPath);
       
-      // Créer l'entrée du document dans Firestore
-      const document = {
+      // Add document reference to employee record
+      await addEmployeeDocument(employee.id, {
         name: documentName,
         type: documentType,
-        date: format(date, 'yyyy-MM-dd'),
+        date: new Date().toISOString(),
         fileUrl: result.fileUrl,
-        id: `doc_${Date.now()}`,
-        fileType: file.type,
-        fileSize: file.size,
-        filePath: result.filePath
-      };
+        filePath: result.filePath,
+        fileType: result.fileType,
+        fileSize: result.fileSize,
+        id: `doc_${Date.now()}`
+      });
       
-      // Ajouter le document à l'employé
-      await addEmployeeDocument(employeeId, document);
+      toast.success("Document ajouté avec succès");
       
-      toast.success('Document téléversé avec succès');
-      onSuccess();
+      // Reset form and close dialog
+      setDocumentName('');
+      setDocumentType('');
+      setSelectedFile(null);
+      
+      // Notify parent component
+      if (onDocumentAdded) {
+        onDocumentAdded();
+      }
+      
       onOpenChange(false);
     } catch (error) {
-      console.error('Erreur lors du téléversement:', error);
-      
-      const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue';
-      
-      // Vérifier s'il s'agit d'une erreur CORS
-      if (errorMessage.includes('CORS') || errorMessage.includes('blocked by CORS policy')) {
-        toast.error('Erreur CORS: Vérifiez la configuration du serveur');
-      } else {
-        toast.error(`Erreur lors du téléversement: ${errorMessage}`);
-      }
+      console.error("Erreur lors de l'ajout du document:", error);
+      toast.error("Erreur lors de l'ajout du document");
     } finally {
       setIsLoading(false);
     }
   };
-
-  const triggerFileInput = () => {
-    fileInputRef.current?.click();
-  };
-
+  
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Téléverser un document</DialogTitle>
+          <DialogTitle>Ajouter un document</DialogTitle>
         </DialogHeader>
         
-        <div className="space-y-4 py-4">
-          {!file ? (
-            <div 
-              onClick={triggerFileInput}
-              className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center cursor-pointer hover:bg-gray-50 transition-colors"
-            >
-              <FileText className="h-10 w-10 text-gray-400 mx-auto mb-2" />
-              <p className="text-sm text-gray-500 font-medium">Cliquez pour sélectionner un fichier</p>
-              <p className="text-xs text-gray-400 mt-1">ou glissez-déposez le fichier ici</p>
-              <input
-                ref={fileInputRef}
-                type="file"
-                onChange={handleFileChange}
-                className="hidden"
+        <form onSubmit={handleSubmit}>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="document-name" className="text-right">
+                Nom
+              </Label>
+              <Input
+                id="document-name"
+                value={documentName}
+                onChange={(e) => setDocumentName(e.target.value)}
+                className="col-span-3"
               />
             </div>
-          ) : (
-            <div className="space-y-4">
-              <div className="flex items-start p-3 bg-gray-50 rounded-md">
-                <File className="h-8 w-8 text-blue-500 mr-2 flex-shrink-0" />
-                <div className="flex-1 min-w-0">
-                  <p className="font-medium truncate">{file.name}</p>
-                  <p className="text-xs text-gray-500">
-                    {formatFileSize(file.size)} · {file.type || 'Type inconnu'}
-                  </p>
-                </div>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  onClick={triggerFileInput}
-                  className="ml-2 flex-shrink-0"
-                >
-                  Changer
-                </Button>
-              </div>
-
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="name">Nom du document</Label>
-                  <Input
-                    id="name"
-                    value={documentName}
-                    onChange={(e) => setDocumentName(e.target.value)}
-                    placeholder="Nom du document"
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="type">Type de document</Label>
-                  <Select value={documentType} onValueChange={setDocumentType}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Sélectionner un type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {documentTypes.map((type) => (
-                        <SelectItem key={type} value={type}>{type}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label>Date du document</Label>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className={cn(
-                          "w-full justify-start text-left font-normal",
-                          !date && "text-muted-foreground"
-                        )}
-                      >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {date ? format(date, 'P', { locale: fr }) : <span>Sélectionnez une date</span>}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0">
-                      <Calendar
-                        mode="single"
-                        selected={date}
-                        onSelect={(date) => date && setDate(date)}
-                        initialFocus
-                      />
-                    </PopoverContent>
-                  </Popover>
-                </div>
+            
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="document-type" className="text-right">
+                Type
+              </Label>
+              <Select value={documentType} onValueChange={setDocumentType}>
+                <SelectTrigger id="document-type" className="col-span-3">
+                  <SelectValue placeholder="Sélectionner un type" />
+                </SelectTrigger>
+                <SelectContent>
+                  {documentTypes.map((type) => (
+                    <SelectItem key={type} value={type}>
+                      {type}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="document-file" className="text-right">
+                Fichier
+              </Label>
+              <div className="col-span-3">
+                <Input
+                  id="document-file"
+                  type="file"
+                  onChange={handleFileChange}
+                />
+                {selectedFile && (
+                  <div className="text-sm text-muted-foreground mt-1">
+                    {selectedFile.name} ({Math.round(selectedFile.size / 1024)} KB)
+                  </div>
+                )}
               </div>
             </div>
-          )}
+          </div>
           
-          {isUploading && (
-            <div className="space-y-2">
-              <Separator />
-              <div className="space-y-1">
-                <div className="flex justify-between text-xs">
-                  <span>Téléversement en cours...</span>
-                  <span>{uploadProgress}%</span>
-                </div>
-                <Progress value={uploadProgress} className="h-2" />
-              </div>
-            </div>
-          )}
-        </div>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isLoading || isUploading}>
+              Annuler
+            </Button>
+            <Button type="submit" disabled={isLoading || isUploading}>
+              {(isLoading || isUploading) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {(isLoading || isUploading) ? 'Téléversement...' : 'Ajouter'}
+            </Button>
+          </DialogFooter>
+        </form>
         
-        <DialogFooter>
-          <Button
-            variant="outline" 
-            onClick={() => onOpenChange(false)}
-            disabled={isLoading}
-          >
-            Annuler
-          </Button>
-          <Button 
-            onClick={handleUpload}
-            disabled={!file || isLoading}
-            className="gap-2"
-          >
-            {isLoading ? (
-              <React.Fragment>
-                <span className="animate-spin">
-                  <svg className="h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                </span>
-                Téléversement...
-              </React.Fragment>
-            ) : (
-              <React.Fragment>
-                <Upload className="h-4 w-4" />
-                Téléverser
-              </React.Fragment>
-            )}
-          </Button>
-        </DialogFooter>
+        {isUploading && (
+          <div className="mt-4">
+            <div className="w-full bg-gray-200 rounded-full h-2.5">
+              <div 
+                className="bg-blue-600 h-2.5 rounded-full" 
+                style={{ width: `${uploadProgress}%` }}
+              ></div>
+            </div>
+            <div className="text-sm text-center mt-1">{uploadProgress}%</div>
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   );
