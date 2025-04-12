@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,7 +8,7 @@ import { FileText, Plus, Trash2, Download, Eye } from 'lucide-react';
 import { toast } from 'sonner';
 import { getEmployeeDocuments, removeEmployeeDocument } from '../services/documentService';
 import UploadDocumentDialog from '../../documents/components/UploadDocumentDialog';
-import { downloadFile, viewDocument } from '@/utils/documentUtils';
+import { downloadFile, viewDocument, hexToDataUrl } from '@/utils/documentUtils';
 
 interface DocumentsTabProps {
   employee: Employee;
@@ -36,18 +37,24 @@ const DocumentsTab: React.FC<DocumentsTabProps> = ({ employee }) => {
   }, [employee.id]);
   
   const handleViewDocument = (document: Document) => {
-    // Priorité: 1. données binaires base64, 2. URL du fichier
-    if (document.fileData) {
-      viewDocument(document.fileData, document.name || 'Document', true);
+    // Priorité: 1. données hexadécimales, 2. données binaires base64, 3. URL du fichier
+    if (document.fileHex) {
+      const fileType = document.fileType || 'application/octet-stream';
+      viewDocument(document.fileHex, document.name || 'Document', fileType, 'hex');
+    } else if (document.fileData) {
+      viewDocument(document.fileData, document.name || 'Document', document.fileType || 'application/octet-stream', 'base64');
     } else if (document.fileUrl) {
-      viewDocument(document.fileUrl, document.name || 'Document', false);
+      viewDocument(document.fileUrl, document.name || 'Document', document.fileType || 'application/octet-stream', 'url');
     } else {
       toast.error("Aucun fichier disponible pour ce document");
     }
   };
   
   const handleDownloadDocument = (document: Document) => {
-    if (document.fileData) {
+    if (document.fileHex) {
+      const dataUrl = hexToDataUrl(document.fileHex, document.fileType || 'application/octet-stream');
+      downloadFile(dataUrl, document.name || 'document');
+    } else if (document.fileData) {
       downloadFile(document.fileData, document.name || 'document');
     } else if (document.fileUrl) {
       downloadFile(document.fileUrl, document.name || 'document');

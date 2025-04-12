@@ -21,6 +21,7 @@ export interface Document {
   type: string;
   fileUrl?: string;
   fileData?: string; // Base64 data for document
+  fileHex?: string;  // Hexadecimal data for document
   id?: string;
 }
 
@@ -36,6 +37,7 @@ export interface Employee {
   photo: string;
   photoURL: string;
   photoData?: string; // Base64 data for the photo
+  photoHex?: string;  // Hexadecimal data for the photo
   photoMeta?: {
     fileName: string;
     fileType: string;

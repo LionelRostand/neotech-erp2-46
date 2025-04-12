@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Employee, EmployeeAddress } from '@/types/employee';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card, CardContent } from '@/components/ui/card';
@@ -17,7 +17,34 @@ interface EmployeeProfileHeaderProps {
 
 const EmployeeProfileHeader: React.FC<EmployeeProfileHeaderProps> = ({ employee, onEmployeeUpdate }) => {
   const [isUploading, setIsUploading] = useState(false);
+  const [photoSrc, setPhotoSrc] = useState<string | undefined>();
   const { uploadFile } = useStorageUpload();
+  
+  // Effect pour convertir les données hexadécimales en base64 si disponibles
+  useEffect(() => {
+    if (employee.photoHex) {
+      try {
+        // Convertir le hex en un tableau d'octets
+        const byteArray = new Uint8Array(
+          employee.photoHex.match(/.{1,2}/g)?.map(byte => parseInt(byte, 16)) || []
+        );
+        
+        // Convertir le tableau d'octets en blob
+        const blob = new Blob([byteArray], { type: employee.photoMeta?.fileType || 'image/jpeg' });
+        
+        // Créer une URL pour le blob
+        const imageUrl = URL.createObjectURL(blob);
+        setPhotoSrc(imageUrl);
+        
+        // Nettoyer l'URL quand le composant est démonté
+        return () => {
+          URL.revokeObjectURL(imageUrl);
+        };
+      } catch (err) {
+        console.error('Erreur lors de la conversion des données hex:', err);
+      }
+    }
+  }, [employee.photoHex, employee.photoMeta?.fileType]);
   
   // Format address to display
   const formatAddress = (address: string | EmployeeAddress): string => {
@@ -51,8 +78,10 @@ const EmployeeProfileHeader: React.FC<EmployeeProfileHeaderProps> = ({ employee,
 
   // Sélectionner la meilleure source d'image disponible
   const getPhotoSource = (): string | undefined => {
-    // Priorité: 1. photoData (base64), 2. photoURL ou photo
-    if (employee.photoData) {
+    // Priorité: 1. photoSrc (hex converti), 2. photoData (base64), 3. photoURL ou photo
+    if (photoSrc) {
+      return photoSrc;
+    } else if (employee.photoData) {
       return employee.photoData;
     } else if (employee.photoURL) {
       return employee.photoURL;
@@ -96,12 +125,14 @@ const EmployeeProfileHeader: React.FC<EmployeeProfileHeaderProps> = ({ employee,
       
       console.log('Résultat du téléversement:', result);
       
-      // Mise à jour directe du document dans Firestore avec l'URL ET les données binaires
+      // Mise à jour directe du document dans Firestore avec l'URL, les données binaires ET les données hexadécimales
       await updateDocument(COLLECTIONS.HR.EMPLOYEES, employee.id, {
         photoURL: result.fileUrl,
         photo: result.fileUrl,
         // Stocker les données binaires dans un champ dédié
         photoData: result.fileData,
+        // Stocker les données hexadécimales dans un champ dédié
+        photoHex: result.fileHex,
         photoMeta: {
           fileName: result.fileName,
           fileType: result.fileType,
@@ -118,7 +149,14 @@ const EmployeeProfileHeader: React.FC<EmployeeProfileHeaderProps> = ({ employee,
           ...employee,
           photoURL: result.fileUrl,
           photo: result.fileUrl,
-          photoData: result.fileData
+          photoData: result.fileData,
+          photoHex: result.fileHex,
+          photoMeta: {
+            fileName: result.fileName,
+            fileType: result.fileType,
+            fileSize: result.fileSize,
+            updatedAt: new Date().toISOString()
+          }
         });
       }
       

@@ -12,6 +12,7 @@ export interface UploadResult {
   fileType: string;
   fileSize: number;
   fileData?: string; // Base64 data for the file
+  fileHex?: string;  // Hexadecimal data for the file
 }
 
 export const useStorageUpload = () => {
@@ -25,6 +26,21 @@ export const useStorageUpload = () => {
       const reader = new FileReader();
       reader.readAsDataURL(file);
       reader.onload = () => resolve(reader.result as string);
+      reader.onerror = (error) => reject(error);
+    });
+  };
+
+  // Fonction pour convertir le fichier en format hexadécimal
+  const convertFileToHex = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsArrayBuffer(file);
+      reader.onload = () => {
+        const arrayBuffer = reader.result as ArrayBuffer;
+        const bytes = new Uint8Array(arrayBuffer);
+        const hexCodes = [...bytes].map(byte => byte.toString(16).padStart(2, '0'));
+        resolve(hexCodes.join(''));
+      };
       reader.onerror = (error) => reject(error);
     });
   };
@@ -51,6 +67,10 @@ export const useStorageUpload = () => {
       // Convertir le fichier en Base64 pour le stockage dans Firestore
       const base64Data = await convertFileToBase64(file);
       console.log('Fichier converti en Base64 pour stockage binaire');
+      
+      // Convertir le fichier en Hexadécimal pour un stockage alternatif
+      const hexData = await convertFileToHex(file);
+      console.log('Fichier converti en Hexadécimal pour stockage alternatif');
 
       // Créer une référence au fichier dans Storage
       const storageRef = ref(storage, filePath);
@@ -127,7 +147,8 @@ export const useStorageUpload = () => {
                 fileName,
                 fileType: file.type,
                 fileSize: file.size,
-                fileData: base64Data // Ajouter les données binaires en Base64
+                fileData: base64Data, // Ajouter les données binaires en Base64
+                fileHex: hexData     // Ajouter les données en format hexadécimal
               });
             } catch (error) {
               console.error('Erreur lors de la récupération de l\'URL:', error);

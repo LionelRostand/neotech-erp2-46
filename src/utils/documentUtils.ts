@@ -18,30 +18,68 @@ export const downloadFile = (url: string, filename: string): void => {
 };
 
 /**
- * Opens a document for viewing
- * @param fileData Base64 data or URL of the file
- * @param name Name of the document
- * @param isBase64 Whether the fileData is base64 encoded
+ * Converts a hexadecimal string to a data URL
+ * @param hexString Hexadecimal string data
+ * @param mimeType MIME type of the file (e.g., 'image/jpeg')
+ * @returns A data URL that can be used in an <img> src or for download
  */
-export const viewDocument = (fileData: string, name: string, isBase64 = true): void => {
-  if (isBase64) {
+export const hexToDataUrl = (hexString: string, mimeType: string = 'application/octet-stream'): string => {
+  try {
+    // Convert hex string to byte array
+    const byteArray = new Uint8Array(
+      hexString.match(/.{1,2}/g)?.map(byte => parseInt(byte, 16)) || []
+    );
+    
+    // Create a blob from the byte array
+    const blob = new Blob([byteArray], { type: mimeType });
+    
+    // Create a data URL
+    return URL.createObjectURL(blob);
+  } catch (error) {
+    console.error('Error converting hex to data URL:', error);
+    return '';
+  }
+};
+
+/**
+ * Opens a document for viewing
+ * @param fileData Base64 data, hex data, or URL of the file
+ * @param name Name of the document
+ * @param fileType MIME type of the document (for hex data)
+ * @param format Format of the fileData ('base64', 'hex', or 'url')
+ */
+export const viewDocument = (
+  fileData: string, 
+  name: string, 
+  fileType: string = 'application/octet-stream',
+  format: 'base64' | 'hex' | 'url' = 'base64'
+): void => {
+  let dataToDisplay: string;
+  
+  // Determine how to process the file data based on format
+  if (format === 'base64') {
     // If we have base64 data, open in a new tab
-    const newTab = window.open();
-    if (newTab) {
-      newTab.document.write(`
-        <html>
-          <head>
-            <title>${name || 'Document'}</title>
-          </head>
-          <body style="margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; background: #f0f0f0;">
-            <img src="${fileData}" style="max-width: 100%; max-height: 90vh; box-shadow: 0 4px 6px rgba(0,0,0,0.1);" />
-          </body>
-        </html>
-      `);
-      newTab.document.close();
-    }
+    dataToDisplay = fileData;
+  } else if (format === 'hex') {
+    // If we have hex data, convert it to a data URL
+    dataToDisplay = hexToDataUrl(fileData, fileType);
   } else {
-    // If it's a URL, open in a new tab
-    window.open(fileData, '_blank');
+    // If it's a URL, use directly
+    dataToDisplay = fileData;
+  }
+  
+  const newTab = window.open();
+  if (newTab) {
+    newTab.document.write(`
+      <html>
+        <head>
+          <title>${name || 'Document'}</title>
+        </head>
+        <body style="margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; background: #f0f0f0;">
+          <img src="${dataToDisplay}" style="max-width: 100%; max-height: 90vh; box-shadow: 0 4px 6px rgba(0,0,0,0.1);" />
+        </body>
+      </html>
+    `);
+    newTab.document.close();
   }
 };
