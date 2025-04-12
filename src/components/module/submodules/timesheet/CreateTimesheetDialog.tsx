@@ -31,6 +31,9 @@ const CreateTimesheetDialog: React.FC<CreateTimesheetDialogProps> = ({
       // Récupérer l'employé sélectionné pour avoir son nom
       const selectedEmployee = employees.find(emp => emp.id === data.employeeId);
       
+      // Date actuelle pour les timestamps
+      const now = new Date().toISOString();
+      
       // Formater les données pour Firestore
       const timeSheetData = {
         employeeId: data.employeeId,
@@ -46,6 +49,10 @@ const CreateTimesheetDialog: React.FC<CreateTimesheetDialogProps> = ({
         totalHours: data.totalHours,
         hours: data.hours,
         notes: data.notes,
+        createdAt: now,
+        updatedAt: now,
+        lastUpdated: now,
+        lastUpdateText: format(new Date(now), 'dd MMM yyyy', { locale: fr }),
         details: Object.entries(data.hours).map(([day, hours]) => ({
           date: format(addDays(data.weekStartDate, getDayIndex(day)), 'yyyy-MM-dd'),
           hours: Number(hours)

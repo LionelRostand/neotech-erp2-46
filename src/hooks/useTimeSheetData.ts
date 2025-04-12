@@ -16,6 +16,15 @@ export const useTimeSheetData = () => {
   const [localError, setLocalError] = useState<Error | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
   
+  // Fonction pour formater la date
+  const formatDate = (dateString: string) => {
+    try {
+      return format(new Date(dateString), 'dd MMM yyyy', { locale: fr });
+    } catch (error) {
+      return dateString;
+    }
+  };
+  
   // Fonction pour rafraîchir les données directement depuis Firestore
   const refetch = useCallback(async () => {
     try {
@@ -81,15 +90,6 @@ export const useTimeSheetData = () => {
       all: formattedTimeSheets
     };
   }, [formattedTimeSheets]);
-  
-  // Fonction pour formater la date
-  const formatDate = (dateString: string) => {
-    try {
-      return format(new Date(dateString), 'dd MMM yyyy', { locale: fr });
-    } catch (error) {
-      return dateString;
-    }
-  };
   
   // Déterminer l'état de chargement global
   const isLoading = isHrLoading || isLocalLoading || isRefreshing;
