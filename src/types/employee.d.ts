@@ -58,8 +58,17 @@ export interface Employee {
   socialSecurityNumber?: string;
   photo?: string;
   photoURL?: string;
+  photoData?: string;
+  photoMeta?: {
+    fileName: string;
+    fileType: string;
+    fileSize: number;
+    updatedAt: string;
+  };
   title?: string;
   role?: string;
   professionalEmail?: string;
   company?: string | Company;
+  createdAt?: string; // Adding timestamp for creation date
+  updatedAt?: string; // Adding timestamp for last update
 }

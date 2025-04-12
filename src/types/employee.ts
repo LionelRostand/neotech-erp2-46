@@ -72,4 +72,6 @@ export interface Employee {
   };
   payslips: any[];
   address_string?: string; // For backward compatibility
+  createdAt?: string; // Adding timestamp for creation date
+  updatedAt?: string; // Adding timestamp for last update
 }
