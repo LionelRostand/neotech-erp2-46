@@ -2,18 +2,7 @@
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import { useFirebaseCollection } from './useFirebaseCollection';
 import { where, QueryConstraint } from 'firebase/firestore';
-
-// Interface pour les données de départements
-export interface Department {
-  id: string;
-  name: string;
-  description?: string;
-  managerId?: string;
-  companyId?: string;
-  employeesCount: number;
-  createdAt: string;
-  updatedAt: string;
-}
+import { Department } from '@/components/module/submodules/departments/types';
 
 /**
  * Hook pour récupérer les départements depuis Firebase avec mise à jour en temps réel

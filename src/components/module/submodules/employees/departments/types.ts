@@ -1,14 +1,3 @@
 
-export interface Department {
-  id: string;
-  name: string;
-  description: string;
-  managerId: string | null;
-  managerName: string | null;
-  employeesCount: number;
-  color: string;
-  employeeIds: string[];
-  createdAt?: string;
-  updatedAt?: string;
-  parentDepartmentId?: string;
-}
+// Import the Department interface from the main departments types
+export { Department } from '../../departments/types';
