@@ -15,6 +15,7 @@ export const employeeFormSchema = z.object({
   position: z.string().optional(),
   contract: z.string(),
   hireDate: z.string().optional(),
+  birthDate: z.string().optional(), // Ajout du champ date de naissance
   manager: z.string().optional(),
   status: z.string(),
   professionalEmail: z.string().email({ message: 'Email professionnel invalide' }).optional().or(z.literal('')),

@@ -28,7 +28,7 @@ import {
 import { toast } from 'sonner';
 import { setDocument } from '@/hooks/firestore/update-operations';
 import { COLLECTIONS } from '@/lib/firebase-collections';
-import { getDoc, doc } from 'firebase/firestore';
+import { getDoc, doc, collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 
 interface EmployeeFormProps {
@@ -62,6 +62,7 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
       position: '',
       contract: 'CDI',
       hireDate: '',
+      birthDate: '',
       manager: '',
       status: 'active',
       professionalEmail: '',
@@ -90,6 +91,7 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
         position: employee.position || '',
         contract: employee.contract || 'CDI',
         hireDate: employee.hireDate || '',
+        birthDate: employee.birthDate || '',
         manager: employee.manager || '',
         status: (employee.status as any) || 'active',
         professionalEmail: employee.professionalEmail || '',
@@ -110,9 +112,53 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
     }
   }, [employee, isEditing, form]);
 
+  // Vérifier si un employé avec les mêmes nom, prénom et email existe déjà
+  const checkEmployeeExists = async (data: EmployeeFormValues) => {
+    try {
+      // Ne pas vérifier en mode édition (car l'employé existe déjà)
+      if (isEditing) return false;
+      
+      // Créer une requête pour trouver un employé avec le même email
+      const emailQuery = query(
+        collection(db, COLLECTIONS.HR.EMPLOYEES),
+        where('email', '==', data.email)
+      );
+      
+      const emailSnapshot = await getDocs(emailQuery);
+      
+      if (!emailSnapshot.empty) {
+        toast.error(`Un employé avec l'email ${data.email} existe déjà.`);
+        return true;
+      }
+      
+      // Créer une requête pour trouver un employé avec les mêmes nom et prénom
+      const nameQuery = query(
+        collection(db, COLLECTIONS.HR.EMPLOYEES),
+        where('firstName', '==', data.firstName),
+        where('lastName', '==', data.lastName)
+      );
+      
+      const nameSnapshot = await getDocs(nameQuery);
+      
+      if (!nameSnapshot.empty) {
+        toast.error(`Un employé avec le nom ${data.firstName} ${data.lastName} existe déjà.`);
+        return true;
+      }
+      
+      return false;
+    } catch (error) {
+      console.error('Erreur lors de la vérification des doublons:', error);
+      return false;
+    }
+  };
+
   const handleFormSubmit = async (data: EmployeeFormValues) => {
     try {
       console.log('Données du formulaire soumises:', data);
+      
+      // Vérifier si l'employé existe déjà
+      const employeeExists = await checkEmployeeExists(data);
+      if (employeeExists) return;
       
       // Utiliser l'ID existant pour l'édition, ou générer un nouvel ID pour la création
       let employeeId: string;

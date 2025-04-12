@@ -45,9 +45,24 @@ const EmployeesList: React.FC<EmployeesListProps> = ({
   const filteredEmployees = employees ? employees.filter(employee => {
     const fullName = `${employee.firstName} ${employee.lastName}`.toLowerCase();
     return fullName.includes(searchQuery.toLowerCase()) || 
-           employee.position.toLowerCase().includes(searchQuery.toLowerCase()) ||
-           employee.department.toLowerCase().includes(searchQuery.toLowerCase());
+           (employee.position && employee.position.toLowerCase().includes(searchQuery.toLowerCase())) ||
+           (employee.department && employee.department.toLowerCase().includes(searchQuery.toLowerCase()));
   }) : [];
+
+  // Filtrer les doublons en fonction de l'email et du nom complet
+  const uniqueEmployees = filteredEmployees.reduce((acc: Employee[], current) => {
+    const isDuplicate = acc.find(
+      (item) => 
+        item.email === current.email || 
+        (item.firstName === current.firstName && item.lastName === current.lastName)
+    );
+    
+    if (!isDuplicate) {
+      acc.push(current);
+    }
+    
+    return acc;
+  }, []);
 
   const handleConfirmDelete = () => {
     if (employeeToDelete) {
@@ -109,8 +124,8 @@ const EmployeesList: React.FC<EmployeesListProps> = ({
             <TableBody>
               {loading ? (
                 <LoadingSkeleton />
-              ) : filteredEmployees.length > 0 ? (
-                filteredEmployees.map((employee) => (
+              ) : uniqueEmployees.length > 0 ? (
+                uniqueEmployees.map((employee) => (
                   <TableRow key={employee.id}>
                     <TableCell className="font-medium">
                       {employee.firstName} {employee.lastName}

@@ -10,7 +10,9 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { EmployeeFormValues } from './employeeFormSchema';
-import { Home, MapPin, Building, Landmark } from 'lucide-react';
+import { Home, MapPin, Building, Landmark, Calendar } from 'lucide-react';
+import { DatePicker } from '@/components/ui/date-picker';
+import { format } from 'date-fns';
 
 const PersonalInfoFields: React.FC = () => {
   const form = useFormContext<EmployeeFormValues>();
@@ -47,28 +49,51 @@ const PersonalInfoFields: React.FC = () => {
         />
       </div>
       
-      <FormField
-        control={form.control}
-        name="email"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Email</FormLabel>
-            <FormControl>
-              <Input type="email" placeholder="email@example.com" {...field} />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <FormField
+          control={form.control}
+          name="email"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Email</FormLabel>
+              <FormControl>
+                <Input type="email" placeholder="email@example.com" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        
+        <FormField
+          control={form.control}
+          name="phone"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Téléphone</FormLabel>
+              <FormControl>
+                <Input placeholder="+33 6 12 34 56 78" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      </div>
       
       <FormField
         control={form.control}
-        name="phone"
+        name="birthDate"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Téléphone</FormLabel>
+            <FormLabel>Date de naissance</FormLabel>
             <FormControl>
-              <Input placeholder="+33 6 12 34 56 78" {...field} />
+              <div className="flex items-center">
+                <Calendar className="h-4 w-4 mr-2 text-muted-foreground" />
+                <Input 
+                  type="date" 
+                  {...field} 
+                  placeholder="JJ/MM/AAAA"
+                />
+              </div>
             </FormControl>
             <FormMessage />
           </FormItem>
