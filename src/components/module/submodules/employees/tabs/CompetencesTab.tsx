@@ -6,8 +6,7 @@ import { Employee } from '@/types/employee';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { X, Save, Plus } from 'lucide-react';
-import { updateDocument } from '@/hooks/firestore/update-operations';
-import { COLLECTIONS } from '@/lib/firebase-collections';
+import { updateEmployeeSkills } from '../services/employeeService';
 import { toast } from 'sonner';
 
 interface CompetencesTabProps {
@@ -45,12 +44,10 @@ const CompetencesTab: React.FC<CompetencesTabProps> = ({ employee, isEditing = f
     
     setIsSubmitting(true);
     try {
-      await updateDocument(COLLECTIONS.HR.EMPLOYEES, employee.id, {
-        skills
-      });
+      // Utiliser la nouvelle fonction de service pour mettre à jour les compétences
+      const success = await updateEmployeeSkills(employee.id, skills);
       
-      toast.success('Compétences mises à jour avec succès');
-      if (onFinishEditing) {
+      if (success && onFinishEditing) {
         onFinishEditing();
       }
     } catch (error) {

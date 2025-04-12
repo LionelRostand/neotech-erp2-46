@@ -1,3 +1,4 @@
+
 import { db } from '@/lib/firebase';
 import { collection, getDocs, doc, getDoc, setDoc, updateDoc, deleteDoc, query, orderBy, where } from 'firebase/firestore';
 import { Employee } from '@/types/employee';
@@ -190,6 +191,25 @@ export const deleteEmployee = async (id: string): Promise<boolean> => {
   } catch (error) {
     console.error('Error deleting employee:', error);
     toast.error('Error deleting employee');
+    return false;
+  }
+};
+
+/**
+ * Mettre à jour les compétences d'un employé
+ */
+export const updateEmployeeSkills = async (id: string, skills: string[]): Promise<boolean> => {
+  try {
+    const docRef = doc(db, COLLECTIONS.HR.EMPLOYEES, id);
+    await updateDoc(docRef, {
+      skills: skills,
+      updatedAt: new Date().toISOString()
+    });
+    toast.success('Compétences mises à jour avec succès');
+    return true;
+  } catch (error) {
+    console.error('Erreur lors de la mise à jour des compétences:', error);
+    toast.error('Erreur lors de la mise à jour des compétences');
     return false;
   }
 };

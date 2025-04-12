@@ -8,13 +8,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { toast } from 'sonner';
 import { addEmployeeDocument, getDocumentTypes } from '@/components/module/submodules/employees/services/documentService';
 import { Employee, Document } from '@/types/employee';
-import { Loader2 } from 'lucide-react';
+import { Loader2, FileText } from 'lucide-react';
 
 interface UploadDocumentDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   employee?: Employee;
-  onDocumentAdded?: () => void;
+  onDocumentAdded?: (document: Document) => void;
   onSuccess?: () => void;
   defaultType?: string;
 }
@@ -33,6 +33,7 @@ const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
   const [documentTypes, setDocumentTypes] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadedDocument, setUploadedDocument] = useState<Document | null>(null);
   
   // Fetch document types on component mount
   useEffect(() => {
@@ -48,6 +49,7 @@ const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
       setDocumentType(defaultType);
       setSelectedFile(null);
       setUploadProgress(0);
+      setUploadedDocument(null);
     }
   }, [open, defaultType]);
   
@@ -139,19 +141,16 @@ const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
       setUploadProgress(100);
       
       // Add document to hr_documents and reference in employee record
-      await addEmployeeDocument(employee.id, newDocument);
+      const addedDocument = await addEmployeeDocument(employee.id, newDocument);
+      
+      // Stocker le document téléversé pour l'affichage immédiat
+      setUploadedDocument(addedDocument);
       
       toast.success("Document ajouté avec succès");
       
-      // Reset form and close dialog
-      setDocumentName('');
-      setDocumentType('');
-      setSelectedFile(null);
-      setUploadProgress(0);
-      
-      // Notify parent component
+      // Notify parent component with the added document
       if (onDocumentAdded) {
-        onDocumentAdded();
+        onDocumentAdded(addedDocument);
       }
       
       // Call onSuccess if provided
@@ -159,12 +158,34 @@ const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
         onSuccess();
       }
       
-      onOpenChange(false);
     } catch (error) {
       console.error("Erreur lors de l'ajout du document:", error);
       toast.error("Erreur lors de l'ajout du document");
     } finally {
       setIsLoading(false);
+    }
+  };
+  
+  const handleClose = () => {
+    // Reset form state before closing
+    setDocumentName('');
+    setDocumentType('');
+    setSelectedFile(null);
+    setUploadProgress(0);
+    setUploadedDocument(null);
+    
+    // Close the dialog
+    onOpenChange(false);
+  };
+  
+  // Format file size for display
+  const formatFileSize = (size: number): string => {
+    if (size < 1024) {
+      return `${size} B`;
+    } else if (size < 1024 * 1024) {
+      return `${(size / 1024).toFixed(1)} KB`;
+    } else {
+      return `${(size / (1024 * 1024)).toFixed(1)} MB`;
     }
   };
   
@@ -175,67 +196,98 @@ const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
           <DialogTitle>Ajouter un document</DialogTitle>
         </DialogHeader>
         
-        <form onSubmit={handleSubmit}>
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="document-file" className="text-right">
-                Fichier
-              </Label>
-              <div className="col-span-3">
+        {!uploadedDocument ? (
+          <form onSubmit={handleSubmit}>
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="document-file" className="text-right">
+                  Fichier
+                </Label>
+                <div className="col-span-3">
+                  <Input
+                    id="document-file"
+                    type="file"
+                    onChange={handleFileChange}
+                  />
+                  {selectedFile && (
+                    <div className="text-sm text-muted-foreground mt-1">
+                      {selectedFile.name} ({Math.round(selectedFile.size / 1024)} KB)
+                    </div>
+                  )}
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="document-name" className="text-right">
+                  Nom
+                </Label>
                 <Input
-                  id="document-file"
-                  type="file"
-                  onChange={handleFileChange}
+                  id="document-name"
+                  value={documentName}
+                  onChange={(e) => setDocumentName(e.target.value)}
+                  className="col-span-3"
                 />
-                {selectedFile && (
-                  <div className="text-sm text-muted-foreground mt-1">
-                    {selectedFile.name} ({Math.round(selectedFile.size / 1024)} KB)
-                  </div>
-                )}
+              </div>
+              
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="document-type" className="text-right">
+                  Type
+                </Label>
+                <Select value={documentType} onValueChange={setDocumentType}>
+                  <SelectTrigger id="document-type" className="col-span-3">
+                    <SelectValue placeholder="Sélectionner un type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {documentTypes.map((type) => (
+                      <SelectItem key={type} value={type}>
+                        {type}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
             
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="document-name" className="text-right">
-                Nom
-              </Label>
-              <Input
-                id="document-name"
-                value={documentName}
-                onChange={(e) => setDocumentName(e.target.value)}
-                className="col-span-3"
-              />
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={handleClose} disabled={isLoading}>
+                Annuler
+              </Button>
+              <Button type="submit" disabled={isLoading}>
+                {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {isLoading ? 'Téléversement...' : 'Ajouter'}
+              </Button>
+            </DialogFooter>
+          </form>
+        ) : (
+          <div className="py-4">
+            <div className="border rounded-md p-4 mb-4">
+              <div className="flex items-start gap-3">
+                <div className="rounded-md bg-blue-100 p-2 text-blue-700">
+                  <FileText className="h-8 w-8" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-medium">{uploadedDocument.name}</h3>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    {uploadedDocument.type} • {formatFileSize(uploadedDocument.fileSize || 0)}
+                  </p>
+                </div>
+              </div>
             </div>
             
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="document-type" className="text-right">
-                Type
-              </Label>
-              <Select value={documentType} onValueChange={setDocumentType}>
-                <SelectTrigger id="document-type" className="col-span-3">
-                  <SelectValue placeholder="Sélectionner un type" />
-                </SelectTrigger>
-                <SelectContent>
-                  {documentTypes.map((type) => (
-                    <SelectItem key={type} value={type}>
-                      {type}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <div className="text-center py-2 text-green-600 font-medium">
+              Document téléversé avec succès
             </div>
+            
+            <DialogFooter className="mt-4">
+              <Button variant="outline" onClick={handleClose}>
+                Fermer
+              </Button>
+              <Button onClick={handleClose}>
+                Terminé
+              </Button>
+            </DialogFooter>
           </div>
-          
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isLoading}>
-              Annuler
-            </Button>
-            <Button type="submit" disabled={isLoading}>
-              {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {isLoading ? 'Téléversement...' : 'Ajouter'}
-            </Button>
-          </DialogFooter>
-        </form>
+        )}
         
         {isLoading && (
           <div className="mt-4">

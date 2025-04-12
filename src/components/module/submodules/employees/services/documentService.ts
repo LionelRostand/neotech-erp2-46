@@ -40,7 +40,7 @@ export const getEmployeeDocuments = async (employeeId: string): Promise<Document
 };
 
 // Ajouter un document à un employé et à la collection hr_documents
-export const addEmployeeDocument = async (employeeId: string, document: Document): Promise<void> => {
+export const addEmployeeDocument = async (employeeId: string, document: Document): Promise<Document> => {
   try {
     console.log(`Ajout d'un document pour l'employé ${employeeId}:`, document);
     
@@ -71,7 +71,7 @@ export const addEmployeeDocument = async (employeeId: string, document: Document
     
     if (documentExists) {
       console.log(`Document avec ID ${document.id} existe déjà, mise à jour skippée`);
-      return;
+      return document;
     }
     
     // Stocker d'abord les données complètes dans hr_documents (avec les données base64)
@@ -125,6 +125,9 @@ export const addEmployeeDocument = async (employeeId: string, document: Document
     });
     
     console.log(`Document ajouté avec succès pour l'employé ${employeeId}`);
+    
+    // Retourner le document complet pour permettre l'affichage immédiat
+    return documentReference;
   } catch (error) {
     console.error("Erreur lors de l'ajout du document:", error);
     throw error;
@@ -218,3 +221,4 @@ export const getDocumentTypes = async (): Promise<string[]> => {
     "Autre"
   ];
 };
+

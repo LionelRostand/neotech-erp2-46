@@ -1,18 +1,15 @@
-
 import React, { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Employee, Document } from '@/types/employee';
-import { MoreHorizontal, FileText, Trash2, Eye, Download, Plus, Save } from 'lucide-react';
-import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
-import { removeEmployeeDocument } from '../services/documentService';
+import { Plus, FileText, Trash2, Download, File } from 'lucide-react';
 import { toast } from 'sonner';
-import { Separator } from '@/components/ui/separator';
-import { Badge } from '@/components/ui/badge';
+import { 
+  getEmployeeDocuments, 
+  removeEmployeeDocument 
+} from '../services/documentService';
 import UploadDocumentDialog from '../../documents/components/UploadDocumentDialog';
-import { viewDocument, hexToDataUrl, getDocumentDataSource, downloadFile } from '@/utils/documentUtils';
-import { updateDocument } from '@/hooks/firestore/update-operations';
-import { COLLECTIONS } from '@/lib/firebase-collections';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 
 interface DocumentsTabProps {
   employee: Employee;
@@ -20,242 +17,228 @@ interface DocumentsTabProps {
   onFinishEditing?: () => void;
 }
 
-const DocumentsTab: React.FC<DocumentsTabProps> = ({ employee, isEditing = false, onFinishEditing }) => {
-  const [isUploadOpen, setIsUploadOpen] = useState(false);
-  const [refreshKey, setRefreshKey] = useState(0); // Pour forcer le rafraîchissement
-  const [selectedDocuments, setSelectedDocuments] = useState<string[]>([]);
-
+const DocumentsTab: React.FC<DocumentsTabProps> = ({ 
+  employee, 
+  isEditing = false,
+  onFinishEditing 
+}) => {
+  const [documents, setDocuments] = useState<Document[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [documentToDelete, setDocumentToDelete] = useState<Document | null>(null);
+  
+  // Fetch documents when component mounts or employee changes
   useEffect(() => {
-    if (!isEditing) {
-      setSelectedDocuments([]);
-    }
-  }, [isEditing]);
-
-  const handleDeleteDocument = async (document: Document) => {
-    if (!document.id || !employee.id) return;
+    const fetchDocuments = async () => {
+      setIsLoading(true);
+      try {
+        if (employee.id) {
+          // If documents are directly in the employee object, use them
+          if (employee.documents && Array.isArray(employee.documents) && employee.documents.length > 0) {
+            setDocuments(employee.documents as Document[]);
+          } else {
+            // Otherwise fetch them
+            const fetchedDocs = await getEmployeeDocuments(employee.id);
+            setDocuments(fetchedDocs);
+          }
+        }
+      } catch (error) {
+        console.error("Erreur lors de la récupération des documents:", error);
+        toast.error("Erreur lors du chargement des documents");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchDocuments();
+  }, [employee]);
+  
+  const handleDocumentAdded = (newDocument: Document) => {
+    // Add the new document to the list without re-fetching
+    setDocuments(prev => [...prev, newDocument]);
+  };
+  
+  const handleDeleteDocument = async () => {
+    if (!documentToDelete || !employee.id) return;
     
     try {
-      await removeEmployeeDocument(employee.id, document.id);
-      toast.success(`Document "${document.name}" supprimé avec succès`);
-      // Force refresh
-      setRefreshKey(prev => prev + 1);
+      await removeEmployeeDocument(employee.id, documentToDelete.id!);
+      
+      // Update local state to remove the deleted document
+      setDocuments(prev => prev.filter(doc => doc.id !== documentToDelete.id));
+      
+      toast.success("Document supprimé avec succès");
     } catch (error) {
       console.error("Erreur lors de la suppression du document:", error);
       toast.error("Erreur lors de la suppression du document");
+    } finally {
+      setDocumentToDelete(null);
     }
   };
-
-  const handleViewDocument = (document: Document) => {
-    const { data, format } = getDocumentDataSource(document);
-    if (!data) {
-      toast.error("Aucune donnée disponible pour ce document");
-      return;
-    }
+  
+  // Function to determine document icon based on type/fileType
+  const getDocumentIcon = (document: Document) => {
+    const fileType = document.fileType?.toLowerCase() || '';
     
-    // Ouvrir le document dans une nouvelle fenêtre
-    viewDocument(data, document.name, document.fileType || 'application/octet-stream', format);
-  };
-
-  const handleDownloadDocument = (document: Document) => {
-    const { data, format } = getDocumentDataSource(document);
-    if (!data) {
-      toast.error("Aucune donnée disponible pour ce document");
-      return;
-    }
-    
-    // Télécharger le document
-    const extension = document.fileType?.split('/')[1] || 'bin';
-    const filename = `${document.name}.${extension}`;
-    
-    downloadFile(data, filename);
-    toast.success(`Téléchargement de "${filename}" démarré`);
-  };
-
-  const handleDocumentAdded = () => {
-    setRefreshKey(prev => prev + 1);
-  };
-
-  const handleToggleSelectDocument = (documentId: string) => {
-    if (selectedDocuments.includes(documentId)) {
-      setSelectedDocuments(selectedDocuments.filter(id => id !== documentId));
+    if (fileType.includes('image') || fileType.includes('jpg') || fileType.includes('png') || fileType.includes('jpeg')) {
+      return <File className="h-6 w-6" />;
+    } else if (fileType.includes('pdf')) {
+      return <FileText className="h-6 w-6" />;
     } else {
-      setSelectedDocuments([...selectedDocuments, documentId]);
+      return <FileText className="h-6 w-6" />;
     }
   };
-
-  const handleBulkDelete = async () => {
-    if (selectedDocuments.length === 0) return;
+  
+  // Format file size for display
+  const formatFileSize = (size?: number): string => {
+    if (!size) return '';
+    
+    if (size < 1024) {
+      return `${size} B`;
+    } else if (size < 1024 * 1024) {
+      return `${(size / 1024).toFixed(1)} KB`;
+    } else {
+      return `${(size / (1024 * 1024)).toFixed(1)} MB`;
+    }
+  };
+  
+  // Format date for display
+  const formatDate = (dateString?: string): string => {
+    if (!dateString) return '';
     
     try {
-      for (const docId of selectedDocuments) {
-        await removeEmployeeDocument(employee.id, docId);
-      }
-      
-      toast.success(`${selectedDocuments.length} document(s) supprimé(s) avec succès`);
-      setSelectedDocuments([]);
-      setRefreshKey(prev => prev + 1);
-    } catch (error) {
-      console.error("Erreur lors de la suppression des documents:", error);
-      toast.error("Erreur lors de la suppression des documents");
-    }
-  };
-
-  const handleFinishEditing = async () => {
-    // Mettre à jour les modifications sur les documents si nécessaire
-    if (onFinishEditing) {
-      onFinishEditing();
-    }
-  };
-
-  // Formatter la date
-  const formatDate = (dateString?: string) => {
-    if (!dateString) return 'N/A';
-    try {
-      return new Date(dateString).toLocaleDateString('fr-FR');
-    } catch (error) {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('fr-FR', { 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric' 
+      });
+    } catch (e) {
       return dateString;
     }
   };
-
-  // Formatage de la taille du fichier
-  const formatFileSize = (size?: number) => {
-    if (!size) return 'N/A';
-    if (size < 1024) return `${size} o`;
-    if (size < 1024 * 1024) return `${(size / 1024).toFixed(1)} Ko`;
-    return `${(size / (1024 * 1024)).toFixed(1)} Mo`;
-  };
-
+  
   return (
-    <div className="space-y-4" key={refreshKey}>
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold">Documents</h2>
-        <div className="flex gap-2">
-          {isEditing && selectedDocuments.length > 0 && (
-            <Button variant="destructive" onClick={handleBulkDelete}>
-              Supprimer sélection ({selectedDocuments.length})
-            </Button>
-          )}
-          <Button onClick={() => setIsUploadOpen(true)}>
-            <Plus className="h-4 w-4 mr-2" />
-            Ajouter un document
-          </Button>
+    <>
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle>Documents</CardTitle>
           {isEditing && (
-            <Button variant="default" onClick={handleFinishEditing}>
-              <Save className="h-4 w-4 mr-2" />
-              Terminer l'édition
-            </Button>
-          )}
-        </div>
-      </div>
-      
-      {employee.documents && employee.documents.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {employee.documents.map((document: Document) => (
-            <Card 
-              key={document.id} 
-              className={`overflow-hidden ${
-                isEditing && selectedDocuments.includes(document.id || '') 
-                ? 'ring-2 ring-primary' 
-                : ''
-              }`}
-              onClick={() => isEditing && handleToggleSelectDocument(document.id || '')}
-            >
-              <CardHeader className="bg-muted/50 py-3">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <CardTitle className="text-base">{document.name}</CardTitle>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      {formatDate(document.date)} - {formatFileSize(document.fileSize)}
-                    </p>
-                  </div>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" onClick={(e) => e.stopPropagation()}>
-                        <MoreHorizontal className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={(e) => {
-                        e.stopPropagation();
-                        handleViewDocument(document);
-                      }}>
-                        <Eye className="mr-2 h-4 w-4" />
-                        Visualiser
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={(e) => {
-                        e.stopPropagation();
-                        handleDownloadDocument(document);
-                      }}>
-                        <Download className="mr-2 h-4 w-4" />
-                        Télécharger
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem 
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDeleteDocument(document);
-                        }}
-                        className="text-red-600"
-                      >
-                        <Trash2 className="mr-2 h-4 w-4" />
-                        Supprimer
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-              </CardHeader>
-              <CardContent className="py-3">
-                <div className="flex items-center mb-3">
-                  <FileText className="h-5 w-5 mr-2 text-muted-foreground" />
-                  <span className="text-sm">Type: <strong>{document.type}</strong></span>
-                </div>
-                <Separator className="mb-3" />
-                <div className="flex flex-wrap gap-2">
-                  {document.documentId && (
-                    <Badge variant="outline" className="text-xs">
-                      ID: {document.documentId}
-                    </Badge>
-                  )}
-                  {document.storageFormat && (
-                    <Badge variant="secondary" className="text-xs">
-                      Format: {document.storageFormat}
-                    </Badge>
-                  )}
-                  {document.storedInHrDocuments && (
-                    <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 text-xs">
-                      Stocké dans hr_documents
-                    </Badge>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      ) : (
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center p-6">
-            <FileText className="h-12 w-12 text-muted-foreground mb-4" />
-            <p className="text-center text-muted-foreground">
-              Aucun document n'a été ajouté pour cet employé.
-            </p>
             <Button 
-              onClick={() => setIsUploadOpen(true)} 
-              variant="outline" 
-              className="mt-4"
+              size="sm" 
+              onClick={() => setIsDialogOpen(true)}
             >
+              <Plus className="h-4 w-4 mr-2" />
               Ajouter un document
             </Button>
-          </CardContent>
-        </Card>
-      )}
+          )}
+        </CardHeader>
+        <CardContent className="p-6">
+          {isLoading ? (
+            <div className="text-center py-8">
+              <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+              <p className="mt-2 text-sm text-muted-foreground">Chargement des documents...</p>
+            </div>
+          ) : documents.length > 0 ? (
+            <div className="grid gap-4">
+              {documents.map((document) => (
+                <div key={document.id} className="flex items-start p-3 border rounded-md hover:bg-muted/30 transition-colors">
+                  <div className="rounded-md bg-blue-100 p-2 text-blue-700 mr-3">
+                    {getDocumentIcon(document)}
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-medium">{document.name}</h3>
+                    <div className="text-sm text-muted-foreground mt-1">
+                      <span>{document.type || 'Document'}</span>
+                      {document.fileSize && (
+                        <span> • {formatFileSize(document.fileSize)}</span>
+                      )}
+                      <span> • {formatDate(document.date)}</span>
+                    </div>
+                  </div>
+                  {isEditing && (
+                    <div className="flex items-center space-x-2">
+                      <Button 
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setDocumentToDelete(document)}
+                      >
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-12 text-gray-500">
+              <FileText className="h-12 w-12 mx-auto text-gray-300 mb-3" />
+              <p>Aucun document disponible</p>
+              {isEditing && (
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="mt-4"
+                  onClick={() => setIsDialogOpen(true)}
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Ajouter un document
+                </Button>
+              )}
+            </div>
+          )}
+        </CardContent>
+        
+        {isEditing && documents.length > 0 && (
+          <CardFooter className="border-t px-6 py-4 bg-muted/20">
+            <div className="ml-auto">
+              <Button 
+                variant="outline" 
+                onClick={onFinishEditing}
+              >
+                Terminer
+              </Button>
+            </div>
+          </CardFooter>
+        )}
+      </Card>
       
-      <UploadDocumentDialog
-        open={isUploadOpen}
-        onOpenChange={setIsUploadOpen}
+      {/* Document upload dialog */}
+      <UploadDocumentDialog 
+        open={isDialogOpen}
+        onOpenChange={setIsDialogOpen}
         employee={employee}
         onDocumentAdded={handleDocumentAdded}
+        onSuccess={() => {
+          // Optional additional success handling
+        }}
       />
-    </div>
+      
+      {/* Confirm delete dialog */}
+      <AlertDialog 
+        open={!!documentToDelete} 
+        onOpenChange={(open) => !open && setDocumentToDelete(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmer la suppression</AlertDialogTitle>
+            <AlertDialogDescription>
+              Êtes-vous sûr de vouloir supprimer le document "{documentToDelete?.name}" ?
+              Cette action est irréversible.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleDeleteDocument}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Supprimer
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 };
 
