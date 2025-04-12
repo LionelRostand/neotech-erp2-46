@@ -1,3 +1,4 @@
+
 /**
  * Format a date string to a readable format
  */
@@ -5,11 +6,18 @@ export const formatDate = (dateString: string | undefined, options?: Intl.DateTi
   if (!dateString) return '';
   
   try {
+    // Check if dateString is a valid date string first
+    const timestamp = Date.parse(dateString);
+    if (isNaN(timestamp)) {
+      console.warn('Invalid date value:', dateString);
+      return '';
+    }
+    
     const date = new Date(dateString);
     
-    // Check if the date is valid
+    // Double-check if the date is valid
     if (isNaN(date.getTime())) {
-      console.warn('Invalid date value:', dateString);
+      console.warn('Invalid date object created from:', dateString);
       return '';
     }
     

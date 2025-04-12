@@ -33,6 +33,13 @@ export const useDocumentsData = () => {
     if (!dateString) return '';
     
     try {
+      // Validate date string before formatting
+      const timestamp = Date.parse(dateString);
+      if (isNaN(timestamp)) {
+        console.warn('Invalid document date:', dateString);
+        return '';
+      }
+      
       return formatDateUtil(dateString);
     } catch (error) {
       console.error('Error formatting document date:', error);
@@ -60,8 +67,14 @@ export const useDocumentsData = () => {
       }
       
       // Determine which date field to use and handle any invalid dates
-      const dateToUse = document.uploadDate || document.createdAt || document.date || '';
-      const formattedDate = formatDate(dateToUse);
+      let dateToFormat = document.uploadDate || document.createdAt || document.date || '';
+      // Try to ensure the date is valid
+      if (dateToFormat && isNaN(Date.parse(dateToFormat))) {
+        console.warn(`Invalid date detected: ${dateToFormat}, using current date instead`);
+        dateToFormat = new Date().toISOString();
+      }
+      
+      const formattedDate = formatDate(dateToFormat);
       
       return {
         id: document.id,

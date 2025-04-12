@@ -61,12 +61,26 @@ export const useLeaveData = () => {
           if (!dateString) return '';
           
           try {
-            const date = typeof dateString === 'number' 
-              ? new Date(dateString) 
-              : new Date(dateString);
+            // Convert string to date if it's a string, or number to date if it's a timestamp
+            let dateValue: any = dateString;
             
+            // Handle numeric timestamps
+            if (typeof dateString === 'number') {
+              dateValue = new Date(dateString);
+            } else if (typeof dateString === 'string') {
+              // Check if the date string is valid
+              const timestamp = Date.parse(dateString);
+              if (isNaN(timestamp)) {
+                console.warn('Invalid date:', dateString);
+                return '';
+              }
+              dateValue = new Date(dateString);
+            }
+            
+            // Validate the created date object
+            const date = new Date(dateValue);
             if (isNaN(date.getTime())) {
-              console.warn('Invalid date:', dateString);
+              console.warn('Invalid date object created from:', dateString);
               return '';
             }
             
@@ -81,8 +95,29 @@ export const useLeaveData = () => {
           }
         };
         
-        const startDate = formatSafeDate(leave.startDate);
-        const endDate = formatSafeDate(leave.endDate);
+        // Ensure dates are valid
+        let validStartDate = leave.startDate || '';
+        let validEndDate = leave.endDate || '';
+        let validRequestDate = leave.requestDate || '';
+        
+        // Try to fix invalid dates by using current date
+        if (validStartDate && typeof validStartDate === 'string' && isNaN(Date.parse(validStartDate))) {
+          console.warn(`Invalid start date detected: ${validStartDate}, using current date instead`);
+          validStartDate = new Date().toISOString();
+        }
+        
+        if (validEndDate && typeof validEndDate === 'string' && isNaN(Date.parse(validEndDate))) {
+          console.warn(`Invalid end date detected: ${validEndDate}, using current date instead`);
+          validEndDate = new Date().toISOString();
+        }
+        
+        if (validRequestDate && typeof validRequestDate === 'string' && isNaN(Date.parse(validRequestDate))) {
+          console.warn(`Invalid request date detected: ${validRequestDate}, using current date instead`);
+          validRequestDate = new Date().toISOString();
+        }
+        
+        const startDate = formatSafeDate(validStartDate);
+        const endDate = formatSafeDate(validEndDate);
         
         // Calculate days if not provided
         let days = leave.durationDays || leave.days || 0;
@@ -113,7 +148,7 @@ export const useLeaveData = () => {
           status: leave.status || 'En attente',
           reason: leave.reason || leave.comment || '',
           employeeId: leave.employeeId,
-          requestDate: formatSafeDate(leave.requestDate),
+          requestDate: formatSafeDate(validRequestDate),
           approvedBy: leave.approvedBy || '',
           employeePhoto: employee?.photoURL || employee?.photo || '',
         };

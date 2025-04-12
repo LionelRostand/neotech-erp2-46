@@ -41,11 +41,19 @@ export const useEvaluationsData = () => {
     if (!dateStr) return '';
     
     try {
-      const date = new Date(dateStr);
-      if (isNaN(date.getTime())) {
+      // Validate the date string first
+      const timestamp = Date.parse(dateStr);
+      if (isNaN(timestamp)) {
         console.warn('Invalid date value:', dateStr);
         return '';
       }
+      
+      const date = new Date(dateStr);
+      if (isNaN(date.getTime())) {
+        console.warn('Invalid date object created from:', dateStr);
+        return '';
+      }
+      
       return formatDate(dateStr, {
         day: 'numeric',
         month: 'long',
@@ -70,6 +78,13 @@ export const useEvaluationsData = () => {
         ? employees.find(emp => emp.id === evaluation.evaluatorId)
         : undefined;
       
+      // Ensure date is valid before formatting
+      let validDate = evaluation.date;
+      if (validDate && isNaN(Date.parse(validDate))) {
+        console.warn(`Invalid evaluation date detected: ${validDate}, using current date instead`);
+        validDate = new Date().toISOString();
+      }
+      
       // Include both types of evaluation data (legacy and new format)
       return {
         id: evaluation.id,
@@ -80,7 +95,7 @@ export const useEvaluationsData = () => {
         evaluatorName: evaluator 
           ? `${evaluator.firstName} ${evaluator.lastName}` 
           : evaluation.evaluatorName || 'Non assigné',
-        date: formatSafeDate(evaluation.date),
+        date: formatSafeDate(validDate),
         score: evaluation.score,
         maxScore: evaluation.maxScore || 100,
         status: evaluation.status || 'Planifiée',
