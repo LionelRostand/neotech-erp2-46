@@ -1,238 +1,183 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Employee, Document } from '@/types/employee';
-import { FileText, Plus, Trash2, Download, Eye, Info } from 'lucide-react';
+import { MoreHorizontal, FileText, Trash2, Eye, Download } from 'lucide-react';
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
+import { removeEmployeeDocument } from '../services/documentService';
 import { toast } from 'sonner';
-import { getEmployeeDocuments, removeEmployeeDocument } from '../services/documentService';
+import { Separator } from '@/components/ui/separator';
+import { Badge } from '@/components/ui/badge';
 import UploadDocumentDialog from '../../documents/components/UploadDocumentDialog';
-import { downloadFile, viewDocument, hexToDataUrl, getDocumentDataSource } from '@/utils/documentUtils';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { viewDocument, hexToDataUrl, getDocumentDataSource, downloadFile } from '@/utils/documentUtils';
 
 interface DocumentsTabProps {
   employee: Employee;
-  onEmployeeUpdate?: (updatedEmployee: Employee) => void;
 }
 
-const DocumentsTab: React.FC<DocumentsTabProps> = ({ employee, onEmployeeUpdate }) => {
-  const [documents, setDocuments] = useState<Document[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [isAddDocumentOpen, setIsAddDocumentOpen] = useState(false);
-  
-  const fetchDocuments = async () => {
-    setLoading(true);
-    try {
-      const docs = await getEmployeeDocuments(employee.id);
-      setDocuments(docs);
-    } catch (error) {
-      console.error('Erreur lors de la récupération des documents:', error);
-      toast.error('Erreur lors de la récupération des documents');
-    } finally {
-      setLoading(false);
-    }
-  };
-  
-  useEffect(() => {
-    fetchDocuments();
-  }, [employee.id]);
-  
-  const formatFileSize = (size?: number) => {
-    if (!size) return 'N/A';
+const DocumentsTab: React.FC<DocumentsTabProps> = ({ employee }) => {
+  const [isUploadOpen, setIsUploadOpen] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0); // Pour forcer le rafraîchissement
+
+  const handleDeleteDocument = async (document: Document) => {
+    if (!document.id || !employee.id) return;
     
-    if (size < 1024) {
-      return `${size} B`;
-    } else if (size < 1024 * 1024) {
-      return `${(size / 1024).toFixed(1)} KB`;
-    } else {
-      return `${(size / (1024 * 1024)).toFixed(1)} MB`;
+    try {
+      await removeEmployeeDocument(employee.id, document.id);
+      toast.success(`Document "${document.name}" supprimé avec succès`);
+      // Force refresh
+      setRefreshKey(prev => prev + 1);
+    } catch (error) {
+      console.error("Erreur lors de la suppression du document:", error);
+      toast.error("Erreur lors de la suppression du document");
     }
   };
-  
+
   const handleViewDocument = (document: Document) => {
     const { data, format } = getDocumentDataSource(document);
-    
     if (!data) {
-      toast.error("Aucun fichier disponible pour ce document");
+      toast.error("Aucune donnée disponible pour ce document");
       return;
     }
     
-    viewDocument(
-      data, 
-      document.name || 'Document', 
-      document.fileType || 'application/octet-stream', 
-      format
-    );
+    // Ouvrir le document dans une nouvelle fenêtre
+    viewDocument(data, document.name, document.fileType || 'application/octet-stream', format);
   };
-  
+
   const handleDownloadDocument = (document: Document) => {
     const { data, format } = getDocumentDataSource(document);
-    
     if (!data) {
-      toast.error("Aucun fichier disponible pour ce document");
+      toast.error("Aucune donnée disponible pour ce document");
       return;
     }
     
-    // If hex data, convert to data URL
-    if (format === 'hex') {
-      const dataUrl = hexToDataUrl(data, document.fileType || 'application/octet-stream');
-      downloadFile(dataUrl, document.name || 'document');
-    } else {
-      // Base64 data or URL
-      downloadFile(data, document.name || 'document');
-    }
-  };
-  
-  const handleDeleteDocument = async (documentId?: string) => {
-    if (!documentId) return;
+    // Télécharger le document
+    const extension = document.fileType?.split('/')[1] || 'bin';
+    const filename = `${document.name}.${extension}`;
     
-    if (confirm('Êtes-vous sûr de vouloir supprimer ce document ?')) {
-      try {
-        await removeEmployeeDocument(employee.id, documentId);
-        setDocuments(documents.filter(doc => doc.id !== documentId));
-        toast.success("Document supprimé avec succès");
-      } catch (error) {
-        console.error('Erreur lors de la suppression du document:', error);
-        toast.error("Erreur lors de la suppression du document");
-      }
-    }
+    downloadFile(data, filename);
+    toast.success(`Téléchargement de "${filename}" démarré`);
   };
-  
-  // Fonction pour rafraîchir sans mettre à jour tout l'employé
+
   const handleDocumentAdded = () => {
-    fetchDocuments();
+    setRefreshKey(prev => prev + 1);
   };
-  
-  // Obtenir le libellé du type de stockage
-  const getStorageTypeLabel = (document: Document) => {
-    if (document.storedInHrDocuments) {
-      let format = '';
-      if (document.storageFormat === 'base64') {
-        format = ' (base64)';
-      } else if (document.storageFormat === 'binary') {
-        format = ' (binaire)';
-      } else if (document.storageFormat === 'hex') {
-        format = ' (hex)';
-      }
-      return <span className="text-blue-600 bg-blue-50 px-2 py-1 rounded-md text-xs">HR Documents{format}</span>;
-    } else if (document.storedInFirebase) {
-      return <span className="text-green-600 bg-green-50 px-2 py-1 rounded-md text-xs">Firebase</span>;
-    } else {
-      return <span className="text-yellow-600 bg-yellow-50 px-2 py-1 rounded-md text-xs">Local</span>;
+
+  // Formatter la date
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return 'N/A';
+    try {
+      return new Date(dateString).toLocaleDateString('fr-FR');
+    } catch (error) {
+      return dateString;
     }
   };
-  
+
+  // Formatage de la taille du fichier
+  const formatFileSize = (size?: number) => {
+    if (!size) return 'N/A';
+    if (size < 1024) return `${size} o`;
+    if (size < 1024 * 1024) return `${(size / 1024).toFixed(1)} Ko`;
+    return `${(size / (1024 * 1024)).toFixed(1)} Mo`;
+  };
+
   return (
-    <div className="space-y-4">
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>Documents de l'employé</CardTitle>
-          <Button onClick={() => setIsAddDocumentOpen(true)} size="sm">
-            <Plus className="h-4 w-4 mr-2" />
-            Ajouter un document
-          </Button>
-        </CardHeader>
-        <CardContent>
-          {loading ? (
-            <div className="flex justify-center p-4">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
-            </div>
-          ) : documents.length === 0 ? (
-            <div className="text-center py-6">
-              <FileText className="h-12 w-12 mx-auto text-gray-400" />
-              <p className="mt-2 text-muted-foreground">Aucun document disponible</p>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="mt-4"
-                onClick={() => setIsAddDocumentOpen(true)}
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Ajouter votre premier document
-              </Button>
-            </div>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Nom</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Taille</TableHead>
-                  <TableHead>Stockage</TableHead>
-                  <TableHead>ID</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {documents.map((document) => (
-                  <TableRow key={document.id}>
-                    <TableCell className="font-medium">{document.name}</TableCell>
-                    <TableCell>{document.type}</TableCell>
-                    <TableCell>
-                      {document.date ? new Date(document.date).toLocaleDateString() : 'N/A'}
-                    </TableCell>
-                    <TableCell>{formatFileSize(document.fileSize)}</TableCell>
-                    <TableCell>
-                      {getStorageTypeLabel(document)}
-                    </TableCell>
-                    <TableCell>
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <div className="flex items-center">
-                              <span className="truncate max-w-[80px] text-xs text-gray-500">
-                                {document.documentId ? document.documentId.substring(0, 8) + '...' : 'N/A'}
-                              </span>
-                              <Info className="h-3 w-3 ml-1 text-gray-400" />
-                            </div>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p className="max-w-xs break-all">
-                              {document.documentId || 'Aucun ID de référence'}
-                            </p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    </TableCell>
-                    <TableCell className="text-right space-x-2">
-                      <Button 
-                        variant="ghost" 
-                        size="icon"
-                        onClick={() => handleViewDocument(document)}
-                        title="Visualiser"
-                      >
-                        <Eye className="h-4 w-4" />
+    <div className="space-y-4" key={refreshKey}>
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-2xl font-bold">Documents</h2>
+        <Button onClick={() => setIsUploadOpen(true)}>
+          Ajouter un document
+        </Button>
+      </div>
+      
+      {employee.documents && employee.documents.length > 0 ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {employee.documents.map((document: Document) => (
+            <Card key={document.id} className="overflow-hidden">
+              <CardHeader className="bg-muted/50 py-3">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <CardTitle className="text-base">{document.name}</CardTitle>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      {formatDate(document.date)} - {formatFileSize(document.fileSize)}
+                    </p>
+                  </div>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon">
+                        <MoreHorizontal className="h-4 w-4" />
                       </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="icon"
-                        onClick={() => handleDownloadDocument(document)}
-                        title="Télécharger"
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => handleViewDocument(document)}>
+                        <Eye className="mr-2 h-4 w-4" />
+                        Visualiser
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleDownloadDocument(document)}>
+                        <Download className="mr-2 h-4 w-4" />
+                        Télécharger
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem 
+                        onClick={() => handleDeleteDocument(document)}
+                        className="text-red-600"
                       >
-                        <Download className="h-4 w-4" />
-                      </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="icon"
-                        onClick={() => handleDeleteDocument(document.id)}
-                        title="Supprimer"
-                      >
-                        <Trash2 className="h-4 w-4 text-red-500" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
-      </Card>
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        Supprimer
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+              </CardHeader>
+              <CardContent className="py-3">
+                <div className="flex items-center mb-3">
+                  <FileText className="h-5 w-5 mr-2 text-muted-foreground" />
+                  <span className="text-sm">Type: <strong>{document.type}</strong></span>
+                </div>
+                <Separator className="mb-3" />
+                <div className="flex flex-wrap gap-2">
+                  {document.documentId && (
+                    <Badge variant="outline" className="text-xs">
+                      ID: {document.documentId}
+                    </Badge>
+                  )}
+                  {document.storageFormat && (
+                    <Badge variant="secondary" className="text-xs">
+                      Format: {document.storageFormat}
+                    </Badge>
+                  )}
+                  {document.storedInHrDocuments && (
+                    <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 text-xs">
+                      Stocké dans hr_documents
+                    </Badge>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      ) : (
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center p-6">
+            <FileText className="h-12 w-12 text-muted-foreground mb-4" />
+            <p className="text-center text-muted-foreground">
+              Aucun document n'a été ajouté pour cet employé.
+            </p>
+            <Button 
+              onClick={() => setIsUploadOpen(true)} 
+              variant="outline" 
+              className="mt-4"
+            >
+              Ajouter un document
+            </Button>
+          </CardContent>
+        </Card>
+      )}
       
       <UploadDocumentDialog
-        open={isAddDocumentOpen}
-        onOpenChange={setIsAddDocumentOpen}
+        open={isUploadOpen}
+        onOpenChange={setIsUploadOpen}
         employee={employee}
         onDocumentAdded={handleDocumentAdded}
       />

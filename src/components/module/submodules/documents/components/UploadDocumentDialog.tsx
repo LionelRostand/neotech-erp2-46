@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useStorageUpload } from '@/hooks/storage/useStorageUpload';
 import { toast } from 'sonner';
 import { addEmployeeDocument, getDocumentTypes } from '@/components/module/submodules/employees/services/documentService';
 import { Employee, Document } from '@/types/employee';
@@ -33,8 +32,7 @@ const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [documentTypes, setDocumentTypes] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  
-  const { uploadFile, isUploading, uploadProgress } = useStorageUpload();
+  const [uploadProgress, setUploadProgress] = useState(0);
   
   // Fetch document types on component mount
   useEffect(() => {
@@ -49,6 +47,7 @@ const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
       setDocumentName('');
       setDocumentType(defaultType);
       setSelectedFile(null);
+      setUploadProgress(0);
     }
   }, [open, defaultType]);
   
@@ -64,6 +63,23 @@ const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
         setDocumentName(nameWithoutExtension || fileName);
       }
     }
+  };
+  
+  // Fonction pour convertir un fichier en base64
+  const convertFileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => {
+        // On extrait la partie base64 (après le préfixe data:xxx;base64,)
+        const base64String = reader.result as string;
+        const base64Data = base64String.split(',')[1]; // Prendre seulement la partie base64
+        resolve(base64Data);
+      };
+      reader.onerror = (error) => {
+        reject(error);
+      };
+    });
   };
   
   const handleSubmit = async (e: React.FormEvent) => {
@@ -92,27 +108,35 @@ const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
     try {
       setIsLoading(true);
       
-      // Upload the file to Firebase Storage
-      const uploadPath = `employees/${employee.id}/documents`;
-      const result = await uploadFile(selectedFile, uploadPath);
+      // Simuler le progrès de téléversement
+      const progressInterval = setInterval(() => {
+        setUploadProgress((prev) => {
+          const newProgress = prev + Math.random() * 10;
+          return newProgress >= 90 ? 90 : newProgress;
+        });
+      }, 200);
+      
+      // Convertir le fichier en base64
+      const base64Data = await convertFileToBase64(selectedFile);
       
       // Préparer les données du document
       const newDocument: Document = {
         name: documentName,
         type: documentType,
         date: new Date().toISOString(),
-        fileUrl: result.fileUrl,
-        fileData: result.fileData, // Stocker les données base64 du document
-        fileHex: result.fileHex,   // Stocker les données hex du document
+        fileData: base64Data, // Stocker les données base64 du document
         fileType: selectedFile.type,
         fileSize: selectedFile.size,
-        filePath: result.filePath,
         id: `doc_${Date.now()}`,
         employeeId: employee.id,
-        storedInFirebase: !!result.fileUrl, // Indique si le document est stocké dans Firebase
+        storedInFirebase: false, // Pas stocké dans Firebase Storage
         storedInHrDocuments: true, // Sera stocké dans hr_documents
         storageFormat: 'base64'    // Indique que le stockage est en base64
       };
+      
+      // Mettre à jour le progrès à 100% avant d'ajouter le document
+      clearInterval(progressInterval);
+      setUploadProgress(100);
       
       // Add document to hr_documents and reference in employee record
       await addEmployeeDocument(employee.id, newDocument);
@@ -123,6 +147,7 @@ const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
       setDocumentName('');
       setDocumentType('');
       setSelectedFile(null);
+      setUploadProgress(0);
       
       // Notify parent component
       if (onDocumentAdded) {
@@ -202,17 +227,17 @@ const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
           </div>
           
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isLoading || isUploading}>
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isLoading}>
               Annuler
             </Button>
-            <Button type="submit" disabled={isLoading || isUploading}>
-              {(isLoading || isUploading) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {(isLoading || isUploading) ? 'Téléversement...' : 'Ajouter'}
+            <Button type="submit" disabled={isLoading}>
+              {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {isLoading ? 'Téléversement...' : 'Ajouter'}
             </Button>
           </DialogFooter>
         </form>
         
-        {isUploading && (
+        {isLoading && (
           <div className="mt-4">
             <div className="w-full bg-gray-200 rounded-full h-2.5">
               <div 
@@ -220,7 +245,7 @@ const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
                 style={{ width: `${uploadProgress}%` }}
               ></div>
             </div>
-            <div className="text-sm text-center mt-1">{uploadProgress}%</div>
+            <div className="text-sm text-center mt-1">{Math.round(uploadProgress)}%</div>
           </div>
         )}
       </DialogContent>

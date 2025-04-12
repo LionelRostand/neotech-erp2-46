@@ -86,7 +86,8 @@ export const addEmployeeDocument = async (employeeId: string, document: Document
         uploadDate: serverTimestamp(),
         createdAt: serverTimestamp(),
         base64Data: document.fileData, // Stocker les données base64
-        storedInHrDocuments: true
+        storedInHrDocuments: true,
+        storageFormat: 'base64'
       };
       
       // Ajouter le document complet dans hr_documents
@@ -110,9 +111,7 @@ export const addEmployeeDocument = async (employeeId: string, document: Document
       date: document.date,
       fileType: document.fileType,
       fileSize: document.fileSize,
-      filePath: document.filePath,
-      fileUrl: document.fileUrl,
-      storedInFirebase: document.storedInFirebase,
+      storedInFirebase: false, // Pas stocké dans Firebase Storage
       employeeId: employeeId,
       documentId: documentRef?.id, // Référence à hr_documents
       storedInHrDocuments: true,
@@ -202,20 +201,20 @@ export const getDocumentTypes = async (): Promise<string[]> => {
   // Pour l'instant, nous utilisons une liste statique
   // Plus tard, cela pourrait venir de la base de données
   return [
-    'Contrat de travail',
-    'Avenant',
-    'Certificat de travail',
-    'Diplôme',
-    'Attestation',
-    'Facture',
-    'Note de frais',
-    'Fiche de paie',
-    'CV',
-    'Lettre de motivation',
+    "Contrat de travail",
+    "Avenant",
+    "Certificat de travail",
+    "Diplôme",
+    "Attestation",
+    "Facture",
+    "Note de frais",
+    "Fiche de paie",
+    "CV",
+    "Lettre de motivation",
     "Pièce d'identité",
-    'Permis de conduire',
-    'Visa',
-    'Carte de séjour',
-    'Autre'
+    "Permis de conduire",
+    "Visa",
+    "Carte de séjour",
+    "Autre"
   ];
 };
