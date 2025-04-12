@@ -4,7 +4,7 @@ import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/comp
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useFirebaseCompanies } from '@/hooks/useFirebaseCompanies';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Mail } from 'lucide-react';
 
 const EmploymentInfoFields = () => {
   const { companies, isLoading } = useFirebaseCompanies();
@@ -149,6 +149,26 @@ const EmploymentInfoFields = () => {
           )}
         />
       </div>
+      
+      <FormField
+        name="professionalEmail"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Email professionnel</FormLabel>
+            <FormControl>
+              <div className="flex items-center">
+                <Mail className="h-4 w-4 mr-2 text-muted-foreground" />
+                <Input 
+                  type="email" 
+                  placeholder="email.professionnel@entreprise.com" 
+                  {...field} 
+                />
+              </div>
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
       
       <FormField
         name="status"
