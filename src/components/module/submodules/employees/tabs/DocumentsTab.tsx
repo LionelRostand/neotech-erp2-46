@@ -4,11 +4,12 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Employee, Document } from '@/types/employee';
-import { FileText, Plus, Trash2, Download, Eye } from 'lucide-react';
+import { FileText, Plus, Trash2, Download, Eye, Info } from 'lucide-react';
 import { toast } from 'sonner';
 import { getEmployeeDocuments, removeEmployeeDocument } from '../services/documentService';
 import UploadDocumentDialog from '../../documents/components/UploadDocumentDialog';
 import { downloadFile, viewDocument, hexToDataUrl, getDocumentDataSource } from '@/utils/documentUtils';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface DocumentsTabProps {
   employee: Employee;
@@ -106,7 +107,15 @@ const DocumentsTab: React.FC<DocumentsTabProps> = ({ employee, onEmployeeUpdate 
   // Obtenir le libellé du type de stockage
   const getStorageTypeLabel = (document: Document) => {
     if (document.storedInHrDocuments) {
-      return <span className="text-blue-600 bg-blue-50 px-2 py-1 rounded-md text-xs">HR Documents</span>;
+      let format = '';
+      if (document.storageFormat === 'base64') {
+        format = ' (base64)';
+      } else if (document.storageFormat === 'binary') {
+        format = ' (binaire)';
+      } else if (document.storageFormat === 'hex') {
+        format = ' (hex)';
+      }
+      return <span className="text-blue-600 bg-blue-50 px-2 py-1 rounded-md text-xs">HR Documents{format}</span>;
     } else if (document.storedInFirebase) {
       return <span className="text-green-600 bg-green-50 px-2 py-1 rounded-md text-xs">Firebase</span>;
     } else {
@@ -152,6 +161,7 @@ const DocumentsTab: React.FC<DocumentsTabProps> = ({ employee, onEmployeeUpdate 
                   <TableHead>Date</TableHead>
                   <TableHead>Taille</TableHead>
                   <TableHead>Stockage</TableHead>
+                  <TableHead>ID</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -166,6 +176,25 @@ const DocumentsTab: React.FC<DocumentsTabProps> = ({ employee, onEmployeeUpdate 
                     <TableCell>{formatFileSize(document.fileSize)}</TableCell>
                     <TableCell>
                       {getStorageTypeLabel(document)}
+                    </TableCell>
+                    <TableCell>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div className="flex items-center">
+                              <span className="truncate max-w-[80px] text-xs text-gray-500">
+                                {document.documentId ? document.documentId.substring(0, 8) + '...' : 'N/A'}
+                              </span>
+                              <Info className="h-3 w-3 ml-1 text-gray-400" />
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p className="max-w-xs break-all">
+                              {document.documentId || 'Aucun ID de référence'}
+                            </p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
                     </TableCell>
                     <TableCell className="text-right space-x-2">
                       <Button 

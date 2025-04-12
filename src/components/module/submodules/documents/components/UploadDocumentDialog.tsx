@@ -110,8 +110,8 @@ const UploadDocumentDialog: React.FC<UploadDocumentDialogProps> = ({
         id: `doc_${Date.now()}`,
         employeeId: employee.id,
         storedInFirebase: !!result.fileUrl, // Indique si le document est stocké dans Firebase
-        binaryData: true, // Indique que les données sont stockées sous format binaire
-        storedInHrDocuments: true // Sera stocké dans hr_documents
+        storedInHrDocuments: true, // Sera stocké dans hr_documents
+        storageFormat: 'base64'    // Indique que le stockage est en base64
       };
       
       // Add document to hr_documents and reference in employee record

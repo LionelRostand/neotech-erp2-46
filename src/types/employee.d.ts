@@ -1,3 +1,4 @@
+
 import { Company } from '@/components/module/submodules/companies/types';
 
 export interface EmployeeAddress {
@@ -30,6 +31,8 @@ export interface Document {
   documentId?: string; // ID du document dans la collection hr_documents
   binaryData?: boolean; // Indique si les données sont stockées sous format binaire
   storedInHrDocuments?: boolean; // Indique si stocké dans hr_documents
+  storageFormat?: 'base64' | 'binary' | 'hex'; // Format de stockage des données
+  base64Data?: string; // Données au format base64
 }
 
 export interface Employee {

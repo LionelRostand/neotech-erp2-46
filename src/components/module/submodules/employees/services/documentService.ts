@@ -1,3 +1,4 @@
+
 import { db } from '@/lib/firebase';
 import { 
   doc, 
@@ -73,7 +74,7 @@ export const addEmployeeDocument = async (employeeId: string, document: Document
       return;
     }
     
-    // Stocker d'abord les données complètes dans hr_documents (avec les données binaires)
+    // Stocker d'abord les données complètes dans hr_documents (avec les données base64)
     let documentRef;
     try {
       const hrDocumentsRef = collection(db, COLLECTIONS.HR.DOCUMENTS);
@@ -84,7 +85,7 @@ export const addEmployeeDocument = async (employeeId: string, document: Document
         department: employeeDoc.data().department || '',
         uploadDate: serverTimestamp(),
         createdAt: serverTimestamp(),
-        binaryData: true,
+        base64Data: document.fileData, // Stocker les données base64
         storedInHrDocuments: true
       };
       
@@ -114,7 +115,8 @@ export const addEmployeeDocument = async (employeeId: string, document: Document
       storedInFirebase: document.storedInFirebase,
       employeeId: employeeId,
       documentId: documentRef?.id, // Référence à hr_documents
-      storedInHrDocuments: true
+      storedInHrDocuments: true,
+      storageFormat: 'base64' // Indiquer que le document est stocké en base64
     };
     
     // Ajouter la référence de document au tableau des documents de l'employé
