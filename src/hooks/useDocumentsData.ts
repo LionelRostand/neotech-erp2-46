@@ -29,7 +29,7 @@ export const useDocumentsData = () => {
   const { hrDocuments, employees, isLoading, error } = useHrModuleData();
   
   // Fonction pour valider que la date existe et est valide
-  const isValidDate = (dateString?: string | null): boolean => {
+  const isValidDate = (dateString?: string): boolean => {
     if (!dateString) return false;
     
     // Handle problematic string values
@@ -58,7 +58,7 @@ export const useDocumentsData = () => {
   };
   
   // Fonction pour formater la date de manière sécurisée avec fallback
-  const formatDate = (dateString?: string | null): string => {
+  const formatDate = (dateString?: string): string => {
     if (!dateString) return '';
     
     try {
