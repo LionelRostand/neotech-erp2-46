@@ -77,3 +77,34 @@ export const formatNumber = (
     return value.toString();
   }
 };
+
+/**
+ * Format a phone number according to the French format or other formats
+ * @param phoneNumber Phone number to format
+ * @param countryCode Country code for formatting rules (defaults to FR)
+ * @returns Formatted phone number string
+ */
+export const formatPhoneNumber = (
+  phoneNumber: string,
+  countryCode: string = 'FR'
+): string => {
+  try {
+    if (!phoneNumber) return '';
+    
+    // Remove any non-digit characters
+    const cleaned = phoneNumber.replace(/\D/g, '');
+    
+    if (countryCode === 'FR') {
+      // France: format as XX XX XX XX XX
+      if (cleaned.length === 10) {
+        return cleaned.replace(/(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})/, '$1 $2 $3 $4 $5');
+      }
+    }
+    
+    // If no specific format matched or number is not the right length, return the cleaned version
+    return cleaned;
+  } catch (error) {
+    console.error('Error formatting phone number:', error);
+    return phoneNumber;
+  }
+};
