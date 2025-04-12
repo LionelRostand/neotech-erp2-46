@@ -25,12 +25,12 @@ export const updateDocument = async (collectionName: string, id: string, data: D
     
     // Check if this is a network error or a "not-found" error
     const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue';
-    const errorCode = error?.code || '';
+    const errorCode = (error as any)?.code || '';
     
     if (errorMessage.includes('offline') || errorMessage.includes('unavailable') || errorMessage.includes('backend')) {
       toast.success('Document mis à jour en mode hors ligne. Les modifications seront synchronisées plus tard.');
       return { id, ...data, _offlineUpdated: true };
-    } else if (errorCode === 'not-found') {
+    } else if (errorCode === 'not-found' || errorMessage.includes('No document to update')) {
       // If document doesn't exist, suggest using setDocument instead
       console.warn('Document not found, consider using setDocument instead of updateDocument');
       toast.error(`Le document n'existe pas. Utilisez setDocument pour créer et mettre à jour.`);
