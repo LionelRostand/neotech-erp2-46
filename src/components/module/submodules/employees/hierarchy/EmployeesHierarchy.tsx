@@ -56,11 +56,11 @@ const EmployeesHierarchy: React.FC = () => {
       ? employees.filter(emp => rootDept.employeeIds?.includes(emp.id))
       : employees.filter(emp => {
           // Check department as string ID
-          if (emp.department && typeof emp.department === 'string') {
+          if (emp.department !== null && emp.department !== undefined && typeof emp.department === 'string') {
             return emp.department === rootDept.id;
           }
           // Check department as object with ID property
-          if (emp.department && typeof emp.department === 'object' && 'id' in emp.department) {
+          if (emp.department !== null && emp.department !== undefined && typeof emp.department === 'object' && 'id' in emp.department) {
             return emp.department.id === rootDept.id;
           }
           // Check departmentId property
@@ -114,11 +114,11 @@ const EmployeesHierarchy: React.FC = () => {
       ? employees.filter(emp => dept.employeeIds?.includes(emp.id))
       : employees.filter(emp => {
           // Check department as string ID
-          if (emp.department && typeof emp.department === 'string') {
+          if (emp.department !== null && emp.department !== undefined && typeof emp.department === 'string') {
             return emp.department === dept.id;
           }
           // Check department as object with ID property
-          if (emp.department && typeof emp.department === 'object' && 'id' in emp.department) {
+          if (emp.department !== null && emp.department !== undefined && typeof emp.department === 'object' && 'id' in emp.department) {
             return emp.department.id === dept.id;
           }
           // Check departmentId property
