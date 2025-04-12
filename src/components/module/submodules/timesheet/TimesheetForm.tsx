@@ -8,7 +8,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { format, startOfWeek, endOfWeek, addDays } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { Calendar as CalendarIcon } from 'lucide-react';
+import { Calendar as CalendarIcon, Loader2 } from 'lucide-react';
 import { DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Employee } from '@/types/employee';
 
@@ -16,9 +16,15 @@ interface TimesheetFormProps {
   onSubmit: (data: any) => void;
   onCancel: () => void;
   employees: Employee[];
+  isSubmitting?: boolean;
 }
 
-const TimesheetForm: React.FC<TimesheetFormProps> = ({ onSubmit, onCancel, employees }) => {
+const TimesheetForm: React.FC<TimesheetFormProps> = ({ 
+  onSubmit, 
+  onCancel, 
+  employees,
+  isSubmitting = false
+}) => {
   const [formData, setFormData] = useState({
     employeeId: '',
     weekStartDate: startOfWeek(new Date(), { weekStartsOn: 1 }),
@@ -123,6 +129,7 @@ const TimesheetForm: React.FC<TimesheetFormProps> = ({ onSubmit, onCancel, emplo
           <Select 
             value={formData.employeeId}
             onValueChange={(value) => handleChange('employeeId', value)}
+            disabled={isSubmitting}
           >
             <SelectTrigger>
               <SelectValue placeholder="Sélectionner un employé" />
@@ -146,6 +153,7 @@ const TimesheetForm: React.FC<TimesheetFormProps> = ({ onSubmit, onCancel, emplo
               <Button
                 variant="outline"
                 className="w-full justify-start text-left font-normal"
+                disabled={isSubmitting}
               >
                 <CalendarIcon className="mr-2 h-4 w-4" />
                 {format(formData.weekStartDate, "dd/MM/yyyy")} - {format(weekEndDate, "dd/MM/yyyy")}
@@ -182,6 +190,7 @@ const TimesheetForm: React.FC<TimesheetFormProps> = ({ onSubmit, onCancel, emplo
                 value={formData.hours[dayKeys[index] as keyof typeof formData.hours]}
                 onChange={(e) => handleHoursChange(dayKeys[index], e.target.value)}
                 className="w-full text-center"
+                disabled={isSubmitting}
               />
             </div>
           ))}
@@ -196,6 +205,7 @@ const TimesheetForm: React.FC<TimesheetFormProps> = ({ onSubmit, onCancel, emplo
           <Select 
             value={formData.status}
             onValueChange={(value) => handleChange('status', value)}
+            disabled={isSubmitting}
           >
             <SelectTrigger className="w-[180px]">
               <SelectValue placeholder="Sélectionner un statut" />
@@ -225,15 +235,23 @@ const TimesheetForm: React.FC<TimesheetFormProps> = ({ onSubmit, onCancel, emplo
           value={formData.notes}
           onChange={(e) => handleChange('notes', e.target.value)}
           rows={3}
+          disabled={isSubmitting}
         />
       </div>
 
       <DialogFooter>
-        <Button type="button" variant="outline" onClick={onCancel}>
+        <Button type="button" variant="outline" onClick={onCancel} disabled={isSubmitting}>
           Annuler
         </Button>
-        <Button type="submit">
-          Soumettre
+        <Button type="submit" disabled={isSubmitting}>
+          {isSubmitting ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Traitement...
+            </>
+          ) : (
+            'Soumettre'
+          )}
         </Button>
       </DialogFooter>
     </form>
