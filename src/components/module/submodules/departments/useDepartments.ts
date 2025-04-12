@@ -126,7 +126,7 @@ export const useDepartments = () => {
     const department = departments.find(dep => dep.id === departmentId);
     if (!department || !department.employeeIds) return [];
     
-    return employees.filter(emp => department.employeeIds.includes(emp.id));
+    return employees.filter(emp => department.employeeIds?.includes(emp.id));
   };
 
   // Save a new department

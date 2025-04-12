@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Dialog } from '@/components/ui/dialog';
 import { Card, CardContent } from '@/components/ui/card';
 import DepartmentHeader from './DepartmentHeader';
@@ -8,6 +8,7 @@ import AddDepartmentDialog from './AddDepartmentDialog';
 import EditDepartmentDialog from './EditDepartmentDialog';
 import ManageEmployeesDialog from './ManageEmployeesDialog';
 import { useDepartments } from './useDepartments';
+import { Department } from './types';
 
 const EmployeesDepartments: React.FC = () => {
   const {
