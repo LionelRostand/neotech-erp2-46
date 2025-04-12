@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,6 +7,7 @@ import { FileText, Plus, Trash2, Download, Eye } from 'lucide-react';
 import { toast } from 'sonner';
 import { getEmployeeDocuments, removeEmployeeDocument } from '../services/documentService';
 import UploadDocumentDialog from '../../documents/components/UploadDocumentDialog';
+import { downloadFile, viewDocument } from '@/utils/documentUtils';
 
 interface DocumentsTabProps {
   employee: Employee;
@@ -38,25 +38,9 @@ const DocumentsTab: React.FC<DocumentsTabProps> = ({ employee }) => {
   const handleViewDocument = (document: Document) => {
     // Priorité: 1. données binaires base64, 2. URL du fichier
     if (document.fileData) {
-      // Si nous avons des données base64, ouvrir dans un nouvel onglet
-      const newTab = window.open();
-      if (newTab) {
-        newTab.document.write(`
-          <html>
-            <head>
-              <title>${document.name || 'Document'}</title>
-            </head>
-            <body style="margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; background: #f0f0f0;">
-              <img src="${document.fileData}" style="max-width: 100%; max-height: 90vh; box-shadow: 0 4px 6px rgba(0,0,0,0.1);" />
-            </body>
-          </html>
-        `);
-        newTab.document.close();
-      } else {
-        toast.error("Le navigateur a bloqué l'ouverture d'un nouvel onglet");
-      }
+      viewDocument(document.fileData, document.name || 'Document', true);
     } else if (document.fileUrl) {
-      window.open(document.fileUrl, '_blank');
+      viewDocument(document.fileUrl, document.name || 'Document', false);
     } else {
       toast.error("Aucun fichier disponible pour ce document");
     }
@@ -64,20 +48,9 @@ const DocumentsTab: React.FC<DocumentsTabProps> = ({ employee }) => {
   
   const handleDownloadDocument = (document: Document) => {
     if (document.fileData) {
-      // Créer un lien de téléchargement à partir des données base64
-      const link = document.createElement('a');
-      link.href = document.fileData;
-      link.download = document.name || 'document';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      downloadFile(document.fileData, document.name || 'document');
     } else if (document.fileUrl) {
-      const link = document.createElement('a');
-      link.href = document.fileUrl;
-      link.download = document.name || 'document';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      downloadFile(document.fileUrl, document.name || 'document');
     } else {
       toast.error("Aucun fichier disponible pour ce document");
     }

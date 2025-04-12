@@ -112,8 +112,9 @@ export const useStorageUpload = () => {
               } catch (urlError) {
                 console.warn('Erreur lors de la récupération de l\'URL standard, utilisation de l\'URL générée:', urlError);
                 // Créer manuellement l'URL en cas d'échec de getDownloadURL
-                const bucket = storage.bucket || 'neotech-erp.appspot.com';
-                downloadURL = `https://firebasestorage.googleapis.com/v0/b/${bucket}/o/${encodeURIComponent(filePath)}?alt=media`;
+                // Use environment-specific bucket or fallback to a default
+                const bucketName = import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || 'neotech-erp.appspot.com';
+                downloadURL = `https://firebasestorage.googleapis.com/v0/b/${bucketName}/o/${encodeURIComponent(filePath)}?alt=media`;
               }
               
               console.log('Fichier disponible à:', downloadURL);
