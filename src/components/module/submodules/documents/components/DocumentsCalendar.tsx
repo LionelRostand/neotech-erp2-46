@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Calendar } from '@/components/ui/calendar';
 import { Badge } from '@/components/ui/badge';
 import { fr } from 'date-fns/locale';
-import { format, isSameDay, parseISO } from 'date-fns';
+import { format, isSameDay } from 'date-fns';
 import { HrDocument } from '@/hooks/useDocumentsData';
 
 interface DocumentsCalendarProps {
