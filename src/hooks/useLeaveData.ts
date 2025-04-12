@@ -2,9 +2,10 @@
 import { useMemo, useState, useCallback } from 'react';
 import { useHrModuleData } from './useHrModuleData';
 import { formatDate } from '@/lib/formatters';
-import { collection, getDocs, query, orderBy } from 'firebase/firestore';
+import { collection, getDocs, query, orderBy, doc, setDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { COLLECTIONS } from '@/lib/firebase-collections';
+import { toast } from 'sonner';
 
 // Define the Leave type to be exported
 export interface Leave {
@@ -21,6 +22,15 @@ export interface Leave {
   requestDate: string;
   approvedBy: string;
   employeePhoto: string;
+}
+
+export interface CreateLeaveRequest {
+  employeeId: string;
+  type: string;
+  startDate: string;
+  endDate: string;
+  days: number;
+  reason: string;
 }
 
 export const useLeaveData = () => {
@@ -43,6 +53,49 @@ export const useLeaveData = () => {
       setIsLoading(false);
     }
   }, []);
+  
+  // Function to create a new leave request
+  const createLeaveRequest = useCallback(async (leaveData: CreateLeaveRequest) => {
+    setIsLoading(true);
+    try {
+      const leaveId = `leave-${Date.now()}`;
+      const employee = employees?.find(emp => emp.id === leaveData.employeeId);
+      
+      const newLeaveRequest = {
+        id: leaveId,
+        employeeId: leaveData.employeeId,
+        type: leaveData.type,
+        startDate: leaveData.startDate,
+        endDate: leaveData.endDate,
+        days: leaveData.days,
+        status: 'En attente',
+        reason: leaveData.reason || '',
+        requestDate: new Date().toISOString(),
+        employeeName: employee ? `${employee.firstName} ${employee.lastName}` : 'Employé inconnu',
+        employeePhoto: employee?.photoURL || employee?.photo || '',
+        department: employee?.department || 'Non spécifié',
+        approvedBy: ''
+      };
+      
+      // Sauvegarder dans Firebase
+      const leaveRef = doc(db, COLLECTIONS.HR.LEAVES, leaveId);
+      await setDoc(leaveRef, newLeaveRequest);
+      
+      toast.success("Demande de congé soumise avec succès");
+      
+      // Actualiser les données
+      await refetch();
+      
+      return newLeaveRequest;
+    } catch (err) {
+      console.error('Error creating leave request:', err);
+      setError(err instanceof Error ? err : new Error('Erreur lors de la création de la demande de congé'));
+      toast.error("Erreur lors de la soumission de la demande");
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [employees, refetch]);
   
   // Calculate stats based on leave requests
   const stats = useMemo(() => {
@@ -183,5 +236,5 @@ export const useLeaveData = () => {
     }
   }, [leaveRequests, employees, refreshCounter]);
   
-  return { leaves, stats, isLoading, error, refetch };
+  return { leaves, stats, isLoading, error, refetch, createLeaveRequest };
 };

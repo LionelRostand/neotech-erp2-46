@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
@@ -15,69 +15,84 @@ import {
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { CreateLeaveRequestDialog } from './CreateLeaveRequestDialog';
 import { useLeaveData } from '@/hooks/useLeaveData';
-import { formatDate } from '@/lib/formatters';
+import { CreateLeaveRequestDialog } from './CreateLeaveRequestDialog';
+import { doc, updateDoc } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { COLLECTIONS } from '@/lib/firebase-collections';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 const EmployeesLeaves: React.FC = () => {
-  const { leaves, stats, isLoading, error, refetch } = useLeaveData();
-  const [leaveRequests, setLeaveRequests] = useState<any[]>([]);
-  const [showCreateDialog, setShowCreateDialog] = useState(false);
-  const [refreshKey, setRefreshKey] = useState(0);
+  const { leaves, stats, isLoading, refetch } = useLeaveData();
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   
-  useEffect(() => {
-    if (leaves && leaves.length > 0) {
-      setLeaveRequests(leaves);
-    }
-  }, [leaves]);
-  
-  const handleApprove = (id: string) => {
-    setLeaveRequests(leaveRequests.map(request => 
-      request.id === id ? { ...request, status: 'Approuvé', approvedBy: 'Vous' } : request
-    ));
-    toast.success('Demande de congés approuvée');
-  };
-
-  const handleReject = (id: string) => {
-    setLeaveRequests(leaveRequests.map(request => 
-      request.id === id ? { ...request, status: 'Refusé', approvedBy: 'Vous' } : request
-    ));
-    toast.success('Demande de congés refusée');
-  };
-
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'Approuvé':
-      case 'approved':
-        return <Badge className="bg-green-100 text-green-800">Approuvé</Badge>;
-      case 'Refusé':
-      case 'rejected':
-        return <Badge className="bg-red-100 text-red-800">Refusé</Badge>;
-      case 'En attente':
-      case 'pending':
-      default:
-        return <Badge className="bg-amber-100 text-amber-800">En attente</Badge>;
+  const handleApprove = async (id: string) => {
+    try {
+      const leaveRef = doc(db, COLLECTIONS.HR.LEAVES, id);
+      await updateDoc(leaveRef, {
+        status: 'Approuvé',
+        approvedBy: 'Vous'
+      });
+      
+      toast.success('Demande de congés approuvée');
+      refetch();
+    } catch (error) {
+      console.error('Erreur lors de l\'approbation du congé:', error);
+      toast.error('Erreur lors de l\'approbation de la demande');
     }
   };
 
-  const handleCreateLeave = async (newLeave: any) => {
-    // Ajouter la nouvelle demande à la liste
-    setLeaveRequests(prev => [...prev, newLeave]);
-    // Fermer le dialogue
-    setShowCreateDialog(false);
-    // Rafraîchir les données
-    setRefreshKey(prev => prev + 1);
-    await refetch?.();
+  const handleReject = async (id: string) => {
+    try {
+      const leaveRef = doc(db, COLLECTIONS.HR.LEAVES, id);
+      await updateDoc(leaveRef, {
+        status: 'Refusé',
+        approvedBy: 'Vous'
+      });
+      
+      toast.success('Demande de congés refusée');
+      refetch();
+    } catch (error) {
+      console.error('Erreur lors du refus du congé:', error);
+      toast.error('Erreur lors du refus de la demande');
+    }
   };
 
   const handleRefresh = async () => {
+    setIsRefreshing(true);
     try {
-      await refetch?.();
-      toast.success("Données actualisées");
+      await refetch();
+      toast.success('Données actualisées');
     } catch (error) {
-      toast.error("Erreur lors de l'actualisation des données");
+      toast.error('Erreur lors de l\'actualisation des données');
+    } finally {
+      setIsRefreshing(false);
     }
+  };
+
+  const getStatusBadge = (status: string) => {
+    const statusLower = status.toLowerCase();
+    if (statusLower.includes('approved') || statusLower.includes('approuvé')) {
+      return <Badge className="bg-green-100 text-green-800">Approuvé</Badge>;
+    }
+    if (statusLower.includes('rejected') || statusLower.includes('refusé')) {
+      return <Badge className="bg-red-100 text-red-800">Refusé</Badge>;
+    }
+    return <Badge className="bg-amber-100 text-amber-800">En attente</Badge>;
+  };
+
+  const getInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map(part => part[0])
+      .join('')
+      .toUpperCase();
+  };
+
+  const handleSubmitRequest = (data: any) => {
+    setIsCreateDialogOpen(false);
+    // Le refetch sera déjà effectué par la fonction createLeaveRequest
   };
 
   return (
@@ -88,15 +103,16 @@ const EmployeesLeaves: React.FC = () => {
           <p className="text-gray-500">Gestion des demandes de congés</p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={handleRefresh} disabled={isLoading}>
-            <RefreshCw className={`mr-2 h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={handleRefresh}
+            disabled={isRefreshing}
+          >
+            <RefreshCw className={`mr-2 h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
             Actualiser
           </Button>
-          <Button variant="outline" size="sm">
-            <Filter className="mr-2 h-4 w-4" />
-            Filtres
-          </Button>
-          <Button size="sm" onClick={() => setShowCreateDialog(true)}>
+          <Button size="sm" onClick={() => setIsCreateDialogOpen(true)}>
             <Plus className="mr-2 h-4 w-4" />
             Nouvelle demande
           </Button>
@@ -109,7 +125,7 @@ const EmployeesLeaves: React.FC = () => {
             <div>
               <h3 className="text-sm font-medium text-blue-900">En attente</h3>
               <p className="text-2xl font-bold text-blue-700">
-                {stats?.pending || 0}
+                {stats.pending}
               </p>
             </div>
             <Clock className="h-8 w-8 text-blue-500" />
@@ -121,7 +137,7 @@ const EmployeesLeaves: React.FC = () => {
             <div>
               <h3 className="text-sm font-medium text-green-900">Approuvés</h3>
               <p className="text-2xl font-bold text-green-700">
-                {stats?.approved || 0}
+                {stats.approved}
               </p>
             </div>
             <Check className="h-8 w-8 text-green-500" />
@@ -133,7 +149,7 @@ const EmployeesLeaves: React.FC = () => {
             <div>
               <h3 className="text-sm font-medium text-red-900">Refusés</h3>
               <p className="text-2xl font-bold text-red-700">
-                {stats?.rejected || 0}
+                {stats.rejected}
               </p>
             </div>
             <X className="h-8 w-8 text-red-500" />
@@ -145,7 +161,7 @@ const EmployeesLeaves: React.FC = () => {
             <div>
               <h3 className="text-sm font-medium text-gray-900">Total</h3>
               <p className="text-2xl font-bold text-gray-700">
-                {stats?.total || 0}
+                {stats.total}
               </p>
             </div>
             <Calendar className="h-8 w-8 text-gray-500" />
@@ -156,21 +172,16 @@ const EmployeesLeaves: React.FC = () => {
       <Card>
         <CardContent className="p-6">
           {isLoading ? (
-            <div className="flex items-center justify-center h-40">
-              <div className="h-8 w-8 border-4 border-blue-500 border-r-transparent rounded-full animate-spin"></div>
-              <span className="ml-3">Chargement des demandes de congés...</span>
+            <div className="flex justify-center items-center py-8">
+              <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div>
             </div>
-          ) : leaveRequests.length === 0 ? (
+          ) : leaves.length === 0 ? (
             <div className="text-center py-10">
-              <Calendar className="mx-auto h-12 w-12 text-gray-400" />
-              <h3 className="mt-2 text-lg font-medium text-gray-900">Aucune demande de congé</h3>
-              <p className="mt-1 text-gray-500">Commencez par créer une nouvelle demande de congé.</p>
-              <div className="mt-6">
-                <Button onClick={() => setShowCreateDialog(true)}>
-                  <Plus className="mr-2 h-4 w-4" />
-                  Nouvelle demande
-                </Button>
-              </div>
+              <Calendar className="h-12 w-12 mx-auto text-gray-300 mb-4" />
+              <h3 className="text-lg font-medium">Aucune demande de congé</h3>
+              <p className="text-gray-500 mt-1">
+                Créez une nouvelle demande en cliquant sur "Nouvelle demande"
+              </p>
             </div>
           ) : (
             <Table>
@@ -186,34 +197,45 @@ const EmployeesLeaves: React.FC = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {leaveRequests.map(request => (
-                  <TableRow key={request.id}>
+                {leaves.map(leave => (
+                  <TableRow key={leave.id}>
                     <TableCell>
-                      <div className="flex items-center space-x-3">
+                      <div className="flex items-center gap-2">
                         <Avatar className="h-8 w-8">
-                          <AvatarImage src={request.employeePhoto} alt={request.employeeName} />
-                          <AvatarFallback>{request.employeeName?.charAt(0) || '?'}</AvatarFallback>
+                          {leave.employeePhoto ? (
+                            <AvatarImage src={leave.employeePhoto} alt={leave.employeeName} />
+                          ) : null}
+                          <AvatarFallback>{getInitials(leave.employeeName)}</AvatarFallback>
                         </Avatar>
-                        <span>{request.employeeName}</span>
+                        <div>
+                          <span className="font-medium">{leave.employeeName}</span>
+                          <div className="text-xs text-gray-500">{leave.department}</div>
+                        </div>
                       </div>
                     </TableCell>
                     <TableCell>
-                      <span className="capitalize">{request.type}</span>
+                      <span className="capitalize">{leave.type}</span>
                     </TableCell>
                     <TableCell>
-                      {request.startDate} au {request.endDate}
-                      <div className="text-xs text-gray-500">{request.days} jour{request.days > 1 ? 's' : ''}</div>
+                      <div>
+                        <div className="text-sm">
+                          {leave.startDate} au {leave.endDate}
+                        </div>
+                        <div className="text-xs text-gray-500">
+                          {leave.days} jour{leave.days > 1 ? 's' : ''}
+                        </div>
+                      </div>
                     </TableCell>
-                    <TableCell>{request.requestDate}</TableCell>
-                    <TableCell>{getStatusBadge(request.status)}</TableCell>
-                    <TableCell>{request.approvedBy || '-'}</TableCell>
+                    <TableCell>{leave.requestDate}</TableCell>
+                    <TableCell>{getStatusBadge(leave.status)}</TableCell>
+                    <TableCell>{leave.approvedBy || '-'}</TableCell>
                     <TableCell className="text-right">
-                      {(request.status === 'En attente' || request.status === 'pending') ? (
+                      {leave.status.toLowerCase() === 'en attente' || leave.status.toLowerCase() === 'pending' ? (
                         <div className="flex justify-end space-x-2">
                           <Button 
                             variant="ghost" 
                             size="sm" 
-                            onClick={() => handleApprove(request.id)}
+                            onClick={() => handleApprove(leave.id)}
                             className="text-green-600 hover:text-green-700 hover:bg-green-50"
                           >
                             <Check className="h-4 w-4 mr-1" /> Approuver
@@ -221,7 +243,7 @@ const EmployeesLeaves: React.FC = () => {
                           <Button 
                             variant="ghost" 
                             size="sm"
-                            onClick={() => handleReject(request.id)}
+                            onClick={() => handleReject(leave.id)}
                             className="text-red-600 hover:text-red-700 hover:bg-red-50"
                           >
                             <X className="h-4 w-4 mr-1" /> Refuser
@@ -240,11 +262,11 @@ const EmployeesLeaves: React.FC = () => {
           )}
         </CardContent>
       </Card>
-
+      
       <CreateLeaveRequestDialog 
-        isOpen={showCreateDialog} 
-        onClose={() => setShowCreateDialog(false)} 
-        onSubmit={handleCreateLeave} 
+        isOpen={isCreateDialogOpen} 
+        onClose={() => setIsCreateDialogOpen(false)} 
+        onSubmit={handleSubmitRequest}
       />
     </div>
   );

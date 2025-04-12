@@ -23,9 +23,7 @@ import { format, differenceInDays, addDays } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { toast } from 'sonner';
 import { CalendarIcon } from 'lucide-react';
-import { COLLECTIONS } from '@/lib/firebase-collections';
-import { doc, setDoc, collection } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { useLeaveData } from '@/hooks/useLeaveData';
 
 interface CreateLeaveRequestDialogProps {
   isOpen: boolean;
@@ -39,6 +37,7 @@ export const CreateLeaveRequestDialog: React.FC<CreateLeaveRequestDialogProps> =
   onSubmit
 }) => {
   const { employees } = useHrModuleData();
+  const { createLeaveRequest } = useLeaveData();
   const [selectedEmployee, setSelectedEmployee] = useState('');
   const [leaveType, setLeaveType] = useState('');
   const [startDate, setStartDate] = useState<Date | undefined>(undefined);
@@ -92,31 +91,16 @@ export const CreateLeaveRequestDialog: React.FC<CreateLeaveRequestDialogProps> =
     // Calculer le nombre de jours
     const diffDays = calculateDays();
     
-    // Récupérer l'employé sélectionné
-    const employee = uniqueEmployees.find(emp => emp.id === selectedEmployee);
-    
-    const newLeaveRequest = {
-      id: `leave-${Date.now()}`,
-      employeeId: selectedEmployee,
-      type: leaveType,
-      startDate: format(startDate, 'yyyy-MM-dd'),
-      endDate: format(endDate, 'yyyy-MM-dd'),
-      days: diffDays,
-      status: 'En attente',
-      reason,
-      requestDate: new Date().toISOString(),
-      employeeName: employee ? `${employee.firstName} ${employee.lastName}` : 'Employé inconnu',
-      employeePhoto: employee?.photoURL || employee?.photo || '',
-      department: employee?.department || 'Non spécifié',
-      approvedBy: ''
-    };
-    
     try {
-      // Sauvegarder dans Firebase
-      const leaveRef = doc(collection(db, COLLECTIONS.HR.LEAVES), newLeaveRequest.id);
-      await setDoc(leaveRef, newLeaveRequest);
-      
-      toast.success("Demande de congé soumise avec succès");
+      // Créer la demande via notre hook
+      const newLeaveRequest = await createLeaveRequest({
+        employeeId: selectedEmployee,
+        type: leaveType,
+        startDate: format(startDate, 'yyyy-MM-dd'),
+        endDate: format(endDate, 'yyyy-MM-dd'),
+        days: diffDays,
+        reason
+      });
       
       // Appeler le callback de soumission avec les données de la demande
       onSubmit(newLeaveRequest);
@@ -125,7 +109,6 @@ export const CreateLeaveRequestDialog: React.FC<CreateLeaveRequestDialogProps> =
       resetForm();
     } catch (error) {
       console.error('Erreur lors de la soumission de la demande de congé:', error);
-      toast.error("Erreur lors de la soumission de la demande");
     } finally {
       setIsSubmitting(false);
     }
