@@ -29,11 +29,19 @@ function Calendar({
   }
 
   const CustomDropdown = (props: DropdownProps) => {
-    const options = props.options || []
+    // Create options array from caption value if not provided
+    const options = Array.isArray(props.children) 
+      ? props.children.map(child => child.props?.value) 
+      : [];
+    
     return (
       <Select
         value={String(props.value)}
-        onValueChange={(value) => props.onChange?.(value)}
+        onValueChange={(value) => {
+          if (props.onChange) {
+            props.onChange(value);
+          }
+        }}
       >
         <SelectTrigger className={cn("border-0 px-2 font-normal h-auto")}>
           <SelectValue placeholder={props.caption} />
