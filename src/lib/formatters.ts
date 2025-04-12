@@ -35,7 +35,19 @@ export const formatDate = (
     if (/^\d+$/.test(dateString)) {
       // This might be a numeric timestamp
       const timestamp = parseInt(dateString, 10);
-      date = new Date(timestamp);
+      
+      // Validate the timestamp is reasonable (between years 1900-2100)
+      const testDate = new Date(timestamp);
+      if (
+        isNaN(testDate.getTime()) || 
+        testDate.getFullYear() < 1900 || 
+        testDate.getFullYear() > 2100
+      ) {
+        console.warn('Timestamp out of reasonable range:', dateString);
+        return '';
+      }
+      
+      date = testDate;
     } else {
       // Make sure the date is valid first
       const timestamp = Date.parse(dateString);
@@ -43,17 +55,17 @@ export const formatDate = (
         console.warn('Invalid date provided to formatDate:', dateString);
         return '';
       }
+      
+      // Create the date object and verify it's a reasonable date
       date = new Date(dateString);
-    }
-    
-    // Double-check the date is valid (some valid timestamps can produce invalid dates)
-    if (
-      isNaN(date.getTime()) || 
-      date.getFullYear() < 1900 || 
-      date.getFullYear() > 2100
-    ) {
-      console.warn('Date out of reasonable range:', dateString);
-      return '';
+      if (
+        isNaN(date.getTime()) || 
+        date.getFullYear() < 1900 || 
+        date.getFullYear() > 2100
+      ) {
+        console.warn('Date out of reasonable range:', dateString);
+        return '';
+      }
     }
     
     return new Intl.DateTimeFormat(locale, options).format(date);

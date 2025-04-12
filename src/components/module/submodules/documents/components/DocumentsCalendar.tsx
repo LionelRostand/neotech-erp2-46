@@ -31,7 +31,9 @@ export const DocumentsCalendar: React.FC<DocumentsCalendarProps> = ({ documents,
         return null;
       }
       
-      // Handle numeric timestamps
+      // Try multiple parsing strategies
+      
+      // 1. Handle numeric timestamps
       if (/^\d+$/.test(dateString)) {
         const timestamp = parseInt(dateString, 10);
         const date = new Date(timestamp);
@@ -41,7 +43,7 @@ export const DocumentsCalendar: React.FC<DocumentsCalendarProps> = ({ documents,
         return null;
       }
       
-      // Try to parse as ISO date first
+      // 2. Try to parse as ISO date first (most reliable)
       try {
         const isoDate = parseISO(dateString);
         if (isValid(isoDate) && isoDate.getFullYear() >= 1900 && isoDate.getFullYear() <= 2100) {
@@ -51,7 +53,7 @@ export const DocumentsCalendar: React.FC<DocumentsCalendarProps> = ({ documents,
         // Ignore and try the next method
       }
       
-      // Try standard Date parsing
+      // 3. Try standard Date parsing as last resort
       const timestamp = Date.parse(dateString);
       if (isNaN(timestamp)) {
         console.warn('Invalid date:', dateString);
@@ -71,22 +73,26 @@ export const DocumentsCalendar: React.FC<DocumentsCalendarProps> = ({ documents,
     }
   };
 
-  // Convert and validate document dates - moved to useMemo for performance
+  // Convert and validate document dates - using useMemo for performance
   const documentDates = useMemo(() => {
     return documents
       .map(doc => {
         // Try all possible date fields
         const dateStr = doc.uploadDate || doc.createdAt || doc.date;
+        if (typeof dateStr === 'string' && dateStr.includes('Date non valide')) {
+          // Skip invalid dates that were marked as such by the formatter
+          return null;
+        }
         return safeParseDate(dateStr);
       })
       .filter((date): date is Date => date !== null);
   }, [documents]);
 
-  // Create a map of dates to document counts - also moved to useMemo
+  // Create a map of dates to document counts - also using useMemo
   const dateToDocCount = useMemo(() => {
     return documentDates.reduce<Record<string, number>>((acc, date) => {
       try {
-        if (!isValid(date)) return acc;
+        if (!date || !isValid(date)) return acc;
         
         const dateStr = format(date, 'yyyy-MM-dd');
         acc[dateStr] = (acc[dateStr] || 0) + 1;
@@ -100,13 +106,15 @@ export const DocumentsCalendar: React.FC<DocumentsCalendarProps> = ({ documents,
 
   // Handle month change
   const handleMonthChange = (month: Date) => {
-    setCurrentMonth(month);
+    if (month && isValid(month)) {
+      setCurrentMonth(month);
+    }
   };
 
   // Handle date selection
   const handleSelect = (date: Date | undefined) => {
-    setSelectedDate(date);
-    if (date) {
+    if (date && isValid(date)) {
+      setSelectedDate(date);
       onSelectDate(date);
     }
   };
@@ -118,7 +126,14 @@ export const DocumentsCalendar: React.FC<DocumentsCalendarProps> = ({ documents,
         return <div>{day?.getDate?.() ?? '?'}</div>;
       }
       
-      const dateStr = format(day, 'yyyy-MM-dd');
+      let dateStr: string;
+      try {
+        dateStr = format(day, 'yyyy-MM-dd');
+      } catch (e) {
+        console.error('Error formatting day in renderDay:', e);
+        return <div>{day?.getDate?.() ?? '?'}</div>;
+      }
+      
       const count = dateToDocCount[dateStr] || 0;
       
       return (
