@@ -11,10 +11,6 @@ interface DocumentsCalendarProps {
   onSelectDate: (date: Date) => void;
 }
 
-type ActiveModifiers = {
-  [key: string]: { [key: string]: boolean };
-};
-
 export const DocumentsCalendar: React.FC<DocumentsCalendarProps> = ({ documents, onSelectDate }) => {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [currentMonth, setCurrentMonth] = useState<Date>(new Date());
@@ -84,7 +80,7 @@ export const DocumentsCalendar: React.FC<DocumentsCalendarProps> = ({ documents,
         locale={fr}
         month={currentMonth}
         components={{
-          Day: ({ date, displayMonth, activeModifiers }) => {
+          Day: ({ date, displayMonth }) => {
             if (!date) return null;
             return renderDay(date);
           }
@@ -93,3 +89,4 @@ export const DocumentsCalendar: React.FC<DocumentsCalendarProps> = ({ documents,
     </div>
   );
 };
+
