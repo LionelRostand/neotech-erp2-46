@@ -1,7 +1,7 @@
-
 import { useState, useEffect } from 'react';
 import { collection, query, onSnapshot, QueryConstraint, DocumentData, QuerySnapshot, doc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { isNetworkError, reconnectToFirestore } from './firestore/network-handler';
 
 /**
  * Custom hook to fetch data from a Firestore collection with real-time updates

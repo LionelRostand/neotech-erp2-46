@@ -1,47 +1,31 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Employee } from '@/types/employee';
-import { FileText, Download, Upload, Calendar, FilePen, FileArchive, FileImage, File } from 'lucide-react';
+import { FileText, Download, Plus, Upload, Calendar, FilePen, FileArchive, FileImage, File } from 'lucide-react';
+import UploadDocumentDialog from '../../documents/components/UploadDocumentDialog';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { toast } from 'sonner';
-import UploadDocumentDialog from './components/UploadDocumentDialog';
-import { getEmployeeDocuments, EmployeeDocument } from '../services/documentService';
+
+interface Document {
+  name: string;
+  date: string;
+  type: string;
+  fileUrl?: string;
+  id?: string;
+  size?: number;
+}
 
 interface DocumentsTabProps {
+  documents?: Document[] | string[];
   employee?: Employee;
 }
 
-const DocumentsTab: React.FC<DocumentsTabProps> = ({ employee }) => {
+const DocumentsTab: React.FC<DocumentsTabProps> = ({ documents = [], employee }) => {
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   const [uploadDocumentType, setUploadDocumentType] = useState('');
-  const [documents, setDocuments] = useState<EmployeeDocument[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-
-  useEffect(() => {
-    if (employee?.id) {
-      fetchDocuments(employee.id);
-    } else if (employee?.documents) {
-      // Utiliser les documents depuis l'objet employee si disponibles
-      setDocuments(Array.isArray(employee.documents) 
-        ? employee.documents.map(processDocument) 
-        : []);
-    }
-  }, [employee]);
-
-  const fetchDocuments = async (employeeId: string) => {
-    setIsLoading(true);
-    try {
-      const docs = await getEmployeeDocuments(employeeId);
-      setDocuments(docs);
-    } catch (error) {
-      console.error('Erreur lors de la récupération des documents:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const handleUpload = () => {
     setUploadDocumentType('');
@@ -50,21 +34,20 @@ const DocumentsTab: React.FC<DocumentsTabProps> = ({ employee }) => {
 
   const handleUploadSuccess = () => {
     toast.success("Document ajouté avec succès");
-    if (employee?.id) {
-      fetchDocuments(employee.id);
-    }
+    // In a real implementation, we would refresh the documents list here
   };
 
-  const handleDownload = (document: EmployeeDocument) => {
-    if (document.fileUrl) {
-      window.open(document.fileUrl, '_blank');
+  const handleDownload = (document: Document | string) => {
+    const processedDoc = processDocument(document);
+    if (processedDoc.fileUrl) {
+      window.open(processedDoc.fileUrl, '_blank');
     } else {
       toast.error("URL du document non disponible");
     }
   };
 
   // Function to convert a string to a Document object if needed
-  const processDocument = (doc: EmployeeDocument | string): EmployeeDocument => {
+  const processDocument = (doc: Document | string): Document => {
     if (typeof doc === 'string') {
       return {
         name: doc,
@@ -75,8 +58,12 @@ const DocumentsTab: React.FC<DocumentsTabProps> = ({ employee }) => {
     return doc;
   };
 
+  const processedDocuments = Array.isArray(documents) 
+    ? documents.map(processDocument) 
+    : [];
+
   // Group documents by month
-  const groupedDocuments = documents.reduce((acc, doc) => {
+  const groupedDocuments = processedDocuments.reduce((acc, doc) => {
     try {
       const date = new Date(doc.date);
       if (isNaN(date.getTime())) {
@@ -98,7 +85,7 @@ const DocumentsTab: React.FC<DocumentsTabProps> = ({ employee }) => {
       acc["Non daté"].push(doc);
     }
     return acc;
-  }, {} as Record<string, EmployeeDocument[]>);
+  }, {} as Record<string, Document[]>);
 
   // Sort months in descending order (newest first)
   const sortedMonths = Object.keys(groupedDocuments).sort((a, b) => {
@@ -150,29 +137,21 @@ const DocumentsTab: React.FC<DocumentsTabProps> = ({ employee }) => {
     }
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex justify-center items-center p-8">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <h3 className="text-lg font-medium">Documents</h3>
-        <Button size="sm" onClick={handleUpload} disabled={!employee?.id}>
+        <Button size="sm" onClick={handleUpload}>
           <Upload className="w-4 h-4 mr-2" />
           Ajouter
         </Button>
       </div>
 
-      {documents.length === 0 ? (
+      {processedDocuments.length === 0 ? (
         <div className="text-center p-8 border border-dashed rounded-md bg-gray-50">
           <FileText className="w-12 h-12 mx-auto text-gray-400" />
           <p className="mt-2 text-gray-500">Aucun document trouvé</p>
-          <Button variant="outline" size="sm" className="mt-4" onClick={handleUpload} disabled={!employee?.id}>
+          <Button variant="outline" size="sm" className="mt-4" onClick={handleUpload}>
             Importer un document
           </Button>
         </div>
@@ -221,16 +200,13 @@ const DocumentsTab: React.FC<DocumentsTabProps> = ({ employee }) => {
         </div>
       )}
 
-      {/* Upload Document Dialog - Key fix: ensuring employee ID is passed correctly */}
-      {employee && (
-        <UploadDocumentDialog 
-          open={uploadDialogOpen}
-          onOpenChange={setUploadDialogOpen}
-          onSuccess={handleUploadSuccess}
-          employeeId={employee.id}
-          defaultType={uploadDocumentType}
-        />
-      )}
+      {/* Upload Document Dialog */}
+      <UploadDocumentDialog 
+        open={uploadDialogOpen}
+        onOpenChange={setUploadDialogOpen}
+        onSuccess={handleUploadSuccess}
+        defaultType={uploadDocumentType}
+      />
     </div>
   );
 };

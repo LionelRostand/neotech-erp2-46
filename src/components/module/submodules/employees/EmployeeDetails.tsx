@@ -27,15 +27,6 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
   const [activeTab, setActiveTab] = useState('infos');
   const [isEditing, setIsEditing] = useState(false);
   
-  // Vérifier que l'employé a un ID
-  React.useEffect(() => {
-    if (!employee?.id) {
-      console.warn("Employé sans ID détecté:", employee);
-    } else {
-      console.log("Employé chargé avec ID:", employee.id);
-    }
-  }, [employee]);
-  
   const handleEditTab = () => {
     if (activeTab === 'infos') {
       onEdit();
