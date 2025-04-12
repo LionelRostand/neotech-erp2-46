@@ -15,7 +15,8 @@ export const COLLECTIONS = {
   PROJECTS: {
     PROJECTS: 'projects',
     TASKS: 'project_tasks',
-    TEAMS: 'project_teams'
+    TEAMS: 'project_teams',
+    NOTIFICATIONS: 'project_notifications'
   },
   DOCUMENTS: 'documents',
   INVOICES: 'invoices',
@@ -97,7 +98,9 @@ export const COLLECTIONS = {
     COMPANIES: 'crm_companies',
     PRODUCTS: 'crm_products',
     SERVICES: 'crm_services',
-    METRICS: 'crm_metrics'
+    METRICS: 'crm_metrics',
+    LEADS: 'crm_leads',
+    REMINDERS: 'crm_reminders'
   },
 
   // Health Collections
@@ -112,7 +115,8 @@ export const COLLECTIONS = {
     BILLING: 'health_billing',
     INVENTORY: 'health_inventory',
     INTEGRATIONS: 'health_integrations',
-    SETTINGS: 'health_settings'
+    SETTINGS: 'health_settings',
+    DOCTORS: 'health_doctors'
   },
 
   // Transport Collections
@@ -124,7 +128,9 @@ export const COLLECTIONS = {
     MAINTENANCE: 'transport_maintenance',
     EXPENSES: 'transport_expenses',
     FUEL: 'transport_fuel',
-    REPORTS: 'transport_reports'
+    REPORTS: 'transport_reports',
+    RESERVATIONS: 'transport_reservations',
+    CLIENTS: 'transport_clients'
   },
 
   // Library Collections
