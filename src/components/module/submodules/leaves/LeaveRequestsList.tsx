@@ -14,6 +14,7 @@ import {
   SelectTrigger, 
   SelectValue 
 } from '@/components/ui/select';
+import LeaveDetailsDialog from './LeaveDetailsDialog';
 
 interface LeaveRequestsListProps {
   onApprove: (id: string) => void;
@@ -27,6 +28,8 @@ export const LeaveRequestsList: React.FC<LeaveRequestsListProps> = ({
   const { leaves, isLoading } = useLeaveData();
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [selectedLeave, setSelectedLeave] = useState(null);
+  const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false);
   
   // Filter leaves based on search query and status
   const filteredLeaves = React.useMemo(() => {
@@ -73,6 +76,16 @@ export const LeaveRequestsList: React.FC<LeaveRequestsListProps> = ({
     } catch (e) {
       return 'U';
     }
+  };
+  
+  const handleOpenDetails = (leave) => {
+    setSelectedLeave(leave);
+    setIsDetailsDialogOpen(true);
+  };
+  
+  const handleCloseDetails = () => {
+    setIsDetailsDialogOpen(false);
+    setSelectedLeave(null);
   };
   
   if (isLoading) {
@@ -197,7 +210,11 @@ export const LeaveRequestsList: React.FC<LeaveRequestsListProps> = ({
                         </Button>
                       </div>
                     ) : (
-                      <Button variant="ghost" size="sm">
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={() => handleOpenDetails(leave)}
+                      >
                         <FileText className="h-4 w-4 mr-1" /> Détails
                       </Button>
                     )}
@@ -208,6 +225,12 @@ export const LeaveRequestsList: React.FC<LeaveRequestsListProps> = ({
           </Table>
         </div>
       )}
+      
+      <LeaveDetailsDialog 
+        isOpen={isDetailsDialogOpen}
+        onClose={handleCloseDetails}
+        leave={selectedLeave}
+      />
     </div>
   );
 };
