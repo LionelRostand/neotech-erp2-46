@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -97,11 +98,18 @@ const DocumentsTab: React.FC<DocumentsTabProps> = ({
   };
   
   const formatDocumentDate = (dateString?: string): string => {
-    return formatDate(dateString, { 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric' 
-    });
+    if (!dateString) return '';
+    
+    try {
+      return formatDate(dateString, { 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric' 
+      });
+    } catch (error) {
+      console.error("Erreur lors du formatage de la date:", error);
+      return '';
+    }
   };
   
   return (

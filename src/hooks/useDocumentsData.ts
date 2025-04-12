@@ -28,6 +28,18 @@ export interface HrDocument {
 export const useDocumentsData = () => {
   const { hrDocuments, employees, isLoading, error } = useHrModuleData();
   
+  // Fonction pour formater la date de manière sécurisée
+  const formatDate = (dateString?: string): string => {
+    if (!dateString) return '';
+    
+    try {
+      return formatDateUtil(dateString);
+    } catch (error) {
+      console.error('Error formatting document date:', error);
+      return '';
+    }
+  };
+  
   // Enrichir les documents avec les noms des employés si nécessaire
   const formattedDocuments = useMemo(() => {
     if (!hrDocuments || hrDocuments.length === 0) return [];
@@ -49,14 +61,7 @@ export const useDocumentsData = () => {
       
       // Determine which date field to use and handle any invalid dates
       const dateToUse = document.uploadDate || document.createdAt || document.date || '';
-      let formattedDate = '';
-      
-      try {
-        formattedDate = formatDateUtil(dateToUse);
-      } catch (error) {
-        console.error('Error formatting document date:', error);
-        formattedDate = '';
-      }
+      const formattedDate = formatDate(dateToUse);
       
       return {
         id: document.id,

@@ -1,6 +1,7 @@
 
 import { useMemo, useState } from 'react';
 import { useHrModuleData } from './useHrModuleData';
+import { formatDate } from '@/lib/formatters';
 
 // Define the Leave type to be exported
 export interface Leave {
@@ -56,35 +57,45 @@ export const useLeaveData = () => {
         const employee = employees.find(emp => emp.id === leave.employeeId);
         
         // Format the date from ISO or timestamp to DD/MM/YYYY
-        const formatDate = (dateString: string | number) => {
+        const formatSafeDate = (dateString: string | number) => {
+          if (!dateString) return '';
+          
           try {
             const date = typeof dateString === 'number' 
               ? new Date(dateString) 
               : new Date(dateString);
             
-            return date.toLocaleDateString('fr-FR', {
+            if (isNaN(date.getTime())) {
+              console.warn('Invalid date:', dateString);
+              return '';
+            }
+            
+            return formatDate(date.toISOString(), {
               day: '2-digit',
               month: '2-digit',
               year: 'numeric'
             });
           } catch (e) {
             console.error('Error formatting date', e);
-            return 'Date invalide';
+            return '';
           }
         };
         
-        const startDate = leave.startDate ? formatDate(leave.startDate) : '';
-        const endDate = leave.endDate ? formatDate(leave.endDate) : '';
+        const startDate = formatSafeDate(leave.startDate);
+        const endDate = formatSafeDate(leave.endDate);
         
         // Calculate days if not provided
         let days = leave.durationDays || leave.days || 0;
-        if (days === 0 && startDate && endDate) {
+        if (days === 0 && leave.startDate && leave.endDate) {
           try {
             // Simple calculation if dates are available
             const start = new Date(leave.startDate);
             const end = new Date(leave.endDate);
-            const diffTime = Math.abs(end.getTime() - start.getTime());
-            days = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+            
+            if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
+              const diffTime = Math.abs(end.getTime() - start.getTime());
+              days = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+            }
           } catch (e) {
             console.error('Error calculating days', e);
             days = 1; // Default to 1 day if calculation fails
@@ -102,7 +113,7 @@ export const useLeaveData = () => {
           status: leave.status || 'En attente',
           reason: leave.reason || leave.comment || '',
           employeeId: leave.employeeId,
-          requestDate: leave.requestDate ? formatDate(leave.requestDate) : '',
+          requestDate: formatSafeDate(leave.requestDate),
           approvedBy: leave.approvedBy || '',
           employeePhoto: employee?.photoURL || employee?.photo || '',
         };

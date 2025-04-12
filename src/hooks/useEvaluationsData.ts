@@ -1,6 +1,7 @@
 
 import { useMemo, useState, useCallback } from 'react';
 import { useHrModuleData } from './useHrModuleData';
+import { formatDate } from '@/lib/formatters';
 
 export interface Evaluation {
   id: string;
@@ -18,6 +19,8 @@ export interface Evaluation {
   goals?: string[];
   strengths?: string[];
   improvements?: string[];
+  title?: string;
+  rating?: number;
 }
 
 /**
@@ -31,9 +34,28 @@ export const useEvaluationsData = () => {
   // Function to force a refresh of the data
   const refreshData = useCallback(() => {
     setRefreshTrigger(prev => prev + 1);
-    // Note: refreshHrData doesn't exist in useHrModuleData
-    // This will be handled separately
   }, []);
+  
+  // Helper function to safely format dates
+  const formatSafeDate = (dateStr: string) => {
+    if (!dateStr) return '';
+    
+    try {
+      const date = new Date(dateStr);
+      if (isNaN(date.getTime())) {
+        console.warn('Invalid date value:', dateStr);
+        return '';
+      }
+      return formatDate(dateStr, {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric'
+      });
+    } catch (error) {
+      console.error('Erreur de formatage de date:', dateStr, error);
+      return '';
+    }
+  };
   
   // Enrich evaluations with employee names
   const formattedEvaluations = useMemo(() => {
@@ -48,6 +70,7 @@ export const useEvaluationsData = () => {
         ? employees.find(emp => emp.id === evaluation.evaluatorId)
         : undefined;
       
+      // Include both types of evaluation data (legacy and new format)
       return {
         id: evaluation.id,
         employeeId: evaluation.employeeId,
@@ -57,7 +80,7 @@ export const useEvaluationsData = () => {
         evaluatorName: evaluator 
           ? `${evaluator.firstName} ${evaluator.lastName}` 
           : evaluation.evaluatorName || 'Non assigné',
-        date: formatDate(evaluation.date),
+        date: formatSafeDate(evaluation.date),
         score: evaluation.score,
         maxScore: evaluation.maxScore || 100,
         status: evaluation.status || 'Planifiée',
@@ -66,20 +89,13 @@ export const useEvaluationsData = () => {
         goals: evaluation.goals,
         strengths: evaluation.strengths,
         improvements: evaluation.improvements,
+        // Support for employee evaluation type from the employee profile
+        title: evaluation.title,
+        rating: evaluation.rating,
       } as Evaluation;
     });
   }, [evaluations, employees, refreshTrigger]);
   
-  // Function to format dates
-  const formatDate = (dateStr: string) => {
-    try {
-      return new Date(dateStr).toLocaleDateString('fr-FR');
-    } catch (error) {
-      console.error('Erreur de formatage de date:', dateStr, error);
-      return dateStr;
-    }
-  };
-
   // Get statistics about evaluations
   const evaluationStats = useMemo(() => {
     const planned = formattedEvaluations.filter(evaluation => evaluation.status === 'Planifiée').length;

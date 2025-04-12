@@ -6,17 +6,9 @@ import { Employee, LeaveRequest } from '@/types/employee';
 import { updateDocument } from '@/hooks/firestore/update-operations';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import { toast } from 'sonner';
-import { Label } from '@/components/ui/label';
-import { 
-  Table, 
-  TableHeader, 
-  TableBody, 
-  TableRow, 
-  TableHead, 
-  TableCell 
-} from '@/components/ui/table';
-import { Calendar } from '@/components/ui/calendar';
-import { Save } from 'lucide-react';
+import { Plus, Calendar, Save } from 'lucide-react';
+import { useLeaveData } from '@/hooks/useLeaveData';
+import { formatDate } from '@/lib/formatters';
 
 interface CongesTabProps {
   employee: Employee;
@@ -31,18 +23,30 @@ const CongesTab: React.FC<CongesTabProps> = ({
 }) => {
   const [leaveRequests, setLeaveRequests] = useState<LeaveRequest[]>(employee.leaveRequests || []);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [newLeaveRequest, setNewLeaveRequest] = useState<Partial<LeaveRequest>>({
-    startDate: '',
-    endDate: '',
-    type: 'paid',
-    status: 'pending',
-    comments: ''
-  });
+  const { leaves } = useLeaveData();
   
-  // Update leave requests when employee data changes
+  // Fetch leave requests for this employee from central data source
   useEffect(() => {
-    setLeaveRequests(employee.leaveRequests || []);
-  }, [employee]);
+    if (employee.id) {
+      const employeeLeaves = leaves.filter(leave => leave.employeeId === employee.id);
+      
+      if (employeeLeaves.length > 0 && (!employee.leaveRequests || employee.leaveRequests.length === 0)) {
+        // Convert to the format expected by the component
+        const formattedLeaves = employeeLeaves.map(leave => ({
+          id: leave.id,
+          startDate: leave.startDate,
+          endDate: leave.endDate,
+          type: leave.type,
+          status: leave.status as 'pending' | 'approved' | 'rejected',
+          comments: leave.reason
+        }));
+        
+        setLeaveRequests(formattedLeaves);
+      } else if (employee.leaveRequests && employee.leaveRequests.length > 0) {
+        setLeaveRequests(employee.leaveRequests);
+      }
+    }
+  }, [employee, leaves]);
 
   const handleSaveLeaveRequests = async () => {
     if (!employee.id) return;
@@ -53,23 +57,40 @@ const CongesTab: React.FC<CongesTabProps> = ({
         leaveRequests
       });
       
-      toast.success('Demandes de congés mises à jour avec succès');
+      toast.success('Congés mis à jour avec succès');
       if (onFinishEditing) {
         onFinishEditing();
       }
     } catch (error) {
-      console.error('Erreur lors de la mise à jour des demandes de congés:', error);
-      toast.error('Erreur lors de la mise à jour des demandes de congés');
+      console.error('Erreur lors de la mise à jour des congés:', error);
+      toast.error('Erreur lors de la mise à jour des congés');
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  // Function to get status badge color
+  const getStatusColor = (status: string) => {
+    switch (status.toLowerCase()) {
+      case 'approved':
+      case 'approuvé':
+        return 'bg-green-100 text-green-800';
+      case 'rejected':
+      case 'refusé':
+        return 'bg-red-100 text-red-800';
+      case 'pending':
+      case 'en attente':
+      default:
+        return 'bg-yellow-100 text-yellow-800';
+    }
+  };
+
   // Function to format date
-  const formatDate = (dateString: string) => {
+  const formatLeaveDate = (dateString: string) => {
+    if (!dateString) return '';
+    
     try {
-      const date = new Date(dateString);
-      return date.toLocaleDateString('fr-FR', {
+      return formatDate(dateString, {
         year: 'numeric',
         month: 'long',
         day: 'numeric'
@@ -80,23 +101,6 @@ const CongesTab: React.FC<CongesTabProps> = ({
     }
   };
 
-  // Fonction pour déterminer la classe CSS en fonction du statut
-  const getStatusClass = (status: string) => {
-    switch (status.toLowerCase()) {
-      case 'approved':
-      case 'approuvé':
-        return 'bg-green-100 text-green-800 px-2 py-1 rounded-full';
-      case 'pending':
-      case 'en attente':
-        return 'bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full';
-      case 'rejected':
-      case 'refusé':
-        return 'bg-red-100 text-red-800 px-2 py-1 rounded-full';
-      default:
-        return 'bg-gray-100 text-gray-800 px-2 py-1 rounded-full';
-    }
-  };
-
   return (
     <Card>
       <CardHeader>
@@ -104,130 +108,50 @@ const CongesTab: React.FC<CongesTabProps> = ({
       </CardHeader>
       <CardContent className="p-6">
         {leaveRequests && leaveRequests.length > 0 ? (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Début</TableHead>
-                <TableHead>Fin</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Statut</TableHead>
-                <TableHead className="text-right">Commentaires</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {leaveRequests.map((leave, index) => (
-                <TableRow key={index}>
-                  <TableCell>{formatDate(leave.startDate)}</TableCell>
-                  <TableCell>{formatDate(leave.endDate)}</TableCell>
-                  <TableCell>{leave.type}</TableCell>
-                  <TableCell>
-                    <span className={getStatusClass(leave.status)}>
-                      {leave.status}
-                    </span>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    {leave.comments || '-'}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+          <div className="space-y-4">
+            {leaveRequests.map((leave, index) => (
+              <div key={index} className="border rounded-md p-4">
+                <div className="flex justify-between items-start mb-2">
+                  <h4 className="text-lg font-medium">{leave.type || 'Congés payés'}</h4>
+                  <span className={`px-2 py-1 rounded-full text-xs ${getStatusColor(leave.status)}`}>
+                    {leave.status === 'pending' ? 'En attente' : 
+                     leave.status === 'approved' ? 'Approuvé' : 'Refusé'}
+                  </span>
+                </div>
+                <div className="flex items-center text-sm text-gray-500 mb-2">
+                  <Calendar className="h-4 w-4 mr-1" />
+                  <span>
+                    Du {formatLeaveDate(leave.startDate)} au {formatLeaveDate(leave.endDate)}
+                  </span>
+                </div>
+                {leave.comments && (
+                  <div className="mt-2">
+                    <h5 className="text-sm font-medium">Commentaires</h5>
+                    <p className="text-sm mt-1">{leave.comments}</p>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
         ) : (
           <div className="text-center py-12 text-gray-500">
-            Aucune demande de congés enregistrée
-          </div>
-        )}
-        
-        {isEditing && (
-          <div className="mt-8 space-y-6 border-t pt-6">
-            <h3 className="text-lg font-medium">Ajouter une demande de congés</h3>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <Label htmlFor="leave-start-date">Date de début</Label>
-                <div className="border rounded-md p-4">
-                  <Calendar 
-                    mode="single" 
-                    selected={newLeaveRequest.startDate ? new Date(newLeaveRequest.startDate) : undefined}
-                    onSelect={(date) => setNewLeaveRequest({...newLeaveRequest, startDate: date ? date.toISOString() : ''})}
-                  />
-                </div>
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="leave-end-date">Date de fin</Label>
-                <div className="border rounded-md p-4">
-                  <Calendar 
-                    mode="single" 
-                    selected={newLeaveRequest.endDate ? new Date(newLeaveRequest.endDate) : undefined}
-                    onSelect={(date) => setNewLeaveRequest({...newLeaveRequest, endDate: date ? date.toISOString() : ''})}
-                  />
-                </div>
-              </div>
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="leave-type">Type de congés</Label>
-              <select 
-                id="leave-type"
-                className="w-full p-2 border rounded-md"
-                value={newLeaveRequest.type}
-                onChange={(e) => setNewLeaveRequest({...newLeaveRequest, type: e.target.value})}
-              >
-                <option value="paid">Congés payés</option>
-                <option value="unpaid">Congés sans solde</option>
-                <option value="sick">Congé maladie</option>
-                <option value="other">Autre</option>
-              </select>
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="leave-comments">Commentaires</Label>
-              <textarea 
-                id="leave-comments"
-                className="w-full p-2 border rounded-md h-24"
-                value={newLeaveRequest.comments}
-                onChange={(e) => setNewLeaveRequest({...newLeaveRequest, comments: e.target.value})}
-              />
-            </div>
-            
-            <div>
+            <Calendar className="h-12 w-12 mx-auto text-gray-300 mb-3" />
+            <p>Aucune demande de congés enregistrée</p>
+            {isEditing && (
               <Button 
-                onClick={() => {
-                  if (!newLeaveRequest.startDate || !newLeaveRequest.endDate) {
-                    toast.error('Veuillez sélectionner les dates de début et de fin');
-                    return;
-                  }
-                  
-                  const newLeave = {
-                    id: `leave-${Date.now()}`,
-                    startDate: newLeaveRequest.startDate,
-                    endDate: newLeaveRequest.endDate,
-                    type: newLeaveRequest.type || 'paid',
-                    status: 'pending',
-                    comments: newLeaveRequest.comments
-                  } as LeaveRequest;
-                  
-                  setLeaveRequests([...leaveRequests, newLeave]);
-                  setNewLeaveRequest({
-                    startDate: '',
-                    endDate: '',
-                    type: 'paid',
-                    status: 'pending',
-                    comments: ''
-                  });
-                  
-                  toast.success('Demande de congés ajoutée');
-                }}
+                variant="outline" 
+                size="sm" 
+                className="mt-4"
               >
-                Ajouter
+                <Plus className="h-4 w-4 mr-2" />
+                Ajouter une demande
               </Button>
-            </div>
+            )}
           </div>
         )}
       </CardContent>
       
-      {isEditing && (
+      {isEditing && leaveRequests.length > 0 && (
         <CardFooter className="border-t px-6 py-4 bg-muted/20">
           <div className="ml-auto flex gap-2">
             <Button 
