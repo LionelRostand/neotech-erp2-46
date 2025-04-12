@@ -25,6 +25,23 @@ const EmployeesHierarchy: React.FC = () => {
     }
   }, [employees]);
 
+  // Fonction récursive pour construire un nœud dans la hiérarchie
+  // IMPORTANT: Define this function before using it in hierarchyData
+  const buildHierarchyNode = (employee: Employee, allEmployees: Employee[]): ChartNode => {
+    // Trouver tous les employés qui ont cet employé comme manager
+    const subordinates = allEmployees.filter(emp => emp.managerId === employee.id);
+    
+    // Construire le nœud pour cet employé
+    return {
+      id: employee.id,
+      name: `${employee.firstName} ${employee.lastName}`,
+      position: employee.position || employee.title || 'Sans titre',
+      department: employee.department || undefined,
+      imageUrl: employee.photoURL || employee.photo || undefined,
+      children: subordinates.map(sub => buildHierarchyNode(sub, allEmployees))
+    };
+  };
+
   // Fonction pour construire l'arbre hiérarchique
   const hierarchyData = useMemo(() => {
     if (!employees || employees.length === 0) return null;
@@ -52,22 +69,6 @@ const EmployeesHierarchy: React.FC = () => {
     // Sinon, utiliser le seul employé de niveau supérieur comme racine
     return buildHierarchyNode(topLevelEmployees[0], employees);
   }, [employees]);
-
-  // Fonction récursive pour construire un nœud dans la hiérarchie
-  const buildHierarchyNode = (employee: Employee, allEmployees: Employee[]): ChartNode => {
-    // Trouver tous les employés qui ont cet employé comme manager
-    const subordinates = allEmployees.filter(emp => emp.managerId === employee.id);
-    
-    // Construire le nœud pour cet employé
-    return {
-      id: employee.id,
-      name: `${employee.firstName} ${employee.lastName}`,
-      position: employee.position || employee.title || 'Sans titre',
-      department: employee.department || undefined,
-      imageUrl: employee.photoURL || employee.photo || undefined,
-      children: subordinates.map(sub => buildHierarchyNode(sub, allEmployees))
-    };
-  };
 
   return (
     <div className="space-y-6">
