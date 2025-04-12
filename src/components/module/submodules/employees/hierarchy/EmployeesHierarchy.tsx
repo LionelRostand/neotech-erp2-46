@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import HierarchyVisualization from './HierarchyVisualization';
@@ -7,6 +8,8 @@ import { Employee } from '@/types/employee';
 import { useFirebaseDepartments } from '@/hooks/useFirebaseDepartments';
 import { employees } from '@/data/employees';
 import { subscribeToDepartmentUpdates } from '@/components/module/submodules/departments/utils/departmentUtils';
+import { Input } from '@/components/ui/input';
+import { Search } from 'lucide-react';
 
 const EmployeesHierarchy: React.FC = () => {
   const [hierarchyData, setHierarchyData] = useState<HierarchyNode | null>(null);
@@ -46,6 +49,7 @@ const EmployeesHierarchy: React.FC = () => {
   };
   
   const createHierarchyFromDepartment = (rootDept: Department, allDepts: Department[]) => {
+    // Récupérer tous les employés du département, y compris le manager
     const deptEmployees = rootDept.employeeIds 
       ? employees.filter(emp => rootDept.employeeIds?.includes(emp.id))
       : employees.filter(emp => {
@@ -64,8 +68,10 @@ const EmployeesHierarchy: React.FC = () => {
           return false;
         });
     
+    // Trouver le manager du département
     const manager = deptEmployees.find(emp => emp.id === rootDept.managerId) || null;
     
+    // Créer le nœud racine pour le département
     const rootNode: HierarchyNode = {
       id: rootDept.id,
       name: rootDept.name,
@@ -75,6 +81,18 @@ const EmployeesHierarchy: React.FC = () => {
       children: []
     };
     
+    // Ajouter d'abord le manager comme premier enfant s'il existe
+    if (manager) {
+      rootNode.children.push({
+        id: manager.id,
+        name: `${manager.firstName} ${manager.lastName}`,
+        title: manager.position || 'Manager',
+        color: '#4B5563', // Couleur différente pour le manager
+        children: []
+      });
+    }
+    
+    // Ajouter les départements enfants
     const childDepts = allDepts.filter(dept => 
       dept.id !== rootDept.id && 
       dept.parentDepartmentId === rootDept.id
@@ -85,6 +103,7 @@ const EmployeesHierarchy: React.FC = () => {
       rootNode.children.push(childNode);
     });
     
+    // Ajouter les autres employés (qui ne sont pas le manager)
     deptEmployees
       .filter(emp => emp.id !== rootDept.managerId)
       .forEach(emp => {
@@ -101,6 +120,7 @@ const EmployeesHierarchy: React.FC = () => {
   };
   
   const createDepartmentNode = (dept: Department, allDepts: Department[]): HierarchyNode => {
+    // Récupérer tous les employés du département, y compris le manager
     const deptEmployees = dept.employeeIds 
       ? employees.filter(emp => dept.employeeIds?.includes(emp.id))
       : employees.filter(emp => {
@@ -119,8 +139,10 @@ const EmployeesHierarchy: React.FC = () => {
           return false;
         });
     
+    // Trouver le manager du département
     const manager = deptEmployees.find(emp => emp.id === dept.managerId) || null;
     
+    // Créer le nœud pour le département
     const deptNode: HierarchyNode = {
       id: dept.id,
       name: dept.name,
@@ -130,6 +152,18 @@ const EmployeesHierarchy: React.FC = () => {
       children: []
     };
     
+    // Ajouter d'abord le manager comme premier enfant s'il existe
+    if (manager) {
+      deptNode.children.push({
+        id: manager.id,
+        name: `${manager.firstName} ${manager.lastName}`,
+        title: manager.position || 'Manager',
+        color: '#4B5563', // Couleur différente pour le manager
+        children: []
+      });
+    }
+    
+    // Ajouter les départements enfants
     const childDepts = allDepts.filter(d => 
       d.id !== dept.id && 
       d.parentDepartmentId === dept.id
@@ -140,6 +174,7 @@ const EmployeesHierarchy: React.FC = () => {
       deptNode.children.push(childNode);
     });
     
+    // Ajouter les autres employés (qui ne sont pas le manager)
     deptEmployees
       .filter(emp => emp.id !== dept.managerId)
       .forEach(emp => {
@@ -181,6 +216,16 @@ const EmployeesHierarchy: React.FC = () => {
   
   return (
     <div className="space-y-6">
+      <div className="flex items-center relative mb-4">
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
+        <Input
+          placeholder="Rechercher un employé ou un département..."
+          className="pl-10"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+        />
+      </div>
+      
       <Card>
         <CardContent className="p-6 overflow-auto">
           <HierarchyVisualization 
