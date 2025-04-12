@@ -8,7 +8,7 @@ import { Employee } from '@/types/employee';
 interface EmployeesListProps {
   employees: Employee[];
   selectedEmployees: string[];
-  onEmployeeSelection: (employeeId: string) => void;
+  onEmployeeSelection: (employeeId: string, checked: boolean) => void;
   id: string;
 }
 
@@ -29,36 +29,39 @@ const EmployeesList: React.FC<EmployeesListProps> = ({
   return (
     <ScrollArea className="h-[300px] border rounded-md p-4">
       <div className="space-y-4">
-        {employees.map((employee) => (
-          <div 
-            key={employee.id}
-            className="flex items-center space-x-3 hover:bg-gray-50 p-2 rounded-md"
-          >
-            <Checkbox 
-              id={`${id}-employee-${employee.id}`}
-              checked={selectedEmployees.includes(employee.id)}
-              onCheckedChange={() => onEmployeeSelection(employee.id)}
-            />
-            <Avatar className="h-8 w-8">
-              {(employee.photoURL || employee.photo) ? (
-                <AvatarImage src={employee.photoURL || employee.photo} alt={`${employee.firstName} ${employee.lastName}`} />
-              ) : null}
-              <AvatarFallback>
-                {employee.firstName?.[0]}{employee.lastName?.[0]}
-              </AvatarFallback>
-            </Avatar>
-            <label 
-              htmlFor={`${id}-employee-${employee.id}`}
-              className="text-sm font-medium leading-none cursor-pointer flex-1"
+        {employees.map((employee) => {
+          const isSelected = selectedEmployees.includes(employee.id);
+          return (
+            <div 
+              key={employee.id}
+              className="flex items-center space-x-3 hover:bg-gray-50 p-2 rounded-md"
             >
-              {employee.firstName} {employee.lastName}
-              <br />
-              <span className="text-xs text-muted-foreground">
-                {employee.title || employee.position || "Sans poste"}
-              </span>
-            </label>
-          </div>
-        ))}
+              <Checkbox 
+                id={`${id}-employee-${employee.id}`}
+                checked={isSelected}
+                onCheckedChange={(checked) => onEmployeeSelection(employee.id, !!checked)}
+              />
+              <Avatar className="h-8 w-8">
+                {(employee.photoURL || employee.photo) ? (
+                  <AvatarImage src={employee.photoURL || employee.photo} alt={`${employee.firstName} ${employee.lastName}`} />
+                ) : null}
+                <AvatarFallback>
+                  {employee.firstName?.[0]}{employee.lastName?.[0]}
+                </AvatarFallback>
+              </Avatar>
+              <label 
+                htmlFor={`${id}-employee-${employee.id}`}
+                className="text-sm font-medium leading-none cursor-pointer flex-1"
+              >
+                {employee.firstName} {employee.lastName}
+                <br />
+                <span className="text-xs text-muted-foreground">
+                  {employee.title || employee.position || "Sans poste"}
+                </span>
+              </label>
+            </div>
+          );
+        })}
       </div>
     </ScrollArea>
   );

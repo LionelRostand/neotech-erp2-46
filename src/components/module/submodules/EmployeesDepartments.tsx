@@ -64,7 +64,7 @@ const EmployeesDepartments: React.FC = () => {
           onInputChange={handleInputChange}
           onManagerChange={handleManagerChange}
           onColorChange={handleColorChange}
-          onEmployeeSelection={(employeeId) => handleEmployeeSelection(employeeId, !selectedEmployees.includes(employeeId))}
+          onEmployeeSelection={handleEmployeeSelection}
           onClose={() => setIsAddDialogOpen(false)}
           onSave={handleSaveDepartment}
         />
@@ -80,7 +80,7 @@ const EmployeesDepartments: React.FC = () => {
           onInputChange={handleInputChange}
           onManagerChange={handleManagerChange}
           onColorChange={handleColorChange}
-          onEmployeeSelection={(employeeId) => handleEmployeeSelection(employeeId, !selectedEmployees.includes(employeeId))}
+          onEmployeeSelection={handleEmployeeSelection}
           onClose={() => setIsEditDialogOpen(false)}
           onUpdate={handleUpdateDepartment}
         />

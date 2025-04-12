@@ -1,3 +1,4 @@
+
 import { Department, DepartmentFormData } from '../types';
 import { Employee } from '@/types/employee';
 import { employees } from '@/data/employees';
@@ -68,7 +69,7 @@ export const getDepartmentEmployees = (departmentId: string): Employee[] => {
   const allEmployees = employees;
   return allEmployees.filter(emp => {
     return emp.departmentId === departmentId || 
-           emp.department === departmentId || 
+           (typeof emp.department === 'string' && emp.department === departmentId) || 
            (typeof emp.department === 'object' && emp.department?.id === departmentId);
   });
 };
