@@ -22,6 +22,7 @@ export interface Document {
   fileUrl?: string;
   fileData?: string; // Base64 data for document
   fileHex?: string;  // Hexadecimal data for document
+  fileType?: string; // MIME type of the document
   id?: string;
 }
 
