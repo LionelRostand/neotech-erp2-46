@@ -1,4 +1,3 @@
-
 /**
  * Format a date according to the specified locale and options
  * @param dateString Date string to format

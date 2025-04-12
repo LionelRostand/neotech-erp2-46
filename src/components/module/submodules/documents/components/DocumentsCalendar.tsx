@@ -89,7 +89,7 @@ export const DocumentsCalendar: React.FC<DocumentsCalendarProps> = ({ documents,
   const renderDay = (day: Date) => {
     try {
       if (!day || !isValid(day)) {
-        return <div>{day.getDate()}</div>;
+        return <div>{day?.getDate?.() ?? '?'}</div>;
       }
       
       const dateStr = format(day, 'yyyy-MM-dd');
@@ -110,7 +110,7 @@ export const DocumentsCalendar: React.FC<DocumentsCalendarProps> = ({ documents,
       );
     } catch (e) {
       console.error('Error rendering day:', e);
-      return <div>{day.getDate()}</div>;
+      return <div>{day?.getDate?.() ?? '?'}</div>;
     }
   };
 
@@ -130,7 +130,7 @@ export const DocumentsCalendar: React.FC<DocumentsCalendarProps> = ({ documents,
               return renderDay(date);
             } catch (e) {
               console.error('Error in Day component:', e);
-              return <div>{date.getDate()}</div>;
+              return <div>{date?.getDate?.() ?? '?'}</div>;
             }
           }
         }}
