@@ -1,6 +1,7 @@
 
 import { useMemo } from 'react';
 import { useHrModuleData } from './useHrModuleData';
+import { formatDate as formatDateUtil } from '@/lib/formatters';
 
 export interface HrDocument {
   id: string;
@@ -26,6 +27,16 @@ export interface HrDocument {
  */
 export const useDocumentsData = () => {
   const { hrDocuments, employees, isLoading, error } = useHrModuleData();
+  
+  // Fonction pour formater les dates - moved before its first usage
+  const formatDate = (dateStr: string) => {
+    try {
+      return new Date(dateStr).toLocaleDateString('fr-FR');
+    } catch (error) {
+      console.error('Erreur de formatage de date:', dateStr, error);
+      return dateStr;
+    }
+  };
   
   // Enrichir les documents avec les noms des employés si nécessaire
   const formattedDocuments = useMemo(() => {
@@ -66,16 +77,6 @@ export const useDocumentsData = () => {
       } as HrDocument;
     });
   }, [hrDocuments, employees]);
-  
-  // Fonction pour formater les dates
-  const formatDate = (dateStr: string) => {
-    try {
-      return new Date(dateStr).toLocaleDateString('fr-FR');
-    } catch (error) {
-      console.error('Erreur de formatage de date:', dateStr, error);
-      return dateStr;
-    }
-  };
 
   // Obtenir des statistiques sur les documents
   const documentStats = useMemo(() => {
