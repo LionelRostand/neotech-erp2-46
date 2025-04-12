@@ -55,8 +55,8 @@ const EmployeesHierarchy: React.FC = () => {
     const deptEmployees = rootDept.employeeIds 
       ? employees.filter(emp => rootDept.employeeIds?.includes(emp.id))
       : employees.filter(emp => 
-          emp.department === rootDept.id || 
-          (typeof emp.department === 'object' && emp.department?.id === rootDept.id) ||
+          (emp.department && typeof emp.department === 'string' && emp.department === rootDept.id) || 
+          (emp.department && typeof emp.department === 'object' && emp.department?.id === rootDept.id) ||
           emp.departmentId === rootDept.id
         );
     
@@ -106,8 +106,8 @@ const EmployeesHierarchy: React.FC = () => {
     const deptEmployees = dept.employeeIds 
       ? employees.filter(emp => dept.employeeIds?.includes(emp.id))
       : employees.filter(emp => 
-          emp.department === dept.id || 
-          (typeof emp.department === 'object' && emp.department?.id === dept.id) ||
+          (emp.department && typeof emp.department === 'string' && emp.department === dept.id) || 
+          (emp.department && typeof emp.department === 'object' && emp.department?.id === dept.id) ||
           emp.departmentId === dept.id
         );
     
