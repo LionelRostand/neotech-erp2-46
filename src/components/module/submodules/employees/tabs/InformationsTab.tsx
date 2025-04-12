@@ -54,6 +54,9 @@ const InformationsTab: React.FC<InformationsTabProps> = ({ employee }) => {
 
   const addressComponents = getAddressComponents(employee.address);
 
+  console.log('Affichage des informations de l\'employé:', employee);
+  console.log('Composants d\'adresse:', addressComponents);
+
   return (
     <Card>
       <CardHeader>

@@ -14,7 +14,7 @@ export const prepareEmployeeData = (data: EmployeeFormValues): Partial<Employee>
   };
 
   return {
-    id: `EMP${Math.floor(1000 + Math.random() * 9000)}`, // Simple ID generation
+    id: data.id || `EMP${Math.floor(1000 + Math.random() * 9000)}`, // Keep existing ID if provided
     firstName: data.firstName,
     lastName: data.lastName,
     email: data.email,
@@ -41,5 +41,55 @@ export const prepareEmployeeData = (data: EmployeeFormValues): Partial<Employee>
       friday: '09:00 - 17:00',
     },
     payslips: []
+  };
+};
+
+// Fonction d'utilité pour extraire les informations d'adresse individuelles
+export const extractAddressFields = (address: string | any): {
+  streetNumber: string;
+  streetName: string;
+  city: string;
+  zipCode: string;
+  region: string;
+} => {
+  // Si l'adresse est une chaîne de caractères
+  if (typeof address === 'string') {
+    // Tenter d'extraire les informations d'une chaîne formatée
+    const parts = address.split(',').map(part => part.trim());
+    const streetParts = (parts[0] || '').split(' ');
+    const streetNumber = streetParts.length > 0 ? streetParts[0] : '';
+    const streetName = streetParts.slice(1).join(' ');
+    
+    return {
+      streetNumber,
+      streetName,
+      city: parts[1] || '',
+      zipCode: parts[2] || '',
+      region: parts[3] || '',
+    };
+  }
+  
+  // Si l'adresse est un objet
+  if (typeof address === 'object' && address !== null) {
+    const streetParts = (address.street || '').split(' ');
+    const streetNumber = streetParts.length > 0 ? streetParts[0] : '';
+    const streetName = streetParts.slice(1).join(' ');
+    
+    return {
+      streetNumber,
+      streetName,
+      city: address.city || '',
+      zipCode: address.postalCode || '',
+      region: address.state || '',
+    };
+  }
+  
+  // Valeur par défaut
+  return {
+    streetNumber: '',
+    streetName: '',
+    city: '',
+    zipCode: '',
+    region: '',
   };
 };

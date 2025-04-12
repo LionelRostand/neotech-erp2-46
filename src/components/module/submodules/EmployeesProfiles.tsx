@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Employee } from '@/types/employee';
@@ -33,7 +32,6 @@ const EmployeesProfiles: React.FC<EmployeesProfilesProps> = (props) => {
   const [selectedCompany, setSelectedCompany] = useState<string>('all');
 
   useEffect(() => {
-    // Utiliser les employés provenant des props ou de useEmployeeData
     const employeesToUse = props.employees && props.employees.length > 0 
       ? props.employees 
       : fetchedEmployees;
@@ -65,12 +63,15 @@ const EmployeesProfiles: React.FC<EmployeesProfilesProps> = (props) => {
   };
 
   const handleEditEmployee = (employee: Employee) => {
+    console.log('Édition de l\'employé:', employee);
     setEmployeeToEdit(employee);
     setIsEditEmployeeOpen(true);
   };
 
   const handleUpdateEmployee = (updatedEmployee: Partial<Employee>) => {
     if (!employeeToEdit) return;
+    
+    console.log('Mise à jour de l\'employé:', updatedEmployee);
     
     const updatedEmployees = employees.map(emp => 
       emp.id === employeeToEdit.id 
@@ -82,7 +83,9 @@ const EmployeesProfiles: React.FC<EmployeesProfilesProps> = (props) => {
     
     // Si l'employé est actuellement sélectionné, mettre à jour aussi
     if (selectedEmployee && selectedEmployee.id === employeeToEdit.id) {
-      setSelectedEmployee({ ...selectedEmployee, ...updatedEmployee } as Employee);
+      const updatedSelectedEmployee = { ...selectedEmployee, ...updatedEmployee } as Employee;
+      console.log('Mise à jour de l\'employé sélectionné:', updatedSelectedEmployee);
+      setSelectedEmployee(updatedSelectedEmployee);
     }
     
     toast.success("Employé mis à jour avec succès.");
@@ -102,10 +105,7 @@ const EmployeesProfiles: React.FC<EmployeesProfilesProps> = (props) => {
   };
 
   const handleExportPdf = () => {
-    // Show loading dialog
     setIsPdfExportOpen(true);
-    // The actual PDF export is now handled in EmployeeDetails component
-    // This is just for UI feedback
     setTimeout(() => {
       setIsPdfExportOpen(false);
     }, 1000);
@@ -198,7 +198,6 @@ const EmployeesProfiles: React.FC<EmployeesProfilesProps> = (props) => {
         />
       )}
 
-      {/* Dialogue de simulation d'export PDF */}
       <Dialog open={isPdfExportOpen} onOpenChange={setIsPdfExportOpen}>
         <DialogContent>
           <DialogHeader>

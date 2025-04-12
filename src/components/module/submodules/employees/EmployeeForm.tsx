@@ -1,41 +1,43 @@
 
-import React, { useEffect, useState } from 'react';
-import { zodResolver } from '@hookform/resolvers/zod';
+import React, { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Employee } from '@/types/employee';
+import { 
+  employeeFormSchema, 
+  EmployeeFormValues 
+} from './form/employeeFormSchema';
 import { Form } from '@/components/ui/form';
-import { Employee, EmployeeAddress } from '@/types/employee';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { AlertCircle } from 'lucide-react';
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogFooter 
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
 import PersonalInfoFields from './form/PersonalInfoFields';
 import EmploymentInfoFields from './form/EmploymentInfoFields';
-import FormActions from './form/FormActions';
-import { employeeFormSchema, EmployeeFormValues } from './form/employeeFormSchema';
-import { prepareEmployeeData } from './form/employeeUtils';
-import { createEmployeeWithAccount } from '@/services/userService';
+import { prepareEmployeeData, extractAddressFields } from './form/employeeUtils';
 import { toast } from 'sonner';
-import { Company } from '@/components/module/submodules/companies/types';
+import { updateDocument, setDocument } from '@/hooks/firestore/update-operations';
+import { COLLECTIONS } from '@/lib/firebase-collections';
 
 interface EmployeeFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSubmit: (data: Partial<Employee>) => void;
+  onSubmit: (employee: Partial<Employee>) => void;
   employee?: Employee;
   isEditing?: boolean;
 }
 
-const EmployeeForm: React.FC<EmployeeFormProps> = ({ 
-  open, 
-  onOpenChange, 
-  onSubmit, 
-  employee, 
-  isEditing = false 
+const EmployeeForm: React.FC<EmployeeFormProps> = ({
+  open,
+  onOpenChange,
+  onSubmit,
+  employee,
+  isEditing = false,
 }) => {
-  const [createAccount, setCreateAccount] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
   const form = useForm<EmployeeFormValues>({
     resolver: zodResolver(employeeFormSchema),
     defaultValues: {
@@ -53,246 +55,106 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
       contract: 'CDI',
       hireDate: '',
       manager: '',
-      status: 'Actif' as 'active' | 'inactive' | 'onLeave' | 'Actif',
+      status: 'active',
       professionalEmail: '',
       company: '',
     },
   });
 
+  // Initialiser le formulaire avec les données de l'employé si disponibles
   useEffect(() => {
-    if (isEditing && employee) {
-      // Extraire les informations d'adresse si c'est un objet
-      let streetNumber = '', streetName = '', city = '', zipCode = '', region = '';
+    if (employee && isEditing) {
+      const addressFields = extractAddressFields(employee.address);
       
-      if (typeof employee.address === 'object' && employee.address !== null) {
-        const address = employee.address as EmployeeAddress;
-        // Extraire les numéro et nom de rue à partir du champ street si disponible
-        if (address.street) {
-          const streetParts = address.street.split(' ');
-          if (streetParts.length > 0) {
-            // Tentative de séparation du numéro et de la rue
-            if (/^\d+$/.test(streetParts[0])) {
-              streetNumber = streetParts[0];
-              streetName = streetParts.slice(1).join(' ');
-            } else {
-              streetName = address.street;
-            }
-          }
-        }
-        city = address.city || '';
-        zipCode = address.postalCode || '';
-        region = address.state || '';
-      } else if (typeof employee.address === 'string' && employee.address) {
-        // Si l'adresse est une chaîne, essayer de l'analyser pour un affichage approximatif
-        const addressParts = employee.address.split(',').map(part => part.trim());
-        if (addressParts.length >= 1) {
-          const streetParts = addressParts[0].split(' ');
-          if (streetParts.length > 0 && /^\d+$/.test(streetParts[0])) {
-            streetNumber = streetParts[0];
-            streetName = streetParts.slice(1).join(' ');
-          } else {
-            streetName = addressParts[0];
-          }
-        }
-        if (addressParts.length >= 2) city = addressParts[1];
-        if (addressParts.length >= 3) {
-          // Tenter d'extraire un code postal
-          const postalMatch = addressParts[2].match(/\b\d{5}\b/);
-          if (postalMatch) {
-            zipCode = postalMatch[0];
-            region = addressParts[2].replace(postalMatch[0], '').trim();
-          } else {
-            region = addressParts[2];
-          }
-        }
-      }
-      
-      const companyString = typeof employee.company === 'object'
-        ? (employee.company as Company).id
-        : employee.company as string;
-        
       form.reset({
-        firstName: employee.firstName,
-        lastName: employee.lastName,
-        email: employee.email,
+        id: employee.id,
+        firstName: employee.firstName || '',
+        lastName: employee.lastName || '',
+        email: employee.email || '',
         phone: employee.phone || '',
-        streetNumber,
-        streetName,
-        city,
-        zipCode,
-        region,
+        streetNumber: addressFields.streetNumber,
+        streetName: addressFields.streetName,
+        city: addressFields.city,
+        zipCode: addressFields.zipCode,
+        region: addressFields.region,
         department: employee.department || '',
         position: employee.position || '',
         contract: employee.contract || 'CDI',
         hireDate: employee.hireDate || '',
         manager: employee.manager || '',
-        status: employee.status as 'active' | 'inactive' | 'onLeave' | 'Actif',
+        status: (employee.status as any) || 'active',
         professionalEmail: employee.professionalEmail || '',
-        company: companyString || '',
+        company: typeof employee.company === 'string' ? employee.company : '',
       });
-    } else {
-      form.reset({
-        firstName: '',
-        lastName: '',
-        email: '',
-        phone: '',
-        streetNumber: '',
-        streetName: '',
-        city: '',
-        zipCode: '',
-        region: '',
-        department: '',
-        position: '',
-        contract: 'CDI',
-        hireDate: '',
-        manager: '',
-        status: 'Actif' as 'active' | 'inactive' | 'onLeave' | 'Actif',
-        professionalEmail: '',
-        company: '',
-      });
-    }
-  }, [isEditing, employee, form, open]);
 
-  const handleSubmit = async (data: EmployeeFormValues) => {
-    setIsSubmitting(true);
-    
+      console.log('Formulaire initialisé avec les données:', employee);
+      console.log('Champs d\'adresse extraits:', addressFields);
+    }
+  }, [employee, isEditing, form]);
+
+  const handleFormSubmit = async (data: EmployeeFormValues) => {
     try {
-      // Formatter l'adresse en objet structuré
-      const formattedAddress: EmployeeAddress = {
-        street: data.streetNumber ? `${data.streetNumber} ${data.streetName}` : data.streetName,
-        city: data.city || '',
-        postalCode: data.zipCode || '',
-        country: 'France', // Valeur par défaut
-        state: data.region || ''
-      };
+      console.log('Données du formulaire soumises:', data);
+      const employeeData = prepareEmployeeData(data);
+      console.log('Données préparées pour la sauvegarde:', employeeData);
       
-      // Préparer les données de l'employé pour l'envoi
-      const formattedData = {
-        ...data,
-        address: formattedAddress
-      };
-      
-      // Supprimer les champs individuels d'adresse qui ne font pas partie du modèle Employee
-      delete (formattedData as any).streetNumber;
-      delete (formattedData as any).streetName;
-      delete (formattedData as any).city;
-      delete (formattedData as any).zipCode;
-      delete (formattedData as any).region;
-      
-      if (createAccount && !isEditing) {
-        if (!data.professionalEmail) {
-          toast.error("L'email professionnel est requis pour créer un compte utilisateur");
-          setIsSubmitting(false);
-          return;
-        }
-        
-        const employeeData = prepareEmployeeData(formattedData as any);
-        const result = await createEmployeeWithAccount(employeeData, data.professionalEmail);
-        
-        if (result.success) {
-          onSubmit(result.employee);
-          toast.success(
-            "Employé créé avec succès. Un email a été envoyé à l'adresse professionnelle pour configurer le mot de passe."
-          );
-        } else {
-          toast.error("Erreur lors de la création du compte utilisateur");
-        }
-      } else {
-        const employeeData = isEditing 
-          ? formattedData
-          : prepareEmployeeData(formattedData as any);
-        
-        onSubmit(employeeData as any);
-        toast.success(`Employé ${isEditing ? 'mis à jour' : 'ajouté'} avec succès`);
+      // Si nous modifions un employé existant, mettre à jour le document Firestore
+      if (isEditing && employee) {
+        await updateDocument(COLLECTIONS.HR.EMPLOYEES, employee.id, employeeData);
+        toast.success('Employé mis à jour avec succès');
+      } 
+      // Sinon, créer un nouveau document
+      else {
+        await setDocument(COLLECTIONS.HR.EMPLOYEES, employeeData.id as string, employeeData);
+        toast.success('Employé créé avec succès');
       }
       
-      form.reset();
+      // Appeler le callback onSubmit pour mettre à jour l'UI
+      onSubmit(employeeData);
       onOpenChange(false);
     } catch (error) {
-      console.error("Erreur lors de la soumission du formulaire:", error);
-      toast.error("Une erreur est survenue lors de l'enregistrement");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const generateProfessionalEmail = () => {
-    const firstName = form.getValues('firstName').toLowerCase();
-    const lastName = form.getValues('lastName').toLowerCase();
-    
-    if (firstName && lastName) {
-      const professionalEmail = `${firstName.charAt(0)}.${lastName}@entreprise.com`;
-      form.setValue('professionalEmail', professionalEmail);
+      console.error('Erreur lors de la soumission du formulaire:', error);
+      toast.error('Erreur lors de la sauvegarde des données');
     }
   };
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="w-full md:max-w-md overflow-y-auto">
-        <SheetHeader className="mb-6">
-          <SheetTitle>{isEditing ? 'Modifier un employé' : 'Ajouter un nouvel employé'}</SheetTitle>
-        </SheetHeader>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>
+            {isEditing ? 'Modifier un employé' : 'Ajouter un nouvel employé'}
+          </DialogTitle>
+        </DialogHeader>
         
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-            <PersonalInfoFields />
-            <EmploymentInfoFields />
+          <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-6">
+            <div className="space-y-4">
+              <h3 className="text-lg font-medium">Informations personnelles</h3>
+              <PersonalInfoFields />
+            </div>
             
-            {!isEditing && (
-              <div className="space-y-4">
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    id="create-account" 
-                    checked={createAccount}
-                    onCheckedChange={setCreateAccount}
-                  />
-                  <Label htmlFor="create-account">
-                    Créer un compte utilisateur pour cet employé
-                  </Label>
-                </div>
-                
-                {createAccount && (
-                  <div className="space-y-4">
-                    <Alert variant="default" className="bg-blue-50">
-                      <AlertCircle className="h-4 w-4 text-blue-600" />
-                      <AlertDescription>
-                        Un email sera envoyé à l'adresse professionnelle pour configurer le mot de passe.
-                      </AlertDescription>
-                    </Alert>
-                    
-                    <div className="grid grid-cols-1 gap-2">
-                      <Label htmlFor="professional-email">Email professionnel</Label>
-                      <div className="flex gap-2">
-                        <input
-                          id="professional-email"
-                          {...form.register('professionalEmail')}
-                          className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                          placeholder="prenom.nom@entreprise.com"
-                        />
-                        <button
-                          type="button"
-                          onClick={generateProfessionalEmail}
-                          className="h-10 px-3 py-2 bg-gray-100 rounded-md text-sm font-medium"
-                        >
-                          Générer
-                        </button>
-                      </div>
-                      {form.formState.errors.professionalEmail && (
-                        <p className="text-sm text-red-500">
-                          {form.formState.errors.professionalEmail.message}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
+            <div className="space-y-4">
+              <h3 className="text-lg font-medium">Informations professionnelles</h3>
+              <EmploymentInfoFields />
+            </div>
             
-            <FormActions onCancel={() => onOpenChange(false)} isSubmitting={isSubmitting} />
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => onOpenChange(false)}
+              >
+                Annuler
+              </Button>
+              <Button type="submit">
+                {isEditing ? 'Mettre à jour' : 'Ajouter'}
+              </Button>
+            </DialogFooter>
           </form>
         </Form>
-      </SheetContent>
-    </Sheet>
+      </DialogContent>
+    </Dialog>
   );
 };
 
