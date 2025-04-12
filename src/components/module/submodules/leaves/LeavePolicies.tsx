@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -120,7 +119,7 @@ export const LeavePolicies: React.FC = () => {
             <h4 className="font-medium mb-2">Délais de demande</h4>
             <ul className="space-y-1 text-sm">
               <li>• <strong>Congés été (juillet/août) :</strong> au moins 3 mois à l'avance</li>
-              <li>• <strong>Congés > 1 semaine :</strong> au moins 30 jours à l'avance</li>
+              <li>• <strong>Congés &gt; 1 semaine :</strong> au moins 30 jours à l'avance</li>
               <li>• <strong>Congés &lt; 1 semaine :</strong> au moins 15 jours à l'avance</li>
               <li>• <strong>RTT :</strong> au moins 7 jours à l'avance</li>
               <li>• <strong>Congés exceptionnels :</strong> dès que possible</li>
