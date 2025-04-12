@@ -15,11 +15,15 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import { useAbsencesData } from '@/hooks/useAbsencesData';
 import CreateAbsenceDialog from './CreateAbsenceDialog';
+import AbsenceDetailsDialog from './AbsenceDetailsDialog';
+import { Absence } from '@/hooks/useAbsencesData';
 
 const EmployeesAbsences: React.FC = () => {
   const { absences, stats, isLoading, error } = useAbsencesData();
   const [activeTab, setActiveTab] = useState('all');
   const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [selectedAbsence, setSelectedAbsence] = useState<Absence | null>(null);
+  const [showDetailsDialog, setShowDetailsDialog] = useState(false);
 
   // Filter absences based on active tab
   const filteredAbsences = activeTab === 'all' 
@@ -40,6 +44,12 @@ const EmployeesAbsences: React.FC = () => {
   // Handle create new absence
   const handleCreateNew = () => {
     setShowCreateDialog(true);
+  };
+
+  // Handle view details
+  const handleViewDetails = (absence: Absence) => {
+    setSelectedAbsence(absence);
+    setShowDetailsDialog(true);
   };
 
   // Export data
@@ -145,7 +155,11 @@ const EmployeesAbsences: React.FC = () => {
                           </TableCell>
                           <TableCell className="max-w-[200px] truncate">{absence.reason}</TableCell>
                           <TableCell className="text-right">
-                            <Button variant="ghost" size="sm">
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              onClick={() => handleViewDetails(absence)}
+                            >
                               Détails
                             </Button>
                           </TableCell>
@@ -165,6 +179,13 @@ const EmployeesAbsences: React.FC = () => {
         open={showCreateDialog}
         onOpenChange={setShowCreateDialog}
         onSuccess={handleRefresh}
+      />
+
+      {/* Dialog for viewing absence details */}
+      <AbsenceDetailsDialog
+        absence={selectedAbsence}
+        open={showDetailsDialog}
+        onOpenChange={setShowDetailsDialog}
       />
     </div>
   );
