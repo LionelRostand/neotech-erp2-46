@@ -7,7 +7,12 @@ export const employeeFormSchema = z.object({
   lastName: z.string().min(2, "Le nom doit contenir au moins 2 caractères"),
   email: z.string().email("Format d'email invalide").or(z.string().length(0)),
   phone: z.string().optional(),
-  address: z.string().optional(),
+  // Remplacer le champ adresse par des champs structurés
+  streetNumber: z.string().optional(),
+  streetName: z.string().optional(),
+  city: z.string().optional(),
+  zipCode: z.string().optional(),
+  region: z.string().optional(),
   department: z.string().optional(),
   position: z.string().optional(),
   contract: z.string(),

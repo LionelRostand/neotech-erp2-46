@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
@@ -42,7 +43,11 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
       lastName: '',
       email: '',
       phone: '',
-      address: '',
+      streetNumber: '',
+      streetName: '',
+      city: '',
+      zipCode: '',
+      region: '',
       department: '',
       position: '',
       contract: 'CDI',
@@ -56,9 +61,51 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
 
   useEffect(() => {
     if (isEditing && employee) {
-      const addressString = typeof employee.address === 'object' 
-        ? `${(employee.address as EmployeeAddress).street}, ${(employee.address as EmployeeAddress).city}` 
-        : employee.address as string;
+      // Extraire les informations d'adresse si c'est un objet
+      let streetNumber = '', streetName = '', city = '', zipCode = '', region = '';
+      
+      if (typeof employee.address === 'object' && employee.address !== null) {
+        const address = employee.address as EmployeeAddress;
+        // Extraire les numéro et nom de rue à partir du champ street si disponible
+        if (address.street) {
+          const streetParts = address.street.split(' ');
+          if (streetParts.length > 0) {
+            // Tentative de séparation du numéro et de la rue
+            if (/^\d+$/.test(streetParts[0])) {
+              streetNumber = streetParts[0];
+              streetName = streetParts.slice(1).join(' ');
+            } else {
+              streetName = address.street;
+            }
+          }
+        }
+        city = address.city || '';
+        zipCode = address.postalCode || '';
+        region = address.state || '';
+      } else if (typeof employee.address === 'string' && employee.address) {
+        // Si l'adresse est une chaîne, essayer de l'analyser pour un affichage approximatif
+        const addressParts = employee.address.split(',').map(part => part.trim());
+        if (addressParts.length >= 1) {
+          const streetParts = addressParts[0].split(' ');
+          if (streetParts.length > 0 && /^\d+$/.test(streetParts[0])) {
+            streetNumber = streetParts[0];
+            streetName = streetParts.slice(1).join(' ');
+          } else {
+            streetName = addressParts[0];
+          }
+        }
+        if (addressParts.length >= 2) city = addressParts[1];
+        if (addressParts.length >= 3) {
+          // Tenter d'extraire un code postal
+          const postalMatch = addressParts[2].match(/\b\d{5}\b/);
+          if (postalMatch) {
+            zipCode = postalMatch[0];
+            region = addressParts[2].replace(postalMatch[0], '').trim();
+          } else {
+            region = addressParts[2];
+          }
+        }
+      }
       
       const companyString = typeof employee.company === 'object'
         ? (employee.company as Company).id
@@ -68,16 +115,20 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
         firstName: employee.firstName,
         lastName: employee.lastName,
         email: employee.email,
-        phone: employee.phone,
-        address: addressString,
-        department: employee.department,
-        position: employee.position,
-        contract: employee.contract,
-        hireDate: employee.hireDate,
-        manager: employee.manager,
+        phone: employee.phone || '',
+        streetNumber,
+        streetName,
+        city,
+        zipCode,
+        region,
+        department: employee.department || '',
+        position: employee.position || '',
+        contract: employee.contract || 'CDI',
+        hireDate: employee.hireDate || '',
+        manager: employee.manager || '',
         status: employee.status as 'active' | 'inactive' | 'onLeave' | 'Actif',
         professionalEmail: employee.professionalEmail || '',
-        company: companyString,
+        company: companyString || '',
       });
     } else {
       form.reset({
@@ -85,7 +136,11 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
         lastName: '',
         email: '',
         phone: '',
-        address: '',
+        streetNumber: '',
+        streetName: '',
+        city: '',
+        zipCode: '',
+        region: '',
         department: '',
         position: '',
         contract: 'CDI',
@@ -102,6 +157,28 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
     setIsSubmitting(true);
     
     try {
+      // Formatter l'adresse en objet structuré
+      const formattedAddress: EmployeeAddress = {
+        street: data.streetNumber ? `${data.streetNumber} ${data.streetName}` : data.streetName,
+        city: data.city || '',
+        postalCode: data.zipCode || '',
+        country: 'France', // Valeur par défaut
+        state: data.region || ''
+      };
+      
+      // Préparer les données de l'employé pour l'envoi
+      const formattedData = {
+        ...data,
+        address: formattedAddress
+      };
+      
+      // Supprimer les champs individuels d'adresse qui ne font pas partie du modèle Employee
+      delete (formattedData as any).streetNumber;
+      delete (formattedData as any).streetName;
+      delete (formattedData as any).city;
+      delete (formattedData as any).zipCode;
+      delete (formattedData as any).region;
+      
       if (createAccount && !isEditing) {
         if (!data.professionalEmail) {
           toast.error("L'email professionnel est requis pour créer un compte utilisateur");
@@ -109,7 +186,7 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
           return;
         }
         
-        const employeeData = prepareEmployeeData(data);
+        const employeeData = prepareEmployeeData(formattedData as any);
         const result = await createEmployeeWithAccount(employeeData, data.professionalEmail);
         
         if (result.success) {
@@ -122,10 +199,10 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
         }
       } else {
         const employeeData = isEditing 
-          ? data
-          : prepareEmployeeData(data);
+          ? formattedData
+          : prepareEmployeeData(formattedData as any);
         
-        onSubmit(employeeData);
+        onSubmit(employeeData as any);
         toast.success(`Employé ${isEditing ? 'mis à jour' : 'ajouté'} avec succès`);
       }
       

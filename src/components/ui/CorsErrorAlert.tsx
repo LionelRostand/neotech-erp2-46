@@ -13,7 +13,7 @@ export const CorsErrorAlert: React.FC<CorsErrorAlertProps> = ({
   className,
 }) => {
   return (
-    <Alert variant="warning" className={`bg-amber-50 border-amber-200 text-amber-800 ${className}`}>
+    <Alert variant="default" className={`bg-amber-50 border-amber-200 text-amber-800 ${className}`}>
       <ShieldAlert className="h-4 w-4" />
       <AlertTitle className="flex items-center gap-2 text-amber-800 font-medium">
         Avertissement CORS

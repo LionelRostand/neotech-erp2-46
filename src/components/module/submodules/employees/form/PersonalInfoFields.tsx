@@ -9,8 +9,8 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { EmployeeFormValues } from './employeeFormSchema';
+import { Home, MapPin, Building, City } from 'lucide-react';
 
 const PersonalInfoFields: React.FC = () => {
   const form = useFormContext<EmployeeFormValues>();
@@ -75,19 +75,95 @@ const PersonalInfoFields: React.FC = () => {
         )}
       />
       
-      <FormField
-        control={form.control}
-        name="address"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Adresse</FormLabel>
-            <FormControl>
-              <Textarea placeholder="Adresse complète" {...field} />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
+      <div className="space-y-4">
+        <h3 className="text-sm font-medium">Adresse</h3>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <FormField
+            control={form.control}
+            name="streetNumber"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Numéro de rue</FormLabel>
+                <FormControl>
+                  <div className="flex items-center">
+                    <MapPin className="h-4 w-4 mr-2 text-muted-foreground" />
+                    <Input placeholder="123" {...field} />
+                  </div>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="streetName"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Nom de rue</FormLabel>
+                <FormControl>
+                  <div className="flex items-center">
+                    <Home className="h-4 w-4 mr-2 text-muted-foreground" />
+                    <Input placeholder="Rue de l'exemple" {...field} />
+                  </div>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <FormField
+            control={form.control}
+            name="city"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Ville</FormLabel>
+                <FormControl>
+                  <div className="flex items-center">
+                    <City className="h-4 w-4 mr-2 text-muted-foreground" />
+                    <Input placeholder="Paris" {...field} />
+                  </div>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="zipCode"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Code postal</FormLabel>
+                <FormControl>
+                  <Input placeholder="75000" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+        
+        <FormField
+          control={form.control}
+          name="region"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Département</FormLabel>
+              <FormControl>
+                <div className="flex items-center">
+                  <Building className="h-4 w-4 mr-2 text-muted-foreground" />
+                  <Input placeholder="Île-de-France" {...field} />
+                </div>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      </div>
     </>
   );
 };
