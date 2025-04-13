@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { PlusCircle, X, Save } from 'lucide-react';
@@ -12,12 +12,26 @@ import { updateEmployeeSkills } from '../services/employeeService';
 interface CompetencesTabProps {
   employee: Employee;
   onEmployeeUpdated: () => void;
+  isEditing?: boolean; // Make isEditing optional
+  onFinishEditing?: () => void; // Make onFinishEditing optional
 }
 
-const CompetencesTab: React.FC<CompetencesTabProps> = ({ employee, onEmployeeUpdated }) => {
+const CompetencesTab: React.FC<CompetencesTabProps> = ({ 
+  employee, 
+  onEmployeeUpdated, 
+  isEditing: externalIsEditing, 
+  onFinishEditing 
+}) => {
   const [skills, setSkills] = useState<string[]>(employee.skills || []);
   const [newSkill, setNewSkill] = useState('');
   const [isEditing, setIsEditing] = useState(false);
+
+  // Sync with external isEditing state if provided
+  useEffect(() => {
+    if (externalIsEditing !== undefined) {
+      setIsEditing(externalIsEditing);
+    }
+  }, [externalIsEditing]);
 
   const handleAddSkill = () => {
     if (!newSkill.trim()) return;
@@ -41,7 +55,13 @@ const CompetencesTab: React.FC<CompetencesTabProps> = ({ employee, onEmployeeUpd
       const result = await updateEmployeeSkills(employee.id, skills);
       
       if (result) {
-        setIsEditing(false);
+        // If we're using external editing state, call the callback
+        if (onFinishEditing) {
+          onFinishEditing();
+        } else {
+          setIsEditing(false);
+        }
+        
         onEmployeeUpdated();
         toast.success("Compétences mises à jour avec succès");
       }

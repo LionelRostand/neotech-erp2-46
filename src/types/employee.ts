@@ -103,5 +103,5 @@ export interface Employee {
   updatedAt?: string; // Adding timestamp for last update
   leaveRequests?: LeaveRequest[]; // Nouvelle propriété pour les congés
   evaluations?: Evaluation[]; // Nouvelle propriété pour les évaluations
+  isManager?: boolean; // Added isManager property to fix type errors
 }
-

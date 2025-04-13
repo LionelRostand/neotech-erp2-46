@@ -1,4 +1,3 @@
-
 // This file doesn't exist in the provided files. We'll need to create it or modify the existing src/components/module/submodules/employees/form/employeeFormSchema.ts
 
 import { Employee, EmployeeAddress } from '@/types/employee';
@@ -54,7 +53,7 @@ export const prepareEmployeeData = (data: EmployeeFormValues, employeeId: string
                    data.position?.toLowerCase().includes('directeur');
   
   // Retourner l'objet employé préparé
-  return {
+  const employeeData: Partial<Employee> = {
     id: employeeId,
     firstName: data.firstName,
     lastName: data.lastName,
@@ -76,7 +75,9 @@ export const prepareEmployeeData = (data: EmployeeFormValues, employeeId: string
     isManager,  // Add the isManager flag
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
-  } as Partial<Employee>; // Cast to Partial<Employee> to resolve TypeScript error
+  };
+  
+  return employeeData;
 };
 
 /**

@@ -25,13 +25,13 @@ export const getAllEmployees = async (): Promise<Employee[]> => {
       ...doc.data(),
       id: doc.id,
       isManager: false
-    })) as Employee[];
+    } as Employee));
     
     const managers = managersSnapshot.docs.map(doc => ({
       ...doc.data(),
       id: doc.id, 
       isManager: true
-    })) as Employee[];
+    } as Employee));
     
     // Return combined list
     return [...regularEmployees, ...managers];
@@ -84,7 +84,8 @@ export const createEmployee = async (employeeData: EmployeeFormValues): Promise<
     const preparedData = prepareEmployeeData(employeeData, newEmployeeId);
     
     // Determine which collection to use based on manager status
-    const collectionPath = preparedData.isManager 
+    const isManagerFlag = preparedData.isManager || false;
+    const collectionPath = isManagerFlag 
       ? COLLECTIONS.HR.MANAGERS 
       : COLLECTIONS.HR.EMPLOYEES;
     
@@ -102,7 +103,7 @@ export const createEmployee = async (employeeData: EmployeeFormValues): Promise<
       const newEmployee = {
         ...employeeSnap.data(),
         id: employeeSnap.id,
-        isManager: !!preparedData.isManager
+        isManager: isManagerFlag
       } as Employee;
       
       toast.success(`Employé ${preparedData.firstName} ${preparedData.lastName} créé avec succès`);
@@ -131,7 +132,8 @@ export const updateEmployee = async (
       return null;
     }
     
-    const collectionPath = existingEmployee.isManager 
+    const isManagerFlag = existingEmployee.isManager || false;
+    const collectionPath = isManagerFlag 
       ? COLLECTIONS.HR.MANAGERS 
       : COLLECTIONS.HR.EMPLOYEES;
     
@@ -145,8 +147,9 @@ export const updateEmployee = async (
     
     // Remove id and isManager from update data to prevent overwrites
     delete updateData.id;
+    delete updateData.isManager;
 
-    // Use type assertion to handle the isManager property correctly
+    // Use type assertion to handle the properties correctly
     await updateDoc(employeeRef, updateData);
     
     // Check if manager status changed, if so, move to the appropriate collection
@@ -154,7 +157,7 @@ export const updateEmployee = async (
                            employeeData.position?.toLowerCase().includes('manager') ||
                            employeeData.position?.toLowerCase().includes('directeur');
     
-    if (shouldBeManager !== undefined && shouldBeManager !== existingEmployee.isManager) {
+    if (shouldBeManager !== undefined && shouldBeManager !== isManagerFlag) {
       // Need to move the employee to the other collection
       const newCollectionPath = shouldBeManager 
         ? COLLECTIONS.HR.MANAGERS 
@@ -234,7 +237,8 @@ export const updateEmployeeSkills = async (
       return false;
     }
     
-    const collectionPath = employee.isManager
+    const isManagerFlag = employee.isManager || false;
+    const collectionPath = isManagerFlag
       ? COLLECTIONS.HR.MANAGERS
       : COLLECTIONS.HR.EMPLOYEES;
       
