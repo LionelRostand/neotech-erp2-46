@@ -1,74 +1,113 @@
 
 import React from 'react';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { BadgeData } from './BadgeTypes';
 import { Employee } from '@/types/employee';
+import { usePermissions } from '@/hooks/usePermissions';
+import { Trash } from 'lucide-react';
 
 interface BadgePreviewDialogProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   selectedBadge: BadgeData | null;
   selectedEmployee: Employee | null;
+  onDeleteClick?: (badge: BadgeData) => void;
 }
 
 const BadgePreviewDialog: React.FC<BadgePreviewDialogProps> = ({
   isOpen,
   onOpenChange,
   selectedBadge,
-  selectedEmployee
+  selectedEmployee,
+  onDeleteClick
 }) => {
+  const { isAdmin } = usePermissions('employees-badges');
+
   if (!selectedBadge) return null;
-  
+
+  const getBadgeStatusColor = (status: string) => {
+    switch (status) {
+      case 'success': return 'bg-green-500';
+      case 'warning': return 'bg-yellow-500';
+      case 'danger': return 'bg-red-500';
+      default: return 'bg-gray-500';
+    }
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[450px] p-0">
-        <div className="bg-gradient-to-br from-blue-700 to-blue-900 text-white p-8 rounded-t-lg flex flex-col items-center">
-          <div className="text-2xl font-bold mb-1">Badge d'accès</div>
-          <div className="text-blue-100 mb-6">{selectedBadge.id}</div>
-          
-          <Avatar className="h-24 w-24 border-4 border-white mb-3">
-            {selectedEmployee && (selectedEmployee.photoURL || selectedEmployee.photo) ? (
-              <AvatarImage src={selectedEmployee.photoURL || selectedEmployee.photo || ''} />
-            ) : null}
-            <AvatarFallback className="bg-blue-500 text-xl">
-              {selectedEmployee ? (
-                `${selectedEmployee.firstName?.[0] || ''}${selectedEmployee.lastName?.[0] || ''}`
-              ) : (
-                selectedBadge.employeeName.split(' ').map(n => n[0]).join('')
-              )}
-            </AvatarFallback>
-          </Avatar>
-          
-          <div className="text-xl font-semibold">{selectedBadge.employeeName}</div>
-          <div className="text-blue-100 mb-4">{selectedBadge.department}</div>
-          
-          <Badge className="bg-blue-800 hover:bg-blue-800 text-white border border-blue-400 px-4 py-1">
-            {selectedBadge.accessLevel}
-          </Badge>
-        </div>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Détails du badge</DialogTitle>
+          <DialogDescription>
+            Informations détaillées sur le badge d'accès.
+          </DialogDescription>
+        </DialogHeader>
         
-        <div className="p-6 bg-white">
-          <div className="grid grid-cols-2 gap-4 text-sm">
-            <div className="font-semibold text-gray-500">Date de création:</div>
-            <div>{selectedBadge.date}</div>
+        <div className="grid gap-4 py-4">
+          <div className="flex justify-between items-start">
+            <div className="flex flex-col">
+              <h3 className="font-medium text-lg">{selectedBadge.employeeName}</h3>
+              {selectedEmployee?.department && (
+                <span className="text-sm text-muted-foreground">{selectedEmployee.department}</span>
+              )}
+            </div>
             
-            <div className="font-semibold text-gray-500">Statut:</div>
-            <div>
-              <Badge
+            <div className="flex flex-col items-end">
+              <Badge 
                 variant={selectedBadge.status === 'success' ? 'default' : 
                        selectedBadge.status === 'warning' ? 'outline' : 
                        selectedBadge.status === 'danger' ? 'destructive' : 'secondary'}
               >
                 {selectedBadge.statusText}
               </Badge>
+              <span className="text-xs mt-1 text-muted-foreground">ID: {selectedBadge.id}</span>
+            </div>
+          </div>
+          
+          <div className="space-y-2 rounded-md border p-4">
+            <div className="flex justify-between">
+              <span className="text-sm font-medium">Date d'émission</span>
+              <span className="text-sm">{selectedBadge.date}</span>
             </div>
             
-            <div className="font-semibold text-gray-500">ID Employé:</div>
-            <div>{selectedBadge.employeeId}</div>
+            <div className="flex justify-between">
+              <span className="text-sm font-medium">Niveau d'accès</span>
+              <span className="text-sm">{selectedBadge.accessLevel}</span>
+            </div>
+            
+            <div className="flex items-center mt-3">
+              <div className={`w-4 h-4 rounded-full mr-2 ${getBadgeStatusColor(selectedBadge.status)}`}></div>
+              <span className="text-sm">{selectedBadge.statusText}</span>
+            </div>
           </div>
         </div>
+        
+        <DialogFooter className="flex justify-between sm:justify-between">
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            Fermer
+          </Button>
+          
+          {isAdmin && onDeleteClick && (
+            <Button 
+              variant="destructive" 
+              onClick={() => onDeleteClick(selectedBadge)}
+              className="gap-2"
+            >
+              <Trash className="h-4 w-4" />
+              Supprimer
+            </Button>
+          )}
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
