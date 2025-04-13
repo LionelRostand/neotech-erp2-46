@@ -26,15 +26,86 @@ export const nodeMatchesSearch = (node: ChartNode | HierarchyNode, query: string
   const nodeName = node.name.toLowerCase();
   const nodePosition = 'position' in node ? node.position.toLowerCase() : node.title.toLowerCase();
   const nodeDepartment = 'department' in node && node.department ? node.department.toLowerCase() : '';
+  const nodeManager = !('position' in node) && node.manager ? node.manager.toLowerCase() : '';
   
   if (
     nodeName.includes(searchLower) ||
     nodePosition.includes(searchLower) ||
-    nodeDepartment.includes(searchLower)
+    nodeDepartment.includes(searchLower) ||
+    nodeManager.includes(searchLower)
   ) {
     return true;
   }
   
   // Check children
   return node.children.some(child => nodeMatchesSearch(child, searchLower));
+};
+
+/**
+ * Helper function to get total count of nodes in hierarchy
+ */
+export const countNodes = (node: ChartNode | HierarchyNode): number => {
+  if (!node) return 0;
+  
+  let count = 1; // Count this node
+  
+  // Add count of all children
+  if (node.children && node.children.length > 0) {
+    count += node.children.reduce((acc, child) => acc + countNodes(child), 0);
+  }
+  
+  return count;
+};
+
+/**
+ * Helper function to get the maximum depth of a node
+ */
+export const getMaxDepth = (node: ChartNode | HierarchyNode): number => {
+  if (!node || !node.children || node.children.length === 0) {
+    return 1;
+  }
+  
+  const childrenDepths = node.children.map(child => getMaxDepth(child));
+  const maxChildDepth = Math.max(...childrenDepths);
+  
+  return 1 + maxChildDepth;
+};
+
+/**
+ * Helper function to count manager nodes (nodes with children)
+ */
+export const countManagerNodes = (node: ChartNode | HierarchyNode): number => {
+  if (!node) return 0;
+  
+  // This node is a manager if it has children
+  const isManager = node.children && node.children.length > 0 ? 1 : 0;
+  
+  // Add count of managers in children
+  const managersInChildren = node.children 
+    ? node.children.reduce((acc, child) => acc + countManagerNodes(child), 0) 
+    : 0;
+  
+  return isManager + managersInChildren;
+};
+
+/**
+ * Helper function to extract all departments from a hierarchy
+ */
+export const getAllDepartments = (node: ChartNode | HierarchyNode): Set<string> => {
+  const departments = new Set<string>();
+  
+  const addDepartmentsRecursive = (n: ChartNode | HierarchyNode) => {
+    // Add department from this node
+    if ('department' in n && n.department) {
+      departments.add(n.department);
+    }
+    
+    // Get departments from children
+    if (n.children) {
+      n.children.forEach(child => addDepartmentsRecursive(child));
+    }
+  };
+  
+  addDepartmentsRecursive(node);
+  return departments;
 };

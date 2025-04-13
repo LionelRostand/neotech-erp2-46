@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -8,6 +8,7 @@ import { Search, RefreshCw, Building, Users } from 'lucide-react';
 import HierarchyVisualization from './hierarchy/HierarchyVisualization';
 import { useHierarchyData } from './hierarchy/hooks/useHierarchyData';
 import StatCard from '@/components/StatCard';
+import { countNodes, countManagerNodes, getMaxDepth, getAllDepartments } from './hierarchy/utils/hierarchyUtils';
 
 const EmployeesHierarchy: React.FC = () => {
   const [viewMode, setViewMode] = useState<'orgChart' | 'treeView'>('orgChart');
@@ -15,78 +16,24 @@ const EmployeesHierarchy: React.FC = () => {
   const [refreshKey, setRefreshKey] = useState(0);
   const { hierarchyData, isLoading, refreshHierarchy } = useHierarchyData();
 
-  // Calculer les statistiques basées sur la hiérarchie
-  const stats = {
-    totalEmployees: calculateTotalEmployees(hierarchyData),
-    managerCount: calculateManagerCount(hierarchyData),
-    maxDepth: calculateMaxDepth(hierarchyData),
-    departmentsRepresented: calculateDepartmentsRepresented(hierarchyData)
-  };
-
-  // Fonction pour calculer le nombre total d'employés dans la hiérarchie
-  function calculateTotalEmployees(data: any): number {
-    if (!data) return 0;
-    
-    let count = 1; // Compter le nœud actuel
-    if (data.children && data.children.length > 0) {
-      // Ajouter le compte de tous les enfants
-      data.children.forEach((child: any) => {
-        count += calculateTotalEmployees(child);
-      });
+  // Calculer les statistiques basées sur la hiérarchie à l'aide des fonctions utilitaires
+  const stats = useMemo(() => {
+    if (!hierarchyData) {
+      return {
+        totalEmployees: 0,
+        managerCount: 0,
+        maxDepth: 0,
+        departmentsRepresented: 0
+      };
     }
-    return count;
-  }
 
-  // Fonction pour calculer le nombre de managers (nœuds avec enfants)
-  function calculateManagerCount(data: any): number {
-    if (!data) return 0;
-    
-    let count = data.children && data.children.length > 0 ? 1 : 0;
-    if (data.children && data.children.length > 0) {
-      data.children.forEach((child: any) => {
-        count += calculateManagerCount(child);
-      });
-    }
-    return count;
-  }
-
-  // Fonction pour calculer la profondeur maximale de la hiérarchie
-  function calculateMaxDepth(data: any): number {
-    if (!data || !data.children || data.children.length === 0) {
-      return 1;
-    }
-    
-    let maxChildDepth = 0;
-    data.children.forEach((child: any) => {
-      const childDepth = calculateMaxDepth(child);
-      if (childDepth > maxChildDepth) {
-        maxChildDepth = childDepth;
-      }
-    });
-    
-    return 1 + maxChildDepth;
-  }
-
-  // Fonction pour calculer le nombre de départements représentés
-  function calculateDepartmentsRepresented(data: any): number {
-    if (!data) return 0;
-    
-    const departments = new Set<string>();
-    
-    // Fonction récursive pour parcourir l'arbre
-    function traverseTree(node: any) {
-      if (node.department) {
-        departments.add(node.department);
-      }
-      
-      if (node.children && node.children.length > 0) {
-        node.children.forEach((child: any) => traverseTree(child));
-      }
-    }
-    
-    traverseTree(data);
-    return departments.size;
-  }
+    return {
+      totalEmployees: countNodes(hierarchyData),
+      managerCount: countManagerNodes(hierarchyData),
+      maxDepth: getMaxDepth(hierarchyData),
+      departmentsRepresented: getAllDepartments(hierarchyData).size
+    };
+  }, [hierarchyData]);
 
   return (
     <div className="space-y-6">

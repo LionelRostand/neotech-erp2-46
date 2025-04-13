@@ -16,6 +16,7 @@ const EmptyHierarchy: React.FC = () => {
           <li>Assurez-vous d'avoir ajouté des employés avec des relations manager/subordonné</li>
           <li>Vérifiez que les départements ont des managers assignés</li>
           <li>Assurez-vous qu'au moins un employé est défini comme PDG ou manager principal</li>
+          <li>Allez dans la section "Départements" pour attribuer un manager à chaque département</li>
         </ul>
       </div>
     </div>
