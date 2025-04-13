@@ -49,7 +49,7 @@ export interface Employee {
   education?: EducationEntry[];
   workSchedule?: WorkSchedule;
   role?: string;
-  isManager: boolean; // Changed from optional to required
+  isManager: boolean; // Required property to indicate if employee is a manager
   userAccountId?: string;
   payslips?: string[];
   title?: string;

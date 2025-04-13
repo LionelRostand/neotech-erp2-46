@@ -49,11 +49,6 @@ export const useEmployeeData = () => {
     
     console.log(`Total d'employés après déduplication: ${uniqueEmployees.length}`);
     
-    // Suppression du toast qui indique le nombre de doublons filtrés
-    // if (employees.length !== uniqueEmployees.length) {
-    //   toast.info(`${employees.length - uniqueEmployees.length} doublons d'employés ont été filtrés`);
-    // }
-    
     return uniqueEmployees;
   }, [employees]);
   
