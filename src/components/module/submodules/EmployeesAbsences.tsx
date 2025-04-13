@@ -6,7 +6,9 @@ import {
   Plus, 
   FileDown,
   Filter,
-  RefreshCw
+  RefreshCw,
+  Check,
+  X
 } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
@@ -17,16 +19,30 @@ import { useHrModuleData } from '@/hooks/useHrModuleData';
 import { exportToExcel } from '@/utils/exportUtils';
 import { exportToPdf } from '@/utils/pdfUtils';
 import CreateAbsenceDialog from './absences/CreateAbsenceDialog';
+import AbsenceDetailsDialog from './absences/AbsenceDetailsDialog';
+import { Absence } from '@/hooks/useAbsencesData';
+import { updateLeaveBalance } from './absences/utils/absenceUtils';
+import { useFirestore } from '@/hooks/useFirestore';
+import { COLLECTIONS } from '@/lib/firebase-collections';
 
 const EmployeesAbsences: React.FC = () => {
-  const { absenceRequests, isLoading } = useHrModuleData();
+  const { absenceRequests, isLoading, employees } = useHrModuleData();
   const [activeTab, setActiveTab] = useState('all');
   const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [showDetailsDialog, setShowDetailsDialog] = useState(false);
+  const [selectedAbsence, setSelectedAbsence] = useState<Absence | null>(null);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const firestore = useFirestore(COLLECTIONS.HR.ABSENCE_REQUESTS);
 
   // Filtrer les absences en fonction de l'onglet actif
   const filteredAbsences = activeTab === 'all' 
     ? absenceRequests 
-    : absenceRequests?.filter(absence => absence.status === activeTab) || [];
+    : absenceRequests?.filter(absence => {
+        if (activeTab === 'pending') return absence.status === 'pending';
+        if (activeTab === 'approved') return absence.status === 'approved';
+        if (activeTab === 'rejected') return absence.status === 'rejected';
+        return true;
+      }) || [];
 
   // Gérer le rafraîchissement des données
   const handleRefresh = () => {
@@ -37,6 +53,68 @@ const EmployeesAbsences: React.FC = () => {
   // Gérer la création d'une nouvelle absence
   const handleCreateNew = () => {
     setShowCreateDialog(true);
+  };
+
+  // Afficher les détails d'une absence
+  const handleShowDetails = (absence: Absence) => {
+    setSelectedAbsence(absence);
+    setShowDetailsDialog(true);
+  };
+
+  // Valider une absence
+  const handleApproveAbsence = async (absence: any) => {
+    setIsUpdating(true);
+    try {
+      // Mettre à jour le statut dans Firestore
+      await firestore.update(absence.id, {
+        ...absence,
+        status: 'approved',
+        approvedAt: new Date().toISOString()
+      });
+
+      // Mettre à jour le solde de congés
+      const leaveType = absence.type || 'Congés payés';
+      const days = absence.days || 0;
+      
+      const updateResult = await updateLeaveBalance(
+        absence.employeeId,
+        leaveType,
+        days
+      );
+      
+      if (updateResult) {
+        toast.success(`Absence validée et solde de ${leaveType} mis à jour (-${days} jours)`);
+      } else {
+        toast.warning("Absence validée mais échec de la mise à jour du solde");
+      }
+
+      handleRefresh();
+    } catch (error) {
+      console.error("Erreur lors de la validation de l'absence:", error);
+      toast.error("Erreur lors de la validation de l'absence");
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  // Rejeter une absence
+  const handleRejectAbsence = async (absence: any) => {
+    setIsUpdating(true);
+    try {
+      await firestore.update(absence.id, {
+        ...absence,
+        status: 'rejected',
+        rejectedAt: new Date().toISOString()
+      });
+      
+      toast.success("Absence refusée");
+      handleRefresh();
+    } catch (error) {
+      console.error("Erreur lors du refus de l'absence:", error);
+      toast.error("Erreur lors du refus de l'absence");
+    } finally {
+      setIsUpdating(false);
+    }
   };
 
   // Exporter les données
@@ -163,9 +241,37 @@ const EmployeesAbsences: React.FC = () => {
                           </TableCell>
                           <TableCell className="max-w-[200px] truncate">{absence.reason}</TableCell>
                           <TableCell className="text-right">
-                            <Button variant="ghost" size="sm">
-                              Détails
-                            </Button>
+                            <div className="flex justify-end items-center gap-2">
+                              {absence.status === 'pending' && (
+                                <>
+                                  <Button 
+                                    variant="outline" 
+                                    size="icon"
+                                    className="h-8 w-8 text-green-600"
+                                    onClick={() => handleApproveAbsence(absence)}
+                                    disabled={isUpdating}
+                                  >
+                                    <Check className="h-4 w-4" />
+                                  </Button>
+                                  <Button 
+                                    variant="outline" 
+                                    size="icon"
+                                    className="h-8 w-8 text-red-600"
+                                    onClick={() => handleRejectAbsence(absence)}
+                                    disabled={isUpdating}
+                                  >
+                                    <X className="h-4 w-4" />
+                                  </Button>
+                                </>
+                              )}
+                              <Button 
+                                variant="ghost" 
+                                size="sm"
+                                onClick={() => handleShowDetails(absence)}
+                              >
+                                Détails
+                              </Button>
+                            </div>
                           </TableCell>
                         </TableRow>
                       ))}
@@ -183,6 +289,13 @@ const EmployeesAbsences: React.FC = () => {
         open={showCreateDialog}
         onOpenChange={setShowCreateDialog}
         onSuccess={handleRefresh}
+      />
+
+      {/* Dialog for absence details */}
+      <AbsenceDetailsDialog
+        absence={selectedAbsence}
+        open={showDetailsDialog}
+        onOpenChange={setShowDetailsDialog}
       />
     </div>
   );

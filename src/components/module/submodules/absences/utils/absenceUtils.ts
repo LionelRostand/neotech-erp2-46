@@ -1,5 +1,7 @@
 
 import { toast } from 'sonner';
+import { useFirestore } from '@/hooks/useFirestore';
+import { COLLECTIONS } from '@/lib/firebase-collections';
 
 /**
  * Met à jour le solde de congés d'un employé
@@ -74,6 +76,50 @@ export const hasEnoughLeaveBalance = async (
     return hasEnough;
   } catch (error) {
     console.error("Erreur lors de la vérification du solde de congés:", error);
+    return false;
+  }
+};
+
+/**
+ * Valide une demande d'absence
+ * @param absenceId Identifiant de l'absence à valider
+ * @returns Promise<boolean> Succès ou échec de l'opération
+ */
+export const validateAbsence = async (absenceId: string): Promise<boolean> => {
+  try {
+    const firestoreClient = new useFirestore(COLLECTIONS.HR.ABSENCE_REQUESTS);
+    
+    await firestoreClient.update(absenceId, {
+      status: 'approved',
+      approvedAt: new Date().toISOString()
+    });
+    
+    console.log(`Absence ${absenceId} validée avec succès`);
+    return true;
+  } catch (error) {
+    console.error("Erreur lors de la validation de l'absence:", error);
+    return false;
+  }
+};
+
+/**
+ * Rejette une demande d'absence
+ * @param absenceId Identifiant de l'absence à rejeter
+ * @returns Promise<boolean> Succès ou échec de l'opération
+ */
+export const rejectAbsence = async (absenceId: string): Promise<boolean> => {
+  try {
+    const firestoreClient = new useFirestore(COLLECTIONS.HR.ABSENCE_REQUESTS);
+    
+    await firestoreClient.update(absenceId, {
+      status: 'rejected',
+      rejectedAt: new Date().toISOString()
+    });
+    
+    console.log(`Absence ${absenceId} rejetée avec succès`);
+    return true;
+  } catch (error) {
+    console.error("Erreur lors du rejet de l'absence:", error);
     return false;
   }
 };
