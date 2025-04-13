@@ -28,7 +28,8 @@ export const useEmployeeData = () => {
           if (typeof employee.photoData === 'string' && employee.photoData.startsWith('data:')) {
             photoURL = employee.photoData;
           } else if (typeof employee.photoData === 'object' && 
-                    employee.photoData !== null && 'data' in employee.photoData) {
+                    employee.photoData !== null && 'data' in employee.photoData && 
+                    typeof (employee.photoData as { data: string }).data === 'string') {
             photoURL = (employee.photoData as { data: string }).data;
           }
         }

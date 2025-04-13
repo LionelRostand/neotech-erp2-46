@@ -58,7 +58,8 @@ const EmployeeProfileHeader: React.FC<EmployeeProfileHeaderProps> = ({
 
     // Check if photoData is an object with a data property - with proper null check
     if (employee.photoData && typeof employee.photoData === 'object' && 
-        employee.photoData !== null && 'data' in employee.photoData) {
+        employee.photoData !== null && 'data' in employee.photoData && 
+        typeof (employee.photoData as { data: string }).data === 'string') {
       return (employee.photoData as { data: string }).data;
     }
     
