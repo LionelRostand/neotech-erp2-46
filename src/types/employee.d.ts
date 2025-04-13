@@ -1,19 +1,4 @@
 
-export interface EmployeeAddress {
-  street?: string;
-  city?: string;
-  state?: string;
-  postalCode?: string;
-  country?: string;
-}
-
-export interface EmployeePhotoMeta {
-  fileName: string;
-  fileType: string;
-  fileSize: number;
-  updatedAt: string;
-}
-
 export interface Employee {
   id: string;
   firstName: string;
@@ -49,28 +34,8 @@ export interface Employee {
   education?: EducationEntry[];
   workSchedule?: WorkSchedule;
   role?: string;
-  isManager: boolean; // Required property to indicate if employee is a manager
+  isManager?: boolean; // Rendu optionnel et booléen
   userAccountId?: string;
   payslips?: string[];
   title?: string;
-}
-
-interface EducationEntry {
-  institution: string;
-  degree: string;
-  field: string;
-  startDate: string;
-  endDate?: string;
-  ongoing?: boolean;
-  description?: string;
-}
-
-interface WorkSchedule {
-  monday?: string;
-  tuesday?: string;
-  wednesday?: string;
-  thursday?: string;
-  friday?: string;
-  saturday?: string;
-  sunday?: string;
 }
