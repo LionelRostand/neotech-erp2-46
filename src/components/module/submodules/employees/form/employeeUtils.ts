@@ -97,9 +97,15 @@ export const prepareEmployeeData = (data: EmployeeFormValues, employeeId: string
       status = 'active';
   }
   
-  // Vérifier si l'employé est un manager
-  const isManager = determineIfManager(data.position);
-  console.log(`Détection de manager pour ${data.firstName} ${data.lastName}:`, isManager);
+  // Vérifier si l'employé est un manager par son poste ou si forcé par le formulaire
+  const isPositionManager = determineIfManager(data.position);
+  const isManager = data.forceManager || isPositionManager;
+  
+  console.log(`Détection de manager pour ${data.firstName} ${data.lastName}:`, { 
+    isPositionManager,
+    forceManager: data.forceManager,
+    finalIsManager: isManager
+  });
   
   // Retourner l'objet employé préparé
   const employeeData: Partial<Employee> = {

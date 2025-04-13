@@ -22,6 +22,7 @@ export const employeeFormSchema = z.object({
   professionalEmail: z.string().email({ message: 'Email professionnel invalide' }).optional().or(z.literal('')),
   company: z.string().optional(),
   photo: z.any().optional(), // Accepte les données de la photo
+  forceManager: z.boolean().default(false), // Nouveau champ pour forcer l'ajout aux managers
 });
 
 export type EmployeeFormValues = z.infer<typeof employeeFormSchema>;
