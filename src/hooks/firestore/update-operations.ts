@@ -20,7 +20,20 @@ export const updateDocument = async (collectionName: string, id: string, data: D
     // car Firebase ne le nécessite pas et pourrait causer des problèmes
     const { id: _, ...dataWithoutId } = updatedData;
     
-    await updateDoc(docRef, dataWithoutId);
+    try {
+      // Essayer d'abord de mettre à jour
+      await updateDoc(docRef, dataWithoutId);
+    } catch (updateError) {
+      // Si le document n'existe pas, le créer à la place
+      if (updateError.code === 'not-found') {
+        console.log(`Document ${id} not found, creating instead of updating`);
+        await setDoc(docRef, updatedData);
+      } else {
+        // Si c'est une autre erreur, la propager
+        throw updateError;
+      }
+    }
+    
     console.log(`Document ${id} updated successfully`);
     toast.success('Document mis à jour avec succès');
     return { id, ...updatedData };

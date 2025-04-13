@@ -1,6 +1,6 @@
 
 import { Department } from '../types';
-import { addDocument, getAllDocuments, updateDocument, deleteDocument, getDocumentById } from '@/hooks/firestore/firestore-utils';
+import { addDocument, getAllDocuments, updateDocument, deleteDocument, getDocumentById, setDocument } from '@/hooks/firestore/firestore-utils';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import { toast } from 'sonner';
 
@@ -38,8 +38,8 @@ export const useDepartmentService = () => {
     try {
       console.log(`Tentative de mise à jour du département ID: ${department.id}`, department);
       
-      // Utiliser updateDocument pour mettre à jour un document existant uniquement
-      await updateDocument(DEPARTMENTS_COLLECTION, department.id, department);
+      // Utiliser setDocument au lieu de updateDocument pour garantir la création si nécessaire
+      await setDocument(DEPARTMENTS_COLLECTION, department.id, department);
       toast.success(`Département ${department.name} mis à jour avec succès`);
       return true;
     } catch (error) {
