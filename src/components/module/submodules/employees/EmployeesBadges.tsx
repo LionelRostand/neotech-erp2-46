@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Badge as BadgeIcon, Plus, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -49,19 +50,20 @@ const EmployeesBadges: React.FC = () => {
   
   const handleCreateBadge = async (newBadge: BadgeData) => {
     try {
+      console.log("Création d'un nouveau badge:", newBadge);
       // Ajout du badge à Firebase
       const addedBadge = await addBadge(newBadge);
       
       if (addedBadge) {
         // Mettre à jour l'état local
         setBadgesList(prev => [addedBadge, ...prev]);
+        // Afficher une notification de succès
+        toast.success(`Badge créé avec succès pour l'employé: ${newBadge.employeeName}`);
       } else {
         // En cas d'échec, ajouter quand même à l'état local pour une expérience utilisateur fluide
         setBadgesList(prev => [newBadge, ...prev]);
+        toast.error("Problème lors de la création du badge dans la base de données");
       }
-      
-      // Afficher une notification de succès
-      toast.success(`Badge créé avec succès pour l'employé: ${newBadge.employeeName}`);
     } catch (error) {
       console.error("Erreur lors de la création du badge:", error);
       toast.error("Échec de la création du badge");

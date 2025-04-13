@@ -9,9 +9,9 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { v4 as uuidv4 } from 'uuid';
 import { CreateBadgeDialogProps, BadgeData } from './BadgeTypes';
 import { Employee } from '@/types/employee';
+import { Badge } from 'lucide-react';
 
 const accessLevels = [
   'Direction',
@@ -23,7 +23,9 @@ const accessLevels = [
   'Commercial',
   'Production',
   'Logistique',
-  'Sécurité'
+  'Sécurité niveau 1',
+  'Sécurité niveau 2',
+  'Sécurité niveau 3'
 ];
 
 const dateToString = (date: Date) => {
@@ -38,7 +40,15 @@ const CreateBadgeDialog: React.FC<CreateBadgeDialogProps> = ({
 }) => {
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<string>('');
   const [selectedAccessLevel, setSelectedAccessLevel] = useState<string>('');
+  const [badgeNumber, setBadgeNumber] = useState<string>('');
   const [uniqueEmployees, setUniqueEmployees] = useState<Employee[]>([]);
+  
+  // Generate a badge number on dialog open
+  useEffect(() => {
+    if (isOpen) {
+      setBadgeNumber(`B-${Math.floor(1000 + Math.random() * 9000)}`);
+    }
+  }, [isOpen]);
   
   // Filter out duplicate employees by email and name
   useEffect(() => {
@@ -71,7 +81,7 @@ const CreateBadgeDialog: React.FC<CreateBadgeDialogProps> = ({
     if (!employee) return;
     
     const newBadge: BadgeData = {
-      id: `B-${Math.floor(1000 + Math.random() * 9000)}`,
+      id: badgeNumber,
       date: dateToString(new Date()),
       employeeId: employee.id,
       employeeName: `${employee.firstName} ${employee.lastName}`,
@@ -92,7 +102,10 @@ const CreateBadgeDialog: React.FC<CreateBadgeDialogProps> = ({
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Créer un nouveau badge</DialogTitle>
+          <DialogTitle className="flex items-center gap-2">
+            <Badge className="h-5 w-5" />
+            Créer un nouveau badge
+          </DialogTitle>
         </DialogHeader>
         
         <div className="grid gap-4 py-4">
@@ -136,6 +149,18 @@ const CreateBadgeDialog: React.FC<CreateBadgeDialogProps> = ({
                 ))}
               </SelectContent>
             </Select>
+          </div>
+          
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="badgeNumber" className="text-right">
+              Numéro de badge
+            </Label>
+            <Input 
+              id="badgeNumber" 
+              value={badgeNumber}
+              disabled
+              className="col-span-3 bg-gray-100"
+            />
           </div>
         </div>
         
