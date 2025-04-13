@@ -15,7 +15,9 @@ const determineIfManager = (position: string | undefined): boolean => {
   return lowerPosition.includes('manager') || 
          lowerPosition.includes('responsable') || 
          lowerPosition.includes('directeur') || 
-         lowerPosition.includes('pdg');
+         lowerPosition.includes('pdg') ||
+         lowerPosition.includes('ceo') || 
+         lowerPosition.includes('chief');
 };
 
 export const createEmployee = async (employeeData: any) => {
@@ -85,29 +87,88 @@ export const updateEmployee = async (id: string, employeeData: Partial<Employee>
     // Déterminer si l'employé est un responsable
     const isManager = determineIfManager(employeeData.position);
     
-    const collectionPath = isManager 
+    // Vérifier où se trouve actuellement l'employé
+    const employeeDoc = await getDoc(doc(db, COLLECTIONS.HR.EMPLOYEES, id));
+    const managerDoc = await getDoc(doc(db, COLLECTIONS.HR.MANAGERS, id));
+    
+    const currentCollectionPath = employeeDoc.exists() 
+      ? COLLECTIONS.HR.EMPLOYEES
+      : managerDoc.exists() 
+        ? COLLECTIONS.HR.MANAGERS
+        : null;
+    
+    // Déterminer la collection de destination
+    const targetCollectionPath = isManager 
       ? COLLECTIONS.HR.MANAGERS 
       : COLLECTIONS.HR.EMPLOYEES;
     
-    const docRef = doc(db, collectionPath, id);
+    // Si l'employé n'existe pas, retourner null
+    if (!currentCollectionPath) {
+      toast.error("Employé non trouvé");
+      return null;
+    }
     
-    await updateDoc(docRef, {
-      ...employeeData,
-      isManager, // Mettre à jour le statut de responsable
-      updatedAt: Timestamp.now()
-    });
-    
-    const employeeSnap = await getDoc(docRef);
-    
-    if (employeeSnap.exists()) {
-      const updatedEmployee = {
-        ...employeeSnap.data(),
-        id: employeeSnap.id,
-        isManager
-      } as Employee;
+    // Si le statut de manager a changé, déplacer l'employé entre les collections
+    if (currentCollectionPath !== targetCollectionPath) {
+      console.log(`Déplacement de l'employé ${id} de ${currentCollectionPath} vers ${targetCollectionPath}`);
       
-      toast.success(`Employé ${employeeData.firstName} ${employeeData.lastName} mis à jour avec succès`);
-      return updatedEmployee;
+      // Récupérer toutes les données actuelles de l'employé
+      const currentDoc = await getDoc(doc(db, currentCollectionPath, id));
+      if (!currentDoc.exists()) {
+        toast.error("Erreur lors de la récupération des données de l'employé");
+        return null;
+      }
+      
+      // Préparer les données mises à jour
+      const updatedData = {
+        ...currentDoc.data(),
+        ...employeeData,
+        isManager,
+        updatedAt: Timestamp.now()
+      };
+      
+      // Créer le document dans la nouvelle collection
+      await setDoc(doc(db, targetCollectionPath, id), updatedData);
+      
+      // Supprimer l'ancien document
+      await deleteDoc(doc(db, currentCollectionPath, id));
+      
+      // Récupérer le document nouvellement créé
+      const newDoc = await getDoc(doc(db, targetCollectionPath, id));
+      
+      if (newDoc.exists()) {
+        const updatedEmployee = {
+          ...newDoc.data(),
+          id: newDoc.id,
+          isManager
+        } as Employee;
+        
+        toast.success(`Employé ${employeeData.firstName} ${employeeData.lastName} mis à jour avec succès`);
+        return updatedEmployee;
+      }
+    } else {
+      // Si pas de changement de collection, mettre simplement à jour le document
+      const docRef = doc(db, currentCollectionPath, id);
+      
+      await updateDoc(docRef, {
+        ...employeeData,
+        isManager,
+        updatedAt: Timestamp.now()
+      });
+      
+      // Récupérer le document mis à jour
+      const updatedDoc = await getDoc(docRef);
+      
+      if (updatedDoc.exists()) {
+        const updatedEmployee = {
+          ...updatedDoc.data(),
+          id: updatedDoc.id,
+          isManager
+        } as Employee;
+        
+        toast.success(`Employé ${employeeData.firstName} ${employeeData.lastName} mis à jour avec succès`);
+        return updatedEmployee;
+      }
     }
     
     return null;

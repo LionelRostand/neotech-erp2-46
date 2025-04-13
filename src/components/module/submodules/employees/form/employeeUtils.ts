@@ -4,14 +4,16 @@ import { EmployeeFormValues } from './employeeFormSchema';
 import { v4 as uuidv4 } from 'uuid';
 
 // Fonction utilitaire pour déterminer si un employé est un responsable
-const determineIfManager = (position: string | undefined): boolean => {
+export const determineIfManager = (position: string | undefined): boolean => {
   if (!position) return false;
   
   const lowerPosition = position.toLowerCase();
   return lowerPosition.includes('manager') || 
          lowerPosition.includes('responsable') || 
          lowerPosition.includes('directeur') || 
-         lowerPosition.includes('pdg');
+         lowerPosition.includes('pdg') ||
+         lowerPosition.includes('ceo') || 
+         lowerPosition.includes('chief');
 };
 
 /**
