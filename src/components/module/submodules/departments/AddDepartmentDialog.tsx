@@ -46,15 +46,15 @@ const AddDepartmentDialog: React.FC<AddDepartmentDialogProps> = ({
       
       <Tabs value={activeTab} onValueChange={onTabChange} className="w-full">
         <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="department-info">
+          <TabsTrigger value="general">
             Informations
           </TabsTrigger>
-          <TabsTrigger value="department-employees">
+          <TabsTrigger value="employees">
             Employés
           </TabsTrigger>
         </TabsList>
         
-        <TabsContent value="department-info" className="space-y-4 py-4">
+        <TabsContent value="general" className="space-y-4 py-4">
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="id" className="text-right">
               ID
@@ -139,7 +139,7 @@ const AddDepartmentDialog: React.FC<AddDepartmentDialogProps> = ({
           </div>
         </TabsContent>
         
-        <TabsContent value="department-employees" className="py-4">
+        <TabsContent value="employees" className="py-4">
           <EmployeesList 
             employees={employees || []}
             selectedEmployees={selectedEmployees}

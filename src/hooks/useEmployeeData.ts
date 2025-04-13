@@ -3,7 +3,6 @@ import { useMemo } from 'react';
 import { useHrModuleData } from './useHrModuleData';
 import { Employee } from '@/types/employee';
 import { Department } from '@/components/module/submodules/departments/types';
-import { toast } from 'sonner';
 
 /**
  * Hook centralisé pour accéder aux données des employés et départements
@@ -50,9 +49,10 @@ export const useEmployeeData = () => {
     
     console.log(`Total d'employés après déduplication: ${uniqueEmployees.length}`);
     
-    if (employees.length !== uniqueEmployees.length) {
-      toast.info(`${employees.length - uniqueEmployees.length} doublons d'employés ont été filtrés`);
-    }
+    // Suppression du toast qui indique le nombre de doublons filtrés
+    // if (employees.length !== uniqueEmployees.length) {
+    //   toast.info(`${employees.length - uniqueEmployees.length} doublons d'employés ont été filtrés`);
+    // }
     
     return uniqueEmployees;
   }, [employees]);
