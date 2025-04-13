@@ -1,15 +1,23 @@
 
 import React from 'react';
-import { Users } from 'lucide-react';
+import { AlertTriangle } from 'lucide-react';
 
 const EmptyHierarchy: React.FC = () => {
   return (
-    <div className="flex flex-col items-center justify-center py-10 text-center">
-      <Users className="h-12 w-12 text-slate-400 mb-3" />
-      <h3 className="text-lg font-medium">Aucune hiérarchie trouvée</h3>
-      <p className="text-slate-500 mt-1">
-        Aucun employé n'a été trouvé ou les relations hiérarchiques ne sont pas définies.
+    <div className="flex flex-col items-center justify-center py-12 text-center">
+      <AlertTriangle className="h-16 w-16 text-amber-500 mb-4" />
+      <h3 className="text-xl font-medium mb-2">Aucune donnée de hiérarchie disponible</h3>
+      <p className="text-muted-foreground max-w-md mb-4">
+        L'organigramme ne peut pas être affiché car aucune donnée de hiérarchie n'a été trouvée.
       </p>
+      <div className="text-sm text-muted-foreground">
+        <p>Suggestions:</p>
+        <ul className="list-disc list-inside text-left mt-2">
+          <li>Assurez-vous d'avoir ajouté des employés avec des relations manager/subordonné</li>
+          <li>Vérifiez que les départements ont des managers assignés</li>
+          <li>Assurez-vous qu'au moins un employé est défini comme PDG ou manager principal</li>
+        </ul>
+      </div>
     </div>
   );
 };

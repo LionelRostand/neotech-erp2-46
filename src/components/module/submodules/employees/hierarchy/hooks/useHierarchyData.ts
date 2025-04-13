@@ -21,12 +21,23 @@ export const useHierarchyData = () => {
 
     // Logique pour construire la hiérarchie
     // Trouver le PDG ou le niveau le plus haut
-    const ceoOrTopManager = emps.find(emp => 
+    let ceoOrTopManager = emps.find(emp => 
       emp.isManager && (!emp.managerId || emp.managerId === "none")
     );
 
+    // Si aucun top manager n'est trouvé, utiliser le premier employé avec isManager=true
     if (!ceoOrTopManager) {
-      console.log("Aucun manager principal trouvé pour la hiérarchie");
+      ceoOrTopManager = emps.find(emp => emp.isManager === true);
+    }
+
+    // Si toujours aucun manager n'est trouvé, prendre le premier employé de la liste
+    if (!ceoOrTopManager && emps.length > 0) {
+      console.log("Aucun manager trouvé, utilisation du premier employé comme racine");
+      ceoOrTopManager = emps[0];
+    }
+
+    if (!ceoOrTopManager) {
+      console.log("Impossible de construire la hiérarchie - aucun employé disponible");
       return null;
     }
 
@@ -54,10 +65,40 @@ export const useHierarchyData = () => {
 
   // Effet pour construire la hiérarchie au chargement et lors des mises à jour
   useEffect(() => {
-    if (!isLoading && employees && departments) {
-      console.log("Construction de la hiérarchie avec", employees.length, "employés et", departments.length, "départements");
-      const hierarchy = buildHierarchy(employees, departments);
-      setHierarchyData(hierarchy);
+    if (!isLoading) {
+      // Utiliser les données des employés et des départements disponibles
+      const emps = employees || [];
+      const depts = departments || [];
+      
+      console.log("Construction de la hiérarchie avec", emps.length, "employés et", depts.length, "départements");
+      
+      try {
+        const hierarchy = buildHierarchy(emps, depts);
+        setHierarchyData(hierarchy);
+        
+        if (!hierarchy && emps.length > 0) {
+          // Si aucune hiérarchie n'a pu être construite mais qu'il y a des employés,
+          // créer une hiérarchie de secours avec un seul niveau pour l'affichage
+          console.log("Création d'une hiérarchie de secours pour l'affichage");
+          const fallbackNode: ChartNode = {
+            id: "root",
+            name: "Organisation",
+            position: "Tous les employés",
+            children: emps.map(emp => ({
+              id: emp.id,
+              name: `${emp.firstName} ${emp.lastName}`,
+              position: emp.position || emp.role || "Employé",
+              department: emp.department || undefined,
+              departmentColor: "#888888",
+              imageUrl: emp.photoURL || emp.photo || undefined,
+              children: []
+            }))
+          };
+          setHierarchyData(fallbackNode);
+        }
+      } catch (error) {
+        console.error("Erreur lors de la construction de la hiérarchie:", error);
+      }
     }
   }, [employees, departments, isLoading, refreshTrigger]);
 
