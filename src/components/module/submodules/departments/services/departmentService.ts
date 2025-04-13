@@ -45,10 +45,9 @@ export const useDepartmentService = () => {
 
       console.log(`Mise à jour du département ID: ${department.id}`, department);
       
-      // Always use updateDocument instead of checking if it exists first
-      // This ensures we update rather than create a new record
+      // Utiliser updateDocument pour mettre à jour le document existant
+      // Cette fonction vérifie si le document existe avant de le mettre à jour
       await updateDocument(DEPARTMENTS_COLLECTION, department.id, department);
-      console.log(`Document ${department.id} mis à jour avec updateDocument`);
       
       toast.success(`Département ${department.name} mis à jour avec succès`);
       return true;

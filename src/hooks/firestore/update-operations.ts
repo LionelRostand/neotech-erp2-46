@@ -2,7 +2,8 @@
 import { 
   DocumentData,
   updateDoc,
-  setDoc
+  setDoc,
+  getDoc
 } from 'firebase/firestore';
 import { getDocRef, formatDocumentWithTimestamps } from './common-utils';
 import { toast } from 'sonner';
@@ -14,31 +15,31 @@ export const updateDocument = async (collectionName: string, id: string, data: D
     console.log('Update data:', data);
     
     const docRef = getDocRef(collectionName, id);
+    
+    // Vérifier d'abord si le document existe
+    const docSnapshot = await getDoc(docRef);
+    const exists = docSnapshot.exists();
+    
+    // Préparer les données avec les timestamps
     const updatedData = formatDocumentWithTimestamps(data);
     
     // Make sure ID is not included in the update data
     // as Firebase doesn't need it and it could cause problems
     const { id: _, ...dataWithoutId } = updatedData;
     
-    try {
-      // Try to update first
+    if (exists) {
+      // Document exists, update it
+      console.log(`Document ${id} exists, updating with updateDoc`);
       await updateDoc(docRef, dataWithoutId);
       console.log(`Document ${id} updated successfully with updateDoc`);
-    } catch (updateError: any) {
-      // If the document doesn't exist, set it instead
-      if (updateError.code === 'not-found') {
-        console.log(`Document ${id} not found, creating instead of updating`);
-        // For setDoc, we want to include the ID
-        await setDoc(docRef, updatedData);
-        console.log(`Document ${id} created with setDoc`);
-      } else {
-        // If it's another error, propagate it
-        console.error(`Error in updateDoc: ${updateError.message}`, updateError);
-        throw updateError;
-      }
+    } else {
+      // Document doesn't exist, create it with setDoc
+      console.log(`Document ${id} does not exist, creating with setDoc`);
+      await setDoc(docRef, updatedData);
+      console.log(`Document ${id} created with setDoc`);
     }
     
-    console.log(`Document ${id} updated successfully`);
+    console.log(`Document ${id} processed successfully`);
     return { id, ...updatedData };
   } catch (error: any) {
     console.error(`Error updating document ${id}:`, error);
