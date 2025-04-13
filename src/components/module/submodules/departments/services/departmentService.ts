@@ -18,8 +18,21 @@ export const useDepartmentService = () => {
       // Récupérer les employés pour enrichir les départements avec les noms de managers
       const employees = await getAllEmployees();
       
+      // Filtrer les doublons par ID avant d'enrichir
+      const uniqueDepartmentsMap = new Map();
+      data.forEach(dept => {
+        if (!uniqueDepartmentsMap.has(dept.id)) {
+          uniqueDepartmentsMap.set(dept.id, dept);
+        } else {
+          console.warn(`Doublon détecté pour le département ID: ${dept.id}, nom: ${dept.name}`);
+        }
+      });
+      
+      const uniqueData = Array.from(uniqueDepartmentsMap.values());
+      console.log(`Départements après filtrage des doublons: ${uniqueData.length} (avant: ${data.length})`);
+      
       // Enrichir les départements avec les noms de managers
-      const enrichedDepartments = data.map(department => {
+      const enrichedDepartments = uniqueData.map(department => {
         // Traiter chaque département comme un objet Department partiel
         const typedDepartment = department as Partial<Department>;
         

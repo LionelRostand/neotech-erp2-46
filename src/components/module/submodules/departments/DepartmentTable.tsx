@@ -20,6 +20,17 @@ const DepartmentTable: React.FC<DepartmentTableProps> = ({
   onDeleteDepartment, 
   onManageEmployees 
 }) => {
+  // Ensure departments are unique by ID
+  const uniqueDepartments = React.useMemo(() => {
+    const deptMap = new Map<string, Department>();
+    departments.forEach(dept => {
+      if (!deptMap.has(dept.id)) {
+        deptMap.set(dept.id, dept);
+      }
+    });
+    return Array.from(deptMap.values());
+  }, [departments]);
+
   return (
     <div className="relative w-full overflow-auto">
       <Table>
@@ -40,15 +51,15 @@ const DepartmentTable: React.FC<DepartmentTableProps> = ({
                 Chargement...
               </TableCell>
             </TableRow>
-          ) : departments.length === 0 ? (
+          ) : uniqueDepartments.length === 0 ? (
             <TableRow>
               <TableCell colSpan={6} className="text-center py-4">
                 Aucun département trouvé.
               </TableCell>
             </TableRow>
           ) : (
-            departments.map((department) => (
-              <TableRow key={department.id}>
+            uniqueDepartments.map((department) => (
+              <TableRow key={`${department.id}-${department.name}`}>
                 <TableCell className="font-medium">{department.id}</TableCell>
                 <TableCell>{department.name}</TableCell>
                 <TableCell>{department.description}</TableCell>
