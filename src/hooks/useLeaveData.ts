@@ -1,6 +1,9 @@
 
 import { useMemo, useState } from 'react';
 import { useHrModuleData } from './useHrModuleData';
+import { addDocument } from './firestore/create-operations';
+import { COLLECTIONS } from '@/lib/firebase-collections';
+import { toast } from 'sonner';
 
 // Define the Leave type to be exported
 export interface Leave {
@@ -120,5 +123,45 @@ export const useLeaveData = () => {
     }
   }, [leaveRequests, employees]);
   
-  return { leaves, stats, isLoading, error, refetch: () => {} };
+  // Add the createLeaveRequest method
+  const createLeaveRequest = async (leaveData: {
+    employeeId: string;
+    type: string;
+    startDate: string;
+    endDate: string;
+    days: number;
+    reason?: string;
+  }) => {
+    try {
+      // Prepare the leave request data
+      const newLeaveRequest = {
+        ...leaveData,
+        status: 'En attente',
+        requestDate: new Date().toISOString(),
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+      
+      // Add the document to Firestore
+      const result = await addDocument(COLLECTIONS.HR.LEAVE_REQUESTS, newLeaveRequest);
+      
+      toast.success('Demande de congé créée avec succès');
+      return result;
+    } catch (err) {
+      console.error('Error creating leave request:', err);
+      setError(err instanceof Error ? err : new Error('Erreur lors de la création de la demande de congé'));
+      toast.error('Erreur lors de la création de la demande de congé');
+      throw err;
+    }
+  };
+
+  // Add the refetch function
+  const refetch = () => {
+    // Currently this is a placeholder as we don't have real-time updates
+    // In a real implementation, this would trigger a data refresh
+    console.log('Refetching leave data...');
+    return Promise.resolve();
+  };
+  
+  return { leaves, stats, isLoading, error, createLeaveRequest, refetch };
 };
