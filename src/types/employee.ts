@@ -40,8 +40,10 @@ export interface LeaveRequest {
   startDate: string;
   endDate: string;
   type: string;
-  status: 'pending' | 'approved' | 'rejected';
+  status: 'pending' | 'approved' | 'rejected' | 'En attente' | 'Approuvé' | 'Refusé';
   comments?: string;
+  approvedBy?: string;
+  approvedAt?: string;
 }
 
 export interface Evaluation {

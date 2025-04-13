@@ -50,13 +50,14 @@ const EmployeesLeaves: React.FC = () => {
         'Administrateur';
         
       await updateDoc(leaveRef, {
-        status: 'Approuvé',
+        status: 'Approuvé', // Use standardized status value
         approvedBy: approverName,
+        approvedAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       });
       
       toast.success('Demande de congé approuvée');
-      refetch();
+      refetch(); // Refresh data after update
     } catch (error) {
       console.error('Erreur lors de l\'approbation de la demande:', error);
       toast.error('Une erreur est survenue lors de l\'approbation');
@@ -71,13 +72,13 @@ const EmployeesLeaves: React.FC = () => {
         'Administrateur';
         
       await updateDoc(leaveRef, {
-        status: 'Refusé',
+        status: 'Refusé', // Use standardized status value
         approvedBy: approverName,
         updatedAt: new Date().toISOString()
       });
       
       toast.success('Demande de congé refusée');
-      refetch();
+      refetch(); // Refresh data after update
     } catch (error) {
       console.error('Erreur lors du refus de la demande:', error);
       toast.error('Une erreur est survenue lors du refus');

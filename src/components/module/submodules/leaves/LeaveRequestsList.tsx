@@ -37,8 +37,24 @@ export const LeaveRequestsList: React.FC<LeaveRequestsListProps> = ({
     
     return leaves.filter(leave => {
       // Status filter
-      if (statusFilter !== 'all' && leave.status.toLowerCase() !== statusFilter) {
-        return false;
+      if (statusFilter !== 'all') {
+        const normalizedStatus = statusFilter.toLowerCase();
+        const leaveStatus = leave.status.toLowerCase();
+        
+        if (normalizedStatus === 'approved' && 
+            !(leaveStatus === 'approved' || leaveStatus === 'approuvé')) {
+          return false;
+        }
+        
+        if (normalizedStatus === 'rejected' && 
+            !(leaveStatus === 'rejected' || leaveStatus === 'refusé')) {
+          return false;
+        }
+        
+        if (normalizedStatus === 'pending' && 
+            !(leaveStatus === 'pending' || leaveStatus === 'en attente')) {
+          return false;
+        }
       }
       
       // Search query filter
@@ -86,6 +102,12 @@ export const LeaveRequestsList: React.FC<LeaveRequestsListProps> = ({
   const handleCloseDetails = () => {
     setIsDetailsDialogOpen(false);
     setSelectedLeave(null);
+  };
+  
+  // Check if a leave is in pending status
+  const isPending = (status: string) => {
+    const statusLower = status.toLowerCase();
+    return statusLower === 'pending' || statusLower === 'en attente';
   };
   
   if (isLoading) {
@@ -189,8 +211,7 @@ export const LeaveRequestsList: React.FC<LeaveRequestsListProps> = ({
                     </div>
                   </TableCell>
                   <TableCell className="text-right">
-                    {(leave.status.toLowerCase() === 'pending' || 
-                      leave.status.toLowerCase() === 'en attente') ? (
+                    {isPending(leave.status) ? (
                       <div className="flex justify-end space-x-2">
                         <Button 
                           variant="ghost" 
