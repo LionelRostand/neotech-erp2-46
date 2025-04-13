@@ -57,9 +57,15 @@ export const updateEmployee = async (employeeId: string, employeeData: Partial<E
   try {
     console.log(`Mise à jour de l'employé ${employeeId} avec les données:`, employeeData);
     
-    // Vérifier si l'employé est un manager
-    const isManager = determineIfManager(employeeData.position);
-    console.log(`L'employé ${employeeData.firstName} ${employeeData.lastName} est-il un manager?`, isManager);
+    // Vérifier si l'employé est un manager (soit par son poste soit par forceManager)
+    const isPositionManager = determineIfManager(employeeData.position);
+    const isManager = employeeData.isManager || isPositionManager;
+    
+    console.log(`L'employé ${employeeData.firstName} ${employeeData.lastName} est-il un manager?`, {
+      isPositionManager,
+      forceManager: employeeData.isManager && !isPositionManager,
+      finalStatus: isManager
+    });
     
     // Mettre à jour l'employé dans la collection principale
     employeeData.isManager = isManager;
