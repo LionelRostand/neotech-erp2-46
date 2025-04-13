@@ -18,6 +18,15 @@ export const formatDate = (
   try {
     if (!dateString) return '';
     
+    // Handle Date objects directly
+    if (dateString instanceof Date) {
+      if (isNaN(dateString.getTime())) {
+        console.warn('Invalid Date object provided to formatDate');
+        return '';
+      }
+      return new Intl.DateTimeFormat(locale, options).format(dateString);
+    }
+    
     // Validate that the input is actually a string
     if (typeof dateString !== 'string') {
       console.warn('Non-string value provided to formatDate:', dateString);
@@ -25,13 +34,15 @@ export const formatDate = (
     }
     
     // Handle exotic date formats or values that could be problematic
-    if (dateString === 'Invalid Date' || dateString === 'NaN' || dateString === 'undefined') {
+    if (dateString === 'Invalid Date' || dateString === 'NaN' || dateString === 'undefined' || dateString.trim() === '') {
       console.warn('Invalid date string literal:', dateString);
       return '';
     }
     
+    // Try different parsing approaches
+    let date: Date | null = null;
+    
     // Special case for timestamps stored as numbers
-    let date: Date;
     if (/^\d+$/.test(dateString)) {
       // This might be a numeric timestamp
       const timestamp = parseInt(dateString, 10);
@@ -48,7 +59,23 @@ export const formatDate = (
       }
       
       date = testDate;
-    } else {
+    } else if (dateString.includes('/')) {
+      // Try to parse DD/MM/YYYY format
+      const parts = dateString.split('/');
+      if (parts.length === 3) {
+        const day = parseInt(parts[0], 10);
+        const month = parseInt(parts[1], 10) - 1;
+        const year = parseInt(parts[2], 10);
+        
+        date = new Date(year, month, day);
+        if (isNaN(date.getTime())) {
+          date = null;
+        }
+      }
+    }
+    
+    // If previous methods failed, try standard parsing
+    if (!date) {
       // Make sure the date is valid first
       const timestamp = Date.parse(dateString);
       if (isNaN(timestamp)) {
@@ -66,6 +93,11 @@ export const formatDate = (
         console.warn('Date out of reasonable range:', dateString);
         return '';
       }
+    }
+    
+    // At this point, we should have a valid date object
+    if (!date || isNaN(date.getTime())) {
+      return '';
     }
     
     return new Intl.DateTimeFormat(locale, options).format(date);

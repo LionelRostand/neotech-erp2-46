@@ -21,13 +21,18 @@ export const DocumentsCalendar: React.FC<DocumentsCalendarProps> = ({ documents,
     
     try {
       // Check for problematic values
-      if (dateString === 'Invalid Date' || dateString === 'NaN' || dateString === 'undefined') {
+      if (dateString === 'Invalid Date' || dateString === 'NaN' || dateString === 'undefined' || dateString.trim() === '') {
         return null;
       }
       
       // Try to parse the date safely
       if (typeof dateString !== 'string') {
         console.warn('Non-string date value:', dateString);
+        return null;
+      }
+      
+      // Skip already formatted dates showing "Date non valide"
+      if (dateString === 'Date non valide') {
         return null;
       }
       
@@ -53,14 +58,22 @@ export const DocumentsCalendar: React.FC<DocumentsCalendarProps> = ({ documents,
         // Ignore and try the next method
       }
       
-      // 3. Try standard Date parsing as last resort
-      const timestamp = Date.parse(dateString);
-      if (isNaN(timestamp)) {
-        console.warn('Invalid date:', dateString);
-        return null;
+      // 3. Try DD/MM/YYYY format (common in French locale)
+      if (/\d{1,2}[/.-]\d{1,2}[/.-]\d{4}/.test(dateString)) {
+        const parts = dateString.split(/[/.-]/);
+        if (parts.length === 3) {
+          const day = parseInt(parts[0], 10);
+          const month = parseInt(parts[1], 10) - 1; // months are 0-based
+          const year = parseInt(parts[2], 10);
+          const date = new Date(year, month, day);
+          if (isValid(date)) {
+            return date;
+          }
+        }
       }
       
-      const date = new Date(timestamp);
+      // 4. Try standard Date parsing as last resort
+      const date = new Date(dateString);
       if (!isValid(date) || date.getFullYear() < 1900 || date.getFullYear() > 2100) {
         console.warn('Date is not valid after parsing:', dateString);
         return null;
@@ -79,7 +92,7 @@ export const DocumentsCalendar: React.FC<DocumentsCalendarProps> = ({ documents,
       .map(doc => {
         // Try all possible date fields
         const dateStr = doc.uploadDate || doc.createdAt || doc.date;
-        if (typeof dateStr === 'string' && dateStr.includes('Date non valide')) {
+        if (!dateStr || typeof dateStr === 'string' && (dateStr === 'Date non valide' || dateStr.includes('non valide'))) {
           // Skip invalid dates that were marked as such by the formatter
           return null;
         }

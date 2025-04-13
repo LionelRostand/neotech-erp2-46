@@ -29,27 +29,32 @@ export const useDocumentsData = () => {
   const { hrDocuments, employees, isLoading, error } = useHrModuleData();
   
   // Fonction pour valider que la date existe et est valide
-  const isValidDate = (dateString?: string): boolean => {
-    if (!dateString) return false;
+  const isValidDate = (dateString?: string | number | Date): boolean => {
+    if (dateString === undefined || dateString === null) return false;
+    
+    // Handle non-string inputs first
+    if (dateString instanceof Date) {
+      return !isNaN(dateString.getTime());
+    }
+    
+    // Convert to string for consistent handling
+    const dateStr = String(dateString);
     
     // Handle problematic string values
-    if (dateString === 'Invalid Date' || dateString === 'NaN' || dateString === 'undefined') {
+    if (dateStr === 'Invalid Date' || dateStr === 'NaN' || dateStr === 'undefined' || dateStr.trim() === '') {
       return false;
     }
     
     try {
       // Special case for timestamps stored as numbers
-      if (typeof dateString === 'number' || /^\d+$/.test(dateString)) {
-        const timestamp = typeof dateString === 'number' ? dateString : parseInt(dateString, 10);
+      if (typeof dateString === 'number' || /^\d+$/.test(dateStr)) {
+        const timestamp = typeof dateString === 'number' ? dateString : parseInt(dateStr, 10);
         const date = new Date(timestamp);
         return !isNaN(date.getTime()) && date.getFullYear() >= 1900 && date.getFullYear() <= 2100;
       }
       
       // Regular date string validation
-      const timestamp = Date.parse(dateString);
-      if (isNaN(timestamp)) return false;
-      
-      const date = new Date(timestamp);
+      const date = new Date(dateStr);
       return !isNaN(date.getTime()) && date.getFullYear() >= 1900 && date.getFullYear() <= 2100;
     } catch (e) {
       console.warn('Date validation error:', e, 'for date:', dateString);
@@ -58,17 +63,22 @@ export const useDocumentsData = () => {
   };
   
   // Fonction pour formater la date de manière sécurisée avec fallback
-  const formatDate = (dateString?: string): string => {
+  const formatDate = (dateString?: string | number | Date): string => {
     if (!dateString) return '';
     
     try {
-      // Validate date string before formatting
+      // Validate date before formatting
       if (!isValidDate(dateString)) {
         console.warn('Invalid document date:', dateString);
         return 'Date non valide';
       }
       
-      const formattedDate = formatDateUtil(dateString);
+      // Handle Date objects directly
+      if (dateString instanceof Date) {
+        return dateString.toLocaleDateString('fr-FR');
+      }
+      
+      const formattedDate = formatDateUtil(String(dateString));
       return formattedDate || 'Date non valide';
     } catch (error) {
       console.error('Error formatting document date:', error);
@@ -95,7 +105,7 @@ export const useDocumentsData = () => {
         }
       }
       
-      // Determine which date field to use and handle any invalid dates
+      // Determine which date field to use
       let dateToFormat = document.uploadDate || document.createdAt || document.date || '';
       
       // Use current date as fallback if invalid
