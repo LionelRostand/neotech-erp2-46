@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -142,8 +141,9 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
     onExportPdf();
   };
 
-  const handleEmployeeUpdate = (updatedEmp: Employee) => {
-    setUpdatedEmployee(updatedEmp);
+  const handleEmployeeUpdate = () => {
+    // This function will be passed to each tab component to handle employee updates
+    setUpdatedEmployee(prevEmployee => ({ ...prevEmployee }));
   };
 
   return (
@@ -182,6 +182,7 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
         <TabsContent value="competences">
           <CompetencesTab 
             employee={updatedEmployee}
+            onEmployeeUpdated={handleEmployeeUpdate}
             isEditing={isEditing && activeTab === 'competences'}
             onFinishEditing={handleFinishEditing}
           />
