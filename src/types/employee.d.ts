@@ -38,4 +38,5 @@ export interface Employee {
   userAccountId?: string;
   payslips?: string[];
   title?: string;
+  forceManager?: boolean; // Added forceManager property
 }
