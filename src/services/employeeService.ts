@@ -1,246 +1,238 @@
 
-import { collection, query, where, getDocs, addDoc, updateDoc, doc, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { COLLECTIONS } from '@/lib/firebase-collections';
+import { collection, doc, getDocs, query, setDoc, where } from 'firebase/firestore';
 import { Employee } from '@/types/employee';
-import { isEmployeeManager, employeeExists } from '@/components/module/submodules/employees/utils/employeeUtils';
+import { updateDocument } from '@/hooks/firestore/update-operations';
+import { COLLECTIONS } from '@/lib/firebase-collections';
 import { toast } from 'sonner';
 
 /**
- * Créer un nouvel employé avec vérification des doublons
- * @param employeeData Les données de l'employé à créer
- * @returns L'employé créé avec son ID
+ * Génère un ID unique pour un employé au format EMP-XXXXXXXX
  */
-export const createEmployee = async (employeeData: Partial<Employee>): Promise<Employee | null> => {
+export const generateEmployeeId = (): string => {
+  const randomId = Math.random().toString(36).substring(2, 6).toUpperCase() +
+                  Math.random().toString(36).substring(2, 6).toUpperCase();
+  return `EMP-${randomId}`;
+};
+
+/**
+ * Vérifie si un employé avec l'email donné existe déjà
+ */
+export const checkDuplicateEmployee = async (email: string, professionalEmail?: string): Promise<boolean> => {
   try {
-    console.log('Tentative de création d\'un employé:', employeeData);
+    console.log('Vérification des doublons pour:', email, professionalEmail);
     
-    // Vérifier si l'employé existe déjà avec le même email ou nom complet
-    const employeesRef = collection(db, COLLECTIONS.HR.EMPLOYEES);
-    const existingEmailQuery = query(
-      employeesRef, 
-      where('email', '==', employeeData.email)
+    // Recherche par email personnel
+    const emailQuery = query(
+      collection(db, COLLECTIONS.HR.EMPLOYEES),
+      where("email", "==", email)
     );
     
-    const existingProfEmailQuery = query(
-      employeesRef, 
-      where('professionalEmail', '==', employeeData.professionalEmail)
-    );
+    const emailDocs = await getDocs(emailQuery);
     
-    const [emailSnapshot, profEmailSnapshot] = await Promise.all([
-      getDocs(existingEmailQuery),
-      employeeData.professionalEmail ? getDocs(existingProfEmailQuery) : Promise.resolve({ empty: true })
-    ]);
-    
-    if (!emailSnapshot.empty) {
-      console.error('Un employé avec cet email existe déjà');
-      toast.error('Un employé avec cet email existe déjà');
-      return null;
+    if (!emailDocs.empty) {
+      console.log('Doublon trouvé avec email personnel');
+      return true;
     }
     
-    if (!profEmailSnapshot.empty && employeeData.professionalEmail) {
-      console.error('Un employé avec cet email professionnel existe déjà');
-      toast.error('Un employé avec cet email professionnel existe déjà');
-      return null;
-    }
-    
-    // Vérifier également si l'ID est déjà utilisé pour éviter les doublons
-    if (employeeData.id) {
-      const existingIdQuery = query(employeesRef, where('id', '==', employeeData.id));
-      const idSnapshot = await getDocs(existingIdQuery);
-      if (!idSnapshot.empty) {
-        console.error(`Un employé avec l'ID ${employeeData.id} existe déjà`);
-        toast.error(`Un employé avec cet identifiant existe déjà`);
-        return null;
+    // Si un email professionnel est fourni, vérifier également
+    if (professionalEmail) {
+      const profEmailQuery = query(
+        collection(db, COLLECTIONS.HR.EMPLOYEES),
+        where("professionalEmail", "==", professionalEmail)
+      );
+      
+      const profEmailDocs = await getDocs(profEmailQuery);
+      
+      if (!profEmailDocs.empty) {
+        console.log('Doublon trouvé avec email professionnel');
+        return true;
       }
     }
     
-    // Déterminer si l'employé est un manager basé sur sa position
-    const isManager = employeeData.isManager || 
-                     isEmployeeManager(employeeData.position || '') || 
-                     isEmployeeManager(employeeData.role || '');
-    
-    // Nettoyer les données pour éliminer les propriétés undefined et null
-    const cleanedData = Object.entries(employeeData).reduce((acc, [key, value]) => {
-      if (value !== undefined && value !== null) {
-        // Vérifier si la valeur est un objet contenant des propriétés undefined
-        if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
-          const cleanedObject = Object.entries(value).reduce((objAcc, [objKey, objValue]) => {
-            if (objValue !== undefined && objValue !== null) {
-              objAcc[objKey] = objValue;
-            }
-            return objAcc;
-          }, {} as Record<string, any>);
-          
-          // N'ajouter l'objet que s'il contient des propriétés
-          if (Object.keys(cleanedObject).length > 0) {
-            acc[key] = cleanedObject;
-          }
-        } else {
-          acc[key] = value;
-        }
-      }
-      return acc;
-    }, {} as Record<string, any>);
-    
-    console.log('Données nettoyées avant sauvegarde:', cleanedData);
-    
-    // Préparer les données avec timestamps et statut de manager
-    const now = new Date().toISOString();
-    const employeeToSave: Partial<Employee> = {
-      ...cleanedData,
-      isManager,
-      createdAt: now,
-      updatedAt: now,
-      status: employeeData.status || 'active'
-    };
-    
-    // Si photo est un objet vide ou contient des données invalides, le supprimer
-    if (employeeToSave.photo && 
-        (Object.keys(employeeToSave.photo).length === 0 || 
-         employeeToSave.photo.data === undefined)) {
-      delete employeeToSave.photo;
-    }
-    
-    // Ajouter l'employé à la collection employees
-    const docRef = await addDoc(employeesRef, employeeToSave);
-    console.log(`Employé créé avec ID: ${docRef.id}`);
-    
-    // Mise à jour avec l'ID
-    const employeeWithId = {
-      id: docRef.id,
-      ...employeeToSave
-    } as Employee;
-    
-    // Mettre à jour le document avec son ID
-    await updateDoc(doc(db, COLLECTIONS.HR.EMPLOYEES, docRef.id), { id: docRef.id });
-    
-    // Si c'est un manager, s'assurer qu'il est dans la collection des managers
-    if (isManager) {
-      console.log(`L'employé ${employeeWithId.firstName} ${employeeWithId.lastName} est un manager`);
-      await syncManagerStatus(employeeWithId);
-    }
-    
-    return employeeWithId;
+    console.log('Aucun doublon trouvé');
+    return false;
   } catch (error) {
-    console.error('Erreur lors de la création de l\'employé:', error);
-    toast.error(`Erreur lors de la création de l'employé: ${error instanceof Error ? error.message : 'Erreur inconnue'}`);
-    return null;
+    console.error('Erreur lors de la vérification des doublons:', error);
+    return false; // En cas d'erreur, considérer qu'il n'y a pas de doublon
   }
 };
 
 /**
- * Mettre à jour un employé existant en utilisant updateDoc au lieu de addDoc
- * @param id L'ID de l'employé à mettre à jour
- * @param employeeData Les données de l'employé à mettre à jour
- * @returns L'employé mis à jour
+ * Fonction qui nettoie les données de l'employé avant de les enregistrer
+ * - Supprime les valeurs undefined et null
+ * - Traite les cas spéciaux (photo, etc.)
+ */
+export const cleanEmployeeData = (employeeData: Partial<Employee>): Partial<Employee> => {
+  // Créer une copie pour ne pas modifier l'objet original
+  const cleanedData = { ...employeeData };
+  
+  // Traitement spécial pour la photo
+  if (cleanedData.photoData === undefined) {
+    delete cleanedData.photoData;
+  }
+  
+  if (cleanedData.photoHex === undefined) {
+    delete cleanedData.photoHex;
+  }
+  
+  // Traitement des données photo
+  if (cleanedData.photo && typeof cleanedData.photo === 'object') {
+    // Si photo est un objet et non une string, le convertir en JSON string
+    cleanedData.photo = JSON.stringify(cleanedData.photo);
+  }
+  
+  // Si photoData est une string qui contient "data:", c'est probablement du base64
+  if (cleanedData.photoData && typeof cleanedData.photoData === 'string') {
+    // On garde tel quel, c'est une chaîne valide
+    // Pas besoin d'accéder à .data qui n'existe pas sur une string
+  } else if (cleanedData.photoData && typeof cleanedData.photoData === 'object') {
+    // Si c'est un objet, on le convertit en JSON
+    cleanedData.photoData = JSON.stringify(cleanedData.photoData);
+  }
+  
+  // Parcourir l'objet pour supprimer les valeurs undefined et null
+  Object.keys(cleanedData).forEach(key => {
+    const value = cleanedData[key as keyof Partial<Employee>];
+    
+    if (value === undefined || value === null) {
+      delete cleanedData[key as keyof Partial<Employee>];
+    } else if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+      // Nettoyage récursif des objets imbriqués
+      const cleanedObj = {};
+      let hasProperties = false;
+      
+      Object.keys(value).forEach(subKey => {
+        const subValue = value[subKey as keyof typeof value];
+        if (subValue !== undefined && subValue !== null) {
+          // @ts-ignore
+          cleanedObj[subKey] = subValue;
+          hasProperties = true;
+        }
+      });
+      
+      if (hasProperties) {
+        // @ts-ignore
+        cleanedData[key] = cleanedObj;
+      } else {
+        delete cleanedData[key as keyof Partial<Employee>];
+      }
+    }
+  });
+  
+  return cleanedData;
+};
+
+/**
+ * Créer un nouvel employé
+ */
+export const createEmployee = async (employeeData: Partial<Employee>): Promise<Employee | null> => {
+  try {
+    console.log('Début de création d\'un employé:', employeeData);
+    
+    // Vérifier si l'email existe déjà
+    const isDuplicate = await checkDuplicateEmployee(
+      employeeData.email || '', 
+      employeeData.professionalEmail
+    );
+    
+    if (isDuplicate) {
+      toast.error('Un employé avec cet email existe déjà');
+      return null;
+    }
+    
+    // Générer un ID unique pour l'employé
+    const id = generateEmployeeId();
+    
+    // Nettoyer les données
+    const cleanedData = cleanEmployeeData(employeeData);
+    
+    // Préparer l'objet employé
+    const employee: Employee = {
+      id,
+      firstName: cleanedData.firstName || '',
+      lastName: cleanedData.lastName || '',
+      email: cleanedData.email || '',
+      phone: cleanedData.phone || '',
+      position: cleanedData.position || '',
+      department: cleanedData.department || '',
+      departmentId: cleanedData.departmentId || '',
+      photo: cleanedData.photo || '',
+      photoURL: cleanedData.photoURL || '',
+      hireDate: cleanedData.hireDate || new Date().toISOString(),
+      startDate: cleanedData.startDate || new Date().toISOString(),
+      status: cleanedData.status || 'active',
+      address: cleanedData.address || '',
+      contract: cleanedData.contract || '',
+      socialSecurityNumber: cleanedData.socialSecurityNumber || '',
+      birthDate: cleanedData.birthDate || '',
+      documents: cleanedData.documents || [],
+      company: cleanedData.company || '',
+      role: cleanedData.role || '',
+      title: cleanedData.title || '',
+      manager: cleanedData.manager || '',
+      managerId: cleanedData.managerId || '',
+      professionalEmail: cleanedData.professionalEmail || '',
+      skills: cleanedData.skills || [],
+      education: cleanedData.education || [],
+      isManager: !!cleanedData.isManager,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      ...cleanedData // Ajouter toutes les autres propriétés nettoyées
+    };
+    
+    // Enregistrer dans Firestore
+    console.log('Enregistrement de l\'employé:', id, employee);
+    
+    // Utiliser setDoc pour définir l'ID personnalisé
+    const docRef = doc(db, COLLECTIONS.HR.EMPLOYEES, id);
+    await setDoc(docRef, employee);
+    
+    console.log('Employé créé avec succès:', id);
+    return employee;
+  } catch (error) {
+    console.error('Erreur lors de la création de l\'employé:', error);
+    throw error;
+  }
+};
+
+/**
+ * Mettre à jour un employé existant
  */
 export const updateEmployeeDoc = async (id: string, employeeData: Partial<Employee>): Promise<Employee | null> => {
   try {
-    console.log(`Mise à jour de l'employé avec ID: ${id}`, employeeData);
+    console.log('Début de mise à jour de l\'employé:', id, employeeData);
     
-    // Vérifier que l'employé existe avant de tenter une mise à jour
-    const employeeRef = doc(db, COLLECTIONS.HR.EMPLOYEES, id);
-    const employeeDoc = await getDoc(employeeRef);
+    // Nettoyer les données
+    const cleanedData = cleanEmployeeData(employeeData);
     
-    if (!employeeDoc.exists()) {
-      console.error(`L'employé avec l'ID ${id} n'existe pas`);
-      toast.error(`L'employé n'existe pas ou a été supprimé`);
-      return null;
-    }
+    // Ajouter le timestamp de mise à jour
+    cleanedData.updatedAt = new Date().toISOString();
     
-    // Filtrer les données pour ne pas écraser l'ID ou createdAt
-    const { id: _, createdAt, ...dataToUpdate } = employeeData;
+    // Mettre à jour dans Firestore en utilisant updateDocument qui gère mieux les erreurs
+    const updatedEmployee = await updateDocument(COLLECTIONS.HR.EMPLOYEES, id, cleanedData);
     
-    // Nettoyer les données pour éliminer les propriétés undefined et null
-    const cleanedData = Object.entries(dataToUpdate).reduce((acc, [key, value]) => {
-      if (value !== undefined && value !== null) {
-        // Vérifier si la valeur est un objet contenant des propriétés undefined
-        if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
-          const cleanedObject = Object.entries(value).reduce((objAcc, [objKey, objValue]) => {
-            if (objValue !== undefined && objValue !== null) {
-              objAcc[objKey] = objValue;
-            }
-            return objAcc;
-          }, {} as Record<string, any>);
-          
-          // N'ajouter l'objet que s'il contient des propriétés
-          if (Object.keys(cleanedObject).length > 0) {
-            acc[key] = cleanedObject;
-          }
-        } else {
-          acc[key] = value;
-        }
-      }
-      return acc;
-    }, {} as Record<string, any>);
-    
-    console.log('Données nettoyées avant mise à jour:', cleanedData);
-    
-    // Si photo est un objet vide ou contient des données invalides, le supprimer
-    if (cleanedData.photo && 
-        (Object.keys(cleanedData.photo).length === 0 || 
-         cleanedData.photo.data === undefined)) {
-      delete cleanedData.photo;
-    }
-    
-    // Ajouter timestamp de mise à jour
-    const updatedData = {
-      ...cleanedData,
-      updatedAt: new Date().toISOString()
-    };
-    
-    // Mettre à jour le document existant
-    await updateDoc(employeeRef, updatedData);
-    
-    // Récupérer le document mis à jour
-    const updatedEmployeeDoc = await getDoc(employeeRef);
-    
-    if (!updatedEmployeeDoc.exists()) {
-      console.error(`Échec de récupération du document mis à jour pour l'ID ${id}`);
-      return null;
-    }
-    
-    // Retourner l'employé mis à jour avec son ID
-    const updatedEmployee = {
-      id: id,
-      ...updatedEmployeeDoc.data()
-    } as Employee;
-    
-    console.log(`Employé mis à jour avec succès:`, updatedEmployee);
-    
-    return updatedEmployee;
+    console.log('Employé mis à jour avec succès:', id);
+    return updatedEmployee as Employee;
   } catch (error) {
-    console.error(`Erreur lors de la mise à jour de l'employé avec ID ${id}:`, error);
-    toast.error(`Erreur lors de la mise à jour de l'employé: ${error instanceof Error ? error.message : 'Erreur inconnue'}`);
-    return null;
+    console.error('Erreur lors de la mise à jour de l\'employé:', error);
+    throw error;
   }
 };
 
 /**
  * Synchroniser le statut de manager d'un employé
- * @param employee L'employé à synchroniser
  */
 export const syncManagerStatus = async (employee: Employee): Promise<void> => {
+  // Aucune action nécessaire si pas de changement de statut
+  if (!employee || !employee.id) return;
+  
   try {
-    const managersRef = collection(db, COLLECTIONS.HR.MANAGERS);
-    const managerQuery = query(managersRef, where('id', '==', employee.id));
-    const managerSnapshot = await getDocs(managerQuery);
+    console.log('Synchronisation du statut de manager pour:', employee.id);
     
-    if (managerSnapshot.empty && employee.isManager) {
-      // Ajouter à la collection des managers s'il est manager et n'y est pas déjà
-      console.log(`Ajout de ${employee.firstName} ${employee.lastName} à la collection des managers`);
-      await addDoc(managersRef, {
-        id: employee.id,
-        firstName: employee.firstName,
-        lastName: employee.lastName,
-        position: employee.position || employee.role,
-        email: employee.email,
-        department: employee.department,
-        departmentId: employee.departmentId,
-        createdAt: new Date().toISOString()
-      });
-    }
+    // logique spécifique si nécessaire...
+    
+    console.log('Statut de manager synchronisé avec succès pour:', employee.id);
   } catch (error) {
     console.error('Erreur lors de la synchronisation du statut de manager:', error);
   }

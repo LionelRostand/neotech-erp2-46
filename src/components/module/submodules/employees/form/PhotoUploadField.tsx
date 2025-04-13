@@ -44,16 +44,18 @@ const PhotoUploadField = ({ defaultPhotoUrl }: PhotoUploadFieldProps) => {
       // Process for storage in form data
       const reader = new FileReader();
       reader.onload = (e) => {
-        const result = e.target?.result as string;
+        const result = e.target?.result;
         if (result) {
           // Store both the base64 data and file metadata
-          onChange({
-            data: result,
+          const photoData = {
             fileName: file.name,
             fileType: file.type,
             fileSize: file.size,
-            updatedAt: new Date().toISOString()
-          });
+            updatedAt: new Date().toISOString(),
+            data: result // Store the result directly, not as an object property
+          };
+          
+          onChange(photoData);
         } else {
           // Si le résultat est null, utiliser un objet avec uniquement les métadonnées
           onChange({

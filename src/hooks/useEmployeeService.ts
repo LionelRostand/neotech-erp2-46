@@ -4,7 +4,6 @@ import { createEmployee, syncManagerStatus, updateEmployeeDoc } from '@/services
 import { Employee } from '@/types/employee';
 import { useFirestore } from './useFirestore';
 import { COLLECTIONS } from '@/lib/firebase-collections';
-import { isEmployeeManager } from '@/components/module/submodules/employees/utils/employeeUtils';
 import { toast } from 'sonner';
 
 export const useEmployeeService = () => {
@@ -23,7 +22,6 @@ export const useEmployeeService = () => {
       console.log('Début de création d\'un employé:', employeeData);
       
       // Utiliser directement la fonction du service pour créer l'employé
-      // au lieu de manipuler les données ici
       const newEmployee = await createEmployee(employeeData);
       
       if (newEmployee) {

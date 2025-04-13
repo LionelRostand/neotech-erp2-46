@@ -8,6 +8,31 @@ import {
 import { getDocRef, formatDocumentWithTimestamps } from './common-utils';
 import { toast } from 'sonner';
 
+// Helper function to clean data by removing undefined and null values
+const cleanData = (data: DocumentData): DocumentData => {
+  // Créer une copie pour ne pas modifier l'objet original
+  const result: DocumentData = {};
+  
+  Object.keys(data).forEach(key => {
+    const value = data[key];
+    
+    if (value !== undefined && value !== null) {
+      // Handle nested objects recursively
+      if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+        const cleanedObj = cleanData(value);
+        // Only add the cleaned object if it has properties
+        if (Object.keys(cleanedObj).length > 0) {
+          result[key] = cleanedObj;
+        }
+      } else {
+        result[key] = value;
+      }
+    }
+  });
+  
+  return result;
+};
+
 // Update an existing document
 export const updateDocument = async (collectionName: string, id: string, data: DocumentData) => {
   try {
@@ -21,27 +46,7 @@ export const updateDocument = async (collectionName: string, id: string, data: D
     const exists = docSnapshot.exists();
     
     // Nettoyer les données pour éliminer les valeurs undefined et null
-    const cleanedData = Object.entries(data).reduce((acc, [key, value]) => {
-      if (value !== undefined && value !== null) {
-        // Gérer les objets qui pourraient contenir des valeurs undefined
-        if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
-          const cleanedObj = Object.entries(value).reduce((objAcc, [objKey, objValue]) => {
-            if (objValue !== undefined && objValue !== null) {
-              objAcc[objKey] = objValue;
-            }
-            return objAcc;
-          }, {} as Record<string, any>);
-          
-          // N'ajouter l'objet que s'il a des propriétés
-          if (Object.keys(cleanedObj).length > 0) {
-            acc[key] = cleanedObj;
-          }
-        } else {
-          acc[key] = value;
-        }
-      }
-      return acc;
-    }, {} as Record<string, any>);
+    const cleanedData = cleanData(data);
     
     console.log('Données nettoyées avant mise à jour:', cleanedData);
     
@@ -88,27 +93,7 @@ export const setDocument = async (collectionName: string, id: string, data: Docu
     console.log('Document data:', data);
     
     // Nettoyer les données pour éliminer les valeurs undefined et null
-    const cleanedData = Object.entries(data).reduce((acc, [key, value]) => {
-      if (value !== undefined && value !== null) {
-        // Gérer les objets qui pourraient contenir des valeurs undefined
-        if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
-          const cleanedObj = Object.entries(value).reduce((objAcc, [objKey, objValue]) => {
-            if (objValue !== undefined && objValue !== null) {
-              objAcc[objKey] = objValue;
-            }
-            return objAcc;
-          }, {} as Record<string, any>);
-          
-          // N'ajouter l'objet que s'il a des propriétés
-          if (Object.keys(cleanedObj).length > 0) {
-            acc[key] = cleanedObj;
-          }
-        } else {
-          acc[key] = value;
-        }
-      }
-      return acc;
-    }, {} as Record<string, any>);
+    const cleanedData = cleanData(data);
     
     console.log('Données nettoyées avant setDocument:', cleanedData);
     
