@@ -29,15 +29,19 @@ export const useHrData = () => {
     const fetchHrData = async () => {
       setIsLoading(true);
       try {
-        // Récupérer les employés réguliers
-        const employeesRef = collection(db, COLLECTIONS.HR.EMPLOYEES);
-        const employeesQuery = query(employeesRef, orderBy('lastName', 'asc'));
-        const employeesSnapshot = await getDocs(employeesQuery);
+        console.log('Début de récupération des données RH...');
         
-        // Récupérer les managers
+        // Récupérer les employés réguliers sans filtrer par statut
+        const employeesRef = collection(db, COLLECTIONS.HR.EMPLOYEES);
+        const employeesQuery = query(employeesRef);
+        const employeesSnapshot = await getDocs(employeesQuery);
+        console.log(`Employés réguliers récupérés: ${employeesSnapshot.docs.length}`);
+        
+        // Récupérer les managers sans filtrer par statut
         const managersRef = collection(db, COLLECTIONS.HR.MANAGERS);
-        const managersQuery = query(managersRef, orderBy('lastName', 'asc'));
+        const managersQuery = query(managersRef);
         const managersSnapshot = await getDocs(managersQuery);
+        console.log(`Managers récupérés: ${managersSnapshot.docs.length}`);
         
         // Combiner les deux ensembles de résultats
         const regularEmployees = employeesSnapshot.docs.map(doc => {
@@ -58,6 +62,20 @@ export const useHrData = () => {
           } as unknown as Employee;
         });
         
+        // Vérification pour LIONEL DJOSSA
+        const lionelInRegular = regularEmployees.some(emp => 
+          emp.firstName?.toLowerCase().includes('lionel') && 
+          emp.lastName?.toLowerCase().includes('djossa')
+        );
+        
+        const lionelInManagers = managerEmployees.some(emp => 
+          emp.firstName?.toLowerCase().includes('lionel') && 
+          emp.lastName?.toLowerCase().includes('djossa')
+        );
+        
+        console.log(`LIONEL DJOSSA trouvé dans employés réguliers: ${lionelInRegular}`);
+        console.log(`LIONEL DJOSSA trouvé dans managers: ${lionelInManagers}`);
+        
         // Filtrer pour éliminer les doublons par ID
         const allEmployees = [...regularEmployees, ...managerEmployees];
         const uniqueEmployeesMap = new Map();
@@ -69,6 +87,7 @@ export const useHrData = () => {
         });
         
         const uniqueEmployees = Array.from(uniqueEmployeesMap.values());
+        console.log(`Total d'employés uniques: ${uniqueEmployees.length}`);
         
         // Trier par nom de famille
         const sortedEmployees = uniqueEmployees.sort((a, b) => 

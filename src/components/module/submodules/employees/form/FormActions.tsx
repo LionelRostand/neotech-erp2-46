@@ -12,11 +12,9 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
-import { collection, getDocs } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
-import { COLLECTIONS } from '@/lib/firebase-collections';
+import { useEmployeeData } from '@/hooks/useEmployeeData';
+import { toast } from 'sonner';
 import { Employee } from '@/types/employee';
-import { fetchCollectionData } from '@/hooks/fetchCollectionData';
 
 interface FormActionsProps {
   onCancel: () => void;
@@ -31,68 +29,51 @@ const FormActions: React.FC<FormActionsProps> = ({
   form,
   showManagerOption = true
 }) => {
-  const [managers, setManagers] = useState<Employee[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const { employees, isLoading: isLoadingEmployees } = useEmployeeData();
+  const [sortedEmployees, setSortedEmployees] = useState<Employee[]>([]);
   
-  // Récupérer la liste complète des employés depuis Firestore sans filtrage
+  // Utilisation directe du hook useEmployeeData pour récupérer tous les employés
   useEffect(() => {
-    const fetchAllEmployees = async () => {
-      setIsLoading(true);
-      try {
-        console.log("Démarrage de la récupération de tous les employés...");
-        // Utiliser fetchCollectionData pour récupérer tous les employés sans filtrage
-        const allEmployees = await fetchCollectionData<Employee>(COLLECTIONS.HR.EMPLOYEES);
-        
-        console.log(`Total d'employés récupérés: ${allEmployees.length}`);
-        console.log("Liste brute des employés:", allEmployees.map(e => ({
-          id: e.id,
-          nom: `${e.lastName || ''} ${e.firstName || ''}`,
-          status: e.status
-        })));
-        
-        // Trier les employés par nom de famille puis prénom
-        const sortedEmployees = [...allEmployees].sort((a, b) => {
-          const nameA = `${a.lastName || ''} ${a.firstName || ''}`.toLowerCase();
-          const nameB = `${b.lastName || ''} ${b.firstName || ''}`.toLowerCase();
-          return nameA.localeCompare(nameB);
+    if (employees && employees.length > 0) {
+      console.log(`Nombre total d'employés récupérés: ${employees.length}`);
+      
+      // Tri des employés par nom de famille puis prénom pour faciliter la recherche
+      const sorted = [...employees].sort((a, b) => {
+        const nameA = `${a.lastName || ''} ${a.firstName || ''}`.toLowerCase();
+        const nameB = `${b.lastName || ''} ${b.firstName || ''}`.toLowerCase();
+        return nameA.localeCompare(nameB);
+      });
+      
+      // Vérification de la présence de LIONEL DJOSSA pour le débogage
+      const lionelDjossa = sorted.find(
+        emp => emp.firstName?.toLowerCase().includes('lionel') && 
+               emp.lastName?.toLowerCase().includes('djossa')
+      );
+      
+      if (lionelDjossa) {
+        console.log('LIONEL DJOSSA est présent dans la liste:');
+        console.log({
+          id: lionelDjossa.id,
+          nom: `${lionelDjossa.lastName} ${lionelDjossa.firstName}`,
+          status: lionelDjossa.status
         });
-        
-        // Vérifier si certains employés spécifiques sont dans la liste
-        const checkEmployee = (firstName: string, lastName: string) => {
-          const found = sortedEmployees.some(
-            emp => emp.firstName?.toLowerCase().includes(firstName.toLowerCase()) && 
-                   emp.lastName?.toLowerCase().includes(lastName.toLowerCase())
-          );
-          console.log(`${lastName} ${firstName} est-il dans la liste?`, found);
-          
-          // Afficher tous les employés qui correspondent partiellement
-          const matches = sortedEmployees.filter(
-            emp => emp.firstName?.toLowerCase().includes(firstName.toLowerCase()) || 
-                   emp.lastName?.toLowerCase().includes(lastName.toLowerCase())
-          );
-          if (matches.length > 0) {
-            console.log(`Correspondances partielles pour ${lastName} ${firstName}:`, 
-              matches.map(e => `${e.lastName || ''} ${e.firstName || ''} (${e.id}) - Status: ${e.status}`)
-            );
-          }
-        };
-        
-        // Vérifier pour LIONEL DJOSSA et quelques autres noms pour le débogage
-        checkEmployee('lionel', 'djossa');
-        
-        console.log(`Nombre final d'employés triés: ${sortedEmployees.length}`);
-        setManagers(sortedEmployees);
-      } catch (error) {
-        console.error('Erreur lors de la récupération des employés:', error);
-      } finally {
-        setIsLoading(false);
+      } else {
+        console.log('LIONEL DJOSSA n\'est pas trouvé dans la liste');
+        // Affichage des premiers employés pour vérification
+        console.log('Premiers employés de la liste:');
+        sorted.slice(0, 5).forEach(emp => {
+          console.log(`${emp.lastName || ''} ${emp.firstName || ''} (${emp.id})`);
+        });
       }
-    };
-    
-    if (showManagerOption && form) {
-      fetchAllEmployees();
+      
+      setSortedEmployees(sorted);
+    } else {
+      console.log('Aucun employé récupéré ou liste vide');
+      if (isLoadingEmployees) {
+        console.log('Chargement des employés en cours...');
+      }
     }
-  }, [showManagerOption, form]);
+  }, [employees, isLoadingEmployees]);
   
   return (
     <div className="space-y-4">
@@ -105,14 +86,14 @@ const FormActions: React.FC<FormActionsProps> = ({
             <Select
               value={form.getValues('managerId') || ''}
               onValueChange={(value) => form.setValue('managerId', value)}
-              disabled={isLoading}
+              disabled={isLoadingEmployees}
             >
               <SelectTrigger>
-                <SelectValue placeholder={isLoading ? "Chargement..." : "Sélectionner un responsable"} />
+                <SelectValue placeholder={isLoadingEmployees ? "Chargement..." : "Sélectionner un responsable"} />
               </SelectTrigger>
-              <SelectContent className="max-h-[300px] overflow-y-auto">
+              <SelectContent className="max-h-[300px] overflow-y-auto bg-popover">
                 <SelectItem value="">Aucun responsable</SelectItem>
-                {managers.map((employee) => (
+                {sortedEmployees.map((employee) => (
                   <SelectItem key={employee.id} value={employee.id}>
                     {`${employee.lastName || ''} ${employee.firstName || ''}`}
                   </SelectItem>
