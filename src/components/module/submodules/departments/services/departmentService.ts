@@ -3,6 +3,7 @@ import { Department } from '../types';
 import { addDocument, getAllDocuments, updateDocument, deleteDocument, getDocumentById } from '@/hooks/firestore/firestore-utils';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import { toast } from 'sonner';
+import { getAllEmployees } from '@/components/module/submodules/employees/services/employeeService';
 
 export const useDepartmentService = () => {
   // Updated collection path for departments
@@ -13,7 +14,22 @@ export const useDepartmentService = () => {
       // Récupérer les données depuis Firestore
       const data = await getAllDocuments(DEPARTMENTS_COLLECTION);
       console.log("Départements récupérés depuis Firebase:", data);
-      return data as Department[];
+      
+      // Récupérer les employés pour enrichir les départements avec les noms de managers
+      const employees = await getAllEmployees();
+      
+      // Enrichir les départements avec les noms de managers
+      const enrichedDepartments = data.map(department => {
+        if (department.managerId) {
+          const manager = employees.find(emp => emp.id === department.managerId);
+          if (manager) {
+            department.managerName = `${manager.firstName} ${manager.lastName}`;
+          }
+        }
+        return department;
+      });
+      
+      return enrichedDepartments as Department[];
     } catch (error) {
       console.error("Error fetching departments:", error);
       toast.error("Erreur lors du chargement des départements");

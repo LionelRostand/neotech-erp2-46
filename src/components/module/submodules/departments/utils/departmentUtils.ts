@@ -1,7 +1,7 @@
 
 import { Department, DepartmentFormData } from '../types';
 import { Employee } from '@/types/employee';
-import { employees } from '@/data/employees';
+import { useEmployeeData } from '@/hooks/useEmployeeData';
 
 export const createDefaultDepartments = (): Department[] => {
   return [
@@ -46,18 +46,24 @@ export const createEmptyFormData = (departments: Department[]): DepartmentFormDa
 export const prepareDepartmentFromForm = (
   formData: DepartmentFormData, 
   selectedEmployees: string[],
+  allEmployees: Employee[],
   currentDepartment?: Department
 ): Department => {
-  const selectedManager = formData.managerId 
-    ? employees.find(emp => emp.id === formData.managerId) 
+  // Find the selected manager from all employees
+  const selectedManager = formData.managerId && formData.managerId !== "none"
+    ? allEmployees.find(emp => emp.id === formData.managerId) 
+    : null;
+
+  const managerName = selectedManager 
+    ? `${selectedManager.firstName} ${selectedManager.lastName}` 
     : null;
 
   return {
     id: formData.id,
     name: formData.name,
     description: formData.description,
-    managerId: formData.managerId || null,
-    managerName: selectedManager ? `${selectedManager.firstName} ${selectedManager.lastName}` : null,
+    managerId: formData.managerId === "none" ? null : formData.managerId || null,
+    managerName: managerName,
     employeesCount: selectedEmployees.length,
     color: formData.color,
     employeeIds: selectedEmployees,
@@ -65,17 +71,13 @@ export const prepareDepartmentFromForm = (
   };
 };
 
-export const getDepartmentEmployees = (departmentId: string): Employee[] => {
-  const allEmployees = employees;
+export const getDepartmentEmployees = (departmentId: string, allEmployees: Employee[] = []): Employee[] => {
+  if (!departmentId || allEmployees.length === 0) return [];
   
   return allEmployees.filter(emp => {
-    // Vérifier si l'ID de l'employé est dans le tableau employeeIds du département
-    const departmentObj = createDefaultDepartments().find(dept => dept.id === departmentId);
-    if (departmentObj && departmentObj.employeeIds && departmentObj.employeeIds.includes(emp.id)) {
-      return true;
-    }
+    // Check if employee is in the department by employeeIds
+    // or by department/departmentId property
     
-    // Vérifier par les autres méthodes si ce n'est pas trouvé ci-dessus
     if (!emp.department && !emp.departmentId) return false;
     
     // Check if department is a string (departmentId)

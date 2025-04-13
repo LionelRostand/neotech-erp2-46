@@ -1,19 +1,45 @@
-
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { Department } from './types';
 import { getDepartmentEmployees, notifyDepartmentUpdates } from './utils/departmentUtils';
 import { useFirebaseDepartments } from '@/hooks/useFirebaseDepartments';
 import { useDepartmentForm } from './hooks/useDepartmentForm';
 import { useDepartmentDialogs } from './hooks/useDepartmentDialogs';
 import { useDepartmentOperations } from './hooks/useDepartmentOperations';
-import { employees } from '@/data/employees';
+import { useEmployeeData } from '@/hooks/useEmployeeData';
 
 export const useDepartments = () => {
   // Fetch departments directly from Firestore
-  const { departments = [], isLoading: loading, error } = useFirebaseDepartments();
+  const { departments: fetchedDepartments = [], isLoading: loading, error, refetch } = useFirebaseDepartments();
   
   // Get all available employees
-  const allEmployees = employees;
+  const { employees: allEmployees } = useEmployeeData();
+  
+  // Enrich departments with manager names if missing
+  const departments = useMemo(() => {
+    if (!fetchedDepartments || !allEmployees || allEmployees.length === 0) {
+      return fetchedDepartments;
+    }
+    
+    return fetchedDepartments.map(department => {
+      // If managerName is already set and not null, keep it
+      if (department.managerName) {
+        return department;
+      }
+      
+      // If managerId is set, find the manager and set the name
+      if (department.managerId) {
+        const manager = allEmployees.find(emp => emp.id === department.managerId);
+        if (manager) {
+          return {
+            ...department,
+            managerName: `${manager.firstName} ${manager.lastName}`
+          };
+        }
+      }
+      
+      return department;
+    });
+  }, [fetchedDepartments, allEmployees]);
   
   // Custom hooks for form, dialogs, and operations
   const form = useDepartmentForm(departments);
@@ -21,13 +47,12 @@ export const useDepartments = () => {
   const operations = useDepartmentOperations();
   
   // Reset form when departments change - but only once on initial load
-  // Added a check to prevent infinite loop
   useEffect(() => {
     // Only reset form on initial load or when departments array changes length
     if (departments && departments.length > 0) {
       form.resetForm(departments);
     }
-  }, []);  // Removed departments dependency to prevent infinite updates
+  }, []);
   
   // Notify other components when departments are updated
   useEffect(() => {
@@ -59,6 +84,7 @@ export const useDepartments = () => {
     );
     if (success) {
       dialogs.setIsAddDialogOpen(false);
+      refetch();
     }
   };
   
@@ -70,11 +96,15 @@ export const useDepartments = () => {
     );
     if (success) {
       dialogs.setIsEditDialogOpen(false);
+      refetch();
     }
   };
   
   const handleDeleteDepartment = async (id: string, name: string) => {
-    await operations.handleDeleteDepartment(id, name);
+    const success = await operations.handleDeleteDepartment(id, name);
+    if (success) {
+      refetch();
+    }
   };
   
   const handleSaveEmployeeAssignments = async () => {
@@ -84,6 +114,7 @@ export const useDepartments = () => {
     );
     if (success) {
       dialogs.setIsManageEmployeesDialogOpen(false);
+      refetch();
     }
   };
   
