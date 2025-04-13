@@ -1,11 +1,11 @@
 
 import React, { useState, useMemo } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import { Search, ListTree, Network } from 'lucide-react';
+import { Search, ListTree, Network, Users, Briefcase, Building } from 'lucide-react';
 import HierarchyVisualization from './hierarchy/HierarchyVisualization';
 import { ChartNode } from './hierarchy/types';
 import { useEmployeeData } from '@/hooks/useEmployeeData';
@@ -15,6 +15,31 @@ const EmployeesHierarchy: React.FC = () => {
   const [viewMode, setViewMode] = useState<'orgChart' | 'treeView'>('orgChart');
   const [searchQuery, setSearchQuery] = useState('');
   const { employees, departments } = useEmployeeData();
+
+  // Statistics for dashboard
+  const stats = useMemo(() => {
+    if (!employees || !departments) return {
+      totalEmployees: 0,
+      managers: 0,
+      departments: 0,
+      topLevelManagers: 0
+    };
+
+    const managers = employees.filter(emp => 
+      employees.some(e => e.managerId === emp.id)
+    ).length;
+    
+    const topLevelManagers = employees.filter(emp => 
+      !emp.managerId && employees.some(e => e.managerId === emp.id)
+    ).length;
+
+    return {
+      totalEmployees: employees.length,
+      managers,
+      departments: departments.length,
+      topLevelManagers
+    };
+  }, [employees, departments]);
 
   // Log de debug pour vérifier le nombre d'employés
   useMemo(() => {
@@ -26,7 +51,6 @@ const EmployeesHierarchy: React.FC = () => {
   }, [employees]);
 
   // Fonction récursive pour construire un nœud dans la hiérarchie
-  // IMPORTANT: Define this function before using it in hierarchyData
   const buildHierarchyNode = (employee: Employee, allEmployees: Employee[]): ChartNode => {
     // Trouver tous les employés qui ont cet employé comme manager
     const subordinates = allEmployees.filter(emp => emp.managerId === employee.id);
@@ -70,6 +94,17 @@ const EmployeesHierarchy: React.FC = () => {
     return buildHierarchyNode(topLevelEmployees[0], employees);
   }, [employees]);
 
+  // Calculate organization depth
+  const getOrganizationDepth = (node: ChartNode | null): number => {
+    if (!node) return 0;
+    if (node.children.length === 0) return 1;
+    return 1 + Math.max(...node.children.map(child => getOrganizationDepth(child)));
+  };
+
+  const organizationDepth = useMemo(() => {
+    return getOrganizationDepth(hierarchyData);
+  }, [hierarchyData]);
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -77,6 +112,53 @@ const EmployeesHierarchy: React.FC = () => {
           <ListTree className="h-6 w-6 text-green-500 mr-2" />
           Hiérarchie de l'Organisation
         </div>
+      </div>
+      
+      {/* Dashboard Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium">Employés</CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.totalEmployees}</div>
+            <p className="text-xs text-muted-foreground">Total des employés de l'organisation</p>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium">Managers</CardTitle>
+            <Briefcase className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.managers}</div>
+            <p className="text-xs text-muted-foreground">Employés avec équipe</p>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium">Départements</CardTitle>
+            <Building className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.departments}</div>
+            <p className="text-xs text-muted-foreground">Unités organisationnelles</p>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium">Niveaux</CardTitle>
+            <ListTree className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{organizationDepth}</div>
+            <p className="text-xs text-muted-foreground">Profondeur hiérarchique</p>
+          </CardContent>
+        </Card>
       </div>
       
       <Card>

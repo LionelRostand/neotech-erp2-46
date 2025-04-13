@@ -3,6 +3,7 @@ import React from 'react';
 import { Card } from '@/components/ui/card';
 import { User, Users } from 'lucide-react';
 import { ChartNode, HierarchyNode, HierarchyVisualizationProps } from './types';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 const HierarchyVisualization: React.FC<HierarchyVisualizationProps> = ({ 
   data, 
@@ -44,24 +45,30 @@ const HierarchyVisualization: React.FC<HierarchyVisualizationProps> = ({
   // Ensure we're working with a ChartNode
   const chartData = 'position' in data ? data : getChartNode(data as HierarchyNode);
   
+  // Get initials from name for avatar fallback
+  const getInitials = (name: string): string => {
+    const parts = name.split(' ');
+    if (parts.length >= 2) {
+      return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+    }
+    return name.substring(0, 2).toUpperCase();
+  };
+  
   // OrgChart view rendering
   const renderOrgChart = (node: ChartNode) => {
     if (!nodeMatchesSearch(node, searchQuery)) return null;
     
     return (
       <div key={node.id} className="flex flex-col items-center">
-        <Card className="p-4 flex flex-col items-center w-56 text-center mb-2">
-          {node.imageUrl ? (
-            <img 
-              src={node.imageUrl} 
-              alt={node.name} 
-              className="w-16 h-16 rounded-full mb-2 object-cover"
-            />
-          ) : (
-            <div className="w-16 h-16 rounded-full bg-slate-200 flex items-center justify-center mb-2">
-              <User className="h-8 w-8 text-slate-500" />
-            </div>
-          )}
+        <Card className="p-4 flex flex-col items-center w-56 text-center mb-2 shadow-md hover:shadow-lg transition-shadow">
+          <Avatar className="h-20 w-20 mb-2">
+            {node.imageUrl ? (
+              <AvatarImage src={node.imageUrl} alt={node.name} />
+            ) : null}
+            <AvatarFallback className="bg-slate-200 text-slate-700 text-lg">
+              {getInitials(node.name)}
+            </AvatarFallback>
+          </Avatar>
           <div className="font-medium">{node.name}</div>
           <div className="text-sm text-slate-500">{node.position}</div>
           {node.department && <div className="text-xs text-slate-400">{node.department}</div>}
@@ -70,7 +77,7 @@ const HierarchyVisualization: React.FC<HierarchyVisualizationProps> = ({
         {node.children.length > 0 && (
           <div className="relative pt-6">
             <div className="absolute top-0 left-1/2 h-6 w-0.5 -ml-px bg-slate-300"></div>
-            <div className="flex space-x-10">
+            <div className="flex flex-wrap justify-center gap-10">
               {node.children.map(child => (
                 <div key={child.id} className="relative pt-6">
                   <div className="absolute top-0 left-1/2 h-6 w-0.5 -ml-px bg-slate-300"></div>
@@ -91,17 +98,14 @@ const HierarchyVisualization: React.FC<HierarchyVisualizationProps> = ({
     return (
       <div key={node.id} className="mb-2" style={{ marginLeft: `${level * 20}px` }}>
         <Card className="p-3 flex items-center bg-white hover:bg-slate-50 transition-colors">
-          {node.imageUrl ? (
-            <img 
-              src={node.imageUrl} 
-              alt={node.name} 
-              className="w-10 h-10 rounded-full mr-3"
-            />
-          ) : (
-            <div className="w-10 h-10 rounded-full bg-slate-200 flex items-center justify-center mr-3">
-              <User className="h-5 w-5 text-slate-500" />
-            </div>
-          )}
+          <Avatar className="h-10 w-10 mr-3">
+            {node.imageUrl ? (
+              <AvatarImage src={node.imageUrl} alt={node.name} />
+            ) : null}
+            <AvatarFallback className="bg-slate-200 text-slate-700">
+              {getInitials(node.name)}
+            </AvatarFallback>
+          </Avatar>
           
           <div>
             <div className="font-medium">{node.name}</div>
