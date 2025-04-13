@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -55,8 +56,9 @@ const EmployeeProfileHeader: React.FC<EmployeeProfileHeaderProps> = ({
       return employee.photo;
     }
 
-    // Check if photoData is an object with a data property
-    if (employee.photoData && typeof employee.photoData === 'object' && 'data' in employee.photoData) {
+    // Check if photoData is an object with a data property - with proper null check
+    if (employee.photoData && typeof employee.photoData === 'object' && 
+        employee.photoData !== null && 'data' in employee.photoData) {
       return (employee.photoData as { data: string }).data;
     }
     

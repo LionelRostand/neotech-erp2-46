@@ -1,3 +1,4 @@
+
 import { useMemo } from 'react';
 import { useHrModuleData } from './useHrModuleData';
 import { Employee } from '@/types/employee';
@@ -22,11 +23,12 @@ export const useEmployeeData = () => {
       if (!existingEmployee || (employee.firebaseId && !existingEmployee.firebaseId)) {
         let photoURL = '';
         
-        // Null-safe checks for photoData
+        // Null-safe checks for photoData with additional type guards
         if (employee.photoData) {
           if (typeof employee.photoData === 'string' && employee.photoData.startsWith('data:')) {
             photoURL = employee.photoData;
-          } else if (typeof employee.photoData === 'object' && 'data' in employee.photoData) {
+          } else if (typeof employee.photoData === 'object' && 
+                    employee.photoData !== null && 'data' in employee.photoData) {
             photoURL = (employee.photoData as { data: string }).data;
           }
         }
