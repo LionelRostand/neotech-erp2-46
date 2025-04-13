@@ -1,6 +1,6 @@
 
 import { db } from '@/lib/firebase';
-import { collection, doc, getDocs, query, setDoc, where } from 'firebase/firestore';
+import { collection, doc, getDocs, query, addDoc, where } from 'firebase/firestore';
 import { Employee } from '@/types/employee';
 import { updateDocument } from '@/hooks/firestore/update-operations';
 import { COLLECTIONS } from '@/lib/firebase-collections';
@@ -181,14 +181,14 @@ export const createEmployee = async (employeeData: Partial<Employee>): Promise<E
       ...cleanedData // Ajouter toutes les autres propriétés nettoyées
     };
     
-    // Enregistrer dans Firestore
-    console.log('Enregistrement de l\'employé:', id, employee);
+    // Enregistrer dans Firestore en utilisant addDoc au lieu de setDoc
+    console.log('Enregistrement de l\'employé avec addDoc:', employee);
     
-    // Utiliser setDoc pour définir l'ID personnalisé
-    const docRef = doc(db, COLLECTIONS.HR.EMPLOYEES, id);
-    await setDoc(docRef, employee);
+    // Utiliser addDoc pour générer un ID Firestore automatique
+    const employeesCollectionRef = collection(db, COLLECTIONS.HR.EMPLOYEES);
+    const docRef = await addDoc(employeesCollectionRef, employee);
     
-    console.log('Employé créé avec succès:', id);
+    console.log('Employé créé avec succès, ID Firestore:', docRef.id, 'ID employé:', id);
     return employee;
   } catch (error) {
     console.error('Erreur lors de la création de l\'employé:', error);
