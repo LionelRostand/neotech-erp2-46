@@ -1,8 +1,9 @@
+
 import React, { useState, useMemo } from 'react';
 import { Calendar } from '@/components/ui/calendar';
 import { Badge } from '@/components/ui/badge';
 import { fr } from 'date-fns/locale';
-import { format, isSameDay, isValid, parseISO } from 'date-fns';
+import { format, isSameDay, isValid } from 'date-fns';
 import { HrDocument } from '@/hooks/useDocumentsData';
 
 interface DocumentsCalendarProps {
@@ -24,6 +25,16 @@ export const DocumentsCalendar: React.FC<DocumentsCalendarProps> = ({ documents,
         return null;
       }
       
+      // Check for French date format (DD/MM/YYYY)
+      if (/^\d{2}\/\d{2}\/\d{4}$/.test(dateString)) {
+        const [day, month, year] = dateString.split('/').map(Number);
+        const parsedDate = new Date(year, month - 1, day);
+        if (!isNaN(parsedDate.getTime())) {
+          return parsedDate;
+        }
+      }
+      
+      // Standard date parsing
       const date = new Date(dateString);
       if (isNaN(date.getTime())) {
         return null;

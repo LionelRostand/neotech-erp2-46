@@ -1,3 +1,4 @@
+
 /**
  * Format a date according to the specified locale and options
  * @param dateInput Date string, Date object, or null/undefined to format
@@ -26,14 +27,28 @@ export const formatDate = (
       return new Intl.DateTimeFormat(locale, options).format(dateInput);
     }
     
-    // If string, try to create a valid date
-    const date = new Date(dateInput);
-    if (isNaN(date.getTime())) {
-      console.warn('Invalid date string provided to formatDate:', dateInput);
-      return '';
+    // If string is in French DD/MM/YYYY format, parse it properly
+    if (typeof dateInput === 'string') {
+      // Check if this looks like DD/MM/YYYY format
+      if (/^\d{2}\/\d{2}\/\d{4}$/.test(dateInput)) {
+        const [day, month, year] = dateInput.split('/').map(Number);
+        const parsedDate = new Date(year, month - 1, day);
+        if (!isNaN(parsedDate.getTime())) {
+          return new Intl.DateTimeFormat(locale, options).format(parsedDate);
+        }
+      }
+      
+      // Standard date parsing
+      const date = new Date(dateInput);
+      if (isNaN(date.getTime())) {
+        console.warn('Invalid date string provided to formatDate:', dateInput);
+        return '';
+      }
+      
+      return new Intl.DateTimeFormat(locale, options).format(date);
     }
     
-    return new Intl.DateTimeFormat(locale, options).format(date);
+    return '';
   } catch (error) {
     console.error('Error formatting date:', error, 'for input:', dateInput);
     return '';

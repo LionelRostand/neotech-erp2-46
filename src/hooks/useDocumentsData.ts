@@ -1,6 +1,7 @@
 
 import { useMemo } from 'react';
 import { useHrModuleData } from './useHrModuleData';
+import { formatDate } from '@/lib/formatters';
 
 export interface HrDocument {
   id: string;
@@ -27,16 +28,6 @@ export interface HrDocument {
 export const useDocumentsData = () => {
   const { hrDocuments, employees, isLoading, error } = useHrModuleData();
   
-  // Fonction pour formater les dates
-  const formatDate = (dateStr: string) => {
-    try {
-      return new Date(dateStr).toLocaleDateString('fr-FR');
-    } catch (error) {
-      console.error('Erreur de formatage de date:', dateStr, error);
-      return dateStr;
-    }
-  };
-  
   // Enrichir les documents avec les noms des employés si nécessaire
   const formattedDocuments = useMemo(() => {
     if (!hrDocuments || hrDocuments.length === 0) return [];
@@ -57,16 +48,19 @@ export const useDocumentsData = () => {
       }
       
       // Utiliser la première date valide disponible
-      let uploadDateStr = document.uploadDate || document.createdAt || document.date || '';
-      let formattedUploadDate = uploadDateStr;
+      const dateStr = document.uploadDate || document.createdAt || document.date || '';
+      let formattedUploadDate = '';
       
       try {
-        if (uploadDateStr) {
-          formattedUploadDate = formatDate(uploadDateStr);
+        if (dateStr) {
+          formattedUploadDate = formatDate(dateStr);
+          if (!formattedUploadDate) {
+            formattedUploadDate = dateStr; // Use original string if formatting fails
+          }
         }
       } catch (e) {
-        console.warn('Erreur lors du formatage de date:', uploadDateStr);
-        formattedUploadDate = 'Date non valide';
+        console.warn('Erreur lors du formatage de date:', dateStr);
+        formattedUploadDate = dateStr || 'Date non valide';
       }
       
       return {
