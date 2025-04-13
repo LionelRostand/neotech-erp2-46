@@ -19,7 +19,7 @@ export const formatDate = (
     if (!dateInput) return '';
     
     // Handle Date objects directly
-    if (typeof dateInput === 'object' && dateInput instanceof Date) {
+    if (dateInput instanceof Date) {
       if (isNaN(dateInput.getTime())) {
         console.warn('Invalid Date object provided to formatDate');
         return '';
