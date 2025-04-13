@@ -1,5 +1,5 @@
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useCallback } from 'react';
 import { useHrModuleData } from './useHrModuleData';
 
 /**
@@ -40,6 +40,12 @@ const DEFAULT_LEAVE_POLICIES: LeavePolicy[] = [
 export const useLeaveBalances = (employeeId?: string) => {
   const { employees, leaveRequests, isLoading } = useHrModuleData();
   const [error, setError] = useState<Error | null>(null);
+  const [refreshCounter, setRefreshCounter] = useState(0);
+  
+  // Function to force refresh the data
+  const refetch = useCallback(() => {
+    setRefreshCounter(prev => prev + 1);
+  }, []);
   
   // Calculate leave balances
   const leaveBalances = useMemo(() => {
@@ -122,11 +128,12 @@ export const useLeaveBalances = (employeeId?: string) => {
       setError(err instanceof Error ? err : new Error('Erreur de calcul des soldes de congés'));
       return [];
     }
-  }, [employees, leaveRequests, employeeId]);
+  }, [employees, leaveRequests, employeeId, refreshCounter]);
   
   return {
     leaveBalances,
     isLoading,
-    error
+    error,
+    refetch
   };
 };

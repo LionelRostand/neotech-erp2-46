@@ -6,7 +6,9 @@ import {
   Plus, 
   FileDown,
   Filter,
-  RefreshCw
+  RefreshCw,
+  Check,
+  X
 } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
@@ -17,9 +19,12 @@ import { useAbsencesData } from '@/hooks/useAbsencesData';
 import CreateAbsenceDialog from './CreateAbsenceDialog';
 import AbsenceDetailsDialog from './AbsenceDetailsDialog';
 import { Absence } from '@/hooks/useAbsencesData';
+import { updateLeaveBalance } from './utils/absenceUtils';
+import { useLeaveBalances } from '@/hooks/useLeaveBalances';
 
 const EmployeesAbsences: React.FC = () => {
   const { absences, stats, isLoading, error } = useAbsencesData();
+  const { leaveBalances, refetch: refetchBalances } = useLeaveBalances();
   const [activeTab, setActiveTab] = useState('all');
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [selectedAbsence, setSelectedAbsence] = useState<Absence | null>(null);
@@ -39,6 +44,7 @@ const EmployeesAbsences: React.FC = () => {
   const handleRefresh = () => {
     toast.success("Données actualisées");
     // Data is automatically reloaded through the useAbsencesData hook
+    refetchBalances();
   };
 
   // Handle create new absence
@@ -50,6 +56,48 @@ const EmployeesAbsences: React.FC = () => {
   const handleViewDetails = (absence: Absence) => {
     setSelectedAbsence(absence);
     setShowDetailsDialog(true);
+  };
+
+  // Nouvelle fonction pour approuver une absence
+  const handleApproveAbsence = async (absence: Absence) => {
+    try {
+      // Mettre à jour le statut de l'absence (simulation)
+      const updatedAbsence = { ...absence, status: 'Validé' };
+      
+      // Vérifier si l'absence est de type congés payés ou RTT
+      if (absence.type.includes('RTT') || 
+          absence.type.includes('congé') || 
+          absence.type.includes('Congé')) {
+        
+        // Mettre à jour le solde de congés de l'employé
+        await updateLeaveBalance(absence.employeeId, absence.type, absence.days);
+        refetchBalances();
+        
+        toast.success(`Absence validée et ${absence.days} jour(s) déduit(s) du solde de ${absence.type}`);
+      } else {
+        toast.success("Absence validée");
+      }
+      
+      // Dans une application réelle, vous mettriez à jour la base de données ici
+      // Reload data after update
+      handleRefresh();
+    } catch (error) {
+      console.error("Erreur lors de la validation de l'absence:", error);
+      toast.error("Erreur lors de la validation de l'absence");
+    }
+  };
+
+  // Nouvelle fonction pour rejeter une absence
+  const handleRejectAbsence = (absence: Absence) => {
+    // Mettre à jour le statut de l'absence (simulation)
+    const updatedAbsence = { ...absence, status: 'Refusé' };
+    
+    // Dans une application réelle, vous mettriez à jour la base de données ici
+    
+    toast.success("Absence refusée");
+    
+    // Reload data after update
+    handleRefresh();
   };
 
   // Export data
@@ -117,6 +165,7 @@ const EmployeesAbsences: React.FC = () => {
                         <TableHead>Type</TableHead>
                         <TableHead>Date début</TableHead>
                         <TableHead>Date fin</TableHead>
+                        <TableHead>Jours</TableHead>
                         <TableHead>Statut</TableHead>
                         <TableHead>Raison</TableHead>
                         <TableHead className="text-right">Actions</TableHead>
@@ -140,6 +189,7 @@ const EmployeesAbsences: React.FC = () => {
                           <TableCell>{absence.type}</TableCell>
                           <TableCell>{absence.startDate}</TableCell>
                           <TableCell>{absence.endDate}</TableCell>
+                          <TableCell>{absence.days}</TableCell>
                           <TableCell>
                             <Badge
                               className={
@@ -153,15 +203,36 @@ const EmployeesAbsences: React.FC = () => {
                               {absence.status}
                             </Badge>
                           </TableCell>
-                          <TableCell className="max-w-[200px] truncate">{absence.reason}</TableCell>
+                          <TableCell className="max-w-[150px] truncate">{absence.reason}</TableCell>
                           <TableCell className="text-right">
-                            <Button 
-                              variant="ghost" 
-                              size="sm" 
-                              onClick={() => handleViewDetails(absence)}
-                            >
-                              Détails
-                            </Button>
+                            {absence.status === 'En attente' ? (
+                              <div className="flex justify-end space-x-2">
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm" 
+                                  onClick={() => handleApproveAbsence(absence)}
+                                  className="text-green-600 hover:bg-green-50"
+                                >
+                                  <Check className="h-4 w-4 mr-1" /> Valider
+                                </Button>
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm" 
+                                  onClick={() => handleRejectAbsence(absence)}
+                                  className="text-red-600 hover:bg-red-50"
+                                >
+                                  <X className="h-4 w-4 mr-1" /> Refuser
+                                </Button>
+                              </div>
+                            ) : (
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                onClick={() => handleViewDetails(absence)}
+                              >
+                                Détails
+                              </Button>
+                            )}
                           </TableCell>
                         </TableRow>
                       ))}
