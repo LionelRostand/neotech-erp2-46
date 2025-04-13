@@ -19,8 +19,8 @@ import { useAuth } from '@/hooks/useAuth';
 
 const EmployeesLeaves: React.FC = () => {
   const { leaves, stats, isLoading, refetch } = useLeaveData();
-  const { currentUser } = useHrModuleData();
-  const { userData } = useAuth(); // Fallback to useAuth if needed
+  const { employees } = useHrModuleData(); // Nous utilisons uniquement les employees ici
+  const { userData } = useAuth(); // Utiliser useAuth pour accéder aux informations utilisateur
   
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   
@@ -45,7 +45,7 @@ const EmployeesLeaves: React.FC = () => {
   const handleApproveLeave = async (id: string) => {
     try {
       const leaveRef = doc(db, COLLECTIONS.HR.LEAVE_REQUESTS, id);
-      const approverName = currentUser?.displayName || userData?.firstName ? 
+      const approverName = userData?.firstName ? 
         `${userData?.firstName} ${userData?.lastName}` : 
         'Administrateur';
         
@@ -66,7 +66,7 @@ const EmployeesLeaves: React.FC = () => {
   const handleRejectLeave = async (id: string) => {
     try {
       const leaveRef = doc(db, COLLECTIONS.HR.LEAVE_REQUESTS, id);
-      const approverName = currentUser?.displayName || userData?.firstName ? 
+      const approverName = userData?.firstName ? 
         `${userData?.firstName} ${userData?.lastName}` : 
         'Administrateur';
         
