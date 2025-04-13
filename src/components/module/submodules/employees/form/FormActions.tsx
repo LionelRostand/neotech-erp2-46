@@ -15,6 +15,7 @@ import { Label } from '@/components/ui/label';
 import { useEmployeeData } from '@/hooks/useEmployeeData';
 import { toast } from 'sonner';
 import { Employee } from '@/types/employee';
+import { isEmployeeManager } from '@/components/module/submodules/employees/utils/employeeUtils';
 
 interface FormActionsProps {
   onCancel: () => void;
@@ -42,37 +43,41 @@ const FormActions: React.FC<FormActionsProps> = ({
       console.log(`FormActions: Nombre d'IDs uniques: ${uniqueIds.size}`);
       
       // Tri des employés par nom de famille puis prénom pour faciliter la recherche
-      const sorted = [...employees].sort((a, b) => {
+      // Filtrer seulement les employés qui sont des managers
+      const managerEmployees = employees.filter(emp => 
+        emp.isManager || isEmployeeManager(emp.position || '') || isEmployeeManager(emp.role || '')
+      );
+      
+      const sorted = [...managerEmployees].sort((a, b) => {
         const nameA = `${a.lastName || ''} ${a.firstName || ''}`.toLowerCase();
         const nameB = `${b.lastName || ''} ${b.firstName || ''}`.toLowerCase();
         return nameA.localeCompare(nameB);
       });
       
-      // Vérification de la présence de LIONEL DJOSSA pour le débogage
-      const lionelDjossa = sorted.find(
-        emp => emp.firstName?.toLowerCase().includes('lionel') && 
-               emp.lastName?.toLowerCase().includes('djossa')
-      );
-      
-      if (lionelDjossa) {
-        console.log('FormActions: LIONEL DJOSSA est présent dans la liste triée:');
-        console.log({
-          id: lionelDjossa.id,
-          nom: `${lionelDjossa.lastName} ${lionelDjossa.firstName}`,
-          status: lionelDjossa.status
-        });
-      } else {
-        console.log('FormActions: LIONEL DJOSSA n\'est pas trouvé dans la liste triée');
-      }
+      console.log(`FormActions: Nombre de managers disponibles: ${sorted.length}`);
       
       setSortedEmployees(sorted);
+      
+      // Si le formulaire est disponible et qu'un employé actuel est édité,
+      // mettre à jour le champ isManager basé sur le poste
+      if (form) {
+        const position = form.getValues('position');
+        const forceManager = form.getValues('forceManager');
+        
+        if (position && !forceManager) {
+          const shouldBeManager = isEmployeeManager(position);
+          if (shouldBeManager) {
+            form.setValue('forceManager', true);
+          }
+        }
+      }
     } else {
       console.log('FormActions: Aucun employé récupéré ou liste vide');
       if (isLoadingEmployees) {
         console.log('FormActions: Chargement des employés en cours...');
       }
     }
-  }, [employees, isLoadingEmployees]);
+  }, [employees, isLoadingEmployees, form]);
   
   return (
     <div className="space-y-4">

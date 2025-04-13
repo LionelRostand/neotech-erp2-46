@@ -23,6 +23,7 @@ export const employeeFormSchema = z.object({
   company: z.string().optional(),
   photo: z.any().optional(), // Accepte les données de la photo
   forceManager: z.boolean().default(false), // Champ pour forcer l'ajout aux managers
+  isManager: z.boolean().optional(), // Propriété pour indiquer si l'employé est un manager
 });
 
 export type EmployeeFormValues = z.infer<typeof employeeFormSchema>;

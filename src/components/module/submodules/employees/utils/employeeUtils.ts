@@ -111,8 +111,28 @@ export const isEmployeeManager = (position: string = ''): boolean => {
   return lowerPosition.includes('manager') || 
          lowerPosition.includes('responsable') || 
          lowerPosition.includes('directeur') || 
+         lowerPosition.includes('directrice') ||
          lowerPosition.includes('pdg') ||
+         lowerPosition.includes('président') ||
          lowerPosition.includes('ceo') || 
          lowerPosition.includes('chief') ||
          lowerPosition.includes('chef');
+};
+
+/**
+ * Vérifie si un employé existe déjà dans la collection
+ * @param employees Liste des employés existants
+ * @param newEmployee Nouvel employé à vérifier
+ * @returns true si l'employé existe déjà
+ */
+export const employeeExists = (employees: any[], newEmployee: any): boolean => {
+  if (!employees || !newEmployee) return false;
+  
+  // Vérifier si l'employé existe déjà avec le même email
+  return employees.some(emp => 
+    emp.email?.toLowerCase() === newEmployee.email?.toLowerCase() ||
+    emp.professionalEmail?.toLowerCase() === newEmployee.professionalEmail?.toLowerCase() ||
+    (emp.firstName?.toLowerCase() === newEmployee.firstName?.toLowerCase() && 
+     emp.lastName?.toLowerCase() === newEmployee.lastName?.toLowerCase())
+  );
 };
