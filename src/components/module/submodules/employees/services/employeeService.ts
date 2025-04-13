@@ -1,28 +1,27 @@
 
-import { collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query, where, orderBy, Timestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query, where, orderBy, Timestamp } from 'firebase/firestore';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import { Employee } from '@/types/employee';
 import { toast } from 'sonner';
-import { generateUniqueEmployeeId } from '../form/employeeUtils';
+import { EmployeeFormValues } from '../form/employeeFormSchema';
+import { generateUniqueEmployeeId, prepareEmployeeData } from '../form/employeeUtils';
 
-/**
- * Récupérer tous les employés (incluant les managers)
- */
+// Function to get all employees (including managers)
 export const getAllEmployees = async (): Promise<Employee[]> => {
   try {
-    // Récupérer les employés réguliers
-    const employeesSnapshot = await getDocs(
-      query(collection(db, COLLECTIONS.HR.EMPLOYEES), orderBy('lastName', 'asc'))
-    );
+    // Get regular employees
+    const employeesRef = collection(db, COLLECTIONS.HR.EMPLOYEES);
+    const employeesQuery = query(employeesRef, orderBy('lastName', 'asc'));
+    const employeesSnapshot = await getDocs(employeesQuery);
     
-    // Récupérer les managers
-    const managersSnapshot = await getDocs(
-      query(collection(db, COLLECTIONS.HR.MANAGERS), orderBy('lastName', 'asc'))
-    );
+    // Get managers 
+    const managersRef = collection(db, COLLECTIONS.HR.MANAGERS);
+    const managersQuery = query(managersRef, orderBy('lastName', 'asc'));
+    const managersSnapshot = await getDocs(managersQuery);
     
-    // Combiner les deux ensembles
-    const employees = employeesSnapshot.docs.map(doc => ({
+    // Combine and process both collections
+    const regularEmployees = employeesSnapshot.docs.map(doc => ({
       ...doc.data(),
       id: doc.id,
       isManager: false
@@ -30,297 +29,239 @@ export const getAllEmployees = async (): Promise<Employee[]> => {
     
     const managers = managersSnapshot.docs.map(doc => ({
       ...doc.data(),
-      id: doc.id,
+      id: doc.id, 
       isManager: true
     })) as Employee[];
     
-    // Combiner et trier
-    return [...employees, ...managers].sort((a, b) => 
-      a.lastName?.localeCompare(b.lastName || '') || 0
-    );
+    // Return combined list
+    return [...regularEmployees, ...managers];
   } catch (error) {
-    console.error('Error fetching employees:', error);
-    throw error;
+    console.error("Error fetching employees:", error);
+    toast.error("Erreur lors du chargement des employés");
+    return [];
   }
 };
 
-/**
- * Récupérer un employé par son ID
- */
+// Function to get employee by ID
 export const getEmployeeById = async (id: string): Promise<Employee | null> => {
   try {
-    // Vérifier d'abord dans la collection des employés
-    const employeeDoc = await getDoc(doc(db, COLLECTIONS.HR.EMPLOYEES, id));
+    // Try to get from employees collection first
+    const employeeDoc = doc(db, COLLECTIONS.HR.EMPLOYEES, id);
+    const employeeSnap = await getDoc(employeeDoc);
     
-    if (employeeDoc.exists()) {
+    if (employeeSnap.exists()) {
       return {
-        ...employeeDoc.data(),
-        id: employeeDoc.id,
+        ...employeeSnap.data(),
+        id: employeeSnap.id,
         isManager: false
       } as Employee;
     }
     
-    // Sinon, vérifier dans la collection des managers
-    const managerDoc = await getDoc(doc(db, COLLECTIONS.HR.MANAGERS, id));
+    // If not found, try managers collection
+    const managerDoc = doc(db, COLLECTIONS.HR.MANAGERS, id);
+    const managerSnap = await getDoc(managerDoc);
     
-    if (managerDoc.exists()) {
+    if (managerSnap.exists()) {
       return {
-        ...managerDoc.data(),
-        id: managerDoc.id,
+        ...managerSnap.data(),
+        id: managerSnap.id,
         isManager: true
       } as Employee;
     }
     
     return null;
   } catch (error) {
-    console.error(`Error fetching employee with id ${id}:`, error);
-    throw error;
+    console.error("Error fetching employee:", error);
+    toast.error("Erreur lors du chargement des données de l'employé");
+    return null;
   }
 };
 
-/**
- * Créer un nouvel employé
- */
-export const createEmployee = async (employeeData: Partial<Employee>): Promise<Employee> => {
+// Function to create a new employee
+export const createEmployee = async (employeeData: EmployeeFormValues): Promise<Employee | null> => {
   try {
-    // Vérifier si un ID a été fourni, sinon en générer un
-    const employeeId = employeeData.id || generateUniqueEmployeeId();
-    const data = { ...employeeData, id: employeeId };
+    const newEmployeeId = generateUniqueEmployeeId();
+    const preparedData = prepareEmployeeData(employeeData, newEmployeeId);
     
-    // Déterminer la collection cible en fonction du statut de manager
-    const isManager = !!data.isManager;
-    const collectionPath = isManager ? COLLECTIONS.HR.MANAGERS : COLLECTIONS.HR.EMPLOYEES;
+    // Determine which collection to use based on manager status
+    const collectionPath = preparedData.isManager 
+      ? COLLECTIONS.HR.MANAGERS 
+      : COLLECTIONS.HR.EMPLOYEES;
     
-    // Ajouter le document à Firestore
-    await addDoc(collection(db, collectionPath), {
-      ...data,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+    const employeeRef = collection(db, collectionPath);
+    const docRef = await addDoc(employeeRef, {
+      ...preparedData,
+      createdAt: Timestamp.now(),
+      updatedAt: Timestamp.now()
     });
     
-    toast.success(`${isManager ? 'Manager' : 'Employé'} créé avec succès`);
+    // Get the created employee to return
+    const employeeSnap = await getDoc(docRef);
     
-    return {
-      ...data,
-      id: employeeId
-    } as Employee;
+    if (employeeSnap.exists()) {
+      const newEmployee = {
+        ...employeeSnap.data(),
+        id: employeeSnap.id,
+        isManager: !!preparedData.isManager
+      } as Employee;
+      
+      toast.success(`Employé ${preparedData.firstName} ${preparedData.lastName} créé avec succès`);
+      return newEmployee;
+    }
+    
+    return null;
   } catch (error) {
-    console.error('Error creating employee:', error);
+    console.error("Error creating employee:", error);
     toast.error("Erreur lors de la création de l'employé");
-    throw error;
+    return null;
   }
 };
 
-/**
- * Mettre à jour un employé existant
- */
-export const updateEmployee = async (id: string, data: Partial<Employee>): Promise<Employee> => {
+// Function to update an existing employee
+export const updateEmployee = async (
+  id: string, 
+  employeeData: Partial<Employee>
+): Promise<Employee | null> => {
   try {
-    // Récupérer l'employé actuel pour connaître sa collection
+    // Determine which collection to use based on current isManager status
     const existingEmployee = await getEmployeeById(id);
     
     if (!existingEmployee) {
-      throw new Error(`Employé avec l'ID ${id} introuvable`);
+      toast.error("Employé non trouvé");
+      return null;
     }
     
-    // Déterminer la collection source et cible
-    const isManager = !!existingEmployee.isManager;
-    const targetIsManager = data.isManager !== undefined ? !!data.isManager : isManager;
+    const collectionPath = existingEmployee.isManager 
+      ? COLLECTIONS.HR.MANAGERS 
+      : COLLECTIONS.HR.EMPLOYEES;
     
-    const sourceCollection = isManager ? COLLECTIONS.HR.MANAGERS : COLLECTIONS.HR.EMPLOYEES;
-    const targetCollection = targetIsManager ? COLLECTIONS.HR.MANAGERS : COLLECTIONS.HR.EMPLOYEES;
+    const employeeRef = doc(db, collectionPath, id);
     
-    // Préparer les données à mettre à jour
+    // Prepare update data
     const updateData = {
-      ...data,
-      updatedAt: new Date().toISOString()
+      ...employeeData,
+      updatedAt: Timestamp.now()
     };
     
-    // Si le statut de manager a changé, supprimer de l'ancienne collection et ajouter à la nouvelle
-    if (isManager !== targetIsManager) {
-      // Supprimer de la collection source
-      await deleteDoc(doc(db, sourceCollection, id));
+    // Remove id and isManager from update data to prevent overwrites
+    delete updateData.id;
+
+    // Use type assertion to handle the isManager property correctly
+    await updateDoc(employeeRef, updateData);
+    
+    // Check if manager status changed, if so, move to the appropriate collection
+    const shouldBeManager = employeeData.role?.toLowerCase().includes('manager') || 
+                           employeeData.position?.toLowerCase().includes('manager') ||
+                           employeeData.position?.toLowerCase().includes('directeur');
+    
+    if (shouldBeManager !== undefined && shouldBeManager !== existingEmployee.isManager) {
+      // Need to move the employee to the other collection
+      const newCollectionPath = shouldBeManager 
+        ? COLLECTIONS.HR.MANAGERS 
+        : COLLECTIONS.HR.EMPLOYEES;
       
-      // Ajouter à la collection cible
-      const newData = {
+      // Add to new collection
+      const newRef = collection(db, newCollectionPath);
+      await addDoc(newRef, {
         ...existingEmployee,
         ...updateData,
-        isManager: targetIsManager
-      };
+        isManager: shouldBeManager
+      });
       
-      await addDoc(collection(db, targetCollection), newData);
+      // Delete from old collection
+      await deleteDoc(employeeRef);
       
-      toast.success(`${targetIsManager ? 'Manager' : 'Employé'} mis à jour avec succès (changement de statut)`);
-      
-      return newData as Employee;
-    } else {
-      // Mise à jour normale sans changement de collection
-      await updateDoc(doc(db, sourceCollection, id), updateData);
-      
-      toast.success(`${isManager ? 'Manager' : 'Employé'} mis à jour avec succès`);
-      
-      return {
-        ...existingEmployee,
-        ...updateData
-      } as Employee;
+      toast.success(`L'employé a été déplacé vers la collection ${shouldBeManager ? 'managers' : 'employees'}`);
     }
+    
+    // Get the updated employee
+    const updatedEmployee = await getEmployeeById(id);
+    
+    if (updatedEmployee) {
+      toast.success(`Employé ${updatedEmployee.firstName} ${updatedEmployee.lastName} mis à jour avec succès`);
+      return updatedEmployee;
+    }
+    
+    return null;
   } catch (error) {
-    console.error(`Error updating employee ${id}:`, error);
+    console.error("Error updating employee:", error);
     toast.error("Erreur lors de la mise à jour de l'employé");
-    throw error;
+    return null;
   }
 };
 
-/**
- * Mettre à jour les compétences d'un employé
- */
-export const updateEmployeeSkills = async (employeeId: string, skills: string[]): Promise<void> => {
+// Function to delete an employee
+export const deleteEmployee = async (id: string): Promise<boolean> => {
   try {
-    // Récupérer l'employé pour déterminer sa collection
+    // Check which collection the employee is in
+    const employeeDoc = doc(db, COLLECTIONS.HR.EMPLOYEES, id);
+    const employeeSnap = await getDoc(employeeDoc);
+    
+    if (employeeSnap.exists()) {
+      await deleteDoc(employeeDoc);
+      toast.success("Employé supprimé avec succès");
+      return true;
+    }
+    
+    const managerDoc = doc(db, COLLECTIONS.HR.MANAGERS, id);
+    const managerSnap = await getDoc(managerDoc);
+    
+    if (managerSnap.exists()) {
+      await deleteDoc(managerDoc);
+      toast.success("Manager supprimé avec succès");
+      return true;
+    }
+    
+    toast.error("Employé non trouvé");
+    return false;
+  } catch (error) {
+    console.error("Error deleting employee:", error);
+    toast.error("Erreur lors de la suppression de l'employé");
+    return false;
+  }
+};
+
+// Function to update employee skills
+export const updateEmployeeSkills = async (
+  employeeId: string, 
+  skills: string[]
+): Promise<boolean> => {
+  try {
     const employee = await getEmployeeById(employeeId);
     
     if (!employee) {
-      throw new Error(`Employé avec l'ID ${employeeId} introuvable`);
+      toast.error("Employé non trouvé");
+      return false;
     }
     
-    // Déterminer la collection
-    const collectionPath = employee.isManager ? COLLECTIONS.HR.MANAGERS : COLLECTIONS.HR.EMPLOYEES;
+    const collectionPath = employee.isManager
+      ? COLLECTIONS.HR.MANAGERS
+      : COLLECTIONS.HR.EMPLOYEES;
+      
+    const employeeRef = doc(db, collectionPath, employeeId);
     
-    // Mettre à jour les compétences
-    await updateDoc(doc(db, collectionPath, employeeId), {
+    await updateDoc(employeeRef, {
       skills,
-      updatedAt: new Date().toISOString()
+      updatedAt: Timestamp.now()
     });
     
     toast.success("Compétences mises à jour avec succès");
+    return true;
   } catch (error) {
-    console.error(`Error updating skills for employee ${employeeId}:`, error);
+    console.error("Error updating employee skills:", error);
     toast.error("Erreur lors de la mise à jour des compétences");
-    throw error;
+    return false;
   }
 };
 
-/**
- * Supprimer un employé
- */
-export const deleteEmployee = async (id: string): Promise<void> => {
-  try {
-    // Récupérer l'employé pour déterminer sa collection
-    const employee = await getEmployeeById(id);
-    
-    if (!employee) {
-      throw new Error(`Employé avec l'ID ${id} introuvable`);
-    }
-    
-    // Déterminer la collection
-    const collectionPath = employee.isManager ? COLLECTIONS.HR.MANAGERS : COLLECTIONS.HR.EMPLOYEES;
-    
-    // Supprimer l'employé
-    await deleteDoc(doc(db, collectionPath, id));
-    
-    toast.success(`${employee.isManager ? 'Manager' : 'Employé'} supprimé avec succès`);
-  } catch (error) {
-    console.error(`Error deleting employee ${id}:`, error);
-    toast.error("Erreur lors de la suppression de l'employé");
-    throw error;
-  }
-};
-
-/**
- * Rafraîchir les données des employés (utilisé après des modifications)
- */
+// Function to refresh employees data (for UI updates)
 export const refreshEmployeesData = async (): Promise<Employee[]> => {
   try {
-    return await getAllEmployees();
+    const employees = await getAllEmployees();
+    return employees;
   } catch (error) {
-    console.error('Error refreshing employees data:', error);
-    toast.error('Erreur lors du rafraîchissement des données');
-    throw error;
-  }
-};
-
-/**
- * Créer plusieurs employés à la fois (importation en masse)
- */
-export const createBulkEmployees = async (employees: Partial<Employee>[]): Promise<Employee[]> => {
-  try {
-    const results: Employee[] = [];
-    
-    for (const employeeData of employees) {
-      // Générer un ID s'il n'y en a pas
-      const employeeId = employeeData.id || generateUniqueEmployeeId();
-      const data = { ...employeeData, id: employeeId };
-      
-      // Déterminer la collection cible
-      const isManager = !!data.isManager;
-      const collectionPath = isManager ? COLLECTIONS.HR.MANAGERS : COLLECTIONS.HR.EMPLOYEES;
-      
-      // Ajouter le document à Firestore
-      await addDoc(collection(db, collectionPath), {
-        ...data,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      });
-      
-      results.push({
-        ...data,
-        id: employeeId,
-        isManager
-      } as Employee);
-    }
-    
-    toast.success(`${results.length} employés créés avec succès`);
-    
-    return results;
-  } catch (error) {
-    console.error('Error creating bulk employees:', error);
-    toast.error("Erreur lors de la création des employés en masse");
-    throw error;
-  }
-};
-
-/**
- * Obtenir des employés filtrés par critères
- */
-export const getFilteredEmployees = async (
-  filters: {
-    department?: string;
-    status?: string;
-    position?: string;
-    managerOnly?: boolean;
-  }
-): Promise<Employee[]> => {
-  try {
-    // Récupérer tous les employés
-    let allEmployees = await getAllEmployees();
-    
-    // Appliquer les filtres
-    return allEmployees.filter(emp => {
-      // Filtrer par département
-      if (filters.department && emp.department !== filters.department) {
-        return false;
-      }
-      
-      // Filtrer par statut
-      if (filters.status && emp.status !== filters.status) {
-        return false;
-      }
-      
-      // Filtrer par position
-      if (filters.position && emp.position !== filters.position) {
-        return false;
-      }
-      
-      // Filtrer par statut de manager
-      if (filters.managerOnly === true && !emp.isManager) {
-        return false;
-      }
-      
-      return true;
-    });
-  } catch (error) {
-    console.error('Error getting filtered employees:', error);
-    toast.error("Erreur lors de la récupération des employés filtrés");
-    throw error;
+    console.error("Error refreshing employees data:", error);
+    toast.error("Erreur lors du rafraîchissement des données");
+    return [];
   }
 };

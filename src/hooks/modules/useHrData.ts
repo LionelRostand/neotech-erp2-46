@@ -41,24 +41,25 @@ export const useHrData = () => {
         const managersSnapshot = await getDocs(managersQuery);
         
         // Combiner les deux ensembles de résultats
-        const allEmployees = [
-          ...employeesSnapshot.docs.map(doc => {
-            const data = doc.data();
-            return {
-              ...data,
-              id: doc.id,
-              isManager: false
-            } as Employee;
-          }),
-          ...managersSnapshot.docs.map(doc => {
-            const data = doc.data();
-            return {
-              ...data,
-              id: doc.id,
-              isManager: true
-            } as Employee;
-          })
-        ];
+        const regularEmployees = employeesSnapshot.docs.map(doc => {
+          const data = doc.data();
+          return {
+            ...data,
+            id: doc.id,
+            isManager: false
+          } as Employee;
+        });
+        
+        const managerEmployees = managersSnapshot.docs.map(doc => {
+          const data = doc.data();
+          return {
+            ...data,
+            id: doc.id,
+            isManager: true
+          } as Employee;
+        });
+        
+        const allEmployees = [...regularEmployees, ...managerEmployees];
         
         // Trier par nom de famille
         const sortedEmployees = allEmployees.sort((a, b) => 

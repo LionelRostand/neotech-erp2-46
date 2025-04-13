@@ -73,7 +73,7 @@ export const prepareEmployeeData = (data: EmployeeFormValues, employeeId: string
     company: data.company || '',
     photoData,
     photoMeta,
-    isManager,  // Keeping the isManager flag
+    isManager,  // Add the isManager flag
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   } as Partial<Employee>; // Cast to Partial<Employee> to resolve TypeScript error

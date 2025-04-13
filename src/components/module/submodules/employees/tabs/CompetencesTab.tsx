@@ -1,36 +1,33 @@
 
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Employee } from '@/types/employee';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { PlusCircle, X, Save } from 'lucide-react';
 import { Input } from '@/components/ui/input';
-import { X, Save, Plus } from 'lucide-react';
-import { updateEmployeeSkills } from '../services/employeeService';
+import { Employee } from '@/types/employee';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
+import { updateEmployeeSkills } from '../services/employeeService';
 
 interface CompetencesTabProps {
   employee: Employee;
-  isEditing?: boolean;
-  onFinishEditing?: () => void;
+  onEmployeeUpdated: () => void;
 }
 
-const CompetencesTab: React.FC<CompetencesTabProps> = ({ employee, isEditing = false, onFinishEditing }) => {
+const CompetencesTab: React.FC<CompetencesTabProps> = ({ employee, onEmployeeUpdated }) => {
   const [skills, setSkills] = useState<string[]>(employee.skills || []);
   const [newSkill, setNewSkill] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  
-  // Mettre à jour les compétences lorsque les données de l'employé changent
-  useEffect(() => {
-    setSkills(employee.skills || []);
-  }, [employee]);
+  const [isEditing, setIsEditing] = useState(false);
 
   const handleAddSkill = () => {
     if (!newSkill.trim()) return;
+    
+    // Check if skill already exists
     if (skills.includes(newSkill.trim())) {
-      toast.error('Cette compétence existe déjà');
+      toast.error("Cette compétence existe déjà");
       return;
     }
+    
     setSkills([...skills, newSkill.trim()]);
     setNewSkill('');
   };
@@ -40,106 +37,92 @@ const CompetencesTab: React.FC<CompetencesTabProps> = ({ employee, isEditing = f
   };
 
   const handleSaveSkills = async () => {
-    if (!employee.id) return;
-    
-    setIsSubmitting(true);
     try {
-      // Utiliser la nouvelle fonction de service pour mettre à jour les compétences
-      const success = await updateEmployeeSkills(employee.id, skills);
+      const result = await updateEmployeeSkills(employee.id, skills);
       
-      if (success && onFinishEditing) {
-        onFinishEditing();
+      if (result) {
+        setIsEditing(false);
+        onEmployeeUpdated();
+        toast.success("Compétences mises à jour avec succès");
       }
     } catch (error) {
-      console.error('Erreur lors de la mise à jour des compétences:', error);
-      toast.error('Erreur lors de la mise à jour des compétences');
-    } finally {
-      setIsSubmitting(false);
+      console.error("Error saving skills:", error);
+      toast.error("Erreur lors de la sauvegarde des compétences");
     }
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Compétences</CardTitle>
+    <Card className="shadow-sm">
+      <CardHeader className="pb-2">
+        <div className="flex justify-between items-center">
+          <CardTitle className="text-lg font-medium">Compétences</CardTitle>
+          {!isEditing ? (
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => setIsEditing(true)}
+            >
+              Modifier
+            </Button>
+          ) : (
+            <Button 
+              variant="default" 
+              size="sm" 
+              onClick={handleSaveSkills}
+            >
+              <Save className="h-4 w-4 mr-1" />
+              Enregistrer
+            </Button>
+          )}
+        </div>
       </CardHeader>
-      <CardContent className="p-6">
+      <CardContent>
         {isEditing ? (
           <div className="space-y-4">
+            <div className="flex items-center space-x-2">
+              <Input
+                placeholder="Ajouter une compétence..."
+                value={newSkill}
+                onChange={(e) => setNewSkill(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleAddSkill()}
+              />
+              <Button 
+                type="button" 
+                size="icon" 
+                onClick={handleAddSkill}
+              >
+                <PlusCircle className="h-4 w-4" />
+              </Button>
+            </div>
             <div className="flex flex-wrap gap-2">
               {skills.map((skill, index) => (
-                <div key={index} className="flex items-center bg-muted rounded-full px-3 py-1">
-                  <span className="text-sm mr-2">{skill}</span>
-                  <button 
+                <Badge key={index} className="py-1 pl-2 pr-1 flex items-center gap-1">
+                  {skill}
+                  <button
+                    type="button"
+                    className="ml-1 rounded-full hover:bg-gray-200 p-1"
                     onClick={() => handleRemoveSkill(skill)}
-                    className="text-muted-foreground hover:text-destructive"
                   >
                     <X className="h-3 w-3" />
                   </button>
-                </div>
+                </Badge>
               ))}
-            </div>
-            
-            <div className="flex gap-2 mt-4">
-              <Input
-                value={newSkill}
-                onChange={(e) => setNewSkill(e.target.value)}
-                placeholder="Ajouter une compétence"
-                className="flex-1"
-                onKeyDown={(e) => e.key === 'Enter' && handleAddSkill()}
-              />
-              <Button type="button" onClick={handleAddSkill} size="sm">
-                <Plus className="h-4 w-4 mr-1" />
-                Ajouter
-              </Button>
             </div>
           </div>
         ) : (
           <div className="flex flex-wrap gap-2">
             {skills.length > 0 ? (
               skills.map((skill, index) => (
-                <Badge key={index} variant="secondary" className="px-3 py-1 text-sm">
+                <Badge key={index} variant="secondary" className="py-1">
                   {skill}
                 </Badge>
               ))
             ) : (
-              <p className="text-gray-500">Aucune compétence renseignée</p>
+              <p className="text-sm text-gray-500">Aucune compétence renseignée.</p>
             )}
           </div>
         )}
       </CardContent>
-      
-      {isEditing && (
-        <CardFooter className="border-t px-6 py-4 bg-muted/20">
-          <div className="ml-auto flex gap-2">
-            <Button 
-              variant="outline" 
-              onClick={onFinishEditing}
-            >
-              Annuler
-            </Button>
-            <Button 
-              onClick={handleSaveSkills}
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? (
-                <span className="flex items-center">
-                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  Enregistrement...
-                </span>
-              ) : (
-                <>
-                  <Save className="h-4 w-4 mr-2" />
-                  Enregistrer
-                </>
-              )}
-            </Button>
-          </div>
-        </CardFooter>
-      )}
     </Card>
   );
 };
