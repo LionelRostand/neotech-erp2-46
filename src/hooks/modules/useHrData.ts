@@ -42,16 +42,22 @@ export const useHrData = () => {
         
         // Combiner les deux ensembles de résultats
         const allEmployees = [
-          ...employeesSnapshot.docs.map(doc => ({
-            ...doc.data(),
-            id: doc.id,
-            isManager: false
-          })) as Employee[],
-          ...managersSnapshot.docs.map(doc => ({
-            ...doc.data(),
-            id: doc.id,
-            isManager: true
-          })) as Employee[]
+          ...employeesSnapshot.docs.map(doc => {
+            const data = doc.data();
+            return {
+              ...data,
+              id: doc.id,
+              isManager: false
+            } as Employee;
+          }),
+          ...managersSnapshot.docs.map(doc => {
+            const data = doc.data();
+            return {
+              ...data,
+              id: doc.id,
+              isManager: true
+            } as Employee;
+          })
         ];
         
         // Trier par nom de famille
