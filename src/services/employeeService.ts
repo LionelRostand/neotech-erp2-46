@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 
 /**
  * Génère un ID unique pour un employé au format EMP-XXXXXXXX
+ * Note: utilisé uniquement comme référence interne, plus pour créer des documents
  */
 export const generateEmployeeId = (): string => {
   const randomId = Math.random().toString(36).substring(2, 6).toUpperCase() +
@@ -140,15 +141,15 @@ export const createEmployee = async (employeeData: Partial<Employee>): Promise<E
       return null;
     }
     
-    // Générer un ID unique pour l'employé
-    const id = generateEmployeeId();
-    
     // Nettoyer les données
     const cleanedData = cleanEmployeeData(employeeData);
     
-    // Préparer l'objet employé
+    // Générer un ID client interne pour référence mais qui ne sera pas utilisé comme ID document
+    const internalId = generateEmployeeId();
+    
+    // Préparer l'objet employé avec ID interne
     const employee: Employee = {
-      id,
+      id: internalId, // ID interne uniquement pour référence
       firstName: cleanedData.firstName || '',
       lastName: cleanedData.lastName || '',
       email: cleanedData.email || '',
@@ -174,22 +175,30 @@ export const createEmployee = async (employeeData: Partial<Employee>): Promise<E
       professionalEmail: cleanedData.professionalEmail || '',
       skills: cleanedData.skills || [],
       education: cleanedData.education || [],
-      payslips: cleanedData.payslips || [], // Ensuring payslips is set
+      payslips: cleanedData.payslips || [],
       isManager: !!cleanedData.isManager,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       ...cleanedData // Ajouter toutes les autres propriétés nettoyées
     };
     
-    // Enregistrer dans Firestore en utilisant addDoc au lieu de setDoc
+    // Enregistrer dans Firestore en utilisant addDoc pour obtenir un ID auto-généré
     console.log('Enregistrement de l\'employé avec addDoc:', employee);
     
-    // Utiliser addDoc pour générer un ID Firestore automatique
     const employeesCollectionRef = collection(db, COLLECTIONS.HR.EMPLOYEES);
     const docRef = await addDoc(employeesCollectionRef, employee);
     
-    console.log('Employé créé avec succès, ID Firestore:', docRef.id, 'ID employé:', id);
-    return employee;
+    // Mettre à jour l'objet employee avec l'ID Firestore
+    const updatedEmployee: Employee = {
+      ...employee,
+      firebaseId: docRef.id, // Stocker l'ID Firestore dans un champ dédié
+    };
+    
+    // Mettre à jour le document pour ajouter l'ID Firestore
+    await updateDocument(COLLECTIONS.HR.EMPLOYEES, docRef.id, { firebaseId: docRef.id });
+    
+    console.log('Employé créé avec succès, ID Firestore:', docRef.id, 'ID interne:', internalId);
+    return updatedEmployee;
   } catch (error) {
     console.error('Erreur lors de la création de l\'employé:', error);
     throw error;
@@ -210,9 +219,11 @@ export const updateEmployeeDoc = async (id: string, employeeData: Partial<Employ
     cleanedData.updatedAt = new Date().toISOString();
     
     // Mettre à jour dans Firestore en utilisant updateDocument qui gère mieux les erreurs
-    const updatedEmployee = await updateDocument(COLLECTIONS.HR.EMPLOYEES, id, cleanedData);
+    // Note: nous utilisons maintenant l'ID Firestore (docRef.id) et non plus l'ID interne
+    const firebaseId = employeeData.firebaseId || id;
+    const updatedEmployee = await updateDocument(COLLECTIONS.HR.EMPLOYEES, firebaseId, cleanedData);
     
-    console.log('Employé mis à jour avec succès:', id);
+    console.log('Employé mis à jour avec succès:', firebaseId);
     return updatedEmployee as Employee;
   } catch (error) {
     console.error('Erreur lors de la mise à jour de l\'employé:', error);
@@ -237,4 +248,3 @@ export const syncManagerStatus = async (employee: Employee): Promise<void> => {
     console.error('Erreur lors de la synchronisation du statut de manager:', error);
   }
 };
-

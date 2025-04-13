@@ -55,6 +55,7 @@ export interface Evaluation {
 
 export interface Employee {
   id: string;
+  firebaseId?: string; // ID généré par Firestore
   firstName: string;
   lastName: string;
   email: string;

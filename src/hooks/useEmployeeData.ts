@@ -23,9 +23,12 @@ export const useEmployeeData = () => {
     const uniqueEmployeesMap = new Map();
     
     employees.forEach(employee => {
-      // Si l'employé n'existe pas encore dans la Map, l'ajouter
-      if (!uniqueEmployeesMap.has(employee.id)) {
-        uniqueEmployeesMap.set(employee.id, {
+      // Privilégier les enregistrements avec un firebaseId
+      const existingEmployee = uniqueEmployeesMap.get(employee.email);
+      
+      // Si l'employé n'existe pas encore dans la Map, ou si le nouvel employé a un firebaseId, l'ajouter/remplacer
+      if (!existingEmployee || (employee.firebaseId && !existingEmployee.firebaseId)) {
+        uniqueEmployeesMap.set(employee.email, {
           ...employee,
           // Garantir que chaque employé a une photo (même placeholder)
           photoURL: employee.photoURL || employee.photo || '',
