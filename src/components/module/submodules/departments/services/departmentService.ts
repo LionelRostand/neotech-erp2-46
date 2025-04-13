@@ -20,16 +20,19 @@ export const useDepartmentService = () => {
       
       // Enrichir les départements avec les noms de managers
       const enrichedDepartments = data.map(department => {
-        if (department.managerId) {
-          const manager = employees.find(emp => emp.id === department.managerId);
+        // Traiter chaque département comme un objet Department partiel
+        const typedDepartment = department as Partial<Department>;
+        
+        if (typedDepartment.managerId) {
+          const manager = employees.find(emp => emp.id === typedDepartment.managerId);
           if (manager) {
-            department.managerName = `${manager.firstName} ${manager.lastName}`;
+            typedDepartment.managerName = `${manager.firstName} ${manager.lastName}`;
           }
         }
-        return department;
+        return typedDepartment as Department;
       });
       
-      return enrichedDepartments as Department[];
+      return enrichedDepartments;
     } catch (error) {
       console.error("Error fetching departments:", error);
       toast.error("Erreur lors du chargement des départements");
