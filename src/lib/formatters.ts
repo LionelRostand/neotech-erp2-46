@@ -1,13 +1,13 @@
 
 /**
  * Format a date according to the specified locale and options
- * @param dateString Date string to format
+ * @param dateInput Date string, Date object, or null/undefined to format
  * @param options DateTimeFormatOptions (defaults to standard DD/MM/YYYY)
  * @param locale Locale string (defaults to fr-FR)
  * @returns Formatted date string
  */
 export const formatDate = (
-  dateString: string | null | undefined, 
+  dateInput: string | Date | null | undefined, 
   options: Intl.DateTimeFormatOptions = {
     day: '2-digit',
     month: '2-digit',
@@ -16,26 +16,26 @@ export const formatDate = (
   locale: string = 'fr-FR'
 ): string => {
   try {
-    if (!dateString) return '';
+    if (!dateInput) return '';
     
     // Handle Date objects directly
-    if (dateString instanceof Date) {
-      if (isNaN(dateString.getTime())) {
+    if (dateInput instanceof Date) {
+      if (isNaN(dateInput.getTime())) {
         console.warn('Invalid Date object provided to formatDate');
         return '';
       }
-      return new Intl.DateTimeFormat(locale, options).format(dateString);
+      return new Intl.DateTimeFormat(locale, options).format(dateInput);
     }
     
     // Validate that the input is actually a string
-    if (typeof dateString !== 'string') {
-      console.warn('Non-string value provided to formatDate:', dateString);
+    if (typeof dateInput !== 'string') {
+      console.warn('Non-string value provided to formatDate:', dateInput);
       return '';
     }
     
     // Handle exotic date formats or values that could be problematic
-    if (dateString === 'Invalid Date' || dateString === 'NaN' || dateString === 'undefined' || dateString.trim() === '') {
-      console.warn('Invalid date string literal:', dateString);
+    if (dateInput === 'Invalid Date' || dateInput === 'NaN' || dateInput === 'undefined' || dateInput.trim() === '') {
+      console.warn('Invalid date string literal:', dateInput);
       return '';
     }
     
@@ -43,9 +43,9 @@ export const formatDate = (
     let date: Date | null = null;
     
     // Special case for timestamps stored as numbers
-    if (/^\d+$/.test(dateString)) {
+    if (/^\d+$/.test(dateInput)) {
       // This might be a numeric timestamp
-      const timestamp = parseInt(dateString, 10);
+      const timestamp = parseInt(dateInput, 10);
       
       // Validate the timestamp is reasonable (between years 1900-2100)
       const testDate = new Date(timestamp);
@@ -54,14 +54,14 @@ export const formatDate = (
         testDate.getFullYear() < 1900 || 
         testDate.getFullYear() > 2100
       ) {
-        console.warn('Timestamp out of reasonable range:', dateString);
+        console.warn('Timestamp out of reasonable range:', dateInput);
         return '';
       }
       
       date = testDate;
-    } else if (dateString.includes('/')) {
+    } else if (dateInput.includes('/')) {
       // Try to parse DD/MM/YYYY format
-      const parts = dateString.split('/');
+      const parts = dateInput.split('/');
       if (parts.length === 3) {
         const day = parseInt(parts[0], 10);
         const month = parseInt(parts[1], 10) - 1;
@@ -77,20 +77,20 @@ export const formatDate = (
     // If previous methods failed, try standard parsing
     if (!date) {
       // Make sure the date is valid first
-      const timestamp = Date.parse(dateString);
+      const timestamp = Date.parse(dateInput);
       if (isNaN(timestamp)) {
-        console.warn('Invalid date provided to formatDate:', dateString);
+        console.warn('Invalid date provided to formatDate:', dateInput);
         return '';
       }
       
       // Create the date object and verify it's a reasonable date
-      date = new Date(dateString);
+      date = new Date(dateInput);
       if (
         isNaN(date.getTime()) || 
         date.getFullYear() < 1900 || 
         date.getFullYear() > 2100
       ) {
-        console.warn('Date out of reasonable range:', dateString);
+        console.warn('Date out of reasonable range:', dateInput);
         return '';
       }
     }
@@ -102,7 +102,7 @@ export const formatDate = (
     
     return new Intl.DateTimeFormat(locale, options).format(date);
   } catch (error) {
-    console.error('Error formatting date:', error, 'for input:', dateString);
+    console.error('Error formatting date:', error, 'for input:', dateInput);
     return '';
   }
 };
