@@ -8,13 +8,13 @@ import { Search, RefreshCw, Building, Users } from 'lucide-react';
 import HierarchyVisualization from './hierarchy/HierarchyVisualization';
 import { useHierarchyData } from './hierarchy/hooks/useHierarchyData';
 import StatCard from '@/components/StatCard';
-import { countNodes, countManagerNodes, getMaxDepth, getAllDepartments } from './hierarchy/utils/hierarchyUtils';
+import { getSyncedStats } from './hierarchy/utils/hierarchyUtils';
 
 const EmployeesHierarchy: React.FC = () => {
   const [viewMode, setViewMode] = useState<'orgChart' | 'treeView'>('orgChart');
   const [searchQuery, setSearchQuery] = useState('');
   const [refreshKey, setRefreshKey] = useState(0);
-  const { hierarchyData, isLoading, refreshHierarchy } = useHierarchyData();
+  const { hierarchyData, isLoading, refreshHierarchy, departmentStats } = useHierarchyData();
 
   // Fonction pour rafraîchir la hiérarchie
   const handleRefresh = useCallback(() => {
@@ -25,22 +25,12 @@ const EmployeesHierarchy: React.FC = () => {
 
   // Calculer les statistiques basées sur la hiérarchie à l'aide des fonctions utilitaires
   const stats = useMemo(() => {
-    if (!hierarchyData) {
-      return {
-        totalEmployees: 0,
-        managerCount: 0,
-        maxDepth: 0,
-        departmentsRepresented: 0
-      };
-    }
-
-    return {
-      totalEmployees: countNodes(hierarchyData),
-      managerCount: countManagerNodes(hierarchyData),
-      maxDepth: getMaxDepth(hierarchyData),
-      departmentsRepresented: getAllDepartments(hierarchyData).size
-    };
-  }, [hierarchyData]);
+    return getSyncedStats(
+      hierarchyData, 
+      departmentStats.departmentsCount, 
+      departmentStats.managersCount
+    );
+  }, [hierarchyData, departmentStats]);
 
   return (
     <div className="space-y-6">

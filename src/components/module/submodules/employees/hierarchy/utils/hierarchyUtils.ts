@@ -98,6 +98,9 @@ export const getAllDepartments = (node: ChartNode | HierarchyNode): Set<string> 
     // Add department from this node
     if ('department' in n && n.department) {
       departments.add(n.department);
+    } else if (n.color) {
+      // Si un nœud a une couleur, cela indique généralement un département
+      departments.add(n.name);
     }
     
     // Get departments from children
@@ -108,4 +111,28 @@ export const getAllDepartments = (node: ChartNode | HierarchyNode): Set<string> 
   
   addDepartmentsRecursive(node);
   return departments;
+};
+
+/**
+ * Fonction pour synchroniser les compteurs avec les données des départements
+ */
+export const getSyncedStats = (hierarchyData: HierarchyNode | ChartNode | null, departmentsCount: number, managersCount: number) => {
+  if (!hierarchyData) {
+    return {
+      totalEmployees: 0,
+      managerCount: managersCount || 0,
+      maxDepth: 0,
+      departmentsRepresented: departmentsCount || 0
+    };
+  }
+
+  const calculatedManagers = countManagerNodes(hierarchyData);
+  const calculatedDepartments = getAllDepartments(hierarchyData).size;
+  
+  return {
+    totalEmployees: countNodes(hierarchyData),
+    managerCount: Math.max(calculatedManagers, managersCount || 0),
+    maxDepth: getMaxDepth(hierarchyData),
+    departmentsRepresented: Math.max(calculatedDepartments, departmentsCount || 0)
+  };
 };

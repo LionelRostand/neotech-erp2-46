@@ -12,6 +12,35 @@ export const useHierarchyData = () => {
   const [hierarchyData, setHierarchyData] = useState<HierarchyNode | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const { employees, departments } = useHrModuleData();
+  
+  // Statistiques des départements et managers
+  const [departmentStats, setDepartmentStats] = useState({
+    departmentsCount: 0,
+    managersCount: 0
+  });
+
+  // Mettre à jour les statistiques des départements
+  useEffect(() => {
+    if (departments && departments.length > 0) {
+      // Compter les départements actifs
+      const deptCount = departments.length;
+      
+      // Compter les managers (départements avec un managerId défini)
+      const managerCount = departments.filter(dept => dept.managerId).length;
+      
+      setDepartmentStats({
+        departmentsCount: deptCount,
+        managersCount: managerCount
+      });
+      
+      console.log(`Statistiques des départements: ${deptCount} départements, ${managerCount} managers`);
+    } else {
+      setDepartmentStats({
+        departmentsCount: 0,
+        managersCount: 0
+      });
+    }
+  }, [departments]);
 
   // Fonction pour construire la hiérarchie
   const buildHierarchy = useCallback(() => {
@@ -127,9 +156,62 @@ export const useHierarchyData = () => {
             const department = departments.find(dept => dept.id === employee.departmentId);
             if (department) {
               node.color = department.color || '';
+              
+              // Si l'employé est un manager de département, inclure cette information
+              if (department.managerId === employee.id) {
+                node.title = `${node.title} (Manager de ${department.name})`;
+              }
             }
           }
         }
+      });
+    }
+    
+    // Si nous n'avons pas trouvé de hiérarchie valide mais que des départements existent,
+    // créer une hiérarchie basée sur les départements
+    if ((!rootNode || (rootNode.children.length === 0 && managersMap.size === 1)) && 
+        departments && departments.length > 0) {
+      console.log("Création d'une hiérarchie basée sur les départements");
+      
+      // Créer un nœud racine factice
+      rootNode = {
+        id: "organization-root",
+        name: "Organisation",
+        title: "Structure de l'organisation",
+        children: [],
+        color: "",
+        imageUrl: ""
+      };
+      
+      // Ajouter les départements comme enfants de la racine
+      departments.forEach(department => {
+        const deptNode: HierarchyNode = {
+          id: `dept-${department.id}`,
+          name: department.name,
+          title: "Département",
+          color: department.color,
+          children: [],
+          imageUrl: ""
+        };
+        
+        // Ajouter le manager du département s'il existe
+        if (department.managerId) {
+          const manager = employees.find(emp => emp.id === department.managerId);
+          if (manager) {
+            const managerNode: HierarchyNode = {
+              id: manager.id,
+              name: `${manager.firstName} ${manager.lastName}`,
+              title: manager.position || "Manager du département",
+              manager: "",
+              children: [],
+              imageUrl: manager.photoURL || '',
+              color: department.color
+            };
+            deptNode.children.push(managerNode);
+          }
+        }
+        
+        rootNode!.children.push(deptNode);
       });
     }
 
@@ -172,6 +254,7 @@ export const useHierarchyData = () => {
   return {
     hierarchyData,
     isLoading,
-    refreshHierarchy
+    refreshHierarchy,
+    departmentStats
   };
 };
