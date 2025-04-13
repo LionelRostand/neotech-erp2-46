@@ -1,7 +1,6 @@
 
 import { useMemo } from 'react';
 import { useHrModuleData } from './useHrModuleData';
-import { formatDate as formatDateUtil } from '@/lib/formatters';
 
 export interface HrDocument {
   id: string;
@@ -28,61 +27,13 @@ export interface HrDocument {
 export const useDocumentsData = () => {
   const { hrDocuments, employees, isLoading, error } = useHrModuleData();
   
-  // Fonction pour valider que la date existe et est valide
-  const isValidDate = (dateString?: string | number | Date): boolean => {
-    if (dateString === undefined || dateString === null) return false;
-    
-    // Handle non-string inputs first
-    if (dateString instanceof Date) {
-      return !isNaN(dateString.getTime());
-    }
-    
-    // Convert to string for consistent handling
-    const dateStr = String(dateString);
-    
-    // Handle problematic string values
-    if (dateStr === 'Invalid Date' || dateStr === 'NaN' || dateStr === 'undefined' || dateStr.trim() === '') {
-      return false;
-    }
-    
+  // Fonction pour formater les dates
+  const formatDate = (dateStr: string) => {
     try {
-      // Special case for timestamps stored as numbers
-      if (typeof dateString === 'number' || /^\d+$/.test(dateStr)) {
-        const timestamp = typeof dateString === 'number' ? dateString : parseInt(dateStr, 10);
-        const date = new Date(timestamp);
-        return !isNaN(date.getTime()) && date.getFullYear() >= 1900 && date.getFullYear() <= 2100;
-      }
-      
-      // Regular date string validation
-      const date = new Date(dateStr);
-      return !isNaN(date.getTime()) && date.getFullYear() >= 1900 && date.getFullYear() <= 2100;
-    } catch (e) {
-      console.warn('Date validation error:', e, 'for date:', dateString);
-      return false;
-    }
-  };
-  
-  // Fonction pour formater la date de manière sécurisée avec fallback
-  const formatDate = (dateString?: string | number | Date): string => {
-    if (!dateString) return '';
-    
-    try {
-      // Validate date before formatting
-      if (!isValidDate(dateString)) {
-        console.warn('Invalid document date:', dateString);
-        return 'Date non valide';
-      }
-      
-      // Handle Date objects directly
-      if (dateString instanceof Date) {
-        return formatDateUtil(dateString);
-      }
-      
-      const formattedDate = formatDateUtil(String(dateString));
-      return formattedDate || 'Date non valide';
+      return new Date(dateStr).toLocaleDateString('fr-FR');
     } catch (error) {
-      console.error('Error formatting document date:', error);
-      return 'Date non valide';
+      console.error('Erreur de formatage de date:', dateStr, error);
+      return dateStr;
     }
   };
   
@@ -105,23 +56,24 @@ export const useDocumentsData = () => {
         }
       }
       
-      // Determine which date field to use
-      let dateToFormat = document.uploadDate || document.createdAt || document.date || '';
+      // Utiliser la première date valide disponible
+      let uploadDateStr = document.uploadDate || document.createdAt || document.date || '';
+      let formattedUploadDate = uploadDateStr;
       
-      // Use current date as fallback if invalid
-      if (!isValidDate(dateToFormat)) {
-        console.warn(`Invalid date detected: ${dateToFormat}, using current date instead`);
-        dateToFormat = new Date().toISOString();
+      try {
+        if (uploadDateStr) {
+          formattedUploadDate = formatDate(uploadDateStr);
+        }
+      } catch (e) {
+        console.warn('Erreur lors du formatage de date:', uploadDateStr);
+        formattedUploadDate = 'Date non valide';
       }
-      
-      // Format the date (now using a valid date string)
-      const formattedDate = formatDate(dateToFormat);
       
       return {
         id: document.id,
         title: document.title || document.filename || document.name || 'Document sans titre',
         type: document.type || 'Autre',
-        uploadDate: formattedDate,
+        uploadDate: formattedUploadDate,
         fileSize: document.fileSize,
         fileType: document.fileType,
         url: document.url,

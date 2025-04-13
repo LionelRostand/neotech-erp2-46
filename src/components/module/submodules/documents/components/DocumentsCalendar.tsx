@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { Calendar } from '@/components/ui/calendar';
 import { Badge } from '@/components/ui/badge';
@@ -15,74 +14,23 @@ export const DocumentsCalendar: React.FC<DocumentsCalendarProps> = ({ documents,
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [currentMonth, setCurrentMonth] = useState<Date>(new Date());
 
-  // Safely convert strings to dates and validate them
+  // Simple, safe date parser that won't throw on invalid dates
   const safeParseDate = (dateString: string | undefined): Date | null => {
     if (!dateString) return null;
     
     try {
-      // Check for problematic values or already formatted error messages
-      if (
-        dateString === 'Invalid Date' || 
-        dateString === 'NaN' || 
-        dateString === 'undefined' || 
-        dateString.trim() === '' ||
-        dateString === 'Date non valide'
-      ) {
+      // Simple validation for empty or invalid strings
+      if (!dateString.trim() || dateString === 'Date non valide') {
         return null;
       }
       
-      // Try to parse the date safely
-      if (typeof dateString !== 'string') {
-        console.warn('Non-string date value:', dateString);
-        return null;
-      }
-      
-      // Try multiple parsing strategies
-      
-      // 1. Handle numeric timestamps
-      if (/^\d+$/.test(dateString)) {
-        const timestamp = parseInt(dateString, 10);
-        const date = new Date(timestamp);
-        if (isValid(date) && date.getFullYear() >= 1900 && date.getFullYear() <= 2100) {
-          return date;
-        }
-        return null;
-      }
-      
-      // 2. Try to parse as ISO date first (most reliable)
-      try {
-        const isoDate = parseISO(dateString);
-        if (isValid(isoDate) && isoDate.getFullYear() >= 1900 && isoDate.getFullYear() <= 2100) {
-          return isoDate;
-        }
-      } catch (e) {
-        // Ignore and try the next method
-      }
-      
-      // 3. Try DD/MM/YYYY format (common in French locale)
-      if (/\d{1,2}[/.-]\d{1,2}[/.-]\d{4}/.test(dateString)) {
-        const parts = dateString.split(/[/.-]/);
-        if (parts.length === 3) {
-          const day = parseInt(parts[0], 10);
-          const month = parseInt(parts[1], 10) - 1; // months are 0-based
-          const year = parseInt(parts[2], 10);
-          const date = new Date(year, month, day);
-          if (isValid(date)) {
-            return date;
-          }
-        }
-      }
-      
-      // 4. Try standard Date parsing as last resort
       const date = new Date(dateString);
-      if (!isValid(date) || date.getFullYear() < 1900 || date.getFullYear() > 2100) {
-        console.warn('Date is not valid after parsing:', dateString);
+      if (isNaN(date.getTime())) {
         return null;
       }
-      
       return date;
     } catch (e) {
-      console.warn('Error parsing date:', dateString, e);
+      console.warn('Error parsing date:', dateString);
       return null;
     }
   };
@@ -93,16 +41,13 @@ export const DocumentsCalendar: React.FC<DocumentsCalendarProps> = ({ documents,
       .map(doc => {
         // Try all possible date fields
         const dateStr = doc.uploadDate || doc.createdAt || doc.date;
-        if (!dateStr || typeof dateStr === 'string' && (dateStr === 'Date non valide' || dateStr.includes('non valide'))) {
-          // Skip invalid dates that were marked as such by the formatter
-          return null;
-        }
+        if (!dateStr) return null;
         return safeParseDate(dateStr);
       })
       .filter((date): date is Date => date !== null);
   }, [documents]);
 
-  // Create a map of dates to document counts - also using useMemo
+  // Create a map of dates to document counts
   const dateToDocCount = useMemo(() => {
     try {
       return documentDates.reduce<Record<string, number>>((acc, date) => {

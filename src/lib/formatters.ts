@@ -1,4 +1,3 @@
-
 /**
  * Format a date according to the specified locale and options
  * @param dateInput Date string, Date object, or null/undefined to format
@@ -27,84 +26,10 @@ export const formatDate = (
       return new Intl.DateTimeFormat(locale, options).format(dateInput);
     }
     
-    // Validate that the input is actually a string
-    if (typeof dateInput !== 'string' && typeof dateInput !== 'number') {
-      console.warn('Non-string/non-number value provided to formatDate:', dateInput);
-      return '';
-    }
-    
-    // Convert potential number to string for consistent handling
-    const dateStr = String(dateInput);
-    
-    // Handle exotic date formats or values that could be problematic
-    if (dateStr === 'Invalid Date' || dateStr === 'NaN' || dateStr === 'undefined' || dateStr.trim() === '') {
-      console.warn('Invalid date string literal:', dateStr);
-      return '';
-    }
-    
-    // Try different parsing approaches
-    let date: Date | null = null;
-    
-    // Special case for timestamps stored as numbers
-    if (typeof dateInput === 'number' || /^\d+$/.test(dateStr)) {
-      // This might be a numeric timestamp
-      const timestamp = typeof dateInput === 'number' ? dateInput : parseInt(dateStr, 10);
-      
-      // Validate the timestamp is reasonable (between years 1900-2100)
-      const testDate = new Date(timestamp);
-      if (
-        isNaN(testDate.getTime()) || 
-        testDate.getFullYear() < 1900 || 
-        testDate.getFullYear() > 2100
-      ) {
-        console.warn('Timestamp out of reasonable range:', dateInput);
-        return '';
-      }
-      
-      date = testDate;
-    } else if (dateStr.includes('/')) {
-      // Try to parse DD/MM/YYYY format
-      const parts = dateStr.split('/');
-      if (parts.length === 3) {
-        const day = parseInt(parts[0], 10);
-        const month = parseInt(parts[1], 10) - 1;
-        const year = parseInt(parts[2], 10);
-        
-        date = new Date(year, month, day);
-        if (isNaN(date.getTime())) {
-          date = null;
-        }
-      }
-    }
-    
-    // If previous methods failed, try standard parsing
-    if (!date) {
-      try {
-        // Make sure the date is valid first
-        const timestamp = Date.parse(dateStr);
-        if (isNaN(timestamp)) {
-          console.warn('Invalid date provided to formatDate:', dateInput);
-          return '';
-        }
-        
-        // Create the date object and verify it's a reasonable date
-        date = new Date(dateStr);
-        if (
-          isNaN(date.getTime()) || 
-          date.getFullYear() < 1900 || 
-          date.getFullYear() > 2100
-        ) {
-          console.warn('Date out of reasonable range:', dateInput);
-          return '';
-        }
-      } catch (err) {
-        console.warn('Error creating date from string:', dateStr, err);
-        return '';
-      }
-    }
-    
-    // At this point, we should have a valid date object
-    if (!date || isNaN(date.getTime())) {
+    // If string, try to create a valid date
+    const date = new Date(dateInput);
+    if (isNaN(date.getTime())) {
+      console.warn('Invalid date string provided to formatDate:', dateInput);
       return '';
     }
     
