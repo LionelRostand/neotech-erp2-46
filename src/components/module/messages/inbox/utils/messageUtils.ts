@@ -1,9 +1,12 @@
-
 import { Timestamp } from 'firebase/firestore';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
 export const formatMessageDate = (timestamp: Timestamp | Date | string | number | any) => {
+  if (!timestamp) {
+    return '';
+  }
+  
   let date: Date;
   
   // Handle different types of timestamp input
@@ -15,39 +18,52 @@ export const formatMessageDate = (timestamp: Timestamp | Date | string | number 
     date = timestamp;
   } else if (typeof timestamp === 'string' || typeof timestamp === 'number') {
     // String or number timestamp
-    date = new Date(timestamp);
+    try {
+      date = new Date(timestamp);
+      if (isNaN(date.getTime())) {
+        console.warn('Invalid date created from:', timestamp);
+        return '';
+      }
+    } catch (e) {
+      console.error('Error creating date from:', timestamp, e);
+      return '';
+    }
   } else {
     // Fallback to current date if invalid input
     console.warn('Format de timestamp invalide:', timestamp);
-    date = new Date();
     return '';
   }
   
-  const now = new Date();
-  const isToday = date.toDateString() === now.toDateString();
-  
-  if (isToday) {
-    return format(date, 'HH:mm', { locale: fr });
+  try {
+    const now = new Date();
+    const isToday = date.toDateString() === now.toDateString();
+    
+    if (isToday) {
+      return format(date, 'HH:mm', { locale: fr });
+    }
+    
+    const yesterday = new Date(now);
+    yesterday.setDate(now.getDate() - 1);
+    const isYesterday = date.toDateString() === yesterday.toDateString();
+    
+    if (isYesterday) {
+      return 'Hier';
+    }
+    
+    // Si dans la même semaine, afficher le jour
+    const sixDaysAgo = new Date(now);
+    sixDaysAgo.setDate(now.getDate() - 6);
+    
+    if (date > sixDaysAgo) {
+      return format(date, 'EEEE', { locale: fr });
+    }
+    
+    // Sinon afficher la date complète
+    return format(date, 'dd/MM/yyyy', { locale: fr });
+  } catch (error) {
+    console.error('Error formatting date:', error);
+    return '';
   }
-  
-  const yesterday = new Date(now);
-  yesterday.setDate(now.getDate() - 1);
-  const isYesterday = date.toDateString() === yesterday.toDateString();
-  
-  if (isYesterday) {
-    return 'Hier';
-  }
-  
-  // Si dans la même semaine, afficher le jour
-  const sixDaysAgo = new Date(now);
-  sixDaysAgo.setDate(now.getDate() - 6);
-  
-  if (date > sixDaysAgo) {
-    return format(date, 'EEEE', { locale: fr });
-  }
-  
-  // Sinon afficher la date complète
-  return format(date, 'dd/MM/yyyy', { locale: fr });
 };
 
 export const getInitials = (firstName: string, lastName: string) => {

@@ -24,6 +24,12 @@ export const formatMessageDate = (timestamp: Timestamp | Date | string | number 
   }
   
   try {
+    // Verify the date is valid
+    if (isNaN(date.getTime())) {
+      console.warn('Invalid date after creation:', timestamp);
+      return '';
+    }
+    
     return format(date, 'dd MMM yyyy', { locale: fr });
   } catch (error) {
     console.error('Error formatting date:', error);
