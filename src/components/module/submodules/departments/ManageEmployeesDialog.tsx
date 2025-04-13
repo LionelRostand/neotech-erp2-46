@@ -10,7 +10,7 @@ interface ManageEmployeesDialogProps {
   department: Department;
   selectedEmployees: string[];
   onEmployeeSelection: (employeeId: string, checked: boolean) => void;
-  getDepartmentEmployees: (department: Department) => any[];
+  getDepartmentEmployees: (departmentId: string) => any[];
   onClose: () => void;
   onSave: () => void;
 }
