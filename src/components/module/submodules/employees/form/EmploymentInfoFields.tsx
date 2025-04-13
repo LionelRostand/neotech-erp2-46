@@ -6,13 +6,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useFirebaseCompanies } from '@/hooks/useFirebaseCompanies';
 import { useFirebaseDepartments } from '@/hooks/useFirebaseDepartments';
 import { Loader2, Mail } from 'lucide-react';
+import { useEmployeeData } from '@/hooks/useEmployeeData';
 import { Department } from '@/components/module/submodules/departments/types';
 
 const EmploymentInfoFields = () => {
   const { companies, isLoading } = useFirebaseCompanies();
   const { departments, isLoading: loadingDepartments } = useFirebaseDepartments();
+  const { employees, isLoading: loadingEmployees } = useEmployeeData();
   const [formattedCompanies, setFormattedCompanies] = useState<{id: string, name: string}[]>([]);
   const [formattedDepartments, setFormattedDepartments] = useState<{id: string, name: string}[]>([]);
+  const [managers, setManagers] = useState<{id: string, name: string}[]>([]);
   
   useEffect(() => {
     if (companies && companies.length > 0) {
@@ -35,6 +38,29 @@ const EmploymentInfoFields = () => {
       setFormattedDepartments(formatted);
     }
   }, [departments]);
+
+  // Filtrer et formater les managers à partir de la liste des employés
+  useEffect(() => {
+    if (employees && employees.length > 0) {
+      // Filtrer pour obtenir uniquement les managers (vous pouvez ajuster ce filtre selon votre logique)
+      const managersList = employees.filter(emp => 
+        emp.isManager === true || 
+        (emp.position && (
+          emp.position.toLowerCase().includes('manager') || 
+          emp.position.toLowerCase().includes('responsable') || 
+          emp.position.toLowerCase().includes('directeur')
+        ))
+      );
+      
+      // Formater pour le dropdown
+      const formattedManagers = managersList.map(manager => ({
+        id: manager.id,
+        name: `${manager.firstName} ${manager.lastName}`
+      }));
+      
+      setManagers(formattedManagers);
+    }
+  }, [employees]);
 
   return (
     <div className="space-y-4">
@@ -177,13 +203,38 @@ const EmploymentInfoFields = () => {
         />
         
         <FormField
-          name="manager"
+          name="managerId"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Responsable</FormLabel>
-              <FormControl>
-                <Input {...field} placeholder="Responsable" />
-              </FormControl>
+              <Select 
+                onValueChange={field.onChange} 
+                defaultValue={field.value}
+              >
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder={loadingEmployees ? "Chargement..." : "Sélectionner un responsable"} />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {loadingEmployees ? (
+                    <div className="flex items-center justify-center p-2">
+                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                      Chargement des responsables...
+                    </div>
+                  ) : managers.length > 0 ? (
+                    managers.map((manager) => (
+                      <SelectItem key={manager.id} value={manager.id}>
+                        {manager.name}
+                      </SelectItem>
+                    ))
+                  ) : (
+                    <SelectItem value="none" disabled>
+                      Aucun responsable disponible
+                    </SelectItem>
+                  )}
+                </SelectContent>
+              </Select>
               <FormMessage />
             </FormItem>
           )}
