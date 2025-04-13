@@ -34,7 +34,7 @@ export interface Employee {
   education?: EducationEntry[];
   workSchedule?: WorkSchedule;
   role?: string;
-  isManager?: boolean; // Rendu optionnel et booléen
+  isManager?: boolean; 
   userAccountId?: string;
   payslips?: string[];
   title?: string;

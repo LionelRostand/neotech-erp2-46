@@ -1,6 +1,18 @@
+
 import { Employee, EmployeeAddress } from '@/types/employee';
 import { EmployeeFormValues } from './employeeFormSchema';
 import { v4 as uuidv4 } from 'uuid';
+
+// Fonction utilitaire pour déterminer si un employé est un responsable
+const determineIfManager = (position: string | undefined): boolean => {
+  if (!position) return false;
+  
+  const lowerPosition = position.toLowerCase();
+  return lowerPosition.includes('manager') || 
+         lowerPosition.includes('responsable') || 
+         lowerPosition.includes('directeur') || 
+         lowerPosition.includes('pdg');
+};
 
 /**
  * Prépare les données d'un employé à partir des valeurs du formulaire
@@ -47,8 +59,7 @@ export const prepareEmployeeData = (data: EmployeeFormValues, employeeId: string
   }
   
   // Vérifier si l'employé est un manager
-  const isManager = data.position?.toLowerCase().includes('manager') || 
-                   data.position?.toLowerCase().includes('directeur');
+  const isManager = determineIfManager(data.position);
   
   // Retourner l'objet employé préparé
   const employeeData: Partial<Employee> = {

@@ -1,3 +1,4 @@
+
 import { prepareEmployeeData } from '../form/employeeUtils';
 import { db } from '@/lib/firebase';
 import { collection, doc, getDoc, getDocs, updateDoc, deleteDoc, query, where, orderBy, Timestamp, setDoc } from 'firebase/firestore';
@@ -6,16 +7,24 @@ import { Employee } from '@/types/employee';
 import { toast } from 'sonner';
 import { v4 as uuidv4 } from 'uuid';
 
+// Fonction utilitaire pour déterminer si un employé est un responsable
+const determineIfManager = (position: string | undefined): boolean => {
+  if (!position) return false;
+  
+  const lowerPosition = position.toLowerCase();
+  return lowerPosition.includes('manager') || 
+         lowerPosition.includes('responsable') || 
+         lowerPosition.includes('directeur') || 
+         lowerPosition.includes('pdg');
+};
+
 export const createEmployee = async (employeeData: any) => {
   try {
     const newEmployeeId = uuidv4();
     const preparedData = prepareEmployeeData(employeeData, newEmployeeId);
     
     // Déterminer si l'employé est un responsable
-    const isManager = 
-      preparedData.position?.toLowerCase().includes('manager') ||
-      preparedData.position?.toLowerCase().includes('responsable') ||
-      preparedData.position?.toLowerCase().includes('directeur');
+    const isManager = determineIfManager(preparedData.position);
     
     const collectionPath = isManager 
       ? COLLECTIONS.HR.MANAGERS 
@@ -73,11 +82,8 @@ export const getEmployee = async (id: string): Promise<Employee | null> => {
 
 export const updateEmployee = async (id: string, employeeData: Partial<Employee>): Promise<Employee | null> => {
   try {
-    // Déterminer si l'employé est un manager
-    const isManager = 
-      employeeData.position?.toLowerCase().includes('manager') ||
-      employeeData.position?.toLowerCase().includes('responsable') ||
-      employeeData.position?.toLowerCase().includes('directeur');
+    // Déterminer si l'employé est un responsable
+    const isManager = determineIfManager(employeeData.position);
     
     const collectionPath = isManager 
       ? COLLECTIONS.HR.MANAGERS 
@@ -87,6 +93,7 @@ export const updateEmployee = async (id: string, employeeData: Partial<Employee>
     
     await updateDoc(docRef, {
       ...employeeData,
+      isManager, // Mettre à jour le statut de responsable
       updatedAt: Timestamp.now()
     });
     
@@ -191,4 +198,13 @@ export const getEmployeesByDepartment = async (departmentId: string): Promise<Em
     toast.error("Erreur lors de la récupération des employés par département");
     return [];
   }
+};
+
+// Ajout des fonctions manquantes référencées dans les erreurs
+export const refreshEmployeesData = async (): Promise<Employee[]> => {
+  return await getAllEmployees();
+};
+
+export const updateEmployeeSkills = async (employeeId: string, skills: string[]): Promise<Employee | null> => {
+  return await updateEmployee(employeeId, { skills });
 };
