@@ -5,6 +5,7 @@ export interface HierarchyNode {
   title: string;
   manager?: string;
   color?: string;
+  imageUrl?: string;
   children: HierarchyNode[];
 }
 
