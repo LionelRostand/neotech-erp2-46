@@ -3,7 +3,7 @@ import React from 'react';
 import { Employee, EmployeeAddress } from '@/types/employee';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { MapPin, Building, Phone, Mail, Briefcase } from 'lucide-react';
+import { MapPin, Building, Phone, Mail, Briefcase, UserCheck } from 'lucide-react';
 import ManagerCheckbox from '../form/ManagerCheckbox';
 import { UseFormReturn } from 'react-hook-form';
 import { EmployeeFormValues } from '../form/employeeFormSchema';
@@ -69,6 +69,7 @@ const InformationsTab: React.FC<InformationsTabProps> = ({
 
   console.log('Affichage des informations de l\'employé:', employee);
   console.log('Composants d\'adresse:', addressComponents);
+  console.log('Form disponible:', !!form, 'showManagerOption:', showManagerOption);
 
   return (
     <div className="space-y-6">
@@ -198,14 +199,23 @@ const InformationsTab: React.FC<InformationsTabProps> = ({
           )}
           
           {employee.status && (
-            <div className="space-y-1">
-              <h4 className="text-sm font-semibold">Statut</h4>
-              <p>{employee.status}</p>
-            </div>
+            <>
+              <div className="space-y-1">
+                <h4 className="text-sm font-semibold">Statut</h4>
+                <p>{employee.status}</p>
+              </div>
+              <Separator />
+            </>
           )}
           
           {form && showManagerOption && (
             <div className="mt-4">
+              <div className="space-y-1 mb-2">
+                <h4 className="text-sm font-semibold flex items-center gap-2">
+                  <UserCheck className="h-4 w-4 text-muted-foreground" />
+                  Privilèges de management
+                </h4>
+              </div>
               <ManagerCheckbox form={form} />
             </div>
           )}
