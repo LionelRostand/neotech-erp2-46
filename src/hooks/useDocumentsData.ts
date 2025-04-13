@@ -75,7 +75,7 @@ export const useDocumentsData = () => {
       
       // Handle Date objects directly
       if (dateString instanceof Date) {
-        return dateString.toLocaleDateString('fr-FR');
+        return formatDateUtil(dateString);
       }
       
       const formattedDate = formatDateUtil(String(dateString));

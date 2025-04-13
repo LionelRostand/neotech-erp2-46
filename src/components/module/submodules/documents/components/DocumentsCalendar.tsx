@@ -20,19 +20,20 @@ export const DocumentsCalendar: React.FC<DocumentsCalendarProps> = ({ documents,
     if (!dateString) return null;
     
     try {
-      // Check for problematic values
-      if (dateString === 'Invalid Date' || dateString === 'NaN' || dateString === 'undefined' || dateString.trim() === '') {
+      // Check for problematic values or already formatted error messages
+      if (
+        dateString === 'Invalid Date' || 
+        dateString === 'NaN' || 
+        dateString === 'undefined' || 
+        dateString.trim() === '' ||
+        dateString === 'Date non valide'
+      ) {
         return null;
       }
       
       // Try to parse the date safely
       if (typeof dateString !== 'string') {
         console.warn('Non-string date value:', dateString);
-        return null;
-      }
-      
-      // Skip already formatted dates showing "Date non valide"
-      if (dateString === 'Date non valide') {
         return null;
       }
       
@@ -103,18 +104,23 @@ export const DocumentsCalendar: React.FC<DocumentsCalendarProps> = ({ documents,
 
   // Create a map of dates to document counts - also using useMemo
   const dateToDocCount = useMemo(() => {
-    return documentDates.reduce<Record<string, number>>((acc, date) => {
-      try {
+    try {
+      return documentDates.reduce<Record<string, number>>((acc, date) => {
         if (!date || !isValid(date)) return acc;
         
-        const dateStr = format(date, 'yyyy-MM-dd');
-        acc[dateStr] = (acc[dateStr] || 0) + 1;
+        try {
+          const dateStr = format(date, 'yyyy-MM-dd');
+          acc[dateStr] = (acc[dateStr] || 0) + 1;
+        } catch (error) {
+          console.error('Error formatting date in reduce:', error);
+        }
+        
         return acc;
-      } catch (e) {
-        console.error('Error formatting date in reduce:', e);
-        return acc;
-      }
-    }, {});
+      }, {});
+    } catch (error) {
+      console.error('Error creating date map:', error);
+      return {};
+    }
   }, [documentDates]);
 
   // Handle month change

@@ -19,7 +19,7 @@ export const formatDate = (
     if (!dateInput) return '';
     
     // Handle Date objects directly
-    if (dateInput instanceof Date) {
+    if (typeof dateInput === 'object' && dateInput instanceof Date) {
       if (isNaN(dateInput.getTime())) {
         console.warn('Invalid Date object provided to formatDate');
         return '';
@@ -28,14 +28,17 @@ export const formatDate = (
     }
     
     // Validate that the input is actually a string
-    if (typeof dateInput !== 'string') {
-      console.warn('Non-string value provided to formatDate:', dateInput);
+    if (typeof dateInput !== 'string' && typeof dateInput !== 'number') {
+      console.warn('Non-string/non-number value provided to formatDate:', dateInput);
       return '';
     }
     
+    // Convert potential number to string for consistent handling
+    const dateStr = String(dateInput);
+    
     // Handle exotic date formats or values that could be problematic
-    if (dateInput === 'Invalid Date' || dateInput === 'NaN' || dateInput === 'undefined' || dateInput.trim() === '') {
-      console.warn('Invalid date string literal:', dateInput);
+    if (dateStr === 'Invalid Date' || dateStr === 'NaN' || dateStr === 'undefined' || dateStr.trim() === '') {
+      console.warn('Invalid date string literal:', dateStr);
       return '';
     }
     
@@ -43,9 +46,9 @@ export const formatDate = (
     let date: Date | null = null;
     
     // Special case for timestamps stored as numbers
-    if (/^\d+$/.test(dateInput)) {
+    if (typeof dateInput === 'number' || /^\d+$/.test(dateStr)) {
       // This might be a numeric timestamp
-      const timestamp = parseInt(dateInput, 10);
+      const timestamp = typeof dateInput === 'number' ? dateInput : parseInt(dateStr, 10);
       
       // Validate the timestamp is reasonable (between years 1900-2100)
       const testDate = new Date(timestamp);
@@ -59,9 +62,9 @@ export const formatDate = (
       }
       
       date = testDate;
-    } else if (dateInput.includes('/')) {
+    } else if (dateStr.includes('/')) {
       // Try to parse DD/MM/YYYY format
-      const parts = dateInput.split('/');
+      const parts = dateStr.split('/');
       if (parts.length === 3) {
         const day = parseInt(parts[0], 10);
         const month = parseInt(parts[1], 10) - 1;
@@ -76,21 +79,26 @@ export const formatDate = (
     
     // If previous methods failed, try standard parsing
     if (!date) {
-      // Make sure the date is valid first
-      const timestamp = Date.parse(dateInput);
-      if (isNaN(timestamp)) {
-        console.warn('Invalid date provided to formatDate:', dateInput);
-        return '';
-      }
-      
-      // Create the date object and verify it's a reasonable date
-      date = new Date(dateInput);
-      if (
-        isNaN(date.getTime()) || 
-        date.getFullYear() < 1900 || 
-        date.getFullYear() > 2100
-      ) {
-        console.warn('Date out of reasonable range:', dateInput);
+      try {
+        // Make sure the date is valid first
+        const timestamp = Date.parse(dateStr);
+        if (isNaN(timestamp)) {
+          console.warn('Invalid date provided to formatDate:', dateInput);
+          return '';
+        }
+        
+        // Create the date object and verify it's a reasonable date
+        date = new Date(dateStr);
+        if (
+          isNaN(date.getTime()) || 
+          date.getFullYear() < 1900 || 
+          date.getFullYear() > 2100
+        ) {
+          console.warn('Date out of reasonable range:', dateInput);
+          return '';
+        }
+      } catch (err) {
+        console.warn('Error creating date from string:', dateStr, err);
         return '';
       }
     }
