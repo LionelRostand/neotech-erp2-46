@@ -36,18 +36,9 @@ export const useDepartmentService = () => {
 
   const updateDepartment = async (department: Department): Promise<boolean> => {
     try {
-      // Vérifier si le document existe avant de le mettre à jour
-      const existingDoc = await getDocumentById(DEPARTMENTS_COLLECTION, department.id);
+      console.log(`Tentative de mise à jour du département ID: ${department.id}`, department);
       
-      if (!existingDoc) {
-        console.warn(`Department with ID ${department.id} does not exist. Creating instead of updating.`);
-        // Si le document n'existe pas, on le crée au lieu de le mettre à jour
-        await addDocument(DEPARTMENTS_COLLECTION, department);
-        toast.success(`Département ${department.name} créé avec succès`);
-        return true;
-      }
-      
-      // Mettre à jour dans Firestore
+      // Utiliser updateDocument pour mettre à jour un document existant uniquement
       await updateDocument(DEPARTMENTS_COLLECTION, department.id, department);
       toast.success(`Département ${department.name} mis à jour avec succès`);
       return true;

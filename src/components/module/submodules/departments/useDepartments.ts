@@ -53,9 +53,9 @@ export const useDepartments = () => {
     setFormData({
       id: department.id,
       name: department.name,
-      description: department.description,
+      description: department.description || "",
       managerId: department.managerId || "",
-      color: department.color,
+      color: department.color || departmentColors[0].value,
       employeeIds: department.employeeIds || []
     });
     setSelectedEmployees(department.employeeIds || []);
@@ -76,7 +76,7 @@ export const useDepartments = () => {
   }, []);
   
   const handleManagerChange = useCallback((value: string) => {
-    setFormData(prev => ({ ...prev, managerId: value }));
+    setFormData(prev => ({ ...prev, managerId: value === "none" ? "" : value }));
   }, []);
   
   const handleColorChange = useCallback((value: string) => {
@@ -126,7 +126,23 @@ export const useDepartments = () => {
     }
     
     try {
-      const departmentToUpdate = prepareDepartmentFromForm(formData, selectedEmployees, currentDepartment);
+      console.log("Current department before update:", currentDepartment);
+      
+      // Préparer le département avec les données du formulaire tout en préservant les métadonnées existantes
+      const departmentToUpdate: Department = {
+        ...currentDepartment,
+        id: formData.id, // Garder l'ID d'origine
+        name: formData.name,
+        description: formData.description,
+        managerId: formData.managerId === "none" ? null : formData.managerId,
+        color: formData.color,
+        employeeIds: selectedEmployees,
+        employeesCount: selectedEmployees.length
+      };
+      
+      console.log("Department to update:", departmentToUpdate);
+      
+      // Mettre à jour le département
       const success = await departmentService.updateDepartment(departmentToUpdate);
       
       if (success) {

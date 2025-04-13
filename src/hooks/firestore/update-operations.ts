@@ -16,7 +16,11 @@ export const updateDocument = async (collectionName: string, id: string, data: D
     const docRef = getDocRef(collectionName, id);
     const updatedData = formatDocumentWithTimestamps(data);
     
-    await updateDoc(docRef, updatedData);
+    // Assurez-vous que l'ID n'est pas inclus dans les données de mise à jour
+    // car Firebase ne le nécessite pas et pourrait causer des problèmes
+    const { id: _, ...dataWithoutId } = updatedData;
+    
+    await updateDoc(docRef, dataWithoutId);
     console.log(`Document ${id} updated successfully`);
     toast.success('Document mis à jour avec succès');
     return { id, ...updatedData };
