@@ -1,6 +1,6 @@
 
 import { useEffect, useState } from 'react';
-import { collection, getDocs, query, orderBy, where } from 'firebase/firestore';
+import { collection, getDocs, query, orderBy, where, getDoc, doc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import { toast } from 'sonner';
@@ -32,68 +32,33 @@ export const useHrData = () => {
       try {
         console.log('Début de récupération des données RH...');
         
-        // Récupérer les employés réguliers sans filtrer par statut
+        // Récupérer les employés depuis la collection des employés
         const employeesRef = collection(db, COLLECTIONS.HR.EMPLOYEES);
         const employeesQuery = query(employeesRef);
         const employeesSnapshot = await getDocs(employeesQuery);
-        console.log(`Employés réguliers récupérés: ${employeesSnapshot.docs.length}`);
+        console.log(`Employés récupérés: ${employeesSnapshot.docs.length}`);
         
-        // Récupérer les managers sans filtrer par statut
-        const managersRef = collection(db, COLLECTIONS.HR.MANAGERS);
-        const managersQuery = query(managersRef);
-        const managersSnapshot = await getDocs(managersQuery);
-        console.log(`Managers récupérés: ${managersSnapshot.docs.length}`);
-        
-        // Combiner les deux ensembles de résultats
-        const regularEmployees = employeesSnapshot.docs.map(doc => {
+        // Convertir les documents en objets employés
+        const allEmployees = employeesSnapshot.docs.map(doc => {
           const data = doc.data();
           return {
             ...data,
             id: doc.id,
-            isManager: false
           } as unknown as Employee;
         });
-        
-        const managerEmployees = managersSnapshot.docs.map(doc => {
-          const data = doc.data();
-          return {
-            ...data,
-            id: doc.id,
-            isManager: true
-          } as unknown as Employee;
-        });
-        
-        // Vérification pour LIONEL DJOSSA
-        const lionelInRegular = regularEmployees.some(emp => 
-          emp.firstName?.toLowerCase().includes('lionel') && 
-          emp.lastName?.toLowerCase().includes('djossa')
-        );
-        
-        const lionelInManagers = managerEmployees.some(emp => 
-          emp.firstName?.toLowerCase().includes('lionel') && 
-          emp.lastName?.toLowerCase().includes('djossa')
-        );
-        
-        console.log(`LIONEL DJOSSA trouvé dans employés réguliers: ${lionelInRegular}`);
-        console.log(`LIONEL DJOSSA trouvé dans managers: ${lionelInManagers}`);
         
         // Utiliser une Map pour éliminer les doublons par ID
-        const uniqueEmployeesMap = new Map();
+        const uniqueEmployeesMap = new Map<string, Employee>();
         
-        // Ajouter d'abord tous les managers (prioritaires)
-        managerEmployees.forEach(employee => {
-          uniqueEmployeesMap.set(employee.id, employee);
-        });
-        
-        // Puis ajouter les employés réguliers, sans écraser les managers déjà présents
-        regularEmployees.forEach(employee => {
+        allEmployees.forEach(employee => {
+          // Ne pas écraser un employé existant s'il existe déjà
           if (!uniqueEmployeesMap.has(employee.id)) {
             uniqueEmployeesMap.set(employee.id, employee);
           }
         });
         
         const uniqueEmployees = Array.from(uniqueEmployeesMap.values());
-        console.log(`Total d'employés uniques après déduplication: ${uniqueEmployees.length} (avant: ${regularEmployees.length + managerEmployees.length})`);
+        console.log(`Total d'employés uniques après déduplication: ${uniqueEmployees.length} (avant: ${allEmployees.length})`);
         
         // Vérification finale pour LIONEL DJOSSA après déduplication
         const lionelAfterDedup = uniqueEmployees.some(emp => 

@@ -1,13 +1,32 @@
-
 import { Employee } from '@/types/employee';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import { addDocument } from '@/hooks/firestore/create-operations';
 import { updateDocument, setDocument } from '@/hooks/firestore/update-operations';
 import { toast } from 'sonner';
-import { determineIfManager, syncManagerStatus } from '../form/employeeUtils';
+import { determineIfManager, syncManagerStatus, checkEmployeeExists } from '../form/employeeUtils';
 import { getAllDocuments, getDocumentById } from '@/hooks/firestore/firestore-utils';
-import { collection, getDocs, query, orderBy, where, deleteDoc, doc } from 'firebase/firestore';
+import { collection, getDocs, query, orderBy, where, deleteDoc, doc, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+
+/**
+ * Vérifie si un employé avec le même email existe déjà
+ * @param email Email à vérifier
+ * @returns true si un employé avec cet email existe, false sinon
+ */
+export const checkEmployeeEmailExists = async (email: string): Promise<boolean> => {
+  try {
+    if (!email) return false;
+    
+    const employeesRef = collection(db, COLLECTIONS.HR.EMPLOYEES);
+    const q = query(employeesRef, where("email", "==", email));
+    const snapshot = await getDocs(q);
+    
+    return !snapshot.empty;
+  } catch (error) {
+    console.error("Erreur lors de la vérification de l'email de l'employé:", error);
+    return false;
+  }
+};
 
 /**
  * Crée un nouvel employé dans Firestore
@@ -17,6 +36,16 @@ import { db } from '@/lib/firebase';
 export const createEmployee = async (employeeData: Partial<Employee>): Promise<Employee | null> => {
   try {
     console.log("Création d'un employé avec les données:", employeeData);
+    
+    // Vérifier si un employé avec cet email existe déjà
+    if (employeeData.email) {
+      const emailExists = await checkEmployeeEmailExists(employeeData.email);
+      if (emailExists) {
+        console.error(`Un employé avec l'email ${employeeData.email} existe déjà`);
+        toast.error(`Un employé avec l'email ${employeeData.email} existe déjà`);
+        return null;
+      }
+    }
     
     // Vérifier si l'employé est un manager
     const isManager = determineIfManager(employeeData.position);
@@ -56,6 +85,14 @@ export const createEmployee = async (employeeData: Partial<Employee>): Promise<E
 export const updateEmployee = async (employeeId: string, employeeData: Partial<Employee>): Promise<Employee | null> => {
   try {
     console.log(`Mise à jour de l'employé ${employeeId} avec les données:`, employeeData);
+    
+    // Vérifier si l'employé existe
+    const exists = await checkEmployeeExists(employeeId);
+    if (!exists) {
+      console.error(`L'employé avec l'ID ${employeeId} n'existe pas`);
+      toast.error(`Impossible de mettre à jour: l'employé n'existe pas`);
+      return null;
+    }
     
     // Vérifier si l'employé est un manager (soit par son poste soit par forceManager)
     const isPositionManager = determineIfManager(employeeData.position);

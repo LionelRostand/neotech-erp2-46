@@ -17,7 +17,7 @@ export const useEmployeeData = () => {
       return [];
     }
     
-    console.log(`useEmployeeData: ${employees.length} employés disponibles avant traitement et déduplication`);
+    console.log(`useEmployeeData: ${employees.length} employés disponibles avant traitement`);
     
     // Créer une Map pour éliminer les doublons par ID
     const uniqueEmployeesMap = new Map();
@@ -36,7 +36,7 @@ export const useEmployeeData = () => {
     // Convertir la Map en tableau
     const uniqueEmployees = Array.from(uniqueEmployeesMap.values());
     
-    console.log(`useEmployeeData: ${uniqueEmployees.length} employés après déduplication et traitement`);
+    console.log(`useEmployeeData: ${uniqueEmployees.length} employés après traitement`);
     
     // Vérifier la présence de LIONEL DJOSSA
     const lionelPresent = uniqueEmployees.some(emp => 
@@ -44,7 +44,7 @@ export const useEmployeeData = () => {
       emp.lastName?.toLowerCase().includes('djossa')
     );
     
-    console.log(`useEmployeeData: LIONEL DJOSSA présent dans les données après déduplication? ${lionelPresent}`);
+    console.log(`useEmployeeData: LIONEL DJOSSA présent dans les données après traitement? ${lionelPresent}`);
     
     return uniqueEmployees;
   }, [employees]);

@@ -35,7 +35,7 @@ const FormActions: React.FC<FormActionsProps> = ({
   // Utiliser les données des employés dédupliquées depuis useEmployeeData
   useEffect(() => {
     if (employees && employees.length > 0) {
-      console.log(`FormActions: Nombre total d'employés récupérés après déduplication: ${employees.length}`);
+      console.log(`FormActions: Nombre total d'employés récupérés: ${employees.length}`);
       
       // Vérification des IDs pour s'assurer qu'il n'y a pas de doublons
       const uniqueIds = new Set(employees.map(emp => emp.id));

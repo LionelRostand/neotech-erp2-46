@@ -1,4 +1,3 @@
-
 import { Employee, EmployeeAddress } from '@/types/employee';
 import { EmployeeFormValues } from './employeeFormSchema';
 import { v4 as uuidv4 } from 'uuid';
@@ -7,6 +6,8 @@ import { getDocRef, getCollectionRef } from '@/hooks/firestore/common-utils';
 import { setDocument } from '@/hooks/firestore/update-operations';
 import { addDocument } from '@/hooks/firestore/create-operations';
 import { toast } from 'sonner';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 
 // Fonction utilitaire pour déterminer si un employé est un responsable
 export const determineIfManager = (position: string | undefined): boolean => {
@@ -196,6 +197,22 @@ export const isValidEmployeeId = (id: string): boolean => {
 };
 
 /**
+ * Vérifie si un employé existe déjà dans Firestore
+ * @param employeeId ID de l'employé à vérifier
+ * @returns true si l'employé existe, false sinon
+ */
+export const checkEmployeeExists = async (employeeId: string): Promise<boolean> => {
+  try {
+    const employeeRef = doc(db, COLLECTIONS.HR.EMPLOYEES, employeeId);
+    const employeeDoc = await getDoc(employeeRef);
+    return employeeDoc.exists();
+  } catch (error) {
+    console.error("Erreur lors de la vérification de l'existence de l'employé:", error);
+    return false;
+  }
+};
+
+/**
  * Sauvegarde un employé et met à jour son statut de manager si nécessaire
  */
 export const saveEmployee = async (employeeData: Partial<Employee>): Promise<Partial<Employee> | null> => {
@@ -214,13 +231,22 @@ export const saveEmployee = async (employeeData: Partial<Employee>): Promise<Par
     
     let result;
     
-    // Sauvegarder dans la collection principale des employés
+    // Pour les nouveaux employés, vérifier s'il existe déjà un employé avec le même email
     if (isNewEmployee) {
+      // Ajouter l'employé à la collection principale
       result = await addDocument(COLLECTIONS.HR.EMPLOYEES, employeeData);
       console.log("Nouvel employé créé:", result);
     } else {
-      result = await setDocument(COLLECTIONS.HR.EMPLOYEES, employeeId, employeeData);
-      console.log("Employé existant mis à jour:", result);
+      // Vérifier si l'employé existe déjà avant de le mettre à jour
+      const exists = await checkEmployeeExists(employeeId);
+      if (!exists) {
+        console.log(`L'employé ${employeeId} n'existe pas, création d'un nouveau document.`);
+        result = await addDocument(COLLECTIONS.HR.EMPLOYEES, employeeData);
+      } else {
+        console.log(`L'employé ${employeeId} existe déj��, mise à jour du document.`);
+        result = await setDocument(COLLECTIONS.HR.EMPLOYEES, employeeId, employeeData);
+      }
+      console.log("Employé mis à jour:", result);
     }
     
     // Synchroniser avec la collection des managers
