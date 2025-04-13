@@ -1,5 +1,5 @@
 
-import { collection, Timestamp } from 'firebase/firestore';
+import { collection, doc, Timestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 
 /**
@@ -9,6 +9,16 @@ import { db } from '@/lib/firebase';
  */
 export const getCollectionRef = (collectionPath: string) => {
   return collection(db, collectionPath);
+};
+
+/**
+ * Get a reference to a document
+ * @param collectionPath Path to the collection
+ * @param docId Document ID
+ * @returns Document reference
+ */
+export const getDocRef = (collectionPath: string, docId: string) => {
+  return doc(db, collectionPath, docId);
 };
 
 /**

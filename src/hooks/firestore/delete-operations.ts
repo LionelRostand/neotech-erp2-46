@@ -1,5 +1,5 @@
 
-import { deleteDoc, doc } from 'firebase/firestore';
+import { deleteDoc } from 'firebase/firestore';
 import { deleteObject, ref } from 'firebase/storage';
 import { db, storage } from '@/lib/firebase';
 import { getDocRef } from './common-utils';
