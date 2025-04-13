@@ -13,6 +13,7 @@ import BadgesTable from './badges/BadgesTable';
 import { getBadges, addBadge, deleteDocument } from './services/badgeService';
 import { useHrModuleData } from '@/hooks/useHrModuleData';
 import { usePermissions } from '@/hooks/usePermissions';
+import { COLLECTIONS } from '@/lib/firebase-collections';
 
 const EmployeesBadges: React.FC = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -103,7 +104,7 @@ const EmployeesBadges: React.FC = () => {
     
     try {
       setIsDeleting(true);
-      await deleteDocument(selectedBadge.id);
+      await deleteDocument(COLLECTIONS.HR.BADGES, selectedBadge.id);
       
       // Mettre à jour la liste des badges en retirant le badge supprimé
       setBadgesList(prev => prev.filter(badge => badge.id !== selectedBadge.id));
