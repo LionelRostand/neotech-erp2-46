@@ -10,6 +10,7 @@ export const convertToChartNode = (node: HierarchyNode): ChartNode => {
     name: node.name,
     position: node.title,
     department: node.manager ? `Manager: ${node.manager}` : undefined,
+    departmentColor: node.color,
     imageUrl: node.imageUrl,
     children: node.children.map(child => convertToChartNode(child))
   };

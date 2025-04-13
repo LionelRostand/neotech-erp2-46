@@ -60,6 +60,7 @@ const EmployeesHierarchy: React.FC = () => {
             key={refreshKey}
             viewMode={viewMode} 
             searchQuery={searchQuery}
+            data={null}  // Pass null for data to use the live data from useHierarchyData
           />
         </CardContent>
       </Card>

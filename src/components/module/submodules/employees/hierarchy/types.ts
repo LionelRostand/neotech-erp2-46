@@ -14,12 +14,13 @@ export interface ChartNode {
   name: string;
   position: string;
   department?: string;
+  departmentColor?: string;
   imageUrl?: string;
   children: ChartNode[];
 }
 
 export interface HierarchyVisualizationProps {
-  data: HierarchyNode | ChartNode;
+  data: HierarchyNode | ChartNode | null;
   viewMode: 'orgChart' | 'treeView';
   searchQuery: string;
 }

@@ -16,7 +16,9 @@ const HierarchyVisualization: React.FC<HierarchyVisualizationProps> = ({
   const { hierarchyData: liveData, isLoading } = useHierarchyData();
   
   // Utiliser les données externes si fournies, sinon utiliser les données en direct
-  const chartData = externalData ? ('position' in externalData ? externalData : convertToChartNode(externalData as HierarchyNode)) : liveData;
+  const chartData = externalData 
+    ? ('position' in externalData ? externalData : convertToChartNode(externalData as HierarchyNode)) 
+    : liveData;
   
   if (isLoading) {
     return (

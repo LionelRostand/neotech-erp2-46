@@ -40,9 +40,10 @@ export const useHierarchyData = () => {
       return {
         id: employee.id,
         name: `${employee.firstName} ${employee.lastName}`,
-        position: employee.jobTitle || (dept ? `Manager - ${dept.name}` : "Manager"),
-        department: dept?.name || "N/A",
-        departmentColor: dept?.color || "#888888",
+        title: employee.position || employee.role || (dept ? `Manager - ${dept.name}` : "Manager"),
+        manager: employee.manager || undefined,
+        color: dept?.color || "#888888",
+        imageUrl: employee.photoURL || employee.photo || undefined,
         children: subordinates.map(sub => buildNode(sub))
       };
     };
