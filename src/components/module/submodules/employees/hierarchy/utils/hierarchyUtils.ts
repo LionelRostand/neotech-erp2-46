@@ -98,8 +98,11 @@ export const getAllDepartments = (node: ChartNode | HierarchyNode): Set<string> 
     // Add department from this node
     if ('department' in n && n.department) {
       departments.add(n.department);
-    } else if (n.color) {
-      // Si un nœud a une couleur, cela indique généralement un département
+    } else if ('color' in n && n.color) {
+      // If a node has a color, it usually indicates a department
+      departments.add(n.name);
+    } else if ('departmentColor' in n && n.departmentColor) {
+      // Handle ChartNode which has departmentColor instead of color
       departments.add(n.name);
     }
     
@@ -114,7 +117,7 @@ export const getAllDepartments = (node: ChartNode | HierarchyNode): Set<string> 
 };
 
 /**
- * Fonction pour synchroniser les compteurs avec les données des départements
+ * Function to sync counters with department data
  */
 export const getSyncedStats = (hierarchyData: HierarchyNode | ChartNode | null, departmentsCount: number, managersCount: number) => {
   if (!hierarchyData) {
