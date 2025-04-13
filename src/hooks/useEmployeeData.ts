@@ -1,16 +1,11 @@
-
 import { useMemo } from 'react';
 import { useHrModuleData } from './useHrModuleData';
 import { Employee } from '@/types/employee';
 import { Department } from '@/components/module/submodules/departments/types';
 
-/**
- * Hook centralisé pour accéder aux données des employés et départements
- */
 export const useEmployeeData = () => {
   const { employees, departments, isLoading, error } = useHrModuleData();
   
-  // On s'assure que les données des employés sont correctement formatées et dédupliquées
   const formattedEmployees = useMemo(() => {
     if (!employees || employees.length === 0) {
       console.log('useEmployeeData: Aucun employé disponible');
@@ -19,45 +14,34 @@ export const useEmployeeData = () => {
     
     console.log(`useEmployeeData: ${employees.length} employés disponibles avant traitement`);
     
-    // Créer une Map pour éliminer les doublons par ID
     const uniqueEmployeesMap = new Map();
     
     employees.forEach(employee => {
-      // Privilégier les enregistrements avec un firebaseId
       const existingEmployee = uniqueEmployeesMap.get(employee.email);
       
-      // Si l'employé n'existe pas encore dans la Map, ou si le nouvel employé a un firebaseId, l'ajouter/remplacer
       if (!existingEmployee || (employee.firebaseId && !existingEmployee.firebaseId)) {
-        // Déterminer quelle URL de photo utiliser (par ordre de priorité)
         let photoURL = '';
         
-        // 1. Si photoData est une chaîne base64, l'utiliser
-        if (employee.photoData && typeof employee.photoData === 'string' && employee.photoData.startsWith('data:')) {
-          photoURL = employee.photoData;
-        } 
-        // 2. Si photoData est un objet avec une propriété data
-        else if (employee.photoData && typeof employee.photoData === 'object' && employee.photoData.data) {
-          photoURL = employee.photoData.data;
+        // Null-safe checks for photoData
+        if (employee.photoData) {
+          if (typeof employee.photoData === 'string' && employee.photoData.startsWith('data:')) {
+            photoURL = employee.photoData;
+          } else if (typeof employee.photoData === 'object' && 'data' in employee.photoData) {
+            photoURL = (employee.photoData as { data: string }).data;
+          }
         }
-        // 3. Utiliser photoURL existant
-        else if (employee.photoURL && employee.photoURL.length > 0) {
-          photoURL = employee.photoURL;
-        }
-        // 4. Utiliser l'ancienne propriété photo
-        else if (employee.photo && employee.photo.length > 0) {
-          photoURL = employee.photo;
-        }
+        
+        // Fallback to other photo sources
+        photoURL = photoURL || employee.photoURL || employee.photo || '';
 
         uniqueEmployeesMap.set(employee.email, {
           ...employee,
-          // Garantir que chaque employé a une photo (même placeholder)
           photoURL: photoURL,
           photo: photoURL, // Dupliquer pour compatibilité
         });
       }
     });
     
-    // Convertir la Map en tableau
     const uniqueEmployees = Array.from(uniqueEmployeesMap.values());
     
     console.log(`useEmployeeData: ${uniqueEmployees.length} employés après traitement`);
@@ -106,10 +90,10 @@ export const useEmployeeData = () => {
       } as Department;
     });
   }, [departments, formattedEmployees]);
-  
+
   return {
     employees: formattedEmployees as Employee[],
-    departments: formattedDepartments as Department[],
+    departments,
     isLoading,
     error
   };

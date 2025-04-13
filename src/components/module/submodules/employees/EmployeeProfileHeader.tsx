@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -41,22 +40,27 @@ const EmployeeProfileHeader: React.FC<EmployeeProfileHeaderProps> = ({
 
   // Sélectionner l'URL de la photo à utiliser
   const getPhotoUrl = () => {
-    // On vérifie toutes les sources possibles de photos
+    // Check if photoData exists and is a string starting with 'data:'
     if (employee.photoData && typeof employee.photoData === 'string' && employee.photoData.startsWith('data:')) {
-      // Utiliser la donnée base64 directement
       return employee.photoData;
-    } else if (employee.photoURL && employee.photoURL.length > 0) {
-      // Utiliser l'URL de la photo
+    }
+
+    // Check photoURL
+    if (employee.photoURL && employee.photoURL.length > 0) {
       return employee.photoURL;
-    } else if (employee.photo && employee.photo.length > 0) {
-      // Utiliser l'ancienne propriété photo
+    }
+
+    // Check legacy photo property
+    if (employee.photo && employee.photo.length > 0) {
       return employee.photo;
-    } else if (employee.photoData && typeof employee.photoData === 'object' && employee.photoData.data) {
-      // Si photoData est un objet avec une propriété data
-      return employee.photoData.data;
+    }
+
+    // Check if photoData is an object with a data property
+    if (employee.photoData && typeof employee.photoData === 'object' && 'data' in employee.photoData) {
+      return (employee.photoData as { data: string }).data;
     }
     
-    // Aucune photo trouvée
+    // If no photo is found, return an empty string
     return '';
   };
 
