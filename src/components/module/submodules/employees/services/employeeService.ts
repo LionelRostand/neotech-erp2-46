@@ -1,3 +1,4 @@
+
 import { db } from '@/lib/firebase';
 import { collection, doc, getDoc, getDocs, query, where, orderBy, deleteDoc, updateDoc, setDoc } from 'firebase/firestore';
 import { COLLECTIONS } from '@/lib/firebase-collections';
@@ -16,7 +17,7 @@ export const getAllEmployees = async (): Promise<Employee[]> => {
       ...doc.data(), 
       id: doc.id,
       isManager: false 
-    } as Employee));
+    }) as Employee);
     
     // Récupérer les managers
     const managersRef = collection(db, COLLECTIONS.HR.MANAGERS);
@@ -25,7 +26,7 @@ export const getAllEmployees = async (): Promise<Employee[]> => {
       ...doc.data(), 
       id: doc.id,
       isManager: true 
-    } as Employee));
+    }) as Employee);
     
     // Combiner les deux ensembles
     return [...employees, ...managers].sort((a, b) => 
@@ -171,6 +172,38 @@ export const updateEmployee = async (employee: Employee): Promise<boolean> => {
 };
 
 /**
+ * Met à jour les compétences d'un employé
+ */
+export const updateEmployeeSkills = async (employeeId: string, skills: string[]): Promise<boolean> => {
+  try {
+    // Récupérer l'employé actuel
+    const employee = await getEmployeeById(employeeId);
+    
+    if (!employee) {
+      toast.error('Employé non trouvé');
+      return false;
+    }
+    
+    // Mettre à jour uniquement le champ skills
+    const collectionPath = employee.isManager 
+      ? COLLECTIONS.HR.MANAGERS 
+      : COLLECTIONS.HR.EMPLOYEES;
+    
+    await updateDoc(doc(db, collectionPath, employeeId), {
+      skills,
+      updatedAt: new Date().toISOString()
+    });
+    
+    toast.success('Compétences mises à jour avec succès');
+    return true;
+  } catch (error) {
+    console.error(`Erreur lors de la mise à jour des compétences de l'employé ${employeeId} :`, error);
+    toast.error('Impossible de mettre à jour les compétences');
+    return false;
+  }
+};
+
+/**
  * Recherche des employés par nom ou email
  */
 export const searchEmployees = async (searchTerm: string): Promise<Employee[]> => {
@@ -183,7 +216,7 @@ export const searchEmployees = async (searchTerm: string): Promise<Employee[]> =
     const employeesSnapshot = await getDocs(employeesRef);
     
     employeesSnapshot.forEach(doc => {
-      const data = doc.data();
+      const data = doc.data() as Employee;
       const fullName = `${data.firstName} ${data.lastName}`.toLowerCase();
       const email = (data.email || '').toLowerCase();
       
@@ -197,7 +230,7 @@ export const searchEmployees = async (searchTerm: string): Promise<Employee[]> =
     const managersSnapshot = await getDocs(managersRef);
     
     managersSnapshot.forEach(doc => {
-      const data = doc.data();
+      const data = doc.data() as Employee;
       const fullName = `${data.firstName} ${data.lastName}`.toLowerCase();
       const email = (data.email || '').toLowerCase();
       
@@ -251,6 +284,7 @@ export default {
   saveEmployee,
   deleteEmployee,
   updateEmployee,
+  updateEmployeeSkills,
   searchEmployees,
   getEmployeesByDepartment
 };

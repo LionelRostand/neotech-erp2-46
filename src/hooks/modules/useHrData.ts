@@ -4,12 +4,13 @@ import { collection, getDocs, query, orderBy, where } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import { toast } from 'sonner';
+import { Employee } from '@/types/employee';
 
 /**
  * Hook pour récupérer les données du module RH
  */
 export const useHrData = () => {
-  const [employees, setEmployees] = useState([]);
+  const [employees, setEmployees] = useState<Employee[]>([]);
   const [payslips, setPayslips] = useState([]);
   const [contracts, setContracts] = useState([]);
   const [departments, setDepartments] = useState([]);
@@ -45,12 +46,12 @@ export const useHrData = () => {
             ...doc.data(),
             id: doc.id,
             isManager: false
-          })),
+          })) as Employee[],
           ...managersSnapshot.docs.map(doc => ({
             ...doc.data(),
             id: doc.id,
             isManager: true
-          }))
+          })) as Employee[]
         ];
         
         // Trier par nom de famille

@@ -49,7 +49,7 @@ export interface Employee {
   education?: EducationEntry[];
   workSchedule?: WorkSchedule;
   role?: string;
-  isManager?: boolean; // Added this property
+  isManager?: boolean; // Added isManager property
   userAccountId?: string;
   payslips?: string[];
   title?: string;

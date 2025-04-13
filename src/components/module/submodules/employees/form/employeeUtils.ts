@@ -73,7 +73,7 @@ export const prepareEmployeeData = (data: EmployeeFormValues, employeeId: string
     company: data.company || '',
     photoData,
     photoMeta,
-    isManager,  // Ajouter le flag isManager
+    isManager,  // Include the isManager flag
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   };
