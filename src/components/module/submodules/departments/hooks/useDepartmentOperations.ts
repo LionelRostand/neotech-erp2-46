@@ -36,15 +36,15 @@ export const useDepartmentOperations = () => {
       return false;
     }
     
-    if (!currentDepartment) {
-      toast.error("Aucun département sélectionné pour la mise à jour");
+    if (!currentDepartment || !currentDepartment.id) {
+      toast.error("Aucun département sélectionné pour la mise à jour ou ID manquant");
       return false;
     }
     
     try {
       console.log("Current department before update:", currentDepartment);
       
-      // S'assurer que nous utilisons l'ID existant et ne créons pas de nouveau document
+      // S'assurer que nous utilisons l'ID existant et préservons les métadonnées
       const departmentToUpdate: Department = {
         ...currentDepartment,  // Préserver toutes les propriétés existantes
         name: formData.name,

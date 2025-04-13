@@ -45,8 +45,19 @@ export const useDepartmentService = () => {
 
       console.log(`Mise à jour du département ID: ${department.id}`, department);
       
-      // Toujours utiliser setDocument pour garantir une mise à jour sans création de doublon
-      await setDocument(DEPARTMENTS_COLLECTION, department.id, department);
+      // Vérifier d'abord si le document existe
+      const existingDoc = await getDocumentById(DEPARTMENTS_COLLECTION, department.id);
+      
+      if (existingDoc) {
+        // Si le document existe, utilisez updateDocument
+        await updateDocument(DEPARTMENTS_COLLECTION, department.id, department);
+        console.log(`Document ${department.id} mis à jour avec updateDocument`);
+      } else {
+        // Si le document n'existe pas, utilisez setDocument
+        console.log(`Document ${department.id} n'existe pas, création avec setDocument`);
+        await setDocument(DEPARTMENTS_COLLECTION, department.id, department);
+      }
+      
       toast.success(`Département ${department.name} mis à jour avec succès`);
       return true;
     } catch (error) {
