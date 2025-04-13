@@ -36,9 +36,16 @@ export const useDepartmentService = () => {
 
   const updateDepartment = async (department: Department): Promise<boolean> => {
     try {
-      console.log(`Tentative de mise à jour du département ID: ${department.id}`, department);
+      // Vérifier que l'ID est présent
+      if (!department.id) {
+        console.error("Department ID is missing, cannot update");
+        toast.error("ID du département manquant, impossible de mettre à jour");
+        return false;
+      }
+
+      console.log(`Mise à jour du département ID: ${department.id}`, department);
       
-      // Utiliser setDocument au lieu de updateDocument pour garantir la création si nécessaire
+      // Toujours utiliser setDocument pour garantir une mise à jour sans création de doublon
       await setDocument(DEPARTMENTS_COLLECTION, department.id, department);
       toast.success(`Département ${department.name} mis à jour avec succès`);
       return true;

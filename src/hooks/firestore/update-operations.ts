@@ -61,6 +61,7 @@ export const setDocument = async (collectionName: string, id: string, data: Docu
     const docRef = getDocRef(collectionName, id);
     const updatedData = formatDocumentWithTimestamps(data);
     
+    // Utiliser merge: true pour fusionner les données au lieu de remplacer le document entier
     await setDoc(docRef, updatedData, { merge: true });
     console.log(`Document ${id} set successfully`);
     toast.success('Document créé/mis à jour avec succès');
