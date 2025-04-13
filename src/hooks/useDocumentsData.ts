@@ -60,7 +60,7 @@ export const useDocumentsData = () => {
         }
       } catch (e) {
         console.warn('Erreur lors du formatage de date:', dateStr);
-        formattedUploadDate = dateStr || 'Date non valide';
+        formattedUploadDate = 'Date non valide';
       }
       
       return {
