@@ -104,4 +104,5 @@ export interface Employee {
   leaveRequests?: LeaveRequest[]; // Nouvelle propriété pour les congés
   evaluations?: Evaluation[]; // Nouvelle propriété pour les évaluations
   isManager?: boolean; // Added isManager property to fix type errors
+  forceManager?: boolean; // Added forceManager property to match d.ts file
 }
