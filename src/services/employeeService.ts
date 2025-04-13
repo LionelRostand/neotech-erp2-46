@@ -29,7 +29,7 @@ export const createEmployee = async (employeeData: Partial<Employee>): Promise<E
     
     const [emailSnapshot, profEmailSnapshot] = await Promise.all([
       getDocs(existingEmailQuery),
-      getDocs(existingProfEmailQuery)
+      employeeData.professionalEmail ? getDocs(existingProfEmailQuery) : Promise.resolve({ empty: true })
     ]);
     
     if (!emailSnapshot.empty) {
@@ -82,6 +82,62 @@ export const createEmployee = async (employeeData: Partial<Employee>): Promise<E
   } catch (error) {
     console.error('Erreur lors de la création de l\'employé:', error);
     toast.error('Erreur lors de la création de l\'employé');
+    return null;
+  }
+};
+
+/**
+ * Mettre à jour un employé existant en utilisant updateDoc au lieu de addDoc
+ * @param id L'ID de l'employé à mettre à jour
+ * @param employeeData Les données de l'employé à mettre à jour
+ * @returns L'employé mis à jour
+ */
+export const updateEmployeeDoc = async (id: string, employeeData: Partial<Employee>): Promise<Employee | null> => {
+  try {
+    console.log(`Mise à jour de l'employé avec ID: ${id}`, employeeData);
+    
+    // Vérifier que l'employé existe avant de tenter une mise à jour
+    const employeeRef = doc(db, COLLECTIONS.HR.EMPLOYEES, id);
+    const employeeDoc = await getDoc(employeeRef);
+    
+    if (!employeeDoc.exists()) {
+      console.error(`L'employé avec l'ID ${id} n'existe pas`);
+      toast.error(`L'employé n'existe pas ou a été supprimé`);
+      return null;
+    }
+    
+    // Filtrer les données pour ne pas écraser l'ID ou createdAt
+    const { id: _, createdAt, ...dataToUpdate } = employeeData;
+    
+    // Ajouter timestamp de mise à jour
+    const updatedData = {
+      ...dataToUpdate,
+      updatedAt: new Date().toISOString()
+    };
+    
+    // Mettre à jour le document existant
+    await updateDoc(employeeRef, updatedData);
+    
+    // Récupérer le document mis à jour
+    const updatedEmployeeDoc = await getDoc(employeeRef);
+    
+    if (!updatedEmployeeDoc.exists()) {
+      console.error(`Échec de récupération du document mis à jour pour l'ID ${id}`);
+      return null;
+    }
+    
+    // Retourner l'employé mis à jour avec son ID
+    const updatedEmployee = {
+      id: id,
+      ...updatedEmployeeDoc.data()
+    } as Employee;
+    
+    console.log(`Employé mis à jour avec succès:`, updatedEmployee);
+    
+    return updatedEmployee;
+  } catch (error) {
+    console.error(`Erreur lors de la mise à jour de l'employé avec ID ${id}:`, error);
+    toast.error(`Erreur lors de la mise à jour de l'employé: ${error instanceof Error ? error.message : 'Erreur inconnue'}`);
     return null;
   }
 };

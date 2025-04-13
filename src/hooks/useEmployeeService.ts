@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { createEmployee, syncManagerStatus } from '@/services/employeeService';
+import { createEmployee, syncManagerStatus, updateEmployeeDoc } from '@/services/employeeService';
 import { Employee } from '@/types/employee';
 import { useFirestore } from './useFirestore';
 import { COLLECTIONS } from '@/lib/firebase-collections';
@@ -20,6 +20,8 @@ export const useEmployeeService = () => {
     setError(null);
     
     try {
+      console.log('Début de création d\'un employé:', employeeData);
+      
       // Déterminer si l'employé est un manager basé sur sa position ou si forceManager est vrai
       const isManager = employeeData.forceManager === true || 
                        isEmployeeManager(employeeData.position || '') || 
@@ -62,20 +64,22 @@ export const useEmployeeService = () => {
     setError(null);
     
     try {
+      console.log('Début de mise à jour d\'un employé:', id, employeeData);
+      
       // Déterminer si l'employé est un manager basé sur sa position ou si forceManager est vrai
       const isManager = employeeData.forceManager === true || 
                        isEmployeeManager(employeeData.position || '') || 
                        isEmployeeManager(employeeData.role || '');
       
-      // Ajouter explicitement la propriété isManager
+      // Ajouter explicitement la propriété isManager et timestamp de mise à jour
       const employeeWithManagerStatus = {
         ...employeeData,
         isManager,
         updatedAt: new Date().toISOString()
       };
       
-      // Mettre à jour l'employé
-      const updatedEmployee = await firestore.update(id, employeeWithManagerStatus) as Employee;
+      // Utiliser le service dédié pour mettre à jour l'employé au lieu d'utiliser directement firestore.update
+      const updatedEmployee = await updateEmployeeDoc(id, employeeWithManagerStatus);
       
       if (updatedEmployee) {
         // Synchroniser le statut de manager
