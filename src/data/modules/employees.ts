@@ -28,7 +28,7 @@ export const employeesModule: AppModule = {
   description: "Gestion des ressources humaines, contrats, congés et administration du personnel",
   href: "/modules/employees",
   icon: createIcon(Users),
-  category: 'business', // Added the category property
+  category: 'business', 
   submodules: [
     { id: "employees-dashboard", name: "Tableau de bord", href: "/modules/employees/dashboard", icon: createIcon(LayoutDashboard) },
     
@@ -36,8 +36,7 @@ export const employeesModule: AppModule = {
     { id: "employees-profiles", name: "Fiches employé", href: "/modules/employees/profiles", icon: createIcon(IdCard) },
     { id: "employees-badges", name: "Badges et accès", href: "/modules/employees/badges", icon: createIcon(User) },
     
-    // Hiérarchie et départements
-    { id: "employees-departments", name: "Départements", href: "/modules/employees/departments", icon: createIcon(Building) },
+    // Hiérarchie (removed Départements from this section)
     { id: "employees-hierarchy", name: "Hiérarchie", href: "/modules/employees/hierarchy", icon: createIcon(ListTree) },
     
     // Suivi du temps et présences
@@ -48,9 +47,10 @@ export const employeesModule: AppModule = {
     { id: "employees-leaves", name: "Congés", href: "/modules/employees/leaves", icon: createIcon(SunMedium) },
     { id: "employees-absences", name: "Absences", href: "/modules/employees/absences", icon: createIcon(Calendar) },
     
-    // Documents et contrats
+    // Documents et contrats (added Départements to this section)
     { id: "employees-contracts", name: "Contrats", href: "/modules/employees/contracts", icon: createIcon(FileSignature) },
     { id: "employees-documents", name: "Documents RH", href: "/modules/employees/documents", icon: createIcon(FileText) },
+    { id: "employees-departments", name: "Départements", href: "/modules/employees/departments", icon: createIcon(Building) },
     
     // Évaluations et formations
     { id: "employees-evaluations", name: "Évaluations", href: "/modules/employees/evaluations", icon: createIcon(BarChart) },

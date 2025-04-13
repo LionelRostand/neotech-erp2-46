@@ -39,7 +39,7 @@ const ModuleSubmenu: React.FC<ModuleSubmenuProps> = ({
         return 'personnel';
       } else if (['employees-attendance', 'employees-timesheet', 'employees-leaves', 'employees-absences'].includes(id)) {
         return 'temps';
-      } else if (['employees-contracts', 'employees-documents', 'employees-companies'].includes(id)) {
+      } else if (['employees-contracts', 'employees-documents', 'employees-departments', 'employees-companies'].includes(id)) {
         return 'administratif';
       } else if (['employees-evaluations', 'employees-trainings'].includes(id)) {
         return 'développement';
