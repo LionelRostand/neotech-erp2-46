@@ -44,9 +44,9 @@ export const useDepartmentOperations = () => {
     try {
       console.log("Current department before update:", currentDepartment);
       
-      // S'assurer que nous utilisons l'ID existant et préservons les métadonnées
+      // Make sure we use the existing ID and preserve metadata
       const departmentToUpdate: Department = {
-        ...currentDepartment,  // Préserver toutes les propriétés existantes
+        ...currentDepartment,  // Preserve all existing properties
         name: formData.name,
         description: formData.description,
         managerId: formData.managerId === "none" ? null : formData.managerId,
@@ -57,7 +57,7 @@ export const useDepartmentOperations = () => {
       
       console.log("Department to update:", departmentToUpdate);
       
-      // Mise à jour du département existant
+      // Update the existing department
       const success = await departmentService.updateDepartment(departmentToUpdate);
       
       if (success) {

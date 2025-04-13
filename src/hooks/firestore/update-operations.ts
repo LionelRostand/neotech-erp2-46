@@ -16,29 +16,29 @@ export const updateDocument = async (collectionName: string, id: string, data: D
     const docRef = getDocRef(collectionName, id);
     const updatedData = formatDocumentWithTimestamps(data);
     
-    // Assurez-vous que l'ID n'est pas inclus dans les données de mise à jour
-    // car Firebase ne le nécessite pas et pourrait causer des problèmes
+    // Make sure ID is not included in the update data
+    // as Firebase doesn't need it and it could cause problems
     const { id: _, ...dataWithoutId } = updatedData;
     
     try {
-      // Essayer d'abord de mettre à jour
+      // Try to update first
       await updateDoc(docRef, dataWithoutId);
       console.log(`Document ${id} updated successfully with updateDoc`);
     } catch (updateError: any) {
-      // Si le document n'existe pas, le créer à la place
+      // If the document doesn't exist, set it instead
       if (updateError.code === 'not-found') {
         console.log(`Document ${id} not found, creating instead of updating`);
+        // For setDoc, we want to include the ID
         await setDoc(docRef, updatedData);
         console.log(`Document ${id} created with setDoc`);
       } else {
-        // Si c'est une autre erreur, la propager
+        // If it's another error, propagate it
         console.error(`Error in updateDoc: ${updateError.message}`, updateError);
         throw updateError;
       }
     }
     
     console.log(`Document ${id} updated successfully`);
-    toast.success('Document mis à jour avec succès');
     return { id, ...updatedData };
   } catch (error: any) {
     console.error(`Error updating document ${id}:`, error);
@@ -64,10 +64,9 @@ export const setDocument = async (collectionName: string, id: string, data: Docu
     const docRef = getDocRef(collectionName, id);
     const updatedData = formatDocumentWithTimestamps(data);
     
-    // Utiliser merge: true pour fusionner les données au lieu de remplacer le document entier
+    // Use merge: true to merge data instead of replacing the entire document
     await setDoc(docRef, updatedData, { merge: true });
     console.log(`Document ${id} set successfully`);
-    toast.success('Document créé/mis à jour avec succès');
     return { id, ...updatedData };
   } catch (error: any) {
     console.error(`Error setting document ${id}:`, error);

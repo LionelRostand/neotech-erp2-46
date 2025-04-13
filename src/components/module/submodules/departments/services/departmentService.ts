@@ -1,6 +1,6 @@
 
 import { Department } from '../types';
-import { addDocument, getAllDocuments, updateDocument, deleteDocument, getDocumentById, setDocument } from '@/hooks/firestore/firestore-utils';
+import { addDocument, getAllDocuments, updateDocument, deleteDocument, getDocumentById } from '@/hooks/firestore/firestore-utils';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import { toast } from 'sonner';
 
@@ -45,18 +45,10 @@ export const useDepartmentService = () => {
 
       console.log(`Mise à jour du département ID: ${department.id}`, department);
       
-      // Vérifier d'abord si le document existe
-      const existingDoc = await getDocumentById(DEPARTMENTS_COLLECTION, department.id);
-      
-      if (existingDoc) {
-        // Si le document existe, utilisez updateDocument
-        await updateDocument(DEPARTMENTS_COLLECTION, department.id, department);
-        console.log(`Document ${department.id} mis à jour avec updateDocument`);
-      } else {
-        // Si le document n'existe pas, utilisez setDocument
-        console.log(`Document ${department.id} n'existe pas, création avec setDocument`);
-        await setDocument(DEPARTMENTS_COLLECTION, department.id, department);
-      }
+      // Always use updateDocument instead of checking if it exists first
+      // This ensures we update rather than create a new record
+      await updateDocument(DEPARTMENTS_COLLECTION, department.id, department);
+      console.log(`Document ${department.id} mis à jour avec updateDocument`);
       
       toast.success(`Département ${department.name} mis à jour avec succès`);
       return true;
