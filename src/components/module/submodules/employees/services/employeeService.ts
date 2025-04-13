@@ -6,7 +6,7 @@ import { updateDocument, setDocument } from '@/hooks/firestore/update-operations
 import { toast } from 'sonner';
 import { determineIfManager, syncManagerStatus } from '../form/employeeUtils';
 import { getAllDocuments, getDocumentById } from '@/hooks/firestore/firestore-utils';
-import { collection, getDocs, query, orderBy } from 'firebase/firestore';
+import { collection, getDocs, query, orderBy, where, deleteDoc, doc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 
 /**
@@ -170,7 +170,7 @@ export const getAllEmployees = async (): Promise<Employee[]> => {
       }
     });
     
-    const uniqueEmployees = Array.from(uniqueEmployeesMap.values());
+    const uniqueEmployees = Array.from(uniqueEmployeesMap.values()) as Employee[];
     
     // Trier par nom de famille
     const sortedEmployees = uniqueEmployees.sort((a, b) => 
@@ -180,6 +180,7 @@ export const getAllEmployees = async (): Promise<Employee[]> => {
     return sortedEmployees;
   } catch (error) {
     console.error("Erreur lors de la récupération des employés:", error);
+    // Return an empty array instead of null to avoid type errors
     return [];
   }
 };
@@ -188,19 +189,18 @@ export const getAllEmployees = async (): Promise<Employee[]> => {
  * Rafraîchit les données des employés
  * Utilisé pour mettre à jour les affichages après des modifications
  */
-export const refreshEmployeesData = async (): Promise<void> => {
+export const refreshEmployeesData = async (): Promise<Employee[]> => {
   try {
     console.log("Rafraîchissement des données des employés...");
-    // Cette fonction est utilisée comme un point de synchronisation
-    // Les composants qui l'appellent vont recharger leurs données
-    
-    // On pourrait ajouter ici une logique de notification pour informer
-    // d'autres parties de l'application qu'une mise à jour a eu lieu
+    // Fetch fresh employee data
+    const employees = await getAllEmployees();
     
     toast.success("Données des employés rafraîchies");
+    return employees;
   } catch (error) {
     console.error("Erreur lors du rafraîchissement des données:", error);
     toast.error("Erreur lors du rafraîchissement des données");
+    return [];
   }
 };
 
@@ -209,7 +209,27 @@ export const refreshEmployeesData = async (): Promise<void> => {
  * @param employeeId ID de l'employé à supprimer
  */
 export const deleteEmployee = async (employeeId: string): Promise<boolean> => {
-  // Cette fonction utiliserait la suppression Firestore
-  // mais nous la laisserons pour l'implémentation future
-  return true;
+  try {
+    // Vérifier si l'employé existe
+    const employee = await getEmployeeById(employeeId);
+    if (!employee) {
+      toast.error("Employé introuvable");
+      return false;
+    }
+    
+    // Supprimer l'employé de la collection principale
+    await deleteDoc(doc(db, COLLECTIONS.HR.EMPLOYEES, employeeId));
+    
+    // Si c'est un manager, supprimer également de la collection des managers
+    if (employee.isManager) {
+      await deleteDoc(doc(db, COLLECTIONS.HR.MANAGERS, employeeId));
+    }
+    
+    toast.success(`Employé ${employee.firstName} ${employee.lastName} supprimé avec succès`);
+    return true;
+  } catch (error) {
+    console.error("Erreur lors de la suppression de l'employé:", error);
+    toast.error("Erreur lors de la suppression de l'employé");
+    return false;
+  }
 };
