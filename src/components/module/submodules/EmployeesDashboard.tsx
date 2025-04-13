@@ -4,7 +4,7 @@ import { Users, Clock, CalendarDays, Building } from 'lucide-react';
 import StatCard from '@/components/StatCard';
 import DataTable, { Transaction } from '@/components/DataTable';
 import { useHrModuleData } from '@/hooks/useHrModuleData';
-import { format } from 'date-fns';
+import { format, isValid } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useEmployeeData } from '@/hooks/useEmployeeData';
@@ -49,9 +49,22 @@ const EmployeesDashboard: React.FC = () => {
     const onLeave = leaveRequests?.filter(lr => {
       // Vérifier si la date d'aujourd'hui est entre la date de début et de fin
       const today = new Date();
-      const startDate = new Date(lr.startDate);
-      const endDate = new Date(lr.endDate);
-      return today >= startDate && today <= endDate && lr.status === 'approved';
+      
+      // Valider les dates avant conversion
+      if (!lr.startDate || !lr.endDate) return false;
+      
+      try {
+        const startDate = new Date(lr.startDate);
+        const endDate = new Date(lr.endDate);
+        
+        // Vérifier que les dates sont valides
+        if (!isValid(startDate) || !isValid(endDate)) return false;
+        
+        return today >= startDate && today <= endDate && lr.status === 'approved';
+      } catch (error) {
+        console.error('Date de congé invalide:', lr.startDate, lr.endDate, error);
+        return false;
+      }
     }).length || 0;
     
     // Total des départements
@@ -77,13 +90,32 @@ const EmployeesDashboard: React.FC = () => {
         const employee = employees?.find(e => e.id === item.employeeId);
         const employeeName = employee ? `${employee.firstName} ${employee.lastName}` : 'Employé inconnu';
         
+        // Valider la date avant de la formatter
+        let formattedDate = '';
+        try {
+          if (item.date) {
+            const dateObj = new Date(item.date);
+            if (isValid(dateObj)) {
+              formattedDate = format(dateObj, 'yyyy-MM-dd');
+            } else {
+              formattedDate = 'Date invalide';
+              console.warn('Date d\'assiduité invalide:', item.date);
+            }
+          } else {
+            formattedDate = 'Date non spécifiée';
+          }
+        } catch (error) {
+          console.error('Erreur lors du formatage de la date d\'assiduité:', error);
+          formattedDate = 'Erreur de date';
+        }
+        
         activities.push({
           id: `ATT-${item.id}`,
-          date: format(new Date(item.date), 'yyyy-MM-dd'),
+          date: formattedDate,
           client: employeeName,
           amount: item.type === 'arrival' ? 'Arrivée' : 'Départ',
           status: 'success',
-          statusText: item.time
+          statusText: item.time || 'Heure non spécifiée'
         });
       });
     }
@@ -105,9 +137,29 @@ const EmployeesDashboard: React.FC = () => {
           statusText = 'Rejeté';
         }
         
+        // Valider la date avant de la formatter
+        let formattedDate = '';
+        try {
+          const dateValue = item.requestDate || item.createdAt;
+          if (dateValue) {
+            const dateObj = new Date(dateValue);
+            if (isValid(dateObj)) {
+              formattedDate = format(dateObj, 'yyyy-MM-dd');
+            } else {
+              formattedDate = 'Date invalide';
+              console.warn('Date de demande de congé invalide:', dateValue);
+            }
+          } else {
+            formattedDate = 'Date non spécifiée';
+          }
+        } catch (error) {
+          console.error('Erreur lors du formatage de la date de demande de congé:', error);
+          formattedDate = 'Erreur de date';
+        }
+        
         activities.push({
           id: `LEAVE-${item.id}`,
-          date: format(new Date(item.requestDate || item.createdAt), 'yyyy-MM-dd'),
+          date: formattedDate,
           client: employeeName,
           amount: 'Congé',
           status: status,
@@ -116,8 +168,25 @@ const EmployeesDashboard: React.FC = () => {
       });
     }
     
-    // Trier par date décroissante
-    return activities.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 5);
+    // Trier par date décroissante (avec gestion des dates invalides)
+    return activities
+      .sort((a, b) => {
+        try {
+          // Vérifier si les dates sont valides
+          const dateA = new Date(a.date);
+          const dateB = new Date(b.date);
+          
+          if (!isValid(dateA) && !isValid(dateB)) return 0;
+          if (!isValid(dateA)) return 1; // Mettre les dates invalides en dernier
+          if (!isValid(dateB)) return -1;
+          
+          return dateB.getTime() - dateA.getTime();
+        } catch (error) {
+          console.error('Erreur de tri des dates:', error);
+          return 0;
+        }
+      })
+      .slice(0, 5);
   }, [employees, attendance, leaveRequests, isLoading]);
 
   if (isLoading) {
