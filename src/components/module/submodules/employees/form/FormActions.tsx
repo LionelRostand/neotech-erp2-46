@@ -12,10 +12,11 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
-import { collection, getDocs, query, where } from 'firebase/firestore';
+import { collection, getDocs } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import { Employee } from '@/types/employee';
+import { fetchCollectionData } from '@/hooks/fetchCollectionData';
 
 interface FormActionsProps {
   onCancel: () => void;
@@ -33,57 +34,53 @@ const FormActions: React.FC<FormActionsProps> = ({
   const [managers, setManagers] = useState<Employee[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   
-  // Récupérer la liste des employés directement depuis Firestore
+  // Récupérer la liste complète des employés depuis Firestore sans filtrage
   useEffect(() => {
-    const fetchEmployees = async () => {
+    const fetchAllEmployees = async () => {
       setIsLoading(true);
       try {
-        // Créer une requête pour récupérer les employés actifs
-        const employeesRef = collection(db, COLLECTIONS.HR.EMPLOYEES);
-        const employeesQuery = query(
-          employeesRef, 
-          // Élargir la requête pour inclure plus de statuts possibles et ne pas manquer d'employés
-          where('status', 'in', ['active', 'Active', 'Actif', 'active', 'ACTIVE'])
-        );
+        console.log("Démarrage de la récupération de tous les employés...");
+        // Utiliser fetchCollectionData pour récupérer tous les employés sans filtrage
+        const allEmployees = await fetchCollectionData<Employee>(COLLECTIONS.HR.EMPLOYEES);
         
-        const employeesSnapshot = await getDocs(employeesQuery);
+        console.log(`Total d'employés récupérés: ${allEmployees.length}`);
+        console.log("Liste brute des employés:", allEmployees.map(e => ({
+          id: e.id,
+          nom: `${e.lastName || ''} ${e.firstName || ''}`,
+          status: e.status
+        })));
         
-        // Transformer les documents en objets employés
-        const employeesList = employeesSnapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        })) as Employee[];
+        // Trier les employés par nom de famille puis prénom
+        const sortedEmployees = [...allEmployees].sort((a, b) => {
+          const nameA = `${a.lastName || ''} ${a.firstName || ''}`.toLowerCase();
+          const nameB = `${b.lastName || ''} ${b.firstName || ''}`.toLowerCase();
+          return nameA.localeCompare(nameB);
+        });
         
-        // Pour le débogage
-        console.log("Liste complète des employés récupérés:", employeesList.map(e => `${e.firstName} ${e.lastName} (${e.id}) - Statut: ${e.status}`));
+        // Vérifier si certains employés spécifiques sont dans la liste
+        const checkEmployee = (firstName: string, lastName: string) => {
+          const found = sortedEmployees.some(
+            emp => emp.firstName?.toLowerCase().includes(firstName.toLowerCase()) && 
+                   emp.lastName?.toLowerCase().includes(lastName.toLowerCase())
+          );
+          console.log(`${lastName} ${firstName} est-il dans la liste?`, found);
+          
+          // Afficher tous les employés qui correspondent partiellement
+          const matches = sortedEmployees.filter(
+            emp => emp.firstName?.toLowerCase().includes(firstName.toLowerCase()) || 
+                   emp.lastName?.toLowerCase().includes(lastName.toLowerCase())
+          );
+          if (matches.length > 0) {
+            console.log(`Correspondances partielles pour ${lastName} ${firstName}:`, 
+              matches.map(e => `${e.lastName || ''} ${e.firstName || ''} (${e.id}) - Status: ${e.status}`)
+            );
+          }
+        };
         
-        // S'assurer que tous les employés sont inclus, même sans filtrage de statut si aucun n'est trouvé
-        let finalEmployeesList = employeesList;
-        if (employeesList.length === 0) {
-          // Récupérer tous les employés sans filtre si la première requête ne trouve rien
-          const allEmployeesRef = collection(db, COLLECTIONS.HR.EMPLOYEES);
-          const allEmployeesSnapshot = await getDocs(allEmployeesRef);
-          finalEmployeesList = allEmployeesSnapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data()
-          })) as Employee[];
-          console.log("Récupération de tous les employés sans filtre:", finalEmployeesList.length);
-        }
+        // Vérifier pour LIONEL DJOSSA et quelques autres noms pour le débogage
+        checkEmployee('lionel', 'djossa');
         
-        // Trier les employés par nom
-        const sortedEmployees = finalEmployeesList.sort((a, b) => 
-          `${a.lastName || ''} ${a.firstName || ''}`.localeCompare(`${b.lastName || ''} ${b.firstName || ''}`)
-        );
-        
-        console.log(`Employés récupérés depuis Firestore: ${sortedEmployees.length}`);
-        
-        // Vérifier si LIONEL DJOSSA est dans la liste
-        const lionelExists = sortedEmployees.some(
-          emp => emp.firstName?.toLowerCase().includes('lionel') && 
-                 emp.lastName?.toLowerCase().includes('djossa')
-        );
-        console.log("LIONEL DJOSSA est-il dans la liste?", lionelExists);
-        
+        console.log(`Nombre final d'employés triés: ${sortedEmployees.length}`);
         setManagers(sortedEmployees);
       } catch (error) {
         console.error('Erreur lors de la récupération des employés:', error);
@@ -93,7 +90,7 @@ const FormActions: React.FC<FormActionsProps> = ({
     };
     
     if (showManagerOption && form) {
-      fetchEmployees();
+      fetchAllEmployees();
     }
   }, [showManagerOption, form]);
   
@@ -113,7 +110,7 @@ const FormActions: React.FC<FormActionsProps> = ({
               <SelectTrigger>
                 <SelectValue placeholder={isLoading ? "Chargement..." : "Sélectionner un responsable"} />
               </SelectTrigger>
-              <SelectContent className="max-h-[300px]">
+              <SelectContent className="max-h-[300px] overflow-y-auto">
                 <SelectItem value="">Aucun responsable</SelectItem>
                 {managers.map((employee) => (
                   <SelectItem key={employee.id} value={employee.id}>
