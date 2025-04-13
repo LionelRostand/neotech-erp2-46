@@ -44,26 +44,20 @@ const PhotoUploadField = ({ defaultPhotoUrl }: PhotoUploadFieldProps) => {
       // Process for storage in form data
       const reader = new FileReader();
       reader.onload = (e) => {
-        const result = e.target?.result;
-        if (result) {
-          // Store both the base64 data and file metadata
-          const photoData = {
-            fileName: file.name,
-            fileType: file.type,
-            fileSize: file.size,
-            updatedAt: new Date().toISOString(),
-            data: result // Store the result directly, not as an object property
-          };
+        const base64Data = e.target?.result as string;
+        if (base64Data) {
+          // Stocker à la fois les données base64 et les métadonnées
+          onChange(base64Data); // Stocker directement la chaîne base64 pour faciliter l'utilisation
           
-          onChange(photoData);
-        } else {
-          // Si le résultat est null, utiliser un objet avec uniquement les métadonnées
-          onChange({
-            fileName: file.name,
-            fileType: file.type,
-            fileSize: file.size,
-            updatedAt: new Date().toISOString()
+          // Ajouter des logs pour le débogage
+          console.log('Photo convertie en base64 avec succès', {
+            size: base64Data.length,
+            preview: base64Data.substring(0, 50) + '...'
           });
+        } else {
+          // En cas d'échec, on stocke au moins les métadonnées
+          onChange(null);
+          console.error('Échec de conversion en base64');
         }
         setIsUploading(false);
       };
@@ -71,17 +65,15 @@ const PhotoUploadField = ({ defaultPhotoUrl }: PhotoUploadFieldProps) => {
       reader.onerror = () => {
         console.error('Erreur lors de la lecture du fichier');
         toast.error('Erreur lors du traitement de l\'image');
-        // Envoyer un objet vide mais valide en cas d'erreur
         onChange(null);
         setIsUploading(false);
       };
       
-      reader.readAsDataURL(file);
+      reader.readAsDataURL(file); // Convertir en base64 URL
       
     } catch (error) {
       console.error('Erreur lors du traitement de l\'image:', error);
       toast.error('Erreur lors du traitement de l\'image');
-      // Envoyer un objet vide mais valide en cas d'erreur
       onChange(null);
       setIsUploading(false);
     }
@@ -97,7 +89,7 @@ const PhotoUploadField = ({ defaultPhotoUrl }: PhotoUploadFieldProps) => {
             <div className="flex flex-col items-center space-y-4">
               <Avatar className="h-24 w-24">
                 <AvatarImage 
-                  src={previewUrl}
+                  src={previewUrl || field.value}
                   alt="Photo de profil" 
                 />
                 <AvatarFallback className="bg-primary text-white text-xl">

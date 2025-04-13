@@ -1,247 +1,116 @@
 
-import React, { useState, useEffect } from 'react';
-import { Employee, EmployeeAddress } from '@/types/employee';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Mail, Phone, MapPin, Upload, Loader2, IdCard } from 'lucide-react';
-import { toast } from 'sonner';
-import { useStorageUpload } from '@/hooks/storage/useStorageUpload';
-import { updateDocument } from '@/hooks/firestore/update-operations';
-import { COLLECTIONS } from '@/lib/firebase-collections';
-import { hexToDataUrl } from '@/utils/documentUtils';
+import { Briefcase, Mail, Phone, MapPin } from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Employee } from '@/types/employee';
 
 interface EmployeeProfileHeaderProps {
   employee: Employee;
   onEmployeeUpdate?: (updatedEmployee: Employee) => void;
 }
 
-const EmployeeProfileHeader: React.FC<EmployeeProfileHeaderProps> = ({ employee, onEmployeeUpdate }) => {
-  const [isUploading, setIsUploading] = useState(false);
-  const [photoSrc, setPhotoSrc] = useState<string | undefined>();
-  const { uploadFile } = useStorageUpload();
-  
-  // Effect pour convertir les données hexadécimales en URL si disponibles
-  useEffect(() => {
-    if (employee.photoHex) {
-      try {
-        const imageUrl = hexToDataUrl(
-          employee.photoHex, 
-          employee.photoMeta?.fileType || 'image/jpeg'
-        );
-        setPhotoSrc(imageUrl);
-        
-        // Nettoyer l'URL quand le composant est démonté
-        return () => {
-          URL.revokeObjectURL(imageUrl);
-        };
-      } catch (err) {
-        console.error('Erreur lors de la conversion des données hex:', err);
-      }
-    }
-  }, [employee.photoHex, employee.photoMeta?.fileType]);
-  
-  // Format address to display
-  const formatAddress = (address: string | EmployeeAddress): string => {
-    if (typeof address === 'string') {
-      return address;
-    } else {
-      const { street, city, postalCode, country } = address;
-      return `${street}, ${postalCode} ${city}, ${country}`;
-    }
+const EmployeeProfileHeader: React.FC<EmployeeProfileHeaderProps> = ({ 
+  employee, 
+  onEmployeeUpdate 
+}) => {
+  // Fonction pour obtenir les initiales de l'employé
+  const getInitials = () => {
+    return `${employee.firstName?.charAt(0) || ''}${employee.lastName?.charAt(0) || ''}`;
   };
 
-  // Get employee initials for avatar fallback
-  const getInitials = (): string => {
-    return `${employee.firstName.charAt(0)}${employee.lastName.charAt(0)}`;
-  };
-
-  // Get status color for badge
-  const getStatusColor = (): string => {
+  // Fonction pour définir le statut avec le bon style
+  const getStatusBadge = () => {
     switch (employee.status) {
       case 'active':
       case 'Actif':
-        return 'bg-green-100 text-green-800 hover:bg-green-100';
+        return <Badge className="bg-green-500 hover:bg-green-600">Actif</Badge>;
       case 'inactive':
-        return 'bg-red-100 text-red-800 hover:bg-red-100';
+      case 'Inactif':
+        return <Badge variant="outline" className="text-gray-500 border-gray-300">Inactif</Badge>;
       case 'onLeave':
-        return 'bg-amber-100 text-amber-800 hover:bg-amber-100';
+      case 'En congé':
+        return <Badge className="bg-amber-500 hover:bg-amber-600">En congé</Badge>;
+      case 'Suspendu':
+        return <Badge className="bg-red-500 hover:bg-red-600">Suspendu</Badge>;
       default:
-        return 'bg-gray-100 text-gray-800 hover:bg-gray-100';
+        return <Badge variant="outline">{employee.status}</Badge>;
     }
   };
 
-  // Sélectionner la meilleure source d'image disponible
-  const getPhotoSource = (): string | undefined => {
-    // Priorité: 1. photoSrc (hex converti), 2. photoData (base64), 3. photoURL ou photo
-    if (photoSrc) {
-      return photoSrc;
-    } else if (employee.photoData) {
+  // Sélectionner l'URL de la photo à utiliser
+  const getPhotoUrl = () => {
+    // On vérifie toutes les sources possibles de photos
+    if (employee.photoData && typeof employee.photoData === 'string' && employee.photoData.startsWith('data:')) {
+      // Utiliser la donnée base64 directement
       return employee.photoData;
-    } else if (employee.photoURL) {
+    } else if (employee.photoURL && employee.photoURL.length > 0) {
+      // Utiliser l'URL de la photo
       return employee.photoURL;
-    } else if (employee.photo) {
+    } else if (employee.photo && employee.photo.length > 0) {
+      // Utiliser l'ancienne propriété photo
       return employee.photo;
+    } else if (employee.photoData && typeof employee.photoData === 'object' && employee.photoData.data) {
+      // Si photoData est un objet avec une propriété data
+      return employee.photoData.data;
     }
-    return undefined;
+    
+    // Aucune photo trouvée
+    return '';
   };
 
-  // Handle photo upload
-  const handlePhotoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = event.target.files;
-    if (!files || files.length === 0) return;
-
-    const file = files[0];
-    
-    // Validate file type
-    if (!file.type.startsWith('image/')) {
-      toast.error('Veuillez sélectionner une image');
-      return;
+  // Adresse formatée pour l'affichage
+  const getFormattedAddress = () => {
+    if (typeof employee.address === 'object') {
+      const addr = employee.address;
+      return `${addr.street || ''}, ${addr.postalCode || ''} ${addr.city || ''}, ${addr.country || ''}`;
     }
-    
-    // Validate file size (max 5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error('L\'image ne doit pas dépasser 5MB');
-      return;
-    }
-
-    try {
-      setIsUploading(true);
-      
-      // Show toast indicating upload start
-      toast.loading('Téléversement de la photo de profil en cours...', {
-        id: 'photo-upload',
-        duration: 3000
-      });
-      
-      // Upload to Firebase Storage (with CORS handling)
-      const uploadPath = `hr_employees/${employee.id}/profile`;
-      const result = await uploadFile(file, uploadPath, 'profile_photo');
-      
-      console.log('Résultat du téléversement:', result);
-      
-      // Si nous n'avons pas d'URL à cause des problèmes CORS, afficher un message pour informer l'utilisateur
-      if (!result.fileUrl && (result.fileData || result.fileHex)) {
-        toast.info('La photo a été stockée localement pour éviter les problèmes CORS.', {
-          duration: 5000
-        });
-      }
-      
-      // Mise à jour directe du document dans Firestore avec l'URL, les données binaires ET les données hexadécimales
-      await updateDocument(COLLECTIONS.HR.EMPLOYEES, employee.id, {
-        photoURL: result.fileUrl || '',
-        photo: result.fileUrl || '',
-        // Stocker les données binaires dans un champ dédié
-        photoData: result.fileData,
-        // Stocker les données hexadécimales dans un champ dédié
-        photoHex: result.fileHex,
-        photoMeta: {
-          fileName: result.fileName,
-          fileType: result.fileType,
-          fileSize: result.fileSize,
-          updatedAt: new Date().toISOString()
-        }
-      });
-      
-      console.log('Photo et données binaires mises à jour dans Firestore');
-      
-      // Update local state if callback provided
-      if (onEmployeeUpdate) {
-        onEmployeeUpdate({
-          ...employee,
-          photoURL: result.fileUrl || '',
-          photo: result.fileUrl || '',
-          photoData: result.fileData,
-          photoHex: result.fileHex,
-          photoMeta: {
-            fileName: result.fileName,
-            fileType: result.fileType,
-            fileSize: result.fileSize,
-            updatedAt: new Date().toISOString()
-          }
-        });
-      }
-      
-      toast.success('Photo de profil mise à jour avec succès', {
-        id: 'photo-upload'
-      });
-    } catch (error) {
-      console.error('Erreur lors du téléversement de la photo:', error);
-      toast.error('Erreur lors du téléversement de la photo', {
-        id: 'photo-upload'
-      });
-    } finally {
-      setIsUploading(false);
-    }
+    return employee.address || '';
   };
 
   return (
-    <Card>
-      <CardContent className="p-6">
-        <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
-          <div className="relative group">
-            <Avatar className="h-24 w-24">
-              <AvatarImage 
-                src={getPhotoSource()} 
-                alt={`${employee.firstName} ${employee.lastName}`} 
-              />
-              <AvatarFallback className="text-2xl">{getInitials()}</AvatarFallback>
-            </Avatar>
-            
-            <label 
-              htmlFor="profile-photo-upload" 
-              className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 rounded-full opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity"
-            >
-              {isUploading ? (
-                <Loader2 className="h-8 w-8 text-white animate-spin" />
-              ) : (
-                <Upload className="h-8 w-8 text-white" />
-              )}
-            </label>
-            <input 
-              id="profile-photo-upload" 
-              type="file" 
-              accept="image/*" 
-              onChange={handlePhotoUpload} 
-              disabled={isUploading}
-              className="hidden" 
+    <Card className="w-full">
+      <CardContent className="pt-6">
+        <div className="flex flex-col md:flex-row gap-6 items-start md:items-center">
+          <Avatar className="w-24 h-24 border-2 border-primary/10">
+            <AvatarImage 
+              src={getPhotoUrl()} 
+              alt={`${employee.firstName} ${employee.lastName}`} 
             />
-            
-            {/* Affichage de l'ID de l'employé */}
-            <div className="flex items-center justify-center mt-2 text-sm text-muted-foreground">
-              <IdCard className="h-3 w-3 mr-1" />
-              <span>ID: {employee.id}</span>
-            </div>
-          </div>
+            <AvatarFallback className="text-xl bg-primary/10">{getInitials()}</AvatarFallback>
+          </Avatar>
           
-          <div className="flex-1 text-center md:text-left">
-            <h2 className="text-2xl font-bold">{employee.firstName} {employee.lastName}</h2>
-            <p className="text-muted-foreground">{employee.position || employee.title}</p>
-            
-            <div className="flex flex-wrap gap-2 mt-2 justify-center md:justify-start">
-              <Badge variant="outline" className={getStatusColor()}>
-                {employee.status === 'active' || employee.status === 'Actif' ? 'Actif' : 
-                 employee.status === 'inactive' ? 'Inactif' : 
-                 employee.status === 'onLeave' ? 'En congé' : employee.status}
-              </Badge>
-              <Badge variant="outline">{employee.department}</Badge>
-              <Badge variant="outline">{employee.contract || 'CDI'}</Badge>
+          <div className="flex-1 space-y-2">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+              <div>
+                <h2 className="text-2xl font-bold">{employee.firstName} {employee.lastName}</h2>
+                <p className="text-muted-foreground">{employee.position || employee.title}</p>
+              </div>
+              <div className="flex items-center gap-2">
+                {getStatusBadge()}
+              </div>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
-              <div className="flex items-center">
-                <Mail className="h-4 w-4 mr-2 text-muted-foreground" />
-                <span className="text-sm">{employee.email}</span>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 py-2">
+              <div className="flex items-center gap-2 text-sm">
+                <Briefcase className="h-4 w-4 text-muted-foreground" />
+                <span>{employee.department}</span>
               </div>
               
-              <div className="flex items-center">
-                <Phone className="h-4 w-4 mr-2 text-muted-foreground" />
-                <span className="text-sm">{employee.phone}</span>
+              <div className="flex items-center gap-2 text-sm">
+                <Phone className="h-4 w-4 text-muted-foreground" />
+                <span>{employee.phone || 'Non renseigné'}</span>
               </div>
               
-              <div className="flex items-center">
-                <MapPin className="h-4 w-4 mr-2 text-muted-foreground" />
-                <span className="text-sm">{formatAddress(employee.address)}</span>
+              <div className="flex items-center gap-2 text-sm">
+                <Mail className="h-4 w-4 text-muted-foreground" />
+                <span>{employee.email}</span>
+              </div>
+              
+              <div className="flex items-center gap-2 text-sm">
+                <MapPin className="h-4 w-4 text-muted-foreground" />
+                <span className="truncate">{getFormattedAddress()}</span>
               </div>
             </div>
           </div>
