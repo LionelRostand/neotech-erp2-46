@@ -2,6 +2,11 @@
 import { Employee, EmployeeAddress } from '@/types/employee';
 import { EmployeeFormValues } from './employeeFormSchema';
 import { v4 as uuidv4 } from 'uuid';
+import { COLLECTIONS } from '@/lib/firebase-collections';
+import { getDocRef, getCollectionRef } from '@/hooks/firestore/common-utils';
+import { setDocument } from '@/hooks/firestore/update-operations';
+import { addDocument } from '@/hooks/firestore/create-operations';
+import { toast } from 'sonner';
 
 // Fonction utilitaire pour déterminer si un employé est un responsable
 export const determineIfManager = (position: string | undefined): boolean => {
@@ -14,6 +19,38 @@ export const determineIfManager = (position: string | undefined): boolean => {
          lowerPosition.includes('pdg') ||
          lowerPosition.includes('ceo') || 
          lowerPosition.includes('chief');
+};
+
+/**
+ * Ajoute ou met à jour un employé dans la collection des managers si nécessaire
+ * @param employeeData Données de l'employé
+ * @returns Promesse qui se résout une fois l'opération terminée
+ */
+export const syncManagerStatus = async (employeeData: Partial<Employee>): Promise<void> => {
+  try {
+    if (!employeeData.id) {
+      console.error("ID d'employé manquant pour la synchronisation du statut de manager");
+      return;
+    }
+    
+    const isManager = determineIfManager(employeeData.position);
+    console.log(`Vérification du statut de manager pour ${employeeData.firstName} ${employeeData.lastName}:`, isManager);
+    
+    // Mettre à jour le champ isManager dans les données
+    employeeData.isManager = isManager;
+    
+    if (isManager) {
+      // Ajouter/mettre à jour dans la collection des managers
+      console.log(`Ajout/mise à jour de ${employeeData.firstName} ${employeeData.lastName} dans la collection des managers`);
+      await setDocument(COLLECTIONS.HR.MANAGERS, employeeData.id, {
+        ...employeeData,
+        role: 'manager',
+        updatedAt: new Date().toISOString()
+      });
+    }
+  } catch (error) {
+    console.error("Erreur lors de la synchronisation du statut de manager:", error);
+  }
 };
 
 /**
@@ -62,6 +99,7 @@ export const prepareEmployeeData = (data: EmployeeFormValues, employeeId: string
   
   // Vérifier si l'employé est un manager
   const isManager = determineIfManager(data.position);
+  console.log(`Détection de manager pour ${data.firstName} ${data.lastName}:`, isManager);
   
   // Retourner l'objet employé préparé
   const employeeData: Partial<Employee> = {
@@ -149,4 +187,48 @@ export const generateUniqueEmployeeId = (): string => {
 export const isValidEmployeeId = (id: string): boolean => {
   // Vérifier que l'ID suit le format "EMP-XXXXXXXX"
   return /^EMP-[A-Z0-9]{8}$/.test(id);
+};
+
+/**
+ * Sauvegarde un employé et met à jour son statut de manager si nécessaire
+ */
+export const saveEmployee = async (employeeData: Partial<Employee>): Promise<Partial<Employee> | null> => {
+  try {
+    const isNewEmployee = !employeeData.id || !isValidEmployeeId(employeeData.id);
+    const employeeId = isNewEmployee ? generateUniqueEmployeeId() : employeeData.id;
+    
+    // S'assurer que l'ID est défini dans les données
+    employeeData.id = employeeId;
+    
+    // Déterminer si l'employé est un manager
+    const isManager = determineIfManager(employeeData.position);
+    console.log(`Statut de manager pour ${employeeData.firstName} ${employeeData.lastName}:`, isManager);
+    employeeData.isManager = isManager;
+    employeeData.role = isManager ? 'manager' : 'employee';
+    
+    let result;
+    
+    // Sauvegarder dans la collection principale des employés
+    if (isNewEmployee) {
+      result = await addDocument(COLLECTIONS.HR.EMPLOYEES, employeeData);
+      console.log("Nouvel employé créé:", result);
+    } else {
+      result = await setDocument(COLLECTIONS.HR.EMPLOYEES, employeeId, employeeData);
+      console.log("Employé existant mis à jour:", result);
+    }
+    
+    // Synchroniser avec la collection des managers
+    await syncManagerStatus(employeeData);
+    
+    toast.success(isNewEmployee 
+      ? `Employé ${employeeData.firstName} ${employeeData.lastName} créé avec succès` 
+      : `Employé ${employeeData.firstName} ${employeeData.lastName} mis à jour avec succès`
+    );
+    
+    return result;
+  } catch (error) {
+    console.error("Erreur lors de la sauvegarde de l'employé:", error);
+    toast.error("Erreur lors de la sauvegarde de l'employé");
+    return null;
+  }
 };

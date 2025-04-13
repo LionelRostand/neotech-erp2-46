@@ -8,7 +8,7 @@ import EmployeesLeaves from "@/components/module/submodules/leaves/EmployeesLeav
 import EmployeesProfiles from "@/components/module/submodules/employees/EmployeesProfiles";
 import EmployeesHierarchy from "@/components/module/submodules/employees/EmployeesHierarchy";
 import EmployeesRecruitment from "@/components/module/submodules/EmployeesRecruitment";
-import EmployeesBadges from "@/components/module/submodules/EmployeesBadges";
+import EmployeesBadges from "@/components/module/submodules/employees/EmployeesBadges";
 import EmployeesAttendance from "@/components/module/submodules/EmployeesAttendance";
 import EmployeesDashboard from "@/components/module/submodules/EmployeesDashboard";
 import EmployeesTimesheet from "@/components/module/submodules/EmployeesTimesheet";

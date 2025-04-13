@@ -98,3 +98,21 @@ export const getPositionStyleClasses = (position: string = ''): string => {
   
   return 'bg-white border-slate-200 shadow-slate-100';
 };
+
+/**
+ * Détermine si un employé a un rôle de manager basé sur son titre/position
+ * @param position Poste ou fonction de l'employé
+ * @returns true si l'employé est considéré comme un manager
+ */
+export const isEmployeeManager = (position: string = ''): boolean => {
+  if (!position) return false;
+  
+  const lowerPosition = position.toLowerCase();
+  return lowerPosition.includes('manager') || 
+         lowerPosition.includes('responsable') || 
+         lowerPosition.includes('directeur') || 
+         lowerPosition.includes('pdg') ||
+         lowerPosition.includes('ceo') || 
+         lowerPosition.includes('chief') ||
+         lowerPosition.includes('chef');
+};
