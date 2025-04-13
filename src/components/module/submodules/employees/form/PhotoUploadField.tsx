@@ -45,16 +45,34 @@ const PhotoUploadField = ({ defaultPhotoUrl }: PhotoUploadFieldProps) => {
       const reader = new FileReader();
       reader.onload = (e) => {
         const result = e.target?.result as string;
-        // Store both the base64 data and file metadata
-        onChange({
-          data: result,
-          fileName: file.name,
-          fileType: file.type,
-          fileSize: file.size,
-          updatedAt: new Date().toISOString()
-        });
+        if (result) {
+          // Store both the base64 data and file metadata
+          // Ensure photoData is not undefined
+          onChange({
+            data: result,
+            fileName: file.name,
+            fileType: file.type,
+            fileSize: file.size,
+            updatedAt: new Date().toISOString()
+          });
+        } else {
+          // Si le résultat est null, utiliser un objet vide mais valide
+          onChange({
+            fileName: file.name,
+            fileType: file.type,
+            fileSize: file.size,
+            updatedAt: new Date().toISOString()
+          });
+        }
         setIsUploading(false);
       };
+      
+      reader.onerror = () => {
+        console.error('Erreur lors de la lecture du fichier');
+        toast.error('Erreur lors du traitement de l\'image');
+        setIsUploading(false);
+      };
+      
       reader.readAsDataURL(file);
       
     } catch (error) {

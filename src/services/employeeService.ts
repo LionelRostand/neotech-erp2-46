@@ -49,10 +49,20 @@ export const createEmployee = async (employeeData: Partial<Employee>): Promise<E
                      isEmployeeManager(employeeData.position || '') || 
                      isEmployeeManager(employeeData.role || '');
     
+    // Nettoyer les données pour éliminer les propriétés undefined
+    const cleanedData = Object.entries(employeeData).reduce((acc, [key, value]) => {
+      if (value !== undefined) {
+        acc[key] = value;
+      }
+      return acc;
+    }, {} as Record<string, any>);
+    
+    console.log('Données nettoyées avant sauvegarde:', cleanedData);
+    
     // Préparer les données avec timestamps et statut de manager
     const now = new Date().toISOString();
     const employeeToSave: Partial<Employee> = {
-      ...employeeData,
+      ...cleanedData,
       isManager,
       createdAt: now,
       updatedAt: now,
@@ -81,7 +91,7 @@ export const createEmployee = async (employeeData: Partial<Employee>): Promise<E
     return employeeWithId;
   } catch (error) {
     console.error('Erreur lors de la création de l\'employé:', error);
-    toast.error('Erreur lors de la création de l\'employé');
+    toast.error(`Erreur lors de la création de l'employé: ${error instanceof Error ? error.message : 'Erreur inconnue'}`);
     return null;
   }
 };
@@ -109,9 +119,19 @@ export const updateEmployeeDoc = async (id: string, employeeData: Partial<Employ
     // Filtrer les données pour ne pas écraser l'ID ou createdAt
     const { id: _, createdAt, ...dataToUpdate } = employeeData;
     
+    // Nettoyer les données pour éliminer les propriétés undefined
+    const cleanedData = Object.entries(dataToUpdate).reduce((acc, [key, value]) => {
+      if (value !== undefined) {
+        acc[key] = value;
+      }
+      return acc;
+    }, {} as Record<string, any>);
+    
+    console.log('Données nettoyées avant mise à jour:', cleanedData);
+    
     // Ajouter timestamp de mise à jour
     const updatedData = {
-      ...dataToUpdate,
+      ...cleanedData,
       updatedAt: new Date().toISOString()
     };
     

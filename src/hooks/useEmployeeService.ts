@@ -22,14 +22,24 @@ export const useEmployeeService = () => {
     try {
       console.log('Début de création d\'un employé:', employeeData);
       
+      // Nettoyer les données pour éliminer les valeurs undefined
+      const cleanedData = Object.entries(employeeData).reduce((acc, [key, value]) => {
+        if (value !== undefined) {
+          acc[key] = value;
+        }
+        return acc;
+      }, {} as Record<string, any>);
+      
+      console.log('Données nettoyées:', cleanedData);
+      
       // Déterminer si l'employé est un manager basé sur sa position ou si forceManager est vrai
-      const isManager = employeeData.forceManager === true || 
-                       isEmployeeManager(employeeData.position || '') || 
-                       isEmployeeManager(employeeData.role || '');
+      const isManager = cleanedData.forceManager === true || 
+                       isEmployeeManager(cleanedData.position || '') || 
+                       isEmployeeManager(cleanedData.role || '');
       
       // Ajouter explicitement la propriété isManager
       const employeeWithManagerStatus = {
-        ...employeeData,
+        ...cleanedData,
         isManager
       };
       
@@ -66,14 +76,24 @@ export const useEmployeeService = () => {
     try {
       console.log('Début de mise à jour d\'un employé:', id, employeeData);
       
+      // Nettoyer les données pour éliminer les valeurs undefined
+      const cleanedData = Object.entries(employeeData).reduce((acc, [key, value]) => {
+        if (value !== undefined) {
+          acc[key] = value;
+        }
+        return acc;
+      }, {} as Record<string, any>);
+      
+      console.log('Données nettoyées pour mise à jour:', cleanedData);
+      
       // Déterminer si l'employé est un manager basé sur sa position ou si forceManager est vrai
-      const isManager = employeeData.forceManager === true || 
-                       isEmployeeManager(employeeData.position || '') || 
-                       isEmployeeManager(employeeData.role || '');
+      const isManager = cleanedData.forceManager === true || 
+                       isEmployeeManager(cleanedData.position || '') || 
+                       isEmployeeManager(cleanedData.role || '');
       
       // Ajouter explicitement la propriété isManager et timestamp de mise à jour
       const employeeWithManagerStatus = {
-        ...employeeData,
+        ...cleanedData,
         isManager,
         updatedAt: new Date().toISOString()
       };
