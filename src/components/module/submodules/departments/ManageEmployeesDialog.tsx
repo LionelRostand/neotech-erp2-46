@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Department } from './types';
@@ -24,6 +24,14 @@ const ManageEmployeesDialog: React.FC<ManageEmployeesDialogProps> = ({
   onSave,
 }) => {
   const { employees } = useEmployeeData();
+
+  // Set selected employees based on department
+  useEffect(() => {
+    // This is just to ensure department employees are loaded
+    if (department && department.id) {
+      getDepartmentEmployees(department.id);
+    }
+  }, [department, getDepartmentEmployees]);
 
   return (
     <DialogContent className="sm:max-w-[600px]">

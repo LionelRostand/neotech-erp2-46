@@ -10,8 +10,9 @@ export const useDepartmentForm = (departments: Department[] = []) => {
   const [selectedEmployees, setSelectedEmployees] = useState<string[]>([]);
   
   // Reset form with initial data
-  const resetForm = useCallback((departments: Department[]) => {
-    setFormData(createEmptyFormData(departments));
+  const resetForm = useCallback((depts: Department[]) => {
+    // We don't want to continuously reset this in an infinite loop
+    setFormData(createEmptyFormData(depts));
     setSelectedEmployees([]);
     setActiveTab("general");
   }, []);

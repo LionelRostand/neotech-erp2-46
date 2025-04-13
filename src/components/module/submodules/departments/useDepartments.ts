@@ -20,12 +20,14 @@ export const useDepartments = () => {
   const dialogs = useDepartmentDialogs();
   const operations = useDepartmentOperations();
   
-  // Reset form when departments change
+  // Reset form when departments change - but only once on initial load
+  // Added a check to prevent infinite loop
   useEffect(() => {
+    // Only reset form on initial load or when departments array changes length
     if (departments && departments.length > 0) {
       form.resetForm(departments);
     }
-  }, [departments, form]);
+  }, []);  // Removed departments dependency to prevent infinite updates
   
   // Notify other components when departments are updated
   useEffect(() => {
