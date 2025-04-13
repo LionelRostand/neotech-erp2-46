@@ -5,11 +5,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import { Search, ListTree, Network, Users, Briefcase, Building } from 'lucide-react';
+import { Search, ListTree, Network, Users, Briefcase, Building, Layers } from 'lucide-react';
 import HierarchyVisualization from './hierarchy/HierarchyVisualization';
 import { ChartNode } from './hierarchy/types';
 import { useEmployeeData } from '@/hooks/useEmployeeData';
 import { Employee } from '@/types/employee';
+import { getEmployeeInitials, getEmployeeDisplayName } from './utils/employeeUtils';
 
 const EmployeesHierarchy: React.FC = () => {
   const [viewMode, setViewMode] = useState<'orgChart' | 'treeView'>('orgChart');
@@ -109,50 +110,50 @@ const EmployeesHierarchy: React.FC = () => {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div className="flex items-center text-xl font-semibold">
-          <ListTree className="h-6 w-6 text-green-500 mr-2" />
+          <ListTree className="h-6 w-6 text-emerald-500 mr-2" />
           Hiérarchie de l'Organisation
         </div>
       </div>
       
       {/* Dashboard Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card>
+        <Card className="border-l-4 border-l-blue-500 shadow-md hover:shadow-lg transition-all">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Employés</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">Équipe</CardTitle>
+            <Users className="h-4 w-4 text-blue-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.totalEmployees}</div>
-            <p className="text-xs text-muted-foreground">Total des employés de l'organisation</p>
+            <p className="text-xs text-muted-foreground">Collaborateurs sous votre responsabilité</p>
           </CardContent>
         </Card>
         
-        <Card>
+        <Card className="border-l-4 border-l-emerald-500 shadow-md hover:shadow-lg transition-all">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">Managers</CardTitle>
-            <Briefcase className="h-4 w-4 text-muted-foreground" />
+            <Briefcase className="h-4 w-4 text-emerald-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.managers}</div>
-            <p className="text-xs text-muted-foreground">Employés avec équipe</p>
+            <p className="text-xs text-muted-foreground">Team leaders dans votre équipe</p>
           </CardContent>
         </Card>
         
-        <Card>
+        <Card className="border-l-4 border-l-purple-500 shadow-md hover:shadow-lg transition-all">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">Départements</CardTitle>
-            <Building className="h-4 w-4 text-muted-foreground" />
+            <Building className="h-4 w-4 text-purple-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.departments}</div>
-            <p className="text-xs text-muted-foreground">Unités organisationnelles</p>
+            <p className="text-xs text-muted-foreground">Unités fonctionnelles</p>
           </CardContent>
         </Card>
         
-        <Card>
+        <Card className="border-l-4 border-l-amber-500 shadow-md hover:shadow-lg transition-all">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">Niveaux</CardTitle>
-            <ListTree className="h-4 w-4 text-muted-foreground" />
+            <Layers className="h-4 w-4 text-amber-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{organizationDepth}</div>
@@ -161,13 +162,13 @@ const EmployeesHierarchy: React.FC = () => {
         </Card>
       </div>
       
-      <Card>
+      <Card className="shadow-md">
         <CardContent className="p-6">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
             <div className="relative w-full md:w-64 mb-4 md:mb-0">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
               <Input 
-                placeholder="Rechercher un employé..." 
+                placeholder="Rechercher un collaborateur..." 
                 className="pl-10" 
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -182,14 +183,14 @@ const EmployeesHierarchy: React.FC = () => {
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="orgChart" id="orgChart" />
                 <Label htmlFor="orgChart" className="flex items-center">
-                  <Network className="h-4 w-4 mr-1" />
+                  <Network className="h-4 w-4 mr-1 text-blue-500" />
                   Organigramme
                 </Label>
               </div>
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="treeView" id="treeView" />
                 <Label htmlFor="treeView" className="flex items-center">
-                  <ListTree className="h-4 w-4 mr-1" />
+                  <ListTree className="h-4 w-4 mr-1 text-emerald-500" />
                   Vue arborescente
                 </Label>
               </div>
