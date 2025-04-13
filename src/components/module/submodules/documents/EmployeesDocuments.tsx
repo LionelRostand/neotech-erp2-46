@@ -1,10 +1,10 @@
+
 import React, { useState, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useDocumentsData } from '@/hooks/useDocumentsData';
 import { DocumentsCalendar } from './components/DocumentsCalendar';
-import { format, isValid } from 'date-fns';
+import { format, isValid, parse } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { DocumentsTable } from './components/DocumentsTable';
 import { DocumentsTabs } from './components/DocumentsTabs';
 
 const EmployeesDocuments = () => {
@@ -18,14 +18,13 @@ const EmployeesDocuments = () => {
     try {
       // Check if it's already in DD/MM/YYYY format
       if (/^\d{2}\/\d{2}\/\d{4}$/.test(dateStr)) {
-        const [day, month, year] = dateStr.split('/').map(Number);
-        const parsedDate = new Date(year, month - 1, day);
-        return !isNaN(parsedDate.getTime()) ? parsedDate : null;
+        const parsedDate = parse(dateStr, 'dd/MM/yyyy', new Date());
+        return isValid(parsedDate) ? parsedDate : null;
       }
       
       // Otherwise try standard parsing
       const date = new Date(dateStr);
-      return !isNaN(date.getTime()) ? date : null;
+      return isValid(date) ? date : null;
     } catch (e) {
       console.warn('Error parsing date:', dateStr, e);
       return null;
@@ -68,7 +67,8 @@ const EmployeesDocuments = () => {
   const documentsByType = useMemo(() => {
     try {
       return filteredDocuments.reduce((acc, doc) => {
-        const type = doc.type || 'Autre';
+        // Ensure doc.type is a valid string
+        const type = typeof doc.type === 'string' ? doc.type : 'Autre';
         if (!acc[type]) {
           acc[type] = [];
         }

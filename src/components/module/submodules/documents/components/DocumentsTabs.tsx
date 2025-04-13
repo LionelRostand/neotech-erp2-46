@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { HrDocument } from '@/hooks/useDocumentsData';
 import { Button } from '@/components/ui/button';
 import { XCircle } from 'lucide-react';
-import { format } from 'date-fns';
+import { format, isValid } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
 interface DocumentsTabsProps {
@@ -30,6 +30,11 @@ export const DocumentsTabs: React.FC<DocumentsTabsProps> = ({
   const safeFormatDate = (date: Date | null) => {
     if (!date) return '';
     try {
+      // Vérifier que la date est valide avant de la formater
+      if (!isValid(date)) {
+        console.warn('Invalid date provided to safeFormatDate:', date);
+        return '';
+      }
       return format(date, 'dd MMMM yyyy', { locale: fr });
     } catch (e) {
       console.error('Error formatting date in tabs:', e);
