@@ -1,20 +1,51 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { ChartNode, HierarchyNode, HierarchyVisualizationProps } from './types';
 import { convertToChartNode, nodeMatchesSearch } from './utils/hierarchyUtils';
 import EmptyHierarchy from './components/EmptyHierarchy';
 import OrgChartNode from './components/OrgChartNode';
 import TreeViewNode from './components/TreeViewNode';
+import { subscribeToDepartmentUpdates } from '../../departments/utils/departmentUtils';
 
 const HierarchyVisualization: React.FC<HierarchyVisualizationProps> = ({ 
   data: externalData,
   viewMode, 
-  searchQuery 
+  searchQuery,
+  onRefresh
 }) => {
-  // Déterminer quelle donnée utiliser pour l'affichage
-  const chartData = externalData 
-    ? ('position' in externalData ? externalData : convertToChartNode(externalData as HierarchyNode)) 
-    : null;
+  // État local pour stocker les données du graphique
+  const [chartData, setChartData] = useState<ChartNode | null>(null);
+  
+  // Mettre à jour les données du graphique lorsque les données externes changent
+  useEffect(() => {
+    if (externalData) {
+      const convertedData = 'position' in externalData 
+        ? externalData 
+        : convertToChartNode(externalData as HierarchyNode);
+      setChartData(convertedData as ChartNode);
+    } else {
+      setChartData(null);
+    }
+  }, [externalData]);
+
+  // S'abonner aux mises à jour des départements
+  useEffect(() => {
+    // Fonction pour gérer les mises à jour des départements
+    const handleDepartmentsUpdate = () => {
+      console.log("Départements mis à jour, rafraîchissement de la hiérarchie");
+      if (onRefresh) {
+        onRefresh();
+      }
+    };
+    
+    // S'abonner aux événements de mise à jour des départements
+    const unsubscribe = subscribeToDepartmentUpdates(handleDepartmentsUpdate);
+    
+    // Se désabonner lors du démontage du composant
+    return () => {
+      unsubscribe();
+    };
+  }, [onRefresh]);
   
   // Afficher un message si aucune donnée n'est disponible
   if (!chartData) {

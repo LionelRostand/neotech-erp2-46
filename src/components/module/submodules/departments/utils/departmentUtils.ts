@@ -1,3 +1,4 @@
+
 import { Department, DepartmentFormData } from '../types';
 import { Employee } from '@/types/employee';
 
@@ -95,16 +96,29 @@ export const getDepartmentEmployees = (departmentId: string, allEmployees: Emplo
   });
 };
 
+// Système de notification pour les mises à jour de départements
+const departmentUpdateListeners: Array<(departments: Department[]) => void> = [];
+
 export const notifyDepartmentUpdates = (departments: Department[]) => {
   try {
+    console.log("Envoi de notification de mise à jour des départements:", departments);
+    
+    // Déclencher l'événement personnalisé
     const updateEvent = new CustomEvent('departments-updated', { 
       detail: { departments } 
     });
     window.dispatchEvent(updateEvent);
     
-    console.log("Departments update notification sent:", departments);
+    // Notifier aussi tous les écouteurs inscrits directement
+    departmentUpdateListeners.forEach(listener => {
+      try {
+        listener(departments);
+      } catch (error) {
+        console.error("Erreur dans un écouteur de mise à jour de département:", error);
+      }
+    });
   } catch (error) {
-    console.error("Error notifying department updates:", error);
+    console.error("Erreur lors de la notification des mises à jour de département:", error);
   }
 };
 
@@ -116,9 +130,21 @@ export const subscribeToDepartmentUpdates = (callback: (departments: Department[
     }
   };
   
+  // Ajouter à la liste des écouteurs directs
+  departmentUpdateListeners.push(callback);
+  
+  // S'abonner aussi à l'événement
   window.addEventListener('departments-updated', handleUpdate);
   
+  // Retourner une fonction pour se désabonner
   return () => {
+    // Retirer de la liste des écouteurs directs
+    const index = departmentUpdateListeners.indexOf(callback);
+    if (index !== -1) {
+      departmentUpdateListeners.splice(index, 1);
+    }
+    
+    // Se désabonner de l'événement
     window.removeEventListener('departments-updated', handleUpdate);
   };
 };

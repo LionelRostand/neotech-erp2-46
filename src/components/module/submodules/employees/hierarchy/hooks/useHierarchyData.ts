@@ -1,251 +1,177 @@
 
-import { useState, useEffect } from 'react';
-import { Employee } from '@/types/employee';
-import { Department } from '@/components/module/submodules/departments/types';
-import { useEmployeeData } from '@/hooks/useEmployeeData';
-import { subscribeToDepartmentUpdates } from '@/components/module/submodules/departments/utils/departmentUtils';
-import { HierarchyNode, ChartNode } from '../types';
-import { convertToChartNode } from '../utils/hierarchyUtils';
+import { useState, useEffect, useCallback } from 'react';
+import { HierarchyNode } from '../types';
+import { useHrModuleData } from '@/hooks/useHrModuleData';
+import { subscribeToDepartmentUpdates } from '../../../departments/utils/departmentUtils';
+import { toast } from 'sonner';
 
+/**
+ * Hook pour récupérer et gérer les données de hiérarchie
+ */
 export const useHierarchyData = () => {
-  const { employees, departments, isLoading } = useEmployeeData();
-  const [hierarchyData, setHierarchyData] = useState<ChartNode | null>(null);
-  const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [hierarchyData, setHierarchyData] = useState<HierarchyNode | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const { employees, departments } = useHrModuleData();
 
-  // Cette fonction construit la hiérarchie à partir des données des employés et des départements
-  const buildHierarchy = (emps: Employee[], depts: Department[]) => {
-    if (!emps || emps.length === 0) {
-      console.log("Aucun employé disponible pour construire la hiérarchie");
-      return null;
+  // Fonction pour construire la hiérarchie
+  const buildHierarchy = useCallback(() => {
+    if (!employees || employees.length === 0) {
+      console.log("Aucun employé trouvé pour construire la hiérarchie");
+      setHierarchyData(null);
+      setIsLoading(false);
+      return;
     }
 
-    // Convertir les IDs des managers en références d'employés
-    const employeesMap = new Map<string, Employee>();
-    emps.forEach(emp => employeesMap.set(emp.id, emp));
-
-    // Trouver tous les managers dans les départements
-    const departmentManagers = new Set<string>();
-    depts.forEach(dept => {
-      if (dept.managerId) {
-        departmentManagers.add(dept.managerId);
-      }
-    });
-
-    // Vérifier explicitement quels employés sont des managers (ont des subordonnés)
-    const hasSubordinates = new Map<string, boolean>();
-    emps.forEach(emp => {
-      if (emp.managerId && employeesMap.has(emp.managerId)) {
-        hasSubordinates.set(emp.managerId, true);
-      }
-    });
-
-    // Logique pour construire la hiérarchie
-    // 1. Chercher d'abord un PDG ou top manager explicite
-    let ceoOrTopManager = emps.find(emp => 
-      (emp.isManager === true || emp.position?.toLowerCase().includes('pdg') || 
-       emp.position?.toLowerCase().includes('ceo') || emp.position?.toLowerCase().includes('directeur')) && 
-      (!emp.managerId || emp.managerId === "none")
-    );
-
-    // 2. Si aucun top manager n'est trouvé, chercher un manager de département
-    if (!ceoOrTopManager) {
-      ceoOrTopManager = emps.find(emp => departmentManagers.has(emp.id));
-    }
-
-    // 3. Chercher n'importe quel employé qui a des subordonnés
-    if (!ceoOrTopManager) {
-      ceoOrTopManager = emps.find(emp => hasSubordinates.get(emp.id) === true);
-    }
-
-    // 4. Dernier recours: utiliser le premier employé de la liste qui semble être un manager
-    if (!ceoOrTopManager) {
-      ceoOrTopManager = emps.find(emp => 
-        emp.isManager === true || 
-        (emp.position && (
-          emp.position.toLowerCase().includes('manager') || 
-          emp.position.toLowerCase().includes('responsable') || 
-          emp.position.toLowerCase().includes('chef')
-        ))
-      );
-    }
-
-    // 5. Si toujours aucun manager, prendre le premier employé
-    if (!ceoOrTopManager && emps.length > 0) {
-      console.log("Aucun manager trouvé, utilisation du premier employé comme racine");
-      ceoOrTopManager = emps[0];
-    }
-
-    if (!ceoOrTopManager) {
-      console.log("Impossible de construire la hiérarchie - aucun employé disponible");
-      return null;
-    }
-
-    // Construire la hiérarchie en commençant par le haut
-    const buildNode = (employee: Employee, processedEmployees = new Set<string>()): HierarchyNode => {
-      // Éviter les boucles infinies en cas de relations cycliques
-      if (processedEmployees.has(employee.id)) {
-        return {
+    console.log(`Construction de la hiérarchie avec ${employees.length} employés et ${departments?.length || 0} départements`);
+    
+    // Identifier les managers et leur créer des nœuds
+    const managersMap = new Map<string, HierarchyNode>();
+    const employeesWithManager = new Set<string>();
+    
+    // Étape 1: Créer un nœud pour chaque employé avec un ID managerId
+    employees.forEach(employee => {
+      if (employee.id) {
+        const node: HierarchyNode = {
           id: employee.id,
           name: `${employee.firstName} ${employee.lastName}`,
-          title: employee.position || employee.role || "Employé",
-          manager: undefined,
-          color: "#888888",
-          children: []
+          title: employee.position || employee.title || employee.role || 'Employé',
+          manager: '',
+          children: [],
+          imageUrl: employee.photoURL || '',
+          color: ''
         };
-      }
-      
-      processedEmployees.add(employee.id);
-      
-      // Trouver le département de l'employé
-      const dept = depts.find(d => d.id === employee.departmentId || d.managerId === employee.id);
-      const deptColor = dept?.color || "#888888";
-      
-      // Trouver le nom du manager
-      let managerName = undefined;
-      if (employee.managerId && employee.managerId !== "none") {
-        const manager = employeesMap.get(employee.managerId);
-        if (manager) {
-          managerName = `${manager.firstName} ${manager.lastName}`;
-        }
-      }
-      
-      // Trouver tous les subordonnés directs
-      const subordinates = emps.filter(emp => emp.managerId === employee.id);
-      
-      return {
-        id: employee.id,
-        name: `${employee.firstName} ${employee.lastName}`,
-        title: employee.position || employee.role || (dept ? `Manager - ${dept.name}` : "Employé"),
-        manager: managerName,
-        color: deptColor,
-        imageUrl: employee.photoURL || employee.photo || undefined,
-        children: subordinates.map(sub => buildNode(sub, new Set(processedEmployees)))
-      };
-    };
-
-    const rootNode = buildNode(ceoOrTopManager, new Set<string>());
-    return convertToChartNode(rootNode);
-  };
-
-  // Effet pour construire la hiérarchie au chargement et lors des mises à jour
-  useEffect(() => {
-    if (!isLoading) {
-      // Utiliser les données des employés et des départements disponibles
-      const emps = employees || [];
-      const depts = departments || [];
-      
-      console.log("Construction de la hiérarchie avec", emps.length, "employés et", depts.length, "départements");
-      
-      try {
-        const hierarchy = buildHierarchy(emps, depts);
-        setHierarchyData(hierarchy);
         
-        if (!hierarchy && emps.length > 0) {
-          // Si aucune hiérarchie n'a pu être construite mais qu'il y a des employés,
-          // créer une hiérarchie de secours avec un seul niveau pour l'affichage
-          console.log("Création d'une hiérarchie de secours pour l'affichage");
-          
-          // Regrouper les employés par département
-          const departmentMap = new Map<string, Employee[]>();
-          
-          emps.forEach(emp => {
-            const deptId = emp.departmentId || 'sans-departement';
-            if (!departmentMap.has(deptId)) {
-              departmentMap.set(deptId, []);
-            }
-            departmentMap.get(deptId)?.push(emp);
-          });
-          
-          // Créer une structure hiérarchique basée sur les départements
-          const fallbackChildren: ChartNode[] = [];
-          
-          // D'abord ajouter les départements avec managers
-          depts.forEach(dept => {
-            if (dept.managerId) {
-              const manager = emps.find(emp => emp.id === dept.managerId);
-              if (manager) {
-                const deptEmployees = departmentMap.get(dept.id) || [];
-                // Filtrer le manager de la liste des employés du département
-                const deptMembers = deptEmployees.filter(emp => emp.id !== manager.id);
-                
-                fallbackChildren.push({
-                  id: manager.id,
-                  name: `${manager.firstName} ${manager.lastName}`,
-                  position: manager.position || `Manager - ${dept.name}`,
-                  department: dept.name,
-                  departmentColor: dept.color || "#888888",
-                  imageUrl: manager.photoURL || manager.photo || undefined,
-                  children: deptMembers.map(emp => ({
-                    id: emp.id,
-                    name: `${emp.firstName} ${emp.lastName}`,
-                    position: emp.position || emp.role || "Employé",
-                    department: dept.name,
-                    departmentColor: dept.color || "#888888",
-                    imageUrl: emp.photoURL || emp.photo || undefined,
-                    children: []
-                  }))
-                });
-                
-                // Supprimer ce département de la map pour éviter les doublons
-                departmentMap.delete(dept.id);
-              }
-            }
-          });
-          
-          // Ensuite ajouter les départements restants sans managers assignés
-          departmentMap.forEach((empList, deptId) => {
-            if (empList.length > 0) {
-              const dept = depts.find(d => d.id === deptId);
-              const deptName = dept?.name || "Département non spécifié";
-              const deptColor = dept?.color || "#888888";
-              
-              fallbackChildren.push({
-                id: `dept-${deptId}`,
-                name: deptName,
-                position: "Département",
-                departmentColor: deptColor,
-                children: empList.map(emp => ({
-                  id: emp.id,
-                  name: `${emp.firstName} ${emp.lastName}`,
-                  position: emp.position || emp.role || "Employé",
-                  department: deptName,
-                  departmentColor: deptColor,
-                  imageUrl: emp.photoURL || emp.photo || undefined,
-                  children: []
-                }))
-              });
-            }
-          });
-          
-          const fallbackNode: ChartNode = {
-            id: "root",
-            name: "Organisation",
-            position: "Tous les départements",
-            children: fallbackChildren
-          };
-          
-          setHierarchyData(fallbackNode);
+        // Si c'est un manager, l'ajouter à la map des managers
+        managersMap.set(employee.id, node);
+        
+        // Si l'employé a un manager, l'ajouter à l'ensemble des employés avec manager
+        if (employee.managerId) {
+          employeesWithManager.add(employee.id);
         }
-      } catch (error) {
-        console.error("Erreur lors de la construction de la hiérarchie:", error);
       }
-    }
-  }, [employees, departments, isLoading, refreshTrigger]);
-
-  // S'abonner aux mises à jour des départements
-  useEffect(() => {
-    const unsubscribe = subscribeToDepartmentUpdates((updatedDepartments) => {
-      console.log("Hiérarchie - Mise à jour des départements reçue:", updatedDepartments.length);
-      // Déclencher un rafraîchissement de la hiérarchie
-      setRefreshTrigger(prev => prev + 1);
     });
     
-    return unsubscribe;
-  }, []);
+    // Étape 2: Établir les relations hiérarchiques
+    employees.forEach(employee => {
+      if (employee.managerId && managersMap.has(employee.managerId) && managersMap.has(employee.id)) {
+        const managerNode = managersMap.get(employee.managerId);
+        const employeeNode = managersMap.get(employee.id);
+        
+        if (managerNode && employeeNode) {
+          // Ajouter l'employé comme enfant du manager
+          managerNode.children.push(employeeNode);
+          
+          // Définir le nom du manager pour l'employé
+          const manager = employees.find(emp => emp.id === employee.managerId);
+          if (manager) {
+            employeeNode.manager = `${manager.firstName} ${manager.lastName}`;
+          }
+        }
+      }
+    });
+    
+    // Étape 3: Identifier le nœud racine (PDG ou manager principal)
+    // On cherche d'abord un employé avec le titre "PDG", "CEO", "Directeur Général", etc.
+    let rootNode: HierarchyNode | null = null;
+    
+    for (const employee of employees) {
+      const position = (employee.position || employee.title || employee.role || '').toLowerCase();
+      if (
+        position.includes('pdg') || 
+        position.includes('ceo') || 
+        position.includes('directeur général') || 
+        position.includes('directeur general') ||
+        position.includes('président') ||
+        position.includes('president')
+      ) {
+        rootNode = managersMap.get(employee.id) || null;
+        break;
+      }
+    }
+    
+    // Si aucun PDG n'est trouvé, chercher un manager qui n'a pas de manager lui-même
+    if (!rootNode) {
+      for (const [empId, node] of managersMap.entries()) {
+        const employee = employees.find(emp => emp.id === empId);
+        if (employee && !employee.managerId && !employeesWithManager.has(empId)) {
+          // Vérifier si ce manager a des subordonnés
+          if (node.children.length > 0) {
+            rootNode = node;
+            break;
+          }
+        }
+      }
+    }
+    
+    // S'il n'y a toujours pas de racine mais que des managers existent, prendre le premier manager
+    if (!rootNode && managersMap.size > 0) {
+      for (const node of managersMap.values()) {
+        if (node.children.length > 0) {
+          rootNode = node;
+          break;
+        }
+      }
+    }
+    
+    // Si aucun manager avec subordonnés n'est trouvé, prendre le premier employé comme racine
+    if (!rootNode && employees.length > 0 && managersMap.size > 0) {
+      rootNode = managersMap.values().next().value;
+    }
+    
+    // Enrichir les nœuds avec les couleurs de département
+    if (departments && departments.length > 0) {
+      employees.forEach(employee => {
+        if (employee.departmentId && managersMap.has(employee.id)) {
+          const node = managersMap.get(employee.id);
+          if (node) {
+            const department = departments.find(dept => dept.id === employee.departmentId);
+            if (department) {
+              node.color = department.color || '';
+            }
+          }
+        }
+      });
+    }
+
+    // Définir les données de hiérarchie
+    setHierarchyData(rootNode);
+    setIsLoading(false);
+  }, [employees, departments]);
+
+  // Construire la hiérarchie au chargement des données
+  useEffect(() => {
+    buildHierarchy();
+  }, [buildHierarchy]);
+
+  // Écouter les mises à jour des départements
+  useEffect(() => {
+    const handleDepartmentsUpdate = () => {
+      console.log("Mise à jour des départements détectée, reconstruction de la hiérarchie");
+      buildHierarchy();
+    };
+    
+    const unsubscribe = subscribeToDepartmentUpdates(handleDepartmentsUpdate);
+    
+    return () => {
+      unsubscribe();
+    };
+  }, [buildHierarchy]);
+
+  // Fonction pour rafraîchir manuellement la hiérarchie
+  const refreshHierarchy = useCallback(() => {
+    setIsLoading(true);
+    console.log("Rafraîchissement manuel de la hiérarchie");
+    
+    // Petit délai pour montrer visuellement le chargement
+    setTimeout(() => {
+      buildHierarchy();
+      toast.success("Hiérarchie actualisée");
+    }, 300);
+  }, [buildHierarchy]);
 
   return {
     hierarchyData,
     isLoading,
-    refreshHierarchy: () => setRefreshTrigger(prev => prev + 1)
+    refreshHierarchy
   };
 };

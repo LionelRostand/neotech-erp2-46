@@ -1,5 +1,5 @@
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -15,6 +15,13 @@ const EmployeesHierarchy: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [refreshKey, setRefreshKey] = useState(0);
   const { hierarchyData, isLoading, refreshHierarchy } = useHierarchyData();
+
+  // Fonction pour rafraîchir la hiérarchie
+  const handleRefresh = useCallback(() => {
+    console.log("Déclenchement du rafraîchissement de la hiérarchie");
+    refreshHierarchy();
+    setRefreshKey(prev => prev + 1);
+  }, [refreshHierarchy]);
 
   // Calculer les statistiques basées sur la hiérarchie à l'aide des fonctions utilitaires
   const stats = useMemo(() => {
@@ -44,10 +51,7 @@ const EmployeesHierarchy: React.FC = () => {
           <Button 
             variant="outline" 
             size="sm"
-            onClick={() => {
-              refreshHierarchy();
-              setRefreshKey(prev => prev + 1);
-            }}
+            onClick={handleRefresh}
           >
             <RefreshCw className="h-4 w-4 mr-2" />
             Actualiser
@@ -118,6 +122,7 @@ const EmployeesHierarchy: React.FC = () => {
             viewMode={viewMode} 
             searchQuery={searchQuery}
             data={hierarchyData}
+            onRefresh={handleRefresh}
           />
         </CardContent>
       </Card>
