@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
 import { UseFormReturn } from 'react-hook-form';
@@ -12,7 +12,10 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
-import { useEmployeeData } from '@/hooks/useEmployeeData';
+import { collection, getDocs, query, where } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { COLLECTIONS } from '@/lib/firebase-collections';
+import { Employee } from '@/types/employee';
 
 interface FormActionsProps {
   onCancel: () => void;
@@ -27,12 +30,47 @@ const FormActions: React.FC<FormActionsProps> = ({
   form,
   showManagerOption = true
 }) => {
-  const { employees } = useEmployeeData();
+  const [managers, setManagers] = useState<Employee[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
   
-  // Filter to only show active employees as potential managers
-  const potentialManagers = employees.filter(emp => 
-    emp.status === 'active' || emp.status === 'Actif'
-  );
+  // Récupérer la liste des employés directement depuis Firestore
+  useEffect(() => {
+    const fetchEmployees = async () => {
+      setIsLoading(true);
+      try {
+        // Créer une requête pour récupérer les employés actifs
+        const employeesRef = collection(db, COLLECTIONS.HR.EMPLOYEES);
+        const employeesQuery = query(
+          employeesRef, 
+          where('status', 'in', ['active', 'Active', 'Actif'])
+        );
+        
+        const employeesSnapshot = await getDocs(employeesQuery);
+        
+        // Transformer les documents en objets employés
+        const employeesList = employeesSnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        })) as Employee[];
+        
+        // Trier les employés par nom
+        const sortedEmployees = employeesList.sort((a, b) => 
+          `${a.lastName} ${a.firstName}`.localeCompare(`${b.lastName} ${b.firstName}`)
+        );
+        
+        console.log(`Employés récupérés depuis Firestore: ${sortedEmployees.length}`);
+        setManagers(sortedEmployees);
+      } catch (error) {
+        console.error('Erreur lors de la récupération des employés:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    if (showManagerOption && form) {
+      fetchEmployees();
+    }
+  }, [showManagerOption, form]);
   
   return (
     <div className="space-y-4">
@@ -45,15 +83,16 @@ const FormActions: React.FC<FormActionsProps> = ({
             <Select
               value={form.getValues('managerId') || ''}
               onValueChange={(value) => form.setValue('managerId', value)}
+              disabled={isLoading}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Sélectionner un responsable" />
+                <SelectValue placeholder={isLoading ? "Chargement..." : "Sélectionner un responsable"} />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="">Aucun responsable</SelectItem>
-                {potentialManagers.map((employee) => (
+                {managers.map((employee) => (
                   <SelectItem key={employee.id} value={employee.id}>
-                    {`${employee.firstName} ${employee.lastName}`}
+                    {`${employee.lastName} ${employee.firstName}`}
                   </SelectItem>
                 ))}
               </SelectContent>
