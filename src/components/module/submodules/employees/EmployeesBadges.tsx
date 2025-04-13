@@ -130,12 +130,11 @@ const EmployeesBadges: React.FC = () => {
             <RefreshCw className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`} />
             Actualiser
           </Button>
-          {isAdmin && (
-            <Button onClick={() => setIsDialogOpen(true)}>
-              <Plus className="h-4 w-4 mr-2" />
-              Créer un badge
-            </Button>
-          )}
+          {/* Suppression de la condition isAdmin pour afficher le bouton dans tous les cas */}
+          <Button onClick={() => setIsDialogOpen(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            Créer un badge
+          </Button>
         </div>
       </div>
       
