@@ -5,8 +5,9 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Clock, Calendar, UserCheck, UserX } from 'lucide-react';
 import { toast } from 'sonner';
-import { employees } from '@/data/employees';
+import { Employee } from '@/types/employee';
 import { EmployeeAttendance } from '@/types/attendance';
+import { useEmployeeData } from '@/hooks/useEmployeeData';
 
 interface AttendanceTerminalProps {
   onCheckIn: (attendance: EmployeeAttendance) => void;
@@ -22,6 +23,7 @@ const AttendanceTerminal: React.FC<AttendanceTerminalProps> = ({
   const [employeeId, setEmployeeId] = useState('');
   const [currentTime, setCurrentTime] = useState('');
   const [currentDate, setCurrentDate] = useState('');
+  const { employees } = useEmployeeData(); // Utiliser le hook useEmployeeData pour obtenir les employés
   
   // Mettre à jour l'heure et la date actuelle
   useEffect(() => {
@@ -42,7 +44,18 @@ const AttendanceTerminal: React.FC<AttendanceTerminalProps> = ({
   
   // Rechercher un employé par ID
   const findEmployee = (id: string) => {
-    return employees.find(emp => emp.id === id);
+    console.log('Recherche d\'employé avec ID:', id);
+    console.log('Employés disponibles:', employees);
+    
+    const employee = employees.find(emp => emp.id === id);
+    
+    if (employee) {
+      console.log('Employé trouvé:', employee);
+    } else {
+      console.log('Aucun employé trouvé avec cet ID');
+    }
+    
+    return employee;
   };
 
   // Vérifier si l'employé est déjà présent aujourd'hui

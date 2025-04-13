@@ -10,10 +10,12 @@ import AttendanceTerminal from './attendance/AttendanceTerminal';
 import { EmployeeAttendance } from '@/types/attendance';
 import { calculateHoursWorked } from './attendance/utils/attendanceUtils';
 import * as XLSX from 'xlsx';
+import { useEmployeeData } from '@/hooks/useEmployeeData';
 
 const EmployeesAttendance: React.FC = () => {
   const [attendances, setAttendances] = useState<EmployeeAttendance[]>([]);
   const [activeTab, setActiveTab] = useState('terminal');
+  const { employees, isLoading } = useEmployeeData(); // Utiliser le hook pour obtenir les données des employés
   
   // Charger les présences depuis le stockage local
   useEffect(() => {
