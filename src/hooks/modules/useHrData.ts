@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { collection, getDocs, query, orderBy, where } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
@@ -47,7 +46,7 @@ export const useHrData = () => {
             ...data,
             id: doc.id,
             isManager: false
-          } as Employee;
+          } as unknown as Employee;
         });
         
         const managerEmployees = managersSnapshot.docs.map(doc => {
@@ -56,13 +55,23 @@ export const useHrData = () => {
             ...data,
             id: doc.id,
             isManager: true
-          } as Employee;
+          } as unknown as Employee;
         });
         
+        // Filtrer pour éliminer les doublons par ID
         const allEmployees = [...regularEmployees, ...managerEmployees];
+        const uniqueEmployeesMap = new Map();
+        
+        allEmployees.forEach(employee => {
+          if (!uniqueEmployeesMap.has(employee.id)) {
+            uniqueEmployeesMap.set(employee.id, employee);
+          }
+        });
+        
+        const uniqueEmployees = Array.from(uniqueEmployeesMap.values());
         
         // Trier par nom de famille
-        const sortedEmployees = allEmployees.sort((a, b) => 
+        const sortedEmployees = uniqueEmployees.sort((a, b) => 
           (a.lastName || '').localeCompare(b.lastName || '') || 0
         );
         

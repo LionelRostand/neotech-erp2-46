@@ -1,6 +1,5 @@
-
 import { db } from '@/lib/firebase';
-import { collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query, where, orderBy, Timestamp } from 'firebase/firestore';
+import { collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query, where, orderBy, Timestamp, setDoc } from 'firebase/firestore';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import { Employee } from '@/types/employee';
 import { toast } from 'sonner';
@@ -25,13 +24,13 @@ export const getAllEmployees = async (): Promise<Employee[]> => {
       ...doc.data(),
       id: doc.id,
       isManager: false
-    } as Employee));
+    } as unknown as Employee));
     
     const managers = managersSnapshot.docs.map(doc => ({
       ...doc.data(),
       id: doc.id, 
       isManager: true
-    } as Employee));
+    } as unknown as Employee));
     
     // Return combined list
     return [...regularEmployees, ...managers];
@@ -54,7 +53,7 @@ export const getEmployeeById = async (id: string): Promise<Employee | null> => {
         ...employeeSnap.data(),
         id: employeeSnap.id,
         isManager: false
-      } as Employee;
+      } as unknown as Employee;
     }
     
     // If not found, try managers collection
@@ -66,7 +65,7 @@ export const getEmployeeById = async (id: string): Promise<Employee | null> => {
         ...managerSnap.data(),
         id: managerSnap.id,
         isManager: true
-      } as Employee;
+      } as unknown as Employee;
     }
     
     return null;
@@ -84,19 +83,26 @@ export const createEmployee = async (employeeData: EmployeeFormValues): Promise<
     const preparedData = prepareEmployeeData(employeeData, newEmployeeId);
     
     // Determine which collection to use based on manager status
-    const isManagerFlag = preparedData.isManager || false;
+    const isManagerFlag = preparedData.isManager as boolean || false;
     const collectionPath = isManagerFlag 
       ? COLLECTIONS.HR.MANAGERS 
       : COLLECTIONS.HR.EMPLOYEES;
     
-    const employeeRef = collection(db, collectionPath);
-    const docRef = await addDoc(employeeRef, {
+    console.log(`Creating employee in collection: ${collectionPath}`);
+    
+    // MODIFICATION: Utiliser setDoc avec l'ID généré au lieu de addDoc
+    // Cela garantit qu'un seul document sera créé avec l'ID spécifié
+    const docRef = doc(db, collectionPath, newEmployeeId);
+    
+    await setDoc(docRef, {
       ...preparedData,
       createdAt: Timestamp.now(),
       updatedAt: Timestamp.now()
     });
     
-    // Get the created employee to return
+    console.log(`Employee created with ID: ${newEmployeeId}`);
+    
+    // Récupérer l'employé créé pour le renvoyer
     const employeeSnap = await getDoc(docRef);
     
     if (employeeSnap.exists()) {
@@ -104,7 +110,7 @@ export const createEmployee = async (employeeData: EmployeeFormValues): Promise<
         ...employeeSnap.data(),
         id: employeeSnap.id,
         isManager: isManagerFlag
-      } as Employee;
+      } as unknown as Employee;
       
       toast.success(`Employé ${preparedData.firstName} ${preparedData.lastName} créé avec succès`);
       return newEmployee;
