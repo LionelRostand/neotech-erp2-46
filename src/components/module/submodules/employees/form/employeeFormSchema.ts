@@ -17,12 +17,12 @@ export const employeeFormSchema = z.object({
   hireDate: z.string().optional(),
   birthDate: z.string().optional(),
   manager: z.string().optional(), // Conserver pour la compatibilité
-  managerId: z.string().optional(), // Nouveau champ pour l'ID du manager
+  managerId: z.string().optional(), // ID du manager sélectionné
   status: z.enum(['active', 'inactive', 'onLeave', 'Actif', 'En congé', 'Suspendu', 'Inactif']),
   professionalEmail: z.string().email({ message: 'Email professionnel invalide' }).optional().or(z.literal('')),
   company: z.string().optional(),
   photo: z.any().optional(), // Accepte les données de la photo
-  forceManager: z.boolean().default(false), // Nouveau champ pour forcer l'ajout aux managers
+  forceManager: z.boolean().default(false), // Champ pour forcer l'ajout aux managers
 });
 
 export type EmployeeFormValues = z.infer<typeof employeeFormSchema>;

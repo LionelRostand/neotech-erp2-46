@@ -3,7 +3,7 @@ import React from 'react';
 import { Employee, EmployeeAddress } from '@/types/employee';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { MapPin, Building, Phone, Mail, Briefcase, UserCheck } from 'lucide-react';
+import { MapPin, Building, Phone, Mail, Briefcase, UserCheck, User } from 'lucide-react';
 import ManagerCheckbox from '../form/ManagerCheckbox';
 import { UseFormReturn } from 'react-hook-form';
 import { EmployeeFormValues } from '../form/employeeFormSchema';
@@ -188,11 +188,14 @@ const InformationsTab: React.FC<InformationsTabProps> = ({
             </>
           )}
           
-          {employee.manager && (
+          {(employee.manager || employee.managerId) && (
             <>
               <div className="space-y-1">
-                <h4 className="text-sm font-semibold">Manager</h4>
-                <p>{employee.manager}</p>
+                <h4 className="text-sm font-semibold flex items-center gap-2">
+                  <User className="h-4 w-4 text-muted-foreground" />
+                  Responsable
+                </h4>
+                <p>{employee.manager || 'Non spécifié'}</p>
               </div>
               <Separator />
             </>
