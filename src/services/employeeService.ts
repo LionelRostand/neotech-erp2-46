@@ -85,7 +85,6 @@ export const cleanEmployeeData = (employeeData: Partial<Employee>): Partial<Empl
   // Si photoData est une string qui contient "data:", c'est probablement du base64
   if (cleanedData.photoData && typeof cleanedData.photoData === 'string') {
     // On garde tel quel, c'est une chaîne valide
-    // Pas besoin d'accéder à .data qui n'existe pas sur une string
   } else if (cleanedData.photoData && typeof cleanedData.photoData === 'object') {
     // Si c'est un objet, on le convertit en JSON
     cleanedData.photoData = JSON.stringify(cleanedData.photoData);
@@ -175,6 +174,7 @@ export const createEmployee = async (employeeData: Partial<Employee>): Promise<E
       professionalEmail: cleanedData.professionalEmail || '',
       skills: cleanedData.skills || [],
       education: cleanedData.education || [],
+      payslips: cleanedData.payslips || [], // Ensuring payslips is set
       isManager: !!cleanedData.isManager,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
@@ -237,3 +237,4 @@ export const syncManagerStatus = async (employee: Employee): Promise<void> => {
     console.error('Erreur lors de la synchronisation du statut de manager:', error);
   }
 };
+
