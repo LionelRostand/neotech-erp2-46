@@ -21,10 +21,12 @@ export const useDepartmentService = () => {
       // Filtrer les doublons par ID avant d'enrichir
       const uniqueDepartmentsMap = new Map();
       data.forEach(dept => {
-        if (!uniqueDepartmentsMap.has(dept.id)) {
-          uniqueDepartmentsMap.set(dept.id, dept);
+        // Cast dept to Partial<Department> to safely access the name property
+        const typedDept = dept as Partial<Department>;
+        if (!uniqueDepartmentsMap.has(typedDept.id)) {
+          uniqueDepartmentsMap.set(typedDept.id, typedDept);
         } else {
-          console.warn(`Doublon détecté pour le département ID: ${dept.id}, nom: ${dept.name}`);
+          console.warn(`Doublon détecté pour le département ID: ${typedDept.id}, nom: ${typedDept.name || 'Sans nom'}`);
         }
       });
       
