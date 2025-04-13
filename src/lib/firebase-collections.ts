@@ -29,6 +29,7 @@ export const COLLECTIONS = {
   // HR Collections
   HR: {
     EMPLOYEES: 'hr_employees',
+    MANAGERS: 'hr_managers', // Nouvelle collection pour les managers
     DEPARTMENTS: 'hr_departments',
     PAYSLIPS: 'hr_payslips',
     CONTRACTS: 'hr_contracts',

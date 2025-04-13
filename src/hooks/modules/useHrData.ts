@@ -1,180 +1,130 @@
-
-import { useCollectionData } from '../useCollectionData';
+import { useEffect, useState } from 'react';
+import { collection, getDocs, query, orderBy, where } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 import { COLLECTIONS } from '@/lib/firebase-collections';
-import { orderBy } from 'firebase/firestore';
+import { toast } from 'sonner';
 
 /**
- * Hook to fetch data for the HR module
+ * Hook pour récupérer les données du module RH
  */
 export const useHrData = () => {
-  // Fetch employees
-  const { 
-    data: employees, 
-    isLoading: isEmployeesLoading, 
-    error: employeesError 
-  } = useCollectionData(
-    COLLECTIONS.HR.EMPLOYEES,
-    [orderBy('lastName')]
-  );
+  const [employees, setEmployees] = useState([]);
+  const [payslips, setPayslips] = useState([]);
+  const [contracts, setContracts] = useState([]);
+  const [departments, setDepartments] = useState([]);
+  const [leaveRequests, setLeaveRequests] = useState([]);
+  const [attendance, setAttendance] = useState([]);
+  const [absenceRequests, setAbsenceRequests] = useState([]);
+  const [hrDocuments, setHrDocuments] = useState([]);
+  const [timeSheets, setTimeSheets] = useState([]);
+  const [evaluations, setEvaluations] = useState([]);
+  const [trainings, setTrainings] = useState([]);
+  const [hrReports, setHrReports] = useState([]);
+  const [hrAlerts, setHrAlerts] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // Fetch payslips
-  const { 
-    data: payslips, 
-    isLoading: isPayslipsLoading, 
-    error: payslipsError 
-  } = useCollectionData(
-    COLLECTIONS.HR.PAYSLIPS,
-    [orderBy('date', 'desc')]
-  );
+  useEffect(() => {
+    const fetchHrData = async () => {
+      setIsLoading(true);
+      try {
+        // Récupérer les employés réguliers
+        const employeesRef = collection(db, COLLECTIONS.HR.EMPLOYEES);
+        const employeesQuery = query(employeesRef, orderBy('lastName', 'asc'));
+        const employeesSnapshot = await getDocs(employeesQuery);
+        
+        // Récupérer les managers
+        const managersRef = collection(db, COLLECTIONS.HR.MANAGERS);
+        const managersQuery = query(managersRef, orderBy('lastName', 'asc'));
+        const managersSnapshot = await getDocs(managersQuery);
+        
+        // Combiner les deux ensembles de résultats
+        const allEmployees = [
+          ...employeesSnapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data(),
+            isManager: false
+          })),
+          ...managersSnapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data(),
+            isManager: true
+          }))
+        ];
+        
+        // Trier par nom de famille
+        const sortedEmployees = allEmployees.sort((a, b) => 
+          a.lastName?.localeCompare(b.lastName || '') || 0
+        );
+        
+        setEmployees(sortedEmployees);
 
-  // Fetch leave requests
-  const { 
-    data: leaveRequests, 
-    isLoading: isLeaveRequestsLoading, 
-    error: leaveRequestsError 
-  } = useCollectionData(
-    COLLECTIONS.HR.LEAVE_REQUESTS,
-    [orderBy('startDate')]
-  );
+        // Récupérer les autres données
+        const payslipsRef = collection(db, COLLECTIONS.HR.PAYSLIPS);
+        const payslipsSnapshot = await getDocs(payslipsRef);
+        setPayslips(payslipsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
 
-  // Fetch contracts
-  const { 
-    data: contracts, 
-    isLoading: isContractsLoading, 
-    error: contractsError 
-  } = useCollectionData(
-    COLLECTIONS.HR.CONTRACTS,
-    [orderBy('startDate', 'desc')]
-  );
+        const contractsRef = collection(db, COLLECTIONS.HR.CONTRACTS);
+        const contractsSnapshot = await getDocs(contractsRef);
+        setContracts(contractsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
 
-  // Fetch departments
-  const { 
-    data: departments, 
-    isLoading: isDepartmentsLoading, 
-    error: departmentsError 
-  } = useCollectionData(
-    COLLECTIONS.HR.DEPARTMENTS,
-    [orderBy('name')]
-  );
+        const departmentsRef = collection(db, COLLECTIONS.HR.DEPARTMENTS);
+        const departmentsSnapshot = await getDocs(departmentsRef);
+        setDepartments(departmentsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
 
-  // Fetch attendance
-  const {
-    data: attendance,
-    isLoading: isAttendanceLoading,
-    error: attendanceError
-  } = useCollectionData(
-    COLLECTIONS.HR.ATTENDANCE,
-    [orderBy('date', 'desc')]
-  );
+        const leaveRequestsRef = collection(db, COLLECTIONS.HR.LEAVE_REQUESTS);
+        const leaveRequestsSnapshot = await getDocs(leaveRequestsRef);
+        setLeaveRequests(leaveRequestsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
 
-  // Fetch absence requests
-  const {
-    data: absenceRequests,
-    isLoading: isAbsenceRequestsLoading,
-    error: absenceRequestsError
-  } = useCollectionData(
-    COLLECTIONS.HR.ABSENCE_REQUESTS,
-    [orderBy('startDate')]
-  );
+        const attendanceRef = collection(db, COLLECTIONS.HR.ATTENDANCE);
+        const attendanceSnapshot = await getDocs(attendanceRef);
+        setAttendance(attendanceSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
 
-  // Fetch HR documents
-  const {
-    data: hrDocuments,
-    isLoading: isHrDocumentsLoading,
-    error: hrDocumentsError
-  } = useCollectionData(
-    COLLECTIONS.HR.DOCUMENTS,
-    [orderBy('uploadDate', 'desc')]
-  );
+        const absenceRequestsRef = collection(db, COLLECTIONS.HR.ABSENCE_REQUESTS);
+        const absenceRequestsSnapshot = await getDocs(absenceRequestsRef);
+        setAbsenceRequests(absenceRequestsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
 
-  // Fetch time sheets
-  const {
-    data: timeSheets,
-    isLoading: isTimeSheetsLoading,
-    error: timeSheetsError
-  } = useCollectionData(
-    COLLECTIONS.HR.TIMESHEETS,
-    [orderBy('startDate', 'desc')]
-  );
+        const hrDocumentsRef = collection(db, COLLECTIONS.HR.DOCUMENTS);
+        const hrDocumentsSnapshot = await getDocs(hrDocumentsRef);
+        setHrDocuments(hrDocumentsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
 
-  // Fetch evaluations
-  const {
-    data: evaluations,
-    isLoading: isEvaluationsLoading,
-    error: evaluationsError
-  } = useCollectionData(
-    COLLECTIONS.HR.EVALUATIONS,
-    [orderBy('date', 'desc')]
-  );
+        const timeSheetsRef = collection(db, COLLECTIONS.HR.TIMESHEETS);
+        const timeSheetsSnapshot = await getDocs(timeSheetsRef);
+        setTimeSheets(timeSheetsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
 
-  // Fetch trainings
-  const {
-    data: trainings,
-    isLoading: isTrainingsLoading,
-    error: trainingsError
-  } = useCollectionData(
-    COLLECTIONS.HR.TRAININGS,
-    [orderBy('date', 'desc')]
-  );
+        const evaluationsRef = collection(db, COLLECTIONS.HR.EVALUATIONS);
+        const evaluationsSnapshot = await getDocs(evaluationsRef);
+        setEvaluations(evaluationsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
 
-  // Fetch HR reports
-  const {
-    data: hrReports,
-    isLoading: isHrReportsLoading,
-    error: hrReportsError
-  } = useCollectionData(
-    COLLECTIONS.HR.REPORTS,
-    [orderBy('date', 'desc')]
-  );
+        const trainingsRef = collection(db, COLLECTIONS.HR.TRAININGS);
+        const trainingsSnapshot = await getDocs(trainingsRef);
+        setTrainings(trainingsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
 
-  // Fetch HR alerts
-  const {
-    data: hrAlerts,
-    isLoading: isHrAlertsLoading,
-    error: hrAlertsError
-  } = useCollectionData(
-    COLLECTIONS.HR.ALERTS,
-    [orderBy('date', 'desc')]
-  );
+        const hrReportsRef = collection(db, COLLECTIONS.HR.REPORTS);
+        const hrReportsSnapshot = await getDocs(hrReportsRef);
+        setHrReports(hrReportsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
 
-  // Check if any data is still loading
-  const isLoading = 
-    isEmployeesLoading || 
-    isPayslipsLoading || 
-    isLeaveRequestsLoading || 
-    isContractsLoading || 
-    isDepartmentsLoading ||
-    isAttendanceLoading ||
-    isAbsenceRequestsLoading ||
-    isHrDocumentsLoading ||
-    isTimeSheetsLoading ||
-    isEvaluationsLoading ||
-    isTrainingsLoading ||
-    isHrReportsLoading ||
-    isHrAlertsLoading;
+        const hrAlertsRef = collection(db, COLLECTIONS.HR.ALERTS);
+        const hrAlertsSnapshot = await getDocs(hrAlertsRef);
+        setHrAlerts(hrAlertsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+      } catch (error) {
+        console.error('Error fetching HR data:', error);
+        setError(error);
+        toast.error('Erreur lors du chargement des données RH');
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-  // Combine all possible errors
-  const error = 
-    employeesError || 
-    payslipsError || 
-    leaveRequestsError || 
-    contractsError || 
-    departmentsError ||
-    attendanceError ||
-    absenceRequestsError ||
-    hrDocumentsError ||
-    timeSheetsError ||
-    evaluationsError ||
-    trainingsError ||
-    hrReportsError ||
-    hrAlertsError;
+    fetchHrData();
+  }, []);
 
   return {
     employees,
     payslips,
-    leaveRequests,
     contracts,
     departments,
+    leaveRequests,
     attendance,
     absenceRequests,
     hrDocuments,

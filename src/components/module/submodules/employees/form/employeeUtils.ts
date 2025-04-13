@@ -47,6 +47,10 @@ export const prepareEmployeeData = (data: EmployeeFormValues, employeeId: string
       status = 'active';
   }
   
+  // Vérifier si l'employé est un manager
+  const isManager = data.position?.toLowerCase().includes('manager') || 
+                   data.position?.toLowerCase().includes('directeur');
+  
   // Retourner l'objet employé préparé
   return {
     id: employeeId,
@@ -57,15 +61,17 @@ export const prepareEmployeeData = (data: EmployeeFormValues, employeeId: string
     address,
     department: data.department || '',
     position: data.position || '',
+    role: isManager ? 'manager' : 'employee',  // Ajouter explicitement le rôle
     contract: data.contract,
     hireDate: data.hireDate || '',
-    birthDate: data.birthDate || '', // Ajout de la date de naissance
+    birthDate: data.birthDate || '',
     status: status,
     manager: data.manager || '',
     professionalEmail: data.professionalEmail || '',
     company: data.company || '',
     photoData,
     photoMeta,
+    isManager,  // Ajouter le flag isManager
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   };

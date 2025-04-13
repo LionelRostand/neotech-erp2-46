@@ -7,18 +7,52 @@ import { COLLECTIONS } from '@/lib/firebase-collections';
 import { v4 as uuidv4 } from 'uuid';
 
 /**
- * Fetch employees data from Firestore
+ * Détermine la collection appropriée pour un employé selon son rôle
+ * @param employee Données de l'employé
+ * @returns Chemin de la collection où enregistrer l'employé
+ */
+const getEmployeeCollection = (employee: Partial<Employee>): string => {
+  // Vérifier si l'employé est un manager
+  const isManager = employee.position?.toLowerCase().includes('manager') ||
+                    employee.position?.toLowerCase().includes('directeur') ||
+                    employee.role?.toLowerCase().includes('manager') ||
+                    employee.role?.toLowerCase().includes('directeur');
+  
+  // Retourner la collection appropriée
+  return isManager ? COLLECTIONS.HR.MANAGERS : COLLECTIONS.HR.EMPLOYEES;
+};
+
+/**
+ * Fetch employees data from Firestore (both regular employees and managers)
  */
 export const fetchEmployeesData = async (): Promise<Employee[]> => {
   try {
+    // Récupérer les employés réguliers
     const employeesRef = collection(db, COLLECTIONS.HR.EMPLOYEES);
-    const q = query(employeesRef, orderBy('lastName', 'asc'));
-    const snapshot = await getDocs(q);
+    const employeesQuery = query(employeesRef, orderBy('lastName', 'asc'));
+    const employeesSnapshot = await getDocs(employeesQuery);
     
-    return snapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    } as Employee));
+    // Récupérer les managers
+    const managersRef = collection(db, COLLECTIONS.HR.MANAGERS);
+    const managersQuery = query(managersRef, orderBy('lastName', 'asc'));
+    const managersSnapshot = await getDocs(managersQuery);
+    
+    // Combiner les deux ensembles de résultats
+    const allEmployees = [
+      ...employeesSnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        isManager: false
+      } as Employee)),
+      ...managersSnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        isManager: true
+      } as Employee))
+    ];
+    
+    // Trier par nom de famille
+    return allEmployees.sort((a, b) => a.lastName.localeCompare(b.lastName));
   } catch (error) {
     console.error('Error fetching employees:', error);
     toast.error('Error fetching employees data');
@@ -34,17 +68,28 @@ export const refreshEmployeesData = async (): Promise<Employee[]> => {
 };
 
 /**
- * Get an employee by ID
+ * Get an employee by ID (checks both collections)
  */
 export const getEmployeeById = async (id: string): Promise<Employee | null> => {
   try {
-    const docRef = doc(db, COLLECTIONS.HR.EMPLOYEES, id);
-    const docSnap = await getDoc(docRef);
+    // Vérifier d'abord dans la collection des employés standard
+    let docRef = doc(db, COLLECTIONS.HR.EMPLOYEES, id);
+    let docSnap = await getDoc(docRef);
+    
+    // Si l'employé n'est pas trouvé, vérifier dans la collection des managers
+    if (!docSnap.exists()) {
+      docRef = doc(db, COLLECTIONS.HR.MANAGERS, id);
+      docSnap = await getDoc(docRef);
+    }
     
     if (docSnap.exists()) {
+      const data = docSnap.data();
+      const isManager = docRef.path.includes(COLLECTIONS.HR.MANAGERS);
+      
       return {
         id: docSnap.id,
-        ...docSnap.data()
+        ...data,
+        isManager
       } as Employee;
     }
     
@@ -68,56 +113,66 @@ export const checkEmployeeDuplicate = async (
 ): Promise<boolean> => {
   try {
     let isDuplicate = false;
-    const employeesRef = collection(db, COLLECTIONS.HR.EMPLOYEES);
     
-    // Vérifier l'email personnel
-    if (employeeData.email) {
-      const emailQuery = query(employeesRef, where('email', '==', employeeData.email));
-      const emailSnapshot = await getDocs(emailQuery);
+    // Vérifier dans les deux collections
+    const collections = [COLLECTIONS.HR.EMPLOYEES, COLLECTIONS.HR.MANAGERS];
+    
+    for (const collectionPath of collections) {
+      const employeesRef = collection(db, collectionPath);
       
-      for (const doc of emailSnapshot.docs) {
-        if (doc.id !== excludeId) {
-          console.warn(`Un employé avec le même email personnel existe déjà: ${doc.id}`);
-          isDuplicate = true;
-          break;
+      // Vérifier l'email personnel
+      if (employeeData.email) {
+        const emailQuery = query(employeesRef, where('email', '==', employeeData.email));
+        const emailSnapshot = await getDocs(emailQuery);
+        
+        for (const doc of emailSnapshot.docs) {
+          if (doc.id !== excludeId) {
+            console.warn(`Un employé avec le même email personnel existe déjà: ${doc.id}`);
+            isDuplicate = true;
+            break;
+          }
         }
       }
-    }
-    
-    // Vérifier l'email professionnel
-    if (!isDuplicate && employeeData.professionalEmail) {
-      const profEmailQuery = query(
-        employeesRef, 
-        where('professionalEmail', '==', employeeData.professionalEmail)
-      );
-      const profEmailSnapshot = await getDocs(profEmailQuery);
       
-      for (const doc of profEmailSnapshot.docs) {
-        if (doc.id !== excludeId) {
-          console.warn(`Un employé avec le même email professionnel existe déjà: ${doc.id}`);
-          isDuplicate = true;
-          break;
+      if (isDuplicate) break;
+      
+      // Vérifier l'email professionnel
+      if (!isDuplicate && employeeData.professionalEmail) {
+        const profEmailQuery = query(
+          employeesRef, 
+          where('professionalEmail', '==', employeeData.professionalEmail)
+        );
+        const profEmailSnapshot = await getDocs(profEmailQuery);
+        
+        for (const doc of profEmailSnapshot.docs) {
+          if (doc.id !== excludeId) {
+            console.warn(`Un employé avec le même email professionnel existe déjà: ${doc.id}`);
+            isDuplicate = true;
+            break;
+          }
         }
       }
-    }
-    
-    // Vérifier la combinaison nom/prénom (optionnel, car peut être homonyme)
-    if (!isDuplicate && employeeData.firstName && employeeData.lastName) {
-      const nameQuery = query(
-        employeesRef,
-        where('firstName', '==', employeeData.firstName),
-        where('lastName', '==', employeeData.lastName)
-      );
       
-      const nameSnapshot = await getDocs(nameQuery);
+      if (isDuplicate) break;
       
-      for (const doc of nameSnapshot.docs) {
-        if (doc.id !== excludeId) {
-          console.warn(`Un employé avec les mêmes nom et prénom existe déjà: ${doc.id}`);
-          // Ici nous pourrions mettre isDuplicate = true, mais c'est un cas où les homonymes sont possibles
-          // On génère plutôt un avertissement
-          toast.warning(`Un employé avec le nom ${employeeData.firstName} ${employeeData.lastName} existe déjà. Vérifiez qu'il ne s'agit pas d'un doublon.`);
-          break;
+      // Vérifier la combinaison nom/prénom (optionnel, car peut être homonyme)
+      if (!isDuplicate && employeeData.firstName && employeeData.lastName) {
+        const nameQuery = query(
+          employeesRef,
+          where('firstName', '==', employeeData.firstName),
+          where('lastName', '==', employeeData.lastName)
+        );
+        
+        const nameSnapshot = await getDocs(nameQuery);
+        
+        for (const doc of nameSnapshot.docs) {
+          if (doc.id !== excludeId) {
+            console.warn(`Un employé avec les mêmes nom et prénom existe déjà: ${doc.id}`);
+            // Ici nous pourrions mettre isDuplicate = true, mais c'est un cas où les homonymes sont possibles
+            // On génère plutôt un avertissement
+            toast.warning(`Un employé avec le nom ${employeeData.firstName} ${employeeData.lastName} existe déjà. Vérifiez qu'il ne s'agit pas d'un doublon.`);
+            break;
+          }
         }
       }
     }
@@ -145,9 +200,16 @@ export const addEmployee = async (employeeData: Omit<Employee, 'id'>): Promise<s
     // Générer un ID unique pour le nouvel employé
     const employeeId = uuidv4();
     
+    // Déterminer la collection appropriée (managers ou employés)
+    const collectionPath = getEmployeeCollection(employeeData);
+    
+    console.log(`Ajout d'un nouvel employé dans la collection: ${collectionPath}`);
+    
     // Utiliser setDoc avec l'ID personnalisé au lieu de addDoc
-    const docRef = doc(db, COLLECTIONS.HR.EMPLOYEES, employeeId);
+    const docRef = doc(db, collectionPath, employeeId);
     await setDoc(docRef, employeeData);
+    
+    toast.success(`${employeeData.firstName} ${employeeData.lastName} a été ajouté avec succès`);
     
     return employeeId;
   } catch (error) {
@@ -170,8 +232,46 @@ export const updateEmployee = async (id: string, data: Partial<Employee>): Promi
       return false;
     }
     
-    const docRef = doc(db, COLLECTIONS.HR.EMPLOYEES, id);
-    await updateDoc(docRef, data);
+    // Déterminer si l'employé est un manager ou un employé régulier
+    const oldEmployeeData = await getEmployeeById(id);
+    
+    // Déterminer la nouvelle collection en fonction des nouvelles données
+    const newCollectionPath = getEmployeeCollection(data);
+    
+    // Déterminer la collection d'origine
+    const oldCollectionPath = oldEmployeeData?.isManager ? 
+                              COLLECTIONS.HR.MANAGERS : 
+                              COLLECTIONS.HR.EMPLOYEES;
+    
+    // Si la collection a changé (promotion/rétrogradation), supprimer de l'ancienne et créer dans la nouvelle
+    if (oldCollectionPath !== newCollectionPath) {
+      console.log(`Changement de statut: ${oldCollectionPath} -> ${newCollectionPath}`);
+      
+      // Supprimer de l'ancienne collection
+      const oldDocRef = doc(db, oldCollectionPath, id);
+      await deleteDoc(oldDocRef);
+      
+      // Créer dans la nouvelle collection
+      const newDocRef = doc(db, newCollectionPath, id);
+      const updatedData = {
+        ...oldEmployeeData,
+        ...data,
+        updatedAt: new Date().toISOString()
+      };
+      await setDoc(newDocRef, updatedData);
+      
+      toast.success(`${data.firstName || oldEmployeeData?.firstName} ${data.lastName || oldEmployeeData?.lastName} a été mis à jour avec succès (changement de statut)`);
+      return true;
+    }
+    
+    // Si pas de changement de collection, simplement mettre à jour
+    const docRef = doc(db, newCollectionPath, id);
+    await updateDoc(docRef, {
+      ...data,
+      updatedAt: new Date().toISOString()
+    });
+    
+    toast.success(`${data.firstName || oldEmployeeData?.firstName} ${data.lastName || oldEmployeeData?.lastName} a été mis à jour avec succès`);
     return true;
   } catch (error) {
     console.error('Error updating employee:', error);
@@ -185,8 +285,23 @@ export const updateEmployee = async (id: string, data: Partial<Employee>): Promi
  */
 export const deleteEmployee = async (id: string): Promise<boolean> => {
   try {
-    const docRef = doc(db, COLLECTIONS.HR.EMPLOYEES, id);
+    // Vérifier dans quelle collection se trouve l'employé
+    const employee = await getEmployeeById(id);
+    
+    if (!employee) {
+      toast.error("Employé non trouvé");
+      return false;
+    }
+    
+    const collectionPath = employee.isManager ? 
+                          COLLECTIONS.HR.MANAGERS : 
+                          COLLECTIONS.HR.EMPLOYEES;
+    
+    // Supprimer l'employé de la collection appropriée
+    const docRef = doc(db, collectionPath, id);
     await deleteDoc(docRef);
+    
+    toast.success(`${employee.firstName} ${employee.lastName} a été supprimé avec succès`);
     return true;
   } catch (error) {
     console.error('Error deleting employee:', error);
@@ -200,11 +315,25 @@ export const deleteEmployee = async (id: string): Promise<boolean> => {
  */
 export const updateEmployeeSkills = async (id: string, skills: string[]): Promise<boolean> => {
   try {
-    const docRef = doc(db, COLLECTIONS.HR.EMPLOYEES, id);
+    // Vérifier dans quelle collection se trouve l'employé
+    const employee = await getEmployeeById(id);
+    
+    if (!employee) {
+      toast.error("Employé non trouvé");
+      return false;
+    }
+    
+    const collectionPath = employee.isManager ? 
+                          COLLECTIONS.HR.MANAGERS : 
+                          COLLECTIONS.HR.EMPLOYEES;
+    
+    // Mettre à jour les compétences
+    const docRef = doc(db, collectionPath, id);
     await updateDoc(docRef, {
       skills: skills,
       updatedAt: new Date().toISOString()
     });
+    
     toast.success('Compétences mises à jour avec succès');
     return true;
   } catch (error) {

@@ -1,56 +1,17 @@
 
-import { Company } from '@/components/module/submodules/companies/types';
-
 export interface EmployeeAddress {
   street?: string;
   city?: string;
+  state?: string;
   postalCode?: string;
   country?: string;
-  state?: string;
 }
 
-export interface Education {
-  degree: string;
-  school: string;
-  year: string;
-}
-
-export interface Document {
-  name: string;
-  date: string;
-  type: string;
-  fileUrl?: string;
-  fileData?: string; // Base64 data for document
-  fileHex?: string;  // Hexadecimal data for document
-  fileType?: string; // MIME type of the document
-  id?: string;
-  employeeId?: string; // ID de l'employé associé
-  filePath?: string;  // Chemin dans Firebase Storage
-  fileSize?: number;  // Taille du fichier
-  storedInFirebase?: boolean; // Indique si stocké dans Firebase
-  documentId?: string; // ID du document dans la collection hr_documents
-  binaryData?: boolean; // Indique si les données sont stockées sous format binaire
-  storedInHrDocuments?: boolean; // Indique si stocké dans hr_documents
-  storageFormat?: 'base64' | 'binary' | 'hex'; // Format de stockage des données
-  base64Data?: string; // Données au format base64
-}
-
-export interface LeaveRequest {
-  id: string;
-  startDate: string;
-  endDate: string;
-  type: string;
-  status: 'pending' | 'approved' | 'rejected';
-  comments?: string;
-}
-
-export interface Evaluation {
-  id: string;
-  date: string;
-  title: string;
-  rating: number;
-  comments: string;
-  evaluator?: string;
+export interface EmployeePhotoMeta {
+  fileName: string;
+  fileType: string;
+  fileSize: number;
+  updatedAt: string;
 }
 
 export interface Employee {
@@ -59,48 +20,57 @@ export interface Employee {
   lastName: string;
   email: string;
   phone?: string;
-  address: EmployeeAddress | string;
+  address?: EmployeeAddress | string;
   department?: string;
   departmentId?: string;
   position?: string;
+  contract?: string;
   hireDate?: string;
   startDate?: string;
-  status: 'active' | 'inactive' | 'onLeave' | 'Actif' | 'En congé' | 'Suspendu' | 'Inactif';
-  contract?: string;
+  endDate?: string;
+  birthDate?: string;
+  status?: 'active' | 'inactive' | 'onLeave' | 'Actif' | 'En congé' | 'Suspendu' | 'Inactif';
+  salary?: number;
   manager?: string;
   managerId?: string;
-  education?: Education[];
-  skills?: string[];
-  documents?: Document[] | string[];
-  workSchedule?: {
-    monday: string;
-    tuesday: string;
-    wednesday: string;
-    thursday: string;
-    friday: string;
-    saturday?: string;
-    sunday?: string;
-  };
-  payslips?: string[];
-  birthDate?: string;
-  socialSecurityNumber?: string;
-  photo?: string;
-  photoURL?: string;
-  photoData?: string;
-  photoHex?: string;
-  photoMeta?: {
-    fileName: string;
-    fileType: string;
-    fileSize: number;
-    updatedAt: string;
-  };
-  title?: string;
-  role?: string;
   professionalEmail?: string;
-  company?: string | Company;
-  createdAt?: string; // Adding timestamp for creation date
-  updatedAt?: string; // Adding timestamp for last update
-  leaveRequests?: LeaveRequest[]; // Nouvelle propriété pour les congés
-  evaluations?: Evaluation[]; // Nouvelle propriété pour les évaluations
+  company?: string;
+  companyId?: string;
+  photoURL?: string;
+  photo?: string;
+  photoData?: string;
+  photoMeta?: EmployeePhotoMeta;
+  documents?: string[];
+  createdAt?: string;
+  updatedAt?: string;
+  socialSecurityNumber?: string;
+  bannerColor?: string;
+  skills?: string[];
+  education?: EducationEntry[];
+  workSchedule?: WorkSchedule;
+  role?: string;
+  isManager?: boolean; // Indiquer si l'employé est un manager
+  userAccountId?: string;
+  payslips?: string[];
+  title?: string;
 }
 
+interface EducationEntry {
+  institution: string;
+  degree: string;
+  field: string;
+  startDate: string;
+  endDate?: string;
+  ongoing?: boolean;
+  description?: string;
+}
+
+interface WorkSchedule {
+  monday?: string;
+  tuesday?: string;
+  wednesday?: string;
+  thursday?: string;
+  friday?: string;
+  saturday?: string;
+  sunday?: string;
+}
