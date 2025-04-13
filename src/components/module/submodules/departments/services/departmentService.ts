@@ -4,6 +4,7 @@ import { addDocument, getAllDocuments, updateDocument, deleteDocument, getDocume
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import { toast } from 'sonner';
 import { getAllEmployees } from '@/components/module/submodules/employees/services/employeeService';
+import { notifyDepartmentUpdates } from '../utils/departmentUtils';
 
 export const useDepartmentService = () => {
   // Updated collection path for departments
@@ -47,6 +48,9 @@ export const useDepartmentService = () => {
         return typedDepartment as Department;
       });
       
+      // Notifier les autres composants de la mise à jour des départements
+      notifyDepartmentUpdates(enrichedDepartments);
+      
       return enrichedDepartments;
     } catch (error) {
       console.error("Error fetching departments:", error);
@@ -60,6 +64,11 @@ export const useDepartmentService = () => {
       // Enregistrer dans Firestore
       await addDocument(DEPARTMENTS_COLLECTION, department);
       toast.success(`Département ${department.name} créé avec succès`);
+      
+      // Récupérer les départements mis à jour et notifier
+      const updatedDepartments = await getAll();
+      notifyDepartmentUpdates(updatedDepartments);
+      
       return true;
     } catch (error) {
       console.error("Error saving department:", error);
@@ -84,6 +93,11 @@ export const useDepartmentService = () => {
       await updateDocument(DEPARTMENTS_COLLECTION, department.id, department);
       
       toast.success(`Département ${department.name} mis à jour avec succès`);
+      
+      // Récupérer les départements mis à jour et notifier
+      const updatedDepartments = await getAll();
+      notifyDepartmentUpdates(updatedDepartments);
+      
       return true;
     } catch (error) {
       console.error("Error updating department:", error);
@@ -112,6 +126,11 @@ export const useDepartmentService = () => {
       // Supprimer dans Firestore
       await deleteDocument(DEPARTMENTS_COLLECTION, id);
       toast.success(`Département ${name} supprimé avec succès`);
+      
+      // Récupérer les départements mis à jour et notifier
+      const updatedDepartments = await getAll();
+      notifyDepartmentUpdates(updatedDepartments);
+      
       return true;
     } catch (error) {
       console.error("Error deleting department:", error);

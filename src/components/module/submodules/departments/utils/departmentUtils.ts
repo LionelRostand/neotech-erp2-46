@@ -1,7 +1,5 @@
-
 import { Department, DepartmentFormData } from '../types';
 import { Employee } from '@/types/employee';
-import { useEmployeeData } from '@/hooks/useEmployeeData';
 
 export const createDefaultDepartments = (): Department[] => {
   return [

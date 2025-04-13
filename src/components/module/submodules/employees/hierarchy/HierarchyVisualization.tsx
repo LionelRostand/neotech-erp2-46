@@ -5,18 +5,30 @@ import { convertToChartNode } from './utils/hierarchyUtils';
 import EmptyHierarchy from './components/EmptyHierarchy';
 import OrgChartNode from './components/OrgChartNode';
 import TreeViewNode from './components/TreeViewNode';
+import { useHierarchyData } from './hooks/useHierarchyData';
 
 const HierarchyVisualization: React.FC<HierarchyVisualizationProps> = ({ 
-  data, 
+  data: externalData,
   viewMode, 
   searchQuery 
 }) => {
-  if (!data) {
-    return <EmptyHierarchy />;
+  // Utiliser notre hook personnalisé pour obtenir des données qui se mettent à jour automatiquement
+  const { hierarchyData: liveData, isLoading } = useHierarchyData();
+  
+  // Utiliser les données externes si fournies, sinon utiliser les données en direct
+  const chartData = externalData ? ('position' in externalData ? externalData : convertToChartNode(externalData as HierarchyNode)) : liveData;
+  
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+      </div>
+    );
   }
   
-  // Ensure we're working with a ChartNode
-  const chartData = 'position' in data ? data : convertToChartNode(data as HierarchyNode);
+  if (!chartData) {
+    return <EmptyHierarchy />;
+  }
 
   return (
     <div className="overflow-auto max-h-[calc(100vh-250px)]">
