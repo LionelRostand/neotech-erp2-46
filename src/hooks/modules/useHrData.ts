@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from 'react';
 import { collection, getDocs, query, orderBy, where } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
@@ -41,20 +42,20 @@ export const useHrData = () => {
         // Combiner les deux ensembles de résultats
         const allEmployees = [
           ...employeesSnapshot.docs.map(doc => ({
-            id: doc.id,
             ...doc.data(),
+            id: doc.id,
             isManager: false
           })),
           ...managersSnapshot.docs.map(doc => ({
-            id: doc.id,
             ...doc.data(),
+            id: doc.id,
             isManager: true
           }))
         ];
         
         // Trier par nom de famille
         const sortedEmployees = allEmployees.sort((a, b) => 
-          a.lastName?.localeCompare(b.lastName || '') || 0
+          (a.lastName || '').localeCompare(b.lastName || '') || 0
         );
         
         setEmployees(sortedEmployees);
