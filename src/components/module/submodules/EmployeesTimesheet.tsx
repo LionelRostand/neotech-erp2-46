@@ -8,7 +8,7 @@ import { useTimeSheetData } from '@/hooks/useTimeSheetData';
 import TimesheetTable from './timesheet/TimesheetTable';
 import { toast } from 'sonner';
 import CreateTimesheetDialog from './timesheet/CreateTimesheetDialog';
-import { approveTimeSheet, rejectTimeSheet } from './timesheet/services/timesheetService';
+import { approveTimeSheet, rejectTimeSheet, submitTimeSheet } from './timesheet/services/timesheetService';
 
 const EmployeesTimesheet: React.FC = () => {
   const [activeTab, setActiveTab] = useState<string>("all");
@@ -31,14 +31,14 @@ const EmployeesTimesheet: React.FC = () => {
       setIsProcessing(true);
       const result = await approveTimeSheet(id);
       if (result) {
-        toast.success("La feuille de temps a été approuvée");
+        toast.success("La feuille de temps a été validée");
         refetch(); // Rafraîchir les données
       } else {
-        toast.error("Erreur lors de l'approbation de la feuille de temps");
+        toast.error("Erreur lors de la validation de la feuille de temps");
       }
     } catch (error) {
-      console.error("Erreur lors de l'approbation:", error);
-      toast.error("Erreur lors de l'approbation de la feuille de temps");
+      console.error("Erreur lors de la validation:", error);
+      toast.error("Erreur lors de la validation de la feuille de temps");
     } finally {
       setIsProcessing(false);
     }
@@ -57,6 +57,24 @@ const EmployeesTimesheet: React.FC = () => {
     } catch (error) {
       console.error("Erreur lors du rejet:", error);
       toast.error("Erreur lors du rejet de la feuille de temps");
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+  
+  const handleSubmitTimesheet = async (id: string) => {
+    try {
+      setIsProcessing(true);
+      const result = await submitTimeSheet(id);
+      if (result) {
+        toast.success("La feuille de temps a été soumise pour validation");
+        refetch(); // Rafraîchir les données
+      } else {
+        toast.error("Erreur lors de la soumission de la feuille de temps");
+      }
+    } catch (error) {
+      console.error("Erreur lors de la soumission:", error);
+      toast.error("Erreur lors de la soumission de la feuille de temps");
     } finally {
       setIsProcessing(false);
     }
@@ -151,6 +169,7 @@ const EmployeesTimesheet: React.FC = () => {
             onEdit={handleEditTimesheet}
             onApprove={handleApproveTimesheet}
             onReject={handleRejectTimesheet}
+            onSubmit={handleSubmitTimesheet}
             isLoading={isLoading || isProcessing}
           />
         </TabsContent>
@@ -171,6 +190,7 @@ const EmployeesTimesheet: React.FC = () => {
             data={timesheetsByStatus?.active || []}
             onView={handleViewTimesheet}
             onEdit={handleEditTimesheet}
+            onSubmit={handleSubmitTimesheet}
             isLoading={isLoading || isProcessing}
           />
         </TabsContent>

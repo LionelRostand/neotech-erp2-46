@@ -14,7 +14,8 @@ import {
   Eye, 
   FileEdit, 
   ThumbsUp, 
-  ThumbsDown 
+  ThumbsDown,
+  SendHorizonal
 } from 'lucide-react';
 import { 
   DropdownMenu, 
@@ -34,6 +35,7 @@ interface TimesheetTableProps {
   onEdit?: (id: string) => void;
   onApprove?: (id: string) => void;
   onReject?: (id: string) => void;
+  onSubmit?: (id: string) => void;
   isLoading?: boolean;
 }
 
@@ -43,6 +45,7 @@ const TimesheetTable: React.FC<TimesheetTableProps> = ({
   onEdit, 
   onApprove, 
   onReject,
+  onSubmit,
   isLoading
 }) => {
   const getStatusBadge = (status: TimeReportStatus) => {
@@ -164,13 +167,18 @@ const TimesheetTable: React.FC<TimesheetTableProps> = ({
                           <FileEdit className="mr-2 h-4 w-4" /> Modifier
                         </DropdownMenuItem>
                       )}
+                      {(onSubmit && report.status === "En cours") && (
+                        <DropdownMenuItem onClick={() => onSubmit(report.id)} className="cursor-pointer">
+                          <SendHorizonal className="mr-2 h-4 w-4" /> Soumettre
+                        </DropdownMenuItem>
+                      )}
                       {(onApprove && report.status === "Soumis") && (
-                        <DropdownMenuItem onClick={() => onApprove(report.id)} className="cursor-pointer">
+                        <DropdownMenuItem onClick={() => onApprove(report.id)} className="cursor-pointer text-green-600 hover:text-green-700">
                           <ThumbsUp className="mr-2 h-4 w-4" /> Valider
                         </DropdownMenuItem>
                       )}
                       {(onReject && report.status === "Soumis") && (
-                        <DropdownMenuItem onClick={() => onReject(report.id)} className="cursor-pointer">
+                        <DropdownMenuItem onClick={() => onReject(report.id)} className="cursor-pointer text-red-600 hover:text-red-700">
                           <ThumbsDown className="mr-2 h-4 w-4" /> Rejeter
                         </DropdownMenuItem>
                       )}
