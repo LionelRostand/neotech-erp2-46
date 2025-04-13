@@ -22,29 +22,9 @@ export const useEmployeeService = () => {
     try {
       console.log('Début de création d\'un employé:', employeeData);
       
-      // Nettoyer les données pour éliminer les valeurs undefined
-      const cleanedData = Object.entries(employeeData).reduce((acc, [key, value]) => {
-        if (value !== undefined) {
-          acc[key] = value;
-        }
-        return acc;
-      }, {} as Record<string, any>);
-      
-      console.log('Données nettoyées:', cleanedData);
-      
-      // Déterminer si l'employé est un manager basé sur sa position ou si forceManager est vrai
-      const isManager = cleanedData.forceManager === true || 
-                       isEmployeeManager(cleanedData.position || '') || 
-                       isEmployeeManager(cleanedData.role || '');
-      
-      // Ajouter explicitement la propriété isManager
-      const employeeWithManagerStatus = {
-        ...cleanedData,
-        isManager
-      };
-      
-      // Utiliser le service dédié pour créer l'employé
-      const newEmployee = await createEmployee(employeeWithManagerStatus);
+      // Utiliser directement la fonction du service pour créer l'employé
+      // au lieu de manipuler les données ici
+      const newEmployee = await createEmployee(employeeData);
       
       if (newEmployee) {
         toast.success(`L'employé ${newEmployee.firstName} ${newEmployee.lastName} a été créé avec succès`);
@@ -76,30 +56,8 @@ export const useEmployeeService = () => {
     try {
       console.log('Début de mise à jour d\'un employé:', id, employeeData);
       
-      // Nettoyer les données pour éliminer les valeurs undefined
-      const cleanedData = Object.entries(employeeData).reduce((acc, [key, value]) => {
-        if (value !== undefined) {
-          acc[key] = value;
-        }
-        return acc;
-      }, {} as Record<string, any>);
-      
-      console.log('Données nettoyées pour mise à jour:', cleanedData);
-      
-      // Déterminer si l'employé est un manager basé sur sa position ou si forceManager est vrai
-      const isManager = cleanedData.forceManager === true || 
-                       isEmployeeManager(cleanedData.position || '') || 
-                       isEmployeeManager(cleanedData.role || '');
-      
-      // Ajouter explicitement la propriété isManager et timestamp de mise à jour
-      const employeeWithManagerStatus = {
-        ...cleanedData,
-        isManager,
-        updatedAt: new Date().toISOString()
-      };
-      
-      // Utiliser le service dédié pour mettre à jour l'employé au lieu d'utiliser directement firestore.update
-      const updatedEmployee = await updateEmployeeDoc(id, employeeWithManagerStatus);
+      // Utiliser directement la fonction du service pour mettre à jour l'employé
+      const updatedEmployee = await updateEmployeeDoc(id, employeeData);
       
       if (updatedEmployee) {
         // Synchroniser le statut de manager

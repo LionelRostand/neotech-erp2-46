@@ -44,15 +44,41 @@ export const createEmployee = async (employeeData: Partial<Employee>): Promise<E
       return null;
     }
     
+    // Vérifier également si l'ID est déjà utilisé pour éviter les doublons
+    if (employeeData.id) {
+      const existingIdQuery = query(employeesRef, where('id', '==', employeeData.id));
+      const idSnapshot = await getDocs(existingIdQuery);
+      if (!idSnapshot.empty) {
+        console.error(`Un employé avec l'ID ${employeeData.id} existe déjà`);
+        toast.error(`Un employé avec cet identifiant existe déjà`);
+        return null;
+      }
+    }
+    
     // Déterminer si l'employé est un manager basé sur sa position
     const isManager = employeeData.isManager || 
                      isEmployeeManager(employeeData.position || '') || 
                      isEmployeeManager(employeeData.role || '');
     
-    // Nettoyer les données pour éliminer les propriétés undefined
+    // Nettoyer les données pour éliminer les propriétés undefined et null
     const cleanedData = Object.entries(employeeData).reduce((acc, [key, value]) => {
-      if (value !== undefined) {
-        acc[key] = value;
+      if (value !== undefined && value !== null) {
+        // Vérifier si la valeur est un objet contenant des propriétés undefined
+        if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+          const cleanedObject = Object.entries(value).reduce((objAcc, [objKey, objValue]) => {
+            if (objValue !== undefined && objValue !== null) {
+              objAcc[objKey] = objValue;
+            }
+            return objAcc;
+          }, {} as Record<string, any>);
+          
+          // N'ajouter l'objet que s'il contient des propriétés
+          if (Object.keys(cleanedObject).length > 0) {
+            acc[key] = cleanedObject;
+          }
+        } else {
+          acc[key] = value;
+        }
       }
       return acc;
     }, {} as Record<string, any>);
@@ -68,6 +94,13 @@ export const createEmployee = async (employeeData: Partial<Employee>): Promise<E
       updatedAt: now,
       status: employeeData.status || 'active'
     };
+    
+    // Si photo est un objet vide ou contient des données invalides, le supprimer
+    if (employeeToSave.photo && 
+        (Object.keys(employeeToSave.photo).length === 0 || 
+         employeeToSave.photo.data === undefined)) {
+      delete employeeToSave.photo;
+    }
     
     // Ajouter l'employé à la collection employees
     const docRef = await addDoc(employeesRef, employeeToSave);
@@ -119,15 +152,37 @@ export const updateEmployeeDoc = async (id: string, employeeData: Partial<Employ
     // Filtrer les données pour ne pas écraser l'ID ou createdAt
     const { id: _, createdAt, ...dataToUpdate } = employeeData;
     
-    // Nettoyer les données pour éliminer les propriétés undefined
+    // Nettoyer les données pour éliminer les propriétés undefined et null
     const cleanedData = Object.entries(dataToUpdate).reduce((acc, [key, value]) => {
-      if (value !== undefined) {
-        acc[key] = value;
+      if (value !== undefined && value !== null) {
+        // Vérifier si la valeur est un objet contenant des propriétés undefined
+        if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+          const cleanedObject = Object.entries(value).reduce((objAcc, [objKey, objValue]) => {
+            if (objValue !== undefined && objValue !== null) {
+              objAcc[objKey] = objValue;
+            }
+            return objAcc;
+          }, {} as Record<string, any>);
+          
+          // N'ajouter l'objet que s'il contient des propriétés
+          if (Object.keys(cleanedObject).length > 0) {
+            acc[key] = cleanedObject;
+          }
+        } else {
+          acc[key] = value;
+        }
       }
       return acc;
     }, {} as Record<string, any>);
     
     console.log('Données nettoyées avant mise à jour:', cleanedData);
+    
+    // Si photo est un objet vide ou contient des données invalides, le supprimer
+    if (cleanedData.photo && 
+        (Object.keys(cleanedData.photo).length === 0 || 
+         cleanedData.photo.data === undefined)) {
+      delete cleanedData.photo;
+    }
     
     // Ajouter timestamp de mise à jour
     const updatedData = {

@@ -47,7 +47,6 @@ const PhotoUploadField = ({ defaultPhotoUrl }: PhotoUploadFieldProps) => {
         const result = e.target?.result as string;
         if (result) {
           // Store both the base64 data and file metadata
-          // Ensure photoData is not undefined
           onChange({
             data: result,
             fileName: file.name,
@@ -56,7 +55,7 @@ const PhotoUploadField = ({ defaultPhotoUrl }: PhotoUploadFieldProps) => {
             updatedAt: new Date().toISOString()
           });
         } else {
-          // Si le résultat est null, utiliser un objet vide mais valide
+          // Si le résultat est null, utiliser un objet avec uniquement les métadonnées
           onChange({
             fileName: file.name,
             fileType: file.type,
@@ -70,6 +69,8 @@ const PhotoUploadField = ({ defaultPhotoUrl }: PhotoUploadFieldProps) => {
       reader.onerror = () => {
         console.error('Erreur lors de la lecture du fichier');
         toast.error('Erreur lors du traitement de l\'image');
+        // Envoyer un objet vide mais valide en cas d'erreur
+        onChange(null);
         setIsUploading(false);
       };
       
@@ -78,6 +79,8 @@ const PhotoUploadField = ({ defaultPhotoUrl }: PhotoUploadFieldProps) => {
     } catch (error) {
       console.error('Erreur lors du traitement de l\'image:', error);
       toast.error('Erreur lors du traitement de l\'image');
+      // Envoyer un objet vide mais valide en cas d'erreur
+      onChange(null);
       setIsUploading(false);
     }
   };

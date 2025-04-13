@@ -20,10 +20,25 @@ export const updateDocument = async (collectionName: string, id: string, data: D
     const docSnapshot = await getDoc(docRef);
     const exists = docSnapshot.exists();
     
-    // Nettoyer les données pour éliminer les valeurs undefined
+    // Nettoyer les données pour éliminer les valeurs undefined et null
     const cleanedData = Object.entries(data).reduce((acc, [key, value]) => {
-      if (value !== undefined) {
-        acc[key] = value;
+      if (value !== undefined && value !== null) {
+        // Gérer les objets qui pourraient contenir des valeurs undefined
+        if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+          const cleanedObj = Object.entries(value).reduce((objAcc, [objKey, objValue]) => {
+            if (objValue !== undefined && objValue !== null) {
+              objAcc[objKey] = objValue;
+            }
+            return objAcc;
+          }, {} as Record<string, any>);
+          
+          // N'ajouter l'objet que s'il a des propriétés
+          if (Object.keys(cleanedObj).length > 0) {
+            acc[key] = cleanedObj;
+          }
+        } else {
+          acc[key] = value;
+        }
       }
       return acc;
     }, {} as Record<string, any>);
@@ -72,10 +87,25 @@ export const setDocument = async (collectionName: string, id: string, data: Docu
     console.log(`Setting document ${id} in collection ${collectionName}`);
     console.log('Document data:', data);
     
-    // Nettoyer les données pour éliminer les valeurs undefined
+    // Nettoyer les données pour éliminer les valeurs undefined et null
     const cleanedData = Object.entries(data).reduce((acc, [key, value]) => {
-      if (value !== undefined) {
-        acc[key] = value;
+      if (value !== undefined && value !== null) {
+        // Gérer les objets qui pourraient contenir des valeurs undefined
+        if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+          const cleanedObj = Object.entries(value).reduce((objAcc, [objKey, objValue]) => {
+            if (objValue !== undefined && objValue !== null) {
+              objAcc[objKey] = objValue;
+            }
+            return objAcc;
+          }, {} as Record<string, any>);
+          
+          // N'ajouter l'objet que s'il a des propriétés
+          if (Object.keys(cleanedObj).length > 0) {
+            acc[key] = cleanedObj;
+          }
+        } else {
+          acc[key] = value;
+        }
       }
       return acc;
     }, {} as Record<string, any>);
