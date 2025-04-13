@@ -10,33 +10,43 @@ import { Department } from '@/components/module/submodules/departments/types';
 export const useEmployeeData = () => {
   const { employees, departments, isLoading, error } = useHrModuleData();
   
-  // On s'assure que les données des employés sont correctement formatées
+  // On s'assure que les données des employés sont correctement formatées et dédupliquées
   const formattedEmployees = useMemo(() => {
     if (!employees || employees.length === 0) {
       console.log('useEmployeeData: Aucun employé disponible');
       return [];
     }
     
-    console.log(`useEmployeeData: ${employees.length} employés disponibles avant traitement`);
+    console.log(`useEmployeeData: ${employees.length} employés disponibles avant traitement et déduplication`);
+    
+    // Créer une Map pour éliminer les doublons par ID
+    const uniqueEmployeesMap = new Map();
+    
+    employees.forEach(employee => {
+      // Si l'employé n'existe pas encore dans la Map, l'ajouter
+      if (!uniqueEmployeesMap.has(employee.id)) {
+        uniqueEmployeesMap.set(employee.id, {
+          ...employee,
+          // Garantir que chaque employé a une photo (même placeholder)
+          photoURL: employee.photoURL || employee.photo || '',
+        });
+      }
+    });
+    
+    // Convertir la Map en tableau
+    const uniqueEmployees = Array.from(uniqueEmployeesMap.values());
+    
+    console.log(`useEmployeeData: ${uniqueEmployees.length} employés après déduplication et traitement`);
     
     // Vérifier la présence de LIONEL DJOSSA
-    const lionelPresent = employees.some(emp => 
+    const lionelPresent = uniqueEmployees.some(emp => 
       emp.firstName?.toLowerCase().includes('lionel') && 
       emp.lastName?.toLowerCase().includes('djossa')
     );
     
-    console.log(`useEmployeeData: LIONEL DJOSSA présent dans les données brutes? ${lionelPresent}`);
+    console.log(`useEmployeeData: LIONEL DJOSSA présent dans les données après déduplication? ${lionelPresent}`);
     
-    // Convertir tous les employés sans filtrage
-    const allEmployees = employees.map(employee => ({
-      ...employee,
-      // Garantir que chaque employé a une photo (même placeholder)
-      photoURL: employee.photoURL || employee.photo || '',
-    }));
-    
-    console.log(`useEmployeeData: ${allEmployees.length} employés après traitement`);
-    
-    return allEmployees;
+    return uniqueEmployees;
   }, [employees]);
   
   // Formater les départements pour les enrichir avec les données des managers
@@ -44,7 +54,17 @@ export const useEmployeeData = () => {
     if (!departments || departments.length === 0) return [];
     if (!formattedEmployees || formattedEmployees.length === 0) return departments;
     
-    return departments.map(department => {
+    // Éliminer les doublons de départements par ID
+    const uniqueDepartmentsMap = new Map();
+    departments.forEach(dept => {
+      if (!uniqueDepartmentsMap.has(dept.id)) {
+        uniqueDepartmentsMap.set(dept.id, dept);
+      }
+    });
+    
+    const uniqueDepartments = Array.from(uniqueDepartmentsMap.values());
+    
+    return uniqueDepartments.map(department => {
       const manager = department.managerId 
         ? formattedEmployees.find(emp => emp.id === department.managerId) 
         : null;

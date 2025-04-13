@@ -32,10 +32,14 @@ const FormActions: React.FC<FormActionsProps> = ({
   const { employees, isLoading: isLoadingEmployees } = useEmployeeData();
   const [sortedEmployees, setSortedEmployees] = useState<Employee[]>([]);
   
-  // Utilisation directe du hook useEmployeeData pour récupérer tous les employés
+  // Utiliser les données des employés dédupliquées depuis useEmployeeData
   useEffect(() => {
     if (employees && employees.length > 0) {
-      console.log(`Nombre total d'employés récupérés: ${employees.length}`);
+      console.log(`FormActions: Nombre total d'employés récupérés après déduplication: ${employees.length}`);
+      
+      // Vérification des IDs pour s'assurer qu'il n'y a pas de doublons
+      const uniqueIds = new Set(employees.map(emp => emp.id));
+      console.log(`FormActions: Nombre d'IDs uniques: ${uniqueIds.size}`);
       
       // Tri des employés par nom de famille puis prénom pour faciliter la recherche
       const sorted = [...employees].sort((a, b) => {
@@ -51,26 +55,21 @@ const FormActions: React.FC<FormActionsProps> = ({
       );
       
       if (lionelDjossa) {
-        console.log('LIONEL DJOSSA est présent dans la liste:');
+        console.log('FormActions: LIONEL DJOSSA est présent dans la liste triée:');
         console.log({
           id: lionelDjossa.id,
           nom: `${lionelDjossa.lastName} ${lionelDjossa.firstName}`,
           status: lionelDjossa.status
         });
       } else {
-        console.log('LIONEL DJOSSA n\'est pas trouvé dans la liste');
-        // Affichage des premiers employés pour vérification
-        console.log('Premiers employés de la liste:');
-        sorted.slice(0, 5).forEach(emp => {
-          console.log(`${emp.lastName || ''} ${emp.firstName || ''} (${emp.id})`);
-        });
+        console.log('FormActions: LIONEL DJOSSA n\'est pas trouvé dans la liste triée');
       }
       
       setSortedEmployees(sorted);
     } else {
-      console.log('Aucun employé récupéré ou liste vide');
+      console.log('FormActions: Aucun employé récupéré ou liste vide');
       if (isLoadingEmployees) {
-        console.log('Chargement des employés en cours...');
+        console.log('FormActions: Chargement des employés en cours...');
       }
     }
   }, [employees, isLoadingEmployees]);

@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from 'react';
 import { collection, getDocs, query, orderBy, where } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
@@ -76,18 +77,31 @@ export const useHrData = () => {
         console.log(`LIONEL DJOSSA trouvé dans employés réguliers: ${lionelInRegular}`);
         console.log(`LIONEL DJOSSA trouvé dans managers: ${lionelInManagers}`);
         
-        // Filtrer pour éliminer les doublons par ID
-        const allEmployees = [...regularEmployees, ...managerEmployees];
+        // Utiliser une Map pour éliminer les doublons par ID
         const uniqueEmployeesMap = new Map();
         
-        allEmployees.forEach(employee => {
+        // Ajouter d'abord tous les managers (prioritaires)
+        managerEmployees.forEach(employee => {
+          uniqueEmployeesMap.set(employee.id, employee);
+        });
+        
+        // Puis ajouter les employés réguliers, sans écraser les managers déjà présents
+        regularEmployees.forEach(employee => {
           if (!uniqueEmployeesMap.has(employee.id)) {
             uniqueEmployeesMap.set(employee.id, employee);
           }
         });
         
         const uniqueEmployees = Array.from(uniqueEmployeesMap.values());
-        console.log(`Total d'employés uniques: ${uniqueEmployees.length}`);
+        console.log(`Total d'employés uniques après déduplication: ${uniqueEmployees.length} (avant: ${regularEmployees.length + managerEmployees.length})`);
+        
+        // Vérification finale pour LIONEL DJOSSA après déduplication
+        const lionelAfterDedup = uniqueEmployees.some(emp => 
+          emp.firstName?.toLowerCase().includes('lionel') && 
+          emp.lastName?.toLowerCase().includes('djossa')
+        );
+        
+        console.log(`LIONEL DJOSSA présent après déduplication: ${lionelAfterDedup}`);
         
         // Trier par nom de famille
         const sortedEmployees = uniqueEmployees.sort((a, b) => 
@@ -105,9 +119,20 @@ export const useHrData = () => {
         const contractsSnapshot = await getDocs(contractsRef);
         setContracts(contractsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
 
+        // Déduplication des départements
         const departmentsRef = collection(db, COLLECTIONS.HR.DEPARTMENTS);
         const departmentsSnapshot = await getDocs(departmentsRef);
-        setDepartments(departmentsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+        const allDepartments = departmentsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        
+        // Utiliser une Map pour éliminer les doublons par ID
+        const uniqueDepartmentsMap = new Map();
+        allDepartments.forEach(dept => {
+          if (!uniqueDepartmentsMap.has(dept.id)) {
+            uniqueDepartmentsMap.set(dept.id, dept);
+          }
+        });
+        
+        setDepartments(Array.from(uniqueDepartmentsMap.values()));
 
         const leaveRequestsRef = collection(db, COLLECTIONS.HR.LEAVE_REQUESTS);
         const leaveRequestsSnapshot = await getDocs(leaveRequestsRef);
