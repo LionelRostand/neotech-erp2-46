@@ -87,7 +87,8 @@ export const hasEnoughLeaveBalance = async (
  */
 export const validateAbsence = async (absenceId: string): Promise<boolean> => {
   try {
-    const firestoreClient = new useFirestore(COLLECTIONS.HR.ABSENCE_REQUESTS);
+    // Correction: Pas besoin d'utiliser "new" avec useFirestore
+    const firestoreClient = useFirestore(COLLECTIONS.HR.ABSENCE_REQUESTS);
     
     await firestoreClient.update(absenceId, {
       status: 'approved',
@@ -109,7 +110,8 @@ export const validateAbsence = async (absenceId: string): Promise<boolean> => {
  */
 export const rejectAbsence = async (absenceId: string): Promise<boolean> => {
   try {
-    const firestoreClient = new useFirestore(COLLECTIONS.HR.ABSENCE_REQUESTS);
+    // Correction: Pas besoin d'utiliser "new" avec useFirestore
+    const firestoreClient = useFirestore(COLLECTIONS.HR.ABSENCE_REQUESTS);
     
     await firestoreClient.update(absenceId, {
       status: 'rejected',
