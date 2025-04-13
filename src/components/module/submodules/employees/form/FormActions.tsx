@@ -42,7 +42,8 @@ const FormActions: React.FC<FormActionsProps> = ({
         const employeesRef = collection(db, COLLECTIONS.HR.EMPLOYEES);
         const employeesQuery = query(
           employeesRef, 
-          where('status', 'in', ['active', 'Active', 'Actif'])
+          // Élargir la requête pour inclure plus de statuts possibles et ne pas manquer d'employés
+          where('status', 'in', ['active', 'Active', 'Actif', 'active', 'ACTIVE'])
         );
         
         const employeesSnapshot = await getDocs(employeesQuery);
@@ -53,12 +54,36 @@ const FormActions: React.FC<FormActionsProps> = ({
           ...doc.data()
         })) as Employee[];
         
+        // Pour le débogage
+        console.log("Liste complète des employés récupérés:", employeesList.map(e => `${e.firstName} ${e.lastName} (${e.id}) - Statut: ${e.status}`));
+        
+        // S'assurer que tous les employés sont inclus, même sans filtrage de statut si aucun n'est trouvé
+        let finalEmployeesList = employeesList;
+        if (employeesList.length === 0) {
+          // Récupérer tous les employés sans filtre si la première requête ne trouve rien
+          const allEmployeesRef = collection(db, COLLECTIONS.HR.EMPLOYEES);
+          const allEmployeesSnapshot = await getDocs(allEmployeesRef);
+          finalEmployeesList = allEmployeesSnapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+          })) as Employee[];
+          console.log("Récupération de tous les employés sans filtre:", finalEmployeesList.length);
+        }
+        
         // Trier les employés par nom
-        const sortedEmployees = employeesList.sort((a, b) => 
-          `${a.lastName} ${a.firstName}`.localeCompare(`${b.lastName} ${b.firstName}`)
+        const sortedEmployees = finalEmployeesList.sort((a, b) => 
+          `${a.lastName || ''} ${a.firstName || ''}`.localeCompare(`${b.lastName || ''} ${b.firstName || ''}`)
         );
         
         console.log(`Employés récupérés depuis Firestore: ${sortedEmployees.length}`);
+        
+        // Vérifier si LIONEL DJOSSA est dans la liste
+        const lionelExists = sortedEmployees.some(
+          emp => emp.firstName?.toLowerCase().includes('lionel') && 
+                 emp.lastName?.toLowerCase().includes('djossa')
+        );
+        console.log("LIONEL DJOSSA est-il dans la liste?", lionelExists);
+        
         setManagers(sortedEmployees);
       } catch (error) {
         console.error('Erreur lors de la récupération des employés:', error);
@@ -88,11 +113,11 @@ const FormActions: React.FC<FormActionsProps> = ({
               <SelectTrigger>
                 <SelectValue placeholder={isLoading ? "Chargement..." : "Sélectionner un responsable"} />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="max-h-[300px]">
                 <SelectItem value="">Aucun responsable</SelectItem>
                 {managers.map((employee) => (
                   <SelectItem key={employee.id} value={employee.id}>
-                    {`${employee.lastName} ${employee.firstName}`}
+                    {`${employee.lastName || ''} ${employee.firstName || ''}`}
                   </SelectItem>
                 ))}
               </SelectContent>
