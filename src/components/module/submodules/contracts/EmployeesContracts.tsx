@@ -3,17 +3,18 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useContractsData, Contract } from '@/hooks/useContractsData';
-import { PlusCircle, FileText, PenSquare } from 'lucide-react';
+import { PlusCircle, FileText, PenSquare, Users, Calendar, Briefcase, FileSignature } from 'lucide-react';
 import DataTable from '@/components/DataTable';
-import { ColumnDef } from '@tanstack/react-table';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import CreateContractDialog from './CreateContractDialog';
 import ContractDetailsDialog from './ContractDetailsDialog';
 import UpdateContractDialog from './UpdateContractDialog';
+import StatCard from '@/components/StatCard';
+import { PieChart } from '@/components/ui/charts';
 
 const EmployeesContracts = () => {
-  const { contracts, isLoading, error } = useContractsData();
+  const { contracts, stats, isLoading, error } = useContractsData();
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
   const [updateDialogOpen, setUpdateDialogOpen] = useState(false);
@@ -33,13 +34,26 @@ const EmployeesContracts = () => {
 
   // Fonction pour rafraîchir les données après une modification
   const handleContractUpdated = () => {
-    // Les données sont automatiquement rafraîchies par useContractsData, mais on peut ajouter ici un refresh manuel si nécessaire
+    // Les données sont automatiquement rafraîchies par useContractsData
+  };
+
+  // Préparer les données pour le graphique circulaire
+  const chartData = {
+    labels: ['Actifs', 'À venir', 'Expirés'],
+    datasets: [
+      {
+        data: [stats.active, stats.upcoming, stats.expired],
+        backgroundColor: ['#16a34a', '#2563eb', '#dc2626'],
+        borderColor: ['#15803d', '#1d4ed8', '#b91c1c'],
+        borderWidth: 1,
+      },
+    ],
   };
 
   // Définition des colonnes pour la table
-  const columns: ColumnDef<Contract>[] = [
+  const columns = [
     {
-      accessorKey: 'employeeName',
+      key: 'employeeName',
       header: 'Employé',
       cell: ({ row }) => {
         const contract = row.original;
@@ -55,24 +69,24 @@ const EmployeesContracts = () => {
       },
     },
     {
-      accessorKey: 'position',
+      key: 'position',
       header: 'Poste',
     },
     {
-      accessorKey: 'type',
+      key: 'type',
       header: 'Type',
     },
     {
-      accessorKey: 'startDate',
+      key: 'startDate',
       header: 'Début',
     },
     {
-      accessorKey: 'endDate',
+      key: 'endDate',
       header: 'Fin',
       cell: ({ row }) => row.original.endDate || '—',
     },
     {
-      accessorKey: 'status',
+      key: 'status',
       header: 'Statut',
       cell: ({ row }) => {
         const status = row.original.status;
@@ -89,7 +103,8 @@ const EmployeesContracts = () => {
       },
     },
     {
-      id: 'actions',
+      key: 'actions',
+      header: 'Actions',
       cell: ({ row }) => {
         const contract = row.original;
         return (
@@ -116,21 +131,83 @@ const EmployeesContracts = () => {
     },
   ];
 
-  // Adapter les colonnes au format attendu par DataTable
-  const adaptedColumns = columns.map(col => ({
-    key: col.accessorKey?.toString() || col.id || '',
-    header: col.header?.toString() || '',
-    cell: col.cell ? col.cell : undefined
-  }));
-
   return (
-    <div className="space-y-4 p-4">
+    <div className="space-y-6 p-4">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold">Gestion des contrats</h2>
         <Button onClick={() => setCreateDialogOpen(true)}>
           <PlusCircle className="h-4 w-4 mr-2" />
           Nouveau contrat
         </Button>
+      </div>
+
+      {/* Dashboard section */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <StatCard 
+          title="Total des contrats" 
+          value={`${stats.total}`} 
+          icon={<FileSignature className="h-5 w-5 text-purple-600" />}
+          description="Nombre total de contrats" 
+          className="bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200"
+        />
+        <StatCard 
+          title="Contrats actifs" 
+          value={`${stats.active}`} 
+          icon={<Users className="h-5 w-5 text-green-600" />}
+          description="Employés actuellement sous contrat" 
+          className="bg-gradient-to-br from-green-50 to-green-100 border-green-200"
+        />
+        <StatCard 
+          title="Contrats à venir" 
+          value={`${stats.upcoming}`} 
+          icon={<Calendar className="h-5 w-5 text-blue-600" />}
+          description="Nouveaux contrats en attente de démarrage" 
+          className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200"
+        />
+        <StatCard 
+          title="Contrats expirés" 
+          value={`${stats.expired}`} 
+          icon={<Briefcase className="h-5 w-5 text-red-600" />}
+          description="Contrats arrivés à échéance" 
+          className="bg-gradient-to-br from-red-50 to-red-100 border-red-200"
+        />
+      </div>
+
+      {/* Chart section */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card className="md:col-span-2">
+          <CardHeader>
+            <CardTitle>Évolution des contrats</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="h-[300px] w-full">
+              {/* Placeholder for line chart - would implement with actual data in a real scenario */}
+              <div className="h-full w-full bg-gradient-to-r from-blue-100 to-indigo-100 rounded-md flex items-center justify-center">
+                <p className="text-gray-500">Graphique d'évolution des contrats</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Répartition des contrats</CardTitle>
+          </CardHeader>
+          <CardContent className="flex justify-center">
+            <div className="h-[300px] w-full">
+              <PieChart
+                data={chartData}
+                options={{
+                  plugins: {
+                    legend: {
+                      position: 'bottom',
+                    },
+                  },
+                }}
+                height={300}
+              />
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       <Card>
@@ -145,7 +222,7 @@ const EmployeesContracts = () => {
           ) : (
             <DataTable 
               title="Liste des contrats"
-              columns={adaptedColumns} 
+              columns={columns} 
               data={contracts} 
               onRowClick={(contract) => handleViewDetails(contract as Contract)}
             />
