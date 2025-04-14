@@ -6,7 +6,9 @@ import { Employee, Evaluation } from '@/types/employee';
 import { updateDocument } from '@/hooks/firestore/update-operations';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import { toast } from 'sonner';
-import { Save } from 'lucide-react';
+import { Save, Link, ExternalLink } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { useEvaluationsData } from '@/hooks/useEvaluationsData';
 
 interface EvaluationsTabProps {
   employee: Employee;
@@ -19,12 +21,24 @@ const EvaluationsTab: React.FC<EvaluationsTabProps> = ({
   isEditing = false, 
   onFinishEditing 
 }) => {
-  const [evaluations, setEvaluations] = useState<Evaluation[]>(employee.evaluations || []);
+  const navigate = useNavigate();
+  const { evaluations: allEvaluations } = useEvaluationsData();
+  const [employeeEvaluations, setEmployeeEvaluations] = useState<Evaluation[]>([]);
+  const [localEvaluations, setLocalEvaluations] = useState<Evaluation[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
-  // Update evaluations when employee data changes
+  // Fetch employee evaluations from useEvaluationsData
   useEffect(() => {
-    setEvaluations(employee.evaluations || []);
+    if (allEvaluations && allEvaluations.length > 0 && employee && employee.id) {
+      const relevantEvaluations = allEvaluations.filter(ev => ev.employeeId === employee.id);
+      setEmployeeEvaluations(relevantEvaluations);
+    }
+  }, [allEvaluations, employee]);
+  
+  // Initialize local evaluations from employee record
+  useEffect(() => {
+    const existingEvaluations = employee.evaluations || [];
+    setLocalEvaluations(existingEvaluations);
   }, [employee]);
 
   const handleSaveEvaluations = async () => {
@@ -33,7 +47,7 @@ const EvaluationsTab: React.FC<EvaluationsTabProps> = ({
     setIsSubmitting(true);
     try {
       await updateDocument(COLLECTIONS.HR.EMPLOYEES, employee.id, {
-        evaluations
+        evaluations: localEvaluations
       });
       
       toast.success('Évaluations mises à jour avec succès');
@@ -46,6 +60,11 @@ const EvaluationsTab: React.FC<EvaluationsTabProps> = ({
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  // Navigate to evaluations module
+  const handleViewAllEvaluations = () => {
+    navigate('/modules/employees/evaluations');
   };
 
   // Function to get rating stars display
@@ -80,34 +99,74 @@ const EvaluationsTab: React.FC<EvaluationsTabProps> = ({
         day: 'numeric'
       });
     } catch (e) {
-      // Use a safer string parsing approach instead of eval
       return dateString;
     }
   };
 
+  // Combine employee record evaluations with those from the evaluations collection
+  const combinedEvaluations = [...employeeEvaluations];
+
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>Évaluations</CardTitle>
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={handleViewAllEvaluations}
+          className="flex items-center gap-2"
+        >
+          <ExternalLink className="h-4 w-4" />
+          Voir toutes les évaluations
+        </Button>
       </CardHeader>
       <CardContent className="p-6">
-        {evaluations && evaluations.length > 0 ? (
+        {combinedEvaluations && combinedEvaluations.length > 0 ? (
           <div className="space-y-6">
-            {evaluations.map((evaluation, index) => (
+            {combinedEvaluations.map((evaluation, index) => (
               <div key={index} className="border rounded-md p-4">
                 <div className="flex justify-between items-start mb-2">
-                  <h4 className="text-lg font-medium">{evaluation.title}</h4>
+                  <h4 className="text-lg font-medium">
+                    {evaluation.title || 'Évaluation'}
+                    {evaluation.fromEmployeeRecord && (
+                      <span className="ml-2 text-xs text-blue-500 bg-blue-50 px-2 py-1 rounded-full">
+                        Local
+                      </span>
+                    )}
+                  </h4>
                   <div className="text-yellow-500 text-lg">
-                    {getRatingStars(evaluation.rating)}
+                    {getRatingStars(evaluation.rating || evaluation.score || 0)}
                   </div>
                 </div>
                 <p className="text-sm text-gray-500 mb-2">
-                  Date: {formatDate(evaluation.date)} • Évaluateur: {evaluation.evaluator || 'Non spécifié'}
+                  Date: {formatDate(evaluation.date)} • Évaluateur: {evaluation.evaluatorName || 'Non spécifié'}
                 </p>
-                {evaluation.comments && (
+                {(evaluation.comments || evaluation.strengths || evaluation.improvements) && (
                   <div className="mt-2">
                     <h5 className="text-sm font-medium">Commentaires</h5>
                     <p className="text-sm mt-1">{evaluation.comments}</p>
+                    
+                    {evaluation.strengths && evaluation.strengths.length > 0 && (
+                      <div className="mt-2">
+                        <h6 className="text-xs font-medium text-green-700">Points forts</h6>
+                        <ul className="list-disc list-inside text-sm">
+                          {evaluation.strengths.map((strength, idx) => (
+                            <li key={idx}>{strength}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                    
+                    {evaluation.improvements && evaluation.improvements.length > 0 && (
+                      <div className="mt-2">
+                        <h6 className="text-xs font-medium text-amber-700">Axes d'amélioration</h6>
+                        <ul className="list-disc list-inside text-sm">
+                          {evaluation.improvements.map((improvement, idx) => (
+                            <li key={idx}>{improvement}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>

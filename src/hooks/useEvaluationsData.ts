@@ -65,11 +65,41 @@ export const useEvaluationsData = () => {
     }
   };
   
+  // Collect all evaluations from both main evaluations collection and employee's embedded evaluations
+  const allEvaluations = useMemo(() => {
+    const mainEvaluations = evaluations || [];
+    const employeeEvaluations = [];
+    
+    // Extract evaluations from employee records
+    if (employees && employees.length > 0) {
+      employees.forEach(employee => {
+        if (employee.evaluations && Array.isArray(employee.evaluations)) {
+          employee.evaluations.forEach(evaluation => {
+            // Add employee info to the evaluation
+            employeeEvaluations.push({
+              ...evaluation,
+              employeeId: employee.id,
+              // Generate an ID if none exists
+              id: evaluation.id || `emp-eval-${employee.id}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+              // Ensure the evaluation has a date
+              date: evaluation.date || new Date().toISOString(),
+              // Flag to indicate this came from an employee record
+              fromEmployeeRecord: true
+            });
+          });
+        }
+      });
+    }
+    
+    // Combine both sources
+    return [...mainEvaluations, ...employeeEvaluations];
+  }, [evaluations, employees, refreshTrigger]);
+  
   // Enrich evaluations with employee names
   const formattedEvaluations = useMemo(() => {
-    if (!evaluations || evaluations.length === 0) return [];
+    if (!allEvaluations || allEvaluations.length === 0) return [];
     
-    return evaluations.map(evaluation => {
+    return allEvaluations.map(evaluation => {
       // Find the evaluated employee
       const employee = employees?.find(emp => emp.id === evaluation.employeeId);
       
@@ -107,9 +137,10 @@ export const useEvaluationsData = () => {
         // Support for employee evaluation type from the employee profile
         title: evaluation.title,
         rating: evaluation.rating,
+        fromEmployeeRecord: evaluation.fromEmployeeRecord || false
       } as Evaluation;
     });
-  }, [evaluations, employees, refreshTrigger]);
+  }, [allEvaluations, employees, refreshTrigger]);
   
   // Get statistics about evaluations
   const evaluationStats = useMemo(() => {
