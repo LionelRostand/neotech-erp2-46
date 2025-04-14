@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
@@ -47,7 +48,7 @@ const TimesheetStats: React.FC<TimesheetStatsProps> = ({ stats, isLoading }) => 
         gradient="bg-gradient-to-br from-red-500 to-red-700"
       />
       
-      <Card className="p-4 col-span-1 md:col-span-2 xl:col-span-4 bg-gradient-to-br from-purple-50 to-purple-100">
+      <Card className="p-4 col-span-1 md:col-span-2 xl:col-span-4 bg-gradient-to-br from-purple-50 to-purple-100 border border-purple-200 shadow-sm">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-2 gap-2">
           <h3 className="font-medium text-sm text-purple-800">Taux de validation des feuilles</h3>
           <span className="text-sm text-purple-600">
@@ -57,8 +58,8 @@ const TimesheetStats: React.FC<TimesheetStatsProps> = ({ stats, isLoading }) => 
         <div className="space-y-2">
           <Progress 
             value={stats.completionRate} 
-            className="h-2 bg-purple-200" 
-            indicatorClassName="bg-purple-600" 
+            className="h-2 bg-purple-200 rounded-full" 
+            indicatorClassName="bg-purple-600 rounded-full" 
           />
           <div className="flex justify-between text-xs text-purple-500">
             <span>0%</span>
