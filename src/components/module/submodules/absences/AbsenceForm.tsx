@@ -67,9 +67,9 @@ const AbsenceForm: React.FC<AbsenceFormProps> = ({ onSubmit, onCancel }) => {
             </SelectTrigger>
             <SelectContent>
               {isLoading ? (
-                <SelectItem value="loading" disabled>Chargement des employés...</SelectItem>
+                <SelectItem value="loading">Chargement des employés...</SelectItem>
               ) : employees.length === 0 ? (
-                <SelectItem value="none" disabled>Aucun employé disponible</SelectItem>
+                <SelectItem value="none">Aucun employé disponible</SelectItem>
               ) : (
                 employees.map((employee) => (
                   <SelectItem key={employee.id} value={employee.id}>
