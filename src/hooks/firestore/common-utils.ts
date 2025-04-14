@@ -1,4 +1,6 @@
-import { DocumentData, serverTimestamp } from "firebase/firestore";
+
+import { DocumentData, serverTimestamp, doc, collection } from "firebase/firestore";
+import { db } from '@/lib/firebase';
 
 /**
  * Adds createdAt and updatedAt timestamp fields to a document
@@ -60,4 +62,38 @@ export const prepareDocumentData = (data: DocumentData): DocumentData => {
   });
   
   return result;
+};
+
+/**
+ * Gets a document reference in Firestore
+ * @param collectionName The collection path
+ * @param documentId The document ID
+ * @returns Document reference
+ */
+export const getDocRef = (collectionName: string, documentId: string) => {
+  return doc(db, collectionName, documentId);
+};
+
+/**
+ * Gets a collection reference in Firestore
+ * @param collectionPath The collection path
+ * @returns Collection reference
+ */
+export const getCollectionRef = (collectionPath: string) => {
+  return collection(db, collectionPath);
+};
+
+/**
+ * Helper function to safely handle offline created documents
+ * @param result The result returned from a Firestore operation
+ * @returns The ID of the document, handling _offlineCreated case
+ */
+export const safelyGetDocumentId = (result: { id: string } | { _offlineCreated: boolean }): string | undefined => {
+  if ('id' in result) {
+    return result.id;
+  } else if ('_offlineCreated' in result) {
+    // For offline documents, return a temporary ID or undefined
+    return undefined;
+  }
+  return undefined;
 };

@@ -1,104 +1,227 @@
-
-// Firebase configuration for NEOTECH-ERP
 import { initializeApp } from 'firebase/app';
-import { getFirestore, enableIndexedDbPersistence, connectFirestoreEmulator } from 'firebase/firestore';
-import { getAuth, connectAuthEmulator } from 'firebase/auth';
-import { getStorage, connectStorageEmulator } from 'firebase/storage';
-import { toast } from 'sonner';
+import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from 'firebase/auth';
+import { getFirestore, collection, doc, setDoc, getDoc, updateDoc, serverTimestamp, onSnapshot, query, orderBy, limit } from 'firebase/firestore';
+import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { COLLECTIONS } from './firebase-collections';
 
-// Configuration Firebase
 const firebaseConfig = {
-  apiKey: "AIzaSyD3ZQYPtVHk4w63bCvOX0b8RVJyybWyOqU",
-  authDomain: "neotech-erp.firebaseapp.com",
-  projectId: "neotech-erp",
-  storageBucket: "neotech-erp.appspot.com",
-  messagingSenderId: "803661896660",
-  appId: "1:803661896660:web:94f17531b963627cbd5441"
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+  measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID
 };
 
-// Initialiser Firebase
-console.log('Initialisation de Firebase...');
+// Initialize Firebase
 const app = initializeApp(firebaseConfig);
 
-// Initialiser Firestore (base de données)
-const db = getFirestore(app);
-
-// Activer la persistance hors ligne pour Firestore
-try {
-  enableIndexedDbPersistence(db)
-    .then(() => {
-      console.log('Persistence hors ligne Firestore activée avec succès');
-    })
-    .catch((err) => {
-      console.warn('Échec de l\'activation de la persistence hors ligne Firestore:', err);
-      
-      if (err.code === 'failed-precondition') {
-        toast.warning('La persistence hors ligne requiert un seul onglet ouvert à la fois');
-      } else if (err.code === 'unimplemented') {
-        toast.warning('Votre navigateur ne prend pas en charge la persistence hors ligne');
-      }
-    });
-} catch (err) {
-  console.warn('Erreur lors de la configuration de la persistence Firestore:', err);
-}
-
-// Initialiser Authentication
+// Initialize Firebase Authentication
 const auth = getAuth(app);
 
-// Initialiser Storage avec des options avancées pour gérer les problèmes CORS
+// Initialize Firestore
+const db = getFirestore(app);
+
+// Initialize Firebase Storage
 const storage = getStorage(app);
 
-// Configuration des règles CORS pour Storage
-// Nous ne pouvons pas configurer CORS directement ici, mais nous allons adapter notre logique
-// pour mieux gérer les erreurs CORS et utiliser des alternatives
+// Google Auth Provider
+const googleAuthProvider = new GoogleAuthProvider();
+googleAuthProvider.setCustomParameters({
+  prompt: "select_account"
+});
 
-// Détecter le mode développement et la configuration des émulateurs
-const isDevMode = import.meta.env.DEV;
-const useEmulator = import.meta.env.VITE_EMULATOR === 'true';
-
-// Activer les émulateurs Firebase en mode développement si configuré
-if (isDevMode && useEmulator) {
+// Function to sign in with Google
+const signInWithGoogle = async () => {
   try {
-    // Connecter l'émulateur Firestore
-    connectFirestoreEmulator(db, 'localhost', 8080);
-    console.log('Connecté à l\'émulateur Firestore');
+    const result = await signInWithPopup(auth, googleAuthProvider);
+    // This gives you a Google Access Token. You can use it to access the Google API.
+    const credential = GoogleAuthProvider.credentialFromResult(result);
+    const token = credential?.accessToken;
+    // The signed-in user info.
+    const user = result.user;
     
-    // Connecter l'émulateur Auth
-    connectAuthEmulator(auth, 'http://localhost:9099');
-    console.log('Connecté à l\'émulateur Auth');
+    // Check if the user exists in the users collection
+    const userRef = doc(db, COLLECTIONS.USERS, user.uid);
+    const docSnap = await getDoc(userRef);
     
-    // Connecter l'émulateur Storage
-    connectStorageEmulator(storage, 'localhost', 9199);
-    console.log('Connecté à l\'émulateur Storage');
-  } catch (err) {
-    console.warn('Échec de la connexion aux émulateurs Firebase:', err);
-  }
-}
-
-// Exporter les services initialisés
-export { db, auth, storage, app };
-
-// Fonction pour vérifier l'état de la connexion à Firestore
-export const checkFirestoreConnection = async (): Promise<boolean> => {
-  try {
-    // Tentative de connexion à Firestore
-    const testCollection = 'connection_test';
-    const testDoc = `test_${Date.now()}`;
-    
-    // Importer de manière dynamique pour éviter les problèmes de référence circulaire
-    const { addDocument, deleteDocument } = await import('@/hooks/firestore/firestore-utils');
-    
-    // Essayer d'ajouter et supprimer un document
-    const added = await addDocument(testCollection, { timestamp: new Date().toISOString() });
-    if (added?.id) {
-      await deleteDocument(testCollection, added.id);
-      console.log('Connexion à Firestore vérifiée avec succès');
-      return true;
+    if (!docSnap.exists()) {
+      // If the user doesn't exist, create a new document
+      await setDoc(userRef, {
+        email: user.email,
+        displayName: user.displayName,
+        photoURL: user.photoURL,
+        createdAt: serverTimestamp()
+      });
     }
     
-    return false;
-  } catch (error) {
-    console.error('Échec de la vérification de connexion à Firestore:', error);
-    return false;
+    return user;
+  } catch (error: any) {
+    console.error("Error signing in with Google", error);
+    throw error;
   }
+};
+
+// Function to sign out
+const userSignOut = async () => {
+  try {
+    await signOut(auth);
+  } catch (error: any) {
+    console.error("Error signing out", error);
+    throw error;
+  }
+};
+
+// Function to update user data
+const updateUser = async (userId: string, data: any) => {
+  try {
+    const userRef = doc(db, COLLECTIONS.USERS, userId);
+    await updateDoc(userRef, data);
+  } catch (error: any) {
+    console.error("Error updating user", error);
+    throw error;
+  }
+};
+
+// Function to upload a file to Firebase Storage
+const uploadFile = async (file: File, path: string) => {
+  try {
+    const storageRef = ref(storage, path);
+    const snapshot = await uploadBytes(storageRef, file);
+    return snapshot;
+  } catch (error: any) {
+    console.error("Error uploading file", error);
+    throw error;
+  }
+};
+
+// Function to get the download URL of a file in Firebase Storage
+const getFileDownloadURL = async (path: string) => {
+  try {
+    const storageRef = ref(storage, path);
+    const url = await getDownloadURL(storageRef);
+    return url;
+  } catch (error: any) {
+    console.error("Error getting download URL", error);
+    throw error;
+  }
+};
+
+// Listen for authentication state changes
+const listenForAuthChanges = (callback: (user: any) => void) => {
+  return onAuthStateChanged(auth, (user) => {
+    callback(user);
+  });
+};
+
+// Function to add a document to a collection
+const addDocument = async (collectionName: string, data: any) => {
+  try {
+    const collectionRef = collection(db, collectionName);
+    const result = await setDoc(doc(collectionRef), data);
+    const id = 'id' in result ? result.id : undefined;
+    console.log(`Document added to ${collectionName} with ID: ${id}`);
+    return { id, ...data };
+  } catch (error: any) {
+    console.error(`Error adding document to ${collectionName}`, error);
+    throw error;
+  }
+};
+
+// Function to set a document in a collection with a specific ID
+const setDocument = async (collectionName: string, documentId: string, data: any) => {
+  try {
+    const docRef = doc(db, collectionName, documentId);
+    await setDoc(docRef, data);
+    console.log(`Document set in ${collectionName} with ID: ${documentId}`);
+    return { id: documentId, ...data };
+  } catch (error: any) {
+    console.error(`Error setting document in ${collectionName} with ID: ${documentId}`, error);
+    throw error;
+  }
+};
+
+// Function to get a document by ID from a collection
+const getDocument = async (collectionName: string, documentId: string) => {
+  try {
+    const docRef = doc(db, collectionName, documentId);
+    const docSnap = await getDoc(docRef);
+    
+    if (docSnap.exists()) {
+      console.log("Document data:", docSnap.data());
+      return { id: docSnap.id, ...docSnap.data() };
+    } else {
+      console.log("No such document!");
+      return null;
+    }
+  } catch (error: any) {
+    console.error("Error getting document:", error);
+    throw error;
+  }
+};
+
+// Function to listen for changes to a specific document
+const listenForDocumentChanges = (collectionName: string, documentId: string, callback: (data: any) => void) => {
+  const docRef = doc(db, collectionName, documentId);
+  return onSnapshot(docRef, (doc) => {
+    if (doc.exists()) {
+      callback({ id: doc.id, ...doc.data() });
+    } else {
+      callback(null);
+    }
+  });
+};
+
+// Function to fetch a limited number of documents from a collection, ordered by a specific field
+const getLimitedDocuments = async (collectionName: string, field: string, order: 'asc' | 'desc', limitCount: number) => {
+  try {
+    const collectionRef = collection(db, collectionName);
+    const q = query(collectionRef, orderBy(field, order), limit(limitCount));
+    const querySnapshot = await getDocs(q);
+    
+    const documents: any[] = [];
+    querySnapshot.forEach((doc) => {
+      documents.push({ id: doc.id, ...doc.data() });
+    });
+    
+    return documents;
+  } catch (error: any) {
+    console.error("Error getting limited documents:", error);
+    throw error;
+  }
+};
+
+const getDocs = async (collectionName: string) => {
+    try {
+        const collectionRef = collection(db, collectionName);
+        const querySnapshot = await getDocs(collectionRef);
+        const documents: any[] = [];
+        querySnapshot.forEach((doc) => {
+            documents.push({ id: doc.id, ...doc.data() });
+        });
+        return documents
+    } catch (error: any) {
+        console.error("Error getting documents:", error);
+        throw error;
+    }
+}
+
+export { 
+  app,
+  auth,
+  db,
+  storage,
+  signInWithGoogle,
+  userSignOut,
+  updateUser,
+  uploadFile,
+  getFileDownloadURL,
+  listenForAuthChanges,
+  addDocument,
+  setDocument,
+  getDocument,
+  listenForDocumentChanges,
+  getLimitedDocuments,
+  getDocs
 };

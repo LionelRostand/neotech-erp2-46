@@ -1,11 +1,11 @@
-
 import { 
-  DocumentData,
   updateDoc,
   setDoc,
-  getDoc
+  DocumentData,
+  doc
 } from 'firebase/firestore';
-import { getDocRef, formatDocumentWithTimestamps } from './common-utils';
+import { db } from '@/lib/firebase';
+import { formatDocumentWithTimestamps } from './common-utils';
 import { toast } from 'sonner';
 
 // Helper function to clean data by removing undefined and null values
@@ -39,7 +39,7 @@ export const updateDocument = async (collectionName: string, id: string, data: D
     console.log(`Updating document ${id} in collection ${collectionName}`);
     console.log('Update data:', data);
     
-    const docRef = getDocRef(collectionName, id);
+    const docRef = doc(db, collectionName, id);
     
     // Vérifier d'abord si le document existe
     const docSnapshot = await getDoc(docRef);
@@ -97,7 +97,7 @@ export const setDocument = async (collectionName: string, id: string, data: Docu
     
     console.log('Données nettoyées avant setDocument:', cleanedData);
     
-    const docRef = getDocRef(collectionName, id);
+    const docRef = doc(db, collectionName, id);
     const updatedData = formatDocumentWithTimestamps(cleanedData);
     
     // Use merge: true to merge data instead of replacing the entire document

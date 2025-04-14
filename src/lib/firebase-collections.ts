@@ -22,7 +22,11 @@ export const COLLECTIONS = {
     ABSENCE_REQUESTS: 'hr_absence_requests',
     LEAVE_REQUESTS: 'hr_leave_requests',
     MANAGERS: 'hr_managers',
-    USER_PERMISSIONS: 'hr_user_permissions'
+    USER_PERMISSIONS: 'hr_user_permissions',
+    RECRUITMENTS: 'hr_recruitments',
+    PAYSLIPS: 'hr_payslips',
+    REPORTS: 'hr_reports',
+    ALERTS: 'hr_alerts'
   },
   COMPANIES: 'companies',
   DOCUMENTS: 'documents',
@@ -33,7 +37,7 @@ export const COLLECTIONS = {
     INBOX: 'messages_inbox',
     SENT: 'messages_sent',
     DRAFTS: 'messages_drafts',
-    ARCHIVE: 'messages_archive',
+    ARCHIVE: 'messages_archive',  // Note: not ARCHIVED
     SCHEDULED: 'messages_scheduled',
     METRICS: 'messages_metrics',
     SETTINGS: 'messages_settings',
@@ -67,7 +71,9 @@ export const COLLECTIONS = {
     ACTIVITIES: 'crm_activities',
     SETTINGS: 'crm_settings',
     CAMPAIGNS: 'crm_campaigns',
-    USER_PERMISSIONS: 'crm_user_permissions'
+    USER_PERMISSIONS: 'crm_user_permissions',
+    DEALS: 'crm_deals',
+    REMINDERS: 'crm_reminders'
   },
   
   // Projects module collections
@@ -78,7 +84,8 @@ export const COLLECTIONS = {
     REPORTS: 'projects_reports',
     COMMENTS: 'projects_comments',
     MILESTONES: 'projects_milestones',
-    SETTINGS: 'projects_settings'
+    SETTINGS: 'projects_settings',
+    NOTIFICATIONS: 'projects_notifications'
   },
   
   // Health module collections
@@ -92,7 +99,9 @@ export const COLLECTIONS = {
     BILLING: 'health_billing',
     INSURANCE: 'health_insurance',
     SETTINGS: 'health_settings',
-    INTEGRATIONS: 'health_integrations'
+    INTEGRATIONS: 'health_integrations',
+    CONSULTATIONS: 'health_consultations',
+    DOCTORS: 'health_doctors'
   },
   
   // Freight module collections
@@ -106,7 +115,15 @@ export const COLLECTIONS = {
     INVOICES: 'freight_invoices',
     CLIENTS: 'freight_clients',
     SETTINGS: 'freight_settings',
-    USERS: 'freight_users'
+    USERS: 'freight_users',
+    PACKAGES: 'freight_packages',
+    TRACKING_EVENTS: 'freight_tracking_events',
+    PACKAGE_TYPES: 'freight_package_types',
+    ROUTES: 'freight_routes',
+    PRICING: 'freight_pricing',
+    BILLING: 'freight_billing',
+    QUOTES: 'freight_quotes',
+    CUSTOMERS: 'freight_customers'
   },
   
   // Library module collections
@@ -118,6 +135,18 @@ export const COLLECTIONS = {
     CATEGORIES: 'library_categories',
     PUBLISHERS: 'library_publishers',
     AUTHORS: 'library_authors',
-    SETTINGS: 'library_settings'
-  }
+    SETTINGS: 'library_settings',
+    STATS: 'library_stats'
+  },
+  
+  // Transport module collection
+  TRANSPORT: {
+    DRIVERS: 'transport_drivers',
+    VEHICLES: 'transport_vehicles',
+    RESERVATIONS: 'transport_reservations',
+    CLIENTS: 'transport_clients'
+  },
+  
+  // Add top-level USER_PERMISSIONS
+  USER_PERMISSIONS: 'user_permissions'
 };
