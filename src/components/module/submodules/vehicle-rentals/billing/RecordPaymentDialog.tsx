@@ -35,7 +35,7 @@ const mockInvoices = [
 
 const RecordPaymentDialog: React.FC<RecordPaymentDialogProps> = ({ open, onOpenChange }) => {
   const [selectedInvoice, setSelectedInvoice] = useState<string>('');
-  const [paymentMethod, setPaymentMethod] = useState<string>('');
+  const [paymentMethod, setPaymentMethod] = useState<string>('bank_transfer');
   const [amount, setAmount] = useState<number>(0);
   const [paymentDate, setPaymentDate] = useState<string>(new Date().toISOString().split('T')[0]);
   const [transactionId, setTransactionId] = useState<string>('');

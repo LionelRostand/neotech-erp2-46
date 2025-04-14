@@ -122,6 +122,7 @@ const CreateEvaluationDialog = ({ open, onOpenChange, onSuccess }) => {
                   <SelectValue placeholder="Sélectionner un évaluateur" />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="none">Non assigné</SelectItem>
                   {employees?.map(employee => (
                     <SelectItem key={employee.id} value={employee.id}>
                       {employee.firstName} {employee.lastName}
