@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -34,12 +33,10 @@ const EmployeesEvaluations = () => {
   const [filterStatus, setFilterStatus] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   
-  // Format display dates safely
   const formatDisplayDate = (dateString) => {
     if (!dateString) return '';
     
     try {
-      // Check if it's a valid date string first
       if (!dateString || dateString === '') {
         return '';
       }
@@ -56,7 +53,6 @@ const EmployeesEvaluations = () => {
     }
   };
   
-  // Filter evaluations based on filter criteria
   const filteredEvaluations = evaluations.filter(evaluation => {
     const matchesEmployee = filterEmployee === 'all' || evaluation.employeeId === filterEmployee;
     const matchesStatus = filterStatus === 'all' || evaluation.status === filterStatus;
@@ -68,17 +64,14 @@ const EmployeesEvaluations = () => {
     return matchesEmployee && matchesStatus && matchesSearch;
   });
   
-  // Calculate stats
-  const plannedCount = evaluations.filter(eval => eval.status === 'Planifiée').length;
-  const completedCount = evaluations.filter(eval => eval.status === 'Complétée').length;
-  const cancelledCount = evaluations.filter(eval => eval.status === 'Annulée').length;
+  const plannedCount = evaluations.filter(evaluation => evaluation.status === 'Planifiée').length;
+  const completedCount = evaluations.filter(evaluation => evaluation.status === 'Complétée').length;
+  const cancelledCount = evaluations.filter(evaluation => evaluation.status === 'Annulée').length;
   
-  // Handle create evaluation submission
   const handleCreateEvaluation = async (data) => {
     try {
       console.log('Creating evaluation with data:', data);
       
-      // Convert date to ISO string if it's a Date object
       const formattedData = {
         ...data,
         date: data.date instanceof Date ? data.date.toISOString() : data.date,
@@ -88,7 +81,6 @@ const EmployeesEvaluations = () => {
       await addDocument(COLLECTIONS.HR.EVALUATIONS, formattedData);
       toast.success('Évaluation créée avec succès');
       
-      // Close dialog and refresh data
       setShowCreateDialog(false);
       refreshData();
     } catch (error) {
@@ -97,16 +89,13 @@ const EmployeesEvaluations = () => {
     }
   };
   
-  // Handle delete evaluation
   const handleDeleteEvaluation = (evaluation) => {
     setSelectedEvaluation(evaluation);
     setShowDeleteDialog(true);
   };
   
-  // Handle confirmation of delete
   const handleConfirmDelete = async () => {
     try {
-      // After deletion is confirmed
       setShowDeleteDialog(false);
       setSelectedEvaluation(null);
       refreshData();
@@ -118,7 +107,6 @@ const EmployeesEvaluations = () => {
   
   return (
     <div className="space-y-6">
-      {/* Header section */}
       <div className="flex justify-between items-center">
         <h2 className="text-3xl font-bold tracking-tight">Évaluations des employés</h2>
         <div className="flex space-x-2">
@@ -133,7 +121,6 @@ const EmployeesEvaluations = () => {
         </div>
       </div>
       
-      {/* Stats cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
           <CardContent className="pt-6">
@@ -161,7 +148,6 @@ const EmployeesEvaluations = () => {
         </Card>
       </div>
       
-      {/* Filter and search */}
       <Card>
         <CardHeader className="pb-3">
           <CardTitle>Évaluations</CardTitle>
@@ -339,7 +325,6 @@ const EmployeesEvaluations = () => {
         </CardContent>
       </Card>
       
-      {/* Create Dialog */}
       <CreateEvaluationDialog
         open={showCreateDialog}
         onClose={() => setShowCreateDialog(false)}
@@ -348,14 +333,12 @@ const EmployeesEvaluations = () => {
         employees={employees}
       />
       
-      {/* Export Dialog */}
       <ExportEvaluationsDialog 
         open={showExportDialog} 
         onOpenChange={setShowExportDialog}
         evaluations={filteredEvaluations}
       />
       
-      {/* Delete Dialog */}
       <DeleteEvaluationDialog
         open={showDeleteDialog}
         onOpenChange={setShowDeleteDialog}
