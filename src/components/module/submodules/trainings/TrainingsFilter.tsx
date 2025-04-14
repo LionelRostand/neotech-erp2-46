@@ -187,10 +187,10 @@ const TrainingsFilter: React.FC<TrainingsFilterProps> = ({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all_statuses">Tous les statuts</SelectItem>
-                <SelectItem value="completed">Terminée</SelectItem>
-                <SelectItem value="in_progress">En cours</SelectItem>
-                <SelectItem value="scheduled">Planifiée</SelectItem>
-                <SelectItem value="cancelled">Annulée</SelectItem>
+                <SelectItem value="Terminée">Terminée</SelectItem>
+                <SelectItem value="En cours">En cours</SelectItem>
+                <SelectItem value="Planifiée">Planifiée</SelectItem>
+                <SelectItem value="Annulée">Annulée</SelectItem>
               </SelectContent>
             </Select>
           </div>

@@ -10,8 +10,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { AlertCircle } from 'lucide-react';
-import { deleteDocument } from '@/hooks/firestore/delete-operations';
-import { COLLECTIONS } from '@/lib/firebase-collections';
+import { deleteTrainingDocument } from '@/hooks/firestore/delete-operations';
 import { toast } from 'sonner';
 import { Training } from '@/hooks/useTrainingsData';
 
@@ -35,7 +34,7 @@ const DeleteTrainingDialog: React.FC<DeleteTrainingDialogProps> = ({
     
     setIsDeleting(true);
     try {
-      await deleteDocument(COLLECTIONS.HR.TRAININGS, training.id);
+      await deleteTrainingDocument(training.id);
       toast.success('Formation supprimée avec succès');
       onConfirm();
     } catch (error) {
