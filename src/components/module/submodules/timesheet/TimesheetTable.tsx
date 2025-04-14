@@ -27,6 +27,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { TimeReport, TimeReportStatus } from '@/types/timesheet';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import TimesheetDetailsDialog from './TimesheetDetailsDialog';
 
 interface TimesheetTableProps {
   data: TimeReport[];
