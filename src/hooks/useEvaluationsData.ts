@@ -1,7 +1,6 @@
 
 import { useMemo, useState, useCallback } from 'react';
 import { useHrModuleData } from './useHrModuleData';
-import { formatDate } from '@/lib/formatters';
 
 export interface Evaluation {
   id: string;
@@ -55,11 +54,8 @@ export const useEvaluationsData = () => {
         return '';
       }
       
-      return formatDate(dateStr, {
-        day: 'numeric',
-        month: 'long',
-        year: 'numeric'
-      });
+      // Return the original date string for consistent formatting elsewhere
+      return dateStr;
     } catch (error) {
       console.error('Erreur de formatage de date:', dateStr, error);
       return '';
@@ -68,6 +64,7 @@ export const useEvaluationsData = () => {
   
   // Collect all evaluations from both main evaluations collection and employee's embedded evaluations
   const allEvaluations = useMemo(() => {
+    console.log("useEvaluationsData: Processing evaluations");
     const mainEvaluations = evaluations || [];
     const employeeEvaluations = [];
     
@@ -75,15 +72,17 @@ export const useEvaluationsData = () => {
     if (employees && employees.length > 0) {
       employees.forEach(employee => {
         if (employee.evaluations && Array.isArray(employee.evaluations)) {
+          console.log(`Found ${employee.evaluations.length} evaluations for employee: ${employee.firstName} ${employee.lastName}`);
           employee.evaluations.forEach(evaluation => {
             // Add employee info to the evaluation
+            const validDate = evaluation.date ? formatSafeDate(evaluation.date) : new Date().toISOString();
             employeeEvaluations.push({
               ...evaluation,
               employeeId: employee.id,
               // Generate an ID if none exists
               id: evaluation.id || `emp-eval-${employee.id}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
               // Ensure the evaluation has a date
-              date: evaluation.date || new Date().toISOString(),
+              date: validDate,
               // Flag to indicate this came from an employee record
               fromEmployeeRecord: true
             });
@@ -91,6 +90,8 @@ export const useEvaluationsData = () => {
         }
       });
     }
+    
+    console.log(`Found ${mainEvaluations.length} main evaluations and ${employeeEvaluations.length} from employee records`);
     
     // Combine both sources
     return [...mainEvaluations, ...employeeEvaluations];
@@ -111,7 +112,7 @@ export const useEvaluationsData = () => {
       
       // Ensure date is valid before formatting
       let validDate = evaluation.date;
-      if (validDate && isNaN(Date.parse(validDate))) {
+      if (!validDate || (validDate && isNaN(Date.parse(validDate)))) {
         console.warn(`Invalid evaluation date detected: ${validDate}, using current date instead`);
         validDate = new Date().toISOString();
       }
@@ -126,7 +127,7 @@ export const useEvaluationsData = () => {
         evaluatorName: evaluator 
           ? `${evaluator.firstName} ${evaluator.lastName}` 
           : evaluation.evaluatorName || 'Non assigné',
-        date: formatSafeDate(validDate),
+        date: validDate,
         score: evaluation.score,
         maxScore: evaluation.maxScore || 100,
         status: evaluation.status || 'Planifiée',

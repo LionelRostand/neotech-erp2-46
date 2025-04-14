@@ -106,14 +106,29 @@ const EvaluationsTab: React.FC<EvaluationsTabProps> = ({
   // Function to format date
   const formatDate = (dateString: string) => {
     try {
+      if (!dateString) return "Non spécifiée";
+      
+      // Check if date string is valid
+      const timestamp = Date.parse(dateString);
+      if (isNaN(timestamp)) {
+        console.warn(`Date invalide: ${dateString}`);
+        return "Date invalide";
+      }
+      
       const date = new Date(dateString);
+      if (isNaN(date.getTime())) {
+        console.warn(`Objet date invalide créé à partir de: ${dateString}`);
+        return "Date invalide";
+      }
+      
       return date.toLocaleDateString('fr-FR', {
         year: 'numeric',
         month: 'long',
         day: 'numeric'
       });
     } catch (e) {
-      return dateString;
+      console.error(`Erreur lors du formatage de la date ${dateString}:`, e);
+      return "Date non disponible";
     }
   };
 

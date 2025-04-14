@@ -25,15 +25,15 @@ const EmployeeProfileHeader: React.FC<EmployeeProfileHeaderProps> = ({
     switch (employee.status) {
       case 'active':
       case 'Actif':
-        return <Badge className="bg-green-500 hover:bg-green-600">Actif</Badge>;
+        return <Badge variant="success">Actif</Badge>;
       case 'inactive':
       case 'Inactif':
         return <Badge variant="outline" className="text-gray-500 border-gray-300">Inactif</Badge>;
       case 'onLeave':
       case 'En congé':
-        return <Badge className="bg-amber-500 hover:bg-amber-600">En congé</Badge>;
+        return <Badge variant="warning">En congé</Badge>;
       case 'Suspendu':
-        return <Badge className="bg-red-500 hover:bg-red-600">Suspendu</Badge>;
+        return <Badge variant="danger">Suspendu</Badge>;
       default:
         return <Badge variant="outline">{employee.status}</Badge>;
     }
@@ -41,18 +41,22 @@ const EmployeeProfileHeader: React.FC<EmployeeProfileHeaderProps> = ({
 
   // Sélectionner l'URL de la photo à utiliser
   const getPhotoUrl = () => {
+    console.log("Photo data:", employee.photoData);
+    console.log("Photo URL:", employee.photoURL);
+    console.log("Photo:", employee.photo);
+    
     // Check if photoData exists and is a string starting with 'data:'
     if (employee.photoData && typeof employee.photoData === 'string' && employee.photoData.startsWith('data:')) {
       return employee.photoData;
     }
 
     // Check photoURL
-    if (employee.photoURL && employee.photoURL.length > 0) {
+    if (employee.photoURL && typeof employee.photoURL === 'string' && employee.photoURL.length > 0) {
       return employee.photoURL;
     }
 
     // Check legacy photo property
-    if (employee.photo && employee.photo.length > 0) {
+    if (employee.photo && typeof employee.photo === 'string' && employee.photo.length > 0) {
       return employee.photo;
     }
 
