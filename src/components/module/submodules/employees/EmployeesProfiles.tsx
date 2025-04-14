@@ -12,7 +12,7 @@ import { useHrModuleData } from '@/hooks/useHrModuleData';
 import CreateEmployeeDialog from './CreateEmployeeDialog';
 import ImportEmployeesDialog from './ImportEmployeesDialog';
 import { toast } from 'sonner';
-import { Employee } from '../../../../types/hr-types';
+import { Employee } from '@/types/employee';
 import { safelyGetDocumentId } from '@/hooks/firestore/common-utils';
 
 export interface EmployeesProfilesProps {
@@ -99,7 +99,7 @@ const EmployeesProfiles: React.FC<EmployeesProfilesProps> = ({ employees }) => {
           
           <div className="mt-6">
             <EmployeeTable 
-              employees={filteredEmployees} 
+              employees={filteredEmployees as Employee[]} 
               isLoading={isLoading} 
               onDelete={handleDeleteEmployee}
             />
