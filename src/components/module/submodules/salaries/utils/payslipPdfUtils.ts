@@ -86,35 +86,35 @@ export const generatePayslipPdf = (payslip: PaySlip): jsPDF => {
   y += 10;
   
   // Earnings table with proper typing for headers
-  const earningsTableHeaders = [
+  const earningsTableHeaders: CellWithStyles[][] = [
     [
-      { content: 'Rubrique', styles: { fontStyle: 'bold' as FontStyle } },
-      { content: 'Base', styles: { fontStyle: 'bold' as FontStyle } },
-      { content: 'Taux', styles: { fontStyle: 'bold' as FontStyle } },
-      { content: 'Montant', styles: { halign: 'right' as HAlignType } }
+      { content: 'Rubrique', styles: { fontStyle: 'bold' } },
+      { content: 'Base', styles: { fontStyle: 'bold' } },
+      { content: 'Taux', styles: { fontStyle: 'bold' } },
+      { content: 'Montant', styles: { halign: 'right' } }
     ]
   ];
   
-  const earningsData = earnings.map(detail => [
+  const earningsData: (string | CellWithStyles)[][] = earnings.map(detail => [
     detail.label,
     detail.base || '',
     detail.rate || '',
-    { content: formatCurrency(detail.amount), styles: { halign: 'right' as HAlignType } }
+    { content: formatCurrency(detail.amount), styles: { halign: 'right' } }
   ]);
   
   // Add gross salary row
   earningsData.push([
-    { content: 'SALAIRE BRUT', styles: { fontStyle: 'bold' as FontStyle } },
+    { content: 'SALAIRE BRUT', styles: { fontStyle: 'bold' } },
     '',
     '',
-    { content: formatCurrency(payslip.grossSalary), styles: { halign: 'right' as HAlignType } }
+    { content: formatCurrency(payslip.grossSalary), styles: { halign: 'right' } }
   ]);
   
   // Use autoTable with proper types
   autoTable(doc, {
     startY: y,
-    head: earningsTableHeaders,
-    body: earningsData,
+    head: earningsTableHeaders as any,
+    body: earningsData as any,
     theme: 'plain',
     styles: {
       fontSize: 10
@@ -135,34 +135,34 @@ export const generatePayslipPdf = (payslip: PaySlip): jsPDF => {
   
   y += 10;
   
-  const deductionsTableHeaders = [
+  const deductionsTableHeaders: CellWithStyles[][] = [
     [
-      { content: 'Rubrique', styles: { fontStyle: 'bold' as FontStyle } },
-      { content: 'Base', styles: { fontStyle: 'bold' as FontStyle } },
-      { content: 'Taux', styles: { fontStyle: 'bold' as FontStyle } },
-      { content: 'Montant', styles: { halign: 'right' as HAlignType } }
+      { content: 'Rubrique', styles: { fontStyle: 'bold' } },
+      { content: 'Base', styles: { fontStyle: 'bold' } },
+      { content: 'Taux', styles: { fontStyle: 'bold' } },
+      { content: 'Montant', styles: { halign: 'right' } }
     ]
   ];
   
-  const deductionsData = deductions.map(detail => [
+  const deductionsData: (string | CellWithStyles)[][] = deductions.map(detail => [
     detail.label,
     detail.base || '',
     detail.rate || '',
-    { content: formatCurrency(detail.amount), styles: { halign: 'right' as HAlignType } }
+    { content: formatCurrency(detail.amount), styles: { halign: 'right' } }
   ]);
   
   // Add total deductions row
   deductionsData.push([
-    { content: 'TOTAL DES COTISATIONS', styles: { fontStyle: 'bold' as FontStyle } },
+    { content: 'TOTAL DES COTISATIONS', styles: { fontStyle: 'bold' } },
     '',
     '',
-    { content: formatCurrency(payslip.totalDeductions), styles: { halign: 'right' as HAlignType } }
+    { content: formatCurrency(payslip.totalDeductions), styles: { halign: 'right' } }
   ]);
   
   autoTable(doc, {
     startY: y,
-    head: deductionsTableHeaders,
-    body: deductionsData,
+    head: deductionsTableHeaders as any,
+    body: deductionsData as any,
     theme: 'plain',
     styles: {
       fontSize: 10
@@ -181,23 +181,23 @@ export const generatePayslipPdf = (payslip: PaySlip): jsPDF => {
   doc.setFont('helvetica', 'bold');
   
   // Create a table for the net salary display
-  const netSalaryData = [
+  const netSalaryData: CellWithStyles[][] = [
     [
-      { content: 'SALAIRE NET À PAYER', styles: { fontStyle: 'bold' as FontStyle } },
-      { content: formatCurrency(payslip.netSalary), styles: { fontStyle: 'bold' as FontStyle, halign: 'right' as HAlignType } }
+      { content: 'SALAIRE NET À PAYER', styles: { fontStyle: 'bold' } },
+      { content: formatCurrency(payslip.netSalary), styles: { fontStyle: 'bold', halign: 'right' } }
     ]
   ];
   
   autoTable(doc, {
     startY: y,
-    body: netSalaryData,
+    body: netSalaryData as any,
     theme: 'plain',
     styles: {
       fontSize: 12
     },
     columnStyles: {
       0: { cellWidth: 100 },
-      1: { cellWidth: 80, halign: 'right' as HAlignType }
+      1: { cellWidth: 80, halign: 'right' }
     },
     margin: { left: 14, right: 14 }
   });
@@ -212,16 +212,16 @@ export const generatePayslipPdf = (payslip: PaySlip): jsPDF => {
     
     y += 10;
     
-    const leaveBalanceHeaders = [
+    const leaveBalanceHeaders: CellWithStyles[][] = [
       [
-        { content: 'Type', styles: { fontStyle: 'bold' as FontStyle } },
-        { content: 'Acquis', styles: { fontStyle: 'bold' as FontStyle } },
-        { content: 'Pris', styles: { fontStyle: 'bold' as FontStyle } },
-        { content: 'Solde', styles: { fontStyle: 'bold' as FontStyle } }
+        { content: 'Type', styles: { fontStyle: 'bold' } },
+        { content: 'Acquis', styles: { fontStyle: 'bold' } },
+        { content: 'Pris', styles: { fontStyle: 'bold' } },
+        { content: 'Solde', styles: { fontStyle: 'bold' } }
       ]
     ];
     
-    const leaveBalanceData = [];
+    const leaveBalanceData: string[][] = [];
     
     if (payslip.conges) {
       leaveBalanceData.push([
@@ -244,7 +244,7 @@ export const generatePayslipPdf = (payslip: PaySlip): jsPDF => {
     if (leaveBalanceData.length > 0) {
       autoTable(doc, {
         startY: y,
-        head: leaveBalanceHeaders,
+        head: leaveBalanceHeaders as any,
         body: leaveBalanceData,
         theme: 'plain',
         styles: {
@@ -272,7 +272,7 @@ export const generatePayslipPdf = (payslip: PaySlip): jsPDF => {
     doc.setPage(i);
     doc.setFontSize(8);
     doc.setFont('helvetica', 'normal');
-    doc.text(`Page ${i} / ${pageCount}`, 195, 287, { align: 'right' as HAlignType });
+    doc.text(`Page ${i} / ${pageCount}`, 195, 287, { align: 'right' });
     doc.text('Document à conserver sans limitation de durée', 14, 287);
   }
   
