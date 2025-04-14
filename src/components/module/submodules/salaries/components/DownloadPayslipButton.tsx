@@ -3,7 +3,7 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { FileDown } from 'lucide-react';
 import { PaySlip } from '@/types/payslip';
-import { generatePayslipPDF } from '../utils/payslipPdfUtils';
+import { generatePayslipPdf } from '../utils/payslipPdfUtils';
 import { toast } from 'sonner';
 import { addEmployeeDocument } from '../../employees/services/documentService';
 
@@ -45,7 +45,7 @@ const DownloadPayslipButton: React.FC<DownloadPayslipButtonProps> = ({ payslip }
       const fileName = `bulletin_de_paie_${employeeName}_${formattedMonth}_${year}.pdf`;
       
       // Génération du PDF selon le format français
-      const doc = generatePayslipPDF(payslip);
+      const doc = generatePayslipPdf(payslip);
       
       // Obtenir le PDF en Base64 pour le stockage
       const pdfBase64 = doc.output('datauristring');

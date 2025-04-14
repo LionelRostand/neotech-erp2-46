@@ -8,6 +8,15 @@ import { PaySlip, PaySlipDetail } from '@/types/payslip';
 type FontStyle = 'normal' | 'bold' | 'italic' | 'bolditalic';
 type HAlignType = 'left' | 'center' | 'right' | 'justify';
 
+// Define a type for cell content with styles
+interface CellWithStyles {
+  content: string;
+  styles: {
+    fontStyle?: FontStyle;
+    halign?: HAlignType;
+  };
+}
+
 // Update the generation function to use proper types
 export const generatePayslipPdf = (payslip: PaySlip): jsPDF => {
   const doc = new jsPDF();
@@ -76,7 +85,7 @@ export const generatePayslipPdf = (payslip: PaySlip): jsPDF => {
   
   y += 10;
   
-  // Earnings table
+  // Earnings table with proper typing for headers
   const earningsTableHeaders = [
     [
       { content: 'Rubrique', styles: { fontStyle: 'bold' as FontStyle } },
@@ -175,7 +184,7 @@ export const generatePayslipPdf = (payslip: PaySlip): jsPDF => {
   const netSalaryData = [
     [
       { content: 'SALAIRE NET À PAYER', styles: { fontStyle: 'bold' as FontStyle } },
-      { content: formatCurrency(payslip.netSalary), styles: { fontStyle: 'bold' as FontStyle } }
+      { content: formatCurrency(payslip.netSalary), styles: { fontStyle: 'bold' as FontStyle, halign: 'right' as HAlignType } }
     ]
   ];
   
@@ -269,3 +278,6 @@ export const generatePayslipPdf = (payslip: PaySlip): jsPDF => {
   
   return doc;
 };
+
+// Also export with the "PDF" capitalized name for backward compatibility
+export const generatePayslipPDF = generatePayslipPdf;
