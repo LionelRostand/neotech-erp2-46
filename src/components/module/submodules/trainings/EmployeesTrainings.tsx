@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { 
@@ -126,7 +125,6 @@ const EmployeesTrainings: React.FC = () => {
     },
   ];
 
-  // Helper function to get initials from a name
   const getInitials = (name: string) => {
     return name
       .split(' ')
@@ -136,7 +134,6 @@ const EmployeesTrainings: React.FC = () => {
       .substring(0, 2);
   };
 
-  // Helper function to get training type label
   const getTrainingTypeLabel = (type: string) => {
     const typeMap: Record<string, string> = {
       'technical': 'Technique',
@@ -204,7 +201,6 @@ const EmployeesTrainings: React.FC = () => {
         </CardContent>
       </Card>
 
-      {/* CreateTrainingDialog with all required props */}
       <CreateTrainingDialog 
         open={openCreateDialog} 
         onOpenChange={setOpenCreateDialog}
