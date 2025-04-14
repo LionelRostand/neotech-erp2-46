@@ -33,12 +33,14 @@ export const useSalaryForm = () => {
     const selectedEmployee = employees.find(emp => emp.id === employeeId);
 
     if (selectedEmployee) {
+      // Ensure conges has default values if undefined
       const conges = selectedEmployee.conges || {
         acquired: 0,
         taken: 0,
         balance: 0
       };
 
+      // Ensure rtt has default values if undefined
       const rtt = selectedEmployee.rtt || {
         acquired: 0,
         taken: 0,
@@ -69,15 +71,28 @@ export const useSalaryForm = () => {
     // Calculer le montant des heures supplémentaires
     const overtimeAmount = parseFloat(overtimeHours) * (baseSalary / 151.67) * (1 + parseFloat(overtimeRate) / 100);
 
+    // Ensure conges and rtt have default values if undefined
+    const conges = selectedEmployee.conges || {
+      acquired: 0,
+      taken: 0,
+      balance: 0
+    };
+
+    const rtt = selectedEmployee.rtt || {
+      acquired: 0,
+      taken: 0,
+      balance: 0
+    };
+
     const newPaySlip: PaySlip = {
       id: '',
       employee: {
         firstName: selectedEmployee.firstName,
         lastName: selectedEmployee.lastName,
         employeeId: selectedEmployeeId,
-        role: selectedEmployee.role,
-        socialSecurityNumber: selectedEmployee.socialSecurityNumber,
-        startDate: selectedEmployee.startDate
+        role: selectedEmployee.role || 'Employé',
+        socialSecurityNumber: selectedEmployee.socialSecurityNumber || '',
+        startDate: selectedEmployee.startDate || selectedEmployee.hireDate || ''
       },
       period: `${month} ${year}`,
       details: [
@@ -108,8 +123,8 @@ export const useSalaryForm = () => {
       date: new Date().toISOString(),
       paymentMethod,
       notes,
-      conges: selectedEmployee.conges,
-      rtt: selectedEmployee.rtt
+      conges: conges,
+      rtt: rtt
     };
 
     try {

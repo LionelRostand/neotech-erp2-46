@@ -24,6 +24,7 @@ const PayslipDetails: React.FC<PayslipDetailsProps> = ({ payslip }) => {
     hoursWorked: payslip.hoursWorked || 151.67
   };
 
+  // Ensure conges and rtt have default values
   const conges = payslip.conges || { acquired: 2.08, taken: 0, balance: 0 };
   const rtt = payslip.rtt || { acquired: 1, taken: 0, balance: 0 };
 

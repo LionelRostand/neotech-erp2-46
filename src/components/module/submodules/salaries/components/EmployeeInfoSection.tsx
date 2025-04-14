@@ -1,7 +1,7 @@
 
 import React from 'react';
 
-export interface EmployeeInfoSectionProps {
+interface EmployeeInfoSectionProps {
   firstName: string;
   lastName: string;
   role: string;
@@ -21,14 +21,15 @@ const EmployeeInfoSection: React.FC<EmployeeInfoSectionProps> = ({
   hoursWorked
 }) => {
   return (
-    <div className="space-y-2">
-      <h3 className="font-bold text-lg">{firstName} {lastName}</h3>
+    <div>
+      <h3 className="font-bold text-lg mb-2">Employé</h3>
       <div className="space-y-1 text-sm">
-        <p><span className="font-medium">Poste:</span> {role}</p>
-        <p><span className="font-medium">N° de sécurité sociale:</span> {socialSecurityNumber}</p>
-        <p><span className="font-medium">Date d'embauche:</span> {new Date(startDate).toLocaleDateString('fr-FR')}</p>
-        <p><span className="font-medium">Période:</span> {period}</p>
-        <p><span className="font-medium">Heures travaillées:</span> {hoursWorked}h</p>
+        <p className="font-medium">{firstName} {lastName}</p>
+        <p>Poste: {role}</p>
+        <p>N° SS: {socialSecurityNumber}</p>
+        <p>Période: {period}</p>
+        <p>Date d'embauche: {new Date(startDate).toLocaleDateString('fr-FR')}</p>
+        <p>Heures travaillées: {hoursWorked.toFixed(2)}h</p>
       </div>
     </div>
   );
