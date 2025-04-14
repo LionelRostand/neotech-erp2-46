@@ -24,15 +24,14 @@ const DownloadPayslipButton: React.FC<DownloadPayslipButtonProps> = ({ payslip }
       // Generate PDF document
       const doc = generatePayslipPDF(payslip);
       
-      if (!doc.autoTable) {
-        throw new Error('La fonction autoTable n\'est pas disponible. Erreur de configuration jsPDF.');
-      }
+      // Save PDF file avec un nom de fichier basé sur les données du bulletin
+      const fileName = `bulletin_de_paie_${payslip.employee.lastName.toLowerCase()}_${payslip.month?.toLowerCase()}_${payslip.year}.pdf`;
       
       // Get PDF as base64 string for storage
       const pdfBase64 = doc.output('datauristring');
       
       // Save PDF file
-      doc.save(`bulletin_de_paie_${payslip.employee.lastName.toLowerCase()}_${payslip.month?.toLowerCase()}_${payslip.year}.pdf`);
+      doc.save(fileName);
       
       // Add document to employee's profile if employeeId exists
       if (payslip.employeeId) {
