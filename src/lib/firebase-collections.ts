@@ -6,7 +6,7 @@ export const COLLECTIONS = {
   HR: {
     EMPLOYEES: 'hr_employees',
     DEPARTMENTS: 'hr_departments',
-    LEAVES: 'hr_leave_requests',
+    LEAVES: 'hr_leaves',
     ABSENCES: 'hr_absences',
     CONTRACTS: 'hr_contracts',
     DOCUMENTS: 'hr_documents',
@@ -60,7 +60,10 @@ export const COLLECTIONS = {
     ACCOUNTS: 'accounting_accounts',
     BUDGETS: 'accounting_budgets',
     CUSTOMERS: 'accounting_customers',
-    VENDORS: 'accounting_vendors'
+    VENDORS: 'accounting_vendors',
+    PERMISSIONS: 'accounting_permissions',
+    CLIENTS: 'accounting_clients',
+    SUPPLIERS: 'accounting_suppliers'
   },
   CRM: {
     CLIENTS: 'crm_clients',
@@ -70,7 +73,9 @@ export const COLLECTIONS = {
     ACTIVITIES: 'crm_activities',
     TASKS: 'crm_tasks',
     DEALS: 'crm_deals',
-    SETTINGS: 'crm_settings'
+    SETTINGS: 'crm_settings',
+    PROSPECTS: 'crm_prospects',
+    REMINDERS: 'crm_reminders'
   },
   HEALTH: {
     PATIENTS: 'health_patients',
@@ -86,12 +91,15 @@ export const COLLECTIONS = {
     SHIPMENTS: 'freight_shipments',
     CARRIERS: 'freight_carriers',
     TRACKING: 'freight_tracking',
+    TRACKING_EVENTS: 'freight_tracking_events',
     WAREHOUSES: 'freight_warehouses',
     VEHICLES: 'freight_vehicles',
     ROUTES: 'freight_routes',
     CONTAINERS: 'freight_containers',
     PACKAGES: 'freight_packages',
+    PACKAGE_TYPES: 'freight_package_types',
     CLIENTS: 'freight_clients',
+    CUSTOMERS: 'freight_customers',
     DRIVERS: 'freight_drivers',
     DOCUMENTS: 'freight_documents',
     DELIVERIES: 'freight_deliveries',
@@ -99,19 +107,28 @@ export const COLLECTIONS = {
     NOTIFICATIONS: 'freight_notifications',
     SCHEDULES: 'freight_schedules',
     INCIDENTS: 'freight_incidents',
-    REPORTS: 'freight_reports'
+    REPORTS: 'freight_reports',
+    PRICING: 'freight_pricing',
+    BILLING: 'freight_billing',
+    QUOTES: 'freight_quotes',
+    RATES: 'freight_rates',
+    USERS: 'freight_users',
+    SETTINGS: 'freight_settings'
   },
   TRANSPORT: {
     VEHICLES: 'transport_vehicles',
     DRIVERS: 'transport_drivers',
     ROUTES: 'transport_routes',
-    SCHEDULES: 'transport_schedules'
+    SCHEDULES: 'transport_schedules',
+    RESERVATIONS: 'transport_reservations',
+    CLIENTS: 'transport_clients'
   },
   LIBRARY: {
     BOOKS: 'library_books',
     MEMBERS: 'library_members',
     LOANS: 'library_loans',
-    CATEGORIES: 'library_categories'
+    CATEGORIES: 'library_categories',
+    STATS: 'library_stats'
   },
   COMPANIES: 'companies'
 };
