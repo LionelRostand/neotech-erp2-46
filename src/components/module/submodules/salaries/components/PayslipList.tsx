@@ -35,8 +35,8 @@ const PayslipList = () => {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {payslips.map((payslip) => (
-            <TableRow key={payslip.id}>
+          {payslips.map((payslip, index) => (
+            <TableRow key={payslip.id || `payslip-${index}`}>
               <TableCell>{new Date(payslip.date).toLocaleDateString('fr-FR')}</TableCell>
               <TableCell>{payslip.employeeName}</TableCell>
               <TableCell>{payslip.month} {payslip.year}</TableCell>
