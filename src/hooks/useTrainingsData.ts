@@ -1,6 +1,7 @@
 
 import { useMemo, useState, useEffect } from 'react';
 import { useHrModuleData } from './useHrModuleData';
+import { formatDate as libFormatDate } from '@/lib/formatters';
 
 export interface Training {
   id: string;
@@ -28,6 +29,32 @@ export interface Training {
  */
 export const useTrainingsData = (refreshTrigger?: number) => {
   const { trainings, employees, isLoading, error } = useHrModuleData();
+  
+  // Custom formatDate function for this component
+  const formatDate = (dateStr: string) => {
+    try {
+      return new Date(dateStr).toLocaleDateString('fr-FR');
+    } catch (error) {
+      console.error('Erreur de formatage de date:', dateStr, error);
+      return dateStr;
+    }
+  };
+
+  // Calculate duration between two dates
+  const calculateDuration = (startDate?: string, endDate?: string) => {
+    if (!startDate || !endDate) return 1;
+    
+    try {
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      const diffTime = Math.abs(end.getTime() - start.getTime());
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      return diffDays || 1;
+    } catch (error) {
+      console.error('Erreur de calcul de durée:', error);
+      return 1;
+    }
+  };
   
   // Enrichir les formations avec les noms des employés
   const formattedTrainings = useMemo(() => {
@@ -59,32 +86,6 @@ export const useTrainingsData = (refreshTrigger?: number) => {
       } as Training;
     });
   }, [trainings, employees, refreshTrigger]); // Add refreshTrigger to dependencies
-  
-  // Fonction pour formater les dates
-  const formatDate = (dateStr: string) => {
-    try {
-      return new Date(dateStr).toLocaleDateString('fr-FR');
-    } catch (error) {
-      console.error('Erreur de formatage de date:', dateStr, error);
-      return dateStr;
-    }
-  };
-
-  // Fonction pour calculer la durée en jours
-  const calculateDuration = (startDate?: string, endDate?: string) => {
-    if (!startDate || !endDate) return 1;
-    
-    try {
-      const start = new Date(startDate);
-      const end = new Date(endDate);
-      const diffTime = Math.abs(end.getTime() - start.getTime());
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-      return diffDays || 1;
-    } catch (error) {
-      console.error('Erreur de calcul de durée:', error);
-      return 1;
-    }
-  };
 
   // Obtenir des statistiques sur les formations
   const trainingStats = useMemo(() => {
