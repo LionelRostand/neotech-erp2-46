@@ -1,17 +1,19 @@
+
 import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { Loader2 } from "lucide-react";
 import { useCrmSettings } from '../hooks/useCrmSettings';
 import { useHrModuleData } from '@/hooks/useHrModuleData';
+import { LoadingState } from './components/LoadingState';
+import { ErrorState } from './components/ErrorState';
+import { CompanySelect } from './components/CompanySelect';
+import { LanguageAndCurrencySelect } from './components/LanguageAndCurrencySelect';
+import { FeatureToggle } from './components/FeatureToggle';
 
 const GeneralTab: React.FC = () => {
-  const { settings, loading, saving, error, saveSettings } = useCrmSettings();
+  const { settings, loading, error, saveSettings } = useCrmSettings();
   const { companies } = useHrModuleData();
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -34,101 +36,25 @@ const GeneralTab: React.FC = () => {
     }
   };
 
-  if (loading) {
-    return (
-      <Card className="w-full">
-        <CardContent className="pt-6">
-          <div className="flex justify-center items-center py-20">
-            <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
-            <span className="ml-2 text-gray-500">Chargement des paramètres...</span>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  if (error) {
-    return (
-      <Card className="w-full">
-        <CardContent className="pt-6">
-          <div className="bg-red-50 border border-red-200 rounded-md p-4 text-red-800">
-            <p>Une erreur est survenue lors du chargement des paramètres.</p>
-            <p className="text-sm text-red-600 mt-1">{error}</p>
-            <Button variant="outline" className="mt-2" onClick={() => window.location.reload()}>
-              Réessayer
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
+  if (loading) return <LoadingState />;
+  if (error) return <ErrorState error={error} />;
 
   return (
     <Card className="w-full">
       <CardContent className="pt-6">
         <form className="space-y-6">
           <div className="space-y-4">
-            <div>
-              <Label htmlFor="companyName">Nom de l'entreprise</Label>
-              <Select 
-                value={settings.companyName}
-                onValueChange={(value) => handleCompanySelect(value)}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Sélectionner une entreprise" />
-                </SelectTrigger>
-                <SelectContent>
-                  {companies?.map((company) => (
-                    <SelectItem 
-                      key={company.id} 
-                      value={company.id}
-                    >
-                      {company.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            <CompanySelect 
+              companies={companies}
+              value={settings.companyName}
+              onSelect={handleCompanySelect}
+            />
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="defaultCurrency">Devise par défaut</Label>
-                <Select 
-                  value={settings.defaultCurrency}
-                  onValueChange={(value) => handleSelectChange("defaultCurrency", value)}
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Sélectionner une devise" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="EUR">Euro (€)</SelectItem>
-                    <SelectItem value="USD">Dollar US ($)</SelectItem>
-                    <SelectItem value="GBP">Livre sterling (£)</SelectItem>
-                    <SelectItem value="CAD">Dollar canadien ($)</SelectItem>
-                    <SelectItem value="CHF">Franc suisse (CHF)</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <Label htmlFor="language">Langue</Label>
-                <Select 
-                  value={settings.language}
-                  onValueChange={(value) => handleSelectChange("language", value)}
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Sélectionner une langue" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="fr">Français</SelectItem>
-                    <SelectItem value="en">Anglais</SelectItem>
-                    <SelectItem value="es">Espagnol</SelectItem>
-                    <SelectItem value="de">Allemand</SelectItem>
-                    <SelectItem value="it">Italien</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
+            <LanguageAndCurrencySelect 
+              defaultCurrency={settings.defaultCurrency}
+              language={settings.language}
+              onSelect={handleSelectChange}
+            />
 
             <div>
               <Label htmlFor="termsAndConditions">Conditions générales</Label>
@@ -161,27 +87,19 @@ const GeneralTab: React.FC = () => {
               </Select>
             </div>
 
-            <div className="flex items-center justify-between p-4 border rounded-md">
-              <div>
-                <h3 className="font-medium">Notifications par email</h3>
-                <p className="text-sm text-gray-500">Recevoir les notifications par email</p>
-              </div>
-              <Switch 
-                checked={settings.emailNotifications}
-                onCheckedChange={(checked) => handleSwitchChange("emailNotifications", checked)}
-              />
-            </div>
+            <FeatureToggle 
+              title="Notifications par email"
+              description="Recevoir les notifications par email"
+              checked={settings.emailNotifications}
+              onChange={(checked) => handleSwitchChange("emailNotifications", checked)}
+            />
 
-            <div className="flex items-center justify-between p-4 border rounded-md">
-              <div>
-                <h3 className="font-medium">Sauvegarde automatique</h3>
-                <p className="text-sm text-gray-500">Effectuer des sauvegardes automatiques des données</p>
-              </div>
-              <Switch 
-                checked={settings.automaticBackup}
-                onCheckedChange={(checked) => handleSwitchChange("automaticBackup", checked)}
-              />
-            </div>
+            <FeatureToggle 
+              title="Sauvegarde automatique"
+              description="Effectuer des sauvegardes automatiques des données"
+              checked={settings.automaticBackup}
+              onChange={(checked) => handleSwitchChange("automaticBackup", checked)}
+            />
           </div>
         </form>
       </CardContent>
