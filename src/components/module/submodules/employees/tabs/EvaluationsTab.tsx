@@ -39,11 +39,11 @@ const EvaluationsTab: React.FC<EvaluationsTabProps> = ({
   useEffect(() => {
     if (employee.evaluations) {
       // Convert employee.evaluations to HookEvaluation type as needed
-      const convertedEvaluations = employee.evaluations.map(eval => ({
-        ...eval,
+      const convertedEvaluations = employee.evaluations.map(evalItem => ({
+        ...evalItem,
         employeeId: employee.id,
-        id: eval.id || `emp-eval-${employee.id}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-        date: eval.date || new Date().toISOString(),
+        id: evalItem.id || `emp-eval-${employee.id}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        date: evalItem.date || new Date().toISOString(),
         fromEmployeeRecord: true
       })) as HookEvaluation[];
       

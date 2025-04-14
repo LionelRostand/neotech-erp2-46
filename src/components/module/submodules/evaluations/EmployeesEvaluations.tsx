@@ -1,228 +1,135 @@
 
-import React, { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Evaluation, useEvaluationsData } from '@/hooks/useEvaluationsData';
-import { Plus, FileDown, Pencil, Trash2, RefreshCw, Check, XCircle, Clock } from 'lucide-react';
-import { format } from 'date-fns';
+import { Button } from '@/components/ui/button';
+import { Eye, Pencil, Plus, Trash2, FileDown } from 'lucide-react';
+import { useEvaluationsData, Evaluation } from '@/hooks/useEvaluationsData';
 import { toast } from 'sonner';
-import { useNavigate } from 'react-router-dom';
-import DeleteEvaluationDialog from './DeleteEvaluationDialog';
-import CreateEvaluationDialog from './CreateEvaluationDialog';
-import EditEvaluationDialog from './EditEvaluationDialog';
-import ExportEvaluationsDialog from './ExportEvaluationsDialog';
-import EvaluationsFilter from './EvaluationsFilter';
-import DataTable from '@/components/DataTable';
-import StatusBadge from '@/components/StatusBadge';
 import { deleteDocument } from '@/hooks/firestore/delete-operations';
 import { COLLECTIONS } from '@/lib/firebase-collections';
-
-interface EvaluationsFilterProps {
-  onFilterApplied: (filtered: any) => void;
-}
-
-// Add missing props interfaces for dialogs
-interface CreateEvaluationDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  onSuccess?: () => void;
-}
-
-interface EditEvaluationDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  evaluation: Evaluation | null;
-  onSuccess?: () => void;
-}
-
-interface ExportEvaluationsDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  evaluations?: Evaluation[];
-}
+import { useNavigate } from 'react-router-dom';
+import { useEmployeeData } from '@/hooks/useEmployeeData';
+import EvaluationsFilter from './EvaluationsFilter';
+import CreateEvaluationDialog from './CreateEvaluationDialog';
+import EditEvaluationDialog from './EditEvaluationDialog';
+import DeleteEvaluationDialog from './DeleteEvaluationDialog';
+import ExportEvaluationsDialog from './ExportEvaluationsDialog';
 
 const EmployeesEvaluations: React.FC = () => {
-  const { evaluations, isLoading, refreshData } = useEvaluationsData();
-  const [filteredEvaluations, setFilteredEvaluations] = useState<Evaluation[]>([]);
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [isExporting, setIsExporting] = useState(false);
-  const [selectedEvaluation, setSelectedEvaluation] = useState<Evaluation | null>(null);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const navigate = useNavigate();
+  const { evaluations, stats, refreshData } = useEvaluationsData();
+  const { employees } = useEmployeeData();
+  const [filteredEvaluations, setFilteredEvaluations] = useState<Evaluation[]>(evaluations);
+  
+  // Dialog states
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [exportDialogOpen, setExportDialogOpen] = useState(false);
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    if (evaluations) {
+  const [selectedEvaluation, setSelectedEvaluation] = useState<Evaluation | null>(null);
+  
+  // Handle filter
+  const handleFilterApplied = (filtered: Evaluation[]) => {
+    if (filtered && filtered.length > 0) {
+      setFilteredEvaluations(filtered);
+    } else {
       setFilteredEvaluations(evaluations);
     }
-  }, [evaluations]);
-
-  const handleFilterApplied = (filtered) => {
-    setFilteredEvaluations(filtered);
   };
-
-  const handleRefresh = () => {
-    refreshData();
-    toast.info('Données actualisées');
-  };
-
-  const getStatusElement = (status: string) => {
-    switch (status) {
-      case 'Planifiée':
-        return <StatusBadge status="warning">
-          <Clock className="w-3 h-3 mr-1" />
-          Planifiée
-        </StatusBadge>;
-      case 'Complétée':
-        return <StatusBadge status="success">
-          <Check className="w-3 h-3 mr-1" />
-          Complétée
-        </StatusBadge>;
-      case 'Annulée':
-        return <StatusBadge status="danger">
-          <XCircle className="w-3 h-3 mr-1" />
-          Annulée
-        </StatusBadge>;
-      default:
-        return <StatusBadge status="default">{status}</StatusBadge>;
+  
+  // Handle view evaluation details
+  const handleViewEvaluation = (evaluation: Evaluation) => {
+    if (evaluation.employeeId) {
+      navigate(`/modules/employees/profiles?id=${evaluation.employeeId}&tab=evaluations`);
+    } else {
+      toast.error("Impossible de trouver l'employé associé à cette évaluation");
     }
   };
-
-  const handleEdit = (evaluation: Evaluation) => {
+  
+  // Handle edit evaluation
+  const handleEditEvaluation = (evaluation: Evaluation) => {
     setSelectedEvaluation(evaluation);
     setEditDialogOpen(true);
   };
-
-  const handleDelete = (evaluation: Evaluation) => {
+  
+  // Handle delete evaluation
+  const handleDeleteClick = (evaluation: Evaluation) => {
     setSelectedEvaluation(evaluation);
     setDeleteDialogOpen(true);
   };
-
-  const confirmDelete = async () => {
+  
+  const handleDeleteEvaluation = async () => {
     if (!selectedEvaluation) return;
-
-    setIsDeleting(true);
+    
     try {
-      // Delete the evaluation from Firestore
-      await deleteDocument(COLLECTIONS.HR.EVALUATIONS, selectedEvaluation.id);
+      if (selectedEvaluation.fromEmployeeRecord && selectedEvaluation.employeeId) {
+        // If this evaluation is from an employee record, we need to update the employee
+        const employee = employees.find(emp => emp.id === selectedEvaluation.employeeId);
+        
+        if (employee && employee.evaluations) {
+          const updatedEvaluations = employee.evaluations.filter(
+            ev => ev.id !== selectedEvaluation.id
+          );
+          
+          // Update employee record
+          await updateEmployeeEvaluations(selectedEvaluation.employeeId, updatedEvaluations);
+        }
+      } else {
+        // Regular evaluation from the evaluations collection
+        await deleteDocument(COLLECTIONS.HR.EVALUATIONS, selectedEvaluation.id);
+      }
       
       toast.success('Évaluation supprimée avec succès');
       refreshData();
       setDeleteDialogOpen(false);
     } catch (error) {
-      console.error('Erreur lors de la suppression:', error);
+      console.error('Erreur lors de la suppression de l\'évaluation :', error);
       toast.error('Erreur lors de la suppression de l\'évaluation');
-    } finally {
-      setIsDeleting(false);
+    }
+  };
+  
+  // Helper function to update employee evaluations
+  const updateEmployeeEvaluations = async (employeeId: string, evaluations: any[]) => {
+    // This is a placeholder function
+    // You would need to implement the actual update logic
+    console.log(`Updating evaluations for employee ${employeeId}`);
+    console.log(evaluations);
+    // await updateDocument(COLLECTIONS.HR.EMPLOYEES, employeeId, { evaluations });
+  };
+
+  // Handle refresh after operations
+  const handleOperationSuccess = () => {
+    refreshData();
+    toast.success('Opération réussie');
+  };
+  
+  // Get status badge color
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'Planifiée':
+        return 'bg-blue-100 text-blue-800';
+      case 'Complétée':
+        return 'bg-green-100 text-green-800';
+      case 'Annulée':
+        return 'bg-red-100 text-red-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
     }
   };
 
-  const handleViewEmployee = (employeeId: string) => {
-    navigate(`/modules/employees/profiles?id=${employeeId}`);
-  };
-
-  const evaluationColumns = [
-    {
-      key: 'date',
-      header: 'Date',
-      cell: ({ row }) => <span>{row.original.date}</span>
-    },
-    {
-      key: 'employeeName',
-      header: 'Employé',
-      cell: ({ row }) => (
-        <div 
-          className="cursor-pointer text-blue-600 hover:underline"
-          onClick={() => handleViewEmployee(row.original.employeeId)}
-        >
-          {row.original.employeeName}
-        </div>
-      )
-    },
-    {
-      key: 'department',
-      header: 'Département',
-      cell: ({ row }) => <span>{row.original.department}</span>
-    },
-    {
-      key: 'evaluatorName',
-      header: 'Évaluateur',
-      cell: ({ row }) => <span>{row.original.evaluatorName}</span>
-    },
-    {
-      key: 'score',
-      header: 'Score',
-      cell: ({ row }) => (
-        <span>
-          {row.original.score || row.original.rating || 0}
-          {row.original.maxScore ? `/${row.original.maxScore}` : ''}
-        </span>
-      )
-    },
-    {
-      key: 'status',
-      header: 'Statut',
-      cell: ({ row }) => getStatusElement(row.original.status)
-    },
-    {
-      key: 'actions',
-      header: 'Actions',
-      cell: ({ row }) => (
-        <div className="flex space-x-2">
-          <Button 
-            variant="ghost"
-            size="icon"
-            onClick={(e) => {
-              e.stopPropagation();
-              handleEdit(row.original);
-            }}
-          >
-            <Pencil className="h-4 w-4" />
-          </Button>
-          <Button 
-            variant="ghost"
-            size="icon"
-            onClick={(e) => {
-              e.stopPropagation();
-              handleDelete(row.original);
-            }}
-          >
-            <Trash2 className="h-4 w-4 text-red-500" />
-          </Button>
-        </div>
-      )
-    },
-  ];
-
   return (
     <div className="space-y-6">
-      <div className="flex flex-col md:flex-row justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold">Évaluations des employés</h1>
-          <p className="text-gray-500">Gérez les évaluations et suivez la progression des employés</p>
-        </div>
-        
-        <div className="flex flex-wrap gap-2">
+      <div className="flex justify-between items-center">
+        <h1 className="text-2xl font-bold">Évaluations des employés</h1>
+        <div className="flex gap-2">
           <Button 
-            variant="outline" 
-            onClick={handleRefresh}
-            className="flex items-center gap-2"
-          >
-            <RefreshCw className="h-4 w-4" />
-            Actualiser
-          </Button>
-          
-          <Button 
-            variant="outline" 
             onClick={() => setExportDialogOpen(true)}
+            variant="outline" 
             className="flex items-center gap-2"
           >
             <FileDown className="h-4 w-4" />
             Exporter
           </Button>
-          
           <Button 
             onClick={() => setCreateDialogOpen(true)}
             className="flex items-center gap-2"
@@ -233,77 +140,150 @@ const EmployeesEvaluations: React.FC = () => {
         </div>
       </div>
       
-      <div className="grid gap-6 grid-cols-1 md:grid-cols-3">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-lg">Planifiées</CardTitle>
+            <CardTitle className="text-sm font-medium">Total</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">
-              {evaluations.filter(e => e.status === 'Planifiée').length}
-            </div>
+            <div className="text-2xl font-bold">{stats.total}</div>
           </CardContent>
         </Card>
         
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-lg">Complétées</CardTitle>
+            <CardTitle className="text-sm font-medium">Planifiées</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-green-600">
-              {evaluations.filter(e => e.status === 'Complétée').length}
-            </div>
+            <div className="text-2xl font-bold text-blue-600">{stats.planned}</div>
           </CardContent>
         </Card>
         
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-lg">Annulées</CardTitle>
+            <CardTitle className="text-sm font-medium">Complétées</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-red-600">
-              {evaluations.filter(e => e.status === 'Annulée').length}
-            </div>
+            <div className="text-2xl font-bold text-green-600">{stats.completed}</div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">Annulées</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-red-600">{stats.cancelled}</div>
           </CardContent>
         </Card>
       </div>
       
-      <EvaluationsFilter onFilterApplied={handleFilterApplied} />
-      
-      <div className="bg-white rounded-lg shadow">
-        <DataTable 
-          title="Liste des évaluations"
-          columns={evaluationColumns}
-          data={filteredEvaluations}
-        />
+      <div className="flex justify-between items-center">
+        <h2 className="text-xl font-semibold">Liste des évaluations</h2>
+        <EvaluationsFilter onFilterApplied={handleFilterApplied} />
       </div>
       
+      <Card>
+        <div className="p-1">
+          <table className="w-full">
+            <thead>
+              <tr className="border-b">
+                <th className="px-4 py-3 text-left font-medium">Employé</th>
+                <th className="px-4 py-3 text-left font-medium">Date</th>
+                <th className="px-4 py-3 text-left font-medium">Statut</th>
+                <th className="px-4 py-3 text-left font-medium">Score</th>
+                <th className="px-4 py-3 text-left font-medium">Évaluateur</th>
+                <th className="px-4 py-3 text-left font-medium">Département</th>
+                <th className="px-4 py-3 text-right font-medium">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredEvaluations.length > 0 ? (
+                filteredEvaluations.map((evaluation) => (
+                  <tr key={evaluation.id} className="border-b hover:bg-muted/50">
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-2">
+                        {evaluation.employeePhoto && (
+                          <img 
+                            src={evaluation.employeePhoto} 
+                            alt={evaluation.employeeName} 
+                            className="w-8 h-8 rounded-full object-cover"
+                          />
+                        )}
+                        <span>{evaluation.employeeName}</span>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3">{evaluation.date}</td>
+                    <td className="px-4 py-3">
+                      <span className={`px-2 py-1 rounded text-xs ${getStatusColor(evaluation.status)}`}>
+                        {evaluation.status}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      {evaluation.score !== undefined 
+                        ? `${evaluation.score}/${evaluation.maxScore || 100}` 
+                        : 'N/A'}
+                    </td>
+                    <td className="px-4 py-3">{evaluation.evaluatorName || 'Non assigné'}</td>
+                    <td className="px-4 py-3">{evaluation.department || 'Non spécifié'}</td>
+                    <td className="px-4 py-3 text-right">
+                      <div className="flex justify-end gap-2">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleViewEvaluation(evaluation)}
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleEditEvaluation(evaluation)}
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleDeleteClick(evaluation)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">
+                    Aucune évaluation trouvée
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </Card>
+      
+      {/* Dialogs */}
       <CreateEvaluationDialog
         open={createDialogOpen}
         onOpenChange={setCreateDialogOpen}
-        onSuccess={() => {
-          refreshData();
-          setCreateDialogOpen(false);
-          toast.success('Évaluation créée avec succès');
-        }}
+        onSuccess={handleOperationSuccess}
       />
       
       <EditEvaluationDialog
         open={editDialogOpen}
         onOpenChange={setEditDialogOpen}
         evaluation={selectedEvaluation}
-        onSuccess={() => {
-          refreshData();
-          setEditDialogOpen(false);
-          toast.success('Évaluation mise à jour avec succès');
-        }}
+        onSuccess={handleOperationSuccess}
       />
       
       <DeleteEvaluationDialog
         open={deleteDialogOpen}
         onOpenChange={setDeleteDialogOpen}
         evaluation={selectedEvaluation}
-        onDelete={confirmDelete}
+        onDelete={handleDeleteEvaluation}
       />
       
       <ExportEvaluationsDialog

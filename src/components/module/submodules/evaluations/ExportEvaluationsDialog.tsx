@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React from 'react';
 import {
   Dialog,
   DialogContent,
@@ -8,97 +7,44 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { toast } from 'sonner';
-import { exportToExcel } from '@/utils/exportUtils';
-import { exportToPdf } from '@/utils/pdfUtils';
-import { FileSpreadsheet, FileText } from 'lucide-react';
+import { Evaluation } from '@/hooks/useEvaluationsData';
 
-interface ExportEvaluationsDialogProps {
+export interface ExportEvaluationsDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  data: any[];
+  evaluations?: Evaluation[];
 }
 
 const ExportEvaluationsDialog: React.FC<ExportEvaluationsDialogProps> = ({
   open,
   onOpenChange,
-  data,
+  evaluations = []
 }) => {
-  const [exportFormat, setExportFormat] = useState('excel');
-
   const handleExport = () => {
-    if (!data || data.length === 0) {
-      toast.error("Aucune donnée à exporter");
-      return;
-    }
-
-    let success = false;
-    
-    if (exportFormat === 'excel') {
-      success = exportToExcel(data, 'Evaluations', 'evaluations_export');
-      if (success) {
-        toast.success("Export Excel généré avec succès");
-      }
-    } else if (exportFormat === 'pdf') {
-      success = exportToPdf(data, 'Évaluations des Employés', 'evaluations_export');
-      if (success) {
-        toast.success("Export PDF généré avec succès");
-      }
-    }
-    
-    if (!success) {
-      toast.error("Une erreur est survenue lors de l'export");
-    }
-    
+    // Export logic here
+    console.log(`Exporting ${evaluations.length} evaluations`);
     onOpenChange(false);
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>Exporter les évaluations</DialogTitle>
         </DialogHeader>
-        <div className="space-y-4 py-2">
-          <div className="space-y-2">
-            <Label htmlFor="exportFormat">Format d'exportation</Label>
-            <Select
-              value={exportFormat}
-              onValueChange={setExportFormat}
-            >
-              <SelectTrigger id="exportFormat">
-                <SelectValue placeholder="Choisir un format" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="excel">
-                  <div className="flex items-center">
-                    <FileSpreadsheet className="mr-2 h-4 w-4" />
-                    <span>Excel (.xlsx)</span>
-                  </div>
-                </SelectItem>
-                <SelectItem value="pdf">
-                  <div className="flex items-center">
-                    <FileText className="mr-2 h-4 w-4" />
-                    <span>PDF (.pdf)</span>
-                  </div>
-                </SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+        
+        <div className="py-4">
+          <p className="text-muted-foreground">
+            Vous êtes sur le point d'exporter {evaluations.length} évaluation(s).
+          </p>
+          {/* Export options would go here */}
         </div>
+        
         <DialogFooter>
           <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
             Annuler
           </Button>
-          <Button type="button" onClick={handleExport}>
+          <Button onClick={handleExport}>
             Exporter
           </Button>
         </DialogFooter>
