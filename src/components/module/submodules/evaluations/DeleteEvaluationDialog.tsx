@@ -15,7 +15,7 @@ import { AlertTriangle } from 'lucide-react';
 interface DeleteEvaluationDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  evaluation: Evaluation;
+  evaluation: Evaluation | null;
   onDelete: () => void;
 }
 
@@ -25,6 +25,11 @@ const DeleteEvaluationDialog: React.FC<DeleteEvaluationDialogProps> = ({
   evaluation,
   onDelete,
 }) => {
+  // Early return if evaluation is null to prevent rendering errors
+  if (!evaluation) {
+    return null;
+  }
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
@@ -38,9 +43,9 @@ const DeleteEvaluationDialog: React.FC<DeleteEvaluationDialogProps> = ({
         <div className="flex items-center p-4 my-4 border border-red-100 bg-red-50 rounded-md">
           <AlertTriangle className="h-5 w-5 text-red-500 mr-3" />
           <div>
-            <p className="font-medium text-red-800">Évaluation de {evaluation.employeeName}</p>
-            <p className="text-red-700 text-sm">Date: {evaluation.date}</p>
-            <p className="text-red-700 text-sm">Statut: {evaluation.status}</p>
+            <p className="font-medium text-red-800">Évaluation de {evaluation.employeeName || 'Employé inconnu'}</p>
+            <p className="text-red-700 text-sm">Date: {evaluation.date || 'Non spécifiée'}</p>
+            <p className="text-red-700 text-sm">Statut: {evaluation.status || 'Non spécifié'}</p>
           </div>
         </div>
         

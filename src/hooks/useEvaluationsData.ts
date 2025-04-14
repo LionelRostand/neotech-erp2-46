@@ -21,6 +21,7 @@ export interface Evaluation {
   improvements?: string[];
   title?: string;
   rating?: number;
+  fromEmployeeRecord?: boolean;
 }
 
 /**

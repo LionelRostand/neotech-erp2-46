@@ -2,13 +2,13 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Employee, Evaluation } from '@/types/employee';
+import { Employee } from '@/types/employee';
 import { updateDocument } from '@/hooks/firestore/update-operations';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import { toast } from 'sonner';
 import { Save, Link, ExternalLink } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { useEvaluationsData } from '@/hooks/useEvaluationsData';
+import { useEvaluationsData, Evaluation as HookEvaluation } from '@/hooks/useEvaluationsData';
 
 interface EvaluationsTabProps {
   employee: Employee;
@@ -23,8 +23,8 @@ const EvaluationsTab: React.FC<EvaluationsTabProps> = ({
 }) => {
   const navigate = useNavigate();
   const { evaluations: allEvaluations } = useEvaluationsData();
-  const [employeeEvaluations, setEmployeeEvaluations] = useState<Evaluation[]>([]);
-  const [localEvaluations, setLocalEvaluations] = useState<Evaluation[]>([]);
+  const [employeeEvaluations, setEmployeeEvaluations] = useState<HookEvaluation[]>([]);
+  const [localEvaluations, setLocalEvaluations] = useState<HookEvaluation[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   // Fetch employee evaluations from useEvaluationsData
@@ -37,8 +37,20 @@ const EvaluationsTab: React.FC<EvaluationsTabProps> = ({
   
   // Initialize local evaluations from employee record
   useEffect(() => {
-    const existingEvaluations = employee.evaluations || [];
-    setLocalEvaluations(existingEvaluations);
+    if (employee.evaluations) {
+      // Convert employee.evaluations to HookEvaluation type as needed
+      const convertedEvaluations = employee.evaluations.map(eval => ({
+        ...eval,
+        employeeId: employee.id,
+        id: eval.id || `emp-eval-${employee.id}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        date: eval.date || new Date().toISOString(),
+        fromEmployeeRecord: true
+      })) as HookEvaluation[];
+      
+      setLocalEvaluations(convertedEvaluations);
+    } else {
+      setLocalEvaluations([]);
+    }
   }, [employee]);
 
   const handleSaveEvaluations = async () => {
@@ -68,7 +80,9 @@ const EvaluationsTab: React.FC<EvaluationsTabProps> = ({
   };
 
   // Function to get rating stars display
-  const getRatingStars = (rating: number) => {
+  const getRatingStars = (rating: number | undefined) => {
+    if (rating === undefined) return '☆☆☆☆☆';
+    
     const fullStars = Math.floor(rating);
     const hasHalfStar = rating % 1 >= 0.5;
     
@@ -135,7 +149,7 @@ const EvaluationsTab: React.FC<EvaluationsTabProps> = ({
                     )}
                   </h4>
                   <div className="text-yellow-500 text-lg">
-                    {getRatingStars(evaluation.rating || evaluation.score || 0)}
+                    {getRatingStars(evaluation.rating || evaluation.score)}
                   </div>
                 </div>
                 <p className="text-sm text-gray-500 mb-2">

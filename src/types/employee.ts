@@ -46,13 +46,25 @@ export interface LeaveRequest {
   approvedAt?: string;
 }
 
+// Updated to match the Evaluation interface from useEvaluationsData
 export interface Evaluation {
   id: string;
   date: string;
-  title: string;
-  rating: number;
-  comments: string;
+  title?: string;
+  rating?: number;
+  comments?: string;
   evaluator?: string;
+  evaluatorId?: string;
+  evaluatorName?: string;
+  employeeId?: string;
+  status?: 'Planifiée' | 'Complétée' | 'Annulée';
+  score?: number;
+  maxScore?: number;
+  department?: string;
+  goals?: string[];
+  strengths?: string[];
+  improvements?: string[];
+  fromEmployeeRecord?: boolean;
 }
 
 export interface Employee {
