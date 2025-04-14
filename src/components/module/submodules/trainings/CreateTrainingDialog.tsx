@@ -3,14 +3,14 @@ import React, { useState } from 'react';
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
+  DialogFooter,
+  DialogDescription,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import {
   Select,
@@ -19,10 +19,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { CalendarIcon } from 'lucide-react';
+import { format } from 'date-fns';
+import { Calendar } from '@/components/ui/calendar';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import { cn } from '@/lib/utils';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Employee } from '@/types/employee';
 import { addTrainingDocument } from '@/hooks/firestore/firestore-utils';
 import { toast } from 'sonner';
-import { Employee } from '@/types/employee';
 
 export interface CreateTrainingDialogProps {
   open: boolean;
@@ -32,6 +41,15 @@ export interface CreateTrainingDialogProps {
   employees: Employee[];
 }
 
+const trainingTypes = [
+  'Formation professionnelle',
+  'Formation réglementaire',
+  'Formation en ligne',
+  'Séminaire',
+  'Workshop',
+  'Conférence',
+];
+
 const CreateTrainingDialog: React.FC<CreateTrainingDialogProps> = ({
   open,
   onOpenChange,
@@ -39,83 +57,66 @@ const CreateTrainingDialog: React.FC<CreateTrainingDialogProps> = ({
   onSubmit,
   employees,
 }) => {
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     employeeId: '',
     title: '',
     description: '',
     type: 'Formation professionnelle',
-    status: 'Planifiée',
-    startDate: '',
-    endDate: '',
+    startDate: new Date(),
+    endDate: new Date(),
     provider: '',
     location: '',
-    cost: '',
+    status: 'Planifiée',
+    cost: 0,
     certificate: false,
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]: value,
-    });
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSelectChange = (name: string, value: string) => {
-    setFormData({
-      ...formData,
-      [name]: value,
-    });
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleDateChange = (name: string, date: Date | undefined) => {
+    if (date) {
+      setFormData((prev) => ({ ...prev, [name]: date }));
+    }
   };
 
   const handleCheckboxChange = (checked: boolean) => {
-    setFormData({
-      ...formData,
-      certificate: checked,
-    });
+    setFormData((prev) => ({ ...prev, certificate: checked }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.employeeId || !formData.title || !formData.startDate) {
+    if (!formData.employeeId || !formData.title || !formData.type) {
       toast.error('Veuillez remplir tous les champs obligatoires');
       return;
     }
-    
-    setIsSubmitting(true);
-    
+
     try {
-      // Convert cost to number if provided
-      const costValue = formData.cost ? parseFloat(formData.cost) : 0;
+      setIsSubmitting(true);
       
-      // Calculate duration in days
-      let duration = 1;
-      if (formData.startDate && formData.endDate) {
-        const start = new Date(formData.startDate);
-        const end = new Date(formData.endDate);
-        const diffTime = Math.abs(end.getTime() - start.getTime());
-        duration = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) || 1;
-      }
-      
-      // Prepare training data
+      // Format dates to ISO strings for Firestore
       const trainingData = {
         ...formData,
-        cost: costValue,
-        duration,
+        startDate: formData.startDate.toISOString(),
+        endDate: formData.endDate.toISOString(),
         createdAt: new Date().toISOString(),
       };
       
-      // Add to Firestore
       await addTrainingDocument(trainingData);
-      toast.success('Formation créée avec succès');
+      toast.success('Formation ajoutée avec succès');
       onSubmit();
+      onOpenChange(false);
     } catch (error) {
-      console.error('Erreur lors de la création de la formation:', error);
-      toast.error('Erreur lors de la création de la formation');
+      console.error('Erreur lors de l\'ajout de la formation:', error);
+      toast.error('Erreur lors de l\'ajout de la formation');
     } finally {
       setIsSubmitting(false);
     }
@@ -124,190 +125,220 @@ const CreateTrainingDialog: React.FC<CreateTrainingDialogProps> = ({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[600px]">
-        <form onSubmit={handleSubmit}>
-          <DialogHeader>
-            <DialogTitle>Nouvelle formation</DialogTitle>
-            <DialogDescription>
-              Créez une nouvelle formation pour un employé
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label htmlFor="employeeId">Employé *</Label>
-              <Select
-                value={formData.employeeId}
-                onValueChange={(value) => handleSelectChange('employeeId', value)}
+        <DialogHeader>
+          <DialogTitle>Ajouter une formation</DialogTitle>
+          <DialogDescription>
+            Saisissez les informations de la formation à ajouter
+          </DialogDescription>
+        </DialogHeader>
+        
+        <form onSubmit={handleSubmit} className="space-y-4 py-4">
+          <div className="space-y-2">
+            <Label htmlFor="employeeId">Employé</Label>
+            <Select 
+              value={formData.employeeId} 
+              onValueChange={(value) => handleSelectChange('employeeId', value)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Sélectionner un employé" />
+              </SelectTrigger>
+              <SelectContent>
+                {employees.map((employee) => (
+                  <SelectItem key={employee.id} value={employee.id}>
+                    {employee.firstName} {employee.lastName}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="title">Titre de la formation</Label>
+            <Input
+              id="title"
+              name="title"
+              value={formData.title}
+              onChange={handleInputChange}
+              placeholder="Titre de la formation"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="description">Description</Label>
+            <Textarea
+              id="description"
+              name="description"
+              value={formData.description}
+              onChange={handleInputChange}
+              placeholder="Description de la formation"
+              rows={3}
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="type">Type de formation</Label>
+              <Select 
+                value={formData.type} 
+                onValueChange={(value) => handleSelectChange('type', value)}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Sélectionner un employé" />
+                  <SelectValue placeholder="Sélectionner un type" />
                 </SelectTrigger>
                 <SelectContent>
-                  {employees.map((employee) => (
-                    <SelectItem key={employee.id} value={employee.id}>
-                      {employee.firstName} {employee.lastName}
+                  {trainingTypes.map((type) => (
+                    <SelectItem key={type} value={type}>
+                      {type}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
             
-            <div className="grid gap-2">
-              <Label htmlFor="title">Titre de la formation *</Label>
-              <Input
-                id="title"
-                name="title"
-                value={formData.title}
-                onChange={handleChange}
-                placeholder="Titre de la formation"
-              />
-            </div>
-            
-            <div className="grid gap-2">
-              <Label htmlFor="description">Description</Label>
-              <Textarea
-                id="description"
-                name="description"
-                value={formData.description}
-                onChange={handleChange}
-                placeholder="Description de la formation"
-              />
-            </div>
-            
-            <div className="grid grid-cols-2 gap-4">
-              <div className="grid gap-2">
-                <Label htmlFor="type">Type de formation</Label>
-                <Select
-                  value={formData.type}
-                  onValueChange={(value) => handleSelectChange('type', value)}
-                >
-                  <SelectTrigger id="type">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Formation professionnelle">Formation professionnelle</SelectItem>
-                    <SelectItem value="Formation réglementaire">Formation réglementaire</SelectItem>
-                    <SelectItem value="Formation en ligne">Formation en ligne</SelectItem>
-                    <SelectItem value="Séminaire">Séminaire</SelectItem>
-                    <SelectItem value="Workshop">Workshop</SelectItem>
-                    <SelectItem value="Conférence">Conférence</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div className="grid gap-2">
-                <Label htmlFor="status">Statut</Label>
-                <Select
-                  value={formData.status}
-                  onValueChange={(value) => handleSelectChange('status', value)}
-                >
-                  <SelectTrigger id="status">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Planifiée">Planifiée</SelectItem>
-                    <SelectItem value="En cours">En cours</SelectItem>
-                    <SelectItem value="Terminée">Terminée</SelectItem>
-                    <SelectItem value="Annulée">Annulée</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            
-            <div className="grid grid-cols-2 gap-4">
-              <div className="grid gap-2">
-                <Label htmlFor="startDate">Date de début *</Label>
-                <Input
-                  id="startDate"
-                  name="startDate"
-                  type="date"
-                  value={formData.startDate}
-                  onChange={handleChange}
-                />
-              </div>
-              
-              <div className="grid gap-2">
-                <Label htmlFor="endDate">Date de fin</Label>
-                <Input
-                  id="endDate"
-                  name="endDate"
-                  type="date"
-                  value={formData.endDate}
-                  onChange={handleChange}
-                />
-              </div>
-            </div>
-            
-            <div className="grid grid-cols-2 gap-4">
-              <div className="grid gap-2">
-                <Label htmlFor="provider">Fournisseur</Label>
-                <Input
-                  id="provider"
-                  name="provider"
-                  value={formData.provider}
-                  onChange={handleChange}
-                  placeholder="Nom du fournisseur"
-                />
-              </div>
-              
-              <div className="grid gap-2">
-                <Label htmlFor="location">Lieu</Label>
-                <Input
-                  id="location"
-                  name="location"
-                  value={formData.location}
-                  onChange={handleChange}
-                  placeholder="Lieu de la formation"
-                />
-              </div>
-            </div>
-            
-            <div className="grid grid-cols-2 gap-4">
-              <div className="grid gap-2">
-                <Label htmlFor="cost">Coût (en €)</Label>
-                <Input
-                  id="cost"
-                  name="cost"
-                  type="number"
-                  value={formData.cost}
-                  onChange={handleChange}
-                  placeholder="0"
-                />
-              </div>
-              
-              <div className="flex items-center space-x-2 pt-6">
-                <Checkbox
-                  id="certificate"
-                  checked={formData.certificate}
-                  onCheckedChange={handleCheckboxChange}
-                />
-                <Label htmlFor="certificate" className="cursor-pointer">
-                  Certificat délivré
-                </Label>
-              </div>
+            <div className="space-y-2">
+              <Label htmlFor="status">Statut</Label>
+              <Select 
+                value={formData.status} 
+                onValueChange={(value) => handleSelectChange('status', value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Sélectionner un statut" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Planifiée">Planifiée</SelectItem>
+                  <SelectItem value="En cours">En cours</SelectItem>
+                  <SelectItem value="Terminée">Terminée</SelectItem>
+                  <SelectItem value="Annulée">Annulée</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
-          
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Date de début</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !formData.startDate && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {formData.startDate ? (
+                      format(formData.startDate, "PPP")
+                    ) : (
+                      <span>Sélectionner une date</span>
+                    )}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={formData.startDate}
+                    onSelect={(date) => handleDateChange('startDate', date)}
+                    initialFocus
+                    className="pointer-events-auto"
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Date de fin</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !formData.endDate && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {formData.endDate ? (
+                      format(formData.endDate, "PPP")
+                    ) : (
+                      <span>Sélectionner une date</span>
+                    )}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={formData.endDate}
+                    onSelect={(date) => handleDateChange('endDate', date)}
+                    initialFocus
+                    className="pointer-events-auto"
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="provider">Organisme de formation</Label>
+              <Input
+                id="provider"
+                name="provider"
+                value={formData.provider}
+                onChange={handleInputChange}
+                placeholder="Organisme de formation"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="location">Lieu</Label>
+              <Input
+                id="location"
+                name="location"
+                value={formData.location}
+                onChange={handleInputChange}
+                placeholder="Lieu de la formation"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="cost">Coût (€)</Label>
+              <Input
+                id="cost"
+                name="cost"
+                type="number"
+                value={formData.cost.toString()}
+                onChange={handleInputChange}
+                placeholder="Coût de la formation"
+              />
+            </div>
+            
+            <div className="flex items-center space-x-2 pt-6">
+              <Checkbox 
+                id="certificate" 
+                checked={formData.certificate}
+                onCheckedChange={handleCheckboxChange}
+              />
+              <Label htmlFor="certificate">
+                Formation certifiante
+              </Label>
+            </div>
+          </div>
+
           <DialogFooter>
-            <Button 
-              type="button" 
-              variant="outline" 
-              onClick={onClose}
-              disabled={isSubmitting}
-            >
+            <Button type="button" variant="outline" onClick={onClose} disabled={isSubmitting}>
               Annuler
             </Button>
-            <Button 
-              type="submit"
-              disabled={isSubmitting}
-            >
+            <Button type="submit" disabled={isSubmitting}>
               {isSubmitting ? (
                 <>
                   <span className="animate-spin mr-2">◌</span>
-                  Enregistrement...
+                  Création...
                 </>
               ) : (
-                'Enregistrer'
+                'Créer la formation'
               )}
             </Button>
           </DialogFooter>
