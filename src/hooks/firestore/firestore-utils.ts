@@ -2,7 +2,10 @@
 // Re-export all firestore utilities from their respective files
 export * from './common-utils';
 export * from './read-operations';
-export * from './create-operations';
+// Export create operations without setDocument to avoid ambiguity
+import { addDocument, addTrainingDocument } from './create-operations';
+export { addDocument, addTrainingDocument };
+// Export everything else
 export * from './update-operations';
 export * from './delete-operations';
 // Export network operations 
