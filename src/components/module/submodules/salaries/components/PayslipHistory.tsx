@@ -1,5 +1,4 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   Table,
   TableBody,
@@ -12,12 +11,15 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useSalarySlipsData } from '@/hooks/useSalarySlipsData';
-import { Eye, FileDown, Search } from 'lucide-react';
+import { Eye, Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { PaySlip } from '@/types/payslip';
 import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import PayslipDetails from './PayslipDetails';
+import DownloadPayslipButton from './DownloadPayslipButton';
+import { addEmployeeDocument } from '../../employees/services/documentService';
+import { generatePayslipPDF } from '../utils/payslipPdfUtils';
 
 const PayslipHistory: React.FC = () => {
   const { salarySlips, isLoading, error } = useSalarySlipsData();
@@ -79,9 +81,68 @@ const PayslipHistory: React.FC = () => {
     setViewDialogOpen(true);
   };
 
-  const handleDownloadPayslip = (payslip: typeof salarySlips[0]) => {
-    toast.info(`Téléchargement de la fiche de paie de ${payslip.employeeName} pour ${payslip.month} ${payslip.year}`);
-    // Logique de téléchargement à implémenter
+  const handleDownloadPayslip = async (payslip: typeof salarySlips[0]) => {
+    try {
+      // Convert SalarySlip to PaySlip format for PDF generation
+      const convertedPayslip: PaySlip = {
+        id: payslip.id,
+        employeeId: payslip.employeeId,
+        employeeName: payslip.employeeName,
+        date: payslip.date,
+        period: payslip.month + ' ' + payslip.year,
+        month: payslip.month,
+        year: payslip.year,
+        netSalary: payslip.netAmount,
+        grossSalary: payslip.grossAmount,
+        totalDeductions: payslip.grossAmount - payslip.netAmount,
+        status: payslip.status,
+        employee: {
+          firstName: payslip.employeeName?.split(' ')[0] || '',
+          lastName: payslip.employeeName?.split(' ').slice(1).join(' ') || '',
+          employeeId: payslip.employeeId,
+          role: 'Employé',
+          socialSecurityNumber: '',
+          startDate: new Date().toISOString()
+        },
+        hoursWorked: 151.67,
+        paymentDate: payslip.date,
+        employerName: 'Entreprise',
+        employerAddress: '',
+        employerSiret: '',
+        details: [{
+          label: "Salaire brut",
+          amount: payslip.grossAmount,
+          type: "earning"
+        }],
+        paymentMethod: 'Virement bancaire',
+        notes: ''
+      };
+
+      // Generate PDF
+      const doc = generatePayslipPDF(convertedPayslip);
+      const pdfBase64 = doc.output('datauristring');
+
+      // Add document to employee's profile
+      const documentData = {
+        id: `payslip_${payslip.id}`,
+        name: `Bulletin de paie - ${payslip.month} ${payslip.year}`,
+        type: 'Fiche de paie',
+        date: new Date().toISOString(),
+        fileType: 'application/pdf',
+        fileData: pdfBase64,
+        employeeId: payslip.employeeId
+      };
+
+      await addEmployeeDocument(payslip.employeeId, documentData);
+      
+      // Save PDF
+      doc.save(`bulletin_de_paie_${payslip.employeeName.toLowerCase()}_${payslip.month.toLowerCase()}_${payslip.year}.pdf`);
+      
+      toast.success('Fiche de paie téléchargée et ajoutée aux documents');
+    } catch (error) {
+      console.error('Error downloading payslip:', error);
+      toast.error('Erreur lors du téléchargement de la fiche de paie');
+    }
   };
 
   const getStatusColor = (status: string) => {
@@ -156,13 +217,7 @@ const PayslipHistory: React.FC = () => {
                       >
                         <Eye className="h-4 w-4 mr-1" /> Voir
                       </Button>
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => handleDownloadPayslip(payslip)}
-                      >
-                        <FileDown className="h-4 w-4 mr-1" /> PDF
-                      </Button>
+                      <DownloadPayslipButton payslip={convertPaySlipFormat(payslip)} />
                     </TableCell>
                   </TableRow>
                 ))}
@@ -184,6 +239,43 @@ const PayslipHistory: React.FC = () => {
       )}
     </Card>
   );
+};
+
+// Helper function to convert SalarySlip to PaySlip format
+const convertPaySlipFormat = (payslip: any): PaySlip => {
+  return {
+    id: payslip.id,
+    employeeId: payslip.employeeId,
+    employeeName: payslip.employeeName,
+    date: payslip.date,
+    period: `${payslip.month} ${payslip.year}`,
+    month: payslip.month,
+    year: payslip.year,
+    netSalary: payslip.netAmount,
+    grossSalary: payslip.grossAmount,
+    totalDeductions: payslip.grossAmount - payslip.netAmount,
+    status: payslip.status,
+    employee: {
+      firstName: payslip.employeeName?.split(' ')[0] || '',
+      lastName: payslip.employeeName?.split(' ').slice(1).join(' ') || '',
+      employeeId: payslip.employeeId,
+      role: 'Employé',
+      socialSecurityNumber: '',
+      startDate: payslip.date
+    },
+    hoursWorked: 151.67,
+    paymentDate: payslip.date,
+    employerName: 'Entreprise',
+    employerAddress: '',
+    employerSiret: '',
+    details: [{
+      label: "Salaire brut",
+      amount: payslip.grossAmount,
+      type: "earning"
+    }],
+    paymentMethod: 'Virement bancaire',
+    notes: ''
+  };
 };
 
 export default PayslipHistory;
