@@ -15,8 +15,9 @@ import { CalendarIcon } from "lucide-react";
 interface CreateEvaluationDialogProps {
   open: boolean;
   onClose: () => void;
-  onOpenChange?: (open: boolean) => void; // Added this prop
+  onOpenChange?: (open: boolean) => void;
   onSubmit: (data: any) => void;
+  onSuccess?: () => void; // Added this prop
   employees?: any[];
 }
 
@@ -25,6 +26,7 @@ const CreateEvaluationDialog: React.FC<CreateEvaluationDialogProps> = ({
   onClose,
   onOpenChange,
   onSubmit,
+  onSuccess,
   employees = []
 }) => {
   const [formData, setFormData] = useState({
@@ -55,6 +57,11 @@ const CreateEvaluationDialog: React.FC<CreateEvaluationDialogProps> = ({
     }
     
     onSubmit(submissionData);
+    
+    // Call onSuccess callback if provided
+    if (onSuccess) {
+      onSuccess();
+    }
   };
   
   const handleCancel = () => {
