@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { savePaySlip, updatePaySlip, getEmployeePaySlips } from '../services/payslipService';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
+import { PaySlipData } from '../types/payslip-types';
 
 interface UseSalaryStorageProps {
   employeeId: string;
@@ -57,6 +58,8 @@ export const useSalaryStorage = ({
         netSalary,
         deductions,
         earnings,
+        taxes: calculateTaxes(parseFloat(grossSalary)),
+        contributions: calculateContributions(parseFloat(grossSalary)),
         overtimeHours: overtimeHours ? parseFloat(overtimeHours) : undefined,
         overtimeRate: overtimeRate ? parseFloat(overtimeRate) : undefined,
         companyName,
@@ -75,6 +78,16 @@ export const useSalaryStorage = ({
     } finally {
       setIsSaving(false);
     }
+  };
+
+  // Helper function to calculate taxes (simplified example)
+  const calculateTaxes = (grossAmount: number): number => {
+    return grossAmount * 0.15; // 15% tax rate (example)
+  };
+
+  // Helper function to calculate contributions (simplified example)
+  const calculateContributions = (grossAmount: number): number => {
+    return grossAmount * 0.10; // 10% contributions rate (example)
   };
 
   const loadEmployeePaySlips = async (empId: string) => {

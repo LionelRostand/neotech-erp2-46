@@ -6,9 +6,10 @@ export interface StatusBadgeProps {
   status: string;
   label?: string;
   variant?: 'outline' | 'success' | 'warning' | 'danger';
+  children?: React.ReactNode;
 }
 
-const StatusBadge: React.FC<StatusBadgeProps> = ({ status, label, variant: propVariant }) => {
+const StatusBadge: React.FC<StatusBadgeProps> = ({ status, label, variant: propVariant, children }) => {
   const getVariant = () => {
     // Use the provided variant if available, otherwise determine based on status
     if (propVariant) return propVariant;
@@ -32,6 +33,7 @@ const StatusBadge: React.FC<StatusBadgeProps> = ({ status, label, variant: propV
   };
 
   const getLabel = () => {
+    if (children) return children;
     if (label) return label;
     
     switch (status) {

@@ -9,6 +9,12 @@ export interface PaySlipData {
   taxes: number;
   contributions: number;
   bonuses?: number;
+  deductions?: any[];
+  earnings?: any[];
+  overtimeHours?: number;
+  overtimeRate?: number;
+  companyName?: string;
+  companyAddress?: string;
   createdAt?: any;
   updatedAt?: any;
 }
