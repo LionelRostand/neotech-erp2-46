@@ -26,7 +26,7 @@ import { useHrModuleData } from '@/hooks/useHrModuleData';
 // Helper component to pass props to EmployeesProfiles
 const EmployeesProfilesWithProps = () => {
   const { employees } = useHrModuleData();
-  return <EmployeesProfiles employees={employees || []} />;
+  return <EmployeesProfiles employees={employees} />;
 };
 
 export const EmployeesRoutes = (

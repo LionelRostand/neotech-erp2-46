@@ -1,5 +1,4 @@
-
-// Basic employee interface
+// Basic employee interface with updated address type to match employee.ts
 export interface Employee {
   id: string;
   firstName: string;
@@ -8,14 +7,23 @@ export interface Employee {
   phone?: string;
   position?: string;
   department?: string;
+  departmentId?: string;
   photoURL?: string;
+  photo?: string;
   hireDate?: string;
+  startDate?: string;
   birthDate?: string;
-  address?: string;
+  address?: string | {
+    street?: string;
+    city?: string;
+    postalCode?: string;
+    country?: string;
+    state?: string;
+  };
   city?: string;
   country?: string;
   postalCode?: string;
-  status?: 'active' | 'inactive' | 'onLeave' | 'terminated';
+  status?: 'active' | 'inactive' | 'onLeave' | 'terminated' | 'Actif' | 'En congé' | 'Suspendu' | 'Inactif';
   emergencyContact?: {
     name: string;
     phone: string;
@@ -28,10 +36,32 @@ export interface Employee {
     routingNumber?: string;
     iban?: string;
   };
-  documents?: string[];
+  documents?: any[];
   notes?: string;
   createdAt?: string;
   updatedAt?: string;
+  contract?: string;
+  socialSecurityNumber?: string;
+  company?: any;
+  role?: string;
+  title?: string;
+  manager?: string;
+  managerId?: string;
+  professionalEmail?: string;
+  skills?: string[];
+  education?: any[];
+  workSchedule?: {
+    monday: string;
+    tuesday: string;
+    wednesday: string;
+    thursday: string;
+    friday: string;
+    saturday?: string;
+    sunday?: string;
+  };
+  payslips?: any[];
+  isManager?: boolean;
+  forceManager?: boolean;
 }
 
 // Department interface

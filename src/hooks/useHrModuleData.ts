@@ -1,5 +1,5 @@
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useHrData } from './modules/useHrData';
 import { Company } from '@/components/module/submodules/companies/types';
 import { Employee } from '@/types/employee';
@@ -23,7 +23,8 @@ export const useHrModuleData = () => {
     hrReports,
     hrAlerts,
     isLoading, 
-    error 
+    error,
+    refetchEmployees: refetchRawEmployees 
   } = useHrData();
   
   const [employees, setEmployees] = useState<Employee[]>([]);
@@ -179,6 +180,13 @@ export const useHrModuleData = () => {
            lowerPosition.includes('ceo') || 
            lowerPosition.includes('chief');
   };
+  
+  // Add refetchEmployees function that will call the refetchRawEmployees from useHrData
+  const refetchEmployees = useCallback(async () => {
+    if (refetchRawEmployees && typeof refetchRawEmployees === 'function') {
+      await refetchRawEmployees();
+    }
+  }, [refetchRawEmployees]);
 
   return {
     employees,
@@ -196,6 +204,7 @@ export const useHrModuleData = () => {
     hrReports: hrReports || [],
     hrAlerts: hrAlerts || [],
     isLoading,
-    error
+    error,
+    refetchEmployees
   };
 };
