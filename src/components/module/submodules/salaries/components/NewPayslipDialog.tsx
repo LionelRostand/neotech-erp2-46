@@ -19,20 +19,21 @@ import PayslipFormControls from './PayslipFormControls';
 import { Employee } from '@/types/employee';
 import { Company } from '@/components/module/submodules/companies/types';
 import PayslipViewer from './PayslipViewer';
+import { useHrModuleData } from '@/hooks/useHrModuleData';
 
 interface NewPayslipDialogProps {
   isOpen: boolean;
   onClose: () => void;
   employees: Employee[];
-  companies: Company[];
 }
 
 const NewPayslipDialog: React.FC<NewPayslipDialogProps> = ({
   isOpen,
   onClose,
-  employees,
-  companies
+  employees
 }) => {
+  const { companies } = useHrModuleData();
+  
   const {
     employeeName,
     setEmployeeName,
@@ -93,7 +94,6 @@ const NewPayslipDialog: React.FC<NewPayslipDialogProps> = ({
     setPeriod(`${selectedMonth} ${selectedYear}`);
   };
 
-  // Custom handlers for employee and company selection
   const handleEmployeeSelection = (value: string) => {
     if (employees && employees.length > 0) {
       handleEmployeeSelect(value, employees);
@@ -102,7 +102,11 @@ const NewPayslipDialog: React.FC<NewPayslipDialogProps> = ({
 
   const handleCompanySelection = (value: string) => {
     if (companies && companies.length > 0) {
-      handleCompanySelect(value, companies);
+      const selectedCompany = companies.find(company => company.id === value);
+      if (selectedCompany) {
+        handleCompanySelect(value, companies);
+        toast.success(`Entreprise ${selectedCompany.name} sélectionnée`);
+      }
     }
   };
 
@@ -169,8 +173,8 @@ const NewPayslipDialog: React.FC<NewPayslipDialogProps> = ({
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Sélectionner une entreprise" />
                 </SelectTrigger>
-                <SelectContent className="max-h-60 overflow-y-auto">
-                  {companies.map((company) => (
+                <SelectContent>
+                  {companies && companies.map((company) => (
                     <SelectItem 
                       key={company.id} 
                       value={company.id}
