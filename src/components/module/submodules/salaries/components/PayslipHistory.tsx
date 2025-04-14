@@ -31,12 +31,55 @@ const PayslipHistory: React.FC = () => {
     slip.year.toString().includes(searchTerm)
   );
 
-  const handleViewPayslip = (payslip: PaySlip) => {
-    setSelectedPayslip(payslip);
+  const handleViewPayslip = (payslip: typeof salarySlips[0]) => {
+    // Convert SalarySlip to PaySlip
+    const convertedPayslip: PaySlip = {
+      id: payslip.id,
+      employeeId: payslip.employeeId,
+      employeeName: payslip.employeeName,
+      date: payslip.date,
+      period: payslip.month + ' ' + payslip.year,
+      month: payslip.month,
+      year: payslip.year,
+      netSalary: payslip.netAmount,
+      grossSalary: payslip.grossAmount,
+      totalDeductions: payslip.grossAmount - payslip.netAmount,
+      status: payslip.status,
+      // Default values or empty placeholder for required properties
+      employee: {
+        firstName: payslip.employeeName?.split(' ')[0] || '',
+        lastName: payslip.employeeName?.split(' ').slice(1).join(' ') || '',
+        employeeId: payslip.employeeId,
+        role: 'Employé',
+        socialSecurityNumber: '',
+        startDate: new Date().toISOString()
+      },
+      hoursWorked: 151.67, // Durée légale mensuelle en France
+      paymentDate: payslip.date,
+      employerName: 'Entreprise',
+      employerAddress: '',
+      employerSiret: '',
+      details: [
+        {
+          label: "Salaire brut",
+          amount: payslip.grossAmount,
+          type: "earning"
+        },
+        {
+          label: "Cotisations sociales",
+          amount: payslip.grossAmount - payslip.netAmount,
+          type: "deduction"
+        }
+      ],
+      paymentMethod: 'Virement bancaire',
+      notes: ''
+    };
+    
+    setSelectedPayslip(convertedPayslip);
     setViewDialogOpen(true);
   };
 
-  const handleDownloadPayslip = (payslip: PaySlip) => {
+  const handleDownloadPayslip = (payslip: typeof salarySlips[0]) => {
     toast.info(`Téléchargement de la fiche de paie de ${payslip.employeeName} pour ${payslip.month} ${payslip.year}`);
     // Logique de téléchargement à implémenter
   };
@@ -109,14 +152,14 @@ const PayslipHistory: React.FC = () => {
                       <Button 
                         variant="outline" 
                         size="sm" 
-                        onClick={() => handleViewPayslip(payslip as PaySlip)}
+                        onClick={() => handleViewPayslip(payslip)}
                       >
                         <Eye className="h-4 w-4 mr-1" /> Voir
                       </Button>
                       <Button 
                         variant="outline" 
                         size="sm"
-                        onClick={() => handleDownloadPayslip(payslip as PaySlip)}
+                        onClick={() => handleDownloadPayslip(payslip)}
                       >
                         <FileDown className="h-4 w-4 mr-1" /> PDF
                       </Button>

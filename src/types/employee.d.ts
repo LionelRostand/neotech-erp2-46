@@ -39,4 +39,14 @@ export interface Employee {
   payslips?: string[];
   title?: string;
   forceManager?: boolean; // Added forceManager property
+  conges?: {
+    acquired: number;
+    taken: number;
+    balance: number;
+  };
+  rtt?: {
+    acquired: number;
+    taken: number;
+    balance: number;
+  };
 }

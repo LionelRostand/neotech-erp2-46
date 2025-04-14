@@ -52,4 +52,8 @@ export interface PaySlip {
   employeeName?: string;
   month?: string;
   year?: number;
+  
+  // Adding the missing properties
+  paymentMethod?: string;
+  notes?: string;
 }
