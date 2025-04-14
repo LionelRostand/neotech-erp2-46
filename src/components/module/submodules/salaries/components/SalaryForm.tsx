@@ -15,6 +15,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/patched-select";
 import { useSalaryForm } from '../hooks/useSalaryForm';
 import { Employee } from '@/types/employee';
+import { Card, CardContent } from '@/components/ui/card';
+import LeaveBalanceCard from './LeaveBalanceCard';
+import { useLeaveBalances } from '@/hooks/useLeaveBalances';
 
 export const SalaryForm: React.FC = () => {
   const {
@@ -38,8 +41,24 @@ export const SalaryForm: React.FC = () => {
 
   const [filteredEmployees, setFilteredEmployees] = useState<Employee[]>([]);
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<string>('');
+  const [leaveBalances, setLeaveBalances] = useState({ 
+    conges: { acquired: 0, taken: 0, balance: 0 },
+    rtt: { acquired: 0, taken: 0, balance: 0 }
+  });
   
-  const form = useForm();
+  const defaultValues = {
+    company: selectedCompanyId,
+    employee: selectedEmployeeId,
+    salaryAmount: salaryAmount,
+    paymentDate: paymentDate,
+    paymentMethod: paymentMethod,
+    notes: notes
+  };
+  
+  const form = useForm({ defaultValues });
+
+  // Get leave balances
+  const { leaveBalances: employeeLeaveBalances } = useLeaveBalances(selectedEmployeeId);
 
   // Filter employees based on selected company
   useEffect(() => {
@@ -65,6 +84,23 @@ export const SalaryForm: React.FC = () => {
     const selectedEmployee = employees?.find(emp => emp.id === employeeId);
     if (selectedEmployee) {
       setEmployeeName(`${selectedEmployee.firstName} ${selectedEmployee.lastName}`);
+      
+      // Set default leave balances
+      const congesBalance = employeeLeaveBalances?.find(b => b.employeeId === employeeId && b.type === 'Congés payés');
+      const rttBalance = employeeLeaveBalances?.find(b => b.employeeId === employeeId && b.type === 'RTT');
+      
+      setLeaveBalances({
+        conges: {
+          acquired: congesBalance?.total || 25,
+          taken: congesBalance?.used || 0,
+          balance: congesBalance?.remaining || 25
+        },
+        rtt: {
+          acquired: rttBalance?.total || 12,
+          taken: rttBalance?.used || 0,
+          balance: rttBalance?.remaining || 12
+        }
+      });
     }
   };
 
@@ -137,6 +173,14 @@ export const SalaryForm: React.FC = () => {
             )}
           />
         </div>
+
+        {/* Leave Balance Card */}
+        {selectedEmployeeId && (
+          <LeaveBalanceCard 
+            conges={leaveBalances.conges}
+            rtt={leaveBalances.rtt}
+          />
+        )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Salary Amount */}
