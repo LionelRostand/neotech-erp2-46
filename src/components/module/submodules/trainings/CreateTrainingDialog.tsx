@@ -17,6 +17,7 @@ import { Employee } from '@/types/employee';
 import { addDocument } from '@/hooks/firestore/firestore-utils';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import { toast } from 'sonner';
+import { Form, FormProvider, useForm } from 'react-hook-form';
 
 export interface CreateTrainingDialogProps {
   open: boolean;
@@ -51,6 +52,20 @@ const CreateTrainingDialog: React.FC<CreateTrainingDialogProps> = ({
   const [endDate, setEndDate] = useState('');
   const [description, setDescription] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // Initialize the form
+  const form = useForm({
+    defaultValues: {
+      title: '',
+      type: '',
+      employeeId: '',
+      provider: '',
+      location: '',
+      startDate: '',
+      endDate: '',
+      description: ''
+    }
+  });
 
   const resetForm = () => {
     setTitle('');
@@ -61,6 +76,7 @@ const CreateTrainingDialog: React.FC<CreateTrainingDialogProps> = ({
     setStartDate('');
     setEndDate('');
     setDescription('');
+    form.reset();
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -113,118 +129,120 @@ const CreateTrainingDialog: React.FC<CreateTrainingDialogProps> = ({
           </DialogDescription>
         </DialogHeader>
         
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="title">Titre de la formation *</Label>
-            <Input
-              id="title"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="Titre de la formation"
-              required
-            />
-          </div>
-          
-          <div className="grid grid-cols-2 gap-4">
+        <FormProvider {...form}>
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="type">Type de formation *</Label>
-              <Select value={type} onValueChange={setType} required>
-                <SelectTrigger id="type" className="w-full">
-                  <SelectValue placeholder="Sélectionner un type" />
-                </SelectTrigger>
-                <SelectContent>
-                  {trainingTypes.map((type) => (
-                    <SelectItem key={type.value} value={type.value}>
-                      {type.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="employee">Employé *</Label>
-              <Select value={employeeId} onValueChange={setEmployeeId} required>
-                <SelectTrigger id="employee" className="w-full">
-                  <SelectValue placeholder="Sélectionner un employé" />
-                </SelectTrigger>
-                <SelectContent>
-                  {employees.map((employee) => (
-                    <SelectItem key={employee.id} value={employee.id}>
-                      {employee.firstName} {employee.lastName}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="provider">Organisme de formation</Label>
+              <Label htmlFor="title">Titre de la formation *</Label>
               <Input
-                id="provider"
-                value={provider}
-                onChange={(e) => setProvider(e.target.value)}
-                placeholder="Organisme de formation"
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="location">Lieu</Label>
-              <Input
-                id="location"
-                value={location}
-                onChange={(e) => setLocation(e.target.value)}
-                placeholder="Lieu de la formation"
-              />
-            </div>
-          </div>
-          
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="startDate">Date de début *</Label>
-              <Input
-                id="startDate"
-                type="date"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
+                id="title"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="Titre de la formation"
                 required
               />
             </div>
             
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="type">Type de formation *</Label>
+                <Select value={type} onValueChange={setType} required>
+                  <SelectTrigger id="type" className="w-full">
+                    <SelectValue placeholder="Sélectionner un type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {trainingTypes.map((type) => (
+                      <SelectItem key={type.value} value={type.value}>
+                        {type.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="employee">Employé *</Label>
+                <Select value={employeeId} onValueChange={setEmployeeId} required>
+                  <SelectTrigger id="employee" className="w-full">
+                    <SelectValue placeholder="Sélectionner un employé" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {employees.map((employee) => (
+                      <SelectItem key={employee.id} value={employee.id}>
+                        {employee.firstName} {employee.lastName}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="provider">Organisme de formation</Label>
+                <Input
+                  id="provider"
+                  value={provider}
+                  onChange={(e) => setProvider(e.target.value)}
+                  placeholder="Organisme de formation"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="location">Lieu</Label>
+                <Input
+                  id="location"
+                  value={location}
+                  onChange={(e) => setLocation(e.target.value)}
+                  placeholder="Lieu de la formation"
+                />
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="startDate">Date de début *</Label>
+                <Input
+                  id="startDate"
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  required
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="endDate">Date de fin</Label>
+                <Input
+                  id="endDate"
+                  type="date"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                  min={startDate}
+                />
+              </div>
+            </div>
+            
             <div className="space-y-2">
-              <Label htmlFor="endDate">Date de fin</Label>
-              <Input
-                id="endDate"
-                type="date"
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-                min={startDate}
+              <Label htmlFor="description">Description</Label>
+              <Textarea
+                id="description"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Description de la formation"
+                rows={3}
               />
             </div>
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
-            <Textarea
-              id="description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Description de la formation"
-              rows={3}
-            />
-          </div>
-          
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={onClose}>
-              Annuler
-            </Button>
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? 'Création...' : 'Créer'}
-            </Button>
-          </DialogFooter>
-        </form>
+            
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={onClose}>
+                Annuler
+              </Button>
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? 'Création...' : 'Créer'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </FormProvider>
       </DialogContent>
     </Dialog>
   );

@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { 
@@ -9,9 +10,8 @@ import { DataTable } from '@/components/ui/data-table';
 import StatusBadge from '@/components/module/submodules/StatusBadge';
 import { useTrainingsData, Training } from '@/hooks/useTrainingsData';
 import { useEmployeeData } from '@/hooks/useEmployeeData';
-import CreateTrainingDialog from './CreateTrainingDialog';
+import CreateTrainingDialog from '../trainings/CreateTrainingDialog';
 import { toast } from 'sonner';
-import SubmoduleHeader from '../SubmoduleHeader';
 import { format } from 'date-fns';
 
 const EmployeesTrainings: React.FC = () => {
