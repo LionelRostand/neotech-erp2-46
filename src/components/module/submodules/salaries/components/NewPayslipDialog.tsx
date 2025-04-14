@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { 
   Dialog, 
@@ -17,7 +18,6 @@ import { toast } from 'sonner';
 import { usePayslipGenerator } from '../hooks/usePayslipGenerator';
 import PayslipFormControls from './PayslipFormControls';
 import { Employee } from '@/types/employee';
-import { Company } from '@/components/module/submodules/companies/types';
 import PayslipViewer from './PayslipViewer';
 import { useHrModuleData } from '@/hooks/useHrModuleData';
 
@@ -105,6 +105,11 @@ const NewPayslipDialog: React.FC<NewPayslipDialogProps> = ({
       const selectedCompany = companies.find(company => company.id === value);
       if (selectedCompany) {
         handleCompanySelect(value, companies);
+        setCompanyName(selectedCompany.name);
+        setCompanyAddress(
+          `${selectedCompany.address?.street || ''}, ${selectedCompany.address?.postalCode || ''} ${selectedCompany.address?.city || ''}`
+        );
+        setCompanySiret(selectedCompany.siret || '');
         toast.success(`Entreprise ${selectedCompany.name} sélectionnée`);
       }
     }
