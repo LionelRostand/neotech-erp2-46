@@ -1,254 +1,216 @@
 
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { 
-  PlusCircle, 
-  Search, 
-  FileDown, 
-  FileUp,
-  GraduationCap
-} from 'lucide-react';
-import { Input } from '@/components/ui/input';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { useTrainingsData, Training } from '@/hooks/useTrainingsData';
-import { useHrModuleData } from '@/hooks/useHrModuleData';
-import StatusBadge from '../StatusBadge';
+  Card, 
+  CardContent,
+} from '@/components/ui/card';
+import { Plus, RefreshCw } from 'lucide-react';
 import { DataTable } from '@/components/ui/data-table';
-import { Column } from '@/types/table-types';
-import SubmoduleHeader from '../SubmoduleHeader';
-import { employeesModule } from '@/data/modules/employees';
+import StatusBadge from '@/components/module/submodules/StatusBadge';
+import { useTrainingsData, Training } from '@/hooks/useTrainingsData';
+import { useEmployeeData } from '@/hooks/useEmployeeData';
 import CreateTrainingDialog from './CreateTrainingDialog';
+import { toast } from 'sonner';
+import SubmoduleHeader from '../SubmoduleHeader';
+import { format } from 'date-fns';
 
-const EmployeesTrainings = () => {
-  const { trainings, stats, isLoading } = useTrainingsData();
-  const { employees } = useHrModuleData();
-  const [filteredTrainings, setFilteredTrainings] = useState<Training[]>([]);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [typeFilter, setTypeFilter] = useState('all');
+const EmployeesTrainings: React.FC = () => {
+  const { trainings, isLoading, error } = useTrainingsData();
+  const { employees } = useEmployeeData();
   const [refreshTrigger, setRefreshTrigger] = useState(0);
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [openCreateDialog, setOpenCreateDialog] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
-  useEffect(() => {
-    if (trainings) {
-      let filtered = [...trainings];
-      
-      // Apply search term filter
-      if (searchTerm) {
-        const term = searchTerm.toLowerCase();
-        filtered = filtered.filter(training => 
-          training.title.toLowerCase().includes(term) ||
-          training.employeeName?.toLowerCase().includes(term) ||
-          training.provider?.toLowerCase().includes(term)
-        );
-      }
-      
-      // Apply status filter
-      if (statusFilter !== 'all') {
-        filtered = filtered.filter(training => training.status === statusFilter);
-      }
-      
-      // Apply type filter
-      if (typeFilter !== 'all') {
-        filtered = filtered.filter(training => training.type === typeFilter);
-      }
-      
-      setFilteredTrainings(filtered);
-    }
-  }, [trainings, searchTerm, statusFilter, typeFilter, refreshTrigger]);
-
-  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(e.target.value);
-  };
-
-  const handleStatusFilter = (value: string) => {
-    setStatusFilter(value);
-  };
-
-  const handleTypeFilter = (value: string) => {
-    setTypeFilter(value);
+  const handleRefresh = () => {
+    setIsRefreshing(true);
+    setRefreshTrigger(prev => prev + 1);
+    
+    // Simulate refresh delay
+    setTimeout(() => {
+      setIsRefreshing(false);
+      toast.success('Données actualisées');
+    }, 500);
   };
   
-  const handleExportTrainings = () => {
-    // Export trainings to CSV or Excel
-    console.log('Exporting trainings...');
-  };
-  
-  const handleImportTrainings = () => {
-    // Import trainings from CSV or Excel
-    console.log('Importing trainings...');
-  };
-  
-  const handleAddTraining = () => {
-    setIsCreateDialogOpen(true);
+  const handleOpenCreateDialog = () => {
+    setOpenCreateDialog(true);
   };
   
   const handleCloseDialog = () => {
-    setIsCreateDialogOpen(false);
+    setOpenCreateDialog(false);
   };
   
   const handleTrainingCreated = () => {
-    setIsCreateDialogOpen(false);
-    setRefreshTrigger(prev => prev + 1);
+    setOpenCreateDialog(false);
+    handleRefresh();
+    toast.success('Formation créée avec succès');
   };
 
-  // Column definition for the trainings table
-  const statusCell = (props: { row: { original: Training } }) => {
-    const { row } = props;
-    return (
-      <StatusBadge status={row.original.status}>
-        {row.original.status}
-      </StatusBadge>
-    );
-  };
-
-  const columns: Column[] = [
+  const columns = [
     {
       key: 'title',
-      header: 'Formation',
-      cell: (props: { row: { original: any } }) => props.row.original.title
-    },
-    {
-      key: 'employeeName',
-      header: 'Employé',
-      cell: (props: { row: { original: any } }) => props.row.original.employeeName
+      header: 'Titre',
+      cell: ({ row }: { row: { original: Training } }) => (
+        <div className="font-medium">{row.original.title}</div>
+      ),
     },
     {
       key: 'type',
       header: 'Type',
-      cell: (props: { row: { original: any } }) => props.row.original.type
+      cell: ({ row }: { row: { original: Training } }) => (
+        <div>{getTrainingTypeLabel(row.original.type)}</div>
+      ),
+    },
+    {
+      key: 'employee',
+      header: 'Employé',
+      cell: ({ row }: { row: { original: Training } }) => (
+        <div className="flex items-center gap-2">
+          {row.original.employeePhoto ? (
+            <div className="h-8 w-8 rounded-full overflow-hidden">
+              <img 
+                src={row.original.employeePhoto} 
+                alt={row.original.employeeName} 
+                className="h-full w-full object-cover"
+              />
+            </div>
+          ) : (
+            <div className="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-600">
+              {getInitials(row.original.employeeName || '')}
+            </div>
+          )}
+          <span>{row.original.employeeName}</span>
+        </div>
+      ),
+    },
+    {
+      key: 'department',
+      header: 'Département',
+      cell: ({ row }: { row: { original: Training } }) => (
+        <div>{row.original.department}</div>
+      ),
+    },
+    {
+      key: 'dates',
+      header: 'Dates',
+      cell: ({ row }: { row: { original: Training } }) => (
+        <div>
+          <div>{row.original.startDate}</div>
+          {row.original.endDate && <div className="text-xs text-gray-500">au {row.original.endDate}</div>}
+        </div>
+      ),
     },
     {
       key: 'provider',
-      header: 'Prestataire',
-      cell: (props: { row: { original: any } }) => props.row.original.provider || 'N/A'
+      header: 'Organisme',
+      cell: ({ row }: { row: { original: Training } }) => (
+        <div>{row.original.provider || '-'}</div>
+      ),
     },
     {
-      key: 'startDate',
-      header: 'Date de début',
-      cell: (props: { row: { original: any } }) => props.row.original.startDate
+      key: 'location',
+      header: 'Lieu',
+      cell: ({ row }: { row: { original: Training } }) => (
+        <div>{row.original.location || '-'}</div>
+      ),
     },
     {
       key: 'status',
       header: 'Statut',
-      cell: statusCell
-    }
+      cell: ({ row }: { row: { original: Training } }) => (
+        <StatusBadge status={row.original.status}>
+          {row.original.status}
+        </StatusBadge>
+      ),
+    },
   ];
 
-  const module = employeesModule;
-  const submodule = module.submodules.find(sm => sm.id === 'employees-trainings');
+  // Helper function to get initials from a name
+  const getInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map(n => n[0])
+      .join('')
+      .toUpperCase()
+      .substring(0, 2);
+  };
+
+  // Helper function to get training type label
+  const getTrainingTypeLabel = (type: string) => {
+    const typeMap: Record<string, string> = {
+      'technical': 'Technique',
+      'management': 'Management',
+      'soft_skills': 'Soft Skills',
+      'certification': 'Certification',
+      'compliance': 'Conformité',
+      'other': 'Autre',
+    };
+    
+    return typeMap[type] || type;
+  };
 
   return (
     <div className="space-y-6">
-      {submodule && <SubmoduleHeader module={module} submodule={submodule} />}
-      
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <Card className="bg-blue-50 border-blue-100">
-          <CardContent className="flex flex-col items-center justify-center p-6">
-            <h3 className="font-semibold text-xl">{stats.total}</h3>
-            <p className="text-gray-500">Total des formations</p>
-          </CardContent>
-        </Card>
-        
-        <Card className="bg-yellow-50 border-yellow-100">
-          <CardContent className="flex flex-col items-center justify-center p-6">
-            <h3 className="font-semibold text-xl">{stats.planned}</h3>
-            <p className="text-gray-500">Formations planifiées</p>
-          </CardContent>
-        </Card>
-        
-        <Card className="bg-green-50 border-green-100">
-          <CardContent className="flex flex-col items-center justify-center p-6">
-            <h3 className="font-semibold text-xl">{stats.inProgress}</h3>
-            <p className="text-gray-500">Formations en cours</p>
-          </CardContent>
-        </Card>
-        
-        <Card className="bg-indigo-50 border-indigo-100">
-          <CardContent className="flex flex-col items-center justify-center p-6">
-            <h3 className="font-semibold text-xl">{stats.completed}</h3>
-            <p className="text-gray-500">Formations terminées</p>
-          </CardContent>
-        </Card>
+      <div className="flex justify-between items-center">
+        <h2 className="text-3xl font-bold tracking-tight">Formations</h2>
+        <div className="flex space-x-2">
+          <Button variant="outline" onClick={handleRefresh} disabled={isLoading || isRefreshing}>
+            <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? "animate-spin" : ""}`} />
+            Actualiser
+          </Button>
+          <Button onClick={handleOpenCreateDialog}>
+            <Plus className="h-4 w-4 mr-2" />
+            Nouvelle formation
+          </Button>
+        </div>
       </div>
-      
-      <div className="flex flex-col sm:flex-row gap-4 justify-between mb-6">
-        <div className="flex flex-col sm:flex-row gap-4">
-          <div className="relative w-full sm:w-64">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
-            <Input
-              placeholder="Rechercher une formation..."
-              className="pl-8"
-              value={searchTerm}
-              onChange={handleSearch}
-            />
+
+      <Card>
+        <CardContent className="p-6">
+          <div className="grid grid-cols-4 gap-4 mb-6">
+            <div className="bg-green-50 p-4 rounded-lg border border-green-100">
+              <div className="text-xs text-green-800 font-medium mb-1">Planifiées</div>
+              <div className="text-2xl font-bold text-green-700">
+                {isLoading ? '-' : trainings.filter(t => t.status === 'Planifiée').length}
+              </div>
+            </div>
+            <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-100">
+              <div className="text-xs text-yellow-800 font-medium mb-1">En cours</div>
+              <div className="text-2xl font-bold text-yellow-700">
+                {isLoading ? '-' : trainings.filter(t => t.status === 'En cours').length}
+              </div>
+            </div>
+            <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
+              <div className="text-xs text-blue-800 font-medium mb-1">Terminées</div>
+              <div className="text-2xl font-bold text-blue-700">
+                {isLoading ? '-' : trainings.filter(t => t.status === 'Terminée').length}
+              </div>
+            </div>
+            <div className="bg-red-50 p-4 rounded-lg border border-red-100">
+              <div className="text-xs text-red-800 font-medium mb-1">Annulées</div>
+              <div className="text-2xl font-bold text-red-700">
+                {isLoading ? '-' : trainings.filter(t => t.status === 'Annulée').length}
+              </div>
+            </div>
           </div>
           
-          <Select value={statusFilter} onValueChange={handleStatusFilter}>
-            <SelectTrigger className="w-full sm:w-40">
-              <SelectValue placeholder="Statut" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Tous les statuts</SelectItem>
-              <SelectItem value="Planifiée">Planifiée</SelectItem>
-              <SelectItem value="En cours">En cours</SelectItem>
-              <SelectItem value="Terminée">Terminée</SelectItem>
-              <SelectItem value="Annulée">Annulée</SelectItem>
-            </SelectContent>
-          </Select>
-          
-          <Select value={typeFilter} onValueChange={handleTypeFilter}>
-            <SelectTrigger className="w-full sm:w-40">
-              <SelectValue placeholder="Type" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Tous les types</SelectItem>
-              <SelectItem value="technical">Technique</SelectItem>
-              <SelectItem value="management">Management</SelectItem>
-              <SelectItem value="soft_skills">Soft Skills</SelectItem>
-              <SelectItem value="certification">Certification</SelectItem>
-              <SelectItem value="compliance">Conformité</SelectItem>
-              <SelectItem value="other">Autre</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={handleExportTrainings}>
-            <FileDown className="h-4 w-4 mr-2" />
-            Exporter
-          </Button>
-          <Button variant="outline" onClick={handleImportTrainings}>
-            <FileUp className="h-4 w-4 mr-2" />
-            Importer
-          </Button>
-          <Button onClick={handleAddTraining}>
-            <PlusCircle className="h-4 w-4 mr-2" />
-            Ajouter
-          </Button>
-        </div>
-      </div>
-      
-      <DataTable
-        columns={columns}
-        data={filteredTrainings}
-        isLoading={isLoading}
-        emptyMessage="Aucune formation trouvée"
-      />
-      
-      <CreateTrainingDialog
-        open={isCreateDialogOpen}
-        onOpenChange={setIsCreateDialogOpen}
+          <DataTable 
+            columns={columns}
+            data={trainings}
+            isLoading={isLoading}
+            emptyMessage="Aucune formation trouvée"
+          />
+        </CardContent>
+      </Card>
+
+      {/* Create Training Dialog with all required props */}
+      <CreateTrainingDialog 
+        open={openCreateDialog} 
+        onOpenChange={setOpenCreateDialog}
         onClose={handleCloseDialog}
         onSubmit={handleTrainingCreated}
-        employees={employees}
+        employees={employees || []}
       />
     </div>
   );
