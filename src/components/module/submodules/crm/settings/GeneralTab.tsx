@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -9,9 +8,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label";
 import { Loader2 } from "lucide-react";
 import { useCrmSettings } from '../hooks/useCrmSettings';
+import { useHrModuleData } from '@/hooks/useHrModuleData';
 
 const GeneralTab: React.FC = () => {
   const { settings, loading, saving, error, saveSettings } = useCrmSettings();
+  const { companies } = useHrModuleData();
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -24,6 +25,13 @@ const GeneralTab: React.FC = () => {
 
   const handleSelectChange = (name: string, value: string) => {
     saveSettings({ [name]: value });
+  };
+
+  const handleCompanySelect = (value: string) => {
+    const selectedCompany = companies?.find(company => company.id === value);
+    if (selectedCompany) {
+      saveSettings({ companyName: selectedCompany.name });
+    }
   };
 
   if (loading) {
@@ -62,12 +70,24 @@ const GeneralTab: React.FC = () => {
           <div className="space-y-4">
             <div>
               <Label htmlFor="companyName">Nom de l'entreprise</Label>
-              <Input 
-                id="companyName" 
-                name="companyName" 
+              <Select 
                 value={settings.companyName}
-                onChange={handleInputChange}
-              />
+                onValueChange={(value) => handleCompanySelect(value)}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Sélectionner une entreprise" />
+                </SelectTrigger>
+                <SelectContent>
+                  {companies?.map((company) => (
+                    <SelectItem 
+                      key={company.id} 
+                      value={company.id}
+                    >
+                      {company.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
