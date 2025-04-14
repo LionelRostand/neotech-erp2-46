@@ -1,340 +1,319 @@
 
-import React, { useState, useEffect, useMemo } from 'react';
-import { useHrModuleData } from '@/hooks/useHrModuleData';
-import { useTrainingsData, Training } from '@/hooks/useTrainingsData';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { PlusCircle, Search, Filter, FileDown, FileUp, User, Calendar, Book, GraduationCap } from 'lucide-react';
-import { DataTable } from '@/components/DataTable';
-import { ColumnDef } from '@tanstack/react-table';
-import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import SubmoduleHeader from '../SubmoduleHeader';
+import React, { useState, useEffect, ChangeEvent } from 'react';
+import { Plus, Search, GraduationCap, Filter } from 'lucide-react';
 import { Input } from '@/components/ui/input';
-import { toast } from 'sonner';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { useToast } from '@/hooks/use-toast';
+import { Badge } from '@/components/ui/badge';
+import DataTable from '@/components/DataTable'; // Fixed: Changed from named import to default import
+import { Training, useTrainingsData } from '@/hooks/useTrainingsData';
 import TrainingsFilter from './TrainingsFilter';
 import DeleteTrainingDialog from './DeleteTrainingDialog';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Employee } from '@/types/employee';
 import CreateTrainingDialog from './CreateTrainingDialog';
-import { addTrainingDocument } from '@/hooks/firestore/firestore-utils';
-
-const getStatusColor = (status: string) => {
-  switch (status) {
-    case 'Planifiée': return 'bg-blue-500 hover:bg-blue-600';
-    case 'En cours': return 'bg-green-500 hover:bg-green-600';
-    case 'Terminée': return 'bg-gray-500 hover:bg-gray-600';
-    case 'Annulée': return 'bg-red-500 hover:bg-red-600';
-    default: return 'bg-gray-500 hover:bg-gray-600';
-  }
-};
+import SubmoduleHeader from '@/components/module/submodules/SubmoduleHeader';
+import { useHrModuleData } from '@/hooks/useHrModuleData';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const EmployeesTrainings: React.FC = () => {
-  const { trainings, isLoading, error } = useTrainingsData();
+  const { toast } = useToast();
+  const { trainings: allTrainings, stats } = useTrainingsData();
   const { employees } = useHrModuleData();
-  const [searchTerm, setSearchTerm] = useState('');
-  const [isFilterOpen, setIsFilterOpen] = useState(false);
-  const [filters, setFilters] = useState<any>({});
-  const [trainingToDelete, setTrainingToDelete] = useState<Training | null>(null);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [trainings, setTrainings] = useState<Training[]>([]);
+  const [selectedTraining, setSelectedTraining] = useState<Training | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterDialogOpen, setFilterDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [activeFilters, setActiveFilters] = useState<any>({});
 
   // Filter and search trainings
-  const filteredTrainings = useMemo(() => {
-    if (!trainings) return [];
+  useEffect(() => {
+    let filteredTrainings = [...allTrainings];
 
-    return trainings.filter(training => {
-      // Text search
-      const searchText = searchTerm.toLowerCase();
-      const matchesSearch = !searchTerm ||
-        training.title.toLowerCase().includes(searchText) ||
-        (training.employeeName && training.employeeName.toLowerCase().includes(searchText)) ||
-        (training.description && training.description.toLowerCase().includes(searchText)) ||
-        (training.provider && training.provider.toLowerCase().includes(searchText));
+    // Apply search query
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      filteredTrainings = filteredTrainings.filter(
+        (training) =>
+          training.title.toLowerCase().includes(query) ||
+          training.employeeName?.toLowerCase().includes(query) ||
+          training.provider?.toLowerCase().includes(query) ||
+          training.type.toLowerCase().includes(query)
+      );
+    }
 
-      if (!matchesSearch) return false;
-
-      // Apply filters
-      if (filters.employee && !training.employeeName?.toLowerCase().includes(filters.employee.toLowerCase())) {
-        return false;
+    // Apply filters
+    if (Object.keys(activeFilters).length > 0) {
+      if (activeFilters.employee) {
+        filteredTrainings = filteredTrainings.filter((training) =>
+          training.employeeName?.toLowerCase().includes(activeFilters.employee.toLowerCase())
+        );
       }
 
-      if (filters.title && !training.title.toLowerCase().includes(filters.title.toLowerCase())) {
-        return false;
+      if (activeFilters.title) {
+        filteredTrainings = filteredTrainings.filter((training) =>
+          training.title.toLowerCase().includes(activeFilters.title.toLowerCase())
+        );
       }
 
-      if (filters.type && filters.type !== 'all_types' && training.type !== filters.type) {
-        return false;
+      if (activeFilters.type && activeFilters.type !== 'all_types') {
+        filteredTrainings = filteredTrainings.filter(
+          (training) => training.type === activeFilters.type
+        );
       }
 
-      if (filters.department && filters.department !== 'all_departments' && training.department !== filters.department) {
-        return false;
+      if (activeFilters.department && activeFilters.department !== 'all_departments') {
+        filteredTrainings = filteredTrainings.filter(
+          (training) => training.department === activeFilters.department
+        );
       }
 
-      if (filters.status && filters.status !== 'all_statuses' && training.status !== filters.status) {
-        return false;
+      if (activeFilters.status && activeFilters.status !== 'all_statuses') {
+        filteredTrainings = filteredTrainings.filter(
+          (training) => training.status === activeFilters.status
+        );
       }
 
-      if (filters.provider && !training.provider?.toLowerCase().includes(filters.provider.toLowerCase())) {
-        return false;
+      if (activeFilters.provider) {
+        filteredTrainings = filteredTrainings.filter((training) =>
+          training.provider?.toLowerCase().includes(activeFilters.provider.toLowerCase())
+        );
       }
 
-      if (filters.certificate === 'yes' && !training.certificate) {
-        return false;
+      if (activeFilters.certificate && activeFilters.certificate !== 'all_certificates') {
+        const hasCertificate = activeFilters.certificate === 'yes';
+        filteredTrainings = filteredTrainings.filter(
+          (training) => !!training.certificate === hasCertificate
+        );
       }
 
-      if (filters.certificate === 'no' && training.certificate) {
-        return false;
+      if (activeFilters.dateFrom) {
+        const dateFrom = new Date(activeFilters.dateFrom);
+        filteredTrainings = filteredTrainings.filter((training) => {
+          const trainingDate = new Date(training.startDate);
+          return trainingDate >= dateFrom;
+        });
       }
 
-      // Date filtering
-      if (filters.dateFrom) {
-        const startDate = new Date(training.startDate.split('/').reverse().join('-'));
-        const filterFromDate = new Date(filters.dateFrom);
-        if (startDate < filterFromDate) return false;
+      if (activeFilters.dateTo) {
+        const dateTo = new Date(activeFilters.dateTo);
+        dateTo.setHours(23, 59, 59, 999); // Set to end of day
+        filteredTrainings = filteredTrainings.filter((training) => {
+          const trainingDate = new Date(training.startDate);
+          return trainingDate <= dateTo;
+        });
       }
+    }
 
-      if (filters.dateTo) {
-        const startDate = new Date(training.startDate.split('/').reverse().join('-'));
-        const filterToDate = new Date(filters.dateTo);
-        if (startDate > filterToDate) return false;
-      }
+    setTrainings(filteredTrainings);
+  }, [allTrainings, searchQuery, activeFilters]);
 
-      return true;
+  const handleRowClick = (training: Training) => {
+    // For future implementation: View training details
+    toast({
+      title: "Détails de la formation",
+      description: `${training.title} - ${training.employeeName}`,
     });
-  }, [trainings, searchTerm, filters]);
+  };
 
-  // Prepare columns for the table
-  const columns = useMemo<ColumnDef<Training>[]>(() => [
-    {
-      id: 'employee',
-      header: 'Employé',
-      cell: ({ row }) => {
-        const training = row.original;
-        return (
-          <div className="flex items-center space-x-2">
-            <Avatar className="h-8 w-8">
-              {training.employeePhoto ? (
-                <AvatarImage src={training.employeePhoto} alt={training.employeeName || ''} />
-              ) : (
-                <AvatarFallback>
-                  <User className="h-4 w-4" />
-                </AvatarFallback>
-              )}
-            </Avatar>
-            <span>{training.employeeName}</span>
-          </div>
-        );
-      },
-      sortingFn: 'text',
-    },
-    {
-      accessorKey: 'title',
-      header: 'Formation',
-      cell: ({ row }) => <div className="font-medium">{row.original.title}</div>,
-    },
-    {
-      accessorKey: 'type',
-      header: 'Type',
-      cell: ({ row }) => <div>{row.original.type}</div>,
-    },
-    {
-      accessorKey: 'status',
-      header: 'Statut',
-      cell: ({ row }) => (
-        <Badge className={`${getStatusColor(row.original.status)}`}>
-          {row.original.status}
-        </Badge>
-      ),
-    },
-    {
-      accessorKey: 'startDate',
-      header: 'Date de début',
-      cell: ({ row }) => <div>{row.original.startDate}</div>,
-    },
-    {
-      accessorKey: 'endDate',
-      header: 'Date de fin',
-      cell: ({ row }) => <div>{row.original.endDate || '-'}</div>,
-    },
-    {
-      accessorKey: 'duration',
-      header: 'Durée (jours)',
-      cell: ({ row }) => <div>{row.original.duration || '-'}</div>,
-    },
-    {
-      accessorKey: 'provider',
-      header: 'Fournisseur',
-      cell: ({ row }) => <div>{row.original.provider || '-'}</div>,
-    },
-    {
-      id: 'certificate',
-      header: 'Certificat',
-      cell: ({ row }) => (
-        <div>
-          {row.original.certificate ? (
-            <Badge className="bg-green-500 hover:bg-green-600">Oui</Badge>
-          ) : (
-            <Badge variant="outline">Non</Badge>
-          )}
-        </div>
-      ),
-    },
-    {
-      id: 'actions',
-      cell: ({ row }) => {
-        return (
-          <div className="flex items-center justify-end space-x-2">
-            <Button
-              variant="destructive"
-              size="sm"
-              onClick={() => {
-                setTrainingToDelete(row.original);
-                setIsDeleteDialogOpen(true);
-              }}
-            >
-              Supprimer
-            </Button>
-          </div>
-        );
-      },
-    },
-  ], []);
+  const handleSearch = (e: ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value);
+  };
 
-  // Handle create training submission
-  const handleTrainingSubmit = async (trainingData: any) => {
-    try {
-      await addTrainingDocument(trainingData);
-      toast.success('Formation ajoutée avec succès');
-      setRefreshTrigger(prev => prev + 1);
-      setIsCreateDialogOpen(false);
-    } catch (error) {
-      console.error('Erreur lors de l\'ajout de la formation:', error);
-      toast.error('Erreur lors de l\'ajout de la formation');
+  const handleApplyFilters = (filters: any) => {
+    setActiveFilters(filters);
+    setFilterDialogOpen(false);
+  };
+
+  const handleDeleteClick = (training: Training, e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent row click event
+    setSelectedTraining(training);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = () => {
+    setDeleteDialogOpen(false);
+    setRefreshTrigger((prev) => prev + 1);
+    
+    // Reset selected training
+    setSelectedTraining(null);
+  };
+
+  const handleCreateTraining = () => {
+    setCreateDialogOpen(true);
+  };
+
+  const handleCloseCreateDialog = () => {
+    setCreateDialogOpen(false);
+  };
+
+  const handleTrainingSubmit = () => {
+    setCreateDialogOpen(false);
+    setRefreshTrigger((prev) => prev + 1);
+    toast({
+      title: "Formation créée",
+      description: "La formation a été créée avec succès",
+    });
+  };
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'Terminée':
+        return <Badge className="bg-green-100 text-green-800 hover:bg-green-200">{status}</Badge>;
+      case 'En cours':
+        return <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-200">{status}</Badge>;
+      case 'Planifiée':
+        return <Badge className="bg-amber-100 text-amber-800 hover:bg-amber-200">{status}</Badge>;
+      case 'Annulée':
+        return <Badge className="bg-red-100 text-red-800 hover:bg-red-200">{status}</Badge>;
+      default:
+        return <Badge>{status}</Badge>;
     }
   };
 
-  // Handle confirmation of training deletion
-  const handleDeleteConfirm = () => {
-    // This will close the dialog and refresh the trainings list
-    setRefreshTrigger(prev => prev + 1);
-    setIsDeleteDialogOpen(false);
-    setTrainingToDelete(null);
+  const getCertificateBadge = (hasCertificate: boolean) => {
+    return hasCertificate ? (
+      <Badge className="bg-green-100 text-green-800 hover:bg-green-200">Oui</Badge>
+    ) : (
+      <Badge variant="outline" className="text-gray-500">
+        Non
+      </Badge>
+    );
   };
-
-  // Display loading state and errors
-  if (isLoading) {
-    return <div className="flex justify-center p-8">Chargement des formations...</div>;
-  }
-
-  if (error) {
-    return <div className="text-red-500 p-8">Erreur: Impossible de charger les formations</div>;
-  }
-
-  // Training statistics by status
-  const plannedCount = trainings.filter(t => t.status === 'Planifiée').length;
-  const inProgressCount = trainings.filter(t => t.status === 'En cours').length;
-  const completedCount = trainings.filter(t => t.status === 'Terminée').length;
-  const cancelledCount = trainings.filter(t => t.status === 'Annulée').length;
 
   return (
     <div className="space-y-6">
       <SubmoduleHeader 
-        title="Formations" 
-        description="Gestion des formations pour les employés"
-        icon={<GraduationCap className="h-6 w-6" />}
+        description="Gérez les formations et développement professionnel des employés"
+        icon={<GraduationCap className="h-6 w-6" />} 
       />
-      
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Formations Planifiées</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{plannedCount}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Formations En Cours</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{inProgressCount}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Formations Terminées</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{completedCount}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Formations Annulées</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{cancelledCount}</div>
-          </CardContent>
-        </Card>
-      </div>
 
       <Tabs defaultValue="list" className="w-full">
-        <TabsList className="grid w-full max-w-md grid-cols-2">
-          <TabsTrigger value="list">Liste</TabsTrigger>
-          <TabsTrigger value="calendar">Calendrier</TabsTrigger>
+        <TabsList className="mb-4">
+          <TabsTrigger value="list">Liste des formations</TabsTrigger>
+          <TabsTrigger value="stats">Statistiques</TabsTrigger>
         </TabsList>
-        <TabsContent value="list" className="space-y-4">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-2">
-            <div className="flex items-center space-x-2 w-full sm:w-auto">
+
+        <TabsContent value="list" className="space-y-6">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div className="relative w-full md:w-1/3">
               <Input
                 placeholder="Rechercher une formation..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="max-w-sm"
-                icon={<Search className="h-4 w-4" />}
+                value={searchQuery}
+                onChange={handleSearch}
+                className="pl-10"
               />
-              <Button variant="outline" onClick={() => setIsFilterOpen(true)}>
-                <Filter className="h-4 w-4 mr-2" />
-                Filtrer
-              </Button>
+              <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-500" />
             </div>
-            <div className="flex items-center space-x-2 w-full sm:w-auto justify-end">
-              <Button variant="secondary">
-                <FileDown className="h-4 w-4 mr-2" />
-                Exporter
+            
+            <div className="flex gap-2 w-full md:w-auto">
+              <Button
+                variant="outline"
+                className="flex items-center gap-2"
+                onClick={() => setFilterDialogOpen(true)}
+              >
+                <Filter className="h-4 w-4" />
+                Filtres
+                {Object.keys(activeFilters).length > 0 && (
+                  <Badge className="ml-1 bg-primary text-white">
+                    {Object.keys(activeFilters).length}
+                  </Badge>
+                )}
               </Button>
-              <Button variant="secondary">
-                <FileUp className="h-4 w-4 mr-2" />
-                Importer
-              </Button>
-              <Button onClick={() => setIsCreateDialogOpen(true)}>
-                <PlusCircle className="h-4 w-4 mr-2" />
-                Nouvelle Formation
+              
+              <Button onClick={handleCreateTraining} className="flex items-center gap-2">
+                <Plus className="h-4 w-4" />
+                Ajouter
               </Button>
             </div>
           </div>
 
           <DataTable
-            columns={columns}
-            data={filteredTrainings}
-            pageSize={10}
-            searchKey="title"
+            title="Formations"
+            data={trainings}
+            columns={[
+              { key: 'employeeName', header: 'Employé' },
+              { key: 'title', header: 'Formation' },
+              { key: 'type', header: 'Type' },
+              { 
+                key: 'startDate', 
+                header: 'Date de début',
+              },
+              { 
+                key: 'status', 
+                header: 'Statut',
+                cell: ({ row }) => getStatusBadge(row.original.status)
+              },
+              { 
+                key: 'certificate', 
+                header: 'Certificat',
+                cell: ({ row }) => getCertificateBadge(row.original.certificate)
+              },
+              {
+                key: 'actions',
+                header: 'Actions',
+                cell: ({ row }) => (
+                  <Button 
+                    variant="destructive" 
+                    size="sm"
+                    onClick={(e) => handleDeleteClick(row.original, e)}
+                  >
+                    Supprimer
+                  </Button>
+                )
+              }
+            ]}
+            onRowClick={handleRowClick}
+            className="shadow-none border border-gray-200"
           />
         </TabsContent>
-        <TabsContent value="calendar">
-          <Card>
-            <CardHeader>
-              <CardTitle>Calendrier des formations</CardTitle>
-            </CardHeader>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-center h-64 border rounded">
-                <div className="text-center">
-                  <Calendar className="h-10 w-10 mx-auto text-gray-400" />
-                  <p className="mt-2">La vue calendrier sera disponible prochainement</p>
+
+        <TabsContent value="stats" className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <Card>
+              <CardContent className="p-6">
+                <div className="space-y-2">
+                  <p className="text-sm font-medium text-gray-500">Total des formations</p>
+                  <p className="text-3xl font-bold">{stats.total}</p>
                 </div>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardContent className="p-6">
+                <div className="space-y-2">
+                  <p className="text-sm font-medium text-gray-500">En cours</p>
+                  <p className="text-3xl font-bold text-blue-600">{stats.inProgress}</p>
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardContent className="p-6">
+                <div className="space-y-2">
+                  <p className="text-sm font-medium text-gray-500">Terminées</p>
+                  <p className="text-3xl font-bold text-green-600">{stats.completed}</p>
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardContent className="p-6">
+                <div className="space-y-2">
+                  <p className="text-sm font-medium text-gray-500">Planifiées</p>
+                  <p className="text-3xl font-bold text-amber-600">{stats.planned}</p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+          
+          <Card>
+            <CardContent className="p-6">
+              <h3 className="text-lg font-medium mb-4">Statistiques des formations</h3>
+              <div className="flex items-center justify-center h-64 bg-gray-50 rounded-lg">
+                <p className="text-gray-500">Graphique des formations par statut</p>
               </div>
             </CardContent>
           </Card>
@@ -342,24 +321,24 @@ const EmployeesTrainings: React.FC = () => {
       </Tabs>
 
       <TrainingsFilter
-        open={isFilterOpen}
-        onOpenChange={setIsFilterOpen}
-        onApplyFilters={setFilters}
+        open={filterDialogOpen}
+        onOpenChange={setFilterDialogOpen}
+        onApplyFilters={handleApplyFilters}
       />
 
       <DeleteTrainingDialog
-        open={isDeleteDialogOpen}
-        onOpenChange={setIsDeleteDialogOpen}
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
         onConfirm={handleDeleteConfirm}
-        training={trainingToDelete}
+        training={selectedTraining}
       />
 
       <CreateTrainingDialog
-        open={isCreateDialogOpen}
-        onOpenChange={setIsCreateDialogOpen}
-        onClose={() => setIsCreateDialogOpen(false)}
+        open={createDialogOpen}
+        onOpenChange={setCreateDialogOpen}
+        onClose={handleCloseCreateDialog}
         onSubmit={handleTrainingSubmit}
-        employees={employees as Employee[]}
+        employees={employees || []}
       />
     </div>
   );
