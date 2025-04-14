@@ -1,291 +1,340 @@
 
 import React, { useState } from 'react';
 import { useEvaluationsData } from '@/hooks/useEvaluationsData';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
+import { useEmployeeData } from '@/hooks/useEmployeeData';
 import { Button } from '@/components/ui/button';
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
-import { Search, Plus, FileText, Trash2, Edit, Filter } from 'lucide-react';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { 
+  Card, 
+  CardContent, 
+  CardDescription, 
+  CardFooter, 
+  CardHeader, 
+  CardTitle 
+} from '@/components/ui/card';
+import { PlusCircle, Filter, FileExport, Edit, Trash, FileCheck } from 'lucide-react';
 import { toast } from 'sonner';
+import { addDocument, updateDocument, deleteDocument } from '@/hooks/firestore/firestore-utils';
+import { COLLECTIONS } from '@/lib/firebase-collections';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
 import CreateEvaluationDialog from './CreateEvaluationDialog';
 import EvaluationsFilter from './EvaluationsFilter';
 import ExportEvaluationsDialog from './ExportEvaluationsDialog';
 import DeleteEvaluationDialog from './DeleteEvaluationDialog';
 
 const EmployeesEvaluations = () => {
-  const { evaluations, stats, isLoading, error, refreshData } = useEvaluationsData();
-  const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string>('');
-  const [showFilterDialog, setShowFilterDialog] = useState(false);
+  const { evaluations, refreshData, isLoading } = useEvaluationsData();
+  const { employees } = useEmployeeData();
+  
   const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [showFilterDialog, setShowFilterDialog] = useState(false);
   const [showExportDialog, setShowExportDialog] = useState(false);
+  const [showViewDialog, setShowViewDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [selectedEvaluation, setSelectedEvaluation] = useState<string | null>(null);
-
-  // Filter evaluations based on search query and status
-  const filteredEvaluations = evaluations
-    .filter(evaluation => 
-      (statusFilter === '' || evaluation.status === statusFilter) &&
-      (searchQuery === '' || 
-        evaluation.employeeName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        evaluation.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        evaluation.comments?.toLowerCase().includes(searchQuery.toLowerCase()))
-    )
-    .sort((a, b) => {
-      // Convert dates to comparable format and sort by most recent first
-      const dateA = new Date(a.date.split('/').reverse().join('-'));
-      const dateB = new Date(b.date.split('/').reverse().join('-'));
-      return dateB.getTime() - dateA.getTime();
-    });
-
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(e.target.value);
-  };
-
-  const handleStatusFilterChange = (value: string) => {
-    setStatusFilter(value);
-  };
-
-  const handleCreateSuccess = () => {
-    refreshData();
-    toast.success('Évaluation créée avec succès');
-  };
-
-  const handleDeleteSuccess = () => {
-    refreshData();
-    toast.success('Évaluation supprimée avec succès');
-  };
-
-  const handleEditEvaluation = (id: string) => {
-    // This would be implemented separately
-    toast.info(`Édition de l'évaluation ${id} - Fonctionnalité à implémenter`);
-  };
-
-  const handleDeleteEvaluation = (id: string) => {
-    setSelectedEvaluation(id);
-    setShowDeleteDialog(true);
-  };
-
-  const getBadgeVariant = (status: string) => {
-    switch (status) {
-      case 'Planifiée':
-        return 'outline';
-      case 'Complétée':
-        return 'success';
-      case 'Annulée':
-        return 'destructive';
-      default:
-        return 'secondary';
+  const [selectedEvaluation, setSelectedEvaluation] = useState<any>(null);
+  
+  const [filters, setFilters] = useState({
+    status: 'all'
+  });
+  
+  // Filter evaluations based on filter criteria
+  const filteredEvaluations = evaluations.filter(evaluation => {
+    if (filters.status !== 'all' && evaluation.status !== filters.status) {
+      return false;
+    }
+    return true;
+  });
+  
+  const handleCreateEvaluation = async (data: any) => {
+    try {
+      // Find employee name
+      const employee = employees.find(emp => emp.id === data.employeeId);
+      const employeeName = employee ? `${employee.firstName} ${employee.lastName}` : 'Employé inconnu';
+      
+      // Find evaluator name if exists
+      let evaluatorName = '';
+      if (data.evaluatorId && data.evaluatorId !== '') {
+        const evaluator = employees.find(emp => emp.id === data.evaluatorId);
+        evaluatorName = evaluator ? `${evaluator.firstName} ${evaluator.lastName}` : '';
+      }
+      
+      // Prepare data for Firestore
+      const evaluationData = {
+        employeeId: data.employeeId,
+        employeeName,
+        evaluatorId: data.evaluatorId !== 'none' ? data.evaluatorId : '',
+        evaluatorName,
+        date: data.date.toISOString(),
+        status: data.status,
+        title: data.title,
+        comments: data.comments,
+        createdAt: new Date().toISOString(),
+      };
+      
+      // Save to Firestore
+      await addDocument(COLLECTIONS.HR.EVALUATIONS, evaluationData);
+      
+      toast.success('Évaluation créée avec succès');
+      refreshData();
+    } catch (error) {
+      console.error('Erreur lors de la création de l\'évaluation:', error);
+      toast.error('Erreur lors de la création de l\'évaluation');
     }
   };
-
-  const formatRating = (rating?: number) => {
-    if (rating === undefined || rating === null) return '-';
-    return rating.toFixed(1);
+  
+  const handleViewEvaluation = (evaluation: any) => {
+    setSelectedEvaluation(evaluation);
+    setShowViewDialog(true);
   };
-
-  if (error) {
-    return (
-      <Card>
-        <CardContent className="pt-6">
-          <div className="text-center text-red-500">
-            Erreur lors du chargement des évaluations: {error.message}
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
+  
+  const handleDeleteEvaluation = (evaluation: any) => {
+    setSelectedEvaluation(evaluation);
+    setShowDeleteDialog(true);
+  };
+  
+  const confirmDeleteEvaluation = async (id: string) => {
+    try {
+      await deleteDocument(COLLECTIONS.HR.EVALUATIONS, id);
+      toast.success('Évaluation supprimée avec succès');
+      setShowDeleteDialog(false);
+      refreshData();
+    } catch (error) {
+      console.error('Erreur lors de la suppression de l\'évaluation:', error);
+      toast.error('Erreur lors de la suppression de l\'évaluation');
+    }
+  };
+  
+  const handleCompleteEvaluation = async (evaluation: any) => {
+    try {
+      // Update status to completed
+      await updateDocument(
+        COLLECTIONS.HR.EVALUATIONS,
+        evaluation.id,
+        { status: 'Complétée', completedAt: new Date().toISOString() }
+      );
+      
+      toast.success('Évaluation marquée comme complétée');
+      refreshData();
+    } catch (error) {
+      console.error('Erreur lors de la mise à jour de l\'évaluation:', error);
+      toast.error('Erreur lors de la mise à jour');
+    }
+  };
+  
+  const handleApplyFilters = (newFilters: any) => {
+    setFilters(newFilters);
+  };
+  
   return (
-    <div className="space-y-4">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div className="flex items-center gap-2 w-full sm:w-auto">
-          <div className="relative w-full sm:w-64">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Rechercher..."
-              className="pl-8 w-full"
-              value={searchQuery}
-              onChange={handleSearchChange}
-            />
-          </div>
-          <Button 
-            variant="outline" 
-            size="icon" 
-            onClick={() => setShowFilterDialog(true)}
-          >
-            <Filter className="h-4 w-4" />
-          </Button>
+    <div className="container mx-auto py-6">
+      <div className="flex justify-between items-center mb-6">
+        <div>
+          <h1 className="text-2xl font-bold">Évaluations des employés</h1>
+          <p className="text-muted-foreground">
+            Gérez les évaluations de performance de vos employés
+          </p>
         </div>
         
-        <div className="flex gap-2 w-full sm:w-auto">
-          <Select value={statusFilter} onValueChange={handleStatusFilterChange}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Tous les statuts" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="">Tous les statuts</SelectItem>
-              <SelectItem value="Planifiée">Planifiée</SelectItem>
-              <SelectItem value="Complétée">Complétée</SelectItem>
-              <SelectItem value="Annulée">Annulée</SelectItem>
-            </SelectContent>
-          </Select>
+        <div className="flex space-x-2">
+          <Button 
+            variant="outline" 
+            onClick={() => setShowFilterDialog(true)}
+          >
+            <Filter className="mr-2 h-4 w-4" />
+            Filtrer
+          </Button>
           
           <Button 
             variant="outline" 
             onClick={() => setShowExportDialog(true)}
           >
-            <FileText className="h-4 w-4 mr-2" />
+            <FileExport className="mr-2 h-4 w-4" />
             Exporter
           </Button>
           
-          <Button onClick={() => setShowCreateDialog(true)}>
-            <Plus className="h-4 w-4 mr-2" />
+          <Button
+            onClick={() => setShowCreateDialog(true)}
+          >
+            <PlusCircle className="mr-2 h-4 w-4" />
             Nouvelle évaluation
           </Button>
         </div>
       </div>
-
-      <Card>
-        <CardHeader className="pb-2">
-          <div className="flex justify-between items-center">
-            <CardTitle>Évaluations</CardTitle>
-            <div className="flex gap-2">
-              <Badge variant="outline" className="text-xs">
-                Total: {stats.total}
-              </Badge>
-              <Badge variant="outline" className="text-xs bg-blue-50">
-                Planifiées: {stats.planned}
-              </Badge>
-              <Badge variant="outline" className="text-xs bg-green-50">
-                Complétées: {stats.completed}
-              </Badge>
-              <Badge variant="outline" className="text-xs bg-red-50">
-                Annulées: {stats.cancelled}
-              </Badge>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <div className="h-64 flex items-center justify-center">
-              <div className="text-center">
-                <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent align-[-0.125em]"></div>
-                <div className="mt-2 text-sm text-gray-500">Chargement des évaluations...</div>
-              </div>
-            </div>
-          ) : filteredEvaluations.length > 0 ? (
-            <div className="overflow-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Employé</TableHead>
-                    <TableHead>Titre</TableHead>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Évaluateur</TableHead>
-                    <TableHead>Note</TableHead>
-                    <TableHead>Statut</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredEvaluations.map((evaluation) => (
-                    <TableRow key={evaluation.id}>
-                      <TableCell className="font-medium">{evaluation.employeeName}</TableCell>
-                      <TableCell>{evaluation.title || 'Évaluation régulière'}</TableCell>
-                      <TableCell>{evaluation.date}</TableCell>
-                      <TableCell>{evaluation.evaluatorName}</TableCell>
-                      <TableCell>{formatRating(evaluation.rating || evaluation.score)}</TableCell>
-                      <TableCell>
-                        <Badge variant={getBadgeVariant(evaluation.status) as "default" | "secondary" | "destructive" | "outline" | "success"}>
-                          {evaluation.status}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            onClick={() => handleEditEvaluation(evaluation.id)}
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            onClick={() => handleDeleteEvaluation(evaluation.id)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          ) : (
-            <div className="py-24 text-center text-muted-foreground">
-              {searchQuery || statusFilter ? (
-                <div>
-                  <p>Aucune évaluation ne correspond à votre recherche.</p>
-                  <Button 
-                    variant="link" 
-                    onClick={() => {
-                      setSearchQuery('');
-                      setStatusFilter('');
-                    }}
-                  >
-                    Réinitialiser les filtres
+      
+      {isLoading ? (
+        <div className="flex justify-center items-center h-64">
+          <p>Chargement des évaluations...</p>
+        </div>
+      ) : filteredEvaluations.length === 0 ? (
+        <div className="flex flex-col items-center justify-center h-64 bg-muted/20 rounded-lg border border-dashed">
+          <p className="text-muted-foreground mb-4">Aucune évaluation trouvée</p>
+          <Button 
+            variant="outline" 
+            onClick={() => setShowCreateDialog(true)}
+          >
+            <PlusCircle className="mr-2 h-4 w-4" />
+            Créer une évaluation
+          </Button>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {filteredEvaluations.map((evaluation) => (
+            <Card key={evaluation.id} className="hover:shadow-md transition-shadow">
+              <CardHeader className="pb-2">
+                <div className="flex justify-between items-start">
+                  <div className="flex-1">
+                    <CardTitle className="text-lg">{evaluation.title || 'Évaluation'}</CardTitle>
+                    <CardDescription className="flex items-center mt-1">
+                      <span 
+                        className={`inline-block w-2 h-2 rounded-full mr-2 ${
+                          evaluation.status === 'Planifiée' ? 'bg-blue-500' : 
+                          evaluation.status === 'Complétée' ? 'bg-green-500' : 'bg-red-500'
+                        }`}
+                      />
+                      {evaluation.status}
+                    </CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
+              
+              <CardContent className="pb-2">
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Employé:</span>
+                    <span className="font-medium">{evaluation.employeeName}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Évaluateur:</span>
+                    <span className="font-medium">{evaluation.evaluatorName || 'Non assigné'}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Date:</span>
+                    <span className="font-medium">{evaluation.date}</span>
+                  </div>
+                  {evaluation.comments && (
+                    <div className="mt-2">
+                      <span className="text-muted-foreground">Commentaires:</span>
+                      <p className="text-sm mt-1 line-clamp-2">{evaluation.comments}</p>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+              
+              <CardFooter className="pt-1 flex justify-between">
+                <div className="flex space-x-2">
+                  <Button variant="ghost" size="icon" onClick={() => handleViewEvaluation(evaluation)}>
+                    <Edit className="h-4 w-4" />
+                  </Button>
+                  <Button variant="ghost" size="icon" onClick={() => handleDeleteEvaluation(evaluation)}>
+                    <Trash className="h-4 w-4" />
                   </Button>
                 </div>
-              ) : (
-                <div>
-                  <p>Aucune évaluation enregistrée.</p>
+                
+                {evaluation.status === 'Planifiée' && (
                   <Button 
-                    variant="link" 
-                    onClick={() => setShowCreateDialog(true)}
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => handleCompleteEvaluation(evaluation)}
                   >
-                    Créer la première évaluation
+                    <FileCheck className="mr-2 h-4 w-4" />
+                    Compléter
                   </Button>
-                </div>
-              )}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Dialogs */}
-      <CreateEvaluationDialog 
-        open={showCreateDialog} 
-        onOpenChange={setShowCreateDialog} 
-        onSuccess={handleCreateSuccess}
-      />
-
-      <EvaluationsFilter 
-        open={showFilterDialog} 
-        onOpenChange={setShowFilterDialog} 
-        currentFilters={{ status: statusFilter }}
-        onApplyFilters={(filters) => {
-          setStatusFilter(filters.status || '');
+                )}
+              </CardFooter>
+            </Card>
+          ))}
+        </div>
+      )}
+      
+      {/* Create Evaluation Dialog */}
+      <CreateEvaluationDialog
+        open={showCreateDialog}
+        onClose={() => setShowCreateDialog(false)}
+        onOpenChange={setShowCreateDialog}
+        onSubmit={handleCreateEvaluation}
+        onSuccess={() => {
+          setShowCreateDialog(false);
+          refreshData();
         }}
+        employees={employees}
       />
-
-      <ExportEvaluationsDialog 
-        open={showExportDialog} 
-        onOpenChange={setShowExportDialog} 
+      
+      {/* Filter Dialog */}
+      <EvaluationsFilter
+        open={showFilterDialog}
+        onOpenChange={setShowFilterDialog}
+        currentFilters={filters}
+        onApplyFilters={handleApplyFilters}
+      />
+      
+      {/* Export Dialog */}
+      <ExportEvaluationsDialog
+        open={showExportDialog}
+        onOpenChange={setShowExportDialog}
         evaluations={filteredEvaluations}
       />
-
-      {selectedEvaluation && (
-        <DeleteEvaluationDialog 
-          open={showDeleteDialog} 
-          onOpenChange={setShowDeleteDialog} 
-          evaluationId={selectedEvaluation}
-          onSuccess={handleDeleteSuccess}
-        />
+      
+      {/* Delete Confirmation Dialog */}
+      <DeleteEvaluationDialog
+        open={showDeleteDialog}
+        onOpenChange={setShowDeleteDialog}
+        onConfirm={() => selectedEvaluation && confirmDeleteEvaluation(selectedEvaluation.id)}
+        evaluation={selectedEvaluation}
+      />
+      
+      {/* View/Edit Dialog */}
+      {showViewDialog && selectedEvaluation && (
+        <Dialog open={showViewDialog} onOpenChange={setShowViewDialog}>
+          <DialogContent className="sm:max-w-[600px]">
+            <DialogHeader>
+              <DialogTitle>Détails de l'évaluation</DialogTitle>
+            </DialogHeader>
+            
+            <div className="space-y-4 py-4">
+              <div className="grid grid-cols-1 gap-4">
+                <div>
+                  <h3 className="font-medium">Employé</h3>
+                  <p>{selectedEvaluation.employeeName}</p>
+                </div>
+                
+                <div>
+                  <h3 className="font-medium">Évaluateur</h3>
+                  <p>{selectedEvaluation.evaluatorName || 'Non assigné'}</p>
+                </div>
+                
+                <div>
+                  <h3 className="font-medium">Date de l'évaluation</h3>
+                  <p>{selectedEvaluation.date}</p>
+                </div>
+                
+                <div>
+                  <h3 className="font-medium">Statut</h3>
+                  <p>{selectedEvaluation.status}</p>
+                </div>
+                
+                <div>
+                  <h3 className="font-medium">Commentaires</h3>
+                  <p className="whitespace-pre-line">{selectedEvaluation.comments || 'Aucun commentaire'}</p>
+                </div>
+              </div>
+            </div>
+            
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowViewDialog(false)}>
+                Fermer
+              </Button>
+              {selectedEvaluation.status === 'Planifiée' && (
+                <Button onClick={() => {
+                  handleCompleteEvaluation(selectedEvaluation);
+                  setShowViewDialog(false);
+                }}>
+                  Marquer comme complétée
+                </Button>
+              )}
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       )}
     </div>
   );

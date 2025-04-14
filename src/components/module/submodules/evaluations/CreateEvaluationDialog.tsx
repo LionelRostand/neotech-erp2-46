@@ -17,7 +17,7 @@ interface CreateEvaluationDialogProps {
   onClose: () => void;
   onOpenChange?: (open: boolean) => void;
   onSubmit: (data: any) => void;
-  onSuccess?: () => void; // Added this prop
+  onSuccess?: () => void;
   employees?: any[];
 }
 
