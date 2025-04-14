@@ -6,6 +6,7 @@ import { addDocument } from '@/hooks/firestore/create-operations';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import { PaySlip } from '@/types/payslip';
 import { addPayslipToEmployee } from '../services/employeeSalaryService';
+import { Company } from '@/components/module/submodules/companies/types';
 
 export const useSalaryForm = () => {
   const { employees, companies } = useHrModuleData();
@@ -35,7 +36,12 @@ export const useSalaryForm = () => {
     if (selectedEmployee) {
       // Set the company if not already selected
       if (!selectedCompanyId && selectedEmployee.company) {
-        setSelectedCompanyId(selectedEmployee.company);
+        // Extract the ID depending on whether company is a string or an object
+        const companyId = typeof selectedEmployee.company === 'string' 
+          ? selectedEmployee.company 
+          : (selectedEmployee.company as Company).id;
+        
+        setSelectedCompanyId(companyId);
       }
 
       // Ensure conges has default values if undefined
