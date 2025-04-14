@@ -8,9 +8,19 @@ import DashboardSkeleton from './dashboard/DashboardSkeleton';
 import { useDashboardData } from './dashboard/useDashboardData';
 import { AlertTriangle, WifiOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { restoreFirestoreConnectivity } from '@/hooks/firestore/network-operations';
+import { checkFirestoreConnection } from '@/hooks/firestore/network-operations';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
+
+// Function to restore connectivity
+const restoreFirestoreConnectivity = async (): Promise<boolean> => {
+  try {
+    return await checkFirestoreConnection();
+  } catch (error) {
+    console.error("Error checking Firestore connection:", error);
+    return false;
+  }
+};
 
 const CompaniesDashboard: React.FC = () => {
   const { metrics, loading, error } = useDashboardData();

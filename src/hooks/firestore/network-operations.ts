@@ -1,3 +1,4 @@
+
 import { db } from '@/lib/firebase';
 import { toast } from 'sonner';
 
@@ -24,6 +25,30 @@ export const checkFirestoreConnection = async (): Promise<boolean> => {
 // Import needed Firestore functions
 import { doc, getDoc } from 'firebase/firestore';
 import { useEffect } from 'react';
+
+// Function to restore Firestore connectivity
+export const restoreFirestoreConnectivity = async (): Promise<boolean> => {
+  console.log("Attempting to restore Firestore connectivity...");
+  if (!isOnline()) {
+    console.warn("Cannot restore connectivity while offline");
+    return false;
+  }
+  
+  try {
+    // Try to reconnect by fetching a test document
+    const result = await checkFirestoreConnection();
+    if (result) {
+      console.log("Firestore connectivity restored successfully");
+      return true;
+    } else {
+      console.warn("Failed to restore Firestore connectivity");
+      return false;
+    }
+  } catch (error) {
+    console.error("Error restoring Firestore connectivity:", error);
+    return false;
+  }
+};
 
 // Function to execute a Firestore operation with network retry logic
 export const executeWithNetworkRetry = async <T>(operation: () => Promise<T>, maxRetries: number = 3): Promise<T> => {
@@ -71,7 +96,8 @@ export const handleOfflineOperations = () => {
         toast.success('Back online! Synchronizing data...');
       } else {
         console.warn('Firestore is not reachable. Skipping synchronization.');
-        toast.warn('Connexion rétablie, mais la synchronisation est impossible pour le moment.');
+        // Fix the warning toast method
+        toast.error('Connexion rétablie, mais la synchronisation est impossible pour le moment.');
       }
     };
     

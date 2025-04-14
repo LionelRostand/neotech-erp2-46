@@ -21,12 +21,19 @@ import EmployeesCompanies from "@/components/module/submodules/employees/Employe
 import EmployeesReports from "@/components/module/submodules/EmployeesReports";
 import EmployeesAlerts from "@/components/module/submodules/EmployeesAlerts";
 import EmployeesSettings from "@/components/module/submodules/EmployeesSettings";
+import { useHrModuleData } from '@/hooks/useHrModuleData';
+
+// Helper component to pass props to EmployeesProfiles
+const EmployeesProfilesWithProps = () => {
+  const { employees } = useHrModuleData();
+  return <EmployeesProfiles employees={employees || []} />;
+};
 
 export const EmployeesRoutes = (
   <Route key="employees" path="/modules/employees" element={<ModuleLayout moduleId={1} />}>
     <Route index element={<EmployeesDashboard />} />
     <Route path="dashboard" element={<EmployeesDashboard />} />
-    <Route path="profiles" element={<EmployeesProfiles />} />
+    <Route path="profiles" element={<EmployeesProfilesWithProps />} />
     <Route path="badges" element={<EmployeesBadges />} />
     <Route path="departments" element={<EmployeesDepartments />} />
     <Route path="hierarchy" element={<EmployeesHierarchy />} />

@@ -1,3 +1,4 @@
+
 import { collection, doc, DocumentData, getFirestore } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 
