@@ -8,7 +8,10 @@ import { Button } from "@/components/ui/button";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
-import { toast } from "@/hooks/use-toast";
+import { toast } from "sonner";
+import PhotoUploadField from "@/components/module/submodules/employees/form/PhotoUploadField";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { User } from "lucide-react";
 
 const personalInfoSchema = z.object({
   firstName: z.string().min(2, { message: "Le prénom doit contenir au moins 2 caractères" }),
@@ -17,12 +20,14 @@ const personalInfoSchema = z.object({
   phone: z.string().optional(),
   position: z.string().optional(),
   bio: z.string().max(500, { message: "La biographie ne peut pas dépasser 500 caractères" }).optional(),
+  photo: z.any().optional(),
 });
 
 type PersonalInfoValues = z.infer<typeof personalInfoSchema>;
 
 const PersonalInfo = () => {
   const [isLoading, setIsLoading] = useState(false);
+  const [photoUrl, setPhotoUrl] = useState<string>("");
 
   const defaultValues: PersonalInfoValues = {
     firstName: "Admin",
@@ -31,6 +36,7 @@ const PersonalInfo = () => {
     phone: "+33 6 12 34 56 78",
     position: "Administrateur",
     bio: "Administrateur de la plateforme Neotech-ERP",
+    photo: "",
   };
 
   const form = useForm<PersonalInfoValues>({
@@ -44,10 +50,7 @@ const PersonalInfo = () => {
     // Simuler une mise à jour des informations
     setTimeout(() => {
       setIsLoading(false);
-      toast({
-        title: "Profil mis à jour",
-        description: "Vos informations personnelles ont été mises à jour avec succès.",
-      });
+      toast.success("Profil mis à jour avec succès");
       console.log("Personal info updated:", data);
     }, 1000);
   }
@@ -63,6 +66,16 @@ const PersonalInfo = () => {
       <CardContent>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <div className="flex flex-col items-center gap-4 mb-6">
+              <Avatar className="h-24 w-24">
+                <AvatarImage src={photoUrl} alt="Photo de profil" />
+                <AvatarFallback>
+                  <User className="h-12 w-12 text-gray-400" />
+                </AvatarFallback>
+              </Avatar>
+              <PhotoUploadField defaultPhotoUrl={photoUrl} />
+            </div>
+            
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
