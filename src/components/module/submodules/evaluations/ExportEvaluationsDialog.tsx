@@ -11,7 +11,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
-import { Download, FileSpreadsheet, FilePdf } from 'lucide-react';
+import { Download, FileSpreadsheet, File } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface ExportEvaluationsDialogProps {
@@ -75,7 +75,7 @@ const ExportEvaluationsDialog: React.FC<ExportEvaluationsDialogProps> = ({
             <div className="flex items-center space-x-2 rounded-md border p-4">
               <RadioGroupItem value="pdf" id="pdf" />
               <Label htmlFor="pdf" className="flex items-center gap-3 cursor-pointer">
-                <FilePdf className="h-5 w-5 text-red-600" />
+                <File className="h-5 w-5 text-red-600" />
                 <div>
                   <p className="font-medium">PDF (.pdf)</p>
                   <p className="text-sm text-muted-foreground">Document PDF pour l'impression ou le partage</p>
