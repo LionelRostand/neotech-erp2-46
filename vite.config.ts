@@ -20,7 +20,7 @@ export default defineConfig(({ mode }) => ({
     },
   },
   define: {
-    // Explicitement fournir les variables d'environnement qui doivent être disponibles dans le code client
+    // Explicitly provide the environment variables that need to be available in the client code
     'import.meta.env.VITE_EMULATOR': JSON.stringify(process.env.VITE_EMULATOR || 'false'),
     'import.meta.env.VITE_FIREBASE_API_KEY': JSON.stringify("AIzaSyD3ZQYPtVHk4w63bCvOX0b8RVJyybWyOqU"),
     'import.meta.env.VITE_FIREBASE_AUTH_DOMAIN': JSON.stringify("neotech-erp.firebaseapp.com"),
