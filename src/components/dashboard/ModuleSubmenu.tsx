@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { SubModule } from '@/data/types/modules';
 import { Badge } from '@/components/ui/badge';
@@ -50,21 +49,21 @@ const ModuleSubmenu: React.FC<ModuleSubmenuProps> = ({
     return null;
   };
 
-  // Couleurs pour les badges selon le groupe
+  // Update the group colors mapping
   const getGroupColor = (group: string | null) => {
     switch (group) {
-      case 'patient': return 'bg-blue-100 text-blue-800';
-      case 'staff': return 'bg-green-100 text-green-800';
-      case 'medical': return 'bg-purple-100 text-purple-800';
-      case 'pharmacy': return 'bg-amber-100 text-amber-800';
-      case 'hospital': return 'bg-red-100 text-red-800';
-      case 'finance': return 'bg-emerald-100 text-emerald-800';
-      case 'personnel': return 'bg-indigo-100 text-indigo-800';
-      case 'temps': return 'bg-cyan-100 text-cyan-800';
-      case 'administratif': return 'bg-orange-100 text-orange-800';
-      case 'développement': return 'bg-pink-100 text-pink-800';
-      case 'rh': return 'bg-violet-100 text-violet-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'personnel':
+        return 'bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200 text-blue-800';
+      case 'temps':
+        return 'bg-gradient-to-br from-green-50 to-green-100 border-green-200 text-green-800';
+      case 'administratif':
+        return 'bg-gradient-to-br from-orange-50 to-orange-100 border-orange-200 text-orange-800';
+      case 'développement':
+        return 'bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200 text-purple-800';
+      case 'rh':
+        return 'bg-gradient-to-br from-pink-50 to-pink-100 border-pink-200 text-pink-800';
+      default:
+        return 'bg-gradient-to-br from-gray-50 to-gray-100 border-gray-200 text-gray-800';
     }
   };
 
@@ -107,6 +106,8 @@ const ModuleSubmenu: React.FC<ModuleSubmenuProps> = ({
         {Object.entries(groupedModules).map(([group, modules]) => {
           if (modules.length === 0) return null;
           
+          const groupColor = getGroupColor(group);
+          
           return (
             <div key={group} className="mb-3">
               <div className="px-3 mb-1 text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -116,10 +117,19 @@ const ModuleSubmenu: React.FC<ModuleSubmenuProps> = ({
                 {modules.map((submodule) => (
                   <SidebarMenuSubItem key={submodule.id}>
                     <SidebarMenuSubButton 
-                      isActive={location.pathname === submodule.href} 
+                      isActive={location.pathname === submodule.href}
                       onClick={() => onNavigate(submodule.href)}
+                      className={`transition-all duration-200 hover:shadow-sm ${
+                        location.pathname === submodule.href ? groupColor : ''
+                      }`}
                     >
-                      <span className="mr-2 text-gray-500">{submodule.icon}</span>
+                      <span className={`mr-2 ${
+                        location.pathname === submodule.href 
+                          ? `text-${group}-600`
+                          : 'text-gray-500'
+                      }`}>
+                        {submodule.icon}
+                      </span>
                       <span className="text-sm">{submodule.name}</span>
                     </SidebarMenuSubButton>
                   </SidebarMenuSubItem>
