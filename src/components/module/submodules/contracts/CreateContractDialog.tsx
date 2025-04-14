@@ -1,54 +1,131 @@
 
-import React from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import ContractForm from './ContractForm';
-import { addDocument } from '@/hooks/firestore/create-operations';
+import React, { useState } from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { toast } from '@/hooks/use-toast';
+import { addDocument } from '@/hooks/firestore/firestore-utils';
 import { COLLECTIONS } from '@/lib/firebase-collections';
-import { toast } from 'sonner';
+import ContractForm from './ContractForm';
 
 interface CreateContractDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSuccess?: () => void;
+  onContractCreated: () => void;
 }
 
 const CreateContractDialog: React.FC<CreateContractDialogProps> = ({
   open,
   onOpenChange,
-  onSuccess
+  onContractCreated,
 }) => {
-  const handleSubmit = async (data: any) => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formData, setFormData] = useState({
+    employeeId: '',
+    type: 'CDI',
+    startDate: new Date().toISOString().split('T')[0],
+    endDate: '',
+    position: '',
+    salary: '',
+    department: '',
+  });
+
+  const handleFormDataChange = (data: any) => {
+    setFormData(data);
+  };
+
+  const handleSubmit = async () => {
+    // Validation de base
+    if (!formData.employeeId) {
+      toast({
+        title: "Champ requis",
+        description: "Veuillez sélectionner un employé.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!formData.position) {
+      toast({
+        title: "Champ requis",
+        description: "Veuillez indiquer le poste.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
-      // Make sure the data doesn't contain createdAt, as it's handled by formatDocumentWithTimestamps
-      const contractData = { ...data };
-      if (contractData.createdAt) {
-        delete contractData.createdAt;
-      }
+      setIsSubmitting(true);
       
-      // Using the new collection path format for contracts
+      // Préparation des données pour Firebase
+      const contractData = {
+        ...formData,
+        // Convertir le salaire en nombre si présent
+        salary: formData.salary ? parseFloat(formData.salary) : null,
+        // S'assurer que la date de fin est null si non renseignée
+        endDate: formData.endDate || null,
+        // Ajouter les timestamps
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+      
+      // Ajouter le contrat à Firebase
       await addDocument(COLLECTIONS.HR.CONTRACTS, contractData);
-      toast.success("Contrat créé avec succès");
+      
+      toast({
+        title: "Contrat créé",
+        description: "Le contrat a été créé avec succès.",
+      });
+      
+      // Réinitialiser le formulaire et fermer le dialogue
+      setFormData({
+        employeeId: '',
+        type: 'CDI',
+        startDate: new Date().toISOString().split('T')[0],
+        endDate: '',
+        position: '',
+        salary: '',
+        department: '',
+      });
+      
+      onContractCreated();
       onOpenChange(false);
-      if (onSuccess) onSuccess();
     } catch (error) {
       console.error("Erreur lors de la création du contrat:", error);
-      toast.error("Erreur lors de la création du contrat");
+      toast({
+        title: "Erreur",
+        description: "Une erreur est survenue lors de la création du contrat.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px]">
+      <DialogContent className="sm:max-w-md md:max-w-lg">
         <DialogHeader>
-          <DialogTitle>Nouveau contrat</DialogTitle>
-          <DialogDescription>
-            Remplissez les informations pour créer un nouveau contrat
-          </DialogDescription>
+          <DialogTitle className="text-xl">Nouveau contrat</DialogTitle>
         </DialogHeader>
+        
         <ContractForm 
-          onSubmit={handleSubmit}
-          onCancel={() => onOpenChange(false)}
+          onFormDataChange={handleFormDataChange} 
         />
+        
+        <DialogFooter>
+          <Button 
+            variant="outline" 
+            onClick={() => onOpenChange(false)}
+          >
+            Annuler
+          </Button>
+          <Button 
+            onClick={handleSubmit} 
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? "Création..." : "Créer le contrat"}
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
