@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { 
   Dialog, 
@@ -6,13 +5,6 @@ import {
   DialogHeader, 
   DialogTitle 
 } from '@/components/ui/dialog';
-import { 
-  Form, 
-  FormField, 
-  FormItem, 
-  FormLabel, 
-  FormControl 
-} from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { 
   Select, 
@@ -21,8 +13,6 @@ import {
   SelectTrigger, 
   SelectValue 
 } from '@/components/ui/select';
-import { Button } from '@/components/ui/button';
-import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import { usePayslipGenerator } from '../hooks/usePayslipGenerator';
 import PayslipFormControls from './PayslipFormControls';
@@ -103,6 +93,19 @@ const NewPayslipDialog: React.FC<NewPayslipDialogProps> = ({
     setPeriod(`${selectedMonth} ${selectedYear}`);
   };
 
+  // Custom handlers for employee and company selection
+  const handleEmployeeSelection = (value: string) => {
+    if (employees && employees.length > 0) {
+      handleEmployeeSelect(value, employees);
+    }
+  };
+
+  const handleCompanySelection = (value: string) => {
+    if (companies && companies.length > 0) {
+      handleCompanySelect(value, companies);
+    }
+  };
+
   if (showPreview && currentPayslip) {
     return (
       <Dialog open={isOpen} onOpenChange={(open) => {
@@ -123,15 +126,6 @@ const NewPayslipDialog: React.FC<NewPayslipDialogProps> = ({
       </Dialog>
     );
   }
-
-  // Custom handlers for employee and company selection
-  const handleEmployeeSelection = (value: string) => {
-    handleEmployeeSelect(value, employees);
-  };
-
-  const handleCompanySelection = (value: string) => {
-    handleCompanySelect(value, companies);
-  };
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => {
@@ -175,7 +169,7 @@ const NewPayslipDialog: React.FC<NewPayslipDialogProps> = ({
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Sélectionner une entreprise" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="max-h-60 overflow-y-auto">
                   {companies.map((company) => (
                     <SelectItem 
                       key={company.id} 

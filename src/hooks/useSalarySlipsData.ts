@@ -20,24 +20,24 @@ export interface SalarySlip {
   department?: string;
 }
 
+// Function to get month and year from date
+const parseMonthAndYear = (dateString: string) => {
+  try {
+    const date = new Date(dateString);
+    const month = date.toLocaleDateString('fr-FR', { month: 'long' });
+    const year = date.getFullYear();
+    return { month, year };
+  } catch (error) {
+    console.error('Error parsing date:', error);
+    return { month: 'Inconnu', year: new Date().getFullYear() };
+  }
+};
+
 /**
  * Hook pour accéder aux données des fiches de paie directement depuis Firebase
  */
 export const useSalarySlipsData = () => {
   const { payslips, employees, companies, isLoading, error } = useHrModuleData();
-  
-  // Function to get month and year from date
-  const parseMonthAndYear = (dateString: string) => {
-    try {
-      const date = new Date(dateString);
-      const month = date.toLocaleDateString('fr-FR', { month: 'long' });
-      const year = date.getFullYear();
-      return { month, year };
-    } catch (error) {
-      console.error('Error parsing date:', error);
-      return { month: 'Inconnu', year: new Date().getFullYear() };
-    }
-  };
   
   // Enrichir les fiches de paie avec les noms des employés
   const formattedSalarySlips = useMemo(() => {

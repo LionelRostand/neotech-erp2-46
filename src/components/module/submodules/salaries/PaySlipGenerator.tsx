@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { usePayslipGenerator } from './hooks/usePayslipGenerator';
@@ -11,6 +10,7 @@ import PayslipViewer from './components/PayslipViewer';
 import { Employee } from '@/types/employee';
 import { Company } from '@/components/module/submodules/companies/types';
 import { useCompaniesData } from '@/hooks/useCompaniesData';
+import { toast } from 'sonner';
 
 interface PaySlipGeneratorProps {
   employees?: Employee[];
@@ -18,8 +18,16 @@ interface PaySlipGeneratorProps {
 }
 
 const PaySlipGenerator: React.FC<PaySlipGeneratorProps> = ({ employees, companies: propCompanies }) => {
-  const { companies: fetchedCompanies, isLoading: isLoadingCompanies } = useCompaniesData();
-  const availableCompanies = propCompanies || fetchedCompanies || [];
+  const { companies, isLoading: isLoadingCompanies, error } = useCompaniesData();
+  
+  useEffect(() => {
+    if (error) {
+      console.error("Erreur lors du chargement des entreprises:", error);
+      toast.error("Impossible de charger la liste des entreprises");
+    }
+  }, [error]);
+  
+  const availableCompanies = propCompanies || companies || [];
   
   const {
     employeeName,
@@ -82,7 +90,9 @@ const PaySlipGenerator: React.FC<PaySlipGeneratorProps> = ({ employees, companie
 
   // Custom handler for company selection
   const handleCompanySelection = (value: string) => {
-    handleCompanySelect(value, availableCompanies);
+    if (availableCompanies && availableCompanies.length > 0) {
+      handleCompanySelect(value, availableCompanies);
+    }
   };
 
   if (showPreview && currentPayslip) {
@@ -131,12 +141,14 @@ const PaySlipGenerator: React.FC<PaySlipGeneratorProps> = ({ employees, companie
 
           <div className="space-y-2">
             <Label>Entreprise</Label>
-            {availableCompanies && availableCompanies.length > 0 ? (
+            {isLoadingCompanies ? (
+              <div className="text-sm text-muted-foreground">Chargement des entreprises...</div>
+            ) : availableCompanies && availableCompanies.length > 0 ? (
               <Select onValueChange={handleCompanySelection}>
                 <SelectTrigger>
                   <SelectValue placeholder="Sélectionner une entreprise" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="max-h-60 overflow-y-auto">
                   {availableCompanies.map(company => (
                     <SelectItem key={company.id} value={company.id}>
                       {company.name}
