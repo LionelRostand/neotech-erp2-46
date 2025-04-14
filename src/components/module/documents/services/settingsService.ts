@@ -1,11 +1,10 @@
-
 import { useFirestore } from '@/hooks/use-firestore';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import { toast } from 'sonner';
 import { DocumentSettings } from '../types/document-types';
 
 export const useSettingsService = () => {
-  const firestore = useFirestore(COLLECTIONS.DOCUMENTS);
+  const firestore = useFirestore(COLLECTIONS.DOCUMENT_COLLECTIONS.DOCUMENTS);
 
   const getDocumentSettings = async (): Promise<DocumentSettings | null> => {
     try {

@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useFirestore } from '@/hooks/use-firestore';
 import { COLLECTIONS } from '@/lib/firebase-collections';
@@ -23,7 +22,7 @@ const RecentDocumentsWidget: React.FC = () => {
   const [documents, setDocuments] = useState<Document[]>([]);
   const [loading, setLoading] = useState(true);
   
-  const documentsDb = useFirestore(COLLECTIONS.DOCUMENTS);
+  const documentsDb = useFirestore(COLLECTIONS.DOCUMENT_COLLECTIONS.DOCUMENTS);
   const navigate = useNavigate();
   
   useEffect(() => {
@@ -53,7 +52,7 @@ const RecentDocumentsWidget: React.FC = () => {
   const getFileIcon = (fileType: string) => {
     switch (fileType?.toLowerCase()) {
       case 'pdf':
-        return <FileText size={16} className="text-red-600" />; // Changed from FilePdf to FileText with red color
+        return <FileText size={16} className="text-red-600" />;
       case 'jpg':
       case 'jpeg':
       case 'png':

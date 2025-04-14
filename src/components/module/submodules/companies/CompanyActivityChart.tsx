@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useFirestore } from '@/hooks/use-firestore';
 import { COLLECTIONS } from '@/lib/firebase-collections';
@@ -42,7 +41,7 @@ const CompanyActivityChart: React.FC = () => {
   const [loading, setLoading] = useState(true);
   
   const companiesDb = useFirestore(COLLECTIONS.COMPANIES);
-  const documentsDb = useFirestore(COLLECTIONS.DOCUMENTS);
+  const documentsDb = useFirestore(COLLECTIONS.DOCUMENT_COLLECTIONS.DOCUMENTS);
   
   useEffect(() => {
     const fetchActivityData = async () => {

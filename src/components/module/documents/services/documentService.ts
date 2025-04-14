@@ -1,4 +1,3 @@
-
 import { useFirestore } from '@/hooks/use-firestore';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import { useFileService } from './fileService';
@@ -11,7 +10,7 @@ export const useDocumentService = () => {
   const {
     getById: getDocumentById,
     remove: deleteDocument,
-  } = useFirestore(COLLECTIONS.DOCUMENTS);
+  } = useFirestore(COLLECTIONS.DOCUMENT_COLLECTIONS.DOCUMENTS);
 
   // Import individual services
   const fileService = useFileService();

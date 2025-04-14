@@ -1,87 +1,101 @@
-
-import { addDocument } from '@/hooks/firestore/create-operations';
-import { getAllDocuments } from '@/hooks/firestore/read-operations';
-import { updateDocument } from '@/hooks/firestore/update-operations';
-import { deleteDocument as deleteFirestoreDocument } from '@/hooks/firestore/delete-operations';
-import { toast } from 'sonner';
-import { BadgeData } from '../badges/BadgeTypes';
+import { db } from '@/firebase';
 import { COLLECTIONS } from '@/lib/firebase-collections';
+import { doc, getDoc, setDoc, collection, query, getDocs, deleteDoc, DocumentReference } from 'firebase/firestore';
+import { BadgeData } from '../badges/BadgeTypes';
 
-// Collection où sont stockés les badges
-const BADGES_COLLECTION = COLLECTIONS.HR.BADGES;
-
-/**
- * Récupère tous les badges employés depuis Firestore
- */
-export const getBadges = async (): Promise<BadgeData[]> => {
+// Function to fetch a badge by ID
+export const getBadge = async (badgeId: string): Promise<BadgeData | null> => {
   try {
-    const badges = await getAllDocuments(BADGES_COLLECTION);
-    return badges as BadgeData[];
-  } catch (error) {
-    console.error("Erreur lors de la récupération des badges:", error);
-    toast.error("Échec du chargement des badges");
-    return [];
-  }
-};
+    const docRef = doc(db, COLLECTIONS.HR.BADGES, badgeId);
+    const docSnap = await getDoc(docRef);
 
-/**
- * Ajoute un nouveau badge dans Firestore
- */
-export const addBadge = async (badgeData: Omit<BadgeData, 'id'>): Promise<BadgeData | null> => {
-  try {
-    const newBadge = await addDocument(BADGES_COLLECTION, badgeData);
-    toast.success("Badge créé avec succès");
-    return newBadge as BadgeData;
+    if (docSnap.exists()) {
+      return {
+        id: docSnap.id,
+        ...docSnap.data()
+      } as BadgeData;
+    } else {
+      console.log("No such document!");
+      return null;
+    }
   } catch (error) {
-    console.error("Erreur lors de la création du badge:", error);
-    toast.error("Échec de la création du badge");
+    console.error("Error fetching badge:", error);
     return null;
   }
 };
 
-/**
- * Met à jour un badge existant dans Firestore
- */
-export const updateBadge = async (id: string, badgeData: Partial<BadgeData>): Promise<BadgeData | null> => {
+// Function to create a new badge
+export const createBadge = async (badgeData: BadgeData): Promise<BadgeData | null> => {
   try {
-    const updatedBadge = await updateDocument(BADGES_COLLECTION, id, badgeData);
-    toast.success("Badge mis à jour avec succès");
-    return updatedBadge as BadgeData;
+    const docRef = doc(db, COLLECTIONS.HR.BADGES, badgeData.id);
+    await setDoc(docRef, badgeData);
+    
+    // Fetch the document to return the created badge data
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+      const docData = docSnap.data();
+      return { id: docRef.id, ...docData } as unknown as BadgeData;
+    } else {
+      console.log("No such document after creation!");
+      return null;
+    }
   } catch (error) {
-    console.error("Erreur lors de la mise à jour du badge:", error);
-    toast.error("Échec de la mise à jour du badge");
+    console.error("Error creating badge:", error);
     return null;
   }
 };
 
-/**
- * Supprime un badge de Firestore
- */
-export const deleteBadge = async (id: string): Promise<boolean> => {
+// Function to update an existing badge
+export const updateBadge = async (badgeId: string, badgeData: Partial<BadgeData>): Promise<BadgeData | null> => {
   try {
-    await deleteFirestoreDocument(BADGES_COLLECTION, id);
-    toast.success("Badge supprimé avec succès");
+    const docRef = doc(db, COLLECTIONS.HR.BADGES, badgeId);
+    await setDoc(docRef, badgeData, { merge: true });
+    
+    // Fetch the document to return the updated badge data
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+      const docData = docSnap.data();
+      return { id: docRef.id, ...docData } as unknown as BadgeData;
+    } else {
+      console.log("No such document after update!");
+      return null;
+    }
+  } catch (error) {
+    console.error("Error updating badge:", error);
+    return null;
+  }
+};
+
+// Function to delete a badge
+export const deleteBadge = async (badgeId: string): Promise<boolean> => {
+  try {
+    const docRef = doc(db, COLLECTIONS.HR.BADGES, badgeId);
+    await deleteDoc(docRef);
     return true;
   } catch (error) {
-    console.error("Erreur lors de la suppression du badge:", error);
-    toast.error("Échec de la suppression du badge");
+    console.error("Error deleting badge:", error);
     return false;
   }
 };
 
-/**
- * Récupère les badges d'un employé spécifique
- */
-export const getEmployeeBadges = async (employeeId: string): Promise<BadgeData[]> => {
+// Function to fetch all badges
+export const getAllBadges = async (): Promise<BadgeData[]> => {
   try {
-    const allBadges = await getBadges();
-    return allBadges.filter(badge => badge.employeeId === employeeId);
+    const badgesCollection = collection(db, COLLECTIONS.HR.BADGES);
+    const badgesQuery = query(badgesCollection);
+    const querySnapshot = await getDocs(badgesQuery);
+    
+    const badges: BadgeData[] = [];
+    querySnapshot.forEach(doc => {
+      badges.push({
+        id: doc.id,
+        ...doc.data()
+      } as BadgeData);
+    });
+    
+    return badges;
   } catch (error) {
-    console.error(`Erreur lors de la récupération des badges pour l'employé ${employeeId}:`, error);
-    toast.error("Échec du chargement des badges de l'employé");
+    console.error("Error fetching all badges:", error);
     return [];
   }
 };
-
-// Exporter la fonction de suppression
-export { deleteFirestoreDocument as deleteDocument };

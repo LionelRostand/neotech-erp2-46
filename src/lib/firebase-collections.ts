@@ -6,8 +6,8 @@ export const COLLECTIONS = {
   USERS: 'users',
   COMPANIES: 'companies',
   SETTINGS: 'settings',
-  USER_PERMISSIONS: 'user_permissions', // Added this missing collection
-  CONTACTS: 'contacts', // Added missing collection for messages module
+  USER_PERMISSIONS: 'user_permissions',
+  CONTACTS: 'contacts',
   DOCUMENTS: 'documents', // String path rather than object
   HR: {
     EMPLOYEES: 'hr_employees',
@@ -24,17 +24,17 @@ export const COLLECTIONS = {
     EVALUATIONS: 'hr_evaluations',
     REPORTS: 'hr_reports', 
     ALERTS: 'hr_alerts',
-    BADGES: 'hr_badges',         // Added this missing collection
-    MANAGERS: 'hr_managers',     // Added this missing collection
-    LEAVES: 'hr_leaves',         // Added this missing collection
-    RECRUITMENTS: 'hr_recruitments', // Added this missing collection
+    BADGES: 'hr_badges',
+    MANAGERS: 'hr_managers',
+    LEAVES: 'hr_leaves',
+    RECRUITMENTS: 'hr_recruitments',
   },
   ACCOUNTING: {
     INVOICES: 'accounting_invoices',
     PAYMENTS: 'accounting_payments',
     TAXES: 'accounting_taxes',
     SETTINGS: 'accounting_settings',
-    EXPENSES: 'accounting_expenses',       // Added missing collections
+    EXPENSES: 'accounting_expenses',
     CLIENTS: 'accounting_clients',
     SUPPLIERS: 'accounting_suppliers',
     REPORTS: 'accounting_reports',
@@ -46,7 +46,7 @@ export const COLLECTIONS = {
     PROSPECTS: 'crm_prospects',
     OPPORTUNITIES: 'crm_opportunities',
     ACTIVITIES: 'crm_activities',
-    CONTACTS: 'crm_contacts',    // Added missing collections
+    CONTACTS: 'crm_contacts',
     LEADS: 'crm_leads',
     DEALS: 'crm_deals',
     SETTINGS: 'crm_settings',
@@ -57,7 +57,7 @@ export const COLLECTIONS = {
     TASKS: 'projects_tasks',
     MILESTONES: 'projects_milestones',
     TIMESHEETS: 'projects_timesheets',
-    TEAMS: 'projects_teams',      // Added missing collection
+    TEAMS: 'projects_teams',
     NOTIFICATIONS: 'projects_notifications'
   },
   FREIGHT: {
@@ -65,7 +65,7 @@ export const COLLECTIONS = {
     PACKAGES: 'freight_packages',
     TRACKING: 'freight_tracking',
     DOCUMENTS: 'freight_documents',
-    CARRIERS: 'freight_carriers',   // Added missing collections
+    CARRIERS: 'freight_carriers',
     CONTAINERS: 'freight_containers',
     TRACKING_EVENTS: 'freight_tracking_events',
     RATES: 'freight_rates',
@@ -80,7 +80,7 @@ export const COLLECTIONS = {
     QUOTES: 'freight_quotes',
     CUSTOMERS: 'freight_customers'
   },
-  DOCUMENTS: {
+  DOCUMENT_COLLECTIONS: {
     DOCUMENTS: 'documents',
     FOLDERS: 'document_folders',
     TEMPLATES: 'document_templates',
@@ -91,18 +91,18 @@ export const COLLECTIONS = {
     CONTACTS: 'message_contacts',
     TEMPLATES: 'message_templates',
     SCHEDULED: 'message_scheduled',
-    INBOX: 'message_inbox',      // Added missing collections
+    INBOX: 'message_inbox',
     ARCHIVE: 'message_archive',
     METRICS: 'message_metrics'
   },
-  HEALTH: {    // Added missing Health module collections
+  HEALTH: {
     PATIENTS: 'health_patients',
     APPOINTMENTS: 'health_appointments',
     PRESCRIPTIONS: 'health_prescriptions',
     STAFF: 'health_staff',
     BILLING: 'health_billing',
     INVENTORY: 'health_inventory',
-    DOCTORS: 'health_doctors',           // Added missing collections
+    DOCTORS: 'health_doctors',
     CONSULTATIONS: 'health_consultations',
     INSURANCE: 'health_insurance',
     NURSES: 'health_nurses',
@@ -112,12 +112,12 @@ export const COLLECTIONS = {
     ADMISSIONS: 'health_admissions',
     ROOMS: 'health_rooms'
   },
-  TRANSPORT: { // Added missing Transport module collections
+  TRANSPORT: {
     VEHICLES: 'transport_vehicles',
     DRIVERS: 'transport_drivers',
     ROUTES: 'transport_routes',
     SCHEDULES: 'transport_schedules',
-    RESERVATIONS: 'transport_reservations', // Added missing collections
+    RESERVATIONS: 'transport_reservations',
     CLIENTS: 'transport_clients',
     PLANNING: 'transport_planning',
     FLEET: 'transport_fleet',
@@ -128,12 +128,12 @@ export const COLLECTIONS = {
     WEB_BOOKING: 'transport_web_booking',
     SETTINGS: 'transport_settings'
   },
-  LIBRARY: {   // Added missing Library module collections
+  LIBRARY: {
     BOOKS: 'library_books',
     MEMBERS: 'library_members',
     LOANS: 'library_loans',
     RESERVATIONS: 'library_reservations',
     CATEGORIES: 'library_categories',
-    STATS: 'library_stats'  // Added missing collection
+    STATS: 'library_stats'
   }
 };

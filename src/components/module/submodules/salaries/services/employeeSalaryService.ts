@@ -1,4 +1,3 @@
-
 import { updateDocument } from '@/hooks/firestore/update-operations';
 import { getDocumentById, getAllDocuments } from '@/hooks/firestore/read-operations';
 import { COLLECTIONS } from '@/lib/firebase-collections';
@@ -84,7 +83,7 @@ export const getEmployeeSalaryHistory = async (employeeId: string): Promise<any[
     
     for (const payslipId of employeeData.payslips) {
       const payslip = await executeWithNetworkRetry(async () => {
-        return await getDocumentById(COLLECTIONS.DOCUMENTS, payslipId);
+        return await getDocumentById(COLLECTIONS.DOCUMENT_COLLECTIONS.DOCUMENTS, payslipId);
       });
       
       if (payslip && (payslip as any).documentType === 'payslip') {
@@ -131,7 +130,7 @@ export const getPayslipsByCompany = async (companyId: string): Promise<any[]> =>
     
     // Récupérer toutes les fiches de paie
     const payslips = await executeWithNetworkRetry(async () => {
-      const allPayslips = await getAllDocuments(COLLECTIONS.DOCUMENTS);
+      const allPayslips = await getAllDocuments(COLLECTIONS.DOCUMENT_COLLECTIONS.DOCUMENTS);
       return allPayslips.filter(doc => 
         (doc as any).documentType === 'payslip' && 
         payslipIds.includes(doc.id)
