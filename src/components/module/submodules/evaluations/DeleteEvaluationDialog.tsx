@@ -1,89 +1,75 @@
 
-import React, { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { toast } from 'sonner';
-import { AlertTriangle } from 'lucide-react';
-import { COLLECTIONS } from '@/lib/firebase-collections';
+import React from 'react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { deleteDocument } from '@/hooks/firestore/delete-operations';
+import { COLLECTIONS } from '@/lib/firebase-collections';
+import { toast } from 'sonner';
 
 interface DeleteEvaluationDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  evaluationId: string;
-  onSuccess?: () => void;
+  onConfirm: () => void;
+  evaluation: any | null;
 }
 
-const DeleteEvaluationDialog: React.FC<DeleteEvaluationDialogProps> = ({ 
-  open, 
-  onOpenChange, 
-  evaluationId,
-  onSuccess
+const DeleteEvaluationDialog: React.FC<DeleteEvaluationDialogProps> = ({
+  open,
+  onOpenChange,
+  onConfirm,
+  evaluation
 }) => {
-  const [isDeleting, setIsDeleting] = useState(false);
-
   const handleDelete = async () => {
-    if (!evaluationId) {
-      toast.error('ID d\'évaluation manquant');
+    if (!evaluation || !evaluation.id) {
+      toast.error("Impossible de supprimer l'évaluation: ID manquant");
       return;
     }
 
-    setIsDeleting(true);
-    
     try {
-      await deleteDocument(COLLECTIONS.HR.EVALUATIONS, evaluationId);
-      toast.success('L\'évaluation a été supprimée avec succès');
-      
-      if (onSuccess) {
-        onSuccess();
-      }
-      
-      onOpenChange(false);
+      await deleteDocument(COLLECTIONS.HR.EVALUATIONS, evaluation.id);
+      toast.success("Évaluation supprimée avec succès");
+      onConfirm();
     } catch (error) {
-      console.error('Erreur lors de la suppression de l\'évaluation:', error);
-      toast.error('Erreur lors de la suppression de l\'évaluation');
-    } finally {
-      setIsDeleting(false);
+      console.error("Erreur lors de la suppression de l'évaluation:", error);
+      toast.error("Erreur lors de la suppression de l'évaluation");
     }
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle>Supprimer l'évaluation</DialogTitle>
-          <DialogDescription>
-            Êtes-vous sûr de vouloir supprimer cette évaluation ? Cette action est irréversible.
-          </DialogDescription>
-        </DialogHeader>
-        
-        <div className="py-4">
-          <div className="flex items-center p-4 bg-amber-50 text-amber-700 rounded-md">
-            <AlertTriangle className="h-5 w-5 mr-2 flex-shrink-0" />
-            <p className="text-sm">
-              La suppression de cette évaluation entraînera la perte définitive de toutes les données associées.
-            </p>
-          </div>
-        </div>
-        
-        <DialogFooter>
-          <Button 
-            variant="outline" 
-            onClick={() => onOpenChange(false)}
-            disabled={isDeleting}
-          >
-            Annuler
-          </Button>
-          <Button 
-            variant="destructive" 
-            onClick={handleDelete}
-            disabled={isDeleting}
-          >
-            {isDeleting ? 'Suppression...' : 'Supprimer'}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+    <AlertDialog open={open} onOpenChange={onOpenChange}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Confirmer la suppression</AlertDialogTitle>
+          <AlertDialogDescription>
+            Êtes-vous sûr de vouloir supprimer cette évaluation ?
+            {evaluation && (
+              <div className="mt-2 bg-muted p-3 rounded-md">
+                <p><strong>Employé:</strong> {evaluation.employeeName}</p>
+                <p><strong>Date:</strong> {evaluation.date}</p>
+                {evaluation.title && (
+                  <p><strong>Titre:</strong> {evaluation.title}</p>
+                )}
+              </div>
+            )}
+            <p className="mt-2 text-red-600 font-medium">Cette action ne peut pas être annulée.</p>
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Annuler</AlertDialogCancel>
+          <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+            Supprimer
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 };
 

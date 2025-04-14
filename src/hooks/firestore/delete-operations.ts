@@ -6,11 +6,7 @@ import {
 import { db } from '@/lib/firebase';
 import { toast } from 'sonner';
 
-/**
- * Delete a document from Firestore
- * @param collectionName The collection to delete from
- * @param documentId The document ID to delete
- */
+// Delete a document from a collection
 export const deleteDocument = async (collectionName: string, documentId: string) => {
   try {
     console.log(`Deleting document ${documentId} from collection ${collectionName}`);
@@ -18,13 +14,22 @@ export const deleteDocument = async (collectionName: string, documentId: string)
     const docRef = doc(db, collectionName, documentId);
     await deleteDoc(docRef);
     
-    console.log(`Document ${documentId} successfully deleted from ${collectionName}`);
+    console.log(`Document with ID ${documentId} deleted from ${collectionName}`);
     return true;
   } catch (error: any) {
-    console.error(`Error deleting document ${documentId} from ${collectionName}:`, error);
+    console.error(`Error deleting document from ${collectionName}:`, error);
     
+    // Check if this is a network error
     const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue';
-    toast.error(`Erreur lors de la suppression: ${errorMessage}`);
+    if (errorMessage.includes('offline') || errorMessage.includes('unavailable') || errorMessage.includes('backend')) {
+      toast.error('Impossible de supprimer le document en mode hors ligne');
+    } else {
+      toast.error(`Erreur lors de la suppression: ${errorMessage}`);
+    }
+    
     throw error;
   }
 };
+
+// Export other delete operations if needed
+export { deleteDocument as deleteOperation };
