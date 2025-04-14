@@ -46,13 +46,9 @@ const ContractForm: React.FC<ContractFormProps> = ({
     const updatedData = { ...formData, [field]: value };
     setFormData(updatedData);
     
-    // Si le champ est salary, convertir en nombre
-    const processedData = { ...updatedData };
-    if (field === 'salary' && value) {
-      processedData.salary = parseFloat(value);
-    }
-    
-    onFormDataChange(processedData);
+    // On envoie directement les données brutes au parent
+    // La conversion se fera lors de la soumission
+    onFormDataChange(updatedData);
   };
 
   return (

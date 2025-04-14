@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useContractsData, Contract } from '@/hooks/useContractsData';
 import { PlusCircle, FileText, PenSquare } from 'lucide-react';
-import { DataTable } from '@/components/DataTable';
+import DataTable from '@/components/DataTable';
 import { ColumnDef } from '@tanstack/react-table';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
