@@ -22,7 +22,7 @@ const EvaluationsFilter: React.FC<EvaluationsFilterProps> = ({
   currentFilters,
   onApplyFilters
 }) => {
-  const [status, setStatus] = useState(currentFilters.status || '');
+  const [status, setStatus] = useState(currentFilters.status || 'all');
 
   const handleApplyFilters = () => {
     onApplyFilters({ status });
@@ -30,7 +30,7 @@ const EvaluationsFilter: React.FC<EvaluationsFilterProps> = ({
   };
 
   const handleReset = () => {
-    setStatus('');
+    setStatus('all');
   };
 
   return (
@@ -48,7 +48,7 @@ const EvaluationsFilter: React.FC<EvaluationsFilterProps> = ({
                 <SelectValue placeholder="Tous les statuts" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Tous les statuts</SelectItem>
+                <SelectItem value="all">Tous les statuts</SelectItem>
                 <SelectItem value="Planifiée">Planifiée</SelectItem>
                 <SelectItem value="Complétée">Complétée</SelectItem>
                 <SelectItem value="Annulée">Annulée</SelectItem>
