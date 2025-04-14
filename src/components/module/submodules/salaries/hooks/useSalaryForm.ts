@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useEmployeeContract } from '@/hooks/useEmployeeContract';
 import { toast } from 'sonner';
@@ -8,6 +9,8 @@ import { PaySlip } from '@/types/payslip';
 import { addPayslipToEmployee } from '../services/employeeSalaryService';
 import { Company } from '@/components/module/submodules/companies/types';
 import { useFirebaseCompanies } from '@/hooks/useFirebaseCompanies';
+import { generatePayslipPDF } from '../utils/payslipPdfUtils';
+import { addEmployeeDocument } from '../../employees/services/documentService';
 
 export const useSalaryForm = () => {
   const { employees } = useHrModuleData();
@@ -151,10 +154,29 @@ export const useSalaryForm = () => {
       const payslipRef = await addDocument(COLLECTIONS.HR.PAYSLIPS, newPaySlip);
       const payslipId = payslipRef.id;
       
+      // Generate PDF
+      const doc = generatePayslipPDF(newPaySlip);
+      const pdfBase64 = doc.output('datauristring');
+
+      // Add document to employee's profile
+      const documentData = {
+        id: `payslip_${payslipId}`,
+        name: `Bulletin de paie - ${month} ${year}`,
+        type: 'Fiche de paie',
+        date: new Date().toISOString(),
+        fileType: 'application/pdf',
+        fileData: pdfBase64,
+        employeeId: selectedEmployeeId
+      };
+
+      await addEmployeeDocument(selectedEmployeeId, documentData);
+      
       const success = await addPayslipToEmployee(selectedEmployeeId, payslipId);
 
       if (success) {
         toast.success('Fiche de paie créée et associée avec succès');
+        // Save PDF
+        doc.save(`bulletin_de_paie_${selectedEmployee.lastName.toLowerCase()}_${month.toLowerCase()}_${year}.pdf`);
       } else {
         toast.error('Fiche de paie créée, mais erreur lors de l\'association à l\'employé');
       }
