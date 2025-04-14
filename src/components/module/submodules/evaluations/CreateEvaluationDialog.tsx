@@ -1,54 +1,31 @@
 
 import React, { useState, useEffect } from 'react';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-  DialogDescription
-} from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useHrModuleData } from '@/hooks/useHrModuleData';
 import { toast } from 'sonner';
-import { addDocument } from '@/hooks/firestore/add-operations';
+import { addDocument } from '@/hooks/firestore/create-operations'; // Changed from add-operations to create-operations
 import { COLLECTIONS } from '@/lib/firebase-collections';
 
-export interface CreateEvaluationDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  onSuccess?: () => void;
-}
-
-const CreateEvaluationDialog: React.FC<CreateEvaluationDialogProps> = ({
-  open,
-  onOpenChange,
-  onSuccess
-}) => {
+const CreateEvaluationDialog = ({ open, onOpenChange, onSuccess }) => {
   const { employees } = useHrModuleData();
   const [isSubmitting, setIsSubmitting] = useState(false);
-
+  
   // Form state
   const [title, setTitle] = useState('');
   const [selectedEmployeeId, setSelectedEmployeeId] = useState('');
   const [selectedEvaluatorId, setSelectedEvaluatorId] = useState('');
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
-  const [status, setStatus] = useState<'Planifiée' | 'Complétée' | 'Annulée'>('Planifiée');
-  const [rating, setRating] = useState<number | string>('');
+  const [status, setStatus] = useState('Planifiée');
+  const [rating, setRating] = useState('');
   const [comments, setComments] = useState('');
   const [strengths, setStrengths] = useState('');
   const [improvements, setImprovements] = useState('');
-  
+
   // Reset form when dialog opens
   useEffect(() => {
     if (open) {
@@ -75,17 +52,11 @@ const CreateEvaluationDialog: React.FC<CreateEvaluationDialogProps> = ({
     }
 
     setIsSubmitting(true);
-    
     try {
       // Convert strengths and improvements from string to array
-      const strengthsArray = strengths.split('\n')
-        .map(item => item.trim())
-        .filter(item => item !== '');
-      
-      const improvementsArray = improvements.split('\n')
-        .map(item => item.trim())
-        .filter(item => item !== '');
-      
+      const strengthsArray = strengths.split('\n').map(item => item.trim()).filter(item => item !== '');
+      const improvementsArray = improvements.split('\n').map(item => item.trim()).filter(item => item !== '');
+
       // Create the evaluation object
       const evaluationData = {
         title,
@@ -99,10 +70,9 @@ const CreateEvaluationDialog: React.FC<CreateEvaluationDialogProps> = ({
         improvements: improvementsArray,
         createdAt: new Date().toISOString()
       };
-      
+
       // Add to Firestore
       await addDocument(COLLECTIONS.HR.EVALUATIONS, evaluationData);
-      
       toast.success('L\'évaluation a été créée avec succès');
       
       if (onSuccess) {
@@ -136,7 +106,7 @@ const CreateEvaluationDialog: React.FC<CreateEvaluationDialogProps> = ({
                   <SelectValue placeholder="Sélectionner un employé" />
                 </SelectTrigger>
                 <SelectContent>
-                  {employees?.map((employee) => (
+                  {employees?.map(employee => (
                     <SelectItem key={employee.id} value={employee.id}>
                       {employee.firstName} {employee.lastName}
                     </SelectItem>
@@ -152,7 +122,7 @@ const CreateEvaluationDialog: React.FC<CreateEvaluationDialogProps> = ({
                   <SelectValue placeholder="Sélectionner un évaluateur" />
                 </SelectTrigger>
                 <SelectContent>
-                  {employees?.map((employee) => (
+                  {employees?.map(employee => (
                     <SelectItem key={employee.id} value={employee.id}>
                       {employee.firstName} {employee.lastName}
                     </SelectItem>
@@ -169,7 +139,7 @@ const CreateEvaluationDialog: React.FC<CreateEvaluationDialogProps> = ({
                 id="title" 
                 placeholder="Titre de l'évaluation" 
                 value={title} 
-                onChange={e => setTitle(e.target.value)} 
+                onChange={(e) => setTitle(e.target.value)} 
               />
             </div>
             
@@ -179,7 +149,7 @@ const CreateEvaluationDialog: React.FC<CreateEvaluationDialogProps> = ({
                 id="date" 
                 type="date" 
                 value={date} 
-                onChange={e => setDate(e.target.value)} 
+                onChange={(e) => setDate(e.target.value)} 
               />
             </div>
           </div>
@@ -189,7 +159,7 @@ const CreateEvaluationDialog: React.FC<CreateEvaluationDialogProps> = ({
               <Label htmlFor="status">Statut</Label>
               <Select 
                 value={status} 
-                onValueChange={(val: 'Planifiée' | 'Complétée' | 'Annulée') => setStatus(val)}
+                onValueChange={(val) => setStatus(val)}
               >
                 <SelectTrigger id="status">
                   <SelectValue placeholder="Sélectionner un statut" />
@@ -209,10 +179,10 @@ const CreateEvaluationDialog: React.FC<CreateEvaluationDialogProps> = ({
                 type="number" 
                 min="1" 
                 max="5" 
-                step="0.5"
+                step="0.5" 
                 placeholder="Note sur 5" 
                 value={rating} 
-                onChange={e => setRating(e.target.value)} 
+                onChange={(e) => setRating(e.target.value)} 
               />
             </div>
           </div>
@@ -223,8 +193,8 @@ const CreateEvaluationDialog: React.FC<CreateEvaluationDialogProps> = ({
               id="comments" 
               placeholder="Commentaires généraux sur l'évaluation" 
               value={comments} 
-              onChange={e => setComments(e.target.value)}
-              rows={3}
+              onChange={(e) => setComments(e.target.value)} 
+              rows={3} 
             />
           </div>
           
@@ -234,8 +204,8 @@ const CreateEvaluationDialog: React.FC<CreateEvaluationDialogProps> = ({
               id="strengths" 
               placeholder="Listez les points forts (un par ligne)" 
               value={strengths} 
-              onChange={e => setStrengths(e.target.value)}
-              rows={3}
+              onChange={(e) => setStrengths(e.target.value)} 
+              rows={3} 
             />
           </div>
           
@@ -245,17 +215,24 @@ const CreateEvaluationDialog: React.FC<CreateEvaluationDialogProps> = ({
               id="improvements" 
               placeholder="Listez les axes d'amélioration (un par ligne)" 
               value={improvements} 
-              onChange={e => setImprovements(e.target.value)}
-              rows={3}
+              onChange={(e) => setImprovements(e.target.value)} 
+              rows={3} 
             />
           </div>
         </div>
         
         <DialogFooter>
-          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+          <Button 
+            type="button" 
+            variant="outline" 
+            onClick={() => onOpenChange(false)}
+          >
             Annuler
           </Button>
-          <Button onClick={handleCreate} disabled={isSubmitting}>
+          <Button 
+            onClick={handleCreate} 
+            disabled={isSubmitting}
+          >
             {isSubmitting ? 'Création en cours...' : 'Créer'}
           </Button>
         </DialogFooter>
