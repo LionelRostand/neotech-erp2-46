@@ -25,11 +25,18 @@ export const generatePayslipPDF = (payslip: PaySlip): jsPDF => {
   doc.text(`N° SS: ${payslip.employee.socialSecurityNumber}`, 20, 75);
 
   // Salary details
-  const salaryData = payslip.details.map(detail => [
-    detail.label,
-    detail.base || '',
-    detail.amount.toFixed(2) + ' €'
-  ]);
+  const salaryData = payslip.details.map(detail => {
+    // Vérifier si amount est un nombre avant d'appliquer toFixed
+    const formattedAmount = typeof detail.amount === 'number'
+      ? detail.amount.toFixed(2) + ' €'
+      : detail.amount + ' €';
+    
+    return [
+      detail.label,
+      detail.base || '',
+      formattedAmount
+    ];
+  });
 
   // @ts-ignore - jspdf-autotable types
   doc.autoTable({
@@ -44,9 +51,24 @@ export const generatePayslipPDF = (payslip: PaySlip): jsPDF => {
   // @ts-ignore - jspdf-autotable types
   const finalY = doc.lastAutoTable.finalY || 200;
   
-  doc.text(`Salaire brut: ${payslip.grossSalary.toFixed(2)} €`, 20, finalY + 10);
-  doc.text(`Total des cotisations: ${payslip.totalDeductions.toFixed(2)} €`, 20, finalY + 20);
-  doc.text(`Net à payer: ${payslip.netSalary.toFixed(2)} €`, 20, finalY + 30);
+  // Vérification que grossSalary est un nombre
+  const grossSalary = typeof payslip.grossSalary === 'number' 
+    ? payslip.grossSalary.toFixed(2) 
+    : payslip.grossSalary;
+  
+  // Vérification que totalDeductions est un nombre
+  const totalDeductions = typeof payslip.totalDeductions === 'number' 
+    ? payslip.totalDeductions.toFixed(2) 
+    : payslip.totalDeductions;
+  
+  // Vérification que netSalary est un nombre
+  const netSalary = typeof payslip.netSalary === 'number' 
+    ? payslip.netSalary.toFixed(2) 
+    : payslip.netSalary;
+  
+  doc.text(`Salaire brut: ${grossSalary} €`, 20, finalY + 10);
+  doc.text(`Total des cotisations: ${totalDeductions} €`, 20, finalY + 20);
+  doc.text(`Net à payer: ${netSalary} €`, 20, finalY + 30);
 
   return doc;
 };

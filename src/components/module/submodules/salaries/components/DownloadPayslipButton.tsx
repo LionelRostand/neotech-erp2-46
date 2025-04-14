@@ -14,6 +14,13 @@ interface DownloadPayslipButtonProps {
 const DownloadPayslipButton: React.FC<DownloadPayslipButtonProps> = ({ payslip }) => {
   const handleDownload = async () => {
     try {
+      console.log('Données de la fiche de paie:', payslip);
+      
+      // Vérifier que les données essentielles existent
+      if (!payslip.details || !Array.isArray(payslip.details)) {
+        throw new Error('Les détails de la fiche de paie sont manquants ou invalides');
+      }
+      
       // Generate PDF document
       const doc = generatePayslipPDF(payslip);
       
@@ -42,7 +49,13 @@ const DownloadPayslipButton: React.FC<DownloadPayslipButtonProps> = ({ payslip }
       }
     } catch (error) {
       console.error('Erreur lors du téléchargement de la fiche de paie:', error);
-      toast.error('Erreur lors du téléchargement de la fiche de paie');
+      let errorMessage = 'Erreur lors du téléchargement de la fiche de paie';
+      
+      if (error instanceof Error) {
+        errorMessage += `: ${error.message}`;
+      }
+      
+      toast.error(errorMessage);
     }
   };
 
