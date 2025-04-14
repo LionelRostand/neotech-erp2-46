@@ -9,18 +9,18 @@ import { PaySlip } from '@/types/payslip';
 import { addPayslipToEmployee } from '../services/employeeSalaryService';
 
 export const useSalaryForm = () => {
-  const { employees } = useHrModuleData();
+  const { employees, companies } = useHrModuleData();
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<string>('');
   const [baseSalary, setBaseSalary] = useState<number>(0);
   const [month, setMonth] = useState<string>('');
   const [year, setYear] = useState<number>(new Date().getFullYear());
   const [paymentMethod, setPaymentMethod] = useState<string>('Virement');
   const [notes, setNotes] = useState<string>('');
+  const [overtimeHours, setOvertimeHours] = useState<string>('0');
+  const [overtimeRate, setOvertimeRate] = useState<string>('25');
 
-  // Utiliser le hook pour récupérer le salaire du contrat
   const { salary: contractSalary } = useEmployeeContract(selectedEmployeeId);
 
-  // Mettre à jour le salaire de base quand un employé est sélectionné
   useEffect(() => {
     if (selectedEmployeeId && contractSalary) {
       setBaseSalary(contractSalary);
@@ -33,14 +33,12 @@ export const useSalaryForm = () => {
     const selectedEmployee = employees.find(emp => emp.id === employeeId);
 
     if (selectedEmployee) {
-      // Utiliser les données de congés si disponibles
       const conges = selectedEmployee.conges || {
         acquired: 0,
         taken: 0,
         balance: 0
       };
 
-      // Utiliser les données de RTT si disponibles
       const rtt = selectedEmployee.rtt || {
         acquired: 0,
         taken: 0,
@@ -66,10 +64,13 @@ export const useSalaryForm = () => {
     }
 
     const employeeName = `${selectedEmployee.firstName} ${selectedEmployee.lastName}`;
+    const company = companies.find(c => c.id === selectedEmployee.company);
 
-    // Créer un objet PaySlip simplifié
+    // Calculer le montant des heures supplémentaires
+    const overtimeAmount = parseFloat(overtimeHours) * (baseSalary / 151.67) * (1 + parseFloat(overtimeRate) / 100);
+
     const newPaySlip: PaySlip = {
-      id: '', // L'ID sera généré par Firestore
+      id: '',
       employee: {
         firstName: selectedEmployee.firstName,
         lastName: selectedEmployee.lastName,
@@ -84,32 +85,37 @@ export const useSalaryForm = () => {
           label: "Salaire de base",
           amount: baseSalary,
           type: "earning"
+        },
+        {
+          label: `Heures supplémentaires (${overtimeHours}h à ${overtimeRate}%)`,
+          amount: overtimeAmount,
+          type: "earning"
         }
       ],
-      grossSalary: baseSalary,
+      grossSalary: baseSalary + overtimeAmount,
       totalDeductions: 0,
-      netSalary: baseSalary,
-      hoursWorked: 151.67,
+      netSalary: (baseSalary + overtimeAmount) * 0.78,
+      hoursWorked: 151.67 + parseFloat(overtimeHours),
       paymentDate: new Date().toISOString(),
-      employerName: 'NEOTECH',
-      employerAddress: 'Paris, France',
-      employerSiret: '12345678901234',
-      month: month,
-      year: year,
+      employerName: company?.name || 'NEOTECH',
+      employerAddress: company?.address?.street || 'Paris, France',
+      employerSiret: company?.siret || '12345678901234',
+      month,
+      year,
       employeeId: selectedEmployeeId,
-      employeeName: employeeName,
+      employeeName,
       status: 'Généré',
       date: new Date().toISOString(),
-      paymentMethod: paymentMethod,
-      notes: notes
+      paymentMethod,
+      notes,
+      conges: selectedEmployee.conges,
+      rtt: selectedEmployee.rtt
     };
 
     try {
-      // Créer la fiche de paie dans Firestore en utilisant addDocument au lieu de createDocument
       const payslipRef = await addDocument(COLLECTIONS.HR.PAYSLIPS, newPaySlip);
       const payslipId = payslipRef.id;
-
-      // Associer la fiche de paie à l'employé
+      
       const success = await addPayslipToEmployee(selectedEmployeeId, payslipId);
 
       if (success) {
@@ -130,12 +136,16 @@ export const useSalaryForm = () => {
     year,
     paymentMethod,
     notes,
+    overtimeHours,
+    overtimeRate,
     handleEmployeeSelect,
     setBaseSalary,
     setMonth,
     setYear,
     setPaymentMethod,
     setNotes,
+    setOvertimeHours,
+    setOvertimeRate,
     handleSubmit
   };
 };

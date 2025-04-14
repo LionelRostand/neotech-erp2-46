@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useHrModuleData } from '@/hooks/useHrModuleData';
-import { format } from 'date-fns';
+import OvertimeSection from './OvertimeSection';
 
 export const SalaryForm: React.FC = () => {
   const { employees, isLoading } = useHrModuleData();
@@ -18,16 +18,19 @@ export const SalaryForm: React.FC = () => {
     year,
     paymentMethod,
     notes,
+    overtimeHours,
+    overtimeRate,
     handleEmployeeSelect,
     setBaseSalary,
     setMonth,
     setYear,
     setPaymentMethod,
     setNotes,
+    setOvertimeHours,
+    setOvertimeRate,
     handleSubmit
   } = useSalaryForm();
 
-  // Mois de l'année en français
   const months = [
     { value: 'Janvier', label: 'Janvier' },
     { value: 'Février', label: 'Février' },
@@ -43,19 +46,12 @@ export const SalaryForm: React.FC = () => {
     { value: 'Décembre', label: 'Décembre' }
   ];
 
-  // Méthodes de paiement
   const paymentMethods = [
     { value: 'Virement', label: 'Virement bancaire' },
     { value: 'Chèque', label: 'Chèque' },
     { value: 'Espèces', label: 'Espèces' }
   ];
 
-  // Formater le montant pour l'affichage
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(amount);
-  };
-
-  // Générer les options d'années (année actuelle + 5 années précédentes)
   const currentYear = new Date().getFullYear();
   const years = Array.from({ length: 6 }, (_, i) => currentYear - i);
 
@@ -95,10 +91,18 @@ export const SalaryForm: React.FC = () => {
               />
               {baseSalary > 0 && (
                 <p className="text-sm text-gray-500">
-                  Net estimé: {formatCurrency(baseSalary * 0.78)}
+                  Net estimé: {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(baseSalary * 0.78)}
                 </p>
               )}
             </div>
+
+            {/* Section des heures supplémentaires */}
+            <OvertimeSection
+              overtimeHours={overtimeHours}
+              setOvertimeHours={setOvertimeHours}
+              overtimeRate={overtimeRate}
+              setOvertimeRate={setOvertimeRate}
+            />
 
             {/* Mois */}
             <div className="space-y-2">
