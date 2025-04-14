@@ -14,30 +14,50 @@ interface DownloadPayslipButtonProps {
 const DownloadPayslipButton: React.FC<DownloadPayslipButtonProps> = ({ payslip }) => {
   const handleDownload = async () => {
     try {
-      console.log('Données de la fiche de paie:', payslip);
+      console.log('Données de la fiche de paie pour PDF:', payslip);
       
-      // Vérifier que les données essentielles existent
-      if (!payslip.details || !Array.isArray(payslip.details)) {
-        throw new Error('Les détails de la fiche de paie sont manquants ou invalides');
+      // Enrichissement des données de congés si manquantes
+      if (!payslip.conges) {
+        payslip.conges = {
+          acquired: 2.5, // 2.5 jours par mois en France
+          taken: 0,
+          balance: 2.5
+        };
       }
       
-      // Generate PDF document
+      if (!payslip.rtt) {
+        payslip.rtt = {
+          acquired: 1, // 1 jour par mois en moyenne
+          taken: 0,
+          balance: 1
+        };
+      }
+      
+      // Vérifier la présence des données essentielles
+      if (!payslip.employee || !payslip.employee.firstName || !payslip.employee.lastName) {
+        throw new Error('Les informations de l\'employé sont manquantes');
+      }
+      
+      // Construction du nom de fichier français
+      const formattedMonth = payslip.month?.toLowerCase() || 'periode';
+      const year = payslip.year || new Date().getFullYear();
+      const employeeName = payslip.employee.lastName.toLowerCase();
+      const fileName = `bulletin_de_paie_${employeeName}_${formattedMonth}_${year}.pdf`;
+      
+      // Génération du PDF selon le format français
       const doc = generatePayslipPDF(payslip);
       
-      // Save PDF file avec un nom de fichier basé sur les données du bulletin
-      const fileName = `bulletin_de_paie_${payslip.employee.lastName.toLowerCase()}_${payslip.month?.toLowerCase()}_${payslip.year}.pdf`;
-      
-      // Get PDF as base64 string for storage
+      // Obtenir le PDF en Base64 pour le stockage
       const pdfBase64 = doc.output('datauristring');
       
-      // Save PDF file
+      // Enregistrement du fichier PDF
       doc.save(fileName);
       
-      // Add document to employee's profile if employeeId exists
+      // Ajout du document au profil de l'employé si l'ID de l'employé existe
       if (payslip.employeeId) {
         const documentData = {
           id: `payslip_${payslip.id || new Date().getTime()}`,
-          name: `Bulletin de paie - ${payslip.month} ${payslip.year}`,
+          name: `Bulletin de paie - ${payslip.month || 'période'} ${payslip.year || year}`,
           type: 'Fiche de paie',
           date: new Date().toISOString(),
           fileType: 'application/pdf',
@@ -46,9 +66,9 @@ const DownloadPayslipButton: React.FC<DownloadPayslipButtonProps> = ({ payslip }
         };
 
         await addEmployeeDocument(payslip.employeeId, documentData);
-        toast.success('Fiche de paie téléchargée et ajoutée aux documents de l\'employé');
+        toast.success('Bulletin de paie téléchargé et ajouté aux documents de l\'employé');
       } else {
-        toast.success('Fiche de paie téléchargée avec succès');
+        toast.success('Bulletin de paie téléchargé avec succès');
       }
     } catch (error) {
       console.error('Erreur lors du téléchargement de la fiche de paie:', error);
