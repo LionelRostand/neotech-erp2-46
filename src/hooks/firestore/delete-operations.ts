@@ -33,3 +33,8 @@ export const deleteDocument = async (collectionName: string, documentId: string)
 
 // Export other delete operations if needed
 export { deleteDocument as deleteOperation };
+
+// Add a specialized function for deleting training documents
+export const deleteTrainingDocument = async (trainingId: string) => {
+  return deleteDocument(COLLECTIONS.HR.TRAININGS, trainingId);
+};

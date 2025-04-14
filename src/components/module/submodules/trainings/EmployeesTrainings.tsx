@@ -1,231 +1,355 @@
 
-import React, { useState } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { 
-  GraduationCap, 
-  Plus,
-  Calendar,
-  Building,
-  Filter,
-  FileText
-} from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Plus, Download, Filter, CalendarDays, Search, Award, FileText } from 'lucide-react';
 import { useTrainingsData } from '@/hooks/useTrainingsData';
+import { useHrModuleData } from '@/hooks/useHrModuleData';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
+import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
+import ExportTrainingsDialog from './ExportTrainingsDialog';
 import CreateTrainingDialog from './CreateTrainingDialog';
-import TrainingsFilter from './TrainingsFilter';
-import TrainingViewDialog from './TrainingViewDialog';
-import TrainingEditDialog from './TrainingEditDialog';
+import DeleteTrainingDialog from './DeleteTrainingDialog';
+import { Training } from '@/hooks/useTrainingsData';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
-const EmployeesTrainings: React.FC = () => {
-  const [activeTab, setActiveTab] = useState('all');
-  const [refreshTrigger, setRefreshTrigger] = useState(0);
-  const { trainings, stats, isLoading, error } = useTrainingsData(refreshTrigger);
+const EmployeesTrainings = () => {
+  const { trainings, stats, isLoading } = useTrainingsData();
+  const { employees } = useHrModuleData();
   
   const [showCreateDialog, setShowCreateDialog] = useState(false);
-  const [showFilterDialog, setShowFilterDialog] = useState(false);
-  const [showViewDialog, setShowViewDialog] = useState(false);
-  const [showEditDialog, setShowEditDialog] = useState(false);
-  const [selectedTraining, setSelectedTraining] = useState<any>(null);
-  const [filters, setFilters] = useState<any>({});
-
-  // Handler for refreshing data after operations
-  const handleRefresh = () => {
+  const [showExportDialog, setShowExportDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [selectedTraining, setSelectedTraining] = useState<Training | null>(null);
+  
+  const [view, setView] = useState('tableau');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterEmployee, setFilterEmployee] = useState('all');
+  const [filterStatus, setFilterStatus] = useState('all');
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+  
+  // Filter trainings based on filters
+  const filteredTrainings = trainings.filter(training => {
+    const matchesSearch = !searchTerm || 
+      (training.title?.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (training.employeeName?.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (training.provider?.toLowerCase().includes(searchTerm.toLowerCase()));
+      
+    const matchesEmployee = filterEmployee === 'all' || training.employeeId === filterEmployee;
+    const matchesStatus = filterStatus === 'all' || training.status === filterStatus;
+    
+    return matchesSearch && matchesEmployee && matchesStatus;
+  });
+  
+  // Handle create training submission
+  const handleCreateTraining = async (data: any) => {
+    try {
+      // The actual adding is done within the dialog component
+      // Here we just refresh the data
+      setRefreshTrigger(prev => prev + 1);
+    } catch (error) {
+      console.error('Error creating training:', error);
+    }
+  };
+  
+  // Handle training deletion
+  const handleDeleteTraining = (training: Training) => {
+    setSelectedTraining(training);
+    setShowDeleteDialog(true);
+  };
+  
+  // Handle confirmation of deletion
+  const handleConfirmDelete = () => {
+    setShowDeleteDialog(false);
+    setSelectedTraining(null);
     setRefreshTrigger(prev => prev + 1);
   };
-
-  const handleViewTraining = (training: any) => {
-    setSelectedTraining(training);
-    setShowViewDialog(true);
-  };
-
-  const handleEditTraining = (training: any) => {
-    setSelectedTraining(training);
-    setShowEditDialog(true);
-  };
-
-  const applyFilters = (filterData: any) => {
-    setFilters(filterData);
-    // In a real app, we would filter the data here
-  };
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent"></div>
-        <p className="ml-2">Chargement des formations...</p>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="bg-red-50 text-red-700 p-4 rounded-md">
-        Une erreur est survenue lors du chargement des formations.
-      </div>
-    );
-  }
-
-  // Apply filters - this is a simplified implementation
-  const filteredTrainings = trainings.filter(training => {
-    if (activeTab !== 'all' && training.status.toLowerCase() !== activeTab.toLowerCase()) {
-      return false;
-    }
-    
-    // Apply custom filters if set
-    if (filters.title && !training.title.toLowerCase().includes(filters.title.toLowerCase())) {
-      return false;
-    }
-    
-    if (filters.employee && !training.employeeName.toLowerCase().includes(filters.employee.toLowerCase())) {
-      return false;
-    }
-    
-    if (filters.provider && filters.provider !== '' && 
-        (!training.provider || !training.provider.toLowerCase().includes(filters.provider.toLowerCase()))) {
-      return false;
-    }
-    
-    if (filters.dateFrom && new Date(training.startDate) < new Date(filters.dateFrom)) {
-      return false;
-    }
-    
-    if (filters.dateTo && training.endDate && new Date(training.endDate) > new Date(filters.dateTo)) {
-      return false;
-    }
-    
-    return true;
-  });
-
+  
   return (
     <div className="space-y-6">
-      <div className="flex flex-col space-y-4 md:flex-row md:justify-between md:items-center">
-        <div>
-          <h2 className="text-2xl font-bold">Formations</h2>
-          <p className="text-gray-500">Gestion des formations du personnel</p>
-        </div>
+      {/* Header section */}
+      <div className="flex justify-between items-center">
+        <h2 className="text-3xl font-bold tracking-tight">Formations</h2>
         <div className="flex space-x-2">
-          <Button variant="outline" onClick={() => setShowFilterDialog(true)}>
-            <Filter className="h-4 w-4 mr-2" />
-            Filtres
-          </Button>
           <Button onClick={() => setShowCreateDialog(true)}>
             <Plus className="h-4 w-4 mr-2" />
             Nouvelle formation
           </Button>
+          <Button variant="outline" onClick={() => setShowExportDialog(true)}>
+            <Download className="h-4 w-4 mr-2" />
+            Exporter
+          </Button>
         </div>
       </div>
-
+      
+      {/* Stats cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
-          <CardContent className="p-4 flex flex-col items-center justify-center">
-            <div className="text-3xl font-bold text-blue-500">{stats?.planned || 0}</div>
-            <div className="text-sm text-gray-500">Planifiées</div>
+          <CardContent className="pt-6">
+            <div className="text-center">
+              <div className="text-2xl font-bold">{stats.total}</div>
+              <p className="text-muted-foreground">Total</p>
+            </div>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="p-4 flex flex-col items-center justify-center">
-            <div className="text-3xl font-bold text-amber-500">{stats?.inProgress || 0}</div>
-            <div className="text-sm text-gray-500">En cours</div>
+          <CardContent className="pt-6">
+            <div className="text-center">
+              <div className="text-2xl font-bold">{stats.planned}</div>
+              <p className="text-muted-foreground">Planifiées</p>
+            </div>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="p-4 flex flex-col items-center justify-center">
-            <div className="text-3xl font-bold text-green-500">{stats?.completed || 0}</div>
-            <div className="text-sm text-gray-500">Terminées</div>
+          <CardContent className="pt-6">
+            <div className="text-center">
+              <div className="text-2xl font-bold">{stats.inProgress}</div>
+              <p className="text-muted-foreground">En cours</p>
+            </div>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="p-4 flex flex-col items-center justify-center">
-            <div className="text-3xl font-bold text-gray-500">{stats?.total || 0}</div>
-            <div className="text-sm text-gray-500">Total</div>
+          <CardContent className="pt-6">
+            <div className="text-center">
+              <div className="text-2xl font-bold">{stats.completed}</div>
+              <p className="text-muted-foreground">Terminées</p>
+            </div>
           </CardContent>
         </Card>
       </div>
-
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="w-full max-w-md grid grid-cols-4">
-          <TabsTrigger value="all">Toutes</TabsTrigger>
-          <TabsTrigger value="planifiée">Planifiées</TabsTrigger>
-          <TabsTrigger value="en cours">En cours</TabsTrigger>
-          <TabsTrigger value="terminée">Terminées</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value={activeTab}>
-          <Card>
-            <CardContent className="p-6">
+      
+      {/* Main content */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Liste des formations</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {/* Filters and search */}
+          <div className="flex flex-col md:flex-row gap-4 mb-6">
+            <div className="flex-1">
+              <div className="relative">
+                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Rechercher une formation..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-8 w-full"
+                />
+              </div>
+            </div>
+            <div className="flex flex-row gap-4">
+              <Select value={filterEmployee} onValueChange={setFilterEmployee}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Tous les employés" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Tous les employés</SelectItem>
+                  {employees.map(employee => (
+                    <SelectItem key={employee.id} value={employee.id}>
+                      {employee.firstName} {employee.lastName}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              
+              <Select value={filterStatus} onValueChange={setFilterStatus}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Tous les statuts" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Tous les statuts</SelectItem>
+                  <SelectItem value="Planifiée">Planifiées</SelectItem>
+                  <SelectItem value="En cours">En cours</SelectItem>
+                  <SelectItem value="Terminée">Terminées</SelectItem>
+                  <SelectItem value="Annulée">Annulées</SelectItem>
+                </SelectContent>
+              </Select>
+              
+              <div className="flex flex-row gap-2">
+                <Button 
+                  variant="outline" 
+                  size="icon" 
+                  onClick={() => setView('tableau')}
+                  className={view === 'tableau' ? 'bg-muted' : ''}
+                >
+                  <FileText className="h-4 w-4" />
+                  <span className="sr-only">Vue tableau</span>
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="icon" 
+                  onClick={() => setView('cartes')}
+                  className={view === 'cartes' ? 'bg-muted' : ''}
+                >
+                  <CalendarDays className="h-4 w-4" />
+                  <span className="sr-only">Vue cartes</span>
+                </Button>
+              </div>
+            </div>
+          </div>
+          
+          {/* Training list */}
+          {isLoading ? (
+            <div className="flex justify-center py-8">
+              <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
+            </div>
+          ) : (
+            <>
               {filteredTrainings.length === 0 ? (
-                <div className="text-center p-8 border border-dashed rounded-md">
-                  <GraduationCap className="w-12 h-12 mx-auto text-gray-400" />
-                  <p className="mt-2 text-gray-500">Aucune formation trouvée</p>
+                <div className="text-center py-12">
+                  <Award className="h-12 w-12 mx-auto text-muted-foreground" />
+                  <h3 className="mt-4 text-lg font-medium">Aucune formation trouvée</h3>
+                  <p className="mt-2 text-sm text-muted-foreground">
+                    Aucune formation ne correspond à vos critères de recherche.
+                  </p>
                 </div>
               ) : (
-                <div className="grid gap-4 grid-cols-1 lg:grid-cols-2">
-                  {filteredTrainings.map((training) => (
-                    <div key={training.id} className="border rounded-md p-4 hover:bg-gray-50">
-                      <div className="flex justify-between mb-2">
-                        <div className="font-medium">{training.title}</div>
-                        <div className={`px-2 py-1 rounded text-xs ${
-                          training.status === 'Planifiée' ? 'bg-blue-100 text-blue-800' : 
-                          training.status === 'En cours' ? 'bg-amber-100 text-amber-800' : 
-                          training.status === 'Terminée' ? 'bg-green-100 text-green-800' : 
-                          'bg-gray-100 text-gray-800'
-                        }`}>
-                          {training.status}
-                        </div>
-                      </div>
-                      <div className="flex items-center text-sm text-gray-500 mb-2">
-                        <Calendar className="w-4 h-4 mr-1" />
-                        {training.startDate} {training.endDate ? `- ${training.endDate}` : ''}
-                      </div>
-                      <div className="flex items-center text-sm text-gray-500 mb-2">
-                        <Building className="w-4 h-4 mr-1" />
-                        {training.provider || 'Formation interne'}
-                      </div>
-                      <div className="mt-2 text-sm">
-                        Participant: <span className="font-medium">{training.employeeName}</span>
-                      </div>
-                      <div className="flex justify-end mt-2 space-x-2">
-                        <Button variant="outline" size="sm" onClick={() => handleViewTraining(training)}>
-                          Voir
-                        </Button>
-                        <Button variant="outline" size="sm" onClick={() => handleEditTraining(training)}>
-                          Planifier
-                        </Button>
-                      </div>
+                <>
+                  {view === 'tableau' ? (
+                    <div className="rounded-md border">
+                      <table className="w-full">
+                        <thead>
+                          <tr className="border-b bg-muted/50">
+                            <th className="py-3 px-4 text-left">Titre</th>
+                            <th className="py-3 px-4 text-left">Employé</th>
+                            <th className="py-3 px-4 text-left">Type</th>
+                            <th className="py-3 px-4 text-left">Dates</th>
+                            <th className="py-3 px-4 text-left">Statut</th>
+                            <th className="py-3 px-4 text-right">Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {filteredTrainings.map((training) => (
+                            <tr key={training.id} className="border-b">
+                              <td className="py-3 px-4 font-medium">{training.title}</td>
+                              <td className="py-3 px-4">{training.employeeName}</td>
+                              <td className="py-3 px-4">{training.type}</td>
+                              <td className="py-3 px-4">
+                                {training.startDate} {training.endDate ? `- ${training.endDate}` : ''}
+                              </td>
+                              <td className="py-3 px-4">
+                                <Badge variant={
+                                  training.status === 'Terminée' ? 'success' : 
+                                  training.status === 'En cours' ? 'default' :
+                                  training.status === 'Planifiée' ? 'secondary' : 'destructive'
+                                }>
+                                  {training.status}
+                                </Badge>
+                              </td>
+                              <td className="py-3 px-4 text-right">
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm" 
+                                  onClick={() => handleDeleteTraining(training)}
+                                  className="hover:text-destructive"
+                                >
+                                  Supprimer
+                                </Button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
                     </div>
-                  ))}
-                </div>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {filteredTrainings.map((training) => (
+                        <Card key={training.id}>
+                          <CardContent className="p-6">
+                            <div className="flex justify-between items-start mb-4">
+                              <div>
+                                <h3 className="font-medium text-lg">{training.title}</h3>
+                                <p className="text-sm text-muted-foreground">
+                                  {training.employeeName}
+                                </p>
+                              </div>
+                              <Badge variant={
+                                training.status === 'Terminée' ? 'success' : 
+                                training.status === 'En cours' ? 'default' :
+                                training.status === 'Planifiée' ? 'secondary' : 'destructive'
+                              }>
+                                {training.status}
+                              </Badge>
+                            </div>
+                            
+                            <div className="space-y-2 mb-4">
+                              <div className="flex items-center gap-2 text-sm">
+                                <CalendarDays className="h-4 w-4 text-muted-foreground" />
+                                <span>
+                                  {training.startDate} {training.endDate ? `- ${training.endDate}` : ''}
+                                </span>
+                              </div>
+                              
+                              <div className="flex items-center gap-2 text-sm">
+                                <FileText className="h-4 w-4 text-muted-foreground" />
+                                <span>{training.type}</span>
+                              </div>
+                              
+                              {training.location && (
+                                <div className="flex items-center gap-2 text-sm">
+                                  <Filter className="h-4 w-4 text-muted-foreground" />
+                                  <span>{training.location}</span>
+                                </div>
+                              )}
+                            </div>
+                            
+                            {training.description && (
+                              <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
+                                {training.description}
+                              </p>
+                            )}
+                            
+                            <div className="flex justify-end">
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                onClick={() => handleDeleteTraining(training)}
+                                className="hover:text-destructive"
+                              >
+                                Supprimer
+                              </Button>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  )}
+                </>
               )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
-
+            </>
+          )}
+        </CardContent>
+      </Card>
+      
       {/* Dialogs */}
-      <CreateTrainingDialog 
-        open={showCreateDialog} 
+      <CreateTrainingDialog
+        open={showCreateDialog}
+        onClose={() => setShowCreateDialog(false)}
         onOpenChange={setShowCreateDialog}
-        onSuccess={handleRefresh}
+        onSubmit={handleCreateTraining}
+        employees={employees}
       />
       
-      <TrainingsFilter 
-        open={showFilterDialog} 
-        onOpenChange={setShowFilterDialog}
-        onApplyFilters={applyFilters}
+      <ExportTrainingsDialog
+        open={showExportDialog}
+        onOpenChange={setShowExportDialog}
+        data={filteredTrainings}
       />
       
-      <TrainingViewDialog 
-        open={showViewDialog} 
-        onOpenChange={setShowViewDialog}
+      <DeleteTrainingDialog
+        open={showDeleteDialog}
+        onOpenChange={setShowDeleteDialog}
+        onConfirm={handleConfirmDelete}
         training={selectedTraining}
-      />
-      
-      <TrainingEditDialog 
-        open={showEditDialog} 
-        onOpenChange={setShowEditDialog}
-        training={selectedTraining}
-        onSuccess={handleRefresh}
       />
     </div>
   );
