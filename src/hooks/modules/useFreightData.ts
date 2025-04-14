@@ -65,12 +65,10 @@ export const useFreightData = (): FreightData => {
   const { data: quotesData, isLoading: quotesLoading, error: quotesError } = useCollectionData(COLLECTIONS.FREIGHT.QUOTES);
   const { data: customersData, isLoading: customersLoading, error: customersError } = useCollectionData(COLLECTIONS.FREIGHT.CUSTOMERS);
 
-  // Update these lines to use string literals instead of constants
-  const vehiclesCollection = `${COLLECTIONS.FREIGHT.SHIPMENTS}_vehicles`;
+  const vehiclesCollection = `freight_vehicles`;
   const { data: vehiclesData, isLoading: vehiclesLoading, error: vehiclesError } = useCollectionData(vehiclesCollection);
 
-  // Update the drivers collection similarly
-  const driversCollection = `${COLLECTIONS.FREIGHT.SHIPMENTS}_drivers`;
+  const driversCollection = `freight_drivers`;
   const { data: driversData, isLoading: driversLoading, error: driversError } = useCollectionData(driversCollection);
 
   useEffect(() => {

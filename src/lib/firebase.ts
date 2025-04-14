@@ -1,6 +1,11 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from 'firebase/auth';
-import { getFirestore, collection, doc, setDoc, getDoc, updateDoc, serverTimestamp, onSnapshot, query, orderBy, limit, getDocs } from 'firebase/firestore';
+import { 
+  getFirestore, collection, doc, setDoc, getDoc, updateDoc, 
+  serverTimestamp, onSnapshot, query, orderBy, limit, 
+  getDocs as firestoreGetDocs, addDoc as firestoreAddDoc, 
+  CollectionReference, DocumentData, Query
+} from 'firebase/firestore';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { COLLECTIONS } from './firebase-collections';
 
@@ -132,7 +137,7 @@ const checkFirestoreConnection = async (): Promise<boolean> => {
 const addDocument = async (collectionName: string, data: any) => {
   try {
     const collectionRef = collection(db, collectionName);
-    const docRef = await addDoc(collectionRef, data);
+    const docRef = await firestoreAddDoc(collectionRef, data);
     console.log(`Document added to ${collectionName} with ID: ${docRef.id}`);
     return { id: docRef.id, ...data };
   } catch (error: any) {
@@ -186,11 +191,11 @@ const listenForDocumentChanges = (collectionName: string, documentId: string, ca
 };
 
 // Function to fetch a limited number of documents from a collection, ordered by a specific field
-const getLimitedDocuments = async (collectionName: string, field: string, order: 'asc' | 'desc', limitCount: number) => {
+const getLimitedDocuments = async (collectionPath: string, field: string, order: 'asc' | 'desc', limitCount: number) => {
   try {
-    const collectionRef = collection(db, collectionName);
+    const collectionRef = collection(db, collectionPath);
     const q = query(collectionRef, orderBy(field, order), limit(limitCount));
-    const querySnapshot = await getDocs(q);
+    const querySnapshot = await firestoreGetDocs(q);
     
     const documents: any[] = [];
     querySnapshot.forEach((doc) => {
@@ -204,10 +209,10 @@ const getLimitedDocuments = async (collectionName: string, field: string, order:
   }
 };
 
-const getDocs = async (collectionName: string) => {
+const getDocs = async (collectionPath: string) => {
     try {
-        const collectionRef = collection(db, collectionName);
-        const querySnapshot = await getDocs(collectionRef);
+        const collectionRef = collection(db, collectionPath);
+        const querySnapshot = await firestoreGetDocs(collectionRef);
         const documents: any[] = [];
         querySnapshot.forEach((doc) => {
             documents.push({ id: doc.id, ...doc.data() });

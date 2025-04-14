@@ -1,278 +1,302 @@
 import React, { useState, useEffect } from 'react';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Badge } from "@/components/ui/badge"
+import { MoreVertical, Edit, Trash2, Eye } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Button } from '@/components/ui/button';
-import { Employee } from '@/types/employee';
-import EmployeesList from './EmployeesList';
-import EmployeeDetails from './EmployeeDetails';
-import EmployeeForm from './EmployeeForm';
-import { toast } from 'sonner';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useEmployeeData } from '@/hooks/useEmployeeData';
-import { RefreshCw } from 'lucide-react';
-import { addDocument } from '@/hooks/firestore/create-operations';
-import { updateDocument, setDocument } from '@/hooks/firestore/update-operations';
-import { deleteDocument } from '@/hooks/firestore/delete-operations';
-import { FirebaseErrorAlert } from '@/components/ui/FirebaseErrorAlert';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Textarea } from "@/components/ui/textarea"
+import { useToast } from '@/hooks/use-toast';
+import { useFirestore } from '@/hooks/useFirestore';
 import { COLLECTIONS } from '@/lib/firebase-collections';
-import { refreshEmployeesData } from './services/employeeService';
-import { useHrModuleData } from '@/hooks/useHrModuleData';
+import { Employee } from '../../../../types/hr-types';
 
 interface EmployeesProfilesProps {
-  employees?: Employee[];
-  searchQuery?: string;
-  setSearchQuery?: (query: string) => void;
-  onViewEmployee?: (employee: Employee) => void;
-  onEditEmployee?: (employee: Employee) => void;
-  onDeleteEmployee?: (employeeId: string) => void;
-  onOpenAddEmployee?: () => void;
+  employees: any[];
 }
 
-const EmployeesProfiles: React.FC<EmployeesProfilesProps> = (props) => {
-  const { employees: fetchedEmployees, isLoading, error } = useEmployeeData();
-  const [searchQuery, setSearchQuery] = useState(props.searchQuery || '');
-  const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
-  const [employees, setEmployees] = useState<Employee[]>([]);
-  const [isAddEmployeeOpen, setIsAddEmployeeOpen] = useState(false);
-  const [isEditEmployeeOpen, setIsEditEmployeeOpen] = useState(false);
-  const [employeeToEdit, setEmployeeToEdit] = useState<Employee | null>(null);
-  const [isPdfExportOpen, setIsPdfExportOpen] = useState(false);
-  const [selectedCompany, setSelectedCompany] = useState<string>('all');
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const { companies } = useHrModuleData();
+const EmployeesProfiles: React.FC<EmployeesProfilesProps> = ({ employees }) => {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedEmployee, setSelectedEmployee] = useState<any | null>(null);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isViewOpen, setIsViewOpen] = useState(false);
+  const [formData, setFormData] = useState<any>({});
+  const { toast } = useToast();
+	const employeesCollection = useFirestore(COLLECTIONS.HR.EMPLOYEES);
 
-  useEffect(() => {
-    const employeesToUse = props.employees && props.employees.length > 0 
-      ? props.employees 
-      : fetchedEmployees;
-      
-    setEmployees(employeesToUse);
-  }, [props.employees, fetchedEmployees]);
+  const filteredEmployees = employees.filter(employee =>
+    employee.firstName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    employee.lastName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    employee.email.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
-  const companyOptions = [
-    { id: 'all', name: 'Toutes les entreprises' },
-    ...companies.map(company => ({
-      id: company.id,
-      name: company.name
-    }))
-  ];
+  const safelyGetId = (record: { id: string } | { _offlineCreated: boolean }) => {
+    if ('id' in record) {
+      return record.id;
+    }
+    return 'temp-' + Date.now(); // Generate a temporary ID for offline records
+  };
 
-  const handleViewEmployee = (employee: Employee) => {
+  const handleEditOpen = (employee: any) => {
     setSelectedEmployee(employee);
+    setFormData({ ...employee });
+    setIsEditDialogOpen(true);
   };
 
-  const handleAddEmployee = async (newEmployee: Partial<Employee>) => {
+  const handleDeleteOpen = (employee: any) => {
+    setSelectedEmployee(employee);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleViewOpen = (employee: any) => {
+    setSelectedEmployee(employee);
+    setIsViewOpen(true);
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleEditSubmit = async () => {
     try {
-      const createdEmployee = await addDocument(COLLECTIONS.HR.EMPLOYEES, newEmployee);
-      
-      if (createdEmployee) {
-        const employeeWithId = {
-          ...newEmployee,
-          id: createdEmployee.id,
-        } as Employee;
-        
-        const updatedEmployees = [...employees, employeeWithId];
-        setEmployees(updatedEmployees);
-        toast.success("Employé ajouté avec succès");
+      if (selectedEmployee && selectedEmployee.id) {
+        await employeesCollection.update(selectedEmployee.id, formData);
+        toast({
+          title: "Employé mis à jour",
+          description: "Les informations de l'employé ont été mises à jour avec succès.",
+        });
+      } else {
+        console.error("Selected employee or employee ID is missing.");
+        toast({
+          title: "Erreur",
+          description: "Impossible de mettre à jour l'employé. ID manquant.",
+          variant: "destructive",
+        });
       }
-    } catch (error) {
-      console.error("Erreur lors de l'ajout de l'employé:", error);
-      toast.error("Erreur lors de l'ajout de l'employé");
-    }
-    setIsAddEmployeeOpen(false);
-  };
-
-  const handleEditEmployee = (employee: Employee) => {
-    setEmployeeToEdit(employee);
-    setIsEditEmployeeOpen(true);
-  };
-
-  const handleUpdateEmployee = async (updatedEmployee: Partial<Employee>) => {
-    if (!employeeToEdit) return;
-    
-    try {
-      await setDocument(COLLECTIONS.HR.EMPLOYEES, employeeToEdit.id, updatedEmployee);
-      
-      const updatedEmployees = employees.map(emp => 
-        emp.id === employeeToEdit.id 
-          ? { ...emp, ...updatedEmployee } as Employee
-          : emp
-      );
-      
-      setEmployees(updatedEmployees);
-      
-      if (selectedEmployee && selectedEmployee.id === employeeToEdit.id) {
-        setSelectedEmployee({ ...selectedEmployee, ...updatedEmployee } as Employee);
-      }
-      
-      toast.success("Employé mis à jour avec succès.");
-      setIsEditEmployeeOpen(false);
-    } catch (error) {
-      console.error("Erreur lors de la mise à jour de l'employé:", error);
-      toast.error("Erreur lors de la mise à jour de l'employé");
-    }
-  };
-
-  const handleDeleteEmployee = async (employeeId: string) => {
-    try {
-      await deleteDocument(COLLECTIONS.HR.EMPLOYEES, employeeId);
-      
-      const updatedEmployees = employees.filter(emp => emp.id !== employeeId);
-      setEmployees(updatedEmployees);
-      
-      if (selectedEmployee && selectedEmployee.id === employeeId) {
-        setSelectedEmployee(null);
-      }
-      
-      toast.success("Employé supprimé avec succès.");
-    } catch (error) {
-      console.error("Erreur lors de la suppression de l'employé:", error);
-      toast.error("Erreur lors de la suppression de l'employé");
-    }
-  };
-
-  const handleRefreshData = async () => {
-    setIsRefreshing(true);
-    try {
-      const refreshedEmployees = await refreshEmployeesData();
-      if (refreshedEmployees.length > 0) {
-        setEmployees(refreshedEmployees);
-        toast.success(`${refreshedEmployees.length} employés chargés avec succès`);
-      }
-    } catch (err) {
-      console.error("Erreur lors de l'actualisation:", err);
+    } catch (error: any) {
+      console.error("Error updating employee:", error);
+      toast({
+        title: "Erreur",
+        description: `Erreur lors de la mise à jour de l'employé: ${error.message}`,
+        variant: "destructive",
+      });
     } finally {
-      setIsRefreshing(false);
+      setIsEditDialogOpen(false);
     }
   };
 
-  const handleExportPdf = () => {
-    setIsPdfExportOpen(true);
-    setTimeout(() => {
-      setIsPdfExportOpen(false);
-    }, 1000);
-  };
-
-  const handleSuccess = (result: { id: string; } | { _offlineCreated: boolean; }) => {
-    let employeeId = '';
-    if ('id' in result) {
-      employeeId = result.id;
-    } else if ('_offlineCreated' in result) {
-      toast.info("Employee created in offline mode. Some features may be limited until back online.");
-      return;
+  const handleDeleteSubmit = async () => {
+    try {
+      if (selectedEmployee && selectedEmployee.id) {
+        await employeesCollection.remove(selectedEmployee.id);
+        toast({
+          title: "Employé supprimé",
+          description: "L'employé a été supprimé avec succès.",
+        });
+      } else {
+        console.error("Selected employee or employee ID is missing.");
+        toast({
+          title: "Erreur",
+          description: "Impossible de supprimer l'employé. ID manquant.",
+          variant: "destructive",
+        });
+      }
+    } catch (error: any) {
+      console.error("Error deleting employee:", error);
+      toast({
+        title: "Erreur",
+        description: `Erreur lors de la suppression de l'employé: ${error.message}`,
+        variant: "destructive",
+      });
+    } finally {
+      setIsDeleteDialogOpen(false);
     }
-    
-    const updatedEmployees = employees.map(emp => 
-      emp.id === employeeId 
-        ? { ...emp, ...result } as Employee
-        : emp
-    );
-    
-    setEmployees(updatedEmployees);
   };
-
-  const filteredEmployees = selectedCompany === 'all' 
-    ? employees 
-    : employees.filter(emp => emp.company === selectedCompany);
 
   return (
-    <div className="space-y-6">
-      {error && (
-        <FirebaseErrorAlert 
-          error={error} 
-          onRetry={handleRefreshData}
-          className="mb-4" 
+    <div>
+      <div className="mb-4">
+        <Input
+          type="search"
+          placeholder="Rechercher un employé..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
         />
-      )}
+      </div>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Nom</TableHead>
+            <TableHead>Email</TableHead>
+            <TableHead>Téléphone</TableHead>
+            <TableHead>Département</TableHead>
+            <TableHead className="text-right">Actions</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {filteredEmployees.map((employee) => (
+            <TableRow key={safelyGetId(employee)}>
+              <TableCell className="font-medium">
+                <div className="flex items-center space-x-2">
+                  <Avatar>
+                    <AvatarImage src={employee.imageUrl} />
+                    <AvatarFallback>{employee.firstName[0]}{employee.lastName[0]}</AvatarFallback>
+                  </Avatar>
+                  <span>{employee.firstName} {employee.lastName}</span>
+                  {employee.status === 'active' && <Badge className="ml-2">Actif</Badge>}
+                </div>
+              </TableCell>
+              <TableCell>{employee.email}</TableCell>
+              <TableCell>{employee.phone}</TableCell>
+              <TableCell>{employee.department}</TableCell>
+              <TableCell className="text-right">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className="h-8 w-8 p-0">
+                      <span className="sr-only">Ouvrir le menu</span>
+                      <MoreVertical className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                    <DropdownMenuItem onClick={() => handleViewOpen(employee)}>
+                      <Eye className="mr-2 h-4 w-4" />
+                      Voir
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleEditOpen(employee)}>
+                      <Edit className="mr-2 h-4 w-4" />
+                      Modifier
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => handleDeleteOpen(employee)}>
+                      <Trash2 className="mr-2 h-4 w-4" />
+                      Supprimer
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
 
-      {selectedEmployee ? (
-        <>
-          <div className="flex items-center mb-4">
-            <Button 
-              variant="ghost" 
-              onClick={() => setSelectedEmployee(null)}
-              className="mr-2"
-            >
-              <span className="mr-2">←</span> Retour à la liste
-            </Button>
-          </div>
-          <EmployeeDetails 
-            employee={selectedEmployee} 
-            onExportPdf={handleExportPdf}
-            onEdit={() => handleEditEmployee(selectedEmployee)}
-          />
-        </>
-      ) : (
-        <div className="space-y-6">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-            <div className="flex items-center space-x-2">
-              <div className="text-md font-medium">Entreprise :</div>
-              <Select value={selectedCompany} onValueChange={setSelectedCompany}>
-                <SelectTrigger className="w-[220px]">
-                  <SelectValue placeholder="Sélectionner une entreprise" />
-                </SelectTrigger>
-                <SelectContent>
-                  {companyOptions.map((company) => (
-                    <SelectItem key={company.id} value={company.id}>{company.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                className="flex items-center gap-2"
-                onClick={handleRefreshData}
-                disabled={isLoading || isRefreshing}
-              >
-                <RefreshCw className={`h-4 w-4 ${isLoading || isRefreshing ? 'animate-spin' : ''}`} />
-                Actualiser
-              </Button>
-              <Button 
-                variant="default" 
-                className="bg-green-500 hover:bg-green-600"
-                onClick={() => setIsAddEmployeeOpen(true)}
-              >
-                Nouvel employé
-              </Button>
-            </div>
-          </div>
-          
-          <EmployeesList
-            employees={filteredEmployees}
-            searchQuery={searchQuery}
-            setSearchQuery={setSearchQuery}
-            onViewEmployee={handleViewEmployee}
-            onEditEmployee={handleEditEmployee}
-            onDeleteEmployee={handleDeleteEmployee}
-            loading={isLoading || isRefreshing}
-          />
-        </div>
-      )}
-
-      <EmployeeForm 
-        open={isAddEmployeeOpen} 
-        onOpenChange={setIsAddEmployeeOpen} 
-        onSubmit={handleAddEmployee} 
-      />
-
-      {employeeToEdit && (
-        <EmployeeForm 
-          open={isEditEmployeeOpen}
-          onOpenChange={setIsEditEmployeeOpen}
-          onSubmit={handleUpdateEmployee}
-          employee={employeeToEdit}
-          isEditing={true}
-        />
-      )}
-
-      <Dialog open={isPdfExportOpen} onOpenChange={setIsPdfExportOpen}>
-        <DialogContent>
+      {/* Edit Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
-            <DialogTitle>Export PDF en cours...</DialogTitle>
+            <DialogTitle>Modifier l'employé</DialogTitle>
+            <DialogDescription>
+              Modifier les informations de l'employé. Cliquez sur Enregistrer lorsque vous avez terminé.
+            </DialogDescription>
           </DialogHeader>
-          <div className="flex justify-center items-center p-6">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500"></div>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="firstName" className="text-right">
+                Prénom
+              </Label>
+              <Input id="firstName" name="firstName" value={formData.firstName || ''} onChange={handleInputChange} className="col-span-3" />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="lastName" className="text-right">
+                Nom
+              </Label>
+              <Input id="lastName" name="lastName" value={formData.lastName || ''} onChange={handleInputChange} className="col-span-3" />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="email" className="text-right">
+                Email
+              </Label>
+              <Input id="email" name="email" value={formData.email || ''} onChange={handleInputChange} className="col-span-3" />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="phone" className="text-right">
+                Téléphone
+              </Label>
+              <Input id="phone" name="phone" value={formData.phone || ''} onChange={handleInputChange} className="col-span-3" />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="department" className="text-right">
+                Département
+              </Label>
+              <Input id="department" name="department" value={formData.department || ''} onChange={handleInputChange} className="col-span-3" />
+            </div>
           </div>
+          <DialogFooter>
+            <Button type="button" variant="secondary" onClick={() => setIsEditDialogOpen(false)}>
+              Annuler
+            </Button>
+            <Button type="submit" onClick={handleEditSubmit}>Enregistrer</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Dialog */}
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Supprimer l'employé</DialogTitle>
+            <DialogDescription>
+              Êtes-vous sûr de vouloir supprimer cet employé ? Cette action est irréversible.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button type="button" variant="secondary" onClick={() => setIsDeleteDialogOpen(false)}>
+              Annuler
+            </Button>
+            <Button type="submit" variant="destructive" onClick={handleDeleteSubmit}>Supprimer</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* View Dialog */}
+      <Dialog open={isViewOpen} onOpenChange={setIsViewOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Voir l'employé</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-1 items-center gap-4">
+              <div className="flex justify-center">
+                <Avatar className="h-32 w-32">
+                  <AvatarImage src={selectedEmployee?.imageUrl} />
+                  <AvatarFallback>{selectedEmployee?.firstName[0]}{selectedEmployee?.lastName[0]}</AvatarFallback>
+                </Avatar>
+              </div>
+              <div className="text-center">
+                <p className="text-lg font-semibold">{selectedEmployee?.firstName} {selectedEmployee?.lastName}</p>
+                <p className="text-sm text-muted-foreground">{selectedEmployee?.department}</p>
+              </div>
+            </div>
+            <div className="grid grid-cols-1 items-start gap-4">
+              <Label htmlFor="email">Email</Label>
+              <Input id="email" value={selectedEmployee?.email || ''} readOnly />
+            </div>
+            <div className="grid grid-cols-1 items-start gap-4">
+              <Label htmlFor="phone">Téléphone</Label>
+              <Input id="phone" value={selectedEmployee?.phone || ''} readOnly />
+            </div>
+            <div className="grid grid-cols-1 items-start gap-4">
+              <Label htmlFor="address">Adresse</Label>
+              <Textarea id="address" value={selectedEmployee?.address || ''} readOnly className="resize-none" />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button type="button" variant="secondary" onClick={() => setIsViewOpen(false)}>
+              Fermer
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

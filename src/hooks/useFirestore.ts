@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { addDocument, updateDocument, deleteDocument, setDocument, getAllDocuments, getDocumentById } from './firestore/firestore-utils';
 import { toast } from 'sonner';
@@ -29,7 +30,7 @@ export const useFirestore = (collectionPath?: string) => {
     setLoading(true);
     try {
       const path = collectionPath || '';
-      // Fix: remove the second argument if not needed or handle it properly
+      // Fix: only pass one argument
       const results = await getAllDocuments(path);
       return results;
     } catch (err: any) {

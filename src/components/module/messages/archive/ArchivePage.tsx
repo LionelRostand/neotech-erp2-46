@@ -1,15 +1,16 @@
+
 import React from 'react';
 import { useCollectionData } from '@/hooks/useCollectionData';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import { where } from 'firebase/firestore';
-import { useParams } from 'next/navigation';
+import { useParams } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 const ArchivePage = () => {
   const { contactId } = useParams();
   
   const { data: messages, isLoading } = useCollectionData(
-    COLLECTIONS.MESSAGES.ARCHIVE, // Changed from ARCHIVED to ARCHIVE
+    COLLECTIONS.MESSAGES.ARCHIVE,
     [where('contactId', '==', contactId || '')]
   );
 

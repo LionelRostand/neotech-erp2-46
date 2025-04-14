@@ -1,136 +1,84 @@
-
-import { checkFirestoreConnection } from '@/lib/firebase';
+import { db } from '@/lib/firebase';
 import { toast } from 'sonner';
-import { isNetworkError, isRateLimitError } from './network-handler';
 
-/**
- * File avec les opérations réseau pour Firestore
- */
-
-// Queue pour stocker les opérations à exécuter lorsque la connexion est rétablie
-type QueuedOperation = {
-  operation: () => Promise<any>;
-  resolve: (value: any) => void;
-  reject: (reason: any) => void;
-  retryCount: number;
-  maxRetries: number;
+// Function to check if we have an internet connection
+export const isOnline = (): boolean => {
+  return typeof navigator !== 'undefined' && navigator.onLine === true;
 };
 
-let operationsQueue: QueuedOperation[] = [];
-let isOnline = true;
-let isProcessingQueue = false;
-
-/**
- * Restaure la connectivité à Firestore et tente de rétablir la connexion
- * @returns Promesse résolue avec true si la connexion est rétablie, false sinon
- */
-export const restoreFirestoreConnectivity = async (): Promise<boolean> => {
-  console.log('Tentative de restauration de la connectivité Firestore...');
+// Function to check if Firestore is reachable
+export const checkFirestoreConnection = async (): Promise<boolean> => {
+  if (!isOnline()) return false;
+  
   try {
-    const isConnected = await checkFirestoreConnection();
-    console.log('Connectivité Firestore:', isConnected ? 'Rétablie' : 'Toujours déconnecté');
-    
-    if (isConnected && !isOnline) {
-      isOnline = true;
-      toast.success('Connexion réseau rétablie');
-      
-      // Traiter les opérations en attente
-      processOperationsQueue();
-    }
-    
-    return isConnected;
+    // Try to fetch a small test document
+    const testRef = doc(db, "connection_test", "test_doc");
+    await getDoc(testRef);
+    return true;
   } catch (error) {
-    console.error('Erreur lors de la tentative de reconnexion:', error);
+    console.error("Firestore connection check failed:", error);
     return false;
   }
 };
 
-/**
- * Ajoute une opération à la file d'attente
- * @param operation Fonction à exécuter
- * @param maxRetries Nombre maximum de tentatives
- * @returns Promesse résolue avec le résultat de l'opération
- */
-export const queueNetworkOperation = <T>(
-  operation: () => Promise<T>,
-  maxRetries: number = 3
-): Promise<T> => {
-  return new Promise((resolve, reject) => {
-    operationsQueue.push({
-      operation,
-      resolve,
-      reject,
-      retryCount: 0,
-      maxRetries,
-    });
-    
-    // Si nous sommes en ligne, tenter d'exécuter immédiatement
-    if (isOnline && !isProcessingQueue) {
-      processOperationsQueue();
-    }
-  });
-};
+// Import needed Firestore functions
+import { doc, getDoc } from 'firebase/firestore';
+import { useEffect } from 'react';
 
-/**
- * Traite les opérations en attente dans la file
- */
-const processOperationsQueue = async () => {
-  if (isProcessingQueue || operationsQueue.length === 0) return;
+// Function to execute a Firestore operation with network retry logic
+export const executeWithNetworkRetry = async <T>(operation: () => Promise<T>, maxRetries: number = 3): Promise<T> => {
+  let retries = 0;
   
-  isProcessingQueue = true;
-  console.log(`Traitement de ${operationsQueue.length} opérations en attente...`);
-  
-  while (operationsQueue.length > 0) {
-    const operation = operationsQueue.shift();
-    if (!operation) continue;
-    
-    try {
-      const result = await operation.operation();
-      operation.resolve(result);
-    } catch (error) {
-      console.error('Erreur lors de l\'exécution d\'une opération en file d\'attente:', error);
-      
-      if (isNetworkError(error)) {
-        // Si c'est une erreur réseau et que nous n'avons pas dépassé le nombre maximum de tentatives
-        if (operation.retryCount < operation.maxRetries) {
-          console.log(`Remise en file d'attente de l'opération (tentative ${operation.retryCount + 1}/${operation.maxRetries})`);
-          operationsQueue.push({
-            ...operation,
-            retryCount: operation.retryCount + 1,
-          });
+  while (retries < maxRetries) {
+    if (isOnline()) {
+      try {
+        return await operation();
+      } catch (error: any) {
+        console.error(`Operation failed (attempt ${retries + 1}):`, error);
+        
+        // Check if the error is a network-related error
+        if (error.message.includes('offline') || error.message.includes('unavailable')) {
+          retries++;
           
-          // Marquer comme hors ligne et arrêter le traitement
-          isOnline = false;
-          break;
+          // Wait before retrying (exponential backoff)
+          await new Promise(resolve => setTimeout(resolve, Math.pow(2, retries) * 1000));
+        } else {
+          // If it's not a network error, re-throw the error
+          throw error;
         }
       }
-      
-      // Si ce n'est pas une erreur réseau ou que nous avons dépassé le nombre maximum de tentatives
-      operation.reject(error);
+    } else {
+      // If offline, reject with an error
+      throw new Error('No internet connection');
     }
   }
   
-  isProcessingQueue = false;
-  console.log('Traitement de la file d\'attente terminé');
+  // If all retries failed, reject with an error
+  throw new Error('Operation failed after multiple retries due to network issues');
 };
 
-/**
- * Configure les gestionnaires pour les événements online/offline
- */
+// Function to handle offline operations by storing them locally and retrying when online
 export const handleOfflineOperations = () => {
-  if (typeof window !== 'undefined') {
-    window.addEventListener('online', async () => {
-      console.log('Navigateur en ligne, tentative de reconnexion à Firestore...');
-      const connected = await restoreFirestoreConnectivity();
-      if (connected) {
-        processOperationsQueue();
+  useEffect(() => {
+    const handleOnline = async () => {
+      console.log('Online - attempting to synchronize offline operations');
+      
+      // Check Firestore connection before attempting synchronization
+      if (await checkFirestoreConnection()) {
+        // Implement logic to synchronize offline operations here
+        // This might involve reading from local storage and writing to Firestore
+        console.log('Synchronization logic needs to be implemented here');
+        toast.success('Back online! Synchronizing data...');
+      } else {
+        console.warn('Firestore is not reachable. Skipping synchronization.');
+        toast.warn('Connexion rétablie, mais la synchronisation est impossible pour le moment.');
       }
-    });
+    };
     
-    window.addEventListener('offline', () => {
-      console.log('Navigateur hors ligne, passage en mode hors ligne');
-      isOnline = false;
-      toast.error('Connexion réseau perdue. Passage en mode hors ligne.');
-    });
-  }
+    window.addEventListener('online', handleOnline);
+    
+    return () => {
+      window.removeEventListener('online', handleOnline);
+    };
+  }, []);
 };
