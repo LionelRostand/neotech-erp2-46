@@ -5,10 +5,14 @@ import { Badge } from '@/components/ui/badge';
 export interface StatusBadgeProps {
   status: string;
   label?: string;
+  variant?: 'outline' | 'success' | 'warning' | 'danger';
 }
 
-const StatusBadge: React.FC<StatusBadgeProps> = ({ status, label }) => {
+const StatusBadge: React.FC<StatusBadgeProps> = ({ status, label, variant: propVariant }) => {
   const getVariant = () => {
+    // Use the provided variant if available, otherwise determine based on status
+    if (propVariant) return propVariant;
+    
     switch (status) {
       case 'scheduled':
       case 'Planifiée':

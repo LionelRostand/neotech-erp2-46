@@ -1,88 +1,100 @@
 
 import React, { useState } from 'react';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { toast } from 'sonner';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { addTrainingDocument } from '@/hooks/firestore/create-operations';
+import { Textarea } from '@/components/ui/textarea';
 import { Employee } from '@/types/employee';
+import { addDocument } from '@/hooks/firestore/firestore-utils';
+import { COLLECTIONS } from '@/lib/firebase-collections';
+import { toast } from 'sonner';
 
 export interface CreateTrainingDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onClose: () => void;
-  onSubmit: (data: any) => void;
+  onSubmit: () => void;
   employees: Employee[];
 }
 
-const trainingFormSchema = z.object({
-  title: z.string().min(3, "Le titre doit contenir au moins 3 caractères"),
-  description: z.string().min(10, "La description doit contenir au moins 10 caractères"),
-  startDate: z.string().min(1, "La date de début est requise"),
-  endDate: z.string().min(1, "La date de fin est requise"),
-  employee: z.string().min(1, "L'employé est requis"),
-  status: z.string().min(1, "Le statut est requis"),
-  type: z.string().min(1, "Le type est requis"),
-});
+const trainingTypes = [
+  { value: 'technical', label: 'Technique' },
+  { value: 'management', label: 'Management' },
+  { value: 'soft_skills', label: 'Soft Skills' },
+  { value: 'certification', label: 'Certification' },
+  { value: 'compliance', label: 'Conformité' },
+  { value: 'other', label: 'Autre' }
+];
 
-type TrainingFormValues = z.infer<typeof trainingFormSchema>;
-
-const CreateTrainingDialog: React.FC<CreateTrainingDialogProps> = ({ 
-  open, 
-  onOpenChange, 
-  onClose, 
-  onSubmit, 
-  employees 
+const CreateTrainingDialog: React.FC<CreateTrainingDialogProps> = ({
+  open,
+  onOpenChange,
+  onClose,
+  onSubmit,
+  employees
 }) => {
+  const [title, setTitle] = useState('');
+  const [type, setType] = useState('');
+  const [employeeId, setEmployeeId] = useState('');
+  const [provider, setProvider] = useState('');
+  const [location, setLocation] = useState('');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [description, setDescription] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
-  const form = useForm<TrainingFormValues>({
-    resolver: zodResolver(trainingFormSchema),
-    defaultValues: {
-      title: '',
-      description: '',
-      startDate: '',
-      endDate: '',
-      employee: '',
-      status: 'scheduled',
-      type: 'internal',
-    }
-  });
 
-  const handleSubmit = async (data: TrainingFormValues) => {
+  const resetForm = () => {
+    setTitle('');
+    setType('');
+    setEmployeeId('');
+    setProvider('');
+    setLocation('');
+    setStartDate('');
+    setEndDate('');
+    setDescription('');
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!title || !type || !employeeId || !startDate) {
+      toast.error('Veuillez remplir tous les champs obligatoires');
+      return;
+    }
+    
     setIsSubmitting(true);
     
     try {
-      // Format training data for Firebase
+      const selectedEmployee = employees.find(emp => emp.id === employeeId);
+      
       const trainingData = {
-        title: data.title,
-        description: data.description,
-        startDate: data.startDate,
-        endDate: data.endDate,
-        employeeId: data.employee,
-        status: data.status,
-        type: data.type,
+        title,
+        type,
+        employeeId,
+        employeeName: selectedEmployee ? `${selectedEmployee.firstName} ${selectedEmployee.lastName}` : '',
+        provider,
+        location,
+        startDate,
+        endDate: endDate || null,
+        description,
+        status: 'Planifiée',
         createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
       };
       
-      // Add training to Firestore
-      const trainingRef = await addTrainingDocument(trainingData);
-      
-      console.log('Formation créée avec succès:', trainingRef.id);
+      await addDocument(COLLECTIONS.HR.TRAININGS, trainingData);
       toast.success('Formation créée avec succès');
-      
-      // Pass data to parent
-      onSubmit(trainingData);
-      
-      // Reset form and close dialog
-      form.reset();
-      onOpenChange(false);
+      resetForm();
+      onSubmit();
     } catch (error) {
       console.error('Erreur lors de la création de la formation:', error);
       toast.error('Erreur lors de la création de la formation');
@@ -93,170 +105,126 @@ const CreateTrainingDialog: React.FC<CreateTrainingDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px]">
+      <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>Créer une nouvelle formation</DialogTitle>
           <DialogDescription>
-            Définissez les détails de la formation pour l'employé sélectionné.
+            Remplissez les informations pour créer une nouvelle formation.
           </DialogDescription>
         </DialogHeader>
         
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="title"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Titre</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Titre de la formation" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="title">Titre de la formation *</Label>
+            <Input
+              id="title"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="Titre de la formation"
+              required
             />
+          </div>
+          
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="type">Type de formation *</Label>
+              <Select value={type} onValueChange={setType} required>
+                <SelectTrigger id="type" className="w-full">
+                  <SelectValue placeholder="Sélectionner un type" />
+                </SelectTrigger>
+                <SelectContent>
+                  {trainingTypes.map((type) => (
+                    <SelectItem key={type.value} value={type.value}>
+                      {type.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
             
-            <FormField
-              control={form.control}
-              name="description"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Description</FormLabel>
-                  <FormControl>
-                    <Textarea 
-                      placeholder="Description de la formation" 
-                      rows={3} 
-                      {...field} 
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="startDate"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Date de début</FormLabel>
-                    <FormControl>
-                      <Input type="date" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="endDate"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Date de fin</FormLabel>
-                    <FormControl>
-                      <Input type="date" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
+            <div className="space-y-2">
+              <Label htmlFor="employee">Employé *</Label>
+              <Select value={employeeId} onValueChange={setEmployeeId} required>
+                <SelectTrigger id="employee" className="w-full">
+                  <SelectValue placeholder="Sélectionner un employé" />
+                </SelectTrigger>
+                <SelectContent>
+                  {employees.map((employee) => (
+                    <SelectItem key={employee.id} value={employee.id}>
+                      {employee.firstName} {employee.lastName}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="provider">Organisme de formation</Label>
+              <Input
+                id="provider"
+                value={provider}
+                onChange={(e) => setProvider(e.target.value)}
+                placeholder="Organisme de formation"
               />
             </div>
             
-            <FormField
-              control={form.control}
-              name="employee"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Employé</FormLabel>
-                  <Select 
-                    onValueChange={field.onChange} 
-                    defaultValue={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Sélectionner un employé" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {employees.map((employee) => (
-                        <SelectItem key={employee.id} value={employee.id}>
-                          {employee.firstName} {employee.lastName}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="status"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Statut</FormLabel>
-                    <Select 
-                      onValueChange={field.onChange} 
-                      defaultValue={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Statut de la formation" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="scheduled">Planifiée</SelectItem>
-                        <SelectItem value="in_progress">En cours</SelectItem>
-                        <SelectItem value="completed">Terminée</SelectItem>
-                        <SelectItem value="cancelled">Annulée</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
+            <div className="space-y-2">
+              <Label htmlFor="location">Lieu</Label>
+              <Input
+                id="location"
+                value={location}
+                onChange={(e) => setLocation(e.target.value)}
+                placeholder="Lieu de la formation"
               />
-              
-              <FormField
-                control={form.control}
-                name="type"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Type</FormLabel>
-                    <Select 
-                      onValueChange={field.onChange} 
-                      defaultValue={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Type de formation" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="internal">Interne</SelectItem>
-                        <SelectItem value="external">Externe</SelectItem>
-                        <SelectItem value="online">En ligne</SelectItem>
-                        <SelectItem value="certification">Certification</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="startDate">Date de début *</Label>
+              <Input
+                id="startDate"
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                required
               />
             </div>
             
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={onClose}>Annuler</Button>
-              <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? 'Création en cours...' : 'Créer la formation'}
-              </Button>
-            </DialogFooter>
-          </form>
-        </Form>
+            <div className="space-y-2">
+              <Label htmlFor="endDate">Date de fin</Label>
+              <Input
+                id="endDate"
+                type="date"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+                min={startDate}
+              />
+            </div>
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="description">Description</Label>
+            <Textarea
+              id="description"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Description de la formation"
+              rows={3}
+            />
+          </div>
+          
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={onClose}>
+              Annuler
+            </Button>
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? 'Création...' : 'Créer'}
+            </Button>
+          </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   );

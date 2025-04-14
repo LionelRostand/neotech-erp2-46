@@ -3,13 +3,11 @@ import React, { useState, useMemo } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Plus, Search, FileSpreadsheet, GraduationCap } from 'lucide-react';
 import DataTable from '@/components/DataTable';
-import type { ColumnDef } from '@tanstack/react-table';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import StatusBadge from '@/components/StatusBadge';
+import StatusBadge from './StatusBadge';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import SubmoduleHeader from '@/components/module/submodules/SubmoduleHeader';
@@ -20,6 +18,14 @@ import CreateTrainingDialog from './CreateTrainingDialog';
 import DeleteTrainingDialog from './DeleteTrainingDialog';
 import { employeesModule } from '@/data/modules/employees';
 import { AppModule, SubModule } from '@/data/types/modules';
+
+// Define the Column type that matches what DataTable expects
+interface Column {
+  key: string;
+  header: string;
+  accessorKey?: string;
+  cell?: (props: { row: any }) => React.ReactNode;
+}
 
 const EmployeesTrainings: React.FC = () => {
   const { trainings, stats, isLoading } = useTrainingsData();
@@ -43,7 +49,7 @@ const EmployeesTrainings: React.FC = () => {
       id: 'employees-trainings',
       name: 'Formations',
       href: '/modules/employees/trainings',
-      icon: <GraduationCap size={24} />
+      icon: { name: 'GraduationCap' }
     };
   }, []);
 
@@ -86,16 +92,19 @@ const EmployeesTrainings: React.FC = () => {
   }, [trainings, searchTerm]);
 
   // Table columns definition
-  const columns: ColumnDef<Training>[] = useMemo(() => [
+  const columns: Column[] = useMemo(() => [
     {
+      key: 'title',
       header: 'Titre',
       accessorKey: 'title',
     },
     {
+      key: 'employeeName',
       header: 'Employé',
       accessorKey: 'employeeName',
     },
     {
+      key: 'type',
       header: 'Type',
       accessorKey: 'type',
       cell: ({ row }) => (
@@ -103,11 +112,12 @@ const EmployeesTrainings: React.FC = () => {
       ),
     },
     {
+      key: 'status',
       header: 'Statut',
       accessorKey: 'status',
       cell: ({ row }) => {
         const status = row.original.status;
-        let variant: 'default' | 'success' | 'warning' | 'danger' | 'outline' = 'default';
+        let variant: 'outline' | 'success' | 'warning' | 'danger' = 'outline';
         
         switch (status) {
           case 'Planifiée':
@@ -124,24 +134,28 @@ const EmployeesTrainings: React.FC = () => {
             break;
         }
         
-        return <StatusBadge variant={variant} label={status} />;
+        return <StatusBadge status={status} variant={variant} label={status} />;
       },
     },
     {
+      key: 'startDate',
       header: 'Date de début',
       accessorKey: 'startDate',
     },
     {
+      key: 'endDate',
       header: 'Date de fin',
       accessorKey: 'endDate',
       cell: ({ row }) => row.original.endDate || '-',
     },
     {
+      key: 'provider',
       header: 'Organisme',
       accessorKey: 'provider',
       cell: ({ row }) => row.original.provider || '-',
     },
     {
+      key: 'actions',
       header: 'Actions',
       accessorKey: 'actions',
       cell: ({ row }) => (

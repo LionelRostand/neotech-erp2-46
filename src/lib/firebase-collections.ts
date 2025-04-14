@@ -7,6 +7,8 @@ export const COLLECTIONS = {
   COMPANIES: 'companies',
   SETTINGS: 'settings',
   USER_PERMISSIONS: 'user_permissions', // Added this missing collection
+  CONTACTS: 'contacts', // Added missing collection for messages module
+  DOCUMENTS: 'documents', // String path rather than object
   HR: {
     EMPLOYEES: 'hr_employees',
     DEPARTMENTS: 'hr_departments',
@@ -99,19 +101,39 @@ export const COLLECTIONS = {
     PRESCRIPTIONS: 'health_prescriptions',
     STAFF: 'health_staff',
     BILLING: 'health_billing',
-    INVENTORY: 'health_inventory'
+    INVENTORY: 'health_inventory',
+    DOCTORS: 'health_doctors',           // Added missing collections
+    CONSULTATIONS: 'health_consultations',
+    INSURANCE: 'health_insurance',
+    NURSES: 'health_nurses',
+    MEDICAL_RECORDS: 'health_medical_records',
+    LABORATORY: 'health_laboratory',
+    PHARMACY: 'health_pharmacy',
+    ADMISSIONS: 'health_admissions',
+    ROOMS: 'health_rooms'
   },
   TRANSPORT: { // Added missing Transport module collections
     VEHICLES: 'transport_vehicles',
     DRIVERS: 'transport_drivers',
     ROUTES: 'transport_routes',
-    SCHEDULES: 'transport_schedules'
+    SCHEDULES: 'transport_schedules',
+    RESERVATIONS: 'transport_reservations', // Added missing collections
+    CLIENTS: 'transport_clients',
+    PLANNING: 'transport_planning',
+    FLEET: 'transport_fleet',
+    GEOLOCATION: 'transport_geolocation',
+    PAYMENTS: 'transport_payments',
+    CUSTOMER_SERVICE: 'transport_customer_service',
+    LOYALTY: 'transport_loyalty',
+    WEB_BOOKING: 'transport_web_booking',
+    SETTINGS: 'transport_settings'
   },
   LIBRARY: {   // Added missing Library module collections
     BOOKS: 'library_books',
     MEMBERS: 'library_members',
     LOANS: 'library_loans',
     RESERVATIONS: 'library_reservations',
-    CATEGORIES: 'library_categories'
+    CATEGORIES: 'library_categories',
+    STATS: 'library_stats'  // Added missing collection
   }
 };
