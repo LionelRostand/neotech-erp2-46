@@ -3,8 +3,8 @@
 export * from './common-utils';
 export * from './read-operations';
 // Export create operations without setDocument to avoid ambiguity
-import { addDocument, addTrainingDocument } from './create-operations';
-export { addDocument, addTrainingDocument };
+import { addDocument, addTrainingDocument, setDocument } from './create-operations';
+export { addDocument, addTrainingDocument, setDocument };
 // Export everything else
 export * from './update-operations';
 export * from './delete-operations';
