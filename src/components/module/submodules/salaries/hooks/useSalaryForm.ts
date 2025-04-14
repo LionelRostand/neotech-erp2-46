@@ -1,146 +1,134 @@
-
-import { useState } from 'react';
-import { useCompaniesData } from '@/hooks/useCompaniesData';
+import { useState, useEffect } from 'react';
+import { useEmployeeContract } from '@/hooks/useEmployeeContract';
 import { toast } from 'sonner';
-import { useFirebaseCompanies } from '@/hooks/useFirebaseCompanies';
 import { useHrModuleData } from '@/hooks/useHrModuleData';
-import { addDocument } from '@/lib/firebase';
+import { createDocument } from '@/hooks/firestore/create-operations';
 import { COLLECTIONS } from '@/lib/firebase-collections';
-import { v4 as uuidv4 } from 'uuid';
+import { PaySlip } from '@/types/payslip';
+import { addPayslipToEmployee } from '../services/employeeSalaryService';
 
 export const useSalaryForm = () => {
-  const { companies, isLoading, error } = useCompaniesData();
-  const { companies: firebaseCompanies } = useFirebaseCompanies();
-  const { employees, payslips } = useHrModuleData();
-  
-  const [selectedCompanyId, setSelectedCompanyId] = useState<string>('');
-  const [employeeName, setEmployeeName] = useState('');
-  const [employeeId, setEmployeeId] = useState('');
-  const [salaryAmount, setSalaryAmount] = useState('');
-  const [paymentDate, setPaymentDate] = useState(() => {
-    const now = new Date();
-    return now.toISOString().split('T')[0];
-  });
-  const [paymentMethod, setPaymentMethod] = useState('virement');
-  const [notes, setNotes] = useState('');
+  const { employees } = useHrModuleData();
+  const [selectedEmployeeId, setSelectedEmployeeId] = useState<string>('');
+  const [baseSalary, setBaseSalary] = useState<number>(0);
+  const [month, setMonth] = useState<string>('');
+  const [year, setYear] = useState<number>(new Date().getFullYear());
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!selectedCompanyId || !employeeName || !salaryAmount || !paymentDate) {
-      toast.error("Veuillez remplir tous les champs obligatoires");
+  // Utiliser le hook pour récupérer le salaire du contrat
+  const { salary: contractSalary } = useEmployeeContract(selectedEmployeeId);
+
+  // Mettre à jour le salaire de base quand un employé est sélectionné
+  useEffect(() => {
+    if (selectedEmployeeId && contractSalary) {
+      setBaseSalary(contractSalary);
+      console.log(`Salaire du contrat récupéré: ${contractSalary}€`);
+    }
+  }, [selectedEmployeeId, contractSalary]);
+
+  const handleEmployeeSelect = (employeeId: string) => {
+    setSelectedEmployeeId(employeeId);
+    const selectedEmployee = employees.find(emp => emp.id === employeeId);
+
+    if (selectedEmployee) {
+      // Utiliser les données de congés si disponibles
+      const conges = selectedEmployee.conges || {
+        acquired: 0,
+        taken: 0,
+        balance: 0
+      };
+
+      // Utiliser les données de RTT si disponibles
+      const rtt = selectedEmployee.rtt || {
+        acquired: 0,
+        taken: 0,
+        balance: 0
+      };
+
+      console.log('Données de congés:', conges);
+      console.log('Données RTT:', rtt);
+    }
+  };
+
+  const handleSubmit = async () => {
+    if (!selectedEmployeeId || !month || !year) {
+      toast.error('Veuillez remplir tous les champs obligatoires');
       return;
     }
 
+    const selectedEmployee = employees.find(emp => emp.id === selectedEmployeeId);
+
+    if (!selectedEmployee) {
+      toast.error('Employé non trouvé');
+      return;
+    }
+
+    const employeeName = `${selectedEmployee.firstName} ${selectedEmployee.lastName}`;
+
+    // Créer un objet PaySlip simplifié
+    const newPaySlip: PaySlip = {
+      id: '', // L'ID sera généré par Firestore
+      employee: {
+        firstName: selectedEmployee.firstName,
+        lastName: selectedEmployee.lastName,
+        employeeId: selectedEmployeeId,
+        role: selectedEmployee.role,
+        socialSecurityNumber: selectedEmployee.socialSecurityNumber,
+        startDate: selectedEmployee.startDate
+      },
+      period: `${month} ${year}`,
+      details: [
+        {
+          label: "Salaire de base",
+          amount: baseSalary,
+          type: "earning"
+        }
+      ],
+      grossSalary: baseSalary,
+      totalDeductions: 0,
+      netSalary: baseSalary,
+      hoursWorked: 151.67,
+      paymentDate: new Date().toISOString(),
+      employerName: 'NEOTECH',
+      employerAddress: 'Paris, France',
+      employerSiret: '12345678901234',
+      month: month,
+      year: year,
+      employeeId: selectedEmployeeId,
+      employeeName: employeeName,
+      status: 'Généré',
+      date: new Date().toISOString(),
+      paymentMethod: 'Virement',
+      notes: 'RAS'
+    };
+
     try {
-      // Préparer les données de la fiche de paie
-      const grossAmount = parseFloat(salaryAmount);
-      const netAmount = grossAmount * 0.78; // Estimation simplifiée (après charges sociales)
-      const payslipId = uuidv4();
-      
-      // Obtenir les données de l'entreprise
-      const selectedCompany = firebaseCompanies.find(company => company.id === selectedCompanyId) || 
-                              companies.find(company => company.id === selectedCompanyId);
-      
-      // Obtenir l'employé sélectionné
-      const selectedEmployee = employees.find(emp => emp.id === employeeId);
-      
-      if (!selectedEmployee) {
-        toast.error("Impossible de trouver les informations de l'employé");
-        return;
+      // Créer la fiche de paie dans Firestore
+      const payslipRef = await createDocument(COLLECTIONS.HR.PAYSLIPS, newPaySlip);
+      const payslipId = payslipRef.id;
+
+      // Associer la fiche de paie à l'employé
+      const success = await addPayslipToEmployee(selectedEmployeeId, payslipId);
+
+      if (success) {
+        toast.success('Fiche de paie créée et associée avec succès');
+      } else {
+        toast.error('Fiche de paie créée, mais erreur lors de l\'association à l\'employé');
       }
-      
-      // Structure conforme au code du travail français
-      const payslipData = {
-        id: payslipId,
-        employeeId: employeeId,
-        employeeName: employeeName,
-        date: paymentDate,
-        period: `${new Date(paymentDate).toLocaleString('fr-FR', { month: 'long', year: 'numeric' })}`,
-        grossSalary: grossAmount,
-        netSalary: netAmount,
-        totalDeductions: grossAmount - netAmount,
-        grossAmount: grossAmount,
-        netAmount: netAmount,
-        currency: 'EUR',
-        details: [
-          {
-            label: "Salaire brut",
-            amount: grossAmount,
-            type: "earning"
-          },
-          {
-            label: "Cotisations sociales",
-            amount: grossAmount - netAmount,
-            type: "deduction"
-          }
-        ],
-        status: "Généré",
-        paymentMethod: paymentMethod,
-        notes: notes,
-        companyId: selectedCompanyId,
-        companyName: selectedCompany?.name || "Entreprise",
-        hoursWorked: 151.67, // Durée légale mensuelle (35h/semaine)
-        employerName: selectedCompany?.name || "Entreprise",
-        employerAddress: selectedCompany?.address ? 
-          `${selectedCompany.address.street}, ${selectedCompany.address.postalCode} ${selectedCompany.address.city}` : "",
-        employerSiret: selectedCompany?.siret || "",
-        // Informations sur les congés
-        conges: {
-          acquired: 2.08, // 25 jours / 12 mois
-          taken: 0,
-          balance: selectedEmployee.conges?.balance || 0
-        },
-        rtt: {
-          acquired: 1, // 12 jours / 12 mois
-          taken: 0,
-          balance: selectedEmployee.rtt?.balance || 0
-        },
-        createdAt: new Date().toISOString()
-      };
-      
-      // Sauvegarde dans Firebase
-      await addDocument(COLLECTIONS.HR.PAYSLIPS, payslipData);
-      
-      console.log("Fiche de paie générée:", payslipData);
-      toast.success("Fiche de paie générée avec succès");
-      resetForm();
     } catch (error) {
-      console.error("Erreur lors de la génération:", error);
-      toast.error("Erreur lors de la génération de la fiche de paie");
+      console.error("Erreur lors de la création de la fiche de paie:", error);
+      toast.error("Erreur lors de la création de la fiche de paie");
     }
   };
 
-  const resetForm = () => {
-    setSelectedCompanyId('');
-    setEmployeeName('');
-    setEmployeeId('');
-    setSalaryAmount('');
-    setPaymentDate(new Date().toISOString().split('T')[0]);
-    setPaymentMethod('virement');
-    setNotes('');
-  };
-
   return {
-    companies: firebaseCompanies.length > 0 ? firebaseCompanies : companies,
-    employees, // Nous avons besoin de retourner explicitement les données des employés
-    isLoading,
-    error,
-    selectedCompanyId,
-    setSelectedCompanyId,
-    employeeName,
-    setEmployeeName,
-    employeeId,
-    setEmployeeId,
-    salaryAmount,
-    setSalaryAmount,
-    paymentDate,
-    setPaymentDate,
-    paymentMethod,
-    setPaymentMethod,
-    notes,
-    setNotes,
-    handleSubmit,
-    resetForm
+    selectedEmployeeId,
+    baseSalary,
+    month,
+    year,
+    handleEmployeeSelect,
+    setBaseSalary,
+    setMonth,
+    setYear,
+    handleSubmit
   };
 };
