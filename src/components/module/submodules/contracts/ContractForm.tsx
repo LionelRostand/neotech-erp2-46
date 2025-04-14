@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -8,6 +8,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { format } from 'date-fns';
 import { Calendar as CalendarIcon } from 'lucide-react';
+import { useEmployeeData } from '@/hooks/useEmployeeData';
 
 interface ContractFormProps {
   onSubmit: (data: any) => void;
@@ -15,11 +16,15 @@ interface ContractFormProps {
 }
 
 const ContractForm: React.FC<ContractFormProps> = ({ onSubmit, onCancel }) => {
+  // Récupérer les données des employés et des départements
+  const { employees, departments, isLoading } = useEmployeeData();
+
   const [formData, setFormData] = useState({
     employeeId: '',
     employeeName: '',
     employeePhoto: '',
     department: '',
+    departmentId: '',
     position: '',
     type: 'CDI',
     startDate: new Date(),
@@ -32,6 +37,36 @@ const ContractForm: React.FC<ContractFormProps> = ({ onSubmit, onCancel }) => {
 
   const [startDateOpen, setStartDateOpen] = useState(false);
   const [endDateOpen, setEndDateOpen] = useState(false);
+
+  // Mettre à jour les données de l'employé sélectionné
+  useEffect(() => {
+    if (formData.employeeId && employees?.length > 0) {
+      const selectedEmployee = employees.find(emp => emp.id === formData.employeeId);
+      if (selectedEmployee) {
+        setFormData(prev => ({
+          ...prev,
+          employeeName: `${selectedEmployee.firstName} ${selectedEmployee.lastName}`,
+          employeePhoto: selectedEmployee.photoURL || selectedEmployee.photo || '',
+          position: selectedEmployee.position || selectedEmployee.title || prev.position,
+          department: selectedEmployee.department || prev.department,
+          departmentId: selectedEmployee.departmentId || prev.departmentId
+        }));
+      }
+    }
+  }, [formData.employeeId, employees]);
+
+  // Mettre à jour les données du département sélectionné
+  useEffect(() => {
+    if (formData.departmentId && departments?.length > 0) {
+      const selectedDepartment = departments.find(dept => dept.id === formData.departmentId);
+      if (selectedDepartment) {
+        setFormData(prev => ({
+          ...prev,
+          department: selectedDepartment.name
+        }));
+      }
+    }
+  }, [formData.departmentId, departments]);
 
   const handleChange = (field: string, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -46,29 +81,47 @@ const ContractForm: React.FC<ContractFormProps> = ({ onSubmit, onCancel }) => {
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label htmlFor="employeeName" className="block text-sm font-medium mb-1">
+          <label htmlFor="employeeId" className="block text-sm font-medium mb-1">
             Employé
           </label>
-          <Input 
-            id="employeeName" 
-            placeholder="Nom de l'employé"
-            value={formData.employeeName}
-            onChange={(e) => handleChange('employeeName', e.target.value)}
-            required
-          />
+          <Select 
+            value={formData.employeeId}
+            onValueChange={(value) => handleChange('employeeId', value)}
+            disabled={isLoading}
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Sélectionner un employé" />
+            </SelectTrigger>
+            <SelectContent>
+              {employees?.map(employee => (
+                <SelectItem key={employee.id} value={employee.id}>
+                  {employee.firstName} {employee.lastName}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
         
         <div>
-          <label htmlFor="department" className="block text-sm font-medium mb-1">
+          <label htmlFor="departmentId" className="block text-sm font-medium mb-1">
             Département
           </label>
-          <Input 
-            id="department" 
-            placeholder="Département"
-            value={formData.department}
-            onChange={(e) => handleChange('department', e.target.value)}
-            required
-          />
+          <Select 
+            value={formData.departmentId}
+            onValueChange={(value) => handleChange('departmentId', value)}
+            disabled={isLoading}
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Sélectionner un département" />
+            </SelectTrigger>
+            <SelectContent>
+              {departments?.map(department => (
+                <SelectItem key={department.id} value={department.id}>
+                  {department.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
