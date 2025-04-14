@@ -13,6 +13,7 @@ import ImportEmployeesDialog from './ImportEmployeesDialog';
 import { toast } from 'sonner';
 import { Employee } from '@/types/employee';
 import { safelyGetDocumentId } from '@/hooks/firestore/common-utils';
+import EmployeesDashboardCards from './dashboard/EmployeesDashboardCards';
 
 export interface EmployeesProfilesProps {
   employees: Employee[];
