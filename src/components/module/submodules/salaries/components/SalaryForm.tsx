@@ -3,9 +3,15 @@ import React from 'react';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useSalaryForm } from '../hooks/useSalaryForm';
 import { useFirebaseCompanies } from '@/hooks/useFirebaseCompanies';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/patched-select";
 
 export const SalaryForm: React.FC = () => {
   const {
@@ -35,34 +41,38 @@ export const SalaryForm: React.FC = () => {
   const loadingState = isLoading || fbLoading;
   const errorState = error || fbError;
 
+  console.log("Companies available:", companies); // Ajout d'un log pour vérifier les données
+
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="space-y-3">
-          <Label htmlFor="company-name">Nom de l'entreprise</Label>
-          <Select 
-            value={selectedCompanyId} 
-            onValueChange={setSelectedCompanyId}
-          >
-            <SelectTrigger id="company-name" className="w-full bg-white">
-              <SelectValue placeholder="Sélectionner une entreprise" />
-            </SelectTrigger>
-            <SelectContent position="popper" className="bg-white w-full shadow-md z-50">
-              {loadingState ? (
-                <div className="p-2 text-center text-gray-500">Chargement des entreprises...</div>
-              ) : errorState ? (
-                <div className="p-2 text-center text-red-500">Erreur de chargement des entreprises</div>
-              ) : companies.length === 0 ? (
-                <div className="p-2 text-center text-amber-500">Aucune entreprise disponible</div>
-              ) : (
-                companies.map((company) => (
-                  <SelectItem key={company.id} value={company.id} className="cursor-pointer">
-                    {company.name}
-                  </SelectItem>
-                ))
-              )}
-            </SelectContent>
-          </Select>
+          <Label htmlFor="company-select">Nom de l'entreprise</Label>
+          <div className="relative">
+            <Select 
+              value={selectedCompanyId} 
+              onValueChange={setSelectedCompanyId}
+            >
+              <SelectTrigger id="company-select" className="w-full bg-white">
+                <SelectValue placeholder="Sélectionner une entreprise" />
+              </SelectTrigger>
+              <SelectContent className="bg-white shadow-md z-50 min-w-[200px]">
+                {loadingState ? (
+                  <div className="p-2 text-center text-gray-500">Chargement des entreprises...</div>
+                ) : errorState ? (
+                  <div className="p-2 text-center text-red-500">Erreur de chargement des entreprises</div>
+                ) : companies.length === 0 ? (
+                  <div className="p-2 text-center text-amber-500">Aucune entreprise disponible</div>
+                ) : (
+                  companies.map((company) => (
+                    <SelectItem key={company.id} value={company.id} className="cursor-pointer hover:bg-gray-100">
+                      {company.name}
+                    </SelectItem>
+                  ))
+                )}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
         
         <div className="space-y-3">
