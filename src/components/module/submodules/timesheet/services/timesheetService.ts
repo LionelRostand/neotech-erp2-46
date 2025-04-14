@@ -1,4 +1,3 @@
-
 import { 
   getDocumentById, 
   getAllDocuments 
@@ -18,7 +17,7 @@ import { executeWithNetworkRetry } from '@/hooks/firestore/network-handler';
 import { TimeReport } from '@/types/timesheet';
 
 // Collection path pour les feuilles de temps
-const TIME_SHEETS_COLLECTION = COLLECTIONS.HR.TIMESHEETS;
+const TIME_SHEETS_COLLECTION = COLLECTIONS.HR.TIMESHEET;
 
 // Récupérer toutes les feuilles de temps
 export const getAllTimeSheets = async (): Promise<TimeReport[]> => {

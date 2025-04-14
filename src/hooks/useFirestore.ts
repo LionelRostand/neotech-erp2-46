@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { addDocument, updateDocument, deleteDocument, setDocument, getAllDocuments, getDocumentById } from './firestore/firestore-utils';
 import { toast } from 'sonner';
@@ -30,10 +29,10 @@ export const useFirestore = (collectionPath?: string) => {
     setLoading(true);
     try {
       const path = collectionPath || '';
-      const results = await getAllDocuments(path, constraints);
+      // Fix: remove the second argument if not needed or handle it properly
+      const results = await getAllDocuments(path);
       return results;
     } catch (err: any) {
-      // Don't throw error here, just return empty array to avoid breaking the UI
       console.error('Error fetching documents:', err);
       setError(err);
       

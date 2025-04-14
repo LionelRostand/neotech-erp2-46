@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { collection, getDocs, query, orderBy, where, getDoc, doc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
@@ -115,7 +114,8 @@ export const useHrData = () => {
         const hrDocumentsSnapshot = await getDocs(hrDocumentsRef);
         setHrDocuments(hrDocumentsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
 
-        const timeSheetsRef = collection(db, COLLECTIONS.HR.TIMESHEETS);
+        const timeSheetCollection = COLLECTIONS.HR.TIMESHEET;
+        const timeSheetsRef = collection(db, timeSheetCollection);
         const timeSheetsSnapshot = await getDocs(timeSheetsRef);
         setTimeSheets(timeSheetsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
 

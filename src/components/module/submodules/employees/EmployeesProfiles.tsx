@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Employee } from '@/types/employee';
@@ -91,7 +90,6 @@ const EmployeesProfiles: React.FC<EmployeesProfilesProps> = (props) => {
     if (!employeeToEdit) return;
     
     try {
-      // Utiliser setDocument au lieu de updateDocument pour créer le document s'il n'existe pas
       await setDocument(COLLECTIONS.HR.EMPLOYEES, employeeToEdit.id, updatedEmployee);
       
       const updatedEmployees = employees.map(emp => 
@@ -116,14 +114,11 @@ const EmployeesProfiles: React.FC<EmployeesProfilesProps> = (props) => {
 
   const handleDeleteEmployee = async (employeeId: string) => {
     try {
-      // Supprimer le document de la collection Firestore
       await deleteDocument(COLLECTIONS.HR.EMPLOYEES, employeeId);
       
-      // Mettre à jour l'état local
       const updatedEmployees = employees.filter(emp => emp.id !== employeeId);
       setEmployees(updatedEmployees);
       
-      // Si l'employé supprimé est celui qui est affiché, revenir à la liste
       if (selectedEmployee && selectedEmployee.id === employeeId) {
         setSelectedEmployee(null);
       }
@@ -155,6 +150,24 @@ const EmployeesProfiles: React.FC<EmployeesProfilesProps> = (props) => {
     setTimeout(() => {
       setIsPdfExportOpen(false);
     }, 1000);
+  };
+
+  const handleSuccess = (result: { id: string; } | { _offlineCreated: boolean; }) => {
+    let employeeId = '';
+    if ('id' in result) {
+      employeeId = result.id;
+    } else if ('_offlineCreated' in result) {
+      toast.info("Employee created in offline mode. Some features may be limited until back online.");
+      return;
+    }
+    
+    const updatedEmployees = employees.map(emp => 
+      emp.id === employeeId 
+        ? { ...emp, ...result } as Employee
+        : emp
+    );
+    
+    setEmployees(updatedEmployees);
   };
 
   const filteredEmployees = selectedCompany === 'all' 

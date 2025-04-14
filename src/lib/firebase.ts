@@ -1,6 +1,6 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from 'firebase/auth';
-import { getFirestore, collection, doc, setDoc, getDoc, updateDoc, serverTimestamp, onSnapshot, query, orderBy, limit } from 'firebase/firestore';
+import { getFirestore, collection, doc, setDoc, getDoc, updateDoc, serverTimestamp, onSnapshot, query, orderBy, limit, getDocs } from 'firebase/firestore';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { COLLECTIONS } from './firebase-collections';
 
@@ -115,14 +115,26 @@ const listenForAuthChanges = (callback: (user: any) => void) => {
   });
 };
 
+// Function to check Firestore connection status
+const checkFirestoreConnection = async (): Promise<boolean> => {
+  try {
+    // Try to fetch a small document to check connectivity
+    const testRef = doc(db, "connection_test", "test_doc");
+    await getDoc(testRef);
+    return true;
+  } catch (error: any) {
+    console.error("Error checking Firestore connection:", error);
+    return false;
+  }
+};
+
 // Function to add a document to a collection
 const addDocument = async (collectionName: string, data: any) => {
   try {
     const collectionRef = collection(db, collectionName);
-    const result = await setDoc(doc(collectionRef), data);
-    const id = 'id' in result ? result.id : undefined;
-    console.log(`Document added to ${collectionName} with ID: ${id}`);
-    return { id, ...data };
+    const docRef = await addDoc(collectionRef, data);
+    console.log(`Document added to ${collectionName} with ID: ${docRef.id}`);
+    return { id: docRef.id, ...data };
   } catch (error: any) {
     console.error(`Error adding document to ${collectionName}`, error);
     throw error;
@@ -223,5 +235,6 @@ export {
   getDocument,
   listenForDocumentChanges,
   getLimitedDocuments,
-  getDocs
+  getDocs,
+  checkFirestoreConnection
 };
