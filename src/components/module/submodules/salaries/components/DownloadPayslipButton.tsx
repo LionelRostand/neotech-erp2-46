@@ -24,6 +24,10 @@ const DownloadPayslipButton: React.FC<DownloadPayslipButtonProps> = ({ payslip }
       // Generate PDF document
       const doc = generatePayslipPDF(payslip);
       
+      if (!doc.autoTable) {
+        throw new Error('La fonction autoTable n\'est pas disponible. Erreur de configuration jsPDF.');
+      }
+      
       // Get PDF as base64 string for storage
       const pdfBase64 = doc.output('datauristring');
       

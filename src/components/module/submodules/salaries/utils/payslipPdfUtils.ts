@@ -3,6 +3,16 @@ import { jsPDF } from 'jspdf';
 import 'jspdf-autotable';
 import { PaySlip } from '@/types/payslip';
 
+// Ajout des types pour jspdf-autotable
+declare module 'jspdf' {
+  interface jsPDF {
+    autoTable: (options: any) => jsPDF;
+    lastAutoTable: {
+      finalY: number;
+    };
+  }
+}
+
 export const generatePayslipPDF = (payslip: PaySlip): jsPDF => {
   const doc = new jsPDF();
 
@@ -38,7 +48,7 @@ export const generatePayslipPDF = (payslip: PaySlip): jsPDF => {
     ];
   });
 
-  // @ts-ignore - jspdf-autotable types
+  // Ajouter le tableau des détails de salaire
   doc.autoTable({
     startY: 90,
     head: [['Description', 'Base', 'Montant']],
@@ -48,7 +58,6 @@ export const generatePayslipPDF = (payslip: PaySlip): jsPDF => {
   });
 
   // Summary
-  // @ts-ignore - jspdf-autotable types
   const finalY = doc.lastAutoTable.finalY || 200;
   
   // Vérification que grossSalary est un nombre
