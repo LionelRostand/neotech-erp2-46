@@ -23,6 +23,13 @@ export const useSalaryForm = () => {
   const { salary: contractSalary } = useEmployeeContract(selectedEmployeeId);
 
   useEffect(() => {
+    if (selectedCompanyId) {
+      // Reset employee selection when company changes
+      setSelectedEmployeeId('');
+    }
+  }, [selectedCompanyId]);
+
+  useEffect(() => {
     if (selectedEmployeeId && contractSalary) {
       setBaseSalary(contractSalary);
       console.log(`Salaire du contrat récupéré: ${contractSalary}€`);
@@ -36,7 +43,6 @@ export const useSalaryForm = () => {
     if (selectedEmployee) {
       // Set the company if not already selected
       if (!selectedCompanyId && selectedEmployee.company) {
-        // Extract the ID depending on whether company is a string or an object
         const companyId = typeof selectedEmployee.company === 'string' 
           ? selectedEmployee.company 
           : (selectedEmployee.company as Company).id;
