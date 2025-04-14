@@ -52,19 +52,17 @@ const CompetencesTab: React.FC<CompetencesTabProps> = ({
 
   const handleSaveSkills = async () => {
     try {
-      const result = await updateEmployeeSkills(employee.id, skills);
+      await updateEmployeeSkills(employee.id, skills);
       
-      if (result) {
-        // If we're using external editing state, call the callback
-        if (onFinishEditing) {
-          onFinishEditing();
-        } else {
-          setIsEditing(false);
-        }
-        
-        onEmployeeUpdated();
-        toast.success("Compétences mises à jour avec succès");
+      // If we're using external editing state, call the callback
+      if (onFinishEditing) {
+        onFinishEditing();
+      } else {
+        setIsEditing(false);
       }
+      
+      onEmployeeUpdated();
+      toast.success("Compétences mises à jour avec succès");
     } catch (error) {
       console.error("Error saving skills:", error);
       toast.error("Erreur lors de la sauvegarde des compétences");

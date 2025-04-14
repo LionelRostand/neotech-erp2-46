@@ -101,12 +101,23 @@ export const deleteEmployee = async (id: string): Promise<void> => {
 };
 
 // Add a function to update employee skills
-export const updateEmployeeSkills = async (employeeId: string, skills: any[]): Promise<void> => {
+export const updateEmployeeSkills = async (employeeId: string, skills: any[]): Promise<boolean> => {
   try {
     await updateEmployee(employeeId, { skills });
     console.log("Employee skills updated successfully!");
+    return true;
   } catch (error) {
     console.error("Error updating employee skills:", error);
     throw error;
+  }
+};
+
+// Add the missing refreshEmployeesData function
+export const refreshEmployeesData = async (): Promise<Employee[]> => {
+  try {
+    return await getAllEmployees();
+  } catch (error) {
+    console.error("Error refreshing employees data:", error);
+    return [];
   }
 };
