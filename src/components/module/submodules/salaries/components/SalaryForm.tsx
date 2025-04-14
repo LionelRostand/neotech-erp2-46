@@ -1,13 +1,15 @@
+
 import React from 'react';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useSalaryForm } from '../hooks/useSalaryForm';
+import { useFirebaseCompanies } from '@/hooks/useFirebaseCompanies';
 
 export const SalaryForm: React.FC = () => {
   const {
-    companies,
+    companies: hookCompanies,
     isLoading,
     error,
     selectedCompanyId,
@@ -25,6 +27,14 @@ export const SalaryForm: React.FC = () => {
     handleSubmit
   } = useSalaryForm();
 
+  // Utiliser directement useFirebaseCompanies pour un accès plus fiable aux données
+  const { companies: firebaseCompanies, isLoading: fbLoading, error: fbError } = useFirebaseCompanies();
+  
+  // Combiner les deux sources de données, en préférant les données de Firebase
+  const companies = firebaseCompanies.length > 0 ? firebaseCompanies : hookCompanies;
+  const loadingState = isLoading || fbLoading;
+  const errorState = error || fbError;
+
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -34,17 +44,19 @@ export const SalaryForm: React.FC = () => {
             value={selectedCompanyId} 
             onValueChange={setSelectedCompanyId}
           >
-            <SelectTrigger className="w-full">
+            <SelectTrigger id="company-name" className="w-full bg-white">
               <SelectValue placeholder="Sélectionner une entreprise" />
             </SelectTrigger>
-            <SelectContent>
-              {isLoading ? (
-                <div className="p-2 text-center text-gray-500">Chargement...</div>
-              ) : error ? (
-                <div className="p-2 text-center text-red-500">Erreur de chargement</div>
+            <SelectContent position="popper" className="bg-white w-full shadow-md z-50">
+              {loadingState ? (
+                <div className="p-2 text-center text-gray-500">Chargement des entreprises...</div>
+              ) : errorState ? (
+                <div className="p-2 text-center text-red-500">Erreur de chargement des entreprises</div>
+              ) : companies.length === 0 ? (
+                <div className="p-2 text-center text-amber-500">Aucune entreprise disponible</div>
               ) : (
                 companies.map((company) => (
-                  <SelectItem key={company.id} value={company.id}>
+                  <SelectItem key={company.id} value={company.id} className="cursor-pointer">
                     {company.name}
                   </SelectItem>
                 ))

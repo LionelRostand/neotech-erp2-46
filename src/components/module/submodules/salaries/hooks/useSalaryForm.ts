@@ -21,10 +21,20 @@ export const useSalaryForm = () => {
     }
 
     try {
+      console.log("Enregistrement de la fiche de paie:", {
+        companyId: selectedCompanyId,
+        employeeName,
+        salaryAmount,
+        paymentDate,
+        paymentMethod,
+        notes
+      });
+      
       // TODO: Implémenter la sauvegarde de la fiche de paie
       toast.success("Fiche de paie enregistrée avec succès");
       resetForm();
     } catch (error) {
+      console.error("Erreur lors de l'enregistrement:", error);
       toast.error("Erreur lors de l'enregistrement de la fiche de paie");
     }
   };
