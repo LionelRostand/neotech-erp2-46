@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Employee } from '@/types/employee';
 import { Company } from '@/components/module/submodules/companies/types';
@@ -116,6 +117,7 @@ export const usePayslipGenerator = () => {
     showPreview,
     setShowPreview,
     currentPayslip,
+    setCurrentPayslip,
     handleEmployeeSelect,
     handleCompanySelect,
     generatePayslip

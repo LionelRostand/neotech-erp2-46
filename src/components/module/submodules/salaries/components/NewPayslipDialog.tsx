@@ -124,6 +124,15 @@ const NewPayslipDialog: React.FC<NewPayslipDialogProps> = ({
     );
   }
 
+  // Custom handlers for employee and company selection
+  const handleEmployeeSelection = (value: string) => {
+    handleEmployeeSelect(value, employees);
+  };
+
+  const handleCompanySelection = (value: string) => {
+    handleCompanySelect(value, companies);
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={(open) => {
       if (!open) {
@@ -140,7 +149,7 @@ const NewPayslipDialog: React.FC<NewPayslipDialogProps> = ({
             <div className="space-y-2">
               <label className="text-sm font-medium">Employé</label>
               <Select 
-                onValueChange={(value) => handleEmployeeSelect(value, employees)}
+                onValueChange={handleEmployeeSelection}
               >
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Sélectionner un employé" />
@@ -161,7 +170,7 @@ const NewPayslipDialog: React.FC<NewPayslipDialogProps> = ({
             <div className="space-y-2">
               <label className="text-sm font-medium">Entreprise</label>
               <Select 
-                onValueChange={(value) => handleCompanySelect(value, companies)}
+                onValueChange={handleCompanySelection}
               >
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Sélectionner une entreprise" />

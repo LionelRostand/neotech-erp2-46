@@ -1,3 +1,4 @@
+
 import { useMemo } from 'react';
 import { useHrModuleData } from './useHrModuleData';
 import { formatDate } from "@/lib/utils";
@@ -25,6 +26,19 @@ export interface SalarySlip {
 export const useSalarySlipsData = () => {
   const { payslips, employees, companies, isLoading, error } = useHrModuleData();
   
+  // Function to get month and year from date
+  const parseMonthAndYear = (dateString: string) => {
+    try {
+      const date = new Date(dateString);
+      const month = date.toLocaleDateString('fr-FR', { month: 'long' });
+      const year = date.getFullYear();
+      return { month, year };
+    } catch (error) {
+      console.error('Error parsing date:', error);
+      return { month: 'Inconnu', year: new Date().getFullYear() };
+    }
+  };
+  
   // Enrichir les fiches de paie avec les noms des employés
   const formattedSalarySlips = useMemo(() => {
     if (!payslips || payslips.length === 0) return [];
@@ -34,9 +48,7 @@ export const useSalarySlipsData = () => {
       const employee = employees?.find(emp => emp.id === payslip.employeeId);
       
       // Extraire le mois et l'année de la date
-      const date = new Date(payslip.date);
-      const month = date.toLocaleDateString('fr-FR', { month: 'long' });
-      const year = date.getFullYear();
+      const { month, year } = parseMonthAndYear(payslip.date);
       
       return {
         id: payslip.id,

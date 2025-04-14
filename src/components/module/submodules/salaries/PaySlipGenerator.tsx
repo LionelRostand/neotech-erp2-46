@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -13,10 +14,13 @@ import { useCompaniesData } from '@/hooks/useCompaniesData';
 
 interface PaySlipGeneratorProps {
   employees?: Employee[];
+  companies?: Company[];
 }
 
-const PaySlipGenerator: React.FC<PaySlipGeneratorProps> = ({ employees }) => {
-  const { companies, isLoading: isLoadingCompanies } = useCompaniesData();
+const PaySlipGenerator: React.FC<PaySlipGeneratorProps> = ({ employees, companies: propCompanies }) => {
+  const { companies: fetchedCompanies, isLoading: isLoadingCompanies } = useCompaniesData();
+  const availableCompanies = propCompanies || fetchedCompanies || [];
+  
   const {
     employeeName,
     setEmployeeName,
@@ -69,6 +73,18 @@ const PaySlipGenerator: React.FC<PaySlipGeneratorProps> = ({ employees }) => {
     setPeriod(`${selectedMonth} ${selectedYear}`);
   };
 
+  // Custom handler for employee selection
+  const handleEmployeeSelection = (value: string) => {
+    if (employees) {
+      handleEmployeeSelect(value, employees);
+    }
+  };
+
+  // Custom handler for company selection
+  const handleCompanySelection = (value: string) => {
+    handleCompanySelect(value, availableCompanies);
+  };
+
   if (showPreview && currentPayslip) {
     return (
       <div className="w-full">
@@ -92,7 +108,7 @@ const PaySlipGenerator: React.FC<PaySlipGeneratorProps> = ({ employees }) => {
           <div className="space-y-2">
             <Label>Employé</Label>
             {employees && employees.length > 0 ? (
-              <Select onValueChange={handleEmployeeSelect}>
+              <Select onValueChange={handleEmployeeSelection}>
                 <SelectTrigger>
                   <SelectValue placeholder="Sélectionner un employé" />
                 </SelectTrigger>
@@ -115,13 +131,13 @@ const PaySlipGenerator: React.FC<PaySlipGeneratorProps> = ({ employees }) => {
 
           <div className="space-y-2">
             <Label>Entreprise</Label>
-            {companies && companies.length > 0 ? (
-              <Select onValueChange={(value) => handleCompanySelect(value, companies)}>
+            {availableCompanies && availableCompanies.length > 0 ? (
+              <Select onValueChange={handleCompanySelection}>
                 <SelectTrigger>
                   <SelectValue placeholder="Sélectionner une entreprise" />
                 </SelectTrigger>
                 <SelectContent>
-                  {companies.map(company => (
+                  {availableCompanies.map(company => (
                     <SelectItem key={company.id} value={company.id}>
                       {company.name}
                     </SelectItem>
