@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,14 +8,15 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import PayslipViewer from './components/PayslipViewer';
 import { Employee } from '@/types/employee';
-import { Company } from '../companies/types';
+import { Company } from '@/components/module/submodules/companies/types';
+import { useCompaniesData } from '@/hooks/useCompaniesData';
 
 interface PaySlipGeneratorProps {
   employees?: Employee[];
-  companies?: Company[];
 }
 
-const PaySlipGenerator: React.FC<PaySlipGeneratorProps> = ({ employees, companies }) => {
+const PaySlipGenerator: React.FC<PaySlipGeneratorProps> = ({ employees }) => {
+  const { companies, isLoading: isLoadingCompanies } = useCompaniesData();
   const {
     employeeName,
     setEmployeeName,
@@ -37,7 +37,6 @@ const PaySlipGenerator: React.FC<PaySlipGeneratorProps> = ({ employees, companie
     showPreview,
     setShowPreview,
     currentPayslip,
-    setCurrentPayslip,
     handleEmployeeSelect,
     handleCompanySelect,
     generatePayslip
@@ -70,11 +69,6 @@ const PaySlipGenerator: React.FC<PaySlipGeneratorProps> = ({ employees, companie
     setPeriod(`${selectedMonth} ${selectedYear}`);
   };
 
-  const handleGeneratePaySlip = () => {
-    generatePayslip();
-    setShowPreview(true);
-  };
-
   if (showPreview && currentPayslip) {
     return (
       <div className="w-full">
@@ -98,7 +92,7 @@ const PaySlipGenerator: React.FC<PaySlipGeneratorProps> = ({ employees, companie
           <div className="space-y-2">
             <Label>Employé</Label>
             {employees && employees.length > 0 ? (
-              <Select onValueChange={(value) => handleEmployeeSelect(value, employees)}>
+              <Select onValueChange={handleEmployeeSelect}>
                 <SelectTrigger>
                   <SelectValue placeholder="Sélectionner un employé" />
                 </SelectTrigger>
@@ -226,7 +220,10 @@ const PaySlipGenerator: React.FC<PaySlipGeneratorProps> = ({ employees, companie
 
         <PayslipFormControls
           handleViewSample={handleViewSample}
-          handleGeneratePaySlip={handleGeneratePaySlip}
+          handleGeneratePaySlip={() => {
+            generatePayslip();
+            setShowPreview(true);
+          }}
         />
       </CardContent>
     </Card>
