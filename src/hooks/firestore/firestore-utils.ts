@@ -5,18 +5,21 @@ export * from './read-operations';
 export * from './create-operations';
 export * from './update-operations';
 export * from './delete-operations';
-// Export network operations without the executeWithNetworkRetry that's already exported
+// Export network operations 
 export { 
   isOnline,
   checkFirestoreConnection,
   restoreFirestoreConnectivity,
-  handleOfflineOperations
+  initializeNetworkListeners,
+  useOfflineOperations
 } from './network-operations';
 export * from './network-handler';
 export { COLLECTIONS } from '@/lib/firebase-collections';
 
-import { handleOfflineOperations } from './network-operations';
+// Initialize network listeners when this module is imported
+import { initializeNetworkListeners } from './network-operations';
 
-// Initialize offline handling when this module is imported
-// This will add listeners for online/offline events
-handleOfflineOperations();
+// Only initialize if we're in a browser environment
+if (typeof window !== 'undefined') {
+  initializeNetworkListeners();
+}

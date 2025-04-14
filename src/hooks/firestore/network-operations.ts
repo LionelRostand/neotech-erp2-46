@@ -24,7 +24,6 @@ export const checkFirestoreConnection = async (): Promise<boolean> => {
 
 // Import needed Firestore functions
 import { doc, getDoc } from 'firebase/firestore';
-import { useEffect } from 'react';
 
 // Function to restore Firestore connectivity
 export const restoreFirestoreConnectivity = async (): Promise<boolean> => {
@@ -82,29 +81,54 @@ export const executeWithNetworkRetry = async <T>(operation: () => Promise<T>, ma
   throw new Error('Operation failed after multiple retries due to network issues');
 };
 
-// Function to handle offline operations by storing them locally and retrying when online
-export const handleOfflineOperations = () => {
+// Initialize offline/online event listeners
+let onlineListenerInitialized = false;
+
+// Function to handle synchronization when app comes back online
+const handleOnlineEvent = async () => {
+  console.log('Online - attempting to synchronize offline operations');
+  
+  // Check Firestore connection before attempting synchronization
+  if (await checkFirestoreConnection()) {
+    // Implement logic to synchronize offline operations here
+    console.log('Synchronization logic needs to be implemented here');
+    toast.success('Back online! Synchronizing data...');
+  } else {
+    console.warn('Firestore is not reachable. Skipping synchronization.');
+    // Fix the warning toast method
+    toast.error('Connexion rétablie, mais la synchronisation est impossible pour le moment.');
+  }
+};
+
+// Function to initialize offline/online event listeners (without React hooks)
+export const initializeNetworkListeners = () => {
+  if (typeof window !== 'undefined' && !onlineListenerInitialized) {
+    window.addEventListener('online', handleOnlineEvent);
+    onlineListenerInitialized = true;
+    console.log('Network listeners initialized');
+  }
+};
+
+// Function to clean up event listeners
+export const cleanupNetworkListeners = () => {
+  if (typeof window !== 'undefined' && onlineListenerInitialized) {
+    window.removeEventListener('online', handleOnlineEvent);
+    onlineListenerInitialized = false;
+    console.log('Network listeners cleaned up');
+  }
+};
+
+// React hook to handle offline operations (for use in React components)
+export const useOfflineOperations = () => {
+  // This is now a proper React hook that can use useEffect
+  import { useEffect } from 'react';
+  
   useEffect(() => {
-    const handleOnline = async () => {
-      console.log('Online - attempting to synchronize offline operations');
-      
-      // Check Firestore connection before attempting synchronization
-      if (await checkFirestoreConnection()) {
-        // Implement logic to synchronize offline operations here
-        // This might involve reading from local storage and writing to Firestore
-        console.log('Synchronization logic needs to be implemented here');
-        toast.success('Back online! Synchronizing data...');
-      } else {
-        console.warn('Firestore is not reachable. Skipping synchronization.');
-        // Fix the warning toast method
-        toast.error('Connexion rétablie, mais la synchronisation est impossible pour le moment.');
-      }
-    };
+    initializeNetworkListeners();
     
-    window.addEventListener('online', handleOnline);
-    
+    // Cleanup on unmount
     return () => {
-      window.removeEventListener('online', handleOnline);
+      cleanupNetworkListeners();
     };
   }, []);
 };
