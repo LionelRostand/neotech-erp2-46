@@ -60,6 +60,7 @@ export const useSalaryForm = () => {
 
   return {
     companies: firebaseCompanies.length > 0 ? firebaseCompanies : companies,
+    employees, // We need to explicitly return the employees data
     isLoading,
     error,
     selectedCompanyId,
