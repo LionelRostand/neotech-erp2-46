@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { 
@@ -66,10 +65,8 @@ const EmployeesProfiles: React.FC<EmployeesProfilesProps> = ({ employees }) => {
   };
   
   const handleDeleteEmployee = (record: any) => {
-    // Use safelyGetDocumentId to handle both regular and offline records
     const id = safelyGetDocumentId(record);
     toast.info(`Suppression de l'employé ${id} demandée`);
-    // Implement the actual deletion logic here
   };
 
   return (
@@ -87,6 +84,8 @@ const EmployeesProfiles: React.FC<EmployeesProfilesProps> = ({ employees }) => {
           </Button>
         </div>
       </div>
+
+      <EmployeesDashboardCards />
     
       <Card>
         <CardContent className="p-6">
