@@ -11,6 +11,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from '@/components/ui/badge';
+import DownloadPayslipButton from './DownloadPayslipButton';
 
 const PayslipList = () => {
   const { payslips, isLoading } = useHrModuleData();
@@ -30,6 +31,7 @@ const PayslipList = () => {
             <TableHead>Période</TableHead>
             <TableHead>Montant Net</TableHead>
             <TableHead>Status</TableHead>
+            <TableHead>Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -43,6 +45,9 @@ const PayslipList = () => {
                 <Badge variant={payslip.status === 'Généré' ? 'default' : 'secondary'}>
                   {payslip.status}
                 </Badge>
+              </TableCell>
+              <TableCell>
+                <DownloadPayslipButton payslip={payslip} />
               </TableCell>
             </TableRow>
           ))}
