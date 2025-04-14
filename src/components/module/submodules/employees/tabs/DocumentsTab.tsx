@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Employee, Document } from '@/types/employee';
-import { Plus, FileText, Trash2, Download, File } from 'lucide-react';
+import { Plus, FileText, Trash2, Download, File, FileDown } from 'lucide-react';
 import { toast } from 'sonner';
 import { 
   getEmployeeDocuments, 
@@ -11,7 +11,11 @@ import {
 } from '../services/documentService';
 import UploadDocumentDialog from '../../documents/components/UploadDocumentDialog';
 import { formatDate } from '@/lib/formatters';
+import { useHrModuleData } from '@/hooks/useHrModuleData';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { jsPDF } from 'jspdf';
+import { generatePayslipPDF } from '../../salaries/utils/payslipPdfUtils';
+import { PaySlip } from '@/types/payslip';
 
 interface DocumentsTabProps {
   employee: Employee;
@@ -28,6 +32,12 @@ const DocumentsTab: React.FC<DocumentsTabProps> = ({
   const [isLoading, setIsLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [documentToDelete, setDocumentToDelete] = useState<Document | null>(null);
+  const { payslips } = useHrModuleData();
+  
+  // Filtrer les fiches de paie pour cet employé
+  const employeePayslips = payslips.filter(
+    payslip => payslip.employeeId === employee.id
+  );
   
   useEffect(() => {
     const fetchDocuments = async () => {
@@ -112,6 +122,37 @@ const DocumentsTab: React.FC<DocumentsTabProps> = ({
     }
   };
   
+  const handleDownloadPayslip = async (payslip: PaySlip) => {
+    try {
+      console.log('Téléchargement de la fiche de paie:', payslip);
+      
+      // Vérifier que les données essentielles existent
+      if (!payslip.details || !Array.isArray(payslip.details)) {
+        throw new Error('Les détails de la fiche de paie sont manquants ou invalides');
+      }
+      
+      // Generate PDF document
+      const doc = generatePayslipPDF(payslip);
+      
+      // Save PDF file avec un nom de fichier basé sur les données du bulletin
+      const fileName = `bulletin_de_paie_${payslip.employee.lastName.toLowerCase()}_${payslip.month?.toLowerCase()}_${payslip.year}.pdf`;
+      
+      // Save PDF file
+      doc.save(fileName);
+      
+      toast.success('Fiche de paie téléchargée avec succès');
+    } catch (error) {
+      console.error('Erreur lors du téléchargement de la fiche de paie:', error);
+      let errorMessage = 'Erreur lors du téléchargement de la fiche de paie';
+      
+      if (error instanceof Error) {
+        errorMessage += `: ${error.message}`;
+      }
+      
+      toast.error(errorMessage);
+    }
+  };
+  
   return (
     <>
       <Card>
@@ -133,36 +174,80 @@ const DocumentsTab: React.FC<DocumentsTabProps> = ({
               <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
               <p className="mt-2 text-sm text-muted-foreground">Chargement des documents...</p>
             </div>
-          ) : documents.length > 0 ? (
+          ) : (documents.length > 0 || employeePayslips.length > 0) ? (
             <div className="grid gap-4">
-              {documents.map((document) => (
-                <div key={document.id} className="flex items-start p-3 border rounded-md hover:bg-muted/30 transition-colors">
-                  <div className="rounded-md bg-blue-100 p-2 text-blue-700 mr-3">
-                    {getDocumentIcon(document)}
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="font-medium">{document.name}</h3>
-                    <div className="text-sm text-muted-foreground mt-1">
-                      <span>{document.type || 'Document'}</span>
-                      {document.fileSize && (
-                        <span> • {formatFileSize(document.fileSize)}</span>
+              {/* Section des documents standards */}
+              {documents.length > 0 && (
+                <>
+                  {documents.map((document) => (
+                    <div key={document.id} className="flex items-start p-3 border rounded-md hover:bg-muted/30 transition-colors">
+                      <div className="rounded-md bg-blue-100 p-2 text-blue-700 mr-3">
+                        {getDocumentIcon(document)}
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="font-medium">{document.name}</h3>
+                        <div className="text-sm text-muted-foreground mt-1">
+                          <span>{document.type || 'Document'}</span>
+                          {document.fileSize && (
+                            <span> • {formatFileSize(document.fileSize)}</span>
+                          )}
+                          <span> • {formatDocumentDate(document.date)}</span>
+                        </div>
+                      </div>
+                      {isEditing && (
+                        <div className="flex items-center space-x-2">
+                          <Button 
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => setDocumentToDelete(document)}
+                          >
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        </div>
                       )}
-                      <span> • {formatDocumentDate(document.date)}</span>
                     </div>
-                  </div>
-                  {isEditing && (
-                    <div className="flex items-center space-x-2">
-                      <Button 
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => setDocumentToDelete(document)}
-                      >
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
-                    </div>
+                  ))}
+                </>
+              )}
+              
+              {/* Section des fiches de paie */}
+              {employeePayslips.length > 0 && (
+                <>
+                  {employeePayslips.length > 0 && documents.length > 0 && (
+                    <div className="h-px bg-border my-4" />
                   )}
-                </div>
-              ))}
+                  
+                  <div className="mb-2 mt-2">
+                    <h3 className="text-sm font-medium text-muted-foreground">Fiches de paie</h3>
+                  </div>
+                  
+                  {employeePayslips.map((payslip) => (
+                    <div key={payslip.id} className="flex items-start p-3 border rounded-md hover:bg-muted/30 transition-colors">
+                      <div className="rounded-md bg-green-100 p-2 text-green-700 mr-3">
+                        <FileText className="h-6 w-6" />
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="font-medium">Bulletin de paie - {payslip.month} {payslip.year}</h3>
+                        <div className="text-sm text-muted-foreground mt-1">
+                          <span>Fiche de paie</span>
+                          <span> • {formatDocumentDate(payslip.date)}</span>
+                          <span> • {payslip.netSalary?.toFixed(2)} €</span>
+                        </div>
+                      </div>
+                      <div className="flex items-center">
+                        <Button 
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleDownloadPayslip(payslip)}
+                          title="Télécharger la fiche de paie"
+                        >
+                          <FileDown className="h-4 w-4 text-primary" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </>
+              )}
             </div>
           ) : (
             <div className="text-center py-12 text-gray-500">
@@ -183,7 +268,7 @@ const DocumentsTab: React.FC<DocumentsTabProps> = ({
           )}
         </CardContent>
         
-        {isEditing && documents.length > 0 && (
+        {isEditing && (documents.length > 0 || employeePayslips.length > 0) && (
           <CardFooter className="border-t px-6 py-4 bg-muted/20">
             <div className="ml-auto">
               <Button 
