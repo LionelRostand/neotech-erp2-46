@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -11,7 +10,6 @@ import CreateContractDialog from './CreateContractDialog';
 import ContractDetailsDialog from './ContractDetailsDialog';
 import UpdateContractDialog from './UpdateContractDialog';
 import StatCard from '@/components/StatCard';
-import { PieChart } from '@/components/ui/charts';
 
 const EmployeesContracts = () => {
   const { contracts, stats, isLoading, error } = useContractsData();
@@ -20,24 +18,19 @@ const EmployeesContracts = () => {
   const [updateDialogOpen, setUpdateDialogOpen] = useState(false);
   const [selectedContract, setSelectedContract] = useState<Contract | null>(null);
 
-  // Fonction pour ouvrir le dialogue de détails
   const handleViewDetails = (contract: Contract) => {
     setSelectedContract(contract);
     setDetailsDialogOpen(true);
   };
 
-  // Fonction pour ouvrir le dialogue de mise à jour
   const handleUpdateContract = (contract: Contract) => {
     setSelectedContract(contract);
     setUpdateDialogOpen(true);
   };
 
-  // Fonction pour rafraîchir les données après une modification
   const handleContractUpdated = () => {
-    // Les données sont automatiquement rafraîchies par useContractsData
   };
 
-  // Préparer les données pour le graphique circulaire
   const chartData = {
     labels: ['Actifs', 'À venir', 'Expirés'],
     datasets: [
@@ -50,7 +43,6 @@ const EmployeesContracts = () => {
     ],
   };
 
-  // Définition des colonnes pour la table
   const columns = [
     {
       key: 'employeeName',
@@ -141,7 +133,6 @@ const EmployeesContracts = () => {
         </Button>
       </div>
 
-      {/* Dashboard section */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard 
           title="Total des contrats" 
@@ -173,43 +164,6 @@ const EmployeesContracts = () => {
         />
       </div>
 
-      {/* Chart section */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="md:col-span-2">
-          <CardHeader>
-            <CardTitle>Évolution des contrats</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="h-[300px] w-full">
-              {/* Placeholder for line chart - would implement with actual data in a real scenario */}
-              <div className="h-full w-full bg-gradient-to-r from-blue-100 to-indigo-100 rounded-md flex items-center justify-center">
-                <p className="text-gray-500">Graphique d'évolution des contrats</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle>Répartition des contrats</CardTitle>
-          </CardHeader>
-          <CardContent className="flex justify-center">
-            <div className="h-[300px] w-full">
-              <PieChart
-                data={chartData}
-                options={{
-                  plugins: {
-                    legend: {
-                      position: 'bottom',
-                    },
-                  },
-                }}
-                height={300}
-              />
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
       <Card>
         <CardHeader>
           <CardTitle>Liste des contrats</CardTitle>
@@ -230,21 +184,18 @@ const EmployeesContracts = () => {
         </CardContent>
       </Card>
 
-      {/* Dialogue pour créer un nouveau contrat */}
       <CreateContractDialog 
         open={createDialogOpen} 
         onOpenChange={setCreateDialogOpen} 
         onContractCreated={handleContractUpdated}
       />
 
-      {/* Dialogue pour afficher les détails d'un contrat */}
       <ContractDetailsDialog 
         contract={selectedContract} 
         open={detailsDialogOpen} 
         onOpenChange={setDetailsDialogOpen}
       />
 
-      {/* Dialogue pour mettre à jour un contrat */}
       <UpdateContractDialog 
         contract={selectedContract} 
         open={updateDialogOpen} 
