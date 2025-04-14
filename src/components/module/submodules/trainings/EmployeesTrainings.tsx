@@ -204,7 +204,7 @@ const EmployeesTrainings: React.FC = () => {
         </CardContent>
       </Card>
 
-      {/* Create Training Dialog with all required props */}
+      {/* CreateTrainingDialog with all required props */}
       <CreateTrainingDialog 
         open={openCreateDialog} 
         onOpenChange={setOpenCreateDialog}
