@@ -1,464 +1,372 @@
+
 import React, { useState, useEffect } from 'react';
-import { useEvaluationsData } from '@/hooks/useEvaluationsData';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from '@/components/ui/table';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { StatusBadge } from '@/components/StatusBadge';
-import { Plus, Search, Filter, FileDown, Trash, Edit } from 'lucide-react';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import CreateEvaluationDialog from './CreateEvaluationDialog';
-import DeleteEvaluationDialog from './DeleteEvaluationDialog';
-import EvaluationsFilter from './EvaluationsFilter';
-import ExportEvaluationsDialog from './ExportEvaluationsDialog';
-import { COLLECTIONS } from '@/lib/firebase-collections';
-import { addDocument } from '@/hooks/firestore/add-operations';
+  BarChart, 
+  Calendar as CalendarIcon, 
+  FileDown, 
+  Filter, 
+  Plus, 
+  Search, 
+  Trash2 
+} from "lucide-react";
+import StatusBadge from "@/components/StatusBadge";
+import { Input } from "@/components/ui/input";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { useEvaluationsData, Evaluation } from "@/hooks/useEvaluationsData";
+import { useEmployeeData } from "@/hooks/useEmployeeData";
+import { addDocument } from "@/hooks/firestore/create-operations";
+import { COLLECTIONS } from "@/lib/firebase-collections";
+import { toast } from "sonner";
+import { useSearchParams } from "react-router-dom";
+import { format } from "date-fns";
+import { fr } from "date-fns/locale";
 
-interface Evaluation {
-  id: string;
-  employeeId: string;
-  employeeName?: string;
-  employeePhoto?: string;
-  evaluatorId?: string;
-  evaluatorName?: string;
-  date: string;
-  score?: number;
-  maxScore?: number;
-  status: 'Planifiée' | 'Complétée' | 'Annulée';
-  comments?: string;
-  department?: string;
-  goals?: string[];
-  strengths?: string[];
-  improvements?: string[];
-  title?: string;
-  rating?: number;
-  fromEmployeeRecord?: boolean;
-}
+// Import dialog components
+import CreateEvaluationDialog from "./CreateEvaluationDialog";
+import DeleteEvaluationDialog from "./DeleteEvaluationDialog";
+import ExportEvaluationsDialog from "./ExportEvaluationsDialog";
+import EvaluationsFilter from "./EvaluationsFilter";
 
-const EmployeesEvaluations: React.FC = () => {
+const EmployeesEvaluations = () => {
+  // Get evaluations data
+  const { evaluations, stats, refreshData } = useEvaluationsData();
+  const { employees } = useEmployeeData();
+  
+  // UI state
+  const [searchTerm, setSearchTerm] = useState('');
+  const [status, setStatus] = useState('all');
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [selectedEvaluation, setSelectedEvaluation] = useState<any>(null);
   const [exportDialogOpen, setExportDialogOpen] = useState(false);
   const [filterDialogOpen, setFilterDialogOpen] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterStatus, setFilterStatus] = useState<string | null>(null);
-  const { evaluations, isLoading, error, refreshData } = useEvaluationsData();
-
-  const [filteredEvaluations, setFilteredEvaluations] = useState<Evaluation[]>([]);
-  const [activeTab, setActiveTab] = useState('all');
-
+  const [selectedEvaluationId, setSelectedEvaluationId] = useState<string | null>(null);
+  
+  // URL params for status filtering
+  const [searchParams, setSearchParams] = useSearchParams();
+  
+  // Initialize status from URL if available
   useEffect(() => {
-    let results = evaluations;
-
-    if (searchTerm) {
-      results = results.filter(evaluation =>
-        evaluation.employeeName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        evaluation.title?.toLowerCase().includes(searchTerm.toLowerCase())
-      );
+    const urlStatus = searchParams.get('status');
+    if (urlStatus) {
+      setStatus(urlStatus);
     }
-
-    if (filterStatus && filterStatus !== 'all') {
-      results = results.filter(evaluation => evaluation.status === filterStatus);
+  }, [searchParams]);
+  
+  // Update URL when status changes
+  useEffect(() => {
+    if (status !== 'all') {
+      searchParams.set('status', status);
+    } else {
+      searchParams.delete('status');
     }
-
-    setFilteredEvaluations(results);
-  }, [evaluations, searchTerm, filterStatus]);
-
+    setSearchParams(searchParams);
+  }, [status, setSearchParams, searchParams]);
+  
+  // Filter evaluations based on search term and status
+  const filteredEvaluations = evaluations.filter(evaluation => {
+    const matchesSearch = 
+      evaluation.employeeName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      evaluation.evaluatorName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      evaluation.department?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      evaluation.comments?.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesStatus = 
+      status === 'all' || 
+      evaluation.status === status;
+    
+    return matchesSearch && matchesStatus;
+  });
+  
+  // Get status badge color
+  const getStatusColor = (status: string): "success" | "warning" | "danger" => {
+    switch (status) {
+      case 'Complétée':
+        return 'success';
+      case 'Planifiée':
+        return 'warning';
+      case 'Annulée':
+        return 'danger';
+      default:
+        return 'warning';
+    }
+  };
+  
+  // Handle evaluation creation
   const handleCreateEvaluation = async (data: any) => {
     try {
-      await addDocument(COLLECTIONS.HR.EVALUATIONS, {
+      // Format date to ISO string
+      const formattedData = {
         ...data,
-        date: data.date.toISOString(),
-        createdAt: new Date().toISOString()
-      });
+        date: data.date.toISOString()
+      };
       
+      await addDocument(COLLECTIONS.HR.EVALUATIONS, formattedData);
+      toast.success('Évaluation créée avec succès');
       refreshData();
     } catch (error) {
-      console.error('Error creating evaluation:', error);
+      console.error('Erreur lors de la création de l\'évaluation:', error);
+      toast.error('Erreur lors de la création de l\'évaluation');
     }
   };
-
-  const handleDeleteEvaluation = async () => {
-    if (!selectedEvaluation) return;
-    
+  
+  // Handle evaluation deletion
+  const handleDeleteEvaluation = (id: string) => {
+    setSelectedEvaluationId(id);
+    setDeleteDialogOpen(true);
+  };
+  
+  // Handle search
+  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
+  };
+  
+  // Format date for display
+  const formatDisplayDate = (dateStr: string) => {
     try {
-      // Implementation of delete operation
-      refreshData();
-      setDeleteDialogOpen(false);
+      return format(new Date(dateStr), 'dd MMMM yyyy', { locale: fr });
     } catch (error) {
-      console.error('Error deleting evaluation:', error);
+      console.error('Erreur de formatage de date:', dateStr, error);
+      return dateStr;
     }
   };
-
-  const filteredEvaluationsByTab = () => {
-    if (activeTab === 'all') {
-      return filteredEvaluations;
-    } else {
-      return filteredEvaluations.filter(evaluation => evaluation.status === activeTab);
+  
+  // Get employee initials for avatar
+  const getInitials = (name: string = ''): string => {
+    const parts = name.split(' ');
+    if (parts.length >= 2) {
+      return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
     }
+    return name.substring(0, 2).toUpperCase();
   };
-
-  const handleTabChange = (value: string) => {
-    setActiveTab(value);
-  };
-
+  
   return (
-    <div className="space-y-4 p-4 pt-0">
-      <div className="flex justify-between items-center">
-        <h2 className="text-3xl font-bold tracking-tight">Évaluations des employés</h2>
-        <div className="flex items-center space-x-2">
-          <Button 
-            onClick={() => setCreateDialogOpen(true)}
-            className="flex items-center gap-1"
-          >
-            <Plus className="h-4 w-4" />
+    <div className="space-y-6">
+      <div className="flex flex-col md:flex-row gap-4 justify-between items-start md:items-center">
+        <div>
+          <h2 className="text-2xl font-bold tracking-tight">Évaluations des employés</h2>
+          <p className="text-muted-foreground">
+            Gérez les évaluations de performance et les entretiens professionnels
+          </p>
+        </div>
+        
+        <div className="flex flex-col sm:flex-row gap-2">
+          <Button onClick={() => setCreateDialogOpen(true)}>
+            <Plus className="mr-2 h-4 w-4" />
             Nouvelle évaluation
           </Button>
-          
-          <Button
-            variant="outline"
-            onClick={() => setExportDialogOpen(true)}
-            className="flex items-center gap-1"
+        </div>
+      </div>
+      
+      {/* Stats Cards */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total des évaluations</CardTitle>
+            <BarChart className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.total}</div>
+            <p className="text-xs text-muted-foreground">
+              Évaluations enregistrées
+            </p>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Évaluations planifiées</CardTitle>
+            <CalendarIcon className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.planned}</div>
+            <p className="text-xs text-muted-foreground">
+              À venir
+            </p>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Évaluations complétées</CardTitle>
+            <BarChart className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.completed}</div>
+            <p className="text-xs text-muted-foreground">
+              Réalisées
+            </p>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Évaluations annulées</CardTitle>
+            <BarChart className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.cancelled}</div>
+            <p className="text-xs text-muted-foreground">
+              Annulées ou reportées
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+      
+      {/* Search and filter */}
+      <div className="flex flex-col sm:flex-row justify-between gap-4">
+        <div className="relative w-full sm:w-72">
+          <Search className="absolute left-2 top-3 h-4 w-4 text-muted-foreground" />
+          <Input 
+            placeholder="Rechercher..." 
+            className="pl-8"
+            value={searchTerm}
+            onChange={handleSearch}
+          />
+        </div>
+        
+        <div className="flex space-x-2">
+          <Button 
+            variant="outline" 
+            onClick={() => setFilterDialogOpen(true)}
           >
-            <FileDown className="h-4 w-4" />
+            <Filter className="mr-2 h-4 w-4" />
+            Filtrer
+            {status !== 'all' && (
+              <span className="ml-2 rounded-full bg-primary/20 px-2 py-0.5 text-xs">
+                {status}
+              </span>
+            )}
+          </Button>
+          
+          <Button 
+            variant="outline" 
+            onClick={() => setExportDialogOpen(true)}
+          >
+            <FileDown className="mr-2 h-4 w-4" />
             Exporter
           </Button>
         </div>
       </div>
       
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader>
-            <CardTitle>Planifiées</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{evaluations.filter(e => e.status === 'Planifiée').length}</div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader>
-            <CardTitle>Complétées</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{evaluations.filter(e => e.status === 'Complétée').length}</div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader>
-            <CardTitle>Annulées</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{evaluations.filter(e => e.status === 'Annulée').length}</div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader>
-            <CardTitle>Total</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{evaluations.length}</div>
-          </CardContent>
-        </Card>
-      </div>
-      
+      {/* Evaluations Table */}
       <Card>
-        <CardHeader className="pb-2">
-          <div className="flex justify-between items-center">
-            <CardTitle>Toutes les évaluations</CardTitle>
-            <div className="flex items-center gap-2">
-              <div className="relative">
-                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input
-                  type="search"
-                  placeholder="Rechercher..."
-                  className="pl-8 w-[250px]"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-              </div>
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => setFilterDialogOpen(true)}
-              >
-                <Filter className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
+        <CardHeader>
+          <CardTitle>Évaluations</CardTitle>
+          <CardDescription>
+            Liste de toutes les évaluations{' '}
+            {status !== 'all' ? `filtrées par statut: ${status}` : ''}
+          </CardDescription>
         </CardHeader>
         <CardContent>
-          <Tabs defaultValue="all" className="space-y-4" onValueChange={handleTabChange}>
-            <TabsList>
-              <TabsTrigger value="all">Toutes</TabsTrigger>
-              <TabsTrigger value="Planifiée">Planifiées</TabsTrigger>
-              <TabsTrigger value="Complétée">Complétées</TabsTrigger>
-              <TabsTrigger value="Annulée">Annulées</TabsTrigger>
-            </TabsList>
-            <TabsContent value="all" className="space-y-2">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Employé</TableHead>
-                    <TableHead>Titre</TableHead>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Statut</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
+          {filteredEvaluations.length > 0 ? (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Employé</TableHead>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Évaluateur</TableHead>
+                  <TableHead>Département</TableHead>
+                  <TableHead>Statut</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredEvaluations.map((evaluation) => (
+                  <TableRow key={evaluation.id}>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <Avatar>
+                          {evaluation.employeePhoto ? (
+                            <AvatarImage src={evaluation.employeePhoto} alt={evaluation.employeeName} />
+                          ) : null}
+                          <AvatarFallback>{getInitials(evaluation.employeeName)}</AvatarFallback>
+                        </Avatar>
+                        <span>{evaluation.employeeName}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell>{formatDisplayDate(evaluation.date)}</TableCell>
+                    <TableCell>{evaluation.evaluatorName}</TableCell>
+                    <TableCell>{evaluation.department}</TableCell>
+                    <TableCell>
+                      <StatusBadge status={getStatusColor(evaluation.status)}>
+                        {evaluation.status}
+                      </StatusBadge>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleDeleteEvaluation(evaluation.id)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Supprimer l'évaluation</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </TableCell>
                   </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredEvaluationsByTab().map((evaluation) => (
-                    <TableRow key={evaluation.id}>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <Avatar>
-                            <AvatarImage src={evaluation.employeePhoto} />
-                            <AvatarFallback>{evaluation.employeeName?.substring(0, 2)}</AvatarFallback>
-                          </Avatar>
-                          <span>{evaluation.employeeName}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell>{evaluation.title}</TableCell>
-                      <TableCell>{evaluation.date}</TableCell>
-                      <TableCell>
-                        <StatusBadge status={evaluation.status} />
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => {
-                            setSelectedEvaluation(evaluation);
-                            // Implement edit functionality here
-                          }}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => {
-                            setSelectedEvaluation(evaluation);
-                            setDeleteDialogOpen(true);
-                          }}
-                        >
-                          <Trash className="h-4 w-4" />
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TabsContent>
-            <TabsContent value="Planifiée" className="space-y-2">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Employé</TableHead>
-                    <TableHead>Titre</TableHead>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Statut</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredEvaluationsByTab().map((evaluation) => (
-                    <TableRow key={evaluation.id}>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <Avatar>
-                            <AvatarImage src={evaluation.employeePhoto} />
-                            <AvatarFallback>{evaluation.employeeName?.substring(0, 2)}</AvatarFallback>
-                          </Avatar>
-                          <span>{evaluation.employeeName}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell>{evaluation.title}</TableCell>
-                      <TableCell>{evaluation.date}</TableCell>
-                      <TableCell>
-                        <StatusBadge status={evaluation.status} />
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => {
-                            setSelectedEvaluation(evaluation);
-                            // Implement edit functionality here
-                          }}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => {
-                            setSelectedEvaluation(evaluation);
-                            setDeleteDialogOpen(true);
-                          }}
-                        >
-                          <Trash className="h-4 w-4" />
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TabsContent>
-            <TabsContent value="Complétée" className="space-y-2">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Employé</TableHead>
-                    <TableHead>Titre</TableHead>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Statut</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredEvaluationsByTab().map((evaluation) => (
-                    <TableRow key={evaluation.id}>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <Avatar>
-                            <AvatarImage src={evaluation.employeePhoto} />
-                            <AvatarFallback>{evaluation.employeeName?.substring(0, 2)}</AvatarFallback>
-                          </Avatar>
-                          <span>{evaluation.employeeName}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell>{evaluation.title}</TableCell>
-                      <TableCell>{evaluation.date}</TableCell>
-                      <TableCell>
-                        <StatusBadge status={evaluation.status} />
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => {
-                            setSelectedEvaluation(evaluation);
-                            // Implement edit functionality here
-                          }}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => {
-                            setSelectedEvaluation(evaluation);
-                            setDeleteDialogOpen(true);
-                          }}
-                        >
-                          <Trash className="h-4 w-4" />
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TabsContent>
-            <TabsContent value="Annulée" className="space-y-2">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Employé</TableHead>
-                    <TableHead>Titre</TableHead>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Statut</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredEvaluationsByTab().map((evaluation) => (
-                    <TableRow key={evaluation.id}>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <Avatar>
-                            <AvatarImage src={evaluation.employeePhoto} />
-                            <AvatarFallback>{evaluation.employeeName?.substring(0, 2)}</AvatarFallback>
-                          </Avatar>
-                          <span>{evaluation.employeeName}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell>{evaluation.title}</TableCell>
-                      <TableCell>{evaluation.date}</TableCell>
-                      <TableCell>
-                        <StatusBadge status={evaluation.status} />
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => {
-                            setSelectedEvaluation(evaluation);
-                            // Implement edit functionality here
-                          }}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => {
-                            setSelectedEvaluation(evaluation);
-                            setDeleteDialogOpen(true);
-                          }}
-                        >
-                          <Trash className="h-4 w-4" />
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TabsContent>
-          </Tabs>
+                ))}
+              </TableBody>
+            </Table>
+          ) : (
+            <div className="py-24 text-center">
+              <div className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-muted">
+                <Search className="h-5 w-5 text-muted-foreground" />
+              </div>
+              <h3 className="mt-4 text-lg font-semibold">Aucune évaluation trouvée</h3>
+              <p className="mt-2 text-sm text-muted-foreground">
+                {searchTerm ? 
+                  "Aucun résultat pour votre recherche. Essayez d'autres termes." : 
+                  "Il n'y a pas encore d'évaluations. Commencez par en créer une."}
+              </p>
+            </div>
+          )}
         </CardContent>
       </Card>
       
       {/* Dialogs */}
-      <CreateEvaluationDialog
-        open={createDialogOpen}
+      <CreateEvaluationDialog 
+        open={createDialogOpen} 
+        onClose={() => setCreateDialogOpen(false)}
         onOpenChange={setCreateDialogOpen}
         onSubmit={handleCreateEvaluation}
-        onSuccess={() => {
-          setCreateDialogOpen(false);
-          refreshData();
-        }}
-        employees={[]} // Pass your employees data here
+        onSuccess={() => refreshData()}
+        employees={employees}
       />
       
-      <DeleteEvaluationDialog
+      <DeleteEvaluationDialog 
         open={deleteDialogOpen}
         onOpenChange={setDeleteDialogOpen}
-        evaluationId={selectedEvaluation?.id || ''}
-        onSuccess={handleDeleteEvaluation}
+        evaluationId={selectedEvaluationId || ''}
+        onSuccess={() => {
+          refreshData();
+          setSelectedEvaluationId(null);
+        }}
       />
       
-      <ExportEvaluationsDialog
+      <ExportEvaluationsDialog 
         open={exportDialogOpen}
         onOpenChange={setExportDialogOpen}
+        evaluations={filteredEvaluations}
       />
       
-      <EvaluationsFilter
+      <EvaluationsFilter 
         open={filterDialogOpen}
         onOpenChange={setFilterDialogOpen}
-        currentStatus={filterStatus}
-        onStatusChange={setFilterStatus}
+        currentFilters={{ status }}
+        onApplyFilters={(filters) => {
+          setStatus(filters.status);
+        }}
       />
     </div>
   );

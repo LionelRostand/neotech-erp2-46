@@ -34,3 +34,6 @@ export const addDocument = async (collectionName: string, data: DocumentData) =>
     }
   }
 };
+
+// Export other create operations if needed
+export { addDocument as addOperation };
