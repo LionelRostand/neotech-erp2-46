@@ -1,6 +1,8 @@
 
 import { db } from '@/lib/firebase';
 import { toast } from 'sonner';
+import { doc, getDoc } from 'firebase/firestore';
+import { useEffect } from 'react';
 
 // Function to check if we have an internet connection
 export const isOnline = (): boolean => {
@@ -21,9 +23,6 @@ export const checkFirestoreConnection = async (): Promise<boolean> => {
     return false;
   }
 };
-
-// Import needed Firestore functions
-import { doc, getDoc } from 'firebase/firestore';
 
 // Function to restore Firestore connectivity
 export const restoreFirestoreConnectivity = async (): Promise<boolean> => {
@@ -120,9 +119,6 @@ export const cleanupNetworkListeners = () => {
 
 // React hook to handle offline operations (for use in React components)
 export const useOfflineOperations = () => {
-  // This is now a proper React hook that can use useEffect
-  import { useEffect } from 'react';
-  
   useEffect(() => {
     initializeNetworkListeners();
     
