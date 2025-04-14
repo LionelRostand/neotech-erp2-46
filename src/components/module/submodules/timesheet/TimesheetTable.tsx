@@ -1,5 +1,4 @@
-
-import React from 'react';
+import React, { useState } from 'react';
 import { 
   Table, 
   TableBody, 
@@ -48,6 +47,8 @@ const TimesheetTable: React.FC<TimesheetTableProps> = ({
   onSubmit,
   isLoading
 }) => {
+  const [selectedTimesheet, setSelectedTimesheet] = useState<TimeReport | null>(null);
+  
   const getStatusBadge = (status: TimeReportStatus) => {
     switch (status) {
       case "En cours":
@@ -63,16 +64,13 @@ const TimesheetTable: React.FC<TimesheetTableProps> = ({
     }
   };
 
-  // Fonction pour formater les dates et gérer les timestamps Firestore
   const formatDateValue = (dateValue: any): string => {
     if (!dateValue) return '';
     
-    // Si la date est un objet avec seconds et nanoseconds (Firestore Timestamp)
     if (dateValue && typeof dateValue === 'object' && 'seconds' in dateValue) {
       return new Date(dateValue.seconds * 1000).toLocaleDateString('fr');
     }
     
-    // Si c'est une chaîne de date ISO
     if (typeof dateValue === 'string') {
       try {
         return new Date(dateValue).toLocaleDateString('fr');
@@ -81,13 +79,15 @@ const TimesheetTable: React.FC<TimesheetTableProps> = ({
       }
     }
     
-    // Si c'est déjà un objet Date
     if (dateValue instanceof Date) {
       return dateValue.toLocaleDateString('fr');
     }
     
-    // Fallback
     return String(dateValue);
+  };
+
+  const handleView = (timesheet: TimeReport) => {
+    setSelectedTimesheet(timesheet);
   };
 
   if (isLoading) {
@@ -99,98 +99,104 @@ const TimesheetTable: React.FC<TimesheetTableProps> = ({
   }
 
   return (
-    <div className="border rounded-md overflow-hidden bg-white">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Employé</TableHead>
-            <TableHead>Période</TableHead>
-            <TableHead className="hidden md:table-cell">Titre</TableHead>
-            <TableHead className="text-center">Heures</TableHead>
-            <TableHead className="text-center">Statut</TableHead>
-            <TableHead className="hidden md:table-cell">Mise à jour</TableHead>
-            <TableHead className="text-right">Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {data.length === 0 ? (
+    <>
+      <div className="border rounded-md overflow-hidden bg-white">
+        <Table>
+          <TableHeader>
             <TableRow>
-              <TableCell colSpan={7} className="text-center py-6 text-muted-foreground">
-                Aucune feuille de temps trouvée.
-              </TableCell>
+              <TableHead>Employé</TableHead>
+              <TableHead>Période</TableHead>
+              <TableHead className="hidden md:table-cell">Titre</TableHead>
+              <TableHead className="text-center">Heures</TableHead>
+              <TableHead className="text-center">Statut</TableHead>
+              <TableHead className="hidden md:table-cell">Mise à jour</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
             </TableRow>
-          ) : (
-            data.map((report) => (
-              <TableRow key={report.id}>
-                <TableCell>
-                  <div className="flex items-center gap-2">
-                    <Avatar className="h-7 w-7">
-                      <AvatarImage src={report.employeePhoto} />
-                      <AvatarFallback>{report.employeeName?.charAt(0) || "U"}</AvatarFallback>
-                    </Avatar>
-                    <span className="font-medium">{report.employeeName}</span>
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <div className="text-sm">
-                    {formatDateValue(report.startDate)} - {formatDateValue(report.endDate)}
-                  </div>
-                </TableCell>
-                <TableCell className="hidden md:table-cell">
-                  {report.title}
-                </TableCell>
-                <TableCell className="text-center font-medium">
-                  {report.totalHours}h
-                </TableCell>
-                <TableCell className="text-center">
-                  {getStatusBadge(report.status)}
-                </TableCell>
-                <TableCell className="hidden md:table-cell text-sm text-muted-foreground">
-                  {report.lastUpdateText || formatDateValue(report.lastUpdated)}
-                </TableCell>
-                <TableCell className="text-right">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="sm">
-                        <MoreHorizontal className="h-4 w-4" />
-                        <span className="sr-only">Actions</span>
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      {onView && (
-                        <DropdownMenuItem onClick={() => onView(report.id)} className="cursor-pointer">
-                          <Eye className="mr-2 h-4 w-4" /> Voir
-                        </DropdownMenuItem>
-                      )}
-                      {(onEdit && report.status !== "Validé") && (
-                        <DropdownMenuItem onClick={() => onEdit(report.id)} className="cursor-pointer">
-                          <FileEdit className="mr-2 h-4 w-4" /> Modifier
-                        </DropdownMenuItem>
-                      )}
-                      {(onSubmit && report.status === "En cours") && (
-                        <DropdownMenuItem onClick={() => onSubmit(report.id)} className="cursor-pointer">
-                          <SendHorizonal className="mr-2 h-4 w-4" /> Soumettre
-                        </DropdownMenuItem>
-                      )}
-                      {(onApprove && report.status === "Soumis") && (
-                        <DropdownMenuItem onClick={() => onApprove(report.id)} className="cursor-pointer text-green-600 hover:text-green-700">
-                          <ThumbsUp className="mr-2 h-4 w-4" /> Valider
-                        </DropdownMenuItem>
-                      )}
-                      {(onReject && report.status === "Soumis") && (
-                        <DropdownMenuItem onClick={() => onReject(report.id)} className="cursor-pointer text-red-600 hover:text-red-700">
-                          <ThumbsDown className="mr-2 h-4 w-4" /> Rejeter
-                        </DropdownMenuItem>
-                      )}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+          </TableHeader>
+          <TableBody>
+            {data.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={7} className="text-center py-6 text-muted-foreground">
+                  Aucune feuille de temps trouvée.
                 </TableCell>
               </TableRow>
-            ))
-          )}
-        </TableBody>
-      </Table>
-    </div>
+            ) : (
+              data.map((report) => (
+                <TableRow key={report.id}>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <Avatar className="h-7 w-7">
+                        <AvatarImage src={report.employeePhoto} />
+                        <AvatarFallback>{report.employeeName?.charAt(0) || "U"}</AvatarFallback>
+                      </Avatar>
+                      <span className="font-medium">{report.employeeName}</span>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="text-sm">
+                      {formatDateValue(report.startDate)} - {formatDateValue(report.endDate)}
+                    </div>
+                  </TableCell>
+                  <TableCell className="hidden md:table-cell">
+                    {report.title}
+                  </TableCell>
+                  <TableCell className="text-center font-medium">
+                    {report.totalHours}h
+                  </TableCell>
+                  <TableCell className="text-center">
+                    {getStatusBadge(report.status)}
+                  </TableCell>
+                  <TableCell className="hidden md:table-cell text-sm text-muted-foreground">
+                    {report.lastUpdateText || formatDateValue(report.lastUpdated)}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="sm">
+                          <MoreHorizontal className="h-4 w-4" />
+                          <span className="sr-only">Actions</span>
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => handleView(report)} className="cursor-pointer">
+                          <Eye className="mr-2 h-4 w-4" /> Voir
+                        </DropdownMenuItem>
+                        {(onEdit && report.status !== "Validé") && (
+                          <DropdownMenuItem onClick={() => onEdit(report.id)} className="cursor-pointer">
+                            <FileEdit className="mr-2 h-4 w-4" /> Modifier
+                          </DropdownMenuItem>
+                        )}
+                        {(onSubmit && report.status === "En cours") && (
+                          <DropdownMenuItem onClick={() => onSubmit(report.id)} className="cursor-pointer">
+                            <SendHorizonal className="mr-2 h-4 w-4" /> Soumettre
+                          </DropdownMenuItem>
+                        )}
+                        {(onApprove && report.status === "Soumis") && (
+                          <DropdownMenuItem onClick={() => onApprove(report.id)} className="cursor-pointer text-green-600 hover:text-green-700">
+                            <ThumbsUp className="mr-2 h-4 w-4" /> Valider
+                          </DropdownMenuItem>
+                        )}
+                        {(onReject && report.status === "Soumis") && (
+                          <DropdownMenuItem onClick={() => onReject(report.id)} className="cursor-pointer text-red-600 hover:text-red-700">
+                            <ThumbsDown className="mr-2 h-4 w-4" /> Rejeter
+                          </DropdownMenuItem>
+                        )}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </div>
+
+      <TimesheetDetailsDialog
+        timesheet={selectedTimesheet}
+        open={!!selectedTimesheet}
+        onClose={() => setSelectedTimesheet(null)}
+      />
+    </>
   );
 };
 
