@@ -1,4 +1,6 @@
+
 import React, { useEffect, useState } from 'react';
+import { useForm } from 'react-hook-form';
 import {
   Form,
   FormControl,
@@ -36,6 +38,8 @@ export const SalaryForm: React.FC = () => {
 
   const [filteredEmployees, setFilteredEmployees] = useState<Employee[]>([]);
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<string>('');
+  
+  const form = useForm();
 
   // Filter employees based on selected company
   useEffect(() => {
@@ -64,14 +68,20 @@ export const SalaryForm: React.FC = () => {
     }
   };
 
+  const onSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    handleSubmit(e);
+  };
+
   return (
-    <Form>
-      <form onSubmit={handleSubmit} className="space-y-6">
+    <Form {...form}>
+      <form onSubmit={onSubmit} className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Company Selection */}
           <FormField
+            control={form.control}
             name="company"
-            render={() => (
+            render={({ field }) => (
               <FormItem>
                 <FormLabel>Entreprise *</FormLabel>
                 <Select 
@@ -99,8 +109,9 @@ export const SalaryForm: React.FC = () => {
 
           {/* Employee Selection */}
           <FormField
+            control={form.control}
             name="employee"
-            render={() => (
+            render={({ field }) => (
               <FormItem>
                 <FormLabel>Employé *</FormLabel>
                 <Select 
@@ -130,8 +141,9 @@ export const SalaryForm: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Salary Amount */}
           <FormField
+            control={form.control}
             name="salaryAmount"
-            render={() => (
+            render={({ field }) => (
               <FormItem>
                 <FormLabel>Montant du salaire (€) *</FormLabel>
                 <FormControl>
@@ -151,8 +163,9 @@ export const SalaryForm: React.FC = () => {
 
           {/* Payment Date */}
           <FormField
+            control={form.control}
             name="paymentDate"
-            render={() => (
+            render={({ field }) => (
               <FormItem>
                 <FormLabel>Date de paiement *</FormLabel>
                 <FormControl>
@@ -170,8 +183,9 @@ export const SalaryForm: React.FC = () => {
 
         {/* Payment Method */}
         <FormField
+          control={form.control}
           name="paymentMethod"
-          render={() => (
+          render={({ field }) => (
             <FormItem>
               <FormLabel>Méthode de paiement</FormLabel>
               <Select value={paymentMethod} onValueChange={setPaymentMethod}>
@@ -193,8 +207,9 @@ export const SalaryForm: React.FC = () => {
 
         {/* Notes */}
         <FormField
+          control={form.control}
           name="notes"
-          render={() => (
+          render={({ field }) => (
             <FormItem>
               <FormLabel>Notes</FormLabel>
               <FormControl>
