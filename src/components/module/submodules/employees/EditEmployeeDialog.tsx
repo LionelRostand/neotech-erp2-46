@@ -8,6 +8,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useForm } from 'react-hook-form';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { User } from 'lucide-react';
+import PhotoUploadField from '@/components/module/submodules/employees/form/PhotoUploadField';
 
 interface EditEmployeeDialogProps {
   open: boolean;
@@ -28,13 +31,13 @@ export const EditEmployeeDialog: React.FC<EditEmployeeDialogProps> = ({
       phone: employee.phone || '',
       position: employee.position || employee.title || '',
       department: employee.department || '',
-      status: employee.status || 'active'
+      status: employee.status || 'active',
+      photo: employee.photoURL || employee.photo || ''
     }
   });
 
   const onSubmit = (data: any) => {
     console.log('Soumission du formulaire avec les données:', data);
-    // Ici, vous implémenteriez la logique pour mettre à jour les informations de l'employé
     toast.success(`Informations de ${data.firstName} ${data.lastName} mises à jour avec succès`);
     onOpenChange(false);
   };
@@ -47,6 +50,19 @@ export const EditEmployeeDialog: React.FC<EditEmployeeDialogProps> = ({
         </DialogHeader>
         
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          <div className="flex flex-col items-center gap-4 mb-6">
+            <Avatar className="h-24 w-24">
+              <AvatarImage 
+                src={employee.photoURL || employee.photo} 
+                alt={`${employee.firstName} ${employee.lastName}`} 
+              />
+              <AvatarFallback>
+                <User className="h-12 w-12 text-gray-400" />
+              </AvatarFallback>
+            </Avatar>
+            <PhotoUploadField defaultPhotoUrl={employee.photoURL || employee.photo} />
+          </div>
+
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="firstName">Prénom</Label>
