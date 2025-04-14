@@ -1,285 +1,181 @@
 
-import React, { useEffect, useState } from 'react';
-import { useForm } from 'react-hook-form';
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/patched-select";
+import React from 'react';
 import { useSalaryForm } from '../hooks/useSalaryForm';
-import { Employee } from '@/types/employee';
-import { Card, CardContent } from '@/components/ui/card';
-import LeaveBalanceCard from './LeaveBalanceCard';
-import { useLeaveBalances } from '@/hooks/useLeaveBalances';
+import { Select } from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
+import { useHrModuleData } from '@/hooks/useHrModuleData';
+import { format } from 'date-fns';
 
 export const SalaryForm: React.FC = () => {
+  const { employees, isLoading } = useHrModuleData();
   const {
-    companies,
-    employees,
-    isLoading,
-    selectedCompanyId,
-    setSelectedCompanyId,
-    employeeName,
-    setEmployeeName,
-    salaryAmount,
-    setSalaryAmount,
-    paymentDate,
-    setPaymentDate,
+    selectedEmployeeId,
+    baseSalary,
+    month,
+    year,
     paymentMethod,
-    setPaymentMethod,
     notes,
+    handleEmployeeSelect,
+    setBaseSalary,
+    setMonth,
+    setYear,
+    setPaymentMethod,
     setNotes,
     handleSubmit
   } = useSalaryForm();
 
-  const [filteredEmployees, setFilteredEmployees] = useState<Employee[]>([]);
-  const [selectedEmployeeId, setSelectedEmployeeId] = useState<string>('');
-  const [leaveBalances, setLeaveBalances] = useState({ 
-    conges: { acquired: 0, taken: 0, balance: 0 },
-    rtt: { acquired: 0, taken: 0, balance: 0 }
-  });
-  
-  const defaultValues = {
-    company: selectedCompanyId,
-    employee: selectedEmployeeId,
-    salaryAmount: salaryAmount,
-    paymentDate: paymentDate,
-    paymentMethod: paymentMethod,
-    notes: notes
-  };
-  
-  const form = useForm({ defaultValues });
+  // Mois de l'année en français
+  const months = [
+    { value: 'Janvier', label: 'Janvier' },
+    { value: 'Février', label: 'Février' },
+    { value: 'Mars', label: 'Mars' },
+    { value: 'Avril', label: 'Avril' },
+    { value: 'Mai', label: 'Mai' },
+    { value: 'Juin', label: 'Juin' },
+    { value: 'Juillet', label: 'Juillet' },
+    { value: 'Août', label: 'Août' },
+    { value: 'Septembre', label: 'Septembre' },
+    { value: 'Octobre', label: 'Octobre' },
+    { value: 'Novembre', label: 'Novembre' },
+    { value: 'Décembre', label: 'Décembre' }
+  ];
 
-  // Get leave balances
-  const { leaveBalances: employeeLeaveBalances } = useLeaveBalances(selectedEmployeeId);
+  // Méthodes de paiement
+  const paymentMethods = [
+    { value: 'Virement', label: 'Virement bancaire' },
+    { value: 'Chèque', label: 'Chèque' },
+    { value: 'Espèces', label: 'Espèces' }
+  ];
 
-  // Filter employees based on selected company
-  useEffect(() => {
-    if (selectedCompanyId && employees?.length) {
-      const filtered = employees.filter(employee => {
-        // Handle both string and object company property
-        if (typeof employee.company === 'string') {
-          return employee.company === selectedCompanyId;
-        } else if (employee.company && typeof employee.company === 'object') {
-          return employee.company.id === selectedCompanyId;
-        }
-        return false;
-      });
-      setFilteredEmployees(filtered);
-    } else {
-      setFilteredEmployees([]);
-    }
-  }, [selectedCompanyId, employees]);
-
-  // Update employee name when an employee is selected
-  const handleEmployeeChange = (employeeId: string) => {
-    setSelectedEmployeeId(employeeId);
-    const selectedEmployee = employees?.find(emp => emp.id === employeeId);
-    if (selectedEmployee) {
-      setEmployeeName(`${selectedEmployee.firstName} ${selectedEmployee.lastName}`);
-      
-      // Set default leave balances
-      const congesBalance = employeeLeaveBalances?.find(b => b.employeeId === employeeId && b.type === 'Congés payés');
-      const rttBalance = employeeLeaveBalances?.find(b => b.employeeId === employeeId && b.type === 'RTT');
-      
-      setLeaveBalances({
-        conges: {
-          acquired: congesBalance?.total || 25,
-          taken: congesBalance?.used || 0,
-          balance: congesBalance?.remaining || 25
-        },
-        rtt: {
-          acquired: rttBalance?.total || 12,
-          taken: rttBalance?.used || 0,
-          balance: rttBalance?.remaining || 12
-        }
-      });
-    }
+  // Formater le montant pour l'affichage
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(amount);
   };
 
-  const onSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    handleSubmit(e);
-  };
+  // Générer les options d'années (année actuelle + 5 années précédentes)
+  const currentYear = new Date().getFullYear();
+  const years = Array.from({ length: 6 }, (_, i) => currentYear - i);
 
   return (
-    <Form {...form}>
-      <form onSubmit={onSubmit} className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* Company Selection */}
-          <FormField
-            control={form.control}
-            name="company"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Entreprise *</FormLabel>
-                <Select 
-                  value={selectedCompanyId}
-                  onValueChange={setSelectedCompanyId}
-                  disabled={isLoading}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Sélectionner une entreprise" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {companies?.map((company) => (
-                      <SelectItem key={company.id} value={company.id}>
-                        {company.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+    <div className="space-y-6">
+      {isLoading ? (
+        <div className="text-center">Chargement des données...</div>
+      ) : (
+        <form className="space-y-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Sélection de l'employé */}
+            <div className="space-y-2">
+              <Label htmlFor="employee">Employé</Label>
+              <select
+                id="employee"
+                className="w-full p-2 border rounded"
+                value={selectedEmployeeId}
+                onChange={(e) => handleEmployeeSelect(e.target.value)}
+              >
+                <option value="">Sélectionnez un employé</option>
+                {employees.map((employee) => (
+                  <option key={employee.id} value={employee.id}>
+                    {employee.firstName} {employee.lastName}
+                  </option>
+                ))}
+              </select>
+            </div>
 
-          {/* Employee Selection */}
-          <FormField
-            control={form.control}
-            name="employee"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Employé *</FormLabel>
-                <Select 
-                  value={selectedEmployeeId}
-                  onValueChange={handleEmployeeChange}
-                  disabled={!selectedCompanyId || filteredEmployees.length === 0}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Sélectionner un employé" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {filteredEmployees.map((employee) => (
-                      <SelectItem key={employee.id} value={employee.id}>
-                        {employee.firstName} {employee.lastName}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
+            {/* Salaire de base */}
+            <div className="space-y-2">
+              <Label htmlFor="baseSalary">Salaire brut</Label>
+              <Input
+                id="baseSalary"
+                type="number"
+                value={baseSalary}
+                onChange={(e) => setBaseSalary(parseFloat(e.target.value))}
+              />
+              {baseSalary > 0 && (
+                <p className="text-sm text-gray-500">
+                  Net estimé: {formatCurrency(baseSalary * 0.78)}
+                </p>
+              )}
+            </div>
 
-        {/* Leave Balance Card */}
-        {selectedEmployeeId && (
-          <LeaveBalanceCard 
-            conges={leaveBalances.conges}
-            rtt={leaveBalances.rtt}
-          />
-        )}
+            {/* Mois */}
+            <div className="space-y-2">
+              <Label htmlFor="month">Mois</Label>
+              <select
+                id="month"
+                className="w-full p-2 border rounded"
+                value={month}
+                onChange={(e) => setMonth(e.target.value)}
+              >
+                <option value="">Sélectionnez un mois</option>
+                {months.map((m) => (
+                  <option key={m.value} value={m.value}>
+                    {m.label}
+                  </option>
+                ))}
+              </select>
+            </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* Salary Amount */}
-          <FormField
-            control={form.control}
-            name="salaryAmount"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Montant du salaire (€) *</FormLabel>
-                <FormControl>
-                  <Input
-                    type="number"
-                    value={salaryAmount}
-                    onChange={(e) => setSalaryAmount(e.target.value)}
-                    placeholder="0.00"
-                    min="0"
-                    step="0.01"
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+            {/* Année */}
+            <div className="space-y-2">
+              <Label htmlFor="year">Année</Label>
+              <select
+                id="year"
+                className="w-full p-2 border rounded"
+                value={year}
+                onChange={(e) => setYear(parseInt(e.target.value))}
+              >
+                {years.map((y) => (
+                  <option key={y} value={y}>
+                    {y}
+                  </option>
+                ))}
+              </select>
+            </div>
 
-          {/* Payment Date */}
-          <FormField
-            control={form.control}
-            name="paymentDate"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Date de paiement *</FormLabel>
-                <FormControl>
-                  <Input
-                    type="date"
-                    value={paymentDate}
-                    onChange={(e) => setPaymentDate(e.target.value)}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
+            {/* Méthode de paiement */}
+            <div className="space-y-2">
+              <Label htmlFor="paymentMethod">Méthode de paiement</Label>
+              <select
+                id="paymentMethod"
+                className="w-full p-2 border rounded"
+                value={paymentMethod}
+                onChange={(e) => setPaymentMethod(e.target.value)}
+              >
+                {paymentMethods.map((method) => (
+                  <option key={method.value} value={method.value}>
+                    {method.label}
+                  </option>
+                ))}
+              </select>
+            </div>
 
-        {/* Payment Method */}
-        <FormField
-          control={form.control}
-          name="paymentMethod"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Méthode de paiement</FormLabel>
-              <Select value={paymentMethod} onValueChange={setPaymentMethod}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Sélectionner une méthode" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value="virement">Virement bancaire</SelectItem>
-                  <SelectItem value="cheque">Chèque</SelectItem>
-                  <SelectItem value="especes">Espèces</SelectItem>
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+            {/* Notes */}
+            <div className="space-y-2 md:col-span-2">
+              <Label htmlFor="notes">Notes</Label>
+              <Textarea
+                id="notes"
+                placeholder="Informations supplémentaires..."
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                rows={3}
+              />
+            </div>
+          </div>
 
-        {/* Notes */}
-        <FormField
-          control={form.control}
-          name="notes"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Notes</FormLabel>
-              <FormControl>
-                <Textarea
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                  placeholder="Informations complémentaires..."
-                  rows={3}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <div className="flex justify-end space-x-2">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => {/* Reset form */}}
-          >
-            Annuler
-          </Button>
-          <Button type="submit">Générer la fiche de paie</Button>
-        </div>
-      </form>
-    </Form>
+          <div className="pt-4">
+            <Button 
+              type="button" 
+              className="w-full md:w-auto" 
+              onClick={handleSubmit}
+            >
+              Générer la fiche de paie
+            </Button>
+          </div>
+        </form>
+      )}
+    </div>
   );
 };

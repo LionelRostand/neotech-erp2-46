@@ -1,8 +1,9 @@
+
 import { useState, useEffect } from 'react';
 import { useEmployeeContract } from '@/hooks/useEmployeeContract';
 import { toast } from 'sonner';
 import { useHrModuleData } from '@/hooks/useHrModuleData';
-import { createDocument } from '@/hooks/firestore/create-operations';
+import { addDocument } from '@/hooks/firestore/create-operations';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import { PaySlip } from '@/types/payslip';
 import { addPayslipToEmployee } from '../services/employeeSalaryService';
@@ -13,6 +14,8 @@ export const useSalaryForm = () => {
   const [baseSalary, setBaseSalary] = useState<number>(0);
   const [month, setMonth] = useState<string>('');
   const [year, setYear] = useState<number>(new Date().getFullYear());
+  const [paymentMethod, setPaymentMethod] = useState<string>('Virement');
+  const [notes, setNotes] = useState<string>('');
 
   // Utiliser le hook pour récupérer le salaire du contrat
   const { salary: contractSalary } = useEmployeeContract(selectedEmployeeId);
@@ -97,13 +100,13 @@ export const useSalaryForm = () => {
       employeeName: employeeName,
       status: 'Généré',
       date: new Date().toISOString(),
-      paymentMethod: 'Virement',
-      notes: 'RAS'
+      paymentMethod: paymentMethod,
+      notes: notes
     };
 
     try {
-      // Créer la fiche de paie dans Firestore
-      const payslipRef = await createDocument(COLLECTIONS.HR.PAYSLIPS, newPaySlip);
+      // Créer la fiche de paie dans Firestore en utilisant addDocument au lieu de createDocument
+      const payslipRef = await addDocument(COLLECTIONS.HR.PAYSLIPS, newPaySlip);
       const payslipId = payslipRef.id;
 
       // Associer la fiche de paie à l'employé
@@ -125,10 +128,14 @@ export const useSalaryForm = () => {
     baseSalary,
     month,
     year,
+    paymentMethod,
+    notes,
     handleEmployeeSelect,
     setBaseSalary,
     setMonth,
     setYear,
+    setPaymentMethod,
+    setNotes,
     handleSubmit
   };
 };
