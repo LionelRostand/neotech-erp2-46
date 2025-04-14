@@ -1,34 +1,51 @@
 
-import React from 'react';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from '@/components/ui/dialog';
+import React, { useState } from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Evaluation } from '@/hooks/useEvaluationsData';
+import { toast } from 'sonner';
 import { AlertTriangle } from 'lucide-react';
+import { COLLECTIONS } from '@/lib/firebase-collections';
+import { deleteDocument } from '@/hooks/firestore/delete-operations';
 
 interface DeleteEvaluationDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  evaluation: Evaluation | null;
-  onDelete: () => void;
+  evaluationId: string;
+  onSuccess?: () => void;
 }
 
-const DeleteEvaluationDialog: React.FC<DeleteEvaluationDialogProps> = ({
-  open,
-  onOpenChange,
-  evaluation,
-  onDelete,
+const DeleteEvaluationDialog: React.FC<DeleteEvaluationDialogProps> = ({ 
+  open, 
+  onOpenChange, 
+  evaluationId,
+  onSuccess
 }) => {
-  // Early return if evaluation is null to prevent rendering errors
-  if (!evaluation) {
-    return null;
-  }
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleDelete = async () => {
+    if (!evaluationId) {
+      toast.error('ID d\'évaluation manquant');
+      return;
+    }
+
+    setIsDeleting(true);
+    
+    try {
+      await deleteDocument(COLLECTIONS.HR.EVALUATIONS, evaluationId);
+      toast.success('L\'évaluation a été supprimée avec succès');
+      
+      if (onSuccess) {
+        onSuccess();
+      }
+      
+      onOpenChange(false);
+    } catch (error) {
+      console.error('Erreur lors de la suppression de l\'évaluation:', error);
+      toast.error('Erreur lors de la suppression de l\'évaluation');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -40,24 +57,29 @@ const DeleteEvaluationDialog: React.FC<DeleteEvaluationDialogProps> = ({
           </DialogDescription>
         </DialogHeader>
         
-        <div className="flex items-center p-4 my-4 border border-red-100 bg-red-50 rounded-md">
-          <AlertTriangle className="h-5 w-5 text-red-500 mr-3" />
-          <div>
-            <p className="font-medium text-red-800">Évaluation de {evaluation.employeeName || 'Employé inconnu'}</p>
-            <p className="text-red-700 text-sm">Date: {evaluation.date || 'Non spécifiée'}</p>
-            <p className="text-red-700 text-sm">Statut: {evaluation.status || 'Non spécifié'}</p>
+        <div className="py-4">
+          <div className="flex items-center p-4 bg-amber-50 text-amber-700 rounded-md">
+            <AlertTriangle className="h-5 w-5 mr-2 flex-shrink-0" />
+            <p className="text-sm">
+              La suppression de cette évaluation entraînera la perte définitive de toutes les données associées.
+            </p>
           </div>
         </div>
         
         <DialogFooter>
-          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+          <Button 
+            variant="outline" 
+            onClick={() => onOpenChange(false)}
+            disabled={isDeleting}
+          >
             Annuler
           </Button>
           <Button 
             variant="destructive" 
-            onClick={onDelete}
+            onClick={handleDelete}
+            disabled={isDeleting}
           >
-            Supprimer
+            {isDeleting ? 'Suppression...' : 'Supprimer'}
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -1,30 +1,74 @@
-import React from 'react';
-import { Button } from '@/components/ui/button';
-import { Check, Filter } from 'lucide-react';
 
-export interface EvaluationsFilterProps {
-  onFilterApplied: (filtered: any) => void;
+import React, { useState } from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
+interface FilterValues {
+  status: string;
 }
 
-const EvaluationsFilter: React.FC<EvaluationsFilterProps> = ({ onFilterApplied }) => {
-  // Placeholder for filters functionality
+interface EvaluationsFilterProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  currentFilters: FilterValues;
+  onApplyFilters: (filters: FilterValues) => void;
+}
+
+const EvaluationsFilter: React.FC<EvaluationsFilterProps> = ({ 
+  open, 
+  onOpenChange, 
+  currentFilters,
+  onApplyFilters
+}) => {
+  const [status, setStatus] = useState(currentFilters.status || '');
+
   const handleApplyFilters = () => {
-    // Apply filters logic
-    onFilterApplied([]);
+    onApplyFilters({ status });
+    onOpenChange(false);
+  };
+
+  const handleReset = () => {
+    setStatus('');
   };
 
   return (
-    <div className="flex items-center space-x-2">
-      <Button 
-        variant="outline" 
-        size="sm" 
-        className="flex items-center gap-2"
-        onClick={handleApplyFilters}
-      >
-        <Filter className="h-4 w-4" />
-        <span>Filtrer</span>
-      </Button>
-    </div>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>Filtrer les évaluations</DialogTitle>
+        </DialogHeader>
+        
+        <div className="py-4 space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="status">Statut</Label>
+            <Select value={status} onValueChange={setStatus}>
+              <SelectTrigger id="status">
+                <SelectValue placeholder="Tous les statuts" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">Tous les statuts</SelectItem>
+                <SelectItem value="Planifiée">Planifiée</SelectItem>
+                <SelectItem value="Complétée">Complétée</SelectItem>
+                <SelectItem value="Annulée">Annulée</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+        
+        <DialogFooter className="flex justify-between">
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={handleReset}>
+              Réinitialiser
+            </Button>
+          </div>
+          <Button onClick={handleApplyFilters}>
+            Appliquer les filtres
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 };
 
