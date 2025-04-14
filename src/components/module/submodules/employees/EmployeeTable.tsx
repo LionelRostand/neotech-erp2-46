@@ -1,61 +1,86 @@
 
-import React from 'react';
-import { 
+import React, { useState } from 'react';
+import {
   Table,
+  TableBody,
+  TableCell,
+  TableHead,
   TableHeader,
   TableRow,
-  TableHead,
-  TableBody,
-  TableCell
-} from '@/components/ui/table';
-import { Button } from '@/components/ui/button';
-import { Edit, Trash2, MoreHorizontal } from 'lucide-react';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Employee } from '@/types/hr-types';
+} from "@/components/ui/table";
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuTrigger 
+} from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
+import { MoreHorizontal, FileEdit, Trash2, Eye, User } from "lucide-react";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Employee } from '@/types/employee';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import EmployeeDetails from './EmployeeDetails';
+import { EditEmployeeDialog } from './EditEmployeeDialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { toast } from 'sonner';
 
 interface EmployeeTableProps {
   employees: Employee[];
-  isLoading: boolean;
-  onDelete: (employee: Employee) => void;
-  onEdit?: (employee: Employee) => void;
+  isLoading?: boolean;
+  onDelete?: (employee: Employee) => void;
 }
 
-const EmployeeTable: React.FC<EmployeeTableProps> = ({ 
-  employees, 
-  isLoading, 
-  onDelete,
-  onEdit 
+const EmployeeTable: React.FC<EmployeeTableProps> = ({
+  employees,
+  isLoading = false,
+  onDelete
 }) => {
+  const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
+  const [viewDetailsOpen, setViewDetailsOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+
+  const handleViewDetails = (employee: Employee) => {
+    setSelectedEmployee(employee);
+    setViewDetailsOpen(true);
+  };
+
+  const handleEditEmployee = (employee: Employee) => {
+    setSelectedEmployee(employee);
+    setEditDialogOpen(true);
+  };
+
+  const handleDeleteEmployee = (employee: Employee) => {
+    setSelectedEmployee(employee);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = () => {
+    if (selectedEmployee && onDelete) {
+      onDelete(selectedEmployee);
+    }
+    setDeleteDialogOpen(false);
+  };
+
+  const handleExportPdf = () => {
+    toast.success('Export PDF terminé');
+  };
+
   if (isLoading) {
-    return (
-      <div className="w-full flex justify-center p-8">
-        <div className="animate-pulse text-center">
-          <p className="text-gray-500">Chargement des données...</p>
-        </div>
-      </div>
-    );
+    return <div className="text-center py-10">Chargement des données...</div>;
   }
 
   if (employees.length === 0) {
-    return (
-      <div className="w-full flex justify-center p-8">
-        <div className="text-center">
-          <p className="text-gray-500">Aucun employé trouvé</p>
-        </div>
-      </div>
-    );
+    return <div className="text-center py-10">Aucun employé trouvé.</div>;
   }
 
   return (
-    <div className="w-full overflow-auto">
+    <>
       <Table>
         <TableHeader>
           <TableRow>
+            <TableHead className="w-[50px]"></TableHead>
             <TableHead>Nom</TableHead>
             <TableHead>Email</TableHead>
             <TableHead>Poste</TableHead>
@@ -67,45 +92,50 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({
         <TableBody>
           {employees.map((employee) => (
             <TableRow key={employee.id}>
-              <TableCell className="font-medium">
-                {employee.firstName} {employee.lastName}
+              <TableCell className="pr-0">
+                <Avatar className="h-8 w-8">
+                  <AvatarImage src={employee.photoURL || employee.photo} alt={`${employee.firstName} ${employee.lastName}`} />
+                  <AvatarFallback>
+                    <User className="h-4 w-4" />
+                  </AvatarFallback>
+                </Avatar>
               </TableCell>
+              <TableCell className="font-medium">{employee.firstName} {employee.lastName}</TableCell>
               <TableCell>{employee.email}</TableCell>
               <TableCell>{employee.position || employee.title}</TableCell>
               <TableCell>{employee.department}</TableCell>
               <TableCell>
-                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                  employee.status === 'active' || employee.status === 'Actif' 
-                    ? 'bg-green-100 text-green-800' 
-                    : employee.status === 'onLeave' || employee.status === 'En congé'
-                    ? 'bg-yellow-100 text-yellow-800'
-                    : 'bg-gray-100 text-gray-800'
-                }`}>
-                  {employee.status === 'active' ? 'Actif' : 
-                   employee.status === 'inactive' ? 'Inactif' : 
-                   employee.status === 'onLeave' ? 'En congé' : 
-                   employee.status || 'Indéfini'}
-                </span>
+                {employee.status === 'active' || employee.status === 'Actif' ? (
+                  <Badge className="bg-green-500 hover:bg-green-600">Actif</Badge>
+                ) : employee.status === 'onLeave' || employee.status === 'En congé' ? (
+                  <Badge className="bg-yellow-500 hover:bg-yellow-600">En congé</Badge>
+                ) : (
+                  <Badge variant="outline">Inactif</Badge>
+                )}
               </TableCell>
               <TableCell className="text-right">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="sm">
+                    <Button variant="ghost" className="h-8 w-8 p-0">
+                      <span className="sr-only">Ouvrir menu</span>
                       <MoreHorizontal className="h-4 w-4" />
-                      <span className="sr-only">Menu</span>
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
-                    {onEdit && (
-                      <DropdownMenuItem onClick={() => onEdit(employee)}>
-                        <Edit className="mr-2 h-4 w-4" />
-                        Modifier
+                    <DropdownMenuItem onClick={() => handleViewDetails(employee)}>
+                      <Eye className="mr-2 h-4 w-4" />
+                      Voir détails
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleEditEmployee(employee)}>
+                      <FileEdit className="mr-2 h-4 w-4" />
+                      Modifier
+                    </DropdownMenuItem>
+                    {onDelete && (
+                      <DropdownMenuItem onClick={() => handleDeleteEmployee(employee)}>
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        Supprimer
                       </DropdownMenuItem>
                     )}
-                    <DropdownMenuItem onClick={() => onDelete(employee)}>
-                      <Trash2 className="mr-2 h-4 w-4" />
-                      Supprimer
-                    </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               </TableCell>
@@ -113,7 +143,51 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({
           ))}
         </TableBody>
       </Table>
-    </div>
+
+      {selectedEmployee && (
+        <>
+          <Dialog open={viewDetailsOpen} onOpenChange={setViewDetailsOpen}>
+            <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>Profil de l'employé</DialogTitle>
+              </DialogHeader>
+              <EmployeeDetails 
+                employee={selectedEmployee} 
+                onExportPdf={handleExportPdf} 
+                onEdit={() => {
+                  setViewDetailsOpen(false);
+                  setEditDialogOpen(true);
+                }}
+              />
+            </DialogContent>
+          </Dialog>
+
+          <EditEmployeeDialog
+            open={editDialogOpen}
+            onOpenChange={setEditDialogOpen}
+            employee={selectedEmployee}
+          />
+
+          <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Confirmation de suppression</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Êtes-vous sûr de vouloir supprimer l'employé {selectedEmployee.firstName} {selectedEmployee.lastName} ? 
+                  Cette action est irréversible.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Annuler</AlertDialogCancel>
+                <AlertDialogAction onClick={confirmDelete} className="bg-red-500 hover:bg-red-600">
+                  Supprimer
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </>
+      )}
+    </>
   );
 };
 

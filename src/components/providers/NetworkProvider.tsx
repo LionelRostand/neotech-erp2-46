@@ -1,6 +1,6 @@
 
-import React, { useEffect } from 'react';
-import { initializeNetworkListeners, cleanupNetworkListeners } from '@/hooks/firestore/network-operations';
+import React from 'react';
+import { useOfflineOperations } from '@/hooks/firestore/network-operations';
 
 interface NetworkProviderProps {
   children: React.ReactNode;
@@ -11,15 +11,8 @@ interface NetworkProviderProps {
  * This ensures proper lifecycle of network event listeners
  */
 export const NetworkProvider: React.FC<NetworkProviderProps> = ({ children }) => {
-  useEffect(() => {
-    // Initialize network listeners when component mounts
-    initializeNetworkListeners();
-    
-    // Clean up listeners when component unmounts
-    return () => {
-      cleanupNetworkListeners();
-    };
-  }, []);
+  // Utiliser le hook pour configurer les listeners réseau
+  useOfflineOperations();
   
   return <>{children}</>;
 };
