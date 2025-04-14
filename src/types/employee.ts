@@ -1,4 +1,3 @@
-
 import { Company } from '@/components/module/submodules/companies/types';
 
 export interface EmployeeAddress {
@@ -120,4 +119,14 @@ export interface Employee {
   evaluations?: Evaluation[]; // Nouvelle propriété pour les évaluations
   isManager?: boolean; // Added isManager property to fix type errors
   forceManager?: boolean; // Added forceManager property to match d.ts file
+  conges?: {
+    acquired: number;
+    taken: number;
+    balance: number;
+  };
+  rtt?: {
+    acquired: number;
+    taken: number;
+    balance: number;
+  };
 }
