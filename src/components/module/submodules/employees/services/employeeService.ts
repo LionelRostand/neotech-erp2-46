@@ -1,7 +1,20 @@
-import { db } from '@/firebase';
+
+import { db } from '@/lib/firebase';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import { doc, getDoc, updateDoc, collection, getDocs, addDoc, deleteDoc, DocumentReference } from 'firebase/firestore';
-import { Employee, EmployeeFormValues } from '@/types/employee';
+import { Employee } from '@/types/employee';
+
+// Define the EmployeeFormValues type if it doesn't exist
+export interface EmployeeFormValues {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  position: string;
+  department: string;
+  hireDate: string;
+  [key: string]: any;
+}
 
 // Function to fetch an employee by ID
 export const getEmployee = async (id: string): Promise<Employee | null> => {
@@ -83,6 +96,17 @@ export const deleteEmployee = async (id: string): Promise<void> => {
     console.log("Employee deleted successfully!");
   } catch (error) {
     console.error("Error deleting employee:", error);
+    throw error;
+  }
+};
+
+// Add a function to update employee skills
+export const updateEmployeeSkills = async (employeeId: string, skills: any[]): Promise<void> => {
+  try {
+    await updateEmployee(employeeId, { skills });
+    console.log("Employee skills updated successfully!");
+  } catch (error) {
+    console.error("Error updating employee skills:", error);
     throw error;
   }
 };

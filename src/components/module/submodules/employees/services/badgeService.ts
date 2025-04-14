@@ -1,6 +1,7 @@
-import { db } from '@/firebase';
+
+import { db } from '@/lib/firebase';
 import { COLLECTIONS } from '@/lib/firebase-collections';
-import { doc, getDoc, setDoc, collection, query, getDocs, deleteDoc, DocumentReference } from 'firebase/firestore';
+import { doc, getDoc, setDoc, collection, query, getDocs, deleteDoc } from 'firebase/firestore';
 import { BadgeData } from '../badges/BadgeTypes';
 
 // Function to fetch a badge by ID
@@ -99,3 +100,19 @@ export const getAllBadges = async (): Promise<BadgeData[]> => {
     return [];
   }
 };
+
+// Helper function to delete a document (used in EmployeesBadges.tsx)
+export const deleteDocument = async (collectionPath: string, documentId: string): Promise<boolean> => {
+  try {
+    const docRef = doc(db, collectionPath, documentId);
+    await deleteDoc(docRef);
+    return true;
+  } catch (error) {
+    console.error(`Error deleting document from ${collectionPath}:`, error);
+    return false;
+  }
+};
+
+// Aliases for compatibility with EmployeesBadges component
+export const getBadges = getAllBadges;
+export const addBadge = createBadge;
