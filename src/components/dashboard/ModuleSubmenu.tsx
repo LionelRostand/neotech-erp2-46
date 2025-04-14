@@ -17,7 +17,6 @@ const ModuleSubmenu: React.FC<ModuleSubmenuProps> = ({
 }) => {
   if (!submodules || submodules.length === 0) return null;
   
-  // Groupes de sous-modules
   const getModuleGroup = (id: string) => {
     if (id.startsWith('health-')) {
       if (['health-patients', 'health-appointments'].includes(id)) {
@@ -49,7 +48,6 @@ const ModuleSubmenu: React.FC<ModuleSubmenuProps> = ({
     return null;
   };
 
-  // Update the group colors mapping
   const getGroupColor = (group: string | null) => {
     switch (group) {
       case 'personnel':
@@ -67,10 +65,8 @@ const ModuleSubmenu: React.FC<ModuleSubmenuProps> = ({
     }
   };
 
-  // Vérifier s'il s'agit du module employés pour améliorer l'affichage
   const isEmployeesModule = submodules.some(sm => sm.id.startsWith('employees-'));
   
-  // Si c'est le module employés, on regroupe les sous-modules
   if (isEmployeesModule) {
     const groupedModules: Record<string, SubModule[]> = {
       'personnel': [],
@@ -81,7 +77,6 @@ const ModuleSubmenu: React.FC<ModuleSubmenuProps> = ({
       'autres': []
     };
     
-    // Grouper les sous-modules par catégorie
     submodules.forEach(submodule => {
       const group = getModuleGroup(submodule.id);
       if (group) {
@@ -91,7 +86,6 @@ const ModuleSubmenu: React.FC<ModuleSubmenuProps> = ({
       }
     });
     
-    // Noms des groupes traduits en français
     const groupNames: Record<string, string> = {
       'personnel': 'Personnel',
       'temps': 'Gestion du temps',
@@ -142,7 +136,6 @@ const ModuleSubmenu: React.FC<ModuleSubmenuProps> = ({
     );
   }
   
-  // Pour les autres modules, on garde le style original
   return (
     <div className="pl-8 space-y-1 mt-1">
       {submodules.map((submodule) => {
@@ -156,7 +149,7 @@ const ModuleSubmenu: React.FC<ModuleSubmenuProps> = ({
                 <div
                   className={`flex items-center px-2 py-1.5 text-sm rounded-md w-full cursor-pointer group ${
                     location.pathname === submodule.href 
-                      ? 'bg-gray-100 text-gray-900 font-medium' 
+                      ? groupColor
                       : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
                   }`}
                   onClick={() => onNavigate(submodule.href)}
@@ -164,18 +157,14 @@ const ModuleSubmenu: React.FC<ModuleSubmenuProps> = ({
                   <span className="mr-2 text-gray-500 group-hover:text-gray-700">{submodule.icon}</span>
                   <span className="whitespace-nowrap flex-grow">{submodule.name}</span>
                   
-                  {/* Indicateurs d'état (nouveauté, priorité) */}
-                  <div className="flex items-center gap-1">
-                    {/* Badge indiquant le groupe fonctionnel */}
-                    {group && (
-                      <Badge 
-                        variant="outline" 
-                        className={`text-[10px] h-5 ${groupColor} hidden group-hover:inline-flex`}
-                      >
-                        {group}
-                      </Badge>
-                    )}
-                  </div>
+                  {group && (
+                    <Badge 
+                      variant="outline" 
+                      className={`text-[10px] h-5 ${groupColor} hidden group-hover:inline-flex`}
+                    >
+                      {group}
+                    </Badge>
+                  )}
                 </div>
               </TooltipTrigger>
               <TooltipContent side="right" className="max-w-xs">
