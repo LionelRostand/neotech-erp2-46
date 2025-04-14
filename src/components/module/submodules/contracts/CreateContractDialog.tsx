@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { toast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { addDocument } from '@/hooks/firestore/firestore-utils';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import ContractForm from './ContractForm';
@@ -36,20 +36,12 @@ const CreateContractDialog: React.FC<CreateContractDialogProps> = ({
   const handleSubmit = async () => {
     // Validation de base
     if (!formData.employeeId) {
-      toast({
-        title: "Champ requis",
-        description: "Veuillez sélectionner un employé.",
-        variant: "destructive",
-      });
+      toast.error("Veuillez sélectionner un employé.");
       return;
     }
 
     if (!formData.position) {
-      toast({
-        title: "Champ requis",
-        description: "Veuillez indiquer le poste.",
-        variant: "destructive",
-      });
+      toast.error("Veuillez indiquer le poste.");
       return;
     }
 
@@ -71,10 +63,7 @@ const CreateContractDialog: React.FC<CreateContractDialogProps> = ({
       // Ajouter le contrat à Firebase
       await addDocument(COLLECTIONS.HR.CONTRACTS, contractData);
       
-      toast({
-        title: "Contrat créé",
-        description: "Le contrat a été créé avec succès.",
-      });
+      toast.success("Le contrat a été créé avec succès.");
       
       // Réinitialiser le formulaire et fermer le dialogue
       setFormData({
@@ -91,11 +80,7 @@ const CreateContractDialog: React.FC<CreateContractDialogProps> = ({
       onOpenChange(false);
     } catch (error) {
       console.error("Erreur lors de la création du contrat:", error);
-      toast({
-        title: "Erreur",
-        description: "Une erreur est survenue lors de la création du contrat.",
-        variant: "destructive",
-      });
+      toast.error("Une erreur est survenue lors de la création du contrat.");
     } finally {
       setIsSubmitting(false);
     }

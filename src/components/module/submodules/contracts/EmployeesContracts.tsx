@@ -116,6 +116,13 @@ const EmployeesContracts = () => {
     },
   ];
 
+  // Adapter les colonnes au format attendu par DataTable
+  const adaptedColumns = columns.map(col => ({
+    key: col.accessorKey?.toString() || col.id || '',
+    header: col.header?.toString() || '',
+    cell: col.cell ? col.cell : undefined
+  }));
+
   return (
     <div className="space-y-4 p-4">
       <div className="flex justify-between items-center">
@@ -137,10 +144,10 @@ const EmployeesContracts = () => {
             <div className="text-red-500 p-4">Erreur: Impossible de charger les contrats</div>
           ) : (
             <DataTable 
-              columns={columns} 
+              title="Liste des contrats"
+              columns={adaptedColumns} 
               data={contracts} 
-              searchColumn="employeeName"
-              searchPlaceholder="Rechercher un employé..."
+              onRowClick={(contract) => handleViewDetails(contract as Contract)}
             />
           )}
         </CardContent>
