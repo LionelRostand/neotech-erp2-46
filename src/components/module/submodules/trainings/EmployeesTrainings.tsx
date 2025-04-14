@@ -1,353 +1,416 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { 
-  AlertCircle, 
-  Award, 
-  Calendar, 
-  CheckCircle2, 
-  Clock, 
-  FileText, 
-  GraduationCap, 
-  Plus, 
-  RefreshCw, 
-  Search, 
-  User 
-} from 'lucide-react';
-import { Input } from '@/components/ui/input';
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from '@/components/ui/select';
-import { toast } from 'sonner';
-
-import SubmoduleHeader from '../SubmoduleHeader';
-import StatusBadge from './StatusBadge';
-import CreateTrainingDialog from './CreateTrainingDialog';
-
+import { PlusCircle, FileText, Filter } from 'lucide-react';
 import { useTrainingsData, Training } from '@/hooks/useTrainingsData';
 import { useEmployeeData } from '@/hooks/useEmployeeData';
-import { DataTable } from '@/components/DataTable';
+import SubmoduleHeader from '../SubmoduleHeader';
+import CreateTrainingDialog from './CreateTrainingDialog';
+import StatusBadge from './StatusBadge';
+import { toast } from 'sonner';
+import { 
+  Card, 
+  CardContent, 
+  CardDescription, 
+  CardHeader, 
+  CardTitle 
+} from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { 
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
+} from '@/components/ui/table';
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger
+} from '@/components/ui/dropdown-menu';
 import { Column } from '@/types/table-types';
+import DataTable from '@/components/DataTable';
 
-const EmployeesTrainings: React.FC = () => {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [typeFilter, setTypeFilter] = useState('all');
-  const [tabValue, setTabValue] = useState('all');
-  const [openCreateDialog, setOpenCreateDialog] = useState(false);
+const EmployeesTrainings = () => {
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
-  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [activeTab, setActiveTab] = useState('all');
+  const [filterText, setFilterText] = useState('');
+  const [filterType, setFilterType] = useState('');
   
   const { trainings, stats, isLoading } = useTrainingsData(refreshTrigger);
   const { employees } = useEmployeeData();
   
-  // Filter trainings based on search term, status and type
-  const filteredTrainings = React.useMemo(() => {
+  // Filter trainings based on active tab and filters
+  const filteredTrainings = useMemo(() => {
     if (!trainings) return [];
     
-    return trainings.filter(training => {
-      const matchesSearch = 
-        searchTerm === '' ||
-        training.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        training.employeeName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        training.provider?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        training.location?.toLowerCase().includes(searchTerm.toLowerCase());
-        
-      const matchesStatus = 
-        statusFilter === 'all' || 
-        training.status === statusFilter;
-        
-      const matchesType = 
-        typeFilter === 'all' || 
-        training.type === typeFilter;
-        
-      const matchesTab = 
-        tabValue === 'all' || 
-        (tabValue === 'current' && (training.status === 'En cours' || training.status === 'Planifiée')) || 
-        (tabValue === 'completed' && training.status === 'Terminée') || 
-        (tabValue === 'cancelled' && training.status === 'Annulée');
-        
-      return matchesSearch && matchesStatus && matchesType && matchesTab;
-    });
-  }, [trainings, searchTerm, statusFilter, typeFilter, tabValue]);
-  
-  const getTrainingStatusElement = (status: "Planifiée" | "En cours" | "Terminée" | "Annulée") => {
-    return <StatusBadge status={status} />;
-  };
-  
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(e.target.value);
-  };
-  
-  const handleStatusFilterChange = (value: string) => {
-    setStatusFilter(value);
-  };
-  
-  const handleTypeFilterChange = (value: string) => {
-    setTypeFilter(value);
-  };
-  
-  const handleTabChange = (value: string) => {
-    setTabValue(value);
-  };
-  
-  const handleCreateTraining = () => {
-    setOpenCreateDialog(true);
-  };
-
-  const handleCloseDialog = () => {
-    setOpenCreateDialog(false);
-  };
-
-  const handleTrainingCreated = () => {
-    // Refresh the trainings data when a new training is created
-    setRefreshTrigger(prev => prev + 1);
-    toast.success('Formation créée avec succès');
-    setOpenCreateDialog(false);
-  };
-  
-  const handleRefresh = async () => {
-    setIsRefreshing(true);
-    setRefreshTrigger(prev => prev + 1);
+    let filtered = [...trainings];
     
-    // Simulated delay for refresh animation
-    setTimeout(() => {
-      setIsRefreshing(false);
-      toast.success('Données actualisées avec succès');
-    }, 800);
+    // Apply tab filter
+    if (activeTab !== 'all') {
+      const statusMap: Record<string, string> = {
+        'planned': 'Planifiée',
+        'inProgress': 'En cours',
+        'completed': 'Terminée',
+        'cancelled': 'Annulée'
+      };
+      
+      filtered = filtered.filter(training => training.status === statusMap[activeTab]);
+    }
+    
+    // Apply text filter (on title or employee name)
+    if (filterText) {
+      const searchTerm = filterText.toLowerCase();
+      filtered = filtered.filter(training => 
+        training.title.toLowerCase().includes(searchTerm) || 
+        (training.employeeName && training.employeeName.toLowerCase().includes(searchTerm))
+      );
+    }
+    
+    // Apply type filter
+    if (filterType) {
+      filtered = filtered.filter(training => training.type === filterType);
+    }
+    
+    return filtered;
+  }, [trainings, activeTab, filterText, filterType]);
+  
+  // Handle closing the create dialog
+  const handleCloseDialog = () => {
+    setIsCreateDialogOpen(false);
   };
   
-  // Define the columns for the DataTable
-  const columns: Column[] = [
-    {
-      key: 'title',
+  // Handle training created successfully
+  const handleTrainingCreated = () => {
+    setRefreshTrigger(prev => prev + 1);
+    setIsCreateDialogOpen(false);
+    toast.success('Formation créée avec succès');
+  };
+  
+  // Create a status badge with appropriate variant
+  const renderStatusBadge = (status: 'Planifiée' | 'En cours' | 'Terminée' | 'Annulée') => {
+    return (
+      <StatusBadge status={status} />
+    );
+  };
+  
+  // Format the training type for display
+  const formatTrainingType = (type: string) => {
+    const typeMap: Record<string, string> = {
+      'technical': 'Technique',
+      'management': 'Management',
+      'soft_skills': 'Soft Skills',
+      'certification': 'Certification',
+      'compliance': 'Conformité',
+      'other': 'Autre'
+    };
+    
+    return typeMap[type] || type;
+  };
+  
+  // Column definitions for the "All" tab
+  const allColumns: Column[] = [
+    { 
+      key: 'title', 
       header: 'Formation',
-      cell: ({ row }) => {
-        const training = row.original as Training;
-        return training.title;
-      },
-      enableSorting: true,
+      cell: (props) => props.row.original.title
     },
-    {
-      key: 'employee',
+    { 
+      key: 'employeeName', 
       header: 'Employé',
-      cell: ({ row }) => {
-        const training = row.original as Training;
-        return training.employeeName || 'Non assigné';
-      },
-      enableSorting: true,
+      cell: (props) => props.row.original.employeeName || 'Non assigné'
     },
-    {
-      key: 'type',
+    { 
+      key: 'type', 
       header: 'Type',
-      cell: ({ row }) => {
-        const training = row.original as Training;
-        return training.type;
-      },
-      enableSorting: true,
+      cell: (props) => formatTrainingType(props.row.original.type)
     },
-    {
-      key: 'startDate',
+    { 
+      key: 'startDate', 
       header: 'Date de début',
-      cell: ({ row }) => {
-        const training = row.original as Training;
-        return training.startDate;
-      },
-      enableSorting: true,
+      cell: (props) => props.row.original.startDate
     },
-    {
-      key: 'endDate',
-      header: 'Date de fin',
-      cell: ({ row }) => {
-        const training = row.original as Training;
-        return training.endDate || 'Non définie';
-      },
-      enableSorting: true,
-    },
-    {
-      key: 'status',
+    { 
+      key: 'status', 
       header: 'Statut',
-      cell: ({ row }) => {
-        const training = row.original as Training;
-        return getTrainingStatusElement(training.status);
-      },
-      enableSorting: true,
+      cell: (props) => renderStatusBadge(props.row.original.status)
+    }
+  ];
+  
+  // Column definitions for the "Planifiée" tab
+  const plannedColumns: Column[] = [
+    { 
+      key: 'title', 
+      header: 'Formation',
+      cell: (props) => props.row.original.title
     },
+    { 
+      key: 'employeeName', 
+      header: 'Employé',
+      cell: (props) => props.row.original.employeeName || 'Non assigné'
+    },
+    { 
+      key: 'type', 
+      header: 'Type',
+      cell: (props) => formatTrainingType(props.row.original.type)
+    },
+    { 
+      key: 'startDate', 
+      header: 'Date de début',
+      cell: (props) => props.row.original.startDate
+    },
+    { 
+      key: 'provider', 
+      header: 'Prestataire',
+      cell: (props) => props.row.original.provider || 'Non spécifié'
+    }
   ];
   
-  const typeOptions = [
-    { value: 'all', label: 'Tous les types' },
-    { value: 'technical', label: 'Technique' },
-    { value: 'management', label: 'Management' },
-    { value: 'soft_skills', label: 'Soft Skills' },
-    { value: 'certification', label: 'Certification' },
-    { value: 'compliance', label: 'Conformité' },
-    { value: 'other', label: 'Autre' },
+  // Column definitions for the "En cours" tab
+  const inProgressColumns: Column[] = [
+    { 
+      key: 'title', 
+      header: 'Formation',
+      cell: (props) => props.row.original.title
+    },
+    { 
+      key: 'employeeName', 
+      header: 'Employé',
+      cell: (props) => props.row.original.employeeName || 'Non assigné'
+    },
+    { 
+      key: 'startDate', 
+      header: 'Date de début',
+      cell: (props) => props.row.original.startDate
+    },
+    { 
+      key: 'endDate', 
+      header: 'Date de fin',
+      cell: (props) => props.row.original.endDate || 'Non spécifiée'
+    },
+    { 
+      key: 'provider', 
+      header: 'Prestataire',
+      cell: (props) => props.row.original.provider || 'Non spécifié'
+    }
   ];
   
-  const statusOptions = [
-    { value: 'all', label: 'Tous les statuts' },
-    { value: 'Planifiée', label: 'Planifiée' },
-    { value: 'En cours', label: 'En cours' },
-    { value: 'Terminée', label: 'Terminée' },
-    { value: 'Annulée', label: 'Annulée' },
+  // Column definitions for the "Terminée" tab
+  const completedColumns: Column[] = [
+    { 
+      key: 'title', 
+      header: 'Formation',
+      cell: (props) => props.row.original.title
+    },
+    { 
+      key: 'employeeName', 
+      header: 'Employé',
+      cell: (props) => props.row.original.employeeName || 'Non assigné'
+    },
+    { 
+      key: 'type', 
+      header: 'Type',
+      cell: (props) => formatTrainingType(props.row.original.type)
+    },
+    { 
+      key: 'endDate', 
+      header: 'Date de fin',
+      cell: (props) => props.row.original.endDate || 'Non spécifiée'
+    },
+    { 
+      key: 'certificate', 
+      header: 'Certification',
+      cell: (props) => props.row.original.certificate ? 'Oui' : 'Non'
+    }
   ];
+  
+  // Column definitions for the "Annulée" tab
+  const cancelledColumns: Column[] = [
+    { 
+      key: 'title', 
+      header: 'Formation',
+      cell: (props) => props.row.original.title
+    },
+    { 
+      key: 'employeeName', 
+      header: 'Employé',
+      cell: (props) => props.row.original.employeeName || 'Non assigné'
+    },
+    { 
+      key: 'type', 
+      header: 'Type',
+      cell: (props) => formatTrainingType(props.row.original.type)
+    },
+    { 
+      key: 'startDate', 
+      header: 'Date planifiée',
+      cell: (props) => props.row.original.startDate
+    },
+    { 
+      key: 'provider', 
+      header: 'Prestataire',
+      cell: (props) => props.row.original.provider || 'Non spécifié'
+    }
+  ];
+  
+  // Determine which columns to use based on the active tab
+  const getColumnsForTab = () => {
+    switch(activeTab) {
+      case 'planned':
+        return plannedColumns;
+      case 'inProgress':
+        return inProgressColumns;
+      case 'completed':
+        return completedColumns;
+      case 'cancelled':
+        return cancelledColumns;
+      default:
+        return allColumns;
+    }
+  };
   
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-3xl font-bold tracking-tight">Formations</h2>
-        <div className="flex space-x-2">
-          <Button variant="outline" onClick={handleRefresh} disabled={isLoading || isRefreshing}>
-            <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? "animate-spin" : ""}`} />
-            Actualiser
-          </Button>
-          <Button onClick={handleCreateTraining}>
-            <Plus className="h-4 w-4 mr-2" />
+      <SubmoduleHeader 
+        title="Gestion des formations" 
+        description="Gérez les formations des employés" 
+      />
+      
+      {/* Statistics Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg font-medium">Total</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold">{stats.total}</div>
+            <p className="text-sm text-muted-foreground">formations</p>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg font-medium">Planifiées</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold">{stats.planned}</div>
+            <p className="text-sm text-muted-foreground">formations à venir</p>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg font-medium">En cours</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold">{stats.inProgress}</div>
+            <p className="text-sm text-muted-foreground">formations en cours</p>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg font-medium">Terminées</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold">{stats.completed}</div>
+            <p className="text-sm text-muted-foreground">formations complétées</p>
+          </CardContent>
+        </Card>
+      </div>
+      
+      {/* Filters & Actions */}
+      <div className="flex flex-col md:flex-row justify-between gap-4">
+        <div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
+          <Input
+            placeholder="Rechercher une formation..."
+            value={filterText}
+            onChange={(e) => setFilterText(e.target.value)}
+            className="w-full sm:w-[250px]"
+          />
+          
+          <Select value={filterType} onValueChange={setFilterType}>
+            <SelectTrigger className="w-full sm:w-[180px]">
+              <SelectValue placeholder="Type de formation" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="">Tous les types</SelectItem>
+              <SelectItem value="technical">Technique</SelectItem>
+              <SelectItem value="management">Management</SelectItem>
+              <SelectItem value="soft_skills">Soft Skills</SelectItem>
+              <SelectItem value="certification">Certification</SelectItem>
+              <SelectItem value="compliance">Conformité</SelectItem>
+              <SelectItem value="other">Autre</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        
+        <div className="flex justify-end">
+          <Button onClick={() => setIsCreateDialogOpen(true)}>
+            <PlusCircle className="mr-2 h-4 w-4" />
             Nouvelle formation
           </Button>
         </div>
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div className="flex flex-col">
-                <span className="text-sm font-medium">Planifiées</span>
-                <span className="text-2xl font-bold">{stats?.planned || 0}</span>
-              </div>
-              <Calendar className="h-8 w-8 text-blue-500" />
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div className="flex flex-col">
-                <span className="text-sm font-medium">En cours</span>
-                <span className="text-2xl font-bold">{stats?.inProgress || 0}</span>
-              </div>
-              <Clock className="h-8 w-8 text-yellow-500" />
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div className="flex flex-col">
-                <span className="text-sm font-medium">Terminées</span>
-                <span className="text-2xl font-bold">{stats?.completed || 0}</span>
-              </div>
-              <CheckCircle2 className="h-8 w-8 text-green-500" />
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div className="flex flex-col">
-                <span className="text-sm font-medium">Annulées</span>
-                <span className="text-2xl font-bold">{stats?.cancelled || 0}</span>
-              </div>
-              <AlertCircle className="h-8 w-8 text-red-500" />
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-      
-      <Tabs defaultValue="all" value={tabValue} onValueChange={handleTabChange}>
-        <TabsList className="w-full md:w-auto">
-          <TabsTrigger value="all" className="flex-1 md:flex-initial">
-            <Award className="h-4 w-4 mr-2" />
-            Toutes
+      {/* Trainings Tabs */}
+      <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="mb-4">
+          <TabsTrigger value="all">
+            Toutes 
+            <Badge variant="outline" className="ml-2">{stats.total}</Badge>
           </TabsTrigger>
-          <TabsTrigger value="current" className="flex-1 md:flex-initial">
-            <Clock className="h-4 w-4 mr-2" />
+          <TabsTrigger value="planned">
+            Planifiées
+            <Badge variant="outline" className="ml-2">{stats.planned}</Badge>
+          </TabsTrigger>
+          <TabsTrigger value="inProgress">
             En cours
+            <Badge variant="outline" className="ml-2">{stats.inProgress}</Badge>
           </TabsTrigger>
-          <TabsTrigger value="completed" className="flex-1 md:flex-initial">
-            <CheckCircle2 className="h-4 w-4 mr-2" />
+          <TabsTrigger value="completed">
             Terminées
+            <Badge variant="outline" className="ml-2">{stats.completed}</Badge>
           </TabsTrigger>
-          <TabsTrigger value="cancelled" className="flex-1 md:flex-initial">
-            <AlertCircle className="h-4 w-4 mr-2" />
+          <TabsTrigger value="cancelled">
             Annulées
+            <Badge variant="outline" className="ml-2">{stats.cancelled}</Badge>
           </TabsTrigger>
         </TabsList>
         
-        <TabsContent value={tabValue} className="mt-6">
+        <TabsContent value={activeTab} className="mt-0">
           <Card>
-            <CardContent className="p-6">
-              <div className="flex flex-col md:flex-row gap-4 mb-6">
-                <div className="flex-1">
-                  <div className="relative">
-                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      type="search"
-                      placeholder="Rechercher..."
-                      className="pl-8"
-                      value={searchTerm}
-                      onChange={handleSearchChange}
-                    />
-                  </div>
-                </div>
-                
-                <div className="flex flex-col md:flex-row gap-4">
-                  <Select value={typeFilter} onValueChange={handleTypeFilterChange}>
-                    <SelectTrigger className="w-full md:w-[180px]">
-                      <SelectValue placeholder="Type de formation" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {typeOptions.map(option => (
-                        <SelectItem key={option.value} value={option.value}>
-                          {option.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  
-                  <Select value={statusFilter} onValueChange={handleStatusFilterChange}>
-                    <SelectTrigger className="w-full md:w-[180px]">
-                      <SelectValue placeholder="Statut" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {statusOptions.map(option => (
-                        <SelectItem key={option.value} value={option.value}>
-                          {option.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              
+            <CardContent className="p-0">
               <DataTable
-                columns={columns}
+                title=""
+                columns={getColumnsForTab()}
                 data={filteredTrainings}
-                isLoading={isLoading}
-                emptyMessage="Aucune formation trouvée"
+                className="border-0"
               />
             </CardContent>
           </Card>
         </TabsContent>
       </Tabs>
       
+      {/* Create Training Dialog */}
       <CreateTrainingDialog
-        open={openCreateDialog}
-        onOpenChange={setOpenCreateDialog}
+        open={isCreateDialogOpen}
+        onOpenChange={setIsCreateDialogOpen}
         onClose={handleCloseDialog}
         onSubmit={handleTrainingCreated}
-        employees={employees}
+        employees={employees || []}
       />
     </div>
   );
