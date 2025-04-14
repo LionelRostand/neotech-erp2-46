@@ -7,9 +7,11 @@ import { COLLECTIONS } from '@/lib/firebase-collections';
 import { PaySlip } from '@/types/payslip';
 import { addPayslipToEmployee } from '../services/employeeSalaryService';
 import { Company } from '@/components/module/submodules/companies/types';
+import { useFirebaseCompanies } from '@/hooks/useFirebaseCompanies';
 
 export const useSalaryForm = () => {
-  const { employees, companies } = useHrModuleData();
+  const { employees } = useHrModuleData();
+  const { companies, isLoading: isLoadingCompanies } = useFirebaseCompanies();
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<string>('');
   const [selectedCompanyId, setSelectedCompanyId] = useState<string>('');
   const [baseSalary, setBaseSalary] = useState<number>(0);
@@ -181,6 +183,8 @@ export const useSalaryForm = () => {
     setOvertimeHours,
     setOvertimeRate,
     setSelectedCompanyId,
-    handleSubmit
+    handleSubmit,
+    companies,
+    isLoadingCompanies
   };
 };
