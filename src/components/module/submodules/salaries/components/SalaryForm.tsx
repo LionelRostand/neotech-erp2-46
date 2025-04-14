@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useSalaryForm } from '../hooks/useSalaryForm';
 import { Select } from '@/components/ui/select';
@@ -8,9 +7,10 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useHrModuleData } from '@/hooks/useHrModuleData';
 import OvertimeSection from './OvertimeSection';
+import { CompanySelect } from '@/components/module/submodules/crm/settings/components/CompanySelect';
 
 export const SalaryForm: React.FC = () => {
-  const { employees, isLoading } = useHrModuleData();
+  const { employees, companies, isLoading } = useHrModuleData();
   const {
     selectedEmployeeId,
     baseSalary,
@@ -28,6 +28,8 @@ export const SalaryForm: React.FC = () => {
     setNotes,
     setOvertimeHours,
     setOvertimeRate,
+    selectedCompanyId,
+    setSelectedCompanyId,
     handleSubmit
   } = useSalaryForm();
 
@@ -62,6 +64,15 @@ export const SalaryForm: React.FC = () => {
       ) : (
         <form className="space-y-8">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Sélection de l'entreprise */}
+            <div className="space-y-2">
+              <CompanySelect 
+                companies={companies} 
+                value={selectedCompanyId} 
+                onSelect={setSelectedCompanyId}
+              />
+            </div>
+
             {/* Sélection de l'employé */}
             <div className="space-y-2">
               <Label htmlFor="employee">Employé</Label>
@@ -72,11 +83,13 @@ export const SalaryForm: React.FC = () => {
                 onChange={(e) => handleEmployeeSelect(e.target.value)}
               >
                 <option value="">Sélectionnez un employé</option>
-                {employees.map((employee) => (
-                  <option key={employee.id} value={employee.id}>
-                    {employee.firstName} {employee.lastName}
-                  </option>
-                ))}
+                {employees
+                  .filter(emp => !selectedCompanyId || emp.company === selectedCompanyId)
+                  .map((employee) => (
+                    <option key={employee.id} value={employee.id}>
+                      {employee.firstName} {employee.lastName}
+                    </option>
+                  ))}
               </select>
             </div>
 

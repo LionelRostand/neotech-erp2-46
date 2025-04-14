@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useEmployeeContract } from '@/hooks/useEmployeeContract';
 import { toast } from 'sonner';
@@ -11,6 +10,7 @@ import { addPayslipToEmployee } from '../services/employeeSalaryService';
 export const useSalaryForm = () => {
   const { employees, companies } = useHrModuleData();
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<string>('');
+  const [selectedCompanyId, setSelectedCompanyId] = useState<string>('');
   const [baseSalary, setBaseSalary] = useState<number>(0);
   const [month, setMonth] = useState<string>('');
   const [year, setYear] = useState<number>(new Date().getFullYear());
@@ -33,6 +33,11 @@ export const useSalaryForm = () => {
     const selectedEmployee = employees.find(emp => emp.id === employeeId);
 
     if (selectedEmployee) {
+      // Set the company if not already selected
+      if (!selectedCompanyId && selectedEmployee.company) {
+        setSelectedCompanyId(selectedEmployee.company);
+      }
+
       // Ensure conges has default values if undefined
       const conges = selectedEmployee.conges || {
         acquired: 0,
@@ -53,20 +58,21 @@ export const useSalaryForm = () => {
   };
 
   const handleSubmit = async () => {
-    if (!selectedEmployeeId || !month || !year) {
+    if (!selectedEmployeeId || !month || !year || !selectedCompanyId) {
       toast.error('Veuillez remplir tous les champs obligatoires');
       return;
     }
 
     const selectedEmployee = employees.find(emp => emp.id === selectedEmployeeId);
+    const company = companies.find(c => c.id === selectedCompanyId);
 
-    if (!selectedEmployee) {
-      toast.error('Employé non trouvé');
+    if (!selectedEmployee || !company) {
+      toast.error('Employé ou entreprise non trouvé');
       return;
     }
 
     const employeeName = `${selectedEmployee.firstName} ${selectedEmployee.lastName}`;
-    const company = companies.find(c => c.id === selectedEmployee.company);
+    // const company = companies.find(c => c.id === selectedEmployee.company);
 
     // Calculer le montant des heures supplémentaires
     const overtimeAmount = parseFloat(overtimeHours) * (baseSalary / 151.67) * (1 + parseFloat(overtimeRate) / 100);
@@ -146,6 +152,7 @@ export const useSalaryForm = () => {
 
   return {
     selectedEmployeeId,
+    selectedCompanyId,
     baseSalary,
     month,
     year,
@@ -161,6 +168,7 @@ export const useSalaryForm = () => {
     setNotes,
     setOvertimeHours,
     setOvertimeRate,
+    setSelectedCompanyId,
     handleSubmit
   };
 };
