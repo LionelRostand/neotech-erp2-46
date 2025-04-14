@@ -49,34 +49,38 @@ const EmployeesHierarchy: React.FC = () => {
         </div>
       </div>
 
-      {/* Dashboard Cards */}
+      {/* Dashboard Cards with colors */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard 
           title="Employés" 
           value={stats.totalEmployees.toString()} 
-          icon={<Users className="h-6 w-6 text-blue-500" />}
-          description="Total dans l'organigramme" 
+          icon={<Users className="h-6 w-6 text-white" />}
+          description="Total dans l'organigramme"
+          className="bg-gradient-to-br from-blue-500 to-blue-600 text-white"
         />
         
         <StatCard 
           title="Managers" 
           value={stats.managerCount.toString()} 
-          icon={<Users className="h-6 w-6 text-green-500" />}
-          description="Avec des subordonnés directs" 
+          icon={<Users className="h-6 w-6 text-white" />}
+          description="Avec des subordonnés directs"
+          className="bg-gradient-to-br from-emerald-500 to-emerald-600 text-white"
         />
         
         <StatCard 
           title="Niveaux" 
           value={stats.maxDepth.toString()} 
-          icon={<Building className="h-6 w-6 text-purple-500" />}
-          description="Profondeur de la hiérarchie" 
+          icon={<Building className="h-6 w-6 text-white" />}
+          description="Profondeur de la hiérarchie"
+          className="bg-gradient-to-br from-purple-500 to-purple-600 text-white"
         />
         
         <StatCard 
           title="Départements" 
           value={stats.departmentsRepresented.toString()} 
-          icon={<Building className="h-6 w-6 text-amber-500" />}
-          description="Représentés dans l'organigramme" 
+          icon={<Building className="h-6 w-6 text-white" />}
+          description="Représentés dans l'organigramme"
+          className="bg-gradient-to-br from-amber-500 to-amber-600 text-white"
         />
       </div>
       
