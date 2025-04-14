@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -31,7 +30,10 @@ export const SalaryForm: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="space-y-3">
           <Label htmlFor="company-name">Nom de l'entreprise</Label>
-          <Select value={selectedCompanyId} onValueChange={setSelectedCompanyId}>
+          <Select 
+            value={selectedCompanyId} 
+            onValueChange={setSelectedCompanyId}
+          >
             <SelectTrigger className="w-full">
               <SelectValue placeholder="Sélectionner une entreprise" />
             </SelectTrigger>
