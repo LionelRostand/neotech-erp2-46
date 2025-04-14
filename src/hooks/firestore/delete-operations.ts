@@ -5,6 +5,7 @@ import {
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { toast } from 'sonner';
+import { COLLECTIONS } from '@/lib/firebase-collections';
 
 // Delete a document from a collection
 export const deleteDocument = async (collectionName: string, documentId: string) => {
