@@ -130,7 +130,7 @@ const CreateEmployeeDialog: React.FC<CreateEmployeeDialogProps> = ({
               <Select 
                 defaultValue="active"
                 onValueChange={(value) => 
-                  methods.setValue('status', value as "active" | "inactive" | "onLeave")
+                  methods.setValue('status', value as Employee['status'])
                 }
               >
                 <SelectTrigger>
@@ -140,6 +140,7 @@ const CreateEmployeeDialog: React.FC<CreateEmployeeDialogProps> = ({
                   <SelectItem value="active">Actif</SelectItem>
                   <SelectItem value="onLeave">En congé</SelectItem>
                   <SelectItem value="inactive">Inactif</SelectItem>
+                  <SelectItem value="Suspendu">Suspendu</SelectItem>
                 </SelectContent>
               </Select>
             </div>
