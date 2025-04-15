@@ -1,4 +1,3 @@
-
 export interface RecruitmentPost {
   id: string;
   position: string;
@@ -31,4 +30,33 @@ export interface RecruitmentPost {
   contractType: string;
   salary: string;
   applicationCount: number;
+}
+
+export type RecruitmentStage = 
+  | 'Candidature déposée'
+  | 'CV en cours d\'analyse' 
+  | 'Entretien RH'
+  | 'Test technique'
+  | 'Entretien technique'
+  | 'Entretien final'
+  | 'Proposition envoyée'
+  | 'Recrutement finalisé'
+  | 'Candidature refusée';
+
+export interface CandidateApplication {
+  id: string;
+  recruitmentId: string;
+  candidateId: string;
+  candidateName: string;
+  candidateEmail: string;
+  currentStage: RecruitmentStage;
+  stageHistory: {
+    stage: RecruitmentStage;
+    date: string;
+    comments?: string;
+  }[];
+  resume?: string;
+  coverLetter?: string;
+  createdAt: string;
+  updatedAt: string;
 }
