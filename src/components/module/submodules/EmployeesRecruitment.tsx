@@ -1,11 +1,14 @@
+
 import React, { useState } from 'react';
 import { DataTable } from '@/components/ui/data-table';
 import { Button } from '@/components/ui/button';
-import { Eye, CalendarPlus, PlusCircle } from 'lucide-react';
+import { Eye, CalendarPlus, PlusCircle, List, LayoutGrid } from 'lucide-react';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import RecruitmentStats from './recruitment/RecruitmentStats';
 import RecruitmentViewDialog from './recruitment/RecruitmentViewDialog';
 import RecruitmentScheduleDialog from './recruitment/RecruitmentScheduleDialog';
 import CreateRecruitmentDialog from './recruitment/CreateRecruitmentDialog';
+import RecruitmentKanban from './recruitment/RecruitmentKanban';
 import { RecruitmentPost } from '@/types/recruitment';
 import { useRecruitmentFirebaseData } from '@/hooks/useRecruitmentFirebaseData';
 import { useToast } from '@/components/ui/use-toast';
@@ -89,13 +92,30 @@ const EmployeesRecruitment = () => {
 
       <RecruitmentStats />
       
-      <div className="mt-6">
-        <DataTable
-          columns={columns}
-          data={recruitmentPosts}
-          isLoading={isLoading}
-        />
-      </div>
+      <Tabs defaultValue="kanban" className="w-full">
+        <TabsList>
+          <TabsTrigger value="kanban" className="flex items-center gap-2">
+            <LayoutGrid className="w-4 h-4" />
+            Kanban
+          </TabsTrigger>
+          <TabsTrigger value="list" className="flex items-center gap-2">
+            <List className="w-4 h-4" />
+            Liste
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="kanban" className="mt-6">
+          <RecruitmentKanban />
+        </TabsContent>
+
+        <TabsContent value="list" className="mt-6">
+          <DataTable
+            columns={columns}
+            data={recruitmentPosts}
+            isLoading={isLoading}
+          />
+        </TabsContent>
+      </Tabs>
 
       <RecruitmentViewDialog
         open={viewDialogOpen}
