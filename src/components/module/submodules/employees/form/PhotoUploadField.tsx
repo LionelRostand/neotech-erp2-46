@@ -1,6 +1,7 @@
 
 import React, { useState } from 'react';
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
+import { useFormContext } from 'react-hook-form';
 import { useStorageUpload } from '@/hooks/storage/useStorageUpload';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -15,6 +16,8 @@ const PhotoUploadField = ({ defaultPhotoUrl }: PhotoUploadFieldProps) => {
   const [previewUrl, setPreviewUrl] = useState<string | undefined>(defaultPhotoUrl);
   const [isUploading, setIsUploading] = useState(false);
   const { uploadFile } = useStorageUpload();
+  // Get the form context to ensure we're inside a form
+  const form = useFormContext();
 
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>, onChange: (value: any) => void) => {
     const files = event.target.files;
@@ -80,56 +83,59 @@ const PhotoUploadField = ({ defaultPhotoUrl }: PhotoUploadFieldProps) => {
   };
 
   return (
-    <FormField
-      name="photo"
-      render={({ field }) => (
-        <FormItem className="text-center">
-          <FormLabel className="block mb-2">Photo de profil</FormLabel>
-          <FormControl>
-            <div className="flex flex-col items-center space-y-4">
-              <Avatar className="h-24 w-24">
-                <AvatarImage 
-                  src={previewUrl || field.value}
-                  alt="Photo de profil" 
-                />
-                <AvatarFallback className="bg-primary text-white text-xl">
-                  <User className="h-10 w-10" />
-                </AvatarFallback>
-              </Avatar>
-              
-              <div className="relative">
-                <Button 
-                  type="button"
-                  variant="outline"
-                  className="relative"
-                  disabled={isUploading}
-                >
-                  {isUploading ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Téléversement...
-                    </>
-                  ) : (
-                    <>
-                      <Upload className="h-4 w-4 mr-2" />
-                      Choisir une photo
-                    </>
-                  )}
-                  <input
-                    type="file"
-                    className="absolute inset-0 opacity-0 cursor-pointer"
-                    accept="image/*"
-                    onChange={(e) => handleFileChange(e, field.onChange)}
-                    disabled={isUploading}
-                  />
-                </Button>
-              </div>
-            </div>
-          </FormControl>
-          <FormMessage />
-        </FormItem>
-      )}
-    />
+    <div className="text-center">
+      <div className="mb-2 font-medium">Photo de profil</div>
+      <div className="flex flex-col items-center space-y-4">
+        <Avatar className="h-24 w-24">
+          <AvatarImage 
+            src={previewUrl}
+            alt="Photo de profil" 
+          />
+          <AvatarFallback className="bg-primary text-white text-xl">
+            <User className="h-10 w-10" />
+          </AvatarFallback>
+        </Avatar>
+        
+        <div className="relative">
+          <Button 
+            type="button"
+            variant="outline"
+            className="relative"
+            disabled={isUploading}
+          >
+            {isUploading ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                Téléversement...
+              </>
+            ) : (
+              <>
+                <Upload className="h-4 w-4 mr-2" />
+                Choisir une photo
+              </>
+            )}
+            <input
+              type="file"
+              name="photo"
+              className="absolute inset-0 opacity-0 cursor-pointer"
+              accept="image/*"
+              onChange={(e) => {
+                // If we're in a form context, use the form setValue method
+                if (form) {
+                  const files = e.target.files;
+                  if (!files || files.length === 0) return;
+                  
+                  handleFileChange(e, (value) => {
+                    form.setValue('photo', value);
+                  });
+                }
+              }}
+              disabled={isUploading}
+            />
+          </Button>
+        </div>
+      </div>
+    </div>
   );
 };
 
