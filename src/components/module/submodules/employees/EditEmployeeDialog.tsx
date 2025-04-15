@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useForm } from 'react-hook-form';
 import PhotoUploadField from '@/components/module/submodules/employees/form/PhotoUploadField';
+import { updateEmployeeDoc } from '@/services/employeeService';
 
 interface EditEmployeeDialogProps {
   open: boolean;
@@ -21,7 +22,7 @@ export const EditEmployeeDialog: React.FC<EditEmployeeDialogProps> = ({
   onOpenChange,
   employee
 }) => {
-  const { register, handleSubmit, formState: { errors } } = useForm({
+  const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm({
     defaultValues: {
       firstName: employee.firstName,
       lastName: employee.lastName,
@@ -34,10 +35,23 @@ export const EditEmployeeDialog: React.FC<EditEmployeeDialogProps> = ({
     }
   });
 
-  const onSubmit = (data: any) => {
-    console.log('Soumission du formulaire avec les données:', data);
-    toast.success(`Informations de ${data.firstName} ${data.lastName} mises à jour avec succès`);
-    onOpenChange(false);
+  const onSubmit = async (data: any) => {
+    try {
+      console.log('Soumission du formulaire avec les données:', data);
+      
+      // Mettre à jour l'employé avec les nouvelles données
+      await updateEmployeeDoc(employee.id, {
+        ...data,
+        photoURL: data.photo, // Assurez-vous que la photo est mise à jour
+        photo: data.photo // Pour la rétrocompatibilité
+      });
+      
+      toast.success(`Informations de ${data.firstName} ${data.lastName} mises à jour avec succès`);
+      onOpenChange(false);
+    } catch (error) {
+      console.error('Erreur lors de la mise à jour:', error);
+      toast.error('Erreur lors de la mise à jour de l\'employé');
+    }
   };
 
   return (

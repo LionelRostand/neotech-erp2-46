@@ -1,4 +1,3 @@
-
 import { db } from '@/lib/firebase';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import { doc, getDoc, updateDoc, collection, getDocs, query, where, addDoc, deleteDoc, DocumentReference } from 'firebase/firestore';
@@ -70,10 +69,17 @@ export const createEmployee = async (employeeData: Partial<Employee>): Promise<E
 export const updateEmployeeDoc = async (id: string, data: Partial<Employee>): Promise<Employee | null> => {
   try {
     const docRef = doc(db, COLLECTIONS.HR.EMPLOYEES, id);
-    await updateDoc(docRef, {
+    
+    // Préparer les données de mise à jour
+    const updateData = {
       ...data,
-      updatedAt: new Date().toISOString()
-    });
+      updatedAt: new Date().toISOString(),
+      // Assurer que la photo est mise à jour dans les deux champs
+      photoURL: data.photoURL || data.photo,
+      photo: data.photoURL || data.photo
+    };
+    
+    await updateDoc(docRef, updateData);
     
     // Récupérer l'employé mis à jour
     const docSnap = await getDoc(docRef);
