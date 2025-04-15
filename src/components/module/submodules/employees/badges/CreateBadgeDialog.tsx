@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 import { Employee } from '@/types/employee';
 import { BadgeData, generateBadgeNumber } from './BadgeTypes';
 import { useAvailableDepartments } from '@/hooks/useAvailableDepartments';
+import { useCompaniesData } from '@/hooks/useCompaniesData';
 
 interface CreateBadgeDialogProps {
   isOpen: boolean;
@@ -24,10 +25,13 @@ const CreateBadgeDialog: React.FC<CreateBadgeDialogProps> = ({
 }) => {
   const [selectedEmployee, setSelectedEmployee] = useState<string>('');
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<string>('');
+  const [selectedCompany, setSelectedCompany] = useState<string>('');
   const [accessLevel, setAccessLevel] = useState<string>('');
   const [department, setDepartment] = useState<string>('no_department');
   const [badgeNumber, setBadgeNumber] = useState(generateBadgeNumber());
+  
   const { departments } = useAvailableDepartments();
+  const { companies } = useCompaniesData();
 
   const handleCreateBadge = () => {
     if (!selectedEmployee || !accessLevel) {
@@ -44,6 +48,8 @@ const CreateBadgeDialog: React.FC<CreateBadgeDialogProps> = ({
     const departmentName = departments.find(dept => dept.id === (department === 'no_department' ? employee.department : department))?.name 
       || (department === 'no_department' ? 'Non assigné' : department);
     
+    const company = companies.find(c => c.id === selectedCompany);
+    
     const newBadge: BadgeData = {
       id: badgeNumber,
       date: new Date().toISOString().split('T')[0],
@@ -52,7 +58,8 @@ const CreateBadgeDialog: React.FC<CreateBadgeDialogProps> = ({
       department: departmentName,
       accessLevel: accessLevel,
       status: "success",
-      statusText: "Actif"
+      statusText: "Actif",
+      company: company ? company.name : 'Non assignée'
     };
     
     onBadgeCreated(newBadge);
@@ -63,6 +70,7 @@ const CreateBadgeDialog: React.FC<CreateBadgeDialogProps> = ({
   const resetForm = () => {
     setSelectedEmployee('');
     setSelectedEmployeeId('');
+    setSelectedCompany('');
     setAccessLevel('');
     setDepartment('no_department');
     setBadgeNumber(generateBadgeNumber());
@@ -71,6 +79,26 @@ const CreateBadgeDialog: React.FC<CreateBadgeDialogProps> = ({
   const handleClose = () => {
     resetForm();
     onOpenChange(false);
+  };
+
+  const handleEmployeeChange = (value: string) => {
+    setSelectedEmployee(value);
+    const empId = value.split('|')[1];
+    setSelectedEmployeeId(empId);
+    
+    const employee = employees.find(emp => emp.id === empId);
+    if (employee) {
+      if (employee.department) {
+        setDepartment(employee.department);
+      }
+      
+      if (employee.company) {
+        const companyId = typeof employee.company === 'string' ? 
+          employee.company : 
+          employee.company.id;
+        setSelectedCompany(companyId);
+      }
+    }
   };
 
   return (
@@ -87,16 +115,7 @@ const CreateBadgeDialog: React.FC<CreateBadgeDialogProps> = ({
             <div className="col-span-3">
               <Select 
                 value={selectedEmployee || "none"} 
-                onValueChange={(value) => {
-                  setSelectedEmployee(value);
-                  const empId = value.split('|')[1];
-                  setSelectedEmployeeId(empId);
-                  
-                  const employee = employees.find(emp => emp.id === empId);
-                  if (employee?.department) {
-                    setDepartment(employee.department);
-                  }
-                }}
+                onValueChange={handleEmployeeChange}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Sélectionner un employé" />
@@ -109,6 +128,27 @@ const CreateBadgeDialog: React.FC<CreateBadgeDialogProps> = ({
                       value={`${employee.firstName} ${employee.lastName}|${employee.id}`}
                     >
                       {employee.firstName} {employee.lastName}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="company" className="text-right">
+              Entreprise
+            </Label>
+            <div className="col-span-3">
+              <Select value={selectedCompany} onValueChange={setSelectedCompany}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Sélectionner une entreprise" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">Aucune entreprise</SelectItem>
+                  {companies.map((company) => (
+                    <SelectItem key={company.id} value={company.id}>
+                      {company.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
