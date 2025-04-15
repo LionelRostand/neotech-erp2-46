@@ -10,7 +10,7 @@ export interface Department {
   employeeIds: string[];
   createdAt?: string;
   updatedAt?: string;
-  parentDepartmentId?: string;
+  parentId?: string;
 }
 
 export interface DepartmentFormData {
