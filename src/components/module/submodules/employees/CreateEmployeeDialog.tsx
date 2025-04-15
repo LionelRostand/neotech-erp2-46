@@ -129,9 +129,14 @@ const CreateEmployeeDialog: React.FC<CreateEmployeeDialogProps> = ({
               <Label htmlFor="status">Statut</Label>
               <Select 
                 defaultValue="active"
-                onValueChange={(value) => 
-                  methods.setValue('status', value as Employee['status'])
-                }
+                onValueChange={(value) => {
+                  // Sécuriser le type pour éviter les erreurs TypeScript
+                  if (value === 'active' || value === 'onLeave' || value === 'inactive' || 
+                      value === 'Actif' || value === 'En congé' || value === 'Inactif' || 
+                      value === 'Suspendu') {
+                    methods.setValue('status', value as Employee['status']);
+                  }
+                }}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Sélectionner un statut" />
