@@ -22,3 +22,11 @@ export interface CreateBadgeDialogProps {
   onBadgeCreated: (newBadge: BadgeData) => Promise<void>;
   employees?: any[];
 }
+
+export const getInitials = (firstName: string, lastName: string) => {
+  return (firstName.charAt(0) + lastName.charAt(0)).toUpperCase();
+};
+
+export const generateBadgeNumber = (): string => {
+  return `B-${Math.floor(2460 + Math.random() * 100)}`;
+};
