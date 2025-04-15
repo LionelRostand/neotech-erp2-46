@@ -1,3 +1,4 @@
+
 import { Employee } from '@/types/employee';
 
 // Interface for Badge data
