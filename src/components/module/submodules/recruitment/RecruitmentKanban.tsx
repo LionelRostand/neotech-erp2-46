@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { RecruitmentStage, CandidateApplication, RecruitmentPost } from '@/types/recruitment';
@@ -69,6 +70,42 @@ const RecruitmentKanban = () => {
     }
   }, [recruitmentPosts, isLoading]);
 
+  const updateCandidateInFirebase = async (candidate: CandidateApplication) => {
+    try {
+      const post = recruitmentPosts.find(p => p.id === candidate.recruitmentId);
+      
+      if (!post) {
+        toast({
+          title: "Erreur",
+          description: "Offre de recrutement non trouvée",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      const updatedCandidates = post.candidates?.map(c => 
+        c.id === candidate.id ? candidate : c
+      ) || [candidate];
+      
+      await updateDocument(COLLECTIONS.HR.RECRUITMENTS, post.id, {
+        candidates: updatedCandidates,
+        updated_at: new Date().toISOString(),
+      });
+      
+      toast({
+        title: "Candidat mis à jour",
+        description: `${candidate.candidateName} est maintenant en phase "${candidate.currentStage}"`,
+      });
+    } catch (error) {
+      console.error("Erreur lors de la mise à jour du candidat:", error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de mettre à jour le candidat",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
 
@@ -100,7 +137,7 @@ const RecruitmentKanban = () => {
     } 
     else if (active.data?.current?.type === 'offer' && active.id !== over.id) {
       const offerId = active.id as string;
-      const targetStage = over.id as RecruitmentStage;
+      const targetStage = over.id as string; // Changed type from RecruitmentStage to string to handle "offres"
       let newStatus: 'Ouvert' | 'En cours' | 'Clôturé' = 'En cours';
       
       // Si l'offre est déplacée depuis la colonne "Offres" vers une autre étape
