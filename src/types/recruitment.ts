@@ -1,3 +1,4 @@
+
 export interface RecruitmentPost {
   id: string;
   position: string;
@@ -30,6 +31,9 @@ export interface RecruitmentPost {
   contractType: string;
   salary: string;
   applicationCount: number;
+  
+  // Added candidates field
+  candidates?: CandidateApplication[];
 }
 
 export type RecruitmentStage = 
@@ -46,7 +50,7 @@ export type RecruitmentStage =
 export interface CandidateApplication {
   id: string;
   recruitmentId: string;
-  candidateId: string;
+  candidateId?: string;
   candidateName: string;
   candidateEmail: string;
   currentStage: RecruitmentStage;

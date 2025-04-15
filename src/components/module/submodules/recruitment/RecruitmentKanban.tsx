@@ -1,10 +1,14 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { RecruitmentStage, CandidateApplication, RecruitmentPost } from '@/types/recruitment';
 import KanbanCard from './KanbanCard';
 import { DndContext, DragEndEvent, closestCorners } from '@dnd-kit/core';
 import { useDroppable } from '@dnd-kit/core';
 import { useRecruitmentFirebaseData } from '@/hooks/useRecruitmentFirebaseData';
+import { useToast } from '@/components/ui/use-toast';
+import { updateDocument } from '@/hooks/firestore/firestore-utils';
+import { COLLECTIONS } from '@/lib/firebase-collections';
 
 interface KanbanColumnProps {
   title: string;
@@ -30,7 +34,8 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({ title, children, id }) => {
 };
 
 const RecruitmentKanban = () => {
-  const { recruitmentPosts } = useRecruitmentFirebaseData();
+  const { recruitmentPosts, isLoading } = useRecruitmentFirebaseData();
+  const { toast } = useToast();
   
   const stages: RecruitmentStage[] = [
     'CV en cours d\'analyse',
@@ -40,29 +45,46 @@ const RecruitmentKanban = () => {
     'Recrutement finalisé'
   ];
 
-  // Example candidate data - in real app this would come from a database
-  const [candidates, setCandidates] = useState<CandidateApplication[]>([
-    {
-      id: '1',
-      recruitmentId: '1',
-      candidateId: '1',
-      candidateName: 'John Doe',
-      candidateEmail: 'john@example.com',
-      currentStage: 'CV en cours d\'analyse',
-      stageHistory: [],
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    },
-  ]);
+  // Initialize with empty array instead of John Doe
+  const [candidates, setCandidates] = useState<CandidateApplication[]>([]);
+
+  // Fetch candidates from related offers
+  useEffect(() => {
+    const fetchCandidates = () => {
+      // Extract candidates from recruitment posts
+      const allCandidates: CandidateApplication[] = [];
+      
+      recruitmentPosts.forEach(post => {
+        if (post.candidates && Array.isArray(post.candidates)) {
+          post.candidates.forEach(candidate => {
+            allCandidates.push({
+              ...candidate,
+              recruitmentId: post.id
+            });
+          });
+        }
+      });
+      
+      setCandidates(allCandidates);
+    };
+    
+    if (!isLoading && recruitmentPosts.length > 0) {
+      fetchCandidates();
+    }
+  }, [recruitmentPosts, isLoading]);
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
 
-    if (over && active.id !== over.id) {
+    if (!over) return;
+
+    // Check if dragging a candidate
+    if (active.data?.current?.type === 'candidate' && active.id !== over.id) {
+      // Update candidate stage
       setCandidates(prevCandidates => 
         prevCandidates.map(candidate => {
           if (candidate.id === active.id) {
-            return {
+            const updatedCandidate = {
               ...candidate,
               currentStage: over.id as RecruitmentStage,
               updatedAt: new Date().toISOString(),
@@ -74,10 +96,85 @@ const RecruitmentKanban = () => {
                 }
               ]
             };
+
+            // Update in Firebase
+            updateCandidateInFirebase(updatedCandidate);
+            return updatedCandidate;
           }
           return candidate;
         })
       );
+    } 
+    // Check if dragging an offer
+    else if (active.data?.current?.type === 'offer' && active.id !== over.id) {
+      // Update offer status based on the column
+      const offerId = active.id as string;
+      const newStatus = over.id === 'offres' ? 'Ouvert' : 'En cours';
+      
+      // Update the status in Firebase
+      updateOfferStatusInFirebase(offerId, newStatus);
+    }
+  };
+
+  // Function to update a candidate in Firebase
+  const updateCandidateInFirebase = async (candidate: CandidateApplication) => {
+    try {
+      // Find the recruitment post
+      const post = recruitmentPosts.find(p => p.id === candidate.recruitmentId);
+      
+      if (!post) {
+        toast({
+          title: "Erreur",
+          description: "Offre de recrutement non trouvée",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      // Update the candidate in the candidates array
+      const updatedCandidates = post.candidates?.map(c => 
+        c.id === candidate.id ? candidate : c
+      ) || [candidate];
+      
+      // Update the post in Firebase
+      await updateDocument(COLLECTIONS.HR.RECRUITMENTS, post.id, {
+        candidates: updatedCandidates,
+        updated_at: new Date().toISOString(),
+      });
+      
+      toast({
+        title: "Candidat mis à jour",
+        description: `${candidate.candidateName} est maintenant en phase "${candidate.currentStage}"`,
+      });
+    } catch (error) {
+      console.error("Erreur lors de la mise à jour du candidat:", error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de mettre à jour le candidat",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Function to update an offer's status in Firebase
+  const updateOfferStatusInFirebase = async (offerId: string, newStatus: string) => {
+    try {
+      await updateDocument(COLLECTIONS.HR.RECRUITMENTS, offerId, {
+        status: newStatus,
+        updated_at: new Date().toISOString(),
+      });
+      
+      toast({
+        title: "Statut de l'offre mis à jour",
+        description: `L'offre est maintenant "${newStatus}"`,
+      });
+    } catch (error) {
+      console.error("Erreur lors de la mise à jour de l'offre:", error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de mettre à jour le statut de l'offre",
+        variant: "destructive",
+      });
     }
   };
 
@@ -89,19 +186,11 @@ const RecruitmentKanban = () => {
           <KanbanColumn key="offres" id="offres" title="Offres">
             <div className="space-y-2">
               {recruitmentPosts.map((post) => (
-                <Card key={post.id} className="p-3 bg-white">
-                  <p className="font-medium text-sm">{post.position}</p>
-                  <p className="text-xs text-muted-foreground">{post.department}</p>
-                  <div className="text-xs mt-1">
-                    <span className={`inline-block px-2 py-0.5 rounded ${
-                      post.status === 'Ouvert' ? 'bg-green-100 text-green-800' :
-                      post.status === 'En cours' ? 'bg-blue-100 text-blue-800' :
-                      'bg-gray-100 text-gray-800'
-                    }`}>
-                      {post.status}
-                    </span>
-                  </div>
-                </Card>
+                <KanbanCard 
+                  key={post.id} 
+                  item={post} 
+                  type="offer"
+                />
               ))}
             </div>
           </KanbanColumn>
@@ -113,7 +202,11 @@ const RecruitmentKanban = () => {
                 {candidates
                   .filter(candidate => candidate.currentStage === stage)
                   .map(candidate => (
-                    <KanbanCard key={candidate.id} candidate={candidate} />
+                    <KanbanCard 
+                      key={candidate.id} 
+                      item={candidate} 
+                      type="candidate"
+                    />
                   ))
                 }
               </div>
