@@ -130,12 +130,8 @@ const CreateEmployeeDialog: React.FC<CreateEmployeeDialogProps> = ({
               <Select 
                 defaultValue="active"
                 onValueChange={(value) => {
-                  // Sécuriser le type pour éviter les erreurs TypeScript
-                  if (value === 'active' || value === 'onLeave' || value === 'inactive' || 
-                      value === 'Actif' || value === 'En congé' || value === 'Inactif' || 
-                      value === 'Suspendu') {
-                    methods.setValue('status', value as Employee['status']);
-                  }
+                  // Type-safe approach using a type assertion
+                  methods.setValue('status', value as Employee['status']);
                 }}
               >
                 <SelectTrigger>
