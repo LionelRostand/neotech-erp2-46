@@ -147,16 +147,16 @@ const EmployeeProfileView: React.FC<{ employee?: Employee; isLoading?: boolean }
           <TabsTrigger value="conges">Congés</TabsTrigger>
         </TabsList>
         <TabsContent value="informations">
-          <InformationsTab employee={displayedEmployee} canEdit={canEdit} />
+          <InformationsTab employee={displayedEmployee} />
         </TabsContent>
         <TabsContent value="horaires">
-          <HorairesTab employee={displayedEmployee} canEdit={canEdit} />
+          <HorairesTab employee={displayedEmployee} isEditing={false} onFinishEditing={() => {}} />
         </TabsContent>
         <TabsContent value="competences">
-          <CompetencesTab employee={displayedEmployee} canEdit={canEdit} />
+          <CompetencesTab employee={displayedEmployee} onEmployeeUpdated={() => {}} />
         </TabsContent>
         <TabsContent value="conges">
-          <CongesTab employee={displayedEmployee} canEdit={canEdit} />
+          <CongesTab employee={displayedEmployee} />
         </TabsContent>
       </Tabs>
     </div>
