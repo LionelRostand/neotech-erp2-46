@@ -1,4 +1,3 @@
-
 import { useMemo } from 'react';
 import { useHrModuleData } from './useHrModuleData';
 
@@ -55,8 +54,7 @@ export const useAbsencesData = () => {
         startDate: formatDate(absence.startDate),
         endDate: formatDate(absence.endDate),
         days: absence.days || diffDays,
-        status: absence.status === 'approved' ? 'Validé' : 
-                absence.status === 'rejected' ? 'Refusé' : 'En attente',
+        status: absence.status || 'En attente',
         reason: absence.reason,
         department: employee?.department || 'Non spécifié',
       } as Absence;
