@@ -18,7 +18,7 @@ const TimesheetStats: React.FC<TimesheetStatsProps> = ({ timesheetsList }) => {
   
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-6">
-      <Card className="bg-blue-50 border-blue-200 hover:shadow-md transition-shadow duration-300">
+      <Card className="bg-blue-50 border-blue-200 hover:shadow-md transition-shadow duration-300 animate-scale-in">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium text-blue-800">En cours</CardTitle>
           <Clock className="h-5 w-5 text-blue-600" />
@@ -33,7 +33,7 @@ const TimesheetStats: React.FC<TimesheetStatsProps> = ({ timesheetsList }) => {
         </CardContent>
       </Card>
       
-      <Card className="bg-amber-50 border-amber-200 hover:shadow-md transition-shadow duration-300">
+      <Card className="bg-amber-50 border-amber-200 hover:shadow-md transition-shadow duration-300 animate-scale-in">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium text-amber-800">Soumises</CardTitle>
           <AlertCircle className="h-5 w-5 text-amber-600" />
@@ -46,7 +46,7 @@ const TimesheetStats: React.FC<TimesheetStatsProps> = ({ timesheetsList }) => {
         </CardContent>
       </Card>
       
-      <Card className="bg-green-50 border-green-200 hover:shadow-md transition-shadow duration-300">
+      <Card className="bg-green-50 border-green-200 hover:shadow-md transition-shadow duration-300 animate-scale-in">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium text-green-800">Validées</CardTitle>
           <CheckCircle className="h-5 w-5 text-green-600" />
@@ -59,7 +59,7 @@ const TimesheetStats: React.FC<TimesheetStatsProps> = ({ timesheetsList }) => {
         </CardContent>
       </Card>
       
-      <Card className="bg-red-50 border-red-200 hover:shadow-md transition-shadow duration-300">
+      <Card className="bg-red-50 border-red-200 hover:shadow-md transition-shadow duration-300 animate-scale-in">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium text-red-800">Rejetées</CardTitle>
           <XCircle className="h-5 w-5 text-red-600" />
