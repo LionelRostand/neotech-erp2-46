@@ -5,7 +5,6 @@ import { Badge } from '@/components/ui/badge';
 import { RecruitmentStage } from '@/types/recruitment';
 import { CheckCircle2, Circle, Clock } from 'lucide-react';
 import RecruitmentStageActions from './RecruitmentStageActions';
-import { useToast } from '@/components/ui/use-toast';
 
 interface StageProps {
   stage: RecruitmentStage;
