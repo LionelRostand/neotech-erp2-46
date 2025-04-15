@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -11,25 +12,30 @@ import CongesTab from './tabs/CongesTab';
 import EvaluationsTab from './tabs/EvaluationsTab';
 import { jsPDF } from 'jspdf';
 import { toast } from 'sonner';
+import { EditEmployeeDialog } from './EditEmployeeDialog';
 
 interface EmployeeDetailsProps {
   employee: Employee;
   onExportPdf: () => void;
   onEdit: () => void;
+  onEmployeeUpdate?: (updatedEmployee: Employee) => void;
 }
 
 const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({ 
   employee, 
   onExportPdf,
-  onEdit
+  onEdit,
+  onEmployeeUpdate
 }) => {
   const [activeTab, setActiveTab] = useState('infos');
   const [isEditing, setIsEditing] = useState(false);
   const [updatedEmployee, setUpdatedEmployee] = useState<Employee>(employee);
+  const [showEditDialog, setShowEditDialog] = useState(false);
   
   const handleEditTab = () => {
     if (activeTab === 'infos') {
-      onEdit();
+      // Ouvrir la boîte de dialogue d'édition
+      setShowEditDialog(true);
     } else {
       // Activer le mode édition pour l'onglet actif
       setIsEditing(true);
@@ -141,9 +147,14 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
     onExportPdf();
   };
 
-  const handleEmployeeUpdate = () => {
-    // This function will be passed to each tab component to handle employee updates
-    setUpdatedEmployee(prevEmployee => ({ ...prevEmployee }));
+  const handleEmployeeUpdate = (updated: Employee) => {
+    // Mettre à jour l'état local
+    setUpdatedEmployee(updated);
+    
+    // Propager la mise à jour au parent
+    if (onEmployeeUpdate) {
+      onEmployeeUpdate(updated);
+    }
   };
 
   return (
@@ -219,6 +230,14 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
           {isEditing ? "Terminer" : "Modifier"}
         </Button>
       </div>
+
+      {/* Dialog de modification */}
+      <EditEmployeeDialog 
+        open={showEditDialog} 
+        onOpenChange={setShowEditDialog} 
+        employee={updatedEmployee}
+        onEmployeeUpdate={handleEmployeeUpdate}
+      />
     </div>
   );
 };
