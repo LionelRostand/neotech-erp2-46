@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
@@ -36,14 +35,12 @@ const CreateBadgeDialog: React.FC<CreateBadgeDialogProps> = ({
       return;
     }
     
-    // Find the employee in the employees array
     const employee = employees.find(emp => emp.id === selectedEmployeeId);
     if (!employee) {
       toast.error("Employé non trouvé");
       return;
     }
     
-    // Create a new badge
     const newBadge: BadgeData = {
       id: badgeNumber,
       date: new Date().toISOString().split('T')[0],
@@ -55,10 +52,8 @@ const CreateBadgeDialog: React.FC<CreateBadgeDialogProps> = ({
       statusText: "Actif"
     };
     
-    // Callback to add the badge
     onBadgeCreated(newBadge);
     
-    // Reset form and close dialog
     resetForm();
     onOpenChange(false);
   };
@@ -95,7 +90,6 @@ const CreateBadgeDialog: React.FC<CreateBadgeDialogProps> = ({
                   const empId = value.split('|')[1];
                   setSelectedEmployeeId(empId);
                   
-                  // Set department from employee if available
                   const employee = employees.find(emp => emp.id === empId);
                   if (employee?.department) {
                     setDepartment(employee.department);
@@ -152,15 +146,10 @@ const CreateBadgeDialog: React.FC<CreateBadgeDialogProps> = ({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none" disabled>Sélectionner un niveau d'accès</SelectItem>
-                  <SelectItem value="Sécurité Niveau 1">Sécurité Niveau 1</SelectItem>
-                  <SelectItem value="Sécurité Niveau 2">Sécurité Niveau 2</SelectItem>
-                  <SelectItem value="Sécurité Niveau 3">Sécurité Niveau 3</SelectItem>
-                  <SelectItem value="Administration">Administration</SelectItem>
-                  <SelectItem value="IT">IT</SelectItem>
-                  <SelectItem value="RH">RH</SelectItem>
-                  <SelectItem value="Marketing">Marketing</SelectItem>
-                  <SelectItem value="DIRECTION">DIRECTION</SelectItem>
-                  <SelectItem value="PDG">PDG</SelectItem>
+                  <SelectItem value="BASIC">Accès Basic</SelectItem>
+                  <SelectItem value="STANDARD">Accès Standard</SelectItem>
+                  <SelectItem value="ADVANCED">Accès Avancé</SelectItem>
+                  <SelectItem value="ADMIN">Accès Administrateur</SelectItem>
                 </SelectContent>
               </Select>
             </div>
