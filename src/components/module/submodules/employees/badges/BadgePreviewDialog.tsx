@@ -122,10 +122,12 @@ const BadgePreviewDialog: React.FC<BadgePreviewDialogProps> = ({
         
         <div className="py-4">
           <div className="bg-gray-100 rounded-md p-6 mb-4">
-            <div className={`h-2 w-full mb-3 rounded-t ${
+            <div className={`h-8 w-full mb-3 rounded-t flex items-center px-3 ${
               selectedBadge.status === 'success' ? 'bg-green-500' : 
               selectedBadge.status === 'warning' ? 'bg-amber-500' : 'bg-red-500'
-            }`}></div>
+            }`}>
+              <span className="text-white font-bold text-sm">{companyName.toUpperCase()}</span>
+            </div>
             
             <div className="text-center mb-3">
               <p className="text-sm text-gray-500">ID: {selectedBadge.id}</p>
