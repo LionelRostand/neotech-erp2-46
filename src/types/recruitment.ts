@@ -7,6 +7,7 @@ export interface RecruitmentPost {
   priority: 'High' | 'Medium' | 'Low' | 'Haute' | 'Moyenne' | 'Basse';
   description: string;
   requirements: string[] | string;
+  currentStage?: RecruitmentStage;
   responsibilities?: string[];
   salary_range?: {
     min: number;

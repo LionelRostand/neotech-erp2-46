@@ -100,49 +100,19 @@ const RecruitmentKanban = () => {
     } 
     else if (active.data?.current?.type === 'offer' && active.id !== over.id) {
       const offerId = active.id as string;
+      const targetStage = over.id as RecruitmentStage;
       let newStatus: 'Ouvert' | 'En cours' | 'Clôturé' = 'En cours';
       
-      if (over.id === 'Recrutement finalisé') {
-        newStatus = 'Clôturé';
+      // Si l'offre est déplacée depuis la colonne "Offres" vers une autre étape
+      if (targetStage !== 'offres') {
+        if (targetStage === 'Recrutement finalisé') {
+          newStatus = 'Clôturé';
+        } else {
+          newStatus = 'En cours';
+        }
+        
+        await updateOfferStatusInFirebase(offerId, newStatus);
       }
-      
-      await updateOfferStatusInFirebase(offerId, newStatus);
-    }
-  };
-
-  const updateCandidateInFirebase = async (candidate: CandidateApplication) => {
-    try {
-      const post = recruitmentPosts.find(p => p.id === candidate.recruitmentId);
-      
-      if (!post) {
-        toast({
-          title: "Erreur",
-          description: "Offre de recrutement non trouvée",
-          variant: "destructive",
-        });
-        return;
-      }
-      
-      const updatedCandidates = post.candidates?.map(c => 
-        c.id === candidate.id ? candidate : c
-      ) || [candidate];
-      
-      await updateDocument(COLLECTIONS.HR.RECRUITMENTS, post.id, {
-        candidates: updatedCandidates,
-        updated_at: new Date().toISOString(),
-      });
-      
-      toast({
-        title: "Candidat mis à jour",
-        description: `${candidate.candidateName} est maintenant en phase "${candidate.currentStage}"`,
-      });
-    } catch (error) {
-      console.error("Erreur lors de la mise à jour du candidat:", error);
-      toast({
-        title: "Erreur",
-        description: "Impossible de mettre à jour le candidat",
-        variant: "destructive",
-      });
     }
   };
 
@@ -150,6 +120,7 @@ const RecruitmentKanban = () => {
     try {
       await updateDocument(COLLECTIONS.HR.RECRUITMENTS, offerId, {
         status: newStatus,
+        currentStage: newStatus === 'Clôturé' ? 'Recrutement finalisé' : 'CV en cours d\'analyse',
         updated_at: new Date().toISOString(),
       });
       
@@ -210,19 +181,32 @@ const RecruitmentKanban = () => {
         <div className="flex gap-3 p-3">
           <KanbanColumn key="offres" id="offres" title="Offres">
             <div className="space-y-2">
-              {recruitmentPosts.map((post) => (
-                <KanbanCard 
-                  key={post.id} 
-                  item={post} 
-                  type="offer"
-                />
-              ))}
+              {recruitmentPosts
+                .filter(post => post.status === 'Ouvert')
+                .map((post) => (
+                  <KanbanCard 
+                    key={post.id} 
+                    item={post} 
+                    type="offer"
+                  />
+                ))}
             </div>
           </KanbanColumn>
 
           {stages.map((stage) => (
             <KanbanColumn key={stage} id={stage} title={stage}>
               <div className="space-y-2">
+                {stage !== 'Recrutement finalisé' && 
+                  recruitmentPosts
+                    .filter(post => post.status === 'En cours' && post.currentStage === stage)
+                    .map(post => (
+                      <KanbanCard 
+                        key={post.id} 
+                        item={post} 
+                        type="offer"
+                      />
+                    ))
+                }
                 {candidates
                   .filter(candidate => candidate.currentStage === stage)
                   .map(candidate => (
