@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -16,6 +16,8 @@ import { usePermissions } from '@/hooks/usePermissions';
 import { Download, Trash } from 'lucide-react';
 import { jsPDF } from 'jspdf';
 import { toast } from 'sonner';
+import { Company } from '@/components/module/submodules/companies/types';
+import { useFirebaseCompanies } from '@/hooks/useFirebaseCompanies';
 
 interface BadgePreviewDialogProps {
   isOpen: boolean;
@@ -33,8 +35,51 @@ const BadgePreviewDialog: React.FC<BadgePreviewDialogProps> = ({
   onDeleteClick
 }) => {
   const { isAdmin } = usePermissions('employees-badges');
+  const { companies, isLoading: isLoadingCompanies } = useFirebaseCompanies();
+  const [employeeCompany, setEmployeeCompany] = useState<Company | null>(null);
+
+  // Find employee's company from the companies list
+  useEffect(() => {
+    if (selectedEmployee && companies.length > 0) {
+      // If employee has company as an object with an id
+      if (selectedEmployee.company && typeof selectedEmployee.company === 'object' && selectedEmployee.company.id) {
+        const companyFromList = companies.find(c => c.id === selectedEmployee.company.id);
+        if (companyFromList) {
+          setEmployeeCompany(companyFromList);
+          return;
+        }
+      }
+      
+      // If employee has company as a string (company ID)
+      if (selectedEmployee.company && typeof selectedEmployee.company === 'string') {
+        const companyFromList = companies.find(c => c.id === selectedEmployee.company);
+        if (companyFromList) {
+          setEmployeeCompany(companyFromList);
+          return;
+        }
+      }
+      
+      // Default to null if no match found
+      setEmployeeCompany(null);
+    }
+  }, [selectedEmployee, companies]);
 
   if (!selectedBadge) return null;
+
+  const getCompanyName = (): string => {
+    // If we found a company from our companies list
+    if (employeeCompany) {
+      return employeeCompany.name;
+    }
+    
+    // If employee has company as an object with name
+    if (selectedEmployee?.company && typeof selectedEmployee.company === 'object' && selectedEmployee.company.name) {
+      return selectedEmployee.company.name;
+    }
+    
+    // Default company name if nothing else is found
+    return 'STORM GROUP';
+  };
 
   const handleDownloadBadge = () => {
     // Create a new PDF document - using landscape format for badge display
@@ -61,9 +106,7 @@ const BadgePreviewDialog: React.FC<BadgePreviewDialogProps> = ({
     doc.rect(0, 0, 85, 12, 'F');
     
     // Company name and title
-    const companyName = selectedEmployee?.company ? 
-      (typeof selectedEmployee.company === 'string' ? 'STORM GROUP' : selectedEmployee.company.name) :
-      'STORM GROUP';
+    const companyName = getCompanyName();
     
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(10);
@@ -146,10 +189,7 @@ const BadgePreviewDialog: React.FC<BadgePreviewDialogProps> = ({
               <div>
                 <h3 className="font-medium text-lg">{selectedBadge.employeeName}</h3>
                 <p className="text-sm text-muted-foreground">
-                  {selectedEmployee?.company ? 
-                    (typeof selectedEmployee.company === 'string' ? 'STORM GROUP' : selectedEmployee.company.name) :
-                    'STORM GROUP'
-                  }
+                  {getCompanyName()}
                 </p>
                 {selectedEmployee?.department && (
                   <span className="text-sm text-muted-foreground">{selectedEmployee.department}</span>
@@ -170,6 +210,10 @@ const BadgePreviewDialog: React.FC<BadgePreviewDialogProps> = ({
             <div className="flex justify-between">
               <span className="text-sm font-medium">ID du badge</span>
               <span className="text-sm">{selectedBadge.id}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-sm font-medium">Entreprise</span>
+              <span className="text-sm">{getCompanyName()}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-sm font-medium">Date d'émission</span>
