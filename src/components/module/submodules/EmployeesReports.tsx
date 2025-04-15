@@ -1,98 +1,67 @@
 
 import React, { useState } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { useReportsData } from '@/hooks/useReportsData';
-import { ReportFilters } from './reports/ReportFilters';
-import { ReportCategoryTabs } from './reports/ReportCategoryTabs';
-import { ReportCardProps } from './reports/ReportCard';
-import { getMockReports } from './reports/reportsData';
-import { PieChart, FileText, Users, Calendar } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { HeadcountByDepartment } from './reports/ReportComponents/HeadcountByDepartment';
+import { MonthlyAbsence } from './reports/ReportComponents/MonthlyAbsence';
+import { SeniorityChart } from './reports/ReportComponents/SeniorityChart';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Users, UserCheck, Calendar, Award, GraduationCap, BadgePercent, BarChart, PieChart } from 'lucide-react';
 
-const EmployeesReports: React.FC = () => {
-  const [selectedPeriod, setSelectedPeriod] = useState<string>("month");
-  const [activeTab, setActiveTab] = useState<string>("all");
-  
-  const { reports, stats, isLoading } = useReportsData();
-  
-  // Helper function to map report status to ReportCard status
-  const mapReportStatus = (status: string): "ready" | "updating" | "scheduled" => {
-    switch (status) {
-      case 'Généré': return 'ready';
-      case 'En traitement': return 'updating';
-      case 'Erreur': return 'scheduled'; // Using scheduled for error state
-      default: return 'ready';
-    }
-  };
-  
-  // Combine real reports with mock reports for demonstration
-  const combinedReports: ReportCardProps[] = [
-    ...getMockReports(),
-    ...reports.map(report => ({
-      title: report.title,
-      description: report.description || 'Rapport généré automatiquement',
-      lastUpdated: report.createdDate,
-      icon: React.createElement(getReportIcon(report.type), { className: "h-5 w-5 text-blue-500" }),
-      status: mapReportStatus(report.status),
-      category: getCategoryFromType(report.type)
-    }))
-  ];
-  
-  // Helper function to get icon based on report type
-  function getReportIcon(type: string) {
-    switch (type.toLowerCase()) {
-      case 'effectifs':
-      case 'personnel':
-        return Users;
-      case 'absences':
-      case 'congés':
-        return Calendar;
-      case 'statistiques':
-        return PieChart;
-      default:
-        return FileText;
-    }
+const reportComponents = [
+  {
+    id: 'headcount',
+    title: 'Effectifs par département',
+    description: 'Répartition des employés par département',
+    icon: Users,
+    component: HeadcountByDepartment
+  },
+  {
+    id: 'absence',
+    title: 'Absentéisme mensuel',
+    description: 'Évolution mensuelle des absences',
+    icon: UserCheck,
+    component: MonthlyAbsence
+  },
+  {
+    id: 'seniority',
+    title: 'Ancienneté moyenne',
+    description: 'Répartition de l\'ancienneté des employés',
+    icon: Calendar,
+    component: SeniorityChart
   }
-  
-  // Helper function to map report type to category
-  function getCategoryFromType(type: string): string {
-    switch (type.toLowerCase()) {
-      case 'effectifs':
-      case 'personnel':
-        return 'rh';
-      case 'absences':
-      case 'congés':
-        return 'absence';
-      case 'performance':
-        return 'performance';
-      case 'formation':
-        return 'formation';
-      case 'salaire':
-      case 'paie':
-        return 'paie';
-      case 'contrat':
-        return 'contrat';
-      default:
-        return 'rh';
-    }
-  }
-  
+];
+
+const EmployeesReports = () => {
   return (
-    <Card className="w-full">
-      <CardContent className="p-6">
-        <div className="space-y-6">
-          <ReportFilters 
-            selectedPeriod={selectedPeriod}
-            setSelectedPeriod={setSelectedPeriod}
-          />
-          
-          <ReportCategoryTabs 
-            activeTab={activeTab}
-            setActiveTab={setActiveTab}
-            reports={combinedReports}
-          />
+    <ScrollArea className="h-full">
+      <div className="container mx-auto p-6 space-y-6">
+        <h2 className="text-3xl font-bold mb-6">Rapports RH</h2>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {reportComponents.map((report) => {
+            const ReportComponent = report.component;
+            const Icon = report.icon;
+            
+            return (
+              <Card key={report.id} className="shadow-lg">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-lg font-medium">
+                    <div className="flex items-center space-x-2">
+                      <Icon className="w-5 h-5" />
+                      <span>{report.title}</span>
+                    </div>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-muted-foreground mb-4">{report.description}</p>
+                  <ReportComponent />
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </ScrollArea>
   );
 };
 
