@@ -1,3 +1,4 @@
+
 export interface BadgeData {
   id: string;
   employeeId: string;
