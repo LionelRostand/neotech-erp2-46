@@ -26,14 +26,16 @@ const CreateBadgeDialog: React.FC<CreateBadgeDialogProps> = ({
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<string>('');
   const [accessLevel, setAccessLevel] = useState<string>('');
   const [badgeNumber, setBadgeNumber] = useState(generateBadgeNumber());
-  const [companyId, setCompanyId] = useState<string>('');
+  const [companyValue, setCompanyValue] = useState<string>('');
   
   // Get unique companies from employees
   const companies = React.useMemo(() => {
     const uniqueCompanies = new Map();
     employees.forEach(emp => {
-      if (emp.companyId && !uniqueCompanies.has(emp.companyId)) {
-        uniqueCompanies.set(emp.companyId, emp.companyName || 'Entreprise inconnue');
+      if (emp.company && typeof emp.company === 'string' && !uniqueCompanies.has(emp.company)) {
+        uniqueCompanies.set(emp.company, 'Entreprise');
+      } else if (emp.company && typeof emp.company === 'object' && emp.company.id && !uniqueCompanies.has(emp.company.id)) {
+        uniqueCompanies.set(emp.company.id, emp.company.name || 'Entreprise');
       }
     });
     return Array.from(uniqueCompanies).map(([id, name]) => ({ id, name }));
@@ -62,8 +64,8 @@ const CreateBadgeDialog: React.FC<CreateBadgeDialogProps> = ({
       accessLevel: accessLevel,
       status: "success",
       statusText: "Actif",
-      companyId: companyId || employee.companyId || '',
-      companyName: companies.find(c => c.id === (companyId || employee.companyId))?.name || ''
+      company: companyValue || (typeof employee.company === 'string' ? employee.company : 
+                           typeof employee.company === 'object' && employee.company ? employee.company.id : '')
     };
     
     // Callback to add the badge
@@ -78,7 +80,7 @@ const CreateBadgeDialog: React.FC<CreateBadgeDialogProps> = ({
     setSelectedEmployee('');
     setSelectedEmployeeId('');
     setAccessLevel('');
-    setCompanyId('');
+    setCompanyValue('');
     setBadgeNumber(generateBadgeNumber());
   };
   
@@ -91,8 +93,12 @@ const CreateBadgeDialog: React.FC<CreateBadgeDialogProps> = ({
   useEffect(() => {
     if (selectedEmployeeId) {
       const employee = employees.find(emp => emp.id === selectedEmployeeId);
-      if (employee && employee.companyId) {
-        setCompanyId(employee.companyId);
+      if (employee && employee.company) {
+        if (typeof employee.company === 'string') {
+          setCompanyValue(employee.company);
+        } else if (typeof employee.company === 'object' && employee.company.id) {
+          setCompanyValue(employee.company.id);
+        }
       }
     }
   }, [selectedEmployeeId, employees]);
@@ -162,7 +168,7 @@ const CreateBadgeDialog: React.FC<CreateBadgeDialogProps> = ({
                 Entreprise
               </Label>
               <div className="col-span-3">
-                <Select value={companyId} onValueChange={setCompanyId}>
+                <Select value={companyValue} onValueChange={setCompanyValue}>
                   <SelectTrigger>
                     <SelectValue placeholder="Sélectionner une entreprise" />
                   </SelectTrigger>

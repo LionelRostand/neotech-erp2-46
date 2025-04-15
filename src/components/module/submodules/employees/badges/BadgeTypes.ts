@@ -6,7 +6,7 @@ export interface BadgeData {
   department: string;
   accessLevel: string;
   date: string;
-  status: 'success' | 'warning' | 'danger';  // Changed 'error' to 'danger' to maintain consistency
+  status: 'success' | 'warning' | 'danger';
   statusText: string;
   company?: string;
 }
