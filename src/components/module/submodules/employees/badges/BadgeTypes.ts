@@ -6,6 +6,7 @@ export interface BadgeData {
   employeeName: string;
   department?: string;
   companyId?: string;
+  photo?: string;
   accessLevel: string;
   status: 'success' | 'warning' | 'danger' | string;
   statusText: string;

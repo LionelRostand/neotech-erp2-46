@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -9,6 +8,7 @@ import { Employee } from '@/types/employee';
 import { jsPDF } from 'jspdf';
 import { Company } from '@/components/module/submodules/companies/types';
 import { useCompaniesData } from '@/hooks/useCompaniesData';
+import ImageIcon from '@/components/ui/icons/ImageIcon';
 
 interface BadgePreviewDialogProps {
   isOpen: boolean;
@@ -34,13 +34,11 @@ const BadgePreviewDialog: React.FC<BadgePreviewDialogProps> = ({
     
     if (!selectedEmployee.company) return "Enterprise";
     
-    // Si company est un string (ID), chercher l'entreprise correspondante
     if (typeof selectedEmployee.company === 'string') {
       const companyData = companies.find(c => c.id === selectedEmployee.company);
       return companyData?.name || selectedEmployee.company;
     }
     
-    // Si c'est un objet Company
     const companyObj = selectedEmployee.company as Company;
     return companyObj.name || companyObj.id || "Enterprise";
   };
@@ -74,12 +72,16 @@ const BadgePreviewDialog: React.FC<BadgePreviewDialogProps> = ({
     doc.setFont('helvetica', 'bold');
     doc.text(companyName.toUpperCase(), 5, 7);
     
+    if (selectedBadge.photo) {
+      const img = new Image();
+      img.src = selectedBadge.photo;
+      doc.addImage(img, 'JPEG', 5, 15, 20, 20);
+    }
+    
     doc.setTextColor(0, 0, 0);
     doc.setFontSize(8);
-    
-    // Ajout de l'ID du badge et de l'employé
-    doc.text(`Badge ID: ${selectedBadge.id}`, 5, 18);
-    doc.text(`Employee ID: ${employeeId}`, 5, 23);
+    doc.text(`Badge ID: ${selectedBadge.id}`, 30, 18);
+    doc.text(`Employee ID: ${employeeId}`, 30, 23);
     
     doc.setFontSize(12);
     doc.setFont('helvetica', 'bold');
@@ -102,14 +104,12 @@ const BadgePreviewDialog: React.FC<BadgePreviewDialogProps> = ({
     doc.setTextColor(statusColor[0], statusColor[1], statusColor[2]);
     doc.text(`Statut: ${selectedBadge.statusText}`, 42.5, 46, { align: 'center' });
     
-    // Footer
     doc.setFillColor(70, 70, 70);
     doc.rect(0, 50, 85, 4, 'F');
     doc.setFontSize(6);
     doc.setTextColor(255, 255, 255);
     doc.text('Ce badge doit être porté visiblement à tout moment', 42.5, 52.5, { align: 'center' });
     
-    // QR Code style box
     doc.setFillColor(0, 0, 0);
     doc.rect(5, 36, 10, 10, 'F');
     doc.setFillColor(255, 255, 255);
@@ -138,13 +138,27 @@ const BadgePreviewDialog: React.FC<BadgePreviewDialogProps> = ({
               <span className="text-white font-bold text-sm">{companyName.toUpperCase()}</span>
             </div>
             
-            <div className="text-center mb-3">
-              <div className="space-y-1">
+            <div className="flex items-start gap-4 mb-4">
+              <div className="w-24 h-24 rounded-lg overflow-hidden bg-gray-200 flex-shrink-0">
+                {selectedBadge.photo ? (
+                  <img 
+                    src={selectedBadge.photo} 
+                    alt={selectedBadge.employeeName}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <ImageIcon className="w-8 h-8 text-gray-400" />
+                  </div>
+                )}
+              </div>
+              
+              <div className="flex-1">
                 <p className="text-sm text-gray-500">ID Badge: {selectedBadge.id}</p>
                 <p className="text-sm text-gray-500">ID Employé: {employeeId}</p>
+                <h3 className="text-lg font-bold mt-1">{selectedBadge.employeeName}</h3>
+                <p className="text-sm text-gray-600">Entreprise: {companyName}</p>
               </div>
-              <h3 className="text-lg font-bold mt-2">{selectedBadge.employeeName}</h3>
-              <p className="text-sm text-gray-600">Entreprise: {companyName}</p>
             </div>
             
             <div className="space-y-2 text-sm">

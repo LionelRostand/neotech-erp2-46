@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
@@ -6,16 +5,16 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
-import { Employee } from '@/types/employee';
 import { BadgeData, generateBadgeNumber } from './BadgeTypes';
 import { useAvailableDepartments } from '@/hooks/useAvailableDepartments';
 import { useFirebaseCompanies } from '@/hooks/useFirebaseCompanies';
+import { Image as ImageIcon, Upload } from 'lucide-react';
 
 interface CreateBadgeDialogProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   onBadgeCreated: (badge: BadgeData) => void;
-  employees: Employee[];
+  employees: any[];
 }
 
 const CreateBadgeDialog: React.FC<CreateBadgeDialogProps> = ({
@@ -30,8 +29,21 @@ const CreateBadgeDialog: React.FC<CreateBadgeDialogProps> = ({
   const [department, setDepartment] = useState<string>('no_department');
   const [badgeNumber, setBadgeNumber] = useState(generateBadgeNumber());
   const [selectedCompany, setSelectedCompany] = useState<string>('');
+  const [photo, setPhoto] = useState<string>('');
+  
   const { departments } = useAvailableDepartments();
   const { companies, isLoading: isLoadingCompanies } = useFirebaseCompanies();
+
+  const handlePhotoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPhoto(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   const handleCreateBadge = () => {
     if (!selectedEmployee || !accessLevel || !selectedCompany) {
@@ -51,8 +63,9 @@ const CreateBadgeDialog: React.FC<CreateBadgeDialogProps> = ({
       employeeId: employee.id,
       employeeName: `${employee.firstName} ${employee.lastName}`,
       department: department === 'no_department' ? employee.department || '' : department,
-      accessLevel: accessLevel,
       companyId: selectedCompany,
+      photo: photo,
+      accessLevel: accessLevel,
       status: "success",
       statusText: "Actif"
     };
@@ -68,6 +81,7 @@ const CreateBadgeDialog: React.FC<CreateBadgeDialogProps> = ({
     setAccessLevel('');
     setDepartment('no_department');
     setSelectedCompany('');
+    setPhoto('');
     setBadgeNumber(generateBadgeNumber());
   };
   
@@ -82,6 +96,7 @@ const CreateBadgeDialog: React.FC<CreateBadgeDialogProps> = ({
         <DialogHeader>
           <DialogTitle>Créer un nouveau badge</DialogTitle>
         </DialogHeader>
+        
         <div className="grid gap-4 py-4">
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="company" className="text-right">
@@ -104,6 +119,41 @@ const CreateBadgeDialog: React.FC<CreateBadgeDialogProps> = ({
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="photo" className="text-right">
+              Photo
+            </Label>
+            <div className="col-span-3">
+              <div className="flex items-center gap-4">
+                <div className="w-20 h-20 border rounded-lg overflow-hidden flex items-center justify-center bg-gray-50">
+                  {photo ? (
+                    <img src={photo} alt="Photo de profil" className="w-full h-full object-cover" />
+                  ) : (
+                    <ImageIcon className="w-8 h-8 text-gray-400" />
+                  )}
+                </div>
+                <div className="flex-1">
+                  <Input
+                    id="photo"
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handlePhotoUpload}
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="w-full"
+                    onClick={() => document.getElementById('photo')?.click()}
+                  >
+                    <Upload className="w-4 h-4 mr-2" />
+                    Choisir une photo
+                  </Button>
+                </div>
+              </div>
             </div>
           </div>
 
