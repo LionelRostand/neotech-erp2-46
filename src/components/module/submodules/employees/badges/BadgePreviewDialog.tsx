@@ -1,14 +1,14 @@
+
 import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Download } from 'lucide-react';
+import { Download, Image } from 'lucide-react';
 import { toast } from 'sonner';
 import { BadgeData } from './BadgeTypes';
 import { Employee } from '@/types/employee';
 import { jsPDF } from 'jspdf';
 import { Company } from '@/components/module/submodules/companies/types';
 import { useCompaniesData } from '@/hooks/useCompaniesData';
-import ImageIcon from '@/components/ui/icons/ImageIcon';
 
 interface BadgePreviewDialogProps {
   isOpen: boolean;
@@ -148,7 +148,7 @@ const BadgePreviewDialog: React.FC<BadgePreviewDialogProps> = ({
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center">
-                    <ImageIcon className="w-8 h-8 text-gray-400" />
+                    <Image className="w-8 h-8 text-gray-400" />
                   </div>
                 )}
               </div>
