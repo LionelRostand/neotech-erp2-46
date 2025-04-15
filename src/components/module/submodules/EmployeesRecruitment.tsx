@@ -16,26 +16,32 @@ const EmployeesRecruitment = () => {
 
   const columns = [
     {
+      key: "position",
       header: "Poste",
       cell: ({ row }) => row.original.position
     },
     {
+      key: "department",
       header: "Département",
       cell: ({ row }) => row.original.department
     },
     {
+      key: "status",
       header: "Statut",
       cell: ({ row }) => row.original.status
     },
     {
+      key: "priority",
       header: "Priorité",
       cell: ({ row }) => row.original.priority
     },
     {
+      key: "location",
       header: "Localisation",
       cell: ({ row }) => row.original.location
     },
     {
+      key: "actions",
       header: "Actions",
       cell: ({ row }) => (
         <div className="flex items-center gap-2">
