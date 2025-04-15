@@ -6,7 +6,7 @@ import RecruitmentStats from './recruitment/RecruitmentStats';
 import RecruitmentViewDialog from './recruitment/RecruitmentViewDialog';
 import RecruitmentScheduleDialog from './recruitment/RecruitmentScheduleDialog';
 import CandidateTrackingView from './recruitment/CandidateTrackingView';
-import { RecruitmentPost } from '@/types/recruitment';
+import { RecruitmentPost, RecruitmentStage } from '@/types/recruitment';
 import { useRecruitmentFirebaseData } from '@/hooks/useRecruitmentFirebaseData';
 
 const EmployeesRecruitment = () => {
@@ -14,6 +14,36 @@ const EmployeesRecruitment = () => {
   const [selectedRecruitment, setSelectedRecruitment] = useState<RecruitmentPost | null>(null);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [scheduleDialogOpen, setScheduleDialogOpen] = useState(false);
+
+  // Mock data for demonstration - In real app, this would come from your data source
+  const mockTrackingData = {
+    currentStage: 'Entretien RH' as RecruitmentStage,
+    stageHistory: [
+      {
+        stage: 'Candidature déposée' as RecruitmentStage,
+        date: '2024-04-10',
+        comments: 'Candidature reçue'
+      },
+      {
+        stage: 'CV en cours d\'analyse' as RecruitmentStage,
+        date: '2024-04-11',
+        comments: 'CV en cours d\'évaluation'
+      },
+      {
+        stage: 'Entretien RH' as RecruitmentStage,
+        date: '2024-04-15',
+        comments: 'Entretien RH planifié'
+      }
+    ]
+  };
+
+  const handleStageUpdate = (newStage: RecruitmentStage) => {
+    // Here you would update the stage in your database
+    console.log('Updating stage to:', newStage);
+    
+    // For demo purposes, we're just logging the change
+    // In a real app, you would make an API call to update the database
+  };
 
   // Column definitions with required 'key' property
   const columns = [
@@ -72,28 +102,6 @@ const EmployeesRecruitment = () => {
     }
   ];
 
-  // Mock data for demonstration - In real app, this would come from your data source
-  const mockTrackingData = {
-    currentStage: 'Entretien RH' as const,
-    stageHistory: [
-      {
-        stage: 'Candidature déposée' as const,
-        date: '2024-04-10',
-        comments: 'Candidature reçue'
-      },
-      {
-        stage: 'CV en cours d\'analyse' as const,
-        date: '2024-04-11',
-        comments: 'CV en cours d\'évaluation'
-      },
-      {
-        stage: 'Entretien RH' as const,
-        date: '2024-04-15',
-        comments: 'Entretien RH planifié'
-      }
-    ]
-  };
-
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -113,6 +121,7 @@ const EmployeesRecruitment = () => {
           <CandidateTrackingView
             currentStage={mockTrackingData.currentStage}
             stageHistory={mockTrackingData.stageHistory}
+            onStageUpdate={handleStageUpdate}
           />
         </div>
       </div>
