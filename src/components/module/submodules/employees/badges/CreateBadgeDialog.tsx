@@ -26,7 +26,7 @@ const CreateBadgeDialog: React.FC<CreateBadgeDialogProps> = ({
   const [selectedEmployee, setSelectedEmployee] = useState<string>('');
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<string>('');
   const [accessLevel, setAccessLevel] = useState<string>('');
-  const [department, setDepartment] = useState<string>('');
+  const [department, setDepartment] = useState<string>('no_department');
   const [badgeNumber, setBadgeNumber] = useState(generateBadgeNumber());
   const { departments } = useAvailableDepartments();
 
@@ -49,7 +49,7 @@ const CreateBadgeDialog: React.FC<CreateBadgeDialogProps> = ({
       date: new Date().toISOString().split('T')[0],
       employeeId: employee.id,
       employeeName: `${employee.firstName} ${employee.lastName}`,
-      department: department || employee.department || '',
+      department: department === 'no_department' ? employee.department || '' : department,
       accessLevel: accessLevel,
       status: "success",
       statusText: "Actif"
@@ -67,7 +67,7 @@ const CreateBadgeDialog: React.FC<CreateBadgeDialogProps> = ({
     setSelectedEmployee('');
     setSelectedEmployeeId('');
     setAccessLevel('');
-    setDepartment('');
+    setDepartment('no_department');
     setBadgeNumber(generateBadgeNumber());
   };
   
@@ -130,7 +130,7 @@ const CreateBadgeDialog: React.FC<CreateBadgeDialogProps> = ({
                   <SelectValue placeholder="Sélectionner un département" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Aucun département</SelectItem>
+                  <SelectItem value="no_department">Aucun département</SelectItem>
                   {departments.map((dept) => (
                     <SelectItem key={dept.id} value={dept.id}>
                       {dept.name}
