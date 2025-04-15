@@ -1,4 +1,3 @@
-
 export interface RecruitmentPost {
   id: string;
   position: string;

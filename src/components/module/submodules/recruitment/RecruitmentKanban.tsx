@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { RecruitmentStage, CandidateApplication, RecruitmentPost } from '@/types/recruitment';
@@ -73,7 +72,7 @@ const RecruitmentKanban = () => {
     }
   }, [recruitmentPosts, isLoading]);
 
-  const handleDragEnd = (event: DragEndEvent) => {
+  const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
 
     if (!over) return;
