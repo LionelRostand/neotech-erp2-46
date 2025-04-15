@@ -22,4 +22,13 @@ export interface RecruitmentPost {
   interviews_scheduled?: number;
   created_at: string;
   updated_at: string;
+  
+  // Adding the fields from useRecruitmentData.ts
+  openDate?: string;
+  applicationDeadline?: string;
+  hiringManagerId?: string;
+  hiringManagerName?: string;
+  contractType?: string;
+  salary?: string;
+  applicationCount?: number;
 }
