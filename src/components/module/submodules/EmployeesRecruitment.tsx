@@ -4,6 +4,7 @@ import { useRecruitmentData } from '@/hooks/useRecruitmentData';
 import { DataTable } from '@/components/ui/data-table';
 import { Button } from '@/components/ui/button';
 import { Eye, Pencil, CalendarPlus } from 'lucide-react';
+import RecruitmentStats from './recruitment/RecruitmentStats';
 import RecruitmentViewDialog from './recruitment/RecruitmentViewDialog';
 import RecruitmentScheduleDialog from './recruitment/RecruitmentScheduleDialog';
 import { RecruitmentPost } from '@/hooks/useRecruitmentData';
@@ -14,6 +15,7 @@ const EmployeesRecruitment = () => {
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [scheduleDialogOpen, setScheduleDialogOpen] = useState(false);
 
+  // Column definitions with required 'key' property
   const columns = [
     {
       key: "position",
@@ -72,6 +74,8 @@ const EmployeesRecruitment = () => {
 
   return (
     <div className="space-y-4">
+      <RecruitmentStats />
+      
       <DataTable
         columns={columns}
         data={recruitmentPosts}
