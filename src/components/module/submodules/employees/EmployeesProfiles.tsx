@@ -9,7 +9,7 @@ import {
 } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Search, Plus, UserPlus } from 'lucide-react';
+import { Search, UserPlus } from 'lucide-react';
 import { Employee } from '@/types/employee';
 import { useEmployeeData } from '@/hooks/useEmployeeData';
 import EmployeesList from './EmployeesList';
@@ -137,7 +137,7 @@ const EmployeesProfiles: React.FC<EmployeesProfilesProps> = ({ employees: initia
             <CardContent className="p-6">
               <EmployeesList
                 employees={filteredEmployees}
-                onSelectEmployee={handleSelectEmployee}
+                onSelect={handleSelectEmployee}
               />
             </CardContent>
           </Card>
@@ -148,7 +148,7 @@ const EmployeesProfiles: React.FC<EmployeesProfilesProps> = ({ employees: initia
             <CardContent className="p-6">
               <EmployeesList
                 employees={filteredEmployees.filter(e => e.status === 'active' || e.status === 'Actif')}
-                onSelectEmployee={handleSelectEmployee}
+                onSelect={handleSelectEmployee}
               />
             </CardContent>
           </Card>
@@ -159,7 +159,7 @@ const EmployeesProfiles: React.FC<EmployeesProfilesProps> = ({ employees: initia
             <CardContent className="p-6">
               <EmployeesList
                 employees={filteredEmployees.filter(e => e.status === 'onLeave' || e.status === 'En congé')}
-                onSelectEmployee={handleSelectEmployee}
+                onSelect={handleSelectEmployee}
               />
             </CardContent>
           </Card>
@@ -170,7 +170,7 @@ const EmployeesProfiles: React.FC<EmployeesProfilesProps> = ({ employees: initia
             <CardContent className="p-6">
               <EmployeesList
                 employees={filteredEmployees.filter(e => e.status === 'inactive' || e.status === 'Inactif')}
-                onSelectEmployee={handleSelectEmployee}
+                onSelect={handleSelectEmployee}
               />
             </CardContent>
           </Card>
@@ -180,7 +180,7 @@ const EmployeesProfiles: React.FC<EmployeesProfilesProps> = ({ employees: initia
       <CreateEmployeeDialog
         open={isCreating}
         onOpenChange={setIsCreating}
-        onEmployeeCreated={handleEmployeeCreated}
+        onCreated={handleEmployeeCreated}
         departments={departments}
       />
     </div>
