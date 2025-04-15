@@ -22,9 +22,9 @@ const CreateBadgeDialog: React.FC<CreateBadgeDialogProps> = ({
   onBadgeCreated,
   employees = []
 }) => {
-  const [selectedEmployee, setSelectedEmployee] = useState<string>('');
+  const [selectedEmployee, setSelectedEmployee] = useState<string | undefined>(undefined);
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<string>('');
-  const [accessLevel, setAccessLevel] = useState<string>('');
+  const [accessLevel, setAccessLevel] = useState<string | undefined>(undefined);
   const [badgeNumber, setBadgeNumber] = useState(generateBadgeNumber());
 
   const handleCreateBadge = () => {
@@ -61,9 +61,9 @@ const CreateBadgeDialog: React.FC<CreateBadgeDialogProps> = ({
   };
   
   const resetForm = () => {
-    setSelectedEmployee('');
+    setSelectedEmployee(undefined);
     setSelectedEmployeeId('');
-    setAccessLevel('');
+    setAccessLevel(undefined);
     setBadgeNumber(generateBadgeNumber());
   };
   
@@ -85,7 +85,7 @@ const CreateBadgeDialog: React.FC<CreateBadgeDialogProps> = ({
             </Label>
             <div className="col-span-3">
               <Select 
-                value={selectedEmployee || undefined} 
+                value={selectedEmployee} 
                 onValueChange={(value) => {
                   setSelectedEmployee(value);
                   const empId = value.split('|')[1];
@@ -96,8 +96,6 @@ const CreateBadgeDialog: React.FC<CreateBadgeDialogProps> = ({
                   <SelectValue placeholder="Sélectionner un employé" />
                 </SelectTrigger>
                 <SelectContent>
-                  {/* Replace the empty value with a non-empty placeholder value */}
-                  <SelectItem value="placeholder" disabled>Sélectionner un employé</SelectItem>
                   {employees.map((employee) => (
                     <SelectItem 
                       key={employee.id} 
@@ -115,13 +113,11 @@ const CreateBadgeDialog: React.FC<CreateBadgeDialogProps> = ({
               Niveau d'accès
             </Label>
             <div className="col-span-3">
-              <Select value={accessLevel || undefined} onValueChange={setAccessLevel}>
+              <Select value={accessLevel} onValueChange={setAccessLevel}>
                 <SelectTrigger>
                   <SelectValue placeholder="Sélectionner un niveau d'accès" />
                 </SelectTrigger>
                 <SelectContent>
-                  {/* Replace the empty value with a non-empty placeholder value */}
-                  <SelectItem value="placeholder" disabled>Sélectionner un niveau d'accès</SelectItem>
                   <SelectItem value="Sécurité Niveau 1">Sécurité Niveau 1</SelectItem>
                   <SelectItem value="Sécurité Niveau 2">Sécurité Niveau 2</SelectItem>
                   <SelectItem value="Sécurité Niveau 3">Sécurité Niveau 3</SelectItem>
