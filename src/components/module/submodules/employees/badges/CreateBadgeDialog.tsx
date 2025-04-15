@@ -1,179 +1,180 @@
 
-import React, { useState, useEffect } from 'react';
-import { 
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter 
-} from '@/components/ui/dialog';
-import { 
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue 
-} from '@/components/ui/select';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import React, { useState } from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { CreateBadgeDialogProps, BadgeData } from './BadgeTypes';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
 import { Employee } from '@/types/employee';
-import { Badge } from 'lucide-react';
+import { BadgeData, generateBadgeNumber } from './BadgeTypes';
+import { useAvailableDepartments } from '@/hooks/useAvailableDepartments';
 
-const accessLevels = [
-  'Direction',
-  'Administration',
-  'RH',
-  'Informatique',
-  'Finance',
-  'Marketing',
-  'Commercial',
-  'Production',
-  'Logistique',
-  'Sécurité niveau 1',
-  'Sécurité niveau 2',
-  'Sécurité niveau 3'
-];
+interface CreateBadgeDialogProps {
+  isOpen: boolean;
+  onOpenChange: (open: boolean) => void;
+  onBadgeCreated: (badge: BadgeData) => void;
+  employees: Employee[];
+}
 
-const dateToString = (date: Date) => {
-  return date.toISOString().split('T')[0];
-};
-
-const CreateBadgeDialog: React.FC<CreateBadgeDialogProps> = ({ 
-  isOpen, 
-  onOpenChange, 
+const CreateBadgeDialog: React.FC<CreateBadgeDialogProps> = ({
+  isOpen,
+  onOpenChange,
   onBadgeCreated,
-  employees = [] 
+  employees
 }) => {
+  const [selectedEmployee, setSelectedEmployee] = useState<string>('');
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<string>('');
-  const [selectedAccessLevel, setSelectedAccessLevel] = useState<string>('');
-  const [badgeNumber, setBadgeNumber] = useState<string>('');
-  const [uniqueEmployees, setUniqueEmployees] = useState<Employee[]>([]);
-  
-  // Generate a badge number on dialog open
-  useEffect(() => {
-    if (isOpen) {
-      setBadgeNumber(`B-${Math.floor(1000 + Math.random() * 9000)}`);
-    }
-  }, [isOpen]);
-  
-  // Filter out duplicate employees by email and name
-  useEffect(() => {
-    if (employees && employees.length > 0) {
-      const filteredEmployees = employees.reduce((acc: Employee[], current) => {
-        const isDuplicate = acc.find(
-          (item) => 
-            item.email === current.email || 
-            (item.firstName === current.firstName && item.lastName === current.lastName)
-        );
-        
-        if (!isDuplicate) {
-          acc.push(current);
-        }
-        
-        return acc;
-      }, []);
-      
-      setUniqueEmployees(filteredEmployees);
-    }
-  }, [employees]);
-  
-  const handleCreate = async () => {
-    if (!selectedEmployeeId || !selectedAccessLevel) {
+  const [accessLevel, setAccessLevel] = useState<string>('');
+  const [department, setDepartment] = useState<string>('');
+  const [badgeNumber, setBadgeNumber] = useState(generateBadgeNumber());
+  const { departments } = useAvailableDepartments();
+
+  const handleCreateBadge = () => {
+    if (!selectedEmployee || !accessLevel) {
+      toast.error("Veuillez sélectionner un employé et un niveau d'accès");
       return;
     }
     
-    // Trouver les informations de l'employé sélectionné
-    const employee = uniqueEmployees.find(emp => emp.id === selectedEmployeeId);
-    if (!employee) return;
+    // Find the employee in the employees array
+    const employee = employees.find(emp => emp.id === selectedEmployeeId);
+    if (!employee) {
+      toast.error("Employé non trouvé");
+      return;
+    }
     
+    // Create a new badge
     const newBadge: BadgeData = {
       id: badgeNumber,
-      date: dateToString(new Date()),
+      date: new Date().toISOString().split('T')[0],
       employeeId: employee.id,
       employeeName: `${employee.firstName} ${employee.lastName}`,
-      department: employee.department,
-      accessLevel: selectedAccessLevel,
-      status: 'success',
-      statusText: 'Actif'
+      department: department || employee.department || '',
+      accessLevel: accessLevel,
+      status: "success",
+      statusText: "Actif"
     };
     
-    await onBadgeCreated(newBadge);
-    // Réinitialiser les valeurs
-    setSelectedEmployeeId('');
-    setSelectedAccessLevel('');
+    // Callback to add the badge
+    onBadgeCreated(newBadge);
+    
+    // Reset form and close dialog
+    resetForm();
     onOpenChange(false);
   };
   
+  const resetForm = () => {
+    setSelectedEmployee('');
+    setSelectedEmployeeId('');
+    setAccessLevel('');
+    setDepartment('');
+    setBadgeNumber(generateBadgeNumber());
+  };
+  
+  const handleClose = () => {
+    resetForm();
+    onOpenChange(false);
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Badge className="h-5 w-5" />
-            Créer un nouveau badge
-          </DialogTitle>
+          <DialogTitle>Créer un nouveau badge</DialogTitle>
         </DialogHeader>
-        
         <div className="grid gap-4 py-4">
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="employee" className="text-right">
               Employé
             </Label>
-            <Select 
-              value={selectedEmployeeId || undefined}
-              onValueChange={setSelectedEmployeeId}
-            >
-              <SelectTrigger id="employee" className="col-span-3">
-                <SelectValue placeholder="Sélectionner un employé" />
-              </SelectTrigger>
-              <SelectContent>
-                {uniqueEmployees.map((employee) => (
-                  <SelectItem key={employee.id} value={employee.id}>
-                    {`${employee.firstName} ${employee.lastName}`}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="col-span-3">
+              <Select 
+                value={selectedEmployee || "none"} 
+                onValueChange={(value) => {
+                  setSelectedEmployee(value);
+                  const empId = value.split('|')[1];
+                  setSelectedEmployeeId(empId);
+                  
+                  // Set department from employee if available
+                  const employee = employees.find(emp => emp.id === empId);
+                  if (employee?.department) {
+                    setDepartment(employee.department);
+                  }
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Sélectionner un employé" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none" disabled>Sélectionner un employé</SelectItem>
+                  {employees.map((employee) => (
+                    <SelectItem 
+                      key={employee.id} 
+                      value={`${employee.firstName} ${employee.lastName}|${employee.id}`}
+                    >
+                      {employee.firstName} {employee.lastName}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
-          
+
           <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="accessLevel" className="text-right">
+            <Label htmlFor="department" className="text-right">
+              Département
+            </Label>
+            <div className="col-span-3">
+              <Select value={department} onValueChange={setDepartment}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Sélectionner un département" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">Aucun département</SelectItem>
+                  {departments.map((dept) => (
+                    <SelectItem key={dept.id} value={dept.id}>
+                      {dept.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="access" className="text-right">
               Niveau d'accès
             </Label>
-            <Select 
-              value={selectedAccessLevel || undefined}
-              onValueChange={setSelectedAccessLevel}
-            >
-              <SelectTrigger id="accessLevel" className="col-span-3">
-                <SelectValue placeholder="Sélectionner un niveau d'accès" />
-              </SelectTrigger>
-              <SelectContent>
-                {accessLevels.map((level) => (
-                  <SelectItem key={level} value={level}>
-                    {level}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="col-span-3">
+              <Select value={accessLevel || "none"} onValueChange={setAccessLevel}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Sélectionner un niveau d'accès" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none" disabled>Sélectionner un niveau d'accès</SelectItem>
+                  <SelectItem value="Sécurité Niveau 1">Sécurité Niveau 1</SelectItem>
+                  <SelectItem value="Sécurité Niveau 2">Sécurité Niveau 2</SelectItem>
+                  <SelectItem value="Sécurité Niveau 3">Sécurité Niveau 3</SelectItem>
+                  <SelectItem value="Administration">Administration</SelectItem>
+                  <SelectItem value="IT">IT</SelectItem>
+                  <SelectItem value="RH">RH</SelectItem>
+                  <SelectItem value="Marketing">Marketing</SelectItem>
+                  <SelectItem value="DIRECTION">DIRECTION</SelectItem>
+                  <SelectItem value="PDG">PDG</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
-          
+
           <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="badgeNumber" className="text-right">
+            <Label htmlFor="badge-number" className="text-right">
               Numéro de badge
             </Label>
-            <Input 
-              id="badgeNumber" 
-              value={badgeNumber}
-              disabled
-              className="col-span-3 bg-gray-100"
-            />
+            <Input id="badge-number" className="col-span-3" value={badgeNumber} disabled />
           </div>
         </div>
-        
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Annuler
-          </Button>
-          <Button 
-            onClick={handleCreate}
-            disabled={!selectedEmployeeId || !selectedAccessLevel}
-          >
-            Créer
-          </Button>
+          <Button variant="outline" onClick={handleClose}>Annuler</Button>
+          <Button onClick={handleCreateBadge}>Créer</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

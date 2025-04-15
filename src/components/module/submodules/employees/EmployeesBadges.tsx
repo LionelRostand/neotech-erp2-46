@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Badge as BadgeIcon, Plus, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -14,6 +13,7 @@ import { getBadges, addBadge, deleteDocument } from './services/badgeService';
 import { useHrModuleData } from '@/hooks/useHrModuleData';
 import { usePermissions } from '@/hooks/usePermissions';
 import { COLLECTIONS } from '@/lib/firebase-collections';
+import { useAvailableDepartments } from '@/hooks/useAvailableDepartments';
 
 const EmployeesBadges: React.FC = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -21,6 +21,7 @@ const EmployeesBadges: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const { employees } = useHrModuleData();
   const { isAdmin } = usePermissions('employees-badges');
+  const { departments } = useAvailableDepartments();
   
   const [isBadgePreviewOpen, setIsBadgePreviewOpen] = useState(false);
   const [selectedBadge, setSelectedBadge] = useState<BadgeData | null>(null);
@@ -30,7 +31,6 @@ const EmployeesBadges: React.FC = () => {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  // Charger les badges depuis Firebase
   useEffect(() => {
     loadBadges();
   }, []);
@@ -47,38 +47,38 @@ const EmployeesBadges: React.FC = () => {
       setLoading(false);
     }
   };
-  
+
   const handleCreateBadge = async (newBadge: BadgeData) => {
     try {
       console.log("Création d'un nouveau badge:", newBadge);
-      // Ajout du badge à Firebase
-      const addedBadge = await addBadge(newBadge);
+      const departmentName = departments.find(dept => dept.id === newBadge.department)?.name || newBadge.department;
+      const badgeToCreate = {
+        ...newBadge,
+        department: departmentName
+      };
+      
+      const addedBadge = await addBadge(badgeToCreate);
       
       if (addedBadge) {
-        // Mettre à jour l'état local
         setBadgesList(prev => [addedBadge, ...prev]);
-        // Afficher une notification de succès
         toast.success(`Badge créé avec succès pour l'employé: ${newBadge.employeeName}`);
       } else {
-        // En cas d'échec, ajouter quand même à l'état local pour une expérience utilisateur fluide
-        setBadgesList(prev => [newBadge, ...prev]);
+        setBadgesList(prev => [badgeToCreate, ...prev]);
         toast.error("Problème lors de la création du badge dans la base de données");
       }
     } catch (error) {
       console.error("Erreur lors de la création du badge:", error);
       toast.error("Échec de la création du badge");
       
-      // Quand même mettre à jour l'état local en mode optimiste
       setBadgesList(prev => [newBadge, ...prev]);
     }
   };
-  
+
   const handleViewBadge = (badgeId: string) => {
     const badge = badgesList.find(b => b.id === badgeId);
     if (badge) {
       setSelectedBadge(badge);
       
-      // Trouver l'employé correspondant
       const employee = employees.find(emp => emp.id === badge.employeeId) || 
                        employees.find(emp => `${emp.firstName} ${emp.lastName}` === badge.employeeName);
                        
@@ -91,15 +91,13 @@ const EmployeesBadges: React.FC = () => {
     await loadBadges();
     toast.success("Données des badges actualisées");
   };
-  
-  // Ouvrir le dialogue de suppression
+
   const handleDeleteClick = (badge: BadgeData) => {
     setSelectedBadge(badge);
     setIsBadgePreviewOpen(false);
     setIsDeleteDialogOpen(true);
   };
-  
-  // Confirmer la suppression
+
   const handleConfirmDelete = async () => {
     if (!selectedBadge) return;
     
@@ -107,10 +105,8 @@ const EmployeesBadges: React.FC = () => {
       setIsDeleting(true);
       await deleteDocument(COLLECTIONS.HR.BADGES, selectedBadge.id);
       
-      // Mettre à jour la liste des badges en retirant le badge supprimé
       setBadgesList(prev => prev.filter(badge => badge.id !== selectedBadge.id));
       
-      // Fermer le dialogue de suppression
       setIsDeleteDialogOpen(false);
       toast.success("Badge supprimé avec succès");
     } catch (error) {
@@ -120,7 +116,7 @@ const EmployeesBadges: React.FC = () => {
       setIsDeleting(false);
     }
   };
-  
+
   return (
     <>
       <div className="flex justify-between items-center mb-6">
@@ -130,7 +126,6 @@ const EmployeesBadges: React.FC = () => {
             <RefreshCw className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`} />
             Actualiser
           </Button>
-          {/* Suppression de la condition isAdmin pour afficher le bouton dans tous les cas */}
           <Button onClick={() => setIsDialogOpen(true)}>
             <Plus className="h-4 w-4 mr-2" />
             Créer un badge
