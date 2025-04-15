@@ -53,13 +53,13 @@ const TimesheetTable: React.FC<TimesheetTableProps> = ({
   const getStatusBadge = (status: TimeReportStatus) => {
     switch (status) {
       case "En cours":
-        return <Badge variant="outline" className="bg-blue-50 text-blue-800 border-blue-200">En cours</Badge>;
+        return <Badge className="bg-blue-50 text-blue-800 border border-blue-200 hover:bg-blue-100">En cours</Badge>;
       case "Soumis":
-        return <Badge variant="outline" className="bg-amber-50 text-amber-800 border-amber-200">Soumis</Badge>;
+        return <Badge className="bg-amber-50 text-amber-800 border border-amber-200 hover:bg-amber-100">Soumis</Badge>;
       case "Validé":
-        return <Badge variant="outline" className="bg-green-50 text-green-800 border-green-200">Validé</Badge>;
+        return <Badge className="bg-green-50 text-green-800 border border-green-200 hover:bg-green-100">Validé</Badge>;
       case "Rejeté":
-        return <Badge variant="outline" className="bg-red-50 text-red-800 border-red-200">Rejeté</Badge>;
+        return <Badge className="bg-red-50 text-red-800 border border-red-200 hover:bg-red-100">Rejeté</Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
     }
@@ -101,17 +101,17 @@ const TimesheetTable: React.FC<TimesheetTableProps> = ({
 
   return (
     <>
-      <div className="border rounded-md overflow-hidden bg-white">
+      <div className="border rounded-md overflow-hidden bg-white shadow-sm">
         <Table>
-          <TableHeader>
+          <TableHeader className="bg-gray-50">
             <TableRow>
-              <TableHead>Employé</TableHead>
-              <TableHead>Période</TableHead>
-              <TableHead className="hidden md:table-cell">Titre</TableHead>
-              <TableHead className="text-center">Heures</TableHead>
-              <TableHead className="text-center">Statut</TableHead>
-              <TableHead className="hidden md:table-cell">Mise à jour</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+              <TableHead className="text-gray-600">Employé</TableHead>
+              <TableHead className="text-gray-600">Période</TableHead>
+              <TableHead className="hidden md:table-cell text-gray-600">Titre</TableHead>
+              <TableHead className="text-center text-gray-600">Heures</TableHead>
+              <TableHead className="text-center text-gray-600">Statut</TableHead>
+              <TableHead className="hidden md:table-cell text-gray-600">Mise à jour</TableHead>
+              <TableHead className="text-right text-gray-600">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -123,38 +123,38 @@ const TimesheetTable: React.FC<TimesheetTableProps> = ({
               </TableRow>
             ) : (
               data.map((report) => (
-                <TableRow key={report.id}>
+                <TableRow key={report.id} className="hover:bg-gray-50/50 transition-colors">
                   <TableCell>
                     <div className="flex items-center gap-2">
-                      <Avatar className="h-7 w-7">
-                        <AvatarImage src={report.employeePhoto} />
-                        <AvatarFallback>{report.employeeName?.charAt(0) || "U"}</AvatarFallback>
+                      <Avatar className="h-7 w-7 border">
+                        <AvatarImage src={report.employeePhoto} alt={report.employeeName} />
+                        <AvatarFallback className="bg-blue-100 text-blue-800">
+                          {report.employeeName?.charAt(0) || "U"}
+                        </AvatarFallback>
                       </Avatar>
-                      <span className="font-medium">{report.employeeName}</span>
+                      <span className="font-medium text-gray-700">{report.employeeName}</span>
                     </div>
                   </TableCell>
-                  <TableCell>
-                    <div className="text-sm">
-                      {formatDateValue(report.startDate)} - {formatDateValue(report.endDate)}
-                    </div>
+                  <TableCell className="text-gray-600">
+                    {formatDateValue(report.startDate)} - {formatDateValue(report.endDate)}
                   </TableCell>
-                  <TableCell className="hidden md:table-cell">
+                  <TableCell className="hidden md:table-cell text-gray-600">
                     {report.title}
                   </TableCell>
-                  <TableCell className="text-center font-medium">
+                  <TableCell className="text-center font-medium text-gray-700">
                     {report.totalHours}h
                   </TableCell>
                   <TableCell className="text-center">
                     {getStatusBadge(report.status)}
                   </TableCell>
-                  <TableCell className="hidden md:table-cell text-sm text-muted-foreground">
+                  <TableCell className="hidden md:table-cell text-sm text-gray-500">
                     {report.lastUpdateText || formatDateValue(report.lastUpdated)}
                   </TableCell>
                   <TableCell className="text-right">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="sm">
-                          <MoreHorizontal className="h-4 w-4" />
+                        <Button variant="ghost" size="sm" className="hover:bg-gray-100">
+                          <MoreHorizontal className="h-4 w-4 text-gray-600" />
                           <span className="sr-only">Actions</span>
                         </Button>
                       </DropdownMenuTrigger>
