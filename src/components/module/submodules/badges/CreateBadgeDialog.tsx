@@ -94,7 +94,7 @@ const CreateBadgeDialog: React.FC<CreateBadgeDialogProps> = ({
                   <SelectValue placeholder="Sélectionner un employé" />
                 </SelectTrigger>
                 <SelectContent>
-                  {employees.length > 0 ? (
+                  {employees && employees.length > 0 ? (
                     employees.map((employee) => (
                       <SelectItem 
                         key={employee.id} 
@@ -104,7 +104,7 @@ const CreateBadgeDialog: React.FC<CreateBadgeDialogProps> = ({
                       </SelectItem>
                     ))
                   ) : (
-                    <SelectItem value="no-employees">Aucun employé disponible</SelectItem>
+                    <SelectItem value="no-employees-available">Aucun employé disponible</SelectItem>
                   )}
                 </SelectContent>
               </Select>
