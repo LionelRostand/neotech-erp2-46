@@ -12,6 +12,7 @@ import { Employee } from '@/types/employee';
 export const createEmployee = async (employeeData: Partial<Employee>): Promise<Employee | null> => {
   try {
     console.log('Creating employee in Firestore:', employeeData);
+    
     // Vérifier si un employé avec cet email existe déjà
     if (employeeData.email) {
       const emailQuery = query(
@@ -32,6 +33,7 @@ export const createEmployee = async (employeeData: Partial<Employee>): Promise<E
       ...employeeData,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
+      status: employeeData.status || 'active'
     });
     
     // Récupérer l'employé créé avec son ID

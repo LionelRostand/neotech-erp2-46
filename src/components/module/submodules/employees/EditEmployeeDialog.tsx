@@ -8,8 +8,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useForm } from 'react-hook-form';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { User } from 'lucide-react';
 import PhotoUploadField from '@/components/module/submodules/employees/form/PhotoUploadField';
 
 interface EditEmployeeDialogProps {
@@ -50,18 +48,7 @@ export const EditEmployeeDialog: React.FC<EditEmployeeDialogProps> = ({
         </DialogHeader>
         
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <div className="flex flex-col items-center gap-4 mb-6">
-            <Avatar className="h-24 w-24">
-              <AvatarImage 
-                src={employee.photoURL || employee.photo} 
-                alt={`${employee.firstName} ${employee.lastName}`} 
-              />
-              <AvatarFallback>
-                <User className="h-12 w-12 text-gray-400" />
-              </AvatarFallback>
-            </Avatar>
-            <PhotoUploadField defaultPhotoUrl={employee.photoURL || employee.photo} />
-          </div>
+          <PhotoUploadField defaultPhotoUrl={employee.photoURL || employee.photo} />
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
@@ -108,6 +95,10 @@ export const EditEmployeeDialog: React.FC<EditEmployeeDialogProps> = ({
                 <SelectItem value="active">Actif</SelectItem>
                 <SelectItem value="onLeave">En congé</SelectItem>
                 <SelectItem value="inactive">Inactif</SelectItem>
+                <SelectItem value="Actif">Actif</SelectItem>
+                <SelectItem value="En congé">En congé</SelectItem>
+                <SelectItem value="Inactif">Inactif</SelectItem>
+                <SelectItem value="Suspendu">Suspendu</SelectItem>
               </SelectContent>
             </Select>
           </div>
