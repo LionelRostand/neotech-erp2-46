@@ -113,14 +113,14 @@ export const EditEmployeeDialog: React.FC<EditEmployeeDialogProps> = ({
           <div className="space-y-2">
             <Label htmlFor="department">Département</Label>
             <Select 
-              defaultValue={employee.department || ''} 
+              defaultValue={employee.department || 'no_department'} 
               onValueChange={(value) => setValue('department', value)}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Sélectionner un département" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Aucun département</SelectItem>
+                <SelectItem value="no_department">Aucun département</SelectItem>
                 {departments.map((dept) => (
                   <SelectItem key={dept.id} value={dept.name}>
                     {dept.name}
@@ -184,4 +184,3 @@ export const EditEmployeeDialog: React.FC<EditEmployeeDialogProps> = ({
     </Dialog>
   );
 };
-
