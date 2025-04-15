@@ -44,13 +44,10 @@ const RecruitmentKanban = () => {
     'Recrutement finalisé'
   ];
 
-  // Initialize with empty array instead of John Doe
   const [candidates, setCandidates] = useState<CandidateApplication[]>([]);
 
-  // Fetch candidates from related offers
   useEffect(() => {
     const fetchCandidates = () => {
-      // Extract candidates from recruitment posts
       const allCandidates: CandidateApplication[] = [];
       
       recruitmentPosts.forEach(post => {
@@ -77,9 +74,7 @@ const RecruitmentKanban = () => {
 
     if (!over) return;
 
-    // Check if dragging a candidate
     if (active.data?.current?.type === 'candidate' && active.id !== over.id) {
-      // Update candidate stage
       setCandidates(prevCandidates => 
         prevCandidates.map(candidate => {
           if (candidate.id === active.id) {
@@ -96,7 +91,6 @@ const RecruitmentKanban = () => {
               ]
             };
 
-            // Update in Firebase
             updateCandidateInFirebase(updatedCandidate);
             return updatedCandidate;
           }
@@ -104,21 +98,20 @@ const RecruitmentKanban = () => {
         })
       );
     } 
-    // Check if dragging an offer
     else if (active.data?.current?.type === 'offer' && active.id !== over.id) {
-      // Update offer status based on the column
       const offerId = active.id as string;
-      const newStatus = over.id === 'offres' ? 'Ouvert' : 'En cours';
+      let newStatus: 'Ouvert' | 'En cours' | 'Clôturé' = 'En cours';
       
-      // Update the status in Firebase
-      updateOfferStatusInFirebase(offerId, newStatus);
+      if (over.id === 'Recrutement finalisé') {
+        newStatus = 'Clôturé';
+      }
+      
+      await updateOfferStatusInFirebase(offerId, newStatus);
     }
   };
 
-  // Function to update a candidate in Firebase
   const updateCandidateInFirebase = async (candidate: CandidateApplication) => {
     try {
-      // Find the recruitment post
       const post = recruitmentPosts.find(p => p.id === candidate.recruitmentId);
       
       if (!post) {
@@ -130,12 +123,10 @@ const RecruitmentKanban = () => {
         return;
       }
       
-      // Update the candidate in the candidates array
       const updatedCandidates = post.candidates?.map(c => 
         c.id === candidate.id ? candidate : c
       ) || [candidate];
       
-      // Update the post in Firebase
       await updateDocument(COLLECTIONS.HR.RECRUITMENTS, post.id, {
         candidates: updatedCandidates,
         updated_at: new Date().toISOString(),
@@ -155,17 +146,22 @@ const RecruitmentKanban = () => {
     }
   };
 
-  // Function to update an offer's status in Firebase
-  const updateOfferStatusInFirebase = async (offerId: string, newStatus: string) => {
+  const updateOfferStatusInFirebase = async (offerId: string, newStatus: 'Ouvert' | 'En cours' | 'Clôturé') => {
     try {
       await updateDocument(COLLECTIONS.HR.RECRUITMENTS, offerId, {
         status: newStatus,
         updated_at: new Date().toISOString(),
       });
       
+      const statusMessages = {
+        'Ouvert': 'ouverte',
+        'En cours': 'en cours',
+        'Clôturé': 'clôturée'
+      };
+      
       toast({
         title: "Statut de l'offre mis à jour",
-        description: `L'offre est maintenant "${newStatus}"`,
+        description: `L'offre est maintenant "${statusMessages[newStatus]}"`,
       });
     } catch (error) {
       console.error("Erreur lors de la mise à jour de l'offre:", error);
@@ -176,8 +172,7 @@ const RecruitmentKanban = () => {
       });
     }
   };
-  
-  // Function to update candidate stage using the tracking dialog
+
   const handleCandidateStageUpdate = (candidateId: string, newStage: string) => {
     const candidateToUpdate = candidates.find(c => c.id === candidateId);
     
@@ -197,7 +192,6 @@ const RecruitmentKanban = () => {
       
       updateCandidateInFirebase(updatedCandidate);
       
-      // Update local state as well
       setCandidates(prevCandidates => 
         prevCandidates.map(c => 
           c.id === candidateId ? updatedCandidate : c
@@ -205,8 +199,7 @@ const RecruitmentKanban = () => {
       );
     }
   };
-  
-  // Function to get a recruitment post by ID
+
   const getRecruitmentPost = (recruitmentId: string) => {
     return recruitmentPosts.find(post => post.id === recruitmentId);
   };
@@ -215,7 +208,6 @@ const RecruitmentKanban = () => {
     <DndContext onDragEnd={handleDragEnd} collisionDetection={closestCorners}>
       <div className="w-full overflow-x-auto">
         <div className="flex gap-3 p-3">
-          {/* Offres Column */}
           <KanbanColumn key="offres" id="offres" title="Offres">
             <div className="space-y-2">
               {recruitmentPosts.map((post) => (
@@ -228,7 +220,6 @@ const RecruitmentKanban = () => {
             </div>
           </KanbanColumn>
 
-          {/* Other stages */}
           {stages.map((stage) => (
             <KanbanColumn key={stage} id={stage} title={stage}>
               <div className="space-y-2">
