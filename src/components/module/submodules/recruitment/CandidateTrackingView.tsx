@@ -51,12 +51,16 @@ interface TrackingViewProps {
     comments?: string;
   }[];
   onStageUpdate?: (newStage: RecruitmentStage) => void;
+  onRecruitmentFinalized?: (data: any) => void;
+  candidateData?: any;
 }
 
 const CandidateTrackingView: React.FC<TrackingViewProps> = ({
   currentStage,
   stageHistory,
-  onStageUpdate
+  onStageUpdate,
+  onRecruitmentFinalized,
+  candidateData
 }) => {
   const stages: RecruitmentStage[] = [
     'Candidature déposée',
@@ -93,6 +97,8 @@ const CandidateTrackingView: React.FC<TrackingViewProps> = ({
         <RecruitmentStageActions
           currentStage={currentStage}
           onUpdateStage={onStageUpdate}
+          onRecruitmentFinalized={onRecruitmentFinalized}
+          candidateData={candidateData}
         />
       )}
     </Card>

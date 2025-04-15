@@ -177,6 +177,40 @@ const RecruitmentKanban = () => {
       });
     }
   };
+  
+  // Function to update candidate stage using the tracking dialog
+  const handleCandidateStageUpdate = (candidateId: string, newStage: string) => {
+    const candidateToUpdate = candidates.find(c => c.id === candidateId);
+    
+    if (candidateToUpdate) {
+      const updatedCandidate = {
+        ...candidateToUpdate,
+        currentStage: newStage as RecruitmentStage,
+        updatedAt: new Date().toISOString(),
+        stageHistory: [
+          ...candidateToUpdate.stageHistory,
+          {
+            stage: newStage as RecruitmentStage,
+            date: new Date().toISOString(),
+          }
+        ]
+      };
+      
+      updateCandidateInFirebase(updatedCandidate);
+      
+      // Update local state as well
+      setCandidates(prevCandidates => 
+        prevCandidates.map(c => 
+          c.id === candidateId ? updatedCandidate : c
+        )
+      );
+    }
+  };
+  
+  // Function to get a recruitment post by ID
+  const getRecruitmentPost = (recruitmentId: string) => {
+    return recruitmentPosts.find(post => post.id === recruitmentId);
+  };
 
   return (
     <DndContext onDragEnd={handleDragEnd} collisionDetection={closestCorners}>
@@ -206,6 +240,8 @@ const RecruitmentKanban = () => {
                       key={candidate.id} 
                       item={candidate} 
                       type="candidate"
+                      onStageUpdate={handleCandidateStageUpdate}
+                      getRecruitmentPost={getRecruitmentPost}
                     />
                   ))
                 }

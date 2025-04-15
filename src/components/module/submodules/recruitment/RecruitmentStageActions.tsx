@@ -2,17 +2,21 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { RecruitmentStage } from '@/types/recruitment';
-import { ChevronRight, CheckCircle, XCircle } from 'lucide-react';
+import { ChevronRight, CheckCircle, XCircle, UserPlus } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 
 interface StageActionsProps {
   currentStage: RecruitmentStage;
   onUpdateStage: (newStage: RecruitmentStage) => void;
+  onRecruitmentFinalized?: (data: any) => void;
+  candidateData?: any;
 }
 
 const RecruitmentStageActions: React.FC<StageActionsProps> = ({
   currentStage,
-  onUpdateStage
+  onUpdateStage,
+  onRecruitmentFinalized,
+  candidateData
 }) => {
   const { toast } = useToast();
   
@@ -55,14 +59,44 @@ const RecruitmentStageActions: React.FC<StageActionsProps> = ({
         title: "Recrutement finalisé",
         description: "Le processus de recrutement est terminé avec succès"
       });
+      
+      // If we have the finalize handler and candidate data, call it
+      if (onRecruitmentFinalized && candidateData) {
+        onRecruitmentFinalized(candidateData);
+      }
     } else {
       handleMoveToNextStage();
     }
   };
+  
+  const handleConvertToEmployee = () => {
+    if (onRecruitmentFinalized && candidateData) {
+      onRecruitmentFinalized(candidateData);
+      toast({
+        title: "Conversion en employé",
+        description: "Le candidat est converti en employé avec succès"
+      });
+    }
+  };
 
-  // Don't show actions if recruitment is finished or rejected
-  if (currentStage === 'Recrutement finalisé' || currentStage === 'Candidature refusée') {
+  // Don't show actions if recruitment is rejected
+  if (currentStage === 'Candidature refusée') {
     return null;
+  }
+  
+  // Show "convert to employee" button when recruitment is finalized
+  if (currentStage === 'Recrutement finalisé') {
+    return (
+      <div className="flex gap-2 mt-4">
+        <Button 
+          onClick={handleConvertToEmployee}
+          className="flex items-center gap-2"
+        >
+          <UserPlus className="w-4 h-4" />
+          Convertir en employé
+        </Button>
+      </div>
+    );
   }
 
   return (
