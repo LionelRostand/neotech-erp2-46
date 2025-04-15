@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
@@ -36,29 +35,27 @@ const CreateBadgeDialog: React.FC<CreateBadgeDialogProps> = ({
       return;
     }
     
-    // Find the employee in the employees array
     const employee = employees.find(emp => emp.id === selectedEmployeeId);
     if (!employee) {
       toast.error("Employé non trouvé");
       return;
     }
     
-    // Create a new badge
+    const departmentName = departments.find(dept => dept.id === (department === 'no_department' ? employee.department : department))?.name 
+      || (department === 'no_department' ? 'Non assigné' : department);
+    
     const newBadge: BadgeData = {
       id: badgeNumber,
       date: new Date().toISOString().split('T')[0],
       employeeId: employee.id,
       employeeName: `${employee.firstName} ${employee.lastName}`,
-      department: department === 'no_department' ? employee.department || '' : department,
+      department: departmentName,
       accessLevel: accessLevel,
       status: "success",
       statusText: "Actif"
     };
     
-    // Callback to add the badge
     onBadgeCreated(newBadge);
-    
-    // Reset form and close dialog
     resetForm();
     onOpenChange(false);
   };
@@ -95,7 +92,6 @@ const CreateBadgeDialog: React.FC<CreateBadgeDialogProps> = ({
                   const empId = value.split('|')[1];
                   setSelectedEmployeeId(empId);
                   
-                  // Set department from employee if available
                   const employee = employees.find(emp => emp.id === empId);
                   if (employee?.department) {
                     setDepartment(employee.department);
