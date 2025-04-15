@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,16 +16,17 @@ const CompaniesList: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filters, setFilters] = useState<CompanyFilters>({});
   
-  // Function to load companies and update sizes
+  // Function to load companies
   const loadCompanies = async () => {
     setIsLoading(true);
     try {
+      // Update the search term to the filters if it exists
       const searchFilters = searchTerm ? { ...filters, name: searchTerm } : filters;
       const response = await companyService.getCompanies(searchFilters);
       setCompanies(response.companies);
     } catch (error) {
       console.error('Error loading companies:', error);
-      toast.error('Erreur lors du chargement des entreprises');
+      toast.error('Failed to load companies');
     } finally {
       setIsLoading(false);
     }

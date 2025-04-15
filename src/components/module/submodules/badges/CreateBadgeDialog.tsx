@@ -1,30 +1,28 @@
 
-import React, { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
+import React, { useState } from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
-import { Employee } from '@/types/employee';
+import { employees } from '@/data/employees';
 import { BadgeData, generateBadgeNumber } from './BadgeTypes';
 
 interface CreateBadgeDialogProps {
   isOpen: boolean;
-  onOpenChange: (open: boolean) => void;
-  onBadgeCreated: (newBadge: BadgeData) => Promise<void>;
-  employees?: Employee[];
+  onOpenChange: (isOpen: boolean) => void;
+  onBadgeCreated: (badge: BadgeData) => void;
 }
 
 const CreateBadgeDialog: React.FC<CreateBadgeDialogProps> = ({ 
   isOpen, 
   onOpenChange, 
-  onBadgeCreated,
-  employees = []
+  onBadgeCreated 
 }) => {
-  const [selectedEmployee, setSelectedEmployee] = useState<string | undefined>(undefined);
+  const [selectedEmployee, setSelectedEmployee] = useState<string>('');
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<string>('');
-  const [accessLevel, setAccessLevel] = useState<string | undefined>(undefined);
+  const [accessLevel, setAccessLevel] = useState<string>('');
   const [badgeNumber, setBadgeNumber] = useState(generateBadgeNumber());
 
   const handleCreateBadge = () => {
@@ -46,7 +44,7 @@ const CreateBadgeDialog: React.FC<CreateBadgeDialogProps> = ({
       date: new Date().toISOString().split('T')[0],
       employeeId: employee.id,
       employeeName: `${employee.firstName} ${employee.lastName}`,
-      department: employee.department || '',
+      department: employee.department,
       accessLevel: accessLevel,
       status: "success",
       statusText: "Actif"
@@ -61,9 +59,9 @@ const CreateBadgeDialog: React.FC<CreateBadgeDialogProps> = ({
   };
   
   const resetForm = () => {
-    setSelectedEmployee(undefined);
+    setSelectedEmployee('');
     setSelectedEmployeeId('');
-    setAccessLevel(undefined);
+    setAccessLevel('');
     setBadgeNumber(generateBadgeNumber());
   };
   
@@ -77,9 +75,6 @@ const CreateBadgeDialog: React.FC<CreateBadgeDialogProps> = ({
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Créer un nouveau badge</DialogTitle>
-          <DialogDescription>
-            Créez un badge d'accès pour un employé.
-          </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="grid grid-cols-4 items-center gap-4">
@@ -88,31 +83,26 @@ const CreateBadgeDialog: React.FC<CreateBadgeDialogProps> = ({
             </Label>
             <div className="col-span-3">
               <Select 
-                value={selectedEmployee} 
+                value={selectedEmployee || "none"} 
                 onValueChange={(value) => {
                   setSelectedEmployee(value);
-                  if (value && value.includes('|')) {
-                    const empId = value.split('|')[1];
-                    setSelectedEmployeeId(empId);
-                  }
+                  const empId = value.split('|')[1];
+                  setSelectedEmployeeId(empId);
                 }}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Sélectionner un employé" />
                 </SelectTrigger>
                 <SelectContent>
-                  {employees && employees.length > 0 ? (
-                    employees.map((employee) => (
-                      <SelectItem 
-                        key={employee.id} 
-                        value={`${employee.firstName} ${employee.lastName}|${employee.id}`}
-                      >
-                        {employee.firstName} {employee.lastName}
-                      </SelectItem>
-                    ))
-                  ) : (
-                    <SelectItem value="no-employees-available">Aucun employé disponible</SelectItem>
-                  )}
+                  <SelectItem value="none" disabled>Sélectionner un employé</SelectItem>
+                  {employees.map((employee) => (
+                    <SelectItem 
+                      key={employee.id} 
+                      value={`${employee.firstName} ${employee.lastName}|${employee.id}`}
+                    >
+                      {employee.firstName} {employee.lastName}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -122,11 +112,12 @@ const CreateBadgeDialog: React.FC<CreateBadgeDialogProps> = ({
               Niveau d'accès
             </Label>
             <div className="col-span-3">
-              <Select value={accessLevel} onValueChange={setAccessLevel}>
+              <Select value={accessLevel || "none"} onValueChange={setAccessLevel}>
                 <SelectTrigger>
                   <SelectValue placeholder="Sélectionner un niveau d'accès" />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="none" disabled>Sélectionner un niveau d'accès</SelectItem>
                   <SelectItem value="Sécurité Niveau 1">Sécurité Niveau 1</SelectItem>
                   <SelectItem value="Sécurité Niveau 2">Sécurité Niveau 2</SelectItem>
                   <SelectItem value="Sécurité Niveau 3">Sécurité Niveau 3</SelectItem>

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { 
@@ -15,10 +14,6 @@ import { toast } from 'sonner';
 import { Employee } from '@/types/employee';
 import { safelyGetDocumentId } from '@/hooks/firestore/common-utils';
 import EmployeesDashboardCards from './dashboard/EmployeesDashboardCards';
-import { deleteDocument } from '@/hooks/firestore/delete-operations';
-import { COLLECTIONS } from '@/lib/firebase-collections';
-import { collection, getDocs, query, where } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
 
 export interface EmployeesProfilesProps {
   employees: Employee[];
@@ -32,7 +27,6 @@ const EmployeesProfiles: React.FC<EmployeesProfilesProps> = ({ employees }) => {
   const [status, setStatus] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
 
   const filteredEmployees = employees.filter(employee => {
     const matchesDepartment = department === 'all' || employee.department === department;
@@ -71,46 +65,9 @@ const EmployeesProfiles: React.FC<EmployeesProfilesProps> = ({ employees }) => {
     refetchEmployees();
   };
   
-  const handleDeleteEmployee = async (employee: Employee) => {
-    try {
-      setIsDeleting(true);
-      const id = employee.id;
-      
-      if (!id) {
-        toast.error("ID de l'employé non trouvé");
-        return;
-      }
-      
-      await deleteDocument(COLLECTIONS.HR.EMPLOYEES, id);
-      
-      // Si l'employé était un manager, supprimer également son entrée dans la collection des managers
-      if (employee.isManager) {
-        try {
-          // Chercher dans la collection des managers par employeeId
-          const managersQuery = query(
-            collection(db, COLLECTIONS.HR.MANAGERS),
-            where("employeeId", "==", id)
-          );
-          
-          const managersSnapshot = await getDocs(managersQuery);
-          
-          if (!managersSnapshot.empty) {
-            const managerDoc = managersSnapshot.docs[0];
-            await deleteDocument(COLLECTIONS.HR.MANAGERS, managerDoc.id);
-          }
-        } catch (error) {
-          console.error("Erreur lors de la suppression du manager:", error);
-        }
-      }
-      
-      toast.success(`L'employé ${employee.firstName} ${employee.lastName} a été supprimé avec succès`);
-      refetchEmployees();
-    } catch (error) {
-      console.error("Erreur lors de la suppression de l'employé:", error);
-      toast.error("Erreur lors de la suppression de l'employé");
-    } finally {
-      setIsDeleting(false);
-    }
+  const handleDeleteEmployee = (record: any) => {
+    const id = safelyGetDocumentId(record);
+    toast.info(`Suppression de l'employé ${id} demandée`);
   };
 
   return (
@@ -143,7 +100,7 @@ const EmployeesProfiles: React.FC<EmployeesProfilesProps> = ({ employees }) => {
           <div className="mt-6">
             <EmployeeTable 
               employees={filteredEmployees as Employee[]} 
-              isLoading={isLoading || isDeleting} 
+              isLoading={isLoading} 
               onDelete={handleDeleteEmployee}
             />
           </div>

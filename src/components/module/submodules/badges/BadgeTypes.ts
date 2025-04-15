@@ -7,11 +7,10 @@ export interface BadgeData {
   date: string;
   employeeId: string;
   employeeName: string;
-  department: string;
+  department?: string;
   accessLevel: string;
   status: "success" | "warning" | "danger";
   statusText: string;
-  company?: string;
 }
 
 export interface BadgesTableProps {
