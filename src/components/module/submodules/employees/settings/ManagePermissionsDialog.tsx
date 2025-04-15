@@ -10,7 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Shield } from "lucide-react";
+import { Shield, Check, X } from "lucide-react";
 import { employeesModule } from "@/data/modules/employees";
 import { useToast } from "@/hooks/use-toast";
 import { useEmployeesPermissions } from "@/hooks/useEmployeesPermissions";
@@ -49,10 +49,20 @@ const ManagePermissionsDialog: React.FC<ManagePermissionsDialogProps> = ({ emplo
     }));
   };
 
+  const handleSetAllPermissions = (moduleId: string, value: boolean) => {
+    setPermissions(prev => ({
+      ...prev,
+      [moduleId]: {
+        view: value,
+        create: value,
+        edit: value,
+        delete: value
+      }
+    }));
+  };
+
   const handleSave = async () => {
     try {
-      // We need to pass the correct permissions format for the specific module
-      // Get the permissions for the 'employees' module from our state
       const modulePermissions = permissions['employees'] || {
         view: false,
         create: false,
@@ -90,7 +100,27 @@ const ManagePermissionsDialog: React.FC<ManagePermissionsDialogProps> = ({ emplo
           <div className="space-y-6">
             {employeesModule.submodules.map((submodule) => (
               <div key={submodule.id} className="border rounded-lg p-4">
-                <h3 className="font-medium mb-3">{submodule.name}</h3>
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="font-medium">{submodule.name}</h3>
+                  <div className="flex space-x-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleSetAllPermissions(submodule.id, true)}
+                    >
+                      <Check className="w-4 h-4 mr-1" />
+                      Tout
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleSetAllPermissions(submodule.id, false)}
+                    >
+                      <X className="w-4 h-4 mr-1" />
+                      Aucun
+                    </Button>
+                  </div>
+                </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="flex items-center space-x-2">
                     <Checkbox
