@@ -3,6 +3,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useEmployeesPermissions } from '@/hooks/useEmployeesPermissions';
 import { ScrollArea } from "@/components/ui/scroll-area";
+import ManagePermissionsDialog from './ManagePermissionsDialog';
 
 const PermissionsSettings: React.FC = () => {
   const { employees } = useEmployeesPermissions();

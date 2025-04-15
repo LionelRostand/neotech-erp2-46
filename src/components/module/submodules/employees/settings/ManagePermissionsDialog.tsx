@@ -51,7 +51,16 @@ const ManagePermissionsDialog: React.FC<ManagePermissionsDialogProps> = ({ emplo
 
   const handleSave = async () => {
     try {
-      await updateEmployeePermissions(employeeId, 'employees', permissions);
+      // We need to pass the correct permissions format for the specific module
+      // Get the permissions for the 'employees' module from our state
+      const modulePermissions = permissions['employees'] || {
+        view: false,
+        create: false,
+        edit: false,
+        delete: false
+      };
+      
+      await updateEmployeePermissions(employeeId, 'employees', modulePermissions);
       toast({
         title: "Permissions mises à jour",
         description: "Les permissions ont été sauvegardées avec succès.",
