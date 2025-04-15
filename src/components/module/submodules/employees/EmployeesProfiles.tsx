@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { 
@@ -16,7 +17,8 @@ import { safelyGetDocumentId } from '@/hooks/firestore/common-utils';
 import EmployeesDashboardCards from './dashboard/EmployeesDashboardCards';
 import { deleteDocument } from '@/hooks/firestore/delete-operations';
 import { COLLECTIONS } from '@/lib/firebase-collections';
-import { useFirestore } from '@/hooks/useFirestore';
+import { collection, getDocs, query, where } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 
 export interface EmployeesProfilesProps {
   employees: Employee[];
@@ -85,11 +87,15 @@ const EmployeesProfiles: React.FC<EmployeesProfilesProps> = ({ employees }) => {
       if (employee.isManager) {
         try {
           // Chercher dans la collection des managers par employeeId
-          const { getAll } = useFirestore(COLLECTIONS.HR.MANAGERS);
-          const managers = await getAll();
-          const managerDoc = managers.find(m => m.employeeId === id);
+          const managersQuery = query(
+            collection(db, COLLECTIONS.HR.MANAGERS),
+            where("employeeId", "==", id)
+          );
           
-          if (managerDoc?.id) {
+          const managersSnapshot = await getDocs(managersQuery);
+          
+          if (!managersSnapshot.empty) {
+            const managerDoc = managersSnapshot.docs[0];
             await deleteDocument(COLLECTIONS.HR.MANAGERS, managerDoc.id);
           }
         } catch (error) {
