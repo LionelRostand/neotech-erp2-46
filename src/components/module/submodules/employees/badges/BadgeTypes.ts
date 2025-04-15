@@ -3,11 +3,11 @@ export interface BadgeData {
   employeeId: string;
   employeeName: string;
   department: string;
+  company: string;
   accessLevel: string;
   date: string;
   status: 'success' | 'warning' | 'danger';
   statusText: string;
-  company?: string;
   photoURL?: string;
 }
 
@@ -17,7 +17,6 @@ export interface BadgesTableProps {
   loading?: boolean;
 }
 
-export const generateBadgeNumber = () => {
-  // Format: B1234
-  return `B${Math.floor(1000 + Math.random() * 9000)}`;
+export const generateBadgeNumber = (): string => {
+  return `B-${Math.floor(2460 + Math.random() * 100)}`;
 };

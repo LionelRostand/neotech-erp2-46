@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -32,6 +32,7 @@ const CreateBadgeDialog: React.FC<CreateBadgeDialogProps> = ({
   const [selectedDepartment, setSelectedDepartment] = useState<string>('');
   const [accessLevel, setAccessLevel] = useState<string>('');
   const [badgeNumber, setBadgeNumber] = useState(generateBadgeNumber());
+
   const { departments } = useAvailableDepartments();
   const { companies } = useCompaniesData();
 
