@@ -1,24 +1,5 @@
-
 import { useMemo, useState, useEffect } from 'react';
-
-export interface RecruitmentPost {
-  id: string;
-  position: string;
-  department: string;
-  openDate: string;
-  applicationDeadline?: string;
-  hiringManagerId: string;
-  hiringManagerName: string;
-  status: string;
-  priority: string;
-  location: string;
-  contractType: string;
-  salary: string;
-  description: string;
-  requirements: string;
-  applicationCount: number;
-  interviewsScheduled?: number; // Added this property
-}
+import { RecruitmentPost } from '@/types/recruitment';
 
 const MOCK_RECRUITMENT_POSTS: RecruitmentPost[] = [
   {
@@ -36,7 +17,9 @@ const MOCK_RECRUITMENT_POSTS: RecruitmentPost[] = [
     salary: '45-55K€',
     description: 'Nous recherchons un développeur Full-Stack expérimenté pour rejoindre notre équipe technique.',
     requirements: 'Expérience minimale de 3 ans, maîtrise de React, Node.js et MongoDB.',
-    applicationCount: 12
+    applicationCount: 12,
+    created_at: '2023-03-10T10:00:00Z',
+    updated_at: '2023-03-10T10:00:00Z'
   },
   {
     id: 'job-2',
@@ -52,7 +35,9 @@ const MOCK_RECRUITMENT_POSTS: RecruitmentPost[] = [
     salary: '50-60K€',
     description: 'Rôle de chef de projet pour nos grands comptes.',
     requirements: 'Expérience en gestion de projet IT, certification PMP appréciée.',
-    applicationCount: 5
+    applicationCount: 5,
+    created_at: '2023-04-01T10:00:00Z',
+    updated_at: '2023-04-01T10:00:00Z'
   },
   {
     id: 'job-3',
@@ -127,10 +112,8 @@ export const useRecruitmentData = (refreshTrigger?: number) => {
   const [recruitmentPosts, setRecruitmentPosts] = useState<RecruitmentPost[]>([]);
   
   useEffect(() => {
-    // Simulate API call
     const fetchData = async () => {
       try {
-        // Simulate loading delay
         await new Promise(resolve => setTimeout(resolve, 500));
         setRecruitmentPosts(MOCK_RECRUITMENT_POSTS);
         setIsLoading(false);
@@ -141,7 +124,7 @@ export const useRecruitmentData = (refreshTrigger?: number) => {
     };
     
     fetchData();
-  }, [refreshTrigger]); // Re-fetch when refreshTrigger changes
+  }, [refreshTrigger]);
   
   const stats = useMemo(() => {
     const open = recruitmentPosts.filter(post => post.status === 'Ouvert').length;

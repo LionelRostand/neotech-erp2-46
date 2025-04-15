@@ -7,28 +7,28 @@ export interface RecruitmentPost {
   status: 'Open' | 'In Progress' | 'Closed';
   priority: 'High' | 'Medium' | 'Low';
   description: string;
-  requirements: string[];
-  responsibilities: string[];
+  requirements: string[] | string;
+  responsibilities?: string[];
   salary_range?: {
     min: number;
     max: number;
     currency: string;
   };
-  posting_date: string;
+  posting_date?: string;
   closing_date?: string;
-  hiring_manager: string;
-  contact_email: string;
+  hiring_manager?: string;
+  contact_email?: string;
   applications_count?: number;
   interviews_scheduled?: number;
   created_at: string;
   updated_at: string;
   
-  // Adding the fields from useRecruitmentData.ts
-  openDate?: string;
+  // Including fields from useRecruitmentData.ts
+  openDate: string;
   applicationDeadline?: string;
-  hiringManagerId?: string;
-  hiringManagerName?: string;
-  contractType?: string;
-  salary?: string;
-  applicationCount?: number;
+  hiringManagerId: string;
+  hiringManagerName: string;
+  contractType: string;
+  salary: string;
+  applicationCount: number;
 }

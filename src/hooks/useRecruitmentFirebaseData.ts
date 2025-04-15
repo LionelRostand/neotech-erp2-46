@@ -20,10 +20,26 @@ export const useRecruitmentFirebaseData = () => {
       const unsubscribe = onSnapshot(
         q,
         (snapshot) => {
-          const posts = snapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data()
-          })) as RecruitmentPost[];
+          const posts = snapshot.docs.map(doc => {
+            const data = doc.data();
+            return {
+              id: doc.id,
+              ...data,
+              // Ensure required fields have default values if not present
+              openDate: data.openDate || data.posting_date || '(Non spécifié)',
+              hiringManagerId: data.hiringManagerId || 'unknown',
+              hiringManagerName: data.hiringManagerName || data.hiring_manager || '(Non spécifié)',
+              contractType: data.contractType || '(Non spécifié)',
+              salary: data.salary || '(Non spécifié)',
+              applicationCount: data.applicationCount || data.applications_count || 0,
+              // Convert requirements to array if it's a string
+              requirements: Array.isArray(data.requirements) 
+                ? data.requirements 
+                : typeof data.requirements === 'string' 
+                  ? [data.requirements] 
+                  : []
+            } as RecruitmentPost;
+          });
           
           console.log(`Retrieved ${posts.length} recruitment posts from Firebase`);
           setRecruitmentPosts(posts);
