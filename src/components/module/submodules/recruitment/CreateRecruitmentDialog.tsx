@@ -7,6 +7,8 @@ import { useToast } from '@/components/ui/use-toast';
 import { Label } from '@/components/ui/label';
 import { addDocument } from '@/hooks/firestore/firestore-utils';
 import { COLLECTIONS } from '@/lib/firebase-collections';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useFirebaseDepartments } from '@/hooks/useFirebaseDepartments';
 
 interface CreateRecruitmentDialogProps {
   open: boolean;
@@ -22,6 +24,7 @@ const CreateRecruitmentDialog: React.FC<CreateRecruitmentDialogProps> = ({
   const { toast } = useToast();
   const [position, setPosition] = React.useState('');
   const [department, setDepartment] = React.useState('');
+  const { departments, isLoading } = useFirebaseDepartments();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -84,13 +87,22 @@ const CreateRecruitmentDialog: React.FC<CreateRecruitmentDialogProps> = ({
 
           <div>
             <Label htmlFor="department">Département</Label>
-            <Input
-              id="department"
-              value={department}
-              onChange={(e) => setDepartment(e.target.value)}
-              placeholder="Département"
+            <Select 
+              value={department} 
+              onValueChange={setDepartment}
               required
-            />
+            >
+              <SelectTrigger id="department">
+                <SelectValue placeholder="Sélectionner un département" />
+              </SelectTrigger>
+              <SelectContent>
+                {departments?.map((dept) => (
+                  <SelectItem key={dept.id} value={dept.name}>
+                    {dept.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <DialogFooter>
