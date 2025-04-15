@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Employee, EmployeeAddress } from '@/types/employee';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -22,6 +23,7 @@ const InformationsTab: React.FC<InformationsTabProps> = ({
   form,
   showManagerOption = true
 }) => {
+  // Fonction pour formater une adresse
   const formatAddress = (address: EmployeeAddress | string): string => {
     if (typeof address === 'string') {
       return address;
@@ -29,10 +31,12 @@ const InformationsTab: React.FC<InformationsTabProps> = ({
     
     const parts = [];
     
+    // Construire la ligne de rue
     if (address.street) {
       parts.push(address.street);
     }
     
+    // Construire la ligne de ville/code postal
     const cityParts = [];
     if (address.postalCode) cityParts.push(address.postalCode);
     if (address.city) cityParts.push(address.city);
@@ -40,10 +44,12 @@ const InformationsTab: React.FC<InformationsTabProps> = ({
       parts.push(cityParts.join(' '));
     }
     
+    // Ajouter le département/état si disponible
     if (address.state) {
       parts.push(address.state);
     }
     
+    // Ajouter le pays si disponible et différent de France
     if (address.country && address.country.toLowerCase() !== 'france') {
       parts.push(address.country);
     }
@@ -51,6 +57,7 @@ const InformationsTab: React.FC<InformationsTabProps> = ({
     return parts.join(', ');
   };
 
+  // Extraire les composants individuels de l'adresse pour un affichage détaillé
   const getAddressComponents = (address: EmployeeAddress | string) => {
     if (typeof address === 'string') {
       return { street: address, city: '', postalCode: '', state: '', country: '' };
@@ -80,9 +87,9 @@ const InformationsTab: React.FC<InformationsTabProps> = ({
           <div className="space-y-1">
             <h4 className="text-sm font-semibold flex items-center gap-2">
               <Mail className="h-4 w-4 text-muted-foreground" />
-              Email Professionnel
+              Email
             </h4>
-            <p>{employee.professionalEmail || employee.email}</p>
+            <p>{employee.email}</p>
           </div>
           <Separator />
           

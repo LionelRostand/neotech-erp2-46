@@ -132,10 +132,7 @@ export const EditEmployeeDialog: React.FC<EditEmployeeDialogProps> = ({
           
           <div className="space-y-2">
             <Label htmlFor="status">Statut</Label>
-            <Select 
-              defaultValue={employee.status || 'active'} 
-              onValueChange={(value: "active" | "inactive" | "onLeave" | "Actif" | "En congé" | "Suspendu" | "Inactif") => setValue('status', value)}
-            >
+            <Select defaultValue={employee.status || 'active'} name="status">
               <SelectTrigger>
                 <SelectValue placeholder="Sélectionner un statut" />
               </SelectTrigger>

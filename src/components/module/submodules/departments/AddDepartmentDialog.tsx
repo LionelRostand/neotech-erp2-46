@@ -103,7 +103,7 @@ const AddDepartmentDialog: React.FC<AddDepartmentDialogProps> = ({
                 <SelectContent>
                   <SelectItem value="none">Aucun responsable</SelectItem>
                   {isLoading ? (
-                    <SelectItem value="loading-placeholder" disabled>Chargement...</SelectItem>
+                    <SelectItem value="loading" disabled>Chargement...</SelectItem>
                   ) : (
                     employees?.map((employee) => (
                       <SelectItem key={employee.id} value={employee.id}>

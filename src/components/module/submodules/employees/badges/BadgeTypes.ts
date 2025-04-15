@@ -1,16 +1,14 @@
 
-import { Employee } from '@/types/employee';
-
 export interface BadgeData {
   id: string;
-  date: string;
   employeeId: string;
   employeeName: string;
-  department?: string;  // Keeping department as optional
+  department: string;
   accessLevel: string;
-  status: "success" | "warning" | "danger";
+  date: string;
+  status: 'success' | 'warning' | 'danger';  // Changed 'error' to 'danger' to maintain consistency
   statusText: string;
-  photoURL?: string;
+  company?: string;
 }
 
 export interface BadgesTableProps {
@@ -19,6 +17,7 @@ export interface BadgesTableProps {
   loading?: boolean;
 }
 
-export const generateBadgeNumber = (): string => {
-  return `B-${Math.floor(2460 + Math.random() * 100)}`;
+export const generateBadgeNumber = () => {
+  // Format: B1234
+  return `B${Math.floor(1000 + Math.random() * 9000)}`;
 };
