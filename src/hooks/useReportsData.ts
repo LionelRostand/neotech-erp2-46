@@ -1,6 +1,7 @@
 
 import { useMemo } from 'react';
 import { useHrModuleData } from './useHrModuleData';
+import { formatDate } from '@/lib/formatters';
 
 export interface Report {
   id: string;
@@ -56,16 +57,6 @@ export const useReportsData = () => {
       } as Report;
     });
   }, [hrReports, employees]);
-  
-  // Fonction pour formater les dates
-  const formatDate = (dateStr: string) => {
-    try {
-      return new Date(dateStr).toLocaleDateString('fr-FR');
-    } catch (error) {
-      console.error('Erreur de formatage de date:', dateStr, error);
-      return dateStr;
-    }
-  };
 
   // Obtenir des statistiques sur les rapports
   const reportsStats = useMemo(() => {
