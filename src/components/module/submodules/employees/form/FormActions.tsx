@@ -88,15 +88,15 @@ const FormActions: React.FC<FormActionsProps> = ({
           </Label>
           <div className="col-span-3">
             <Select
-              value={form.getValues('managerId') || ''}
-              onValueChange={(value) => form.setValue('managerId', value)}
+              value={form.getValues('managerId') || 'none'}
+              onValueChange={(value) => form.setValue('managerId', value === 'none' ? '' : value)}
               disabled={isLoadingEmployees}
             >
               <SelectTrigger>
                 <SelectValue placeholder={isLoadingEmployees ? "Chargement..." : "Sélectionner un responsable"} />
               </SelectTrigger>
               <SelectContent className="max-h-[300px] overflow-y-auto bg-popover">
-                <SelectItem value="">Aucun responsable</SelectItem>
+                <SelectItem value="none">Aucun responsable</SelectItem>
                 {sortedEmployees.map((employee) => (
                   <SelectItem key={employee.id} value={employee.id}>
                     {`${employee.lastName || ''} ${employee.firstName || ''}`}

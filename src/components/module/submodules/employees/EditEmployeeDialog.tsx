@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Employee } from '@/types/employee';
@@ -135,14 +136,14 @@ export const EditEmployeeDialog: React.FC<EditEmployeeDialogProps> = ({
               Responsable
             </Label>
             <Select 
-              defaultValue={employee.managerId || ''} 
-              onValueChange={(value) => setValue('managerId', value)}
+              defaultValue={employee.managerId || 'none'} 
+              onValueChange={(value) => setValue('managerId', value === 'none' ? '' : value)}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Sélectionner un responsable" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Aucun responsable</SelectItem>
+                <SelectItem value="none">Aucun responsable</SelectItem>
                 {managers.map((manager) => (
                   <SelectItem key={manager.id} value={manager.id}>
                     {`${manager.lastName} ${manager.firstName}`}
