@@ -22,14 +22,4 @@ export interface RecruitmentPost {
   interviews_scheduled?: number;
   created_at: string;
   updated_at: string;
-  
-  // Adding the missing fields
-  openDate: string;
-  hiringManagerId: string;
-  hiringManagerName: string;
-  contractType: string;
-  applicationDeadline?: string;
-  applicationCount: number;
-  salary?: string;
-  requirements_text?: string;
 }
