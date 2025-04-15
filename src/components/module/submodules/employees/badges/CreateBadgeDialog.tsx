@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 import { Employee } from '@/types/employee';
 import { BadgeData, generateBadgeNumber } from './BadgeTypes';
 import { useAvailableDepartments } from '@/hooks/useAvailableDepartments';
+import { useFirebaseCompanies } from '@/hooks/useFirebaseCompanies';
 
 interface CreateBadgeDialogProps {
   isOpen: boolean;
@@ -27,11 +28,13 @@ const CreateBadgeDialog: React.FC<CreateBadgeDialogProps> = ({
   const [accessLevel, setAccessLevel] = useState<string>('');
   const [department, setDepartment] = useState<string>('no_department');
   const [badgeNumber, setBadgeNumber] = useState(generateBadgeNumber());
+  const [selectedCompany, setSelectedCompany] = useState<string>('');
   const { departments } = useAvailableDepartments();
+  const { companies, isLoading: isLoadingCompanies } = useFirebaseCompanies();
 
   const handleCreateBadge = () => {
-    if (!selectedEmployee || !accessLevel) {
-      toast.error("Veuillez sélectionner un employé et un niveau d'accès");
+    if (!selectedEmployee || !accessLevel || !selectedCompany) {
+      toast.error("Veuillez sélectionner un employé, un niveau d'accès et une entreprise");
       return;
     }
     
@@ -48,12 +51,12 @@ const CreateBadgeDialog: React.FC<CreateBadgeDialogProps> = ({
       employeeName: `${employee.firstName} ${employee.lastName}`,
       department: department === 'no_department' ? employee.department || '' : department,
       accessLevel: accessLevel,
+      companyId: selectedCompany,
       status: "success",
       statusText: "Actif"
     };
     
     onBadgeCreated(newBadge);
-    
     resetForm();
     onOpenChange(false);
   };
@@ -63,6 +66,7 @@ const CreateBadgeDialog: React.FC<CreateBadgeDialogProps> = ({
     setSelectedEmployeeId('');
     setAccessLevel('');
     setDepartment('no_department');
+    setSelectedCompany('');
     setBadgeNumber(generateBadgeNumber());
   };
   
@@ -78,6 +82,30 @@ const CreateBadgeDialog: React.FC<CreateBadgeDialogProps> = ({
           <DialogTitle>Créer un nouveau badge</DialogTitle>
         </DialogHeader>
         <div className="grid gap-4 py-4">
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="company" className="text-right">
+              Entreprise
+            </Label>
+            <div className="col-span-3">
+              <Select 
+                value={selectedCompany} 
+                onValueChange={setSelectedCompany}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Sélectionner une entreprise" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none" disabled>Sélectionner une entreprise</SelectItem>
+                  {companies.map((company) => (
+                    <SelectItem key={company.id} value={company.id}>
+                      {company.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="employee" className="text-right">
               Employé

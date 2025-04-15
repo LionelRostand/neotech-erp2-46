@@ -1,10 +1,10 @@
-
 export interface BadgeData {
   id: string;
   date: string;
   employeeId: string;
   employeeName: string;
   department?: string;
+  companyId?: string;
   accessLevel: string;
   status: 'success' | 'warning' | 'danger' | string;
   statusText: string;
