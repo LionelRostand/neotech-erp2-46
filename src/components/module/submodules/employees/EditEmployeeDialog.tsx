@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Employee } from '@/types/employee';
@@ -12,6 +11,7 @@ import PhotoUploadField from '@/components/module/submodules/employees/form/Phot
 import { updateEmployeeDoc } from '@/services/employeeService';
 import { useEmployeeData } from '@/hooks/useEmployeeData';
 import { User } from 'lucide-react';
+import { useAvailableDepartments } from '@/hooks/useAvailableDepartments';
 
 interface EditEmployeeDialogProps {
   open: boolean;
@@ -25,6 +25,8 @@ export const EditEmployeeDialog: React.FC<EditEmployeeDialogProps> = ({
   employee
 }) => {
   const { employees } = useEmployeeData();
+  const { departments, isLoading: isLoadingDepartments } = useAvailableDepartments();
+  
   const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm({
     defaultValues: {
       firstName: employee.firstName,
@@ -109,7 +111,23 @@ export const EditEmployeeDialog: React.FC<EditEmployeeDialogProps> = ({
           
           <div className="space-y-2">
             <Label htmlFor="department">Département</Label>
-            <Input id="department" {...register('department')} />
+            <Select 
+              defaultValue={employee.department || ''} 
+              onValueChange={(value) => setValue('department', value)}
+              disabled={isLoadingDepartments}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder={isLoadingDepartments ? "Chargement..." : "Sélectionner un département"} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">Aucun département</SelectItem>
+                {departments.map((dept) => (
+                  <SelectItem key={dept.id} value={dept.id}>
+                    {dept.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           
           <div className="space-y-2">
