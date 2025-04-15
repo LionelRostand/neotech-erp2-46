@@ -1,268 +1,138 @@
-
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import HierarchyVisualization from './HierarchyVisualization';
-import { HierarchyNode } from './types';
-import { Department } from '@/components/module/submodules/departments/types';
-import { Employee } from '@/types/employee';
-import { useFirebaseDepartments } from '@/hooks/useFirebaseDepartments';
-import { subscribeToDepartmentUpdates } from '@/components/module/submodules/departments/utils/departmentUtils';
 import { Input } from '@/components/ui/input';
-import { Search } from 'lucide-react';
-import { useEmployeeData } from '@/hooks/useEmployeeData';
-import { toast } from 'sonner';
+import { Button } from '@/components/ui/button';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Search, RefreshCw, Building, Users } from 'lucide-react';
+import HierarchyVisualization from './hierarchy/HierarchyVisualization';
+import DepartmentHierarchy from './hierarchy/components/DepartmentHierarchy';
+import { useHierarchyData } from './hierarchy/hooks/useHierarchyData';
+import StatCard from '@/components/StatCard';
+import { getSyncedStats } from './hierarchy/utils/hierarchyUtils';
 
 const EmployeesHierarchy: React.FC = () => {
-  const [hierarchyData, setHierarchyData] = useState<HierarchyNode | null>(null);
-  const [searchQuery, setSearchQuery] = useState<string>('');
-  const { departments, isLoading } = useFirebaseDepartments();
-  const { employees } = useEmployeeData();
+  const [viewMode, setViewMode] = useState<'orgChart' | 'treeView'>('orgChart');
+  const [hierarchyType, setHierarchyType] = useState<'employees' | 'departments'>('employees');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [refreshKey, setRefreshKey] = useState(0);
   
-  // Log de debug pour inspecter les données des employés
-  useEffect(() => {
-    console.log(`EmployeesHierarchy - Nombre d'employés dédupliqués: ${employees?.length || 0}`);
-    if (employees?.length > 0) {
-      console.log("Liste des employés dédupliqués:", employees.map(e => `${e.firstName} ${e.lastName} (${e.id})`));
-    }
-  }, [employees]);
-  
-  useEffect(() => {
-    if (!isLoading && departments && departments.length > 0 && employees && employees.length > 0) {
-      console.log(`Construction de la hiérarchie avec ${departments.length} départements et ${employees.length} employés dédupliqués`);
-      buildHierarchyData(departments);
-    }
-  }, [departments, employees, isLoading]);
-  
-  useEffect(() => {
-    const unsubscribe = subscribeToDepartmentUpdates((updatedDepartments) => {
-      if (employees && employees.length > 0) {
-        console.log(`Mise à jour de la hiérarchie suite à des changements de départements (${updatedDepartments.length} départements, ${employees.length} employés dédupliqués)`);
-        buildHierarchyData(updatedDepartments);
-      }
-    });
-    
-    return () => unsubscribe();
-  }, [employees]);
-  
-  const buildHierarchyData = (departments: Department[]) => {
-    const rootDept = departments.find(dept => 
-      dept.name.includes('Direction') || 
-      dept.name.includes('CEO') || 
-      dept.name.includes('Président')
+  const { hierarchyData, isLoading, refreshHierarchy, departmentStats } = useHierarchyData();
+
+  // Fonction pour rafraîchir la hiérarchie
+  const handleRefresh = useCallback(() => {
+    console.log("Déclenchement du rafraîchissement de la hiérarchie");
+    refreshHierarchy();
+    setRefreshKey(prev => prev + 1);
+  }, [refreshHierarchy]);
+
+  // Calculer les statistiques basées sur la hiérarchie
+  const stats = useMemo(() => {
+    return getSyncedStats(
+      hierarchyData, 
+      departmentStats.departmentsCount, 
+      departmentStats.managersCount
     );
-    
-    if (!rootDept) {
-      console.log('Aucun département racine trouvé, utilisation du premier département');
-      if (departments.length > 0) {
-        createHierarchyFromDepartment(departments[0], departments);
-      }
-      return;
-    }
-    
-    createHierarchyFromDepartment(rootDept, departments);
-  };
-  
-  const createHierarchyFromDepartment = (rootDept: Department, allDepts: Department[]) => {
-    // S'assurer qu'on travaille avec la liste dédupliquée des employés
-    if (!employees || employees.length === 0) {
-      console.log("Aucun employé disponible pour construire la hiérarchie");
-      return;
-    }
-    
-    const deptEmployees = rootDept.employeeIds 
-      ? employees.filter(emp => rootDept.employeeIds?.includes(emp.id))
-      : employees.filter(emp => {
-          if (emp.department === null || emp.department === undefined) {
-            return emp.departmentId === rootDept.id;
-          }
-          
-          if (typeof emp.department === 'string') {
-            return emp.department === rootDept.id;
-          }
-          
-          if (typeof emp.department === 'object' && emp.department !== null && 'id' in emp.department) {
-            return (emp.department as { id: string }).id === rootDept.id;
-          }
-          
-          return false;
-        });
-    
-    console.log(`Employés dédupliqués dans le département ${rootDept.name}: ${deptEmployees.length}`);
-    
-    const manager = deptEmployees.find(emp => emp.id === rootDept.managerId) || null;
-    
-    const rootNode: HierarchyNode = {
-      id: rootDept.id,
-      name: rootDept.name,
-      title: 'Département',
-      manager: manager ? `${manager.firstName} ${manager.lastName}` : 'Non défini',
-      color: rootDept.color,
-      children: []
-    };
-    
-    if (manager) {
-      rootNode.children.push({
-        id: manager.id,
-        name: `${manager.firstName} ${manager.lastName}`,
-        title: manager.position || 'Manager',
-        color: '#4B5563',
-        children: []
-      });
-    }
-    
-    const childDepts = allDepts.filter(dept => 
-      dept.id !== rootDept.id && 
-      dept.parentDepartmentId === rootDept.id
-    );
-    
-    childDepts.forEach(childDept => {
-      const childNode = createDepartmentNode(childDept, allDepts);
-      rootNode.children.push(childNode);
-    });
-    
-    // Ajouter les employés qui ne sont pas managers
-    const nonManagerEmployees = deptEmployees.filter(emp => emp.id !== rootDept.managerId);
-    console.log(`Employés non-managers dédupliqués dans le département ${rootDept.name}: ${nonManagerEmployees.length}`);
-    
-    // Utiliser un Set pour éviter les doublons dans l'affichage
-    const addedEmployeeIds = new Set<string>();
-    
-    if (manager) {
-      addedEmployeeIds.add(manager.id);
-    }
-    
-    nonManagerEmployees.forEach(emp => {
-      if (!addedEmployeeIds.has(emp.id)) {
-        addedEmployeeIds.add(emp.id);
-        rootNode.children.push({
-          id: emp.id,
-          name: `${emp.firstName} ${emp.lastName}`,
-          title: emp.position || 'Employé',
-          color: '#64748b',
-          children: []
-        });
-      }
-    });
-    
-    setHierarchyData(rootNode);
-  };
-  
-  const createDepartmentNode = (dept: Department, allDepts: Department[]): HierarchyNode => {
-    const deptEmployees = dept.employeeIds 
-      ? employees.filter(emp => dept.employeeIds?.includes(emp.id))
-      : employees.filter(emp => {
-          if (emp.department === null || emp.department === undefined) {
-            return emp.departmentId === dept.id;
-          }
-          
-          if (typeof emp.department === 'string') {
-            return emp.department === dept.id;
-          }
-          
-          if (typeof emp.department === 'object' && emp.department !== null && 'id' in emp.department) {
-            return (emp.department as { id: string }).id === dept.id;
-          }
-          
-          return false;
-        });
-    
-    const manager = deptEmployees.find(emp => emp.id === dept.managerId) || null;
-    
-    const deptNode: HierarchyNode = {
-      id: dept.id,
-      name: dept.name,
-      title: 'Département',
-      manager: manager ? `${manager.firstName} ${manager.lastName}` : 'Non défini',
-      color: dept.color,
-      children: []
-    };
-    
-    // Utiliser un Set pour éviter les doublons dans l'affichage
-    const addedEmployeeIds = new Set<string>();
-    
-    if (manager) {
-      addedEmployeeIds.add(manager.id);
-      deptNode.children.push({
-        id: manager.id,
-        name: `${manager.firstName} ${manager.lastName}`,
-        title: manager.position || 'Manager',
-        color: '#4B5563',
-        children: []
-      });
-    }
-    
-    const childDepts = allDepts.filter(d => 
-      d.id !== dept.id && 
-      d.parentDepartmentId === dept.id
-    );
-    
-    childDepts.forEach(childDept => {
-      const childNode = createDepartmentNode(childDept, allDepts);
-      deptNode.children.push(childNode);
-    });
-    
-    // Ajouter les employés qui ne sont pas managers
-    const nonManagerEmployees = deptEmployees.filter(emp => emp.id !== dept.managerId);
-    
-    nonManagerEmployees.forEach(emp => {
-      if (!addedEmployeeIds.has(emp.id)) {
-        addedEmployeeIds.add(emp.id);
-        deptNode.children.push({
-          id: emp.id,
-          name: `${emp.firstName} ${emp.lastName}`,
-          title: emp.position || 'Employé',
-          color: '#64748b',
-          children: []
-        });
-      }
-    });
-    
-    return deptNode;
-  };
-  
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-center">
-          <div className="animate-spin h-10 w-10 border-4 border-primary rounded-full border-t-transparent mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Chargement de l'organigramme...</p>
-        </div>
-      </div>
-    );
-  }
-  
-  if (!hierarchyData) {
-    return (
-      <div className="flex items-center justify-center h-64 p-6">
-        <div className="text-center max-w-md">
-          <h3 className="text-lg font-medium mb-2">Aucun département trouvé</h3>
-          <p className="text-muted-foreground">
-            Pour afficher l'organigramme, veuillez d'abord créer des départements et y assigner des employés et des responsables.
-          </p>
-        </div>
-      </div>
-    );
-  }
-  
+  }, [hierarchyData, departmentStats]);
+
   return (
     <div className="space-y-6">
-      <div className="flex items-center relative mb-4">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
-        <Input
-          placeholder="Rechercher un employé ou un département..."
-          className="pl-10"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
+      <div className="flex justify-between items-center">
+        <h1 className="text-2xl font-bold">Hiérarchie de l'Organisation</h1>
+        
+        <div className="flex space-x-2">
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={handleRefresh}
+          >
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Actualiser
+          </Button>
+        </div>
+      </div>
+
+      {/* Dashboard Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <StatCard 
+          title="Employés" 
+          value={stats.totalEmployees.toString()} 
+          icon={<Users className="h-6 w-6 text-white" />}
+          description="Total dans l'organigramme"
+          className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200 hover:shadow-md transition-shadow"
+        />
+        
+        <StatCard 
+          title="Managers" 
+          value={stats.managerCount.toString()} 
+          icon={<Users className="h-6 w-6 text-green-600" />}
+          description="Avec des subordonnés directs"
+          className="bg-gradient-to-br from-green-50 to-green-100 border-green-200 hover:shadow-md transition-shadow"
+        />
+        
+        <StatCard 
+          title="Niveaux" 
+          value={stats.maxDepth.toString()} 
+          icon={<Building className="h-6 w-6 text-purple-600" />}
+          description="Profondeur de la hiérarchie"
+          className="bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200 hover:shadow-md transition-shadow"
+        />
+        
+        <StatCard 
+          title="Départements" 
+          value={stats.departmentsRepresented.toString()} 
+          icon={<Building className="h-6 w-6 text-orange-600" />}
+          description="Représentés dans l'organigramme"
+          className="bg-gradient-to-br from-orange-50 to-orange-100 border-orange-200 hover:shadow-md transition-shadow"
         />
       </div>
       
-      <Card>
-        <CardContent className="p-6 overflow-auto">
-          <HierarchyVisualization 
-            data={hierarchyData} 
-            viewMode="orgChart" 
-            searchQuery={searchQuery} 
+      <div className="flex flex-col sm:flex-row justify-between gap-4">
+        <div className="relative flex-1 max-w-md">
+          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Rechercher..."
+            className="pl-8"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
           />
+        </div>
+        
+        <Tabs defaultValue="employees" onValueChange={(v) => setHierarchyType(v as 'employees' | 'departments')}>
+          <TabsList>
+            <TabsTrigger value="employees">
+              <Users className="h-4 w-4 mr-2" />
+              Employés
+            </TabsTrigger>
+            <TabsTrigger value="departments">
+              <Building className="h-4 w-4 mr-2" />
+              Départements
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
+        
+        {hierarchyType === 'employees' && (
+          <Tabs defaultValue={viewMode} onValueChange={(v) => setViewMode(v as 'orgChart' | 'treeView')}>
+            <TabsList>
+              <TabsTrigger value="orgChart">Organigramme</TabsTrigger>
+              <TabsTrigger value="treeView">Vue Arborescente</TabsTrigger>
+            </TabsList>
+          </Tabs>
+        )}
+      </div>
+      
+      <Card>
+        <CardContent className="p-6">
+          {hierarchyType === 'employees' ? (
+            <HierarchyVisualization 
+              key={refreshKey}
+              viewMode={viewMode} 
+              searchQuery={searchQuery}
+              data={hierarchyData}
+              onRefresh={handleRefresh}
+            />
+          ) : (
+            <DepartmentHierarchy />
+          )}
         </CardContent>
       </Card>
     </div>

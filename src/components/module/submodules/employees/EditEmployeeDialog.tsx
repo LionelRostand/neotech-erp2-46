@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Employee } from '@/types/employee';
@@ -10,6 +9,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useForm } from 'react-hook-form';
 import PhotoUploadField from '@/components/module/submodules/employees/form/PhotoUploadField';
 import { updateEmployeeDoc } from '@/services/employeeService';
+import { useEmployeeData } from '@/hooks/useEmployeeData';
+import { User } from 'lucide-react';
 
 interface EditEmployeeDialogProps {
   open: boolean;
@@ -22,6 +23,7 @@ export const EditEmployeeDialog: React.FC<EditEmployeeDialogProps> = ({
   onOpenChange,
   employee
 }) => {
+  const { employees } = useEmployeeData();
   const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm({
     defaultValues: {
       firstName: employee.firstName,
@@ -31,19 +33,29 @@ export const EditEmployeeDialog: React.FC<EditEmployeeDialogProps> = ({
       position: employee.position || employee.title || '',
       department: employee.department || '',
       status: employee.status || 'active',
-      photo: employee.photoURL || employee.photo || ''
+      photo: employee.photoURL || employee.photo || '',
+      managerId: employee.managerId || ''
     }
+  });
+
+  const managers = employees.filter(emp => 
+    emp.isManager || 
+    (emp.position && emp.position.toLowerCase().includes('manager')) ||
+    emp.forceManager
+  ).sort((a, b) => {
+    const nameA = `${a.lastName} ${a.firstName}`.toLowerCase();
+    const nameB = `${b.lastName} ${b.firstName}`.toLowerCase();
+    return nameA.localeCompare(nameB);
   });
 
   const onSubmit = async (data: any) => {
     try {
       console.log('Soumission du formulaire avec les données:', data);
       
-      // Mettre à jour l'employé avec les nouvelles données
       await updateEmployeeDoc(employee.id, {
         ...data,
-        photoURL: data.photo, // Assurez-vous que la photo est mise à jour
-        photo: data.photo // Pour la rétrocompatibilité
+        photoURL: data.photo,
+        photo: data.photo
       });
       
       toast.success(`Informations de ${data.firstName} ${data.lastName} mises à jour avec succès`);
@@ -113,6 +125,29 @@ export const EditEmployeeDialog: React.FC<EditEmployeeDialogProps> = ({
                 <SelectItem value="En congé">En congé</SelectItem>
                 <SelectItem value="Inactif">Inactif</SelectItem>
                 <SelectItem value="Suspendu">Suspendu</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="manager" className="flex items-center gap-2">
+              <User className="h-4 w-4" />
+              Responsable
+            </Label>
+            <Select 
+              defaultValue={employee.managerId || ''} 
+              onValueChange={(value) => setValue('managerId', value)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Sélectionner un responsable" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">Aucun responsable</SelectItem>
+                {managers.map((manager) => (
+                  <SelectItem key={manager.id} value={manager.id}>
+                    {`${manager.lastName} ${manager.firstName}`}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
