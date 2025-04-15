@@ -7,13 +7,22 @@ import { ReportCategoryTabs } from './reports/ReportCategoryTabs';
 import { ReportCardProps } from './reports/ReportCard';
 import { getMockReports } from './reports/reportsData';
 import { PieChart, FileText, Users, Calendar } from 'lucide-react';
-import { formatDate } from '@/lib/formatters';
 
 const EmployeesReports: React.FC = () => {
   const [selectedPeriod, setSelectedPeriod] = useState<string>("month");
   const [activeTab, setActiveTab] = useState<string>("all");
   
   const { reports, stats, isLoading } = useReportsData();
+  
+  // Helper function to map report status to ReportCard status
+  const mapReportStatus = (status: string): "ready" | "updating" | "scheduled" => {
+    switch (status) {
+      case 'Généré': return 'ready';
+      case 'En traitement': return 'updating';
+      case 'Erreur': return 'scheduled'; // Using scheduled for error state
+      default: return 'ready';
+    }
+  };
   
   // Combine real reports with mock reports for demonstration
   const combinedReports: ReportCardProps[] = [
@@ -23,8 +32,7 @@ const EmployeesReports: React.FC = () => {
       description: report.description || 'Rapport généré automatiquement',
       lastUpdated: report.createdDate,
       icon: React.createElement(getReportIcon(report.type), { className: "h-5 w-5 text-blue-500" }),
-      status: report.status === 'Généré' ? 'ready' : 
-              report.status === 'En traitement' ? 'updating' : 'scheduled',
+      status: mapReportStatus(report.status),
       category: getCategoryFromType(report.type)
     }))
   ];
