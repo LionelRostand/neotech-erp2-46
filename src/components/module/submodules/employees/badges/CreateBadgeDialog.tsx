@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { BadgeData, generateBadgeNumber } from './BadgeTypes';
 import { Employee } from '@/types/employee';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 
 interface CreateBadgeDialogProps {
   isOpen: boolean;
@@ -24,6 +25,7 @@ const CreateBadgeDialog: React.FC<CreateBadgeDialogProps> = ({
 }) => {
   const [selectedEmployee, setSelectedEmployee] = useState<string>('');
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<string>('');
+  const [selectedDepartment, setSelectedDepartment] = useState<string>('');
   const [accessLevel, setAccessLevel] = useState<string>('');
   const [badgeNumber, setBadgeNumber] = useState(generateBadgeNumber());
   const [companyValue, setCompanyValue] = useState<string>('');
@@ -40,6 +42,22 @@ const CreateBadgeDialog: React.FC<CreateBadgeDialogProps> = ({
     });
     return Array.from(uniqueCompanies).map(([id, name]) => ({ id, name }));
   }, [employees]);
+
+  // Get unique departments
+  const departments = React.useMemo(() => {
+    const uniqueDepartments = new Set();
+    employees.forEach(emp => {
+      if (emp.department) {
+        uniqueDepartments.add(emp.department);
+      }
+    });
+    return Array.from(uniqueDepartments) as string[];
+  }, [employees]);
+
+  // Get selected employee data
+  const selectedEmployeeData = React.useMemo(() => {
+    return employees.find(emp => emp.id === selectedEmployeeId);
+  }, [selectedEmployeeId, employees]);
 
   const handleCreateBadge = () => {
     if (!selectedEmployee || !accessLevel) {
@@ -60,12 +78,13 @@ const CreateBadgeDialog: React.FC<CreateBadgeDialogProps> = ({
       date: new Date().toISOString().split('T')[0],
       employeeId: employee.id,
       employeeName: `${employee.firstName} ${employee.lastName}`,
-      department: employee.department,
+      department: selectedDepartment || employee.department || '',
       accessLevel: accessLevel,
       status: "success",
       statusText: "Actif",
       company: companyValue || (typeof employee.company === 'string' ? employee.company : 
-                           typeof employee.company === 'object' && employee.company ? employee.company.id : '')
+                           typeof employee.company === 'object' && employee.company ? employee.company.id : ''),
+      photoURL: employee.photoURL || employee.photo || ''
     };
     
     // Callback to add the badge
@@ -79,6 +98,7 @@ const CreateBadgeDialog: React.FC<CreateBadgeDialogProps> = ({
   const resetForm = () => {
     setSelectedEmployee('');
     setSelectedEmployeeId('');
+    setSelectedDepartment('');
     setAccessLevel('');
     setCompanyValue('');
     setBadgeNumber(generateBadgeNumber());
@@ -89,15 +109,20 @@ const CreateBadgeDialog: React.FC<CreateBadgeDialogProps> = ({
     onOpenChange(false);
   };
 
-  // Update company when employee is selected
+  // Update company and department when employee is selected
   useEffect(() => {
     if (selectedEmployeeId) {
       const employee = employees.find(emp => emp.id === selectedEmployeeId);
-      if (employee && employee.company) {
-        if (typeof employee.company === 'string') {
-          setCompanyValue(employee.company);
-        } else if (typeof employee.company === 'object' && employee.company.id) {
-          setCompanyValue(employee.company.id);
+      if (employee) {
+        if (employee.company) {
+          if (typeof employee.company === 'string') {
+            setCompanyValue(employee.company);
+          } else if (typeof employee.company === 'object' && employee.company.id) {
+            setCompanyValue(employee.company.id);
+          }
+        }
+        if (employee.department) {
+          setSelectedDepartment(employee.department);
         }
       }
     }
@@ -109,6 +134,7 @@ const CreateBadgeDialog: React.FC<CreateBadgeDialogProps> = ({
         <DialogHeader>
           <DialogTitle>Créer un nouveau badge</DialogTitle>
         </DialogHeader>
+        
         <div className="grid gap-4 py-4">
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="employee" className="text-right">
@@ -139,29 +165,18 @@ const CreateBadgeDialog: React.FC<CreateBadgeDialogProps> = ({
               </Select>
             </div>
           </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="access" className="text-right">
-              Niveau d'accès
-            </Label>
-            <div className="col-span-3">
-              <Select value={accessLevel} onValueChange={setAccessLevel}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Sélectionner un niveau d'accès" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Sécurité Niveau 1">Sécurité Niveau 1</SelectItem>
-                  <SelectItem value="Sécurité Niveau 2">Sécurité Niveau 2</SelectItem>
-                  <SelectItem value="Sécurité Niveau 3">Sécurité Niveau 3</SelectItem>
-                  <SelectItem value="Administration">Administration</SelectItem>
-                  <SelectItem value="IT">IT</SelectItem>
-                  <SelectItem value="RH">RH</SelectItem>
-                  <SelectItem value="Marketing">Marketing</SelectItem>
-                  <SelectItem value="DIRECTION">DIRECTION</SelectItem>
-                  <SelectItem value="PDG">PDG</SelectItem>
-                </SelectContent>
-              </Select>
+
+          {selectedEmployeeData && (
+            <div className="flex justify-center py-2">
+              <Avatar className="h-24 w-24">
+                <AvatarImage src={selectedEmployeeData.photoURL || selectedEmployeeData.photo} />
+                <AvatarFallback>
+                  {`${selectedEmployeeData.firstName[0]}${selectedEmployeeData.lastName[0]}`}
+                </AvatarFallback>
+              </Avatar>
             </div>
-          </div>
+          )}
+
           {companies.length > 0 && (
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="company" className="text-right">
@@ -186,6 +201,54 @@ const CreateBadgeDialog: React.FC<CreateBadgeDialogProps> = ({
               </div>
             </div>
           )}
+
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="department" className="text-right">
+              Département
+            </Label>
+            <div className="col-span-3">
+              <Select value={selectedDepartment} onValueChange={setSelectedDepartment}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Sélectionner un département" />
+                </SelectTrigger>
+                <SelectContent>
+                  {departments.map((department) => (
+                    <SelectItem 
+                      key={department} 
+                      value={department}
+                    >
+                      {department}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="access" className="text-right">
+              Niveau d'accès
+            </Label>
+            <div className="col-span-3">
+              <Select value={accessLevel} onValueChange={setAccessLevel}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Sélectionner un niveau d'accès" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Sécurité Niveau 1">Sécurité Niveau 1</SelectItem>
+                  <SelectItem value="Sécurité Niveau 2">Sécurité Niveau 2</SelectItem>
+                  <SelectItem value="Sécurité Niveau 3">Sécurité Niveau 3</SelectItem>
+                  <SelectItem value="Administration">Administration</SelectItem>
+                  <SelectItem value="IT">IT</SelectItem>
+                  <SelectItem value="RH">RH</SelectItem>
+                  <SelectItem value="Marketing">Marketing</SelectItem>
+                  <SelectItem value="DIRECTION">DIRECTION</SelectItem>
+                  <SelectItem value="PDG">PDG</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="badge-number" className="text-right">
               Numéro de badge
@@ -193,6 +256,7 @@ const CreateBadgeDialog: React.FC<CreateBadgeDialogProps> = ({
             <Input id="badge-number" className="col-span-3" value={badgeNumber} disabled />
           </div>
         </div>
+        
         <DialogFooter>
           <Button variant="outline" onClick={handleClose}>Annuler</Button>
           <Button onClick={handleCreateBadge}>Créer</Button>

@@ -1,4 +1,3 @@
-
 export interface BadgeData {
   id: string;
   employeeId: string;
@@ -9,6 +8,7 @@ export interface BadgeData {
   status: 'success' | 'warning' | 'danger';
   statusText: string;
   company?: string;
+  photoURL?: string;
 }
 
 export interface BadgesTableProps {
