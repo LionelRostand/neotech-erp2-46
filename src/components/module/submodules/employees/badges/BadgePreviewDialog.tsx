@@ -61,10 +61,14 @@ const BadgePreviewDialog: React.FC<BadgePreviewDialogProps> = ({
     doc.rect(0, 0, 85, 12, 'F');
     
     // Company name and title
+    const companyName = selectedEmployee?.company ? 
+      (typeof selectedEmployee.company === 'string' ? 'STORM GROUP' : selectedEmployee.company.name) :
+      'STORM GROUP';
+    
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(10);
     doc.setFont('helvetica', 'bold');
-    doc.text('STORM GROUP', 5, 7);
+    doc.text(companyName.toUpperCase(), 5, 7);
     doc.setFont('helvetica', 'normal');
     doc.text('Enterprise Solutions', 80, 7, { align: 'right' });
     
@@ -81,13 +85,11 @@ const BadgePreviewDialog: React.FC<BadgePreviewDialogProps> = ({
 
     // Add photo placeholder or actual photo
     if (selectedEmployee?.photoURL) {
-      // If we have a photo, we'll add it to the badge
       const photoSize = 20;
       const photoX = 5;
       const photoY = 25;
       doc.addImage(selectedEmployee.photoURL, 'JPEG', photoX, photoY, photoSize, photoSize);
     } else {
-      // Add a placeholder box for photo
       doc.setDrawColor(200, 200, 200);
       doc.setFillColor(220, 220, 220);
       doc.roundedRect(5, 25, 20, 20, 2, 2, 'FD');
@@ -143,6 +145,12 @@ const BadgePreviewDialog: React.FC<BadgePreviewDialogProps> = ({
               )}
               <div>
                 <h3 className="font-medium text-lg">{selectedBadge.employeeName}</h3>
+                <p className="text-sm text-muted-foreground">
+                  {selectedEmployee?.company ? 
+                    (typeof selectedEmployee.company === 'string' ? 'STORM GROUP' : selectedEmployee.company.name) :
+                    'STORM GROUP'
+                  }
+                </p>
                 {selectedEmployee?.department && (
                   <span className="text-sm text-muted-foreground">{selectedEmployee.department}</span>
                 )}
