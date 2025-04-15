@@ -6,9 +6,15 @@ export interface BadgeData {
   department: string;
   accessLevel: string;
   date: string;
-  status: 'success' | 'warning' | 'error';
+  status: 'success' | 'warning' | 'danger';  // Changed 'error' to 'danger' to maintain consistency
   statusText: string;
   company?: string;
+}
+
+export interface BadgesTableProps {
+  badgesList: BadgeData[];
+  onBadgeClick: (badgeId: string) => void;
+  loading?: boolean;
 }
 
 export const generateBadgeNumber = () => {
