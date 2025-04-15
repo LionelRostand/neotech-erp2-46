@@ -1,4 +1,3 @@
-
 import { db } from '@/lib/firebase';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import { doc, getDoc, setDoc, collection, query, getDocs, deleteDoc } from 'firebase/firestore';
@@ -28,18 +27,21 @@ export const getBadge = async (badgeId: string): Promise<BadgeData | null> => {
 // Function to create a new badge
 export const createBadge = async (badgeData: BadgeData): Promise<BadgeData | null> => {
   try {
-    const docRef = doc(db, COLLECTIONS.HR.BADGES, badgeData.id);
-    await setDoc(docRef, badgeData);
+    // Générer un ID court pour le badge
+    const shortId = `B${Math.floor(1000 + Math.random() * 9000)}`; // Format: B1234
+    const badgeWithId = {
+      ...badgeData,
+      id: shortId
+    };
     
-    // Fetch the document to return the created badge data
+    const docRef = doc(db, COLLECTIONS.HR.BADGES, shortId);
+    await setDoc(docRef, badgeWithId);
+    
     const docSnap = await getDoc(docRef);
     if (docSnap.exists()) {
-      const docData = docSnap.data();
-      return { id: docRef.id, ...docData } as unknown as BadgeData;
-    } else {
-      console.log("No such document after creation!");
-      return null;
+      return { id: docRef.id, ...docSnap.data() } as BadgeData;
     }
+    return null;
   } catch (error) {
     console.error("Error creating badge:", error);
     return null;
@@ -52,7 +54,6 @@ export const updateBadge = async (badgeId: string, badgeData: Partial<BadgeData>
     const docRef = doc(db, COLLECTIONS.HR.BADGES, badgeId);
     await setDoc(docRef, badgeData, { merge: true });
     
-    // Fetch the document to return the updated badge data
     const docSnap = await getDoc(docRef);
     if (docSnap.exists()) {
       const docData = docSnap.data();
