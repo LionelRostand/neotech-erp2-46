@@ -1,23 +1,13 @@
 
-import React, { useState, useEffect } from 'react';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from '@/components/ui/dialog';
-import { Badge } from '@/components/ui/badge';
+import React from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { Download } from 'lucide-react';
+import { toast } from 'sonner';
 import { BadgeData } from './BadgeTypes';
 import { Employee } from '@/types/employee';
-import { usePermissions } from '@/hooks/usePermissions';
-import { Download, Trash } from 'lucide-react';
 import { jsPDF } from 'jspdf';
-import { toast } from 'sonner';
 import { Company } from '@/components/module/submodules/companies/types';
-import { useFirebaseCompanies } from '@/hooks/useFirebaseCompanies';
 
 interface BadgePreviewDialogProps {
   isOpen: boolean;
@@ -34,89 +24,54 @@ const BadgePreviewDialog: React.FC<BadgePreviewDialogProps> = ({
   selectedEmployee,
   onDeleteClick
 }) => {
-  const { isAdmin } = usePermissions('employees-badges');
-  const { companies, isLoading: isLoadingCompanies } = useFirebaseCompanies();
-  const [employeeCompany, setEmployeeCompany] = useState<Company | null>(null);
-
-  // Find employee's company from the companies list
-  useEffect(() => {
-    if (selectedEmployee && companies.length > 0) {
-      // If employee has company as an object with an id
-      if (selectedEmployee.company && typeof selectedEmployee.company === 'object' && selectedEmployee.company.id) {
-        const companyFromList = companies.find(c => c.id === selectedEmployee.company.id);
-        if (companyFromList) {
-          setEmployeeCompany(companyFromList);
-          return;
-        }
-      }
-      
-      // If employee has company as a string (company ID)
-      if (selectedEmployee.company && typeof selectedEmployee.company === 'string') {
-        const companyFromList = companies.find(c => c.id === selectedEmployee.company);
-        if (companyFromList) {
-          setEmployeeCompany(companyFromList);
-          return;
-        }
-      }
-      
-      // Default to null if no match found
-      setEmployeeCompany(null);
-    }
-  }, [selectedEmployee, companies]);
-
   if (!selectedBadge) return null;
-
+  
   const getCompanyName = (): string => {
-    // If we found a company from our companies list
-    if (employeeCompany) {
-      return employeeCompany.name;
+    if (!selectedEmployee) return "Enterprise";
+    
+    if (!selectedEmployee.company) return "Enterprise";
+    
+    if (typeof selectedEmployee.company === 'string') {
+      return selectedEmployee.company;
     }
     
-    // If employee has company as an object with name
-    if (selectedEmployee?.company && typeof selectedEmployee.company === 'object' && selectedEmployee.company.name) {
-      return selectedEmployee.company.name;
-    }
-    
-    // Default company name if nothing else is found
-    return 'STORM GROUP';
+    // Now TypeScript knows this is a Company object
+    const companyObj = selectedEmployee.company as Company;
+    return companyObj.name || "Enterprise";
   };
-
+  
+  const companyName = getCompanyName();
+  
   const handleDownloadBadge = () => {
-    // Create a new PDF document - using landscape format for badge display
     const doc = new jsPDF({
       orientation: 'landscape',
       unit: 'mm',
-      format: [85, 54] // ID card standard size (85mm x 54mm)
+      format: [85, 54]
     });
     
-    // Set background color for entire badge
     doc.setFillColor(240, 240, 240);
     doc.rect(0, 0, 85, 54, 'F');
     
-    // Add company header with status color
     let headerColor;
     if (selectedBadge.status === 'success') {
-      headerColor = [34, 197, 94]; // green
+      headerColor = [34, 197, 94];
     } else if (selectedBadge.status === 'warning') {
-      headerColor = [234, 179, 8]; // amber
+      headerColor = [234, 179, 8];
     } else {
-      headerColor = [239, 68, 68]; // red
+      headerColor = [239, 68, 68];
     }
     doc.setFillColor(headerColor[0], headerColor[1], headerColor[2]);
     doc.rect(0, 0, 85, 12, 'F');
-    
-    // Company name and title
-    const companyName = getCompanyName();
     
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(10);
     doc.setFont('helvetica', 'bold');
     doc.text(companyName.toUpperCase(), 5, 7);
-    doc.setFont('helvetica', 'normal');
-    doc.text('Enterprise Solutions', 80, 7, { align: 'right' });
     
-    // Employee details
     doc.setTextColor(0, 0, 0);
+    doc.setFontSize(8);
+    doc.text(`ID: ${selectedBadge.id}`, 42.5, 18, { align: 'center' });
+    
     doc.setFontSize(12);
     doc.setFont('helvetica', 'bold');
     doc.text(selectedBadge.employeeName, 42.5, 25, { align: 'center' });
@@ -125,129 +80,107 @@ const BadgePreviewDialog: React.FC<BadgePreviewDialogProps> = ({
     doc.setFont('helvetica', 'normal');
     doc.text(`Département: ${selectedBadge.department || 'N/A'}`, 42.5, 31, { align: 'center' });
     doc.text(`Accès: ${selectedBadge.accessLevel || 'Standard'}`, 42.5, 36, { align: 'center' });
-
-    // Add photo placeholder or actual photo
-    if (selectedEmployee?.photoURL) {
-      const photoSize = 20;
-      const photoX = 5;
-      const photoY = 25;
-      doc.addImage(selectedEmployee.photoURL, 'JPEG', photoX, photoY, photoSize, photoSize);
+    
+    let statusColor;
+    if (selectedBadge.status === 'success') {
+      statusColor = [34, 197, 94];
+    } else if (selectedBadge.status === 'warning') {
+      statusColor = [234, 179, 8];
     } else {
-      doc.setDrawColor(200, 200, 200);
-      doc.setFillColor(220, 220, 220);
-      doc.roundedRect(5, 25, 20, 20, 2, 2, 'FD');
+      statusColor = [239, 68, 68];
     }
     
-    // Add badge ID and date
+    doc.setTextColor(statusColor[0], statusColor[1], statusColor[2]);
+    doc.text(`Statut: ${selectedBadge.statusText}`, 42.5, 41, { align: 'center' });
+    
+    doc.setTextColor(100, 100, 100);
     doc.setFontSize(8);
-    doc.setFont('helvetica', 'normal');
-    doc.text(`ID: ${selectedBadge.id}`, 42.5, 41, { align: 'center' });
-    doc.text(`Émis le: ${selectedBadge.date}`, 42.5, 45, { align: 'center' });
+    doc.text(`Émis le: ${selectedBadge.date}`, 42.5, 46, { align: 'center' });
     
-    // Add QR code placeholder for future scanning
-    doc.setFillColor(0, 0, 0);
-    doc.rect(70, 25, 10, 10, 'F');
-    
-    // Add footer with company info
     doc.setFillColor(70, 70, 70);
     doc.rect(0, 50, 85, 4, 'F');
     doc.setFontSize(6);
     doc.setTextColor(255, 255, 255);
     doc.text('Ce badge doit être porté visiblement à tout moment', 42.5, 52.5, { align: 'center' });
     
-    // Save the PDF
+    doc.setFillColor(0, 0, 0);
+    doc.rect(5, 36, 10, 10, 'F');
+    doc.setFillColor(255, 255, 255);
+    doc.rect(6, 37, 8, 8, 'F');
+    doc.setFillColor(0, 0, 0);
+    doc.rect(7, 38, 6, 6, 'F');
+
     doc.save(`badge-${selectedBadge.id}.pdf`);
+    
     toast.success("Badge téléchargé avec succès");
   };
-
+  
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Détails du badge</DialogTitle>
-          <DialogDescription>
-            Informations détaillées sur le badge d'accès.
-          </DialogDescription>
+          <DialogTitle>Aperçu du Badge</DialogTitle>
         </DialogHeader>
         
-        <div className="grid gap-4 py-4">
-          <div className="flex justify-between items-start">
-            <div className="flex items-center gap-4">
-              {selectedEmployee?.photoURL ? (
-                <img 
-                  src={selectedEmployee.photoURL} 
-                  alt={selectedBadge.employeeName}
-                  className="w-16 h-16 rounded-full object-cover border-2 border-gray-200"
-                />
-              ) : (
-                <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center border-2 border-gray-200">
-                  <span className="text-2xl text-gray-400">
-                    {selectedBadge.employeeName.charAt(0)}
-                  </span>
-                </div>
-              )}
-              <div>
-                <h3 className="font-medium text-lg">{selectedBadge.employeeName}</h3>
-                <p className="text-sm text-muted-foreground">
-                  {getCompanyName()}
-                </p>
-                {selectedEmployee?.department && (
-                  <span className="text-sm text-muted-foreground">{selectedEmployee.department}</span>
-                )}
-              </div>
+        <div className="py-4">
+          <div className="bg-gray-100 rounded-md p-6 mb-4">
+            <div className={`h-2 w-full mb-3 rounded-t ${
+              selectedBadge.status === 'success' ? 'bg-green-500' : 
+              selectedBadge.status === 'warning' ? 'bg-amber-500' : 'bg-red-500'
+            }`}></div>
+            
+            <div className="text-center mb-3">
+              <p className="text-sm text-gray-500">ID: {selectedBadge.id}</p>
+              <h3 className="text-lg font-bold">{selectedBadge.employeeName}</h3>
+              <p className="text-sm text-gray-600">Entreprise: {companyName}</p>
             </div>
             
-            <Badge 
-              variant={selectedBadge.status === 'success' ? 'default' : 
-                     selectedBadge.status === 'warning' ? 'outline' : 
-                     selectedBadge.status === 'danger' ? 'destructive' : 'secondary'}
-            >
-              {selectedBadge.statusText}
-            </Badge>
+            <div className="space-y-2 text-sm">
+              <p><span className="font-medium">Département:</span> {selectedBadge.department || 'N/A'}</p>
+              <p><span className="font-medium">Niveau d'accès:</span> {selectedBadge.accessLevel || 'Standard'}</p>
+              <p><span className="font-medium">Statut:</span> 
+                <span className={`ml-1 ${
+                  selectedBadge.status === 'success' ? 'text-green-600' : 
+                  selectedBadge.status === 'warning' ? 'text-amber-600' : 'text-red-600'
+                }`}>
+                  {selectedBadge.statusText}
+                </span>
+              </p>
+              <p><span className="font-medium">Date d'émission:</span> {selectedBadge.date}</p>
+            </div>
+            
+            {selectedEmployee && (
+              <div className="mt-4 pt-4 border-t border-gray-200">
+                <p className="text-sm text-gray-500 mb-2">Informations supplémentaires</p>
+                <div className="space-y-1 text-sm">
+                  <p><span className="font-medium">Email:</span> {selectedEmployee.email}</p>
+                  <p><span className="font-medium">Poste:</span> {selectedEmployee.position}</p>
+                </div>
+              </div>
+            )}
           </div>
           
-          <div className="space-y-2 rounded-md border p-4">
-            <div className="flex justify-between">
-              <span className="text-sm font-medium">ID du badge</span>
-              <span className="text-sm">{selectedBadge.id}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-sm font-medium">Entreprise</span>
-              <span className="text-sm">{getCompanyName()}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-sm font-medium">Date d'émission</span>
-              <span className="text-sm">{selectedBadge.date}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-sm font-medium">Niveau d'accès</span>
-              <span className="text-sm">{selectedBadge.accessLevel}</span>
-            </div>
+          <div className="flex gap-2">
+            <Button 
+              onClick={handleDownloadBadge} 
+              className="flex-1" 
+              variant="outline"
+            >
+              <Download className="h-4 w-4 mr-2" />
+              Télécharger le badge
+            </Button>
+            
+            {onDeleteClick && selectedBadge && (
+              <Button 
+                onClick={() => onDeleteClick(selectedBadge)}
+                variant="destructive"
+                className="flex-shrink-0"
+              >
+                Supprimer
+              </Button>
+            )}
           </div>
         </div>
-        
-        <DialogFooter className="flex justify-between sm:justify-between gap-2">
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={() => onOpenChange(false)}>
-              Fermer
-            </Button>
-            <Button onClick={handleDownloadBadge} className="gap-2">
-              <Download className="h-4 w-4" />
-              Télécharger
-            </Button>
-          </div>
-          
-          {isAdmin && onDeleteClick && (
-            <Button 
-              variant="destructive" 
-              onClick={() => onDeleteClick(selectedBadge)}
-              className="gap-2"
-            >
-              <Trash className="h-4 w-4" />
-              Supprimer
-            </Button>
-          )}
-        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
