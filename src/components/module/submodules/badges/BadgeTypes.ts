@@ -1,4 +1,3 @@
-
 import { Employee } from '@/types/employee';
 
 // Interface for Badge data
@@ -12,6 +11,7 @@ export interface BadgeData {
   status: "success" | "warning" | "danger";
   statusText: string;
   photoURL?: string;
+  company?: string;
 }
 
 export interface BadgesTableProps {
