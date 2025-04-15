@@ -1,7 +1,9 @@
+
 import { db } from '@/lib/firebase';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import { doc, getDoc, updateDoc, collection, getDocs, query, where, addDoc, deleteDoc, DocumentReference } from 'firebase/firestore';
 import { Employee } from '@/types/employee';
+import { notifyDepartmentUpdates } from '@/components/module/submodules/departments/utils/departmentUtils';
 
 /**
  * Créer un nouvel employé dans Firestore
@@ -49,7 +51,16 @@ export const createEmployee = async (employeeData: Partial<Employee>): Promise<E
         ...docSnap.data()
       } as Employee;
       
+      // Si c'est un manager, l'ajouter à la liste des managers
+      if (newEmployee.isManager || employeeData.forceManager) {
+        await addManagerToList(newEmployee);
+      }
+      
       console.log('Employee created successfully:', newEmployee);
+      
+      // Déclencher une mise à jour de la hiérarchie
+      triggerHierarchyUpdate();
+      
       return newEmployee;
     }
     
@@ -95,6 +106,10 @@ export const updateEmployeeDoc = async (id: string, data: Partial<Employee>): Pr
       } as Employee;
       
       console.log('Employee updated successfully:', updatedEmployee);
+      
+      // Déclencher une mise à jour de la hiérarchie après la mise à jour d'un employé
+      triggerHierarchyUpdate();
+      
       return updatedEmployee;
     }
     
@@ -129,6 +144,9 @@ export const syncManagerStatus = async (employee: Employee): Promise<void> => {
       const managerId = querySnapshot.docs[0].id;
       await deleteDoc(doc(db, COLLECTIONS.HR.MANAGERS, managerId));
     }
+    
+    // Déclencher une mise à jour de la hiérarchie après la modification du statut de manager
+    triggerHierarchyUpdate();
   } catch (error) {
     console.error('Error syncing manager status:', error);
     throw error;
@@ -154,4 +172,15 @@ const addManagerToList = async (employee: Employee): Promise<void> => {
     console.error('Error adding employee to managers list:', error);
     throw error;
   }
+};
+
+/**
+ * Déclenche une mise à jour de la hiérarchie en notifiant les composants concernés
+ * Cette fonction utilise le même mécanisme que pour les mises à jour des départements
+ */
+export const triggerHierarchyUpdate = (): void => {
+  console.log('Triggering hierarchy update after employee changes');
+  // Utiliser le système de notification existant pour les départements
+  // puisque la hiérarchie dépend à la fois des employés et des départements
+  notifyDepartmentUpdates();
 };

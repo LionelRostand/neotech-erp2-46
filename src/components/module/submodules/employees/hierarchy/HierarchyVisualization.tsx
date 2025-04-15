@@ -1,11 +1,12 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { ChartNode, HierarchyNode, HierarchyVisualizationProps } from './types';
 import { convertToChartNode, nodeMatchesSearch } from './utils/hierarchyUtils';
 import EmptyHierarchy from './components/EmptyHierarchy';
 import OrgChartNode from './components/OrgChartNode';
 import TreeViewNode from './components/TreeViewNode';
 import { subscribeToDepartmentUpdates } from '../../departments/utils/departmentUtils';
+import { toast } from 'sonner';
 
 const HierarchyVisualization: React.FC<HierarchyVisualizationProps> = ({ 
   data: externalData,
@@ -15,6 +16,7 @@ const HierarchyVisualization: React.FC<HierarchyVisualizationProps> = ({
 }) => {
   // État local pour stocker les données du graphique
   const [chartData, setChartData] = useState<ChartNode | null>(null);
+  const [lastUpdateTime, setLastUpdateTime] = useState<Date>(new Date());
   
   // Mettre à jour les données du graphique lorsque les données externes changent
   useEffect(() => {
@@ -23,19 +25,36 @@ const HierarchyVisualization: React.FC<HierarchyVisualizationProps> = ({
         ? externalData 
         : convertToChartNode(externalData as HierarchyNode);
       setChartData(convertedData as ChartNode);
+      setLastUpdateTime(new Date());
     } else {
       setChartData(null);
     }
   }, [externalData]);
 
+  // Fonction de rafraîchissement avec délai minimum
+  const handleRefresh = useCallback(() => {
+    const now = new Date();
+    const timeSinceLastUpdate = now.getTime() - lastUpdateTime.getTime();
+    
+    // Éviter les rafraîchissements trop fréquents (minimum 5 secondes entre les mises à jour)
+    if (timeSinceLastUpdate > 5000) {
+      console.log("Rafraîchissement de la hiérarchie depuis la visualisation");
+      if (onRefresh) {
+        onRefresh();
+        setLastUpdateTime(now);
+        toast.info("Organigramme mis à jour");
+      }
+    } else {
+      console.log("Rafraîchissement ignoré (trop fréquent)");
+    }
+  }, [onRefresh, lastUpdateTime]);
+
   // S'abonner aux mises à jour des départements
   useEffect(() => {
     // Fonction pour gérer les mises à jour des départements
     const handleDepartmentsUpdate = () => {
-      console.log("Départements mis à jour, rafraîchissement de la hiérarchie");
-      if (onRefresh) {
-        onRefresh();
-      }
+      console.log("Départements ou employés mis à jour, rafraîchissement de la hiérarchie");
+      handleRefresh();
     };
     
     // S'abonner aux événements de mise à jour des départements
@@ -45,7 +64,7 @@ const HierarchyVisualization: React.FC<HierarchyVisualizationProps> = ({
     return () => {
       unsubscribe();
     };
-  }, [onRefresh]);
+  }, [handleRefresh]);
   
   // Afficher un message si aucune donnée n'est disponible
   if (!chartData) {
