@@ -1,6 +1,6 @@
 
 import React, { useState } from "react";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -9,7 +9,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { toast } from "sonner";
-import PhotoUploadField from "@/components/module/submodules/employees/form/PhotoUploadField";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { User } from "lucide-react";
 
@@ -55,6 +54,14 @@ const PersonalInfo = () => {
     }, 1000);
   }
 
+  const handlePhotoChange = (file: File | null) => {
+    if (file) {
+      const imageUrl = URL.createObjectURL(file);
+      setPhotoUrl(imageUrl);
+      form.setValue('photo', file);
+    }
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -73,7 +80,29 @@ const PersonalInfo = () => {
                   <User className="h-12 w-12 text-gray-400" />
                 </AvatarFallback>
               </Avatar>
-              <PhotoUploadField defaultPhotoUrl={photoUrl} />
+              <div className="flex justify-center">
+                <FormField
+                  control={form.control}
+                  name="photo"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="cursor-pointer inline-flex items-center px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90">
+                        Changer la photo
+                        <input
+                          type="file"
+                          className="hidden"
+                          accept="image/*"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0] || null;
+                            handlePhotoChange(file);
+                            field.onChange(file);
+                          }}
+                        />
+                      </FormLabel>
+                    </FormItem>
+                  )}
+                />
+              </div>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

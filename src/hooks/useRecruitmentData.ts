@@ -55,7 +55,9 @@ const MOCK_RECRUITMENT_POSTS: RecruitmentPost[] = [
     salary: '45-55K€',
     description: 'Gestion complète du département RH.',
     requirements: 'Minimum 5 ans d\'expérience en RH, connaissance du droit du travail français.',
-    applicationCount: 18
+    applicationCount: 18,
+    created_at: '2023-02-15T10:00:00Z',
+    updated_at: '2023-02-15T10:00:00Z'
   },
   {
     id: 'job-4',
@@ -71,7 +73,9 @@ const MOCK_RECRUITMENT_POSTS: RecruitmentPost[] = [
     salary: '35-45K€ + commission',
     description: 'Développement du portefeuille clients B2B dans le secteur Sud-Ouest.',
     requirements: 'Expérience commerciale B2B, connaissance du secteur IT appréciée.',
-    applicationCount: 3
+    applicationCount: 3,
+    created_at: '2023-03-10T10:00:00Z',
+    updated_at: '2023-03-10T10:00:00Z'
   },
   {
     id: 'job-5',
@@ -87,7 +91,9 @@ const MOCK_RECRUITMENT_POSTS: RecruitmentPost[] = [
     salary: '45-55K€',
     description: 'Développement d\'applications mobiles natives (iOS et Android).',
     requirements: 'Expérience en Swift et Kotlin, connaissance de React Native appréciée.',
-    applicationCount: 7
+    applicationCount: 7,
+    created_at: '2023-04-05T10:00:00Z',
+    updated_at: '2023-04-05T10:00:00Z'
   },
   {
     id: 'job-6',
@@ -103,7 +109,9 @@ const MOCK_RECRUITMENT_POSTS: RecruitmentPost[] = [
     salary: '38-42K€',
     description: 'Gestion complète de la paie et des déclarations sociales.',
     requirements: 'Minimum 2 ans d\'expérience en gestion de paie, maîtrise de SAGE Paie.',
-    applicationCount: 9
+    applicationCount: 9,
+    created_at: '2023-03-22T10:00:00Z',
+    updated_at: '2023-03-22T10:00:00Z'
   }
 ];
 
@@ -113,8 +121,10 @@ export const useRecruitmentData = (refreshTrigger?: number) => {
   const [recruitmentPosts, setRecruitmentPosts] = useState<RecruitmentPost[]>([]);
   
   useEffect(() => {
+    // Simulate API call
     const fetchData = async () => {
       try {
+        // Simulate loading delay
         await new Promise(resolve => setTimeout(resolve, 500));
         setRecruitmentPosts(MOCK_RECRUITMENT_POSTS);
         setIsLoading(false);
@@ -125,7 +135,7 @@ export const useRecruitmentData = (refreshTrigger?: number) => {
     };
     
     fetchData();
-  }, [refreshTrigger]);
+  }, [refreshTrigger]); // Re-fetch when refreshTrigger changes
   
   const stats = useMemo(() => {
     // Update these comparisons to match the French status values

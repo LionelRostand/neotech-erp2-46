@@ -8,17 +8,23 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useToast } from "@/hooks/use-toast";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { RecruitmentPost } from '@/types/recruitment';
+import { toast } from 'sonner';
 
 interface EditRecruitmentDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  recruitment: RecruitmentPost;
+  recruitment: RecruitmentPost | null;
   onSuccess?: () => void;
 }
 
@@ -28,9 +34,10 @@ const EditRecruitmentDialog: React.FC<EditRecruitmentDialogProps> = ({
   recruitment,
   onSuccess
 }) => {
-  const { toast } = useToast();
-  const [formData, setFormData] = useState(recruitment);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formData, setFormData] = useState<Partial<RecruitmentPost>>(recruitment || {});
+
+  if (!recruitment) return null;
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -41,21 +48,16 @@ const EditRecruitmentDialog: React.FC<EditRecruitmentDialogProps> = ({
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
     setIsSubmitting(true);
-    
-    // In a real app, we would update the recruitment in Firestore here
-    console.log('Submitting updated recruitment:', formData);
-    
+
     // Simulate API call
     setTimeout(() => {
       setIsSubmitting(false);
-      toast({
-        title: "Poste mis à jour",
-        description: "Les informations du poste ont été mises à jour avec succès."
-      });
-      if (onSuccess) onSuccess();
+      toast.success("Annonce de recrutement mise à jour avec succès");
       onOpenChange(false);
+      if (onSuccess) onSuccess();
     }, 1000);
   };
 
@@ -63,62 +65,40 @@ const EditRecruitmentDialog: React.FC<EditRecruitmentDialogProps> = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
-          <DialogTitle>Modifier le poste</DialogTitle>
+          <DialogTitle>Modifier l'annonce de recrutement</DialogTitle>
         </DialogHeader>
-        
-        <div className="space-y-4 py-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+        <form onSubmit={handleSubmit} className="space-y-4 py-4">
+          <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="position">Poste</Label>
-              <Input 
-                id="position" 
-                name="position" 
-                value={formData.position} 
-                onChange={handleChange} 
+              <Input
+                id="position"
+                name="position"
+                value={formData.position || ''}
+                onChange={handleChange}
+                required
               />
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="department">Département</Label>
-              <Input 
-                id="department" 
-                name="department" 
-                value={formData.department} 
-                onChange={handleChange} 
+              <Input
+                id="department"
+                name="department"
+                value={formData.department || ''}
+                onChange={handleChange}
+                required
               />
             </div>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="location">Localisation</Label>
-              <Input 
-                id="location" 
-                name="location" 
-                value={formData.location} 
-                onChange={handleChange} 
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="contractType">Type de contrat</Label>
-              <Input 
-                id="contractType" 
-                name="contractType" 
-                value={formData.contractType} 
-                onChange={handleChange} 
-              />
-            </div>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
             <div className="space-y-2">
               <Label htmlFor="status">Statut</Label>
-              <Select 
-                value={formData.status} 
+              <Select
+                value={formData.status}
                 onValueChange={(value) => handleSelectChange('status', value)}
               >
-                <SelectTrigger>
+                <SelectTrigger id="status">
                   <SelectValue placeholder="Sélectionner un statut" />
                 </SelectTrigger>
                 <SelectContent>
@@ -128,14 +108,14 @@ const EditRecruitmentDialog: React.FC<EditRecruitmentDialogProps> = ({
                 </SelectContent>
               </Select>
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="priority">Priorité</Label>
-              <Select 
-                value={formData.priority} 
+              <Select
+                value={formData.priority}
                 onValueChange={(value) => handleSelectChange('priority', value)}
               >
-                <SelectTrigger>
+                <SelectTrigger id="priority">
                   <SelectValue placeholder="Sélectionner une priorité" />
                 </SelectTrigger>
                 <SelectContent>
@@ -145,49 +125,85 @@ const EditRecruitmentDialog: React.FC<EditRecruitmentDialogProps> = ({
                 </SelectContent>
               </Select>
             </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="location">Localisation</Label>
+              <Input
+                id="location"
+                name="location"
+                value={formData.location || ''}
+                onChange={handleChange}
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="contractType">Type de contrat</Label>
+              <Input
+                id="contractType"
+                name="contractType"
+                value={formData.contractType || ''}
+                onChange={handleChange}
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="salary">Salaire</Label>
+              <Input
+                id="salary"
+                name="salary"
+                value={formData.salary || ''}
+                onChange={handleChange}
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="hiringManagerName">Responsable recrutement</Label>
+              <Input
+                id="hiringManagerName"
+                name="hiringManagerName"
+                value={formData.hiringManagerName || ''}
+                onChange={handleChange}
+                required
+              />
+            </div>
           </div>
-          
+
           <div className="space-y-2">
-            <Label htmlFor="salary">Salaire</Label>
-            <Input 
-              id="salary" 
-              name="salary" 
-              value={formData.salary} 
-              onChange={handleChange} 
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
-            <Textarea 
-              id="description" 
-              name="description" 
-              value={formData.description} 
-              onChange={handleChange} 
+            <Label htmlFor="description">Description du poste</Label>
+            <Textarea
+              id="description"
+              name="description"
+              value={formData.description || ''}
+              onChange={handleChange}
+              required
               rows={4}
             />
           </div>
-          
+
           <div className="space-y-2">
-            <Label htmlFor="requirements">Prérequis</Label>
-            <Textarea 
-              id="requirements" 
-              name="requirements" 
-              value={Array.isArray(formData.requirements) ? formData.requirements.join('\n') : formData.requirements} 
-              onChange={handleChange} 
+            <Label htmlFor="requirements">Prérequis et compétences</Label>
+            <Textarea
+              id="requirements"
+              name="requirements"
+              value={typeof formData.requirements === 'string' ? formData.requirements : formData.requirements?.join('\n')}
+              onChange={handleChange}
+              required
               rows={4}
             />
           </div>
-        </div>
-        
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Annuler
-          </Button>
-          <Button onClick={handleSubmit} disabled={isSubmitting}>
-            {isSubmitting ? 'Enregistrement...' : 'Enregistrer les modifications'}
-          </Button>
-        </DialogFooter>
+
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+              Annuler
+            </Button>
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? "Enregistrement..." : "Enregistrer"}
+            </Button>
+          </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   );
