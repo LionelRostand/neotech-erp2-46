@@ -6,14 +6,17 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Search, RefreshCw, Building, Users } from 'lucide-react';
 import HierarchyVisualization from './hierarchy/HierarchyVisualization';
+import DepartmentHierarchy from './hierarchy/components/DepartmentHierarchy';
 import { useHierarchyData } from './hierarchy/hooks/useHierarchyData';
 import StatCard from '@/components/StatCard';
 import { getSyncedStats } from './hierarchy/utils/hierarchyUtils';
 
 const EmployeesHierarchy: React.FC = () => {
   const [viewMode, setViewMode] = useState<'orgChart' | 'treeView'>('orgChart');
+  const [hierarchyType, setHierarchyType] = useState<'employees' | 'departments'>('employees');
   const [searchQuery, setSearchQuery] = useState('');
   const [refreshKey, setRefreshKey] = useState(0);
+  
   const { hierarchyData, isLoading, refreshHierarchy, departmentStats } = useHierarchyData();
 
   // Fonction pour rafraîchir la hiérarchie
@@ -23,7 +26,7 @@ const EmployeesHierarchy: React.FC = () => {
     setRefreshKey(prev => prev + 1);
   }, [refreshHierarchy]);
 
-  // Calculer les statistiques basées sur la hiérarchie à l'aide des fonctions utilitaires
+  // Calculer les statistiques basées sur la hiérarchie
   const stats = useMemo(() => {
     return getSyncedStats(
       hierarchyData, 
@@ -49,7 +52,7 @@ const EmployeesHierarchy: React.FC = () => {
         </div>
       </div>
 
-      {/* Dashboard Cards with gradient backgrounds */}
+      {/* Dashboard Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard 
           title="Employés" 
@@ -88,36 +91,49 @@ const EmployeesHierarchy: React.FC = () => {
         <div className="relative flex-1 max-w-md">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Rechercher un employé..."
+            placeholder="Rechercher..."
             className="pl-8"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
         
-        <Tabs defaultValue={viewMode} onValueChange={(v) => setViewMode(v as 'orgChart' | 'treeView')}>
+        <Tabs defaultValue="employees" onValueChange={(v) => setHierarchyType(v as 'employees' | 'departments')}>
           <TabsList>
-            <TabsTrigger value="orgChart">
-              <Building className="h-4 w-4 mr-2" />
-              Organigramme
-            </TabsTrigger>
-            <TabsTrigger value="treeView">
+            <TabsTrigger value="employees">
               <Users className="h-4 w-4 mr-2" />
-              Vue Arborescente
+              Employés
+            </TabsTrigger>
+            <TabsTrigger value="departments">
+              <Building className="h-4 w-4 mr-2" />
+              Départements
             </TabsTrigger>
           </TabsList>
         </Tabs>
+        
+        {hierarchyType === 'employees' && (
+          <Tabs defaultValue={viewMode} onValueChange={(v) => setViewMode(v as 'orgChart' | 'treeView')}>
+            <TabsList>
+              <TabsTrigger value="orgChart">Organigramme</TabsTrigger>
+              <TabsTrigger value="treeView">Vue Arborescente</TabsTrigger>
+            </TabsList>
+          </Tabs>
+        )}
       </div>
       
       <Card>
         <CardContent className="p-6">
-          <HierarchyVisualization 
-            key={refreshKey}
-            viewMode={viewMode} 
-            searchQuery={searchQuery}
-            data={hierarchyData}
-            onRefresh={handleRefresh}
-          />
+          {hierarchyType === 'employees' ? (
+            <HierarchyVisualization 
+              key={refreshKey}
+              viewMode={viewMode} 
+              searchQuery={searchQuery}
+              data={hierarchyData}
+              onRefresh={handleRefresh}
+            />
+          ) : (
+            <DepartmentHierarchy />
+          )}
         </CardContent>
       </Card>
     </div>
