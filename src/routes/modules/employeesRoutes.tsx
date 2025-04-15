@@ -20,7 +20,7 @@ import EmployeesTrainings from "@/components/module/submodules/trainings/Employe
 import EmployeesCompanies from "@/components/module/submodules/employees/EmployeesCompanies";
 import EmployeesReports from "@/components/module/submodules/EmployeesReports";
 import EmployeesAlerts from "@/components/module/submodules/EmployeesAlerts";
-import EmployeesSettings from "@/components/module/submodules/EmployeesSettings";
+import EmployeesSettings from "@/components/module/submodules/settings/EmployeesSettings";
 import { useEmployeeData } from '@/hooks/useEmployeeData';
 import { Employee } from '@/types/employee';
 

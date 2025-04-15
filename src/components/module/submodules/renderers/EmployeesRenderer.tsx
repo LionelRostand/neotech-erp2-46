@@ -17,7 +17,7 @@ import EmployeesRecruitment from '../EmployeesRecruitment';
 import EmployeesCompanies from '../employees/EmployeesCompanies';
 import EmployeesReports from '../EmployeesReports';
 import EmployeesAlerts from '../EmployeesAlerts';
-import EmployeesSettings from '../EmployeesSettings';
+import EmployeesSettings from '../settings/EmployeesSettings';
 import { SubModule } from '@/data/types/modules';
 import { useHrModuleData } from '@/hooks/useHrModuleData';
 import EmployeesDepartments from '../departments/EmployeesDepartments';
