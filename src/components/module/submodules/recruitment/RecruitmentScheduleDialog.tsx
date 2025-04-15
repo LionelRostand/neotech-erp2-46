@@ -18,7 +18,7 @@ import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { RecruitmentPost } from '@/hooks/useRecruitmentData';
+import { RecruitmentPost } from '@/types/recruitment';
 
 interface RecruitmentScheduleDialogProps {
   open: boolean;

@@ -4,8 +4,8 @@ export interface RecruitmentPost {
   position: string;
   department: string;
   location: string;
-  status: 'Open' | 'In Progress' | 'Closed';
-  priority: 'High' | 'Medium' | 'Low';
+  status: 'Open' | 'In Progress' | 'Closed' | 'Ouvert' | 'En cours' | 'Clôturé';
+  priority: 'High' | 'Medium' | 'Low' | 'Haute' | 'Moyenne' | 'Basse';
   description: string;
   requirements: string[] | string;
   responsibilities?: string[];

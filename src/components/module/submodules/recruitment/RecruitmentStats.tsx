@@ -9,9 +9,9 @@ const RecruitmentStats = () => {
 
   const stats = {
     total: recruitmentPosts.length,
-    open: recruitmentPosts.filter(post => post.status === 'Open').length,
-    inProgress: recruitmentPosts.filter(post => post.status === 'In Progress').length,
-    closed: recruitmentPosts.filter(post => post.status === 'Closed').length
+    open: recruitmentPosts.filter(post => post.status === 'Open' || post.status === 'Ouvert').length,
+    inProgress: recruitmentPosts.filter(post => post.status === 'In Progress' || post.status === 'En cours').length,
+    closed: recruitmentPosts.filter(post => post.status === 'Closed' || post.status === 'Clôturé').length
   };
 
   return (

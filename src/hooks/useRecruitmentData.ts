@@ -1,3 +1,4 @@
+
 import { useMemo, useState, useEffect } from 'react';
 import { RecruitmentPost } from '@/types/recruitment';
 
@@ -127,6 +128,7 @@ export const useRecruitmentData = (refreshTrigger?: number) => {
   }, [refreshTrigger]);
   
   const stats = useMemo(() => {
+    // Update these comparisons to match the French status values
     const open = recruitmentPosts.filter(post => post.status === 'Ouvert').length;
     const inProgress = recruitmentPosts.filter(post => post.status === 'En cours').length;
     const closed = recruitmentPosts.filter(post => post.status === 'Clôturé').length;

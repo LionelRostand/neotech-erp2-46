@@ -32,6 +32,8 @@ export const useRecruitmentFirebaseData = () => {
               contractType: data.contractType || '(Non spécifié)',
               salary: data.salary || '(Non spécifié)',
               applicationCount: data.applicationCount || data.applications_count || 0,
+              created_at: data.created_at || new Date().toISOString(),
+              updated_at: data.updated_at || new Date().toISOString(),
               // Convert requirements to array if it's a string
               requirements: Array.isArray(data.requirements) 
                 ? data.requirements 

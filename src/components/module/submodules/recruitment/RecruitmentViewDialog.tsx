@@ -19,7 +19,7 @@ import {
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { RecruitmentPost } from '@/hooks/useRecruitmentData';
+import { RecruitmentPost } from '@/types/recruitment';
 import EditRecruitmentDialog from './EditRecruitmentDialog';
 import { useToast } from '@/hooks/use-toast';
 
