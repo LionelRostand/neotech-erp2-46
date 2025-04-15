@@ -26,10 +26,15 @@ export const createEmployee = async (employeeData: Partial<Employee>): Promise<E
       }
     }
     
+    // S'assurer que la photo est correctement assignée
+    const photoURL = employeeData.photoURL || employeeData.photo || '';
+    
     // Ajouter l'employé à la collection hr_employees
     const collectionRef = collection(db, COLLECTIONS.HR.EMPLOYEES);
     const docRef = await addDoc(collectionRef, {
       ...employeeData,
+      photoURL: photoURL,
+      photo: photoURL, // Garder la compatibilité avec les deux champs
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       status: employeeData.status || 'active'
@@ -43,11 +48,6 @@ export const createEmployee = async (employeeData: Partial<Employee>): Promise<E
         id: docSnap.id,
         ...docSnap.data()
       } as Employee;
-      
-      // Si c'est un manager, l'ajouter à la liste des managers
-      if (newEmployee.isManager || employeeData.forceManager) {
-        await addManagerToList(newEmployee);
-      }
       
       console.log('Employee created successfully:', newEmployee);
       return newEmployee;
@@ -68,27 +68,34 @@ export const createEmployee = async (employeeData: Partial<Employee>): Promise<E
  */
 export const updateEmployeeDoc = async (id: string, data: Partial<Employee>): Promise<Employee | null> => {
   try {
+    console.log('Updating employee with ID:', id, 'Data:', data);
     const docRef = doc(db, COLLECTIONS.HR.EMPLOYEES, id);
+    
+    // S'assurer que la photo est correctement mise à jour
+    const photoURL = data.photoURL || data.photo || '';
     
     // Préparer les données de mise à jour
     const updateData = {
       ...data,
-      updatedAt: new Date().toISOString(),
-      // Assurer que la photo est mise à jour dans les deux champs
-      photoURL: data.photoURL || data.photo,
-      photo: data.photoURL || data.photo
+      photoURL: photoURL,
+      photo: photoURL, // Garder la compatibilité avec les deux champs
+      updatedAt: new Date().toISOString()
     };
     
     await updateDoc(docRef, updateData);
+    console.log('Update successful, fetching updated employee data');
     
     // Récupérer l'employé mis à jour
     const docSnap = await getDoc(docRef);
     
     if (docSnap.exists()) {
-      return {
+      const updatedEmployee = {
         id: docSnap.id,
         ...docSnap.data()
       } as Employee;
+      
+      console.log('Employee updated successfully:', updatedEmployee);
+      return updatedEmployee;
     }
     
     return null;
