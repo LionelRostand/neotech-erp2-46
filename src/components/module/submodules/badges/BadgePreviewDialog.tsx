@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -13,13 +14,15 @@ interface BadgePreviewDialogProps {
   onOpenChange: (open: boolean) => void;
   selectedBadge: BadgeData | null;
   selectedEmployee: Employee | null;
+  onDeleteClick?: (badge: BadgeData) => void;
 }
 
 const BadgePreviewDialog: React.FC<BadgePreviewDialogProps> = ({
   isOpen,
   onOpenChange,
   selectedBadge,
-  selectedEmployee
+  selectedEmployee,
+  onDeleteClick
 }) => {
   if (!selectedBadge) return null;
   
@@ -32,7 +35,9 @@ const BadgePreviewDialog: React.FC<BadgePreviewDialogProps> = ({
       return selectedEmployee.company;
     }
     
-    return (selectedEmployee.company as Company).name || "Enterprise";
+    // Now TypeScript knows this is a Company object
+    const companyObj = selectedEmployee.company as Company;
+    return companyObj.name || "Enterprise";
   };
   
   const companyName = getCompanyName();
@@ -155,14 +160,26 @@ const BadgePreviewDialog: React.FC<BadgePreviewDialogProps> = ({
             )}
           </div>
           
-          <Button 
-            onClick={handleDownloadBadge} 
-            className="w-full" 
-            variant="outline"
-          >
-            <Download className="h-4 w-4 mr-2" />
-            Télécharger le badge
-          </Button>
+          <div className="flex gap-2">
+            <Button 
+              onClick={handleDownloadBadge} 
+              className="flex-1" 
+              variant="outline"
+            >
+              <Download className="h-4 w-4 mr-2" />
+              Télécharger le badge
+            </Button>
+            
+            {onDeleteClick && selectedBadge && (
+              <Button 
+                onClick={() => onDeleteClick(selectedBadge)}
+                variant="destructive"
+                className="flex-shrink-0"
+              >
+                Supprimer
+              </Button>
+            )}
+          </div>
         </div>
       </DialogContent>
     </Dialog>
