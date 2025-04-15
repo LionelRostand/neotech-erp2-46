@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -12,13 +12,18 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Shield } from "lucide-react";
 import { employeesModule } from "@/data/modules/employees";
+import { useToast } from "@/hooks/use-toast";
+import { useEmployeesPermissions } from "@/hooks/useEmployeesPermissions";
 
 interface ManagePermissionsDialogProps {
-  roleId: string;
+  employeeId: string;
+  employeeName: string;
 }
 
-const ManagePermissionsDialog: React.FC<ManagePermissionsDialogProps> = ({ roleId }) => {
-  const [permissions, setPermissions] = React.useState<{
+const ManagePermissionsDialog: React.FC<ManagePermissionsDialogProps> = ({ employeeId, employeeName }) => {
+  const { toast } = useToast();
+  const { employees, updateEmployeePermissions } = useEmployeesPermissions();
+  const [permissions, setPermissions] = useState<{
     [key: string]: {
       view: boolean;
       create: boolean;
@@ -26,6 +31,13 @@ const ManagePermissionsDialog: React.FC<ManagePermissionsDialogProps> = ({ roleI
       delete: boolean;
     };
   }>({});
+
+  useEffect(() => {
+    const employee = employees.find(emp => emp.id === employeeId);
+    if (employee?.permissions) {
+      setPermissions(employee.permissions);
+    }
+  }, [employeeId, employees]);
 
   const handlePermissionChange = (moduleId: string, permissionType: 'view' | 'create' | 'edit' | 'delete', checked: boolean) => {
     setPermissions(prev => ({
@@ -35,6 +47,22 @@ const ManagePermissionsDialog: React.FC<ManagePermissionsDialogProps> = ({ roleI
         [permissionType]: checked
       }
     }));
+  };
+
+  const handleSave = async () => {
+    try {
+      await updateEmployeePermissions(employeeId, 'employees', permissions);
+      toast({
+        title: "Permissions mises à jour",
+        description: "Les permissions ont été sauvegardées avec succès.",
+      });
+    } catch (error) {
+      toast({
+        title: "Erreur",
+        description: "Une erreur est survenue lors de la mise à jour des permissions.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -47,7 +75,7 @@ const ManagePermissionsDialog: React.FC<ManagePermissionsDialogProps> = ({ roleI
       </DialogTrigger>
       <DialogContent className="sm:max-w-[625px]">
         <DialogHeader>
-          <DialogTitle>Gestion des permissions</DialogTitle>
+          <DialogTitle>Gestion des permissions - {employeeName}</DialogTitle>
         </DialogHeader>
         <ScrollArea className="max-h-[500px] pr-4">
           <div className="space-y-6">
@@ -106,6 +134,11 @@ const ManagePermissionsDialog: React.FC<ManagePermissionsDialogProps> = ({ roleI
                 </div>
               </div>
             ))}
+          </div>
+          <div className="mt-6 flex justify-end">
+            <Button onClick={handleSave}>
+              Sauvegarder les modifications
+            </Button>
           </div>
         </ScrollArea>
       </DialogContent>
