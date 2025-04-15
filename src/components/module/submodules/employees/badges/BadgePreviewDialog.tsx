@@ -73,53 +73,72 @@ const BadgePreviewDialog: React.FC<BadgePreviewDialogProps> = ({
     doc.text(companyName.toUpperCase(), 5, 7);
     
     if (selectedBadge.photo) {
-      const img = new Image();
+      // Fix: Create HTML Image element properly
+      const img = new window.Image();
       img.src = selectedBadge.photo;
-      doc.addImage(img, 'JPEG', 5, 15, 20, 20);
+      // Only add the image after it's loaded
+      img.onload = () => {
+        doc.addImage(img, 'JPEG', 5, 15, 20, 20);
+        finalizePdf();
+      };
+      
+      // If there's any error loading the image, continue without it
+      img.onerror = () => {
+        console.error('Error loading badge image');
+        finalizePdf();
+      };
+      
+      // Return early - the actual PDF generation will happen in the callbacks
+      return;
     }
     
-    doc.setTextColor(0, 0, 0);
-    doc.setFontSize(8);
-    doc.text(`Badge ID: ${selectedBadge.id}`, 30, 18);
-    doc.text(`Employee ID: ${employeeId}`, 30, 23);
+    // If no photo, finalize the PDF directly
+    finalizePdf();
     
-    doc.setFontSize(12);
-    doc.setFont('helvetica', 'bold');
-    doc.text(selectedBadge.employeeName, 42.5, 30, { align: 'center' });
-    
-    doc.setFontSize(9);
-    doc.setFont('helvetica', 'normal');
-    doc.text(`Département: ${selectedBadge.department || 'N/A'}`, 42.5, 36, { align: 'center' });
-    doc.text(`Accès: ${selectedBadge.accessLevel || 'Standard'}`, 42.5, 41, { align: 'center' });
-    
-    let statusColor;
-    if (selectedBadge.status === 'success') {
-      statusColor = [34, 197, 94];
-    } else if (selectedBadge.status === 'warning') {
-      statusColor = [234, 179, 8];
-    } else {
-      statusColor = [239, 68, 68];
-    }
-    
-    doc.setTextColor(statusColor[0], statusColor[1], statusColor[2]);
-    doc.text(`Statut: ${selectedBadge.statusText}`, 42.5, 46, { align: 'center' });
-    
-    doc.setFillColor(70, 70, 70);
-    doc.rect(0, 50, 85, 4, 'F');
-    doc.setFontSize(6);
-    doc.setTextColor(255, 255, 255);
-    doc.text('Ce badge doit être porté visiblement à tout moment', 42.5, 52.5, { align: 'center' });
-    
-    doc.setFillColor(0, 0, 0);
-    doc.rect(5, 36, 10, 10, 'F');
-    doc.setFillColor(255, 255, 255);
-    doc.rect(6, 37, 8, 8, 'F');
-    doc.setFillColor(0, 0, 0);
-    doc.rect(7, 38, 6, 6, 'F');
+    function finalizePdf() {
+      doc.setTextColor(0, 0, 0);
+      doc.setFontSize(8);
+      doc.text(`Badge ID: ${selectedBadge.id}`, 30, 18);
+      doc.text(`Employee ID: ${employeeId}`, 30, 23);
+      
+      doc.setFontSize(12);
+      doc.setFont('helvetica', 'bold');
+      doc.text(selectedBadge.employeeName, 42.5, 30, { align: 'center' });
+      
+      doc.setFontSize(9);
+      doc.setFont('helvetica', 'normal');
+      doc.text(`Département: ${selectedBadge.department || 'N/A'}`, 42.5, 36, { align: 'center' });
+      doc.text(`Accès: ${selectedBadge.accessLevel || 'Standard'}`, 42.5, 41, { align: 'center' });
+      
+      let statusColor;
+      if (selectedBadge.status === 'success') {
+        statusColor = [34, 197, 94];
+      } else if (selectedBadge.status === 'warning') {
+        statusColor = [234, 179, 8];
+      } else {
+        statusColor = [239, 68, 68];
+      }
+      
+      doc.setTextColor(statusColor[0], statusColor[1], statusColor[2]);
+      doc.text(`Statut: ${selectedBadge.statusText}`, 42.5, 46, { align: 'center' });
+      
+      doc.setFillColor(70, 70, 70);
+      doc.rect(0, 50, 85, 4, 'F');
+      doc.setFontSize(6);
+      doc.setTextColor(255, 255, 255);
+      doc.text('Ce badge doit être porté visiblement à tout moment', 42.5, 52.5, { align: 'center' });
+      
+      doc.setFillColor(0, 0, 0);
+      doc.rect(5, 36, 10, 10, 'F');
+      doc.setFillColor(255, 255, 255);
+      doc.rect(6, 37, 8, 8, 'F');
+      doc.setFillColor(0, 0, 0);
+      doc.rect(7, 38, 6, 6, 'F');
 
-    doc.save(`badge-${selectedBadge.id}.pdf`);
-    
-    toast.success("Badge téléchargé avec succès");
+      doc.save(`badge-${selectedBadge.id}.pdf`);
+      
+      toast.success("Badge téléchargé avec succès");
+    }
   };
   
   return (
