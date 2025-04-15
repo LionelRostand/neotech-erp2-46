@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Settings, Shield, Bell, Database } from "lucide-react";
 import PermissionsSettings from './PermissionsSettings';
+import GeneralSettings from './GeneralSettings';
 
 const EmployeesSettings: React.FC = () => {
   const [activeTab, setActiveTab] = useState('permissions');
@@ -38,15 +39,7 @@ const EmployeesSettings: React.FC = () => {
         </TabsContent>
         
         <TabsContent value="general" className="mt-6">
-          <div className="bg-white p-6 rounded-lg border shadow-sm">
-            <h2 className="text-xl font-semibold mb-4">Paramètres généraux</h2>
-            <p className="text-gray-500 mb-6">Configurez les options générales du module employés.</p>
-            
-            {/* Placeholder pour les paramètres généraux */}
-            <div className="text-center py-8 text-gray-400">
-              Configuration des paramètres généraux en cours de développement
-            </div>
-          </div>
+          <GeneralSettings />
         </TabsContent>
         
         <TabsContent value="notifications" className="mt-6">
@@ -54,7 +47,6 @@ const EmployeesSettings: React.FC = () => {
             <h2 className="text-xl font-semibold mb-4">Paramètres de notifications</h2>
             <p className="text-gray-500 mb-6">Gérez les notifications envoyées aux employés et managers.</p>
             
-            {/* Placeholder pour les paramètres de notifications */}
             <div className="text-center py-8 text-gray-400">
               Configuration des notifications en cours de développement
             </div>
@@ -66,7 +58,6 @@ const EmployeesSettings: React.FC = () => {
             <h2 className="text-xl font-semibold mb-4">Gestion des données</h2>
             <p className="text-gray-500 mb-6">Configurez les options d'importation et d'exportation des données.</p>
             
-            {/* Placeholder pour les paramètres de données */}
             <div className="text-center py-8 text-gray-400">
               Configuration de la gestion des données en cours de développement
             </div>
