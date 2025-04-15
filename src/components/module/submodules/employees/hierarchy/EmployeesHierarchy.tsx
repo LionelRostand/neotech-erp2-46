@@ -4,11 +4,11 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Search, RefreshCw, Building, Users } from 'lucide-react';
-import HierarchyVisualization from './hierarchy/HierarchyVisualization';
-import DepartmentHierarchy from './hierarchy/components/DepartmentHierarchy';
-import { useHierarchyData } from './hierarchy/hooks/useHierarchyData';
+import HierarchyVisualization from './HierarchyVisualization';
+import DepartmentHierarchy from './components/DepartmentHierarchy';
+import { useHierarchyData } from './hooks/useHierarchyData';
 import StatCard from '@/components/StatCard';
-import { getSyncedStats } from './hierarchy/utils/hierarchyUtils';
+import { getSyncedStats } from './utils/hierarchyUtils';
 
 const EmployeesHierarchy: React.FC = () => {
   const [viewMode, setViewMode] = useState<'orgChart' | 'treeView'>('orgChart');
@@ -18,14 +18,12 @@ const EmployeesHierarchy: React.FC = () => {
   
   const { hierarchyData, isLoading, refreshHierarchy, departmentStats } = useHierarchyData();
 
-  // Fonction pour rafraîchir la hiérarchie
   const handleRefresh = useCallback(() => {
     console.log("Déclenchement du rafraîchissement de la hiérarchie");
     refreshHierarchy();
     setRefreshKey(prev => prev + 1);
   }, [refreshHierarchy]);
 
-  // Calculer les statistiques basées sur la hiérarchie
   const stats = useMemo(() => {
     return getSyncedStats(
       hierarchyData, 
@@ -51,7 +49,6 @@ const EmployeesHierarchy: React.FC = () => {
         </div>
       </div>
 
-      {/* Dashboard Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard 
           title="Employés" 
