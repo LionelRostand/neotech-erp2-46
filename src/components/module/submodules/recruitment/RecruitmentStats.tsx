@@ -18,9 +18,10 @@ const RecruitmentStats = () => {
 
   useEffect(() => {
     if (recruitmentPosts && recruitmentPosts.length > 0) {
-      const openCount = recruitmentPosts.filter(post => post.status === 'Open' || post.status === 'Ouvert').length;
-      const inProgressCount = recruitmentPosts.filter(post => post.status === 'In Progress' || post.status === 'En cours').length;
-      const closedCount = recruitmentPosts.filter(post => post.status === 'Closed' || post.status === 'Clôturé').length;
+      // Changed to use French status values
+      const openCount = recruitmentPosts.filter(post => post.status === 'Ouvert').length;
+      const inProgressCount = recruitmentPosts.filter(post => post.status === 'En cours').length;
+      const closedCount = recruitmentPosts.filter(post => post.status === 'Clôturé').length;
       
       const applicationCount = recruitmentPosts.reduce((acc, post) => acc + (post.applicationCount || post.applications_count || 0), 0);
       const interviewsCount = recruitmentPosts.reduce((acc, post) => acc + (post.interviews_scheduled || 0), 0);
