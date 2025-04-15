@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { DataTable } from '@/components/ui/data-table';
 import { Button } from '@/components/ui/button';
@@ -20,6 +19,13 @@ const EmployeesRecruitment = () => {
   const [scheduleDialogOpen, setScheduleDialogOpen] = useState(false);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const { toast } = useToast();
+
+  const handleRecruitmentCreated = () => {
+    toast({
+      title: "Offre créée",
+      description: "L'offre d'emploi a été créée avec succès.",
+    });
+  };
 
   const columns = [
     {
@@ -132,6 +138,7 @@ const EmployeesRecruitment = () => {
       <CreateRecruitmentDialog
         open={createDialogOpen}
         onOpenChange={setCreateDialogOpen}
+        onRecruitmentCreated={handleRecruitmentCreated}
       />
     </div>
   );
