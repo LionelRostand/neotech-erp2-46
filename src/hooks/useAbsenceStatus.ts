@@ -1,7 +1,8 @@
 
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { updateDocument } from '@/lib/firebase';
+// Updated import to use the correct path for updateDocument
+import { updateDocument } from '@/hooks/firestore/update-operations';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 
 export const useAbsenceStatus = () => {

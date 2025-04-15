@@ -8,7 +8,8 @@ import { Check, X, Filter, Plus, Eye, UserCheck } from 'lucide-react';
 import { useAbsencesData } from '@/hooks/useAbsencesData';
 import { useAbsenceStatus } from '@/hooks/useAbsenceStatus';
 import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
-import AbsenceDetailsDialog from './absences/AbsenceDetailsDialog';
+// Changed the import path to match the correct location
+import AbsenceDetailsDialog from '../absences/AbsenceDetailsDialog';
 
 const EmployeesAbsences = () => {
   const { absences, stats, isLoading } = useAbsencesData();
