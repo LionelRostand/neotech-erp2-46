@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 import { BadgeData } from './BadgeTypes';
 import { Employee } from '@/types/employee';
 import { jsPDF } from 'jspdf';
+import { Company } from '@/components/module/submodules/companies/types';
 
 interface BadgePreviewDialogProps {
   isOpen: boolean;
@@ -22,6 +23,21 @@ const BadgePreviewDialog: React.FC<BadgePreviewDialogProps> = ({
   selectedEmployee
 }) => {
   if (!selectedBadge) return null;
+  
+  // Get company name from the employee's company
+  const getCompanyName = (): string => {
+    if (!selectedEmployee) return "Enterprise";
+    
+    if (!selectedEmployee.company) return "Enterprise";
+    
+    if (typeof selectedEmployee.company === 'string') {
+      return selectedEmployee.company;
+    }
+    
+    return (selectedEmployee.company as Company).name || "Enterprise";
+  };
+  
+  const companyName = getCompanyName();
   
   const handleDownloadBadge = () => {
     // Create a new PDF document - using landscape format for badge display
@@ -51,7 +67,7 @@ const BadgePreviewDialog: React.FC<BadgePreviewDialogProps> = ({
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(10);
     doc.setFont('helvetica', 'bold');
-    doc.text('STORM GROUP', 5, 7);
+    doc.text(companyName.toUpperCase(), 5, 7);
     
     // Company tagline on right
     doc.setTextColor(255, 255, 255);
@@ -134,6 +150,7 @@ const BadgePreviewDialog: React.FC<BadgePreviewDialogProps> = ({
             <div className="text-center mb-3">
               <p className="text-sm text-gray-500">ID: {selectedBadge.id}</p>
               <h3 className="text-lg font-bold">{selectedBadge.employeeName}</h3>
+              <p className="text-sm text-gray-600">Entreprise: {companyName}</p>
             </div>
             
             <div className="space-y-2 text-sm">
