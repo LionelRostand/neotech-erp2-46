@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -35,9 +34,8 @@ const BadgePreviewDialog: React.FC<BadgePreviewDialogProps> = ({
       return selectedEmployee.company;
     }
     
-    // Now TypeScript knows this is a Company object
     const companyObj = selectedEmployee.company as Company;
-    return companyObj.name || "Enterprise";
+    return companyObj.name || companyObj.id || "Enterprise";
   };
   
   const companyName = getCompanyName();
