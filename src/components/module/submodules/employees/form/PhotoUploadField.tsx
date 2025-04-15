@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
 import { useFormContext } from 'react-hook-form';
 import { useStorageUpload } from '@/hooks/storage/useStorageUpload';
@@ -16,10 +16,26 @@ const PhotoUploadField = ({ defaultPhotoUrl }: PhotoUploadFieldProps) => {
   const [previewUrl, setPreviewUrl] = useState<string | undefined>(defaultPhotoUrl);
   const [isUploading, setIsUploading] = useState(false);
   const { uploadFile } = useStorageUpload();
+  
   // Get the form context to ensure we're inside a form
   const form = useFormContext();
 
-  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>, onChange: (value: any) => void) => {
+  // Set initial preview URL from form values when component mounts
+  useEffect(() => {
+    if (!defaultPhotoUrl && form) {
+      const photo = form.getValues('photo');
+      const photoURL = form.getValues('photoURL');
+      const photoData = form.getValues('photoData');
+      
+      // Try to set preview from any available photo source
+      const previewSource = photoData || photoURL || photo;
+      if (previewSource && typeof previewSource === 'string') {
+        setPreviewUrl(previewSource);
+      }
+    }
+  }, [defaultPhotoUrl, form]);
+
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
     if (!files || files.length === 0) return;
 
@@ -49,18 +65,20 @@ const PhotoUploadField = ({ defaultPhotoUrl }: PhotoUploadFieldProps) => {
       reader.onload = (e) => {
         const base64Data = e.target?.result as string;
         if (base64Data) {
-          // Stocker à la fois les données base64 et les métadonnées
-          onChange(base64Data); // Stocker directement la chaîne base64 pour faciliter l'utilisation
-          
-          // Ajouter des logs pour le débogage
-          console.log('Photo convertie en base64 avec succès', {
-            size: base64Data.length,
-            preview: base64Data.substring(0, 50) + '...'
-          });
+          if (form) {
+            // Mettre à jour plusieurs champs du formulaire pour assurer la compatibilité
+            form.setValue('photoData', base64Data);
+            form.setValue('photo', base64Data);
+            form.setValue('photoURL', base64Data);
+            
+            console.log('Photo convertie en base64 avec succès', {
+              size: base64Data.length,
+              preview: base64Data.substring(0, 50) + '...'
+            });
+          }
         } else {
-          // En cas d'échec, on stocke au moins les métadonnées
-          onChange(null);
           console.error('Échec de conversion en base64');
+          toast.error('Échec de conversion de l\'image');
         }
         setIsUploading(false);
       };
@@ -68,7 +86,6 @@ const PhotoUploadField = ({ defaultPhotoUrl }: PhotoUploadFieldProps) => {
       reader.onerror = () => {
         console.error('Erreur lors de la lecture du fichier');
         toast.error('Erreur lors du traitement de l\'image');
-        onChange(null);
         setIsUploading(false);
       };
       
@@ -77,7 +94,6 @@ const PhotoUploadField = ({ defaultPhotoUrl }: PhotoUploadFieldProps) => {
     } catch (error) {
       console.error('Erreur lors du traitement de l\'image:', error);
       toast.error('Erreur lors du traitement de l\'image');
-      onChange(null);
       setIsUploading(false);
     }
   };
@@ -119,17 +135,7 @@ const PhotoUploadField = ({ defaultPhotoUrl }: PhotoUploadFieldProps) => {
               name="photo"
               className="absolute inset-0 opacity-0 cursor-pointer"
               accept="image/*"
-              onChange={(e) => {
-                // If we're in a form context, use the form setValue method
-                if (form) {
-                  const files = e.target.files;
-                  if (!files || files.length === 0) return;
-                  
-                  handleFileChange(e, (value) => {
-                    form.setValue('photo', value);
-                  });
-                }
-              }}
+              onChange={handleFileChange}
               disabled={isUploading}
             />
           </Button>

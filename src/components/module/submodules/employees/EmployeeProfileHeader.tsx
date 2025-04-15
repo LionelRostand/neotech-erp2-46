@@ -41,36 +41,32 @@ const EmployeeProfileHeader: React.FC<EmployeeProfileHeaderProps> = ({
 
   // Sélectionner l'URL de la photo à utiliser
   const getPhotoUrl = () => {
-    console.log("Photo data:", employee.photoData);
-    console.log("Photo URL:", employee.photoURL);
-    console.log("Photo:", employee.photo);
+    // Log all potential photo sources for debugging
+    console.log("Photo sources available:");
+    console.log("- photoData:", employee.photoData ? "Présent" : "Absent");
+    console.log("- photoURL:", employee.photoURL);
+    console.log("- photo:", employee.photo);
     
     // Check if photoData exists and is a string starting with 'data:'
     if (employee.photoData && typeof employee.photoData === 'string' && employee.photoData.startsWith('data:')) {
+      console.log("Using photoData source");
       return employee.photoData;
     }
 
     // Check photoURL
     if (employee.photoURL && typeof employee.photoURL === 'string' && employee.photoURL.length > 0) {
+      console.log("Using photoURL source");
       return employee.photoURL;
     }
 
     // Check legacy photo property
     if (employee.photo && typeof employee.photo === 'string' && employee.photo.length > 0) {
+      console.log("Using photo source");
       return employee.photo;
     }
 
-    // Check if photoData is an object with a data property - with proper null check
-    if (employee.photoData && typeof employee.photoData === 'object' && 
-        employee.photoData !== null) {
-      // Additional safe check for 'data' property
-      const photoDataObj = employee.photoData as Record<string, unknown>;
-      if ('data' in photoDataObj && typeof photoDataObj.data === 'string') {
-        return photoDataObj.data;
-      }
-    }
-    
     // If no photo is found, return an empty string
+    console.log("No photo source found");
     return '';
   };
 
@@ -83,13 +79,16 @@ const EmployeeProfileHeader: React.FC<EmployeeProfileHeaderProps> = ({
     return employee.address || '';
   };
 
+  // Get the photo URL for display
+  const photoUrl = getPhotoUrl();
+
   return (
     <Card className="w-full">
       <CardContent className="pt-6">
         <div className="flex flex-col md:flex-row gap-6 items-start md:items-center">
           <Avatar className="w-24 h-24 border-2 border-primary/10">
             <AvatarImage 
-              src={getPhotoUrl()} 
+              src={photoUrl} 
               alt={`${employee.firstName} ${employee.lastName}`} 
             />
             <AvatarFallback className="text-xl bg-primary/10">{getInitials()}</AvatarFallback>

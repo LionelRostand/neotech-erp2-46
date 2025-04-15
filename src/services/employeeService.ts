@@ -26,13 +26,32 @@ export const createEmployee = async (employeeData: Partial<Employee>): Promise<E
       }
     }
     
-    // Ajouter l'employé à la collection hr_employees
-    const collectionRef = collection(db, COLLECTIONS.HR.EMPLOYEES);
-    const docRef = await addDoc(collectionRef, {
+    // Préparer les données de l'employé avec les champs photo correctement structurés
+    const employeeToSave = {
       ...employeeData,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-    });
+    };
+    
+    // S'assurer que photoURL et photoData sont correctement définis
+    if (employeeData.photo && !employeeData.photoURL) {
+      employeeToSave.photoURL = employeeData.photo;
+    }
+    
+    if (employeeData.photoData) {
+      // Si photoData est une chaîne base64, l'utiliser directement
+      if (typeof employeeData.photoData === 'string') {
+        employeeToSave.photoData = employeeData.photoData;
+        // Utiliser photoData comme photoURL s'il n'y en a pas
+        if (!employeeToSave.photoURL) {
+          employeeToSave.photoURL = employeeData.photoData;
+        }
+      }
+    }
+    
+    // Ajouter l'employé à la collection hr_employees
+    const collectionRef = collection(db, COLLECTIONS.HR.EMPLOYEES);
+    const docRef = await addDoc(collectionRef, employeeToSave);
     
     // Récupérer l'employé créé avec son ID
     const docSnap = await getDoc(docRef);
@@ -68,10 +87,29 @@ export const createEmployee = async (employeeData: Partial<Employee>): Promise<E
 export const updateEmployeeDoc = async (id: string, data: Partial<Employee>): Promise<Employee | null> => {
   try {
     const docRef = doc(db, COLLECTIONS.HR.EMPLOYEES, id);
-    await updateDoc(docRef, {
+    
+    // Préparer les données à mettre à jour
+    const updateData = {
       ...data,
       updatedAt: new Date().toISOString()
-    });
+    };
+    
+    // S'assurer que photoURL et photoData sont correctement définis
+    if (data.photo && !data.photoURL) {
+      updateData.photoURL = data.photo;
+    }
+    
+    if (data.photoData) {
+      // Si photoData est une chaîne base64, l'utiliser directement
+      if (typeof data.photoData === 'string') {
+        // Utiliser photoData comme photoURL s'il n'y en a pas
+        if (!updateData.photoURL) {
+          updateData.photoURL = data.photoData;
+        }
+      }
+    }
+    
+    await updateDoc(docRef, updateData);
     
     // Récupérer l'employé mis à jour
     const docSnap = await getDoc(docRef);
