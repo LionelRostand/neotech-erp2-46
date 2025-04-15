@@ -40,9 +40,19 @@ export const SeniorityChart = () => {
     }]
   };
 
+  const options = {
+    maintainAspectRatio: false,
+    responsive: true,
+    plugins: {
+      legend: {
+        position: 'top' as const,
+      }
+    }
+  };
+
   return (
-    <div className="h-[300px]">
-      <BarChart data={data} />
+    <div className="w-full h-[350px] p-4">
+      <BarChart data={data} options={options} />
     </div>
   );
 };

@@ -19,9 +19,27 @@ export const HeadcountByDepartment = () => {
     }]
   };
 
+  const options = {
+    maintainAspectRatio: false,
+    responsive: true,
+    plugins: {
+      legend: {
+        position: 'top' as const,
+      }
+    },
+    scales: {
+      x: {
+        ticks: {
+          maxRotation: 45,
+          minRotation: 45
+        }
+      }
+    }
+  };
+
   return (
-    <div className="h-[300px]">
-      <BarChart data={data} />
+    <div className="w-full h-[350px] p-4">
+      <BarChart data={data} options={options} />
     </div>
   );
 };

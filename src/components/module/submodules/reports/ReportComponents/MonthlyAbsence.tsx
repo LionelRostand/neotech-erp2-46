@@ -23,9 +23,19 @@ export const MonthlyAbsence = () => {
     }]
   };
 
+  const options = {
+    maintainAspectRatio: false,
+    responsive: true,
+    plugins: {
+      legend: {
+        position: 'top' as const,
+      }
+    }
+  };
+
   return (
-    <div className="h-[300px]">
-      <LineChart data={data} />
+    <div className="w-full h-[350px] p-4">
+      <LineChart data={data} options={options} />
     </div>
   );
 };
