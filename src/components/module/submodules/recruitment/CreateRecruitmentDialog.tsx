@@ -1,301 +1,370 @@
 
 import React, { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { useToast } from '@/components/ui/use-toast';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { PlusCircle, FileText } from 'lucide-react';
+import { useToast } from '@/components/ui/use-toast';
 import { addDocument } from '@/hooks/firestore/firestore-utils';
 import { COLLECTIONS } from '@/lib/firebase-collections';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useFirebaseDepartments } from '@/hooks/useFirebaseDepartments';
-import { Textarea } from "@/components/ui/textarea";
-import { X, Plus, Upload } from "lucide-react";
-import { CandidateApplication } from '@/types/recruitment';
-import { v4 as uuidv4 } from 'uuid';
 
 interface CreateRecruitmentDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onOfferCreated?: () => void;
 }
 
-const CreateRecruitmentDialog: React.FC<CreateRecruitmentDialogProps> = ({
-  open,
-  onOpenChange,
-  onOfferCreated
-}) => {
+const CreateRecruitmentDialog: React.FC<CreateRecruitmentDialogProps> = ({ open, onOpenChange }) => {
+  const [formData, setFormData] = useState({
+    position: '',
+    department: '',
+    location: '',
+    status: 'Ouvert',
+    priority: 'Moyenne',
+    contractType: 'CDI',
+    description: '',
+    requirements: '',
+    salary: '',
+    applicationDeadline: '',
+    hiringManagerName: '',
+    hiringManagerId: 'manager-1', // Default value for now
+  });
+
+  const [candidates, setCandidates] = useState<{
+    name: string;
+    email: string;
+    resume: File | null;
+  }[]>([]);
+
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
-  const [position, setPosition] = useState('');
-  const [department, setDepartment] = useState('');
-  const [description, setDescription] = useState('');
-  const { departments, isLoading } = useFirebaseDepartments();
-  
-  // Candidates state
-  const [candidates, setCandidates] = useState<CandidateApplication[]>([]);
-  const [candidateName, setCandidateName] = useState('');
-  const [candidateEmail, setCandidateEmail] = useState('');
-  const [candidateCV, setCandidateCV] = useState<File | null>(null);
 
   const handleAddCandidate = () => {
-    if (!candidateName || !candidateEmail) {
-      toast({
-        title: "Champs requis",
-        description: "Le nom et l'email du candidat sont requis",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    const newCandidate: CandidateApplication = {
-      id: uuidv4(),
-      recruitmentId: '', // Will be set when the offer is created
-      candidateName,
-      candidateEmail,
-      currentStage: 'CV en cours d\'analyse',
-      stageHistory: [{
-        stage: 'CV en cours d\'analyse',
-        date: new Date().toISOString(),
-      }],
-      resume: candidateCV ? 'cv_attached' : undefined,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-
-    setCandidates([...candidates, newCandidate]);
-    
-    // Clear form
-    setCandidateName('');
-    setCandidateEmail('');
-    setCandidateCV(null);
+    setCandidates([
+      ...candidates,
+      {
+        name: '',
+        email: '',
+        resume: null,
+      },
+    ]);
   };
 
-  const handleRemoveCandidate = (id: string) => {
-    setCandidates(candidates.filter(c => c.id !== id));
+  const handleCandidateChange = (index: number, field: string, value: string | File | null) => {
+    const updatedCandidates = [...candidates];
+    updatedCandidates[index] = {
+      ...updatedCandidates[index],
+      [field]: value,
+    };
+    setCandidates(updatedCandidates);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!position || !department) {
+    if (!formData.position || !formData.department) {
       toast({
         title: "Champs requis",
-        description: "Veuillez remplir tous les champs obligatoires",
-        variant: "destructive"
+        description: "Veuillez remplir tous les champs obligatoires.",
+        variant: "destructive",
       });
       return;
     }
 
+    setIsSubmitting(true);
+
     try {
-      const newOffer = {
-        position,
-        department,
-        description,
-        status: 'Ouvert',
-        priority: 'Moyenne',
-        location: '',
+      // Prepare recruitment data
+      const recruitmentData = {
+        ...formData,
+        openDate: new Date().toISOString(),
+        applicationCount: 0,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
-        currentStage: 'Candidature déposée',
-        candidates: candidates.map(candidate => ({
-          ...candidate,
-          // The recruitmentId will be set after we get the new document ID
-        })),
-        stageHistory: [{
-          stage: 'Candidature déposée',
-          date: new Date().toISOString(),
-          comments: 'Nouvelle offre créée'
-        }]
+        // Convert requirements string to array
+        requirements: formData.requirements.split('\n').filter(req => req.trim() !== ''),
       };
 
-      const docRef = await addDocument(COLLECTIONS.HR.RECRUITMENTS, newOffer);
+      // Add to Firestore
+      const recruitmentRef = await addDocument(COLLECTIONS.HR.RECRUITMENTS, recruitmentData);
       
-      // If we have candidates, we need to update them with the correct recruitmentId
-      if (candidates.length > 0 && docRef?.id) {
-        const updatedCandidates = candidates.map(candidate => ({
-          ...candidate,
-          recruitmentId: docRef.id,
-        }));
+      // Process candidates if any
+      if (candidates.length > 0) {
+        const validCandidates = candidates.filter(c => c.name && c.email);
         
-        // Update the document with the updated candidates
-        await addDocument(COLLECTIONS.HR.RECRUITMENTS, {
-          ...newOffer,
-          candidates: updatedCandidates,
-          id: docRef.id
-        }, docRef.id);
+        // Add candidates to the database
+        for (const candidate of validCandidates) {
+          const candidateData = {
+            recruitmentId: recruitmentRef.id,
+            candidateName: candidate.name,
+            candidateEmail: candidate.email,
+            currentStage: 'Candidature déposée' as const,
+            stageHistory: [
+              {
+                stage: 'Candidature déposée' as const,
+                date: new Date().toISOString(),
+                comments: 'Candidature initiale'
+              }
+            ],
+            resume: candidate.resume ? 'Attached' : undefined,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+          };
+          
+          await addDocument(COLLECTIONS.HR.CANDIDATES, candidateData);
+        }
       }
-      
+
       toast({
         title: "Offre créée",
-        description: "L'offre de recrutement a été créée avec succès"
+        description: "L'offre d'emploi a été créée avec succès.",
       });
-
-      // Reset form
-      setPosition('');
-      setDepartment('');
-      setDescription('');
+      
+      // Reset form and close dialog
+      setFormData({
+        position: '',
+        department: '',
+        location: '',
+        status: 'Ouvert',
+        priority: 'Moyenne',
+        contractType: 'CDI',
+        description: '',
+        requirements: '',
+        salary: '',
+        applicationDeadline: '',
+        hiringManagerName: '',
+        hiringManagerId: 'manager-1',
+      });
       setCandidates([]);
-
       onOpenChange(false);
-      if (onOfferCreated) {
-        onOfferCreated();
-      }
     } catch (error) {
-      console.error('Error creating offer:', error);
+      console.error("Error creating recruitment post:", error);
       toast({
         title: "Erreur",
-        description: "Une erreur est survenue lors de la création de l'offre",
-        variant: "destructive"
+        description: "Une erreur est survenue lors de la création de l'offre.",
+        variant: "destructive",
       });
-    }
-  };
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setCandidateCV(e.target.files[0]);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Nouvelle offre de recrutement</DialogTitle>
+          <DialogTitle>Créer une nouvelle offre d'emploi</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="position">Poste *</Label>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="position">Poste*</Label>
               <Input
                 id="position"
-                value={position}
-                onChange={(e) => setPosition(e.target.value)}
-                placeholder="Intitulé du poste"
+                value={formData.position}
+                onChange={(e) => setFormData({ ...formData, position: e.target.value })}
+                placeholder="Développeur full-stack"
                 required
               />
             </div>
 
-            <div>
-              <Label htmlFor="department">Département *</Label>
-              <Select 
-                value={department} 
-                onValueChange={setDepartment}
+            <div className="space-y-2">
+              <Label htmlFor="department">Département*</Label>
+              <Input
+                id="department"
+                value={formData.department}
+                onChange={(e) => setFormData({ ...formData, department: e.target.value })}
+                placeholder="Informatique"
                 required
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="contractType">Type de contrat</Label>
+              <Select
+                value={formData.contractType}
+                onValueChange={(value) => setFormData({ ...formData, contractType: value })}
               >
-                <SelectTrigger id="department">
-                  <SelectValue placeholder="Sélectionner un département" />
+                <SelectTrigger id="contractType">
+                  <SelectValue placeholder="Type de contrat" />
                 </SelectTrigger>
                 <SelectContent>
-                  {departments?.map((dept) => (
-                    <SelectItem key={dept.id} value={dept.name}>
-                      {dept.name}
-                    </SelectItem>
-                  ))}
+                  <SelectItem value="CDI">CDI</SelectItem>
+                  <SelectItem value="CDD">CDD</SelectItem>
+                  <SelectItem value="Alternance">Alternance</SelectItem>
+                  <SelectItem value="Stage">Stage</SelectItem>
+                  <SelectItem value="Freelance">Freelance</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="location">Localisation</Label>
+              <Input
+                id="location"
+                value={formData.location}
+                onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                placeholder="Paris"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="status">Statut</Label>
+              <Select
+                value={formData.status}
+                onValueChange={(value) => setFormData({ ...formData, status: value })}
+              >
+                <SelectTrigger id="status">
+                  <SelectValue placeholder="Statut" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Ouvert">Ouvert</SelectItem>
+                  <SelectItem value="En cours">En cours</SelectItem>
+                  <SelectItem value="Clôturé">Clôturé</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="priority">Priorité</Label>
+              <Select
+                value={formData.priority}
+                onValueChange={(value) => setFormData({ ...formData, priority: value })}
+              >
+                <SelectTrigger id="priority">
+                  <SelectValue placeholder="Priorité" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Haute">Haute</SelectItem>
+                  <SelectItem value="Moyenne">Moyenne</SelectItem>
+                  <SelectItem value="Basse">Basse</SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </div>
 
-          <div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="salary">Salaire</Label>
+              <Input
+                id="salary"
+                value={formData.salary}
+                onChange={(e) => setFormData({ ...formData, salary: e.target.value })}
+                placeholder="45-55K€"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="applicationDeadline">Date limite</Label>
+              <Input
+                id="applicationDeadline"
+                type="date"
+                value={formData.applicationDeadline}
+                onChange={(e) => setFormData({ ...formData, applicationDeadline: e.target.value })}
+              />
+            </div>
+          </div>
+
+          <div className="space-y-2">
             <Label htmlFor="description">Description du poste</Label>
             <Textarea
               id="description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Description des responsabilités et des compétences requises"
+              value={formData.description}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              placeholder="Description détaillée du poste..."
+              rows={4}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="requirements">Prérequis (un par ligne)</Label>
+            <Textarea
+              id="requirements"
+              value={formData.requirements}
+              onChange={(e) => setFormData({ ...formData, requirements: e.target.value })}
+              placeholder="Expérience minimale de 3 ans\nMaîtrise de React\nAnglais courant"
               rows={3}
             />
           </div>
 
-          <div className="border-t pt-4">
-            <h3 className="font-medium mb-2">Ajouter des candidats</h3>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-2">
-              <div>
-                <Label htmlFor="candidateName">Nom du candidat</Label>
-                <Input
-                  id="candidateName"
-                  value={candidateName}
-                  onChange={(e) => setCandidateName(e.target.value)}
-                  placeholder="Nom complet"
-                />
-              </div>
-              <div>
-                <Label htmlFor="candidateEmail">Email du candidat</Label>
-                <Input
-                  id="candidateEmail"
-                  type="email"
-                  value={candidateEmail}
-                  onChange={(e) => setCandidateEmail(e.target.value)}
-                  placeholder="email@exemple.com"
-                />
-              </div>
+          <div className="space-y-2">
+            <Label htmlFor="hiringManager">Responsable du recrutement</Label>
+            <Input
+              id="hiringManager"
+              value={formData.hiringManagerName}
+              onChange={(e) => setFormData({ ...formData, hiringManagerName: e.target.value })}
+              placeholder="Marie Dubois"
+            />
+          </div>
+
+          {/* Candidate section */}
+          <div className="border rounded-md p-4 space-y-4">
+            <div className="flex justify-between items-center">
+              <h3 className="text-lg font-medium">Candidats</h3>
+              <Button type="button" variant="outline" size="sm" onClick={handleAddCandidate}>
+                <PlusCircle className="h-4 w-4 mr-2" />
+                Ajouter un candidat
+              </Button>
             </div>
 
-            <div className="mb-4">
-              <Label htmlFor="candidateCV" className="block mb-1">CV du candidat</Label>
-              <div className="flex items-center gap-2">
-                <Input
-                  id="candidateCV"
-                  type="file"
-                  accept=".pdf,.doc,.docx"
-                  onChange={handleFileChange}
-                  className="flex-1"
-                />
-                <Button 
-                  type="button" 
-                  onClick={handleAddCandidate}
-                  className="flex items-center gap-1"
-                >
-                  <Plus className="h-4 w-4" />
-                  Ajouter
-                </Button>
-              </div>
-              {candidateCV && (
-                <p className="text-sm text-muted-foreground mt-1">
-                  Fichier: {candidateCV.name}
-                </p>
-              )}
-            </div>
-
-            {candidates.length > 0 && (
-              <div className="border rounded-md p-3 space-y-2">
-                <h4 className="text-sm font-medium">Candidats ajoutés ({candidates.length})</h4>
-                {candidates.map((candidate) => (
-                  <div key={candidate.id} className="flex items-center justify-between bg-muted/50 p-2 rounded">
-                    <div>
-                      <p className="text-sm font-medium">{candidate.candidateName}</p>
-                      <p className="text-xs text-muted-foreground">{candidate.candidateEmail}</p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {candidate.resume && (
-                        <div className="text-xs flex items-center text-blue-600">
-                          <FileText className="h-3 w-3 mr-1" />
-                          <span>CV</span>
-                        </div>
-                      )}
-                      <Button 
-                        type="button" 
-                        variant="ghost" 
-                        size="sm"
-                        onClick={() => handleRemoveCandidate(candidate.id)}
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
+            {candidates.length === 0 ? (
+              <p className="text-sm text-muted-foreground">Aucun candidat ajouté. Cliquez sur "Ajouter un candidat" pour commencer.</p>
+            ) : (
+              candidates.map((candidate, index) => (
+                <div key={index} className="grid grid-cols-2 gap-4 border-t pt-4">
+                  <div className="space-y-2">
+                    <Label htmlFor={`candidate-${index}-name`}>Nom</Label>
+                    <Input
+                      id={`candidate-${index}-name`}
+                      value={candidate.name}
+                      onChange={(e) => handleCandidateChange(index, 'name', e.target.value)}
+                      placeholder="John Doe"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor={`candidate-${index}-email`}>Email</Label>
+                    <Input
+                      id={`candidate-${index}-email`}
+                      value={candidate.email}
+                      onChange={(e) => handleCandidateChange(index, 'email', e.target.value)}
+                      placeholder="john.doe@example.com"
+                      type="email"
+                    />
+                  </div>
+                  <div className="space-y-2 col-span-2">
+                    <Label htmlFor={`candidate-${index}-resume`}>CV</Label>
+                    <div className="flex items-center border rounded p-2">
+                      <FileText className="h-4 w-4 mr-2 text-blue-500" />
+                      <Input
+                        id={`candidate-${index}-resume`}
+                        type="file"
+                        accept=".pdf,.doc,.docx"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0] || null;
+                          handleCandidateChange(index, 'resume', file);
+                        }}
+                        className="border-0 p-0"
+                      />
                     </div>
                   </div>
-                ))}
-              </div>
+                </div>
+              ))
             )}
           </div>
 
-          <DialogFooter className="mt-6">
-            <Button variant="outline" type="button" onClick={() => onOpenChange(false)}>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Annuler
             </Button>
-            <Button type="submit">
-              Créer l'offre
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? "Création en cours..." : "Créer l'offre"}
             </Button>
           </DialogFooter>
         </form>
