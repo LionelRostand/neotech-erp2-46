@@ -1,11 +1,11 @@
 
 import React from 'react';
 import { Card } from '@/components/ui/card';
-import { CandidateApplication } from '@/types/recruitment';
+import type { CandidateApplication as CandidateApplicationType } from '@/types/recruitment';
 import CandidateTrackingView from './CandidateTrackingView';
 
 interface CandidateApplicationProps {
-  application: CandidateApplication;
+  application: CandidateApplicationType;
   onStageUpdate: (applicationId: string, newStage: string) => void;
 }
 

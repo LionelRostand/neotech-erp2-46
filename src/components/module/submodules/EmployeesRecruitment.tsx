@@ -1,13 +1,12 @@
 import React, { useState } from 'react';
 import { DataTable } from '@/components/ui/data-table';
 import { Button } from '@/components/ui/button';
-import { Eye, Pencil, CalendarPlus, PlusCircle } from 'lucide-react';
+import { Eye, CalendarPlus, PlusCircle } from 'lucide-react';
 import RecruitmentStats from './recruitment/RecruitmentStats';
 import RecruitmentViewDialog from './recruitment/RecruitmentViewDialog';
 import RecruitmentScheduleDialog from './recruitment/RecruitmentScheduleDialog';
 import CreateRecruitmentDialog from './recruitment/CreateRecruitmentDialog';
-import CandidateApplication from './recruitment/CandidateApplication';
-import { RecruitmentPost, RecruitmentStage, CandidateApplication as CandidateApplicationType } from '@/types/recruitment';
+import { RecruitmentPost } from '@/types/recruitment';
 import { useRecruitmentFirebaseData } from '@/hooks/useRecruitmentFirebaseData';
 import { useToast } from '@/components/ui/use-toast';
 
@@ -18,66 +17,6 @@ const EmployeesRecruitment = () => {
   const [scheduleDialogOpen, setScheduleDialogOpen] = useState(false);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const { toast } = useToast();
-
-  const mockApplications: CandidateApplicationType[] = [
-    {
-      id: '1',
-      recruitmentId: '1',
-      candidateId: '1',
-      candidateName: 'Jean Dupont',
-      candidateEmail: 'jean.dupont@example.com',
-      currentStage: 'CV en cours d\'analyse',
-      stageHistory: [
-        {
-          stage: 'Candidature déposée',
-          date: '2024-04-10',
-          comments: 'Candidature reçue'
-        },
-        {
-          stage: 'CV en cours d\'analyse',
-          date: '2024-04-11',
-          comments: 'CV en cours d\'évaluation'
-        }
-      ],
-      createdAt: '2024-04-10',
-      updatedAt: '2024-04-11'
-    },
-    {
-      id: '2',
-      recruitmentId: '1',
-      candidateId: '2',
-      candidateName: 'Marie Martin',
-      candidateEmail: 'marie.martin@example.com',
-      currentStage: 'Entretien RH',
-      stageHistory: [
-        {
-          stage: 'Candidature déposée',
-          date: '2024-04-09',
-          comments: 'Candidature reçue'
-        },
-        {
-          stage: 'CV en cours d\'analyse',
-          date: '2024-04-10',
-          comments: 'CV validé'
-        },
-        {
-          stage: 'Entretien RH',
-          date: '2024-04-12',
-          comments: 'Entretien planifié'
-        }
-      ],
-      createdAt: '2024-04-09',
-      updatedAt: '2024-04-12'
-    }
-  ];
-
-  const handleStageUpdate = (applicationId: string, newStage: string) => {
-    console.log(`Updating application ${applicationId} to stage: ${newStage}`);
-    toast({
-      title: "Étape mise à jour",
-      description: `Le candidat passe à l'étape : ${newStage}`
-    });
-  };
 
   const columns = [
     {
@@ -148,29 +87,14 @@ const EmployeesRecruitment = () => {
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2">
-          <RecruitmentStats />
-          
-          <div className="mt-6">
-            <DataTable
-              columns={columns}
-              data={recruitmentPosts}
-              isLoading={isLoading}
-            />
-          </div>
-        </div>
-        
-        <div className="lg:col-span-1">
-          <h3 className="text-lg font-semibold mb-4">Suivi des candidatures</h3>
-          {mockApplications.map((application) => (
-            <CandidateApplication
-              key={application.id}
-              application={application}
-              onStageUpdate={handleStageUpdate}
-            />
-          ))}
-        </div>
+      <RecruitmentStats />
+      
+      <div className="mt-6">
+        <DataTable
+          columns={columns}
+          data={recruitmentPosts}
+          isLoading={isLoading}
+        />
       </div>
 
       <RecruitmentViewDialog
