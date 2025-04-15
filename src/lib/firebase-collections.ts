@@ -27,6 +27,7 @@ export const COLLECTIONS = {
     MANAGERS: 'hr_managers',
     LEAVES: 'hr_leaves',
     RECRUITMENTS: 'hr_recruitments',
+    CANDIDATES: 'hr_candidates', // Added this new collection
   },
   ACCOUNTING: {
     INVOICES: 'accounting_invoices',
