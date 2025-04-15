@@ -108,7 +108,7 @@ const CreateBadgeDialog: React.FC<CreateBadgeDialogProps> = ({
                       </SelectItem>
                     ))
                   ) : (
-                    <SelectItem value="no-employees">Aucun employé disponible</SelectItem>
+                    <SelectItem value="no-employees-available">Aucun employé disponible</SelectItem>
                   )}
                 </SelectContent>
               </Select>
