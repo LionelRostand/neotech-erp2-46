@@ -11,6 +11,7 @@ export interface BadgeData {
   accessLevel: string;
   status: "success" | "warning" | "danger";
   statusText: string;
+  photoURL?: string;
 }
 
 export interface BadgesTableProps {
