@@ -1,110 +1,71 @@
-
-import React, { useState, useEffect } from 'react';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { useToast } from "@/components/ui/use-toast";
-import { useAvailableDepartments } from '@/hooks/useAvailableDepartments';
+import React, { useState } from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
+import { addDocument } from '@/hooks/firestore/firestore-utils'; // Corrected import path
 import { COLLECTIONS } from '@/lib/firebase-collections';
-import { addDocument } from '@/lib/firebase-utils';
-import { RecruitmentPost } from '@/types/recruitment';
+import { useAvailableDepartments } from '@/hooks/useAvailableDepartments'; // Added import for departments
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 
 interface CreateRecruitmentDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSuccess?: () => void;
+  onRecruitmentCreated: () => void;
 }
 
 const CreateRecruitmentDialog: React.FC<CreateRecruitmentDialogProps> = ({
   open,
   onOpenChange,
-  onSuccess
+  onRecruitmentCreated,
 }) => {
-  const { toast } = useToast();
-  const { departments, isLoading: loadingDepts } = useAvailableDepartments();
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [formData, setFormData] = useState<Partial<RecruitmentPost>>({
-    position: '',
-    department: '',
-    status: 'Ouvert',
-    priority: 'Moyenne',
-    location: '',
-    description: '',
-    requirements: [],
-    hiringManagerId: '',
-    hiringManagerName: '',
-    contractType: 'CDI',
-    salary: '',
-    openDate: new Date().toISOString(),
-    applicationCount: 0
-  });
+  const [position, setPosition] = useState('');
+  const [location, setLocation] = useState('');
+  const [status, setStatus] = useState<'Ouvert' | 'En cours' | 'Clôturé'>('Ouvert');
+  const [priority, setPriority] = useState<'High' | 'Medium' | 'Low' | 'Haute' | 'Moyenne' | 'Basse'>('Medium');
+  const [description, setDescription] = useState('');
+  const [requirements, setRequirements] = useState('');
+  const [salaryMin, setSalaryMin] = useState('');
+  const [salaryMax, setSalaryMax] = useState('');
+  const [currency, setCurrency] = useState('EUR');
+  const [contactEmail, setContactEmail] = useState('');
 
-  const handleDepartmentChange = (departmentId: string) => {
-    const selectedDept = departments.find(dept => dept.id === departmentId);
-    if (selectedDept) {
-      setFormData(prev => ({
-        ...prev,
-        department: departmentId,
-        hiringManagerId: selectedDept.managerId,
-        hiringManagerName: selectedDept.managerName
-      }));
+  const { departments } = useAvailableDepartments();
+  const [selectedDepartment, setSelectedDepartment] = useState('');
+
+  const handleSubmit = async () => {
+    if (!position || !selectedDepartment) {
+      toast.error("Veuillez remplir tous les champs obligatoires.");
+      return;
     }
-  };
-
-  const handleChange = (
-    name: keyof RecruitmentPost,
-    value: string
-  ) => {
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
 
     try {
-      const newRecruitment = {
-        ...formData,
+      const recruitmentData = {
+        position,
+        department: selectedDepartment,
+        location,
+        status,
+        priority,
+        description,
+        requirements: requirements.split(',').map(item => item.trim()),
+        salary_range: {
+          min: salaryMin ? parseFloat(salaryMin) : 0,
+          max: salaryMax ? parseFloat(salaryMax) : 0,
+          currency,
+        },
+        contact_email: contactEmail,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
-        requirements: typeof formData.requirements === 'string' 
-          ? formData.requirements.split('\n') 
-          : formData.requirements,
       };
 
-      await addDocument(COLLECTIONS.HR.RECRUITMENTS, newRecruitment);
-      
-      toast({
-        title: "Offre créée",
-        description: "L'offre de recrutement a été créée avec succès",
-      });
-      
-      onSuccess?.();
+      await addDocument(COLLECTIONS.HR.RECRUITMENTS, recruitmentData);
+      toast.success("Offre d'emploi créée avec succès.");
+      onRecruitmentCreated();
       onOpenChange(false);
     } catch (error) {
-      console.error("Erreur lors de la création de l'offre:", error);
-      toast({
-        title: "Erreur",
-        description: "Impossible de créer l'offre",
-        variant: "destructive",
-      });
-    } finally {
-      setIsSubmitting(false);
+      console.error("Erreur lors de la création de l'offre d'emploi:", error);
+      toast.error("Erreur lors de la création de l'offre d'emploi.");
     }
   };
 
@@ -112,150 +73,116 @@ const CreateRecruitmentDialog: React.FC<CreateRecruitmentDialogProps> = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
-          <DialogTitle>Nouvelle offre de recrutement</DialogTitle>
+          <DialogTitle>Créer une nouvelle offre d'emploi</DialogTitle>
         </DialogHeader>
-        
-        <form onSubmit={handleSubmit} className="space-y-4 py-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="position">Poste</Label>
-              <Input
-                id="position"
-                value={formData.position || ''}
-                onChange={(e) => handleChange('position', e.target.value)}
-                required
-              />
-            </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="department">Département</Label>
-              <Select 
-                value={formData.department} 
-                onValueChange={handleDepartmentChange}
-                disabled={loadingDepts}
-              >
-                <SelectTrigger id="department">
+        <div className="grid gap-4 py-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium leading-none text-gray-700">Poste *</label>
+              <Input type="text" value={position} onChange={(e) => setPosition(e.target.value)} />
+            </div>
+            <div>
+              <label className="block text-sm font-medium leading-none text-gray-700">Département *</label>
+              <Select onValueChange={setSelectedDepartment}>
+                <SelectTrigger>
                   <SelectValue placeholder="Sélectionner un département" />
                 </SelectTrigger>
                 <SelectContent>
-                  {departments.map(dept => (
-                    <SelectItem key={dept.id} value={dept.id}>
-                      {dept.name}
+                  {departments && departments.map((department) => (
+                    <SelectItem key={department.id} value={department.name}>
+                      {department.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
+          </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="hiringManagerId">ID Manager</Label>
-              <Input
-                id="hiringManagerId"
-                value={formData.hiringManagerId || ''}
-                readOnly
-                className="bg-gray-100"
-              />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium leading-none text-gray-700">Lieu</label>
+              <Input type="text" value={location} onChange={(e) => setLocation(e.target.value)} />
             </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="hiringManagerName">Nom du Manager</Label>
-              <Input
-                id="hiringManagerName"
-                value={formData.hiringManagerName || ''}
-                readOnly
-                className="bg-gray-100"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="priority">Priorité</Label>
-              <Select
-                value={formData.priority}
-                onValueChange={(value) => handleChange('priority', value)}
-              >
-                <SelectTrigger id="priority">
-                  <SelectValue placeholder="Sélectionner une priorité" />
+            <div>
+              <label className="block text-sm font-medium leading-none text-gray-700">Statut</label>
+              <Select value={status} onValueChange={(value) => setStatus(value as 'Ouvert' | 'En cours' | 'Clôturé')}>
+                <SelectTrigger>
+                  <SelectValue placeholder={status} />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="Ouvert">Ouvert</SelectItem>
+                  <SelectItem value="En cours">En cours</SelectItem>
+                  <SelectItem value="Clôturé">Clôturé</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium leading-none text-gray-700">Priorité</label>
+              <Select value={priority} onValueChange={(value) => setPriority(value as 'High' | 'Medium' | 'Low' | 'Haute' | 'Moyenne' | 'Basse')}>
+                <SelectTrigger>
+                  <SelectValue placeholder={priority} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="High">High</SelectItem>
+                  <SelectItem value="Medium">Medium</SelectItem>
+                  <SelectItem value="Low">Low</SelectItem>
                   <SelectItem value="Haute">Haute</SelectItem>
                   <SelectItem value="Moyenne">Moyenne</SelectItem>
                   <SelectItem value="Basse">Basse</SelectItem>
                 </SelectContent>
               </Select>
             </div>
+            <div>
+              <label className="block text-sm font-medium leading-none text-gray-700">Email de contact</label>
+              <Input type="email" value={contactEmail} onChange={(e) => setContactEmail(e.target.value)} />
+            </div>
+          </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="contractType">Type de contrat</Label>
-              <Select
-                value={formData.contractType}
-                onValueChange={(value) => handleChange('contractType', value)}
-              >
-                <SelectTrigger id="contractType">
-                  <SelectValue placeholder="Sélectionner un type" />
+          <div>
+            <label className="block text-sm font-medium leading-none text-gray-700">Description</label>
+            <Textarea value={description} onChange={(e) => setDescription(e.target.value)} />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium leading-none text-gray-700">Exigences (séparées par des virgules)</label>
+            <Textarea value={requirements} onChange={(e) => setRequirements(e.target.value)} />
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-sm font-medium leading-none text-gray-700">Salaire Min</label>
+              <Input type="number" value={salaryMin} onChange={(e) => setSalaryMin(e.target.value)} />
+            </div>
+            <div>
+              <label className="block text-sm font-medium leading-none text-gray-700">Salaire Max</label>
+              <Input type="number" value={salaryMax} onChange={(e) => setSalaryMax(e.target.value)} />
+            </div>
+            <div>
+              <label className="block text-sm font-medium leading-none text-gray-700">Devise</label>
+              <Select value={currency} onValueChange={setCurrency}>
+                <SelectTrigger>
+                  <SelectValue placeholder={currency} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="CDI">CDI</SelectItem>
-                  <SelectItem value="CDD">CDD</SelectItem>
-                  <SelectItem value="Stage">Stage</SelectItem>
-                  <SelectItem value="Alternance">Alternance</SelectItem>
+                  <SelectItem value="EUR">EUR</SelectItem>
+                  <SelectItem value="USD">USD</SelectItem>
+                  <SelectItem value="CAD">CAD</SelectItem>
                 </SelectContent>
               </Select>
             </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="location">Localisation</Label>
-              <Input
-                id="location"
-                value={formData.location || ''}
-                onChange={(e) => handleChange('location', e.target.value)}
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="salary">Salaire</Label>
-              <Input
-                id="salary"
-                value={formData.salary || ''}
-                onChange={(e) => handleChange('salary', e.target.value)}
-                placeholder="Ex: 35-45k€"
-                required
-              />
-            </div>
           </div>
+        </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="description">Description du poste</Label>
-            <Textarea
-              id="description"
-              value={formData.description || ''}
-              onChange={(e) => handleChange('description', e.target.value)}
-              required
-              rows={4}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="requirements">Prérequis (un par ligne)</Label>
-            <Textarea
-              id="requirements"
-              value={Array.isArray(formData.requirements) ? formData.requirements.join('\n') : formData.requirements || ''}
-              onChange={(e) => handleChange('requirements', e.target.value)}
-              required
-              rows={4}
-              placeholder="Listez les prérequis, un par ligne"
-            />
-          </div>
-
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Annuler
-            </Button>
-            <Button type="submit" disabled={isSubmitting || loadingDepts}>
-              {isSubmitting ? "Création..." : "Créer"}
-            </Button>
-          </DialogFooter>
-        </form>
+        <DialogFooter>
+          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            Annuler
+          </Button>
+          <Button onClick={handleSubmit}>Créer</Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
