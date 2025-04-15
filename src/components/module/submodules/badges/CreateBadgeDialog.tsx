@@ -7,10 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { Employee } from '@/types/employee';
-import { useCompaniesData } from '@/hooks/useCompaniesData';
-import { useEmployeeData } from '@/hooks/useEmployeeData';
 import { BadgeData, generateBadgeNumber } from './BadgeTypes';
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 
 interface CreateBadgeDialogProps {
   isOpen: boolean;
@@ -29,42 +26,6 @@ const CreateBadgeDialog: React.FC<CreateBadgeDialogProps> = ({
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<string>('');
   const [accessLevel, setAccessLevel] = useState<string | undefined>(undefined);
   const [badgeNumber, setBadgeNumber] = useState(generateBadgeNumber());
-  const [selectedCompany, setSelectedCompany] = useState<string | undefined>(undefined);
-  const [selectedDepartment, setSelectedDepartment] = useState<string | undefined>(undefined);
-  const { companies } = useCompaniesData();
-  const { departments } = useEmployeeData();
-  const [selectedEmployeePhoto, setSelectedEmployeePhoto] = useState<string>('');
-
-  // Reset form when dialog opens
-  useEffect(() => {
-    if (isOpen) {
-      setBadgeNumber(generateBadgeNumber());
-    }
-  }, [isOpen]);
-
-  const handleEmployeeSelect = (value: string) => {
-    setSelectedEmployee(value);
-    const [empName, empId] = value.split('|');
-    setSelectedEmployeeId(empId);
-    
-    // Find the employee to get their photo and set department/company
-    const employee = employees.find(emp => emp.id === empId);
-    if (employee) {
-      setSelectedEmployeePhoto(employee.photoURL || '');
-      
-      // Pre-select their department if available
-      if (employee.department) {
-        setSelectedDepartment(employee.department);
-      }
-      
-      // Pre-select their company if available
-      if (employee.company) {
-        const companyId = typeof employee.company === 'string' ? 
-          employee.company : employee.company.id;
-        setSelectedCompany(companyId);
-      }
-    }
-  };
 
   const handleCreateBadge = () => {
     if (!selectedEmployee || !accessLevel) {
@@ -79,24 +40,16 @@ const CreateBadgeDialog: React.FC<CreateBadgeDialogProps> = ({
       return;
     }
     
-    // Get company name if selected
-    let companyName = '';
-    if (selectedCompany) {
-      const company = companies.find(c => c.id === selectedCompany);
-      companyName = company ? company.name : '';
-    }
-    
     // Create a new badge
     const newBadge: BadgeData = {
       id: badgeNumber,
       date: new Date().toISOString().split('T')[0],
       employeeId: employee.id,
       employeeName: `${employee.firstName} ${employee.lastName}`,
-      department: selectedDepartment || employee.department || '',
+      department: employee.department || '',
       accessLevel: accessLevel,
       status: "success",
-      statusText: "Actif",
-      company: companyName || '',
+      statusText: "Actif"
     };
     
     // Callback to add the badge
@@ -111,9 +64,6 @@ const CreateBadgeDialog: React.FC<CreateBadgeDialogProps> = ({
     setSelectedEmployee(undefined);
     setSelectedEmployeeId('');
     setAccessLevel(undefined);
-    setSelectedCompany(undefined);
-    setSelectedDepartment(undefined);
-    setSelectedEmployeePhoto('');
     setBadgeNumber(generateBadgeNumber());
   };
   
@@ -122,35 +72,13 @@ const CreateBadgeDialog: React.FC<CreateBadgeDialogProps> = ({
     onOpenChange(false);
   };
 
-  // Simplified access levels
-  const accessLevels = [
-    { id: "niveau1", label: "Niveau 1 - Accès basique" },
-    { id: "niveau2", label: "Niveau 2 - Accès intermédiaire" },
-    { id: "niveau3", label: "Niveau 3 - Accès avancé" },
-    { id: "admin", label: "Administration - Accès complet" },
-    { id: "direction", label: "Direction - Accès tous secteurs" }
-  ];
-
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Créer un nouveau badge</DialogTitle>
         </DialogHeader>
         <div className="grid gap-4 py-4">
-          {/* Photo preview */}
-          {selectedEmployeePhoto && (
-            <div className="flex justify-center mb-4">
-              <Avatar className="w-24 h-24 border-2 border-primary">
-                <AvatarImage src={selectedEmployeePhoto} alt="Photo employé" />
-                <AvatarFallback>
-                  {selectedEmployee?.split('|')[0].substr(0, 2).toUpperCase() || 'EM'}
-                </AvatarFallback>
-              </Avatar>
-            </div>
-          )}
-          
-          {/* Employee selection */}
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="employee" className="text-right">
               Employé
@@ -158,7 +86,13 @@ const CreateBadgeDialog: React.FC<CreateBadgeDialogProps> = ({
             <div className="col-span-3">
               <Select 
                 value={selectedEmployee} 
-                onValueChange={handleEmployeeSelect}
+                onValueChange={(value) => {
+                  setSelectedEmployee(value);
+                  if (value && value.includes('|')) {
+                    const empId = value.split('|')[1];
+                    setSelectedEmployeeId(empId);
+                  }
+                }}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Sélectionner un employé" />
@@ -180,58 +114,6 @@ const CreateBadgeDialog: React.FC<CreateBadgeDialogProps> = ({
               </Select>
             </div>
           </div>
-          
-          {/* Company selection */}
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="company" className="text-right">
-              Entreprise
-            </Label>
-            <div className="col-span-3">
-              <Select value={selectedCompany} onValueChange={setSelectedCompany}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Sélectionner une entreprise" />
-                </SelectTrigger>
-                <SelectContent>
-                  {companies && companies.length > 0 ? (
-                    companies.map((company) => (
-                      <SelectItem key={company.id} value={company.id}>
-                        {company.name}
-                      </SelectItem>
-                    ))
-                  ) : (
-                    <SelectItem value="no-company">Aucune entreprise disponible</SelectItem>
-                  )}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          
-          {/* Department selection */}
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="department" className="text-right">
-              Département
-            </Label>
-            <div className="col-span-3">
-              <Select value={selectedDepartment} onValueChange={setSelectedDepartment}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Sélectionner un département" />
-                </SelectTrigger>
-                <SelectContent>
-                  {departments && departments.length > 0 ? (
-                    departments.map((dept) => (
-                      <SelectItem key={dept.id} value={dept.id}>
-                        {dept.name}
-                      </SelectItem>
-                    ))
-                  ) : (
-                    <SelectItem value="no-department">Aucun département disponible</SelectItem>
-                  )}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          
-          {/* Access level */}
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="access" className="text-right">
               Niveau d'accès
@@ -242,17 +124,19 @@ const CreateBadgeDialog: React.FC<CreateBadgeDialogProps> = ({
                   <SelectValue placeholder="Sélectionner un niveau d'accès" />
                 </SelectTrigger>
                 <SelectContent>
-                  {accessLevels.map(level => (
-                    <SelectItem key={level.id} value={level.label}>
-                      {level.label}
-                    </SelectItem>
-                  ))}
+                  <SelectItem value="Sécurité Niveau 1">Sécurité Niveau 1</SelectItem>
+                  <SelectItem value="Sécurité Niveau 2">Sécurité Niveau 2</SelectItem>
+                  <SelectItem value="Sécurité Niveau 3">Sécurité Niveau 3</SelectItem>
+                  <SelectItem value="Administration">Administration</SelectItem>
+                  <SelectItem value="IT">IT</SelectItem>
+                  <SelectItem value="RH">RH</SelectItem>
+                  <SelectItem value="Marketing">Marketing</SelectItem>
+                  <SelectItem value="DIRECTION">DIRECTION</SelectItem>
+                  <SelectItem value="PDG">PDG</SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </div>
-          
-          {/* Badge number */}
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="badge-number" className="text-right">
               Numéro de badge
