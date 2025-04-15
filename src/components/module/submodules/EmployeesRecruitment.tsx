@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { DataTable } from '@/components/ui/data-table';
 import { Button } from '@/components/ui/button';
-import { Eye, Pencil, CalendarPlus } from 'lucide-react';
+import { Eye, Pencil, CalendarPlus, PlusCircle } from 'lucide-react';
 import RecruitmentStats from './recruitment/RecruitmentStats';
 import RecruitmentViewDialog from './recruitment/RecruitmentViewDialog';
 import RecruitmentScheduleDialog from './recruitment/RecruitmentScheduleDialog';
+import CreateRecruitmentDialog from './recruitment/CreateRecruitmentDialog';
 import CandidateTrackingView from './recruitment/CandidateTrackingView';
 import { RecruitmentPost, RecruitmentStage } from '@/types/recruitment';
 import { useRecruitmentFirebaseData } from '@/hooks/useRecruitmentFirebaseData';
@@ -14,8 +15,8 @@ const EmployeesRecruitment = () => {
   const [selectedRecruitment, setSelectedRecruitment] = useState<RecruitmentPost | null>(null);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [scheduleDialogOpen, setScheduleDialogOpen] = useState(false);
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
 
-  // Mock data for demonstration - In real app, this would come from your data source
   const mockTrackingData = {
     currentStage: 'Entretien RH' as RecruitmentStage,
     stageHistory: [
@@ -38,14 +39,9 @@ const EmployeesRecruitment = () => {
   };
 
   const handleStageUpdate = (newStage: RecruitmentStage) => {
-    // Here you would update the stage in your database
     console.log('Updating stage to:', newStage);
-    
-    // For demo purposes, we're just logging the change
-    // In a real app, you would make an API call to update the database
   };
 
-  // Column definitions with required 'key' property
   const columns = [
     {
       key: "position",
@@ -104,6 +100,17 @@ const EmployeesRecruitment = () => {
 
   return (
     <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-bold">Recrutement</h2>
+        <Button 
+          onClick={() => setCreateDialogOpen(true)}
+          className="flex items-center gap-2"
+        >
+          <PlusCircle className="w-4 h-4" />
+          Nouvelle offre
+        </Button>
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
           <RecruitmentStats />
@@ -136,6 +143,11 @@ const EmployeesRecruitment = () => {
         open={scheduleDialogOpen}
         onOpenChange={setScheduleDialogOpen}
         recruitment={selectedRecruitment}
+      />
+
+      <CreateRecruitmentDialog
+        open={createDialogOpen}
+        onOpenChange={setCreateDialogOpen}
       />
     </div>
   );
