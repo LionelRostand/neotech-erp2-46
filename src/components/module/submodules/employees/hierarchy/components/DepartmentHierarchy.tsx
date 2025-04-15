@@ -8,14 +8,12 @@ import { Department } from '../../departments/types';
 interface DepartmentNodeProps {
   department: Department;
   level?: number;
+  allDepartments: Department[];
 }
 
-const DepartmentNode: React.FC<DepartmentNodeProps> = ({ department, level = 0 }) => {
-  const { employees } = useEmployeeData();
-  const subordinateDepartments = employees
-    .filter(emp => emp.departmentId === department.id)
-    .map(emp => emp.department)
-    .filter((value, index, self) => self.indexOf(value) === index);
+const DepartmentNode: React.FC<DepartmentNodeProps> = ({ department, level = 0, allDepartments }) => {
+  // Find child departments that have this department as their parent
+  const childDepartments = allDepartments.filter(dept => dept.parentId === department.id);
 
   return (
     <div style={{ marginLeft: `${level * 40}px` }} className="mb-4">
@@ -32,13 +30,14 @@ const DepartmentNode: React.FC<DepartmentNodeProps> = ({ department, level = 0 }
         </CardContent>
       </Card>
       
-      {subordinateDepartments.length > 0 && (
+      {childDepartments.length > 0 && (
         <div className="pl-4 mt-2 border-l border-gray-200">
-          {subordinateDepartments.map((subDeptId, index) => (
+          {childDepartments.map((childDept) => (
             <DepartmentNode 
-              key={index}
-              department={department}
+              key={childDept.id}
+              department={childDept}
               level={level + 1}
+              allDepartments={allDepartments}
             />
           ))}
         </div>
@@ -56,7 +55,11 @@ const DepartmentHierarchy: React.FC = () => {
       <h2 className="text-xl font-bold mb-6">Hiérarchie des Départements</h2>
       <div className="space-y-4">
         {rootDepartments.map(dept => (
-          <DepartmentNode key={dept.id} department={dept} />
+          <DepartmentNode 
+            key={dept.id} 
+            department={dept} 
+            allDepartments={departments} 
+          />
         ))}
       </div>
     </div>
