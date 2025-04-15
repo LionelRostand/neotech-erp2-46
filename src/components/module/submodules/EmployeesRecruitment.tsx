@@ -1,16 +1,16 @@
 
 import React, { useState } from 'react';
-import { useRecruitmentData } from '@/hooks/useRecruitmentData';
 import { DataTable } from '@/components/ui/data-table';
 import { Button } from '@/components/ui/button';
 import { Eye, Pencil, CalendarPlus } from 'lucide-react';
 import RecruitmentStats from './recruitment/RecruitmentStats';
 import RecruitmentViewDialog from './recruitment/RecruitmentViewDialog';
 import RecruitmentScheduleDialog from './recruitment/RecruitmentScheduleDialog';
-import { RecruitmentPost } from '@/hooks/useRecruitmentData';
+import { RecruitmentPost } from '@/types/recruitment';
+import { useRecruitmentFirebaseData } from '@/hooks/useRecruitmentFirebaseData';
 
 const EmployeesRecruitment = () => {
-  const { recruitmentPosts, isLoading } = useRecruitmentData();
+  const { recruitmentPosts, isLoading } = useRecruitmentFirebaseData();
   const [selectedRecruitment, setSelectedRecruitment] = useState<RecruitmentPost | null>(null);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [scheduleDialogOpen, setScheduleDialogOpen] = useState(false);
