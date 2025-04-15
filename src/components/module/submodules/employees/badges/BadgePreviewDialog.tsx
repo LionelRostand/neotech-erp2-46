@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -39,6 +40,7 @@ const BadgePreviewDialog: React.FC<BadgePreviewDialogProps> = ({
   };
   
   const companyName = getCompanyName();
+  const employeeId = selectedEmployee?.id || 'N/A';
   
   const handleDownloadBadge = () => {
     const doc = new jsPDF({
@@ -68,16 +70,19 @@ const BadgePreviewDialog: React.FC<BadgePreviewDialogProps> = ({
     
     doc.setTextColor(0, 0, 0);
     doc.setFontSize(8);
-    doc.text(`ID: ${selectedBadge.id}`, 42.5, 18, { align: 'center' });
+    
+    // Ajout de l'ID du badge et de l'employé
+    doc.text(`Badge ID: ${selectedBadge.id}`, 5, 18);
+    doc.text(`Employee ID: ${employeeId}`, 5, 23);
     
     doc.setFontSize(12);
     doc.setFont('helvetica', 'bold');
-    doc.text(selectedBadge.employeeName, 42.5, 25, { align: 'center' });
+    doc.text(selectedBadge.employeeName, 42.5, 30, { align: 'center' });
     
     doc.setFontSize(9);
     doc.setFont('helvetica', 'normal');
-    doc.text(`Département: ${selectedBadge.department || 'N/A'}`, 42.5, 31, { align: 'center' });
-    doc.text(`Accès: ${selectedBadge.accessLevel || 'Standard'}`, 42.5, 36, { align: 'center' });
+    doc.text(`Département: ${selectedBadge.department || 'N/A'}`, 42.5, 36, { align: 'center' });
+    doc.text(`Accès: ${selectedBadge.accessLevel || 'Standard'}`, 42.5, 41, { align: 'center' });
     
     let statusColor;
     if (selectedBadge.status === 'success') {
@@ -89,18 +94,16 @@ const BadgePreviewDialog: React.FC<BadgePreviewDialogProps> = ({
     }
     
     doc.setTextColor(statusColor[0], statusColor[1], statusColor[2]);
-    doc.text(`Statut: ${selectedBadge.statusText}`, 42.5, 41, { align: 'center' });
+    doc.text(`Statut: ${selectedBadge.statusText}`, 42.5, 46, { align: 'center' });
     
-    doc.setTextColor(100, 100, 100);
-    doc.setFontSize(8);
-    doc.text(`Émis le: ${selectedBadge.date}`, 42.5, 46, { align: 'center' });
-    
+    // Footer
     doc.setFillColor(70, 70, 70);
     doc.rect(0, 50, 85, 4, 'F');
     doc.setFontSize(6);
     doc.setTextColor(255, 255, 255);
     doc.text('Ce badge doit être porté visiblement à tout moment', 42.5, 52.5, { align: 'center' });
     
+    // QR Code style box
     doc.setFillColor(0, 0, 0);
     doc.rect(5, 36, 10, 10, 'F');
     doc.setFillColor(255, 255, 255);
@@ -130,8 +133,11 @@ const BadgePreviewDialog: React.FC<BadgePreviewDialogProps> = ({
             </div>
             
             <div className="text-center mb-3">
-              <p className="text-sm text-gray-500">ID: {selectedBadge.id}</p>
-              <h3 className="text-lg font-bold">{selectedBadge.employeeName}</h3>
+              <div className="space-y-1">
+                <p className="text-sm text-gray-500">ID Badge: {selectedBadge.id}</p>
+                <p className="text-sm text-gray-500">ID Employé: {employeeId}</p>
+              </div>
+              <h3 className="text-lg font-bold mt-2">{selectedBadge.employeeName}</h3>
               <p className="text-sm text-gray-600">Entreprise: {companyName}</p>
             </div>
             
