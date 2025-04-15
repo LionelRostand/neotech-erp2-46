@@ -1,186 +1,122 @@
-
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from '@/components/ui/tabs';
-import { Input } from '@/components/ui/input';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Search, UserPlus } from 'lucide-react';
-import { Employee } from '@/types/employee';
-import { useEmployeeData } from '@/hooks/useEmployeeData';
-import EmployeesList from './EmployeesList';
-import EmployeeDetails from './EmployeeDetails';
-import CreateEmployeeDialog from './CreateEmployeeDialog';
+import { 
+  Card, 
+  CardContent, 
+} from '@/components/ui/card';
+import EmployeeTable from './EmployeeTable';
+import EmployeeFilter from './EmployeeFilter';
+import { Plus, RefreshCw } from 'lucide-react';
 import { useHrModuleData } from '@/hooks/useHrModuleData';
+import CreateEmployeeDialog from './CreateEmployeeDialog';
+import ImportEmployeesDialog from './ImportEmployeesDialog';
+import { toast } from 'sonner';
+import { Employee } from '@/types/employee';
+import { safelyGetDocumentId } from '@/hooks/firestore/common-utils';
+import EmployeesDashboardCards from './dashboard/EmployeesDashboardCards';
 
-interface EmployeesProfilesProps {
+export interface EmployeesProfilesProps {
   employees: Employee[];
 }
 
-const EmployeesProfiles: React.FC<EmployeesProfilesProps> = ({ employees: initialEmployees }) => {
-  const { employees: latestEmployees, departments } = useEmployeeData();
-  const { refreshEmployees } = useHrModuleData();
-  
-  const [employees, setEmployees] = useState<Employee[]>(initialEmployees || []);
+const EmployeesProfiles: React.FC<EmployeesProfilesProps> = ({ employees }) => {
+  const { isLoading, error, refetchEmployees } = useHrModuleData();
+  const [openCreate, setOpenCreate] = useState(false);
+  const [openImport, setOpenImport] = useState(false);
+  const [department, setDepartment] = useState<string>('all');
+  const [status, setStatus] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
-  const [isCreating, setIsCreating] = useState(false);
-  const [activeView, setActiveView] = useState<'list' | 'grid'>('list');
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
-  // Mettre à jour les employés lorsque les données fraîches sont disponibles
-  useEffect(() => {
-    if (latestEmployees?.length > 0) {
-      setEmployees(latestEmployees);
-    }
-  }, [latestEmployees]);
-
-  const filteredEmployees = employees.filter(
-    (employee) =>
+  const filteredEmployees = employees.filter(employee => {
+    const matchesDepartment = department === 'all' || employee.department === department;
+    const matchesStatus = status === 'all' || employee.status === status;
+    const matchesSearch = 
+      searchTerm === '' ||
       employee.firstName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       employee.lastName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       employee.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      employee.position?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      employee.department?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(e.target.value);
-  };
-
-  const handleSelectEmployee = (employee: Employee) => {
-    setSelectedEmployee(employee);
-  };
-
-  const handleBackToList = () => {
-    setSelectedEmployee(null);
-  };
-
-  const handleCreateEmployee = () => {
-    setIsCreating(true);
-  };
-
-  const handleEmployeeCreated = async (employee: Employee) => {
-    setIsCreating(false);
-    // Rafraîchir les données des employés
-    await refreshEmployees();
-    // Sélectionner automatiquement le nouvel employé
-    setSelectedEmployee(employee);
-  };
-
-  const handleEmployeeUpdate = async (updatedEmployee: Employee) => {
-    // Mise à jour de l'employé dans la liste locale
-    setEmployees(prevEmployees => 
-      prevEmployees.map(emp => 
-        emp.id === updatedEmployee.id ? updatedEmployee : emp
-      )
-    );
+      employee.position?.toLowerCase().includes(searchTerm.toLowerCase());
     
-    // Mettre à jour l'employé sélectionné
-    setSelectedEmployee(updatedEmployee);
-    
-    // Rafraîchir les données globales des employés
-    await refreshEmployees();
+    return matchesDepartment && matchesStatus && matchesSearch;
+  });
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    await refetchEmployees();
+    toast.success('Données actualisées avec succès');
+    setIsRefreshing(false);
   };
 
-  // Si un employé est sélectionné, afficher ses détails
-  if (selectedEmployee) {
-    return (
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <Button variant="outline" onClick={handleBackToList}>
-            Retour à la liste
-          </Button>
-        </div>
-        <EmployeeDetails 
-          employee={selectedEmployee} 
-          onExportPdf={() => {}} 
-          onEmployeeUpdate={handleEmployeeUpdate}
-        />
-      </div>
-    );
-  }
+  const handleOpenCreateDialog = () => {
+    setOpenCreate(true);
+  };
+  
+  const handleOpenImportDialog = () => {
+    setOpenImport(true);
+  };
+  
+  const handleCreated = () => {
+    refetchEmployees();
+  };
+  
+  const handleImported = (count: number) => {
+    toast.success(`${count} employés importés avec succès`);
+    refetchEmployees();
+  };
+  
+  const handleDeleteEmployee = (record: any) => {
+    const id = safelyGetDocumentId(record);
+    toast.info(`Suppression de l'employé ${id} demandée`);
+  };
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
-        <div className="relative w-full md:w-96">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
-          <Input
-            type="search"
-            placeholder="Rechercher un employé..."
-            className="pl-8 w-full"
-            value={searchTerm}
-            onChange={handleSearch}
-          />
+      <div className="flex justify-between items-center">
+        <h2 className="text-3xl font-bold tracking-tight">Gestion des employés</h2>
+        <div className="flex space-x-2">
+          <Button variant="outline" onClick={handleRefresh} disabled={isLoading || isRefreshing}>
+            <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? "animate-spin" : ""}`} />
+            Actualiser
+          </Button>
+          <Button onClick={handleOpenCreateDialog}>
+            <Plus className="h-4 w-4 mr-2" />
+            Nouvel employé
+          </Button>
         </div>
-        <Button onClick={handleCreateEmployee}>
-          <UserPlus className="h-4 w-4 mr-2" />
-          Ajouter un employé
-        </Button>
       </div>
 
-      <Tabs defaultValue="all" className="w-full">
-        <TabsList className="mb-4">
-          <TabsTrigger value="all">Tous</TabsTrigger>
-          <TabsTrigger value="active">Actifs</TabsTrigger>
-          <TabsTrigger value="onLeave">En congé</TabsTrigger>
-          <TabsTrigger value="inactive">Inactifs</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="all">
-          <Card>
-            <CardContent className="p-6">
-              <EmployeesList
-                employees={filteredEmployees}
-                onSelect={handleSelectEmployee}
-              />
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="active">
-          <Card>
-            <CardContent className="p-6">
-              <EmployeesList
-                employees={filteredEmployees.filter(e => e.status === 'active' || e.status === 'Actif')}
-                onSelect={handleSelectEmployee}
-              />
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="onLeave">
-          <Card>
-            <CardContent className="p-6">
-              <EmployeesList
-                employees={filteredEmployees.filter(e => e.status === 'onLeave' || e.status === 'En congé')}
-                onSelect={handleSelectEmployee}
-              />
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="inactive">
-          <Card>
-            <CardContent className="p-6">
-              <EmployeesList
-                employees={filteredEmployees.filter(e => e.status === 'inactive' || e.status === 'Inactif')}
-                onSelect={handleSelectEmployee}
-              />
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
-
-      <CreateEmployeeDialog
-        open={isCreating}
-        onOpenChange={setIsCreating}
-        onCreated={handleEmployeeCreated}
-        departments={departments}
+      <EmployeesDashboardCards />
+    
+      <Card>
+        <CardContent className="p-6">
+          <EmployeeFilter 
+            onDepartmentChange={setDepartment} 
+            onStatusChange={setStatus} 
+            onSearchChange={setSearchTerm}
+            onImportClick={handleOpenImportDialog}
+          />
+          
+          <div className="mt-6">
+            <EmployeeTable 
+              employees={filteredEmployees as Employee[]} 
+              isLoading={isLoading} 
+              onDelete={handleDeleteEmployee}
+            />
+          </div>
+        </CardContent>
+      </Card>
+      
+      <CreateEmployeeDialog 
+        open={openCreate} 
+        onOpenChange={setOpenCreate} 
+        onCreated={handleCreated}
+      />
+      
+      <ImportEmployeesDialog 
+        open={openImport} 
+        onOpenChange={setOpenImport} 
+        onImported={handleImported}
       />
     </div>
   );

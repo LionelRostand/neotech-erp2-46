@@ -1,3 +1,4 @@
+
 import { useMemo } from 'react';
 import { useHrModuleData } from './useHrModuleData';
 import { Employee } from '@/types/employee';
@@ -22,38 +23,27 @@ export const useEmployeeData = () => {
       if (!existingEmployee || (employee.firebaseId && !existingEmployee.firebaseId)) {
         let photoURL = '';
         
-        // Prioritizing photoData if it exists
-        if (employee.photoData && typeof employee.photoData === 'string' && employee.photoData.startsWith('data:')) {
-          photoURL = employee.photoData;
-          console.log(`Found photoData for ${employee.firstName} ${employee.lastName}`);
-        } 
-        // Then check for photoURL
-        else if (employee.photoURL && typeof employee.photoURL === 'string' && employee.photoURL.length > 0) {
-          photoURL = employee.photoURL;
-          console.log(`Found photoURL for ${employee.firstName} ${employee.lastName}`);
-        }
-        // Finally check for photo
-        else if (employee.photo && typeof employee.photo === 'string' && employee.photo.length > 0) {
-          photoURL = employee.photo;
-          console.log(`Found photo for ${employee.firstName} ${employee.lastName}`);
-        }
-        
-        // If photoData is an object, try to extract data property
-        if (!photoURL && employee.photoData && typeof employee.photoData === 'object' && 
-                employee.photoData !== null) {
-          // Use Record<string, unknown> for better type safety
-          const photoDataObj = employee.photoData as Record<string, unknown>;
-          if ('data' in photoDataObj && typeof photoDataObj.data === 'string') {
-            photoURL = photoDataObj.data;
-            console.log(`Found photoData.data for ${employee.firstName} ${employee.lastName}`);
+        // Null-safe checks for photoData with additional type guards
+        if (employee.photoData) {
+          if (typeof employee.photoData === 'string' && employee.photoData.startsWith('data:')) {
+            photoURL = employee.photoData;
+          } else if (typeof employee.photoData === 'object' && 
+                    employee.photoData !== null) {
+            // Use Record<string, unknown> for better type safety
+            const photoDataObj = employee.photoData as Record<string, unknown>;
+            if ('data' in photoDataObj && typeof photoDataObj.data === 'string') {
+              photoURL = photoDataObj.data;
+            }
           }
         }
+        
+        // Fallback to other photo sources
+        photoURL = photoURL || employee.photoURL || employee.photo || '';
 
         uniqueEmployeesMap.set(employee.email, {
           ...employee,
           photoURL: photoURL,
           photo: photoURL, // Dupliquer pour compatibilité
-          photoData: photoURL || employee.photoData, // Ensure photoData is set
         });
       }
     });
@@ -62,14 +52,14 @@ export const useEmployeeData = () => {
     
     console.log(`useEmployeeData: ${uniqueEmployees.length} employés après traitement`);
     
-    // Log some debugging information
-    if (uniqueEmployees.length > 0) {
-      const firstEmployee = uniqueEmployees[0];
-      console.log(`Premier employé après traitement: ${firstEmployee.firstName} ${firstEmployee.lastName}`);
-      console.log(`  - photoURL: ${firstEmployee.photoURL ? 'Présent' : 'Absent'}`);
-      console.log(`  - photo: ${firstEmployee.photo ? 'Présent' : 'Absent'}`);
-      console.log(`  - photoData: ${firstEmployee.photoData ? 'Présent' : 'Absent'}`);
-    }
+    // Vérifier la présence de LIONEL DJOSSA
+    const lionelPresent = uniqueEmployees.some(emp => 
+      emp.firstName?.toLowerCase().includes('lionel') && 
+      emp.lastName?.toLowerCase().includes('djossa')
+    );
+    
+    console.log(`useEmployeeData: LIONEL DJOSSA présent dans les données après traitement? ${lionelPresent}`);
+    console.log('Premier employé après traitement:', uniqueEmployees[0]?.photoURL ? 'a une photo' : 'sans photo');
     
     return uniqueEmployees;
   }, [employees]);

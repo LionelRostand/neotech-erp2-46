@@ -1,226 +1,19 @@
 
-import { useState, useEffect, useCallback } from 'react';
-import { useFirestore } from './useFirestore';
-import { COLLECTIONS } from '@/lib/firebase-collections';
+import { useEffect, useState, useCallback } from 'react';
+import { useHrData } from './modules/useHrData';
+import { Company } from '@/components/module/submodules/companies/types';
 import { Employee } from '@/types/employee';
-import { refreshEmployeesData } from '@/components/module/submodules/employees/services/employeeService';
 
+/**
+ * Hook to fetch and process HR module data
+ */
 export const useHrModuleData = () => {
-  const [employees, setEmployees] = useState<Employee[]>([]);
-  const [departments, setDepartments] = useState([]);
-  const [companies, setCompanies] = useState([]);
-  const [payslips, setPayslips] = useState([]);
-  const [contracts, setContracts] = useState([]);
-  const [leaveRequests, setLeaveRequests] = useState([]);
-  const [attendance, setAttendance] = useState([]);
-  const [absenceRequests, setAbsenceRequests] = useState([]);
-  const [hrDocuments, setHrDocuments] = useState([]);
-  const [timeSheets, setTimeSheets] = useState([]);
-  const [evaluations, setEvaluations] = useState([]);
-  const [trainings, setTrainings] = useState([]);
-  const [hrReports, setHrReports] = useState([]);
-  const [hrAlerts, setHrAlerts] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
-
-  const employeesCollection = useFirestore(COLLECTIONS.HR.EMPLOYEES);
-  const departmentsCollection = useFirestore(COLLECTIONS.HR.DEPARTMENTS);
-  // Fix the COMPANIES reference by using a string directly
-  const companiesCollection = useFirestore('hr_companies');
-  const payslipsCollection = useFirestore(COLLECTIONS.HR.PAYSLIPS);
-  const contractsCollection = useFirestore(COLLECTIONS.HR.CONTRACTS);
-  const leaveRequestsCollection = useFirestore(COLLECTIONS.HR.LEAVE_REQUESTS);
-  const attendanceCollection = useFirestore(COLLECTIONS.HR.ATTENDANCE);
-  const absenceRequestsCollection = useFirestore(COLLECTIONS.HR.ABSENCE_REQUESTS);
-  const hrDocumentsCollection = useFirestore(COLLECTIONS.HR.DOCUMENTS);
-  const timeSheetsCollection = useFirestore(COLLECTIONS.HR.TIMESHEET);
-  const evaluationsCollection = useFirestore(COLLECTIONS.HR.EVALUATIONS);
-  const trainingsCollection = useFirestore(COLLECTIONS.HR.TRAININGS);
-  const hrReportsCollection = useFirestore(COLLECTIONS.HR.REPORTS);
-  const hrAlertsCollection = useFirestore(COLLECTIONS.HR.ALERTS);
-
-  const fetchData = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      // Récupération des employés
-      const employeesData = await employeesCollection.getAll();
-      setEmployees(employeesData as Employee[]);
-
-      // Récupération des départements
-      const departmentsData = await departmentsCollection.getAll();
-      setDepartments(departmentsData);
-
-      // Récupération des entreprises
-      let companiesData = [];
-      try {
-        companiesData = await companiesCollection.getAll();
-      } catch (err) {
-        console.error('Erreur lors de la récupération des entreprises:', err);
-        companiesData = [];
-      }
-      setCompanies(companiesData);
-
-      // Récupération des fiches de paie
-      let payslipsData = [];
-      try {
-        payslipsData = await payslipsCollection.getAll();
-      } catch (err) {
-        console.error('Erreur lors de la récupération des fiches de paie:', err);
-        payslipsData = [];
-      }
-      setPayslips(payslipsData);
-
-      // Récupération des contrats
-      let contractsData = [];
-      try {
-        contractsData = await contractsCollection.getAll();
-      } catch (err) {
-        console.error('Erreur lors de la récupération des contrats:', err);
-        contractsData = [];
-      }
-      setContracts(contractsData);
-
-      // Récupération des demandes de congés
-      let leaveRequestsData = [];
-      try {
-        leaveRequestsData = await leaveRequestsCollection.getAll();
-      } catch (err) {
-        console.error('Erreur lors de la récupération des demandes de congés:', err);
-        leaveRequestsData = [];
-      }
-      setLeaveRequests(leaveRequestsData);
-
-      // Récupération des présences
-      let attendanceData = [];
-      try {
-        attendanceData = await attendanceCollection.getAll();
-      } catch (err) {
-        console.error('Erreur lors de la récupération des présences:', err);
-        attendanceData = [];
-      }
-      setAttendance(attendanceData);
-
-      // Récupération des demandes d'absence
-      let absenceRequestsData = [];
-      try {
-        absenceRequestsData = await absenceRequestsCollection.getAll();
-      } catch (err) {
-        console.error('Erreur lors de la récupération des demandes d\'absence:', err);
-        absenceRequestsData = [];
-      }
-      setAbsenceRequests(absenceRequestsData);
-
-      // Récupération des documents RH
-      let hrDocumentsData = [];
-      try {
-        hrDocumentsData = await hrDocumentsCollection.getAll();
-      } catch (err) {
-        console.error('Erreur lors de la récupération des documents RH:', err);
-        hrDocumentsData = [];
-      }
-      setHrDocuments(hrDocumentsData);
-
-      // Récupération des feuilles de temps
-      let timeSheetsData = [];
-      try {
-        timeSheetsData = await timeSheetsCollection.getAll();
-      } catch (err) {
-        console.error('Erreur lors de la récupération des feuilles de temps:', err);
-        timeSheetsData = [];
-      }
-      setTimeSheets(timeSheetsData);
-
-      // Récupération des évaluations
-      let evaluationsData = [];
-      try {
-        evaluationsData = await evaluationsCollection.getAll();
-      } catch (err) {
-        console.error('Erreur lors de la récupération des évaluations:', err);
-        evaluationsData = [];
-      }
-      setEvaluations(evaluationsData);
-
-      // Récupération des formations
-      let trainingsData = [];
-      try {
-        trainingsData = await trainingsCollection.getAll();
-      } catch (err) {
-        console.error('Erreur lors de la récupération des formations:', err);
-        trainingsData = [];
-      }
-      setTrainings(trainingsData);
-
-      // Récupération des rapports RH
-      let hrReportsData = [];
-      try {
-        hrReportsData = await hrReportsCollection.getAll();
-      } catch (err) {
-        console.error('Erreur lors de la récupération des rapports RH:', err);
-        hrReportsData = [];
-      }
-      setHrReports(hrReportsData);
-
-      // Récupération des alertes RH
-      let hrAlertsData = [];
-      try {
-        hrAlertsData = await hrAlertsCollection.getAll();
-      } catch (err) {
-        console.error('Erreur lors de la récupération des alertes RH:', err);
-        hrAlertsData = [];
-      }
-      setHrAlerts(hrAlertsData);
-    } catch (err) {
-      console.error('Erreur lors de la récupération des données RH:', err);
-      setError(err instanceof Error ? err : new Error('Une erreur est survenue'));
-    } finally {
-      setIsLoading(false);
-    }
-  }, [
-    employeesCollection, 
-    departmentsCollection, 
-    companiesCollection,
-    payslipsCollection,
-    contractsCollection,
-    leaveRequestsCollection,
-    attendanceCollection,
-    absenceRequestsCollection,
-    hrDocumentsCollection,
-    timeSheetsCollection,
-    evaluationsCollection,
-    trainingsCollection,
-    hrReportsCollection,
-    hrAlertsCollection
-  ]);
-
-  // Fonction pour rafraîchir les données des employés
-  const refreshEmployees = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      // Utiliser la fonction du service pour récupérer les données fraîches
-      const refreshedEmployees = await refreshEmployeesData();
-      if (Array.isArray(refreshedEmployees)) {
-        setEmployees(refreshedEmployees);
-      }
-    } catch (err) {
-      console.error('Erreur lors du rafraîchissement des employés:', err);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
-
-  return {
-    employees,
-    departments,
-    companies,
-    payslips,
-    contracts,
-    leaveRequests,
+  const { 
+    employees: rawEmployees, 
+    payslips, 
+    contracts, 
+    departments, 
+    leaveRequests, 
     attendance,
     absenceRequests,
     hrDocuments,
@@ -229,8 +22,189 @@ export const useHrModuleData = () => {
     trainings,
     hrReports,
     hrAlerts,
+    isLoading, 
+    error,
+    refetchEmployees: refetchRawEmployees 
+  } = useHrData();
+  
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [companies, setCompanies] = useState<Company[]>([]);
+
+  // Process employees data
+  useEffect(() => {
+    if (rawEmployees) {
+      // Utiliser une Map pour éliminer les doublons par ID
+      const uniqueEmployeesMap = new Map<string, Employee>();
+      
+      rawEmployees.forEach(emp => {
+        if (!uniqueEmployeesMap.has(emp.id)) {
+          const processedEmployee = {
+            id: emp.id,
+            firstName: emp.firstName || '',
+            lastName: emp.lastName || '',
+            email: emp.email || '',
+            phone: emp.phone || '',
+            position: emp.position || emp.role || 'Employé',
+            department: emp.department || 'Non spécifié',
+            departmentId: emp.departmentId || emp.department || '',
+            photo: emp.photoURL || emp.photo || '',
+            photoURL: emp.photoURL || emp.photo || '',
+            hireDate: emp.hireDate || emp.startDate || new Date().toISOString(),
+            startDate: emp.startDate || emp.hireDate || new Date().toISOString(),
+            status: (emp.status === 'Actif' ? 'active' : emp.status) || 'active',
+            address: emp.address || {},
+            contract: emp.contract || '',
+            socialSecurityNumber: emp.socialSecurityNumber || '1 99 99 99 999 999 99',
+            birthDate: emp.birthDate || '',
+            documents: emp.documents || [],
+            company: emp.company || '',
+            role: emp.role || emp.position || '',
+            title: emp.title || emp.position || '',
+            manager: emp.manager || '',
+            managerId: emp.managerId || '',
+            professionalEmail: emp.professionalEmail || emp.email || '',
+            skills: emp.skills || [],
+            education: emp.education || [],
+            isManager: emp.isManager || determineIfManager(emp.position || emp.role),
+            workSchedule: emp.workSchedule || {
+              monday: '09:00 - 18:00',
+              tuesday: '09:00 - 18:00',
+              wednesday: '09:00 - 18:00',
+              thursday: '09:00 - 18:00',
+              friday: '09:00 - 17:00',
+            },
+            payslips: emp.payslips || [],
+          } as Employee;
+          
+          uniqueEmployeesMap.set(emp.id, processedEmployee);
+        }
+      });
+      
+      const uniqueEmployees = Array.from(uniqueEmployeesMap.values());
+      console.log(`useHrModuleData: ${uniqueEmployees.length} employés uniques (avant: ${rawEmployees.length})`);
+      
+      // Vérifier la présence de certains employés pour le débogage
+      const lionelPresent = uniqueEmployees.some(emp => 
+        emp.firstName?.toLowerCase().includes('lionel') && 
+        emp.lastName?.toLowerCase().includes('djossa')
+      );
+      
+      console.log(`useHrModuleData: LIONEL DJOSSA présent dans les données après traitement? ${lionelPresent}`);
+      
+      setEmployees(uniqueEmployees);
+    }
+  }, [rawEmployees]);
+
+  // Extract companies from employees if available
+  useEffect(() => {
+    if (employees && employees.length > 0) {
+      // Create a map to ensure unique companies
+      const companiesMap = new Map<string, Company>();
+      
+      employees.forEach(emp => {
+        if (emp.company) {
+          const companyId = typeof emp.company === 'string' ? emp.company : emp.company.id;
+          
+          if (!companiesMap.has(companyId)) {
+            if (typeof emp.company === 'string') {
+              // Only has the id, create a basic company object
+              companiesMap.set(companyId, {
+                id: companyId,
+                name: 'Entreprise',
+                address: {
+                  street: '',
+                  city: '',
+                  postalCode: '',
+                  country: ''
+                },
+                siret: '',
+                logo: '',
+                logoUrl: '',
+                phone: '',
+                email: '',
+                website: '',
+                industry: '',
+                size: '',
+                status: 'active',
+                employeesCount: 0,
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString()
+              });
+            } else {
+              // Has the full company object
+              const company = emp.company as Company;
+              
+              // Add missing properties if needed
+              if (!company.address) {
+                company.address = {
+                  street: '',
+                  city: '',
+                  postalCode: '',
+                  country: ''
+                };
+              }
+              
+              companiesMap.set(companyId, {
+                ...company,
+                logo: company.logo || '',
+                logoUrl: company.logoUrl || '',
+                phone: company.phone || '',
+                email: company.email || '',
+                website: company.website || '',
+                industry: company.industry || '',
+                size: company.size || '',
+                status: company.status || 'active',
+                employeesCount: company.employeesCount || 0,
+                createdAt: company.createdAt || new Date().toISOString(),
+                updatedAt: company.updatedAt || new Date().toISOString()
+              });
+            }
+          }
+        }
+      });
+      
+      // Convert map to array
+      setCompanies(Array.from(companiesMap.values()));
+    }
+  }, [employees]);
+
+  // Fonction pour déterminer si un employé est un manager d'après son poste
+  const determineIfManager = (position: string | undefined): boolean => {
+    if (!position) return false;
+    
+    const lowerPosition = position.toLowerCase();
+    return lowerPosition.includes('manager') || 
+           lowerPosition.includes('responsable') || 
+           lowerPosition.includes('directeur') || 
+           lowerPosition.includes('pdg') ||
+           lowerPosition.includes('ceo') || 
+           lowerPosition.includes('chief');
+  };
+  
+  // Add refetchEmployees function that will call the refetchRawEmployees from useHrData
+  const refetchEmployees = useCallback(async () => {
+    if (refetchRawEmployees && typeof refetchRawEmployees === 'function') {
+      await refetchRawEmployees();
+    }
+  }, [refetchRawEmployees]);
+
+  return {
+    employees,
+    payslips,
+    contracts,
+    departments,
+    companies,
+    leaveRequests: leaveRequests || [],
+    attendance: attendance || [],
+    absenceRequests: absenceRequests || [],
+    hrDocuments: hrDocuments || [],
+    timeSheets: timeSheets || [],
+    evaluations: evaluations || [],
+    trainings: trainings || [],
+    hrReports: hrReports || [],
+    hrAlerts: hrAlerts || [],
     isLoading,
     error,
-    refreshEmployees
+    refetchEmployees
   };
 };
