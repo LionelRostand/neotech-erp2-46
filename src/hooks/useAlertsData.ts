@@ -25,6 +25,16 @@ export interface Alert {
 export const useAlertsData = () => {
   const { hrAlerts, employees, isLoading, error } = useHrModuleData();
   
+  // Fonction pour formater les dates - defined before it's used in useMemo
+  const formatDate = (dateStr: string) => {
+    try {
+      return new Date(dateStr).toLocaleDateString('fr-FR');
+    } catch (error) {
+      console.error('Erreur de formatage de date:', dateStr, error);
+      return dateStr;
+    }
+  };
+  
   // Enrichir les alertes avec des informations supplémentaires
   const formattedAlerts = useMemo(() => {
     if (!hrAlerts || hrAlerts.length === 0) {
@@ -62,16 +72,6 @@ export const useAlertsData = () => {
       } as Alert;
     });
   }, [hrAlerts, employees]);
-  
-  // Fonction pour formater les dates
-  const formatDate = (dateStr: string) => {
-    try {
-      return new Date(dateStr).toLocaleDateString('fr-FR');
-    } catch (error) {
-      console.error('Erreur de formatage de date:', dateStr, error);
-      return dateStr;
-    }
-  };
 
   // Obtenir des statistiques sur les alertes
   const alertsStats = useMemo(() => {

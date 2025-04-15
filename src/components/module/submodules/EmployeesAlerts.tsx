@@ -31,13 +31,14 @@ const EmployeesAlerts: React.FC = () => {
     employee: null
   });
 
-  const filteredAlerts = alerts.filter(alert => {
+  // Apply filters to alerts after they're loaded
+  const filteredAlerts = alerts ? alerts.filter(alert => {
     if (filterCriteria.type && alert.type !== filterCriteria.type) return false;
     if (filterCriteria.severity && alert.severity !== filterCriteria.severity) return false;
     if (filterCriteria.status && alert.status !== filterCriteria.status) return false;
     if (filterCriteria.employee && alert.employeeId !== filterCriteria.employee) return false;
     return true;
-  });
+  }) : [];
 
   return (
     <ModuleContainer>
