@@ -25,7 +25,7 @@ const CreateEmployeeDialog: React.FC<CreateEmployeeDialogProps> = ({
   onCreated,
   departments = []
 }) => {
-  const { createEmployee, isLoading } = useEmployeeService();
+  const { addEmployee, isLoading } = useEmployeeService();
 
   const methods = useForm({
     defaultValues: {
@@ -45,7 +45,7 @@ const CreateEmployeeDialog: React.FC<CreateEmployeeDialogProps> = ({
   const onSubmit = async (data: any) => {
     try {
       console.log('Creating employee with data:', data);
-      const newEmployee = await createEmployee(data);
+      const newEmployee = await addEmployee(data);
       
       if (newEmployee) {
         toast.success(`${data.firstName} ${data.lastName} ajouté avec succès`);
@@ -129,8 +129,8 @@ const CreateEmployeeDialog: React.FC<CreateEmployeeDialogProps> = ({
               <Label htmlFor="status">Statut</Label>
               <Select 
                 defaultValue="active"
-                onValueChange={(value: "active" | "inactive" | "onLeave" | "Actif" | "En congé" | "Suspendu" | "Inactif") => 
-                  methods.setValue('status', value)
+                onValueChange={(value) => 
+                  methods.setValue('status', value as "active" | "inactive" | "onLeave")
                 }
               >
                 <SelectTrigger>

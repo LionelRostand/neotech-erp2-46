@@ -25,7 +25,8 @@ export const useHrModuleData = () => {
 
   const employeesCollection = useFirestore(COLLECTIONS.HR.EMPLOYEES);
   const departmentsCollection = useFirestore(COLLECTIONS.HR.DEPARTMENTS);
-  const companiesCollection = useFirestore(COLLECTIONS.HR.COMPANIES || 'companies');
+  // Fix the COMPANIES reference by using a string directly
+  const companiesCollection = useFirestore('hr_companies');
   const payslipsCollection = useFirestore(COLLECTIONS.HR.PAYSLIPS);
   const contractsCollection = useFirestore(COLLECTIONS.HR.CONTRACTS);
   const leaveRequestsCollection = useFirestore(COLLECTIONS.HR.LEAVE_REQUESTS);

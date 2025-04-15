@@ -98,7 +98,6 @@ const EmployeesProfiles: React.FC<EmployeesProfilesProps> = ({ employees: initia
         <EmployeeDetails 
           employee={selectedEmployee} 
           onExportPdf={() => {}} 
-          onEdit={() => {}}
           onEmployeeUpdate={handleEmployeeUpdate}
         />
       </div>

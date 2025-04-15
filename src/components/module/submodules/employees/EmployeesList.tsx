@@ -8,11 +8,33 @@ import { Badge } from '@/components/ui/badge';
 
 export interface EmployeesListProps {
   employees: Employee[];
-  onSelect: (employee: Employee) => void;
+  onSelect?: (employee: Employee) => void;
   onDeleteEmployee?: (id: string) => void;
+  // Add the additional props that are being passed
+  searchQuery?: string;
+  setSearchQuery?: (query: string) => void;
+  onViewEmployee?: (employee: Employee) => void;
+  onEditEmployee?: (employee: Employee) => void;
+  loading?: boolean;
 }
 
-const EmployeesList: React.FC<EmployeesListProps> = ({ employees, onSelect, onDeleteEmployee }) => {
+const EmployeesList: React.FC<EmployeesListProps> = ({ 
+  employees, 
+  onSelect, 
+  onDeleteEmployee,
+  onViewEmployee,
+  onEditEmployee,
+  loading
+}) => {
+  // Use the appropriate handler function
+  const handleSelectEmployee = (employee: Employee) => {
+    if (onViewEmployee) {
+      onViewEmployee(employee);
+    } else if (onSelect) {
+      onSelect(employee);
+    }
+  };
+
   const getStatusBadge = (status?: string) => {
     switch (status) {
       case 'active':
@@ -51,7 +73,7 @@ const EmployeesList: React.FC<EmployeesListProps> = ({ employees, onSelect, onDe
           <TableRow 
             key={employee.id} 
             className="cursor-pointer hover:bg-gray-50"
-            onClick={() => onSelect(employee)}
+            onClick={() => handleSelectEmployee(employee)}
           >
             <TableCell className="flex items-center space-x-3">
               <Avatar>
