@@ -1,13 +1,14 @@
 
+import { Employee } from '@/types/employee';
+
 export interface BadgeData {
   id: string;
+  date: string;
   employeeId: string;
   employeeName: string;
-  department: string;
-  company: string;
+  department?: string;  // Keeping department as optional
   accessLevel: string;
-  date: string;
-  status: 'success' | 'warning' | 'danger';
+  status: "success" | "warning" | "danger";
   statusText: string;
   photoURL?: string;
 }

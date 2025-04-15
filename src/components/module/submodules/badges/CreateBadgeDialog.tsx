@@ -47,7 +47,8 @@ const CreateBadgeDialog: React.FC<CreateBadgeDialogProps> = ({
       department: employee.department,
       accessLevel: accessLevel,
       status: "success",
-      statusText: "Actif"
+      statusText: "Actif",
+      photoURL: employee.photoURL // Add employee photo if available
     };
     
     // Callback to add the badge
