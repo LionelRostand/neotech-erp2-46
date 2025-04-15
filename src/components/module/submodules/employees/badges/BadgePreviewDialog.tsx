@@ -8,6 +8,7 @@ import { BadgeData } from './BadgeTypes';
 import { Employee } from '@/types/employee';
 import { jsPDF } from 'jspdf';
 import { Company } from '@/components/module/submodules/companies/types';
+import { useCompaniesData } from '@/hooks/useCompaniesData';
 
 interface BadgePreviewDialogProps {
   isOpen: boolean;
@@ -24,6 +25,8 @@ const BadgePreviewDialog: React.FC<BadgePreviewDialogProps> = ({
   selectedEmployee,
   onDeleteClick
 }) => {
+  const { companies } = useCompaniesData();
+  
   if (!selectedBadge) return null;
   
   const getCompanyName = (): string => {
@@ -31,10 +34,13 @@ const BadgePreviewDialog: React.FC<BadgePreviewDialogProps> = ({
     
     if (!selectedEmployee.company) return "Enterprise";
     
+    // Si company est un string (ID), chercher l'entreprise correspondante
     if (typeof selectedEmployee.company === 'string') {
-      return selectedEmployee.company;
+      const companyData = companies.find(c => c.id === selectedEmployee.company);
+      return companyData?.name || selectedEmployee.company;
     }
     
+    // Si c'est un objet Company
     const companyObj = selectedEmployee.company as Company;
     return companyObj.name || companyObj.id || "Enterprise";
   };
