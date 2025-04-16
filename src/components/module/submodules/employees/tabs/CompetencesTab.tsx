@@ -25,9 +25,11 @@ const CompetencesTab: React.FC<CompetencesTabProps> = ({
   const [newSkill, setNewSkill] = useState('');
 
   const handleAddSkill = () => {
-    if (!newSkill.trim()) return;
+    if (!newSkill.trim()) {
+      toast.error("Veuillez saisir une compétence");
+      return;
+    }
     
-    // Check if skill already exists
     if (skills.includes(newSkill.trim())) {
       toast.error("Cette compétence existe déjà");
       return;
@@ -64,7 +66,6 @@ const CompetencesTab: React.FC<CompetencesTabProps> = ({
               size="sm" 
               onClick={handleSaveSkills}
             >
-              <Save className="h-4 w-4 mr-1" />
               Enregistrer
             </Button>
           )}
@@ -75,17 +76,18 @@ const CompetencesTab: React.FC<CompetencesTabProps> = ({
           <div className="space-y-4">
             <div className="flex items-center space-x-2">
               <Input
-                placeholder="Ajouter une compétence..."
+                placeholder="Nouvelle compétence..."
                 value={newSkill}
                 onChange={(e) => setNewSkill(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleAddSkill()}
+                className="flex-1"
               />
               <Button 
-                type="button" 
-                size="icon" 
+                type="button"
                 onClick={handleAddSkill}
               >
-                <PlusCircle className="h-4 w-4" />
+                <PlusCircle className="h-4 w-4 mr-2" />
+                Ajouter
               </Button>
             </div>
             <div className="flex flex-wrap gap-2">
@@ -112,7 +114,7 @@ const CompetencesTab: React.FC<CompetencesTabProps> = ({
                 </Badge>
               ))
             ) : (
-              <p className="text-sm text-gray-500">Aucune compétence renseignée.</p>
+              <p className="text-sm text-gray-500 italic">Aucune compétence renseignée</p>
             )}
           </div>
         )}
