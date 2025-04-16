@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -36,7 +35,7 @@ const EditDepartmentDialog: React.FC<EditDepartmentDialogProps> = ({
   onClose,
   onUpdate,
 }) => {
-  const { employees, isLoading } = useEmployeeData();
+  const { employees, isLoading: isLoadingEmployees } = useEmployeeData();
   const { companies, isLoading: isLoadingCompanies } = useCompaniesData();
 
   const handleCompanyChange = (value: string) => {
@@ -49,10 +48,6 @@ const EditDepartmentDialog: React.FC<EditDepartmentDialogProps> = ({
     } as React.ChangeEvent<HTMLInputElement>);
   };
 
-  useEffect(() => {
-    console.log("Form data in dialog:", formData);
-  }, [formData]);
-
   return (
     <DialogContent className="sm:max-w-[600px]">
       <DialogHeader>
@@ -61,19 +56,13 @@ const EditDepartmentDialog: React.FC<EditDepartmentDialogProps> = ({
       
       <Tabs value={activeTab} onValueChange={onTabChange} className="w-full">
         <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="general">
-            Informations
-          </TabsTrigger>
-          <TabsTrigger value="employees">
-            Employés
-          </TabsTrigger>
+          <TabsTrigger value="general">Informations</TabsTrigger>
+          <TabsTrigger value="employees">Employés</TabsTrigger>
         </TabsList>
         
         <TabsContent value="general" className="space-y-4 py-4">
           <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="edit-id" className="text-right">
-              ID
-            </Label>
+            <Label htmlFor="edit-id" className="text-right">ID</Label>
             <Input
               id="edit-id"
               value={formData.id}
@@ -83,9 +72,7 @@ const EditDepartmentDialog: React.FC<EditDepartmentDialogProps> = ({
           </div>
           
           <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="edit-company" className="text-right">
-              Entreprise
-            </Label>
+            <Label htmlFor="edit-company" className="text-right">Entreprise</Label>
             <div className="col-span-3">
               <Select 
                 value={formData.companyId || "none"} 
@@ -111,9 +98,7 @@ const EditDepartmentDialog: React.FC<EditDepartmentDialogProps> = ({
           </div>
 
           <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="edit-name" className="text-right">
-              Nom
-            </Label>
+            <Label htmlFor="edit-name" className="text-right">Nom</Label>
             <Input
               id="edit-name"
               name="name"
@@ -122,10 +107,9 @@ const EditDepartmentDialog: React.FC<EditDepartmentDialogProps> = ({
               className="col-span-3"
             />
           </div>
+
           <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="edit-description" className="text-right">
-              Description
-            </Label>
+            <Label htmlFor="edit-description" className="text-right">Description</Label>
             <Input
               id="edit-description"
               name="description"
@@ -134,10 +118,9 @@ const EditDepartmentDialog: React.FC<EditDepartmentDialogProps> = ({
               className="col-span-3"
             />
           </div>
+
           <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="edit-manager" className="text-right">
-              Responsable
-            </Label>
+            <Label htmlFor="edit-manager" className="text-right">Responsable</Label>
             <div className="col-span-3">
               <Select value={formData.managerId || "none"} onValueChange={onManagerChange}>
                 <SelectTrigger>
@@ -145,7 +128,7 @@ const EditDepartmentDialog: React.FC<EditDepartmentDialogProps> = ({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">Aucun responsable</SelectItem>
-                  {isLoading ? (
+                  {isLoadingEmployees ? (
                     <SelectItem value="loading" disabled>Chargement...</SelectItem>
                   ) : (
                     employees?.map((employee) => (
@@ -158,10 +141,9 @@ const EditDepartmentDialog: React.FC<EditDepartmentDialogProps> = ({
               </Select>
             </div>
           </div>
+
           <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="edit-color" className="text-right">
-              Couleur
-            </Label>
+            <Label htmlFor="edit-color" className="text-right">Couleur</Label>
             <div className="col-span-3">
               <Select value={formData.color || departmentColors[0].value} onValueChange={onColorChange}>
                 <SelectTrigger>
