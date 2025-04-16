@@ -1,31 +1,24 @@
 
 import React from 'react';
-import { 
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter
-} from '@/components/ui/dialog';
+import { DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useEmployeeData } from '@/hooks/useEmployeeData';
-import { useFirebaseCompanies } from '@/hooks/useFirebaseCompanies';
-import { departmentColors } from './types';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { DepartmentFormData, departmentColors } from './types';
 import EmployeesList from './EmployeesList';
+import { useEmployeeData } from '@/hooks/useEmployeeData';
 
 interface AddDepartmentDialogProps {
-  formData: any;
+  formData: DepartmentFormData;
   selectedEmployees: string[];
   activeTab: string;
-  onTabChange: (value: string) => void;
-  onInputChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
+  onTabChange: (tab: string) => void;
+  onInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onManagerChange: (value: string) => void;
   onColorChange: (value: string) => void;
-  onEmployeeSelection: (employeeId: string, selected: boolean) => void;
+  onEmployeeSelection: (employeeId: string, checked: boolean) => void;
   onClose: () => void;
   onSave: () => void;
 }
@@ -40,132 +33,103 @@ const AddDepartmentDialog: React.FC<AddDepartmentDialogProps> = ({
   onColorChange,
   onEmployeeSelection,
   onClose,
-  onSave
+  onSave,
 }) => {
-  const { employees } = useEmployeeData();
-  const { companies, isLoading: companiesLoading } = useFirebaseCompanies();
+  // Utiliser les données des employés depuis Firebase
+  const { employees, isLoading } = useEmployeeData();
 
   return (
-    <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+    <DialogContent className="sm:max-w-[600px]">
       <DialogHeader>
-        <DialogTitle>Ajouter un département</DialogTitle>
+        <DialogTitle>Nouveau département</DialogTitle>
       </DialogHeader>
-
-      <Tabs value={activeTab} onValueChange={onTabChange}>
-        <TabsList className="grid grid-cols-2 mb-4">
-          <TabsTrigger value="general">Général</TabsTrigger>
-          <TabsTrigger value="members">Membres</TabsTrigger>
+      
+      <Tabs value={activeTab} onValueChange={onTabChange} className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="general">
+            Informations
+          </TabsTrigger>
+          <TabsTrigger value="employees">
+            Employés
+          </TabsTrigger>
         </TabsList>
-
-        <TabsContent value="general" className="space-y-4">
-          <div className="grid grid-cols-1 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Nom du département</Label>
-              <Input 
-                id="name" 
-                name="name" 
-                value={formData.name} 
-                onChange={onInputChange} 
-                placeholder="Ex: Resources Humaines"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="description">Description</Label>
-              <Textarea 
-                id="description" 
-                name="description" 
-                value={formData.description} 
-                onChange={onInputChange} 
-                placeholder="Description du département"
-                rows={3}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="manager">Manager</Label>
-              <Select 
-                value={formData.managerId} 
-                onValueChange={onManagerChange}
-              >
-                <SelectTrigger id="manager">
-                  <SelectValue placeholder="Sélectionner un manager" />
+        
+        <TabsContent value="general" className="space-y-4 py-4">
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="id" className="text-right">
+              ID
+            </Label>
+            <Input
+              id="id"
+              name="id"
+              value={formData.id}
+              className="col-span-3"
+              disabled
+            />
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="name" className="text-right">
+              Nom
+            </Label>
+            <Input
+              id="name"
+              name="name"
+              value={formData.name}
+              onChange={onInputChange}
+              className="col-span-3"
+            />
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="description" className="text-right">
+              Description
+            </Label>
+            <Input
+              id="description"
+              name="description"
+              value={formData.description}
+              onChange={onInputChange}
+              className="col-span-3"
+            />
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="manager" className="text-right">
+              Responsable
+            </Label>
+            <div className="col-span-3">
+              <Select value={formData.managerId || "none"} onValueChange={onManagerChange}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Sélectionner un responsable" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">Aucun</SelectItem>
-                  {employees.map(employee => (
-                    <SelectItem 
-                      key={employee.id} 
-                      value={employee.id}
-                    >
-                      {employee.firstName} {employee.lastName}
-                    </SelectItem>
-                  ))}
+                  <SelectItem value="none">Aucun responsable</SelectItem>
+                  {isLoading ? (
+                    <SelectItem value="loading" disabled>Chargement...</SelectItem>
+                  ) : (
+                    employees?.map((employee) => (
+                      <SelectItem key={employee.id} value={employee.id}>
+                        {employee.firstName} {employee.lastName}
+                      </SelectItem>
+                    ))
+                  )}
                 </SelectContent>
               </Select>
             </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="company">Entreprise</Label>
-              <Select 
-                value={formData.companyId || ""} 
-                onValueChange={(value) => {
-                  const event = {
-                    target: {
-                      name: "companyId",
-                      value
-                    }
-                  } as React.ChangeEvent<HTMLInputElement>;
-                  onInputChange(event);
-                }}
-              >
-                <SelectTrigger id="company">
-                  <SelectValue placeholder="Sélectionner une entreprise" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="">Aucune</SelectItem>
-                  {!companiesLoading && companies?.map(company => (
-                    <SelectItem 
-                      key={company.id} 
-                      value={company.id}
-                    >
-                      {company.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="color">Couleur</Label>
-              <Select 
-                value={formData.color} 
-                onValueChange={onColorChange}
-              >
-                <SelectTrigger 
-                  id="color" 
-                  className="flex items-center"
-                >
-                  <div className="flex items-center">
-                    <div 
-                      className="w-4 h-4 rounded-full mr-2" 
-                      style={{ backgroundColor: formData.color }}
-                    />
-                    <SelectValue />
-                  </div>
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="color" className="text-right">
+              Couleur
+            </Label>
+            <div className="col-span-3">
+              <Select value={formData.color || departmentColors[0].value} onValueChange={onColorChange}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Sélectionner une couleur" />
                 </SelectTrigger>
                 <SelectContent>
                   {departmentColors.map(color => (
-                    <SelectItem 
-                      key={color.value} 
-                      value={color.value}
-                    >
-                      <div className="flex items-center">
-                        <div 
-                          className="w-4 h-4 rounded-full mr-2" 
-                          style={{ backgroundColor: color.value }}
-                        />
-                        {color.label}
+                    <SelectItem key={color.value} value={color.value}>
+                      <div className="flex items-center space-x-2">
+                        <div className="w-4 h-4 rounded-full" style={{ backgroundColor: color.value }}></div>
+                        <span>{color.label}</span>
                       </div>
                     </SelectItem>
                   ))}
@@ -174,28 +138,22 @@ const AddDepartmentDialog: React.FC<AddDepartmentDialogProps> = ({
             </div>
           </div>
         </TabsContent>
-
-        <TabsContent value="members">
+        
+        <TabsContent value="employees" className="py-4">
           <EmployeesList 
-            employees={employees}
+            employees={employees || []}
             selectedEmployees={selectedEmployees}
             onEmployeeSelection={onEmployeeSelection}
+            id="add"
           />
         </TabsContent>
       </Tabs>
-
-      <DialogFooter className="mt-6 flex items-center justify-between">
-        <div className="text-xs text-muted-foreground">
-          {selectedEmployees.length} employé(s) sélectionné(s)
-        </div>
-        <div>
-          <Button variant="outline" onClick={onClose} className="mr-2">
-            Annuler
-          </Button>
-          <Button onClick={onSave}>
-            Enregistrer
-          </Button>
-        </div>
+      
+      <DialogFooter>
+        <Button variant="outline" onClick={onClose}>
+          Annuler
+        </Button>
+        <Button onClick={onSave}>Créer</Button>
       </DialogFooter>
     </DialogContent>
   );

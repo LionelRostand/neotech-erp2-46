@@ -1,4 +1,3 @@
-
 import { useEffect, useMemo } from 'react';
 import { Department } from './types';
 import { getDepartmentEmployees, notifyDepartmentUpdates } from './utils/departmentUtils';
@@ -7,45 +6,40 @@ import { useDepartmentForm } from './hooks/useDepartmentForm';
 import { useDepartmentDialogs } from './hooks/useDepartmentDialogs';
 import { useDepartmentOperations } from './hooks/useDepartmentOperations';
 import { useEmployeeData } from '@/hooks/useEmployeeData';
-import { useFirebaseCompanies } from '@/hooks/useFirebaseCompanies';
 
 export const useDepartments = () => {
   // Fetch departments directly from Firestore
   const { departments: fetchedDepartments = [], isLoading: loading, error, refetch } = useFirebaseDepartments();
   
-  // Get all available employees and companies
+  // Get all available employees
   const { employees: allEmployees } = useEmployeeData();
-  const { companies } = useFirebaseCompanies();
   
-  // Enrich departments with manager names and company names if missing
+  // Enrich departments with manager names if missing
   const departments = useMemo(() => {
     if (!fetchedDepartments || !allEmployees || allEmployees.length === 0) {
       return fetchedDepartments;
     }
     
     return fetchedDepartments.map(department => {
-      // Enrichissement avec le nom du manager
-      let enrichedDepartment = { ...department };
+      // If managerName is already set and not null, keep it
+      if (department.managerName) {
+        return department;
+      }
       
-      // Si managerName est déjà défini, le garder
-      if (!department.managerName && department.managerId) {
+      // If managerId is set, find the manager and set the name
+      if (department.managerId) {
         const manager = allEmployees.find(emp => emp.id === department.managerId);
         if (manager) {
-          enrichedDepartment.managerName = `${manager.firstName} ${manager.lastName}`;
+          return {
+            ...department,
+            managerName: `${manager.firstName} ${manager.lastName}`
+          };
         }
       }
       
-      // Enrichissement avec le nom de l'entreprise
-      if (!department.companyName && department.companyId && companies) {
-        const company = companies.find(comp => comp.id === department.companyId);
-        if (company) {
-          enrichedDepartment.companyName = company.name;
-        }
-      }
-      
-      return enrichedDepartment;
+      return department;
     });
-  }, [fetchedDepartments, allEmployees, companies]);
+  }, [fetchedDepartments, allEmployees]);
   
   // Custom hooks for form, dialogs, and operations
   const form = useDepartmentForm(departments);
