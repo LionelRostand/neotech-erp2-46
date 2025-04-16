@@ -1,7 +1,6 @@
 
 import { doc, setDoc, collection, addDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { generateId } from '@/lib/utils';
 
 /**
  * Add a document to a collection with an auto-generated ID

@@ -7,9 +7,13 @@ import { Employee } from '@/types/employee';
 import { toast } from 'sonner';
 import { updateEmployeeDoc } from '@/services/employeeService';
 import EmployeeProfileView from './EmployeeProfileView';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { COLLECTIONS } from '@/lib/firebase-collections';
+import { Loader2 } from 'lucide-react';
 
 export interface EmployeeDetailsProps {
-  employee: Employee;
+  employee?: Employee;
   onExportPdf?: () => void;
   onEdit?: () => void;
 }
@@ -33,13 +37,28 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
   const fetchEmployeeData = async (employeeId: string) => {
     try {
       setLoading(true);
-      const data = await getEmployee(employeeId);
-      if (data) {
+      
+      // First try to get the employee from the direct route
+      const docRef = doc(db, COLLECTIONS.HR.EMPLOYEES, employeeId);
+      const docSnap = await getDoc(docRef);
+      
+      if (docSnap.exists()) {
+        const data = {
+          id: docSnap.id,
+          ...docSnap.data()
+        } as Employee;
+        
         console.log('Employee data fetched:', data);
         setEmployee(data);
       } else {
-        toast.error("Impossible de trouver cet employé");
-        navigate('/modules/employees/profiles');
+        // Try to get from the service as a fallback
+        const serviceData = await getEmployee(employeeId);
+        if (serviceData) {
+          setEmployee(serviceData);
+        } else {
+          toast.error("Impossible de trouver cet employé");
+          navigate('/modules/employees/profiles');
+        }
       }
     } catch (error) {
       console.error('Error fetching employee:', error);
@@ -59,7 +78,7 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
     return (
       <div className="container mx-auto p-4">
         <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+          <Loader2 className="h-12 w-12 animate-spin text-primary" />
         </div>
       </div>
     );

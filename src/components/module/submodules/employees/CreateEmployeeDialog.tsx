@@ -1,15 +1,30 @@
 
 import React, { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
 import { addDocument } from '@/hooks/firestore/add-operations';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import { toast } from 'sonner';
-import { Employee } from '@/types/employee';
+import { Loader2 } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
+// Define the form schema
+const createEmployeeSchema = z.object({
+  firstName: z.string().min(2, 'Le prénom doit contenir au moins 2 caractères'),
+  lastName: z.string().min(2, 'Le nom doit contenir au moins 2 caractères'),
+  email: z.string().email('Email invalide'),
+  department: z.string().min(1, 'Veuillez sélectionner un département'),
+  position: z.string().min(2, 'Le poste doit contenir au moins 2 caractères'),
+  phone: z.string().optional(),
+  status: z.string().default('active'),
+});
+
+type CreateEmployeeValues = z.infer<typeof createEmployeeSchema>;
 
 interface CreateEmployeeDialogProps {
   open: boolean;
@@ -19,77 +34,41 @@ interface CreateEmployeeDialogProps {
 
 const CreateEmployeeDialog: React.FC<CreateEmployeeDialogProps> = ({ open, onOpenChange, onCreated }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [employee, setEmployee] = useState<Partial<Employee>>({
-    firstName: '',
-    lastName: '',
-    email: '',
-    phone: '',
-    department: '',
-    position: '',
-    status: 'Actif',
-    startDate: '',
-    isManager: false,
+  
+  const form = useForm<CreateEmployeeValues>({
+    resolver: zodResolver(createEmployeeSchema),
+    defaultValues: {
+      firstName: '',
+      lastName: '',
+      email: '',
+      department: '',
+      position: '',
+      phone: '',
+      status: 'active',
+    },
   });
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setEmployee(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleSelectChange = (field: string, value: string) => {
-    setEmployee(prev => ({ ...prev, [field]: value }));
-  };
-
-  const handleSwitchChange = (field: string, checked: boolean) => {
-    setEmployee(prev => ({ ...prev, [field]: checked }));
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!employee.firstName || !employee.lastName || !employee.email) {
-      toast.error('Veuillez remplir tous les champs obligatoires');
-      return;
-    }
-    
+  const onSubmit = async (data: CreateEmployeeValues) => {
     try {
       setIsSubmitting(true);
       
-      // Prepare the employee data
-      const newEmployee: Partial<Employee> = {
-        ...employee,
+      // Add employee to Firestore
+      const employeeData = {
+        ...data,
+        address: '',
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
-        address: {},
       };
       
-      // Add the employee to Firestore
-      await addDocument(COLLECTIONS.HR.EMPLOYEES, newEmployee);
-      
-      // If the employee is a manager, create a manager record as well
-      if (employee.isManager) {
-        // Handle manager creation logic if needed
-      }
+      const employeeId = await addDocument(COLLECTIONS.HR.EMPLOYEES, employeeData);
       
       toast.success('Employé créé avec succès');
+      form.reset();
       onCreated();
       onOpenChange(false);
-      
-      // Reset the form
-      setEmployee({
-        firstName: '',
-        lastName: '',
-        email: '',
-        phone: '',
-        department: '',
-        position: '',
-        status: 'Actif',
-        startDate: '',
-        isManager: false,
-      });
     } catch (error) {
-      console.error('Erreur lors de la création de l\'employé:', error);
-      toast.error('Une erreur est survenue lors de la création de l\'employé');
+      console.error('Error creating employee:', error);
+      toast.error("Erreur lors de la création de l'employé");
     } finally {
       setIsSubmitting(false);
     }
@@ -97,134 +76,130 @@ const CreateEmployeeDialog: React.FC<CreateEmployeeDialogProps> = ({ open, onOpe
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px]">
+      <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Ajouter un nouvel employé</DialogTitle>
+          <DialogTitle>Créer un nouvel employé</DialogTitle>
         </DialogHeader>
         
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-2">
-              <Label htmlFor="firstName">Prénom *</Label>
-              <Input
-                id="firstName"
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
                 name="firstName"
-                value={employee.firstName}
-                onChange={handleInputChange}
-                required
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Prénom</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Prénom" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="lastName">Nom *</Label>
-              <Input
-                id="lastName"
+              
+              <FormField
+                control={form.control}
                 name="lastName"
-                value={employee.lastName}
-                onChange={handleInputChange}
-                required
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Nom</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Nom" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
             </div>
             
-            <div className="space-y-2">
-              <Label htmlFor="email">Email *</Label>
-              <Input
-                id="email"
-                name="email"
-                type="email"
-                value={employee.email}
-                onChange={handleInputChange}
-                required
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Email</FormLabel>
+                  <FormControl>
+                    <Input type="email" placeholder="email@exemple.com" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="department"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Département</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Sélectionner un département" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="IT">IT</SelectItem>
+                        <SelectItem value="RH">RH</SelectItem>
+                        <SelectItem value="Finance">Finance</SelectItem>
+                        <SelectItem value="Marketing">Marketing</SelectItem>
+                        <SelectItem value="Commercial">Commercial</SelectItem>
+                        <SelectItem value="Direction">Direction</SelectItem>
+                        <SelectItem value="Logistique">Logistique</SelectItem>
+                        <SelectItem value="Production">Production</SelectItem>
+                        <SelectItem value="R&D">R&D</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="phone">Téléphone</Label>
-              <Input
-                id="phone"
-                name="phone"
-                value={employee.phone}
-                onChange={handleInputChange}
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="department">Département</Label>
-              <Select 
-                value={employee.department} 
-                onValueChange={(value) => handleSelectChange('department', value)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Sélectionner un département" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="IT">IT</SelectItem>
-                  <SelectItem value="Marketing">Marketing</SelectItem>
-                  <SelectItem value="RH">RH</SelectItem>
-                  <SelectItem value="Finance">Finance</SelectItem>
-                  <SelectItem value="Commercial">Commercial</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="position">Poste</Label>
-              <Input
-                id="position"
+              
+              <FormField
+                control={form.control}
                 name="position"
-                value={employee.position}
-                onChange={handleInputChange}
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Poste</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Poste" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
             </div>
             
-            <div className="space-y-2">
-              <Label htmlFor="status">Statut</Label>
-              <Select 
-                value={employee.status} 
-                onValueChange={(value) => handleSelectChange('status', value)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Sélectionner un statut" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Actif">Actif</SelectItem>
-                  <SelectItem value="Inactif">Inactif</SelectItem>
-                  <SelectItem value="En congé">En congé</SelectItem>
-                  <SelectItem value="Suspendu">Suspendu</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+            <FormField
+              control={form.control}
+              name="phone"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Téléphone</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Téléphone" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
             
-            <div className="space-y-2">
-              <Label htmlFor="startDate">Date d'embauche</Label>
-              <Input
-                id="startDate"
-                name="startDate"
-                type="date"
-                value={employee.startDate}
-                onChange={handleInputChange}
-              />
+            <div className="flex justify-end space-x-2 pt-4">
+              <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isSubmitting}>
+                Annuler
+              </Button>
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Créer
+              </Button>
             </div>
-            
-            <div className="flex items-center space-x-2 pt-6">
-              <Switch
-                id="isManager"
-                checked={employee.isManager}
-                onCheckedChange={(checked) => handleSwitchChange('isManager', checked)}
-              />
-              <Label htmlFor="isManager">Manager</Label>
-            </div>
-          </div>
-          
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Annuler
-            </Button>
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? 'Création en cours...' : 'Créer'}
-            </Button>
-          </DialogFooter>
-        </form>
+          </form>
+        </Form>
       </DialogContent>
     </Dialog>
   );
