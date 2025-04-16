@@ -49,6 +49,10 @@ const CreateBadgeDialog: React.FC<CreateBadgeDialogProps> = ({
       return;
     }
     
+    // Generate a shortId from initials if it doesn't exist
+    const shortId = typeof employee.shortId === 'string' ? employee.shortId : 
+                    `${employee.firstName.charAt(0)}${employee.lastName.charAt(0)}`;
+    
     const newBadge: BadgeData = {
       id: badgeNumber,
       date: new Date().toISOString().split('T')[0],
@@ -61,10 +65,7 @@ const CreateBadgeDialog: React.FC<CreateBadgeDialogProps> = ({
       status: "success",
       statusText: "Actif",
       employeePhoto: employee.photoURL || employee.photo,
-      // Safely handle shortId with a fallback
-      employeeShortId: employee.shortId || 
-                       `${employee.firstName.charAt(0)}${employee.lastName.charAt(0)}` || 
-                       'N/A'
+      employeeShortId: shortId || 'N/A'
     };
     
     onBadgeCreated(newBadge);
