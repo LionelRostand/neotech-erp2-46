@@ -45,7 +45,6 @@ export interface LeaveRequest {
   approvedAt?: string;
 }
 
-// Updated to match the Evaluation interface from useEvaluationsData
 export interface Evaluation {
   id: string;
   date: string;
@@ -119,6 +118,7 @@ export interface Employee {
   evaluations?: Evaluation[]; // Nouvelle propriété pour les évaluations
   isManager?: boolean; // Added isManager property to fix type errors
   forceManager?: boolean; // Added forceManager property to match d.ts file
+  salary?: number; // Added salary property to fix the type errors
   conges?: {
     acquired: number;
     taken: number;
