@@ -1,3 +1,4 @@
+
 export interface Employee {
   id: string;
   firstName: string;
@@ -24,7 +25,7 @@ export interface Employee {
   photo?: string;
   photoData?: string;
   photoMeta?: EmployeePhotoMeta;
-  documents?: string[];
+  documents?: Document[];
   createdAt?: string;
   updatedAt?: string;
   socialSecurityNumber?: string;
@@ -48,4 +49,19 @@ export interface Employee {
     taken: number;
     balance: number;
   };
+}
+
+export interface Document {
+  id: string;
+  name: string;
+  type: string;
+  date: string;
+  fileData?: string;
+  fileType: string;
+  fileSize: number; // Changed to number type to fix build errors
+  employeeId: string;
+  documentId?: string;
+  storedInFirebase?: boolean;
+  storedInHrDocuments?: boolean;
+  storageFormat?: string;
 }

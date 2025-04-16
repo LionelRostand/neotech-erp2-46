@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
@@ -71,6 +70,8 @@ const NewDocumentDialog: React.FC<NewDocumentDialogProps> = ({
       return;
     }
     
+    const fileSizeNumber = fileData ? fileData.length : 0;
+    
     const document: Document = {
       id: `doc_${Date.now()}`,
       name,
@@ -78,7 +79,7 @@ const NewDocumentDialog: React.FC<NewDocumentDialogProps> = ({
       date: new Date().toISOString().split('T')[0],
       fileData,
       fileType,
-      fileSize: fileData.length.toString(),
+      fileSize: fileSizeNumber,
       employeeId: selectedEmployeeId
     };
     

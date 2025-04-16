@@ -12,10 +12,10 @@ import {
 import { Plus, Search } from 'lucide-react';
 import { toast } from 'sonner';
 import { useDocumentsData, HrDocument } from '@/hooks/useDocumentsData';
-import DocumentsList from '@/components/module/documents/components/DocumentsList';
-import SearchResults from '@/components/module/documents/components/SearchResults';
-import DocumentsEmptyState from '@/components/module/documents/components/DocumentsEmptyState';
-import DocumentsLoading from '@/components/module/documents/components/DocumentsLoading';
+import { DocumentsList } from '@/components/module/documents/components/DocumentsList';
+import { SearchResults } from '@/components/module/documents/components/SearchResults';
+import { DocumentsEmptyState } from '@/components/module/documents/components/DocumentsEmptyState';
+import { DocumentsLoading } from '@/components/module/documents/components/DocumentsLoading';
 import { addEmployeeDocument } from '../employees/services/documentService';
 import NewDocumentDialog from './components/NewDocumentDialog';
 import { Document } from '@/types/employee';

@@ -15,9 +15,9 @@ import { useEmployeeData } from '@/hooks/useEmployeeData';
 const EmployeesAttendance: React.FC = () => {
   const [attendances, setAttendances] = useState<EmployeeAttendance[]>([]);
   const [activeTab, setActiveTab] = useState('terminal');
-  const { employees, isLoading } = useEmployeeData(); // Utiliser le hook pour obtenir les données des employés
+  const { employees, isLoading } = useEmployeeData(); // Use the hook to get employee data
   
-  // Charger les présences depuis le stockage local
+  // Load attendances from local storage
   useEffect(() => {
     const storedAttendances = localStorage.getItem('employee_attendances');
     if (storedAttendances) {
@@ -25,19 +25,19 @@ const EmployeesAttendance: React.FC = () => {
     }
   }, []);
   
-  // Sauvegarder les présences dans le stockage local
+  // Save attendances to local storage
   useEffect(() => {
     if (attendances.length > 0) {
       localStorage.setItem('employee_attendances', JSON.stringify(attendances));
     }
   }, [attendances]);
   
-  // Gérer l'entrée d'un employé
+  // Handle employee check-in
   const handleCheckIn = (newAttendance: EmployeeAttendance) => {
     setAttendances(prev => [...prev, newAttendance]);
   };
   
-  // Gérer la sortie d'un employé
+  // Handle employee check-out
   const handleCheckOut = (employeeId: string, departureTime: string) => {
     setAttendances(prev => {
       return prev.map(attendance => {
@@ -54,7 +54,7 @@ const EmployeesAttendance: React.FC = () => {
     });
   };
 
-  // Valider une présence
+  // Validate attendance
   const handleValidateAttendance = (id: string) => {
     setAttendances(prev => {
       return prev.map(attendance => {
@@ -70,7 +70,7 @@ const EmployeesAttendance: React.FC = () => {
     toast.success("Présence validée avec succès");
   };
   
-  // Rejeter une présence
+  // Reject attendance
   const handleRejectAttendance = (id: string) => {
     setAttendances(prev => {
       return prev.map(attendance => {
@@ -86,7 +86,7 @@ const EmployeesAttendance: React.FC = () => {
     toast.success("Présence rejetée");
   };
   
-  // Exportation des données de présence vers Excel
+  // Export attendance data to Excel
   const handleExportToExcel = () => {
     // Préparer les données pour l'exportation
     const exportData = attendances.map(attendance => ({
@@ -154,6 +154,7 @@ const EmployeesAttendance: React.FC = () => {
               onCheckIn={handleCheckIn}
               onCheckOut={handleCheckOut}
               attendances={attendances}
+              employees={employees} // Pass employees data to the terminal
             />
           </div>
         </TabsContent>

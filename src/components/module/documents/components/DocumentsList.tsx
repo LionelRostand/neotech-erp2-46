@@ -8,19 +8,19 @@ import { DocumentListItem } from './DocumentListItem';
 
 interface DocumentsListProps {
   documents: DocumentFile[];
-  isLoading: boolean;
-  view: 'grid' | 'list';
-  onSelect: (document: DocumentFile) => void;
-  onDelete: (documentId: string) => void;
+  isLoading?: boolean;
+  view?: 'grid' | 'list';
+  onSelect?: (document: DocumentFile) => void;
+  onDelete?: (documentId: string) => void;
   selected?: string;
 }
 
 export const DocumentsList: React.FC<DocumentsListProps> = ({
   documents,
-  isLoading,
-  view,
-  onSelect,
-  onDelete,
+  isLoading = false,
+  view = 'grid',
+  onSelect = () => {},
+  onDelete = () => {},
   selected
 }) => {
   // Loading state
