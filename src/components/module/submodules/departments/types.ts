@@ -1,3 +1,4 @@
+
 import { Employee } from '@/types/employee';
 
 export interface Department {
@@ -10,6 +11,9 @@ export interface Department {
   employeeIds?: string[];
   employeesCount?: number;
   companyId?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  parentId?: string;
 }
 
 export interface DepartmentFormData {

@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -72,7 +73,7 @@ const EditDepartmentDialog: React.FC<EditDepartmentDialogProps> = ({
               Entreprise
             </Label>
             <div className="col-span-3">
-              <Select value={formData.companyId || "none"} onValueChange={(value) => console.log('Company selected:', value)}>
+              <Select value={formData.companyId || "none"} onValueChange={(value) => onInputChange({ target: { name: 'companyId', value: value === 'none' ? '' : value } } as React.ChangeEvent<HTMLInputElement>)}>
                 <SelectTrigger>
                   <SelectValue placeholder="Sélectionner une entreprise" />
                 </SelectTrigger>
