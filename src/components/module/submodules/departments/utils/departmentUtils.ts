@@ -51,6 +51,7 @@ export const createEmptyFormData = (departments: Department[] = []) => {
     name: '',
     description: '',
     managerId: '',
+    companyId: '',
     color: '#4f46e5', // Couleur par défaut (indigo)
     employeeIds: []
   };
@@ -83,6 +84,8 @@ export const prepareDepartmentFromForm = (
     description: formData.description,
     managerId: formData.managerId === "none" ? null : formData.managerId,
     managerName: managerName,
+    companyId: formData.companyId || null,
+    companyName: null, // Sera défini plus tard avec les données de l'entreprise
     color: formData.color,
     employeeIds: selectedEmployees,
     employeesCount: selectedEmployees.length,
@@ -108,4 +111,3 @@ export const getDepartmentEmployees = (
     emp.departmentId === departmentId
   );
 };
-

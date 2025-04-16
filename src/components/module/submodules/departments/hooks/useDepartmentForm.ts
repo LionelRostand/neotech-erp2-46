@@ -1,81 +1,71 @@
 
-import { useState, useCallback } from 'react';
-import { Department, DepartmentFormData, departmentColors } from '../types';
+import { useState } from 'react';
+import { Department } from '../types';
 import { createEmptyFormData } from '../utils/departmentUtils';
-import { toast } from 'sonner';
 
 export const useDepartmentForm = (departments: Department[] = []) => {
-  const [formData, setFormData] = useState<DepartmentFormData>(createEmptyFormData(departments));
-  const [activeTab, setActiveTab] = useState("general");
+  const [formData, setFormData] = useState(() => createEmptyFormData(departments));
+  const [activeTab, setActiveTab] = useState('general');
   const [selectedEmployees, setSelectedEmployees] = useState<string[]>([]);
-  
-  // Reset form with initial data
-  const resetForm = useCallback((depts: Department[]) => {
-    // We don't want to continuously reset this in an infinite loop
-    setFormData(createEmptyFormData(depts));
+
+  // Réinitialiser le formulaire avec des valeurs par défaut
+  const resetForm = (departments: Department[] = []) => {
+    setFormData(createEmptyFormData(departments));
     setSelectedEmployees([]);
-    setActiveTab("general");
-  }, []);
-  
-  // Initialize form with department data for editing
-  const initFormWithDepartment = useCallback((department: Department) => {
+    setActiveTab('general');
+  };
+
+  // Initialiser le formulaire avec les données d'un département existant
+  const initFormWithDepartment = (department: Department) => {
     setFormData({
       id: department.id,
       name: department.name,
-      description: department.description || "",
-      managerId: department.managerId || "",
-      color: department.color || departmentColors[0].value,
-      employeeIds: department.employeeIds || []
+      description: department.description,
+      managerId: department.managerId || 'none',
+      companyId: department.companyId || '',
+      color: department.color
     });
     setSelectedEmployees(department.employeeIds || []);
-    setActiveTab("general");
-  }, []);
-  
-  // Form input handlers
-  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    setActiveTab('general');
+  };
+
+  // Gérer le changement des champs du formulaire
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
-  }, []);
-  
-  const handleManagerChange = useCallback((value: string) => {
-    setFormData(prev => ({ ...prev, managerId: value === "none" ? "" : value }));
-  }, []);
-  
-  const handleColorChange = useCallback((value: string) => {
+  };
+
+  // Gérer le changement du manager
+  const handleManagerChange = (value: string) => {
+    setFormData(prev => ({ ...prev, managerId: value === 'none' ? null : value }));
+  };
+
+  // Gérer le changement de la couleur
+  const handleColorChange = (value: string) => {
     setFormData(prev => ({ ...prev, color: value }));
-  }, []);
-  
-  const handleEmployeeSelection = useCallback((employeeId: string, checked: boolean) => {
-    setSelectedEmployees(prev => {
-      if (checked) {
-        return [...prev, employeeId];
-      } else {
-        return prev.filter(id => id !== employeeId);
-      }
-    });
-  }, []);
-  
-  // Validation
-  const validateForm = useCallback(() => {
-    if (!formData.name || !formData.description) {
-      toast.error("Veuillez remplir tous les champs obligatoires");
-      return false;
+  };
+
+  // Gérer la sélection/désélection d'un employé
+  const handleEmployeeSelection = (employeeId: string, selected: boolean) => {
+    if (selected) {
+      setSelectedEmployees(prev => [...prev, employeeId]);
+    } else {
+      setSelectedEmployees(prev => prev.filter(id => id !== employeeId));
     }
-    return true;
-  }, [formData]);
-  
+  };
+
   return {
     formData,
     activeTab,
     selectedEmployees,
+    setFormData,
+    setActiveTab,
+    setSelectedEmployees,
     resetForm,
     initFormWithDepartment,
-    setActiveTab,
     handleInputChange,
     handleManagerChange,
     handleColorChange,
-    handleEmployeeSelection,
-    validateForm,
-    setSelectedEmployees
+    handleEmployeeSelection
   };
 };

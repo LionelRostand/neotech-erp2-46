@@ -1,15 +1,19 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Dialog } from '@/components/ui/dialog';
 import { Card, CardContent } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import DepartmentHeader from './DepartmentHeader';
 import DepartmentTable from './DepartmentTable';
+import DepartmentsDashboard from './DepartmentsDashboard';
 import AddDepartmentDialog from './AddDepartmentDialog';
 import EditDepartmentDialog from './EditDepartmentDialog';
 import ManageEmployeesDialog from './ManageEmployeesDialog';
 import { useDepartments } from './useDepartments';
 
 const EmployeesDepartments: React.FC = () => {
+  const [activeTab, setActiveTab] = useState<string>("dashboard");
+  
   const {
     departments,
     loading,
@@ -18,12 +22,12 @@ const EmployeesDepartments: React.FC = () => {
     isManageEmployeesDialogOpen,
     formData,
     currentDepartment,
-    activeTab,
+    activeTab: formActiveTab,
     selectedEmployees,
     setIsAddDialogOpen,
     setIsEditDialogOpen,
     setIsManageEmployeesDialogOpen,
-    setActiveTab,
+    setActiveTab: setFormActiveTab,
     handleInputChange,
     handleManagerChange,
     handleColorChange,
@@ -40,27 +44,41 @@ const EmployeesDepartments: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <DepartmentHeader onAddDepartment={handleAddDepartment} />
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <div className="flex justify-between items-center mb-6">
+          <TabsList>
+            <TabsTrigger value="dashboard">Tableau de Bord</TabsTrigger>
+            <TabsTrigger value="departments">Liste des Départements</TabsTrigger>
+          </TabsList>
+          <DepartmentHeader onAddDepartment={handleAddDepartment} />
+        </div>
 
-      <Card>
-        <CardContent className="p-6">
-          <DepartmentTable 
-            departments={departments}
-            loading={loading}
-            onEditDepartment={(id) => handleEditDepartment(departments.find(dept => dept.id === id)!)}
-            onDeleteDepartment={handleDeleteDepartment}
-            onManageEmployees={(id) => handleManageEmployees(departments.find(dept => dept.id === id)!)}
-          />
-        </CardContent>
-      </Card>
+        <TabsContent value="dashboard">
+          <DepartmentsDashboard />
+        </TabsContent>
+        
+        <TabsContent value="departments">
+          <Card>
+            <CardContent className="p-6">
+              <DepartmentTable 
+                departments={departments}
+                loading={loading}
+                onEditDepartment={(id) => handleEditDepartment(departments.find(dept => dept.id === id)!)}
+                onDeleteDepartment={handleDeleteDepartment}
+                onManageEmployees={(id) => handleManageEmployees(departments.find(dept => dept.id === id)!)}
+              />
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
 
       {/* Add Department Dialog */}
       <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
         <AddDepartmentDialog 
           formData={formData}
           selectedEmployees={selectedEmployees}
-          activeTab={activeTab}
-          onTabChange={setActiveTab}
+          activeTab={formActiveTab}
+          onTabChange={setFormActiveTab}
           onInputChange={handleInputChange}
           onManagerChange={handleManagerChange}
           onColorChange={handleColorChange}
@@ -75,8 +93,8 @@ const EmployeesDepartments: React.FC = () => {
         <EditDepartmentDialog 
           formData={formData}
           selectedEmployees={selectedEmployees}
-          activeTab={activeTab}
-          onTabChange={setActiveTab}
+          activeTab={formActiveTab}
+          onTabChange={setFormActiveTab}
           onInputChange={handleInputChange}
           onManagerChange={handleManagerChange}
           onColorChange={handleColorChange}
