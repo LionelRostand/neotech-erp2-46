@@ -6,29 +6,16 @@ export interface BadgeData {
   employeeName: string;
   department?: string;
   accessLevel: string;
-  status: 'success' | 'warning' | 'danger' | string;
+  status: string;
   statusText: string;
+  companyId: string;
+  companyName: string;
+  employeePhoto?: string;
+  employeeShortId?: string;
 }
-
-export interface BadgesTableProps {
-  badgesList: BadgeData[];
-  onBadgeClick: (badgeId: string) => void;
-  loading?: boolean;
-}
-
-export interface CreateBadgeDialogProps {
-  isOpen: boolean;
-  onOpenChange: (open: boolean) => void;
-  onBadgeCreated: (newBadge: BadgeData) => Promise<void>;
-  employees?: any[];
-}
-
-export const getInitials = (firstName: string, lastName: string) => {
-  return (firstName.charAt(0) + lastName.charAt(0)).toUpperCase();
-};
 
 export const generateBadgeNumber = (): string => {
-  // Generate a 4-digit number between 1000 and 9999
-  const number = Math.floor(1000 + Math.random() * 9000);
-  return `B${number}`;
+  const prefix = 'BDG';
+  const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+  return `${prefix}${random}`;
 };

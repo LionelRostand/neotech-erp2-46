@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
@@ -7,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { Employee } from '@/types/employee';
 import { BadgeData, generateBadgeNumber } from './BadgeTypes';
-import { useAvailableDepartments } from '@/hooks/useAvailableDepartments';
+import { useCompaniesData } from '@/hooks/useCompaniesData';
 
 interface CreateBadgeDialogProps {
   isOpen: boolean;
@@ -25,13 +26,14 @@ const CreateBadgeDialog: React.FC<CreateBadgeDialogProps> = ({
   const [selectedEmployee, setSelectedEmployee] = useState<string>('');
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<string>('');
   const [accessLevel, setAccessLevel] = useState<string>('');
-  const [department, setDepartment] = useState<string>('no_department');
+  const [selectedCompany, setSelectedCompany] = useState<string>('');
   const [badgeNumber, setBadgeNumber] = useState(generateBadgeNumber());
-  const { departments } = useAvailableDepartments();
+  
+  const { companies, isLoading: isLoadingCompanies } = useCompaniesData();
 
   const handleCreateBadge = () => {
-    if (!selectedEmployee || !accessLevel) {
-      toast.error("Veuillez sélectionner un employé et un niveau d'accès");
+    if (!selectedEmployee || !accessLevel || !selectedCompany) {
+      toast.error("Veuillez remplir tous les champs requis");
       return;
     }
     
@@ -41,18 +43,25 @@ const CreateBadgeDialog: React.FC<CreateBadgeDialogProps> = ({
       return;
     }
     
-    const departmentName = departments.find(dept => dept.id === (department === 'no_department' ? employee.department : department))?.name 
-      || (department === 'no_department' ? 'Non assigné' : department);
+    const company = companies.find(c => c.id === selectedCompany);
+    if (!company) {
+      toast.error("Entreprise non trouvée");
+      return;
+    }
     
     const newBadge: BadgeData = {
       id: badgeNumber,
       date: new Date().toISOString().split('T')[0],
       employeeId: employee.id,
       employeeName: `${employee.firstName} ${employee.lastName}`,
-      department: departmentName,
+      department: employee.department,
+      companyId: company.id,
+      companyName: company.name,
       accessLevel: accessLevel,
       status: "success",
-      statusText: "Actif"
+      statusText: "Actif",
+      employeePhoto: employee.photoURL || employee.photo,
+      employeeShortId: employee.shortId || ''
     };
     
     onBadgeCreated(newBadge);
@@ -64,7 +73,7 @@ const CreateBadgeDialog: React.FC<CreateBadgeDialogProps> = ({
     setSelectedEmployee('');
     setSelectedEmployeeId('');
     setAccessLevel('');
-    setDepartment('no_department');
+    setSelectedCompany('');
     setBadgeNumber(generateBadgeNumber());
   };
   
@@ -80,6 +89,7 @@ const CreateBadgeDialog: React.FC<CreateBadgeDialogProps> = ({
           <DialogTitle>Créer un nouveau badge</DialogTitle>
         </DialogHeader>
         <div className="grid gap-4 py-4">
+          {/* Employee Select */}
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="employee" className="text-right">
               Employé
@@ -93,8 +103,8 @@ const CreateBadgeDialog: React.FC<CreateBadgeDialogProps> = ({
                   setSelectedEmployeeId(empId);
                   
                   const employee = employees.find(emp => emp.id === empId);
-                  if (employee?.department) {
-                    setDepartment(employee.department);
+                  if (employee?.company && typeof employee.company === 'string') {
+                    setSelectedCompany(employee.company);
                   }
                 }}
               >
@@ -116,27 +126,32 @@ const CreateBadgeDialog: React.FC<CreateBadgeDialogProps> = ({
             </div>
           </div>
 
+          {/* Company Select */}
           <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="department" className="text-right">
-              Département
+            <Label htmlFor="company" className="text-right">
+              Entreprise
             </Label>
             <div className="col-span-3">
-              <Select value={department} onValueChange={setDepartment}>
+              <Select value={selectedCompany} onValueChange={setSelectedCompany}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Sélectionner un département" />
+                  <SelectValue placeholder="Sélectionner une entreprise" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="no_department">Aucun département</SelectItem>
-                  {departments.map((dept) => (
-                    <SelectItem key={dept.id} value={dept.id}>
-                      {dept.name}
-                    </SelectItem>
-                  ))}
+                  {isLoadingCompanies ? (
+                    <SelectItem value="loading" disabled>Chargement...</SelectItem>
+                  ) : (
+                    companies.map((company) => (
+                      <SelectItem key={company.id} value={company.id}>
+                        {company.name}
+                      </SelectItem>
+                    ))
+                  )}
                 </SelectContent>
               </Select>
             </div>
           </div>
 
+          {/* Access Level Select */}
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="access" className="text-right">
               Niveau d'accès
@@ -148,20 +163,16 @@ const CreateBadgeDialog: React.FC<CreateBadgeDialogProps> = ({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none" disabled>Sélectionner un niveau d'accès</SelectItem>
-                  <SelectItem value="Sécurité Niveau 1">Sécurité Niveau 1</SelectItem>
-                  <SelectItem value="Sécurité Niveau 2">Sécurité Niveau 2</SelectItem>
-                  <SelectItem value="Sécurité Niveau 3">Sécurité Niveau 3</SelectItem>
-                  <SelectItem value="Administration">Administration</SelectItem>
-                  <SelectItem value="IT">IT</SelectItem>
-                  <SelectItem value="RH">RH</SelectItem>
-                  <SelectItem value="Marketing">Marketing</SelectItem>
-                  <SelectItem value="DIRECTION">DIRECTION</SelectItem>
-                  <SelectItem value="PDG">PDG</SelectItem>
+                  <SelectItem value="STANDARD">Standard</SelectItem>
+                  <SelectItem value="RESTRICTED">Restreint</SelectItem>
+                  <SelectItem value="ADMIN">Administrateur</SelectItem>
+                  <SelectItem value="MANAGER">Manager</SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </div>
 
+          {/* Badge Number */}
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="badge-number" className="text-right">
               Numéro de badge
