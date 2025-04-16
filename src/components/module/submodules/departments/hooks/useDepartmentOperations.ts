@@ -1,3 +1,4 @@
+
 import { useCallback } from 'react';
 import { Department } from '../types';
 import { useDepartmentService } from '../services/departmentService';
@@ -59,9 +60,9 @@ export const useDepartmentOperations = () => {
         ? `${selectedManager.firstName} ${selectedManager.lastName}` 
         : null;
       
-      // S'assurer que l'ID est conservé et que toutes les métadonnées sont préservées
+      // Make sure to preserve the ID and all metadata
       const departmentToUpdate: Department = {
-        ...currentDepartment,  // Préserver toutes les propriétés existantes
+        ...currentDepartment,  // Preserve all existing properties
         name: formData.name,
         description: formData.description,
         managerId: formData.managerId === "none" ? null : formData.managerId,
@@ -69,12 +70,12 @@ export const useDepartmentOperations = () => {
         color: formData.color,
         employeeIds: selectedEmployees,
         employeesCount: selectedEmployees.length,
-        companyId: formData.companyId === "none" ? null : formData.companyId, // Ajouter l'ID de l'entreprise
+        companyId: formData.companyId === "none" ? null : formData.companyId,
       };
       
       console.log("Department to update:", departmentToUpdate);
       
-      // Mettre à jour le département existant
+      // Update the existing department
       const success = await departmentService.updateDepartment(departmentToUpdate);
       
       if (success) {
