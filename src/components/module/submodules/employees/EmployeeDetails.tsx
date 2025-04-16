@@ -1,8 +1,6 @@
 
 import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Button } from '@/components/ui/button';
 import { Employee } from '@/types/employee';
 import InformationsTab from './tabs/InformationsTab';
 import HorairesTab from './tabs/HorairesTab';
@@ -11,9 +9,11 @@ import CongesTab from './tabs/CongesTab';
 import DocumentsTab from './tabs/DocumentsTab';
 import EvaluationsTab from './tabs/EvaluationsTab';
 import { useEmployeePermissions } from './hooks/useEmployeePermissions';
-import { AlertCircle, User, FileText, BarChart } from 'lucide-react';
+import { FileText, BarChart } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
+import EmployeeProfileHeader from './profile/EmployeeProfileHeader';
+import EmployeeProfileActions from './profile/EmployeeProfileActions';
 
 interface EmployeeDetailsProps {
   employee?: Employee;
@@ -79,22 +79,19 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
 
   if (!canView && !isOwnProfile) {
     return (
-      <Card className="mt-6">
-        <CardContent className="pt-6">
-          <div className="flex flex-col items-center justify-center py-12 text-center">
-            <div className="rounded-full bg-amber-100 p-3 mb-4">
-              <AlertCircle className="h-6 w-6 text-amber-600" />
-            </div>
-            <h3 className="text-lg font-medium mb-2">Accès limité</h3>
-            <p className="text-sm text-gray-500 mb-4 max-w-md">
-              Vous n'avez pas les permissions nécessaires pour consulter ce profil.
-            </p>
-            <Button variant="outline" onClick={() => navigate('/modules/employees/profiles')}>
-              Retour à la liste
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="space-y-6">
+        <div className="flex flex-col items-center justify-center py-12 text-center">
+          <p className="text-sm text-gray-500 mb-4">
+            Vous n'avez pas les permissions nécessaires pour consulter ce profil.
+          </p>
+          <button 
+            className="text-primary hover:underline"
+            onClick={() => navigate('/modules/employees/profiles')}
+          >
+            Retour à la liste
+          </button>
+        </div>
+      </div>
     );
   }
 
@@ -102,37 +99,7 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
 
   return (
     <div className="space-y-6">
-      <Card>
-        <CardHeader className="pb-3">
-          <div className="flex flex-col space-y-2">
-            <div className="flex items-center">
-              <div className="w-16 h-16 rounded-full mr-4 bg-gray-200 overflow-hidden">
-                {employee.photoURL ? (
-                  <img 
-                    src={employee.photoURL} 
-                    alt={`${employee.firstName} ${employee.lastName}`} 
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center bg-primary text-white text-2xl">
-                    {employee.firstName[0]}{employee.lastName[0]}
-                  </div>
-                )}
-              </div>
-              <div>
-                <CardTitle className="text-2xl">
-                  {employee.firstName} {employee.lastName}
-                </CardTitle>
-                <p className="text-gray-500">{employee.position}</p>
-              </div>
-            </div>
-            <div className="flex items-center text-sm text-muted-foreground">
-              <User className="h-4 w-4 mr-2" />
-              <span>ID: {employee.shortId || employee.id}</span>
-            </div>
-          </div>
-        </CardHeader>
-      </Card>
+      <EmployeeProfileHeader employee={employee} />
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid w-full grid-cols-6">
@@ -201,19 +168,12 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
       </Tabs>
 
       {(canEdit || isOwnProfile) && (
-        <div className="flex justify-end gap-3 mt-6">
-          {onExportPdf && (
-            <Button variant="outline" onClick={onExportPdf} className="mr-2">
-              Exporter PDF
-            </Button>
-          )}
-          <Button 
-            variant={isEditing ? "default" : "outline"} 
-            onClick={isEditing ? handleFinishEditing : handleStartEditing}
-          >
-            {isEditing ? "Terminer" : "Modifier"}
-          </Button>
-        </div>
+        <EmployeeProfileActions 
+          isEditing={isEditing}
+          onExportPdf={onExportPdf}
+          onEdit={handleStartEditing}
+          onFinishEditing={handleFinishEditing}
+        />
       )}
     </div>
   );
