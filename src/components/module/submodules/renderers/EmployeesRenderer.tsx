@@ -32,7 +32,7 @@ export const renderEmployeesSubmodule = (submoduleId: string, submodule: SubModu
     case 'employees-dashboard':
       return <EmployeesDashboard />;
     case 'employees-profiles':
-      return <EmployeesProfiles employees={employees} />;
+      return <EmployeesProfiles employeesProp={employees} />;
     case 'employees-badges':
       return <EmployeesBadges />;
     case 'employees-departments':
