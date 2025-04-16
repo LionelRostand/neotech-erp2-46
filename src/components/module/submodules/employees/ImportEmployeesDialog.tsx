@@ -1,9 +1,14 @@
 
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
-import { Upload, File, X } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Upload, FileWarning, AlertCircle } from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Employee } from '@/types/employee';
+import { COLLECTIONS } from '@/lib/firebase-collections';
+import { addDocument } from '@/hooks/firestore/create-operations';
 
 interface ImportEmployeesDialogProps {
   open: boolean;
@@ -11,49 +16,124 @@ interface ImportEmployeesDialogProps {
   onImported: (count: number) => void;
 }
 
-const ImportEmployeesDialog: React.FC<ImportEmployeesDialogProps> = ({
-  open,
+const ImportEmployeesDialog: React.FC<ImportEmployeesDialogProps> = ({ 
+  open, 
   onOpenChange,
   onImported
 }) => {
-  const [file, setFile] = useState<File | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [importedData, setImportedData] = useState<any[] | null>(null);
   const [isImporting, setIsImporting] = useState(false);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setFile(e.target.files[0]);
-    }
-  };
-
-  const handleRemoveFile = () => {
-    setFile(null);
-  };
-
-  const handleImport = async () => {
-    if (!file) {
-      toast.error('Veuillez sélectionner un fichier');
+    setErrorMessage(null);
+    setImportedData(null);
+    
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    // Check file type
+    if (!file.name.endsWith('.json') && !file.name.endsWith('.csv')) {
+      setErrorMessage("Format de fichier non pris en charge. Veuillez importer un fichier JSON ou CSV.");
       return;
     }
-
-    setIsImporting(true);
-
+    
+    setSelectedFile(file);
+  };
+  
+  const handleUpload = async () => {
+    if (!selectedFile) {
+      setErrorMessage("Veuillez sélectionner un fichier à importer.");
+      return;
+    }
+    
+    setIsUploading(true);
+    setErrorMessage(null);
+    
     try {
-      // Simuler un import
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      const fileContent = await readFileAsText(selectedFile);
       
-      // Dans une application réelle, vous traiteriez le fichier ici
-      // Par exemple, parsez un CSV ou un Excel
+      let parsedData;
+      if (selectedFile.name.endsWith('.json')) {
+        parsedData = JSON.parse(fileContent);
+      } else if (selectedFile.name.endsWith('.csv')) {
+        parsedData = parseCSV(fileContent);
+      }
       
-      toast.success('Fichier importé avec succès');
-      onImported(5); // Simuler l'import de 5 employés
-      onOpenChange(false);
-      setFile(null);
+      if (!Array.isArray(parsedData)) {
+        setErrorMessage("Le format du fichier est invalide. Veuillez vous assurer qu'il contient un tableau d'employés.");
+        return;
+      }
+      
+      setImportedData(parsedData);
     } catch (error) {
-      console.error('Erreur lors de l\'import:', error);
-      toast.error('Erreur lors de l\'import du fichier');
+      console.error("Erreur lors de la lecture du fichier:", error);
+      setErrorMessage("Une erreur s'est produite lors de la lecture du fichier. Veuillez vérifier son format.");
+    } finally {
+      setIsUploading(false);
+    }
+  };
+  
+  const handleImport = async () => {
+    if (!importedData || importedData.length === 0) return;
+    
+    setIsImporting(true);
+    try {
+      let importCount = 0;
+      
+      for (const employeeData of importedData) {
+        // Format employee data
+        const employeeToAdd: Partial<Employee> = {
+          ...employeeData,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
+        
+        // Add to Firestore
+        await addDocument(COLLECTIONS.HR.EMPLOYEES, employeeToAdd);
+        importCount++;
+      }
+      
+      onImported(importCount);
+      onOpenChange(false);
+      
+      // Reset form
+      setSelectedFile(null);
+      setImportedData(null);
+    } catch (error) {
+      console.error("Erreur lors de l'importation des employés:", error);
+      setErrorMessage("Une erreur s'est produite lors de l'importation des employés.");
     } finally {
       setIsImporting(false);
     }
+  };
+  
+  const readFileAsText = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (event) => resolve(event.target?.result as string);
+      reader.onerror = (error) => reject(error);
+      reader.readAsText(file);
+    });
+  };
+  
+  const parseCSV = (csvContent: string): any[] => {
+    // Simple CSV parser (for more complex needs, consider using a library)
+    const lines = csvContent.split('\n');
+    const headers = lines[0].split(',').map(header => header.trim());
+    
+    return lines.slice(1).filter(line => line.trim()).map(line => {
+      const values = line.split(',').map(value => value.trim());
+      const employee: any = {};
+      
+      headers.forEach((header, index) => {
+        employee[header] = values[index] || '';
+      });
+      
+      return employee;
+    });
   };
 
   return (
@@ -62,75 +142,64 @@ const ImportEmployeesDialog: React.FC<ImportEmployeesDialogProps> = ({
         <DialogHeader>
           <DialogTitle>Importer des employés</DialogTitle>
         </DialogHeader>
-        <div className="space-y-4 mt-4">
-          <div className="border-2 border-dashed rounded-md p-6 text-center">
-            {!file ? (
-              <>
-                <div className="mb-4">
-                  <Upload className="h-10 w-10 mx-auto text-gray-400" />
-                </div>
-                <p className="text-sm text-gray-500 mb-2">
-                  Glissez-déposez un fichier CSV ou Excel ici, ou cliquez pour sélectionner
-                </p>
-                <input
-                  type="file"
-                  id="file-upload"
-                  className="hidden"
-                  accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
-                  onChange={handleFileChange}
-                />
-                <Button 
-                  variant="outline" 
-                  onClick={() => document.getElementById('file-upload')?.click()}
-                >
-                  Sélectionner un fichier
-                </Button>
-              </>
-            ) : (
-              <div className="flex items-center justify-between p-2 bg-gray-50 rounded">
-                <div className="flex items-center">
-                  <File className="h-5 w-5 text-blue-500 mr-2" />
-                  <div>
-                    <p className="text-sm font-medium">{file.name}</p>
-                    <p className="text-xs text-gray-500">
-                      {(file.size / 1024).toFixed(2)} KB
-                    </p>
-                  </div>
-                </div>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  onClick={handleRemoveFile}
-                  className="text-gray-500 hover:text-red-500"
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
-            )}
-          </div>
+        
+        <div className="space-y-4">
+          {errorMessage && (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>Erreur</AlertTitle>
+              <AlertDescription>{errorMessage}</AlertDescription>
+            </Alert>
+          )}
           
-          <div className="bg-amber-50 p-4 rounded text-sm">
-            <p className="font-medium text-amber-800">Format requis:</p>
-            <p className="text-amber-700">
-              Le fichier doit contenir les colonnes: Prénom, Nom, Email, Poste, Département, Date d'embauche
+          <div className="space-y-2">
+            <Label htmlFor="importFile">Fichier d'importation (JSON ou CSV)</Label>
+            <div className="flex gap-2">
+              <Input
+                id="importFile"
+                type="file"
+                accept=".json,.csv"
+                onChange={handleFileChange}
+                disabled={isUploading || isImporting}
+              />
+              <Button 
+                onClick={handleUpload} 
+                disabled={!selectedFile || isUploading || isImporting}
+                type="button"
+              >
+                <Upload className="h-4 w-4 mr-2" />
+                Lire
+              </Button>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Formats acceptés: JSON, CSV
             </p>
           </div>
-
-          <div className="flex justify-end space-x-2 pt-4">
-            <Button
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-              disabled={isImporting}
-            >
-              Annuler
-            </Button>
-            <Button
-              onClick={handleImport}
-              disabled={!file || isImporting}
-            >
-              {isImporting ? 'Importation...' : 'Importer'}
-            </Button>
-          </div>
+          
+          {importedData && (
+            <div className="space-y-2">
+              <div className="bg-muted p-3 rounded-md">
+                <p><span className="font-medium">Employés détectés:</span> {importedData.length}</p>
+                <p className="text-sm">Les données seront importées dans la base de données.</p>
+              </div>
+              
+              <div className="flex justify-end space-x-2 pt-2">
+                <Button 
+                  variant="outline" 
+                  onClick={() => onOpenChange(false)}
+                  disabled={isImporting}
+                >
+                  Annuler
+                </Button>
+                <Button 
+                  onClick={handleImport}
+                  disabled={isImporting}
+                >
+                  {isImporting ? 'Importation...' : 'Importer les employés'}
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
       </DialogContent>
     </Dialog>

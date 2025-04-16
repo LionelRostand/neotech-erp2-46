@@ -1,10 +1,14 @@
 
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Employee, EmployeeAddress } from '@/types/employee';
 import { toast } from 'sonner';
-import { Employee } from '@/types/employee';
+import { addDocument } from '@/hooks/firestore/create-operations';
 import { COLLECTIONS } from '@/lib/firebase-collections';
-import { addDocument } from '@/hooks/firestore/add-operations';
 
 interface CreateEmployeeDialogProps {
   open: boolean;
@@ -12,64 +16,82 @@ interface CreateEmployeeDialogProps {
   onCreated: () => void;
 }
 
-const CreateEmployeeDialog: React.FC<CreateEmployeeDialogProps> = ({
-  open,
+const CreateEmployeeDialog: React.FC<CreateEmployeeDialogProps> = ({ 
+  open, 
   onOpenChange,
   onCreated
 }) => {
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [email, setEmail] = useState('');
-  const [position, setPosition] = useState('');
-  const [department, setDepartment] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formData, setFormData] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    position: '',
+    department: 'IT',
+    status: 'active',
+    hireDate: new Date().toISOString().split('T')[0],
+  });
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleSelectChange = (name: string, value: string) => {
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!firstName || !lastName || !email) {
-      toast.error('Veuillez remplir tous les champs obligatoires');
-      return;
-    }
-    
+    setIsSubmitting(true);
+
     try {
-      setIsSubmitting(true);
-      
+      // Create new employee 
       const newEmployee: Partial<Employee> = {
-        firstName,
-        lastName,
-        email,
-        position: position || 'Employé',
-        department: department || 'Non spécifié',
-        departmentId: department || '',
-        hireDate: new Date().toISOString(),
-        startDate: new Date().toISOString(),
-        status: 'active',
+        ...formData,
+        address: {
+          street: '',
+          city: '',
+          postalCode: '',
+          country: ''
+        } as EmployeeAddress,
+        phone: '',
         photo: '',
         photoURL: '',
-        phone: '',
-        address: {},
-        contract: '',
+        socialSecurityNumber: '',
+        birthDate: '',
         documents: [],
+        company: '',
+        role: formData.position,
+        title: formData.position,
+        manager: '',
+        managerId: '',
+        professionalEmail: formData.email,
         skills: [],
-        education: []
+        education: [],
+        departmentId: formData.department,
+        startDate: formData.hireDate,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
       };
+
+      const docRef = await addDocument(COLLECTIONS.HR.EMPLOYEES, newEmployee);
       
-      await addDocument(COLLECTIONS.HR.EMPLOYEES, newEmployee);
-      
-      toast.success('Employé créé avec succès');
+      toast.success(`L'employé ${formData.firstName} ${formData.lastName} a été créé avec succès`);
       onCreated();
       onOpenChange(false);
-      
-      // Réinitialiser le formulaire
-      setFirstName('');
-      setLastName('');
-      setEmail('');
-      setPosition('');
-      setDepartment('');
+      setFormData({
+        firstName: '',
+        lastName: '',
+        email: '',
+        position: '',
+        department: 'IT',
+        status: 'active',
+        hireDate: new Date().toISOString().split('T')[0],
+      });
     } catch (error) {
-      console.error('Erreur lors de la création de l\'employé:', error);
-      toast.error('Erreur lors de la création de l\'employé');
+      console.error("Erreur lors de la création de l'employé:", error);
+      toast.error("Erreur lors de la création de l'employé");
     } finally {
       setIsSubmitting(false);
     }
@@ -77,97 +99,123 @@ const CreateEmployeeDialog: React.FC<CreateEmployeeDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Ajouter un nouvel employé</DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4 mt-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <label htmlFor="firstName" className="block text-sm font-medium">
-                Prénom *
-              </label>
-              <input
+              <Label htmlFor="firstName">Prénom</Label>
+              <Input
                 id="firstName"
-                type="text"
-                value={firstName}
-                onChange={(e) => setFirstName(e.target.value)}
-                className="w-full px-3 py-2 border rounded-md"
+                name="firstName"
+                value={formData.firstName}
+                onChange={handleChange}
                 required
               />
             </div>
             <div className="space-y-2">
-              <label htmlFor="lastName" className="block text-sm font-medium">
-                Nom *
-              </label>
-              <input
+              <Label htmlFor="lastName">Nom</Label>
+              <Input
                 id="lastName"
-                type="text"
-                value={lastName}
-                onChange={(e) => setLastName(e.target.value)}
-                className="w-full px-3 py-2 border rounded-md"
+                name="lastName"
+                value={formData.lastName}
+                onChange={handleChange}
                 required
               />
             </div>
           </div>
           
           <div className="space-y-2">
-            <label htmlFor="email" className="block text-sm font-medium">
-              Email *
-            </label>
-            <input
+            <Label htmlFor="email">Email</Label>
+            <Input
               id="email"
+              name="email"
               type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-3 py-2 border rounded-md"
+              value={formData.email}
+              onChange={handleChange}
               required
             />
           </div>
           
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <label htmlFor="position" className="block text-sm font-medium">
-                Poste
-              </label>
-              <input
-                id="position"
-                type="text"
-                value={position}
-                onChange={(e) => setPosition(e.target.value)}
-                className="w-full px-3 py-2 border rounded-md"
-              />
-            </div>
-            <div className="space-y-2">
-              <label htmlFor="department" className="block text-sm font-medium">
-                Département
-              </label>
-              <input
-                id="department"
-                type="text"
-                value={department}
-                onChange={(e) => setDepartment(e.target.value)}
-                className="w-full px-3 py-2 border rounded-md"
-              />
-            </div>
+          <div className="space-y-2">
+            <Label htmlFor="position">Poste</Label>
+            <Input
+              id="position"
+              name="position"
+              value={formData.position}
+              onChange={handleChange}
+              required
+            />
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="department">Département</Label>
+            <Select 
+              name="department" 
+              value={formData.department} 
+              onValueChange={(value) => handleSelectChange('department', value)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Sélectionnez un département" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="IT">IT</SelectItem>
+                <SelectItem value="HR">Ressources Humaines</SelectItem>
+                <SelectItem value="Finance">Finance</SelectItem>
+                <SelectItem value="Marketing">Marketing</SelectItem>
+                <SelectItem value="Sales">Ventes</SelectItem>
+                <SelectItem value="Operations">Opérations</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="status">Statut</Label>
+            <Select 
+              name="status" 
+              value={formData.status} 
+              onValueChange={(value) => handleSelectChange('status', value)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Sélectionnez un statut" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="active">Actif</SelectItem>
+                <SelectItem value="inactive">Inactif</SelectItem>
+                <SelectItem value="onLeave">En congé</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="hireDate">Date d'embauche</Label>
+            <Input
+              id="hireDate"
+              name="hireDate"
+              type="date"
+              value={formData.hireDate}
+              onChange={handleChange}
+              required
+            />
           </div>
           
           <div className="flex justify-end space-x-2 pt-4">
-            <button
-              type="button"
+            <Button 
+              type="button" 
+              variant="outline" 
               onClick={() => onOpenChange(false)}
-              className="px-4 py-2 border rounded-md"
               disabled={isSubmitting}
             >
               Annuler
-            </button>
-            <button
-              type="submit"
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+            </Button>
+            <Button 
+              type="submit" 
               disabled={isSubmitting}
             >
               {isSubmitting ? 'Création...' : 'Créer'}
-            </button>
+            </Button>
           </div>
         </form>
       </DialogContent>

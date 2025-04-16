@@ -31,12 +31,60 @@ const EmployeesProfilesWithData = () => {
   return <EmployeesProfiles employeesProp={employees} />;
 };
 
+// Helper component to pass employee to EmployeeDetails
+const EmployeeDetailsWithData = () => {
+  // Create a mock employee or use a real one from a hook if available
+  const mockEmployee: Employee = {
+    id: "1",
+    firstName: "John",
+    lastName: "Doe",
+    email: "john.doe@example.com",
+    phone: "123456789",
+    position: "Developer",
+    department: "IT",
+    departmentId: "IT",
+    photo: "",
+    photoURL: "",
+    hireDate: "2023-01-01",
+    startDate: "2023-01-01",
+    status: "active",
+    address: {
+      street: "123 Main St",
+      city: "Paris",
+      postalCode: "75000",
+      country: "France"
+    },
+    contract: "CDI",
+    socialSecurityNumber: "123456789",
+    birthDate: "1990-01-01",
+    documents: [],
+    company: "Company",
+    role: "Developer",
+    title: "Senior Developer",
+    manager: "",
+    managerId: "",
+    professionalEmail: "john.doe@example.com",
+    skills: [],
+    education: [],
+    workSchedule: {
+      monday: "09:00 - 18:00",
+      tuesday: "09:00 - 18:00",
+      wednesday: "09:00 - 18:00",
+      thursday: "09:00 - 18:00",
+      friday: "09:00 - 17:00",
+    },
+    payslips: [],
+  };
+  
+  return <EmployeeDetails employee={mockEmployee} />;
+};
+
 export const EmployeesRoutes = (
   <Route key="employees" path="/modules/employees" element={<ModuleLayout moduleId={1} />}>
     <Route index element={<EmployeesDashboard />} />
     <Route path="dashboard" element={<EmployeesDashboard />} />
     <Route path="profiles" element={<EmployeesProfilesWithData />} />
-    <Route path="profiles/:id" element={<EmployeeDetails />} />
+    <Route path="profiles/:id" element={<EmployeeDetailsWithData />} />
     <Route path="badges" element={<EmployeesBadges />} />
     <Route path="departments" element={<EmployeesDepartments />} />
     <Route path="hierarchy" element={<EmployeesHierarchy />} />
