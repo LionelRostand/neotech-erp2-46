@@ -1,3 +1,4 @@
+
 import { v4 as uuidv4 } from 'uuid';
 import { Department, DepartmentFormData } from '../components/module/submodules/departments/types';
 import { Employee } from '@/types/employee';
@@ -42,7 +43,7 @@ export const createEmployee = async (employeeData: Partial<Employee>): Promise<E
     // Generate a unique ID for the new employee
     const employeeId = `emp-${uuidv4().substring(0, 8)}`;
     
-    // Create a new employee object
+    // Create a new employee object with all required fields
     const newEmployee = {
       id: employeeId,
       firstName: employeeData.firstName || '',
@@ -51,19 +52,24 @@ export const createEmployee = async (employeeData: Partial<Employee>): Promise<E
       phone: employeeData.phone || '',
       position: employeeData.position || '',
       department: employeeData.department || null,
+      departmentId: employeeData.departmentId || '',
       hireDate: employeeData.hireDate || new Date().toISOString(),
+      startDate: employeeData.startDate || new Date().toISOString(),
       isManager: employeeData.isManager || false,
       managerId: employeeData.managerId || null,
       address: employeeData.address || '',
       birthDate: employeeData.birthDate || null,
       photo: employeeData.photo || null,
+      photoURL: employeeData.photoURL || '',
       status: employeeData.status || 'active',
-      gender: employeeData.gender || 'unknown',
       skills: employeeData.skills || [],
       contract: employeeData.contract || null,
-      salary: employeeData.salary || 0,
+      salary: employeeData.salary !== undefined ? employeeData.salary : 0,
       createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+      updatedAt: new Date().toISOString(),
+      // Include other required fields with default values
+      socialSecurityNumber: employeeData.socialSecurityNumber || '',
+      // Add any other required fields from the Employee type
     } as Employee;
     
     console.log('Created new employee:', newEmployee);
@@ -80,7 +86,7 @@ export const createEmployee = async (employeeData: Partial<Employee>): Promise<E
 export const updateEmployeeDoc = async (id: string, employeeData: Partial<Employee>): Promise<Employee | null> => {
   try {
     // In a real app, this would update the database
-    // For now, we just return a merged employee object
+    // For now, we just return a merged employee object with all required fields
     const updatedEmployee = {
       id,
       firstName: employeeData.firstName || '',
@@ -89,19 +95,24 @@ export const updateEmployeeDoc = async (id: string, employeeData: Partial<Employ
       phone: employeeData.phone || '',
       position: employeeData.position || '',
       department: employeeData.department || null,
+      departmentId: employeeData.departmentId || '',
       hireDate: employeeData.hireDate || new Date().toISOString(),
+      startDate: employeeData.startDate || new Date().toISOString(),
       isManager: employeeData.isManager || false,
       managerId: employeeData.managerId || null,
       address: employeeData.address || '',
       birthDate: employeeData.birthDate || null,
       photo: employeeData.photo || null,
+      photoURL: employeeData.photoURL || '',
       status: employeeData.status || 'active',
-      gender: employeeData.gender || 'unknown',
       skills: employeeData.skills || [],
       contract: employeeData.contract || null,
-      salary: employeeData.salary || 0,
+      salary: employeeData.salary !== undefined ? employeeData.salary : 0,
       createdAt: employeeData.createdAt || new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+      updatedAt: new Date().toISOString(),
+      // Include other required fields with default values
+      socialSecurityNumber: employeeData.socialSecurityNumber || '',
+      // Add any other required fields from the Employee type
     } as Employee;
     
     console.log('Updated employee:', updatedEmployee);

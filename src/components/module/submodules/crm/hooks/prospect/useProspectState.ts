@@ -31,7 +31,7 @@ export const useProspectState = () => {
   const [reminderData, setReminderData] = useState<ReminderData>({
     title: '',
     date: new Date().toISOString().split('T')[0],
-    description: '', // Changed 'notes' to 'description' to match interface
+    description: '', // Using description property as per interface
     notes: ''
   });
   
@@ -54,7 +54,7 @@ export const useProspectState = () => {
     setReminderData({
       title: '',
       date: new Date().toISOString().split('T')[0],
-      description: '', // Changed 'notes' to 'description' to match interface
+      description: '', // Using description property as per interface
       notes: ''
     });
   };

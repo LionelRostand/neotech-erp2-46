@@ -1,7 +1,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { Prospect, ProspectFormData, ReminderData } from '../types/crm-types';
-import { mockProspects } from '../data/mockProspects';
+import mockProspectsData from '../data/mockProspects';
 import { useProspectActions } from './prospect/useProspectActions';
 import { useProspectData } from './prospect/useProspectData';
 
@@ -38,7 +38,7 @@ export const useProspects = () => {
         console.error('Error loading prospects:', err);
         setError(err.message || 'Failed to load prospects');
         // Fallback to mock data
-        setProspects(mockProspects);
+        setProspects(mockProspectsData);
       } finally {
         setIsLoading(false);
       }

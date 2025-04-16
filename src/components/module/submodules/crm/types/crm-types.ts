@@ -74,6 +74,7 @@ export interface Client {
   sector?: string;
   revenue?: string;
   customerSince?: string;
+  _offlineCreated?: boolean; // Added this property for offline clients
 }
 
 export interface ClientFormData {
@@ -81,8 +82,8 @@ export interface ClientFormData {
   contactName: string;
   contactEmail: string;
   contactPhone: string;
-  email: string;
-  phone: string;
+  email: string; // Added missing required property
+  phone: string; // Added missing required property
   address: string;
   website?: string;
   industry?: string;
