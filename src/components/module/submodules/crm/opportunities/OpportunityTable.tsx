@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Eye, FileEdit, Trash2 } from "lucide-react";
 import { Opportunity, OpportunityStage } from '../types/crm-types';
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency } from "@/lib/formatters";
 
 interface OpportunityTableProps {
   opportunities: Opportunity[];

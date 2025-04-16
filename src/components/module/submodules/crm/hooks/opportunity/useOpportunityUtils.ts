@@ -1,5 +1,5 @@
-
 import { OpportunityStage } from '../../types/crm-types';
+import { formatCurrency as formatCurrencyUtil } from '@/lib/formatters';
 
 export const useOpportunityUtils = () => {
   // Get all stages with proper labels for display
@@ -44,13 +44,9 @@ export const useOpportunityUtils = () => {
     return stageObj ? stageObj.label : 'Inconnu';
   };
 
-  // Format currency for display
+  // Format currency for display - now using the imported utility
   const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('fr-FR', { 
-      style: 'currency', 
-      currency: 'EUR',
-      maximumFractionDigits: 0 
-    }).format(value);
+    return formatCurrencyUtil(value);
   };
 
   // Format probability percentage for display

@@ -18,3 +18,6 @@ export function formatDate(date: Date): string {
     return 'Date invalide';
   }
 }
+
+// Add formatCurrency as a re-export from formatters
+export { formatCurrency } from './formatters';
