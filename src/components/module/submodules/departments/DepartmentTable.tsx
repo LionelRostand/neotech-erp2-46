@@ -2,7 +2,7 @@
 import React from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { Edit, Trash, Users } from 'lucide-react';
+import { Edit, Eye, Trash } from 'lucide-react';
 import { Department } from './types';
 import { useCompaniesData } from '@/hooks/useCompaniesData';
 
@@ -11,7 +11,7 @@ interface DepartmentTableProps {
   loading: boolean;
   onEditDepartment: (id: string) => void;
   onDeleteDepartment: (id: string, name: string) => void;
-  onManageEmployees: (id: string) => void;
+  onViewDepartment: (id: string) => void;
 }
 
 const DepartmentTable: React.FC<DepartmentTableProps> = ({ 
@@ -19,7 +19,7 @@ const DepartmentTable: React.FC<DepartmentTableProps> = ({
   loading,
   onEditDepartment, 
   onDeleteDepartment, 
-  onManageEmployees 
+  onViewDepartment 
 }) => {
   const { companies } = useCompaniesData();
 
@@ -86,9 +86,9 @@ const DepartmentTable: React.FC<DepartmentTableProps> = ({
                     <Trash className="h-4 w-4 mr-2" />
                     Supprimer
                   </Button>
-                  <Button variant="ghost" size="sm" onClick={() => onManageEmployees(department.id)}>
-                    <Users className="h-4 w-4 mr-2" />
-                    Gérer
+                  <Button variant="ghost" size="sm" onClick={() => onViewDepartment(department.id)}>
+                    <Eye className="h-4 w-4 mr-2" />
+                    Voir
                   </Button>
                 </TableCell>
               </TableRow>
