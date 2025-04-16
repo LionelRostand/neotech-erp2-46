@@ -13,8 +13,8 @@ export const useEmployeeContract = (employeeId: string) => {
     
     // Get salary from employee record (may be undefined)
     // Since 'salary' property might not exist on the Employee type directly
-    // We need to access it safely
-    const employeeSalary = employee && 'salary' in employee ? (employee.salary as number) : 0;
+    // We need to access it safely using a type assertion
+    const employeeSalary = employee ? (employee as any).salary || 0 : 0;
     
     // Récupérer le contrat actif le plus récent de l'employé
     const activeContracts = contracts

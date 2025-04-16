@@ -64,13 +64,23 @@ export const createEmployee = async (employeeData: Partial<Employee>): Promise<E
       status: employeeData.status || 'active',
       skills: employeeData.skills || [],
       contract: employeeData.contract || null,
-      salary: employeeData.salary !== undefined ? employeeData.salary : 0,
+      // Add fields that were missing
+      documents: employeeData.documents || [],
+      company: employeeData.company || '',
+      role: employeeData.role || 'Employé',
+      title: employeeData.title || '',
+      professionalEmail: employeeData.professionalEmail || '',
+      workSchedule: employeeData.workSchedule || {},
+      payslips: employeeData.payslips || [],
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-      // Include other required fields with default values
       socialSecurityNumber: employeeData.socialSecurityNumber || '',
-      // Add any other required fields from the Employee type
     } as Employee;
+    
+    // Handle the salary property separately as it may not be in the Employee type
+    if ('salary' in employeeData) {
+      (newEmployee as any).salary = employeeData.salary;
+    }
     
     console.log('Created new employee:', newEmployee);
     
@@ -107,13 +117,23 @@ export const updateEmployeeDoc = async (id: string, employeeData: Partial<Employ
       status: employeeData.status || 'active',
       skills: employeeData.skills || [],
       contract: employeeData.contract || null,
-      salary: employeeData.salary !== undefined ? employeeData.salary : 0,
+      // Add fields that were missing
+      documents: employeeData.documents || [],
+      company: employeeData.company || '',
+      role: employeeData.role || 'Employé',
+      title: employeeData.title || '',
+      professionalEmail: employeeData.professionalEmail || '',
+      workSchedule: employeeData.workSchedule || {},
+      payslips: employeeData.payslips || [],
       createdAt: employeeData.createdAt || new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-      // Include other required fields with default values
       socialSecurityNumber: employeeData.socialSecurityNumber || '',
-      // Add any other required fields from the Employee type
     } as Employee;
+    
+    // Handle the salary property separately as it may not be in the Employee type
+    if ('salary' in employeeData) {
+      (updatedEmployee as any).salary = employeeData.salary;
+    }
     
     console.log('Updated employee:', updatedEmployee);
     

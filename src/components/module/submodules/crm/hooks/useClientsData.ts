@@ -1,5 +1,38 @@
 
-// This file is kept for backward compatibility
-// It re-exports the useClientsData hook from the new location
-import { useClientsData } from './clients/useClientsData';
-export { useClientsData };
+import { useClientsQuery } from './useClientsQuery';
+import { useClientMutations } from './useClientMutations';
+
+export const useClientsData = () => {
+  const { 
+    clients, 
+    isLoading: queryLoading, 
+    error, 
+    isOfflineMode, 
+    fetchClients, 
+    cancelLoading,
+    seedMockClients
+  } = useClientsQuery();
+
+  const {
+    isLoading: mutationLoading,
+    addClient,
+    updateClient,
+    deleteClient
+  } = useClientMutations(fetchClients);
+
+  // Combine loading states from both hooks
+  const isLoading = queryLoading || mutationLoading;
+
+  return {
+    clients,
+    isLoading,
+    error,
+    isOfflineMode,
+    fetchClients,
+    addClient,
+    updateClient,
+    deleteClient,
+    seedMockClients,
+    cancelLoading
+  };
+};
