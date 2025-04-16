@@ -1,33 +1,34 @@
 import React, { useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Employee } from '@/types/employee';
-import EmployeeProfileHeader from './EmployeeProfileHeader';
 import InformationsTab from './tabs/InformationsTab';
-import DocumentsTab from './tabs/DocumentsTab';
-import CompetencesTab from './tabs/CompetencesTab';
 import HorairesTab from './tabs/HorairesTab';
+import CompetencesTab from './tabs/CompetencesTab';
 import CongesTab from './tabs/CongesTab';
-import EvaluationsTab from './tabs/EvaluationsTab';
-import { jsPDF } from 'jspdf';
+import { useEmployeePermissions } from './hooks/useEmployeePermissions';
+import { AlertCircle } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 
 interface EmployeeDetailsProps {
-  employee: Employee;
-  onExportPdf: () => void;
-  onEdit: () => void;
+  employee?: Employee;
+  isLoading?: boolean;
 }
 
 const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({ 
-  employee, 
-  onExportPdf,
-  onEdit
+  employee,
+  isLoading = false
 }) => {
-  const [activeTab, setActiveTab] = useState('infos');
+  const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState('informations');
   const [isEditing, setIsEditing] = useState(false);
-  const [updatedEmployee, setUpdatedEmployee] = useState<Employee>(employee);
-  
-  const handleEditTab = () => {
+  const [updatedEmployee, setUpdatedEmployee] = useState<Employee | undefined>(employee);
+
+  const { canView, canEdit, isOwnProfile } = useEmployeePermissions('employees-profiles', employee?.id);
+
+  const handleStartEditing = () => {
     setIsEditing(true);
     toast.info(`Mode édition activé pour l'onglet ${getTabName(activeTab)}`);
   };
@@ -39,176 +40,134 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
 
   const getTabName = (tabId: string): string => {
     switch (tabId) {
-      case 'infos': return 'Informations';
-      case 'documents': return 'Documents';
+      case 'informations': return 'Informations';
+      case 'horaires': return 'Horaires et présence';
       case 'competences': return 'Compétences';
-      case 'horaires': return 'Horaires';
       case 'conges': return 'Congés';
-      case 'evaluations': return 'Évaluations';
       default: return tabId;
     }
   };
 
-  const handleExportPdf = () => {
-    // Create PDF document
-    const doc = new jsPDF();
-    
-    // Add company logo on left side (placeholder for now)
-    doc.setDrawColor(200, 200, 200);
-    doc.setFillColor(240, 240, 240);
-    doc.roundedRect(15, 15, 50, 25, 3, 3, 'FD');
-    doc.setFontSize(12);
-    doc.setTextColor(80, 80, 80);
-    doc.text("LOGO", 40, 30, { align: "center" });
-    
-    // Add company information on right side
-    doc.setFontSize(14);
-    doc.setFont("helvetica", "bold");
-    doc.setTextColor(40, 40, 40);
-    doc.text("Enterprise Solutions", 140, 20, { align: "center" });
-    doc.setFontSize(10);
-    doc.setFont("helvetica", "normal");
-    doc.text("123 Avenue des Affaires", 140, 26, { align: "center" });
-    doc.text("75000 Paris, France", 140, 32, { align: "center" });
-    doc.text("contact@enterprise-solutions.fr", 140, 38, { align: "center" });
-    
-    // Add horizontal separator
-    doc.setDrawColor(200, 200, 200);
-    doc.line(15, 50, 195, 50);
-    
-    // Document title
-    doc.setFontSize(18);
-    doc.setFont("helvetica", "bold");
-    doc.setTextColor(20, 20, 20);
-    doc.text(`FICHE EMPLOYÉ`, 105, 65, { align: "center" });
-    
-    // Employee information
-    doc.setFontSize(14);
-    doc.setFont("helvetica", "bold");
-    doc.text("Informations personnelles", 20, 80);
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(11);
-    
-    const personalInfo = [
-      [`Nom: ${employee.lastName}`, `Prénom: ${employee.firstName}`],
-      [`Email: ${employee.email}`, `Téléphone: ${employee.phone || "Non renseigné"}`],
-      // Use optional chaining to safely access education
-      [`Date de naissance: ${employee.birthDate || "Non renseignée"}`, `Adresse: ${
-        typeof employee.address === 'object' 
-          ? `${employee.address.street}, ${employee.address.city}` 
-          : employee.address || "Non renseignée"
-      }`]
-    ];
-    
-    let yPos = 90;
-    personalInfo.forEach(row => {
-      doc.text(row[0], 25, yPos);
-      doc.text(row[1], 120, yPos);
-      yPos += 10;
-    });
-    
-    // Professional information
-    doc.setFontSize(14);
-    doc.setFont("helvetica", "bold");
-    doc.text("Informations professionnelles", 20, yPos + 10);
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(11);
-    
-    const professionalInfo = [
-      [`Poste: ${employee.position}`, `Département: ${employee.department}`],
-      [`Date d'embauche: ${employee.hireDate}`, `Manager: ${employee.manager || "Aucun"}`],
-      // Fixed: Using contract instead of contractType
-      [`Type de contrat: ${employee.contract || "Non spécifié"}`, `Statut: ${employee.status || "Actif"}`]
-    ];
-    
-    yPos += 20;
-    professionalInfo.forEach(row => {
-      doc.text(row[0], 25, yPos);
-      doc.text(row[1], 120, yPos);
-      yPos += 10;
-    });
-    
-    // Save PDF
-    doc.save(`fiche-employe-${employee.firstName.toLowerCase()}-${employee.lastName.toLowerCase()}.pdf`);
-    toast.success("Document PDF exporté avec succès");
-    
-    // Also call the parent onExportPdf to manage any UI updates
-    onExportPdf();
-  };
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-pulse flex space-x-4">
+          <div className="rounded-full bg-slate-200 h-10 w-10"></div>
+          <div className="flex-1 space-y-6 py-1">
+            <div className="h-2 bg-slate-200 rounded"></div>
+            <div className="space-y-3">
+              <div className="grid grid-cols-3 gap-4">
+                <div className="h-2 bg-slate-200 rounded col-span-2"></div>
+                <div className="h-2 bg-slate-200 rounded col-span-1"></div>
+              </div>
+              <div className="h-2 bg-slate-200 rounded"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!canView && !isOwnProfile) {
+    return (
+      <Card className="mt-6">
+        <CardContent className="pt-6">
+          <div className="flex flex-col items-center justify-center py-12 text-center">
+            <div className="rounded-full bg-amber-100 p-3 mb-4">
+              <AlertCircle className="h-6 w-6 text-amber-600" />
+            </div>
+            <h3 className="text-lg font-medium mb-2">Accès limité</h3>
+            <p className="text-sm text-gray-500 mb-4 max-w-md">
+              Vous n'avez pas les permissions nécessaires pour consulter ce profil.
+            </p>
+            <Button variant="outline" onClick={() => navigate('/modules/employees/profiles')}>
+              Retour à la liste
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (!employee) return null;
 
   return (
     <div className="space-y-6">
-      <EmployeeProfileHeader 
-        employee={updatedEmployee} 
-        onEmployeeUpdate={employee => setUpdatedEmployee(employee)}
-      />
+      <Card>
+        <CardHeader className="pb-3">
+          <div className="flex items-center">
+            <div className="w-16 h-16 rounded-full mr-4 bg-gray-200 overflow-hidden">
+              {employee.photoURL ? (
+                <img 
+                  src={employee.photoURL} 
+                  alt={`${employee.firstName} ${employee.lastName}`} 
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center bg-primary text-white text-2xl">
+                  {employee.firstName[0]}{employee.lastName[0]}
+                </div>
+              )}
+            </div>
+            <div>
+              <CardTitle className="text-2xl">
+                {employee.firstName} {employee.lastName}
+              </CardTitle>
+              <p className="text-gray-500">{employee.position}</p>
+            </div>
+          </div>
+        </CardHeader>
+      </Card>
 
-      <Tabs defaultValue="infos" value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid grid-cols-4 md:grid-cols-6 mb-6">
-          <TabsTrigger value="infos">Informations</TabsTrigger>
-          <TabsTrigger value="documents">Documents</TabsTrigger>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="informations">Informations</TabsTrigger>
+          <TabsTrigger value="horaires">Horaires et présence</TabsTrigger>
           <TabsTrigger value="competences">Compétences</TabsTrigger>
-          <TabsTrigger value="horaires">Horaires</TabsTrigger>
           <TabsTrigger value="conges">Congés</TabsTrigger>
-          <TabsTrigger value="evaluations">Évaluations</TabsTrigger>
         </TabsList>
-        
-        <TabsContent value="infos">
+
+        <TabsContent value="informations">
           <InformationsTab 
-            employee={updatedEmployee} 
-            isEditing={isEditing && activeTab === 'infos'}
+            employee={employee} 
+            isEditing={isEditing && activeTab === 'informations'}
             onFinishEditing={handleFinishEditing}
           />
         </TabsContent>
-        
-        <TabsContent value="documents">
-          <DocumentsTab 
-            employee={updatedEmployee} 
-            isEditing={isEditing && activeTab === 'documents'}
+
+        <TabsContent value="horaires">
+          <HorairesTab 
+            employee={employee} 
+            isEditing={isEditing && activeTab === 'horaires'}
             onFinishEditing={handleFinishEditing}
           />
         </TabsContent>
-        
+
         <TabsContent value="competences">
           <CompetencesTab 
-            employee={updatedEmployee}
+            employee={employee}
             onEmployeeUpdated={() => {}}
             isEditing={isEditing && activeTab === 'competences'}
             onFinishEditing={handleFinishEditing}
           />
         </TabsContent>
-        
-        <TabsContent value="horaires">
-          <HorairesTab 
-            employee={updatedEmployee}
-            isEditing={isEditing && activeTab === 'horaires'}
+
+        <TabsContent value="conges">
+          <CongesTab 
+            employee={employee} 
+            isEditing={isEditing && activeTab === 'conges'}
             onFinishEditing={handleFinishEditing}
           />
         </TabsContent>
-        
-        <TabsContent value="conges">
-          <CongesTab 
-            employee={updatedEmployee} 
-            isEditing={isEditing && activeTab === 'conges'} 
-            onFinishEditing={handleFinishEditing} 
-          />
-        </TabsContent>
-        
-        <TabsContent value="evaluations">
-          <EvaluationsTab 
-            employee={updatedEmployee} 
-            isEditing={isEditing && activeTab === 'evaluations'} 
-            onFinishEditing={handleFinishEditing} 
-          />
-        </TabsContent>
       </Tabs>
-      
-      <div className="flex justify-end gap-3 mt-6">
-        <Button variant="outline" onClick={handleExportPdf}>Exporter PDF</Button>
-        <Button variant={isEditing ? "default" : "outline"} onClick={isEditing ? handleFinishEditing : handleEditTab}>
-          {isEditing ? "Terminer" : "Modifier"}
-        </Button>
-      </div>
+
+      {(canEdit || isOwnProfile) && (
+        <div className="flex justify-end gap-3 mt-6">
+          <Button variant={isEditing ? "default" : "outline"} onClick={isEditing ? handleFinishEditing : handleStartEditing}>
+            {isEditing ? "Terminer" : "Modifier"}
+          </Button>
+        </div>
+      )}
     </div>
   );
 };
