@@ -86,8 +86,8 @@ export const prepareDepartmentFromForm = (
     color: formData.color,
     employeeIds: selectedEmployees,
     employeesCount: selectedEmployees.length,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
+    companyId: formData.companyId || null,
+    parentId: formData.parentId || null
   };
 };
 
@@ -108,4 +108,3 @@ export const getDepartmentEmployees = (
     emp.departmentId === departmentId
   );
 };
-

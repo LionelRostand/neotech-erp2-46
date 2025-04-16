@@ -13,7 +13,9 @@ interface DepartmentNodeProps {
 
 const DepartmentNode: React.FC<DepartmentNodeProps> = ({ department, level = 0, allDepartments }) => {
   // Find child departments that have this department as their parent
-  const childDepartments = allDepartments.filter(dept => dept.parentId === department.id);
+  const childDepartments = allDepartments.filter(dept => 
+    dept.parentId === department.id
+  );
 
   return (
     <div style={{ marginLeft: `${level * 40}px` }} className="mb-4">

@@ -1,5 +1,6 @@
+
 import { Employee } from '@/types/employee';
-import { generateUniqueId } from './utils/departmentUtils';
+import { v4 as uuidv4 } from 'uuid';
 
 export interface Department {
   id: string;
@@ -11,6 +12,7 @@ export interface Department {
   employeeIds: string[];
   employeesCount: number;
   companyId: string | null;
+  parentId?: string | null;
 }
 
 export interface DepartmentFormData {
@@ -21,6 +23,7 @@ export interface DepartmentFormData {
   color: string;
   employeeIds?: string[];
   companyId?: string;
+  parentId?: string;
 }
 
 export interface DepartmentColor {
@@ -41,7 +44,7 @@ export const departmentColors: DepartmentColor[] = [
 
 export const createEmptyFormData = (departments: Department[]): DepartmentFormData => {
   // Générer un nouvel ID unique
-  const newId = generateUniqueId(departments);
+  const newId = uuidv4();
   
   return {
     id: newId,
