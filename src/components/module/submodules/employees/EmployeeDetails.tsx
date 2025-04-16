@@ -8,8 +8,10 @@ import InformationsTab from './tabs/InformationsTab';
 import HorairesTab from './tabs/HorairesTab';
 import CompetencesTab from './tabs/CompetencesTab';
 import CongesTab from './tabs/CongesTab';
+import DocumentsTab from './tabs/DocumentsTab';
+import EvaluationsTab from './tabs/EvaluationsTab';
 import { useEmployeePermissions } from './hooks/useEmployeePermissions';
-import { AlertCircle, User } from 'lucide-react';
+import { AlertCircle, User, FileText, BarChart } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 
@@ -133,11 +135,19 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
       </Card>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="informations">Informations</TabsTrigger>
           <TabsTrigger value="horaires">Horaires et présence</TabsTrigger>
           <TabsTrigger value="competences">Compétences</TabsTrigger>
           <TabsTrigger value="conges">Congés</TabsTrigger>
+          <TabsTrigger value="documents" className="flex items-center gap-2">
+            <FileText className="h-4 w-4" />
+            <span>Documents</span>
+          </TabsTrigger>
+          <TabsTrigger value="evaluations" className="flex items-center gap-2">
+            <BarChart className="h-4 w-4" />
+            <span>Évaluations</span>
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="informations">
@@ -169,6 +179,22 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
           <CongesTab 
             employee={employee} 
             isEditing={isEditing && activeTab === 'conges'}
+            onFinishEditing={handleFinishEditing}
+          />
+        </TabsContent>
+
+        <TabsContent value="documents">
+          <DocumentsTab 
+            employee={employee}
+            isEditing={isEditing && activeTab === 'documents'}
+            onFinishEditing={handleFinishEditing}
+          />
+        </TabsContent>
+
+        <TabsContent value="evaluations">
+          <EvaluationsTab
+            employee={employee}
+            isEditing={isEditing && activeTab === 'evaluations'}
             onFinishEditing={handleFinishEditing}
           />
         </TabsContent>
