@@ -1,4 +1,3 @@
-
 export interface Department {
   id: string;
   name: string;
@@ -20,6 +19,7 @@ export interface DepartmentFormData {
   managerId: string;
   color: string;
   employeeIds: string[];
+  companyId?: string;
 }
 
 export const departmentColors = [
