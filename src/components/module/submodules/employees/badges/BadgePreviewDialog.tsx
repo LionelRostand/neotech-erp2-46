@@ -2,7 +2,7 @@
 import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Download, Image } from 'lucide-react';
+import { Download } from 'lucide-react';
 import { toast } from 'sonner';
 import { BadgeData } from './BadgeTypes';
 import { Employee } from '@/types/employee';
@@ -34,11 +34,13 @@ const BadgePreviewDialog: React.FC<BadgePreviewDialogProps> = ({
     
     if (!selectedEmployee.company) return "Enterprise";
     
+    // Si company est un string (ID), chercher l'entreprise correspondante
     if (typeof selectedEmployee.company === 'string') {
       const companyData = companies.find(c => c.id === selectedEmployee.company);
       return companyData?.name || selectedEmployee.company;
     }
     
+    // Si c'est un objet Company
     const companyObj = selectedEmployee.company as Company;
     return companyObj.name || companyObj.id || "Enterprise";
   };
@@ -72,73 +74,52 @@ const BadgePreviewDialog: React.FC<BadgePreviewDialogProps> = ({
     doc.setFont('helvetica', 'bold');
     doc.text(companyName.toUpperCase(), 5, 7);
     
-    if (selectedBadge.photo) {
-      // Fix: Create HTML Image element properly
-      const img = new window.Image();
-      img.src = selectedBadge.photo;
-      // Only add the image after it's loaded
-      img.onload = () => {
-        doc.addImage(img, 'JPEG', 5, 15, 20, 20);
-        finalizePdf();
-      };
-      
-      // If there's any error loading the image, continue without it
-      img.onerror = () => {
-        console.error('Error loading badge image');
-        finalizePdf();
-      };
-      
-      // Return early - the actual PDF generation will happen in the callbacks
-      return;
+    doc.setTextColor(0, 0, 0);
+    doc.setFontSize(8);
+    
+    // Ajout de l'ID du badge et de l'employé
+    doc.text(`Badge ID: ${selectedBadge.id}`, 5, 18);
+    doc.text(`Employee ID: ${employeeId}`, 5, 23);
+    
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'bold');
+    doc.text(selectedBadge.employeeName, 42.5, 30, { align: 'center' });
+    
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Département: ${selectedBadge.department || 'N/A'}`, 42.5, 36, { align: 'center' });
+    doc.text(`Accès: ${selectedBadge.accessLevel || 'Standard'}`, 42.5, 41, { align: 'center' });
+    
+    let statusColor;
+    if (selectedBadge.status === 'success') {
+      statusColor = [34, 197, 94];
+    } else if (selectedBadge.status === 'warning') {
+      statusColor = [234, 179, 8];
+    } else {
+      statusColor = [239, 68, 68];
     }
     
-    // If no photo, finalize the PDF directly
-    finalizePdf();
+    doc.setTextColor(statusColor[0], statusColor[1], statusColor[2]);
+    doc.text(`Statut: ${selectedBadge.statusText}`, 42.5, 46, { align: 'center' });
     
-    function finalizePdf() {
-      doc.setTextColor(0, 0, 0);
-      doc.setFontSize(8);
-      doc.text(`Badge ID: ${selectedBadge.id}`, 30, 18);
-      doc.text(`Employee ID: ${employeeId}`, 30, 23);
-      
-      doc.setFontSize(12);
-      doc.setFont('helvetica', 'bold');
-      doc.text(selectedBadge.employeeName, 42.5, 30, { align: 'center' });
-      
-      doc.setFontSize(9);
-      doc.setFont('helvetica', 'normal');
-      doc.text(`Département: ${selectedBadge.department || 'N/A'}`, 42.5, 36, { align: 'center' });
-      doc.text(`Accès: ${selectedBadge.accessLevel || 'Standard'}`, 42.5, 41, { align: 'center' });
-      
-      let statusColor;
-      if (selectedBadge.status === 'success') {
-        statusColor = [34, 197, 94];
-      } else if (selectedBadge.status === 'warning') {
-        statusColor = [234, 179, 8];
-      } else {
-        statusColor = [239, 68, 68];
-      }
-      
-      doc.setTextColor(statusColor[0], statusColor[1], statusColor[2]);
-      doc.text(`Statut: ${selectedBadge.statusText}`, 42.5, 46, { align: 'center' });
-      
-      doc.setFillColor(70, 70, 70);
-      doc.rect(0, 50, 85, 4, 'F');
-      doc.setFontSize(6);
-      doc.setTextColor(255, 255, 255);
-      doc.text('Ce badge doit être porté visiblement à tout moment', 42.5, 52.5, { align: 'center' });
-      
-      doc.setFillColor(0, 0, 0);
-      doc.rect(5, 36, 10, 10, 'F');
-      doc.setFillColor(255, 255, 255);
-      doc.rect(6, 37, 8, 8, 'F');
-      doc.setFillColor(0, 0, 0);
-      doc.rect(7, 38, 6, 6, 'F');
+    // Footer
+    doc.setFillColor(70, 70, 70);
+    doc.rect(0, 50, 85, 4, 'F');
+    doc.setFontSize(6);
+    doc.setTextColor(255, 255, 255);
+    doc.text('Ce badge doit être porté visiblement à tout moment', 42.5, 52.5, { align: 'center' });
+    
+    // QR Code style box
+    doc.setFillColor(0, 0, 0);
+    doc.rect(5, 36, 10, 10, 'F');
+    doc.setFillColor(255, 255, 255);
+    doc.rect(6, 37, 8, 8, 'F');
+    doc.setFillColor(0, 0, 0);
+    doc.rect(7, 38, 6, 6, 'F');
 
-      doc.save(`badge-${selectedBadge.id}.pdf`);
-      
-      toast.success("Badge téléchargé avec succès");
-    }
+    doc.save(`badge-${selectedBadge.id}.pdf`);
+    
+    toast.success("Badge téléchargé avec succès");
   };
   
   return (
@@ -157,27 +138,13 @@ const BadgePreviewDialog: React.FC<BadgePreviewDialogProps> = ({
               <span className="text-white font-bold text-sm">{companyName.toUpperCase()}</span>
             </div>
             
-            <div className="flex items-start gap-4 mb-4">
-              <div className="w-24 h-24 rounded-lg overflow-hidden bg-gray-200 flex-shrink-0">
-                {selectedBadge.photo ? (
-                  <img 
-                    src={selectedBadge.photo} 
-                    alt={selectedBadge.employeeName}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center">
-                    <Image className="w-8 h-8 text-gray-400" />
-                  </div>
-                )}
-              </div>
-              
-              <div className="flex-1">
+            <div className="text-center mb-3">
+              <div className="space-y-1">
                 <p className="text-sm text-gray-500">ID Badge: {selectedBadge.id}</p>
                 <p className="text-sm text-gray-500">ID Employé: {employeeId}</p>
-                <h3 className="text-lg font-bold mt-1">{selectedBadge.employeeName}</h3>
-                <p className="text-sm text-gray-600">Entreprise: {companyName}</p>
               </div>
+              <h3 className="text-lg font-bold mt-2">{selectedBadge.employeeName}</h3>
+              <p className="text-sm text-gray-600">Entreprise: {companyName}</p>
             </div>
             
             <div className="space-y-2 text-sm">

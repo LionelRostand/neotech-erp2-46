@@ -5,16 +5,15 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
+import { Employee } from '@/types/employee';
 import { BadgeData, generateBadgeNumber } from './BadgeTypes';
 import { useAvailableDepartments } from '@/hooks/useAvailableDepartments';
-import { useFirebaseCompanies } from '@/hooks/useFirebaseCompanies';
-import { Image as ImageIcon, Upload } from 'lucide-react';
 
 interface CreateBadgeDialogProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   onBadgeCreated: (badge: BadgeData) => void;
-  employees: any[];
+  employees: Employee[];
 }
 
 const CreateBadgeDialog: React.FC<CreateBadgeDialogProps> = ({
@@ -28,26 +27,11 @@ const CreateBadgeDialog: React.FC<CreateBadgeDialogProps> = ({
   const [accessLevel, setAccessLevel] = useState<string>('');
   const [department, setDepartment] = useState<string>('no_department');
   const [badgeNumber, setBadgeNumber] = useState(generateBadgeNumber());
-  const [selectedCompany, setSelectedCompany] = useState<string>('');
-  const [photo, setPhoto] = useState<string>('');
-  
   const { departments } = useAvailableDepartments();
-  const { companies, isLoading: isLoadingCompanies } = useFirebaseCompanies();
-
-  const handlePhotoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setPhoto(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
 
   const handleCreateBadge = () => {
-    if (!selectedEmployee || !accessLevel || !selectedCompany) {
-      toast.error("Veuillez sélectionner un employé, un niveau d'accès et une entreprise");
+    if (!selectedEmployee || !accessLevel) {
+      toast.error("Veuillez sélectionner un employé et un niveau d'accès");
       return;
     }
     
@@ -57,14 +41,15 @@ const CreateBadgeDialog: React.FC<CreateBadgeDialogProps> = ({
       return;
     }
     
+    const departmentName = departments.find(dept => dept.id === (department === 'no_department' ? employee.department : department))?.name 
+      || (department === 'no_department' ? 'Non assigné' : department);
+    
     const newBadge: BadgeData = {
       id: badgeNumber,
       date: new Date().toISOString().split('T')[0],
       employeeId: employee.id,
       employeeName: `${employee.firstName} ${employee.lastName}`,
-      department: department === 'no_department' ? employee.department || '' : department,
-      companyId: selectedCompany,
-      photo: photo,
+      department: departmentName,
       accessLevel: accessLevel,
       status: "success",
       statusText: "Actif"
@@ -80,8 +65,6 @@ const CreateBadgeDialog: React.FC<CreateBadgeDialogProps> = ({
     setSelectedEmployeeId('');
     setAccessLevel('');
     setDepartment('no_department');
-    setSelectedCompany('');
-    setPhoto('');
     setBadgeNumber(generateBadgeNumber());
   };
   
@@ -96,67 +79,7 @@ const CreateBadgeDialog: React.FC<CreateBadgeDialogProps> = ({
         <DialogHeader>
           <DialogTitle>Créer un nouveau badge</DialogTitle>
         </DialogHeader>
-        
         <div className="grid gap-4 py-4">
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="company" className="text-right">
-              Entreprise
-            </Label>
-            <div className="col-span-3">
-              <Select 
-                value={selectedCompany} 
-                onValueChange={setSelectedCompany}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Sélectionner une entreprise" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none" disabled>Sélectionner une entreprise</SelectItem>
-                  {companies.map((company) => (
-                    <SelectItem key={company.id} value={company.id}>
-                      {company.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="photo" className="text-right">
-              Photo
-            </Label>
-            <div className="col-span-3">
-              <div className="flex items-center gap-4">
-                <div className="w-20 h-20 border rounded-lg overflow-hidden flex items-center justify-center bg-gray-50">
-                  {photo ? (
-                    <img src={photo} alt="Photo de profil" className="w-full h-full object-cover" />
-                  ) : (
-                    <ImageIcon className="w-8 h-8 text-gray-400" />
-                  )}
-                </div>
-                <div className="flex-1">
-                  <Input
-                    id="photo"
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={handlePhotoUpload}
-                  />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="w-full"
-                    onClick={() => document.getElementById('photo')?.click()}
-                  >
-                    <Upload className="w-4 h-4 mr-2" />
-                    Choisir une photo
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </div>
-
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="employee" className="text-right">
               Employé
@@ -225,10 +148,15 @@ const CreateBadgeDialog: React.FC<CreateBadgeDialogProps> = ({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none" disabled>Sélectionner un niveau d'accès</SelectItem>
-                  <SelectItem value="BASIC">Accès Basic</SelectItem>
-                  <SelectItem value="STANDARD">Accès Standard</SelectItem>
-                  <SelectItem value="ADVANCED">Accès Avancé</SelectItem>
-                  <SelectItem value="ADMIN">Accès Administrateur</SelectItem>
+                  <SelectItem value="Sécurité Niveau 1">Sécurité Niveau 1</SelectItem>
+                  <SelectItem value="Sécurité Niveau 2">Sécurité Niveau 2</SelectItem>
+                  <SelectItem value="Sécurité Niveau 3">Sécurité Niveau 3</SelectItem>
+                  <SelectItem value="Administration">Administration</SelectItem>
+                  <SelectItem value="IT">IT</SelectItem>
+                  <SelectItem value="RH">RH</SelectItem>
+                  <SelectItem value="Marketing">Marketing</SelectItem>
+                  <SelectItem value="DIRECTION">DIRECTION</SelectItem>
+                  <SelectItem value="PDG">PDG</SelectItem>
                 </SelectContent>
               </Select>
             </div>

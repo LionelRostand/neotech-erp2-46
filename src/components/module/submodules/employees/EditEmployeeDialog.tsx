@@ -26,7 +26,7 @@ export const EditEmployeeDialog: React.FC<EditEmployeeDialogProps> = ({
   employee
 }) => {
   const { employees } = useEmployeeData();
-  const { departments, isLoading: isLoadingDepartments } = useAvailableDepartments();
+  const { departments } = useAvailableDepartments();
   
   const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm({
     defaultValues: {
@@ -115,15 +115,14 @@ export const EditEmployeeDialog: React.FC<EditEmployeeDialogProps> = ({
             <Select 
               defaultValue={employee.department || ''} 
               onValueChange={(value) => setValue('department', value)}
-              disabled={isLoadingDepartments}
             >
               <SelectTrigger>
-                <SelectValue placeholder={isLoadingDepartments ? "Chargement..." : "Sélectionner un département"} />
+                <SelectValue placeholder="Sélectionner un département" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="none">Aucun département</SelectItem>
+                <SelectItem value="">Aucun département</SelectItem>
                 {departments.map((dept) => (
-                  <SelectItem key={dept.id} value={dept.id}>
+                  <SelectItem key={dept.id} value={dept.name}>
                     {dept.name}
                   </SelectItem>
                 ))}
@@ -185,3 +184,4 @@ export const EditEmployeeDialog: React.FC<EditEmployeeDialogProps> = ({
     </Dialog>
   );
 };
+

@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -7,7 +8,6 @@ import { BadgeData } from './BadgeTypes';
 import { Employee } from '@/types/employee';
 import { jsPDF } from 'jspdf';
 import { Company } from '@/components/module/submodules/companies/types';
-import { useCompaniesData } from '@/hooks/useCompaniesData';
 
 interface BadgePreviewDialogProps {
   isOpen: boolean;
@@ -24,23 +24,20 @@ const BadgePreviewDialog: React.FC<BadgePreviewDialogProps> = ({
   selectedEmployee,
   onDeleteClick
 }) => {
-  const { companies } = useCompaniesData();
-  
   if (!selectedBadge) return null;
   
   const getCompanyName = (): string => {
-    if (!selectedEmployee || !selectedEmployee.company) return "Entreprise";
+    if (!selectedEmployee) return "Enterprise";
+    
+    if (!selectedEmployee.company) return "Enterprise";
     
     if (typeof selectedEmployee.company === 'string') {
-      const foundCompany = companies.find(
-        company => company.id === selectedEmployee.company || 
-                   company.name === selectedEmployee.company
-      );
-      return foundCompany?.name || "Entreprise";
+      return selectedEmployee.company;
     }
     
+    // Now TypeScript knows this is a Company object
     const companyObj = selectedEmployee.company as Company;
-    return companyObj.name || "Entreprise";
+    return companyObj.name || "Enterprise";
   };
   
   const companyName = getCompanyName();

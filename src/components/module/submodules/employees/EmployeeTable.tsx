@@ -24,6 +24,7 @@ import EmployeeDetails from './EmployeeDetails';
 import { EditEmployeeDialog } from './EditEmployeeDialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
+import DeleteConfirmDialog from '@/components/module/submodules/accounting/components/DeleteConfirmDialog';
 
 interface EmployeeTableProps {
   employees: Employee[];
@@ -168,23 +169,13 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({
             employee={selectedEmployee}
           />
 
-          <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Confirmation de suppression</AlertDialogTitle>
-                <AlertDialogDescription>
-                  Êtes-vous sûr de vouloir supprimer l'employé {selectedEmployee.firstName} {selectedEmployee.lastName} ? 
-                  Cette action est irréversible.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Annuler</AlertDialogCancel>
-                <AlertDialogAction onClick={confirmDelete} className="bg-red-500 hover:bg-red-600">
-                  Supprimer
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
+          <DeleteConfirmDialog
+            open={deleteDialogOpen}
+            onOpenChange={setDeleteDialogOpen}
+            onConfirm={confirmDelete}
+            title="Confirmation de suppression"
+            description={`Êtes-vous sûr de vouloir supprimer l'employé ${selectedEmployee.firstName} ${selectedEmployee.lastName} ? Cette action est irréversible.`}
+          />
         </>
       )}
     </>
