@@ -48,7 +48,7 @@ export const useSalarySlipsData = () => {
       const employee = employees?.find(emp => emp.id === payslip.employeeId);
       
       // Extraire le mois et l'année de la date
-      const { month, year } = parseMonthAndYear(payslip.date);
+      const { month, year } = parseMonthAndYear(payslip.date || '');
       
       return {
         id: payslip.id,
@@ -57,9 +57,9 @@ export const useSalarySlipsData = () => {
         employeePhoto: employee?.photoURL || employee?.photo || '',
         month,
         year,
-        date: formatDate(payslip.date),
-        netAmount: payslip.netAmount || 0,
-        grossAmount: payslip.grossAmount || 0,
+        date: formatDate(payslip.date || ''),
+        netAmount: payslip.netAmount || payslip.netSalary || 0,
+        grossAmount: payslip.grossAmount || payslip.grossSalary || 0,
         currency: payslip.currency || 'EUR',
         status: payslip.status || 'Généré',
         pdfUrl: payslip.pdfUrl,

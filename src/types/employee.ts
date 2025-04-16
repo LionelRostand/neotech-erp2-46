@@ -121,6 +121,7 @@ export interface Employee {
   evaluations?: Evaluation[]; // Nouvelle propriété pour les évaluations
   isManager?: boolean; // Added isManager property to fix type errors
   forceManager?: boolean; // Added forceManager property to match d.ts file
+  salary?: number; // Add the salary property
   conges?: {
     acquired: number;
     taken: number;

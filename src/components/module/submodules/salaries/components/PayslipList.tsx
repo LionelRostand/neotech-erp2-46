@@ -148,7 +148,7 @@ const PayslipList: React.FC = () => {
                         {new Intl.NumberFormat('fr-FR', { 
                           style: 'currency', 
                           currency: payslip.currency || 'EUR'
-                        }).format(payslip.netAmount || 0)}
+                        }).format(payslip.netAmount || payslip.netSalary || 0)}
                       </td>
                       <td className="py-3 px-4">
                         <span className={`px-2 py-1 rounded-full text-xs ${
@@ -195,4 +195,3 @@ const PayslipList: React.FC = () => {
 };
 
 export default PayslipList;
-
