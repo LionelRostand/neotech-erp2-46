@@ -28,13 +28,8 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
   const [updatedEmployee, setUpdatedEmployee] = useState<Employee>(employee);
   
   const handleEditTab = () => {
-    if (activeTab === 'infos') {
-      onEdit();
-    } else {
-      // Activer le mode édition pour l'onglet actif
-      setIsEditing(true);
-      toast.info(`Mode édition activé pour l'onglet ${getTabName(activeTab)}`);
-    }
+    setIsEditing(true);
+    toast.info(`Mode édition activé pour l'onglet ${getTabName(activeTab)}`);
   };
 
   const handleFinishEditing = () => {
@@ -141,16 +136,11 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
     onExportPdf();
   };
 
-  const handleEmployeeUpdate = () => {
-    // This function will be passed to each tab component to handle employee updates
-    setUpdatedEmployee(prevEmployee => ({ ...prevEmployee }));
-  };
-
   return (
     <div className="space-y-6">
       <EmployeeProfileHeader 
         employee={updatedEmployee} 
-        onEmployeeUpdate={handleEmployeeUpdate}
+        onEmployeeUpdate={employee => setUpdatedEmployee(employee)}
       />
 
       <Tabs defaultValue="infos" value={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -182,7 +172,7 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
         <TabsContent value="competences">
           <CompetencesTab 
             employee={updatedEmployee}
-            onEmployeeUpdated={handleEmployeeUpdate}
+            onEmployeeUpdated={() => {}}
             isEditing={isEditing && activeTab === 'competences'}
             onFinishEditing={handleFinishEditing}
           />
