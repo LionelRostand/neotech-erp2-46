@@ -1,4 +1,3 @@
-
 import { db } from '@/lib/firebase';
 import { 
   doc, 
@@ -18,7 +17,7 @@ import {
 import { Document } from '@/types/employee';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 
-// Récupérer les documents d'un employé
+// Renamed to avoid export conflicts
 export const getEmployeeDocuments = async (employeeId: string): Promise<Document[]> => {
   try {
     const employeeRef = doc(db, COLLECTIONS.HR.EMPLOYEES, employeeId);
@@ -39,8 +38,8 @@ export const getEmployeeDocuments = async (employeeId: string): Promise<Document
   }
 };
 
-// Ajouter un document à un employé et à la collection hr_documents
-export const addEmployeeDocument = async (employeeId: string, document: Document): Promise<Document> => {
+// Renamed function to saveEmployeeDocument to avoid conflict
+export const saveEmployeeDocument = async (employeeId: string, document: Document): Promise<Document> => {
   try {
     console.log(`Ajout d'un document pour l'employé ${employeeId}:`, document);
     
@@ -134,6 +133,9 @@ export const addEmployeeDocument = async (employeeId: string, document: Document
   }
 };
 
+// For backward compatibility with existing code
+export const addEmployeeDocument = saveEmployeeDocument;
+
 // Supprimer un document d'un employé
 export const removeEmployeeDocument = async (employeeId: string, documentId: string): Promise<void> => {
   try {
@@ -221,4 +223,3 @@ export const getDocumentTypes = async (): Promise<string[]> => {
     "Autre"
   ];
 };
-

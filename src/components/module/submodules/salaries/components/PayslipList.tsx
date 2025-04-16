@@ -1,7 +1,7 @@
 import React from 'react';
 import { Card } from '@/components/ui/card';
 import { PaySlip } from '@/types/payslip';
-import { addEmployeeDocument } from '../../employees/services/documentService';
+import { saveEmployeeDocument } from '../../employees/services/documentService';
 import { useToast } from "@/components/ui/use-toast"
 import {
   Table,
@@ -42,10 +42,10 @@ const PayslipList = () => {
         type: 'Fiche de paie',
         date: payslip.paymentDate,
         employeeId: payslip.employeeId,
-        fileData: payslip.url // Assuming payslip has a URL or data
+        fileData: payslip.fileData || null // Use fileData instead of url
       };
 
-      await addEmployeeDocument(payslip.employeeId, document);
+      await saveEmployeeDocument(payslip.employeeId, document);
     } catch (error) {
       console.error("Error adding payslip as document:", error);
     }
@@ -106,6 +106,9 @@ const PayslipList = () => {
                       Télécharger
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => handlePayslipGenerated(payslip)}>
+                      Ajouter aux documents
+                    </DropdownMenuItem>
                     <DropdownMenuItem>
                       Supprimer
                     </DropdownMenuItem>

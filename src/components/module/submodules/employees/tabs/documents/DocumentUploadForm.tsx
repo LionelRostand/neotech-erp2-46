@@ -12,7 +12,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useForm } from 'react-hook-form';
-import { addEmployeeDocument } from '../../services/documentService';
+import { saveEmployeeDocument } from '../../services/documentService';
 import { toast } from 'sonner';
 
 interface DocumentUploadFormProps {
@@ -67,7 +67,7 @@ export const DocumentUploadForm: React.FC<DocumentUploadFormProps> = ({
           fileData: base64Data
         };
 
-        await addEmployeeDocument(employeeId, document);
+        await saveEmployeeDocument(employeeId, document);
         toast.success("Document ajouté avec succès");
         form.reset();
         if (onUploadComplete) {
