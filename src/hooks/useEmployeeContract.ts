@@ -8,8 +8,10 @@ export const useEmployeeContract = (employeeId: string) => {
   const result = useMemo(() => {
     if (!contracts || !employeeId) return { contract: null, salary: 0 };
     
-    // Find the employee to get their salary (if available)
+    // Find the employee
     const employee = employees?.find(emp => emp.id === employeeId);
+    
+    // Get salary from employee record (may be undefined)
     const employeeSalary = employee?.salary || 0;
     
     // Récupérer le contrat actif le plus récent de l'employé

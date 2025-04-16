@@ -1,3 +1,4 @@
+
 export interface Employee {
   id: string;
   firstName: string;
@@ -37,7 +38,7 @@ export interface Employee {
   userAccountId?: string;
   payslips?: string[];
   title?: string;
-  forceManager?: boolean; // Added forceManager property
+  forceManager?: boolean;
   conges?: {
     acquired: number;
     taken: number;
