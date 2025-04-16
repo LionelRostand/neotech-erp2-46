@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
@@ -52,9 +51,10 @@ const CreateBadgeDialog: React.FC<CreateBadgeDialogProps> = ({
     
     const employeeInitials = getEmployeeInitials(employee.firstName, employee.lastName);
     
-    // Generate employee short ID - handle the case where shortId might not exist
-    // TypeScript safe approach using type assertion or type guard
-    const employeeShortId = 'shortId' in employee && employee.shortId ? employee.shortId : employeeInitials;
+    const employeeShortId: string = 
+      employee.shortId && typeof employee.shortId === 'string' 
+        ? employee.shortId 
+        : employeeInitials;
     
     const newBadge: BadgeData = {
       id: badgeNumber,
