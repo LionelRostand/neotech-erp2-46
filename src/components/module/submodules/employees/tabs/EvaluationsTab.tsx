@@ -1,9 +1,10 @@
-
 import React from 'react';
 import { Card } from '@/components/ui/card';
 import { Employee } from '@/types/employee';
 import { useEvaluationsData } from '@/hooks/useEvaluationsData';
 import { Progress } from '@/components/ui/progress';
+import { Button } from '@/components/ui/button';
+import { Plus } from '@/components/ui/icons';
 
 interface EvaluationsTabProps {
   employee: Employee;
@@ -11,9 +12,15 @@ interface EvaluationsTabProps {
   onFinishEditing?: () => void;
 }
 
-const EvaluationsTab: React.FC<EvaluationsTabProps> = ({ employee }) => {
+const EvaluationsTab: React.FC<EvaluationsTabProps> = ({ 
+  employee,
+  isEditing = false,
+  onFinishEditing 
+}) => {
   const { evaluations, isLoading } = useEvaluationsData();
-  const employeeEvaluations = evaluations.filter(evaluation => evaluation.employeeId === employee.id);
+  const employeeEvaluations = evaluations.filter(evaluation => 
+    evaluation.employeeId === employee.id
+  );
 
   if (isLoading) {
     return (
@@ -42,6 +49,16 @@ const EvaluationsTab: React.FC<EvaluationsTabProps> = ({ employee }) => {
 
   return (
     <Card className="p-6">
+      <div className="flex justify-between items-center mb-4">
+        <h3 className="font-medium">Évaluations</h3>
+        {isEditing && (
+          <Button size="sm" variant="outline">
+            <Plus className="h-4 w-4 mr-2" />
+            Nouvelle évaluation
+          </Button>
+        )}
+      </div>
+      
       <div className="space-y-6">
         {employeeEvaluations.map((evaluation) => (
           <div 

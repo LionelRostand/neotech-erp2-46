@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Card } from '@/components/ui/card';
 import { Employee } from '@/types/employee';
 import { useDocumentsData } from '@/hooks/useDocumentsData';
@@ -14,7 +14,7 @@ interface DocumentsTabProps {
 
 const DocumentsTab: React.FC<DocumentsTabProps> = ({ 
   employee,
-  isEditing 
+  isEditing = false
 }) => {
   const { documents, isLoading } = useDocumentsData();
   

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Clock, Save } from 'lucide-react';
@@ -16,7 +15,11 @@ interface HorairesTabProps {
   onFinishEditing?: () => void;
 }
 
-const HorairesTab: React.FC<HorairesTabProps> = ({ employee, isEditing = false, onFinishEditing }) => {
+const HorairesTab: React.FC<HorairesTabProps> = ({ 
+  employee, 
+  isEditing = false,
+  onFinishEditing 
+}) => {
   const defaultSchedule = {
     monday: '09:00 - 18:00',
     tuesday: '09:00 - 18:00',
@@ -30,7 +33,6 @@ const HorairesTab: React.FC<HorairesTabProps> = ({ employee, isEditing = false, 
   const [workSchedule, setWorkSchedule] = useState(employee.workSchedule || defaultSchedule);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Mettre à jour les horaires lorsque les données de l'employé changent
   useEffect(() => {
     setWorkSchedule(employee.workSchedule || defaultSchedule);
   }, [employee]);

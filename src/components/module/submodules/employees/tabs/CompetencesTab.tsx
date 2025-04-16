@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -12,26 +11,18 @@ import { updateEmployeeSkills } from '../services/employeeService';
 interface CompetencesTabProps {
   employee: Employee;
   onEmployeeUpdated: () => void;
-  isEditing?: boolean; // Make isEditing optional
-  onFinishEditing?: () => void; // Make onFinishEditing optional
+  isEditing?: boolean;
+  onFinishEditing?: () => void;
 }
 
 const CompetencesTab: React.FC<CompetencesTabProps> = ({ 
   employee, 
-  onEmployeeUpdated, 
-  isEditing: externalIsEditing, 
-  onFinishEditing 
+  isEditing = false,
+  onFinishEditing,
+  onEmployeeUpdated 
 }) => {
   const [skills, setSkills] = useState<string[]>(employee.skills || []);
   const [newSkill, setNewSkill] = useState('');
-  const [isEditing, setIsEditing] = useState(false);
-
-  // Sync with external isEditing state if provided
-  useEffect(() => {
-    if (externalIsEditing !== undefined) {
-      setIsEditing(externalIsEditing);
-    }
-  }, [externalIsEditing]);
 
   const handleAddSkill = () => {
     if (!newSkill.trim()) return;
@@ -53,14 +44,7 @@ const CompetencesTab: React.FC<CompetencesTabProps> = ({
   const handleSaveSkills = async () => {
     try {
       await updateEmployeeSkills(employee.id, skills);
-      
-      // If we're using external editing state, call the callback
-      if (onFinishEditing) {
-        onFinishEditing();
-      } else {
-        setIsEditing(false);
-      }
-      
+      onFinishEditing?.();
       onEmployeeUpdated();
       toast.success("Compétences mises à jour avec succès");
     } catch (error) {
@@ -74,15 +58,7 @@ const CompetencesTab: React.FC<CompetencesTabProps> = ({
       <CardHeader className="pb-2">
         <div className="flex justify-between items-center">
           <CardTitle className="text-lg font-medium">Compétences</CardTitle>
-          {!isEditing ? (
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={() => setIsEditing(true)}
-            >
-              Modifier
-            </Button>
-          ) : (
+          {isEditing && (
             <Button 
               variant="default" 
               size="sm" 
