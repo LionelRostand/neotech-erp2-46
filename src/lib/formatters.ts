@@ -146,3 +146,28 @@ export const formatPhoneNumber = (
     return phoneNumber;
   }
 };
+
+/**
+ * Safely parses a date string into a Date object
+ * @param dateStr Date string to parse
+ * @returns A valid Date object or null if invalid
+ */
+export const safeParseDate = (dateStr: string | null | undefined): Date | null => {
+  if (!dateStr) return null;
+  
+  try {
+    // Handle French format DD/MM/YYYY
+    if (/^\d{2}\/\d{2}\/\d{4}$/.test(dateStr)) {
+      const [day, month, year] = dateStr.split('/').map(Number);
+      const date = new Date(year, month - 1, day);
+      return isNaN(date.getTime()) ? null : date;
+    }
+    
+    // Try standard parsing
+    const date = new Date(dateStr);
+    return isNaN(date.getTime()) ? null : date;
+  } catch (error) {
+    console.error('Error parsing date:', dateStr, error);
+    return null;
+  }
+};
