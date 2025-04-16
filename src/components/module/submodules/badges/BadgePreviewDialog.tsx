@@ -8,6 +8,7 @@ import { BadgeData } from './BadgeTypes';
 import { Employee } from '@/types/employee';
 import { jsPDF } from 'jspdf';
 import { Company } from '@/components/module/submodules/companies/types';
+import { useCompaniesData } from '@/hooks/useCompaniesData';
 
 interface BadgePreviewDialogProps {
   isOpen: boolean;
@@ -24,6 +25,8 @@ const BadgePreviewDialog: React.FC<BadgePreviewDialogProps> = ({
   selectedEmployee,
   onDeleteClick
 }) => {
+  const { companies } = useCompaniesData();
+  
   if (!selectedBadge) return null;
   
   const getCompanyName = (): string => {
@@ -31,16 +34,19 @@ const BadgePreviewDialog: React.FC<BadgePreviewDialogProps> = ({
     
     if (!selectedEmployee.company) return "Enterprise";
     
+    // Si company est un string (ID), chercher l'entreprise correspondante
     if (typeof selectedEmployee.company === 'string') {
-      return selectedEmployee.company;
+      const companyData = companies.find(c => c.id === selectedEmployee.company);
+      return companyData?.name || selectedEmployee.company;
     }
     
-    // Now TypeScript knows this is a Company object
+    // Si c'est un objet Company
     const companyObj = selectedEmployee.company as Company;
-    return companyObj.name || "Enterprise";
+    return companyObj.name || companyObj.id || "Enterprise";
   };
   
   const companyName = getCompanyName();
+  const badgeShortId = selectedBadge.id.split('-')[1] || selectedBadge.id;
   
   const handleDownloadBadge = () => {
     const doc = new jsPDF({
@@ -70,7 +76,7 @@ const BadgePreviewDialog: React.FC<BadgePreviewDialogProps> = ({
     
     doc.setTextColor(0, 0, 0);
     doc.setFontSize(8);
-    doc.text(`ID: ${selectedBadge.id}`, 42.5, 18, { align: 'center' });
+    doc.text(`ID: ${badgeShortId}`, 42.5, 18, { align: 'center' });
     
     doc.setFontSize(12);
     doc.setFont('helvetica', 'bold');
@@ -124,14 +130,16 @@ const BadgePreviewDialog: React.FC<BadgePreviewDialogProps> = ({
         
         <div className="py-4">
           <div className="bg-gray-100 rounded-md p-6 mb-4">
-            <div className={`h-2 w-full mb-3 rounded-t ${
+            <div className={`h-8 w-full mb-3 rounded-t flex items-center px-3 ${
               selectedBadge.status === 'success' ? 'bg-green-500' : 
               selectedBadge.status === 'warning' ? 'bg-amber-500' : 'bg-red-500'
-            }`}></div>
+            }`}>
+              <span className="text-white font-bold text-sm">{companyName.toUpperCase()}</span>
+            </div>
             
             <div className="text-center mb-3">
-              <p className="text-sm text-gray-500">ID: {selectedBadge.id}</p>
-              <h3 className="text-lg font-bold">{selectedBadge.employeeName}</h3>
+              <p className="text-sm text-gray-500">ID Badge: {badgeShortId}</p>
+              <h3 className="text-lg font-bold mt-2">{selectedBadge.employeeName}</h3>
               <p className="text-sm text-gray-600">Entreprise: {companyName}</p>
             </div>
             

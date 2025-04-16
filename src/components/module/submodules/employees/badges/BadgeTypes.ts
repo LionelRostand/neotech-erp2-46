@@ -28,5 +28,7 @@ export const getInitials = (firstName: string, lastName: string) => {
 };
 
 export const generateBadgeNumber = (): string => {
-  return `B-${Math.floor(2460 + Math.random() * 100)}`;
+  // Generate a 4-digit number between 1000 and 9999
+  const number = Math.floor(1000 + Math.random() * 9000);
+  return `B${number}`;
 };
