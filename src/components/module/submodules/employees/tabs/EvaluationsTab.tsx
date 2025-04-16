@@ -1,10 +1,11 @@
+
 import React from 'react';
 import { Card } from '@/components/ui/card';
 import { Employee } from '@/types/employee';
 import { useEvaluationsData } from '@/hooks/useEvaluationsData';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
-import { Plus } from 'lucide-react';
+import { Plus, Save } from 'lucide-react';
 
 interface EvaluationsTabProps {
   employee: Employee;
@@ -52,8 +53,12 @@ const EvaluationsTab: React.FC<EvaluationsTabProps> = ({
       <div className="flex justify-between items-center mb-4">
         <h3 className="font-medium">Évaluations</h3>
         {isEditing && (
-          <Button size="sm" variant="outline">
-            <Plus className="h-4 w-4 mr-2" />
+          <Button 
+            size="sm" 
+            variant="outline"
+            className="flex items-center gap-2"
+          >
+            <Plus className="h-4 w-4" />
             Nouvelle évaluation
           </Button>
         )}

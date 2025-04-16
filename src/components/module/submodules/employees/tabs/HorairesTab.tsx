@@ -37,6 +37,31 @@ const HorairesTab: React.FC<HorairesTabProps> = ({
     setWorkSchedule(employee.workSchedule || defaultSchedule);
   }, [employee]);
 
+  if (!isEditing) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Horaires de travail</CardTitle>
+        </CardHeader>
+        <CardContent className="p-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {days.map(day => (
+              <div key={day.key} className={`p-4 border rounded-md ${(day.key === 'saturday' || day.key === 'sunday') && !workSchedule[day.key] ? 'opacity-70' : ''}`}>
+                <p className="text-sm font-medium text-gray-500 mb-2">
+                  {day.label}
+                </p>
+                <div className="flex items-center gap-2">
+                  <Clock className="h-4 w-4 text-blue-500" />
+                  <span>{workSchedule[day.key as keyof typeof workSchedule] || 'Jour non travaillé'}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   const handleScheduleChange = (day: string, value: string) => {
     setWorkSchedule({
       ...workSchedule,
