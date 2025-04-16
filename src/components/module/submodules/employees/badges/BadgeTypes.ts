@@ -14,6 +14,12 @@ export interface BadgeData {
   employeeShortId?: string;
 }
 
+export interface BadgesTableProps {
+  badgesList: BadgeData[];
+  onBadgeClick: (badgeId: string) => void;
+  loading?: boolean;
+}
+
 export const generateBadgeNumber = (): string => {
   const prefix = 'BDG';
   const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
