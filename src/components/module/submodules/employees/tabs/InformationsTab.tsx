@@ -1,40 +1,63 @@
 
 import React, { useState } from 'react';
-import { Employee, EmployeeAddress } from '@/types/employee';
-import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Edit, Save, X } from 'lucide-react';
+import { Employee, EmployeeAddress } from '@/types/employee';
+import { toast } from 'sonner';
 
-interface InformationsTabProps {
+export interface InformationsTabProps {
   employee: Employee;
-  onAddressUpdated: (addressData: EmployeeAddress) => Promise<void>;
+  onAddressUpdated?: (addressData: any) => Promise<void>;
 }
 
-const InformationsTab: React.FC<InformationsTabProps> = ({ employee, onAddressUpdated }) => {
-  const [editingAddress, setEditingAddress] = useState(false);
-  const [addressData, setAddressData] = useState<EmployeeAddress>(() => {
-    // Initialize with the current address or default values
-    if (typeof employee.address === 'string') {
-      return {
-        street: '',
-        streetNumber: '',
-        city: '',
-        postalCode: '',
-        country: 'France',
-      };
+const InformationsTab: React.FC<InformationsTabProps> = ({ 
+  employee,
+  onAddressUpdated = async () => {} 
+}) => {
+  const [isEditingAddress, setIsEditingAddress] = useState(false);
+  const [addressData, setAddressData] = useState<EmployeeAddress>(
+    typeof employee.address === 'object' 
+      ? employee.address as EmployeeAddress 
+      : {
+          street: '',
+          streetNumber: '',
+          city: '',
+          postalCode: '',
+          country: 'France'
+        }
+  );
+
+  const handleEditAddress = () => {
+    setIsEditingAddress(true);
+  };
+
+  const handleCancelEdit = () => {
+    // Reset to original address data
+    setAddressData(
+      typeof employee.address === 'object' 
+        ? employee.address as EmployeeAddress 
+        : {
+            street: '',
+            streetNumber: '',
+            city: '',
+            postalCode: '',
+            country: 'France'
+          }
+    );
+    setIsEditingAddress(false);
+  };
+
+  const handleSaveAddress = async () => {
+    try {
+      await onAddressUpdated(addressData);
+      setIsEditingAddress(false);
+    } catch (error) {
+      console.error('Error saving address:', error);
+      toast.error("Une erreur s'est produite lors de l'enregistrement de l'adresse");
     }
-    
-    return {
-      street: employee.address?.street || '',
-      streetNumber: employee.address?.streetNumber || '',
-      city: employee.address?.city || '',
-      postalCode: employee.address?.postalCode || '',
-      country: employee.address?.country || 'France',
-      state: employee.address?.state || '',
-    };
-  });
+  };
 
   const handleAddressChange = (field: keyof EmployeeAddress, value: string) => {
     setAddressData(prev => ({
@@ -43,222 +66,161 @@ const InformationsTab: React.FC<InformationsTabProps> = ({ employee, onAddressUp
     }));
   };
 
-  const handleSaveAddress = async () => {
-    await onAddressUpdated(addressData);
-    setEditingAddress(false);
-  };
-
-  const handleCancelEdit = () => {
-    // Reset to the current employee address
-    if (typeof employee.address === 'string') {
-      setAddressData({
-        street: '',
-        streetNumber: '',
-        city: '',
-        postalCode: '',
-        country: 'France',
-      });
-    } else {
-      setAddressData({
-        street: employee.address?.street || '',
-        streetNumber: employee.address?.streetNumber || '',
-        city: employee.address?.city || '',
-        postalCode: employee.address?.postalCode || '',
-        country: employee.address?.country || 'France',
-        state: employee.address?.state || '',
-      });
-    }
-    setEditingAddress(false);
-  };
-
   // Format address for display
-  const getFormattedAddress = () => {
+  const formatAddress = () => {
     if (typeof employee.address === 'string') {
       return employee.address;
     }
     
-    if (!employee.address) {
-      return 'Adresse non renseignée';
+    if (typeof employee.address === 'object' && employee.address) {
+      const addr = employee.address as EmployeeAddress;
+      const streetWithNumber = addr.streetNumber 
+        ? `${addr.streetNumber} ${addr.street}`
+        : addr.street;
+      
+      return `${streetWithNumber}, ${addr.postalCode} ${addr.city}, ${addr.country}`;
     }
     
-    const { streetNumber, street, city, postalCode, country } = employee.address;
-    return `${streetNumber ? streetNumber + ' ' : ''}${street}, ${postalCode} ${city}, ${country}`;
+    return 'Adresse non spécifiée';
   };
 
   return (
-    <div className="p-4 space-y-6">
-      {/* Personal Information */}
-      <Card>
-        <CardContent className="pt-6">
-          <h3 className="text-lg font-semibold mb-4">Informations personnelles</h3>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <h4 className="text-sm font-medium text-muted-foreground mb-1">Nom</h4>
-              <p>{employee.lastName}</p>
-            </div>
-            
-            <div>
-              <h4 className="text-sm font-medium text-muted-foreground mb-1">Prénom</h4>
-              <p>{employee.firstName}</p>
-            </div>
-            
-            <div>
-              <h4 className="text-sm font-medium text-muted-foreground mb-1">Email</h4>
-              <p>{employee.email}</p>
-            </div>
-            
-            <div>
-              <h4 className="text-sm font-medium text-muted-foreground mb-1">Téléphone</h4>
-              <p>{employee.phone || 'Non renseigné'}</p>
-            </div>
-            
-            <div>
-              <h4 className="text-sm font-medium text-muted-foreground mb-1">Date de naissance</h4>
-              <p>{employee.birthDate || 'Non renseignée'}</p>
-            </div>
-            
-            <div>
-              <h4 className="text-sm font-medium text-muted-foreground mb-1">Numéro de sécurité sociale</h4>
-              <p>{employee.socialSecurityNumber || 'Non renseigné'}</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+    <div className="p-4">
+      <h2 className="text-xl font-semibold mb-4">Informations de {employee.firstName} {employee.lastName}</h2>
       
-      {/* Address Information */}
-      <Card>
-        <CardContent className="pt-6">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-semibold">Adresse</h3>
-            
-            {!editingAddress ? (
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => setEditingAddress(true)}
-              >
-                <Edit className="h-4 w-4 mr-2" />
-                Modifier
-              </Button>
-            ) : (
-              <div className="flex space-x-2">
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={handleCancelEdit}
-                >
-                  <X className="h-4 w-4 mr-2" />
-                  Annuler
-                </Button>
-                <Button 
-                  variant="default" 
-                  size="sm" 
-                  onClick={handleSaveAddress}
-                >
-                  <Save className="h-4 w-4 mr-2" />
-                  Enregistrer
-                </Button>
-              </div>
-            )}
-          </div>
-          
-          {editingAddress ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Personal Information */}
+        <Card>
+          <CardContent className="pt-6">
+            <h3 className="text-lg font-medium mb-4">Informations personnelles</h3>
+            <div className="space-y-4">
               <div>
-                <Label htmlFor="streetNumber">Numéro</Label>
-                <Input 
-                  id="streetNumber"
-                  value={addressData.streetNumber || ''}
-                  onChange={(e) => handleAddressChange('streetNumber', e.target.value)}
-                  placeholder="N°"
-                />
+                <Label>Nom</Label>
+                <div className="mt-1">{employee.lastName}</div>
               </div>
-              
-              <div className="md:col-span-2">
-                <Label htmlFor="street">Rue</Label>
-                <Input
-                  id="street"
-                  value={addressData.street}
-                  onChange={(e) => handleAddressChange('street', e.target.value)}
-                  placeholder="Rue"
-                />
-              </div>
-              
               <div>
-                <Label htmlFor="postalCode">Code postal</Label>
-                <Input
-                  id="postalCode"
-                  value={addressData.postalCode}
-                  onChange={(e) => handleAddressChange('postalCode', e.target.value)}
-                  placeholder="Code postal"
-                />
+                <Label>Prénom</Label>
+                <div className="mt-1">{employee.firstName}</div>
               </div>
-              
               <div>
-                <Label htmlFor="city">Ville</Label>
-                <Input
-                  id="city"
-                  value={addressData.city}
-                  onChange={(e) => handleAddressChange('city', e.target.value)}
-                  placeholder="Ville"
-                />
+                <Label>Date de naissance</Label>
+                <div className="mt-1">{employee.birthDate || 'Non spécifié'}</div>
               </div>
-              
               <div>
-                <Label htmlFor="country">Pays</Label>
-                <Input
-                  id="country"
-                  value={addressData.country}
-                  onChange={(e) => handleAddressChange('country', e.target.value)}
-                  placeholder="Pays"
-                />
+                <Label>Adresse</Label>
+                <div className="mt-1 flex justify-between items-start">
+                  {isEditingAddress ? (
+                    <div className="w-full space-y-4">
+                      <div>
+                        <Label htmlFor="streetNumber">Numéro</Label>
+                        <Input
+                          id="streetNumber"
+                          value={addressData.streetNumber || ''}
+                          onChange={(e) => handleAddressChange('streetNumber', e.target.value)}
+                          placeholder="Numéro"
+                          className="mt-1"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="street">Rue</Label>
+                        <Input
+                          id="street"
+                          value={addressData.street}
+                          onChange={(e) => handleAddressChange('street', e.target.value)}
+                          placeholder="Rue"
+                          className="mt-1"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="postalCode">Code postal</Label>
+                        <Input
+                          id="postalCode"
+                          value={addressData.postalCode}
+                          onChange={(e) => handleAddressChange('postalCode', e.target.value)}
+                          placeholder="Code postal"
+                          className="mt-1"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="city">Ville</Label>
+                        <Input
+                          id="city"
+                          value={addressData.city}
+                          onChange={(e) => handleAddressChange('city', e.target.value)}
+                          placeholder="Ville"
+                          className="mt-1"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="country">Pays</Label>
+                        <Input
+                          id="country"
+                          value={addressData.country}
+                          onChange={(e) => handleAddressChange('country', e.target.value)}
+                          placeholder="Pays"
+                          className="mt-1"
+                        />
+                      </div>
+                      <div className="flex space-x-2 mt-4">
+                        <Button onClick={handleSaveAddress}>Enregistrer</Button>
+                        <Button variant="outline" onClick={handleCancelEdit}>Annuler</Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      <div>{formatAddress()}</div>
+                      <Button variant="ghost" size="sm" onClick={handleEditAddress}>
+                        Modifier
+                      </Button>
+                    </>
+                  )}
+                </div>
+              </div>
+              <div>
+                <Label>Numéro de sécurité sociale</Label>
+                <div className="mt-1">{employee.socialSecurityNumber || 'Non spécifié'}</div>
               </div>
             </div>
-          ) : (
-            <p>{getFormattedAddress()}</p>
-          )}
-        </CardContent>
-      </Card>
-      
-      {/* Professional Information */}
-      <Card>
-        <CardContent className="pt-6">
-          <h3 className="text-lg font-semibold mb-4">Informations professionnelles</h3>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <h4 className="text-sm font-medium text-muted-foreground mb-1">Poste</h4>
-              <p>{employee.position || 'Non renseigné'}</p>
+          </CardContent>
+        </Card>
+        
+        {/* Professional Information */}
+        <Card>
+          <CardContent className="pt-6">
+            <h3 className="text-lg font-medium mb-4">Informations professionnelles</h3>
+            <div className="space-y-4">
+              <div>
+                <Label>Email professionnel</Label>
+                <div className="mt-1">{employee.professionalEmail || employee.email}</div>
+              </div>
+              <div>
+                <Label>Téléphone</Label>
+                <div className="mt-1">{employee.phone || 'Non spécifié'}</div>
+              </div>
+              <div>
+                <Label>Poste</Label>
+                <div className="mt-1">{employee.position || employee.title}</div>
+              </div>
+              <div>
+                <Label>Département</Label>
+                <div className="mt-1">{employee.department}</div>
+              </div>
+              <div>
+                <Label>Manager</Label>
+                <div className="mt-1">{employee.manager || 'Aucun'}</div>
+              </div>
+              <div>
+                <Label>Date d'embauche</Label>
+                <div className="mt-1">{employee.hireDate || employee.startDate || 'Non spécifié'}</div>
+              </div>
+              <div>
+                <Label>Type de contrat</Label>
+                <div className="mt-1">{employee.contract || 'Non spécifié'}</div>
+              </div>
             </div>
-            
-            <div>
-              <h4 className="text-sm font-medium text-muted-foreground mb-1">Département</h4>
-              <p>{employee.department || 'Non renseigné'}</p>
-            </div>
-            
-            <div>
-              <h4 className="text-sm font-medium text-muted-foreground mb-1">Date d'embauche</h4>
-              <p>{employee.hireDate || 'Non renseignée'}</p>
-            </div>
-            
-            <div>
-              <h4 className="text-sm font-medium text-muted-foreground mb-1">Type de contrat</h4>
-              <p>{employee.contract || 'Non renseigné'}</p>
-            </div>
-            
-            <div>
-              <h4 className="text-sm font-medium text-muted-foreground mb-1">Manager</h4>
-              <p>{employee.manager || 'Non renseigné'}</p>
-            </div>
-            
-            <div>
-              <h4 className="text-sm font-medium text-muted-foreground mb-1">Email professionnel</h4>
-              <p>{employee.professionalEmail || employee.email}</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 };

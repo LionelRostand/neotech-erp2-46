@@ -1,29 +1,31 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Employee } from '@/types/employee';
-import EmployeesList from './employees/EmployeesList';
-import EmployeeDetails from './employees/EmployeeDetails';
-import EmployeeForm from './employees/EmployeeForm';
+import { 
+  Card, 
+  CardContent, 
+} from '@/components/ui/card';
+import EmployeeTable from './employees/EmployeeTable';
+import EmployeeFilter from './employees/EmployeeFilter';
+import { Plus, RefreshCw } from 'lucide-react';
+import { useHrModuleData } from '@/hooks/useHrModuleData';
+import CreateEmployeeDialog from './employees/CreateEmployeeDialog';
+import ImportEmployeesDialog from './employees/ImportEmployeesDialog';
 import { toast } from 'sonner';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useEmployeeData } from '@/hooks/useEmployeeData';
-import { RefreshCw } from 'lucide-react';
+import { Employee } from '@/types/employee';
+import { safelyGetDocumentId } from '@/hooks/firestore/common-utils';
+import EmployeesDashboardCards from './employees/dashboard/EmployeesDashboardCards';
+import { deleteDocument } from '@/hooks/firestore/delete-operations';
+import { COLLECTIONS } from '@/lib/firebase-collections';
+import { collection, getDocs, query, where } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 
-interface EmployeesProfilesProps {
-  employees?: Employee[];
-  searchQuery?: string;
-  setSearchQuery?: (query: string) => void;
-  onViewEmployee?: (employee: Employee) => void;
-  onEditEmployee?: (employee: Employee) => void;
-  onDeleteEmployee?: (employeeId: string) => void;
-  onOpenAddEmployee?: () => void;
+export interface EmployeesProfilesProps {
+  employees: Employee[];
 }
 
-const EmployeesProfiles: React.FC<EmployeesProfilesProps> = (props) => {
-  const { employees: fetchedEmployees, isLoading } = useEmployeeData();
-  const [searchQuery, setSearchQuery] = useState(props.searchQuery || '');
+const EmployeesProfiles: React.FC<EmployeesProfilesProps> = ({ employees }) => {
+  const { fetchedEmployees, isLoading } = useHrModuleData();
+  const [searchQuery, setSearchQuery] = useState('');
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [isAddEmployeeOpen, setIsAddEmployeeOpen] = useState(false);
@@ -33,12 +35,12 @@ const EmployeesProfiles: React.FC<EmployeesProfilesProps> = (props) => {
   const [selectedCompany, setSelectedCompany] = useState<string>('all');
 
   useEffect(() => {
-    if (props.employees && props.employees.length > 0) {
-      setEmployees(props.employees);
+    if (employees && employees.length > 0) {
+      setEmployees(employees);
     } else if (fetchedEmployees) {
       setEmployees(fetchedEmployees);
     }
-  }, [props.employees, fetchedEmployees]);
+  }, [employees, fetchedEmployees]);
 
   const companies = [
     { id: 'all', name: 'Toutes les entreprises' },

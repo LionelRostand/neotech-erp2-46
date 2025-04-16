@@ -20,7 +20,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Employee } from '@/types/employee';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import EmployeeDetails from './EmployeeDetails';
+import EmployeeDetails, { EmployeeDetailsProps } from './EmployeeDetails';
 import { EditEmployeeDialog } from './EditEmployeeDialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
@@ -152,14 +152,16 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({
               <DialogHeader>
                 <DialogTitle>Profil de l'employé</DialogTitle>
               </DialogHeader>
-              <EmployeeDetails 
-                employee={selectedEmployee} 
-                onExportPdf={handleExportPdf} 
-                onEdit={() => {
-                  setViewDetailsOpen(false);
-                  setEditDialogOpen(true);
-                }}
-              />
+              <div>
+                <EmployeeDetails 
+                  employee={selectedEmployee} 
+                  onExportPdf={handleExportPdf} 
+                  onEdit={() => {
+                    setViewDetailsOpen(false);
+                    setEditDialogOpen(true);
+                  }}
+                />
+              </div>
             </DialogContent>
           </Dialog>
 

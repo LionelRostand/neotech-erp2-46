@@ -68,6 +68,16 @@ const EmployeeProfileView: React.FC<{ employee?: Employee; isLoading?: boolean }
   // Use the useEmployeePermissions hook with the module ID and employee ID
   const { canView, canEdit, isOwnProfile, loading } = useEmployeePermissions('employees-profiles', employeeId);
 
+  // Handle dummy address updates - this is just a placeholder for the interface
+  const handleAddressUpdated = async () => {
+    return Promise.resolve();
+  };
+
+  // Dummy function for employee updates
+  const handleEmployeeUpdated = async () => {
+    return Promise.resolve();
+  };
+
   // If employee data is loading or permission check is in progress
   if (isLoading || loading) {
     return (
@@ -147,13 +157,19 @@ const EmployeeProfileView: React.FC<{ employee?: Employee; isLoading?: boolean }
           <TabsTrigger value="conges">Congés</TabsTrigger>
         </TabsList>
         <TabsContent value="informations">
-          <InformationsTab employee={displayedEmployee} />
+          <InformationsTab 
+            employee={displayedEmployee} 
+            onAddressUpdated={handleAddressUpdated}
+          />
         </TabsContent>
         <TabsContent value="horaires">
-          <HorairesTab employee={displayedEmployee} isEditing={false} onFinishEditing={() => {}} />
+          <HorairesTab employee={displayedEmployee} />
         </TabsContent>
         <TabsContent value="competences">
-          <CompetencesTab employee={displayedEmployee} onEmployeeUpdated={() => {}} />
+          <CompetencesTab 
+            employee={displayedEmployee} 
+            onEmployeeUpdated={handleEmployeeUpdated} 
+          />
         </TabsContent>
         <TabsContent value="conges">
           <CongesTab employee={displayedEmployee} />

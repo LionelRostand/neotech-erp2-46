@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
@@ -17,11 +16,21 @@ import FormationsTab from './tabs/FormationsTab';
 import { toast } from 'sonner';
 import { updateEmployeeDoc } from '@/services/employeeService';
 
-const EmployeeDetails: React.FC = () => {
+export interface EmployeeDetailsProps {
+  employee: Employee;
+  onExportPdf?: () => void;
+  onEdit?: () => void;
+}
+
+const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({ 
+  employee: propEmployee, 
+  onExportPdf,
+  onEdit
+}) => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [employee, setEmployee] = useState<Employee | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [employee, setEmployee] = useState<Employee | null>(propEmployee || null);
+  const [loading, setLoading] = useState<boolean>(!propEmployee);
   const [activeTab, setActiveTab] = useState('infos');
   const [updatedEmployee, setUpdatedEmployee] = useState<Employee | null>(null);
 
@@ -31,7 +40,6 @@ const EmployeeDetails: React.FC = () => {
     }
   }, [id]);
 
-  // Update the component when updatedEmployee changes
   useEffect(() => {
     if (updatedEmployee) {
       setEmployee(updatedEmployee);
@@ -67,7 +75,6 @@ const EmployeeDetails: React.FC = () => {
     if (!employee || !id) return;
 
     try {
-      // Update employee with new address data
       const updatedData = {
         ...employee,
         address: addressData

@@ -3,11 +3,17 @@ import React from 'react';
 import { Employee } from '@/types/employee';
 import { Card, CardContent } from '@/components/ui/card';
 
-interface HorairesTabProps {
+export interface HorairesTabProps {
   employee: Employee;
+  isEditing?: boolean;
+  onFinishEditing?: () => void;
 }
 
-const HorairesTab: React.FC<HorairesTabProps> = ({ employee }) => {
+const HorairesTab: React.FC<HorairesTabProps> = ({ 
+  employee,
+  isEditing = false,
+  onFinishEditing = () => {}
+}) => {
   // Default work schedule if not provided
   const workSchedule = employee.workSchedule || {
     monday: '9:00 - 17:00',
