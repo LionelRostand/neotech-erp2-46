@@ -12,8 +12,8 @@ import { updateEmployeeSkills } from '../services/employeeService';
 interface CompetencesTabProps {
   employee: Employee;
   onEmployeeUpdated: () => void;
-  isEditing?: boolean; // Make isEditing optional
-  onFinishEditing?: () => void; // Make onFinishEditing optional
+  isEditing?: boolean;
+  onFinishEditing?: () => void;
 }
 
 const CompetencesTab: React.FC<CompetencesTabProps> = ({ 
@@ -25,18 +25,21 @@ const CompetencesTab: React.FC<CompetencesTabProps> = ({
   const [skills, setSkills] = useState<string[]>(employee.skills || []);
   const [newSkill, setNewSkill] = useState('');
   const [isEditing, setIsEditing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
-  // Sync with external isEditing state if provided
   useEffect(() => {
     if (externalIsEditing !== undefined) {
       setIsEditing(externalIsEditing);
     }
   }, [externalIsEditing]);
 
+  useEffect(() => {
+    setSkills(employee.skills || []);
+  }, [employee.skills]);
+
   const handleAddSkill = () => {
     if (!newSkill.trim()) return;
     
-    // Check if skill already exists
     if (skills.includes(newSkill.trim())) {
       toast.error("Cette compétence existe déjà");
       return;
@@ -52,9 +55,9 @@ const CompetencesTab: React.FC<CompetencesTabProps> = ({
 
   const handleSaveSkills = async () => {
     try {
+      setIsSaving(true);
       await updateEmployeeSkills(employee.id, skills);
       
-      // If we're using external editing state, call the callback
       if (onFinishEditing) {
         onFinishEditing();
       } else {
@@ -66,6 +69,8 @@ const CompetencesTab: React.FC<CompetencesTabProps> = ({
     } catch (error) {
       console.error("Error saving skills:", error);
       toast.error("Erreur lors de la sauvegarde des compétences");
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -87,9 +92,10 @@ const CompetencesTab: React.FC<CompetencesTabProps> = ({
               variant="default" 
               size="sm" 
               onClick={handleSaveSkills}
+              disabled={isSaving}
             >
               <Save className="h-4 w-4 mr-1" />
-              Enregistrer
+              {isSaving ? 'Enregistrement...' : 'Enregistrer'}
             </Button>
           )}
         </div>

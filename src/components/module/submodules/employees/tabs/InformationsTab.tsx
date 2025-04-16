@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Employee, EmployeeAddress } from '@/types/employee';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -87,9 +86,9 @@ const InformationsTab: React.FC<InformationsTabProps> = ({
           <div className="space-y-1">
             <h4 className="text-sm font-semibold flex items-center gap-2">
               <Mail className="h-4 w-4 text-muted-foreground" />
-              Email
+              Email professionnel
             </h4>
-            <p>{employee.email}</p>
+            <p>{employee.professionalEmail || employee.email}</p>
           </div>
           <Separator />
           
