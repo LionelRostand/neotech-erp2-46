@@ -10,7 +10,7 @@ import { useForm } from 'react-hook-form';
 import PhotoUploadField from '@/components/module/submodules/employees/form/PhotoUploadField';
 import { updateEmployeeDoc } from '@/services/employeeService';
 import { useEmployeeData } from '@/hooks/useEmployeeData';
-import { User } from 'lucide-react';
+import { User, MapPin, Home, Building } from 'lucide-react';
 import { useAvailableDepartments } from '@/hooks/useAvailableDepartments';
 
 interface EditEmployeeDialogProps {
@@ -37,7 +37,11 @@ export const EditEmployeeDialog: React.FC<EditEmployeeDialogProps> = ({
       department: employee.department || 'none',
       status: employee.status || 'active',
       photo: employee.photoURL || employee.photo || '',
-      managerId: employee.managerId || ''
+      managerId: employee.managerId || '',
+      street: typeof employee.address === 'object' ? employee.address.street : '',
+      city: typeof employee.address === 'object' ? employee.address.city : '',
+      postalCode: typeof employee.address === 'object' ? employee.address.postalCode : '',
+      state: typeof employee.address === 'object' ? employee.address.state : ''
     }
   });
 
@@ -55,11 +59,20 @@ export const EditEmployeeDialog: React.FC<EditEmployeeDialogProps> = ({
     try {
       console.log('Soumission du formulaire avec les données:', data);
       
+      const address = {
+        street: data.street,
+        city: data.city,
+        postalCode: data.postalCode,
+        state: data.state,
+        country: 'France'
+      };
+      
       await updateEmployeeDoc(employee.id, {
         ...data,
         photoURL: data.photo,
         photo: data.photo,
-        department: data.department === 'none' ? '' : data.department
+        department: data.department === 'none' ? '' : data.department,
+        address
       });
       
       toast.success(`Informations de ${data.firstName} ${data.lastName} mises à jour avec succès`);
@@ -149,6 +162,41 @@ export const EditEmployeeDialog: React.FC<EditEmployeeDialogProps> = ({
                 <SelectItem value="Suspendu">Suspendu</SelectItem>
               </SelectContent>
             </Select>
+          </div>
+          
+          <div className="space-y-4">
+            <h3 className="text-lg font-medium">Adresse</h3>
+            
+            <div className="space-y-2">
+              <Label htmlFor="street" className="flex items-center gap-2">
+                <Home className="h-4 w-4" />
+                Rue
+              </Label>
+              <Input id="street" {...register('street')} placeholder="123 rue des Exemples" />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="postalCode" className="flex items-center gap-2">
+                  <MapPin className="h-4 w-4" />
+                  Code postal
+                </Label>
+                <Input id="postalCode" {...register('postalCode')} placeholder="75000" />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="city" className="flex items-center gap-2">
+                  <Building className="h-4 w-4" />
+                  Ville
+                </Label>
+                <Input id="city" {...register('city')} placeholder="Paris" />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="state">Département</Label>
+              <Input id="state" {...register('state')} placeholder="Île-de-France" />
+            </div>
           </div>
           
           <div className="space-y-2">
