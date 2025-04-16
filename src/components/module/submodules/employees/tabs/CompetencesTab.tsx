@@ -1,48 +1,30 @@
 
-import React, { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { PlusCircle, X, Save } from 'lucide-react';
-import { Input } from '@/components/ui/input';
+import React, { useState } from 'react';
 import { Employee } from '@/types/employee';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { X, Plus, Save } from 'lucide-react';
 import { toast } from 'sonner';
-import { updateEmployeeSkills } from '../services/employeeService';
+import { updateEmployeeSkills } from '@/components/module/submodules/employees/services/employeeService';
 
 interface CompetencesTabProps {
   employee: Employee;
-  onEmployeeUpdated: () => void;
-  isEditing?: boolean;
-  onFinishEditing?: () => void;
+  onEmployeeUpdated: () => Promise<void>;
 }
 
-const CompetencesTab: React.FC<CompetencesTabProps> = ({ 
-  employee, 
-  onEmployeeUpdated, 
-  isEditing: externalIsEditing, 
-  onFinishEditing 
-}) => {
+const CompetencesTab: React.FC<CompetencesTabProps> = ({ employee, onEmployeeUpdated }) => {
   const [skills, setSkills] = useState<string[]>(employee.skills || []);
   const [newSkill, setNewSkill] = useState('');
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
-  useEffect(() => {
-    if (externalIsEditing !== undefined) {
-      setIsEditing(externalIsEditing);
-    }
-  }, [externalIsEditing]);
-
-  useEffect(() => {
-    // Update local skills state when employee skills change
-    console.log("Employee skills changed:", employee.skills);
-    setSkills(employee.skills || []);
-  }, [employee.skills]);
-
   const handleAddSkill = () => {
     if (!newSkill.trim()) return;
     
-    if (skills.includes(newSkill.trim())) {
+    // Avoid duplicates (case insensitive)
+    if (skills.some(skill => skill.toLowerCase() === newSkill.trim().toLowerCase())) {
       toast.error("Cette compétence existe déjà");
       return;
     }
@@ -51,110 +33,134 @@ const CompetencesTab: React.FC<CompetencesTabProps> = ({
     setNewSkill('');
   };
 
-  const handleRemoveSkill = (skill: string) => {
-    setSkills(skills.filter(s => s !== skill));
+  const handleRemoveSkill = (skillToRemove: string) => {
+    setSkills(skills.filter(skill => skill !== skillToRemove));
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleAddSkill();
+    }
+  };
+
+  const handleStartEditing = () => {
+    setIsEditing(true);
+    // Reset skills to employee's current skills when starting to edit
+    setSkills(employee.skills || []);
+  };
+
+  const handleCancelEditing = () => {
+    setIsEditing(false);
+    setSkills(employee.skills || []);
+    setNewSkill('');
   };
 
   const handleSaveSkills = async () => {
+    if (!employee.id) return;
+    
     try {
       setIsSaving(true);
-      console.log("Saving skills for employee:", employee.id, skills);
       
-      // Correct the call to updateEmployeeSkills
-      await updateEmployeeSkills(employee.id, skills);
+      const success = await updateEmployeeSkills(employee.id, skills);
       
-      // After successful save, call the onEmployeeUpdated function
-      onEmployeeUpdated();
-      
-      if (onFinishEditing) {
-        onFinishEditing();
-      } else {
+      if (success) {
+        toast.success("Compétences enregistrées avec succès");
         setIsEditing(false);
+        setNewSkill('');
+        await onEmployeeUpdated();
+      } else {
+        toast.error("Erreur lors de l'enregistrement des compétences");
       }
-      
-      toast.success("Compétences mises à jour avec succès");
     } catch (error) {
       console.error("Error saving skills:", error);
-      toast.error("Erreur lors de la sauvegarde des compétences");
+      toast.error("Erreur lors de l'enregistrement des compétences");
     } finally {
       setIsSaving(false);
     }
   };
 
   return (
-    <Card className="shadow-sm">
-      <CardHeader className="pb-2">
-        <div className="flex justify-between items-center">
-          <CardTitle className="text-lg font-medium">Compétences</CardTitle>
-          {!isEditing ? (
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={() => setIsEditing(true)}
-            >
-              Modifier
+    <div className="p-4 space-y-6">
+      <div className="flex justify-between items-center">
+        <h2 className="text-xl font-semibold">Compétences de {employee.firstName} {employee.lastName}</h2>
+        
+        {!isEditing ? (
+          <Button variant="outline" size="sm" onClick={handleStartEditing}>
+            Modifier
+          </Button>
+        ) : (
+          <div className="flex space-x-2">
+            <Button variant="outline" size="sm" onClick={handleCancelEditing}>
+              <X className="h-4 w-4 mr-2" />
+              Annuler
             </Button>
-          ) : (
             <Button 
               variant="default" 
               size="sm" 
               onClick={handleSaveSkills}
               disabled={isSaving}
             >
-              <Save className="h-4 w-4 mr-1" />
-              {isSaving ? 'Enregistrement...' : 'Enregistrer'}
+              <Save className="h-4 w-4 mr-2" />
+              Enregistrer
             </Button>
-          )}
-        </div>
-      </CardHeader>
-      <CardContent>
-        {isEditing ? (
-          <div className="space-y-4">
-            <div className="flex items-center space-x-2">
-              <Input
-                placeholder="Ajouter une compétence..."
-                value={newSkill}
-                onChange={(e) => setNewSkill(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleAddSkill()}
-              />
-              <Button 
-                type="button" 
-                size="icon" 
-                onClick={handleAddSkill}
-              >
-                <PlusCircle className="h-4 w-4" />
-              </Button>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {skills.map((skill, index) => (
-                <Badge key={index} className="py-1 pl-2 pr-1 flex items-center gap-1">
-                  {skill}
-                  <button
-                    type="button"
-                    className="ml-1 rounded-full hover:bg-gray-200 p-1"
-                    onClick={() => handleRemoveSkill(skill)}
-                  >
-                    <X className="h-3 w-3" />
-                  </button>
-                </Badge>
-              ))}
-            </div>
-          </div>
-        ) : (
-          <div className="flex flex-wrap gap-2">
-            {skills.length > 0 ? (
-              skills.map((skill, index) => (
-                <Badge key={index} variant="secondary" className="py-1">
-                  {skill}
-                </Badge>
-              ))
-            ) : (
-              <p className="text-sm text-gray-500">Aucune compétence renseignée.</p>
-            )}
           </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+      
+      <Card>
+        <CardContent className="pt-6">
+          {isEditing ? (
+            <div className="space-y-4">
+              <div className="flex space-x-2">
+                <Input
+                  placeholder="Ajouter une compétence"
+                  value={newSkill}
+                  onChange={(e) => setNewSkill(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                />
+                <Button onClick={handleAddSkill}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Ajouter
+                </Button>
+              </div>
+              
+              <div className="flex flex-wrap gap-2 mt-4">
+                {skills.map((skill, index) => (
+                  <Badge key={index} variant="secondary" className="px-3 py-1 group">
+                    {skill}
+                    <X 
+                      className="h-3 w-3 ml-2 cursor-pointer" 
+                      onClick={() => handleRemoveSkill(skill)}
+                    />
+                  </Badge>
+                ))}
+                
+                {skills.length === 0 && (
+                  <p className="text-muted-foreground text-sm italic">
+                    Aucune compétence ajoutée
+                  </p>
+                )}
+              </div>
+            </div>
+          ) : (
+            <div className="flex flex-wrap gap-2">
+              {(employee.skills || []).length > 0 ? (
+                employee.skills?.map((skill, index) => (
+                  <Badge key={index} variant="secondary" className="px-3 py-1">
+                    {skill}
+                  </Badge>
+                ))
+              ) : (
+                <p className="text-muted-foreground text-sm italic">
+                  Aucune compétence enregistrée
+                </p>
+              )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
   );
 };
 
