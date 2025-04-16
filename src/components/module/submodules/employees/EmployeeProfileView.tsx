@@ -152,7 +152,7 @@ const EmployeeProfileView: React.FC<{ employee?: Employee; isLoading?: boolean }
           <TabsTrigger value="documents">Documents</TabsTrigger>
         </TabsList>
         
-        <ScrollArea className="h-[600px] w-full pr-4">
+        <ScrollArea className="h-[calc(100vh-250px)] min-h-[600px] w-full pr-4 overflow-y-auto">
           <TabsContent value="informations">
             <InformationsTab employee={displayedEmployee} />
           </TabsContent>
