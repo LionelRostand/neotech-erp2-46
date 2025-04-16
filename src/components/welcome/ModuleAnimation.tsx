@@ -11,20 +11,20 @@ interface ModuleAnimationProps {
 
 const moduleColors = {
   1: 'bg-gradient-to-br from-[#8B5CF6] to-[#6E59A5]',  // Vibrant purple gradient
-  2: 'bg-gradient-to-br from-[#0EA5E9] to-[#1EAEDB]',  // Ocean blue gradient
-  3: 'bg-gradient-to-br from-[#F97316] to-[#FEC6A1]',  // Orange gradient
-  4: 'bg-gradient-to-br from-[#D946EF] to-[#9b87f5]',  // Magenta to purple
-  5: 'bg-gradient-to-br from-[#33C3F0] to-[#0EA5E9]',  // Sky blue gradient
-  6: 'bg-gradient-to-br from-[#7E69AB] to-[#6E59A5]',  // Deep purple gradient
-  7: 'bg-gradient-to-br from-[#F97316] to-[#FDE1D3]',  // Warm orange gradient
-  8: 'bg-gradient-to-br from-[#D946EF] to-[#E5DEFF]',  // Pink to soft purple
-  9: 'bg-gradient-to-br from-[#8B5CF6] to-[#D3E4FD]',  // Purple to soft blue
-  10: 'bg-gradient-to-br from-[#1EAEDB] to-[#33C3F0]', // Blue gradient
-  11: 'bg-gradient-to-br from-[#F97316] to-[#FEF7CD]', // Orange to yellow
-  12: 'bg-gradient-to-br from-[#6E59A5] to-[#9b87f5]', // Purple variation
-  13: 'bg-gradient-to-br from-[#0EA5E9] to-[#D3E4FD]', // Ocean to soft blue
-  14: 'bg-gradient-to-br from-[#D946EF] to-[#FDE1D3]', // Magenta to peach
-  15: 'bg-gradient-to-br from-[#33C3F0] to-[#E5DEFF]', // Sky blue to lavender
+  2: 'bg-gradient-to-br from-[#F97316] to-[#FEC6A1]',  // Orange gradient
+  3: 'bg-gradient-to-br from-[#D946EF] to-[#9b87f5]',  // Magenta to purple
+  4: 'bg-gradient-to-br from-[#33C3F0] to-[#0EA5E9]',  // Sky blue gradient
+  5: 'bg-gradient-to-br from-[#FF6B6B] to-[#FFE066]',  // Red to yellow
+  6: 'bg-gradient-to-br from-[#4CAF50] to-[#8BC34A]',  // Green shades
+  7: 'bg-gradient-to-br from-[#FF9A8B] to-[#FF6B88]',  // Peach to pink
+  8: 'bg-gradient-to-br from-[#7B61FF] to-[#00C6FB]',  // Purple to cyan
+  9: 'bg-gradient-to-br from-[#FFA726] to-[#FFCC80]',  // Orange shades
+  10: 'bg-gradient-to-br from-[#43A047] to-[#1DE9B6]', // Green to teal
+  11: 'bg-gradient-to-br from-[#FF5722] to-[#FF8A65]', // Deep orange
+  12: 'bg-gradient-to-br from-[#2196F3] to-[#00BCD4]', // Blue to cyan
+  13: 'bg-gradient-to-br from-[#EC407A] to-[#FF8A80]', // Pink to coral
+  14: 'bg-gradient-to-br from-[#AB47BC] to-[#7E57C2]', // Purple shades
+  15: 'bg-gradient-to-br from-[#26A69A] to-[#4DB6AC]', // Teal shades
 };
 
 const ModuleAnimation = ({ installedModules, visibleModules, animationStep }: ModuleAnimationProps) => {
@@ -37,7 +37,7 @@ const ModuleAnimation = ({ installedModules, visibleModules, animationStep }: Mo
     >
       <div className="absolute inset-0 flex items-center justify-center z-20">
         <motion.div 
-          className="w-24 h-24 rounded-full bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center text-white text-4xl font-bold shadow-lg"
+          className="w-24 h-24 rounded-full bg-gradient-to-br from-neotech-primary to-[#00b36b] flex items-center justify-center text-white text-4xl font-bold shadow-lg"
           animate={{ 
             scale: [1, 1.1, 1],
             rotate: [0, 5, 0, -5, 0]
@@ -82,11 +82,11 @@ const ModuleAnimation = ({ installedModules, visibleModules, animationStep }: Mo
                   y: { duration: 2 }
                 }}
               >
-                <div className="mb-2 text-2xl text-gray-900">
+                <div className="mb-2 text-2xl text-white">
                   {module.icon}
                 </div>
-                <span className="text-sm font-medium text-gray-900">{module.name}</span>
-                <span className="text-xs mt-1 text-gray-800">Installé</span>
+                <span className="text-sm font-medium text-white">{module.name}</span>
+                <span className="text-xs mt-1 text-gray-100">Installé</span>
               </motion.div>
             );
           })
