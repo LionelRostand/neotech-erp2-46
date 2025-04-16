@@ -1,4 +1,3 @@
-
 import { Company } from '@/components/module/submodules/companies/types';
 
 export interface EmployeeAddress {
@@ -69,7 +68,6 @@ export interface Evaluation {
 
 export interface Employee {
   id: string;
-  shortId?: string; // Added shortId property to match .d.ts file
   firebaseId?: string; // ID généré par Firestore
   firstName: string;
   lastName: string;
@@ -121,7 +119,6 @@ export interface Employee {
   evaluations?: Evaluation[]; // Nouvelle propriété pour les évaluations
   isManager?: boolean; // Added isManager property to fix type errors
   forceManager?: boolean; // Added forceManager property to match d.ts file
-  salary?: number; // Add the salary property
   conges?: {
     acquired: number;
     taken: number;

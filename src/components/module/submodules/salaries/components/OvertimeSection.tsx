@@ -4,10 +4,10 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 
 interface OvertimeSectionProps {
-  overtimeHours: number;
-  setOvertimeHours: (hours: number) => void;
-  overtimeRate: number;
-  setOvertimeRate: (rate: number) => void;
+  overtimeHours: string;
+  setOvertimeHours: (hours: string) => void;
+  overtimeRate: string;
+  setOvertimeRate: (rate: string) => void;
 }
 
 const OvertimeSection: React.FC<OvertimeSectionProps> = ({
@@ -27,7 +27,7 @@ const OvertimeSection: React.FC<OvertimeSectionProps> = ({
             placeholder="0" 
             type="number"
             value={overtimeHours}
-            onChange={(e) => setOvertimeHours(Number(e.target.value))}
+            onChange={(e) => setOvertimeHours(e.target.value)}
           />
         </div>
         <div className="space-y-2">
@@ -37,7 +37,7 @@ const OvertimeSection: React.FC<OvertimeSectionProps> = ({
             placeholder="25" 
             type="number"
             value={overtimeRate}
-            onChange={(e) => setOvertimeRate(Number(e.target.value))}
+            onChange={(e) => setOvertimeRate(e.target.value)}
           />
         </div>
       </div>

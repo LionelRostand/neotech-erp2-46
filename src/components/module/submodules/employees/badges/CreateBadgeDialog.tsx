@@ -52,10 +52,8 @@ const CreateBadgeDialog: React.FC<CreateBadgeDialogProps> = ({
     
     const employeeInitials = getEmployeeInitials(employee.firstName, employee.lastName);
     
-    // Using type assertion with 'as' to handle the type discrepancy
-    const employeeShortId = (employee as any).shortId && typeof (employee as any).shortId === 'string'
-      ? (employee as any).shortId 
-      : employeeInitials;
+    // Use optional chaining to safely access shortId, with a fallback to initials
+    const shortId = employee.shortId ?? employeeInitials;
     
     const newBadge: BadgeData = {
       id: badgeNumber,
@@ -69,7 +67,7 @@ const CreateBadgeDialog: React.FC<CreateBadgeDialogProps> = ({
       status: "success",
       statusText: "Actif",
       employeePhoto: employee.photoURL || employee.photo,
-      employeeShortId: employeeShortId
+      employeeShortId: shortId || 'N/A'
     };
     
     onBadgeCreated(newBadge);

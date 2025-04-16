@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -14,16 +15,14 @@ interface CongesTabProps {
   onFinishEditing?: () => void;
 }
 
-const CongesTab: React.FC<CongesTabProps> = ({ 
-  employee, 
-  isEditing = false,
-  onFinishEditing 
-}) => {
+const CongesTab: React.FC<CongesTabProps> = ({ employee, isEditing, onFinishEditing }) => {
   const { leaves, refetch } = useLeaveData();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   
+  // Filtre les congés de l'employé actuel
   const employeeLeaves = leaves.filter(leave => leave.employeeId === employee.id);
   
+  // Rafraîchir les données au chargement du composant
   useEffect(() => {
     refetch();
   }, [refetch]);
@@ -56,16 +55,14 @@ const CongesTab: React.FC<CongesTabProps> = ({
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h3 className="text-lg font-medium">Historique des congés</h3>
-        {isEditing && (
-          <Button 
-            size="sm" 
-            onClick={handleOpenCreateDialog}
-            className="flex items-center gap-2"
-          >
-            <Plus className="h-4 w-4" />
-            Demander un congé
-          </Button>
-        )}
+        <Button 
+          size="sm" 
+          onClick={handleOpenCreateDialog}
+          className="flex items-center gap-2"
+        >
+          <Plus className="h-4 w-4" />
+          Demander un congé
+        </Button>
       </div>
       
       {employeeLeaves.length === 0 ? (

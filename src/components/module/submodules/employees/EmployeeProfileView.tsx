@@ -1,30 +1,22 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Employee } from '@/types/employee';
 import InformationsTab from './tabs/InformationsTab';
 import HorairesTab from './tabs/HorairesTab';
 import CompetencesTab from './tabs/CompetencesTab';
 import CongesTab from './tabs/CongesTab';
-import EvaluationsTab from './tabs/EvaluationsTab';
-import DocumentsTab from './tabs/DocumentsTab';
 import { useEmployeePermissions } from './hooks/useEmployeePermissions';
 import { Button } from '@/components/ui/button';
 import { AlertCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { useEmployeeData } from '@/hooks/useEmployeeData';
 
 const EmployeeProfileView: React.FC<{ employee?: Employee; isLoading?: boolean }> = ({ 
   employee,
   isLoading = false
 }) => {
   const navigate = useNavigate();
-  const [isEditing, setIsEditing] = useState(false);
-  const [activeTab, setActiveTab] = useState('informations');
-  const { employees } = useEmployeeData();
-
   const mockEmployee: Employee = {
     id: "EMP001",
     firstName: "Martin",
@@ -67,37 +59,16 @@ const EmployeeProfileView: React.FC<{ employee?: Employee; isLoading?: boolean }
     payslips: []
   };
 
+  // Use the provided employee or fallback to the mock
   const displayedEmployee = employee || mockEmployee;
   
-  // Trouver le manager de l'employé s'il en a un
-  const findManager = () => {
-    if (!displayedEmployee.managerId || !employees || employees.length === 0) return null;
-    
-    const manager = employees.find(emp => emp.id === displayedEmployee.managerId);
-    console.log("Manager trouvé:", manager || "Aucun");
-    return manager;
-  };
-  
-  const employeeManager = findManager();
-  
-  // Si on a trouvé un manager dans les données des employés, mettre à jour le champ manager
-  const employeeWithManagerInfo = {
-    ...displayedEmployee,
-    manager: employeeManager ? `${employeeManager.firstName} ${employeeManager.lastName}` : displayedEmployee.manager,
-  };
-  
+  // Get the employee ID from the displayed employee
   const employeeId = displayedEmployee?.id;
   
+  // Use the useEmployeePermissions hook with the module ID and employee ID
   const { canView, canEdit, isOwnProfile, loading } = useEmployeePermissions('employees-profiles', employeeId);
 
-  const handleStartEditing = () => {
-    setIsEditing(true);
-  };
-
-  const handleFinishEditing = () => {
-    setIsEditing(false);
-  };
-
+  // If employee data is loading or permission check is in progress
   if (isLoading || loading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -118,6 +89,7 @@ const EmployeeProfileView: React.FC<{ employee?: Employee; isLoading?: boolean }
     );
   }
 
+  // If user doesn't have permission to view this profile
   if (!canView && !isOwnProfile) {
     return (
       <Card className="mt-6">
@@ -143,70 +115,49 @@ const EmployeeProfileView: React.FC<{ employee?: Employee; isLoading?: boolean }
     <div className="space-y-6">
       <Card>
         <CardHeader className="pb-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center">
-              <div className="w-16 h-16 rounded-full mr-4 bg-gray-200 overflow-hidden">
-                {employeeWithManagerInfo.photoURL ? (
-                  <img 
-                    src={employeeWithManagerInfo.photoURL} 
-                    alt={`${employeeWithManagerInfo.firstName} ${employeeWithManagerInfo.lastName}`} 
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center bg-primary text-white text-2xl">
-                    {employeeWithManagerInfo.firstName[0]}{employeeWithManagerInfo.lastName[0]}
-                  </div>
-                )}
-              </div>
-              <div>
-                <CardTitle className="text-2xl">
-                  {employeeWithManagerInfo.firstName} {employeeWithManagerInfo.lastName}
-                </CardTitle>
-                <p className="text-gray-500">{employeeWithManagerInfo.position}</p>
-              </div>
+          <div className="flex items-center">
+            <div className="w-16 h-16 rounded-full mr-4 bg-gray-200 overflow-hidden">
+              {displayedEmployee.photoURL ? (
+                <img 
+                  src={displayedEmployee.photoURL} 
+                  alt={`${displayedEmployee.firstName} ${displayedEmployee.lastName}`} 
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center bg-primary text-white text-2xl">
+                  {displayedEmployee.firstName[0]}{displayedEmployee.lastName[0]}
+                </div>
+              )}
             </div>
-            {(canEdit || isOwnProfile) && (
-              <Button 
-                variant={isEditing ? "default" : "outline"} 
-                onClick={isEditing ? handleFinishEditing : handleStartEditing}
-              >
-                {isEditing ? "Terminer" : "Modifier"}
-              </Button>
-            )}
+            <div>
+              <CardTitle className="text-2xl">
+                {displayedEmployee.firstName} {displayedEmployee.lastName}
+              </CardTitle>
+              <p className="text-gray-500">{displayedEmployee.position}</p>
+            </div>
           </div>
         </CardHeader>
       </Card>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-6">
+      <Tabs defaultValue="informations" className="w-full">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="informations">Informations</TabsTrigger>
-          <TabsTrigger value="horaires">Horaires</TabsTrigger>
+          <TabsTrigger value="horaires">Horaires et présence</TabsTrigger>
           <TabsTrigger value="competences">Compétences</TabsTrigger>
           <TabsTrigger value="conges">Congés</TabsTrigger>
-          <TabsTrigger value="evaluations">Évaluations</TabsTrigger>
-          <TabsTrigger value="documents">Documents</TabsTrigger>
         </TabsList>
-        
-        <ScrollArea className="h-[calc(100vh-250px)] min-h-[600px] w-full pr-4 overflow-y-auto">
-          <TabsContent value="informations">
-            <InformationsTab employee={employeeWithManagerInfo} isEditing={isEditing} onFinishEditing={handleFinishEditing} />
-          </TabsContent>
-          <TabsContent value="horaires">
-            <HorairesTab employee={employeeWithManagerInfo} isEditing={isEditing} onFinishEditing={handleFinishEditing} />
-          </TabsContent>
-          <TabsContent value="competences">
-            <CompetencesTab employee={employeeWithManagerInfo} onEmployeeUpdated={() => {}} isEditing={isEditing} onFinishEditing={handleFinishEditing} />
-          </TabsContent>
-          <TabsContent value="conges">
-            <CongesTab employee={employeeWithManagerInfo} isEditing={isEditing} onFinishEditing={handleFinishEditing} />
-          </TabsContent>
-          <TabsContent value="evaluations">
-            <EvaluationsTab employee={employeeWithManagerInfo} isEditing={isEditing} onFinishEditing={handleFinishEditing} />
-          </TabsContent>
-          <TabsContent value="documents">
-            <DocumentsTab employee={employeeWithManagerInfo} isEditing={isEditing} onFinishEditing={handleFinishEditing} />
-          </TabsContent>
-        </ScrollArea>
+        <TabsContent value="informations">
+          <InformationsTab employee={displayedEmployee} />
+        </TabsContent>
+        <TabsContent value="horaires">
+          <HorairesTab employee={displayedEmployee} isEditing={false} onFinishEditing={() => {}} />
+        </TabsContent>
+        <TabsContent value="competences">
+          <CompetencesTab employee={displayedEmployee} onEmployeeUpdated={() => {}} />
+        </TabsContent>
+        <TabsContent value="conges">
+          <CongesTab employee={displayedEmployee} />
+        </TabsContent>
       </Tabs>
     </div>
   );

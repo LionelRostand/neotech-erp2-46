@@ -56,13 +56,4 @@ export interface PaySlip {
   // Adding the missing properties
   paymentMethod?: string;
   notes?: string;
-  
-  // Adding properties for the PayslipList component
-  currency?: string;
-  netAmount?: number;
-  grossAmount?: number;
-  
-  // Adding the fileData property for document storage
-  fileData?: string | null;
-  pdfUrl?: string;
 }

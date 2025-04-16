@@ -1,8 +1,8 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { PlusCircle, X } from 'lucide-react';
+import { PlusCircle, X, Save } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Employee } from '@/types/employee';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -11,26 +11,32 @@ import { updateEmployeeSkills } from '../services/employeeService';
 
 interface CompetencesTabProps {
   employee: Employee;
-  onEmployeeUpdated: ((updatedEmployee?: Employee) => void) | (() => void);
-  isEditing?: boolean;
-  onFinishEditing?: () => void;
+  onEmployeeUpdated: () => void;
+  isEditing?: boolean; // Make isEditing optional
+  onFinishEditing?: () => void; // Make onFinishEditing optional
 }
 
 const CompetencesTab: React.FC<CompetencesTabProps> = ({ 
   employee, 
-  isEditing = false,
-  onFinishEditing,
-  onEmployeeUpdated 
+  onEmployeeUpdated, 
+  isEditing: externalIsEditing, 
+  onFinishEditing 
 }) => {
   const [skills, setSkills] = useState<string[]>(employee.skills || []);
   const [newSkill, setNewSkill] = useState('');
+  const [isEditing, setIsEditing] = useState(false);
+
+  // Sync with external isEditing state if provided
+  useEffect(() => {
+    if (externalIsEditing !== undefined) {
+      setIsEditing(externalIsEditing);
+    }
+  }, [externalIsEditing]);
 
   const handleAddSkill = () => {
-    if (!newSkill.trim()) {
-      toast.error("Veuillez saisir une compétence");
-      return;
-    }
+    if (!newSkill.trim()) return;
     
+    // Check if skill already exists
     if (skills.includes(newSkill.trim())) {
       toast.error("Cette compétence existe déjà");
       return;
@@ -47,11 +53,15 @@ const CompetencesTab: React.FC<CompetencesTabProps> = ({
   const handleSaveSkills = async () => {
     try {
       await updateEmployeeSkills(employee.id, skills);
-      onFinishEditing?.();
-      // Call onEmployeeUpdated in a way compatible with both function signatures
-      if (typeof onEmployeeUpdated === 'function') {
-        onEmployeeUpdated();
+      
+      // If we're using external editing state, call the callback
+      if (onFinishEditing) {
+        onFinishEditing();
+      } else {
+        setIsEditing(false);
       }
+      
+      onEmployeeUpdated();
       toast.success("Compétences mises à jour avec succès");
     } catch (error) {
       console.error("Error saving skills:", error);
@@ -64,12 +74,21 @@ const CompetencesTab: React.FC<CompetencesTabProps> = ({
       <CardHeader className="pb-2">
         <div className="flex justify-between items-center">
           <CardTitle className="text-lg font-medium">Compétences</CardTitle>
-          {isEditing && (
+          {!isEditing ? (
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => setIsEditing(true)}
+            >
+              Modifier
+            </Button>
+          ) : (
             <Button 
               variant="default" 
               size="sm" 
               onClick={handleSaveSkills}
             >
+              <Save className="h-4 w-4 mr-1" />
               Enregistrer
             </Button>
           )}
@@ -80,18 +99,17 @@ const CompetencesTab: React.FC<CompetencesTabProps> = ({
           <div className="space-y-4">
             <div className="flex items-center space-x-2">
               <Input
-                placeholder="Nouvelle compétence..."
+                placeholder="Ajouter une compétence..."
                 value={newSkill}
                 onChange={(e) => setNewSkill(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleAddSkill()}
-                className="flex-1"
               />
               <Button 
-                type="button"
+                type="button" 
+                size="icon" 
                 onClick={handleAddSkill}
               >
-                <PlusCircle className="h-4 w-4 mr-2" />
-                Ajouter
+                <PlusCircle className="h-4 w-4" />
               </Button>
             </div>
             <div className="flex flex-wrap gap-2">
@@ -118,7 +136,7 @@ const CompetencesTab: React.FC<CompetencesTabProps> = ({
                 </Badge>
               ))
             ) : (
-              <p className="text-sm text-gray-500 italic">Aucune compétence renseignée</p>
+              <p className="text-sm text-gray-500">Aucune compétence renseignée.</p>
             )}
           </div>
         )}

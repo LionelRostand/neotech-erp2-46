@@ -19,31 +19,19 @@ const ModuleInfo = () => {
           
           <Tabs defaultValue="business" className="w-full">
             <TabsList className="grid grid-cols-4 w-full mb-6">
-              <TabsTrigger 
-                value="business" 
-                className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r from-[#4CAF50] to-[#45B649] data-[state=active]:text-white"
-              >
+              <TabsTrigger value="business" className="flex items-center gap-2">
                 <Building className="h-4 w-4" />
                 <span>GESTION D'ENTREPRISE</span>
               </TabsTrigger>
-              <TabsTrigger 
-                value="services" 
-                className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r from-[#FF5722] to-[#FF8A65] data-[state=active]:text-white"
-              >
+              <TabsTrigger value="services" className="flex items-center gap-2">
                 <Headphones className="h-4 w-4" />
                 <span>SERVICES SPÉCIALISÉS</span>
               </TabsTrigger>
-              <TabsTrigger 
-                value="digital" 
-                className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r from-[#2196F3] to-[#00BCD4] data-[state=active]:text-white"
-              >
+              <TabsTrigger value="digital" className="flex items-center gap-2">
                 <Globe className="h-4 w-4" />
                 <span>PRÉSENCE NUMÉRIQUE</span>
               </TabsTrigger>
-              <TabsTrigger 
-                value="communication" 
-                className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r from-[#AB47BC] to-[#7E57C2] data-[state=active]:text-white"
-              >
+              <TabsTrigger value="communication" className="flex items-center gap-2">
                 <MessageSquare className="h-4 w-4" />
                 <span>COMMUNICATION</span>
               </TabsTrigger>
