@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -8,31 +9,14 @@ const WelcomeHeader = () => {
   
   return (
     <div className="flex flex-col items-start text-left space-y-6">
-      <div className="relative">
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-          className="inline-block px-4 py-2 rounded-full text-sm font-medium"
-          style={{
-            background: "linear-gradient(90deg, hsla(277, 75%, 84%, 1) 0%, hsla(297, 50%, 51%, 1) 100%)"
-          }}
-        >
-          <span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-400 via-pink-500 to-red-500 font-bold">
-            NEOTECH ERP System
-          </span>
-          <motion.div
-            className="absolute bottom-0 left-0 h-0.5 w-full"
-            initial={{ scaleX: 0 }}
-            animate={{ scaleX: 1 }}
-            transition={{ duration: 1, delay: 0.5 }}
-            style={{
-              background: "linear-gradient(90deg, #9b87f5 0%, #D946EF 50%, #F97316 100%)",
-              boxShadow: "0 0 8px rgba(155, 135, 245, 0.5)"
-            }}
-          />
-        </motion.div>
-      </div>
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8 }}
+        className="inline-block bg-neotech-primary/10 text-neotech-primary px-4 py-2 rounded-full text-sm font-medium"
+      >
+        NEOTECH ERP System
+      </motion.div>
       
       <motion.h1 
         className="text-4xl md:text-6xl font-bold text-gray-900"
