@@ -1,31 +1,15 @@
 
-import React from 'react';
+import React, { useState } from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { 
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
-import { useForm, FormProvider } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { Employee } from '@/types/employee';
-import { useHrModuleData } from '@/hooks/useHrModuleData';
+import { Switch } from '@/components/ui/switch';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { addDocument } from '@/hooks/firestore/add-operations';
+import { COLLECTIONS } from '@/lib/firebase-collections';
 import { toast } from 'sonner';
-import { useEmployeeService } from '@/hooks/useEmployeeService';
-import { employeeFormSchema, EmployeeFormValues } from './form/employeeFormSchema';
-import PhotoUploadField from './form/PhotoUploadField';
+import { Employee } from '@/types/employee';
 
 interface CreateEmployeeDialogProps {
   open: boolean;
@@ -33,235 +17,214 @@ interface CreateEmployeeDialogProps {
   onCreated: () => void;
 }
 
-const CreateEmployeeDialog: React.FC<CreateEmployeeDialogProps> = ({
-  open,
-  onOpenChange,
-  onCreated
-}) => {
-  const { departments } = useHrModuleData();
-  const { addEmployee, isLoading } = useEmployeeService();
-  
-  const methods = useForm<EmployeeFormValues>({
-    resolver: zodResolver(employeeFormSchema),
-    defaultValues: {
-      firstName: '',
-      lastName: '',
-      email: '',
-      phone: '',
-      position: '',
-      department: '',
-      status: 'active',
-      contract: 'CDI',
-      professionalEmail: '',
-      forceManager: false
-    }
+const CreateEmployeeDialog: React.FC<CreateEmployeeDialogProps> = ({ open, onOpenChange, onCreated }) => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [employee, setEmployee] = useState<Partial<Employee>>({
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+    department: '',
+    position: '',
+    status: 'Actif',
+    startDate: '',
+    isManager: false,
   });
-  
-  const { handleSubmit, reset, formState: { errors } } = methods;
 
-  const handleFormSubmit = async (data: EmployeeFormValues) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setEmployee(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleSelectChange = (field: string, value: string) => {
+    setEmployee(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleSwitchChange = (field: string, checked: boolean) => {
+    setEmployee(prev => ({ ...prev, [field]: checked }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!employee.firstName || !employee.lastName || !employee.email) {
+      toast.error('Veuillez remplir tous les champs obligatoires');
+      return;
+    }
+    
     try {
-      console.log('Creating employee with data:', data);
+      setIsSubmitting(true);
       
-      // Prepare employee data
-      const employeeData: Partial<Employee> = {
-        ...data,
-        hireDate: new Date().toISOString(),
+      // Prepare the employee data
+      const newEmployee: Partial<Employee> = {
+        ...employee,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
-        // If the photo is provided as base64, use it
-        photo: data.photo || '',
-        photoURL: data.photo || '',
-        isManager: data.forceManager || false
+        address: {},
       };
       
-      // Save to Firestore using the employee service
-      const result = await addEmployee(employeeData);
+      // Add the employee to Firestore
+      await addDocument(COLLECTIONS.HR.EMPLOYEES, newEmployee);
       
-      if (result) {
-        reset();
-        onOpenChange(false);
-        onCreated();
+      // If the employee is a manager, create a manager record as well
+      if (employee.isManager) {
+        // Handle manager creation logic if needed
       }
+      
+      toast.success('Employé créé avec succès');
+      onCreated();
+      onOpenChange(false);
+      
+      // Reset the form
+      setEmployee({
+        firstName: '',
+        lastName: '',
+        email: '',
+        phone: '',
+        department: '',
+        position: '',
+        status: 'Actif',
+        startDate: '',
+        isManager: false,
+      });
     } catch (error) {
-      console.error('Error creating employee:', error);
-      toast.error("Erreur lors de la création de l'employé");
+      console.error('Erreur lors de la création de l\'employé:', error);
+      toast.error('Une erreur est survenue lors de la création de l\'employé');
+    } finally {
+      setIsSubmitting(false);
     }
-  };
-  
-  const onDialogClose = () => {
-    reset();
-    onOpenChange(false);
   };
 
   return (
-    <Dialog open={open} onOpenChange={onDialogClose}>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
           <DialogTitle>Ajouter un nouvel employé</DialogTitle>
-          <DialogDescription>
-            Complétez les informations ci-dessous pour créer un nouvel employé.
-          </DialogDescription>
         </DialogHeader>
         
-        <FormProvider {...methods}>
-          <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="firstName">Prénom</Label>
-                <Input 
-                  id="firstName" 
-                  {...methods.register("firstName")}
-                />
-                {errors.firstName && (
-                  <p className="text-red-500 text-xs">{errors.firstName.message}</p>
-                )}
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="lastName">Nom</Label>
-                <Input 
-                  id="lastName" 
-                  {...methods.register("lastName")}
-                />
-                {errors.lastName && (
-                  <p className="text-red-500 text-xs">{errors.lastName.message}</p>
-                )}
-              </div>
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <Label htmlFor="firstName">Prénom *</Label>
+              <Input
+                id="firstName"
+                name="firstName"
+                value={employee.firstName}
+                onChange={handleInputChange}
+                required
+              />
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="email">Email personnel</Label>
-                <Input 
-                  id="email" 
-                  type="email"
-                  {...methods.register("email")}
-                />
-                {errors.email && (
-                  <p className="text-red-500 text-xs">{errors.email.message}</p>
-                )}
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="professionalEmail">Email professionnel</Label>
-                <Input 
-                  id="professionalEmail" 
-                  type="email"
-                  {...methods.register("professionalEmail")}
-                />
-                {errors.professionalEmail && (
-                  <p className="text-red-500 text-xs">{errors.professionalEmail.message}</p>
-                )}
-              </div>
+            <div className="space-y-2">
+              <Label htmlFor="lastName">Nom *</Label>
+              <Input
+                id="lastName"
+                name="lastName"
+                value={employee.lastName}
+                onChange={handleInputChange}
+                required
+              />
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="phone">Téléphone</Label>
-                <Input 
-                  id="phone" 
-                  {...methods.register("phone")}
-                />
-                {errors.phone && (
-                  <p className="text-red-500 text-xs">{errors.phone.message}</p>
-                )}
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="position">Poste</Label>
-                <Input 
-                  id="position" 
-                  {...methods.register("position")}
-                />
-                {errors.position && (
-                  <p className="text-red-500 text-xs">{errors.position.message}</p>
-                )}
-              </div>
+            <div className="space-y-2">
+              <Label htmlFor="email">Email *</Label>
+              <Input
+                id="email"
+                name="email"
+                type="email"
+                value={employee.email}
+                onChange={handleInputChange}
+                required
+              />
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="department">Département</Label>
-                <Select 
-                  onValueChange={(value) => methods.setValue("department", value)}
-                  defaultValue={methods.getValues("department")}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Sélectionnez un département" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {departments.map((dept, index) => (
-                      <SelectItem key={dept.id || index} value={dept.id || ''}>
-                        {dept.name || 'Département sans nom'}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {errors.department && (
-                  <p className="text-red-500 text-xs">{errors.department.message}</p>
-                )}
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="status">Statut</Label>
-                <Select 
-                  onValueChange={(value) => methods.setValue("status", value as any)}
-                  defaultValue={methods.getValues("status")}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Sélectionnez un statut" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="active">Actif</SelectItem>
-                    <SelectItem value="inactive">Inactif</SelectItem>
-                    <SelectItem value="onLeave">En congé</SelectItem>
-                  </SelectContent>
-                </Select>
-                {errors.status && (
-                  <p className="text-red-500 text-xs">{errors.status.message}</p>
-                )}
-              </div>
+            <div className="space-y-2">
+              <Label htmlFor="phone">Téléphone</Label>
+              <Input
+                id="phone"
+                name="phone"
+                value={employee.phone}
+                onChange={handleInputChange}
+              />
             </div>
             
-            <div className="grid grid-cols-1 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="contract">Type de contrat</Label>
-                <Select 
-                  onValueChange={(value) => methods.setValue("contract", value)}
-                  defaultValue={methods.getValues("contract")}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Sélectionnez un type de contrat" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="CDI">CDI</SelectItem>
-                    <SelectItem value="CDD">CDD</SelectItem>
-                    <SelectItem value="Intérim">Intérim</SelectItem>
-                    <SelectItem value="Stage">Stage</SelectItem>
-                    <SelectItem value="Alternance">Alternance</SelectItem>
-                  </SelectContent>
-                </Select>
-                {errors.contract && (
-                  <p className="text-red-500 text-xs">{errors.contract.message}</p>
-                )}
-              </div>
+            <div className="space-y-2">
+              <Label htmlFor="department">Département</Label>
+              <Select 
+                value={employee.department} 
+                onValueChange={(value) => handleSelectChange('department', value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Sélectionner un département" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="IT">IT</SelectItem>
+                  <SelectItem value="Marketing">Marketing</SelectItem>
+                  <SelectItem value="RH">RH</SelectItem>
+                  <SelectItem value="Finance">Finance</SelectItem>
+                  <SelectItem value="Commercial">Commercial</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             
-            <div className="grid grid-cols-1 gap-4">
-              <PhotoUploadField />
+            <div className="space-y-2">
+              <Label htmlFor="position">Poste</Label>
+              <Input
+                id="position"
+                name="position"
+                value={employee.position}
+                onChange={handleInputChange}
+              />
             </div>
             
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={onDialogClose}>
-                Annuler
-              </Button>
-              <Button type="submit" disabled={isLoading}>
-                {isLoading ? "Création en cours..." : "Créer l'employé"}
-              </Button>
-            </DialogFooter>
-          </form>
-        </FormProvider>
+            <div className="space-y-2">
+              <Label htmlFor="status">Statut</Label>
+              <Select 
+                value={employee.status} 
+                onValueChange={(value) => handleSelectChange('status', value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Sélectionner un statut" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Actif">Actif</SelectItem>
+                  <SelectItem value="Inactif">Inactif</SelectItem>
+                  <SelectItem value="En congé">En congé</SelectItem>
+                  <SelectItem value="Suspendu">Suspendu</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="startDate">Date d'embauche</Label>
+              <Input
+                id="startDate"
+                name="startDate"
+                type="date"
+                value={employee.startDate}
+                onChange={handleInputChange}
+              />
+            </div>
+            
+            <div className="flex items-center space-x-2 pt-6">
+              <Switch
+                id="isManager"
+                checked={employee.isManager}
+                onCheckedChange={(checked) => handleSwitchChange('isManager', checked)}
+              />
+              <Label htmlFor="isManager">Manager</Label>
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+              Annuler
+            </Button>
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? 'Création en cours...' : 'Créer'}
+            </Button>
+          </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   );

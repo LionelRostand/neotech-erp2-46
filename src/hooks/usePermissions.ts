@@ -4,16 +4,15 @@ import { getUserPermissions, checkUserPermission, ModulePermissions } from '@/co
 import { useAuth } from './useAuth';
 
 export const usePermissions = (moduleId?: string) => {
-  const { currentUser, isOffline, userData } = useAuth();
+  const { currentUser, isOffline, userData, isAdmin: authIsAdmin } = useAuth();
   const [loading, setLoading] = useState(true);
   const [permissions, setPermissions] = useState<{[key: string]: ModulePermissions} | null>(null);
   const [hasPermission, setHasPermission] = useState<{[key: string]: boolean}>({});
   const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
-    // Check if user is admin based on email or role
-    const adminEmail = 'admin@neotech-consulting.com';
-    if (userData?.email === adminEmail || userData?.role === 'admin') {
+    // Check if user is admin based on email or role from useAuth
+    if (authIsAdmin) {
       setIsAdmin(true);
       setLoading(false);
       return;
@@ -45,11 +44,11 @@ export const usePermissions = (moduleId?: string) => {
     };
 
     fetchPermissions();
-  }, [currentUser?.uid, userData?.email, userData?.role]);
+  }, [currentUser?.uid, userData?.email, userData?.role, authIsAdmin]);
 
   const checkPermission = async (module: string, action: 'view' | 'create' | 'edit' | 'delete' | 'export' | 'modify') => {
     // If user is admin, grant all permissions
-    if (isAdmin) {
+    if (isAdmin || authIsAdmin) {
       return true;
     }
 
@@ -75,17 +74,17 @@ export const usePermissions = (moduleId?: string) => {
   useEffect(() => {
     if (moduleId && !loading && currentUser?.uid) {
       checkPermission(moduleId, 'view').then(hasAccess => {
-        if (!hasAccess && !isAdmin) {
+        if (!hasAccess && !isAdmin && !authIsAdmin) {
           console.warn(`L'utilisateur n'a pas accès au module ${moduleId}`);
           // On pourrait rediriger l'utilisateur ou afficher un message
         }
       });
     }
-  }, [moduleId, loading, currentUser?.uid, isAdmin]);
+  }, [moduleId, loading, currentUser?.uid, isAdmin, authIsAdmin]);
 
   return {
     permissions,
-    isAdmin,
+    isAdmin: isAdmin || authIsAdmin,
     loading,
     checkPermission,
     hasPermission,

@@ -125,12 +125,6 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({
                             Manager
                           </div>
                         )}
-                        {employee.isAdmin && (
-                          <div className="text-xs flex items-center gap-1 text-purple-600">
-                            <ShieldAlert className="h-3 w-3" />
-                            Admin
-                          </div>
-                        )}
                       </div>
                     </div>
                   </TableCell>
