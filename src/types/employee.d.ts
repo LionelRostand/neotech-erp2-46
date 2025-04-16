@@ -65,3 +65,34 @@ export interface Document {
   storedInHrDocuments?: boolean;
   storageFormat?: string;
 }
+
+export interface EmployeeAddress {
+  street: string;
+  city: string;
+  postalCode: string;
+  country: string;
+  state?: string;
+}
+
+export interface EmployeePhotoMeta {
+  fileName: string;
+  fileType: string;
+  fileSize: number;
+  updatedAt: string;
+}
+
+export interface EducationEntry {
+  degree: string;
+  school: string;
+  year: string;
+}
+
+export interface WorkSchedule {
+  monday: string;
+  tuesday: string;
+  wednesday: string;
+  thursday: string;
+  friday: string;
+  saturday?: string;
+  sunday?: string;
+}

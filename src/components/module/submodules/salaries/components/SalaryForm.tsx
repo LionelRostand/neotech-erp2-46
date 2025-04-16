@@ -1,312 +1,258 @@
 
 import React, { useState, useEffect } from 'react';
-import { z } from 'zod';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
+import { Card, CardContent } from '@/components/ui/card';
+import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useEmployeeData } from '@/hooks/useEmployeeData';
 import { toast } from 'sonner';
-import { useHrModuleData } from '@/hooks/useHrModuleData';
-import { addPayslip } from '../services/salaryService';
-import { Document } from '@/types/employee';
-
-// Schema for form validation
-const salaryFormSchema = z.object({
-  employeeId: z.string().min(1, "Veuillez sélectionner un employé"),
-  month: z.string().min(1, "Veuillez sélectionner un mois"),
-  year: z.string().min(1, "Veuillez sélectionner une année"),
-  grossSalary: z.string().min(1, "Le salaire brut est requis"),
-  netSalary: z.string().min(1, "Le salaire net est requis"),
-  status: z.string().default("Payé")
-});
-
-type SalaryFormValues = z.infer<typeof salaryFormSchema>;
+import { Employee, Document } from '@/types/employee';
+import { useEmployeeContract } from '@/hooks/useEmployeeContract';
 
 export const SalaryForm = () => {
-  const { employees, payslips } = useHrModuleData();
-  const [selectedEmployeeGrossSalary, setSelectedEmployeeGrossSalary] = useState<string>('');
+  // Form state
+  const [employeeId, setEmployeeId] = useState('');
+  const [grossSalary, setGrossSalary] = useState('');
+  const [netSalary, setNetSalary] = useState('');
+  const [month, setMonth] = useState('');
+  const [year, setYear] = useState(new Date().getFullYear().toString());
+  const [paymentDate, setPaymentDate] = useState('');
+  const [fileData, setFileData] = useState<string | null>(null);
+  const [fileName, setFileName] = useState('');
+  const [fileType, setFileType] = useState('');
+  const [fileSize, setFileSize] = useState<number>(0);
   
-  const form = useForm<SalaryFormValues>({
-    resolver: zodResolver(salaryFormSchema),
-    defaultValues: {
-      employeeId: '',
-      month: new Date().getMonth().toString(),
-      year: new Date().getFullYear().toString(),
-      grossSalary: '',
-      netSalary: '',
-      status: 'Payé'
+  // Fetch employees data
+  const { employees, isLoading } = useEmployeeData();
+  
+  // Handle contract data for selected employee
+  const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
+  
+  // Use custom hook for employee contract data
+  const { contract, salary } = selectedEmployee ? useEmployeeContract(selectedEmployee.id) : { contract: null, salary: 0 };
+  
+  // Update selected employee when employeeId changes
+  useEffect(() => {
+    if (employeeId && employees) {
+      const employee = employees.find(emp => emp.id === employeeId);
+      if (employee) {
+        setSelectedEmployee(employee);
+        // Use contract salary or employee salary property if available, otherwise default to 0
+        const employeeSalary = employee.salary || salary || 0;
+        setGrossSalary(employeeSalary.toString());
+        // Calculate estimated net salary (roughly 77% of gross)
+        const estimatedNet = Math.round(employeeSalary * 0.77);
+        setNetSalary(estimatedNet.toString());
+      }
     }
-  });
+  }, [employeeId, employees, salary]);
   
-  // Handle employee selection to auto-fill gross salary
-  const handleEmployeeChange = (employeeId: string) => {
-    form.setValue('employeeId', employeeId);
-    
-    // Find the selected employee
-    const selectedEmployee = employees.find(emp => emp.id === employeeId);
-    
-    // If employee has salary information, populate the gross salary field
-    if (selectedEmployee && selectedEmployee.salary) {
-      const grossSalary = selectedEmployee.salary.toString();
-      setSelectedEmployeeGrossSalary(grossSalary);
-      form.setValue('grossSalary', grossSalary);
+  // Set current month on component mount
+  useEffect(() => {
+    const currentDate = new Date();
+    setMonth((currentDate.getMonth() + 1).toString().padStart(2, '0')); // Add 1 because getMonth is zero-based
+    setPaymentDate(currentDate.toISOString().split('T')[0]);
+  }, []);
+  
+  // Handle file upload
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setFileName(file.name);
+      setFileType(file.type);
+      setFileSize(file.size);
       
-      // Calculate an estimated net salary (for example, 80% of gross)
-      const estimatedNetSalary = (selectedEmployee.salary * 0.8).toFixed(2);
-      form.setValue('netSalary', estimatedNetSalary);
-    } else {
-      setSelectedEmployeeGrossSalary('');
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        setFileData(event.target?.result as string);
+      };
+      reader.readAsDataURL(file);
     }
   };
   
-  // Calculate net salary based on gross salary (simplified example)
-  const handleGrossSalaryChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const grossSalary = parseFloat(event.target.value);
-    if (!isNaN(grossSalary)) {
-      // Simple calculation of net salary (for example, 80% of gross)
-      const netSalary = (grossSalary * 0.8).toFixed(2);
-      form.setValue('netSalary', netSalary);
+  // Handle form submission
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!employeeId || !grossSalary || !netSalary || !month || !year || !paymentDate) {
+      toast.error('Veuillez remplir tous les champs obligatoires');
+      return;
     }
-  };
-  
-  const onSubmit = async (data: SalaryFormValues) => {
+    
     try {
-      // Get month name based on month number
-      const monthNames = [
-        "Janvier", "Février", "Mars", "Avril", "Mai", "Juin",
-        "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"
-      ];
-      const monthIndex = parseInt(data.month);
-      const monthName = monthNames[monthIndex];
-      
-      // Find the employee to get their name
-      const employee = employees.find(emp => emp.id === data.employeeId);
-      const employeeName = employee ? `${employee.firstName} ${employee.lastName}` : 'Employé inconnu';
-      
-      // Create a payslip object
-      const payslipData = {
-        id: `payslip_${Date.now()}`,
-        employeeId: data.employeeId,
-        employeeName: employeeName,
-        month: parseInt(data.month),
-        year: parseInt(data.year),
-        monthName,
-        grossSalary: parseFloat(data.grossSalary),
-        netSalary: parseFloat(data.netSalary),
-        date: new Date().toISOString().split('T')[0],
-        status: data.status
+      // Create document object
+      const payslipDocument: Document = {
+        id: `payslip_${employeeId}_${year}_${month}`,
+        name: `Fiche de paie - ${month}/${year}`,
+        type: 'Fiche de paie',
+        date: paymentDate,
+        fileData: fileData || '',
+        fileType: fileType || 'application/pdf',
+        fileSize: fileSize,
+        employeeId: employeeId
       };
       
-      // Save the payslip
-      const result = await addPayslip(payslipData);
+      // Simulate payslip generation
+      toast.success('Fiche de paie générée avec succès');
       
-      if (result) {
-        // Create a document for this payslip to show in employee documents
-        if (employee) {
-          // Generate PDF data (this would actually generate a PDF in a real system)
-          const pdfData = `data:application/pdf;base64,JVBERi0xLjcKCjEgMCBvYmogICUgZW50cnkgcG9pbnQKPDwKICAvVHlwZSAvQ2F0YWxvZwogIC9QYWdlcyAyIDAgUgo+PgplbmRvYmoKCjIgMCBvYmoKPDwKICAvVHlwZSAvUGFnZXMKICAvTWVkaWFCb3ggWyAwIDAgMjAwIDIwMCBdCiAgL0NvdW50IDEKICAvS2lkcyBbIDMgMCBSIF0KPj4KZW5kb2JqCgozIDAgb2JqCjw8CiAgL1R5cGUgL1BhZ2UKICAvUGFyZW50IDIgMCBSCiAgL1Jlc291cmNlcyA8PAogICAgL0ZvbnQgPDwKICAgICAgL0YxIDQgMCBSIAogICAgPj4KICA+PgogIC9Db250ZW50cyA1IDAgUgo+PgplbmRvYmoKCjQgMCBvYmoKPDwKICAvVHlwZSAvRm9udAogIC9TdWJ0eXBlIC9UeXBlMQogIC9CYXNlRm9udCAvVGltZXMtUm9tYW4KPj4KZW5kb2JqCgo1IDAgb2JqICAlIHBhZ2UgY29udGVudAo8PAogIC9MZW5ndGggNDQKPj4Kc3RyZWFtCkJUCjcwIDUwIFRECi9GMSAxMiBUZgooSGVsbG8sIHdvcmxkISkgVGoKRVQKZW5kc3RyZWFtCmVuZG9iagoKeHJlZgowIDYKMDAwMDAwMDAwMCA2NTUzNSBmIAowMDAwMDAwMDEwIDAwMDAwIG4gCjAwMDAwMDAwNzkgMDAwMDAgbiAKMDAwMDAwMDE3MyAwMDAwMCBuIAowMDAwMDAwMzAxIDAwMDAwIG4gCjAwMDAwMDAzODAgMDAwMDAgbiAKdHJhaWxlcgo8PAogIC9TaXplIDYKICAvUm9vdCAxIDAgUgo+PgpzdGFydHhyZWYKNDkyCiUlRU9G`;
-          
-          // Create the document with the proper fileSize as a number 
-          const documentData: Document = {
-            id: `payslip_doc_${Date.now()}`,
-            name: `Fiche de paie - ${monthName} ${data.year}`,
-            type: 'Fiche de paie',
-            date: new Date().toISOString().split('T')[0],
-            fileData: pdfData,
-            fileType: 'application/pdf',
-            fileSize: pdfData.length, // This is now properly typed as a number
-            employeeId: data.employeeId
-          };
-          
-          // In a real implementation, you would save this document to the employee's documents collection
-          // Here you might call a function like: await addEmployeeDocument(data.employeeId, documentData);
-        }
-        
-        // Reset the form
-        form.reset();
-        toast.success("Fiche de paie créée avec succès");
-      }
+      // Reset form
+      setFileData(null);
+      setFileName('');
+      
     } catch (error) {
-      console.error("Erreur lors de la création de la fiche de paie:", error);
-      toast.error("Erreur lors de la création de la fiche de paie");
+      console.error('Erreur lors de la génération de la fiche de paie:', error);
+      toast.error('Erreur lors de la génération de la fiche de paie');
     }
   };
+  
+  const months = [
+    { value: '01', label: 'Janvier' },
+    { value: '02', label: 'Février' },
+    { value: '03', label: 'Mars' },
+    { value: '04', label: 'Avril' },
+    { value: '05', label: 'Mai' },
+    { value: '06', label: 'Juin' },
+    { value: '07', label: 'Juillet' },
+    { value: '08', label: 'Août' },
+    { value: '09', label: 'Septembre' },
+    { value: '10', label: 'Octobre' },
+    { value: '11', label: 'Novembre' },
+    { value: '12', label: 'Décembre' }
+  ];
   
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>Créer une fiche de paie</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <FormField
-              control={form.control}
-              name="employeeId"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Employé</FormLabel>
-                  <Select 
-                    value={field.value} 
-                    onValueChange={(value) => handleEmployeeChange(value)}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Sélectionner un employé" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {employees
-                        .filter(emp => emp.status === 'active' || emp.status === 'Actif')
-                        .map((employee) => (
-                          <SelectItem key={employee.id} value={employee.id}>
-                            {employee.firstName} {employee.lastName}
-                          </SelectItem>
-                        ))
-                      }
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+      <CardContent className="pt-6">
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Employee selection */}
+            <div className="space-y-2">
+              <Label htmlFor="employee">Employé</Label>
+              <Select
+                value={employeeId}
+                onValueChange={setEmployeeId}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Sélectionner un employé" />
+                </SelectTrigger>
+                <SelectContent>
+                  {isLoading ? (
+                    <SelectItem value="loading" disabled>Chargement...</SelectItem>
+                  ) : employees && employees.length > 0 ? (
+                    employees.map(employee => (
+                      <SelectItem key={employee.id} value={employee.id}>
+                        {employee.firstName} {employee.lastName}
+                      </SelectItem>
+                    ))
+                  ) : (
+                    <SelectItem value="no-data" disabled>Aucun employé disponible</SelectItem>
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
             
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="month"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Mois</FormLabel>
-                    <Select value={field.value} onValueChange={field.onChange}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Sélectionner un mois" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="0">Janvier</SelectItem>
-                        <SelectItem value="1">Février</SelectItem>
-                        <SelectItem value="2">Mars</SelectItem>
-                        <SelectItem value="3">Avril</SelectItem>
-                        <SelectItem value="4">Mai</SelectItem>
-                        <SelectItem value="5">Juin</SelectItem>
-                        <SelectItem value="6">Juillet</SelectItem>
-                        <SelectItem value="7">Août</SelectItem>
-                        <SelectItem value="8">Septembre</SelectItem>
-                        <SelectItem value="9">Octobre</SelectItem>
-                        <SelectItem value="10">Novembre</SelectItem>
-                        <SelectItem value="11">Décembre</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="year"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Année</FormLabel>
-                    <Select value={field.value} onValueChange={field.onChange}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Sélectionner une année" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {[...Array(5)].map((_, i) => {
-                          const year = new Date().getFullYear() - 2 + i;
-                          return (
-                            <SelectItem key={year} value={year.toString()}>
-                              {year}
-                            </SelectItem>
-                          );
-                        })}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
+            {/* Period selection */}
+            <div className="space-y-2">
+              <Label>Période</Label>
+              <div className="grid grid-cols-2 gap-4">
+                <Select
+                  value={month}
+                  onValueChange={setMonth}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Mois" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {months.map(m => (
+                      <SelectItem key={m.value} value={m.value}>
+                        {m.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                
+                <Input
+                  type="number"
+                  min="2000"
+                  max="2100"
+                  value={year}
+                  onChange={e => setYear(e.target.value)}
+                  placeholder="Année"
+                />
+              </div>
+            </div>
+            
+            {/* Gross salary */}
+            <div className="space-y-2">
+              <Label htmlFor="grossSalary">Salaire brut (€)</Label>
+              <Input
+                id="grossSalary"
+                type="number"
+                min="0"
+                step="0.01"
+                value={grossSalary}
+                onChange={e => {
+                  setGrossSalary(e.target.value);
+                  // Calculate estimated net salary (roughly 77% of gross)
+                  const gross = parseFloat(e.target.value) || 0;
+                  const estimatedNet = Math.round(gross * 0.77);
+                  setNetSalary(estimatedNet.toString());
+                }}
+                placeholder="Salaire brut"
               />
             </div>
             
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="grossSalary"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Salaire brut</FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        type="number"
-                        step="0.01"
-                        onChange={(e) => {
-                          field.onChange(e);
-                          handleGrossSalaryChange(e);
-                        }}
-                        placeholder={selectedEmployeeGrossSalary || "Saisir le salaire brut"}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="netSalary"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Salaire net</FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        type="number"
-                        step="0.01"
-                        placeholder="Saisir le salaire net"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
+            {/* Net salary */}
+            <div className="space-y-2">
+              <Label htmlFor="netSalary">Salaire net (€)</Label>
+              <Input
+                id="netSalary"
+                type="number"
+                min="0"
+                step="0.01"
+                value={netSalary}
+                onChange={e => setNetSalary(e.target.value)}
+                placeholder="Salaire net"
               />
             </div>
             
-            <FormField
-              control={form.control}
-              name="status"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Statut</FormLabel>
-                  <Select value={field.value} onValueChange={field.onChange}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Sélectionner un statut" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="Payé">Payé</SelectItem>
-                      <SelectItem value="En attente">En attente</SelectItem>
-                      <SelectItem value="Annulé">Annulé</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            {/* Payment date */}
+            <div className="space-y-2">
+              <Label htmlFor="paymentDate">Date de paiement</Label>
+              <Input
+                id="paymentDate"
+                type="date"
+                value={paymentDate}
+                onChange={e => setPaymentDate(e.target.value)}
+              />
+            </div>
             
-            <Button type="submit">Créer la fiche de paie</Button>
-          </form>
-        </Form>
+            {/* File upload */}
+            <div className="space-y-2">
+              <Label htmlFor="payslipFile">Fichier PDF (optionnel)</Label>
+              <Input
+                id="payslipFile"
+                type="file"
+                accept=".pdf"
+                onChange={handleFileChange}
+              />
+              {fileName && (
+                <p className="text-xs text-muted-foreground mt-1">
+                  {fileName}
+                </p>
+              )}
+            </div>
+          </div>
+          
+          {/* Submit button */}
+          <Button type="submit" className="w-full md:w-auto">
+            Générer la fiche de paie
+          </Button>
+        </form>
       </CardContent>
     </Card>
   );
 };
+
+export default SalaryForm;

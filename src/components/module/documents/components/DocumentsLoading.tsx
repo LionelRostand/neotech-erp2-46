@@ -2,7 +2,7 @@
 import React from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 
-interface DocumentsLoadingProps {
+export interface DocumentsLoadingProps {
   view: 'grid' | 'list';
 }
 

@@ -19,12 +19,41 @@ import { DocumentsLoading } from '@/components/module/documents/components/Docum
 import { addEmployeeDocument } from '../employees/services/documentService';
 import NewDocumentDialog from './components/NewDocumentDialog';
 import { Document } from '@/types/employee';
+import { DocumentFile } from '../../documents/types/document-types';
+
+// Adapter function to convert HrDocument to DocumentFile
+const adaptHrDocumentToDocumentFile = (doc: HrDocument): DocumentFile => {
+  return {
+    id: doc.id,
+    name: doc.title,
+    type: doc.type,
+    size: typeof doc.fileSize === 'string' ? parseInt(doc.fileSize) || 0 : doc.fileSize || 0,
+    format: doc.fileType || 'unknown',
+    path: doc.url || '',
+    createdAt: new Date(doc.uploadDate || doc.createdAt || doc.date || new Date().toISOString()),
+    updatedAt: new Date(doc.uploadDate || doc.createdAt || doc.date || new Date().toISOString()),
+    createdBy: doc.employeeName || 'Unknown',
+    isEncrypted: false,
+    status: 'active',
+    versions: [],
+    permissions: [],
+    tags: [doc.type],
+    description: doc.description || '',
+    department: doc.department || '',
+    category: doc.type
+  };
+};
 
 const EmployeesDocuments: React.FC = () => {
   const { documents, isLoading, error } = useDocumentsData();
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredDocuments, setFilteredDocuments] = useState<HrDocument[]>([]);
   const [isNewDocumentDialogOpen, setIsNewDocumentDialogOpen] = useState(false);
+  const [view, setView] = useState<'grid' | 'list'>('grid');
+  
+  // Convert HrDocuments to DocumentFiles
+  const adaptedDocuments = documents.map(adaptHrDocumentToDocumentFile);
+  const adaptedFilteredDocuments = filteredDocuments.map(adaptHrDocumentToDocumentFile);
   
   useEffect(() => {
     if (searchQuery.trim() === '') {
@@ -89,7 +118,7 @@ const EmployeesDocuments: React.FC = () => {
       </Card>
       
       {searchQuery.trim() !== '' ? (
-        <SearchResults results={filteredDocuments} searchQuery={searchQuery} />
+        <SearchResults results={adaptedFilteredDocuments} searchQuery={searchQuery} />
       ) : (
         <Tabs defaultValue="all">
           <TabsList>
@@ -101,49 +130,52 @@ const EmployeesDocuments: React.FC = () => {
           
           <TabsContent value="all">
             {isLoading ? (
-              <DocumentsLoading />
-            ) : documents.length === 0 ? (
+              <DocumentsLoading view={view} />
+            ) : adaptedDocuments.length === 0 ? (
               <DocumentsEmptyState />
             ) : (
-              <DocumentsList documents={documents} />
+              <DocumentsList documents={adaptedDocuments} view={view} />
             )}
           </TabsContent>
           
           <TabsContent value="contracts">
             {isLoading ? (
-              <DocumentsLoading />
+              <DocumentsLoading view={view} />
             ) : (
               <DocumentsList 
-                documents={documents.filter(doc => 
+                documents={adaptedDocuments.filter(doc => 
                   doc.type.toLowerCase().includes('contrat')
-                )} 
+                )}
+                view={view}
               />
             )}
           </TabsContent>
           
           <TabsContent value="payslips">
             {isLoading ? (
-              <DocumentsLoading />
+              <DocumentsLoading view={view} />
             ) : (
               <DocumentsList 
-                documents={documents.filter(doc => 
+                documents={adaptedDocuments.filter(doc => 
                   doc.type.toLowerCase().includes('paie') || 
                   doc.type.toLowerCase().includes('salaire')
-                )} 
+                )}
+                view={view}
               />
             )}
           </TabsContent>
           
           <TabsContent value="certifications">
             {isLoading ? (
-              <DocumentsLoading />
+              <DocumentsLoading view={view} />
             ) : (
               <DocumentsList 
-                documents={documents.filter(doc => 
+                documents={adaptedDocuments.filter(doc => 
                   doc.type.toLowerCase().includes('certification') || 
                   doc.type.toLowerCase().includes('diplôme') ||
                   doc.type.toLowerCase().includes('attestation')
-                )} 
+                )}
+                view={view}
               />
             )}
           </TabsContent>
