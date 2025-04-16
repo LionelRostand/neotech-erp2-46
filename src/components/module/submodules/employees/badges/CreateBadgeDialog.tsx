@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
@@ -51,10 +52,10 @@ const CreateBadgeDialog: React.FC<CreateBadgeDialogProps> = ({
     
     const employeeInitials = getEmployeeInitials(employee.firstName, employee.lastName);
     
-    const employeeShortId: string = 
-      employee.shortId && typeof employee.shortId === 'string' 
-        ? employee.shortId 
-        : employeeInitials;
+    // Using type assertion with 'as' to handle the type discrepancy
+    const employeeShortId = (employee as any).shortId && typeof (employee as any).shortId === 'string'
+      ? (employee as any).shortId 
+      : employeeInitials;
     
     const newBadge: BadgeData = {
       id: badgeNumber,
