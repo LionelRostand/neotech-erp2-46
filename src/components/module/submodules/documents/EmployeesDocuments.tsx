@@ -9,7 +9,7 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs";
-import { Plus, Search } from 'lucide-react';
+import { Plus, Search, FileText } from 'lucide-react';
 import { toast } from 'sonner';
 import { useDocumentsData, HrDocument } from '@/hooks/useDocumentsData';
 import { DocumentsList } from '@/components/module/documents/components/DocumentsList';
@@ -50,6 +50,7 @@ const EmployeesDocuments: React.FC = () => {
   const [filteredDocuments, setFilteredDocuments] = useState<HrDocument[]>([]);
   const [isNewDocumentDialogOpen, setIsNewDocumentDialogOpen] = useState(false);
   const [view, setView] = useState<'grid' | 'list'>('grid');
+  const [selectedDocument, setSelectedDocument] = useState<DocumentFile | null>(null);
   
   // Convert HrDocuments to DocumentFiles
   const adaptedDocuments = documents.map(adaptHrDocumentToDocumentFile);
@@ -80,6 +81,10 @@ const EmployeesDocuments: React.FC = () => {
       toast.error('Erreur lors de l\'ajout du document');
       return Promise.reject(error);
     }
+  };
+  
+  const getDocumentIcon = (doc: DocumentFile) => {
+    return <FileText className="h-5 w-5 text-blue-500" />;
   };
   
   if (error) {
@@ -118,7 +123,14 @@ const EmployeesDocuments: React.FC = () => {
       </Card>
       
       {searchQuery.trim() !== '' ? (
-        <SearchResults results={adaptedFilteredDocuments} searchQuery={searchQuery} />
+        <SearchResults 
+          results={adaptedFilteredDocuments} 
+          isLoading={isLoading}
+          onSelect={setSelectedDocument}
+          selectedDocument={selectedDocument}
+          getDocumentIcon={getDocumentIcon}
+          searchQuery={searchQuery}
+        />
       ) : (
         <Tabs defaultValue="all">
           <TabsList>
@@ -134,7 +146,12 @@ const EmployeesDocuments: React.FC = () => {
             ) : adaptedDocuments.length === 0 ? (
               <DocumentsEmptyState />
             ) : (
-              <DocumentsList documents={adaptedDocuments} view={view} />
+              <DocumentsList 
+                documents={adaptedDocuments} 
+                view={view} 
+                onSelect={setSelectedDocument}
+                selected={selectedDocument?.id}
+              />
             )}
           </TabsContent>
           
@@ -147,6 +164,8 @@ const EmployeesDocuments: React.FC = () => {
                   doc.type.toLowerCase().includes('contrat')
                 )}
                 view={view}
+                onSelect={setSelectedDocument}
+                selected={selectedDocument?.id}
               />
             )}
           </TabsContent>
@@ -161,6 +180,8 @@ const EmployeesDocuments: React.FC = () => {
                   doc.type.toLowerCase().includes('salaire')
                 )}
                 view={view}
+                onSelect={setSelectedDocument}
+                selected={selectedDocument?.id}
               />
             )}
           </TabsContent>
@@ -176,6 +197,8 @@ const EmployeesDocuments: React.FC = () => {
                   doc.type.toLowerCase().includes('attestation')
                 )}
                 view={view}
+                onSelect={setSelectedDocument}
+                selected={selectedDocument?.id}
               />
             )}
           </TabsContent>

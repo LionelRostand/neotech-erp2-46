@@ -32,20 +32,22 @@ import { formatFileSize } from '../utils/formatUtils';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
-interface SearchResultsProps {
+export interface SearchResultsProps {
   results: DocumentFile[];
   isLoading: boolean;
-  onSelect: (document: DocumentFile) => void;
-  selectedDocument: DocumentFile | null;
-  getDocumentIcon: (document: DocumentFile) => React.ReactNode;
+  onSelect?: (document: DocumentFile) => void;
+  selectedDocument?: DocumentFile | null;
+  getDocumentIcon?: (document: DocumentFile) => React.ReactNode;
+  searchQuery?: string; // Added searchQuery as an optional prop
 }
 
 export const SearchResults: React.FC<SearchResultsProps> = ({
   results,
   isLoading,
-  onSelect,
-  selectedDocument,
-  getDocumentIcon
+  onSelect = () => {},
+  selectedDocument = null,
+  getDocumentIcon = () => <Search className="h-4 w-4" />,
+  searchQuery = ''
 }) => {
   // Loading skeleton
   if (isLoading) {
