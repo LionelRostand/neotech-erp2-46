@@ -3,9 +3,8 @@ import React, { useState } from 'react';
 import { Employee } from '@/types/employee';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Phone, Mail, MapPin, Building, FileEdit, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Edit, FileText, Mail, Phone, MapPin, Building, Briefcase, Calendar } from 'lucide-react';
-import { formatDate } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/hooks/useAuth';
@@ -15,148 +14,134 @@ import AbsencesTab from './tabs/AbsencesTab';
 import FormationsTab from './tabs/FormationsTab';
 import EvaluationsTab from './tabs/EvaluationsTab';
 import HorairesTab from './tabs/HorairesTab';
+import { toast } from 'sonner';
+import { useEmployeePermissions } from './hooks/useEmployeePermissions';
 
 interface EmployeeProfileViewProps {
   employee: Employee;
-  isLoading: boolean;
-  onEmployeeUpdated?: () => Promise<void>;
+  isLoading?: boolean;
+  onEmployeeUpdated?: () => void;
 }
 
 const EmployeeProfileView: React.FC<EmployeeProfileViewProps> = ({
   employee,
-  isLoading,
+  isLoading = false,
   onEmployeeUpdated
 }) => {
   const navigate = useNavigate();
   const { userData } = useAuth();
   const [activeTab, setActiveTab] = useState('profile');
+  const { canEdit, isAdmin } = useEmployeePermissions('employees-profiles', employee.id);
   
-  // Check if user is admin
-  const isAdmin = userData?.email === 'admin@neotech-consulting.com' || userData?.role === 'admin';
+  // Function to handle the edit button click
+  const handleEditClick = () => {
+    navigate(`/modules/employees/profiles/edit/${employee.id}`);
+    toast.info("Mode édition activé");
+  };
   
-  const getStatusColor = (status: string) => {
-    status = status?.toLowerCase() || 'active';
-    switch (status) {
-      case 'active':
-      case 'actif':
-        return 'bg-green-500';
-      case 'inactive':
-      case 'inactif':
-        return 'bg-red-500';
-      case 'on leave':
-      case 'en congé':
-        return 'bg-yellow-500';
-      case 'suspended':
-      case 'suspendu':
-        return 'bg-gray-500';
-      default:
-        return 'bg-blue-500';
+  const getStatusBadge = (status: string) => {
+    const lowerStatus = status?.toLowerCase?.() || '';
+    
+    if (lowerStatus.includes('actif') || lowerStatus === 'active') {
+      return <Badge className="bg-green-100 text-green-800">Actif</Badge>;
+    } else if (lowerStatus.includes('inactif') || lowerStatus === 'inactive') {
+      return <Badge className="bg-red-100 text-red-800">Inactif</Badge>;
+    } else if (lowerStatus.includes('congé') || lowerStatus === 'onleave') {
+      return <Badge className="bg-blue-100 text-blue-800">En congé</Badge>;
+    } else if (lowerStatus.includes('suspendu') || lowerStatus === 'suspended') {
+      return <Badge className="bg-yellow-100 text-yellow-800">Suspendu</Badge>;
+    } else {
+      return <Badge variant="outline">{status || 'Non défini'}</Badge>;
     }
   };
   
+  // Function to get user initials for avatar fallback
   const getInitials = (firstName: string, lastName: string) => {
     return `${firstName?.charAt(0) || ''}${lastName?.charAt(0) || ''}`.toUpperCase();
   };
   
-  const getFullName = () => {
-    return `${employee.firstName || ''} ${employee.lastName || ''}`;
-  };
-
-  // Helper function to safely display address
-  const displayAddress = () => {
-    if (typeof employee.address === 'string') {
-      return employee.address;
-    } else if (typeof employee.address === 'object' && employee.address) {
-      const addr = employee.address;
-      return `${addr.street || ''}, ${addr.city || ''}, ${addr.postalCode || ''}, ${addr.country || ''}`;
-    }
-    return 'Non spécifié';
-  };
-  
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-2">
-          <Button variant="outline" size="icon" onClick={() => navigate('/modules/employees/profiles')}>
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-          <h1 className="text-2xl font-bold">Profil de l'employé</h1>
-        </div>
+      <div className="flex justify-between items-center">
+        <h2 className="text-3xl font-bold tracking-tight">Profil de {employee.firstName} {employee.lastName}</h2>
         
-        {isAdmin && (
-          <Button variant="outline">
-            <Edit className="h-4 w-4 mr-2" />
-            Modifier
-          </Button>
-        )}
+        {/* Edit button - Now enabled based on permissions */}
+        <Button 
+          onClick={handleEditClick} 
+          variant="outline"
+          disabled={!canEdit && !isAdmin}
+        >
+          <FileEdit className="mr-2 h-4 w-4" /> Modifier
+        </Button>
       </div>
       
       <Card>
-        <CardContent className="p-6">
-          <div className="flex flex-col md:flex-row gap-6">
+        <CardHeader className="pb-0">
+          <CardTitle>Informations personnelles</CardTitle>
+        </CardHeader>
+        <CardContent className="pt-6">
+          <div className="flex flex-col md:flex-row gap-8">
             <div className="flex flex-col items-center space-y-3">
-              <Avatar className="h-32 w-32">
-                <AvatarImage src={employee.photoURL || employee.photo} alt={getFullName()} />
-                <AvatarFallback className="text-2xl">{getInitials(employee.firstName, employee.lastName)}</AvatarFallback>
+              <Avatar className="h-24 w-24">
+                <AvatarImage src={employee.photoURL} alt={`${employee.firstName} ${employee.lastName}`} />
+                <AvatarFallback className="text-lg">
+                  {getInitials(employee.firstName || '', employee.lastName || '')}
+                </AvatarFallback>
               </Avatar>
-              
-              <div className="text-center">
-                <h2 className="text-xl font-semibold">{getFullName()}</h2>
-                <p className="text-gray-500">{employee.position}</p>
-                <div className="mt-2">
-                  <Badge className={getStatusColor(employee.status)}>
-                    {employee.status || 'Actif'}
-                  </Badge>
-                </div>
-              </div>
+              {getStatusBadge(employee.status || '')}
+              <span className="text-sm text-muted-foreground">
+                {employee.position || 'Poste non spécifié'}
+              </span>
             </div>
             
-            <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-4">
-                <h3 className="text-lg font-medium">Informations personnelles</h3>
-                
-                <div className="space-y-2">
-                  <div className="flex items-center space-x-2">
-                    <Mail className="h-4 w-4 text-gray-500" />
-                    <span>{employee.email || 'Non spécifié'}</span>
-                  </div>
-                  
-                  <div className="flex items-center space-x-2">
-                    <Phone className="h-4 w-4 text-gray-500" />
-                    <span>{employee.phone || 'Non spécifié'}</span>
-                  </div>
-                  
-                  <div className="flex items-center space-x-2">
-                    <MapPin className="h-4 w-4 text-gray-500" />
-                    <span>{displayAddress()}</span>
-                  </div>
-                  
-                  <div className="flex items-center space-x-2">
-                    <Calendar className="h-4 w-4 text-gray-500" />
-                    <span>Intégré le: {employee.startDate ? formatDate(employee.startDate) : 'Non spécifié'}</span>
-                  </div>
-                </div>
+            <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <span className="text-sm font-medium flex items-center text-muted-foreground">
+                  <User className="mr-2 h-4 w-4" /> Nom complet
+                </span>
+                <span className="text-base">{employee.firstName} {employee.lastName}</span>
               </div>
               
-              <div className="space-y-4">
-                <h3 className="text-lg font-medium">Informations professionnelles</h3>
-                
-                <div className="space-y-2">
-                  <div className="flex items-center space-x-2">
-                    <Building className="h-4 w-4 text-gray-500" />
-                    <span>Département: {employee.department || 'Non spécifié'}</span>
-                  </div>
-                  
-                  <div className="flex items-center space-x-2">
-                    <Briefcase className="h-4 w-4 text-gray-500" />
-                    <span>Poste: {employee.position || 'Non spécifié'}</span>
-                  </div>
-                  
-                  <div className="flex items-center space-x-2">
-                    <FileText className="h-4 w-4 text-gray-500" />
-                    <span>Matricule: {employee.badgeNumber || 'Non spécifié'}</span>
-                  </div>
-                </div>
+              <div className="space-y-1">
+                <span className="text-sm font-medium flex items-center text-muted-foreground">
+                  <Mail className="mr-2 h-4 w-4" /> Email
+                </span>
+                <span className="text-base">{employee.email || 'Non spécifié'}</span>
+              </div>
+              
+              <div className="space-y-1">
+                <span className="text-sm font-medium flex items-center text-muted-foreground">
+                  <Phone className="mr-2 h-4 w-4" /> Téléphone
+                </span>
+                <span className="text-base">{employee.phone || 'Non spécifié'}</span>
+              </div>
+              
+              <div className="space-y-1">
+                <span className="text-sm font-medium flex items-center text-muted-foreground">
+                  <Building className="mr-2 h-4 w-4" /> Département
+                </span>
+                <span className="text-base">{employee.department || 'Non spécifié'}</span>
+              </div>
+              
+              <div className="space-y-1">
+                <span className="text-sm font-medium flex items-center text-muted-foreground">
+                  <MapPin className="mr-2 h-4 w-4" /> Adresse
+                </span>
+                <span className="text-base">
+                  {employee.address ? 
+                    typeof employee.address === 'string' ? 
+                      employee.address : 
+                      `${employee.address.street || ''}, ${employee.address.city || ''}, ${employee.address.zipCode || ''}` 
+                    : 'Non spécifiée'
+                  }
+                </span>
+              </div>
+              
+              <div className="space-y-1">
+                <span className="text-sm font-medium flex items-center text-muted-foreground">
+                  <User className="mr-2 h-4 w-4" /> Numéro d'employé
+                </span>
+                <span className="text-base">{employee.employeeNumber || 'Non spécifié'}</span>
               </div>
             </div>
           </div>

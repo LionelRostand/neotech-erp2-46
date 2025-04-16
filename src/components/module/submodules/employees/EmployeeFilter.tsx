@@ -3,6 +3,7 @@ import React from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { FileUp, Search } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface EmployeeFilterProps {
   onDepartmentChange: (department: string) => void;
@@ -33,31 +34,33 @@ const EmployeeFilter: React.FC<EmployeeFilterProps> = ({
         </div>
         
         <div className="flex gap-4">
-          <select
-            className="px-3 py-2 rounded-md border border-input bg-background"
-            onChange={(e) => onDepartmentChange(e.target.value)}
-            defaultValue="all"
-          >
-            <option value="all">Tous les départements</option>
-            <option value="IT">IT</option>
-            <option value="HR">Ressources Humaines</option>
-            <option value="Finance">Finance</option>
-            <option value="Marketing">Marketing</option>
-            <option value="Sales">Ventes</option>
-            <option value="Operations">Opérations</option>
-          </select>
+          <Select defaultValue="all" onValueChange={onDepartmentChange}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Tous les départements" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Tous les départements</SelectItem>
+              <SelectItem value="IT">IT</SelectItem>
+              <SelectItem value="HR">Ressources Humaines</SelectItem>
+              <SelectItem value="Finance">Finance</SelectItem>
+              <SelectItem value="Marketing">Marketing</SelectItem>
+              <SelectItem value="Sales">Ventes</SelectItem>
+              <SelectItem value="Operations">Opérations</SelectItem>
+            </SelectContent>
+          </Select>
           
-          <select
-            className="px-3 py-2 rounded-md border border-input bg-background"
-            onChange={(e) => onStatusChange(e.target.value)}
-            defaultValue="all"
-          >
-            <option value="all">Tous les statuts</option>
-            <option value="active">Actif</option>
-            <option value="inactive">Inactif</option>
-            <option value="onLeave">En congé</option>
-            <option value="suspended">Suspendu</option>
-          </select>
+          <Select defaultValue="all" onValueChange={onStatusChange}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Tous les statuts" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Tous les statuts</SelectItem>
+              <SelectItem value="active">Actif</SelectItem>
+              <SelectItem value="inactive">Inactif</SelectItem>
+              <SelectItem value="onLeave">En congé</SelectItem>
+              <SelectItem value="suspended">Suspendu</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </div>
       
