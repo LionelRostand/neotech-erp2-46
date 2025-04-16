@@ -61,7 +61,10 @@ const CreateBadgeDialog: React.FC<CreateBadgeDialogProps> = ({
       status: "success",
       statusText: "Actif",
       employeePhoto: employee.photoURL || employee.photo,
-      employeeShortId: employee.shortId || ''
+      // Safely handle shortId with a fallback
+      employeeShortId: employee.shortId || 
+                       `${employee.firstName.charAt(0)}${employee.lastName.charAt(0)}` || 
+                       'N/A'
     };
     
     onBadgeCreated(newBadge);
