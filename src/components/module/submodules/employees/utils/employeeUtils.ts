@@ -1,4 +1,3 @@
-
 /**
  * Génère les initiales à partir du nom et prénom d'un employé
  * @param firstName Prénom de l'employé
@@ -135,4 +134,21 @@ export const employeeExists = (employees: any[], newEmployee: any): boolean => {
     (emp.firstName?.toLowerCase() === newEmployee.firstName?.toLowerCase() && 
      emp.lastName?.toLowerCase() === newEmployee.lastName?.toLowerCase())
   );
+};
+
+/**
+ * Génère un ID court et mémorisable pour un employé
+ * Format: 2 lettres du nom + 2 chiffres aléatoires
+ * Exemple: JD42 pour John Doe
+ */
+export const generateShortEmployeeId = (firstName: string, lastName: string): string => {
+  // Prendre les initiales (ou 2 premières lettres du nom si pas de prénom)
+  const letters = lastName 
+    ? `${(firstName?.[0] || '').toUpperCase()}${lastName[0].toUpperCase()}`
+    : lastName.slice(0, 2).toUpperCase();
+    
+  // Générer 2 chiffres aléatoires
+  const numbers = Math.floor(Math.random() * 100).toString().padStart(2, '0');
+  
+  return `${letters}${numbers}`;
 };

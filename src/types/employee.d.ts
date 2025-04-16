@@ -1,5 +1,7 @@
+
 export interface Employee {
   id: string;
+  shortId?: string; // Added short ID field
   firstName: string;
   lastName: string;
   email: string;
