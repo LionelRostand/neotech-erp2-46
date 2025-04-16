@@ -1,3 +1,4 @@
+
 import { Company } from '@/components/module/submodules/companies/types';
 
 export interface EmployeeAddress {
@@ -68,6 +69,7 @@ export interface Evaluation {
 
 export interface Employee {
   id: string;
+  shortId?: string; // Added shortId property to match .d.ts file
   firebaseId?: string; // ID généré par Firestore
   firstName: string;
   lastName: string;
