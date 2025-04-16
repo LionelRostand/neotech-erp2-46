@@ -27,7 +27,7 @@ import { Employee } from '@/types/employee';
 // Helper component to pass props to EmployeesProfiles
 const EmployeesProfilesWithProps = () => {
   const { employees } = useEmployeeData();
-  return <EmployeesProfiles employees={employees as Employee[]} />;
+  return <EmployeesProfiles employeesProp={employees as Employee[]} />;
 };
 
 export const EmployeesRoutes = (

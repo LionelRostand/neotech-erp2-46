@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { 
   Card, 
@@ -20,11 +20,11 @@ import { db } from '@/lib/firebase';
 import EmployeesDashboardCards from './dashboard/EmployeesDashboardCards';
 
 export interface EmployeesProfilesProps {
-  employees: Employee[];
+  employeesProp: Employee[];
 }
 
-const EmployeesProfiles: React.FC<EmployeesProfilesProps> = ({ employees: propEmployees }) => {
-  const { isLoading, error, refetchEmployees } = useHrModuleData();
+const EmployeesProfiles: React.FC<EmployeesProfilesProps> = ({ employeesProp }) => {
+  const { employees, isLoading, error, refetchEmployees } = useHrModuleData();
   const [openCreate, setOpenCreate] = useState(false);
   const [openImport, setOpenImport] = useState(false);
   const [department, setDepartment] = useState<string>('all');
@@ -33,7 +33,10 @@ const EmployeesProfiles: React.FC<EmployeesProfilesProps> = ({ employees: propEm
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  const filteredEmployees = propEmployees.filter(employee => {
+  // Use the employees from props or from the hook if props are empty
+  const employeesList = employeesProp && employeesProp.length > 0 ? employeesProp : employees;
+
+  const filteredEmployees = employeesList.filter(employee => {
     const matchesDepartment = department === 'all' || employee.department === department;
     const matchesStatus = status === 'all' || employee.status === status;
     const matchesSearch = 
