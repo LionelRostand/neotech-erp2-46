@@ -8,7 +8,7 @@ export const useEmployeeContract = (employeeId: string) => {
   const result = useMemo(() => {
     if (!contracts || !employeeId) return { contract: null, salary: 0 };
     
-    // Find the employee to get their salary (if available)
+    // Trouver l'employé pour obtenir son salaire (si disponible)
     const employee = employees?.find(emp => emp.id === employeeId);
     const employeeSalary = employee?.salary || 0;
     
@@ -22,8 +22,11 @@ export const useEmployeeContract = (employeeId: string) => {
     
     const contract = activeContracts[0] || null;
     
-    // Use contract salary if available, otherwise fall back to employee salary
-    const salary = contract?.salary || employeeSalary;
+    // Utiliser le salaire du contrat s'il est disponible, sinon celui de l'employé
+    const salary = contract?.salaryAmount || contract?.salary || employeeSalary;
+    
+    console.log(`Contrat pour employé ${employeeId}: `, contract);
+    console.log(`Salaire trouvé: ${salary} (contrat: ${contract?.salaryAmount || contract?.salary}, employé: ${employeeSalary})`);
     
     return { contract, salary };
   }, [contracts, employeeId, employees]);

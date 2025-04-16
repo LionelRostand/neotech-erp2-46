@@ -67,7 +67,7 @@ export interface Evaluation {
 
 export interface Employee {
   id: string;
-  firebaseId?: string; // ID généré par Firestore
+  firebaseId?: string;
   firstName: string;
   lastName: string;
   email: string;
@@ -77,8 +77,8 @@ export interface Employee {
   departmentId: string;
   photo: string;
   photoURL: string;
-  photoData?: string; // Base64 data for the photo
-  photoHex?: string;  // Hexadecimal data for the photo
+  photoData?: string;
+  photoHex?: string;
   photoMeta?: {
     fileName: string;
     fileType: string;
@@ -111,14 +111,15 @@ export interface Employee {
     sunday?: string;
   };
   payslips: any[];
-  address_string?: string; // For backward compatibility
-  createdAt?: string; // Adding timestamp for creation date
-  updatedAt?: string; // Adding timestamp for last update
-  leaveRequests?: LeaveRequest[]; // Nouvelle propriété pour les congés
-  evaluations?: Evaluation[]; // Nouvelle propriété pour les évaluations
-  isManager?: boolean; // Added isManager property to fix type errors
-  forceManager?: boolean; // Added forceManager property to match d.ts file
-  salary?: number; // Added salary property to fix the type errors
+  address_string?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  leaveRequests?: LeaveRequest[];
+  evaluations?: Evaluation[];
+  isManager?: boolean;
+  forceManager?: boolean;
+  salary?: number;
+  badgeNumber?: string;
   conges?: {
     acquired: number;
     taken: number;
