@@ -1,4 +1,3 @@
-
 import { useCallback } from 'react';
 import { Department } from '../types';
 import { useDepartmentService } from '../services/departmentService';
@@ -17,7 +16,11 @@ export const useDepartmentOperations = () => {
     }
     
     try {
-      const departmentToSave = prepareDepartmentFromForm(formData, selectedEmployees, allEmployees);
+      const departmentToSave = {
+        ...prepareDepartmentFromForm(formData, selectedEmployees, allEmployees),
+        companyId: formData.companyId === "none" ? null : formData.companyId
+      };
+      
       const success = await departmentService.createDepartment(departmentToSave);
       
       if (success) {
