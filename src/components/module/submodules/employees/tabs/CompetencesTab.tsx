@@ -48,8 +48,10 @@ const CompetencesTab: React.FC<CompetencesTabProps> = ({
     try {
       await updateEmployeeSkills(employee.id, skills);
       onFinishEditing?.();
-      // Call onEmployeeUpdated, now compatible with both function signatures
-      onEmployeeUpdated();
+      // Call onEmployeeUpdated in a way compatible with both function signatures
+      if (typeof onEmployeeUpdated === 'function') {
+        onEmployeeUpdated();
+      }
       toast.success("Compétences mises à jour avec succès");
     } catch (error) {
       console.error("Error saving skills:", error);

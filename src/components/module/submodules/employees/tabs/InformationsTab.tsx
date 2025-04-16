@@ -6,6 +6,7 @@ import { EmployeeFormValues } from '../form/employeeFormSchema';
 import { Card, CardContent } from '@/components/ui/card';
 import { Form, FormField, FormItem, FormLabel, FormControl } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 interface InformationsTabProps {
   employee: Employee;
@@ -120,32 +121,32 @@ const InformationsTab: React.FC<InformationsTabProps> = ({
             <div className="grid gap-6">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <FormLabel>Prénom</FormLabel>
+                  <Label>Prénom</Label>
                   <div className="p-2 border rounded-md bg-muted/10">{employee.firstName}</div>
                 </div>
                 <div className="space-y-2">
-                  <FormLabel>Nom</FormLabel>
+                  <Label>Nom</Label>
                   <div className="p-2 border rounded-md bg-muted/10">{employee.lastName}</div>
                 </div>
               </div>
               
               <div className="space-y-2">
-                <FormLabel>Email</FormLabel>
+                <Label>Email</Label>
                 <div className="p-2 border rounded-md bg-muted/10">{employee.email}</div>
               </div>
               
               <div className="space-y-2">
-                <FormLabel>Téléphone</FormLabel>
+                <Label>Téléphone</Label>
                 <div className="p-2 border rounded-md bg-muted/10">{employee.phone || '-'}</div>
               </div>
               
               <div className="space-y-2">
-                <FormLabel>Poste</FormLabel>
+                <Label>Poste</Label>
                 <div className="p-2 border rounded-md bg-muted/10">{employee.position || '-'}</div>
               </div>
               
               <div className="space-y-2">
-                <FormLabel>Département</FormLabel>
+                <Label>Département</Label>
                 <div className="p-2 border rounded-md bg-muted/10">{employee.department || '-'}</div>
               </div>
             </div>
