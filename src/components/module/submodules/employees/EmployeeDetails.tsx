@@ -14,6 +14,8 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import EmployeeProfileHeader from './profile/EmployeeProfileHeader';
 import EmployeeProfileActions from './profile/EmployeeProfileActions';
+import { useForm } from 'react-hook-form';
+import { EmployeeFormValues } from './form/employeeFormSchema';
 
 interface EmployeeDetailsProps {
   employee?: Employee;
@@ -31,6 +33,19 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('informations');
   const [isEditing, setIsEditing] = useState(false);
+
+  // Initialize form with employee data when available
+  const employeeForm = useForm<EmployeeFormValues>({
+    defaultValues: employee ? {
+      firstName: employee.firstName,
+      lastName: employee.lastName,
+      email: employee.email,
+      phone: employee.phone || '',
+      position: employee.position || '',
+      department: employee.department || '',
+      forceManager: employee.isManager || false
+    } : undefined
+  });
 
   const { canView, canEdit, isOwnProfile } = useEmployeePermissions('employees-profiles', employee?.id);
 
@@ -122,6 +137,7 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
             employee={employee} 
             isEditing={isEditing && activeTab === 'informations'}
             onFinishEditing={handleFinishEditing}
+            form={employeeForm}
           />
         </TabsContent>
 

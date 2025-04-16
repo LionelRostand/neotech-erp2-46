@@ -36,6 +36,16 @@ const InformationsTab: React.FC<InformationsTabProps> = ({
     );
   }
 
+  // Check if form exists before rendering the edit form
+  if (!form) {
+    console.error('Form object is undefined in InformationsTab while in editing mode');
+    return (
+      <div className="p-4 bg-red-50 text-red-500 rounded-md">
+        Error: Form configuration is missing. Please try again.
+      </div>
+    );
+  }
+
   return (
     <Form {...form}>
       <form className="space-y-6">
@@ -74,7 +84,7 @@ const InformationsTab: React.FC<InformationsTabProps> = ({
           </div>
         </Card>
 
-        {form && showManagerOption && (
+        {showManagerOption && (
           <div className="mt-4">
             <ManagerCheckbox form={form} />
           </div>
