@@ -37,7 +37,7 @@ const ModuleAnimation = ({ installedModules, visibleModules, animationStep }: Mo
     >
       <div className="absolute inset-0 flex items-center justify-center z-20">
         <motion.div 
-          className="w-24 h-24 rounded-full bg-gradient-to-br from-neotech-primary to-[#00b36b] flex items-center justify-center text-gray-900 text-4xl font-bold shadow-lg"
+          className="w-24 h-24 rounded-full bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center text-white text-4xl font-bold shadow-lg"
           animate={{ 
             scale: [1, 1.1, 1],
             rotate: [0, 5, 0, -5, 0]
