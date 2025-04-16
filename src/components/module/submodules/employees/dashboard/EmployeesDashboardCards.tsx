@@ -7,11 +7,17 @@ import { useHrModuleData } from '@/hooks/useHrModuleData';
 const EmployeesDashboardCards: React.FC = () => {
   const { employees, departments, companies, isLoading } = useHrModuleData();
   
-  // Count active employees
-  const activeEmployees = employees.filter(emp => emp.status === 'active' || emp.status === 'Active' || emp.status === 'Actif').length;
+  // Count active employees - handling various status formats
+  const activeEmployees = employees.filter(emp => {
+    const status = emp.status?.toLowerCase?.() || '';
+    return status === 'active' || status === 'actif';
+  }).length;
   
-  // Count inactive employees
-  const inactiveEmployees = employees.filter(emp => emp.status === 'inactive' || emp.status === 'Inactive' || emp.status === 'Inactif').length;
+  // Count inactive employees - handling various status formats
+  const inactiveEmployees = employees.filter(emp => {
+    const status = emp.status?.toLowerCase?.() || '';
+    return status === 'inactive' || status === 'inactif';
+  }).length;
   
   // Count departments
   const departmentsCount = new Set(employees.map(emp => emp.department)).size;

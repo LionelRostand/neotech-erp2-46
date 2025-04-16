@@ -8,7 +8,6 @@ import {
   Trash, 
   Eye, 
   DownloadCloud,
-  ShieldAlert,
   Shield 
 } from 'lucide-react';
 import { Link } from 'react-router-dom';

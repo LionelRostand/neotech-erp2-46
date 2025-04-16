@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Employee } from '@/types/employee';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -52,6 +53,17 @@ const EmployeeProfileView: React.FC<EmployeeProfileViewProps> = ({
   
   const getFullName = () => {
     return `${employee.firstName || ''} ${employee.lastName || ''}`;
+  };
+
+  // Helper function to safely display address
+  const displayAddress = () => {
+    if (typeof employee.address === 'string') {
+      return employee.address;
+    } else if (typeof employee.address === 'object' && employee.address) {
+      const addr = employee.address;
+      return `${addr.street || ''}, ${addr.city || ''}, ${addr.postalCode || ''}, ${addr.country || ''}`;
+    }
+    return 'Non spécifié';
   };
   
   return (
@@ -109,7 +121,7 @@ const EmployeeProfileView: React.FC<EmployeeProfileViewProps> = ({
                   
                   <div className="flex items-center space-x-2">
                     <MapPin className="h-4 w-4 text-gray-500" />
-                    <span>{employee.address || 'Non spécifié'}</span>
+                    <span>{displayAddress()}</span>
                   </div>
                   
                   <div className="flex items-center space-x-2">
@@ -135,7 +147,7 @@ const EmployeeProfileView: React.FC<EmployeeProfileViewProps> = ({
                   
                   <div className="flex items-center space-x-2">
                     <FileText className="h-4 w-4 text-gray-500" />
-                    <span>Matricule: {employee.employeeNumber || 'Non spécifié'}</span>
+                    <span>Matricule: {employee.badgeNumber || 'Non spécifié'}</span>
                   </div>
                 </div>
               </div>

@@ -101,14 +101,17 @@ const ImportEmployeesDialog: React.FC<ImportEmployeesDialogProps> = ({
           const now = new Date().toISOString();
           
           for (const row of jsonData) {
+            // Cast row to any to safely access properties
+            const excelRow = row as Record<string, any>;
+            
             const employeeData = {
-              firstName: row.firstName || row.FirstName || '',
-              lastName: row.lastName || row.LastName || '',
-              email: row.email || row.Email || '',
-              phone: row.phone || row.Phone || '',
-              position: row.position || row.Position || '',
-              department: row.department || row.Department || '',
-              status: row.status || row.Status || 'active',
+              firstName: excelRow.firstName || excelRow.FirstName || '',
+              lastName: excelRow.lastName || excelRow.LastName || '',
+              email: excelRow.email || excelRow.Email || '',
+              phone: excelRow.phone || excelRow.Phone || '',
+              position: excelRow.position || excelRow.Position || '',
+              department: excelRow.department || excelRow.Department || '',
+              status: excelRow.status || excelRow.Status || 'active',
               address: '',
               createdAt: now,
               updatedAt: now,
