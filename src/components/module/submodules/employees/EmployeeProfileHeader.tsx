@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -14,10 +15,12 @@ const EmployeeProfileHeader: React.FC<EmployeeProfileHeaderProps> = ({
   employee, 
   onEmployeeUpdate 
 }) => {
+  // Fonction pour obtenir les initiales de l'employé
   const getInitials = () => {
     return `${employee.firstName?.charAt(0) || ''}${employee.lastName?.charAt(0) || ''}`;
   };
 
+  // Fonction pour définir le statut avec le bon style
   const getStatusBadge = () => {
     switch (employee.status) {
       case 'active':
@@ -36,34 +39,42 @@ const EmployeeProfileHeader: React.FC<EmployeeProfileHeaderProps> = ({
     }
   };
 
+  // Sélectionner l'URL de la photo à utiliser
   const getPhotoUrl = () => {
     console.log("Photo data:", employee.photoData);
     console.log("Photo URL:", employee.photoURL);
     console.log("Photo:", employee.photo);
     
+    // Check if photoData exists and is a string starting with 'data:'
     if (employee.photoData && typeof employee.photoData === 'string' && employee.photoData.startsWith('data:')) {
       return employee.photoData;
     }
 
+    // Check photoURL
     if (employee.photoURL && typeof employee.photoURL === 'string' && employee.photoURL.length > 0) {
       return employee.photoURL;
     }
 
+    // Check legacy photo property
     if (employee.photo && typeof employee.photo === 'string' && employee.photo.length > 0) {
       return employee.photo;
     }
 
+    // Check if photoData is an object with a data property - with proper null check
     if (employee.photoData && typeof employee.photoData === 'object' && 
         employee.photoData !== null) {
+      // Additional safe check for 'data' property
       const photoDataObj = employee.photoData as Record<string, unknown>;
       if ('data' in photoDataObj && typeof photoDataObj.data === 'string') {
         return photoDataObj.data;
       }
     }
     
+    // If no photo is found, return an empty string
     return '';
   };
 
+  // Adresse formatée pour l'affichage
   const getFormattedAddress = () => {
     if (typeof employee.address === 'object') {
       const addr = employee.address;
@@ -108,7 +119,7 @@ const EmployeeProfileHeader: React.FC<EmployeeProfileHeaderProps> = ({
               
               <div className="flex items-center gap-2 text-sm">
                 <Mail className="h-4 w-4 text-muted-foreground" />
-                <span>{employee.professionalEmail || employee.email}</span>
+                <span>{employee.email}</span>
               </div>
               
               <div className="flex items-center gap-2 text-sm">
