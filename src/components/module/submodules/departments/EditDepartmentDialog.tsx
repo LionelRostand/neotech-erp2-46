@@ -1,4 +1,5 @@
-import React, { useEffect } from 'react';
+
+import React from 'react'; // Removed unnecessary `useEffect` import
 import { DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -39,7 +40,6 @@ const EditDepartmentDialog: React.FC<EditDepartmentDialogProps> = ({
   const { companies, isLoading: isLoadingCompanies } = useCompaniesData();
 
   const handleCompanyChange = (value: string) => {
-    console.log("Company changed to:", value);
     onInputChange({
       target: {
         name: 'companyId',
