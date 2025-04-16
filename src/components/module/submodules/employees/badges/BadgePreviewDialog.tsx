@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -28,23 +29,6 @@ const BadgePreviewDialog: React.FC<BadgePreviewDialogProps> = ({
   
   if (!selectedBadge) return null;
   
-  const getCompanyName = (): string => {
-    if (!selectedEmployee) return "Enterprise";
-    
-    if (!selectedEmployee.company) return "Enterprise";
-    
-    if (typeof selectedEmployee.company === 'string') {
-      const companyData = companies.find(c => c.id === selectedEmployee.company);
-      return companyData?.name || selectedEmployee.company;
-    }
-    
-    const companyObj = selectedEmployee.company as Company;
-    return companyObj.name || companyObj.id || "Enterprise";
-  };
-  
-  const companyName = getCompanyName();
-  const employeeId = selectedEmployee?.id || 'N/A';
-  
   const handleDownloadBadge = () => {
     const doc = new jsPDF({
       orientation: 'landscape',
@@ -69,7 +53,7 @@ const BadgePreviewDialog: React.FC<BadgePreviewDialogProps> = ({
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(10);
     doc.setFont('helvetica', 'bold');
-    doc.text(companyName.toUpperCase(), 5, 7);
+    doc.text(selectedBadge.companyName.toUpperCase(), 5, 7);
     
     doc.setTextColor(0, 0, 0);
     doc.setFontSize(8);
