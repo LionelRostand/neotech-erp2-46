@@ -52,8 +52,8 @@ const CreateBadgeDialog: React.FC<CreateBadgeDialogProps> = ({
     
     const employeeInitials = getEmployeeInitials(employee.firstName, employee.lastName);
     
-    // Use optional chaining to safely access shortId, with a fallback to initials
-    const shortId = employee.shortId ?? employeeInitials;
+    // Generate employee short ID - either use existing or create from initials
+    const employeeShortId = employee.shortId || employeeInitials;
     
     const newBadge: BadgeData = {
       id: badgeNumber,
@@ -67,7 +67,7 @@ const CreateBadgeDialog: React.FC<CreateBadgeDialogProps> = ({
       status: "success",
       statusText: "Actif",
       employeePhoto: employee.photoURL || employee.photo,
-      employeeShortId: shortId || 'N/A'
+      employeeShortId: employeeShortId
     };
     
     onBadgeCreated(newBadge);
