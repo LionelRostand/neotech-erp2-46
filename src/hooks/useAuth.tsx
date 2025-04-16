@@ -1,36 +1,20 @@
 
-import { useState, useEffect, createContext, useContext } from 'react';
-import { User as FirebaseUser, onAuthStateChanged } from 'firebase/auth';
-import { auth, db } from '@/lib/firebase';
-import { doc, getDoc } from 'firebase/firestore';
-import { User } from '@/types/user';
-import { COLLECTIONS } from '@/lib/firebase-collections';
-import { toast } from 'sonner';
-import { executeWithNetworkRetry } from './firestore/network-handler';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { User, AuthContextType } from '@/types/user';
+import { authService } from '@/services/authService';
+import { useNavigate } from 'react-router-dom';
+import { onAuthStateChanged } from 'firebase/auth';
+import { auth } from '@/lib/firebase';
 
-interface AuthContextType {
-  currentUser: FirebaseUser | null;
-  userData: User | null;
-  loading: boolean;
-  isAdmin: boolean;
-  isOffline: boolean;
-}
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const AuthContext = createContext<AuthContextType>({ 
-  currentUser: null, 
-  userData: null, 
-  loading: true,
-  isAdmin: false,
-  isOffline: false
-});
-
-export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  const [currentUser, setCurrentUser] = useState<FirebaseUser | null>(null);
-  const [userData, setUserData] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+export const AuthProvider = ({ children }: { children: ReactNode }) => {
+  const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
+  const navigate = useNavigate();
 
-  // Monitor online status
+  // Monitor online/offline status
   useEffect(() => {
     const handleOnline = () => setIsOffline(false);
     const handleOffline = () => setIsOffline(true);
@@ -44,79 +28,78 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     };
   }, []);
 
+  // Écouter les changements d'état d'authentification Firebase
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      setCurrentUser(user);
-      
-      if (user) {
-        try {
-          // Try to get user data with network retry and offline handling
-          await executeWithNetworkRetry(async () => {
-            const userRef = doc(db, COLLECTIONS.USERS, user.uid);
-            const userSnap = await getDoc(userRef);
-            
-            if (userSnap.exists()) {
-              const userData = { id: user.uid, ...userSnap.data() as Omit<User, 'id'> };
-              setUserData(userData);
-              
-              // Cache user data
-              localStorage.setItem(`user_data_${user.uid}`, JSON.stringify(userData));
-            } else {
-              console.warn("Document utilisateur non trouvé dans Firestore");
-              setUserData(null);
-              
-              // Try to get from cache
-              const cachedUserData = localStorage.getItem(`user_data_${user.uid}`);
-              if (cachedUserData) {
-                setUserData(JSON.parse(cachedUserData));
-                console.log("Using cached user data");
-              }
-            }
-          });
-          
-        } catch (error) {
-          console.error("Erreur lors de la récupération des données utilisateur", error);
-          
-          // Try to get from cache if we failed to get from network
-          const cachedUserData = localStorage.getItem(`user_data_${user.uid}`);
-          if (cachedUserData) {
-            setUserData(JSON.parse(cachedUserData));
-            console.log("Using cached user data due to error");
-          } else {
-            setUserData(null);
-          }
-          
-          if (!navigator.onLine) {
-            toast.warning("Mode hors-ligne. Certaines fonctionnalités peuvent être limitées.");
-          } else {
-            toast.error("Erreur de connexion à la base de données");
-          }
+    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+      if (firebaseUser) {
+        // Si nous avons des données d'utilisateur dans le localStorage, les utiliser
+        const storedUser = authService.getCurrentUser();
+        if (storedUser) {
+          setUser(storedUser);
         }
       } else {
-        setUserData(null);
+        // Utilisateur déconnecté
+        setUser(null);
       }
-      
-      setLoading(false);
+      setIsLoading(false);
     });
 
-    return unsubscribe;
+    return () => unsubscribe();
   }, []);
 
-  // Cache user data when it changes
+  // Aussi, charger l'utilisateur depuis localStorage au démarrage
   useEffect(() => {
-    if (userData && currentUser) {
-      localStorage.setItem(`user_data_${currentUser.uid}`, JSON.stringify(userData));
+    const loadUser = () => {
+      const currentUser = authService.getCurrentUser();
+      setUser(currentUser);
+      setIsLoading(false);
+    };
+
+    loadUser();
+  }, []);
+
+  const login = async (email: string, password: string) => {
+    setIsLoading(true);
+    try {
+      const user = await authService.login(email, password);
+      setUser(user);
+      return user;
+    } finally {
+      setIsLoading(false);
     }
-  }, [userData, currentUser]);
+  };
 
-  // Check if user is admin
-  const isAdmin = userData?.role === 'admin' || userData?.email === 'admin@neotech-consulting.com';
+  const logout = async () => {
+    setIsLoading(true);
+    try {
+      await authService.logout();
+      setUser(null);
+      navigate('/login');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-  return (
-    <AuthContext.Provider value={{ currentUser, userData, loading, isAdmin, isOffline }}>
-      {children}
-    </AuthContext.Provider>
-  );
+  const value: AuthContextType = {
+    user,
+    login,
+    logout,
+    isAuthenticated: !!user,
+    isLoading,
+    // Alias properties to maintain compatibility
+    currentUser: user,
+    userData: user,
+    loading: isLoading,
+    isOffline
+  };
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
-export const useAuth = () => useContext(AuthContext);
+export const useAuth = (): AuthContextType => {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+};

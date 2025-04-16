@@ -1,4 +1,3 @@
-
 import { useCallback } from 'react';
 import { Department } from '../types';
 import { useDepartmentService } from '../services/departmentService';
@@ -17,11 +16,7 @@ export const useDepartmentOperations = () => {
     }
     
     try {
-      const departmentToSave = {
-        ...prepareDepartmentFromForm(formData, selectedEmployees, allEmployees),
-        companyId: formData.companyId === "none" ? null : formData.companyId
-      };
-      
+      const departmentToSave = prepareDepartmentFromForm(formData, selectedEmployees, allEmployees);
       const success = await departmentService.createDepartment(departmentToSave);
       
       if (success) {
@@ -49,8 +44,6 @@ export const useDepartmentOperations = () => {
     
     try {
       console.log("Current department before update:", currentDepartment);
-      console.log("Form data for update:", formData);
-      console.log("Company ID being set:", formData.companyId);
       
       // Find the selected manager from all employees
       const selectedManager = formData.managerId && formData.managerId !== "none"
@@ -61,22 +54,21 @@ export const useDepartmentOperations = () => {
         ? `${selectedManager.firstName} ${selectedManager.lastName}` 
         : null;
       
-      // Make sure to preserve the ID and all metadata
+      // S'assurer que l'ID est conservé et que toutes les métadonnées sont préservées
       const departmentToUpdate: Department = {
-        ...currentDepartment,  // Preserve all existing properties
+        ...currentDepartment,  // Préserver toutes les propriétés existantes
         name: formData.name,
         description: formData.description,
         managerId: formData.managerId === "none" ? null : formData.managerId,
         managerName: managerName,
         color: formData.color,
         employeeIds: selectedEmployees,
-        employeesCount: selectedEmployees.length,
-        companyId: formData.companyId === "none" ? null : formData.companyId,
+        employeesCount: selectedEmployees.length
       };
       
       console.log("Department to update:", departmentToUpdate);
       
-      // Update the existing department
+      // Mettre à jour le département existant
       const success = await departmentService.updateDepartment(departmentToUpdate);
       
       if (success) {

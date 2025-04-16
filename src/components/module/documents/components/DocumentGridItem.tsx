@@ -26,7 +26,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { formatFileSize } from '../utils/formatUtils';
-import { isValid, format } from 'date-fns';
+import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { DocumentIcon } from './DocumentIcon';
 
@@ -43,20 +43,6 @@ export const DocumentGridItem: React.FC<DocumentGridItemProps> = ({
   onSelect,
   onDelete
 }) => {
-  // Safe date formatting function to prevent RangeError
-  const safeFormatDate = (date: Date | null | undefined): string => {
-    try {
-      if (!date || !isValid(date)) {
-        return 'Date non disponible';
-      }
-      
-      return format(date, 'PPP', { locale: fr });
-    } catch (error) {
-      console.error('Error formatting date in DocumentGridItem:', error);
-      return 'Date non disponible';
-    }
-  };
-  
   return (
     <div 
       className={`border rounded-md p-4 space-y-2 hover:bg-gray-50 cursor-pointer transition-colors ${
@@ -95,7 +81,7 @@ export const DocumentGridItem: React.FC<DocumentGridItemProps> = ({
               <Calendar className="h-4 w-4 text-muted-foreground" />
             </TooltipTrigger>
             <TooltipContent>
-              {safeFormatDate(document.createdAt)}
+              {format(new Date(document.createdAt), 'PPP', { locale: fr })}
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>

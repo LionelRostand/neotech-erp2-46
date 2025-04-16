@@ -52,9 +52,7 @@ export const createEmptyFormData = (departments: Department[] = []) => {
     description: '',
     managerId: '',
     color: '#4f46e5', // Couleur par défaut (indigo)
-    employeeIds: [],
-    companyId: '',
-    parentId: ''
+    employeeIds: []
   };
 };
 
@@ -88,8 +86,8 @@ export const prepareDepartmentFromForm = (
     color: formData.color,
     employeeIds: selectedEmployees,
     employeesCount: selectedEmployees.length,
-    companyId: formData.companyId || null,
-    parentId: formData.parentId || null
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
   };
 };
 
@@ -110,3 +108,4 @@ export const getDepartmentEmployees = (
     emp.departmentId === departmentId
   );
 };
+

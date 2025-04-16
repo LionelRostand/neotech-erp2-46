@@ -8,7 +8,7 @@ export interface HrDocument {
   title: string;
   type: string;
   uploadDate: string;
-  fileSize?: string | number;
+  fileSize?: string;
   fileType?: string;
   url?: string;
   employeeId?: string;
@@ -47,39 +47,39 @@ export const useDocumentsData = () => {
         }
       }
       
-      // Safely parse and format the date
+      // Formatter la date avec sécurité (gérer les objets Timestamp de Firestore)
       let formattedUploadDate = '';
       
       try {
-        // Determine which date to use (prioritize uploadDate)
-        let dateToUse = document.uploadDate || document.createdAt || document.date;
-        
-        // Convert Firestore Timestamp objects
-        if (dateToUse && typeof dateToUse === 'object' && 'seconds' in dateToUse) {
-          const seconds = dateToUse.seconds;
-          if (typeof seconds === 'number') {
-            const date = new Date(seconds * 1000);
-            if (!isNaN(date.getTime())) {
-              formattedUploadDate = formatDate(date.toISOString());
+        // Vérifier si uploadDate est un objet Timestamp (avec seconds et nanoseconds)
+        if (document.uploadDate && typeof document.uploadDate === 'object' && 'seconds' in document.uploadDate) {
+          // Convertir le Timestamp Firestore en chaîne de date
+          const timestamp = document.uploadDate;
+          const date = new Date(timestamp.seconds * 1000);
+          formattedUploadDate = formatDate(date);
+        } else if (document.createdAt && typeof document.createdAt === 'object' && 'seconds' in document.createdAt) {
+          // Même traitement pour createdAt si c'est un Timestamp
+          const timestamp = document.createdAt;
+          const date = new Date(timestamp.seconds * 1000);
+          formattedUploadDate = formatDate(date);
+        } else if (document.date && typeof document.date === 'object' && 'seconds' in document.date) {
+          // Même traitement pour date si c'est un Timestamp
+          const timestamp = document.date;
+          const date = new Date(timestamp.seconds * 1000);
+          formattedUploadDate = formatDate(date);
+        } else {
+          // Utiliser la première date valide disponible en string
+          const dateStr = document.uploadDate || document.createdAt || document.date || '';
+          if (dateStr && typeof dateStr === 'string') {
+            formattedUploadDate = formatDate(dateStr);
+            if (!formattedUploadDate) {
+              formattedUploadDate = dateStr; // Use original string if formatting fails
             }
           }
-        } else if (dateToUse && typeof dateToUse === 'string') {
-          formattedUploadDate = formatDate(dateToUse) || dateToUse;
-        }
-        
-        // Fallback if we couldn't format the date
-        if (!formattedUploadDate) {
-          formattedUploadDate = 'Date non disponible';
         }
       } catch (e) {
         console.warn('Erreur lors du formatage de date:', e);
-        formattedUploadDate = 'Date non disponible';
-      }
-      
-      // Safely convert fileSize to string if it's a number
-      let fileSizeStr = document.fileSize;
-      if (typeof document.fileSize === 'number') {
-        fileSizeStr = document.fileSize.toString();
+        formattedUploadDate = 'Date non valide';
       }
       
       return {
@@ -87,7 +87,7 @@ export const useDocumentsData = () => {
         title: document.title || document.filename || document.name || 'Document sans titre',
         type: document.type || 'Autre',
         uploadDate: formattedUploadDate,
-        fileSize: fileSizeStr,
+        fileSize: document.fileSize,
         fileType: document.fileType,
         url: document.url,
         employeeId: document.employeeId,
@@ -98,8 +98,12 @@ export const useDocumentsData = () => {
         filename: document.filename,
         name: document.name,
         // Store original dates as strings for other components
-        createdAt: typeof document.createdAt === 'string' ? document.createdAt : undefined,
-        date: typeof document.date === 'string' ? document.date : undefined
+        createdAt: typeof document.createdAt === 'string' ? document.createdAt : 
+                 (document.createdAt && typeof document.createdAt === 'object' && 'seconds' in document.createdAt) ?
+                 new Date(document.createdAt.seconds * 1000).toISOString() : undefined,
+        date: typeof document.date === 'string' ? document.date :
+             (document.date && typeof document.date === 'object' && 'seconds' in document.date) ?
+             new Date(document.date.seconds * 1000).toISOString() : undefined
       } as HrDocument;
     });
   }, [hrDocuments, employees]);

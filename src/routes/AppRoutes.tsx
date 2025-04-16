@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Routes, Route, Navigate } from "react-router-dom";
 
@@ -20,8 +19,6 @@ import { TransportRoutes } from './modules/transportRoutes';
 import { OtherModulesRoutes } from './modules/otherModulesRoutes';
 import { WebsiteRoutes } from './modules/websiteRoutes';
 import NotFound from '@/pages/NotFound';
-import EmployeeDetails from '@/components/module/submodules/employees/EmployeeDetails';
-import ProtectedRoute from './ProtectedRoute';
 
 const AppRoutes = () => (
   <Routes>
@@ -50,13 +47,6 @@ const AppRoutes = () => (
     
     {/* Other module routes */}
     {OtherModulesRoutes}
-    
-    {/* Direct employee access route */}
-    <Route path="/employee/:id" element={
-      <ProtectedRoute>
-        <EmployeeDetails />
-      </ProtectedRoute>
-    } />
     
     {/* Catch-all route for 404s */}
     <Route path="*" element={<NotFound />} />

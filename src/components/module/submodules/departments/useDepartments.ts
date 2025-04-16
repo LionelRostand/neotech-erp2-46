@@ -1,4 +1,3 @@
-
 import { useEffect, useMemo } from 'react';
 import { Department } from './types';
 import { getDepartmentEmployees, notifyDepartmentUpdates } from './utils/departmentUtils';
@@ -73,11 +72,6 @@ export const useDepartments = () => {
     dialogs.handleEditDepartment(department);
   };
   
-  const handleViewDepartment = (department: Department) => {
-    dialogs.setCurrentDepartment(department);
-    dialogs.setIsViewDialogOpen(true);
-  };
-  
   const handleManageEmployees = (department: Department) => {
     form.setSelectedEmployees(department.employeeIds || []);
     dialogs.handleManageEmployees(department);
@@ -140,14 +134,12 @@ export const useDepartments = () => {
     isAddDialogOpen: dialogs.isAddDialogOpen,
     isEditDialogOpen: dialogs.isEditDialogOpen,
     isManageEmployeesDialogOpen: dialogs.isManageEmployeesDialogOpen,
-    isViewDialogOpen: dialogs.isViewDialogOpen,
     currentDepartment: dialogs.currentDepartment,
     
     // Dialog operations
     setIsAddDialogOpen: dialogs.setIsAddDialogOpen,
     setIsEditDialogOpen: dialogs.setIsEditDialogOpen,
     setIsManageEmployeesDialogOpen: dialogs.setIsManageEmployeesDialogOpen,
-    setIsViewDialogOpen: dialogs.setIsViewDialogOpen,
     
     // Form operations
     setActiveTab: form.setActiveTab,
@@ -159,7 +151,6 @@ export const useDepartments = () => {
     // Operations
     handleAddDepartment,
     handleEditDepartment,
-    handleViewDepartment,
     handleManageEmployees,
     handleSaveDepartment,
     handleUpdateDepartment,

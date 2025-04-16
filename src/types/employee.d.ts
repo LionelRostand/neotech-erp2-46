@@ -1,4 +1,3 @@
-
 export interface Employee {
   id: string;
   firstName: string;
@@ -38,8 +37,7 @@ export interface Employee {
   userAccountId?: string;
   payslips?: string[];
   title?: string;
-  forceManager?: boolean;
-  badgeNumber?: string; // Added for employee badge
+  forceManager?: boolean; // Added forceManager property
   conges?: {
     acquired: number;
     taken: number;
@@ -69,7 +67,6 @@ export interface Document {
 
 export interface EmployeeAddress {
   street: string;
-  streetNumber?: string; // Added streetNumber property
   city: string;
   postalCode: string;
   country: string;

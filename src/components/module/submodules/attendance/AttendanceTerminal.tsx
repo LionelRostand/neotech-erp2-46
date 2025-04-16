@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Clock, Calendar, UserCheck, UserX, Search } from 'lucide-react';
+import { Clock, Calendar, UserCheck, UserX } from 'lucide-react';
 import { toast } from 'sonner';
 import { Employee } from '@/types/employee';
 import { EmployeeAttendance } from '@/types/attendance';
@@ -24,8 +24,6 @@ const AttendanceTerminal: React.FC<AttendanceTerminalProps> = ({
   const [employeeId, setEmployeeId] = useState('');
   const [currentTime, setCurrentTime] = useState('');
   const [currentDate, setCurrentDate] = useState('');
-  const [searchResults, setSearchResults] = useState<Employee[]>([]);
-  const [showResults, setShowResults] = useState(false);
   
   // Mettre à jour l'heure et la date actuelle
   useEffect(() => {
@@ -44,48 +42,37 @@ const AttendanceTerminal: React.FC<AttendanceTerminalProps> = ({
     return () => clearInterval(interval);
   }, []);
   
-  // Recherche en temps réel
-  useEffect(() => {
-    if (employeeId && employeeId.length > 1) {
-      // Recherche par ID, badge, nom ou prénom
-      const results = employees.filter(emp => 
-        emp.id.toLowerCase().includes(employeeId.toLowerCase()) ||
-        (emp.badgeNumber && emp.badgeNumber.toLowerCase().includes(employeeId.toLowerCase())) ||
-        emp.firstName.toLowerCase().includes(employeeId.toLowerCase()) ||
-        emp.lastName.toLowerCase().includes(employeeId.toLowerCase()) ||
-        `${emp.firstName} ${emp.lastName}`.toLowerCase().includes(employeeId.toLowerCase()) ||
-        `${emp.lastName} ${emp.firstName}`.toLowerCase().includes(employeeId.toLowerCase())
-      );
-
-      setSearchResults(results.slice(0, 5)); // Limiter à 5 résultats
-      setShowResults(results.length > 0);
-    } else {
-      setSearchResults([]);
-      setShowResults(false);
-    }
-  }, [employeeId, employees]);
-  
   // Rechercher un employé par ID (accepte ID direct ou badge ID)
   const findEmployee = (id: string) => {
-    // Chercher par ID, badge ou nom
+    console.log('Recherche d\'employé avec ID:', id);
+    
+    // 1. Direct employee ID match
     let employee = employees.find(emp => emp.id === id);
     
+    // 2. Try to match badge ID
     if (!employee) {
-      // Essayer avec badgeNumber s'il existe
-      employee = employees.find(emp => emp.badgeNumber === id);
+      // Check if input might be a badge number
+      const badgePattern = /^B-?\d+$/i;
+      if (badgePattern.test(id)) {
+        // This is potentially a badge ID, let's try to find the employee by badge
+        // Logic to check for employee by badge would go here if we had access to badges
+        // For now, we'll show a helpful message
+        toast.info("Identification par badge en cours d'implémentation");
+      }
     }
     
-    // Essayer par B-XXXX (format des badges)
-    if (!employee && id.startsWith('B-')) {
-      employee = employees.find(emp => emp.badgeNumber === id);
-    }
-    
-    // Chercher par le nom complet ou partiel
+    // 3. Try to match by name (partial match)
     if (!employee) {
       employee = employees.find(emp => 
-        `${emp.firstName} ${emp.lastName}`.toLowerCase() === id.toLowerCase() ||
-        `${emp.lastName} ${emp.firstName}`.toLowerCase() === id.toLowerCase()
+        `${emp.firstName} ${emp.lastName}`.toLowerCase().includes(id.toLowerCase()) ||
+        `${emp.lastName} ${emp.firstName}`.toLowerCase().includes(id.toLowerCase())
       );
+    }
+    
+    if (employee) {
+      console.log('Employé trouvé:', employee);
+    } else {
+      console.log('Aucun employé trouvé avec cet ID ou nom');
     }
     
     return employee;
@@ -99,12 +86,6 @@ const AttendanceTerminal: React.FC<AttendanceTerminalProps> = ({
       attendance.date === today && 
       !attendance.departureTime
     );
-  };
-
-  // Sélectionner un employé dans les résultats
-  const selectEmployee = (employee: Employee) => {
-    setEmployeeId(employee.id);
-    setShowResults(false);
   };
 
   // Gérer la validation d'entrée
@@ -191,38 +172,13 @@ const AttendanceTerminal: React.FC<AttendanceTerminalProps> = ({
             <label htmlFor="employee-id" className="text-sm font-medium">
               Identifiant employé
             </label>
-            <div className="relative">
-              <Input
-                id="employee-id"
-                value={employeeId}
-                onChange={(e) => setEmployeeId(e.target.value)}
-                placeholder="ID, Badge ou Nom"
-                className="text-lg pr-10"
-              />
-              <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-              
-              {showResults && (
-                <div className="absolute z-50 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg">
-                  {searchResults.map(emp => (
-                    <div 
-                      key={emp.id} 
-                      className="p-2 hover:bg-blue-50 cursor-pointer flex items-center gap-2 border-b border-gray-100"
-                      onClick={() => selectEmployee(emp)}
-                    >
-                      {emp.photoURL && (
-                        <div className="w-8 h-8 rounded-full overflow-hidden">
-                          <img src={emp.photoURL} alt={emp.firstName} className="w-full h-full object-cover" />
-                        </div>
-                      )}
-                      <div>
-                        <div className="font-medium">{emp.firstName} {emp.lastName}</div>
-                        <div className="text-xs text-gray-500">{emp.department || 'Non spécifié'}</div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
+            <Input
+              id="employee-id"
+              value={employeeId}
+              onChange={(e) => setEmployeeId(e.target.value)}
+              placeholder="Saisissez votre ID employé ou Badge ID"
+              className="text-lg"
+            />
           </div>
           
           <div className="grid grid-cols-2 gap-4 pt-4">

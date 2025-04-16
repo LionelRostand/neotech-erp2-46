@@ -1,5 +1,5 @@
 
-import React from 'react'; // Removed unnecessary `useEffect` import
+import React from 'react';
 import { DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,8 +9,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { DepartmentFormData, departmentColors } from './types';
 import EmployeesList from './EmployeesList';
 import { useEmployeeData } from '@/hooks/useEmployeeData';
-import { useCompaniesData } from '@/hooks/useCompaniesData';
-import { useEffect } from 'react';
 
 interface EditDepartmentDialogProps {
   formData: DepartmentFormData;
@@ -37,30 +35,8 @@ const EditDepartmentDialog: React.FC<EditDepartmentDialogProps> = ({
   onClose,
   onUpdate,
 }) => {
-  const { employees, isLoading: isLoadingEmployees } = useEmployeeData();
-  const { companies, isLoading: isLoadingCompanies } = useCompaniesData();
-
-  // Debug les valeurs actuelles
-  useEffect(() => {
-    console.log("Department formData:", formData);
-    console.log("Available companies:", companies);
-    console.log("Current companyId:", formData.companyId);
-    
-    // Vérifier si l'ID de l'entreprise existe dans la liste des entreprises
-    if (formData.companyId && companies) {
-      const matchingCompany = companies.find(c => c.id === formData.companyId);
-      console.log("Matching company:", matchingCompany);
-    }
-  }, [formData, companies]);
-
-  const handleCompanyChange = (value: string) => {
-    onInputChange({
-      target: {
-        name: 'companyId',
-        value: value === 'none' ? '' : value
-      }
-    } as React.ChangeEvent<HTMLInputElement>);
-  };
+  // Utiliser les données des employés depuis Firebase
+  const { employees, isLoading } = useEmployeeData();
 
   return (
     <DialogContent className="sm:max-w-[600px]">
@@ -70,13 +46,19 @@ const EditDepartmentDialog: React.FC<EditDepartmentDialogProps> = ({
       
       <Tabs value={activeTab} onValueChange={onTabChange} className="w-full">
         <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="general">Informations</TabsTrigger>
-          <TabsTrigger value="employees">Employés</TabsTrigger>
+          <TabsTrigger value="general">
+            Informations
+          </TabsTrigger>
+          <TabsTrigger value="employees">
+            Employés
+          </TabsTrigger>
         </TabsList>
         
         <TabsContent value="general" className="space-y-4 py-4">
           <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="edit-id" className="text-right">ID</Label>
+            <Label htmlFor="edit-id" className="text-right">
+              ID
+            </Label>
             <Input
               id="edit-id"
               value={formData.id}
@@ -84,35 +66,10 @@ const EditDepartmentDialog: React.FC<EditDepartmentDialogProps> = ({
               disabled
             />
           </div>
-          
           <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="edit-company" className="text-right">Entreprise</Label>
-            <div className="col-span-3">
-              <Select 
-                value={formData.companyId || "none"} 
-                onValueChange={handleCompanyChange}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Sélectionner une entreprise" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">Aucune entreprise</SelectItem>
-                  {isLoadingCompanies ? (
-                    <SelectItem value="loading" disabled>Chargement...</SelectItem>
-                  ) : (
-                    companies?.map((company) => (
-                      <SelectItem key={company.id} value={company.id}>
-                        {company.name}
-                      </SelectItem>
-                    ))
-                  )}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="edit-name" className="text-right">Nom</Label>
+            <Label htmlFor="edit-name" className="text-right">
+              Nom
+            </Label>
             <Input
               id="edit-name"
               name="name"
@@ -121,9 +78,10 @@ const EditDepartmentDialog: React.FC<EditDepartmentDialogProps> = ({
               className="col-span-3"
             />
           </div>
-
           <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="edit-description" className="text-right">Description</Label>
+            <Label htmlFor="edit-description" className="text-right">
+              Description
+            </Label>
             <Input
               id="edit-description"
               name="description"
@@ -132,9 +90,10 @@ const EditDepartmentDialog: React.FC<EditDepartmentDialogProps> = ({
               className="col-span-3"
             />
           </div>
-
           <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="edit-manager" className="text-right">Responsable</Label>
+            <Label htmlFor="edit-manager" className="text-right">
+              Responsable
+            </Label>
             <div className="col-span-3">
               <Select value={formData.managerId || "none"} onValueChange={onManagerChange}>
                 <SelectTrigger>
@@ -142,7 +101,7 @@ const EditDepartmentDialog: React.FC<EditDepartmentDialogProps> = ({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">Aucun responsable</SelectItem>
-                  {isLoadingEmployees ? (
+                  {isLoading ? (
                     <SelectItem value="loading" disabled>Chargement...</SelectItem>
                   ) : (
                     employees?.map((employee) => (
@@ -155,9 +114,10 @@ const EditDepartmentDialog: React.FC<EditDepartmentDialogProps> = ({
               </Select>
             </div>
           </div>
-
           <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="edit-color" className="text-right">Couleur</Label>
+            <Label htmlFor="edit-color" className="text-right">
+              Couleur
+            </Label>
             <div className="col-span-3">
               <Select value={formData.color || departmentColors[0].value} onValueChange={onColorChange}>
                 <SelectTrigger>

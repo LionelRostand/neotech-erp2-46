@@ -1,92 +1,184 @@
 
-import React from 'react';
+import React, { useState } from 'react';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuTrigger 
+} from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
+import { MoreHorizontal, FileEdit, Trash2, Eye, User } from "lucide-react";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import { Employee } from '@/types/employee';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
-import { formatPhoneNumber } from '@/lib/utils';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import EmployeeDetails from './EmployeeDetails';
+import { EditEmployeeDialog } from './EditEmployeeDialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { toast } from 'sonner';
+import DeleteConfirmDialog from '@/components/module/submodules/accounting/components/DeleteConfirmDialog';
 
 interface EmployeeTableProps {
   employees: Employee[];
-  onEmployeeClick: (employee: Employee) => void;
+  isLoading?: boolean;
+  onDelete?: (employee: Employee) => void;
 }
 
-const EmployeeTable: React.FC<EmployeeTableProps> = ({ employees, onEmployeeClick }) => {
-  // Function to get status badge color
-  const getStatusBadge = (status: string) => {
-    switch (status?.toLowerCase()) {
-      case 'active':
-      case 'actif':
-        return <Badge className="bg-green-100 text-green-800">Actif</Badge>;
-      case 'inactive':
-      case 'inactif':
-        return <Badge className="bg-gray-100 text-gray-800">Inactif</Badge>;
-      case 'onleave':
-      case 'en congé':
-        return <Badge className="bg-blue-100 text-blue-800">En congé</Badge>;
-      case 'suspended':
-      case 'suspendu':
-        return <Badge className="bg-red-100 text-red-800">Suspendu</Badge>;
-      default:
-        return <Badge variant="outline">{status || 'Inconnu'}</Badge>;
-    }
+const EmployeeTable: React.FC<EmployeeTableProps> = ({
+  employees,
+  isLoading = false,
+  onDelete
+}) => {
+  const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
+  const [viewDetailsOpen, setViewDetailsOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+
+  const handleViewDetails = (employee: Employee) => {
+    setSelectedEmployee(employee);
+    setViewDetailsOpen(true);
   };
 
-  // Function to get employee initials for avatar fallback
-  const getInitials = (firstName: string, lastName: string) => {
-    return `${firstName?.charAt(0) || ''}${lastName?.charAt(0) || ''}`.toUpperCase();
+  const handleEditEmployee = (employee: Employee) => {
+    setSelectedEmployee(employee);
+    setEditDialogOpen(true);
   };
+
+  const handleDeleteEmployee = (employee: Employee) => {
+    setSelectedEmployee(employee);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = () => {
+    if (selectedEmployee && onDelete) {
+      onDelete(selectedEmployee);
+    }
+    setDeleteDialogOpen(false);
+  };
+
+  const handleExportPdf = () => {
+    toast.success('Export PDF terminé');
+  };
+
+  if (isLoading) {
+    return <div className="text-center py-10">Chargement des données...</div>;
+  }
+
+  if (employees.length === 0) {
+    return <div className="text-center py-10">Aucun employé trouvé.</div>;
+  }
 
   return (
-    <div className="border rounded-md overflow-hidden">
+    <>
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead className="w-[250px]">Nom</TableHead>
+            <TableHead className="w-[50px]"></TableHead>
+            <TableHead>Nom</TableHead>
             <TableHead>Email</TableHead>
-            <TableHead>Téléphone</TableHead>
-            <TableHead>Département</TableHead>
             <TableHead>Poste</TableHead>
+            <TableHead>Département</TableHead>
             <TableHead>Statut</TableHead>
+            <TableHead className="text-right">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {employees.length === 0 ? (
-            <TableRow>
-              <TableCell colSpan={6} className="text-center py-6 text-muted-foreground">
-                Aucun employé trouvé
+          {employees.map((employee) => (
+            <TableRow key={employee.id}>
+              <TableCell className="pr-0">
+                <Avatar className="h-8 w-8">
+                  <AvatarImage src={employee.photoURL || employee.photo} alt={`${employee.firstName} ${employee.lastName}`} />
+                  <AvatarFallback>
+                    <User className="h-4 w-4" />
+                  </AvatarFallback>
+                </Avatar>
+              </TableCell>
+              <TableCell className="font-medium">{employee.firstName} {employee.lastName}</TableCell>
+              <TableCell>{employee.email}</TableCell>
+              <TableCell>{employee.position || employee.title}</TableCell>
+              <TableCell>{employee.department}</TableCell>
+              <TableCell>
+                {employee.status === 'active' || employee.status === 'Actif' ? (
+                  <Badge className="bg-green-500 hover:bg-green-600">Actif</Badge>
+                ) : employee.status === 'onLeave' || employee.status === 'En congé' ? (
+                  <Badge className="bg-yellow-500 hover:bg-yellow-600">En congé</Badge>
+                ) : (
+                  <Badge variant="outline">Inactif</Badge>
+                )}
+              </TableCell>
+              <TableCell className="text-right">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className="h-8 w-8 p-0">
+                      <span className="sr-only">Ouvrir menu</span>
+                      <MoreHorizontal className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={() => handleViewDetails(employee)}>
+                      <Eye className="mr-2 h-4 w-4" />
+                      Voir détails
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleEditEmployee(employee)}>
+                      <FileEdit className="mr-2 h-4 w-4" />
+                      Modifier
+                    </DropdownMenuItem>
+                    {onDelete && (
+                      <DropdownMenuItem onClick={() => handleDeleteEmployee(employee)}>
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        Supprimer
+                      </DropdownMenuItem>
+                    )}
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </TableCell>
             </TableRow>
-          ) : (
-            employees.map((employee) => (
-              <TableRow 
-                key={employee.id} 
-                className="cursor-pointer hover:bg-muted/50"
-                onClick={() => onEmployeeClick(employee)}
-              >
-                <TableCell className="font-medium">
-                  <div className="flex items-center gap-3">
-                    <Avatar className="h-8 w-8">
-                      <AvatarImage 
-                        src={employee.photoURL || employee.photo} 
-                        alt={`${employee.firstName} ${employee.lastName}`} 
-                      />
-                      <AvatarFallback>{getInitials(employee.firstName || '', employee.lastName || '')}</AvatarFallback>
-                    </Avatar>
-                    <span>{employee.lastName} {employee.firstName}</span>
-                  </div>
-                </TableCell>
-                <TableCell>{employee.email}</TableCell>
-                <TableCell>{formatPhoneNumber(employee.phone)}</TableCell>
-                <TableCell>{employee.department || '—'}</TableCell>
-                <TableCell>{employee.position || employee.title || '—'}</TableCell>
-                <TableCell>{getStatusBadge(employee.status || 'unknown')}</TableCell>
-              </TableRow>
-            ))
-          )}
+          ))}
         </TableBody>
       </Table>
-    </div>
+
+      {selectedEmployee && (
+        <>
+          <Dialog open={viewDetailsOpen} onOpenChange={setViewDetailsOpen}>
+            <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>Profil de l'employé</DialogTitle>
+              </DialogHeader>
+              <EmployeeDetails 
+                employee={selectedEmployee} 
+                onExportPdf={handleExportPdf} 
+                onEdit={() => {
+                  setViewDetailsOpen(false);
+                  setEditDialogOpen(true);
+                }}
+              />
+            </DialogContent>
+          </Dialog>
+
+          <EditEmployeeDialog
+            open={editDialogOpen}
+            onOpenChange={setEditDialogOpen}
+            employee={selectedEmployee}
+          />
+
+          <DeleteConfirmDialog
+            open={deleteDialogOpen}
+            onOpenChange={setDeleteDialogOpen}
+            onConfirm={confirmDelete}
+            title="Confirmation de suppression"
+            description={`Êtes-vous sûr de vouloir supprimer l'employé ${selectedEmployee.firstName} ${selectedEmployee.lastName} ? Cette action est irréversible.`}
+          />
+        </>
+      )}
+    </>
   );
 };
 

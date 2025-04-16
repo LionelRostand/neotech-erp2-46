@@ -29,11 +29,6 @@ export const formatDate = (
     
     // If string is in French DD/MM/YYYY format, parse it properly
     if (typeof dateInput === 'string') {
-      // Check if string is empty or not a valid date string
-      if (!dateInput.trim()) {
-        return '';
-      }
-      
       // Check if this looks like DD/MM/YYYY format
       if (/^\d{2}\/\d{2}\/\d{4}$/.test(dateInput)) {
         const [day, month, year] = dateInput.split('/').map(Number);
@@ -43,7 +38,7 @@ export const formatDate = (
         }
       }
       
-      // Standard date parsing with extra validation
+      // Standard date parsing
       const date = new Date(dateInput);
       if (isNaN(date.getTime())) {
         console.warn('Invalid date string provided to formatDate:', dateInput);
@@ -73,11 +68,6 @@ export const formatCurrency = (
   locale: string = 'fr-FR'
 ): string => {
   try {
-    if (isNaN(value)) {
-      console.warn('Invalid number provided to formatCurrency:', value);
-      return '0,00 €';
-    }
-    
     return new Intl.NumberFormat(locale, {
       style: 'currency',
       currency
@@ -101,11 +91,6 @@ export const formatNumber = (
   locale: string = 'fr-FR'
 ): string => {
   try {
-    if (isNaN(value)) {
-      console.warn('Invalid number provided to formatNumber:', value);
-      return '0';
-    }
-    
     return new Intl.NumberFormat(locale, {
       minimumFractionDigits: decimals,
       maximumFractionDigits: decimals
@@ -144,30 +129,5 @@ export const formatPhoneNumber = (
   } catch (error) {
     console.error('Error formatting phone number:', error);
     return phoneNumber;
-  }
-};
-
-/**
- * Safely parses a date string into a Date object
- * @param dateStr Date string to parse
- * @returns A valid Date object or null if invalid
- */
-export const safeParseDate = (dateStr: string | null | undefined): Date | null => {
-  if (!dateStr) return null;
-  
-  try {
-    // Handle French format DD/MM/YYYY
-    if (/^\d{2}\/\d{2}\/\d{4}$/.test(dateStr)) {
-      const [day, month, year] = dateStr.split('/').map(Number);
-      const date = new Date(year, month - 1, day);
-      return isNaN(date.getTime()) ? null : date;
-    }
-    
-    // Try standard parsing
-    const date = new Date(dateStr);
-    return isNaN(date.getTime()) ? null : date;
-  } catch (error) {
-    console.error('Error parsing date:', dateStr, error);
-    return null;
   }
 };

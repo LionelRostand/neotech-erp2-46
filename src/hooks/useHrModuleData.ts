@@ -92,9 +92,6 @@ export const useHrModuleData = () => {
       console.log(`useHrModuleData: LIONEL DJOSSA présent dans les données après traitement? ${lionelPresent}`);
       
       setEmployees(uniqueEmployees);
-    } else {
-      // Always set an empty array, never undefined
-      setEmployees([]);
     }
   }, [rawEmployees]);
 
@@ -168,9 +165,6 @@ export const useHrModuleData = () => {
       
       // Convert map to array
       setCompanies(Array.from(companiesMap.values()));
-    } else {
-      // Always set an empty array, never undefined
-      setCompanies([]);
     }
   }, [employees]);
 
@@ -196,9 +190,9 @@ export const useHrModuleData = () => {
 
   return {
     employees,
-    payslips: payslips || [],
-    contracts: contracts || [],
-    departments: departments || [],
+    payslips,
+    contracts,
+    departments,
     companies,
     leaveRequests: leaveRequests || [],
     attendance: attendance || [],

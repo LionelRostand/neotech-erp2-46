@@ -6,7 +6,6 @@ export const useDepartmentDialogs = () => {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isManageEmployeesDialogOpen, setIsManageEmployeesDialogOpen] = useState(false);
-  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [currentDepartment, setCurrentDepartment] = useState<Department | null>(null);
   
   const handleAddDepartment = useCallback(() => {
@@ -27,13 +26,10 @@ export const useDepartmentDialogs = () => {
     isAddDialogOpen,
     isEditDialogOpen,
     isManageEmployeesDialogOpen,
-    isViewDialogOpen,
     currentDepartment,
     setIsAddDialogOpen,
     setIsEditDialogOpen,
     setIsManageEmployeesDialogOpen,
-    setIsViewDialogOpen,
-    setCurrentDepartment,
     handleAddDepartment,
     handleEditDepartment,
     handleManageEmployees

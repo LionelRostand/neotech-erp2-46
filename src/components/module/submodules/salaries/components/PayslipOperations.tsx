@@ -24,7 +24,7 @@ interface PayslipOperationsProps {
 }
 
 const PayslipOperations: React.FC<PayslipOperationsProps> = ({
-  employees: providedEmployees,
+  employees = [],
   companies = [],
   onFilter,
   currentFilters,
@@ -33,10 +33,10 @@ const PayslipOperations: React.FC<PayslipOperationsProps> = ({
   onExportData
 }) => {
   const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false);
-  const { employees: hrEmployees } = useHrModuleData();
+  const { employees: employeeData } = useHrModuleData();
   
-  // Always use hook, then decide which data to use
-  const employeesToUse = providedEmployees && providedEmployees.length > 0 ? providedEmployees : hrEmployees;
+  // Utilisez les données d'employés de useHrModuleData si aucun employé n'est passé en props
+  const employeesToUse = employees.length > 0 ? employees : employeeData;
 
   // Convert Employee[] to format required by PayslipFilters
   const formattedEmployees = employeesToUse.map(emp => ({

@@ -4,20 +4,13 @@ import { getUserPermissions, checkUserPermission, ModulePermissions } from '@/co
 import { useAuth } from './useAuth';
 
 export const usePermissions = (moduleId?: string) => {
-  const { currentUser, isOffline, userData, isAdmin: authIsAdmin } = useAuth();
+  const { currentUser, isOffline } = useAuth();
   const [loading, setLoading] = useState(true);
   const [permissions, setPermissions] = useState<{[key: string]: ModulePermissions} | null>(null);
   const [hasPermission, setHasPermission] = useState<{[key: string]: boolean}>({});
   const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
-    // Check if user is admin based on email or role from useAuth
-    if (authIsAdmin) {
-      setIsAdmin(true);
-      setLoading(false);
-      return;
-    }
-
     const fetchPermissions = async () => {
       if (!currentUser?.uid) {
         setLoading(false);
@@ -44,19 +37,15 @@ export const usePermissions = (moduleId?: string) => {
     };
 
     fetchPermissions();
-  }, [currentUser?.uid, userData?.email, userData?.role, authIsAdmin]);
+  }, [currentUser?.uid]);
 
   const checkPermission = async (module: string, action: 'view' | 'create' | 'edit' | 'delete' | 'export' | 'modify') => {
-    // If user is admin, grant all permissions
-    if (isAdmin || authIsAdmin) {
-      return true;
-    }
-
     if (!currentUser?.uid) return false;
     
     if (isOffline) {
       console.log('Mode hors ligne: utilisation des permissions en cache');
       // En mode hors ligne, on utilise les permissions déjà chargées
+      if (isAdmin) return true;
       return !!permissions?.[module]?.[action];
     }
 
@@ -74,20 +63,20 @@ export const usePermissions = (moduleId?: string) => {
   useEffect(() => {
     if (moduleId && !loading && currentUser?.uid) {
       checkPermission(moduleId, 'view').then(hasAccess => {
-        if (!hasAccess && !isAdmin && !authIsAdmin) {
+        if (!hasAccess && !isAdmin) {
           console.warn(`L'utilisateur n'a pas accès au module ${moduleId}`);
           // On pourrait rediriger l'utilisateur ou afficher un message
         }
       });
     }
-  }, [moduleId, loading, currentUser?.uid, isAdmin, authIsAdmin]);
+  }, [moduleId, loading, currentUser?.uid, isAdmin]);
 
   return {
     permissions,
-    isAdmin: isAdmin || authIsAdmin,
+    isAdmin,
     loading,
     checkPermission,
     hasPermission,
-    isOffline
+    isOffline // Add isOffline to the return object
   };
 };

@@ -74,7 +74,7 @@ const BadgesTable: React.FC<BadgesTableProps> = ({ badgesList, onBadgeClick, loa
                 <Badge
                   variant={badge.status === 'success' ? 'default' : 
                          badge.status === 'warning' ? 'outline' : 
-                         badge.status === 'error' ? 'destructive' : 'secondary'}
+                         badge.status === 'danger' ? 'destructive' : 'secondary'}
                 >
                   {badge.statusText}
                 </Badge>

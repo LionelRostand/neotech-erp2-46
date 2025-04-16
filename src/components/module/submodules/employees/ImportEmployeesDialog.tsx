@@ -1,139 +1,213 @@
 
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
-import { Employee } from '@/types/employee';
-import { Loader2, Upload } from 'lucide-react';
-import * as XLSX from 'xlsx';
+import { Upload, FileText, CheckCircle, AlertCircle } from 'lucide-react';
+import { Progress } from '@/components/ui/progress';
 
 interface ImportEmployeesDialogProps {
-  onImport: (employees: Partial<Employee>[]) => void;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onImported: (count: number) => void;
 }
 
-const ImportEmployeesDialog: React.FC<ImportEmployeesDialogProps> = ({ onImport }) => {
-  const [isUploading, setIsUploading] = useState(false);
+const ImportEmployeesDialog: React.FC<ImportEmployeesDialogProps> = ({
+  open,
+  onOpenChange,
+  onImported
+}) => {
   const [file, setFile] = useState<File | null>(null);
-  const [parsedEmployees, setParsedEmployees] = useState<Partial<Employee>[]>([]);
-  
+  const [uploading, setUploading] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [importStatus, setImportStatus] = useState<'idle' | 'uploading' | 'processing' | 'success' | 'error'>('idle');
+  const [importedCount, setImportedCount] = useState(0);
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFile = e.target.files?.[0];
-    if (selectedFile) {
-      setFile(selectedFile);
-      parseFile(selectedFile);
+    if (e.target.files && e.target.files.length > 0) {
+      const selectedFile = e.target.files[0];
+      const fileExtension = selectedFile.name.split('.').pop()?.toLowerCase();
+      
+      if (fileExtension === 'csv' || fileExtension === 'xlsx' || fileExtension === 'xls') {
+        setFile(selectedFile);
+        setImportStatus('idle');
+      } else {
+        toast.error('Format de fichier non supporté. Veuillez utiliser CSV ou Excel (.xlsx, .xls).');
+        e.target.value = '';
+      }
     }
   };
-  
-  const parseFile = async (file: File) => {
-    try {
-      setIsUploading(true);
-      
-      const data = await file.arrayBuffer();
-      const workbook = XLSX.read(data);
-      
-      const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-      const jsonData = XLSX.utils.sheet_to_json(worksheet);
-      
-      const employees = jsonData.map((row: Record<string, any>) => {
-        // Safely access properties with type checking
-        const employee: Partial<Employee> = {
-          firstName: row.firstName || row.FirstName || '',
-          lastName: row.lastName || row.LastName || '',
-          email: row.email || row.Email || '',
-          phone: row.phone || row.Phone || '',
-          position: row.position || row.Position || '',
-          department: row.department || row.Department || '',
-          status: row.status || row.Status || 'active',
-        };
-        return employee;
+
+  const simulateImportProgress = () => {
+    setUploading(true);
+    setImportStatus('uploading');
+    setProgress(0);
+    
+    const interval = setInterval(() => {
+      setProgress(prev => {
+        if (prev >= 100) {
+          clearInterval(interval);
+          setImportStatus('processing');
+          
+          // Simulate processing delay
+          setTimeout(() => {
+            const randomCount = Math.floor(Math.random() * 20) + 5; // Random between 5 and 25
+            setImportedCount(randomCount);
+            setImportStatus('success');
+            setUploading(false);
+            onImported(randomCount);
+          }, 1500);
+          
+          return 100;
+        }
+        return prev + 5;
       });
-      
-      setParsedEmployees(employees);
-      toast.success(`${employees.length} employés trouvés dans le fichier`);
-    } catch (error) {
-      console.error('Error parsing file:', error);
-      toast.error("Erreur lors de l'analyse du fichier");
-    } finally {
-      setIsUploading(false);
-    }
+    }, 150);
   };
-  
+
   const handleImport = () => {
-    if (parsedEmployees.length > 0) {
-      onImport(parsedEmployees);
-    } else {
-      toast.error('Aucun employé à importer');
+    if (!file) {
+      toast.error('Veuillez sélectionner un fichier à importer');
+      return;
     }
+    
+    simulateImportProgress();
   };
-  
+
+  const handleClose = () => {
+    if (uploading) return;
+    
+    setFile(null);
+    setProgress(0);
+    setImportStatus('idle');
+    onOpenChange(false);
+  };
+
   return (
-    <div className="space-y-4">
-      <div className="p-4 border-2 border-dashed rounded-lg text-center">
-        {isUploading ? (
-          <div className="py-8 flex flex-col items-center">
-            <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
-            <p>Traitement du fichier en cours...</p>
-          </div>
-        ) : file ? (
-          <div className="py-8">
-            <p className="font-medium">{file.name}</p>
-            <p className="text-sm text-muted-foreground mt-1">{parsedEmployees.length} employés trouvés</p>
-            <Button
-              variant="outline"
-              className="mt-4"
-              onClick={() => {
-                setFile(null);
-                setParsedEmployees([]);
-              }}
-            >
-              Changer de fichier
-            </Button>
-          </div>
-        ) : (
-          <>
-            <div className="py-8">
-              <div className="flex justify-center mb-4">
-                <Upload className="h-8 w-8 text-muted-foreground" />
-              </div>
-              <p className="text-sm text-muted-foreground mb-2">
-                Déposer un fichier Excel (.xlsx) ou
+    <Dialog open={open} onOpenChange={handleClose}>
+      <DialogContent className="sm:max-w-[500px]">
+        <DialogHeader>
+          <DialogTitle>Importer des employés</DialogTitle>
+          <DialogDescription>
+            Importez plusieurs employés à partir d'un fichier CSV ou Excel.
+          </DialogDescription>
+        </DialogHeader>
+        
+        <div className="space-y-6">
+          {importStatus === 'success' ? (
+            <div className="p-6 flex flex-col items-center justify-center text-center">
+              <CheckCircle className="h-12 w-12 text-green-500 mb-4" />
+              <h3 className="text-lg font-semibold">Import réussi!</h3>
+              <p className="text-gray-500 mt-2">
+                {importedCount} employés ont été importés avec succès.
               </p>
-              <Button variant="outline" asChild>
-                <label>
-                  Parcourir
-                  <input
-                    type="file"
-                    className="hidden"
-                    accept=".xlsx,.xls"
-                    onChange={handleFileChange}
-                  />
-                </label>
-              </Button>
             </div>
-            <p className="text-xs text-muted-foreground">
-              Formats supportés: Excel (.xlsx, .xls)
-            </p>
-          </>
-        )}
-      </div>
-      
-      <div className="flex justify-end space-x-2">
-        <Button
-          variant="outline"
-          onClick={() => {
-            setFile(null);
-            setParsedEmployees([]);
-          }}
-        >
-          Annuler
-        </Button>
-        <Button
-          onClick={handleImport}
-          disabled={parsedEmployees.length === 0 || isUploading}
-        >
-          Importer {parsedEmployees.length} employés
-        </Button>
-      </div>
-    </div>
+          ) : importStatus === 'error' ? (
+            <div className="p-6 flex flex-col items-center justify-center text-center">
+              <AlertCircle className="h-12 w-12 text-red-500 mb-4" />
+              <h3 className="text-lg font-semibold">Erreur d'importation</h3>
+              <p className="text-gray-500 mt-2">
+                Une erreur s'est produite lors de l'importation. Veuillez réessayer.
+              </p>
+            </div>
+          ) : (
+            <>
+              <div className="space-y-3">
+                <Label htmlFor="file-upload">Fichier à importer</Label>
+                <div className="flex items-center gap-4">
+                  <Input
+                    id="file-upload"
+                    type="file"
+                    accept=".csv,.xlsx,.xls"
+                    onChange={handleFileChange}
+                    disabled={uploading}
+                    className="flex-1"
+                  />
+                  {file && (
+                    <Button variant="outline" size="icon" disabled={uploading}>
+                      <FileText className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
+                <p className="text-xs text-gray-500">
+                  Formats acceptés: CSV, Excel (.xlsx, .xls)
+                </p>
+              </div>
+              
+              {(importStatus === 'uploading' || importStatus === 'processing') && (
+                <div className="space-y-2">
+                  <div className="flex justify-between text-xs">
+                    <span>
+                      {importStatus === 'uploading' ? 'Chargement...' : 'Traitement...'}
+                    </span>
+                    <span>{Math.round(progress)}%</span>
+                  </div>
+                  <Progress value={progress} />
+                </div>
+              )}
+              
+              <div className="p-4 border border-gray-200 rounded-md bg-gray-50">
+                <h4 className="font-medium mb-2">Format attendu</h4>
+                <p className="text-sm text-gray-600 mb-2">
+                  Votre fichier doit contenir les colonnes suivantes:
+                </p>
+                <ul className="text-xs text-gray-500 list-disc pl-5 space-y-1">
+                  <li>Prénom (obligatoire)</li>
+                  <li>Nom (obligatoire)</li>
+                  <li>Email (obligatoire)</li>
+                  <li>Poste/Position</li>
+                  <li>Département</li>
+                  <li>Date d'embauche</li>
+                  <li>Statut</li>
+                </ul>
+              </div>
+            </>
+          )}
+        </div>
+
+        <DialogFooter>
+          {importStatus === 'success' ? (
+            <Button onClick={handleClose}>Fermer</Button>
+          ) : importStatus === 'error' ? (
+            <>
+              <Button variant="outline" onClick={handleClose}>Annuler</Button>
+              <Button onClick={() => setImportStatus('idle')}>Réessayer</Button>
+            </>
+          ) : (
+            <>
+              <Button variant="outline" onClick={handleClose} disabled={uploading}>
+                Annuler
+              </Button>
+              <Button 
+                onClick={handleImport} 
+                disabled={!file || uploading}
+              >
+                {uploading ? (
+                  <span className="flex items-center">
+                    <span className="animate-spin mr-2">⏳</span>
+                    {importStatus === 'uploading' ? 'Chargement...' : 'Traitement...'}
+                  </span>
+                ) : (
+                  <span className="flex items-center">
+                    <Upload className="h-4 w-4 mr-2" />
+                    Importer
+                  </span>
+                )}
+              </Button>
+            </>
+          )}
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 };
 

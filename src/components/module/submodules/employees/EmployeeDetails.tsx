@@ -1,84 +1,224 @@
-
-import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { useHrModuleData } from '@/hooks/useHrModuleData';
-import { Employee } from '@/types/employee';
+import React, { useState } from 'react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft } from 'lucide-react';
-import EmployeeProfileView from './EmployeeProfileView';
-import { Skeleton } from '@/components/ui/skeleton';
+import { Employee } from '@/types/employee';
+import EmployeeProfileHeader from './EmployeeProfileHeader';
+import InformationsTab from './tabs/InformationsTab';
+import DocumentsTab from './tabs/DocumentsTab';
+import CompetencesTab from './tabs/CompetencesTab';
+import HorairesTab from './tabs/HorairesTab';
+import CongesTab from './tabs/CongesTab';
+import EvaluationsTab from './tabs/EvaluationsTab';
+import { jsPDF } from 'jspdf';
+import { toast } from 'sonner';
 
-const EmployeeDetails: React.FC = () => {
-  const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
-  const { employees } = useHrModuleData();
-  const [employee, setEmployee] = useState<Employee | null>(null);
-  const [loading, setLoading] = useState(true);
+interface EmployeeDetailsProps {
+  employee: Employee;
+  onExportPdf: () => void;
+  onEdit: () => void;
+}
 
-  useEffect(() => {
-    if (id && employees.length > 0) {
-      const foundEmployee = employees.find(emp => emp.id === id);
-      if (foundEmployee) {
-        setEmployee(foundEmployee);
-      }
-      setLoading(false);
+const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({ 
+  employee, 
+  onExportPdf,
+  onEdit
+}) => {
+  const [activeTab, setActiveTab] = useState('infos');
+  const [isEditing, setIsEditing] = useState(false);
+  const [updatedEmployee, setUpdatedEmployee] = useState<Employee>(employee);
+  
+  const handleEditTab = () => {
+    if (activeTab === 'infos') {
+      onEdit();
+    } else {
+      // Activer le mode édition pour l'onglet actif
+      setIsEditing(true);
+      toast.info(`Mode édition activé pour l'onglet ${getTabName(activeTab)}`);
     }
-  }, [id, employees]);
-
-  const handleBack = () => {
-    navigate('/modules/employees/profiles');
   };
 
-  if (loading) {
-    return (
-      <div className="container mx-auto p-6 space-y-6">
-        <Button variant="ghost" onClick={handleBack}>
-          <ChevronLeft className="mr-2 h-4 w-4" />
-          Retour
-        </Button>
-        
-        <div className="flex items-center gap-4">
-          <Skeleton className="h-16 w-16 rounded-full" />
-          <div>
-            <Skeleton className="h-8 w-64 mb-2" />
-            <Skeleton className="h-4 w-40" />
-          </div>
-        </div>
-        
-        <Skeleton className="h-[300px] w-full rounded-md" />
-      </div>
-    );
-  }
+  const handleFinishEditing = () => {
+    setIsEditing(false);
+    toast.success(`Modifications enregistrées pour l'onglet ${getTabName(activeTab)}`);
+  };
 
-  if (!employee) {
-    return (
-      <div className="container mx-auto p-6">
-        <Button variant="ghost" onClick={handleBack}>
-          <ChevronLeft className="mr-2 h-4 w-4" />
-          Retour
-        </Button>
-        
-        <div className="flex flex-col items-center justify-center p-12 text-center">
-          <h2 className="text-2xl font-bold mb-2">Employé non trouvé</h2>
-          <p className="text-gray-500 mb-6">
-            L'employé avec l'identifiant {id} n'existe pas ou n'est plus disponible.
-          </p>
-          <Button onClick={handleBack}>
-            Retourner à la liste des employés
-          </Button>
-        </div>
-      </div>
-    );
-  }
+  const getTabName = (tabId: string): string => {
+    switch (tabId) {
+      case 'infos': return 'Informations';
+      case 'documents': return 'Documents';
+      case 'competences': return 'Compétences';
+      case 'horaires': return 'Horaires';
+      case 'conges': return 'Congés';
+      case 'evaluations': return 'Évaluations';
+      default: return tabId;
+    }
+  };
+
+  const handleExportPdf = () => {
+    // Create PDF document
+    const doc = new jsPDF();
+    
+    // Add company logo on left side (placeholder for now)
+    doc.setDrawColor(200, 200, 200);
+    doc.setFillColor(240, 240, 240);
+    doc.roundedRect(15, 15, 50, 25, 3, 3, 'FD');
+    doc.setFontSize(12);
+    doc.setTextColor(80, 80, 80);
+    doc.text("LOGO", 40, 30, { align: "center" });
+    
+    // Add company information on right side
+    doc.setFontSize(14);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(40, 40, 40);
+    doc.text("Enterprise Solutions", 140, 20, { align: "center" });
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "normal");
+    doc.text("123 Avenue des Affaires", 140, 26, { align: "center" });
+    doc.text("75000 Paris, France", 140, 32, { align: "center" });
+    doc.text("contact@enterprise-solutions.fr", 140, 38, { align: "center" });
+    
+    // Add horizontal separator
+    doc.setDrawColor(200, 200, 200);
+    doc.line(15, 50, 195, 50);
+    
+    // Document title
+    doc.setFontSize(18);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(20, 20, 20);
+    doc.text(`FICHE EMPLOYÉ`, 105, 65, { align: "center" });
+    
+    // Employee information
+    doc.setFontSize(14);
+    doc.setFont("helvetica", "bold");
+    doc.text("Informations personnelles", 20, 80);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(11);
+    
+    const personalInfo = [
+      [`Nom: ${employee.lastName}`, `Prénom: ${employee.firstName}`],
+      [`Email: ${employee.email}`, `Téléphone: ${employee.phone || "Non renseigné"}`],
+      // Use optional chaining to safely access education
+      [`Date de naissance: ${employee.birthDate || "Non renseignée"}`, `Adresse: ${
+        typeof employee.address === 'object' 
+          ? `${employee.address.street}, ${employee.address.city}` 
+          : employee.address || "Non renseignée"
+      }`]
+    ];
+    
+    let yPos = 90;
+    personalInfo.forEach(row => {
+      doc.text(row[0], 25, yPos);
+      doc.text(row[1], 120, yPos);
+      yPos += 10;
+    });
+    
+    // Professional information
+    doc.setFontSize(14);
+    doc.setFont("helvetica", "bold");
+    doc.text("Informations professionnelles", 20, yPos + 10);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(11);
+    
+    const professionalInfo = [
+      [`Poste: ${employee.position}`, `Département: ${employee.department}`],
+      [`Date d'embauche: ${employee.hireDate}`, `Manager: ${employee.manager || "Aucun"}`],
+      // Fixed: Using contract instead of contractType
+      [`Type de contrat: ${employee.contract || "Non spécifié"}`, `Statut: ${employee.status || "Actif"}`]
+    ];
+    
+    yPos += 20;
+    professionalInfo.forEach(row => {
+      doc.text(row[0], 25, yPos);
+      doc.text(row[1], 120, yPos);
+      yPos += 10;
+    });
+    
+    // Save PDF
+    doc.save(`fiche-employe-${employee.firstName.toLowerCase()}-${employee.lastName.toLowerCase()}.pdf`);
+    toast.success("Document PDF exporté avec succès");
+    
+    // Also call the parent onExportPdf to manage any UI updates
+    onExportPdf();
+  };
+
+  const handleEmployeeUpdate = () => {
+    // This function will be passed to each tab component to handle employee updates
+    setUpdatedEmployee(prevEmployee => ({ ...prevEmployee }));
+  };
 
   return (
     <div className="space-y-6">
-      <Button variant="ghost" onClick={handleBack}>
-        <ChevronLeft className="mr-2 h-4 w-4" />
-        Retour à la liste des employés
-      </Button>
+      <EmployeeProfileHeader 
+        employee={updatedEmployee} 
+        onEmployeeUpdate={handleEmployeeUpdate}
+      />
+
+      <Tabs defaultValue="infos" value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="grid grid-cols-4 md:grid-cols-6 mb-6">
+          <TabsTrigger value="infos">Informations</TabsTrigger>
+          <TabsTrigger value="documents">Documents</TabsTrigger>
+          <TabsTrigger value="competences">Compétences</TabsTrigger>
+          <TabsTrigger value="horaires">Horaires</TabsTrigger>
+          <TabsTrigger value="conges">Congés</TabsTrigger>
+          <TabsTrigger value="evaluations">Évaluations</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="infos">
+          <InformationsTab 
+            employee={updatedEmployee} 
+            isEditing={isEditing && activeTab === 'infos'}
+            onFinishEditing={handleFinishEditing}
+          />
+        </TabsContent>
+        
+        <TabsContent value="documents">
+          <DocumentsTab 
+            employee={updatedEmployee} 
+            isEditing={isEditing && activeTab === 'documents'}
+            onFinishEditing={handleFinishEditing}
+          />
+        </TabsContent>
+        
+        <TabsContent value="competences">
+          <CompetencesTab 
+            employee={updatedEmployee}
+            onEmployeeUpdated={handleEmployeeUpdate}
+            isEditing={isEditing && activeTab === 'competences'}
+            onFinishEditing={handleFinishEditing}
+          />
+        </TabsContent>
+        
+        <TabsContent value="horaires">
+          <HorairesTab 
+            employee={updatedEmployee}
+            isEditing={isEditing && activeTab === 'horaires'}
+            onFinishEditing={handleFinishEditing}
+          />
+        </TabsContent>
+        
+        <TabsContent value="conges">
+          <CongesTab 
+            employee={updatedEmployee} 
+            isEditing={isEditing && activeTab === 'conges'} 
+            onFinishEditing={handleFinishEditing} 
+          />
+        </TabsContent>
+        
+        <TabsContent value="evaluations">
+          <EvaluationsTab 
+            employee={updatedEmployee} 
+            isEditing={isEditing && activeTab === 'evaluations'} 
+            onFinishEditing={handleFinishEditing} 
+          />
+        </TabsContent>
+      </Tabs>
       
-      <EmployeeProfileView employee={employee} />
+      <div className="flex justify-end gap-3 mt-6">
+        <Button variant="outline" onClick={handleExportPdf}>Exporter PDF</Button>
+        <Button variant={isEditing ? "default" : "outline"} onClick={isEditing ? handleFinishEditing : handleEditTab}>
+          {isEditing ? "Terminer" : "Modifier"}
+        </Button>
+      </div>
     </div>
   );
 };

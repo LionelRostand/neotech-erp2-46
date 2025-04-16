@@ -2,7 +2,6 @@ import { Company } from '@/components/module/submodules/companies/types';
 
 export interface EmployeeAddress {
   street: string;
-  streetNumber?: string; // Added streetNumber property
   city: string;
   postalCode: string;
   country: string;
@@ -46,6 +45,7 @@ export interface LeaveRequest {
   approvedAt?: string;
 }
 
+// Updated to match the Evaluation interface from useEvaluationsData
 export interface Evaluation {
   id: string;
   date: string;
@@ -68,7 +68,7 @@ export interface Evaluation {
 
 export interface Employee {
   id: string;
-  firebaseId?: string;
+  firebaseId?: string; // ID généré par Firestore
   firstName: string;
   lastName: string;
   email: string;
@@ -78,8 +78,8 @@ export interface Employee {
   departmentId: string;
   photo: string;
   photoURL: string;
-  photoData?: string;
-  photoHex?: string;
+  photoData?: string; // Base64 data for the photo
+  photoHex?: string;  // Hexadecimal data for the photo
   photoMeta?: {
     fileName: string;
     fileType: string;
@@ -112,15 +112,13 @@ export interface Employee {
     sunday?: string;
   };
   payslips: any[];
-  address_string?: string;
-  createdAt?: string;
-  updatedAt?: string;
-  leaveRequests?: LeaveRequest[];
-  evaluations?: Evaluation[];
-  isManager?: boolean;
-  forceManager?: boolean;
-  salary?: number;
-  badgeNumber?: string;
+  address_string?: string; // For backward compatibility
+  createdAt?: string; // Adding timestamp for creation date
+  updatedAt?: string; // Adding timestamp for last update
+  leaveRequests?: LeaveRequest[]; // Nouvelle propriété pour les congés
+  evaluations?: Evaluation[]; // Nouvelle propriété pour les évaluations
+  isManager?: boolean; // Added isManager property to fix type errors
+  forceManager?: boolean; // Added forceManager property to match d.ts file
   conges?: {
     acquired: number;
     taken: number;

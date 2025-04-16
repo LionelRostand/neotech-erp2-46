@@ -1,116 +1,137 @@
 
-// Define interfaces
+import { db } from '@/lib/firebase';
+import { COLLECTIONS } from '@/lib/firebase-collections';
+import { 
+  collection, 
+  doc, 
+  addDoc, 
+  getDoc, 
+  getDocs, 
+  query, 
+  where, 
+  orderBy, 
+  updateDoc, 
+  deleteDoc 
+} from 'firebase/firestore';
+
 export interface Payslip {
   id: string;
   employeeId: string;
   employeeName: string;
-  month: string;
-  monthName: string;
+  month: number;
   year: number;
+  monthName: string;
+  grossSalary: number;
+  netSalary: number;
   date: string;
-  grossSalary: number;
-  netSalary: number;
-  status: 'Généré' | 'Envoyé' | 'Validé';
+  status: string;
+  [key: string]: any;
 }
 
-export interface PaySlipData {
-  id?: string;
-  employeeId: string;
-  employeeName: string;
-  period: string;
-  grossSalary: number;
-  netSalary: number;
-  deductions: any[];
-  earnings: any[];
-  date?: string;
-}
-
-// Mock data
-const mockPayslips: Payslip[] = [
-  {
-    id: '1',
-    employeeId: 'emp1',
-    employeeName: 'Jean Dupont',
-    month: '04',
-    monthName: 'Avril',
-    year: 2025,
-    date: new Date().toISOString(),
-    grossSalary: 3500,
-    netSalary: 2750,
-    status: 'Généré'
-  },
-  {
-    id: '2',
-    employeeId: 'emp2',
-    employeeName: 'Marie Laurent',
-    month: '03',
-    monthName: 'Mars',
-    year: 2025,
-    date: new Date().toISOString(),
-    grossSalary: 4200,
-    netSalary: 3300,
-    status: 'Envoyé'
+// Add a new payslip
+export const addPayslip = async (payslip: Payslip): Promise<Payslip> => {
+  try {
+    // Use specific COLLECTIONS.HR.PAYSLIPS path if it exists
+    const collectionPath = COLLECTIONS.HR.PAYSLIPS || 'hr_payslips';
+    const payslipRef = await addDoc(collection(db, collectionPath), payslip);
+    
+    // Get the newly created document
+    const payslipDoc = await getDoc(payslipRef);
+    
+    if (payslipDoc.exists()) {
+      return { id: payslipDoc.id, ...payslipDoc.data() } as Payslip;
+    } else {
+      throw new Error('Failed to retrieve created payslip');
+    }
+  } catch (error) {
+    console.error('Error adding payslip:', error);
+    throw error;
   }
-];
+};
 
-// Service methods
+// Get all payslips
 export const getAllPayslips = async (): Promise<Payslip[]> => {
-  console.log('Getting all payslips');
-  
-  // Simulate API call
-  return new Promise(resolve => {
-    setTimeout(() => {
-      resolve(mockPayslips);
-    }, 500);
-  });
+  try {
+    // Use specific COLLECTIONS.HR.PAYSLIPS path if it exists
+    const collectionPath = COLLECTIONS.HR.PAYSLIPS || 'hr_payslips';
+    const q = query(collection(db, collectionPath), orderBy('date', 'desc'));
+    const querySnapshot = await getDocs(q);
+    
+    const payslips: Payslip[] = [];
+    querySnapshot.forEach((doc) => {
+      payslips.push({ id: doc.id, ...doc.data() } as Payslip);
+    });
+    
+    return payslips;
+  } catch (error) {
+    console.error('Error getting payslips:', error);
+    throw error;
+  }
 };
 
-export const getEmployeePaySlips = async (employeeId: string): Promise<Payslip[]> => {
-  console.log(`Getting payslips for employee ${employeeId}`);
-  
-  // Filter by employee ID
-  const filtered = mockPayslips.filter(p => p.employeeId === employeeId);
-  
-  // Simulate API call
-  return new Promise(resolve => {
-    setTimeout(() => {
-      resolve(filtered);
-    }, 500);
-  });
+// Get payslips for a specific employee
+export const getEmployeePayslips = async (employeeId: string): Promise<Payslip[]> => {
+  try {
+    // Use specific COLLECTIONS.HR.PAYSLIPS path if it exists
+    const collectionPath = COLLECTIONS.HR.PAYSLIPS || 'hr_payslips';
+    const q = query(
+      collection(db, collectionPath),
+      where('employeeId', '==', employeeId),
+      orderBy('date', 'desc')
+    );
+    
+    const querySnapshot = await getDocs(q);
+    
+    const payslips: Payslip[] = [];
+    querySnapshot.forEach((doc) => {
+      payslips.push({ id: doc.id, ...doc.data() } as Payslip);
+    });
+    
+    return payslips;
+  } catch (error) {
+    console.error('Error getting employee payslips:', error);
+    throw error;
+  }
 };
 
-export const savePaySlip = async (data: PaySlipData): Promise<{ id: string }> => {
-  console.log('Saving payslip', data);
-  
-  // Generate ID if not provided
-  const id = data.id || `payslip_${Date.now()}`;
-  
-  // Simulate API call
-  return new Promise(resolve => {
-    setTimeout(() => {
-      resolve({ id });
-    }, 500);
-  });
+// Get a single payslip by ID
+export const getPayslip = async (payslipId: string): Promise<Payslip | null> => {
+  try {
+    // Use specific COLLECTIONS.HR.PAYSLIPS path if it exists
+    const collectionPath = COLLECTIONS.HR.PAYSLIPS || 'hr_payslips';
+    const payslipDoc = await getDoc(doc(db, collectionPath, payslipId));
+    
+    if (payslipDoc.exists()) {
+      return { id: payslipDoc.id, ...payslipDoc.data() } as Payslip;
+    } else {
+      return null;
+    }
+  } catch (error) {
+    console.error('Error getting payslip:', error);
+    throw error;
+  }
 };
 
-export const updatePaySlip = async (id: string, data: Partial<PaySlipData>): Promise<{ id: string }> => {
-  console.log(`Updating payslip ${id}`, data);
-  
-  // Simulate API call
-  return new Promise(resolve => {
-    setTimeout(() => {
-      resolve({ id });
-    }, 500);
-  });
+// Update a payslip
+export const updatePayslip = async (payslipId: string, data: Partial<Payslip>): Promise<void> => {
+  try {
+    // Use specific COLLECTIONS.HR.PAYSLIPS path if it exists
+    const collectionPath = COLLECTIONS.HR.PAYSLIPS || 'hr_payslips';
+    await updateDoc(doc(db, collectionPath, payslipId), data);
+  } catch (error) {
+    console.error('Error updating payslip:', error);
+    throw error;
+  }
 };
 
-export const deletePayslip = async (id: string): Promise<boolean> => {
-  console.log(`Deleting payslip ${id}`);
-  
-  // Simulate API call
-  return new Promise(resolve => {
-    setTimeout(() => {
-      resolve(true);
-    }, 500);
-  });
+// Delete a payslip
+export const deletePayslip = async (payslipId: string): Promise<void> => {
+  try {
+    // Use specific COLLECTIONS.HR.PAYSLIPS path if it exists
+    const collectionPath = COLLECTIONS.HR.PAYSLIPS || 'hr_payslips';
+    await deleteDoc(doc(db, collectionPath, payslipId));
+  } catch (error) {
+    console.error('Error deleting payslip:', error);
+    throw error;
+  }
 };

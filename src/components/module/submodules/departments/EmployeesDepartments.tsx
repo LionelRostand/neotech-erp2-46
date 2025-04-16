@@ -7,7 +7,6 @@ import DepartmentTable from './DepartmentTable';
 import AddDepartmentDialog from './AddDepartmentDialog';
 import EditDepartmentDialog from './EditDepartmentDialog';
 import ManageEmployeesDialog from './ManageEmployeesDialog';
-import ViewDepartmentDialog from './ViewDepartmentDialog';
 import { useDepartments } from './useDepartments';
 
 const EmployeesDepartments: React.FC = () => {
@@ -17,7 +16,6 @@ const EmployeesDepartments: React.FC = () => {
     isAddDialogOpen,
     isEditDialogOpen,
     isManageEmployeesDialogOpen,
-    isViewDialogOpen,
     formData,
     currentDepartment,
     activeTab,
@@ -25,7 +23,6 @@ const EmployeesDepartments: React.FC = () => {
     setIsAddDialogOpen,
     setIsEditDialogOpen,
     setIsManageEmployeesDialogOpen,
-    setIsViewDialogOpen,
     setActiveTab,
     handleInputChange,
     handleManagerChange,
@@ -33,7 +30,6 @@ const EmployeesDepartments: React.FC = () => {
     handleAddDepartment,
     handleEditDepartment,
     handleManageEmployees,
-    handleViewDepartment,
     handleEmployeeSelection,
     handleSaveDepartment,
     handleUpdateDepartment,
@@ -53,7 +49,7 @@ const EmployeesDepartments: React.FC = () => {
             loading={loading}
             onEditDepartment={(id) => handleEditDepartment(departments.find(dept => dept.id === id)!)}
             onDeleteDepartment={handleDeleteDepartment}
-            onViewDepartment={(id) => handleViewDepartment(departments.find(dept => dept.id === id)!)}
+            onManageEmployees={(id) => handleManageEmployees(departments.find(dept => dept.id === id)!)}
           />
         </CardContent>
       </Card>
@@ -89,19 +85,6 @@ const EmployeesDepartments: React.FC = () => {
           onUpdate={handleUpdateDepartment}
         />
       </Dialog>
-
-      {/* View Department Dialog */}
-      {currentDepartment && (
-        <Dialog 
-          open={isViewDialogOpen} 
-          onOpenChange={setIsViewDialogOpen}
-        >
-          <ViewDepartmentDialog 
-            department={currentDepartment}
-            onClose={() => setIsViewDialogOpen(false)}
-          />
-        </Dialog>
-      )}
 
       {/* Manage Employees Dialog */}
       {currentDepartment && (
