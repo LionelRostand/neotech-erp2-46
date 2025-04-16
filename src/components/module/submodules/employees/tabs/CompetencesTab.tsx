@@ -11,7 +11,7 @@ import { updateEmployeeSkills } from '../services/employeeService';
 
 interface CompetencesTabProps {
   employee: Employee;
-  onEmployeeUpdated: () => void;
+  onEmployeeUpdated: ((updatedEmployee?: Employee) => void) | (() => void);
   isEditing?: boolean;
   onFinishEditing?: () => void;
 }
@@ -48,6 +48,7 @@ const CompetencesTab: React.FC<CompetencesTabProps> = ({
     try {
       await updateEmployeeSkills(employee.id, skills);
       onFinishEditing?.();
+      // Call onEmployeeUpdated, now compatible with both function signatures
       onEmployeeUpdated();
       toast.success("Compétences mises à jour avec succès");
     } catch (error) {
