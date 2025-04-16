@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Employee } from '@/types/employee';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -9,6 +9,12 @@ import { formatDate } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/hooks/useAuth';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import DocumentsTab from './tabs/DocumentsTab';
+import AbsencesTab from './tabs/AbsencesTab';
+import FormationsTab from './tabs/FormationsTab';
+import EvaluationsTab from './tabs/EvaluationsTab';
+import HorairesTab from './tabs/HorairesTab';
 
 interface EmployeeProfileViewProps {
   employee: Employee;
@@ -23,6 +29,7 @@ const EmployeeProfileView: React.FC<EmployeeProfileViewProps> = ({
 }) => {
   const navigate = useNavigate();
   const { userData } = useAuth();
+  const [activeTab, setActiveTab] = useState('profile');
   
   // Check if user is admin
   const isAdmin = userData?.email === 'admin@neotech-consulting.com' || userData?.role === 'admin';
@@ -156,13 +163,50 @@ const EmployeeProfileView: React.FC<EmployeeProfileViewProps> = ({
         </CardContent>
       </Card>
       
-      {/* Here you could add more sections like:
-       * - Employee History
-       * - Performance reviews
-       * - Documents
-       * - Leave history 
-       * - etc.
-       */}
+      <Tabs defaultValue="profile" className="w-full">
+        <TabsList className="grid grid-cols-6 w-full">
+          <TabsTrigger value="profile">Profil</TabsTrigger>
+          <TabsTrigger value="documents">Documents</TabsTrigger>
+          <TabsTrigger value="absences">Absences</TabsTrigger>
+          <TabsTrigger value="formations">Formations</TabsTrigger>
+          <TabsTrigger value="evaluations">Évaluations</TabsTrigger>
+          <TabsTrigger value="horaires">Horaires</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="profile" className="mt-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Informations détaillées</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Ajoutez ici plus d'informations détaillées si nécessaire */}
+                <p className="text-gray-500">Informations supplémentaires non disponibles</p>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="documents" className="mt-6">
+          <DocumentsTab employee={employee} />
+        </TabsContent>
+        
+        <TabsContent value="absences" className="mt-6">
+          <AbsencesTab employee={employee} />
+        </TabsContent>
+        
+        <TabsContent value="formations" className="mt-6">
+          <FormationsTab employee={employee} />
+        </TabsContent>
+        
+        <TabsContent value="evaluations" className="mt-6">
+          <EvaluationsTab employee={employee} />
+        </TabsContent>
+        
+        <TabsContent value="horaires" className="mt-6">
+          <HorairesTab employee={employee} />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
