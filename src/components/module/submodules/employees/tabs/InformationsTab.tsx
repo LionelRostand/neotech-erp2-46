@@ -7,6 +7,7 @@ import { MapPin, Building, Phone, Mail, Briefcase, UserCheck, User } from 'lucid
 import ManagerCheckbox from '../form/ManagerCheckbox';
 import { UseFormReturn } from 'react-hook-form';
 import { EmployeeFormValues } from '../form/employeeFormSchema';
+import { useEmployeeData } from '@/hooks/useEmployeeData';
 
 interface InformationsTabProps {
   employee: Employee;
@@ -23,6 +24,8 @@ const InformationsTab: React.FC<InformationsTabProps> = ({
   form,
   showManagerOption = true
 }) => {
+  const { employees } = useEmployeeData();
+  
   // Fonction pour formater une adresse
   const formatAddress = (address: EmployeeAddress | string): string => {
     if (typeof address === 'string') {
@@ -63,6 +66,16 @@ const InformationsTab: React.FC<InformationsTabProps> = ({
       return { street: address, city: '', postalCode: '', state: '', country: '' };
     }
     return address;
+  };
+
+  // Trouver le nom complet du manager à partir de son ID
+  const getManagerName = (managerId: string): string => {
+    if (!managerId) return 'Non spécifié';
+    
+    const manager = employees.find(emp => emp.id === managerId);
+    return manager 
+      ? `${manager.firstName} ${manager.lastName}`
+      : employee.manager || 'Non spécifié';
   };
 
   const addressComponents = getAddressComponents(employee.address);
@@ -188,18 +201,14 @@ const InformationsTab: React.FC<InformationsTabProps> = ({
             </>
           )}
           
-          {(employee.manager || employee.managerId) && (
-            <>
-              <div className="space-y-1">
-                <h4 className="text-sm font-semibold flex items-center gap-2">
-                  <User className="h-4 w-4 text-muted-foreground" />
-                  Responsable
-                </h4>
-                <p>{employee.manager || 'Non spécifié'}</p>
-              </div>
-              <Separator />
-            </>
-          )}
+          <div className="space-y-1">
+            <h4 className="text-sm font-semibold flex items-center gap-2">
+              <User className="h-4 w-4 text-muted-foreground" />
+              Responsable
+            </h4>
+            <p>{employee.managerId ? getManagerName(employee.managerId) : 'Non spécifié'}</p>
+          </div>
+          <Separator />
           
           {employee.status && (
             <>

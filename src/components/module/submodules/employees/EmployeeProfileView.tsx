@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -13,6 +14,7 @@ import { useEmployeePermissions } from './hooks/useEmployeePermissions';
 import { Button } from '@/components/ui/button';
 import { AlertCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useEmployeeData } from '@/hooks/useEmployeeData';
 
 const EmployeeProfileView: React.FC<{ employee?: Employee; isLoading?: boolean }> = ({ 
   employee,
@@ -21,6 +23,7 @@ const EmployeeProfileView: React.FC<{ employee?: Employee; isLoading?: boolean }
   const navigate = useNavigate();
   const [isEditing, setIsEditing] = useState(false);
   const [activeTab, setActiveTab] = useState('informations');
+  const { employees } = useEmployeeData();
 
   const mockEmployee: Employee = {
     id: "EMP001",
@@ -65,6 +68,23 @@ const EmployeeProfileView: React.FC<{ employee?: Employee; isLoading?: boolean }
   };
 
   const displayedEmployee = employee || mockEmployee;
+  
+  // Trouver le manager de l'employé s'il en a un
+  const findManager = () => {
+    if (!displayedEmployee.managerId || !employees || employees.length === 0) return null;
+    
+    const manager = employees.find(emp => emp.id === displayedEmployee.managerId);
+    console.log("Manager trouvé:", manager || "Aucun");
+    return manager;
+  };
+  
+  const employeeManager = findManager();
+  
+  // Si on a trouvé un manager dans les données des employés, mettre à jour le champ manager
+  const employeeWithManagerInfo = {
+    ...displayedEmployee,
+    manager: employeeManager ? `${employeeManager.firstName} ${employeeManager.lastName}` : displayedEmployee.manager,
+  };
   
   const employeeId = displayedEmployee?.id;
   
@@ -126,23 +146,23 @@ const EmployeeProfileView: React.FC<{ employee?: Employee; isLoading?: boolean }
           <div className="flex items-center justify-between">
             <div className="flex items-center">
               <div className="w-16 h-16 rounded-full mr-4 bg-gray-200 overflow-hidden">
-                {displayedEmployee.photoURL ? (
+                {employeeWithManagerInfo.photoURL ? (
                   <img 
-                    src={displayedEmployee.photoURL} 
-                    alt={`${displayedEmployee.firstName} ${displayedEmployee.lastName}`} 
+                    src={employeeWithManagerInfo.photoURL} 
+                    alt={`${employeeWithManagerInfo.firstName} ${employeeWithManagerInfo.lastName}`} 
                     className="w-full h-full object-cover"
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center bg-primary text-white text-2xl">
-                    {displayedEmployee.firstName[0]}{displayedEmployee.lastName[0]}
+                    {employeeWithManagerInfo.firstName[0]}{employeeWithManagerInfo.lastName[0]}
                   </div>
                 )}
               </div>
               <div>
                 <CardTitle className="text-2xl">
-                  {displayedEmployee.firstName} {displayedEmployee.lastName}
+                  {employeeWithManagerInfo.firstName} {employeeWithManagerInfo.lastName}
                 </CardTitle>
-                <p className="text-gray-500">{displayedEmployee.position}</p>
+                <p className="text-gray-500">{employeeWithManagerInfo.position}</p>
               </div>
             </div>
             {(canEdit || isOwnProfile) && (
@@ -169,22 +189,22 @@ const EmployeeProfileView: React.FC<{ employee?: Employee; isLoading?: boolean }
         
         <ScrollArea className="h-[calc(100vh-250px)] min-h-[600px] w-full pr-4 overflow-y-auto">
           <TabsContent value="informations">
-            <InformationsTab employee={displayedEmployee} isEditing={isEditing} onFinishEditing={handleFinishEditing} />
+            <InformationsTab employee={employeeWithManagerInfo} isEditing={isEditing} onFinishEditing={handleFinishEditing} />
           </TabsContent>
           <TabsContent value="horaires">
-            <HorairesTab employee={displayedEmployee} isEditing={isEditing} onFinishEditing={handleFinishEditing} />
+            <HorairesTab employee={employeeWithManagerInfo} isEditing={isEditing} onFinishEditing={handleFinishEditing} />
           </TabsContent>
           <TabsContent value="competences">
-            <CompetencesTab employee={displayedEmployee} onEmployeeUpdated={() => {}} isEditing={isEditing} onFinishEditing={handleFinishEditing} />
+            <CompetencesTab employee={employeeWithManagerInfo} onEmployeeUpdated={() => {}} isEditing={isEditing} onFinishEditing={handleFinishEditing} />
           </TabsContent>
           <TabsContent value="conges">
-            <CongesTab employee={displayedEmployee} isEditing={isEditing} onFinishEditing={handleFinishEditing} />
+            <CongesTab employee={employeeWithManagerInfo} isEditing={isEditing} onFinishEditing={handleFinishEditing} />
           </TabsContent>
           <TabsContent value="evaluations">
-            <EvaluationsTab employee={displayedEmployee} isEditing={isEditing} onFinishEditing={handleFinishEditing} />
+            <EvaluationsTab employee={employeeWithManagerInfo} isEditing={isEditing} onFinishEditing={handleFinishEditing} />
           </TabsContent>
           <TabsContent value="documents">
-            <DocumentsTab employee={displayedEmployee} isEditing={isEditing} onFinishEditing={handleFinishEditing} />
+            <DocumentsTab employee={employeeWithManagerInfo} isEditing={isEditing} onFinishEditing={handleFinishEditing} />
           </TabsContent>
         </ScrollArea>
       </Tabs>
