@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Clock, Save } from 'lucide-react';
@@ -32,6 +33,17 @@ const HorairesTab: React.FC<HorairesTabProps> = ({
 
   const [workSchedule, setWorkSchedule] = useState(employee.workSchedule || defaultSchedule);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Define days array before it's used
+  const days = [
+    { key: 'monday', label: 'Lundi' },
+    { key: 'tuesday', label: 'Mardi' },
+    { key: 'wednesday', label: 'Mercredi' },
+    { key: 'thursday', label: 'Jeudi' },
+    { key: 'friday', label: 'Vendredi' },
+    { key: 'saturday', label: 'Samedi' },
+    { key: 'sunday', label: 'Dimanche' }
+  ];
 
   useEffect(() => {
     setWorkSchedule(employee.workSchedule || defaultSchedule);
@@ -89,16 +101,6 @@ const HorairesTab: React.FC<HorairesTabProps> = ({
       setIsSubmitting(false);
     }
   };
-
-  const days = [
-    { key: 'monday', label: 'Lundi' },
-    { key: 'tuesday', label: 'Mardi' },
-    { key: 'wednesday', label: 'Mercredi' },
-    { key: 'thursday', label: 'Jeudi' },
-    { key: 'friday', label: 'Vendredi' },
-    { key: 'saturday', label: 'Samedi' },
-    { key: 'sunday', label: 'Dimanche' }
-  ];
 
   return (
     <Card>
