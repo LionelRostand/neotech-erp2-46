@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { DocumentFile } from '../types/document-types';
 import { Badge } from '@/components/ui/badge';
@@ -38,7 +37,7 @@ export interface SearchResultsProps {
   onSelect?: (document: DocumentFile) => void;
   selectedDocument?: DocumentFile | null;
   getDocumentIcon?: (document: DocumentFile) => React.ReactNode;
-  searchQuery?: string; // Added searchQuery as an optional prop
+  searchQuery?: string; // Search query property
 }
 
 export const SearchResults: React.FC<SearchResultsProps> = ({
@@ -79,7 +78,7 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
         <Search className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
         <h3 className="text-lg font-medium">Aucun résultat trouvé</h3>
         <p className="text-muted-foreground mt-1 mb-4">
-          Essayez de modifier vos critères de recherche
+          {searchQuery ? `Aucun document trouvé pour "${searchQuery}"` : "Essayez de modifier vos critères de recherche"}
         </p>
       </div>
     );
@@ -120,7 +119,14 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
                 <div className="flex items-center">
                   <Calendar className="h-3 w-3 mr-1 text-muted-foreground" />
                   <span className="text-sm">
-                    {format(new Date(doc.createdAt), 'PPP', { locale: fr })}
+                    {(() => {
+                      try {
+                        return format(new Date(doc.createdAt), 'PPP', { locale: fr });
+                      } catch (e) {
+                        console.error('Error formatting date:', e);
+                        return 'Date non disponible';
+                      }
+                    })()}
                   </span>
                 </div>
               </TableCell>

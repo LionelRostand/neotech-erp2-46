@@ -8,8 +8,8 @@ export interface BadgeData {
   accessLevel: string;
   status: 'success' | 'warning' | 'error' | 'pending';
   statusText: string;
-  company?: string; // Ajout de l'entreprise
-  badgeNumber?: string; // ID court pour l'employé
+  company?: string;
+  badgeNumber?: string;
 }
 
 export const generateBadgeNumber = (): string => {
@@ -24,3 +24,10 @@ export const accessLevels = [
   'Niveau 3 - Administration',
   'Niveau 4 - Direction'
 ];
+
+// Add the missing BadgesTableProps interface
+export interface BadgesTableProps {
+  badgesList: BadgeData[];
+  onBadgeClick: (badgeId: string) => void;
+  loading?: boolean;
+}

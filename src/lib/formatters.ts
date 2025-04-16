@@ -29,6 +29,11 @@ export const formatDate = (
     
     // If string is in French DD/MM/YYYY format, parse it properly
     if (typeof dateInput === 'string') {
+      // Check if string is empty or not a valid date string
+      if (!dateInput.trim()) {
+        return '';
+      }
+      
       // Check if this looks like DD/MM/YYYY format
       if (/^\d{2}\/\d{2}\/\d{4}$/.test(dateInput)) {
         const [day, month, year] = dateInput.split('/').map(Number);
@@ -38,7 +43,7 @@ export const formatDate = (
         }
       }
       
-      // Standard date parsing
+      // Standard date parsing with extra validation
       const date = new Date(dateInput);
       if (isNaN(date.getTime())) {
         console.warn('Invalid date string provided to formatDate:', dateInput);
@@ -68,6 +73,11 @@ export const formatCurrency = (
   locale: string = 'fr-FR'
 ): string => {
   try {
+    if (isNaN(value)) {
+      console.warn('Invalid number provided to formatCurrency:', value);
+      return '0,00 €';
+    }
+    
     return new Intl.NumberFormat(locale, {
       style: 'currency',
       currency
@@ -91,6 +101,11 @@ export const formatNumber = (
   locale: string = 'fr-FR'
 ): string => {
   try {
+    if (isNaN(value)) {
+      console.warn('Invalid number provided to formatNumber:', value);
+      return '0';
+    }
+    
     return new Intl.NumberFormat(locale, {
       minimumFractionDigits: decimals,
       maximumFractionDigits: decimals

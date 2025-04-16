@@ -15,17 +15,17 @@ export const DocumentsCalendar: React.FC<DocumentsCalendarProps> = ({ documents,
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [currentMonth, setCurrentMonth] = useState<Date>(new Date());
 
-  // Simple, safe date parser that won't throw on invalid dates
+  // Safely parse date strings to avoid invalid date errors
   const safeParseDate = (dateString: string | undefined): Date | null => {
     if (!dateString) return null;
     
     try {
-      // Simple validation for empty or invalid strings
+      // Check if the string is empty or invalid
       if (!dateString.trim() || dateString === 'Date non valide') {
         return null;
       }
       
-      // Check for French date format (DD/MM/YYYY)
+      // Handle French date format (DD/MM/YYYY)
       if (/^\d{2}\/\d{2}\/\d{4}$/.test(dateString)) {
         const [day, month, year] = dateString.split('/').map(Number);
         const parsedDate = new Date(year, month - 1, day);
@@ -34,14 +34,11 @@ export const DocumentsCalendar: React.FC<DocumentsCalendarProps> = ({ documents,
         }
       }
       
-      // Standard date parsing
+      // Standard date parsing with validation
       const date = new Date(dateString);
-      if (isNaN(date.getTime())) {
-        return null;
-      }
-      return date;
+      return isNaN(date.getTime()) ? null : date;
     } catch (e) {
-      console.warn('Error parsing date:', dateString);
+      console.warn('Error parsing date:', dateString, e);
       return null;
     }
   };
@@ -52,31 +49,27 @@ export const DocumentsCalendar: React.FC<DocumentsCalendarProps> = ({ documents,
       .map(doc => {
         // Try all possible date fields
         const dateStr = doc.uploadDate || doc.createdAt || doc.date;
-        if (!dateStr) return null;
         return safeParseDate(dateStr);
       })
-      .filter((date): date is Date => date !== null);
+      .filter((date): date is Date => date !== null && isValid(date));
   }, [documents]);
 
   // Create a map of dates to document counts
   const dateToDocCount = useMemo(() => {
+    const counts: Record<string, number> = {};
+    
     try {
-      return documentDates.reduce<Record<string, number>>((acc, date) => {
-        if (!date || !isValid(date)) return acc;
-        
-        try {
+      documentDates.forEach(date => {
+        if (date && isValid(date)) {
           const dateStr = format(date, 'yyyy-MM-dd');
-          acc[dateStr] = (acc[dateStr] || 0) + 1;
-        } catch (error) {
-          console.error('Error formatting date in reduce:', error);
+          counts[dateStr] = (counts[dateStr] || 0) + 1;
         }
-        
-        return acc;
-      }, {});
+      });
     } catch (error) {
       console.error('Error creating date map:', error);
-      return {};
     }
+    
+    return counts;
   }, [documentDates]);
 
   // Handle month change
@@ -96,38 +89,33 @@ export const DocumentsCalendar: React.FC<DocumentsCalendarProps> = ({ documents,
 
   // Return a custom content for each day that has documents
   const renderDay = (day: Date) => {
-    try {
-      if (!day || !isValid(day)) {
-        return <div>{day?.getDate?.() ?? '?'}</div>;
-      }
-      
-      let dateStr: string;
-      try {
-        dateStr = format(day, 'yyyy-MM-dd');
-      } catch (e) {
-        console.error('Error formatting day in renderDay:', e);
-        return <div>{day?.getDate?.() ?? '?'}</div>;
-      }
-      
-      const count = dateToDocCount[dateStr] || 0;
-      
-      return (
-        <div className="relative">
-          <div>{day.getDate()}</div>
-          {count > 0 && (
-            <Badge 
-              variant="secondary" 
-              className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center rounded-full text-[10px] p-0"
-            >
-              {count}
-            </Badge>
-          )}
-        </div>
-      );
-    } catch (e) {
-      console.error('Error rendering day:', e);
+    if (!day || !isValid(day)) {
       return <div>{day?.getDate?.() ?? '?'}</div>;
     }
+    
+    let dateStr: string;
+    try {
+      dateStr = format(day, 'yyyy-MM-dd');
+    } catch (e) {
+      console.error('Error formatting day in renderDay:', e);
+      return <div>{day?.getDate?.() ?? '?'}</div>;
+    }
+    
+    const count = dateToDocCount[dateStr] || 0;
+    
+    return (
+      <div className="relative">
+        <div>{day.getDate()}</div>
+        {count > 0 && (
+          <Badge 
+            variant="secondary" 
+            className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center rounded-full text-[10px] p-0"
+          >
+            {count}
+          </Badge>
+        )}
+      </div>
+    );
   };
 
   return (
@@ -140,7 +128,7 @@ export const DocumentsCalendar: React.FC<DocumentsCalendarProps> = ({ documents,
         locale={fr}
         month={currentMonth}
         components={{
-          Day: ({ date, displayMonth }) => {
+          Day: ({ date }) => {
             if (!date) return null;
             try {
               return renderDay(date);
