@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -32,9 +33,10 @@ const BadgePreviewDialog: React.FC<BadgePreviewDialogProps> = ({
     if (!selectedEmployee || !selectedEmployee.company) return "Entreprise";
     
     if (typeof selectedEmployee.company === 'string') {
+      const companyId = selectedEmployee.company;
       const foundCompany = companies.find(
-        company => company.id === selectedEmployee.company || 
-                   company.name.toLowerCase() === selectedEmployee.company.toLowerCase()
+        company => company.id === companyId || 
+                   company.name === companyId
       );
       return foundCompany?.name || "Entreprise";
     }
