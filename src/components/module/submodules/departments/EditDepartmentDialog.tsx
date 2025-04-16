@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { DepartmentFormData, departmentColors } from './types';
 import EmployeesList from './EmployeesList';
 import { useEmployeeData } from '@/hooks/useEmployeeData';
-import { useFirebaseCompanies } from '@/hooks/useFirebaseCompanies';
+import { useCompaniesData } from '@/hooks/useCompaniesData';
 
 interface EditDepartmentDialogProps {
   formData: DepartmentFormData;
@@ -37,9 +37,10 @@ const EditDepartmentDialog: React.FC<EditDepartmentDialogProps> = ({
   onUpdate,
 }) => {
   const { employees, isLoading } = useEmployeeData();
-  const { companies, isLoading: isLoadingCompanies } = useFirebaseCompanies();
+  const { companies, isLoading: isLoadingCompanies } = useCompaniesData();
 
   const handleCompanyChange = (value: string) => {
+    console.log("Company changed to:", value);
     onInputChange({
       target: {
         name: 'companyId',
@@ -47,6 +48,10 @@ const EditDepartmentDialog: React.FC<EditDepartmentDialogProps> = ({
       }
     } as React.ChangeEvent<HTMLInputElement>);
   };
+
+  useEffect(() => {
+    console.log("Form data in dialog:", formData);
+  }, [formData]);
 
   return (
     <DialogContent className="sm:max-w-[600px]">

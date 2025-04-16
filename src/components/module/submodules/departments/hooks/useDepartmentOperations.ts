@@ -50,6 +50,7 @@ export const useDepartmentOperations = () => {
     try {
       console.log("Current department before update:", currentDepartment);
       console.log("Form data for update:", formData);
+      console.log("Company ID being set:", formData.companyId);
       
       // Find the selected manager from all employees
       const selectedManager = formData.managerId && formData.managerId !== "none"

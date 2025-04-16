@@ -19,13 +19,15 @@ export const useDepartmentForm = (departments: Department[] = []) => {
   
   // Initialize form with department data for editing
   const initFormWithDepartment = useCallback((department: Department) => {
+    console.log("Initializing form with department:", department);
     setFormData({
       id: department.id,
       name: department.name,
       description: department.description || "",
       managerId: department.managerId || "",
       color: department.color || departmentColors[0].value,
-      employeeIds: department.employeeIds || []
+      employeeIds: department.employeeIds || [],
+      companyId: department.companyId || ""
     });
     setSelectedEmployees(department.employeeIds || []);
     setActiveTab("general");
@@ -34,6 +36,7 @@ export const useDepartmentForm = (departments: Department[] = []) => {
   // Form input handlers
   const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
+    console.log(`Changing ${name} to ${value}`);
     setFormData(prev => ({ ...prev, [name]: value }));
   }, []);
   

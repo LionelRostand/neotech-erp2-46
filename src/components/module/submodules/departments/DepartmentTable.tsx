@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Edit, Eye, Trash } from 'lucide-react';
@@ -21,10 +21,10 @@ const DepartmentTable: React.FC<DepartmentTableProps> = ({
   onDeleteDepartment, 
   onViewDepartment 
 }) => {
-  const { companies } = useCompaniesData();
+  const { companies, isLoading: isLoadingCompanies } = useCompaniesData();
 
   // Ensure departments are unique by ID
-  const uniqueDepartments = React.useMemo(() => {
+  const uniqueDepartments = useMemo(() => {
     const deptMap = new Map<string, Department>();
     departments.forEach(dept => {
       if (!deptMap.has(dept.id)) {
@@ -35,9 +35,11 @@ const DepartmentTable: React.FC<DepartmentTableProps> = ({
   }, [departments]);
 
   // Function to get company name from ID
-  const getCompanyName = (companyId: string | null) => {
+  const getCompanyName = (companyId: string | null | undefined) => {
     if (!companyId) return 'Aucune entreprise';
-    const company = companies.find(c => c.id === companyId);
+    if (isLoadingCompanies) return 'Chargement...';
+    
+    const company = companies?.find(c => c.id === companyId);
     return company ? company.name : 'Aucune entreprise';
   };
 
