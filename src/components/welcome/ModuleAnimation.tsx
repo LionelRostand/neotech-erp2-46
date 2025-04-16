@@ -10,21 +10,21 @@ interface ModuleAnimationProps {
 }
 
 const moduleColors = {
-  1: 'bg-[#8B5CF6]',        // Vivid Purple for primary
-  2: 'bg-[#0EA5E9]',        // Ocean Blue for projects
-  3: 'bg-[#F97316]',        // Bright Orange for CRM
-  4: 'bg-[#D946EF]',        // Magenta Pink for employees
-  5: 'bg-[#33C3F0]',        // Sky Blue for freight
-  6: 'bg-[#1EAEDB]',        // Bright Blue for garage
-  7: 'bg-[#6E59A5]',        // Tertiary Purple for transport
-  8: 'bg-[#7E69AB]',        // Secondary Purple for health
-  9: 'bg-[#FEC6A1]',        // Soft Orange for accounting
-  10: 'bg-[#E5DEFF]',       // Soft Purple for ecommerce
-  11: 'bg-[#D3E4FD]',       // Soft Blue for website
-  12: 'bg-[#FFDEE2]',       // Soft Pink for rentals
-  13: 'bg-[#FDE1D3]',       // Soft Peach for messages
-  14: 'bg-[#F2FCE2]',       // Soft Green for events
-  15: 'bg-[#FEF7CD]',       // Soft Yellow for library
+  1: 'bg-gradient-to-br from-[#8B5CF6] to-[#6E59A5]',  // Vibrant purple gradient
+  2: 'bg-gradient-to-br from-[#0EA5E9] to-[#1EAEDB]',  // Ocean blue gradient
+  3: 'bg-gradient-to-br from-[#F97316] to-[#FEC6A1]',  // Orange gradient
+  4: 'bg-gradient-to-br from-[#D946EF] to-[#9b87f5]',  // Magenta to purple
+  5: 'bg-gradient-to-br from-[#33C3F0] to-[#0EA5E9]',  // Sky blue gradient
+  6: 'bg-gradient-to-br from-[#7E69AB] to-[#6E59A5]',  // Deep purple gradient
+  7: 'bg-gradient-to-br from-[#F97316] to-[#FDE1D3]',  // Warm orange gradient
+  8: 'bg-gradient-to-br from-[#D946EF] to-[#E5DEFF]',  // Pink to soft purple
+  9: 'bg-gradient-to-br from-[#8B5CF6] to-[#D3E4FD]',  // Purple to soft blue
+  10: 'bg-gradient-to-br from-[#1EAEDB] to-[#33C3F0]', // Blue gradient
+  11: 'bg-gradient-to-br from-[#F97316] to-[#FEF7CD]', // Orange to yellow
+  12: 'bg-gradient-to-br from-[#6E59A5] to-[#9b87f5]', // Purple variation
+  13: 'bg-gradient-to-br from-[#0EA5E9] to-[#D3E4FD]', // Ocean to soft blue
+  14: 'bg-gradient-to-br from-[#D946EF] to-[#FDE1D3]', // Magenta to peach
+  15: 'bg-gradient-to-br from-[#33C3F0] to-[#E5DEFF]', // Sky blue to lavender
 };
 
 const ModuleAnimation = ({ installedModules, visibleModules, animationStep }: ModuleAnimationProps) => {
@@ -37,7 +37,7 @@ const ModuleAnimation = ({ installedModules, visibleModules, animationStep }: Mo
     >
       <div className="absolute inset-0 flex items-center justify-center z-20">
         <motion.div 
-          className="w-24 h-24 rounded-full bg-gradient-to-br from-[#9b87f5] to-[#D946EF] flex items-center justify-center text-gray-100 text-4xl font-bold shadow-lg"
+          className="w-24 h-24 rounded-full bg-gradient-to-br from-neotech-primary to-[#00b36b] flex items-center justify-center text-gray-900 text-4xl font-bold shadow-lg"
           animate={{ 
             scale: [1, 1.1, 1],
             rotate: [0, 5, 0, -5, 0]
@@ -82,16 +82,16 @@ const ModuleAnimation = ({ installedModules, visibleModules, animationStep }: Mo
                   y: { duration: 2 }
                 }}
               >
-                <div className="mb-2 text-2xl text-gray-100">
+                <div className="mb-2 text-2xl text-gray-900">
                   {module.icon}
                 </div>
-                <span className="text-sm font-medium text-gray-100">{module.name}</span>
-                <span className="text-xs mt-1 text-gray-200/90">Installé</span>
+                <span className="text-sm font-medium text-gray-900">{module.name}</span>
+                <span className="text-xs mt-1 text-gray-800">Installé</span>
               </motion.div>
             );
           })
         ) : (
-          <div className="absolute text-center px-8 py-4 bg-gradient-to-br from-gray-800/80 to-gray-900/80 backdrop-blur-sm rounded-xl shadow-sm">
+          <div className="absolute text-center px-8 py-4 bg-gradient-to-br from-gray-800/90 to-gray-900/90 backdrop-blur-sm rounded-xl shadow-sm">
             <p className="text-gray-200 text-lg">Aucune application installée</p>
             <p className="text-sm mt-2 text-gray-300">Utilisez le menu de navigation pour installer des applications</p>
           </div>
@@ -100,9 +100,9 @@ const ModuleAnimation = ({ installedModules, visibleModules, animationStep }: Mo
       
       {/* Background decorative elements with enhanced gradients */}
       <div className="absolute inset-0 -z-10">
-        <div className="absolute top-1/4 right-1/4 w-40 h-40 bg-gradient-to-br from-purple-500/20 to-pink-500/20 rounded-full blur-2xl"></div>
-        <div className="absolute bottom-1/3 left-1/3 w-60 h-60 bg-gradient-to-br from-blue-500/20 to-cyan-500/20 rounded-full blur-3xl"></div>
-        <div className="absolute top-2/3 right-1/3 w-40 h-40 bg-gradient-to-br from-pink-500/20 to-orange-500/20 rounded-full blur-xl"></div>
+        <div className="absolute top-1/4 right-1/4 w-40 h-40 bg-gradient-to-br from-[#8B5CF6]/30 to-[#D946EF]/30 rounded-full blur-2xl"></div>
+        <div className="absolute bottom-1/3 left-1/3 w-60 h-60 bg-gradient-to-br from-[#0EA5E9]/30 to-[#33C3F0]/30 rounded-full blur-3xl"></div>
+        <div className="absolute top-2/3 right-1/3 w-40 h-40 bg-gradient-to-br from-[#F97316]/30 to-[#FEC6A1]/30 rounded-full blur-xl"></div>
       </div>
     </motion.div>
   );
