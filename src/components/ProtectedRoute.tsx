@@ -3,6 +3,7 @@ import React from 'react';
 import { Navigate, useParams } from 'react-router-dom';
 import { usePermissions } from '@/hooks/usePermissions';
 import { Loader2 } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -17,11 +18,13 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
 }) => {
   const params = useParams();
   const { loading, isAdmin, checkPermission, hasPermission } = usePermissions(moduleId);
+  const { userData } = useAuth();
   const [hasAccess, setHasAccess] = React.useState<boolean | null>(null);
 
   React.useEffect(() => {
     const checkAccess = async () => {
-      if (isAdmin) {
+      // If user is admin by role or email, grant access
+      if (isAdmin || userData?.email === 'admin@neotech-consulting.com') {
         setHasAccess(true);
         return;
       }
@@ -42,7 +45,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     if (!loading) {
       checkAccess();
     }
-  }, [moduleId, requiredPermission, loading, isAdmin, checkPermission, hasPermission]);
+  }, [moduleId, requiredPermission, loading, isAdmin, checkPermission, hasPermission, userData?.email]);
 
   if (loading || hasAccess === null) {
     return (

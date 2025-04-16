@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { 
   Card, 
@@ -18,13 +18,14 @@ import { COLLECTIONS } from '@/lib/firebase-collections';
 import { collection, getDocs, query, where } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import EmployeesDashboardCards from './dashboard/EmployeesDashboardCards';
+import { useAuth } from '@/hooks/useAuth';
 
 export interface EmployeesProfilesProps {
   employeesProp: Employee[];
 }
 
 const EmployeesProfiles: React.FC<EmployeesProfilesProps> = ({ employeesProp }) => {
-  const { employees, isLoading, error, refetchEmployees } = useHrModuleData();
+  const { employees: dataEmployees, isLoading, error, refetchEmployees } = useHrModuleData();
   const [openCreate, setOpenCreate] = useState(false);
   const [openImport, setOpenImport] = useState(false);
   const [department, setDepartment] = useState<string>('all');
@@ -32,9 +33,19 @@ const EmployeesProfiles: React.FC<EmployeesProfilesProps> = ({ employeesProp }) 
   const [searchTerm, setSearchTerm] = useState('');
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-
+  const { userData } = useAuth();
+  
   // Use the employees from props or from the hook if props are empty
-  const employeesList = employeesProp && employeesProp.length > 0 ? employeesProp : employees;
+  const employeesList = employeesProp && employeesProp.length > 0 ? employeesProp : dataEmployees;
+
+  // Check if user is admin
+  const isAdmin = userData?.email === 'admin@neotech-consulting.com' || userData?.role === 'admin';
+
+  useEffect(() => {
+    if (isAdmin) {
+      console.log('Admin user detected, providing full access');
+    }
+  }, [isAdmin]);
 
   const filteredEmployees = employeesList.filter(employee => {
     const matchesDepartment = department === 'all' || employee.department === department;
@@ -124,10 +135,12 @@ const EmployeesProfiles: React.FC<EmployeesProfilesProps> = ({ employeesProp }) 
             <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? "animate-spin" : ""}`} />
             Actualiser
           </Button>
-          <Button onClick={handleOpenCreateDialog}>
-            <Plus className="h-4 w-4 mr-2" />
-            Nouvel employé
-          </Button>
+          {isAdmin && (
+            <Button onClick={handleOpenCreateDialog}>
+              <Plus className="h-4 w-4 mr-2" />
+              Nouvel employé
+            </Button>
+          )}
         </div>
       </div>
 
@@ -147,22 +160,27 @@ const EmployeesProfiles: React.FC<EmployeesProfilesProps> = ({ employeesProp }) 
               employees={filteredEmployees} 
               isLoading={isLoading || isDeleting} 
               onDelete={handleDeleteEmployee}
+              isAdmin={isAdmin}
             />
           </div>
         </CardContent>
       </Card>
       
-      <CreateEmployeeDialog 
-        open={openCreate} 
-        onOpenChange={setOpenCreate} 
-        onCreated={handleCreated}
-      />
-      
-      <ImportEmployeesDialog 
-        open={openImport} 
-        onOpenChange={setOpenImport} 
-        onImported={handleImported}
-      />
+      {isAdmin && (
+        <>
+          <CreateEmployeeDialog 
+            open={openCreate} 
+            onOpenChange={setOpenCreate} 
+            onCreated={handleCreated}
+          />
+          
+          <ImportEmployeesDialog 
+            open={openImport} 
+            onOpenChange={setOpenImport} 
+            onImported={handleImported}
+          />
+        </>
+      )}
     </div>
   );
 };

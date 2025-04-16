@@ -4,13 +4,21 @@ import { getUserPermissions, checkUserPermission, ModulePermissions } from '@/co
 import { useAuth } from './useAuth';
 
 export const usePermissions = (moduleId?: string) => {
-  const { currentUser, isOffline } = useAuth();
+  const { currentUser, isOffline, userData } = useAuth();
   const [loading, setLoading] = useState(true);
   const [permissions, setPermissions] = useState<{[key: string]: ModulePermissions} | null>(null);
   const [hasPermission, setHasPermission] = useState<{[key: string]: boolean}>({});
   const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
+    // Check if user is admin based on email or role
+    const adminEmail = 'admin@neotech-consulting.com';
+    if (userData?.email === adminEmail || userData?.role === 'admin') {
+      setIsAdmin(true);
+      setLoading(false);
+      return;
+    }
+
     const fetchPermissions = async () => {
       if (!currentUser?.uid) {
         setLoading(false);
@@ -37,15 +45,19 @@ export const usePermissions = (moduleId?: string) => {
     };
 
     fetchPermissions();
-  }, [currentUser?.uid]);
+  }, [currentUser?.uid, userData?.email, userData?.role]);
 
   const checkPermission = async (module: string, action: 'view' | 'create' | 'edit' | 'delete' | 'export' | 'modify') => {
+    // If user is admin, grant all permissions
+    if (isAdmin) {
+      return true;
+    }
+
     if (!currentUser?.uid) return false;
     
     if (isOffline) {
       console.log('Mode hors ligne: utilisation des permissions en cache');
       // En mode hors ligne, on utilise les permissions déjà chargées
-      if (isAdmin) return true;
       return !!permissions?.[module]?.[action];
     }
 
@@ -77,6 +89,6 @@ export const usePermissions = (moduleId?: string) => {
     loading,
     checkPermission,
     hasPermission,
-    isOffline // Add isOffline to the return object
+    isOffline
   };
 };
