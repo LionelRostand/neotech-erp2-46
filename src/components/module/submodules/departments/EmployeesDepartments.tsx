@@ -26,6 +26,7 @@ const EmployeesDepartments: React.FC = () => {
     setActiveTab,
     handleInputChange,
     handleManagerChange,
+    handleCompanyChange,
     handleColorChange,
     handleAddDepartment,
     handleEditDepartment,
@@ -63,6 +64,7 @@ const EmployeesDepartments: React.FC = () => {
           onTabChange={setActiveTab}
           onInputChange={handleInputChange}
           onManagerChange={handleManagerChange}
+          onCompanyChange={handleCompanyChange}
           onColorChange={handleColorChange}
           onEmployeeSelection={handleEmployeeSelection}
           onClose={() => setIsAddDialogOpen(false)}
@@ -79,6 +81,7 @@ const EmployeesDepartments: React.FC = () => {
           onTabChange={setActiveTab}
           onInputChange={handleInputChange}
           onManagerChange={handleManagerChange}
+          onCompanyChange={handleCompanyChange}
           onColorChange={handleColorChange}
           onEmployeeSelection={handleEmployeeSelection}
           onClose={() => setIsEditDialogOpen(false)}

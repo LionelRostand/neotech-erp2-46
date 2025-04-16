@@ -4,6 +4,39 @@ import { Department, DepartmentFormData } from '../types';
 import { Employee } from '@/types/employee';
 import { Company } from '@/components/module/submodules/companies/types';
 
+// Create an event bus for department updates
+type EventListener = () => void;
+const eventListeners: EventListener[] = [];
+
+/**
+ * Notify subscribers when departments are updated
+ * @param departments The updated departments
+ */
+export const notifyDepartmentUpdates = (departments: Department[]) => {
+  console.log(`Notifying ${eventListeners.length} subscribers about department updates`);
+  // Trigger all event listeners
+  eventListeners.forEach(listener => listener());
+};
+
+/**
+ * Subscribe to department updates
+ * @param callback Function to call when departments are updated
+ * @returns Function to unsubscribe
+ */
+export const subscribeToDepartmentUpdates = (callback: EventListener): (() => void) => {
+  console.log('New subscriber to department updates');
+  eventListeners.push(callback);
+  
+  // Return unsubscribe function
+  return () => {
+    const index = eventListeners.indexOf(callback);
+    if (index > -1) {
+      eventListeners.splice(index, 1);
+      console.log('Unsubscribed from department updates');
+    }
+  };
+};
+
 export const createEmptyFormData = (departments: Department[] = []): DepartmentFormData => {
   const deptId = `dept-${departments.length + 1}`;
 

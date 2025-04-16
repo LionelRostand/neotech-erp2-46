@@ -45,7 +45,7 @@ export const useDepartments = () => {
     const fetchDepartments = async () => {
       try {
         setLoading(true);
-        const fetchedDepartments = await departmentService.getDepartments();
+        const fetchedDepartments = await departmentService.getAll();
         setDepartments(fetchedDepartments);
       } catch (error) {
         console.error("Error fetching departments:", error);
@@ -96,7 +96,7 @@ export const useDepartments = () => {
       setIsAddDialogOpen(false);
       
       // Refresh departments list
-      const updatedDepartments = await departmentService.getDepartments();
+      const updatedDepartments = await departmentService.getAll();
       setDepartments(updatedDepartments);
     }
   }, [formData, selectedEmployees, validateForm, handleSaveDepartment, departmentService]);
@@ -111,7 +111,7 @@ export const useDepartments = () => {
       setIsEditDialogOpen(false);
       
       // Refresh departments list
-      const updatedDepartments = await departmentService.getDepartments();
+      const updatedDepartments = await departmentService.getAll();
       setDepartments(updatedDepartments);
     }
   }, [formData, selectedEmployees, currentDepartment, validateForm, handleUpdateDepartment, departmentService]);
@@ -126,7 +126,7 @@ export const useDepartments = () => {
       setIsManageEmployeesDialogOpen(false);
       
       // Refresh departments list
-      const updatedDepartments = await departmentService.getDepartments();
+      const updatedDepartments = await departmentService.getAll();
       setDepartments(updatedDepartments);
     }
   }, [currentDepartment, selectedEmployees, handleSaveEmployeeAssignments, departmentService]);
@@ -137,7 +137,7 @@ export const useDepartments = () => {
     
     if (success) {
       // Refresh departments list
-      const updatedDepartments = await departmentService.getDepartments();
+      const updatedDepartments = await departmentService.getAll();
       setDepartments(updatedDepartments);
     }
   }, [handleDeleteDepartment, departmentService]);

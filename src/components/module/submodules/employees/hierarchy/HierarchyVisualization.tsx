@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState, useCallback } from 'react';
 import { ChartNode, HierarchyNode, HierarchyVisualizationProps } from './types';
 import { convertToChartNode, nodeMatchesSearch } from './utils/hierarchyUtils';

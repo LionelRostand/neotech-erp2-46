@@ -1,4 +1,3 @@
-
 import { useHrModuleData } from './useHrModuleData';
 import { useMemo } from 'react';
 
@@ -13,7 +12,7 @@ export const useEmployeeContract = (employeeId: string) => {
     
     // Get salary from employee record (may be undefined)
     // Use optional chaining to safely access salary property
-    const employeeSalary = employee?.salary ?? 0;
+    const employeeSalary = employee?.salary || 0;
     
     // Récupérer le contrat actif le plus récent de l'employé
     const activeContracts = contracts
