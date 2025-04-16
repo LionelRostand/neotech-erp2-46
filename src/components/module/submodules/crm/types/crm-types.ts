@@ -21,6 +21,8 @@ export interface Prospect {
   address?: string;
   size?: string;
   estimatedValue?: number;
+  convertedAt?: string;
+  convertedToClientId?: string;
 }
 
 export interface ProspectFormData {
@@ -69,6 +71,9 @@ export interface Client {
   updatedAt: string;
   totalSpent?: number;
   assignedTo?: string;
+  sector?: string;
+  revenue?: string;
+  customerSince?: string;
 }
 
 export interface ClientFormData {
@@ -85,6 +90,8 @@ export interface ClientFormData {
   notes?: string;
   status: string;
   assignedTo?: string;
+  sector?: string;
+  revenue?: string;
 }
 
 // CRM Opportunity types
@@ -120,6 +127,7 @@ export interface Opportunity {
   assignedTo?: string;
   ownerName?: string;
   nextContact?: string;
+  prospectId?: string;
 }
 
 export interface OpportunityFormData {
@@ -139,4 +147,7 @@ export interface OpportunityFormData {
   source?: string;
   notes?: string;
   assignedTo?: string;
+  prospectId?: string;
+  ownerName?: string;
+  nextContact?: string;
 }

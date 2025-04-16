@@ -29,6 +29,7 @@ export const useProspectActions = (
         website: data.website,
         address: data.address,
         size: data.size,
+        lastContact: data.lastContact || new Date().toISOString().split('T')[0],
         estimatedValue: typeof data.estimatedValue === 'string' ? 
           parseFloat(data.estimatedValue) || 0 : 
           (data.estimatedValue || 0),

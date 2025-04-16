@@ -12,8 +12,8 @@ export const useEmployeeContract = (employeeId: string) => {
     const employee = employees?.find(emp => emp.id === employeeId);
     
     // Get salary from employee record (may be undefined)
-    // Use optional chaining to safely access salary property
-    const employeeSalary = employee && 'salary' in employee ? employee.salary : 0;
+    // Check if employee exists and if it has a salary property
+    const employeeSalary = employee && employee.salary !== undefined ? employee.salary : 0;
     
     // Récupérer le contrat actif le plus récent de l'employé
     const activeContracts = contracts

@@ -1,4 +1,3 @@
-
 import { v4 as uuidv4 } from 'uuid';
 import { Department, DepartmentFormData } from '../components/module/submodules/departments/types';
 import { Employee } from '@/types/employee';
@@ -44,7 +43,7 @@ export const createEmployee = async (employeeData: Partial<Employee>): Promise<E
     const employeeId = `emp-${uuidv4().substring(0, 8)}`;
     
     // Create a new employee object
-    const newEmployee: Employee = {
+    const newEmployee = {
       id: employeeId,
       firstName: employeeData.firstName || '',
       lastName: employeeData.lastName || '',
@@ -54,7 +53,6 @@ export const createEmployee = async (employeeData: Partial<Employee>): Promise<E
       department: employeeData.department || null,
       hireDate: employeeData.hireDate || new Date().toISOString(),
       isManager: employeeData.isManager || false,
-      isActive: employeeData.isActive !== undefined ? employeeData.isActive : true,
       managerId: employeeData.managerId || null,
       address: employeeData.address || '',
       birthDate: employeeData.birthDate || null,
@@ -62,11 +60,11 @@ export const createEmployee = async (employeeData: Partial<Employee>): Promise<E
       status: employeeData.status || 'active',
       gender: employeeData.gender || 'unknown',
       skills: employeeData.skills || [],
-      contracts: employeeData.contracts || [],
+      contract: employeeData.contract || null,
       salary: employeeData.salary || 0,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
-    };
+    } as Employee;
     
     console.log('Created new employee:', newEmployee);
     
@@ -83,7 +81,7 @@ export const updateEmployeeDoc = async (id: string, employeeData: Partial<Employ
   try {
     // In a real app, this would update the database
     // For now, we just return a merged employee object
-    const updatedEmployee: Employee = {
+    const updatedEmployee = {
       id,
       firstName: employeeData.firstName || '',
       lastName: employeeData.lastName || '',
@@ -93,7 +91,6 @@ export const updateEmployeeDoc = async (id: string, employeeData: Partial<Employ
       department: employeeData.department || null,
       hireDate: employeeData.hireDate || new Date().toISOString(),
       isManager: employeeData.isManager || false,
-      isActive: employeeData.isActive !== undefined ? employeeData.isActive : true,
       managerId: employeeData.managerId || null,
       address: employeeData.address || '',
       birthDate: employeeData.birthDate || null,
@@ -101,11 +98,11 @@ export const updateEmployeeDoc = async (id: string, employeeData: Partial<Employ
       status: employeeData.status || 'active',
       gender: employeeData.gender || 'unknown',
       skills: employeeData.skills || [],
-      contracts: employeeData.contracts || [],
+      contract: employeeData.contract || null,
       salary: employeeData.salary || 0,
       createdAt: employeeData.createdAt || new Date().toISOString(),
       updatedAt: new Date().toISOString()
-    };
+    } as Employee;
     
     console.log('Updated employee:', updatedEmployee);
     

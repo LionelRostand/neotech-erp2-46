@@ -1,89 +1,68 @@
 
 import { Prospect } from '../types/crm-types';
 
-export const mockProspects: Prospect[] = [
+// Add mock prospects data
+const mockProspectsData: Prospect[] = [
   {
-    id: '1',
-    name: 'Tech Innovations',
-    company: 'Tech Innovations',
-    contactName: 'Pierre Dupont',
-    contactEmail: 'pierre@techinnovations.fr',
-    contactPhone: '01 23 45 67 89',
-    email: 'info@techinnovations.fr',
-    phone: '01 23 45 67 89',
-    status: 'new',
-    source: 'website',
-    industry: 'technology',
-    website: 'www.techinnovations.fr',
-    address: '123 Boulevard de l\'Innovation, Paris',
-    size: 'medium',
-    estimatedValue: 25000,
-    notes: 'Prospect intéressé par notre solution CRM',
-    createdAt: '2023-01-15'
-  },
-  {
-    id: '2',
-    name: 'Green Solutions',
-    company: 'Green Solutions',
-    contactName: 'Marie Lambert',
-    contactEmail: 'marie@greensolutions.fr',
-    contactPhone: '01 98 76 54 32',
-    email: 'contact@greensolutions.fr',
-    phone: '01 98 76 54 32',
-    status: 'contacted',
-    source: 'linkedin',
-    industry: 'environmental',
-    website: 'www.greensolutions.fr',
-    address: '456 Rue de l\'Écologie, Lyon',
-    size: 'small',
+    id: "mock-prospect-1",
+    name: "TechInnovate",
+    company: "TechInnovate SAS",
+    contactName: "Jean Martin",
+    contactEmail: "jmartin@techinnovate.fr",
+    contactPhone: "01 23 45 67 89",
+    email: "contact@techinnovate.fr",
+    phone: "01 23 45 67 88",
+    status: "new",
+    source: "website",
+    industry: "tech",
+    website: "www.techinnovate.fr",
+    address: "15 rue de l'Innovation, 75001 Paris",
+    size: "50-100",
+    notes: "Intéressé par nos solutions de CRM",
+    lastContact: "2023-04-15",
     estimatedValue: 15000,
-    notes: 'Premier contact effectué, en attente de retour',
-    createdAt: '2023-02-20'
+    createdAt: "2023-04-10"
   },
   {
-    id: '3',
-    name: 'Global Finance',
-    company: 'Global Finance',
-    contactName: 'Julien Martin',
-    contactEmail: 'julien@globalfinance.fr',
-    contactPhone: '01 45 67 89 01',
-    email: 'info@globalfinance.fr',
-    phone: '01 45 67 89 01',
-    status: 'meeting',
-    source: 'referral',
-    industry: 'finance',
-    website: 'www.globalfinance.fr',
-    address: '789 Avenue des Finances, Bordeaux',
-    size: 'large',
+    id: "mock-prospect-2",
+    name: "GreenEnergy",
+    company: "GreenEnergy SA",
+    contactName: "Sophie Dubois",
+    contactEmail: "sophie.dubois@greenenergy.com",
+    contactPhone: "01 23 45 67 90",
+    email: "info@greenenergy.com",
+    phone: "01 23 45 67 91",
+    status: "contacted",
+    source: "referral",
+    industry: "energy",
+    website: "www.greenenergy.com",
+    address: "8 avenue Verte, 75008 Paris",
+    size: "100-500",
+    notes: "Rendez-vous prévu pour le mois prochain",
+    lastContact: "2023-05-20",
     estimatedValue: 50000,
-    notes: 'Rendez-vous programmé pour la semaine prochaine',
-    createdAt: '2023-03-10'
+    createdAt: "2023-05-15"
+  },
+  {
+    id: "mock-prospect-3",
+    name: "HealthPlus",
+    company: "HealthPlus SARL",
+    contactName: "Pierre Lambert",
+    contactEmail: "pierre.lambert@healthplus.fr",
+    contactPhone: "01 23 45 67 92",
+    email: "contact@healthplus.fr",
+    phone: "01 23 45 67 93",
+    status: "qualified",
+    source: "tradeshow",
+    industry: "healthcare",
+    website: "www.healthplus.fr",
+    address: "25 rue de la Santé, 69002 Lyon",
+    size: "10-50",
+    notes: "A participé à notre dernier webinaire",
+    lastContact: "2023-06-05",
+    estimatedValue: 25000,
+    createdAt: "2023-05-30"
   }
 ];
 
-// This data can be used to seed the Firestore collection
-// Example code to seed Firestore (to be run once):
-/*
-import { collection, addDoc } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
-import { COLLECTIONS } from '@/lib/firebase-collections';
-
-export const seedProspectsToFirestore = async () => {
-  try {
-    const prospectsCollection = collection(db, COLLECTIONS.CRM.PROSPECTS);
-    
-    for (const prospect of mockProspects) {
-      const { id, ...prospectData } = prospect;
-      await addDoc(prospectsCollection, {
-        ...prospectData,
-        createdAt: new Date(prospectData.createdAt),
-        updatedAt: new Date()
-      });
-    }
-    
-    console.log('Seeded prospects to Firestore successfully');
-  } catch (error) {
-    console.error('Error seeding prospects to Firestore:', error);
-  }
-};
-*/
+export default mockProspectsData;
