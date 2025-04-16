@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { 
   Card, 
@@ -13,18 +13,17 @@ import CreateEmployeeDialog from './CreateEmployeeDialog';
 import ImportEmployeesDialog from './ImportEmployeesDialog';
 import { toast } from 'sonner';
 import { Employee } from '@/types/employee';
-import { safelyGetDocumentId } from '@/hooks/firestore/common-utils';
-import EmployeesDashboardCards from './dashboard/EmployeesDashboardCards';
 import { deleteDocument } from '@/hooks/firestore/delete-operations';
 import { COLLECTIONS } from '@/lib/firebase-collections';
 import { collection, getDocs, query, where } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import EmployeesDashboardCards from './dashboard/EmployeesDashboardCards';
 
 export interface EmployeesProfilesProps {
   employees: Employee[];
 }
 
-const EmployeesProfiles: React.FC<EmployeesProfilesProps> = ({ employees }) => {
+const EmployeesProfiles: React.FC<EmployeesProfilesProps> = ({ employees: propEmployees }) => {
   const { isLoading, error, refetchEmployees } = useHrModuleData();
   const [openCreate, setOpenCreate] = useState(false);
   const [openImport, setOpenImport] = useState(false);
@@ -34,7 +33,7 @@ const EmployeesProfiles: React.FC<EmployeesProfilesProps> = ({ employees }) => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  const filteredEmployees = employees.filter(employee => {
+  const filteredEmployees = propEmployees.filter(employee => {
     const matchesDepartment = department === 'all' || employee.department === department;
     const matchesStatus = status === 'all' || employee.status === status;
     const matchesSearch = 
@@ -142,7 +141,7 @@ const EmployeesProfiles: React.FC<EmployeesProfilesProps> = ({ employees }) => {
           
           <div className="mt-6">
             <EmployeeTable 
-              employees={filteredEmployees as Employee[]} 
+              employees={filteredEmployees} 
               isLoading={isLoading || isDeleting} 
               onDelete={handleDeleteEmployee}
             />
