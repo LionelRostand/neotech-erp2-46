@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -15,11 +16,15 @@ import { toast } from 'sonner';
 interface EmployeeDetailsProps {
   employee?: Employee;
   isLoading?: boolean;
+  onExportPdf?: () => void;  // Added missing prop
+  onEdit?: () => void;       // Added missing prop
 }
 
 const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({ 
   employee,
-  isLoading = false
+  isLoading = false,
+  onExportPdf,
+  onEdit
 }) => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('informations');
@@ -31,6 +36,11 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
   const handleStartEditing = () => {
     setIsEditing(true);
     toast.info(`Mode édition activé pour l'onglet ${getTabName(activeTab)}`);
+    
+    // Call the onEdit callback if provided
+    if (onEdit) {
+      onEdit();
+    }
   };
 
   const handleFinishEditing = () => {
@@ -163,6 +173,11 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
 
       {(canEdit || isOwnProfile) && (
         <div className="flex justify-end gap-3 mt-6">
+          {onExportPdf && (
+            <Button variant="outline" onClick={onExportPdf} className="mr-2">
+              Exporter PDF
+            </Button>
+          )}
           <Button variant={isEditing ? "default" : "outline"} onClick={isEditing ? handleFinishEditing : handleStartEditing}>
             {isEditing ? "Terminer" : "Modifier"}
           </Button>
