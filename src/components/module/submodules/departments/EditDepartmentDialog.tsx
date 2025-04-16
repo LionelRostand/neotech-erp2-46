@@ -39,6 +39,15 @@ const EditDepartmentDialog: React.FC<EditDepartmentDialogProps> = ({
   const { employees, isLoading } = useEmployeeData();
   const { companies, isLoading: isLoadingCompanies } = useFirebaseCompanies();
 
+  const handleCompanyChange = (value: string) => {
+    onInputChange({
+      target: {
+        name: 'companyId',
+        value: value === 'none' ? '' : value
+      }
+    } as React.ChangeEvent<HTMLInputElement>);
+  };
+
   return (
     <DialogContent className="sm:max-w-[600px]">
       <DialogHeader>
@@ -75,12 +84,7 @@ const EditDepartmentDialog: React.FC<EditDepartmentDialogProps> = ({
             <div className="col-span-3">
               <Select 
                 value={formData.companyId || "none"} 
-                onValueChange={(value) => onInputChange({ 
-                  target: { 
-                    name: 'companyId', 
-                    value: value === 'none' ? '' : value 
-                  } 
-                } as React.ChangeEvent<HTMLInputElement>)}
+                onValueChange={handleCompanyChange}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Sélectionner une entreprise" />
