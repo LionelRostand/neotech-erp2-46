@@ -20,7 +20,7 @@ export const usePayslipsData = () => {
       return {
         ...payslip,
         employeeName: employee ? `${employee.firstName} ${employee.lastName}` : 'Employé inconnu',
-        // Add fileData as a correctly typed property to fix the url error
+        // Add fileData as a correctly typed property to fix the error
         fileData: payslip.fileData || null,
       };
     });

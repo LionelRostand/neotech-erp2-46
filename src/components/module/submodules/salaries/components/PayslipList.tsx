@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card } from '@/components/ui/card';
 import { PaySlip } from '@/types/payslip';
@@ -42,7 +43,7 @@ const PayslipList = () => {
         type: 'Fiche de paie',
         date: payslip.paymentDate,
         employeeId: payslip.employeeId,
-        fileData: payslip.fileData || null // Use fileData instead of url
+        fileData: payslip.fileData || null // This line is now type-safe
       };
 
       await saveEmployeeDocument(payslip.employeeId, document);
