@@ -7,6 +7,9 @@ import { MapPin, Building, Phone, Mail, Briefcase, UserCheck, User } from 'lucid
 import ManagerCheckbox from '../form/ManagerCheckbox';
 import { UseFormReturn } from 'react-hook-form';
 import { EmployeeFormValues } from '../form/employeeFormSchema';
+import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 
 interface InformationsTabProps {
   employee: Employee;
@@ -67,9 +70,29 @@ const InformationsTab: React.FC<InformationsTabProps> = ({
 
   const addressComponents = getAddressComponents(employee.address);
 
-  console.log('Affichage des informations de l\'employé:', employee);
-  console.log('Composants d\'adresse:', addressComponents);
-  console.log('Form disponible:', !!form, 'showManagerOption:', showManagerOption);
+  // Rendre les champs en mode édition ou les informations en mode lecture seule
+  const renderViewOrEditField = (isEditMode: boolean, fieldType: string, fieldValue: string, formField?: string) => {
+    if (!isEditMode) {
+      return <p>{fieldValue || 'Non renseigné'}</p>;
+    }
+
+    if (!form || !formField) return null;
+
+    return (
+      <FormField
+        control={form.control}
+        name={formField}
+        render={({ field }) => (
+          <FormItem>
+            <FormControl>
+              <Input {...field} type={fieldType} placeholder={fieldValue} />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+    );
+  };
 
   return (
     <div className="space-y-6">
@@ -80,7 +103,14 @@ const InformationsTab: React.FC<InformationsTabProps> = ({
         <CardContent className="space-y-4">
           <div className="space-y-1">
             <h4 className="text-sm font-semibold">Nom complet</h4>
-            <p>{employee.firstName} {employee.lastName}</p>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                {renderViewOrEditField(isEditing, 'text', employee.firstName, 'firstName')}
+              </div>
+              <div>
+                {renderViewOrEditField(isEditing, 'text', employee.lastName, 'lastName')}
+              </div>
+            </div>
           </div>
           <Separator />
           
@@ -89,7 +119,7 @@ const InformationsTab: React.FC<InformationsTabProps> = ({
               <Mail className="h-4 w-4 text-muted-foreground" />
               Email
             </h4>
-            <p>{employee.email}</p>
+            {renderViewOrEditField(isEditing, 'email', employee.email, 'email')}
           </div>
           <Separator />
           
@@ -98,7 +128,7 @@ const InformationsTab: React.FC<InformationsTabProps> = ({
               <Phone className="h-4 w-4 text-muted-foreground" />
               Téléphone
             </h4>
-            <p>{employee.phone || 'Non renseigné'}</p>
+            {renderViewOrEditField(isEditing, 'tel', employee.phone || '', 'phone')}
           </div>
           <Separator />
           
@@ -108,43 +138,121 @@ const InformationsTab: React.FC<InformationsTabProps> = ({
               Adresse
             </h4>
             
-            {typeof employee.address === 'object' ? (
-              <div className="grid grid-cols-1 gap-2">
-                {addressComponents.street && (
-                  <div>
-                    <p className="text-sm text-muted-foreground">Rue</p>
-                    <p>{addressComponents.street}</p>
-                  </div>
-                )}
+            {isEditing ? (
+              <div className="grid grid-cols-1 gap-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={form?.control}
+                    name="streetNumber"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Numéro de rue</FormLabel>
+                        <FormControl>
+                          <Input placeholder="123" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form?.control}
+                    name="streetName"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Nom de rue</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Rue de l'exemple" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
                 
                 <div className="grid grid-cols-2 gap-4">
-                  {addressComponents.postalCode && (
+                  <FormField
+                    control={form?.control}
+                    name="city"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Ville</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Paris" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form?.control}
+                    name="zipCode"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Code postal</FormLabel>
+                        <FormControl>
+                          <Input placeholder="75000" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                
+                <FormField
+                  control={form?.control}
+                  name="region"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Département</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Île-de-France" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            ) : (
+              typeof employee.address === 'object' ? (
+                <div className="grid grid-cols-1 gap-2">
+                  {addressComponents.street && (
                     <div>
-                      <p className="text-sm text-muted-foreground">Code postal</p>
-                      <p>{addressComponents.postalCode}</p>
+                      <p className="text-sm text-muted-foreground">Rue</p>
+                      <p>{addressComponents.street}</p>
                     </div>
                   )}
                   
-                  {addressComponents.city && (
+                  <div className="grid grid-cols-2 gap-4">
+                    {addressComponents.postalCode && (
+                      <div>
+                        <p className="text-sm text-muted-foreground">Code postal</p>
+                        <p>{addressComponents.postalCode}</p>
+                      </div>
+                    )}
+                    
+                    {addressComponents.city && (
+                      <div>
+                        <p className="text-sm text-muted-foreground">Ville</p>
+                        <p>{addressComponents.city}</p>
+                      </div>
+                    )}
+                  </div>
+                  
+                  {addressComponents.state && (
                     <div>
-                      <p className="text-sm text-muted-foreground">Ville</p>
-                      <p>{addressComponents.city}</p>
+                      <p className="text-sm text-muted-foreground flex items-center gap-2">
+                        <Building className="h-4 w-4 text-muted-foreground" />
+                        Département
+                      </p>
+                      <p>{addressComponents.state}</p>
                     </div>
                   )}
                 </div>
-                
-                {addressComponents.state && (
-                  <div>
-                    <p className="text-sm text-muted-foreground flex items-center gap-2">
-                      <Building className="h-4 w-4 text-muted-foreground" />
-                      Département
-                    </p>
-                    <p>{addressComponents.state}</p>
-                  </div>
-                )}
-              </div>
-            ) : (
-              <p>{formatAddress(employee.address)}</p>
+              ) : (
+                <p>{formatAddress(employee.address)}</p>
+              )
             )}
           </div>
         </CardContent>
@@ -155,61 +263,116 @@ const InformationsTab: React.FC<InformationsTabProps> = ({
           <CardTitle>Informations professionnelles</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          {employee.position && (
-            <>
-              <div className="space-y-1">
-                <h4 className="text-sm font-semibold flex items-center gap-2">
-                  <Briefcase className="h-4 w-4 text-muted-foreground" />
-                  Poste
-                </h4>
-                <p>{employee.position}</p>
-              </div>
-              <Separator />
-            </>
-          )}
+          <div className="space-y-1">
+            <h4 className="text-sm font-semibold flex items-center gap-2">
+              <Briefcase className="h-4 w-4 text-muted-foreground" />
+              Poste
+            </h4>
+            {renderViewOrEditField(isEditing, 'text', employee.position || '', 'position')}
+          </div>
+          <Separator />
           
-          {employee.department && (
-            <>
-              <div className="space-y-1">
-                <h4 className="text-sm font-semibold">Département</h4>
-                <p>{employee.department}</p>
-              </div>
-              <Separator />
-            </>
-          )}
+          <div className="space-y-1">
+            <h4 className="text-sm font-semibold">Département</h4>
+            {renderViewOrEditField(isEditing, 'text', employee.department || '', 'department')}
+          </div>
+          <Separator />
           
-          {employee.contract && (
-            <>
-              <div className="space-y-1">
-                <h4 className="text-sm font-semibold">Type de contrat</h4>
-                <p>{employee.contract}</p>
-              </div>
-              <Separator />
-            </>
-          )}
+          <div className="space-y-1">
+            <h4 className="text-sm font-semibold">Type de contrat</h4>
+            {isEditing && form ? (
+              <FormField
+                control={form.control}
+                name="contract"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormControl>
+                      <Select 
+                        onValueChange={field.onChange} 
+                        defaultValue={field.value}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Sélectionner un type de contrat" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="CDI">CDI</SelectItem>
+                          <SelectItem value="CDD">CDD</SelectItem>
+                          <SelectItem value="Intérim">Intérim</SelectItem>
+                          <SelectItem value="Stage">Stage</SelectItem>
+                          <SelectItem value="Alternance">Alternance</SelectItem>
+                          <SelectItem value="Freelance">Freelance</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            ) : (
+              <p>{employee.contract || 'Non spécifié'}</p>
+            )}
+          </div>
+          <Separator />
           
-          {(employee.manager || employee.managerId) && (
-            <>
-              <div className="space-y-1">
-                <h4 className="text-sm font-semibold flex items-center gap-2">
-                  <User className="h-4 w-4 text-muted-foreground" />
-                  Responsable
-                </h4>
-                <p>{employee.manager || 'Non spécifié'}</p>
-              </div>
-              <Separator />
-            </>
-          )}
+          <div className="space-y-1">
+            <h4 className="text-sm font-semibold flex items-center gap-2">
+              <User className="h-4 w-4 text-muted-foreground" />
+              Responsable
+            </h4>
+            {isEditing && form ? (
+              <FormField
+                control={form.control}
+                name="managerId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormControl>
+                      <Input {...field} placeholder="ID du responsable" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            ) : (
+              <p>{employee.manager || 'Non spécifié'}</p>
+            )}
+          </div>
+          <Separator />
           
-          {employee.status && (
-            <>
-              <div className="space-y-1">
-                <h4 className="text-sm font-semibold">Statut</h4>
-                <p>{employee.status}</p>
-              </div>
-              <Separator />
-            </>
-          )}
+          <div className="space-y-1">
+            <h4 className="text-sm font-semibold">Statut</h4>
+            {isEditing && form ? (
+              <FormField
+                control={form.control}
+                name="status"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormControl>
+                      <Select 
+                        onValueChange={field.onChange} 
+                        defaultValue={field.value}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Sélectionner un statut" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="active">Actif</SelectItem>
+                          <SelectItem value="inactive">Inactif</SelectItem>
+                          <SelectItem value="onLeave">En congé</SelectItem>
+                          <SelectItem value="Actif">Actif</SelectItem>
+                          <SelectItem value="Inactif">Inactif</SelectItem>
+                          <SelectItem value="En congé">En congé</SelectItem>
+                          <SelectItem value="Suspendu">Suspendu</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            ) : (
+              <p>{employee.status}</p>
+            )}
+          </div>
           
           {form && showManagerOption && (
             <div className="mt-4">

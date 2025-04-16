@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Employee } from '@/types/employee';
@@ -9,14 +9,23 @@ import CompetencesTab from './tabs/CompetencesTab';
 import CongesTab from './tabs/CongesTab';
 import { useEmployeePermissions } from './hooks/useEmployeePermissions';
 import { Button } from '@/components/ui/button';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, Edit, Save } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useEmployeeService } from '@/hooks/useEmployeeService';
+import { toast } from 'sonner';
+import { useForm } from 'react-hook-form';
+import { employeeFormSchema, EmployeeFormValues } from './form/employeeFormSchema';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Form } from '@/components/ui/form';
 
 const EmployeeProfileView: React.FC<{ employee?: Employee; isLoading?: boolean }> = ({ 
   employee,
   isLoading = false
 }) => {
   const navigate = useNavigate();
+  const [isEditing, setIsEditing] = useState(false);
+  const { updateEmployee, isLoading: isUpdating } = useEmployeeService();
+  
   const mockEmployee: Employee = {
     id: "EMP001",
     firstName: "Martin",
@@ -67,6 +76,63 @@ const EmployeeProfileView: React.FC<{ employee?: Employee; isLoading?: boolean }
   
   // Use the useEmployeePermissions hook with the module ID and employee ID
   const { canView, canEdit, isOwnProfile, loading } = useEmployeePermissions('employees-profiles', employeeId);
+
+  // Initialize form with employee data
+  const form = useForm<EmployeeFormValues>({
+    resolver: zodResolver(employeeFormSchema),
+    defaultValues: {
+      firstName: displayedEmployee.firstName,
+      lastName: displayedEmployee.lastName,
+      email: displayedEmployee.email,
+      phone: displayedEmployee.phone || '',
+      position: displayedEmployee.position || '',
+      department: displayedEmployee.department || '',
+      streetNumber: typeof displayedEmployee.address === 'object' ? displayedEmployee.address.street?.split(' ')[0] || '' : '',
+      streetName: typeof displayedEmployee.address === 'object' ? displayedEmployee.address.street?.split(' ').slice(1).join(' ') || '' : '',
+      city: typeof displayedEmployee.address === 'object' ? displayedEmployee.address.city || '' : '',
+      zipCode: typeof displayedEmployee.address === 'object' ? displayedEmployee.address.postalCode || '' : '',
+      region: typeof displayedEmployee.address === 'object' ? displayedEmployee.address.state || '' : '',
+      contract: displayedEmployee.contract || '',
+      status: displayedEmployee.status,
+      managerId: displayedEmployee.managerId || '',
+      forceManager: displayedEmployee.isManager || false,
+    }
+  });
+
+  // Handle form submission
+  const handleSubmit = async (values: EmployeeFormValues) => {
+    try {
+      // Create address object from form values
+      const address = {
+        street: `${values.streetNumber} ${values.streetName}`.trim(),
+        city: values.city,
+        postalCode: values.zipCode,
+        country: 'France',
+        state: values.region
+      };
+
+      // Prepare update data
+      const updateData = {
+        ...values,
+        address
+      };
+
+      // Update employee
+      if (employeeId) {
+        await updateEmployee(employeeId, updateData);
+        setIsEditing(false);
+        toast.success('Informations de l\'employé mises à jour avec succès');
+      }
+    } catch (error) {
+      console.error('Error updating employee:', error);
+      toast.error('Erreur lors de la mise à jour des informations');
+    }
+  };
+
+  // Toggle edit mode
+  const toggleEditMode = () => {
+    setIsEditing(!isEditing);
+  };
 
   // If employee data is loading or permission check is in progress
   if (isLoading || loading) {
@@ -135,30 +201,79 @@ const EmployeeProfileView: React.FC<{ employee?: Employee; isLoading?: boolean }
               </CardTitle>
               <p className="text-gray-500">{displayedEmployee.position}</p>
             </div>
+            {(canEdit || isOwnProfile) && (
+              <Button 
+                variant={isEditing ? "default" : "outline"} 
+                className="ml-auto"
+                onClick={toggleEditMode}
+                disabled={isUpdating}
+              >
+                {isEditing ? (
+                  <>
+                    <Save className="h-4 w-4 mr-2" />
+                    Terminer
+                  </>
+                ) : (
+                  <>
+                    <Edit className="h-4 w-4 mr-2" />
+                    Modifier
+                  </>
+                )}
+              </Button>
+            )}
           </div>
         </CardHeader>
       </Card>
 
-      <Tabs defaultValue="informations" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="informations">Informations</TabsTrigger>
-          <TabsTrigger value="horaires">Horaires et présence</TabsTrigger>
-          <TabsTrigger value="competences">Compétences</TabsTrigger>
-          <TabsTrigger value="conges">Congés</TabsTrigger>
-        </TabsList>
-        <TabsContent value="informations">
-          <InformationsTab employee={displayedEmployee} />
-        </TabsContent>
-        <TabsContent value="horaires">
-          <HorairesTab employee={displayedEmployee} isEditing={false} onFinishEditing={() => {}} />
-        </TabsContent>
-        <TabsContent value="competences">
-          <CompetencesTab employee={displayedEmployee} onEmployeeUpdated={() => {}} />
-        </TabsContent>
-        <TabsContent value="conges">
-          <CongesTab employee={displayedEmployee} />
-        </TabsContent>
-      </Tabs>
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(handleSubmit)}>
+          <Tabs defaultValue="informations" className="w-full">
+            <TabsList className="grid w-full grid-cols-4">
+              <TabsTrigger value="informations">Informations</TabsTrigger>
+              <TabsTrigger value="horaires">Horaires et présence</TabsTrigger>
+              <TabsTrigger value="competences">Compétences</TabsTrigger>
+              <TabsTrigger value="conges">Congés</TabsTrigger>
+            </TabsList>
+            <TabsContent value="informations">
+              <InformationsTab 
+                employee={displayedEmployee} 
+                isEditing={isEditing}
+                onFinishEditing={() => setIsEditing(false)}
+                form={form}
+                showManagerOption={true}
+              />
+            </TabsContent>
+            <TabsContent value="horaires">
+              <HorairesTab employee={displayedEmployee} isEditing={false} onFinishEditing={() => {}} />
+            </TabsContent>
+            <TabsContent value="competences">
+              <CompetencesTab employee={displayedEmployee} onEmployeeUpdated={() => {}} />
+            </TabsContent>
+            <TabsContent value="conges">
+              <CongesTab employee={displayedEmployee} />
+            </TabsContent>
+          </Tabs>
+          
+          {isEditing && (
+            <div className="flex justify-end mt-6">
+              <Button 
+                type="button" 
+                variant="outline" 
+                className="mr-2"
+                onClick={() => setIsEditing(false)}
+              >
+                Annuler
+              </Button>
+              <Button 
+                type="submit" 
+                disabled={isUpdating}
+              >
+                {isUpdating ? 'Enregistrement...' : 'Enregistrer les modifications'}
+              </Button>
+            </div>
+          )}
+        </form>
+      </Form>
     </div>
   );
 };
