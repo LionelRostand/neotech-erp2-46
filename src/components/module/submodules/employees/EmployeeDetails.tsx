@@ -9,15 +9,15 @@ import HorairesTab from './tabs/HorairesTab';
 import CompetencesTab from './tabs/CompetencesTab';
 import CongesTab from './tabs/CongesTab';
 import { useEmployeePermissions } from './hooks/useEmployeePermissions';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, User } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 
 interface EmployeeDetailsProps {
   employee?: Employee;
   isLoading?: boolean;
-  onExportPdf?: () => void;  // Added missing prop
-  onEdit?: () => void;       // Added missing prop
+  onExportPdf?: () => void;
+  onEdit?: () => void;
 }
 
 const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({ 
@@ -29,15 +29,12 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('informations');
   const [isEditing, setIsEditing] = useState(false);
-  const [updatedEmployee, setUpdatedEmployee] = useState<Employee | undefined>(employee);
 
   const { canView, canEdit, isOwnProfile } = useEmployeePermissions('employees-profiles', employee?.id);
 
   const handleStartEditing = () => {
     setIsEditing(true);
     toast.info(`Mode édition activé pour l'onglet ${getTabName(activeTab)}`);
-    
-    // Call the onEdit callback if provided
     if (onEdit) {
       onEdit();
     }
@@ -105,25 +102,31 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
     <div className="space-y-6">
       <Card>
         <CardHeader className="pb-3">
-          <div className="flex items-center">
-            <div className="w-16 h-16 rounded-full mr-4 bg-gray-200 overflow-hidden">
-              {employee.photoURL ? (
-                <img 
-                  src={employee.photoURL} 
-                  alt={`${employee.firstName} ${employee.lastName}`} 
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center bg-primary text-white text-2xl">
-                  {employee.firstName[0]}{employee.lastName[0]}
-                </div>
-              )}
+          <div className="flex flex-col space-y-2">
+            <div className="flex items-center">
+              <div className="w-16 h-16 rounded-full mr-4 bg-gray-200 overflow-hidden">
+                {employee.photoURL ? (
+                  <img 
+                    src={employee.photoURL} 
+                    alt={`${employee.firstName} ${employee.lastName}`} 
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center bg-primary text-white text-2xl">
+                    {employee.firstName[0]}{employee.lastName[0]}
+                  </div>
+                )}
+              </div>
+              <div>
+                <CardTitle className="text-2xl">
+                  {employee.firstName} {employee.lastName}
+                </CardTitle>
+                <p className="text-gray-500">{employee.position}</p>
+              </div>
             </div>
-            <div>
-              <CardTitle className="text-2xl">
-                {employee.firstName} {employee.lastName}
-              </CardTitle>
-              <p className="text-gray-500">{employee.position}</p>
+            <div className="flex items-center text-sm text-muted-foreground">
+              <User className="h-4 w-4 mr-2" />
+              <span>ID: {employee.id}</span>
             </div>
           </div>
         </CardHeader>
@@ -178,7 +181,10 @@ const EmployeeDetails: React.FC<EmployeeDetailsProps> = ({
               Exporter PDF
             </Button>
           )}
-          <Button variant={isEditing ? "default" : "outline"} onClick={isEditing ? handleFinishEditing : handleStartEditing}>
+          <Button 
+            variant={isEditing ? "default" : "outline"} 
+            onClick={isEditing ? handleFinishEditing : handleStartEditing}
+          >
             {isEditing ? "Terminer" : "Modifier"}
           </Button>
         </div>
