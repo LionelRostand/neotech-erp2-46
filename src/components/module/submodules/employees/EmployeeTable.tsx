@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import {
   Table,
@@ -25,6 +24,7 @@ import { EditEmployeeDialog } from './EditEmployeeDialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
 import DeleteConfirmDialog from '@/components/module/submodules/accounting/components/DeleteConfirmDialog';
+import { useAvailableDepartments } from '@/hooks/useAvailableDepartments';
 
 interface EmployeeTableProps {
   employees: Employee[];
@@ -41,6 +41,12 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({
   const [viewDetailsOpen, setViewDetailsOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const { departments } = useAvailableDepartments();
+
+  const getDepartmentName = (departmentId: string) => {
+    const department = departments.find(dept => dept.id === departmentId);
+    return department ? department.name : departmentId;
+  };
 
   const handleViewDetails = (employee: Employee) => {
     setSelectedEmployee(employee);
@@ -104,7 +110,7 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({
               <TableCell className="font-medium">{employee.firstName} {employee.lastName}</TableCell>
               <TableCell>{employee.email}</TableCell>
               <TableCell>{employee.position || employee.title}</TableCell>
-              <TableCell>{employee.department}</TableCell>
+              <TableCell>{getDepartmentName(employee.department)}</TableCell>
               <TableCell>
                 {employee.status === 'active' || employee.status === 'Actif' ? (
                   <Badge className="bg-green-500 hover:bg-green-600">Actif</Badge>

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Employee } from '@/types/employee';
@@ -35,7 +34,7 @@ export const EditEmployeeDialog: React.FC<EditEmployeeDialogProps> = ({
       email: employee.email,
       phone: employee.phone || '',
       position: employee.position || employee.title || '',
-      department: employee.department || '',
+      department: employee.department || 'none',
       status: employee.status || 'active',
       photo: employee.photoURL || employee.photo || '',
       managerId: employee.managerId || ''
@@ -59,7 +58,8 @@ export const EditEmployeeDialog: React.FC<EditEmployeeDialogProps> = ({
       await updateEmployeeDoc(employee.id, {
         ...data,
         photoURL: data.photo,
-        photo: data.photo
+        photo: data.photo,
+        department: data.department === 'none' ? '' : data.department
       });
       
       toast.success(`Informations de ${data.firstName} ${data.lastName} mises à jour avec succès`);
@@ -113,16 +113,16 @@ export const EditEmployeeDialog: React.FC<EditEmployeeDialogProps> = ({
           <div className="space-y-2">
             <Label htmlFor="department">Département</Label>
             <Select 
-              defaultValue={employee.department || ''} 
+              defaultValue={employee.department || 'none'} 
               onValueChange={(value) => setValue('department', value)}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Sélectionner un département" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Aucun département</SelectItem>
+                <SelectItem value="none">Aucun département</SelectItem>
                 {departments.map((dept) => (
-                  <SelectItem key={dept.id} value={dept.name}>
+                  <SelectItem key={dept.id} value={dept.id}>
                     {dept.name}
                   </SelectItem>
                 ))}
@@ -132,7 +132,10 @@ export const EditEmployeeDialog: React.FC<EditEmployeeDialogProps> = ({
           
           <div className="space-y-2">
             <Label htmlFor="status">Statut</Label>
-            <Select defaultValue={employee.status || 'active'} name="status">
+            <Select 
+              defaultValue={employee.status || 'active'} 
+              onValueChange={(value) => setValue('status', value as 'active' | 'onLeave' | 'inactive')}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Sélectionner un statut" />
               </SelectTrigger>
@@ -184,4 +187,3 @@ export const EditEmployeeDialog: React.FC<EditEmployeeDialogProps> = ({
     </Dialog>
   );
 };
-
