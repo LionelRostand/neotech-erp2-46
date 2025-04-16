@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
@@ -49,9 +48,8 @@ const CreateBadgeDialog: React.FC<CreateBadgeDialogProps> = ({
       return;
     }
     
-    // Generate a shortId from initials if it doesn't exist
-    const shortId = typeof employee.shortId === 'string' ? employee.shortId : 
-                    `${employee.firstName.charAt(0)}${employee.lastName.charAt(0)}`;
+    const employeeInitials = `${employee.firstName.charAt(0)}${employee.lastName.charAt(0)}`;
+    const shortId = employee.shortId !== undefined ? employee.shortId : employeeInitials;
     
     const newBadge: BadgeData = {
       id: badgeNumber,
@@ -93,7 +91,6 @@ const CreateBadgeDialog: React.FC<CreateBadgeDialogProps> = ({
           <DialogTitle>Créer un nouveau badge</DialogTitle>
         </DialogHeader>
         <div className="grid gap-4 py-4">
-          {/* Employee Select */}
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="employee" className="text-right">
               Employé
@@ -130,7 +127,6 @@ const CreateBadgeDialog: React.FC<CreateBadgeDialogProps> = ({
             </div>
           </div>
 
-          {/* Company Select */}
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="company" className="text-right">
               Entreprise
@@ -155,7 +151,6 @@ const CreateBadgeDialog: React.FC<CreateBadgeDialogProps> = ({
             </div>
           </div>
 
-          {/* Access Level Select */}
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="access" className="text-right">
               Niveau d'accès
@@ -176,7 +171,6 @@ const CreateBadgeDialog: React.FC<CreateBadgeDialogProps> = ({
             </div>
           </div>
 
-          {/* Badge Number */}
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="badge-number" className="text-right">
               Numéro de badge
