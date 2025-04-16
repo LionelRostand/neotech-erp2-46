@@ -1,5 +1,6 @@
+
 import { v4 as uuidv4 } from 'uuid';
-import { Department, DepartmentFormData } from '../types';
+import { Department, DepartmentFormData } from '../components/module/submodules/departments/types';
 import { Employee } from '@/types/employee';
 import { Company } from '@/components/module/submodules/companies/types';
 
@@ -34,6 +35,100 @@ export const subscribeToDepartmentUpdates = (callback: EventListener): (() => vo
       console.log('Unsubscribed from department updates');
     }
   };
+};
+
+// Employee service functions
+export const createEmployee = async (employeeData: Partial<Employee>): Promise<Employee | null> => {
+  try {
+    // Generate a unique ID for the new employee
+    const employeeId = `emp-${uuidv4().substring(0, 8)}`;
+    
+    // Create a new employee object
+    const newEmployee: Employee = {
+      id: employeeId,
+      firstName: employeeData.firstName || '',
+      lastName: employeeData.lastName || '',
+      email: employeeData.email || '',
+      phone: employeeData.phone || '',
+      position: employeeData.position || '',
+      department: employeeData.department || null,
+      hireDate: employeeData.hireDate || new Date().toISOString(),
+      isManager: employeeData.isManager || false,
+      isActive: employeeData.isActive !== undefined ? employeeData.isActive : true,
+      managerId: employeeData.managerId || null,
+      address: employeeData.address || '',
+      birthDate: employeeData.birthDate || null,
+      photo: employeeData.photo || null,
+      status: employeeData.status || 'active',
+      gender: employeeData.gender || 'unknown',
+      skills: employeeData.skills || [],
+      contracts: employeeData.contracts || [],
+      salary: employeeData.salary || 0,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    
+    console.log('Created new employee:', newEmployee);
+    
+    // In a real app, this would save to a database
+    // Here we just return the new employee object
+    return newEmployee;
+  } catch (error) {
+    console.error('Error creating employee:', error);
+    return null;
+  }
+};
+
+export const updateEmployeeDoc = async (id: string, employeeData: Partial<Employee>): Promise<Employee | null> => {
+  try {
+    // In a real app, this would update the database
+    // For now, we just return a merged employee object
+    const updatedEmployee: Employee = {
+      id,
+      firstName: employeeData.firstName || '',
+      lastName: employeeData.lastName || '',
+      email: employeeData.email || '',
+      phone: employeeData.phone || '',
+      position: employeeData.position || '',
+      department: employeeData.department || null,
+      hireDate: employeeData.hireDate || new Date().toISOString(),
+      isManager: employeeData.isManager || false,
+      isActive: employeeData.isActive !== undefined ? employeeData.isActive : true,
+      managerId: employeeData.managerId || null,
+      address: employeeData.address || '',
+      birthDate: employeeData.birthDate || null,
+      photo: employeeData.photo || null,
+      status: employeeData.status || 'active',
+      gender: employeeData.gender || 'unknown',
+      skills: employeeData.skills || [],
+      contracts: employeeData.contracts || [],
+      salary: employeeData.salary || 0,
+      createdAt: employeeData.createdAt || new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    
+    console.log('Updated employee:', updatedEmployee);
+    
+    return updatedEmployee;
+  } catch (error) {
+    console.error('Error updating employee:', error);
+    return null;
+  }
+};
+
+export const syncManagerStatus = async (employee: Employee): Promise<void> => {
+  try {
+    // In a real app, this would update related departments and employees
+    // For now, just log the action
+    console.log(`Syncing manager status for employee ${employee.id}`);
+    if (employee.isManager) {
+      console.log(`${employee.firstName} ${employee.lastName} is now a manager`);
+    } else {
+      console.log(`${employee.firstName} ${employee.lastName} is no longer a manager`);
+    }
+  } catch (error) {
+    console.error('Error syncing manager status:', error);
+  }
 };
 
 export const createEmptyFormData = (departments: Department[] = []): DepartmentFormData => {
