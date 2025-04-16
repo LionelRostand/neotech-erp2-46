@@ -1,3 +1,4 @@
+
 export interface Employee {
   id: string;
   firstName: string;
@@ -68,7 +69,7 @@ export interface Document {
 
 export interface EmployeeAddress {
   street: string;
-  streetNumber?: string;
+  streetNumber?: string; // Added streetNumber property
   city: string;
   postalCode: string;
   country: string;

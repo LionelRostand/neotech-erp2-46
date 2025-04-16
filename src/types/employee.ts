@@ -2,6 +2,7 @@ import { Company } from '@/components/module/submodules/companies/types';
 
 export interface EmployeeAddress {
   street: string;
+  streetNumber?: string; // Added streetNumber property
   city: string;
   postalCode: string;
   country: string;
