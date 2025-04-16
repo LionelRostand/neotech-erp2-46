@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Employee } from '@/types/employee';
@@ -9,14 +9,22 @@ import CompetencesTab from './tabs/CompetencesTab';
 import CongesTab from './tabs/CongesTab';
 import { useEmployeePermissions } from './hooks/useEmployeePermissions';
 import { Button } from '@/components/ui/button';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, Save } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
+import { updateDocument } from '@/hooks/firestore/update-operations';
+import { COLLECTIONS } from '@/lib/firebase-collections';
 
-const EmployeeProfileView: React.FC<{ employee?: Employee; isLoading?: boolean }> = ({ 
+const EmployeeProfileView: React.FC<{ employee?: Employee; isLoading?: boolean; onEmployeeUpdated?: () => void }> = ({ 
   employee,
-  isLoading = false
+  isLoading = false,
+  onEmployeeUpdated
 }) => {
   const navigate = useNavigate();
+  const [editMode, setEditMode] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [updatedEmployee, setUpdatedEmployee] = useState<Employee | null>(null);
+  
   const mockEmployee: Employee = {
     id: "EMP001",
     firstName: "Martin",
@@ -68,14 +76,83 @@ const EmployeeProfileView: React.FC<{ employee?: Employee; isLoading?: boolean }
   // Use the useEmployeePermissions hook with the module ID and employee ID
   const { canView, canEdit, isOwnProfile, loading } = useEmployeePermissions('employees-profiles', employeeId);
 
-  // Handle dummy address updates - this is just a placeholder for the interface
-  const handleAddressUpdated = async () => {
-    return Promise.resolve();
+  // Save all employee updates
+  const saveEmployeeUpdates = async () => {
+    if (!updatedEmployee || !employeeId) return;
+    
+    try {
+      setIsUpdating(true);
+      await updateDocument(COLLECTIONS.HR.EMPLOYEES, employeeId, updatedEmployee);
+      toast.success("Profil employé mis à jour avec succès");
+      setEditMode(false);
+      
+      // Call the parent update handler if provided
+      if (onEmployeeUpdated) {
+        onEmployeeUpdated();
+      }
+    } catch (error) {
+      console.error("Erreur lors de la mise à jour du profil:", error);
+      toast.error("Erreur lors de la mise à jour du profil");
+    } finally {
+      setIsUpdating(false);
+    }
   };
 
-  // Dummy function for employee updates
-  const handleEmployeeUpdated = async () => {
-    return Promise.resolve();
+  // Update employee information
+  const handleEmployeeUpdated = (field: string, value: any) => {
+    setUpdatedEmployee(prev => {
+      const baseEmployee = prev || displayedEmployee;
+      return {
+        ...baseEmployee,
+        [field]: value
+      };
+    });
+  };
+
+  // Handle address updates
+  const handleAddressUpdated = async (addressData: any) => {
+    handleEmployeeUpdated('address', addressData);
+  };
+
+  // Handle schedule updates
+  const handleScheduleUpdated = (scheduleData: any) => {
+    handleEmployeeUpdated('workSchedule', scheduleData);
+  };
+
+  // Handle skills and competency updates
+  const handleCompetencesUpdated = (skills: string[], education: any[]) => {
+    setUpdatedEmployee(prev => {
+      const baseEmployee = prev || displayedEmployee;
+      return {
+        ...baseEmployee,
+        skills,
+        education
+      };
+    });
+  };
+
+  // Handle leave updates
+  const handleLeavesUpdated = (leaveRequests: any[]) => {
+    handleEmployeeUpdated('leaveRequests', leaveRequests);
+  };
+
+  // Toggle edit mode
+  const toggleEditMode = () => {
+    setEditMode(!editMode);
+    if (!editMode) {
+      // Initialize updatedEmployee with current data when entering edit mode
+      setUpdatedEmployee(displayedEmployee);
+    } else if (updatedEmployee) {
+      // Prompt to save changes when exiting edit mode
+      const hasChanges = JSON.stringify(updatedEmployee) !== JSON.stringify(displayedEmployee);
+      if (hasChanges) {
+        if (window.confirm("Vous avez des modifications non enregistrées. Voulez-vous les sauvegarder?")) {
+          saveEmployeeUpdates();
+        } else {
+          setUpdatedEmployee(null);
+        }
+      }
+    }
   };
 
   // If employee data is loading or permission check is in progress
@@ -125,26 +202,50 @@ const EmployeeProfileView: React.FC<{ employee?: Employee; isLoading?: boolean }
     <div className="space-y-6">
       <Card>
         <CardHeader className="pb-3">
-          <div className="flex items-center">
-            <div className="w-16 h-16 rounded-full mr-4 bg-gray-200 overflow-hidden">
-              {displayedEmployee.photoURL ? (
-                <img 
-                  src={displayedEmployee.photoURL} 
-                  alt={`${displayedEmployee.firstName} ${displayedEmployee.lastName}`} 
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center bg-primary text-white text-2xl">
-                  {displayedEmployee.firstName[0]}{displayedEmployee.lastName[0]}
-                </div>
-              )}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center">
+              <div className="w-16 h-16 rounded-full mr-4 bg-gray-200 overflow-hidden">
+                {displayedEmployee.photoURL ? (
+                  <img 
+                    src={displayedEmployee.photoURL} 
+                    alt={`${displayedEmployee.firstName} ${displayedEmployee.lastName}`} 
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center bg-primary text-white text-2xl">
+                    {displayedEmployee.firstName[0]}{displayedEmployee.lastName[0]}
+                  </div>
+                )}
+              </div>
+              <div>
+                <CardTitle className="text-2xl">
+                  {displayedEmployee.firstName} {displayedEmployee.lastName}
+                </CardTitle>
+                <p className="text-gray-500">{displayedEmployee.position}</p>
+              </div>
             </div>
-            <div>
-              <CardTitle className="text-2xl">
-                {displayedEmployee.firstName} {displayedEmployee.lastName}
-              </CardTitle>
-              <p className="text-gray-500">{displayedEmployee.position}</p>
-            </div>
+            
+            {(canEdit || isOwnProfile) && (
+              <div className="flex space-x-2">
+                <Button 
+                  variant={editMode ? "default" : "outline"} 
+                  onClick={toggleEditMode}
+                >
+                  {editMode ? "Quitter le mode édition" : "Modifier le profil"}
+                </Button>
+                
+                {editMode && updatedEmployee && (
+                  <Button 
+                    variant="default" 
+                    onClick={saveEmployeeUpdates}
+                    disabled={isUpdating}
+                  >
+                    <Save className="h-4 w-4 mr-2" />
+                    Enregistrer
+                  </Button>
+                )}
+              </div>
+            )}
           </div>
         </CardHeader>
       </Card>
@@ -158,21 +259,31 @@ const EmployeeProfileView: React.FC<{ employee?: Employee; isLoading?: boolean }
         </TabsList>
         <TabsContent value="informations">
           <InformationsTab 
-            employee={displayedEmployee} 
+            employee={updatedEmployee || displayedEmployee} 
             onAddressUpdated={handleAddressUpdated}
+            editMode={editMode}
           />
         </TabsContent>
         <TabsContent value="horaires">
-          <HorairesTab employee={displayedEmployee} />
+          <HorairesTab 
+            employee={updatedEmployee || displayedEmployee} 
+            editMode={editMode}
+            onScheduleUpdated={handleScheduleUpdated}
+          />
         </TabsContent>
         <TabsContent value="competences">
           <CompetencesTab 
-            employee={displayedEmployee} 
-            onEmployeeUpdated={handleEmployeeUpdated} 
+            employee={updatedEmployee || displayedEmployee} 
+            onEmployeeUpdated={handleCompetencesUpdated}
+            editMode={editMode}
           />
         </TabsContent>
         <TabsContent value="conges">
-          <CongesTab employee={displayedEmployee} />
+          <CongesTab 
+            employee={updatedEmployee || displayedEmployee}
+            editMode={editMode}
+            onLeavesUpdated={handleLeavesUpdated}
+          />
         </TabsContent>
       </Tabs>
     </div>
