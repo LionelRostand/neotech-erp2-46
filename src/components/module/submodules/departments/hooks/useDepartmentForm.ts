@@ -1,27 +1,23 @@
+
 import { useState, useCallback } from 'react';
 import { Department, DepartmentFormData, departmentColors } from '../types';
 import { createEmptyFormData } from '../utils/departmentUtils';
 import { toast } from 'sonner';
 
 export const useDepartmentForm = (departments: Department[] = []) => {
-  const [formData, setFormData] = useState<DepartmentFormData>({
-    id: '',
-    name: '',
-    description: '',
-    managerId: '',
-    color: departmentColors[0].value,
-    employeeIds: [],
-    companyId: ''
-  });
+  const [formData, setFormData] = useState<DepartmentFormData>(createEmptyFormData(departments));
   const [activeTab, setActiveTab] = useState("general");
   const [selectedEmployees, setSelectedEmployees] = useState<string[]>([]);
   
+  // Reset form with initial data
   const resetForm = useCallback((depts: Department[]) => {
+    // We don't want to continuously reset this in an infinite loop
     setFormData(createEmptyFormData(depts));
     setSelectedEmployees([]);
     setActiveTab("general");
   }, []);
   
+  // Initialize form with department data for editing
   const initFormWithDepartment = useCallback((department: Department) => {
     setFormData({
       id: department.id,
@@ -35,6 +31,7 @@ export const useDepartmentForm = (departments: Department[] = []) => {
     setActiveTab("general");
   }, []);
   
+  // Form input handlers
   const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
@@ -58,10 +55,7 @@ export const useDepartmentForm = (departments: Department[] = []) => {
     });
   }, []);
   
-  const handleCompanyChange = useCallback((value: string) => {
-    setFormData(prev => ({ ...prev, companyId: value === 'none' ? '' : value }));
-  }, []);
-  
+  // Validation
   const validateForm = useCallback(() => {
     if (!formData.name || !formData.description) {
       toast.error("Veuillez remplir tous les champs obligatoires");
@@ -81,7 +75,6 @@ export const useDepartmentForm = (departments: Department[] = []) => {
     handleManagerChange,
     handleColorChange,
     handleEmployeeSelection,
-    handleCompanyChange,
     validateForm,
     setSelectedEmployees
   };

@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Employee } from '@/types/employee';
@@ -34,7 +35,7 @@ export const EditEmployeeDialog: React.FC<EditEmployeeDialogProps> = ({
       email: employee.email,
       phone: employee.phone || '',
       position: employee.position || employee.title || '',
-      department: employee.department || 'none',
+      department: employee.department || '',
       status: employee.status || 'active',
       photo: employee.photoURL || employee.photo || '',
       managerId: employee.managerId || ''
@@ -58,8 +59,7 @@ export const EditEmployeeDialog: React.FC<EditEmployeeDialogProps> = ({
       await updateEmployeeDoc(employee.id, {
         ...data,
         photoURL: data.photo,
-        photo: data.photo,
-        department: data.department === 'none' ? '' : data.department
+        photo: data.photo
       });
       
       toast.success(`Informations de ${data.firstName} ${data.lastName} mises à jour avec succès`);
@@ -113,16 +113,16 @@ export const EditEmployeeDialog: React.FC<EditEmployeeDialogProps> = ({
           <div className="space-y-2">
             <Label htmlFor="department">Département</Label>
             <Select 
-              defaultValue={employee.department || 'none'} 
+              defaultValue={employee.department || 'no_department'} 
               onValueChange={(value) => setValue('department', value)}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Sélectionner un département" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="none">Aucun département</SelectItem>
+                <SelectItem value="no_department">Aucun département</SelectItem>
                 {departments.map((dept) => (
-                  <SelectItem key={dept.id} value={dept.id}>
+                  <SelectItem key={dept.id} value={dept.name}>
                     {dept.name}
                   </SelectItem>
                 ))}
@@ -134,7 +134,7 @@ export const EditEmployeeDialog: React.FC<EditEmployeeDialogProps> = ({
             <Label htmlFor="status">Statut</Label>
             <Select 
               defaultValue={employee.status || 'active'} 
-              onValueChange={(value) => setValue('status', value as 'active' | 'onLeave' | 'inactive')}
+              onValueChange={(value: "active" | "inactive" | "onLeave" | "Actif" | "En congé" | "Suspendu" | "Inactif") => setValue('status', value)}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Sélectionner un statut" />

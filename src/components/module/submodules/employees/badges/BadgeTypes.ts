@@ -1,17 +1,15 @@
 
 export interface BadgeData {
   id: string;
-  date: string;
   employeeId: string;
   employeeName: string;
-  department?: string;
+  department: string;
+  company: string;
   accessLevel: string;
-  status: string;
+  date: string;
+  status: 'success' | 'warning' | 'danger';
   statusText: string;
-  companyId: string;
-  companyName: string;
-  employeePhoto?: string;
-  employeeShortId?: string;
+  photoURL?: string;
 }
 
 export interface BadgesTableProps {
@@ -21,7 +19,5 @@ export interface BadgesTableProps {
 }
 
 export const generateBadgeNumber = (): string => {
-  const prefix = 'BDG';
-  const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
-  return `${prefix}${random}`;
+  return `B-${Math.floor(2460 + Math.random() * 100)}`;
 };

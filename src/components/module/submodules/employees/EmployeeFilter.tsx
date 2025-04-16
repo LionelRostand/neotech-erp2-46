@@ -11,7 +11,6 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Search, Upload } from 'lucide-react';
 import { useHrModuleData } from '@/hooks/useHrModuleData';
-import { useAvailableDepartments } from '@/hooks/useAvailableDepartments';
 
 interface EmployeeFilterProps {
   onDepartmentChange: (department: string) => void;
@@ -26,8 +25,18 @@ const EmployeeFilter: React.FC<EmployeeFilterProps> = ({
   onSearchChange,
   onImportClick
 }) => {
-  const { departments } = useAvailableDepartments();
+  const { departments } = useHrModuleData();
   const [searchValue, setSearchValue] = useState('');
+  const [uniqueDepartments, setUniqueDepartments] = useState<string[]>([]);
+
+  // Extract unique departments from the departments collection
+  useEffect(() => {
+    if (departments && departments.length > 0) {
+      const deptNames = departments.map(dept => dept.name || '');
+      const uniqueDepts = [...new Set(deptNames)].filter(name => name.trim() !== '');
+      setUniqueDepartments(uniqueDepts);
+    }
+  }, [departments]);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -63,10 +72,8 @@ const EmployeeFilter: React.FC<EmployeeFilterProps> = ({
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Tous les départements</SelectItem>
-            {departments.map((dept) => (
-              <SelectItem key={dept.id} value={dept.id}>
-                {dept.name}
-              </SelectItem>
+            {uniqueDepartments.map((dept, index) => (
+              <SelectItem key={index} value={dept}>{dept}</SelectItem>
             ))}
           </SelectContent>
         </Select>

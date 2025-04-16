@@ -8,7 +8,6 @@ import { BadgeData } from './BadgeTypes';
 import { Employee } from '@/types/employee';
 import { jsPDF } from 'jspdf';
 import { Company } from '@/components/module/submodules/companies/types';
-import { useCompaniesData } from '@/hooks/useCompaniesData';
 
 interface BadgePreviewDialogProps {
   isOpen: boolean;
@@ -25,30 +24,23 @@ const BadgePreviewDialog: React.FC<BadgePreviewDialogProps> = ({
   selectedEmployee,
   onDeleteClick
 }) => {
-  const { companies } = useCompaniesData();
-  
   if (!selectedBadge) return null;
   
   const getCompanyName = (): string => {
-    // If no employee, return default
-    if (!selectedEmployee) return "Entreprise";
+    if (!selectedEmployee) return "Enterprise";
     
-    // If no company, return default
-    if (!selectedEmployee.company) return "Entreprise";
+    if (!selectedEmployee.company) return "Enterprise";
     
-    // If company is a string (ID), find corresponding company
     if (typeof selectedEmployee.company === 'string') {
-      const companyData = companies.find(c => c.id === selectedEmployee.company);
-      return companyData?.name || selectedEmployee.company;
+      return selectedEmployee.company;
     }
     
-    // If it's a Company object
+    // Now TypeScript knows this is a Company object
     const companyObj = selectedEmployee.company as Company;
-    return companyObj.name || "Entreprise";
+    return companyObj.name || "Enterprise";
   };
   
   const companyName = getCompanyName();
-  const badgeShortId = selectedBadge.id.split('-')[1] || selectedBadge.id;
   
   const handleDownloadBadge = () => {
     const doc = new jsPDF({
@@ -78,7 +70,7 @@ const BadgePreviewDialog: React.FC<BadgePreviewDialogProps> = ({
     
     doc.setTextColor(0, 0, 0);
     doc.setFontSize(8);
-    doc.text(`ID: ${badgeShortId}`, 42.5, 18, { align: 'center' });
+    doc.text(`ID: ${selectedBadge.id}`, 42.5, 18, { align: 'center' });
     
     doc.setFontSize(12);
     doc.setFont('helvetica', 'bold');
@@ -132,16 +124,14 @@ const BadgePreviewDialog: React.FC<BadgePreviewDialogProps> = ({
         
         <div className="py-4">
           <div className="bg-gray-100 rounded-md p-6 mb-4">
-            <div className={`h-8 w-full mb-3 rounded-t flex items-center px-3 ${
+            <div className={`h-2 w-full mb-3 rounded-t ${
               selectedBadge.status === 'success' ? 'bg-green-500' : 
               selectedBadge.status === 'warning' ? 'bg-amber-500' : 'bg-red-500'
-            }`}>
-              <span className="text-white font-bold text-sm">{companyName.toUpperCase()}</span>
-            </div>
+            }`}></div>
             
             <div className="text-center mb-3">
-              <p className="text-sm text-gray-500">ID Badge: {badgeShortId}</p>
-              <h3 className="text-lg font-bold mt-2">{selectedBadge.employeeName}</h3>
+              <p className="text-sm text-gray-500">ID: {selectedBadge.id}</p>
+              <h3 className="text-lg font-bold">{selectedBadge.employeeName}</h3>
               <p className="text-sm text-gray-600">Entreprise: {companyName}</p>
             </div>
             
@@ -197,4 +187,3 @@ const BadgePreviewDialog: React.FC<BadgePreviewDialogProps> = ({
 };
 
 export default BadgePreviewDialog;
-

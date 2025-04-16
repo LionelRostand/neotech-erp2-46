@@ -110,8 +110,7 @@ const EmployeesBadges: React.FC = () => {
       <CreateBadgeDialog 
         isOpen={isDialogOpen} 
         onOpenChange={setIsDialogOpen} 
-        onBadgeCreated={handleCreateBadge} 
-        employees={employees}
+        onBadgeCreated={handleCreateBadge}
       />
       
       <BadgePreviewDialog 

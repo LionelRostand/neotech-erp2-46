@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -8,7 +9,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { DepartmentFormData, departmentColors } from './types';
 import EmployeesList from './EmployeesList';
 import { useEmployeeData } from '@/hooks/useEmployeeData';
-import { useCompaniesData } from '@/hooks/useCompaniesData';
 
 interface AddDepartmentDialogProps {
   formData: DepartmentFormData;
@@ -18,7 +18,6 @@ interface AddDepartmentDialogProps {
   onInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onManagerChange: (value: string) => void;
   onColorChange: (value: string) => void;
-  onCompanyChange: (value: string) => void;
   onEmployeeSelection: (employeeId: string, checked: boolean) => void;
   onClose: () => void;
   onSave: () => void;
@@ -32,13 +31,12 @@ const AddDepartmentDialog: React.FC<AddDepartmentDialogProps> = ({
   onInputChange,
   onManagerChange,
   onColorChange,
-  onCompanyChange,
   onEmployeeSelection,
   onClose,
   onSave,
 }) => {
+  // Utiliser les données des employés depuis Firebase
   const { employees, isLoading } = useEmployeeData();
-  const { companies, isLoading: isLoadingCompanies } = useCompaniesData();
 
   return (
     <DialogContent className="sm:max-w-[600px]">
@@ -105,7 +103,7 @@ const AddDepartmentDialog: React.FC<AddDepartmentDialogProps> = ({
                 <SelectContent>
                   <SelectItem value="none">Aucun responsable</SelectItem>
                   {isLoading ? (
-                    <SelectItem value="loading" disabled>Chargement...</SelectItem>
+                    <SelectItem value="loading-placeholder" disabled>Chargement...</SelectItem>
                   ) : (
                     employees?.map((employee) => (
                       <SelectItem key={employee.id} value={employee.id}>
@@ -133,30 +131,6 @@ const AddDepartmentDialog: React.FC<AddDepartmentDialogProps> = ({
                         <div className="w-4 h-4 rounded-full" style={{ backgroundColor: color.value }}></div>
                         <span>{color.label}</span>
                       </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="add-company" className="text-right">
-              Entreprise
-            </Label>
-            <div className="col-span-3">
-              <Select 
-                value={formData.companyId || 'none'} 
-                onValueChange={onCompanyChange}
-                disabled={isLoadingCompanies}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder={isLoadingCompanies ? "Chargement..." : "Sélectionner une entreprise"} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">Aucune entreprise</SelectItem>
-                  {companies?.map((company) => (
-                    <SelectItem key={company.id} value={company.id}>
-                      {company.name}
                     </SelectItem>
                   ))}
                 </SelectContent>

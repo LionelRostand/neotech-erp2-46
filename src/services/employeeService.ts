@@ -1,9 +1,9 @@
+
 import { db } from '@/lib/firebase';
 import { COLLECTIONS } from '@/lib/firebase-collections';
-import { doc, getDoc, updateDoc, collection, getDocs, query, where, addDoc, deleteDoc } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, collection, getDocs, query, where, addDoc, deleteDoc, DocumentReference } from 'firebase/firestore';
 import { Employee } from '@/types/employee';
 import { notifyDepartmentUpdates } from '@/components/module/submodules/departments/utils/departmentUtils';
-import { generateShortEmployeeId } from '@/components/module/submodules/employees/utils/employeeUtils';
 
 /**
  * Créer un nouvel employé dans Firestore
@@ -28,22 +28,15 @@ export const createEmployee = async (employeeData: Partial<Employee>): Promise<E
       }
     }
     
-    // Générer l'ID court
-    const shortId = generateShortEmployeeId(
-      employeeData.firstName || '', 
-      employeeData.lastName || ''
-    );
-    
     // S'assurer que la photo est correctement assignée
     const photoURL = employeeData.photoURL || employeeData.photo || '';
     
-    // Ajouter l'employé à la collection hr_employees avec l'ID court
+    // Ajouter l'employé à la collection hr_employees
     const collectionRef = collection(db, COLLECTIONS.HR.EMPLOYEES);
     const docRef = await addDoc(collectionRef, {
       ...employeeData,
-      shortId, // Ajouter l'ID court
       photoURL: photoURL,
-      photo: photoURL,
+      photo: photoURL, // Garder la compatibilité avec les deux champs
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       status: employeeData.status || 'active'
