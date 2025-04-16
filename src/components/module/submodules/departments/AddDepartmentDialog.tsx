@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { DepartmentFormData, departmentColors } from './types';
 import EmployeesList from './EmployeesList';
 import { useEmployeeData } from '@/hooks/useEmployeeData';
+import { useFirebaseCompanies } from '@/hooks/useFirebaseCompanies';
 
 interface AddDepartmentDialogProps {
   formData: DepartmentFormData;
@@ -17,6 +18,7 @@ interface AddDepartmentDialogProps {
   onTabChange: (tab: string) => void;
   onInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onManagerChange: (value: string) => void;
+  onCompanyChange: (value: string) => void;
   onColorChange: (value: string) => void;
   onEmployeeSelection: (employeeId: string, checked: boolean) => void;
   onClose: () => void;
@@ -30,6 +32,7 @@ const AddDepartmentDialog: React.FC<AddDepartmentDialogProps> = ({
   onTabChange,
   onInputChange,
   onManagerChange,
+  onCompanyChange,
   onColorChange,
   onEmployeeSelection,
   onClose,
@@ -37,6 +40,8 @@ const AddDepartmentDialog: React.FC<AddDepartmentDialogProps> = ({
 }) => {
   // Utiliser les données des employés depuis Firebase
   const { employees, isLoading } = useEmployeeData();
+  // Utiliser les données des entreprises depuis Firebase
+  const { companies, isLoading: isLoadingCompanies } = useFirebaseCompanies();
 
   return (
     <DialogContent className="sm:max-w-[600px]">
@@ -108,6 +113,30 @@ const AddDepartmentDialog: React.FC<AddDepartmentDialogProps> = ({
                     employees?.map((employee) => (
                       <SelectItem key={employee.id} value={employee.id}>
                         {employee.firstName} {employee.lastName}
+                      </SelectItem>
+                    ))
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="company" className="text-right">
+              Entreprise
+            </Label>
+            <div className="col-span-3">
+              <Select value={formData.companyId || "none"} onValueChange={onCompanyChange}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Sélectionner une entreprise" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Aucune entreprise</SelectItem>
+                  {isLoadingCompanies ? (
+                    <SelectItem value="loading" disabled>Chargement...</SelectItem>
+                  ) : (
+                    companies?.map((company) => (
+                      <SelectItem key={company.id} value={company.id}>
+                        {company.name}
                       </SelectItem>
                     ))
                   )}

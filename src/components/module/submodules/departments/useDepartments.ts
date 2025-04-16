@@ -1,163 +1,173 @@
-import { useEffect, useMemo } from 'react';
-import { Department } from './types';
-import { getDepartmentEmployees, notifyDepartmentUpdates } from './utils/departmentUtils';
-import { useFirebaseDepartments } from '@/hooks/useFirebaseDepartments';
+
+import { useState, useEffect, useCallback } from 'react';
 import { useDepartmentForm } from './hooks/useDepartmentForm';
-import { useDepartmentDialogs } from './hooks/useDepartmentDialogs';
 import { useDepartmentOperations } from './hooks/useDepartmentOperations';
+import { Department } from './types';
+import { useDepartmentService } from './services/departmentService';
 import { useEmployeeData } from '@/hooks/useEmployeeData';
 
 export const useDepartments = () => {
-  // Fetch departments directly from Firestore
-  const { departments: fetchedDepartments = [], isLoading: loading, error, refetch } = useFirebaseDepartments();
+  const [departments, setDepartments] = useState<Department[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isManageEmployeesDialogOpen, setIsManageEmployeesDialogOpen] = useState(false);
+  const [currentDepartment, setCurrentDepartment] = useState<Department | null>(null);
   
-  // Get all available employees
-  const { employees: allEmployees } = useEmployeeData();
+  const departmentService = useDepartmentService();
+  const { employees } = useEmployeeData();
   
-  // Enrich departments with manager names if missing
-  const departments = useMemo(() => {
-    if (!fetchedDepartments || !allEmployees || allEmployees.length === 0) {
-      return fetchedDepartments;
-    }
-    
-    return fetchedDepartments.map(department => {
-      // If managerName is already set and not null, keep it
-      if (department.managerName) {
-        return department;
-      }
-      
-      // If managerId is set, find the manager and set the name
-      if (department.managerId) {
-        const manager = allEmployees.find(emp => emp.id === department.managerId);
-        if (manager) {
-          return {
-            ...department,
-            managerName: `${manager.firstName} ${manager.lastName}`
-          };
-        }
-      }
-      
-      return department;
-    });
-  }, [fetchedDepartments, allEmployees]);
+  const {
+    formData,
+    activeTab,
+    selectedEmployees,
+    resetForm,
+    initFormWithDepartment,
+    setActiveTab,
+    handleInputChange,
+    handleManagerChange,
+    handleCompanyChange,
+    handleColorChange,
+    handleEmployeeSelection,
+    validateForm,
+    setSelectedEmployees
+  } = useDepartmentForm(departments);
   
-  // Custom hooks for form, dialogs, and operations
-  const form = useDepartmentForm(departments);
-  const dialogs = useDepartmentDialogs();
-  const operations = useDepartmentOperations();
-  
-  // Reset form when departments change - but only once on initial load
-  useEffect(() => {
-    // Only reset form on initial load or when departments array changes length
-    if (departments && departments.length > 0) {
-      form.resetForm(departments);
-    }
-  }, []);
-  
-  // Notify other components when departments are updated
-  useEffect(() => {
-    if (departments && departments.length > 0) {
-      notifyDepartmentUpdates(departments);
-    }
-  }, [departments]);
-  
-  // Handle operations with dialog state updates
-  const handleAddDepartment = () => {
-    form.resetForm(departments);
-    dialogs.handleAddDepartment();
-  };
-  
-  const handleEditDepartment = (department: Department) => {
-    form.initFormWithDepartment(department);
-    dialogs.handleEditDepartment(department);
-  };
-  
-  const handleManageEmployees = (department: Department) => {
-    form.setSelectedEmployees(department.employeeIds || []);
-    dialogs.handleManageEmployees(department);
-  };
-  
-  const handleSaveDepartment = async () => {
-    const success = await operations.handleSaveDepartment(
-      form.formData, 
-      form.selectedEmployees
-    );
-    if (success) {
-      dialogs.setIsAddDialogOpen(false);
-      refetch();
-    }
-  };
-  
-  const handleUpdateDepartment = async () => {
-    const success = await operations.handleUpdateDepartment(
-      form.formData, 
-      form.selectedEmployees, 
-      dialogs.currentDepartment
-    );
-    if (success) {
-      dialogs.setIsEditDialogOpen(false);
-      refetch();
-    }
-  };
-  
-  const handleDeleteDepartment = async (id: string, name: string) => {
-    const success = await operations.handleDeleteDepartment(id, name);
-    if (success) {
-      refetch();
-    }
-  };
-  
-  const handleSaveEmployeeAssignments = async () => {
-    const success = await operations.handleSaveEmployeeAssignments(
-      dialogs.currentDepartment, 
-      form.selectedEmployees
-    );
-    if (success) {
-      dialogs.setIsManageEmployeesDialogOpen(false);
-      refetch();
-    }
-  };
-  
-  return {
-    // Data
-    departments,
-    loading,
-    error,
-    allEmployees,
-    
-    // Form state
-    formData: form.formData,
-    activeTab: form.activeTab,
-    selectedEmployees: form.selectedEmployees,
-    
-    // Dialog state
-    isAddDialogOpen: dialogs.isAddDialogOpen,
-    isEditDialogOpen: dialogs.isEditDialogOpen,
-    isManageEmployeesDialogOpen: dialogs.isManageEmployeesDialogOpen,
-    currentDepartment: dialogs.currentDepartment,
-    
-    // Dialog operations
-    setIsAddDialogOpen: dialogs.setIsAddDialogOpen,
-    setIsEditDialogOpen: dialogs.setIsEditDialogOpen,
-    setIsManageEmployeesDialogOpen: dialogs.setIsManageEmployeesDialogOpen,
-    
-    // Form operations
-    setActiveTab: form.setActiveTab,
-    handleInputChange: form.handleInputChange,
-    handleManagerChange: form.handleManagerChange,
-    handleColorChange: form.handleColorChange,
-    handleEmployeeSelection: form.handleEmployeeSelection,
-    
-    // Operations
-    handleAddDepartment,
-    handleEditDepartment,
-    handleManageEmployees,
+  const {
     handleSaveDepartment,
     handleUpdateDepartment,
     handleDeleteDepartment,
-    handleSaveEmployeeAssignments,
+    handleSaveEmployeeAssignments
+  } = useDepartmentOperations();
+  
+  // Fetch departments
+  useEffect(() => {
+    const fetchDepartments = async () => {
+      try {
+        setLoading(true);
+        const fetchedDepartments = await departmentService.getDepartments();
+        setDepartments(fetchedDepartments);
+      } catch (error) {
+        console.error("Error fetching departments:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchDepartments();
+  }, [departmentService]);
+  
+  // Get employees for a department
+  const getDepartmentEmployees = useCallback((departmentId: string) => {
+    const department = departments.find(dept => dept.id === departmentId);
+    if (!department) return [];
+    
+    return employees.filter(emp => department.employeeIds.includes(emp.id));
+  }, [departments, employees]);
+  
+  // Show add department dialog
+  const handleAddDepartment = useCallback(() => {
+    resetForm(departments);
+    setIsAddDialogOpen(true);
+  }, [departments, resetForm]);
+  
+  // Show edit department dialog
+  const handleEditDepartment = useCallback((department: Department) => {
+    setCurrentDepartment(department);
+    initFormWithDepartment(department);
+    setSelectedEmployees(department.employeeIds || []);
+    setIsEditDialogOpen(true);
+  }, [initFormWithDepartment, setSelectedEmployees]);
+  
+  // Show manage employees dialog
+  const handleManageEmployees = useCallback((department: Department) => {
+    setCurrentDepartment(department);
+    setSelectedEmployees(department.employeeIds || []);
+    setIsManageEmployeesDialogOpen(true);
+  }, [setSelectedEmployees]);
+  
+  // Save new department
+  const handleSaveNewDepartment = useCallback(async () => {
+    if (!validateForm()) return;
+    
+    const success = await handleSaveDepartment(formData, selectedEmployees);
+    
+    if (success) {
+      setIsAddDialogOpen(false);
+      
+      // Refresh departments list
+      const updatedDepartments = await departmentService.getDepartments();
+      setDepartments(updatedDepartments);
+    }
+  }, [formData, selectedEmployees, validateForm, handleSaveDepartment, departmentService]);
+  
+  // Update department
+  const handleUpdateExistingDepartment = useCallback(async () => {
+    if (!validateForm()) return;
+    
+    const success = await handleUpdateDepartment(formData, selectedEmployees, currentDepartment);
+    
+    if (success) {
+      setIsEditDialogOpen(false);
+      
+      // Refresh departments list
+      const updatedDepartments = await departmentService.getDepartments();
+      setDepartments(updatedDepartments);
+    }
+  }, [formData, selectedEmployees, currentDepartment, validateForm, handleUpdateDepartment, departmentService]);
+  
+  // Save employee assignments
+  const handleSaveEmployees = useCallback(async () => {
+    if (!currentDepartment) return;
+    
+    const success = await handleSaveEmployeeAssignments(currentDepartment, selectedEmployees);
+    
+    if (success) {
+      setIsManageEmployeesDialogOpen(false);
+      
+      // Refresh departments list
+      const updatedDepartments = await departmentService.getDepartments();
+      setDepartments(updatedDepartments);
+    }
+  }, [currentDepartment, selectedEmployees, handleSaveEmployeeAssignments, departmentService]);
+  
+  // Delete department
+  const handleDeleteDept = useCallback(async (id: string, name: string) => {
+    const success = await handleDeleteDepartment(id, name);
+    
+    if (success) {
+      // Refresh departments list
+      const updatedDepartments = await departmentService.getDepartments();
+      setDepartments(updatedDepartments);
+    }
+  }, [handleDeleteDepartment, departmentService]);
+  
+  return {
+    departments,
+    loading,
+    isAddDialogOpen,
+    isEditDialogOpen,
+    isManageEmployeesDialogOpen,
+    formData,
+    currentDepartment,
+    activeTab,
+    selectedEmployees,
+    setIsAddDialogOpen,
+    setIsEditDialogOpen,
+    setIsManageEmployeesDialogOpen,
+    setActiveTab,
+    handleInputChange,
+    handleManagerChange,
+    handleCompanyChange,
+    handleColorChange,
+    handleAddDepartment,
+    handleEditDepartment,
+    handleManageEmployees,
+    handleEmployeeSelection,
+    handleSaveDepartment: handleSaveNewDepartment,
+    handleUpdateDepartment: handleUpdateExistingDepartment,
+    handleDeleteDepartment: handleDeleteDept,
+    handleSaveEmployeeAssignments: handleSaveEmployees,
     getDepartmentEmployees
   };
 };
-
-export default useDepartments;

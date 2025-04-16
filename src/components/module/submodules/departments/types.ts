@@ -8,6 +8,8 @@ export interface Department {
   employeesCount: number;
   color: string;
   employeeIds: string[];
+  companyId?: string;
+  companyName?: string;
   createdAt?: string;
   updatedAt?: string;
   parentId?: string;
@@ -19,6 +21,7 @@ export interface DepartmentFormData {
   description: string;
   managerId: string;
   color: string;
+  companyId: string;
   employeeIds: string[];
 }
 

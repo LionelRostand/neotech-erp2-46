@@ -25,6 +25,7 @@ export const useDepartmentForm = (departments: Department[] = []) => {
       description: department.description || "",
       managerId: department.managerId || "",
       color: department.color || departmentColors[0].value,
+      companyId: department.companyId || "",
       employeeIds: department.employeeIds || []
     });
     setSelectedEmployees(department.employeeIds || []);
@@ -39,6 +40,10 @@ export const useDepartmentForm = (departments: Department[] = []) => {
   
   const handleManagerChange = useCallback((value: string) => {
     setFormData(prev => ({ ...prev, managerId: value === "none" ? "" : value }));
+  }, []);
+  
+  const handleCompanyChange = useCallback((value: string) => {
+    setFormData(prev => ({ ...prev, companyId: value === "none" ? "" : value }));
   }, []);
   
   const handleColorChange = useCallback((value: string) => {
@@ -73,6 +78,7 @@ export const useDepartmentForm = (departments: Department[] = []) => {
     setActiveTab,
     handleInputChange,
     handleManagerChange,
+    handleCompanyChange,
     handleColorChange,
     handleEmployeeSelection,
     validateForm,

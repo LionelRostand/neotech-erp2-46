@@ -40,6 +40,7 @@ const DepartmentTable: React.FC<DepartmentTableProps> = ({
             <TableHead>Nom</TableHead>
             <TableHead>Description</TableHead>
             <TableHead>Manager</TableHead>
+            <TableHead>Entreprise</TableHead>
             <TableHead>Employés</TableHead>
             <TableHead className="text-right">Actions</TableHead>
           </TableRow>
@@ -47,13 +48,13 @@ const DepartmentTable: React.FC<DepartmentTableProps> = ({
         <TableBody>
           {loading ? (
             <TableRow>
-              <TableCell colSpan={6} className="text-center py-4">
+              <TableCell colSpan={7} className="text-center py-4">
                 Chargement...
               </TableCell>
             </TableRow>
           ) : uniqueDepartments.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={6} className="text-center py-4">
+              <TableCell colSpan={7} className="text-center py-4">
                 Aucun département trouvé.
               </TableCell>
             </TableRow>
@@ -64,6 +65,7 @@ const DepartmentTable: React.FC<DepartmentTableProps> = ({
                 <TableCell>{department.name}</TableCell>
                 <TableCell>{department.description}</TableCell>
                 <TableCell>{department.managerName || 'N/A'}</TableCell>
+                <TableCell>{department.companyName || 'N/A'}</TableCell>
                 <TableCell>{department.employeesCount}</TableCell>
                 <TableCell className="text-right">
                   <Button variant="ghost" size="sm" onClick={() => onEditDepartment(department.id)}>

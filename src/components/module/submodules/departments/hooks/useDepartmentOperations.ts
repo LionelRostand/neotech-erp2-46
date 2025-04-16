@@ -4,10 +4,12 @@ import { useDepartmentService } from '../services/departmentService';
 import { prepareDepartmentFromForm } from '../utils/departmentUtils';
 import { toast } from 'sonner';
 import { useEmployeeData } from '@/hooks/useEmployeeData';
+import { useFirebaseCompanies } from '@/hooks/useFirebaseCompanies';
 
 export const useDepartmentOperations = () => {
   const departmentService = useDepartmentService();
   const { employees: allEmployees } = useEmployeeData();
+  const { companies } = useFirebaseCompanies();
   
   const handleSaveDepartment = useCallback(async (formData: any, selectedEmployees: string[]) => {
     if (!formData.name || !formData.description) {
@@ -16,7 +18,7 @@ export const useDepartmentOperations = () => {
     }
     
     try {
-      const departmentToSave = prepareDepartmentFromForm(formData, selectedEmployees, allEmployees);
+      const departmentToSave = prepareDepartmentFromForm(formData, selectedEmployees, allEmployees, companies);
       const success = await departmentService.createDepartment(departmentToSave);
       
       if (success) {
@@ -29,7 +31,7 @@ export const useDepartmentOperations = () => {
       toast.error("Erreur lors de la création du département");
       return false;
     }
-  }, [departmentService, allEmployees]);
+  }, [departmentService, allEmployees, companies]);
   
   const handleUpdateDepartment = useCallback(async (formData: any, selectedEmployees: string[], currentDepartment: Department | null) => {
     if (!formData.name || !formData.description) {
@@ -54,6 +56,15 @@ export const useDepartmentOperations = () => {
         ? `${selectedManager.firstName} ${selectedManager.lastName}` 
         : null;
       
+      // Find the selected company from all companies
+      const selectedCompany = formData.companyId && formData.companyId !== "none"
+        ? companies.find(comp => comp.id === formData.companyId)
+        : null;
+        
+      const companyName = selectedCompany 
+        ? selectedCompany.name
+        : null;
+      
       // S'assurer que l'ID est conservé et que toutes les métadonnées sont préservées
       const departmentToUpdate: Department = {
         ...currentDepartment,  // Préserver toutes les propriétés existantes
@@ -61,6 +72,8 @@ export const useDepartmentOperations = () => {
         description: formData.description,
         managerId: formData.managerId === "none" ? null : formData.managerId,
         managerName: managerName,
+        companyId: formData.companyId === "none" ? null : formData.companyId,
+        companyName: companyName,
         color: formData.color,
         employeeIds: selectedEmployees,
         employeesCount: selectedEmployees.length
@@ -81,7 +94,7 @@ export const useDepartmentOperations = () => {
       toast.error("Erreur lors de la mise à jour du département");
       return false;
     }
-  }, [departmentService, allEmployees]);
+  }, [departmentService, allEmployees, companies]);
   
   const handleDeleteDepartment = useCallback(async (id: string, name: string) => {
     if (window.confirm(`Êtes-vous sûr de vouloir supprimer le département "${name}" ?`)) {
