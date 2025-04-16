@@ -1,15 +1,19 @@
-import React from 'react';
+
+import React, { useEffect, useState } from 'react';
 import { useSalaryForm } from '../hooks/useSalaryForm';
-import { Select } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useHrModuleData } from '@/hooks/useHrModuleData';
 import OvertimeSection from './OvertimeSection';
+import { toast } from 'sonner';
+import { Employee } from '@/types/employee';
 
 export const SalaryForm: React.FC = () => {
-  const { employees, isLoading } = useHrModuleData();
+  const { employees, companies, isLoading, error } = useHrModuleData();
+  const [filteredEmployees, setFilteredEmployees] = useState<Employee[]>([]);
+  
   const {
     selectedEmployeeId,
     baseSalary,
@@ -30,9 +34,46 @@ export const SalaryForm: React.FC = () => {
     selectedCompanyId,
     setSelectedCompanyId,
     handleSubmit,
-    companies,
     isLoadingCompanies
   } = useSalaryForm();
+
+  // Log data received from useHrModuleData to debug
+  useEffect(() => {
+    console.log('Employees data from useHrModuleData:', employees);
+    console.log('Companies data from useHrModuleData:', companies);
+    console.log('IsLoading state:', isLoading);
+    console.log('Error state:', error);
+  }, [employees, companies, isLoading, error]);
+
+  // Filter employees when company changes
+  useEffect(() => {
+    if (employees && employees.length > 0) {
+      if (!selectedCompanyId) {
+        setFilteredEmployees(employees);
+      } else {
+        const filtered = employees.filter(emp => {
+          if (typeof emp.company === 'string') {
+            return emp.company === selectedCompanyId;
+          } else if (emp.company && typeof emp.company === 'object') {
+            return emp.company.id === selectedCompanyId;
+          }
+          return false;
+        });
+        
+        setFilteredEmployees(filtered);
+        console.log('Filtered employees:', filtered);
+      }
+    } else {
+      setFilteredEmployees([]);
+    }
+  }, [employees, selectedCompanyId]);
+
+  // Show error if data loading fails
+  useEffect(() => {
+    if (error) {
+      toast.error("Erreur lors du chargement des données: " + error);
+    }
+  }, [error]);
 
   const months = [
     { value: 'Janvier', label: 'Janvier' },
@@ -75,11 +116,15 @@ export const SalaryForm: React.FC = () => {
                 onChange={(e) => setSelectedCompanyId(e.target.value)}
               >
                 <option value="">Sélectionnez une entreprise</option>
-                {companies?.map((company) => (
-                  <option key={company.id} value={company.id}>
-                    {company.name}
-                  </option>
-                ))}
+                {companies && companies.length > 0 ? (
+                  companies.map((company) => (
+                    <option key={company.id} value={company.id}>
+                      {company.name}
+                    </option>
+                  ))
+                ) : (
+                  <option disabled>Aucune entreprise disponible</option>
+                )}
               </select>
             </div>
 
@@ -91,17 +136,21 @@ export const SalaryForm: React.FC = () => {
                 className="w-full p-2 border rounded"
                 value={selectedEmployeeId}
                 onChange={(e) => handleEmployeeSelect(e.target.value)}
-                disabled={!selectedCompanyId}
               >
                 <option value="">Sélectionnez un employé</option>
-                {employees
-                  .filter(emp => !selectedCompanyId || 
-                    (typeof emp.company === 'string' ? emp.company === selectedCompanyId : emp.company?.id === selectedCompanyId))
-                  .map((employee) => (
+                {filteredEmployees.length > 0 ? (
+                  filteredEmployees.map((employee) => (
                     <option key={employee.id} value={employee.id}>
                       {employee.firstName} {employee.lastName}
                     </option>
-                  ))}
+                  ))
+                ) : (
+                  <option disabled>
+                    {selectedCompanyId 
+                      ? "Aucun employé pour cette entreprise" 
+                      : "Sélectionnez d'abord une entreprise"}
+                  </option>
+                )}
               </select>
             </div>
 
@@ -208,3 +257,4 @@ export const SalaryForm: React.FC = () => {
     </div>
   );
 };
+

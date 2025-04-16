@@ -1,143 +1,142 @@
 
 import React from 'react';
+import { Filter, X } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Calendar } from '@/components/ui/calendar';
-import { CalendarIcon, Filter } from 'lucide-react';
-import { format } from 'date-fns';
-import { fr } from 'date-fns/locale';
+import { useHrModuleData } from '@/hooks/useHrModuleData';
 
 export interface PayslipFiltersOptions {
   employeeId?: string;
+  year?: number | null;
   month?: string;
-  year?: number;
-  status?: string;
-  department?: string;
+  startDate?: string;
+  endDate?: string;
+}
+
+interface FormattedEmployee {
+  id: string;
+  name: string;
 }
 
 interface PayslipFiltersProps {
-  employees: { id: string; name: string }[];
+  employees?: FormattedEmployee[];
   onApplyFilters: (filters: PayslipFiltersOptions) => void;
-  currentFilters?: PayslipFiltersOptions;
+  currentFilters: PayslipFiltersOptions;
 }
 
 const PayslipFilters: React.FC<PayslipFiltersProps> = ({
-  employees,
+  employees = [],
   onApplyFilters,
-  currentFilters = {}
+  currentFilters
 }) => {
-  const [calendarOpen, setCalendarOpen] = React.useState(false);
-  const [filters, setFilters] = React.useState<PayslipFiltersOptions>(currentFilters);
+  const { employees: empData, isLoading } = useHrModuleData();
+  
+  // Generate formatted employee list from useHrModuleData if none provided
+  const employeesToUse = employees.length > 0 ? employees : empData.map(emp => ({
+    id: emp.id,
+    name: `${emp.firstName} ${emp.lastName}`
+  }));
 
-  const handleEmployeeChange = (value: string) => {
-    const newFilters = {
-      ...filters,
-      employeeId: value === 'all' ? undefined : value
-    };
-    setFilters(newFilters);
-    onApplyFilters(newFilters);
-  };
+  const months = [
+    'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 
+    'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'
+  ];
 
-  const handleMonthChange = (date: Date | undefined) => {
-    if (date) {
-      const monthName = format(date, 'MMMM', { locale: fr });
-      const year = date.getFullYear();
-      
-      const newFilters = {
-        ...filters,
-        month: monthName,
-        year: year
-      };
-      setFilters(newFilters);
+  const currentYear = new Date().getFullYear();
+  const years = Array.from({ length: 5 }, (_, i) => currentYear - i);
+
+  const clearFilter = (filterName: keyof PayslipFiltersOptions) => {
+    const newFilters = { ...currentFilters };
+    if (filterName in newFilters) {
+      delete newFilters[filterName];
       onApplyFilters(newFilters);
-      setCalendarOpen(false);
     }
   };
 
-  const handleStatusChange = (value: string) => {
-    const newFilters = {
-      ...filters,
-      status: value === 'all' ? undefined : value
-    };
-    setFilters(newFilters);
-    onApplyFilters(newFilters);
+  const getEmployeeName = (id: string) => {
+    const employee = employeesToUse.find(emp => emp.id === id);
+    return employee ? employee.name : 'Employé inconnu';
   };
 
-  const handleReset = () => {
-    const resetFilters = {};
-    setFilters(resetFilters);
-    onApplyFilters(resetFilters);
-  };
+  // Show active filters
+  const hasActiveFilters = Object.keys(currentFilters).some(key => {
+    const value = currentFilters[key as keyof PayslipFiltersOptions];
+    return value !== undefined && value !== null && value !== '';
+  });
+
+  if (!hasActiveFilters) {
+    return null;
+  }
 
   return (
-    <div className="flex flex-col md:flex-row gap-4 items-start md:items-center">
-      <Select
-        value={filters.employeeId || 'all'}
-        onValueChange={handleEmployeeChange}
-      >
-        <SelectTrigger className="w-full md:w-48">
-          <SelectValue placeholder="Tous les employés" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">Tous les employés</SelectItem>
-          {employees && employees.length > 0 ? (
-            employees.map(employee => (
-              <SelectItem key={employee.id} value={employee.id}>
-                {employee.name}
-              </SelectItem>
-            ))
-          ) : (
-            <SelectItem value="no-employees">Aucun employé disponible</SelectItem>
-          )}
-        </SelectContent>
-      </Select>
-
-      <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
-        <PopoverTrigger asChild>
-          <Button
-            variant="outline"
-            className="w-full md:w-auto justify-start text-left font-normal"
-            onClick={() => setCalendarOpen(true)}
+    <div className="flex flex-wrap gap-2 items-center">
+      {currentFilters.employeeId && (
+        <Badge variant="outline" className="flex items-center gap-1">
+          Employé: {getEmployeeName(currentFilters.employeeId)}
+          <button
+            type="button"
+            onClick={() => clearFilter('employeeId')}
+            className="ml-1 rounded-full hover:bg-gray-200 p-1"
           >
-            <CalendarIcon className="mr-2 h-4 w-4" />
-            {filters.month ? (
-              `${filters.month} ${filters.year}`
-            ) : (
-              "Tous les mois"
-            )}
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent className="w-auto p-0" align="start">
-          <Calendar
-            mode="single"
-            selected={filters.month && filters.year ? new Date(filters.year, new Date(Date.parse(`1 ${filters.month} ${filters.year}`)).getMonth(), 1) : undefined}
-            onSelect={handleMonthChange}
-            initialFocus
-            locale={fr}
-          />
-        </PopoverContent>
-      </Popover>
+            <X className="h-3 w-3" />
+          </button>
+        </Badge>
+      )}
 
-      <Select
-        value={filters.status || 'all'}
-        onValueChange={handleStatusChange}
-      >
-        <SelectTrigger className="w-full md:w-40">
-          <SelectValue placeholder="Tout statut" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">Tous</SelectItem>
-          <SelectItem value="Généré">Généré</SelectItem>
-          <SelectItem value="Envoyé">Envoyé</SelectItem>
-          <SelectItem value="Validé">Validé</SelectItem>
-        </SelectContent>
-      </Select>
+      {currentFilters.year && (
+        <Badge variant="outline" className="flex items-center gap-1">
+          Année: {currentFilters.year}
+          <button
+            type="button"
+            onClick={() => clearFilter('year')}
+            className="ml-1 rounded-full hover:bg-gray-200 p-1"
+          >
+            <X className="h-3 w-3" />
+          </button>
+        </Badge>
+      )}
 
-      <Button variant="outline" size="sm" onClick={handleReset} className="ml-auto">
-        <Filter className="mr-2 h-4 w-4" />
-        Réinitialiser
-      </Button>
+      {currentFilters.month && (
+        <Badge variant="outline" className="flex items-center gap-1">
+          Mois: {currentFilters.month}
+          <button
+            type="button"
+            onClick={() => clearFilter('month')}
+            className="ml-1 rounded-full hover:bg-gray-200 p-1"
+          >
+            <X className="h-3 w-3" />
+          </button>
+        </Badge>
+      )}
+
+      {(currentFilters.startDate || currentFilters.endDate) && (
+        <Badge variant="outline" className="flex items-center gap-1">
+          Période: {currentFilters.startDate && currentFilters.startDate}
+          {currentFilters.startDate && currentFilters.endDate && ' - '}
+          {currentFilters.endDate && currentFilters.endDate}
+          <button
+            type="button"
+            onClick={() => {
+              clearFilter('startDate');
+              clearFilter('endDate');
+            }}
+            className="ml-1 rounded-full hover:bg-gray-200 p-1"
+          >
+            <X className="h-3 w-3" />
+          </button>
+        </Badge>
+      )}
+
+      {hasActiveFilters && (
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => onApplyFilters({})}
+          className="text-xs"
+        >
+          Effacer tous les filtres
+        </Button>
+      )}
     </div>
   );
 };

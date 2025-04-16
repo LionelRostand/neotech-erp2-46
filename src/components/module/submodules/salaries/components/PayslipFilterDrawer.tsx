@@ -1,19 +1,17 @@
 
 import React, { useState, useEffect } from 'react';
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Calendar } from '@/components/ui/calendar';
-import { format } from 'date-fns';
-import { fr } from 'date-fns/locale';
-import { Employee } from '@/types/employee';
+import { Label } from '@/components/ui/label';
+import { X } from 'lucide-react';
 import { PayslipFiltersOptions } from './PayslipFilters';
+import { Employee } from '@/types/employee';
+import { useHrModuleData } from '@/hooks/useHrModuleData';
 
 interface PayslipFilterDrawerProps {
   isOpen: boolean;
   onClose: () => void;
   onApplyFilters: (filters: PayslipFiltersOptions) => void;
-  employees: Employee[];
+  employees?: Employee[];
   currentFilters: PayslipFiltersOptions;
 }
 
@@ -21,165 +19,128 @@ const PayslipFilterDrawer: React.FC<PayslipFilterDrawerProps> = ({
   isOpen,
   onClose,
   onApplyFilters,
-  employees,
+  employees = [],
   currentFilters
 }) => {
-  const [filters, setFilters] = useState<PayslipFiltersOptions>(currentFilters);
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(
-    currentFilters.month && currentFilters.year 
-      ? new Date(currentFilters.year, new Date(`${currentFilters.month} 1, ${currentFilters.year}`).getMonth(), 1)
-      : undefined
-  );
+  const [localFilters, setLocalFilters] = useState<PayslipFiltersOptions>(currentFilters);
+  const { employees: empData, isLoading } = useHrModuleData();
+  
+  // Use provided employees or fetch from hook
+  const employeesToUse = employees.length > 0 ? employees : empData;
 
+  // Reset local filters when drawer opens or current filters change
   useEffect(() => {
-    setFilters(currentFilters);
-    
-    if (currentFilters.month && currentFilters.year) {
-      setSelectedDate(new Date(currentFilters.year, new Date(`${currentFilters.month} 1, ${currentFilters.year}`).getMonth(), 1));
-    } else {
-      setSelectedDate(undefined);
-    }
-  }, [currentFilters]);
+    setLocalFilters(currentFilters);
+  }, [isOpen, currentFilters]);
 
-  const handleEmployeeChange = (value: string) => {
-    setFilters(prev => ({
-      ...prev,
-      employeeId: value === 'all' ? undefined : value
-    }));
+  const handleFilterChange = (key: keyof PayslipFiltersOptions, value: any) => {
+    setLocalFilters(prev => ({ ...prev, [key]: value }));
   };
 
-  const handleDateChange = (date: Date | undefined) => {
-    setSelectedDate(date);
-    if (date) {
-      setFilters(prev => ({
-        ...prev,
-        month: format(date, 'MMMM', { locale: fr }),
-        year: date.getFullYear()
-      }));
-    } else {
-      const { month, year, ...rest } = filters;
-      setFilters(rest);
-    }
-  };
-
-  const handleStatusChange = (value: string) => {
-    setFilters(prev => ({
-      ...prev,
-      status: value === 'all' ? undefined : value
-    }));
-  };
-
-  const handleDepartmentChange = (value: string) => {
-    setFilters(prev => ({
-      ...prev,
-      department: value === 'all' ? undefined : value
-    }));
-  };
-
-  const handleApply = () => {
-    onApplyFilters(filters);
+  const handleApplyFilters = () => {
+    onApplyFilters(localFilters);
     onClose();
   };
 
-  const handleReset = () => {
-    const resetFilters = {};
-    setFilters(resetFilters);
-    setSelectedDate(undefined);
+  const handleResetFilters = () => {
+    setLocalFilters({});
   };
 
-  // Extraire les départements uniques des employés
-  const departments = Array.from(new Set(employees.map(emp => emp.department)))
-    .filter(Boolean)
-    .sort();
+  if (!isOpen) return null;
 
   return (
-    <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <SheetContent className="w-full sm:max-w-md">
-        <SheetHeader>
-          <SheetTitle>Filtres</SheetTitle>
-        </SheetHeader>
-        
-        <div className="py-6 space-y-6">
+    <div className="fixed inset-0 z-50 bg-black/25 flex justify-end">
+      <div className="w-full max-w-sm bg-white h-full overflow-y-auto shadow-lg animate-in slide-in-from-right">
+        <div className="flex items-center justify-between p-4 border-b">
+          <h2 className="text-lg font-semibold">Filtrer les fiches de paie</h2>
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={onClose}
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
+
+        <div className="p-4 space-y-6">
+          {/* Filtre par employé */}
           <div className="space-y-2">
-            <label className="text-sm font-medium">Employé</label>
-            <Select 
-              value={filters.employeeId || 'all'} 
-              onValueChange={handleEmployeeChange}
+            <Label htmlFor="employee-filter">Employé</Label>
+            <select
+              id="employee-filter"
+              className="w-full p-2 border rounded"
+              value={localFilters.employeeId || ''}
+              onChange={(e) => handleFilterChange('employeeId', e.target.value)}
             >
-              <SelectTrigger>
-                <SelectValue placeholder="Tous les employés" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Tous les employés</SelectItem>
-                {employees.map(emp => (
-                  <SelectItem key={emp.id} value={emp.id}>
-                    {`${emp.firstName} ${emp.lastName}`}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              <option value="">Tous les employés</option>
+              {isLoading ? (
+                <option disabled>Chargement des employés...</option>
+              ) : (
+                employeesToUse.map((employee) => (
+                  <option key={employee.id} value={employee.id}>
+                    {employee.firstName} {employee.lastName}
+                  </option>
+                ))
+              )}
+            </select>
           </div>
-          
+
+          {/* Filtre par année */}
           <div className="space-y-2">
-            <label className="text-sm font-medium">Période</label>
-            <Calendar
-              mode="single"
-              selected={selectedDate}
-              onSelect={handleDateChange}
-              locale={fr}
-              className="rounded-md border"
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Statut</label>
-            <Select 
-              value={filters.status || 'all'} 
-              onValueChange={handleStatusChange}
+            <Label htmlFor="year-filter">Année</Label>
+            <select
+              id="year-filter"
+              className="w-full p-2 border rounded"
+              value={localFilters.year || ''}
+              onChange={(e) => handleFilterChange('year', e.target.value ? parseInt(e.target.value) : null)}
             >
-              <SelectTrigger>
-                <SelectValue placeholder="Tous les statuts" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Tous</SelectItem>
-                <SelectItem value="Généré">Généré</SelectItem>
-                <SelectItem value="Envoyé">Envoyé</SelectItem>
-                <SelectItem value="Validé">Validé</SelectItem>
-              </SelectContent>
-            </Select>
+              <option value="">Toutes les années</option>
+              {Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i).map((year) => (
+                <option key={year} value={year}>
+                  {year}
+                </option>
+              ))}
+            </select>
           </div>
-          
+
+          {/* Filtre par mois */}
           <div className="space-y-2">
-            <label className="text-sm font-medium">Département</label>
-            <Select 
-              value={filters.department || 'all'} 
-              onValueChange={handleDepartmentChange}
+            <Label htmlFor="month-filter">Mois</Label>
+            <select
+              id="month-filter"
+              className="w-full p-2 border rounded"
+              value={localFilters.month || ''}
+              onChange={(e) => handleFilterChange('month', e.target.value)}
             >
-              <SelectTrigger>
-                <SelectValue placeholder="Tous les départements" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Tous</SelectItem>
-                {departments.map(dept => (
-                  <SelectItem key={dept} value={dept}>
-                    {dept}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              <option value="">Tous les mois</option>
+              {['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 
+                'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'].map((month) => (
+                <option key={month} value={month}>
+                  {month}
+                </option>
+              ))}
+            </select>
           </div>
-          
-          <div className="flex justify-between pt-4">
-            <Button variant="outline" onClick={handleReset}>
+
+          {/* Boutons d'action */}
+          <div className="pt-4 flex space-x-2">
+            <Button 
+              variant="outline" 
+              className="flex-1"
+              onClick={handleResetFilters}
+            >
               Réinitialiser
             </Button>
-            <Button onClick={handleApply}>
+            <Button 
+              className="flex-1"
+              onClick={handleApplyFilters}
+            >
               Appliquer
             </Button>
           </div>
         </div>
-      </SheetContent>
-    </Sheet>
+      </div>
+    </div>
   );
 };
 
