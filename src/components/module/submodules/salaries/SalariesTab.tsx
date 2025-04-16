@@ -6,7 +6,7 @@ import PayslipList from './components/PayslipList';
 
 const SalariesTab = () => {
   return (
-    <Tabs defaultValue="create" className="w-full">
+    <Tabs defaultValue="history" className="w-full">
       <TabsList>
         <TabsTrigger value="create">Nouvelle fiche de paie</TabsTrigger>
         <TabsTrigger value="history">Historique</TabsTrigger>
