@@ -49,6 +49,12 @@ export interface Employee {
     taken: number;
     balance: number;
   };
+  // Added address-related fields for direct access
+  streetNumber?: string;
+  streetName?: string;
+  city?: string;
+  zipCode?: string;
+  region?: string;
 }
 
 export interface Document {

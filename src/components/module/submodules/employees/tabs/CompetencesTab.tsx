@@ -1,145 +1,58 @@
 
-import React, { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
+import React from 'react';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { PlusCircle, X, Save } from 'lucide-react';
-import { Input } from '@/components/ui/input';
+import { GraduationCap, Award } from 'lucide-react';
 import { Employee } from '@/types/employee';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { toast } from 'sonner';
-import { updateEmployeeSkills } from '../services/employeeService';
 
 interface CompetencesTabProps {
   employee: Employee;
-  onEmployeeUpdated: () => void;
-  isEditing?: boolean; // Make isEditing optional
-  onFinishEditing?: () => void; // Make onFinishEditing optional
+  onEmployeeUpdated: (updatedEmployee: Employee) => void;
 }
 
-const CompetencesTab: React.FC<CompetencesTabProps> = ({ 
-  employee, 
-  onEmployeeUpdated, 
-  isEditing: externalIsEditing, 
-  onFinishEditing 
-}) => {
-  const [skills, setSkills] = useState<string[]>(employee.skills || []);
-  const [newSkill, setNewSkill] = useState('');
-  const [isEditing, setIsEditing] = useState(false);
-
-  // Sync with external isEditing state if provided
-  useEffect(() => {
-    if (externalIsEditing !== undefined) {
-      setIsEditing(externalIsEditing);
-    }
-  }, [externalIsEditing]);
-
-  const handleAddSkill = () => {
-    if (!newSkill.trim()) return;
-    
-    // Check if skill already exists
-    if (skills.includes(newSkill.trim())) {
-      toast.error("Cette compétence existe déjà");
-      return;
-    }
-    
-    setSkills([...skills, newSkill.trim()]);
-    setNewSkill('');
-  };
-
-  const handleRemoveSkill = (skill: string) => {
-    setSkills(skills.filter(s => s !== skill));
-  };
-
-  const handleSaveSkills = async () => {
-    try {
-      await updateEmployeeSkills(employee.id, skills);
-      
-      // If we're using external editing state, call the callback
-      if (onFinishEditing) {
-        onFinishEditing();
-      } else {
-        setIsEditing(false);
-      }
-      
-      onEmployeeUpdated();
-      toast.success("Compétences mises à jour avec succès");
-    } catch (error) {
-      console.error("Error saving skills:", error);
-      toast.error("Erreur lors de la sauvegarde des compétences");
-    }
-  };
-
+const CompetencesTab: React.FC<CompetencesTabProps> = ({ employee, onEmployeeUpdated }) => {
   return (
-    <Card className="shadow-sm">
-      <CardHeader className="pb-2">
-        <div className="flex justify-between items-center">
-          <CardTitle className="text-lg font-medium">Compétences</CardTitle>
-          {!isEditing ? (
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={() => setIsEditing(true)}
-            >
-              Modifier
-            </Button>
-          ) : (
-            <Button 
-              variant="default" 
-              size="sm" 
-              onClick={handleSaveSkills}
-            >
-              <Save className="h-4 w-4 mr-1" />
-              Enregistrer
-            </Button>
-          )}
-        </div>
-      </CardHeader>
-      <CardContent>
-        {isEditing ? (
-          <div className="space-y-4">
-            <div className="flex items-center space-x-2">
-              <Input
-                placeholder="Ajouter une compétence..."
-                value={newSkill}
-                onChange={(e) => setNewSkill(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleAddSkill()}
-              />
-              <Button 
-                type="button" 
-                size="icon" 
-                onClick={handleAddSkill}
-              >
-                <PlusCircle className="h-4 w-4" />
-              </Button>
-            </div>
+    <Card>
+      <CardContent className="p-6 space-y-6">
+        <div>
+          <h3 className="text-lg font-medium flex items-center mb-4">
+            <Award className="h-5 w-5 mr-2" />
+            Compétences
+          </h3>
+          
+          {employee.skills && employee.skills.length > 0 ? (
             <div className="flex flex-wrap gap-2">
-              {skills.map((skill, index) => (
-                <Badge key={index} className="py-1 pl-2 pr-1 flex items-center gap-1">
+              {employee.skills.map((skill, index) => (
+                <Badge key={index} variant="secondary">
                   {skill}
-                  <button
-                    type="button"
-                    className="ml-1 rounded-full hover:bg-gray-200 p-1"
-                    onClick={() => handleRemoveSkill(skill)}
-                  >
-                    <X className="h-3 w-3" />
-                  </button>
                 </Badge>
               ))}
             </div>
-          </div>
-        ) : (
-          <div className="flex flex-wrap gap-2">
-            {skills.length > 0 ? (
-              skills.map((skill, index) => (
-                <Badge key={index} variant="secondary" className="py-1">
-                  {skill}
-                </Badge>
-              ))
-            ) : (
-              <p className="text-sm text-gray-500">Aucune compétence renseignée.</p>
-            )}
-          </div>
-        )}
+          ) : (
+            <p className="text-muted-foreground">Aucune compétence enregistrée</p>
+          )}
+        </div>
+        
+        <div className="pt-4">
+          <h3 className="text-lg font-medium flex items-center mb-4">
+            <GraduationCap className="h-5 w-5 mr-2" />
+            Formation
+          </h3>
+          
+          {employee.education && employee.education.length > 0 ? (
+            <div className="space-y-4">
+              {employee.education.map((education, index) => (
+                <div key={index} className="border-l-2 pl-4 border-primary/30">
+                  <p className="font-medium">{education.degree}</p>
+                  <p className="text-sm text-muted-foreground">{education.school}</p>
+                  <p className="text-sm">{education.year}</p>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-muted-foreground">Aucune formation enregistrée</p>
+          )}
+        </div>
       </CardContent>
     </Card>
   );

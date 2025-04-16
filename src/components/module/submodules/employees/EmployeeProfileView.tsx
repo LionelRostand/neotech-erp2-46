@@ -177,7 +177,10 @@ const EmployeeProfileView: React.FC<EmployeeProfileViewProps> = ({
             </TabsContent>
             
             <TabsContent value="competences">
-              <CompetencesTab employee={currentEmployee} />
+              <CompetencesTab 
+                employee={currentEmployee}
+                onEmployeeUpdated={handleEmployeeUpdated}
+              />
             </TabsContent>
             
             <TabsContent value="conges">
