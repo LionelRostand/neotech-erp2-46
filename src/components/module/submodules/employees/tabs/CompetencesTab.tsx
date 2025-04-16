@@ -1,58 +1,144 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { GraduationCap, Award } from 'lucide-react';
 import { Employee } from '@/types/employee';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Edit, Plus, Save, Trash, XCircle } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { toast } from 'sonner';
+import { updateEmployeeDoc } from '@/services/employeeService';
 
 interface CompetencesTabProps {
   employee: Employee;
-  onEmployeeUpdated: (updatedEmployee: Employee) => void;
+  onEmployeeUpdated?: (updatedEmployee: Employee) => void;
 }
 
-const CompetencesTab: React.FC<CompetencesTabProps> = ({ employee, onEmployeeUpdated }) => {
+const CompetencesTab: React.FC<CompetencesTabProps> = ({ 
+  employee,
+  onEmployeeUpdated
+}) => {
+  const [isEditing, setIsEditing] = useState(false);
+  const [skills, setSkills] = useState<string[]>(employee.skills || []);
+  const [newSkill, setNewSkill] = useState('');
+  
+  const handleEdit = () => {
+    setIsEditing(true);
+  };
+  
+  const handleCancel = () => {
+    setSkills(employee.skills || []);
+    setNewSkill('');
+    setIsEditing(false);
+  };
+  
+  const handleAddSkill = () => {
+    if (newSkill.trim()) {
+      setSkills(prev => [...prev, newSkill.trim()]);
+      setNewSkill('');
+    }
+  };
+  
+  const handleRemoveSkill = (index: number) => {
+    setSkills(prev => prev.filter((_, i) => i !== index));
+  };
+  
+  const handleSave = async () => {
+    try {
+      // Mettre à jour l'employé dans la base de données
+      const updatedEmployee = await updateEmployeeDoc(employee.id, {
+        skills
+      });
+      
+      if (updatedEmployee) {
+        toast.success('Compétences mises à jour avec succès');
+        
+        // Si un callback de mise à jour a été fourni, l'appeler avec l'employé mis à jour
+        if (typeof onEmployeeUpdated === 'function') {
+          onEmployeeUpdated(updatedEmployee);
+        }
+        
+        setIsEditing(false);
+      }
+    } catch (error) {
+      console.error('Erreur lors de la mise à jour des compétences:', error);
+      toast.error('Erreur lors de la mise à jour des compétences');
+    }
+  };
+  
   return (
     <Card>
-      <CardContent className="p-6 space-y-6">
-        <div>
-          <h3 className="text-lg font-medium flex items-center mb-4">
-            <Award className="h-5 w-5 mr-2" />
-            Compétences
-          </h3>
-          
-          {employee.skills && employee.skills.length > 0 ? (
-            <div className="flex flex-wrap gap-2">
-              {employee.skills.map((skill, index) => (
-                <Badge key={index} variant="secondary">
-                  {skill}
-                </Badge>
-              ))}
-            </div>
+      <CardContent className="p-6">
+        <div className="flex justify-between items-center mb-6">
+          <h3 className="text-lg font-medium">Compétences</h3>
+          {!isEditing ? (
+            <Button variant="outline" size="sm" onClick={handleEdit}>
+              <Edit className="h-4 w-4 mr-2" />
+              Modifier
+            </Button>
           ) : (
-            <p className="text-muted-foreground">Aucune compétence enregistrée</p>
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" onClick={handleCancel}>
+                <XCircle className="h-4 w-4 mr-2" />
+                Annuler
+              </Button>
+              <Button variant="default" size="sm" onClick={handleSave}>
+                <Save className="h-4 w-4 mr-2" />
+                Enregistrer
+              </Button>
+            </div>
           )}
         </div>
         
-        <div className="pt-4">
-          <h3 className="text-lg font-medium flex items-center mb-4">
-            <GraduationCap className="h-5 w-5 mr-2" />
-            Formation
-          </h3>
-          
-          {employee.education && employee.education.length > 0 ? (
-            <div className="space-y-4">
-              {employee.education.map((education, index) => (
-                <div key={index} className="border-l-2 pl-4 border-primary/30">
-                  <p className="font-medium">{education.degree}</p>
-                  <p className="text-sm text-muted-foreground">{education.school}</p>
-                  <p className="text-sm">{education.year}</p>
-                </div>
-              ))}
+        {isEditing ? (
+          <div className="space-y-4">
+            <div className="flex gap-2">
+              <Input
+                placeholder="Nouvelle compétence"
+                value={newSkill}
+                onChange={(e) => setNewSkill(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleAddSkill();
+                  }
+                }}
+              />
+              <Button type="button" onClick={handleAddSkill}>
+                <Plus className="h-4 w-4 mr-2" />
+                Ajouter
+              </Button>
             </div>
-          ) : (
-            <p className="text-muted-foreground">Aucune formation enregistrée</p>
-          )}
-        </div>
+            
+            <div className="flex flex-wrap gap-2">
+              {skills.map((skill, index) => (
+                <Badge key={index} variant="secondary" className="flex items-center gap-1">
+                  {skill}
+                  <button 
+                    onClick={() => handleRemoveSkill(index)}
+                    className="ml-1 hover:text-destructive"
+                  >
+                    <XCircle className="h-3 w-3" />
+                  </button>
+                </Badge>
+              ))}
+              {skills.length === 0 && (
+                <p className="text-muted-foreground text-sm">Aucune compétence enregistrée</p>
+              )}
+            </div>
+          </div>
+        ) : (
+          <div className="flex flex-wrap gap-2">
+            {skills.map((skill, index) => (
+              <Badge key={index} variant="secondary">
+                {skill}
+              </Badge>
+            ))}
+            {skills.length === 0 && (
+              <p className="text-muted-foreground text-sm">Aucune compétence enregistrée</p>
+            )}
+          </div>
+        )}
       </CardContent>
     </Card>
   );
