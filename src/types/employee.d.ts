@@ -1,4 +1,3 @@
-
 export interface Employee {
   id: string;
   firstName: string;
@@ -69,6 +68,7 @@ export interface Document {
 
 export interface EmployeeAddress {
   street: string;
+  streetNumber?: string;
   city: string;
   postalCode: string;
   country: string;

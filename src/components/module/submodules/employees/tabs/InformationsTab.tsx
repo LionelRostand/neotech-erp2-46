@@ -1,11 +1,16 @@
-import React from 'react';
+
+import React, { useState } from 'react';
 import { Employee, EmployeeAddress } from '@/types/employee';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { MapPin, Building, Phone, Mail, Briefcase, UserCheck, User } from 'lucide-react';
+import { MapPin, Building, Phone, Mail, Briefcase, UserCheck, User, Save } from 'lucide-react';
 import ManagerCheckbox from '../form/ManagerCheckbox';
 import { UseFormReturn } from 'react-hook-form';
 import { EmployeeFormValues } from '../form/employeeFormSchema';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { updateEmployee } from '../services/employeeService';
+import { toast } from 'sonner';
 
 interface InformationsTabProps {
   employee: Employee;
@@ -13,15 +18,57 @@ interface InformationsTabProps {
   onFinishEditing?: () => void;
   form?: UseFormReturn<EmployeeFormValues>;
   showManagerOption?: boolean;
+  onEmployeeUpdated?: () => void;
 }
 
 const InformationsTab: React.FC<InformationsTabProps> = ({ 
   employee, 
-  isEditing = false, 
+  isEditing: externalIsEditing,
   onFinishEditing,
   form,
-  showManagerOption = true
+  showManagerOption = true,
+  onEmployeeUpdated
 }) => {
+  const [isEditing, setIsEditing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [addressData, setAddressData] = useState<EmployeeAddress>(() => {
+    if (typeof employee.address === 'object') {
+      return employee.address as EmployeeAddress;
+    }
+    return {
+      street: '',
+      streetNumber: '',
+      city: '',
+      postalCode: '',
+      country: 'France',
+      state: ''
+    };
+  });
+
+  const handleAddressChange = (field: keyof EmployeeAddress, value: string) => {
+    setAddressData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  const handleSaveAddress = async () => {
+    try {
+      setIsSaving(true);
+      await updateEmployee(employee.id, { address: addressData });
+      toast.success("Adresse mise à jour avec succès");
+      setIsEditing(false);
+      if (onEmployeeUpdated) {
+        onEmployeeUpdated();
+      }
+    } catch (error) {
+      console.error("Erreur lors de la mise à jour de l'adresse:", error);
+      toast.error("Erreur lors de la mise à jour de l'adresse");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   // Fonction pour formater une adresse
   const formatAddress = (address: EmployeeAddress | string): string => {
     if (typeof address === 'string') {
@@ -66,10 +113,6 @@ const InformationsTab: React.FC<InformationsTabProps> = ({
 
   const addressComponents = getAddressComponents(employee.address);
 
-  console.log('Affichage des informations de l\'employé:', employee);
-  console.log('Composants d\'adresse:', addressComponents);
-  console.log('Form disponible:', !!form, 'showManagerOption:', showManagerOption);
-
   return (
     <div className="space-y-6">
       <Card>
@@ -102,17 +145,78 @@ const InformationsTab: React.FC<InformationsTabProps> = ({
           <Separator />
           
           <div className="space-y-3">
-            <h4 className="text-sm font-semibold flex items-center gap-2">
-              <MapPin className="h-4 w-4 text-muted-foreground" />
-              Adresse
-            </h4>
+            <div className="flex justify-between items-center">
+              <h4 className="text-sm font-semibold flex items-center gap-2">
+                <MapPin className="h-4 w-4 text-muted-foreground" />
+                Adresse
+              </h4>
+              {!isEditing ? (
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => setIsEditing(true)}
+                >
+                  Modifier
+                </Button>
+              ) : (
+                <Button 
+                  variant="default" 
+                  size="sm"
+                  onClick={handleSaveAddress}
+                  disabled={isSaving}
+                >
+                  <Save className="h-4 w-4 mr-1" />
+                  {isSaving ? 'Enregistrement...' : 'Enregistrer'}
+                </Button>
+              )}
+            </div>
             
-            {typeof employee.address === 'object' ? (
+            {isEditing ? (
+              <div className="grid grid-cols-1 gap-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm text-muted-foreground">N° de rue</label>
+                    <Input
+                      value={addressData.streetNumber || ''}
+                      onChange={(e) => handleAddressChange('streetNumber', e.target.value)}
+                      placeholder="123"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm text-muted-foreground">Rue</label>
+                    <Input
+                      value={addressData.street || ''}
+                      onChange={(e) => handleAddressChange('street', e.target.value)}
+                      placeholder="Nom de la rue"
+                    />
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm text-muted-foreground">Code postal</label>
+                    <Input
+                      value={addressData.postalCode || ''}
+                      onChange={(e) => handleAddressChange('postalCode', e.target.value)}
+                      placeholder="75000"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm text-muted-foreground">Ville</label>
+                    <Input
+                      value={addressData.city || ''}
+                      onChange={(e) => handleAddressChange('city', e.target.value)}
+                      placeholder="Paris"
+                    />
+                  </div>
+                </div>
+              </div>
+            ) : (
               <div className="grid grid-cols-1 gap-2">
                 {addressComponents.street && (
                   <div>
                     <p className="text-sm text-muted-foreground">Rue</p>
-                    <p>{addressComponents.street}</p>
+                    <p>{addressComponents.streetNumber} {addressComponents.street}</p>
                   </div>
                 )}
                 
@@ -131,19 +235,7 @@ const InformationsTab: React.FC<InformationsTabProps> = ({
                     </div>
                   )}
                 </div>
-                
-                {addressComponents.state && (
-                  <div>
-                    <p className="text-sm text-muted-foreground flex items-center gap-2">
-                      <Building className="h-4 w-4 text-muted-foreground" />
-                      Département
-                    </p>
-                    <p>{addressComponents.state}</p>
-                  </div>
-                )}
               </div>
-            ) : (
-              <p>{formatAddress(employee.address)}</p>
             )}
           </div>
         </CardContent>
