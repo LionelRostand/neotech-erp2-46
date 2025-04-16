@@ -2,11 +2,14 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { Employee } from '@/types/employee';
 import InformationsTab from './tabs/InformationsTab';
 import HorairesTab from './tabs/HorairesTab';
 import CompetencesTab from './tabs/CompetencesTab';
 import CongesTab from './tabs/CongesTab';
+import EvaluationsTab from './tabs/EvaluationsTab';
+import DocumentsTab from './tabs/DocumentsTab';
 import { useEmployeePermissions } from './hooks/useEmployeePermissions';
 import { Button } from '@/components/ui/button';
 import { AlertCircle } from 'lucide-react';
@@ -140,24 +143,35 @@ const EmployeeProfileView: React.FC<{ employee?: Employee; isLoading?: boolean }
       </Card>
 
       <Tabs defaultValue="informations" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="informations">Informations</TabsTrigger>
-          <TabsTrigger value="horaires">Horaires et présence</TabsTrigger>
+          <TabsTrigger value="horaires">Horaires</TabsTrigger>
           <TabsTrigger value="competences">Compétences</TabsTrigger>
           <TabsTrigger value="conges">Congés</TabsTrigger>
+          <TabsTrigger value="evaluations">Évaluations</TabsTrigger>
+          <TabsTrigger value="documents">Documents</TabsTrigger>
         </TabsList>
-        <TabsContent value="informations">
-          <InformationsTab employee={displayedEmployee} />
-        </TabsContent>
-        <TabsContent value="horaires">
-          <HorairesTab employee={displayedEmployee} isEditing={false} onFinishEditing={() => {}} />
-        </TabsContent>
-        <TabsContent value="competences">
-          <CompetencesTab employee={displayedEmployee} onEmployeeUpdated={() => {}} />
-        </TabsContent>
-        <TabsContent value="conges">
-          <CongesTab employee={displayedEmployee} />
-        </TabsContent>
+        
+        <ScrollArea className="h-[600px] w-full pr-4">
+          <TabsContent value="informations">
+            <InformationsTab employee={displayedEmployee} />
+          </TabsContent>
+          <TabsContent value="horaires">
+            <HorairesTab employee={displayedEmployee} isEditing={false} onFinishEditing={() => {}} />
+          </TabsContent>
+          <TabsContent value="competences">
+            <CompetencesTab employee={displayedEmployee} onEmployeeUpdated={() => {}} />
+          </TabsContent>
+          <TabsContent value="conges">
+            <CongesTab employee={displayedEmployee} />
+          </TabsContent>
+          <TabsContent value="evaluations">
+            <EvaluationsTab employee={displayedEmployee} />
+          </TabsContent>
+          <TabsContent value="documents">
+            <DocumentsTab employee={displayedEmployee} />
+          </TabsContent>
+        </ScrollArea>
       </Tabs>
     </div>
   );
