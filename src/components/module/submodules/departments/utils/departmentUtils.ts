@@ -15,6 +15,15 @@ export const notifyDepartmentUpdates = (departments?: Department[]) => {
 };
 
 /**
+ * S'abonne aux mises à jour de départements
+ * @param callback Fonction à appeler lors des mises à jour
+ * @returns Fonction pour se désabonner
+ */
+export const subscribeToDepartmentUpdates = (callback: () => void) => {
+  return departmentEvents.on('departments:updated', callback);
+};
+
+/**
  * Prépare un objet Department à partir des données de formulaire
  * @param formData Données du formulaire
  * @param selectedEmployees ID des employés sélectionnés
@@ -43,6 +52,7 @@ export const prepareDepartmentFromForm = (
     managerName: managerName,
     color: formData.color,
     companyId: formData.companyId === "none" ? null : formData.companyId,
+    parentId: formData.parentId === "none" ? null : formData.parentId,
     employeeIds: selectedEmployees,
     employeesCount: selectedEmployees.length,
     createdAt: new Date().toISOString(),

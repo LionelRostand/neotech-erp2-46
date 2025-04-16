@@ -14,6 +14,7 @@ export interface Department {
   createdAt?: string;
   updatedAt?: string;
   companyId?: string | null;
+  parentId?: string | null;
 }
 
 // Structure pour le formulaire de département
@@ -25,6 +26,7 @@ export interface DepartmentFormData {
   managerName: string;
   color: string;
   companyId: string;
+  parentId?: string;
 }
 
 // Couleurs disponibles pour les départements
