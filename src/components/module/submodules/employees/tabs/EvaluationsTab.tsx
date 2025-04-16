@@ -13,7 +13,7 @@ interface EvaluationsTabProps {
 
 const EvaluationsTab: React.FC<EvaluationsTabProps> = ({ employee }) => {
   const { evaluations, isLoading } = useEvaluationsData();
-  const employeeEvaluations = evaluations.filter(eval => eval.employeeId === employee.id);
+  const employeeEvaluations = evaluations.filter(evaluation => evaluation.employeeId === employee.id);
 
   if (isLoading) {
     return (
