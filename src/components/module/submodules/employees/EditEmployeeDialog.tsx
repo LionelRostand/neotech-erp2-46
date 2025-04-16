@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Employee } from '@/types/employee';
@@ -120,7 +121,7 @@ export const EditEmployeeDialog: React.FC<EditEmployeeDialogProps> = ({
                 <SelectValue placeholder={isLoadingDepartments ? "Chargement..." : "Sélectionner un département"} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Aucun département</SelectItem>
+                <SelectItem value="none">Aucun département</SelectItem>
                 {departments.map((dept) => (
                   <SelectItem key={dept.id} value={dept.id}>
                     {dept.name}
