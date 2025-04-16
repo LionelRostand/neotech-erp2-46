@@ -73,7 +73,15 @@ const EditDepartmentDialog: React.FC<EditDepartmentDialogProps> = ({
               Entreprise
             </Label>
             <div className="col-span-3">
-              <Select value={formData.companyId || "none"} onValueChange={(value) => onInputChange({ target: { name: 'companyId', value: value === 'none' ? '' : value } } as React.ChangeEvent<HTMLInputElement>)}>
+              <Select 
+                value={formData.companyId || "none"} 
+                onValueChange={(value) => onInputChange({ 
+                  target: { 
+                    name: 'companyId', 
+                    value: value === 'none' ? '' : value 
+                  } 
+                } as React.ChangeEvent<HTMLInputElement>)}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Sélectionner une entreprise" />
                 </SelectTrigger>
